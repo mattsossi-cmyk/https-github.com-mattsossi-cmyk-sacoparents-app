@@ -17,7 +17,7 @@ function FacebookFeed() {
           <Facebook size={18} />
         </div>
         <div className="flex-1">
-          <div className="font-serif text-xl text-[#2A3631]">SA Coparents on Facebook</div>
+          <div className="font-serif text-xl text-[#2A3631]">SA Coparents</div>
           <div className="text-xs text-[#8A9A92] uppercase tracking-[0.2em]">
             Live posts & videos
           </div>

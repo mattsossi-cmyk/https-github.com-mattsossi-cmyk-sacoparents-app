@@ -172,7 +172,7 @@ export default function Landing() {
                 <span className="w-8 h-8 rounded-full bg-[#F5F3E9] grid place-items-center text-[#849D8E] group-hover:bg-[#E8ECE9] transition-colors">
                   <Facebook size={14} />
                 </span>
-                Follow SA Coparents on Facebook
+                Follow SA Coparents
               </a>
             )}
           </div>
