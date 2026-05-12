@@ -60,6 +60,12 @@ export default function Landing() {
         />
         <div className="relative z-10 grid lg:grid-cols-12 gap-10 items-center pt-12 fade-up">
           <div className="lg:col-span-7">
+            <img
+              src="/sa-coparents-logo.png"
+              alt="SA Coparents"
+              className="block w-full max-w-md h-auto mb-6 -ml-2 drop-shadow-sm"
+              data-testid="hero-logo"
+            />
             <div className="eyebrow mb-5">A quieter way to prepare</div>
             <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl leading-[1.02] text-[#2A3631]">
               Mediation, prepared with <em className="text-[#849D8E]">care</em>.
