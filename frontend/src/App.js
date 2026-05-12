@@ -115,7 +115,7 @@ function App() {
         <AuthProvider>
           <AppRoutes />
           <Toaster
-            position="top-center"
+            position="bottom-right"
             toastOptions={{
               style: {
                 background: "#FFFFFF",
