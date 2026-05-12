@@ -1,8 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Heart, Compass, Users, ArrowRight } from "lucide-react";
+import { Heart, Compass, Users, ArrowRight, Facebook } from "lucide-react";
 
 const HERO_BG = "https://images.unsplash.com/photo-1745059759163-77394a0d1770?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlbnRsZSUyMHNoYXBlcyUyMHNhZ2UlMjBzYW5kfGVufDB8fHx8MTc3ODU4OTIwN3ww&ixlib=rb-4.1.0&q=85";
+const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
 export default function Landing() {
   return (
@@ -137,8 +138,26 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-[#E8ECE9] py-8 text-center text-xs text-[#8A9A92]">
-        © SA Coparents — Relational Mediation Prep
+      <footer className="border-t border-[#E8ECE9] py-8">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-xs text-[#8A9A92]">
+            © SA Coparents — Relational Mediation Prep
+          </div>
+          {FB_URL && (
+            <a
+              href={FB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-[#5C6B64] hover:text-[#2A3631] transition-colors group"
+              data-testid="landing-footer-facebook-link"
+            >
+              <span className="w-8 h-8 rounded-full bg-[#F5F3E9] grid place-items-center text-[#849D8E] group-hover:bg-[#E8ECE9] transition-colors">
+                <Facebook size={14} />
+              </span>
+              Follow SA Coparents on Facebook
+            </a>
+          )}
+        </div>
       </footer>
     </div>
   );

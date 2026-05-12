@@ -1,7 +1,9 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, Sparkles } from "lucide-react";
+import { LogOut, Sparkles, Facebook } from "lucide-react";
+
+const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
 const navLinks = [
   { to: "/dashboard", label: "Dashboard" },
@@ -63,6 +65,19 @@ export default function AppShell({ children }) {
               <div className="text-sm text-[#2A3631]">{user?.name}</div>
               <div className="text-xs text-[#8A9A92]">{user?.email}</div>
             </div>
+            {FB_URL && (
+              <a
+                href={FB_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-[#F5F3E9] hover:bg-[#E8ECE9] grid place-items-center text-[#849D8E] transition-colors"
+                aria-label="SA Coparents on Facebook"
+                title="SA Coparents on Facebook"
+                data-testid="header-facebook-link"
+              >
+                <Facebook size={16} />
+              </a>
+            )}
             <button
               onClick={handleLogout}
               data-testid="logout-button"
