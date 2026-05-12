@@ -1,0 +1,111 @@
+{
+  "theme": "light",
+  "archetype": "Organic & Earthy (Archetype 1)",
+  "design_philosophy": {
+    "mood": "Calm, structured, non-judgmental, warm, dignified, and supportive",
+    "rationale": "Coparenting mediation is high-stress. The UI acts as a digital sanctuary, reducing cognitive load with soft colors, generous spacing, and clear, single-focus steps. Sharp edges and high-contrast colors are avoided to prevent triggering anxiety.",
+    "rules": [
+      "No sharp edges (use rounded corners everywhere).",
+      "One primary action per screen (Wizard flow).",
+      "De-saturated colors only. No high-vibrancy warnings.",
+      "Use optical alignment and generous negative space to let content breathe."
+    ]
+  },
+  "typography": {
+    "heading_font": "Cormorant Garamond",
+    "heading_font_type": "serif",
+    "body_font": "Manrope",
+    "body_font_type": "sans-serif",
+    "scales": {
+      "h1": "text-4xl sm:text-5xl tracking-tight leading-tight",
+      "h2": "text-2xl sm:text-3xl tracking-tight",
+      "h3": "text-xl sm:text-2xl",
+      "body": "text-base leading-relaxed text-slate-700",
+      "small": "text-sm text-slate-500",
+      "label": "text-xs uppercase tracking-[0.2em] font-medium text-slate-500"
+    }
+  },
+  "colors": {
+    "background": {
+      "default": "#FDFAF3",
+      "alt": "#F5F3E9",
+      "card": "#FFFFFF",
+      "accent_subtle": "#E8ECE9"
+    },
+    "text": {
+      "primary": "#2A3631",
+      "secondary": "#5C6B64",
+      "tertiary": "#8A9A92"
+    },
+    "brand": {
+      "primary": "#849D8E",
+      "primary_hover": "#6C8576",
+      "secondary": "#C28771",
+      "accent": "#E5D9C5"
+    },
+    "state": {
+      "success": "#849D8E",
+      "warning": "#D6A374",
+      "error": "#C28771",
+      "info": "#9CB4C4"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous Spacing (Tailwind p-6, p-8, p-12). Content must breathe.",
+    "grid_system": {
+      "dashboard": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+      "wizard": "max-w-2xl mx-auto"
+    },
+    "container_styles": {
+      "cards": "bg-white rounded-3xl border border-[#E8ECE9] shadow-[0_8px_30px_rgba(42,54,49,0.04)] p-8",
+      "inputs": "bg-[#F5F3E9] rounded-2xl border-none focus:ring-2 focus:ring-[#849D8E] focus:bg-white transition-all",
+      "buttons_primary": "bg-[#849D8E] text-white rounded-full px-8 py-4 hover:bg-[#6C8576] transition-colors shadow-sm",
+      "buttons_secondary": "bg-[#F5F3E9] text-[#2A3631] rounded-full px-8 py-4 hover:bg-[#E8ECE9] transition-colors"
+    }
+  },
+  "animations": {
+    "page_transitions": "Fade and gentle slide-up (Framer Motion).",
+    "micro_interactions": "Soft scale on button hover (scale 1.02). Progress bar fills smoothly over 1s.",
+    "haptics_simulation": "Visual reassurance upon task completion (e.g., gentle checkmark animation, soft green flash)."
+  },
+  "components": {
+    "libraries": [
+      "shadcn/ui",
+      "lucide-react",
+      "framer-motion",
+      "@dnd-kit/core"
+    ],
+    "custom_instructions": {
+      "Wizard_Progress": "Use a subtle, segmented progress bar at the top of the screen. Colors: filled = Sage, empty = Light Sand.",
+      "Priority_Ranking": "Drag-and-drop cards should have a 'grab' handle icon. On drag, slightly elevate the card with a soft shadow.",
+      "AI_Chat_Feedback": "Display AI communication feedback in a soft Terracotta or Sage tinted card with an avatar/icon that feels empathetic, not robotic.",
+      "Forms": "Never use sharp square inputs. Use large touch targets (min height 48px). Use labels above inputs."
+    }
+  },
+  "image_urls": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1745059759163-77394a0d1770?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlbnRsZSUyMHNoYXBlcyUyMHNhZ2UlMjBzYW5kfGVufDB8fHx8MTc3ODU4OTIwN3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract background of flowing, curved shapes in sage and sand. Use as a subtle, low-opacity background behind the Welcome/Landing hero section."
+    },
+    "zen_texture": {
+      "url": "https://images.unsplash.com/photo-1679869802669-353e3e20bfac?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAxODF8MHwxfHNlYXJjaHwxfHxjYWxtJTIwd2F0ZXIlMjByaXBwbGVzJTIwbWluaW1hbCUyMHNhbmR8ZW58MHx8fHwxNzc4NTg5MTkxfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Calming sand dune texture (black and white). Can be tinted with sage/sand overlay for dashboard background or resource center headers."
+    },
+    "calm_water": {
+       "url": "https://images.unsplash.com/photo-1620780700438-dcac5af5bf24?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAxODF8MHwxfHNlYXJjaHw0fHxjYWxtJTIwd2F0ZXIlMjByaXBwbGVzJTIwbWluaW1hbCUyMHNhbmR8ZW58MHx8fHwxNzc4NTg5MTkxfDA&ixlib=rb-4.1.0&q=85",
+       "description": "Calm water ripples. Good for 'Personal Reflection' or 'Readiness Check' success screens."
+    },
+    "floral_soft": {
+       "url": "https://images.unsplash.com/photo-1777970932124-5094861453d9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwyfHxzb2Z0JTIwYmx1cnJlZCUyMGFic3RyYWN0JTIwYmFja2dyb3VuZCUyMGNyZWFtJTIwcGVhY2h8ZW58MHx8fHwxNzc4NTg5MjA3fDA&ixlib=rb-4.1.0&q=85",
+       "description": "Soft blurred floral background. Perfect for the 'App Orientation' or 'Child-Centered Goals' section."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Ensure the entire app feels like a sanctuary. Avoid the standard 'Vercel SaaS' look.",
+    "Implement Google Auth + JWT seamlessly on the Landing/Welcome screen.",
+    "For the Wizard flow, ensure strict form validation but display errors gently (using the Warning/Soft Terracotta color, not harsh red).",
+    "Integrate a PDF export function for the 'Mediation Prep Summary' using a library like react-pdf or html2canvas + jspdf. Make the exported PDF match the calming branding.",
+    "The Dashboard should track progress across the modules (Child Goals, Issues, Priority Ranking, Comm Style, Readiness). Use Shadcn progress components customized with rounded edges and sage colors.",
+    "All interactive elements must have a data-testid attribute for testing."
+  ]
+}
