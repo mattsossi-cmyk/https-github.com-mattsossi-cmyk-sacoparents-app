@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, Sparkles, Facebook } from "lucide-react";
+import { LogOut, Sparkles, Facebook, ShieldAlert } from "lucide-react";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
@@ -61,6 +61,15 @@ export default function AppShell({ children }) {
             })}
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              to="/safety"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#C28771]/10 text-[#C28771] hover:bg-[#C28771]/15 transition-colors"
+              data-testid="header-safety-link"
+              title="Safety & domestic violence resources"
+            >
+              <ShieldAlert size={12} />
+              Safety
+            </Link>
             <div className="hidden sm:block text-right">
               <div className="text-sm text-[#2A3631]">{user?.name}</div>
               <div className="text-xs text-[#8A9A92]">{user?.email}</div>

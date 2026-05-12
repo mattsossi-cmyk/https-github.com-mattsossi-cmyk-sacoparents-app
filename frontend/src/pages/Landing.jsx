@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Heart, Compass, Users, ArrowRight, Facebook } from "lucide-react";
+import { Heart, Compass, Users, ArrowRight, Facebook, ShieldAlert } from "lucide-react";
 
 const HERO_BG = "https://images.unsplash.com/photo-1745059759163-77394a0d1770?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlbnRsZSUyMHNoYXBlcyUyMHNhZ2UlMjBzYW5kfGVufDB8fHx8MTc3ODU4OTIwN3ww&ixlib=rb-4.1.0&q=85";
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
@@ -22,6 +22,15 @@ export default function Landing() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            to="/safety"
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#C28771]/10 text-[#C28771] hover:bg-[#C28771]/15 transition-colors"
+            data-testid="landing-header-safety-link"
+            title="Domestic violence safety resources"
+          >
+            <ShieldAlert size={12} />
+            Safety
+          </Link>
           <Link
             to="/login"
             className="text-sm text-[#5C6B64] hover:text-[#2A3631]"
@@ -143,20 +152,30 @@ export default function Landing() {
           <div className="text-xs text-[#8A9A92]">
             © SA Coparents — Relational Mediation Prep
           </div>
-          {FB_URL && (
-            <a
-              href={FB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-[#5C6B64] hover:text-[#2A3631] transition-colors group"
-              data-testid="landing-footer-facebook-link"
+          <div className="flex items-center gap-5">
+            <Link
+              to="/safety"
+              className="inline-flex items-center gap-2 text-sm text-[#C28771] hover:text-[#a87560] transition-colors"
+              data-testid="landing-footer-safety-link"
             >
-              <span className="w-8 h-8 rounded-full bg-[#F5F3E9] grid place-items-center text-[#849D8E] group-hover:bg-[#E8ECE9] transition-colors">
-                <Facebook size={14} />
-              </span>
-              Follow SA Coparents on Facebook
-            </a>
-          )}
+              <ShieldAlert size={14} />
+              Domestic violence support
+            </Link>
+            {FB_URL && (
+              <a
+                href={FB_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-[#5C6B64] hover:text-[#2A3631] transition-colors group"
+                data-testid="landing-footer-facebook-link"
+              >
+                <span className="w-8 h-8 rounded-full bg-[#F5F3E9] grid place-items-center text-[#849D8E] group-hover:bg-[#E8ECE9] transition-colors">
+                  <Facebook size={14} />
+                </span>
+                Follow SA Coparents on Facebook
+              </a>
+            )}
+          </div>
         </div>
       </footer>
     </div>

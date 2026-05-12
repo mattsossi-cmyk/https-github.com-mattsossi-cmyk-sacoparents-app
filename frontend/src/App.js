@@ -18,6 +18,7 @@ import CommStyle from "@/pages/CommStyle";
 import ReadinessCheck from "@/pages/ReadinessCheck";
 import Summary from "@/pages/Summary";
 import Resources from "@/pages/Resources";
+import Safety from "@/pages/Safety";
 
 const TOAST_OPTIONS = {
   style: {
@@ -45,6 +46,7 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/safety" element={<Safety />} />
 
         <Route
           path="/dashboard"

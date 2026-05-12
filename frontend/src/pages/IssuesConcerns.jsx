@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import WizardLayout from "../components/WizardLayout";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { ShieldAlert } from "lucide-react";
 
 const CATEGORIES = [
   {
@@ -155,6 +156,14 @@ export default function IssuesConcerns() {
               If safety is at risk, please also speak to a qualified attorney or therapist.
               This app is preparation — not a substitute for professional support.
             </p>
+            <Link
+              to="/safety"
+              className="inline-flex items-center gap-2 text-sm text-[#C28771] hover:text-[#a87560] mb-3"
+              data-testid="issues-safety-resources-link"
+            >
+              <ShieldAlert size={14} />
+              View domestic violence support resources
+            </Link>
             <textarea
               rows={3}
               className="input-soft resize-none"
