@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, Sparkles, Facebook, ShieldAlert } from "lucide-react";
+import { LogOut, Facebook, ShieldAlert } from "lucide-react";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
@@ -30,10 +30,12 @@ export default function AppShell({ children }) {
     <div className="min-h-screen gentle-bg">
       <header className="border-b border-[#E8ECE9]/70 backdrop-blur-md bg-[#FDFAF3]/70 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2" data-testid="brand-logo">
-            <div className="w-9 h-9 rounded-full bg-[#849D8E] grid place-items-center text-white">
-              <Sparkles size={16} />
-            </div>
+          <Link to="/dashboard" className="flex items-center gap-3" data-testid="brand-logo">
+            <img
+              src="/sa-coparents-mark.png"
+              alt="SA Coparents"
+              className="w-14 h-14 rounded-xl object-contain bg-[#FDFAF3] ring-1 ring-[#E8ECE9]"
+            />
             <div className="leading-tight">
               <div className="font-serif text-xl">SA Coparents</div>
               <div className="text-[10px] uppercase tracking-[0.25em] text-[#8A9A92]">

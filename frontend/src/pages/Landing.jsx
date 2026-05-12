@@ -10,10 +10,12 @@ export default function Landing() {
     <div className="min-h-screen gentle-bg">
       {/* Top bar */}
       <header className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-full bg-[#849D8E] grid place-items-center text-white font-serif">
-            S
-          </div>
+        <div className="flex items-center gap-3">
+          <img
+            src="/sa-coparents-mark.png"
+            alt="SA Coparents"
+            className="w-14 h-14 rounded-xl object-contain bg-[#FDFAF3] ring-1 ring-[#E8ECE9]"
+          />
           <div className="leading-tight">
             <div className="font-serif text-xl">SA Coparents</div>
             <div className="text-[10px] uppercase tracking-[0.25em] text-[#8A9A92]">

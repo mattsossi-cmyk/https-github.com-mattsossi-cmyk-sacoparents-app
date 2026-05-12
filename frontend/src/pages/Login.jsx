@@ -28,6 +28,11 @@ export default function Login() {
     <div className="min-h-screen gentle-bg grid place-items-center p-6">
       <div className="w-full max-w-md fade-up">
         <Link to="/" className="block text-center mb-8" data-testid="brand-home-link">
+          <img
+            src="/sa-coparents-mark.png"
+            alt="SA Coparents"
+            className="w-24 h-24 rounded-2xl object-contain bg-white ring-1 ring-[#E8ECE9] mx-auto mb-3"
+          />
           <div className="font-serif text-3xl text-[#2A3631]">SA Coparents</div>
           <div className="text-[10px] uppercase tracking-[0.25em] text-[#8A9A92]">
             Relational Mediation Prep
