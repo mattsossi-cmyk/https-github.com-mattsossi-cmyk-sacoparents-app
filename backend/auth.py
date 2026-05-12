@@ -79,14 +79,15 @@ async def get_current_user(
     """Resolve user from session_token cookie or Bearer token (JWT or session)."""
     db = request.app.state.db
 
-    # Prefer cookie (Emergent session token)
-    cookie_token = request.cookies.get("session_token")
+    # Sources of credentials: cookies first, then bearer header
+    session_cookie = request.cookies.get("session_token")
+    jwt_cookie = request.cookies.get(JWT_COOKIE_NAME)
     bearer_token = creds.credentials if creds else None
 
-    # Try cookie -> session lookup
-    if cookie_token:
+    # 1) Emergent session cookie -> session_token DB lookup
+    if session_cookie:
         session = await db.user_sessions.find_one(
-            {"session_token": cookie_token}, {"_id": 0}
+            {"session_token": session_cookie}, {"_id": 0}
         )
         if session:
             exp = session["expires_at"]
@@ -101,14 +102,21 @@ async def get_current_user(
                 if user_doc:
                     return _serialize_user(user_doc)
 
-    # Try bearer JWT
+    # 2) JWT cookie
+    if jwt_cookie:
+        user_id = decode_jwt(jwt_cookie)
+        if user_id:
+            user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+            if user_doc:
+                return _serialize_user(user_doc)
+
+    # 3) Bearer token: try JWT, then session_token DB lookup
     if bearer_token:
         user_id = decode_jwt(bearer_token)
         if user_id:
             user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
             if user_doc:
                 return _serialize_user(user_doc)
-        # Or treat as session token
         session = await db.user_sessions.find_one(
             {"session_token": bearer_token}, {"_id": 0}
         )
@@ -122,9 +130,29 @@ async def get_current_user(
     raise HTTPException(status_code=401, detail="Not authenticated")
 
 
+JWT_COOKIE_NAME = "auth_token"
+JWT_COOKIE_MAX_AGE = ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+
+
+def _set_jwt_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key=JWT_COOKIE_NAME,
+        value=token,
+        max_age=JWT_COOKIE_MAX_AGE,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+    )
+
+
 # ============ Routes ============
 @router.post("/register", response_model=TokenResponse)
-async def register(body: UserRegister, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def register(
+    body: UserRegister,
+    response: Response,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
     existing = await db.users.find_one({"email": body.email.lower()}, {"_id": 0})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -144,17 +172,23 @@ async def register(body: UserRegister, db: AsyncIOMotorDatabase = Depends(get_db
     }
     await db.users.insert_one(doc)
     token = create_jwt(user_id)
+    _set_jwt_cookie(response, token)
     return TokenResponse(access_token=token, user=_serialize_user(doc))
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(body: UserLogin, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def login(
+    body: UserLogin,
+    response: Response,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
     user = await db.users.find_one({"email": body.email.lower()}, {"_id": 0})
     if not user or not user.get("hashed_password"):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     if not verify_password(body.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_jwt(user["user_id"])
+    _set_jwt_cookie(response, token)
     return TokenResponse(access_token=token, user=_serialize_user(user))
 
 
@@ -246,6 +280,7 @@ async def logout(
     if token:
         await db.user_sessions.delete_many({"session_token": token})
     response.delete_cookie("session_token", path="/")
+    response.delete_cookie(JWT_COOKIE_NAME, path="/")
     return {"ok": True}
 
 

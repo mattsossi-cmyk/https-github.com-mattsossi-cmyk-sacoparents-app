@@ -54,7 +54,10 @@ export default function Resources() {
   const [filter, setFilter] = useState("All");
 
   useEffect(() => {
-    api.get("/mediation/resources").then((r) => setItems(r.data || [])).catch(() => {});
+    api
+      .get("/mediation/resources")
+      .then((r) => setItems(r.data || []))
+      .catch((err) => console.error("Failed to load resources:", err));
   }, []);
 
   const categories = ["All", ...Array.from(new Set(items.map((i) => i.category)))];

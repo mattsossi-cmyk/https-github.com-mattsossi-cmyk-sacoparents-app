@@ -22,10 +22,30 @@ const SCALE = [
   { v: 5, label: "Yes, consistently" },
 ];
 
+const READINESS_PREPARED_THRESHOLD = 75;
+const READINESS_MODERATE_THRESHOLD = 50;
+const SCALE_MAX = 5;
+
+const READINESS_BADGES = {
+  prepared: { label: "Prepared for Mediation", color: "#849D8E" },
+  moderate: { label: "Moderately Ready", color: "#D6A374" },
+  needs_support: { label: "Needs Support", color: "#C28771" },
+};
+
 function scoreToLabel(pct) {
-  if (pct >= 75) return { label: "Prepared for Mediation", color: "#849D8E" };
-  if (pct >= 50) return { label: "Moderately Ready", color: "#D6A374" };
-  return { label: "Needs Support", color: "#C28771" };
+  if (pct >= READINESS_PREPARED_THRESHOLD) return READINESS_BADGES.prepared;
+  if (pct >= READINESS_MODERATE_THRESHOLD) return READINESS_BADGES.moderate;
+  return READINESS_BADGES.needs_support;
+}
+
+function readinessAdvice(pct) {
+  if (pct >= READINESS_PREPARED_THRESHOLD) {
+    return "You're in a strong place. Carry this calm into the room.";
+  }
+  if (pct >= READINESS_MODERATE_THRESHOLD) {
+    return "You're getting there. Consider one more reflection or a coaching session before mediation.";
+  }
+  return "Consider individual therapy or coaching before mediation. Preparation here is still valuable.";
 }
 
 export default function ReadinessCheck() {
@@ -35,16 +55,19 @@ export default function ReadinessCheck() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.get("/mediation/prep").then((r) => {
-      setCompleted(r.data?.completed || {});
-      if (r.data?.readiness?.answers) setAnswers(r.data.readiness.answers);
-    }).catch(() => {});
+    api
+      .get("/mediation/prep")
+      .then((r) => {
+        setCompleted(r.data?.completed || {});
+        if (r.data?.readiness?.answers) setAnswers(r.data.readiness.answers);
+      })
+      .catch((err) => console.error("Failed to load prep:", err));
   }, []);
 
   const { total, pct, badge } = useMemo(() => {
     const vals = QUESTIONS.map((q) => answers[q.id] || 0);
     const t = vals.reduce((a, b) => a + b, 0);
-    const max = QUESTIONS.length * 5;
+    const max = QUESTIONS.length * SCALE_MAX;
     const p = Math.round((t / max) * 100);
     return { total: t, pct: p, badge: scoreToLabel(p) };
   }, [answers]);
@@ -55,7 +78,8 @@ export default function ReadinessCheck() {
       await api.put("/mediation/readiness", { answers });
       toast.success("Readiness saved.");
       navigate("/summary");
-    } catch {
+    } catch (err) {
+      console.error("Save readiness failed:", err);
       toast.error("Could not save.");
     } finally {
       setSaving(false);
@@ -112,16 +136,10 @@ export default function ReadinessCheck() {
                 {badge.label}
               </div>
               <div className="text-sm text-[#5C6B64]">
-                {total} / {QUESTIONS.length * 5} · {pct}%
+                {total} / {QUESTIONS.length * SCALE_MAX} · {pct}%
               </div>
             </div>
-            <p className="text-sm text-[#5C6B64] mt-3">
-              {pct >= 75
-                ? "You're in a strong place. Carry this calm into the room."
-                : pct >= 50
-                ? "You're getting there. Consider one more reflection or a coaching session before mediation."
-                : "Consider individual therapy or coaching before mediation. Preparation here is still valuable."}
-            </p>
+            <p className="text-sm text-[#5C6B64] mt-3">{readinessAdvice(pct)}</p>
           </div>
         </div>
       </WizardLayout>

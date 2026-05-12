@@ -55,13 +55,16 @@ export default function CommStyle() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.get("/mediation/prep").then((r) => {
-      setCompleted(r.data?.completed || {});
-      if (r.data?.comm_style) {
-        setAnswers(r.data.comm_style.answers || {});
-        setSample(r.data.comm_style.free_text_sample || "");
-      }
-    }).catch(() => {});
+    api
+      .get("/mediation/prep")
+      .then((r) => {
+        setCompleted(r.data?.completed || {});
+        if (r.data?.comm_style) {
+          setAnswers(r.data.comm_style.answers || {});
+          setSample(r.data.comm_style.free_text_sample || "");
+        }
+      })
+      .catch((err) => console.error("Failed to load prep:", err));
   }, []);
 
   const handleAnalyze = async () => {
@@ -89,7 +92,8 @@ export default function CommStyle() {
       });
       toast.success("Saved.");
       navigate("/prep/readiness");
-    } catch {
+    } catch (err) {
+      console.error("Save comm-style failed:", err);
       toast.error("Could not save.");
     } finally {
       setSaving(false);
@@ -198,7 +202,7 @@ export default function CommStyle() {
                 <div>
                   <div className="eyebrow mb-2">Strengths</div>
                   <ul className="list-disc pl-5 space-y-1 text-[#2A3631]">
-                    {analysis.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                    {analysis.strengths.map((s) => <li key={s}>{s}</li>)}
                   </ul>
                 </div>
               )}
@@ -206,7 +210,7 @@ export default function CommStyle() {
                 <div>
                   <div className="eyebrow mb-2">Growth areas</div>
                   <ul className="list-disc pl-5 space-y-1 text-[#2A3631]">
-                    {analysis.growth_areas.map((s, i) => <li key={i}>{s}</li>)}
+                    {analysis.growth_areas.map((s) => <li key={s}>{s}</li>)}
                   </ul>
                 </div>
               )}
@@ -214,7 +218,7 @@ export default function CommStyle() {
                 <div>
                   <div className="eyebrow mb-2">Try this</div>
                   <ul className="list-disc pl-5 space-y-1 text-[#2A3631]">
-                    {analysis.suggestions.map((s, i) => <li key={i}>{s}</li>)}
+                    {analysis.suggestions.map((s) => <li key={s}>{s}</li>)}
                   </ul>
                 </div>
               )}

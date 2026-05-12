@@ -57,7 +57,10 @@ export default function Dashboard() {
   const [prep, setPrep] = useState({ completed: {} });
 
   useEffect(() => {
-    api.get("/mediation/prep").then((r) => setPrep(r.data || { completed: {} })).catch(() => {});
+    api
+      .get("/mediation/prep")
+      .then((r) => setPrep(r.data || { completed: {} }))
+      .catch((err) => console.error("Failed to load prep:", err));
   }, []);
 
   const completed = prep.completed || {};

@@ -12,10 +12,11 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [custody, setCustody] = useState("");
   const [mediationDate, setMediationDate] = useState("");
-  const [children, setChildren] = useState([{ name: "", age: "" }]);
+  const [children, setChildren] = useState([{ uid: "c0", name: "", age: "" }]);
   const [loading, setLoading] = useState(false);
 
-  const addChild = () => setChildren((c) => [...c, { name: "", age: "" }]);
+  const addChild = () =>
+    setChildren((c) => [...c, { uid: `c${Date.now()}`, name: "", age: "" }]);
   const removeChild = (i) =>
     setChildren((c) => (c.length > 1 ? c.filter((_, idx) => idx !== i) : c));
   const updateChild = (i, field, val) =>
@@ -121,7 +122,7 @@ export default function Register() {
               <label className="eyebrow block mb-2">Children</label>
               <div className="space-y-2">
                 {children.map((c, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_120px_auto] gap-2 items-center">
+                  <div key={c.uid} className="grid grid-cols-[1fr_120px_auto] gap-2 items-center">
                     <input
                       placeholder="Name"
                       value={c.name}

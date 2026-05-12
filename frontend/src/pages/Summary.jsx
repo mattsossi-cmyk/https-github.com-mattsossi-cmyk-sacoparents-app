@@ -1,23 +1,74 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import AppShell from "../components/AppShell";
 import { api, API } from "../lib/api";
 import { toast } from "sonner";
 import { Sparkles, Download, RefreshCw } from "lucide-react";
+
+function Section({ title, children }) {
+  return (
+    <div className="py-4 border-t border-[#E8ECE9] first:border-t-0 first:pt-0">
+      <div className="eyebrow mb-2">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function BulletList({ items }) {
+  if (!items || !items.length)
+    return <p className="text-sm italic text-[#8A9A92]">(none captured)</p>;
+  return (
+    <ul className="space-y-1.5">
+      {items.map((s) => (
+        <li key={s} className="flex gap-2 text-[#2A3631]">
+          <span className="text-[#849D8E] mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full bg-[#849D8E]" />
+          <span>{s}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PriorityAgenda({ items }) {
+  if (!items?.length)
+    return <p className="text-sm italic text-[#8A9A92]">(none captured)</p>;
+  return (
+    <ol className="space-y-2 list-none">
+      {items.map((it, i) => (
+        <li key={`${it.rank || i}-${it.topic}`} className="flex gap-3">
+          <span className="font-serif text-xl text-[#849D8E] w-7 shrink-0">
+            {it.rank || i + 1}.
+          </span>
+          <div>
+            <div className="text-[#2A3631]">{it.topic}</div>
+            <div className="text-xs text-[#8A9A92] uppercase tracking-wider">
+              {it.category}
+            </div>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 export default function Summary() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
 
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       const r = await api.get("/mediation/summaries");
-      setHistory(r.data || []);
-      if (!summary && r.data?.length) setSummary(r.data[0]);
-    } catch {}
-  };
+      const list = r.data || [];
+      setHistory(list);
+      setSummary((prev) => prev || list[0] || null);
+    } catch (err) {
+      console.error("Failed to load summaries:", err);
+    }
+  }, []);
 
-  useEffect(() => { loadHistory(); }, []); // eslint-disable-line
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
 
   const generate = async () => {
     setLoading(true);
@@ -36,12 +87,10 @@ export default function Summary() {
   const download = async () => {
     if (!summary?.summary_id) return;
     try {
-      const token = localStorage.getItem("sa_access_token");
       const res = await fetch(`${API}/mediation/summary/${summary.summary_id}/pdf`, {
         credentials: "include",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) throw new Error("PDF request failed");
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -51,7 +100,8 @@ export default function Summary() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch {
+    } catch (err) {
+      console.error("PDF download failed:", err);
       toast.error("Could not download PDF.");
     }
   };
@@ -137,21 +187,7 @@ export default function Summary() {
               </Section>
 
               <Section title="Priority agenda">
-                <ol className="space-y-2 list-none">
-                  {(summary.priority_agenda || []).map((it, i) => (
-                    <li key={i} className="flex gap-3">
-                      <span className="font-serif text-xl text-[#849D8E] w-7 shrink-0">
-                        {it.rank || i + 1}.
-                      </span>
-                      <div>
-                        <div className="text-[#2A3631]">{it.topic}</div>
-                        <div className="text-xs text-[#8A9A92] uppercase tracking-wider">
-                          {it.category}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
+                <PriorityAgenda items={summary.priority_agenda} />
               </Section>
 
               <Section title="Flexibility areas">
@@ -193,29 +229,5 @@ export default function Summary() {
         )}
       </div>
     </AppShell>
-  );
-}
-
-function Section({ title, children }) {
-  return (
-    <div className="py-4 border-t border-[#E8ECE9] first:border-t-0 first:pt-0">
-      <div className="eyebrow mb-2">{title}</div>
-      {children}
-    </div>
-  );
-}
-
-function BulletList({ items }) {
-  if (!items || !items.length)
-    return <p className="text-sm italic text-[#8A9A92]">(none captured)</p>;
-  return (
-    <ul className="space-y-1.5">
-      {items.map((s, i) => (
-        <li key={i} className="flex gap-2 text-[#2A3631]">
-          <span className="text-[#849D8E] mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full bg-[#849D8E]" />
-          <span>{s}</span>
-        </li>
-      ))}
-    </ul>
   );
 }

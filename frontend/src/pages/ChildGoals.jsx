@@ -25,16 +25,19 @@ export default function ChildGoals() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.get("/mediation/prep").then((r) => {
-      const cg = r.data?.child_goals;
-      setCompleted(r.data?.completed || {});
-      if (cg) {
-        setSelected(cg.selected_goals || []);
-        setConsistencyText(cg.consistency_text || "");
-        setFeelText(cg.feel_text || "");
-        setStrengthText(cg.strength_text || "");
-      }
-    }).catch(() => {});
+    api
+      .get("/mediation/prep")
+      .then((r) => {
+        const cg = r.data?.child_goals;
+        setCompleted(r.data?.completed || {});
+        if (cg) {
+          setSelected(cg.selected_goals || []);
+          setConsistencyText(cg.consistency_text || "");
+          setFeelText(cg.feel_text || "");
+          setStrengthText(cg.strength_text || "");
+        }
+      })
+      .catch((err) => console.error("Failed to load prep:", err));
   }, []);
 
   const toggle = (id) =>
@@ -52,7 +55,8 @@ export default function ChildGoals() {
       });
       toast.success("Your goals are saved.");
       navigate("/prep/issues");
-    } catch (e) {
+    } catch (err) {
+      console.error("Save child-goals failed:", err);
       toast.error("Could not save. Please try again.");
     } finally {
       setSaving(false);

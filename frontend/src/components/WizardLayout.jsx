@@ -10,6 +10,16 @@ const STEPS = [
   { key: "readiness", label: "Readiness", path: "/prep/readiness" },
 ];
 
+const SEGMENT_ACTIVE = "bg-[#849D8E]";
+const SEGMENT_DONE = "bg-[#849D8E]/70";
+const SEGMENT_IDLE = "bg-[#E8ECE9]";
+
+function segmentClass(isActive, isDone) {
+  if (isActive) return SEGMENT_ACTIVE;
+  if (isDone) return SEGMENT_DONE;
+  return SEGMENT_IDLE;
+}
+
 export default function WizardLayout({
   currentKey,
   title,
@@ -37,13 +47,7 @@ export default function WizardLayout({
             return (
               <div key={s.key} className="flex-1">
                 <div
-                  className={`h-1.5 rounded-full progress-fill ${
-                    isActive
-                      ? "bg-[#849D8E]"
-                      : isDone
-                      ? "bg-[#849D8E]/70"
-                      : "bg-[#E8ECE9]"
-                  }`}
+                  className={`h-1.5 rounded-full progress-fill ${segmentClass(isActive, isDone)}`}
                 />
               </div>
             );

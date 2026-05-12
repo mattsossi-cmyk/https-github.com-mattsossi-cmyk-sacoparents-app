@@ -19,6 +19,15 @@ import ReadinessCheck from "@/pages/ReadinessCheck";
 import Summary from "@/pages/Summary";
 import Resources from "@/pages/Resources";
 
+const TOAST_OPTIONS = {
+  style: {
+    background: "#FFFFFF",
+    color: "#2A3631",
+    border: "1px solid #E8ECE9",
+    borderRadius: "16px",
+  },
+};
+
 function HashAuthGuard({ children }) {
   // Catch Emergent OAuth hash before normal routing
   const location = useLocation();
@@ -114,17 +123,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: "#FFFFFF",
-                color: "#2A3631",
-                border: "1px solid #E8ECE9",
-                borderRadius: "16px",
-              },
-            }}
-          />
+          <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
         </AuthProvider>
       </BrowserRouter>
     </div>

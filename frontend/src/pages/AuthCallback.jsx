@@ -23,17 +23,15 @@ export default function AuthCallback() {
 
     (async () => {
       try {
-        const res = await api.post(
+        await api.post(
           "/auth/google/session",
           {},
           { headers: { "X-Session-ID": sessionId } }
         );
-        if (res.data?.access_token) {
-          localStorage.setItem("sa_access_token", res.data.access_token);
-        }
         await checkAuth();
         navigate("/dashboard", { replace: true });
-      } catch (e) {
+      } catch (err) {
+        console.error("Google session exchange failed:", err);
         navigate("/login", { replace: true });
       }
     })();

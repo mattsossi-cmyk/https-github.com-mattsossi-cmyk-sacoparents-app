@@ -93,7 +93,7 @@ export default function Landing() {
                     "Reflect on your communication patterns.",
                     "Generate a summary.",
                   ].map((t, i) => (
-                    <li key={i} className="flex gap-3 items-start">
+                    <li key={t} className="flex gap-3 items-start">
                       <span className="w-7 h-7 rounded-full bg-[#849D8E]/15 text-[#849D8E] grid place-items-center text-sm font-medium shrink-0 mt-0.5">
                         {i + 1}
                       </span>

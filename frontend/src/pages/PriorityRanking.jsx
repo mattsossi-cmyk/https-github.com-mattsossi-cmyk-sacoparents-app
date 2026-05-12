@@ -49,20 +49,22 @@ export default function PriorityRanking() {
   const [dragId, setDragId] = useState(null);
 
   useEffect(() => {
-    api.get("/mediation/prep").then((r) => {
-      setCompleted(r.data?.completed || {});
-      const existing = r.data?.priority?.items;
-      if (existing && existing.length) {
-        setItems(existing);
-      } else {
-        // seed from issues
-        const seeds = deriveSuggestionsFromIssues(r.data?.issues).map((s) => ({
-          ...s,
-          bucket: "easy",
-        }));
-        setItems(seeds);
-      }
-    }).catch(() => {});
+    api
+      .get("/mediation/prep")
+      .then((r) => {
+        setCompleted(r.data?.completed || {});
+        const existing = r.data?.priority?.items;
+        if (existing && existing.length) {
+          setItems(existing);
+        } else {
+          const seeds = deriveSuggestionsFromIssues(r.data?.issues).map((s) => ({
+            ...s,
+            bucket: "easy",
+          }));
+          setItems(seeds);
+        }
+      })
+      .catch((err) => console.error("Failed to load prep:", err));
   }, []);
 
   const addItem = () => {
@@ -90,7 +92,8 @@ export default function PriorityRanking() {
       await api.put("/mediation/priority", { items });
       toast.success("Priorities saved.");
       navigate("/prep/communication");
-    } catch {
+    } catch (err) {
+      console.error("Save priority failed:", err);
       toast.error("Could not save.");
     } finally {
       setSaving(false);

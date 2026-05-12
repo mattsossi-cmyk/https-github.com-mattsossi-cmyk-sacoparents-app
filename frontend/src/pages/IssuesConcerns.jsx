@@ -71,11 +71,13 @@ export default function IssuesConcerns() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.get("/mediation/prep").then((r) => {
-      setCompleted(r.data?.completed || {});
-      if (r.data?.issues) setData({ ...data, ...r.data.issues });
-    }).catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    api
+      .get("/mediation/prep")
+      .then((r) => {
+        setCompleted(r.data?.completed || {});
+        if (r.data?.issues) setData((d) => ({ ...d, ...r.data.issues }));
+      })
+      .catch((err) => console.error("Failed to load prep:", err));
   }, []);
 
   const updateField = (cat, key, val) => {
@@ -88,7 +90,8 @@ export default function IssuesConcerns() {
       await api.put("/mediation/issues", data);
       toast.success("Concerns noted.");
       navigate("/prep/priority");
-    } catch {
+    } catch (err) {
+      console.error("Save issues failed:", err);
       toast.error("Could not save. Please try again.");
     } finally {
       setSaving(false);
