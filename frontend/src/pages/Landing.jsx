@@ -83,15 +83,15 @@ export default function Landing() {
               <div className="relative">
                 <div className="eyebrow mb-3">What you'll do</div>
                 <h2 className="font-serif text-2xl text-[#2A3631] mb-6">
-                  Five gentle steps. One clearer conversation.
+                  Five steps approach.
                 </h2>
                 <ul className="space-y-4 text-[#2A3631]">
                   {[
-                    "Define what you want your child to experience.",
-                    "Map the issues, calmly and clearly.",
-                    "Rank what matters most — and where you can flex.",
+                    "Define the goals you have for your children.",
+                    "Map the issues that you have, calmly and clearly.",
+                    "Rank what matters most, and where you can flex.",
                     "Reflect on your communication patterns.",
-                    "Generate a mediator-ready summary (PDF).",
+                    "Generate a summary.",
                   ].map((t, i) => (
                     <li key={i} className="flex gap-3 items-start">
                       <span className="w-7 h-7 rounded-full bg-[#849D8E]/15 text-[#849D8E] grid place-items-center text-sm font-medium shrink-0 mt-0.5">
