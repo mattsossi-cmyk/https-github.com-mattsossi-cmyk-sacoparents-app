@@ -23,12 +23,15 @@ Composition:
   child's hand between them — drawn as soft, painterly brush strokes, NOT photorealistic.
   Place this gesture on the left third of the image.
 - Right side: leave generous negative space for text.
-- Typography (rendered as part of the image): in the upper right, in a refined serif
-  similar to Cormorant Garamond, the words "SA Coparents" small and elegant.
-  Below it, in a larger serif, the line: "Mediation, prepared with care."
-  Underneath, in a tiny sans-serif: "Five gentle steps to a calmer co-parenting conversation."
+- Typography (rendered as part of the image), exact words and order — spelled carefully:
+    Line 1 (small, uppercase, letterspaced, soft sage tone): SA COPARENTS
+    Line 2 (large, elegant serif similar to Cormorant Garamond, dark charcoal):
+            Creating Your
+            Coparenting Agreement
+    Line 3 (tiny clean sans-serif, soft gray): A calm, child-centered way to prepare.
 - Overall mood: warm morning light, hopeful but quiet. Earthy, organic, restorative.
 - Do NOT include any harsh edges, no logos other than the wordmark, no children's faces.
+- Spell every word exactly as written above. No extra text, no other words.
 """
 
 async def main():
