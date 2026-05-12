@@ -1,34 +1,16 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
-}
-
-.App-header {
-    background-color: #0f0f10;
+/* App-level styles for SA Coparents — most theming lives in index.css */
+.App {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
 }
 
-.App-link {
-    color: #61dafb;
+.gentle-bg {
+    background:
+        radial-gradient(60rem 40rem at 110% -10%, rgba(229, 217, 197, 0.45), transparent 60%),
+        radial-gradient(50rem 36rem at -10% 110%, rgba(132, 157, 142, 0.18), transparent 60%),
+        var(--bg-default);
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.divider-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #D8DDD9, transparent);
 }
