@@ -520,9 +520,10 @@ RESOURCES = [
     {
         "id": "r5",
         "category": "Rebuilding Trust",
-        "title": "Small Consistent Wins",
-        "description": "Trust is rebuilt through small, predictable actions over time.",
-        "kind": "article",
+        "title": "Small Consistent Wins (Video)",
+        "description": "Trust is rebuilt through small, predictable actions over time. This short video unpacks how repeated, low-stakes follow-through rebuilds credibility with your co-parent and your child.",
+        "kind": "video",
+        "url": "https://www.youtube.com/watch?v=k-k8lTJLFVU",
     },
     {
         "id": "r6",
