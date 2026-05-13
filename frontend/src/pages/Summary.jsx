@@ -296,17 +296,11 @@ function AgreementDraftTab() {
         <Section title="Shared goals for our child">
           <BulletList items={agreement.shared_goals} />
         </Section>
-        <Section title="Parenting schedule">
-          <ClauseList items={agreement.parenting_schedule} />
-        </Section>
         <Section title="Communication">
           <ClauseList items={agreement.communication} />
         </Section>
         <Section title="Child needs">
           <ClauseList items={agreement.child_needs} />
-        </Section>
-        <Section title="Financial">
-          <ClauseList items={agreement.financial} />
         </Section>
         <Section title="Household rules">
           <ClauseList items={agreement.household_rules} />

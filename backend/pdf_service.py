@@ -289,10 +289,8 @@ def build_agreement_pdf(
         pdf.section_title("Shared Goals for Our Child")
         pdf.bullet_list(agreement["shared_goals"])
 
-    _agreement_section(pdf, "Parenting Schedule", agreement.get("parenting_schedule", []))
     _agreement_section(pdf, "Communication", agreement.get("communication", []))
     _agreement_section(pdf, "Child Needs", agreement.get("child_needs", []))
-    _agreement_section(pdf, "Financial", agreement.get("financial", []))
     _agreement_section(pdf, "Household Rules", agreement.get("household_rules", []))
 
     priorities = agreement.get("priority_items", [])

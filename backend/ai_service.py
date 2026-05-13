@@ -154,17 +154,11 @@ Return strict JSON only with these exact keys:
 {{
   "overview": "1-2 sentence warm intro framing this as a child-centered draft",
   "shared_goals": ["3-6 short statements of what we want our child to experience"],
-  "parenting_schedule": [
-    {{"area": "Exchanges|Weekdays|Weekends|Summer|Holidays|Other", "agreement": "one neutral sentence"}}
-  ],
   "communication": [
     {{"area": "Texting|Response times|Emergency|Other", "agreement": "one neutral sentence"}}
   ],
   "child_needs": [
     {{"area": "School|Therapy|Medical|Activities|Other", "agreement": "one neutral sentence"}}
-  ],
-  "financial": [
-    {{"area": "Expenses|Child support|Shared costs|Other", "agreement": "one neutral sentence"}}
   ],
   "household_rules": [
     {{"area": "Discipline|Screen time|Bedtime|Homework|Other", "agreement": "one neutral sentence"}}
@@ -177,6 +171,7 @@ Return strict JSON only with these exact keys:
 }}
 
 Important:
+- Do NOT include any parenting-schedule or financial clauses, even if such data was captured. Those topics will be handled separately.
 - If a section has NO captured input, return an empty array [] (do NOT invent content).
 - Spell every co-parent input faithfully; do not add legal-sounding language.
 - Keep each "agreement" clause under ~24 words.
