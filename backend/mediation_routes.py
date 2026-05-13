@@ -507,6 +507,14 @@ RESOURCES = [
         "kind": "article",
     },
     {
+        "id": "r8",
+        "category": "Parallel Parenting",
+        "title": "Parallel Parenting Explained (Video)",
+        "description": "A clear walkthrough of how parallel parenting works in high-conflict situations and why it can be safer for the child than traditional co-parenting.",
+        "kind": "video",
+        "url": "https://www.youtube.com/watch?v=b0IL8baFUmQ",
+    },
+    {
         "id": "r4",
         "category": "Communication",
         "title": "I-Statements for Co-Parents",
