@@ -130,7 +130,68 @@ Return strict JSON:
     return _extract_json(response)
 
 
-# ============ Co-Parenting Agreement Draft ============
+# ============ Things I Can Improve On (compiled from comm + readiness) ============
+IMPROVEMENT_SYSTEM = (
+    "You are a compassionate co-parenting coach. You take a parent's communication "
+    "self-assessment and their readiness-for-mediation self-ratings and turn them "
+    "into a short, actionable, warm action plan — written directly to the parent. "
+    "You never blame, never moralize, and always frame growth as a kindness to "
+    "themselves and their child. You give SPECIFIC, do-this-tomorrow advice — not "
+    "generic life-coach language. Output strict JSON only."
+)
+
+
+async def generate_improvement_plan(
+    comm_style: Dict[str, Any] | None,
+    readiness: Dict[str, Any] | None,
+    user_name: str,
+) -> Dict[str, Any]:
+    """Compile a 'Things I Can Improve On' plan from communication + readiness data."""
+    chat = _make_chat(IMPROVEMENT_SYSTEM)
+    prompt = f"""Generate a personalized "Things I Can Improve On" action plan for {user_name}.
+
+Use ONLY these two inputs:
+
+Communication self-assessment (3 questions, each tagged with one of:
+avoider, escalator, defensive, over_explainer, passive, balanced):
+{json.dumps(comm_style or {{}}, indent=2, default=str)}
+
+Readiness self-ratings (6 questions, 1=Not yet, 2=Sometimes, 3=Often, 4=Usually, 5=Yes consistently):
+- listen: can listen without interrupting
+- past: can discuss without raising past relationship pain
+- future: willing to focus on future solutions
+- separate: can separate parenting from personal hurt
+- calm: have strategies to stay calm under pressure
+- respect: can speak respectfully even when disagreeing
+
+Data:
+{json.dumps(readiness or {{}}, indent=2, default=str)}
+
+Return strict JSON only with these exact keys:
+{{
+  "headline": "1 warm sentence that names the 1-2 biggest growth areas without judgment",
+  "focus_areas": [
+    {{
+      "title": "short title of the growth area (e.g. 'Pausing before responding')",
+      "why_it_matters": "1 sentence on how this affects your child and your day-to-day",
+      "communication_tips": ["3 SPECIFIC tips for messages/conversations — actionable phrases or rituals"],
+      "quality_of_life_tips": ["2 SPECIFIC tips for self-care, regulation, or habits that support this growth area"]
+    }}
+  ],
+  "this_week": ["3 small, concrete actions to try in the next 7 days — each starts with a verb"],
+  "encouragement": "1-2 warm sentences acknowledging the courage of doing this work"
+}}
+
+Important:
+- Pick 2-4 focus_areas based on the WEAKEST patterns in their data — do not list everything.
+- A 'balanced' answer or a 4-5 rating is a STRENGTH, not a growth area — only flag genuine gaps.
+- Tips must reference real-life co-parenting scenarios (exchanges, texts, child's school events, holidays, etc).
+- Avoid clichés ('be the bigger person', 'communication is key', 'practice mindfulness').
+- If both inputs are mostly empty, return focus_areas=[] and put a gentle note in 'headline' that more reflection is needed.
+"""
+    response = await chat.send_message(UserMessage(text=prompt))
+    return _extract_json(response)
+
 AGREEMENT_SYSTEM = (
     "You are a co-parenting agreement drafting assistant. Take what each parent has "
     "captured during their preparation and translate it into a CALM, NEUTRAL, "

@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Mail,
   X,
+  Lightbulb,
 } from "lucide-react";
 
 /* ------------------------------ shared bits ------------------------------ */
@@ -453,6 +454,191 @@ function AgreementDraftTab() {
   );
 }
 
+
+/* ----------------------- Things I Can Improve On Tab ----------------------- */
+
+function ImprovementPlanTab() {
+  const [plan, setPlan] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const r = await api.get("/mediation/improvement-plans");
+      const list = r.data || [];
+      setHistory(list);
+      setPlan((prev) => prev || list[0] || null);
+    } catch (err) {
+      logError("Failed to load improvement plans:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  const generate = async () => {
+    setLoading(true);
+    try {
+      const r = await api.post("/mediation/improvement-plan");
+      setPlan(r.data);
+      toast.success("Your growth plan is ready.");
+      loadHistory();
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || "Could not generate plan.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!plan) {
+    return (
+      <EmptyState
+        icon={<Lightbulb size={20} />}
+        title="Build your personal growth plan"
+        body="Using your Communication and Readiness responses, we'll compile a short, specific action plan with tips for both your everyday quality of life and the quality of your communication with your co-parent."
+        cta={loading ? "Compiling…" : "Generate my plan"}
+        onCta={generate}
+        loading={loading}
+        testId="improve-generate-button"
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-6" data-testid="improve-card">
+      <div className="card-soft p-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div>
+            <div className="eyebrow mb-1">Things I can improve on</div>
+            <div className="font-serif text-2xl text-[#2A3631] leading-snug max-w-2xl">
+              {plan.headline}
+            </div>
+          </div>
+          <button
+            onClick={generate}
+            className="btn-soft inline-flex items-center gap-2"
+            disabled={loading}
+            data-testid="improve-regenerate-button"
+          >
+            <RefreshCw size={14} />
+            {loading ? "Working…" : "Regenerate"}
+          </button>
+        </div>
+
+        {(plan.focus_areas || []).length === 0 && (
+          <div className="rounded-2xl bg-[#F5F3E9] px-5 py-4 text-sm text-[#5C6B64]">
+            We didn't have enough Communication or Readiness data to compile growth
+            areas. Revisit those steps and try again.
+          </div>
+        )}
+
+        <div className="space-y-5">
+          {(plan.focus_areas || []).map((fa, i) => (
+            <FocusAreaCard key={`${fa.title}-${i}`} fa={fa} index={i} />
+          ))}
+        </div>
+
+        {plan.this_week?.length > 0 && (
+          <div className="mt-8 rounded-2xl bg-[#849D8E]/8 border border-[#849D8E]/25 p-6">
+            <div className="eyebrow mb-3">Try this week</div>
+            <ol className="space-y-2 list-none">
+              {plan.this_week.map((t, i) => (
+                <li key={`${t}-${i}`} className="flex gap-3 text-[#2A3631]">
+                  <span className="font-serif text-xl text-[#5C7A6A] w-6 shrink-0">
+                    {i + 1}.
+                  </span>
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
+        {plan.encouragement && (
+          <div className="mt-6 text-center px-2">
+            <p className="font-serif text-lg text-[#5C7A6A] italic leading-snug">
+              {plan.encouragement}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {history.length > 1 && (
+        <HistoryList
+          items={history}
+          activeId={plan.plan_id}
+          labelKey="headline"
+          idKey="plan_id"
+          onSelect={setPlan}
+        />
+      )}
+    </div>
+  );
+}
+
+function FocusAreaCard({ fa, index }) {
+  return (
+    <div
+      className="rounded-2xl bg-[#F5F3E9] p-5 sm:p-6"
+      data-testid={`improve-focus-${index}`}
+    >
+      <div className="flex items-start gap-3 mb-3">
+        <span className="font-serif text-xl text-[#849D8E] shrink-0 leading-none mt-0.5">
+          {index + 1}.
+        </span>
+        <div>
+          <div className="font-serif text-xl text-[#2A3631] leading-snug">
+            {fa.title}
+          </div>
+          {fa.why_it_matters && (
+            <p className="text-sm text-[#5C6B64] mt-1.5">{fa.why_it_matters}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4 sm:gap-5 mt-4">
+        <TipBlock
+          eyebrow="Communication"
+          accent="#849D8E"
+          tips={fa.communication_tips}
+        />
+        <TipBlock
+          eyebrow="Quality of life"
+          accent="#D6A374"
+          tips={fa.quality_of_life_tips}
+        />
+      </div>
+    </div>
+  );
+}
+
+function TipBlock({ eyebrow, accent, tips }) {
+  if (!tips?.length) return null;
+  return (
+    <div>
+      <div
+        className="text-[10px] uppercase tracking-[0.2em] mb-2"
+        style={{ color: accent }}
+      >
+        {eyebrow}
+      </div>
+      <ul className="space-y-1.5">
+        {tips.map((t, i) => (
+          <li key={`${t}-${i}`} className="flex gap-2 text-sm text-[#2A3631]">
+            <span
+              className="w-1.5 h-1.5 rounded-full mt-2 shrink-0"
+              style={{ background: accent }}
+            />
+            <span>{t}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+
 /* -------------------------- shared sub-components ------------------------ */
 
 function EmptyState({ icon, title, body, cta, onCta, loading, testId }) {
@@ -794,6 +980,7 @@ function DocCheckbox({ checked, disabled, onChange, label, hint, testId }) {
 const TABS = [
   { key: "summary", label: "Mediation Summary", icon: FileText },
   { key: "agreement", label: "Co-Parenting Agreement Draft", icon: Handshake },
+  { key: "improve", label: "Things I Can Improve On", icon: Lightbulb },
 ];
 
 export default function Summary() {
@@ -807,13 +994,14 @@ export default function Summary() {
           Your prepared documents.
         </h1>
         <p className="text-[#5C6B64] mb-8 max-w-2xl">
-          Two AI-synthesized views of your preparation: a focused summary for your
-          mediator, and a neutral draft agreement to start the conversation with your
-          co-parent.
+          Three AI-synthesized views of your preparation: a focused summary for your
+          mediator, a neutral draft agreement to start the conversation with your
+          co-parent, and a personal growth plan compiled from your communication and
+          readiness reflections.
         </p>
 
         <div
-          className="inline-flex items-center gap-1 p-1 rounded-full bg-[#F5F3E9] mb-8"
+          className="inline-flex flex-wrap items-center gap-1 p-1 rounded-full bg-[#F5F3E9] mb-8"
           role="tablist"
         >
           {TABS.map(({ key, label, icon: Icon }) => {
@@ -840,6 +1028,7 @@ export default function Summary() {
 
         {tab === "summary" && <MediationSummaryTab />}
         {tab === "agreement" && <AgreementDraftTab />}
+        {tab === "improve" && <ImprovementPlanTab />}
       </div>
     </AppShell>
   );

@@ -385,6 +385,49 @@ async def download_shared_pdf(
     )
 
 
+# ============ Things I Can Improve On ============
+@router.post("/improvement-plan")
+async def generate_improvement_plan_route(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    db = request.app.state.db
+    prep = await _load_prep(db, current.user_id)
+    comm = prep.get("comm_style")
+    readiness = prep.get("readiness")
+    if not comm and not readiness:
+        raise HTTPException(
+            status_code=400,
+            detail="Please complete the Communication and Readiness steps first.",
+        )
+    try:
+        plan = await ai_service.generate_improvement_plan(comm, readiness, current.name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI plan failed: {e}")
+
+    plan_id = f"imp_{uuid.uuid4().hex[:12]}"
+    doc = {
+        **plan,
+        "plan_id": plan_id,
+        "user_id": current.user_id,
+        "generated_at": _now(),
+    }
+    await db.improvement_plans.insert_one(doc.copy())
+    doc.pop("_id", None)
+    return doc
+
+
+@router.get("/improvement-plans")
+async def list_improvement_plans(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    cursor = request.app.state.db.improvement_plans.find(
+        {"user_id": current.user_id}, {"_id": 0}
+    ).sort("generated_at", -1).limit(20)
+    return await cursor.to_list(20)
+
+
 # ============ Email to mediator ============
 class MediatorEmailRequest(BaseModel):
     mediator_email: EmailStr
