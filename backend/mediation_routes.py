@@ -511,9 +511,10 @@ RESOURCES = [
     {
         "id": "r4",
         "category": "Communication",
-        "title": "I-Statements for Co-Parents",
-        "description": "Express needs without triggering defensiveness.",
-        "kind": "article",
+        "title": "I-Statements for Co-Parents (Video)",
+        "description": "A short walkthrough on using I-statements to express needs without triggering defensiveness — a key skill for keeping co-parenting conversations productive.",
+        "kind": "video",
+        "url": "https://www.youtube.com/watch?v=gG25Kq_3gmg",
     },
     {
         "id": "r5",
