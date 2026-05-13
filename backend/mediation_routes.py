@@ -527,6 +527,14 @@ RESOURCES = [
         "description": "Practical scripts and rituals that anchor your child during transitions.",
         "kind": "video",
     },
+    {
+        "id": "r7",
+        "category": "Communication",
+        "title": "BIFF Response Method — Bill Eddy",
+        "description": "Watch Bill Eddy walk through the BIFF method (Brief, Informative, Friendly, Firm) for replying to high-conflict messages without escalating.",
+        "kind": "video",
+        "url": "https://www.youtube.com/watch?v=ggXhQLihi54",
+    },
 ]
 
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
-import { BookOpen, PlayCircle, Facebook, ExternalLink } from "lucide-react";
+import { BookOpen, PlayCircle, Facebook, ExternalLink, Play } from "lucide-react";
 import { logError } from "../lib/logger";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
@@ -96,10 +96,24 @@ export default function Resources() {
           <div className="lg:col-span-2 grid sm:grid-cols-2 gap-5 self-start">
             {shown.map((r) => {
               const Icon = r.kind === "video" ? PlayCircle : BookOpen;
+              const hasLink = !!r.url;
+              const CardTag = hasLink ? "a" : "div";
+              const cardProps = hasLink
+                ? {
+                    href: r.url,
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                  }
+                : {};
               return (
-                <div
+                <CardTag
                   key={r.id}
-                  className="card-soft p-6 hover:-translate-y-0.5 transition-transform"
+                  {...cardProps}
+                  className={`card-soft p-6 transition-transform block ${
+                    hasLink
+                      ? "hover:-translate-y-0.5 hover:shadow-md cursor-pointer no-underline"
+                      : "hover:-translate-y-0.5"
+                  }`}
                   data-testid={`resource-card-${r.id}`}
                 >
                   <div className="flex items-center gap-2 mb-4">
@@ -109,10 +123,16 @@ export default function Resources() {
                     <div className="text-[10px] uppercase tracking-[0.2em] text-[#8A9A92]">
                       {r.category}
                     </div>
+                    {hasLink && (
+                      <span className="ml-auto inline-flex items-center gap-1 text-xs text-[#849D8E]">
+                        {r.kind === "video" ? <Play size={12} /> : <ExternalLink size={12} />}
+                        {r.kind === "video" ? "Watch" : "Open"}
+                      </span>
+                    )}
                   </div>
                   <div className="font-serif text-xl text-[#2A3631] mb-1">{r.title}</div>
                   <p className="text-sm text-[#5C6B64]">{r.description}</p>
-                </div>
+                </CardTag>
               );
             })}
           </div>
