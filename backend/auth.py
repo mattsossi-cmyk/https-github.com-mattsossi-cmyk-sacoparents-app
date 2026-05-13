@@ -110,16 +110,22 @@ async def get_current_user(
     """Resolve user from session_token cookie, JWT cookie, or Bearer header."""
     db = request.app.state.db
     bearer_token = creds.credentials if creds else None
+    session_cookie = request.cookies.get("session_token")
+    jwt_cookie = request.cookies.get(JWT_COOKIE_NAME)
 
-    # Try each credential source in order of preference.
-    resolvers = (
-        _user_from_session_token(db, request.cookies.get("session_token")),
-        _user_from_jwt_token(db, request.cookies.get(JWT_COOKIE_NAME)),
-        _user_from_jwt_token(db, bearer_token),
-        _user_from_session_token(db, bearer_token),
+    # (resolver, token) pairs — evaluated lazily so unused coroutines are
+    # never created. Previously we built all four coroutines eagerly and the
+    # unused ones leaked as "coroutine was never awaited" RuntimeWarnings.
+    candidates = (
+        (_user_from_session_token, session_cookie),
+        (_user_from_jwt_token, jwt_cookie),
+        (_user_from_jwt_token, bearer_token),
+        (_user_from_session_token, bearer_token),
     )
-    for awaitable in resolvers:
-        user = await awaitable
+    for resolver, token in candidates:
+        if not token:
+            continue
+        user = await resolver(db, token)
         if user:
             return user
 
