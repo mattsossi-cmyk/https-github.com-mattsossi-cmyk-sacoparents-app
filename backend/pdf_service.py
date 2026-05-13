@@ -260,16 +260,9 @@ def _agreement_section(pdf: AgreementPDF, title: str, items: list) -> None:
     pdf.clause_list(items)
 
 
-def build_agreement_pdf(
-    user_name: str,
-    agreement: Dict[str, Any],
-    mediation_date: str | None = None,
-) -> bytes:
-    pdf = AgreementPDF(format="A4")
-    pdf.set_auto_page_break(auto=True, margin=20)
-    pdf.set_margins(15, 30, 15)
-    pdf.add_page()
-
+def _agreement_meta(
+    pdf: AgreementPDF, user_name: str, mediation_date: str | None
+) -> None:
     pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(*TEXT_MID)
     pdf.cell(0, 6, f"Drafted by: {user_name}", ln=1)
@@ -278,45 +271,35 @@ def build_agreement_pdf(
         pdf.cell(0, 6, f"Mediation date: {mediation_date}", ln=1)
     pdf.set_text_color(*TEXT_DARK)
 
-    if agreement.get("overview"):
-        pdf.ln(3)
-        pdf.set_font("Helvetica", "I", 11)
-        pdf.set_text_color(*TEXT_MID)
-        pdf.multi_cell(0, 6, agreement["overview"])
-        pdf.set_text_color(*TEXT_DARK)
 
-    if agreement.get("shared_goals"):
-        pdf.section_title("Shared Goals for Our Child")
-        pdf.bullet_list(agreement["shared_goals"])
+def _agreement_overview(pdf: AgreementPDF, overview: str | None) -> None:
+    if not overview:
+        return
+    pdf.ln(3)
+    pdf.set_font("Helvetica", "I", 11)
+    pdf.set_text_color(*TEXT_MID)
+    pdf.multi_cell(0, 6, overview)
+    pdf.set_text_color(*TEXT_DARK)
 
-    _agreement_section(pdf, "Communication", agreement.get("communication", []))
-    _agreement_section(pdf, "Child Needs", agreement.get("child_needs", []))
-    _agreement_section(pdf, "Household Rules", agreement.get("household_rules", []))
 
-    priorities = agreement.get("priority_items", [])
-    if priorities:
-        pdf.section_title("Priority Topics to Discuss")
+def _agreement_priority_items(pdf: AgreementPDF, priorities: list) -> None:
+    if not priorities:
+        return
+    pdf.section_title("Priority Topics to Discuss")
+    pdf.set_font("Helvetica", "", 11)
+    for it in priorities:
+        rank = it.get("rank", "?")
+        topic = it.get("topic", "")
+        cat = it.get("category", "")
+        pdf.set_x(18)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(10, 6, f"{rank}.")
         pdf.set_font("Helvetica", "", 11)
-        for it in priorities:
-            rank = it.get("rank", "?")
-            topic = it.get("topic", "")
-            cat = it.get("category", "")
-            pdf.set_x(18)
-            pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(10, 6, f"{rank}.")
-            pdf.set_font("Helvetica", "", 11)
-            pdf.multi_cell(0, 6, f"{topic}  [{cat}]")
-        pdf.ln(2)
+        pdf.multi_cell(0, 6, f"{topic}  [{cat}]")
+    pdf.ln(2)
 
-    if agreement.get("open_for_discussion"):
-        pdf.section_title("Open for Discussion")
-        pdf.bullet_list(agreement["open_for_discussion"])
 
-    if agreement.get("closing_note"):
-        pdf.section_title("A Note from the Draft")
-        pdf.set_font("Helvetica", "I", 11)
-        pdf.multi_cell(0, 6, agreement["closing_note"])
-
+def _agreement_signature_lines(pdf: AgreementPDF) -> None:
     pdf.ln(8)
     pdf.set_draw_color(*TEXT_MID)
     pdf.line(20, pdf.get_y(), 90, pdf.get_y())
@@ -327,6 +310,40 @@ def build_agreement_pdf(
     pdf.cell(70, 5, "Parent A signature / date")
     pdf.set_xy(120, pdf.get_y())
     pdf.cell(70, 5, "Parent B signature / date")
+
+
+def build_agreement_pdf(
+    user_name: str,
+    agreement: Dict[str, Any],
+    mediation_date: str | None = None,
+) -> bytes:
+    pdf = AgreementPDF(format="A4")
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.set_margins(15, 30, 15)
+    pdf.add_page()
+
+    _agreement_meta(pdf, user_name, mediation_date)
+    _agreement_overview(pdf, agreement.get("overview"))
+
+    if agreement.get("shared_goals"):
+        pdf.section_title("Shared Goals for Our Child")
+        pdf.bullet_list(agreement["shared_goals"])
+
+    _agreement_section(pdf, "Communication", agreement.get("communication", []))
+    _agreement_section(pdf, "Child Needs", agreement.get("child_needs", []))
+    _agreement_section(pdf, "Household Rules", agreement.get("household_rules", []))
+    _agreement_priority_items(pdf, agreement.get("priority_items", []))
+
+    if agreement.get("open_for_discussion"):
+        pdf.section_title("Open for Discussion")
+        pdf.bullet_list(agreement["open_for_discussion"])
+
+    if agreement.get("closing_note"):
+        pdf.section_title("A Note from the Draft")
+        pdf.set_font("Helvetica", "I", 11)
+        pdf.multi_cell(0, 6, agreement["closing_note"])
+
+    _agreement_signature_lines(pdf)
 
     out = pdf.output(dest="S")
     if isinstance(out, str):
