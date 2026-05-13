@@ -3,7 +3,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -22,6 +22,8 @@ from models import (
 )
 import ai_service
 import pdf_service
+import email_service
+from pydantic import BaseModel, EmailStr, Field
 
 
 router = APIRouter(prefix="/mediation", tags=["mediation"])
@@ -381,6 +383,104 @@ async def download_shared_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )
+
+
+# ============ Email to mediator ============
+class MediatorEmailRequest(BaseModel):
+    mediator_email: EmailStr
+    mediator_name: Optional[str] = Field(default=None, max_length=120)
+    summary_id: Optional[str] = None
+    agreement_id: Optional[str] = None
+
+
+@router.get("/email/status")
+async def email_status(current: UserPublic = Depends(get_current_user)):
+    return {"configured": email_service.is_configured()}
+
+
+@router.post("/email-mediator")
+async def email_mediator(
+    body: MediatorEmailRequest,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    db = request.app.state.db
+    if not body.summary_id and not body.agreement_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Please choose at least one document to attach.",
+        )
+
+    attachments: list = []
+    doc_labels: list = []
+
+    if body.summary_id:
+        summary = await db.summaries.find_one(
+            {"summary_id": body.summary_id, "user_id": current.user_id},
+            {"_id": 0},
+        )
+        if not summary:
+            raise HTTPException(status_code=404, detail="Summary not found")
+        prep = await _load_prep(db, current.user_id)
+        pdf_bytes = pdf_service.build_summary_pdf(
+            user_name=current.name,
+            summary=summary,
+            child_goals=prep.get("child_goals"),
+            mediation_date=current.mediation_date,
+        )
+        attachments.append(
+            (f"mediation_summary_{body.summary_id}.pdf", pdf_bytes)
+        )
+        doc_labels.append("Mediation Summary")
+
+    if body.agreement_id:
+        agreement = await db.agreements.find_one(
+            {"agreement_id": body.agreement_id, "user_id": current.user_id},
+            {"_id": 0},
+        )
+        if not agreement:
+            raise HTTPException(status_code=404, detail="Agreement draft not found")
+        pdf_bytes = pdf_service.build_agreement_pdf(
+            user_name=current.name,
+            agreement=agreement,
+            mediation_date=current.mediation_date,
+        )
+        attachments.append(
+            (f"coparenting_agreement_{body.agreement_id}.pdf", pdf_bytes)
+        )
+        doc_labels.append("Co-Parenting Agreement Draft")
+
+    try:
+        email_service.send_mediator_email(
+            to_email=body.mediator_email,
+            mediator_name=body.mediator_name,
+            user_name=current.name or "",
+            user_email=current.email,
+            attachments=attachments,
+            doc_labels=doc_labels,
+        )
+    except email_service.EmailNotConfigured as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except email_service.EmailSendError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    # Log the send (best-effort, not fatal).
+    try:
+        await db.mediator_emails.insert_one(
+            {
+                "user_id": current.user_id,
+                "mediator_email": body.mediator_email,
+                "mediator_name": body.mediator_name,
+                "summary_id": body.summary_id,
+                "agreement_id": body.agreement_id,
+                "doc_labels": doc_labels,
+                "sent_at": _now(),
+            }
+        )
+    except Exception:
+        pass
+
+    return {"ok": True, "sent_to": body.mediator_email, "documents": doc_labels}
 
 
 # ============ Resources (static seed) ============

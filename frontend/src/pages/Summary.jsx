@@ -10,6 +10,8 @@ import {
   FileText,
   Handshake,
   MessageSquare,
+  Mail,
+  X,
 } from "lucide-react";
 
 /* ------------------------------ shared bits ------------------------------ */
@@ -107,6 +109,8 @@ function MediationSummaryTab() {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [history, setHistory] = useState([]);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [latestAgreementId, setLatestAgreementId] = useState(null);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -122,6 +126,14 @@ function MediationSummaryTab() {
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
+
+  // Surface the latest agreement so the email dialog can optionally attach it.
+  useEffect(() => {
+    api
+      .get("/mediation/agreements")
+      .then((r) => setLatestAgreementId((r.data || [])[0]?.agreement_id || null))
+      .catch(() => {});
+  }, []);
 
   const generate = async () => {
     setLoading(true);
@@ -206,11 +218,13 @@ function MediationSummaryTab() {
           onRegenerate={generate}
           onDownload={download}
           onShare={shareText}
+          onEmail={() => setEmailOpen(true)}
           loading={loading}
           downloading={downloading}
           regenerateTestId="summary-regenerate-button"
           downloadTestId="summary-download-button"
           shareTestId="summary-share-button"
+          emailTestId="summary-email-button"
         />
 
         <Section title="Child-centered goals">
@@ -246,6 +260,13 @@ function MediationSummaryTab() {
           onSelect={setSummary}
         />
       )}
+      <EmailMediatorDialog
+        open={emailOpen}
+        onClose={() => setEmailOpen(false)}
+        summaryId={summary?.summary_id}
+        agreementId={latestAgreementId}
+        defaultDoc="summary"
+      />
     </div>
   );
 }
@@ -257,6 +278,8 @@ function AgreementDraftTab() {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [history, setHistory] = useState([]);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [latestSummaryId, setLatestSummaryId] = useState(null);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -272,6 +295,14 @@ function AgreementDraftTab() {
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
+
+  // Surface the latest summary so the email dialog can optionally attach it.
+  useEffect(() => {
+    api
+      .get("/mediation/summaries")
+      .then((r) => setLatestSummaryId((r.data || [])[0]?.summary_id || null))
+      .catch(() => {});
+  }, []);
 
   const generate = async () => {
     setLoading(true);
@@ -349,11 +380,13 @@ function AgreementDraftTab() {
           onRegenerate={generate}
           onDownload={download}
           onShare={shareText}
+          onEmail={() => setEmailOpen(true)}
           loading={loading}
           downloading={downloading}
           regenerateTestId="agreement-regenerate-button"
           downloadTestId="agreement-download-button"
           shareTestId="agreement-share-button"
+          emailTestId="agreement-email-button"
         />
 
         {agreement.overview && (
@@ -407,6 +440,13 @@ function AgreementDraftTab() {
           onSelect={setAgreement}
         />
       )}
+      <EmailMediatorDialog
+        open={emailOpen}
+        onClose={() => setEmailOpen(false)}
+        summaryId={latestSummaryId}
+        agreementId={agreement?.agreement_id}
+        defaultDoc="agreement"
+      />
     </div>
   );
 }
@@ -440,11 +480,13 @@ function HeaderRow({
   onRegenerate,
   onDownload,
   onShare,
+  onEmail,
   loading,
   downloading,
   regenerateTestId,
   downloadTestId,
   shareTestId,
+  emailTestId,
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -472,6 +514,18 @@ function HeaderRow({
           >
             <MessageSquare size={14} />
             Share via text
+          </button>
+        )}
+        {onEmail && (
+          <button
+            onClick={onEmail}
+            className="btn-soft inline-flex items-center gap-2"
+            disabled={loading || downloading}
+            data-testid={emailTestId}
+            title="Email this document directly to your mediator"
+          >
+            <Mail size={14} />
+            Email to mediator
           </button>
         )}
         <button
@@ -517,6 +571,221 @@ function HistoryList({ items, activeId, labelKey, idKey, onSelect }) {
     </div>
   );
 }
+
+/* ------------------------- Email to Mediator dialog ----------------------- */
+
+function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc }) {
+  const [mediatorEmail, setMediatorEmail] = useState("");
+  const [mediatorName, setMediatorName] = useState("");
+  const [includeSummary, setIncludeSummary] = useState(defaultDoc === "summary" && !!summaryId);
+  const [includeAgreement, setIncludeAgreement] = useState(defaultDoc === "agreement" && !!agreementId);
+  const [sending, setSending] = useState(false);
+  const [configured, setConfigured] = useState(true);
+
+  useEffect(() => {
+    if (open) {
+      setMediatorEmail("");
+      setMediatorName("");
+      setIncludeSummary(defaultDoc === "summary" && !!summaryId);
+      setIncludeAgreement(defaultDoc === "agreement" && !!agreementId);
+      api
+        .get("/mediation/email/status")
+        .then((r) => setConfigured(!!r.data?.configured))
+        .catch(() => setConfigured(true));
+    }
+  }, [open, defaultDoc, summaryId, agreementId]);
+
+  if (!open) return null;
+
+  const canSend =
+    !sending &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mediatorEmail.trim()) &&
+    (includeSummary || includeAgreement);
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSend) return;
+    setSending(true);
+    try {
+      const payload = { mediator_email: mediatorEmail.trim() };
+      if (mediatorName.trim()) payload.mediator_name = mediatorName.trim();
+      if (includeSummary && summaryId) payload.summary_id = summaryId;
+      if (includeAgreement && agreementId) payload.agreement_id = agreementId;
+      const r = await api.post("/mediation/email-mediator", payload);
+      toast.success(`Sent to ${r.data.sent_to}.`);
+      onClose();
+    } catch (err) {
+      logError("Email to mediator failed:", err);
+      const detail = err?.response?.data?.detail;
+      toast.error(detail || "Could not send email. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2A3631]/40 backdrop-blur-sm"
+      onClick={onClose}
+      data-testid="email-mediator-dialog"
+    >
+      <form
+        onSubmit={onSubmit}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#FDFAF3] rounded-2xl shadow-xl w-full max-w-md border border-[#E8ECE9] overflow-hidden"
+      >
+        <div className="px-6 pt-6 pb-2 flex items-start justify-between gap-4">
+          <div>
+            <div className="w-10 h-10 rounded-full bg-[#849D8E]/15 text-[#5C7A6A] grid place-items-center mb-3">
+              <Mail size={18} />
+            </div>
+            <div className="font-serif text-2xl text-[#2A3631] leading-tight">
+              Email to your mediator
+            </div>
+            <p className="text-sm text-[#5C6B64] mt-1">
+              We'll attach your selected PDF(s) with a short cover note. Replies
+              go straight to your inbox.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-[#8A9A92] hover:text-[#2A3631] -mr-1 -mt-1 p-1"
+            aria-label="Close"
+            data-testid="email-mediator-close"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="px-6 py-4 space-y-4">
+          {!configured && (
+            <div
+              className="rounded-xl bg-[#C28771]/10 border border-[#C28771]/25 px-4 py-3 text-sm text-[#5C6B64]"
+              data-testid="email-mediator-not-configured"
+            >
+              Email sending isn't fully set up on this account yet. You can still
+              fill in the form — but sending will fail until the administrator
+              completes the SMTP setup in <code className="text-xs">backend/.env</code>.
+            </div>
+          )}
+          <div>
+            <label
+              htmlFor="mediator-email"
+              className="block text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-1.5"
+            >
+              Mediator's email
+            </label>
+            <input
+              id="mediator-email"
+              type="email"
+              required
+              autoFocus
+              className="input-soft w-full"
+              placeholder="mediator@example.com"
+              value={mediatorEmail}
+              onChange={(e) => setMediatorEmail(e.target.value)}
+              data-testid="email-mediator-email-input"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="mediator-name"
+              className="block text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-1.5"
+            >
+              Mediator's name (optional)
+            </label>
+            <input
+              id="mediator-name"
+              type="text"
+              className="input-soft w-full"
+              placeholder="e.g., Maria Lopez"
+              value={mediatorName}
+              onChange={(e) => setMediatorName(e.target.value)}
+              data-testid="email-mediator-name-input"
+            />
+          </div>
+
+          <div>
+            <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-2">
+              Attach
+            </div>
+            <div className="space-y-2">
+              <DocCheckbox
+                checked={includeSummary}
+                disabled={!summaryId}
+                onChange={setIncludeSummary}
+                label="Mediation Summary"
+                hint={!summaryId ? "Generate one first to include it" : "PDF — your prep at a glance"}
+                testId="email-mediator-check-summary"
+              />
+              <DocCheckbox
+                checked={includeAgreement}
+                disabled={!agreementId}
+                onChange={setIncludeAgreement}
+                label="Co-Parenting Agreement Draft"
+                hint={!agreementId ? "Generate one first to include it" : "PDF — neutral starter agreement"}
+                testId="email-mediator-check-agreement"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 bg-[#F5F3E9] flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-soft"
+            disabled={sending}
+            data-testid="email-mediator-cancel"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!canSend}
+            className="btn-sage inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="email-mediator-send"
+          >
+            <Mail size={14} />
+            {sending ? "Sending…" : "Send email"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function DocCheckbox({ checked, disabled, onChange, label, hint, testId }) {
+  return (
+    <label
+      className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
+        disabled
+          ? "border-[#E8ECE9] bg-[#F5F3E9]/40 cursor-not-allowed opacity-60"
+          : checked
+          ? "border-[#849D8E]/40 bg-[#849D8E]/8 cursor-pointer"
+          : "border-[#E8ECE9] hover:bg-[#F5F3E9]/60 cursor-pointer"
+      }`}
+    >
+      <input
+        type="checkbox"
+        className="mt-1 accent-[#849D8E]"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        data-testid={testId}
+      />
+      <span>
+        <span className="block text-[#2A3631] text-sm font-medium">{label}</span>
+        {hint && (
+          <span className="block text-xs text-[#8A9A92] mt-0.5">{hint}</span>
+        )}
+      </span>
+    </label>
+  );
+}
+
 
 /* --------------------------------- Page --------------------------------- */
 
