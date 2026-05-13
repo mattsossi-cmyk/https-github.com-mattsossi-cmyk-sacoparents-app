@@ -6,66 +6,47 @@ import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import { GripVertical, Plus, X } from "lucide-react";
-import { ISSUE_TYPES } from "./IssuesConcerns";
-import { GOAL_OPTIONS } from "./ChildGoals";
 
 const BUCKETS = [
-  { key: "urgent", label: "Most urgent", color: "#C28771", tint: "#C28771/12" },
-  { key: "difficult", label: "Most emotionally difficult", color: "#849D8E", tint: "#849D8E/12" },
-  { key: "easy", label: "Easier agreements", color: "#9CB4C4", tint: "#9CB4C4/12" },
-  { key: "compromise", label: "Willing to compromise", color: "#D6A374", tint: "#D6A374/12" },
+  { key: "urgent", label: "Most urgent", color: "#C28771" },
+  { key: "difficult", label: "Most emotionally difficult", color: "#849D8E" },
+  { key: "easy", label: "Easier agreements", color: "#9CB4C4" },
+  { key: "compromise", label: "Willing to compromise", color: "#D6A374" },
 ];
 
+// The fixed list of legal / custody topics every parent ranks for mediation.
+// Order here = display order; first 10 are predefined topics, 11th is "Other".
+const PRIORITY_TOPICS = [
+  { id: "custody", label: "Custody" },
+  { id: "possession_schedule", label: "Possession Schedule" },
+  { id: "special_education", label: "Special Education" },
+  { id: "mental_health", label: "Mental Health" },
+  { id: "medication", label: "Medication" },
+  { id: "geographic_restriction", label: "Geographic Restriction" },
+  { id: "right_of_first_refusal", label: "Right of First Refusal" },
+  { id: "morality_clause", label: "Morality Clause" },
+  { id: "telephonic_access", label: "Telephonic Access" },
+  { id: "airport_transportation", label: "Airport Transportation" },
+  { id: "other", label: "Other" },
+];
+
+const PRIORITY_TOPIC_IDS = new Set(PRIORITY_TOPICS.map((t) => t.id));
+
 const KIND_META = {
-  goal:    { label: "Goal",    bg: "bg-[#849D8E]/10", text: "text-[#5C7A6A]", chipBg: "bg-[#849D8E]/20" },
-  concern: { label: "Concern", bg: "bg-[#C28771]/8",  text: "text-[#A26852]", chipBg: "bg-[#C28771]/15" },
-  other:   { label: "Other",   bg: "bg-[#9CB4C4]/10", text: "text-[#5C6B64]", chipBg: "bg-[#9CB4C4]/20" },
-  custom:  { label: "Added",   bg: "bg-[#D6A374]/10", text: "text-[#8A6A40]", chipBg: "bg-[#D6A374]/20" },
+  topic: {
+    label: "Topic",
+    text: "text-[#5C7A6A]",
+    chipBg: "bg-[#849D8E]/20",
+  },
+  custom: {
+    label: "Added",
+    text: "text-[#8A6A40]",
+    chipBg: "bg-[#D6A374]/20",
+  },
 };
 
-const ISSUE_LABEL_BY_ID = Object.fromEntries(
-  ISSUE_TYPES.map((it) => [it.id, it.label])
-);
-const GOAL_LABEL_BY_ID = Object.fromEntries(
-  GOAL_OPTIONS.map((g) => [g.id, g.label])
-);
-
-function deriveSuggestionsFromIssues(issues) {
-  const suggestions = [];
-  if (!issues) return suggestions;
-  if (issues.items && typeof issues.items === "object") {
-    Object.entries(issues.items).forEach(([id, note]) => {
-      if (note && String(note).trim().length > 0) {
-        suggestions.push({
-          id: `c_${id}`,
-          label: ISSUE_LABEL_BY_ID[id] || id,
-          kind: "concern",
-        });
-      }
-    });
-  }
-  if (issues.other && String(issues.other).trim().length > 0) {
-    suggestions.push({ id: "c_other", label: "Other concerns (your notes)", kind: "other" });
-  }
-  return suggestions;
-}
-
-function deriveSuggestionsFromGoals(childGoals) {
-  if (!childGoals?.selected_goals) return [];
-  return childGoals.selected_goals.map((id) => ({
-    id: `g_${id}`,
-    label: GOAL_LABEL_BY_ID[id] || id,
-    kind: "goal",
-  }));
-}
-
-function inferKind(item) {
-  if (item.kind) return item.kind;
-  if (typeof item.id === "string") {
-    if (item.id.startsWith("g_")) return "goal";
-    if (item.id.startsWith("c_")) return "concern";
-  }
-  return "custom";
+function isPredefined(item) {
+  return PRIORITY_TOPIC_IDS.has(item.id);
 }
 
 export default function PriorityRanking() {
@@ -82,29 +63,20 @@ export default function PriorityRanking() {
       .then((r) => {
         setCompleted(r.data?.completed || {});
 
-        // Build the canonical list of "things the user picked" from goals + issues.
-        const goalSeeds = deriveSuggestionsFromGoals(r.data?.child_goals);
-        const issueSeeds = deriveSuggestionsFromIssues(r.data?.issues);
-        const fresh = [...goalSeeds, ...issueSeeds];
-
-        // Merge with any previously-saved priority items so the user keeps their
-        // bucket assignments — but also picks up newly-added goals/concerns.
         const existing = r.data?.priority?.items || [];
         const existingById = new Map(existing.map((x) => [x.id, x]));
 
-        const merged = [
-          // 1) seeds (in canonical goal-then-issue order), enriched with saved bucket if present
-          ...fresh.map((s) => ({
-            ...s,
-            bucket: existingById.get(s.id)?.bucket || "easy",
-          })),
-          // 2) any custom items the user added directly on the priority page
-          ...existing.filter(
-            (e) => !fresh.some((s) => s.id === e.id),
-          ),
-        ];
+        // 1) Seed the 11 predefined topics — keeping any previously-saved bucket.
+        const seeded = PRIORITY_TOPICS.map((t) => ({
+          id: t.id,
+          label: t.label,
+          bucket: existingById.get(t.id)?.bucket || "easy",
+        }));
 
-        setItems(merged);
+        // 2) Append any custom items the user added in earlier sessions.
+        const customCarriedOver = existing.filter((e) => !PRIORITY_TOPIC_IDS.has(e.id));
+
+        setItems([...seeded, ...customCarriedOver]);
       })
       .catch((err) => logError("Failed to load prep:", err));
   }, []);
@@ -148,7 +120,7 @@ export default function PriorityRanking() {
         currentKey="priority"
         eyebrow="Step 3 of 5"
         title="Rank what matters most."
-        description="Sort each concern into a bucket. This becomes the agenda for your mediation session."
+        description="Sort each of the legal and custody topics below into a bucket. This becomes the agenda for your mediation session."
         completed={completed}
         saving={saving}
         onNext={onNext}
@@ -157,7 +129,7 @@ export default function PriorityRanking() {
           <div className="flex gap-2">
             <input
               className="input-soft"
-              placeholder="Add a concern not listed…"
+              placeholder="Add a topic not listed…"
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addItem())}
@@ -192,11 +164,11 @@ export default function PriorityRanking() {
                   <div className="space-y-2">
                     {bucketItems.length === 0 && (
                       <div className="text-xs italic text-[#8A9A92]">
-                        Drag items here, or use the buttons below.
+                        Drag topics into this bucket.
                       </div>
                     )}
                     {bucketItems.map((it) => {
-                      const meta = KIND_META[inferKind(it)] || KIND_META.custom;
+                      const meta = isPredefined(it) ? KIND_META.topic : KIND_META.custom;
                       return (
                         <div
                           key={it.id}
@@ -213,14 +185,17 @@ export default function PriorityRanking() {
                             {meta.label}
                           </span>
                           <span className="text-sm text-[#2A3631] flex-1">{it.label}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeItem(it.id)}
-                            className="text-[#8A9A92] hover:text-[#C28771]"
-                            aria-label="Remove"
-                          >
-                            <X size={14} />
-                          </button>
+                          {!isPredefined(it) && (
+                            <button
+                              type="button"
+                              onClick={() => removeItem(it.id)}
+                              className="text-[#8A9A92] hover:text-[#C28771]"
+                              aria-label="Remove"
+                              data-testid={`priority-item-${it.id}-remove`}
+                            >
+                              <X size={14} />
+                            </button>
+                          )}
                         </div>
                       );
                     })}
@@ -230,11 +205,10 @@ export default function PriorityRanking() {
             })}
           </div>
 
-          {items.length > 0 && (
-            <div className="text-xs text-[#8A9A92] italic">
-              Tip: drag-and-drop to reorganize, or use the X to remove an item.
-            </div>
-          )}
+          <div className="text-xs text-[#8A9A92] italic">
+            Tip: drag-and-drop to reorganize. The 11 predefined topics always stay
+            on this list — only added items can be removed.
+          </div>
         </div>
       </WizardLayout>
     </AppShell>
