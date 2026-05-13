@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   ExternalLink,
   Home,
+  Shield,
 } from "lucide-react";
 
 const NATIONAL_RESOURCES = [
@@ -216,6 +217,9 @@ export default function Safety() {
           ))}
         </div>
 
+        {/* Parallel Parenting provision */}
+        <ParallelParentingSection />
+
         {/* Safety planning tips */}
         <SectionHeading eyebrow="A gentle reminder" title="Privacy on this device" />
         <div className="card-soft p-7 mb-12">
@@ -310,3 +314,395 @@ function ResourceCard({ r }) {
     </div>
   );
 }
+
+function ParallelParentingSection() {
+  return (
+    <section className="mb-12" data-testid="safety-parallel-parenting-section">
+      <SectionHeading
+        eyebrow="When co-parenting isn't safe"
+        title="Parallel parenting: a safer framework"
+      />
+
+      {/* Lead card */}
+      <div className="card-soft p-7 sm:p-8 mb-5 relative overflow-hidden">
+        <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-[#849D8E]/10" />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-[#849D8E]/15 text-[#5C7A6A] grid place-items-center">
+              <Shield size={18} />
+            </div>
+            <div className="eyebrow">A different framework</div>
+          </div>
+          <p className="text-[#2A3631] leading-relaxed mb-4">
+            When there has been domestic violence, parenting arrangements require a
+            very different framework than traditional co-parenting models. In these
+            situations, the priority is not improving the parental relationship —
+            it is protecting the physical and psychological safety of the child and
+            the survivor parent.
+          </p>
+          <p className="text-[#5C6B64] leading-relaxed">
+            <strong className="text-[#2A3631]">Parallel parenting</strong> is often
+            considered the safer alternative because it minimizes direct interaction
+            between parents while still allowing the child to maintain structured
+            contact with both parents when appropriate.
+          </p>
+        </div>
+      </div>
+
+      {/* Why traditional co-parenting fails */}
+      <PPCard title="Why traditional co-parenting often fails in domestic violence cases">
+        <p className="text-[#5C6B64] mb-3">Traditional co-parenting assumes:</p>
+        <PPList items={[
+          "Mutual respect",
+          "Ability to communicate safely",
+          "Shared decision-making",
+          "Emotional regulation",
+          "Basic trust",
+        ]} />
+        <p className="text-[#5C6B64] mt-5 mb-3">
+          Domestic violence undermines all of these assumptions. Abuse dynamics often
+          continue after separation through:
+        </p>
+        <PPList items={[
+          "Harassing texts or calls",
+          "Manipulation through the children",
+          "Financial control",
+          "False allegations",
+          "Intimidation during exchanges",
+          "Monitoring the survivor parent's activities",
+          "Undermining parenting authority",
+        ]} />
+        <p className="text-[#5C6B64] mt-5 italic">
+          In these cases, requiring frequent communication can unintentionally
+          create continued access for coercive control.
+        </p>
+      </PPCard>
+
+      {/* What parallel parenting means */}
+      <PPCard title="What parallel parenting means">
+        <p className="text-[#5C6B64] mb-4">
+          Parallel parenting is a high-boundary parenting model designed to reduce
+          conflict and limit opportunities for abuse. The parents disengage from each
+          other as much as possible while maintaining clear parenting structures.
+        </p>
+        <div className="rounded-2xl bg-[#F5F3E9] p-5 mb-5">
+          <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-2">
+            The focus shifts from
+          </div>
+          <div className="font-serif text-lg text-[#2A3631] italic mb-3">
+            "How can parents work together?"
+          </div>
+          <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-2">to</div>
+          <div className="font-serif text-lg text-[#5C7A6A] italic">
+            "How can the child remain safe and stable with minimal parental interaction?"
+          </div>
+        </div>
+        <p className="text-[#5C6B64] mb-3 font-medium text-[#2A3631]">
+          Core features of parallel parenting
+        </p>
+        <PPList items={[
+          "Limited direct communication",
+          "Structured schedules",
+          "Written-only communication when possible",
+          "Clear boundaries",
+          "Independent decision-making in each household",
+          "Detailed court orders or parenting plans",
+          "Neutral exchange locations",
+          "Third-party communication platforms (e.g., OurFamilyWizard)",
+        ]} />
+      </PPCard>
+
+      {/* Concerns */}
+      <PPCard title="Parenting concerns in domestic violence cases">
+        <PPSubsection
+          number="1"
+          title="Ongoing coercive control"
+          lead="Even after separation, abuse may continue through parenting interactions."
+        >
+          <p className="text-[#5C6B64] mb-2 text-sm">Examples:</p>
+          <PPList items={[
+            "Excessive messaging",
+            "Threats disguised as parenting concerns",
+            "Last-minute schedule changes",
+            "Using children to gather information",
+            "Refusing to return children on time",
+            "Creating crises to maintain control",
+          ]} />
+          <p className="text-[#5C6B64] mt-4 italic text-sm">
+            Parallel parenting helps reduce these opportunities by limiting
+            discretionary contact.
+          </p>
+        </PPSubsection>
+
+        <PPSubsection
+          number="2"
+          title="Child emotional safety"
+          lead="Children exposed to domestic violence may experience:"
+        >
+          <PPList items={[
+            "Anxiety",
+            "Hypervigilance",
+            "Loyalty conflicts",
+            "Trauma symptoms",
+            "Parentification",
+            "Fear during exchanges",
+          ]} />
+          <p className="text-[#5C6B64] mt-4 mb-2 text-sm">
+            Children often benefit from predictable routines and reduced parental
+            conflict exposure. A parenting plan should address:
+          </p>
+          <PPList items={[
+            "Consistent routines",
+            "Transition supports",
+            "Emotional regulation strategies",
+            "Therapy access if needed",
+            "Safe exchange procedures",
+          ]} />
+        </PPSubsection>
+
+        <PPSubsection
+          number="3"
+          title="Communication challenges"
+          lead="Direct communication may retraumatize the survivor parent or escalate conflict."
+        >
+          <p className="text-[#5C6B64] mb-2 text-sm">Helpful strategies include:</p>
+          <PPList items={[
+            "Written-only communication",
+            "BIFF responses (Brief, Informative, Friendly, Firm)",
+            "Communication restricted to child-related topics",
+            "Scheduled communication windows",
+            "Use of monitored parenting apps",
+          ]} />
+          <p className="text-[#5C6B64] mt-4 mb-2 text-sm">Some cases require:</p>
+          <PPList items={[
+            "Third-party intermediaries",
+            "Parenting coordinators",
+            "Attorneys handling communication",
+          ]} />
+        </PPSubsection>
+
+        <PPSubsection
+          number="4"
+          title="Decision-making authority"
+          lead="Joint decision-making can become another arena for power struggles."
+        >
+          <p className="text-[#5C6B64] mb-2 text-sm">
+            In high-conflict or abusive dynamics, courts sometimes allocate:
+          </p>
+          <PPList items={[
+            "Sole decision-making authority in certain areas",
+            "Tie-breaking authority",
+            "Separate spheres of responsibility",
+          ]} />
+          <p className="text-[#5C6B64] mt-4 mb-2 text-sm">For example:</p>
+          <PPList items={[
+            "One parent handles medical decisions",
+            "One parent handles educational decisions",
+          ]} />
+          <p className="text-[#5C6B64] mt-4 italic text-sm">
+            This reduces repeated conflict and manipulation.
+          </p>
+        </PPSubsection>
+
+        <PPSubsection
+          number="5"
+          title="Exchanges and safety planning"
+          lead="Exchanges are often high-risk moments."
+        >
+          <p className="text-[#5C6B64] mb-2 text-sm">Safety-focused considerations:</p>
+          <PPList items={[
+            "Neutral public locations",
+            "School-based exchanges",
+            "Third-party transport",
+            "Staggered arrival/departure times",
+            "No-contact exchange protocols",
+          ]} />
+          <p className="text-[#5C6B64] mt-4 mb-2 text-sm">In severe cases:</p>
+          <PPList items={[
+            "Supervised visitation may be necessary",
+            "Protective orders may affect parenting arrangements",
+          ]} />
+        </PPSubsection>
+
+        <PPSubsection
+          number="6"
+          title="Children as messengers"
+          lead="One major concern is children being drawn into adult conflict."
+          last
+        >
+          <p className="text-[#5C6B64] mb-2 text-sm">Children should never:</p>
+          <PPList items={[
+            "Carry messages",
+            "Report on the other parent",
+            "Relay financial information",
+            "Be pressured to \u201Cchoose sides\u201D",
+          ]} />
+          <p className="text-[#5C6B64] mt-4 italic text-sm">
+            Parallel parenting aims to create emotional separation between the
+            parental conflict and the child's experience.
+          </p>
+        </PPSubsection>
+      </PPCard>
+
+      {/* Clinical / Legal */}
+      <PPCard title="Important clinical and legal considerations">
+        <div className="mb-5">
+          <div className="font-serif text-lg text-[#2A3631] mb-2">
+            Domestic violence is not always "mutual conflict"
+          </div>
+          <p className="text-[#5C6B64] text-sm mb-2">Professionals must distinguish:</p>
+          <div className="flex flex-col sm:flex-row items-stretch gap-3">
+            <div className="flex-1 rounded-xl bg-[#F5F3E9] p-4 text-center">
+              <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-1">From</div>
+              <div className="text-[#2A3631]">High-conflict relationships</div>
+            </div>
+            <div className="self-center text-[#8A9A92] text-sm">vs.</div>
+            <div className="flex-1 rounded-xl bg-[#C28771]/10 p-4 text-center">
+              <div className="text-xs uppercase tracking-[0.2em] text-[#A26852] mb-1">To</div>
+              <div className="text-[#2A3631]">Coercive controlling violence</div>
+            </div>
+          </div>
+          <p className="text-[#5C6B64] text-sm mt-3 italic">
+            Treating abuse as simply "poor communication" can endanger survivors
+            and children.
+          </p>
+        </div>
+
+        <div className="mb-5">
+          <div className="font-serif text-lg text-[#2A3631] mb-2">
+            Reunification and family therapy require caution
+          </div>
+          <p className="text-[#5C6B64] text-sm mb-2">
+            Family therapy or co-parenting counseling may be inappropriate when:
+          </p>
+          <PPList items={[
+            "There is fear or intimidation",
+            "One parent controls the other",
+            "Abuse is ongoing",
+            "Accountability is absent",
+          ]} />
+          <p className="text-[#5C6B64] text-sm mt-3 italic">
+            In some cases, conjoint therapy can increase risk.
+          </p>
+        </div>
+
+        <div>
+          <div className="font-serif text-lg text-[#2A3631] mb-2">
+            Children may need individual support
+          </div>
+          <p className="text-[#5C6B64] text-sm mb-2">
+            Children exposed to domestic violence may benefit from:
+          </p>
+          <PPList items={[
+            "Trauma-informed therapy",
+            "Play therapy",
+            "Emotional regulation work",
+            "Psychoeducation about conflict and safety",
+          ]} />
+          <p className="text-[#5C6B64] text-sm mt-3 italic">
+            The therapeutic goal is often stabilization and safety — not forcing
+            reconciliation between parents.
+          </p>
+        </div>
+      </PPCard>
+
+      {/* Effective plans */}
+      <PPCard title="What effective parallel parenting plans usually include">
+        <p className="text-[#5C6B64] mb-3">A strong plan often specifies:</p>
+        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1">
+          <PPList items={[
+            "Exact exchange times and locations",
+            "Communication methods",
+            "Response time expectations",
+            "Holiday schedules",
+            "Medical and school procedures",
+          ]} />
+          <PPList items={[
+            "Emergency protocols",
+            "Rules regarding new partners",
+            "Travel restrictions",
+            "Dispute resolution procedures",
+          ]} />
+        </div>
+        <p className="text-[#5C6B64] mt-5 italic">
+          The more detailed the plan, the fewer opportunities exist for conflict
+          escalation.
+        </p>
+      </PPCard>
+
+      {/* Goal */}
+      <div
+        className="card-soft p-7 sm:p-8 relative overflow-hidden"
+        data-testid="safety-pp-goal"
+      >
+        <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-[#849D8E]/10" />
+        <div className="relative">
+          <div className="eyebrow mb-3">The goal of parallel parenting</div>
+          <h3 className="font-serif text-2xl sm:text-3xl text-[#2A3631] mb-4 leading-tight">
+            Not closeness between parents — safety, stability, and predictability
+            for the child.
+          </h3>
+          <p className="text-[#5C6B64] mb-4">Parallel parenting is about:</p>
+          <PPList items={[
+            "Reducing exposure to conflict",
+            "Creating predictability",
+            "Supporting child stability",
+            "Protecting safety",
+            "Allowing children to maintain relationships when appropriate",
+          ]} />
+          <p className="text-[#5C6B64] mt-5 text-sm">
+            In some families, parallel parenting eventually evolves into healthier
+            co-parenting. In others, long-term structured separation remains the
+            safest and healthiest arrangement.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PPCard({ title, children }) {
+  return (
+    <details
+      className="card-soft p-0 mb-5 group overflow-hidden"
+      data-testid={`safety-pp-card-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}`}
+    >
+      <summary className="cursor-pointer list-none p-6 sm:p-7 flex items-start justify-between gap-4 hover:bg-[#F5F3E9]/40 transition-colors">
+        <h3 className="font-serif text-xl sm:text-2xl text-[#2A3631] leading-snug">
+          {title}
+        </h3>
+        <span className="shrink-0 mt-1 w-7 h-7 rounded-full bg-[#849D8E]/15 text-[#5C7A6A] grid place-items-center text-lg leading-none group-open:rotate-45 transition-transform">
+          +
+        </span>
+      </summary>
+      <div className="px-6 sm:px-7 pb-7 -mt-2">{children}</div>
+    </details>
+  );
+}
+
+function PPSubsection({ number, title, lead, children, last }) {
+  return (
+    <div className={last ? "" : "mb-6 pb-6 border-b border-[#E8ECE9]"}>
+      <div className="flex items-baseline gap-3 mb-2">
+        <span className="font-serif text-lg text-[#5C7A6A]">{number}.</span>
+        <h4 className="font-serif text-lg text-[#2A3631]">{title}</h4>
+      </div>
+      {lead && <p className="text-[#5C6B64] text-sm mb-3">{lead}</p>}
+      {children}
+    </div>
+  );
+}
+
+function PPList({ items }) {
+  return (
+    <ul className="space-y-2">
+      {items.map((it) => (
+        <li key={it} className="flex gap-3 text-[#2A3631] text-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#849D8E] mt-2 shrink-0" />
+          <span>{it}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
