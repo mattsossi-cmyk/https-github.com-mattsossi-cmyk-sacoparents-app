@@ -9,6 +9,7 @@ import {
   RefreshCw,
   FileText,
   Handshake,
+  MessageSquare,
 } from "lucide-react";
 
 /* ------------------------------ shared bits ------------------------------ */
@@ -155,6 +156,26 @@ function MediationSummaryTab() {
     }
   };
 
+  const shareText = async () => {
+    if (!summary?.summary_id) {
+      toast.error("No summary loaded. Please generate one first.");
+      return;
+    }
+    try {
+      const r = await shareViaText(
+        "summary",
+        `/mediation/summary/${summary.summary_id}/share-link`,
+        "Mediation Summary"
+      );
+      if (r.mode === "clipboard") {
+        toast.success("Link copied. Paste it into your text message.");
+      }
+    } catch (err) {
+      logError("Share link failed:", err);
+      toast.error("Could not create share link.");
+    }
+  };
+
   if (!summary) {
     return (
       <EmptyState
@@ -184,10 +205,12 @@ function MediationSummaryTab() {
           }
           onRegenerate={generate}
           onDownload={download}
+          onShare={shareText}
           loading={loading}
           downloading={downloading}
           regenerateTestId="summary-regenerate-button"
           downloadTestId="summary-download-button"
+          shareTestId="summary-share-button"
         />
 
         <Section title="Child-centered goals">
@@ -283,6 +306,26 @@ function AgreementDraftTab() {
     }
   };
 
+  const shareText = async () => {
+    if (!agreement?.agreement_id) {
+      toast.error("No draft loaded. Please generate one first.");
+      return;
+    }
+    try {
+      const r = await shareViaText(
+        "agreement",
+        `/mediation/agreement/${agreement.agreement_id}/share-link`,
+        "Co-Parenting Agreement Draft"
+      );
+      if (r.mode === "clipboard") {
+        toast.success("Link copied. Paste it into your text message.");
+      }
+    } catch (err) {
+      logError("Share link failed:", err);
+      toast.error("Could not create share link.");
+    }
+  };
+
   if (!agreement) {
     return (
       <EmptyState
@@ -305,10 +348,12 @@ function AgreementDraftTab() {
           title="Co-Parenting Agreement"
           onRegenerate={generate}
           onDownload={download}
+          onShare={shareText}
           loading={loading}
           downloading={downloading}
           regenerateTestId="agreement-regenerate-button"
           downloadTestId="agreement-download-button"
+          shareTestId="agreement-share-button"
         />
 
         {agreement.overview && (
@@ -394,10 +439,12 @@ function HeaderRow({
   title,
   onRegenerate,
   onDownload,
+  onShare,
   loading,
   downloading,
   regenerateTestId,
   downloadTestId,
+  shareTestId,
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -405,7 +452,7 @@ function HeaderRow({
         <div className="eyebrow mb-1">{eyebrow}</div>
         <div className="font-serif text-2xl text-[#2A3631]">{title}</div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={onRegenerate}
           className="btn-soft inline-flex items-center gap-2"
@@ -415,6 +462,18 @@ function HeaderRow({
           <RefreshCw size={14} />
           {loading ? "Working…" : "Regenerate"}
         </button>
+        {onShare && (
+          <button
+            onClick={onShare}
+            className="btn-soft inline-flex items-center gap-2"
+            disabled={loading || downloading}
+            data-testid={shareTestId}
+            title="Share a 7-day download link via text message"
+          >
+            <MessageSquare size={14} />
+            Share via text
+          </button>
+        )}
         <button
           onClick={onDownload}
           className="btn-sage inline-flex items-center gap-2"
@@ -488,6 +547,33 @@ export default function Summary() {
         >
           {TABS.map(({ key, label, icon: Icon }) => {
             const active = tab === key;
+            return (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(key)}
+                data-testid={`summary-tab-${key}`}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors ${
+                  active
+                    ? "bg-white text-[#2A3631] shadow-sm"
+                    : "text-[#5C6B64] hover:text-[#2A3631]"
+                }`}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {tab === "summary" && <MediationSummaryTab />}
+        {tab === "agreement" && <AgreementDraftTab />}
+      </div>
+    </AppShell>
+  );
+}
+ active = tab === key;
             return (
               <button
                 key={key}

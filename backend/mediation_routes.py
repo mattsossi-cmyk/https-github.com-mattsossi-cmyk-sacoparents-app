@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from auth import get_current_user
+from auth import get_current_user, create_share_token, decode_share_token
 from models import (
     ChildGoalsPayload,
     IssuesPayload,
@@ -294,6 +294,92 @@ async def download_agreement_pdf(
         headers={
             "Content-Disposition": f'attachment; filename="coparenting_agreement_{agreement_id}.pdf"'
         },
+    )
+
+
+# ============ Shareable download links (no-auth, signed) ============
+@router.post("/summary/{summary_id}/share-link")
+async def create_summary_share_link(
+    summary_id: str,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    db = request.app.state.db
+    exists = await db.summaries.find_one(
+        {"summary_id": summary_id, "user_id": current.user_id}, {"_id": 0, "summary_id": 1}
+    )
+    if not exists:
+        raise HTTPException(status_code=404, detail="Summary not found")
+    token = create_share_token("summary", summary_id, current.user_id)
+    return {"token": token, "path": f"/api/mediation/shared/{token}"}
+
+
+@router.post("/agreement/{agreement_id}/share-link")
+async def create_agreement_share_link(
+    agreement_id: str,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    db = request.app.state.db
+    exists = await db.agreements.find_one(
+        {"agreement_id": agreement_id, "user_id": current.user_id},
+        {"_id": 0, "agreement_id": 1},
+    )
+    if not exists:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    token = create_share_token("agreement", agreement_id, current.user_id)
+    return {"token": token, "path": f"/api/mediation/shared/{token}"}
+
+
+@router.get("/shared/{token}")
+async def download_shared_pdf(
+    token: str,
+    request: Request,
+):
+    """Public endpoint: anyone with a valid signed token can download the PDF."""
+    payload = decode_share_token(token)
+    if not payload:
+        raise HTTPException(status_code=404, detail="This link has expired or is invalid.")
+    db = request.app.state.db
+    user = await db.users.find_one({"user_id": payload["sub"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="This link is no longer valid.")
+
+    doc_type = payload["doc_type"]
+    doc_id = payload["doc_id"]
+    if doc_type == "summary":
+        doc = await db.summaries.find_one(
+            {"summary_id": doc_id, "user_id": user["user_id"]}, {"_id": 0}
+        )
+        if not doc:
+            raise HTTPException(status_code=404, detail="Summary not found")
+        prep = await _load_prep(db, user["user_id"])
+        pdf_bytes = pdf_service.build_summary_pdf(
+            user_name=user.get("name", ""),
+            summary=doc,
+            child_goals=prep.get("child_goals"),
+            mediation_date=user.get("mediation_date"),
+        )
+        filename = f"mediation_summary_{doc_id}.pdf"
+    elif doc_type == "agreement":
+        doc = await db.agreements.find_one(
+            {"agreement_id": doc_id, "user_id": user["user_id"]}, {"_id": 0}
+        )
+        if not doc:
+            raise HTTPException(status_code=404, detail="Agreement not found")
+        pdf_bytes = pdf_service.build_agreement_pdf(
+            user_name=user.get("name", ""),
+            agreement=doc,
+            mediation_date=user.get("mediation_date"),
+        )
+        filename = f"coparenting_agreement_{doc_id}.pdf"
+    else:
+        raise HTTPException(status_code=404, detail="Unknown document type")
+
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )
 
 

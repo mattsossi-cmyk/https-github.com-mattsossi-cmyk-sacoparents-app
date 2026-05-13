@@ -128,6 +128,30 @@ async def get_current_user(
 
 JWT_COOKIE_NAME = "auth_token"
 JWT_COOKIE_MAX_AGE = ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+SHARE_TOKEN_EXPIRE_DAYS = 7
+
+
+def create_share_token(doc_type: str, doc_id: str, user_id: str) -> str:
+    """Issue a short-lived signed token that lets anyone with the link download a PDF."""
+    payload = {
+        "kind": "share",
+        "doc_type": doc_type,  # "summary" | "agreement"
+        "doc_id": doc_id,
+        "sub": user_id,
+        "exp": datetime.now(timezone.utc) + timedelta(days=SHARE_TOKEN_EXPIRE_DAYS),
+        "iat": datetime.now(timezone.utc),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
+
+
+def decode_share_token(token: str) -> Optional[dict]:
+    try:
+        data = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])
+        if data.get("kind") != "share":
+            return None
+        return data
+    except jwt.PyJWTError:
+        return None
 
 
 def _set_jwt_cookie(response: Response, token: str) -> None:
