@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import WizardLayout from "../components/WizardLayout";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { logError } from "../lib/logger";
 
 const QUESTIONS = [
   { id: "listen", text: "I can listen without interrupting." },
@@ -61,7 +62,7 @@ export default function ReadinessCheck() {
         setCompleted(r.data?.completed || {});
         if (r.data?.readiness?.answers) setAnswers(r.data.readiness.answers);
       })
-      .catch((err) => console.error("Failed to load prep:", err));
+      .catch((err) => logError("Failed to load prep:", err));
   }, []);
 
   const { total, pct, badge } = useMemo(() => {
@@ -79,7 +80,7 @@ export default function ReadinessCheck() {
       toast.success("Readiness saved.");
       navigate("/summary");
     } catch (err) {
-      console.error("Save readiness failed:", err);
+      logError("Save readiness failed:", err);
       toast.error("Could not save.");
     } finally {
       setSaving(false);

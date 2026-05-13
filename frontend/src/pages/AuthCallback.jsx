@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { logError } from "../lib/logger";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function AuthCallback() {
         await checkAuth();
         navigate("/dashboard", { replace: true });
       } catch (err) {
-        console.error("Google session exchange failed:", err);
+        logError("Google session exchange failed:", err);
         navigate("/login", { replace: true });
       }
     })();

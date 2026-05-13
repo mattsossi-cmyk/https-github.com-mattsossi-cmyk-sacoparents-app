@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import WizardLayout from "../components/WizardLayout";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { logError } from "../lib/logger";
 import { ShieldAlert } from "lucide-react";
 
 const CATEGORIES = [
@@ -78,7 +79,7 @@ export default function IssuesConcerns() {
         setCompleted(r.data?.completed || {});
         if (r.data?.issues) setData((d) => ({ ...d, ...r.data.issues }));
       })
-      .catch((err) => console.error("Failed to load prep:", err));
+      .catch((err) => logError("Failed to load prep:", err));
   }, []);
 
   const updateField = (cat, key, val) => {
@@ -92,7 +93,7 @@ export default function IssuesConcerns() {
       toast.success("Concerns noted.");
       navigate("/prep/priority");
     } catch (err) {
-      console.error("Save issues failed:", err);
+      logError("Save issues failed:", err);
       toast.error("Could not save. Please try again.");
     } finally {
       setSaving(false);

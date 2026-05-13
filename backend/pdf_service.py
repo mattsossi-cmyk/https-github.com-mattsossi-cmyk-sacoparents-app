@@ -67,17 +67,7 @@ class PrepSummaryPDF(FPDF):
         self.ln(1)
 
 
-def build_summary_pdf(
-    user_name: str,
-    summary: Dict[str, Any],
-    child_goals: Dict[str, Any] | None = None,
-    mediation_date: str | None = None,
-) -> bytes:
-    pdf = PrepSummaryPDF(format="A4")
-    pdf.set_auto_page_break(auto=True, margin=20)
-    pdf.set_margins(15, 30, 15)
-    pdf.add_page()
-
+def _render_meta(pdf: "PrepSummaryPDF", user_name: str, mediation_date: str | None) -> None:
     pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(*TEXT_MID)
     pdf.cell(0, 6, f"Prepared for: {user_name}", ln=1)
@@ -86,7 +76,8 @@ def build_summary_pdf(
         pdf.cell(0, 6, f"Mediation date: {mediation_date}", ln=1)
     pdf.set_text_color(*TEXT_DARK)
 
-    # Readiness banner
+
+def _render_readiness_banner(pdf: "PrepSummaryPDF", summary: Dict[str, Any]) -> None:
     pdf.ln(3)
     pdf.set_fill_color(*SAND)
     pdf.set_font("Helvetica", "B", 12)
@@ -94,16 +85,9 @@ def build_summary_pdf(
     score = summary.get("readiness_score", 0)
     pdf.cell(0, 10, f"Readiness: {label}  ({score}/100)", ln=1, fill=True)
 
-    pdf.section_title("Child-Centered Goals")
-    pdf.body_text(summary.get("child_goals_summary", ""))
-    if child_goals and child_goals.get("selected_goals"):
-        pdf.bullet_list(child_goals["selected_goals"])
 
-    pdf.section_title("Top Concerns")
-    pdf.bullet_list(summary.get("top_concerns", []))
-
+def _render_priority_agenda(pdf: "PrepSummaryPDF", agenda: list) -> None:
     pdf.section_title("Priority Agenda")
-    agenda = summary.get("priority_agenda", [])
     pdf.set_font("Helvetica", "", 11)
     for it in agenda:
         rank = it.get("rank", "?")
@@ -116,6 +100,38 @@ def build_summary_pdf(
         pdf.multi_cell(0, 6, f"{topic}  [{cat}]")
     pdf.ln(2)
 
+
+def _render_child_goals(
+    pdf: "PrepSummaryPDF",
+    summary: Dict[str, Any],
+    child_goals: Dict[str, Any] | None,
+) -> None:
+    pdf.section_title("Child-Centered Goals")
+    pdf.body_text(summary.get("child_goals_summary", ""))
+    if child_goals and child_goals.get("selected_goals"):
+        pdf.bullet_list(child_goals["selected_goals"])
+
+
+def build_summary_pdf(
+    user_name: str,
+    summary: Dict[str, Any],
+    child_goals: Dict[str, Any] | None = None,
+    mediation_date: str | None = None,
+) -> bytes:
+    pdf = PrepSummaryPDF(format="A4")
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.set_margins(15, 30, 15)
+    pdf.add_page()
+
+    _render_meta(pdf, user_name, mediation_date)
+    _render_readiness_banner(pdf, summary)
+    _render_child_goals(pdf, summary, child_goals)
+
+    pdf.section_title("Top Concerns")
+    pdf.bullet_list(summary.get("top_concerns", []))
+
+    _render_priority_agenda(pdf, summary.get("priority_agenda", []))
+
     pdf.section_title("Flexibility Areas")
     pdf.bullet_list(summary.get("flexibility_areas", []))
 
@@ -125,7 +141,6 @@ def build_summary_pdf(
     pdf.section_title("Notes for the Mediator")
     pdf.body_text(summary.get("notes_for_mediator", ""))
 
-    # output as bytes
     out = pdf.output(dest="S")
     if isinstance(out, str):
         return out.encode("latin-1")

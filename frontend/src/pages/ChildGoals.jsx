@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import WizardLayout from "../components/WizardLayout";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { logError } from "../lib/logger";
 
 const GOAL_OPTIONS = [
   { id: "emotional_safety", label: "Emotional safety" },
@@ -37,7 +38,7 @@ export default function ChildGoals() {
           setStrengthText(cg.strength_text || "");
         }
       })
-      .catch((err) => console.error("Failed to load prep:", err));
+      .catch((err) => logError("Failed to load prep:", err));
   }, []);
 
   const toggle = (id) =>
@@ -56,7 +57,7 @@ export default function ChildGoals() {
       toast.success("Your goals are saved.");
       navigate("/prep/issues");
     } catch (err) {
-      console.error("Save child-goals failed:", err);
+      logError("Save child-goals failed:", err);
       toast.error("Could not save. Please try again.");
     } finally {
       setSaving(false);

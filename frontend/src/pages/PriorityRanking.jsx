@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import WizardLayout from "../components/WizardLayout";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { logError } from "../lib/logger";
 import { GripVertical, Plus, X } from "lucide-react";
 
 const BUCKETS = [
@@ -64,7 +65,7 @@ export default function PriorityRanking() {
           setItems(seeds);
         }
       })
-      .catch((err) => console.error("Failed to load prep:", err));
+      .catch((err) => logError("Failed to load prep:", err));
   }, []);
 
   const addItem = () => {
@@ -93,7 +94,7 @@ export default function PriorityRanking() {
       toast.success("Priorities saved.");
       navigate("/prep/communication");
     } catch (err) {
-      console.error("Save priority failed:", err);
+      logError("Save priority failed:", err);
       toast.error("Could not save.");
     } finally {
       setSaving(false);

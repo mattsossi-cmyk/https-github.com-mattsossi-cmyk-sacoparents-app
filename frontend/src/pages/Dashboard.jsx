@@ -13,6 +13,7 @@ import {
   BookOpen,
   ArrowRight,
 } from "lucide-react";
+import { logError } from "../lib/logger";
 
 const STEPS = [
   {
@@ -60,7 +61,7 @@ export default function Dashboard() {
     api
       .get("/mediation/prep")
       .then((r) => setPrep(r.data || { completed: {} }))
-      .catch((err) => console.error("Failed to load prep:", err));
+      .catch((err) => logError("Failed to load prep:", err));
   }, []);
 
   const completed = prep.completed || {};

@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { api } from "../lib/api";
+import { logError } from "../lib/logger";
 
 const AuthContext = createContext(null);
 
@@ -21,7 +22,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       // 401 here just means "not signed in" — expected on first visit.
       if (err?.response && err.response.status !== 401) {
-        console.error("Auth check failed:", err);
+        logError("Auth check failed:", err);
       }
       setUser(null);
     } finally {
@@ -64,7 +65,7 @@ export function AuthProvider({ children }) {
     try {
       await api.post("/auth/logout");
     } catch (err) {
-      console.error("Logout request failed:", err);
+      logError("Logout request failed:", err);
     }
     setUser(null);
   }, []);

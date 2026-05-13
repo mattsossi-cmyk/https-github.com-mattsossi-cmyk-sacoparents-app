@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { BookOpen, PlayCircle, Facebook, ExternalLink } from "lucide-react";
+import { logError } from "../lib/logger";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
@@ -57,7 +58,7 @@ export default function Resources() {
     api
       .get("/mediation/resources")
       .then((r) => setItems(r.data || []))
-      .catch((err) => console.error("Failed to load resources:", err));
+      .catch((err) => logError("Failed to load resources:", err));
   }, []);
 
   const categories = ["All", ...Array.from(new Set(items.map((i) => i.category)))];

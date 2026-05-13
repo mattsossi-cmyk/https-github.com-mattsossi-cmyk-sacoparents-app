@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import WizardLayout from "../components/WizardLayout";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { logError } from "../lib/logger";
 import { Sparkles } from "lucide-react";
 
 const QUIZ = [
@@ -64,7 +65,7 @@ export default function CommStyle() {
           setSample(r.data.comm_style.free_text_sample || "");
         }
       })
-      .catch((err) => console.error("Failed to load prep:", err));
+      .catch((err) => logError("Failed to load prep:", err));
   }, []);
 
   const handleAnalyze = async () => {
@@ -93,7 +94,7 @@ export default function CommStyle() {
       toast.success("Saved.");
       navigate("/prep/readiness");
     } catch (err) {
-      console.error("Save comm-style failed:", err);
+      logError("Save comm-style failed:", err);
       toast.error("Could not save.");
     } finally {
       setSaving(false);

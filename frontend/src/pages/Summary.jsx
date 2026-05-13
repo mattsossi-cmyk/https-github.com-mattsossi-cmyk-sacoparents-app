@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import AppShell from "../components/AppShell";
 import { api, API } from "../lib/api";
 import { toast } from "sonner";
+import { logError } from "../lib/logger";
 import { Sparkles, Download, RefreshCw } from "lucide-react";
 
 function Section({ title, children }) {
@@ -62,7 +63,7 @@ export default function Summary() {
       setHistory(list);
       setSummary((prev) => prev || list[0] || null);
     } catch (err) {
-      console.error("Failed to load summaries:", err);
+      logError("Failed to load summaries:", err);
     }
   }, []);
 
@@ -101,7 +102,7 @@ export default function Summary() {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("PDF download failed:", err);
+      logError("PDF download failed:", err);
       toast.error("Could not download PDF.");
     }
   };
