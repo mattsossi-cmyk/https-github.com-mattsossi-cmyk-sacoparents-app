@@ -78,8 +78,17 @@ function PriorityAgenda({ items }) {
 
 async function downloadBlob(url, filename) {
   const res = await fetch(url, { credentials: "include" });
-  if (!res.ok) throw new Error("Download failed");
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = (await res.text()).slice(0, 120);
+    } catch (e) { /* ignore */ }
+    throw new Error(`HTTP ${res.status}${detail ? ` - ${detail}` : ""}`);
+  }
   const blob = await res.blob();
+  if (!blob || blob.size === 0) {
+    throw new Error("Empty PDF response");
+  }
   const objUrl = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = objUrl;
@@ -95,6 +104,7 @@ async function downloadBlob(url, filename) {
 function MediationSummaryTab() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [history, setHistory] = useState([]);
 
   const loadHistory = useCallback(async () => {
@@ -127,7 +137,11 @@ function MediationSummaryTab() {
   };
 
   const download = async () => {
-    if (!summary?.summary_id) return;
+    if (!summary?.summary_id) {
+      toast.error("No summary loaded. Please generate one first.");
+      return;
+    }
+    setDownloading(true);
     try {
       await downloadBlob(
         `${API}/mediation/summary/${summary.summary_id}/pdf`,
@@ -135,7 +149,9 @@ function MediationSummaryTab() {
       );
     } catch (err) {
       logError("PDF download failed:", err);
-      toast.error("Could not download PDF.");
+      toast.error(`Could not download PDF. ${err?.message || ""}`.trim());
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -169,6 +185,7 @@ function MediationSummaryTab() {
           onRegenerate={generate}
           onDownload={download}
           loading={loading}
+          downloading={downloading}
           regenerateTestId="summary-regenerate-button"
           downloadTestId="summary-download-button"
         />
@@ -215,6 +232,7 @@ function MediationSummaryTab() {
 function AgreementDraftTab() {
   const [agreement, setAgreement] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [history, setHistory] = useState([]);
 
   const loadHistory = useCallback(async () => {
@@ -247,7 +265,11 @@ function AgreementDraftTab() {
   };
 
   const download = async () => {
-    if (!agreement?.agreement_id) return;
+    if (!agreement?.agreement_id) {
+      toast.error("No draft loaded. Please generate one first.");
+      return;
+    }
+    setDownloading(true);
     try {
       await downloadBlob(
         `${API}/mediation/agreement/${agreement.agreement_id}/pdf`,
@@ -255,7 +277,9 @@ function AgreementDraftTab() {
       );
     } catch (err) {
       logError("PDF download failed:", err);
-      toast.error("Could not download PDF.");
+      toast.error(`Could not download PDF. ${err?.message || ""}`.trim());
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -282,6 +306,7 @@ function AgreementDraftTab() {
           onRegenerate={generate}
           onDownload={download}
           loading={loading}
+          downloading={downloading}
           regenerateTestId="agreement-regenerate-button"
           downloadTestId="agreement-download-button"
         />
@@ -370,6 +395,7 @@ function HeaderRow({
   onRegenerate,
   onDownload,
   loading,
+  downloading,
   regenerateTestId,
   downloadTestId,
 }) {
@@ -383,7 +409,7 @@ function HeaderRow({
         <button
           onClick={onRegenerate}
           className="btn-soft inline-flex items-center gap-2"
-          disabled={loading}
+          disabled={loading || downloading}
           data-testid={regenerateTestId}
         >
           <RefreshCw size={14} />
@@ -392,10 +418,11 @@ function HeaderRow({
         <button
           onClick={onDownload}
           className="btn-sage inline-flex items-center gap-2"
+          disabled={downloading || loading}
           data-testid={downloadTestId}
         >
           <Download size={16} />
-          Download PDF
+          {downloading ? "Downloading…" : "Download PDF"}
         </button>
       </div>
     </div>

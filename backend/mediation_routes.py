@@ -171,11 +171,12 @@ async def generate_summary(
         raise HTTPException(status_code=500, detail=f"AI summary failed: {e}")
 
     summary_id = f"sum_{uuid.uuid4().hex[:12]}"
+    # Authoritative fields after the AI spread (defensive against hallucinated keys).
     doc = {
+        **summary,
         "summary_id": summary_id,
         "user_id": current.user_id,
         "generated_at": _now(),
-        **summary,
     }
     await db.summaries.insert_one(doc.copy())
     doc.pop("_id", None)
@@ -246,11 +247,13 @@ async def generate_agreement(
         raise HTTPException(status_code=500, detail=f"AI agreement failed: {e}")
 
     agreement_id = f"agr_{uuid.uuid4().hex[:12]}"
+    # Authoritative fields go AFTER the AI spread so Claude can never overwrite
+    # our identifiers with a hallucinated key.
     doc = {
+        **agreement,
         "agreement_id": agreement_id,
         "user_id": current.user_id,
         "generated_at": _now(),
-        **agreement,
     }
     await db.agreements.insert_one(doc.copy())
     doc.pop("_id", None)
