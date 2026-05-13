@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import { GripVertical, Plus, X } from "lucide-react";
 import { ISSUE_TYPES } from "./IssuesConcerns";
+import { GOAL_OPTIONS } from "./ChildGoals";
 
 const BUCKETS = [
   { key: "urgent", label: "Most urgent", color: "#C28771", tint: "#C28771/12" },
@@ -15,28 +16,56 @@ const BUCKETS = [
   { key: "compromise", label: "Willing to compromise", color: "#D6A374", tint: "#D6A374/12" },
 ];
 
+const KIND_META = {
+  goal:    { label: "Goal",    bg: "bg-[#849D8E]/10", text: "text-[#5C7A6A]", chipBg: "bg-[#849D8E]/20" },
+  concern: { label: "Concern", bg: "bg-[#C28771]/8",  text: "text-[#A26852]", chipBg: "bg-[#C28771]/15" },
+  other:   { label: "Other",   bg: "bg-[#9CB4C4]/10", text: "text-[#5C6B64]", chipBg: "bg-[#9CB4C4]/20" },
+  custom:  { label: "Added",   bg: "bg-[#D6A374]/10", text: "text-[#8A6A40]", chipBg: "bg-[#D6A374]/20" },
+};
+
 const ISSUE_LABEL_BY_ID = Object.fromEntries(
   ISSUE_TYPES.map((it) => [it.id, it.label])
+);
+const GOAL_LABEL_BY_ID = Object.fromEntries(
+  GOAL_OPTIONS.map((g) => [g.id, g.label])
 );
 
 function deriveSuggestionsFromIssues(issues) {
   const suggestions = [];
   if (!issues) return suggestions;
-  // New shape: { items: { issue_id: note }, other: string }
   if (issues.items && typeof issues.items === "object") {
     Object.entries(issues.items).forEach(([id, note]) => {
       if (note && String(note).trim().length > 0) {
         suggestions.push({
-          id: `s_${id}`,
+          id: `c_${id}`,
           label: ISSUE_LABEL_BY_ID[id] || id,
+          kind: "concern",
         });
       }
     });
   }
   if (issues.other && String(issues.other).trim().length > 0) {
-    suggestions.push({ id: "s_other", label: "Other (your own notes)" });
+    suggestions.push({ id: "c_other", label: "Other concerns (your notes)", kind: "other" });
   }
   return suggestions;
+}
+
+function deriveSuggestionsFromGoals(childGoals) {
+  if (!childGoals?.selected_goals) return [];
+  return childGoals.selected_goals.map((id) => ({
+    id: `g_${id}`,
+    label: GOAL_LABEL_BY_ID[id] || id,
+    kind: "goal",
+  }));
+}
+
+function inferKind(item) {
+  if (item.kind) return item.kind;
+  if (typeof item.id === "string") {
+    if (item.id.startsWith("g_")) return "goal";
+    if (item.id.startsWith("c_")) return "concern";
+  }
+  return "custom";
 }
 
 export default function PriorityRanking() {

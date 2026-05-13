@@ -6,7 +6,7 @@ import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
 
-const GOAL_OPTIONS = [
+export const GOAL_OPTIONS = [
   { id: "emotional_safety", label: "Emotional safety" },
   { id: "stability", label: "Stability" },
   { id: "school_success", label: "School success" },
