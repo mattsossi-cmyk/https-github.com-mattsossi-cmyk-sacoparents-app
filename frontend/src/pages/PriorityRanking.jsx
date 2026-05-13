@@ -81,16 +81,30 @@ export default function PriorityRanking() {
       .get("/mediation/prep")
       .then((r) => {
         setCompleted(r.data?.completed || {});
-        const existing = r.data?.priority?.items;
-        if (existing && existing.length) {
-          setItems(existing);
-        } else {
-          const seeds = deriveSuggestionsFromIssues(r.data?.issues).map((s) => ({
+
+        // Build the canonical list of "things the user picked" from goals + issues.
+        const goalSeeds = deriveSuggestionsFromGoals(r.data?.child_goals);
+        const issueSeeds = deriveSuggestionsFromIssues(r.data?.issues);
+        const fresh = [...goalSeeds, ...issueSeeds];
+
+        // Merge with any previously-saved priority items so the user keeps their
+        // bucket assignments — but also picks up newly-added goals/concerns.
+        const existing = r.data?.priority?.items || [];
+        const existingById = new Map(existing.map((x) => [x.id, x]));
+
+        const merged = [
+          // 1) seeds (in canonical goal-then-issue order), enriched with saved bucket if present
+          ...fresh.map((s) => ({
             ...s,
-            bucket: "easy",
-          }));
-          setItems(seeds);
-        }
+            bucket: existingById.get(s.id)?.bucket || "easy",
+          })),
+          // 2) any custom items the user added directly on the priority page
+          ...existing.filter(
+            (e) => !fresh.some((s) => s.id === e.id),
+          ),
+        ];
+
+        setItems(merged);
       })
       .catch((err) => logError("Failed to load prep:", err));
   }, []);
@@ -181,26 +195,35 @@ export default function PriorityRanking() {
                         Drag items here, or use the buttons below.
                       </div>
                     )}
-                    {bucketItems.map((it) => (
-                      <div
-                        key={it.id}
-                        draggable
-                        onDragStart={() => onDragStart(it.id)}
-                        className="bg-white rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm border border-[#E8ECE9] cursor-grab active:cursor-grabbing"
-                        data-testid={`priority-item-${it.id}`}
-                      >
-                        <GripVertical size={14} className="text-[#8A9A92] shrink-0" />
-                        <span className="text-sm text-[#2A3631] flex-1">{it.label}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeItem(it.id)}
-                          className="text-[#8A9A92] hover:text-[#C28771]"
-                          aria-label="Remove"
+                    {bucketItems.map((it) => {
+                      const meta = KIND_META[inferKind(it)] || KIND_META.custom;
+                      return (
+                        <div
+                          key={it.id}
+                          draggable
+                          onDragStart={() => onDragStart(it.id)}
+                          className="bg-white rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm border border-[#E8ECE9] cursor-grab active:cursor-grabbing"
+                          data-testid={`priority-item-${it.id}`}
                         >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
+                          <GripVertical size={14} className="text-[#8A9A92] shrink-0" />
+                          <span
+                            className={`text-[10px] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded ${meta.chipBg} ${meta.text} shrink-0`}
+                            data-testid={`priority-item-${it.id}-chip`}
+                          >
+                            {meta.label}
+                          </span>
+                          <span className="text-sm text-[#2A3631] flex-1">{it.label}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(it.id)}
+                            className="text-[#8A9A92] hover:text-[#C28771]"
+                            aria-label="Remove"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
