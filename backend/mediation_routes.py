@@ -493,13 +493,6 @@ RESOURCES = [
         "kind": "video",
     },
     {
-        "id": "r3",
-        "category": "Parallel Parenting",
-        "title": "When to Move from Co-Parenting to Parallel Parenting",
-        "description": "Reduce exposure to conflict while protecting your child's wellbeing.",
-        "kind": "article",
-    },
-    {
         "id": "r8",
         "category": "Parallel Parenting",
         "title": "Parallel Parenting Explained (Video)",
