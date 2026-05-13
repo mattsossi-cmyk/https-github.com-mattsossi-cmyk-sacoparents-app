@@ -24,6 +24,17 @@ const NATIONAL_RESOURCES = [
       "24/7 confidential support for anyone experiencing or affected by domestic violence. Free, available in 200+ languages.",
   },
   {
+    id: "988",
+    name: "988 Suicide & Crisis Lifeline",
+    phone: "988",
+    phoneHref: "tel:988",
+    text: 'Text "988" to 988',
+    textHref: "sms:988?&body=988",
+    web: "https://988lifeline.org",
+    description:
+      "24/7 free and confidential support for anyone in suicidal crisis or emotional distress. Call or text 988 anytime, from anywhere in the U.S.",
+  },
+  {
     id: "stronghearts",
     name: "StrongHearts Native Helpline",
     phone: "1-844-762-8483",
