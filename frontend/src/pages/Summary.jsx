@@ -85,7 +85,9 @@ async function downloadBlob(url, filename) {
     let detail = "";
     try {
       detail = (await res.text()).slice(0, 120);
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      logError("downloadBlob: failed to read error body", e);
+    }
     throw new Error(`HTTP ${res.status}${detail ? ` - ${detail}` : ""}`);
   }
   const blob = await res.blob();
