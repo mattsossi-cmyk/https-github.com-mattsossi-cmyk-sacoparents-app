@@ -221,6 +221,79 @@ async def download_summary_pdf(
     )
 
 
+# ============ Co-Parenting Agreement Draft ============
+@router.post("/agreement")
+async def generate_agreement(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    db = request.app.state.db
+    prep = await _load_prep(db, current.user_id)
+    if not prep.get("child_goals") and not prep.get("issues"):
+        raise HTTPException(
+            status_code=400,
+            detail="Please complete at least Child Goals or Issues first.",
+        )
+    # Build a focused subset — goals, issues, priority only.
+    focused = {
+        "child_goals": prep.get("child_goals"),
+        "issues": prep.get("issues"),
+        "priority": prep.get("priority"),
+    }
+    try:
+        agreement = await ai_service.generate_agreement_draft(focused, current.name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI agreement failed: {e}")
+
+    agreement_id = f"agr_{uuid.uuid4().hex[:12]}"
+    doc = {
+        "agreement_id": agreement_id,
+        "user_id": current.user_id,
+        "generated_at": _now(),
+        **agreement,
+    }
+    await db.agreements.insert_one(doc.copy())
+    doc.pop("_id", None)
+    return doc
+
+
+@router.get("/agreements")
+async def list_agreements(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    cursor = request.app.state.db.agreements.find(
+        {"user_id": current.user_id}, {"_id": 0}
+    ).sort("generated_at", -1).limit(20)
+    return await cursor.to_list(20)
+
+
+@router.get("/agreement/{agreement_id}/pdf")
+async def download_agreement_pdf(
+    agreement_id: str,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    db = request.app.state.db
+    agreement = await db.agreements.find_one(
+        {"agreement_id": agreement_id, "user_id": current.user_id}, {"_id": 0}
+    )
+    if not agreement:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    pdf_bytes = pdf_service.build_agreement_pdf(
+        user_name=current.name,
+        agreement=agreement,
+        mediation_date=current.mediation_date,
+    )
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="coparenting_agreement_{agreement_id}.pdf"'
+        },
+    )
+
+
 # ============ Resources (static seed) ============
 RESOURCES = [
     {

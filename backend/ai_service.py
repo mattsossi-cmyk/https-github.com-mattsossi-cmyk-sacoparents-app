@@ -128,3 +128,58 @@ Return strict JSON:
 """
     response = await chat.send_message(UserMessage(text=prompt))
     return _extract_json(response)
+
+
+# ============ Co-Parenting Agreement Draft ============
+AGREEMENT_SYSTEM = (
+    "You are a co-parenting agreement drafting assistant. Take what each parent has "
+    "captured during their preparation and translate it into a CALM, NEUTRAL, "
+    "CHILD-CENTERED DRAFT agreement that two co-parents could review together. "
+    "This is NOT a legal document — it is a starting point for discussion. "
+    "Use first-person plural ('we', 'our') where natural. Avoid blame, never name "
+    "either parent. Keep each clause short, factual, and constructive. "
+    "Output strict JSON only — no prose outside the JSON."
+)
+
+
+async def generate_agreement_draft(prep: Dict[str, Any], user_name: str) -> Dict[str, Any]:
+    chat = _make_chat(AGREEMENT_SYSTEM)
+    prompt = f"""Draft a co-parenting agreement for {user_name} based ONLY on this
+preparation data (ignore any communication-style or readiness data).
+
+Preparation data:
+{json.dumps(prep, indent=2, default=str)}
+
+Return strict JSON only with these exact keys:
+{{
+  "overview": "1-2 sentence warm intro framing this as a child-centered draft",
+  "shared_goals": ["3-6 short statements of what we want our child to experience"],
+  "parenting_schedule": [
+    {{"area": "Exchanges|Weekdays|Weekends|Summer|Holidays|Other", "agreement": "one neutral sentence"}}
+  ],
+  "communication": [
+    {{"area": "Texting|Response times|Emergency|Other", "agreement": "one neutral sentence"}}
+  ],
+  "child_needs": [
+    {{"area": "School|Therapy|Medical|Activities|Other", "agreement": "one neutral sentence"}}
+  ],
+  "financial": [
+    {{"area": "Expenses|Child support|Shared costs|Other", "agreement": "one neutral sentence"}}
+  ],
+  "household_rules": [
+    {{"area": "Discipline|Screen time|Bedtime|Homework|Other", "agreement": "one neutral sentence"}}
+  ],
+  "priority_items": [
+    {{"rank": 1, "topic": "...", "category": "urgent|difficult|easy|compromise"}}
+  ],
+  "open_for_discussion": ["topics where no clear agreement was captured yet"],
+  "closing_note": "one warm sentence framing this as a living draft to revisit together"
+}}
+
+Important:
+- If a section has NO captured input, return an empty array [] (do NOT invent content).
+- Spell every co-parent input faithfully; do not add legal-sounding language.
+- Keep each "agreement" clause under ~24 words.
+"""
+    response = await chat.send_message(UserMessage(text=prompt))
+    return _extract_json(response)

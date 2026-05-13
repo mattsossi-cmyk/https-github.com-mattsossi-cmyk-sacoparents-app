@@ -13,7 +13,40 @@ TEXT_DARK = (42, 54, 49)
 TEXT_MID = (92, 107, 100)
 
 
+# fpdf2's built-in Helvetica is a latin-1 font and can't encode characters like
+# em-dashes, curly quotes, ellipses, or unicode bullets that AI output sometimes
+# contains. We replace them with ASCII equivalents before drawing.
+_UNICODE_REPLACEMENTS = {
+    "\u2014": "-",   # em dash
+    "\u2013": "-",   # en dash
+    "\u2018": "'",   # left single quote
+    "\u2019": "'",   # right single quote
+    "\u201C": '"',   # left double quote
+    "\u201D": '"',   # right double quote
+    "\u2026": "...", # ellipsis
+    "\u2022": "*",   # bullet
+    "\u00A0": " ",   # nbsp
+}
+
+
+def _safe(text: Any) -> str:
+    """Return a latin-1 safe representation of any text for fpdf2 built-in fonts."""
+    if text is None:
+        return ""
+    s = str(text)
+    for ch, repl in _UNICODE_REPLACEMENTS.items():
+        s = s.replace(ch, repl)
+    # Fallback: strip anything still outside latin-1 so we never crash a PDF render.
+    return s.encode("latin-1", "replace").decode("latin-1")
+
+
 class PrepSummaryPDF(FPDF):
+    def cell(self, w=0, h=0, txt="", *args, **kwargs):
+        return super().cell(w, h, _safe(txt), *args, **kwargs)
+
+    def multi_cell(self, w, h, txt="", *args, **kwargs):
+        return super().multi_cell(w, h, _safe(txt), *args, **kwargs)
+
     def header(self):
         self.set_fill_color(*SAND)
         self.rect(0, 0, 210, 30, "F")
@@ -140,6 +173,162 @@ def build_summary_pdf(
 
     pdf.section_title("Notes for the Mediator")
     pdf.body_text(summary.get("notes_for_mediator", ""))
+
+    out = pdf.output(dest="S")
+    if isinstance(out, str):
+        return out.encode("latin-1")
+    return bytes(out)
+
+
+# ============ Co-Parenting Agreement PDF ============
+class AgreementPDF(FPDF):
+    def cell(self, w=0, h=0, txt="", *args, **kwargs):
+        return super().cell(w, h, _safe(txt), *args, **kwargs)
+
+    def multi_cell(self, w, h, txt="", *args, **kwargs):
+        return super().multi_cell(w, h, _safe(txt), *args, **kwargs)
+
+    def header(self):
+        self.set_fill_color(*SAND)
+        self.rect(0, 0, 210, 30, "F")
+        self.set_text_color(*TEXT_DARK)
+        self.set_font("Helvetica", "B", 18)
+        self.set_xy(15, 10)
+        self.cell(0, 8, "Co-Parenting Agreement — Draft", ln=1)
+        self.set_font("Helvetica", "", 10)
+        self.set_text_color(*TEXT_MID)
+        self.set_x(15)
+        self.cell(0, 5, "SA Coparents - A starting point for discussion", ln=1)
+        self.set_text_color(*TEXT_DARK)
+        self.set_y(35)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font("Helvetica", "I", 8)
+        self.set_text_color(*TEXT_MID)
+        self.cell(
+            0, 8,
+            "Draft only - not a legal document. Review together and revise. SA Coparents.",
+            align="C",
+        )
+
+    def section_title(self, text: str):
+        self.ln(4)
+        self.set_font("Helvetica", "B", 13)
+        self.set_text_color(*SAGE)
+        self.cell(0, 8, text, ln=1)
+        self.set_draw_color(*SAGE)
+        self.set_line_width(0.4)
+        y = self.get_y()
+        self.line(15, y, 60, y)
+        self.ln(3)
+        self.set_text_color(*TEXT_DARK)
+
+    def body_text(self, text: str):
+        self.set_font("Helvetica", "", 11)
+        self.multi_cell(0, 6, text)
+        self.ln(1)
+
+    def clause_list(self, items: list) -> None:
+        """Render a list of {area, agreement} dicts as labelled clauses."""
+        self.set_font("Helvetica", "", 11)
+        for it in items:
+            area = it.get("area", "")
+            clause = it.get("agreement", "")
+            self.set_x(18)
+            self.set_font("Helvetica", "B", 11)
+            self.cell(0, 6, area, ln=1)
+            self.set_x(22)
+            self.set_font("Helvetica", "", 11)
+            self.multi_cell(0, 6, clause)
+            self.ln(0.5)
+
+    def bullet_list(self, items):
+        self.set_font("Helvetica", "", 11)
+        for item in items:
+            self.set_x(18)
+            self.cell(4, 6, chr(149))
+            self.multi_cell(0, 6, str(item))
+            self.ln(0.5)
+        self.ln(1)
+
+
+def _agreement_section(pdf: AgreementPDF, title: str, items: list) -> None:
+    if not items:
+        return
+    pdf.section_title(title)
+    pdf.clause_list(items)
+
+
+def build_agreement_pdf(
+    user_name: str,
+    agreement: Dict[str, Any],
+    mediation_date: str | None = None,
+) -> bytes:
+    pdf = AgreementPDF(format="A4")
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.set_margins(15, 30, 15)
+    pdf.add_page()
+
+    pdf.set_font("Helvetica", "", 11)
+    pdf.set_text_color(*TEXT_MID)
+    pdf.cell(0, 6, f"Drafted by: {user_name}", ln=1)
+    pdf.cell(0, 6, f"Generated: {datetime.now().strftime('%B %d, %Y')}", ln=1)
+    if mediation_date:
+        pdf.cell(0, 6, f"Mediation date: {mediation_date}", ln=1)
+    pdf.set_text_color(*TEXT_DARK)
+
+    if agreement.get("overview"):
+        pdf.ln(3)
+        pdf.set_font("Helvetica", "I", 11)
+        pdf.set_text_color(*TEXT_MID)
+        pdf.multi_cell(0, 6, agreement["overview"])
+        pdf.set_text_color(*TEXT_DARK)
+
+    if agreement.get("shared_goals"):
+        pdf.section_title("Shared Goals for Our Child")
+        pdf.bullet_list(agreement["shared_goals"])
+
+    _agreement_section(pdf, "Parenting Schedule", agreement.get("parenting_schedule", []))
+    _agreement_section(pdf, "Communication", agreement.get("communication", []))
+    _agreement_section(pdf, "Child Needs", agreement.get("child_needs", []))
+    _agreement_section(pdf, "Financial", agreement.get("financial", []))
+    _agreement_section(pdf, "Household Rules", agreement.get("household_rules", []))
+
+    priorities = agreement.get("priority_items", [])
+    if priorities:
+        pdf.section_title("Priority Topics to Discuss")
+        pdf.set_font("Helvetica", "", 11)
+        for it in priorities:
+            rank = it.get("rank", "?")
+            topic = it.get("topic", "")
+            cat = it.get("category", "")
+            pdf.set_x(18)
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.cell(10, 6, f"{rank}.")
+            pdf.set_font("Helvetica", "", 11)
+            pdf.multi_cell(0, 6, f"{topic}  [{cat}]")
+        pdf.ln(2)
+
+    if agreement.get("open_for_discussion"):
+        pdf.section_title("Open for Discussion")
+        pdf.bullet_list(agreement["open_for_discussion"])
+
+    if agreement.get("closing_note"):
+        pdf.section_title("A Note from the Draft")
+        pdf.set_font("Helvetica", "I", 11)
+        pdf.multi_cell(0, 6, agreement["closing_note"])
+
+    pdf.ln(8)
+    pdf.set_draw_color(*TEXT_MID)
+    pdf.line(20, pdf.get_y(), 90, pdf.get_y())
+    pdf.line(120, pdf.get_y(), 190, pdf.get_y())
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(*TEXT_MID)
+    pdf.set_xy(20, pdf.get_y() + 1)
+    pdf.cell(70, 5, "Parent A signature / date")
+    pdf.set_xy(120, pdf.get_y())
+    pdf.cell(70, 5, "Parent B signature / date")
 
     out = pdf.output(dest="S")
     if isinstance(out, str):

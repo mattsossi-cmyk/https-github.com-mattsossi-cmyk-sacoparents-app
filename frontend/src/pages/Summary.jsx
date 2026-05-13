@@ -3,7 +3,15 @@ import AppShell from "../components/AppShell";
 import { api, API } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
-import { Sparkles, Download, RefreshCw } from "lucide-react";
+import {
+  Sparkles,
+  Download,
+  RefreshCw,
+  FileText,
+  Handshake,
+} from "lucide-react";
+
+/* ------------------------------ shared bits ------------------------------ */
 
 function Section({ title, children }) {
   return (
@@ -29,6 +37,23 @@ function BulletList({ items }) {
   );
 }
 
+function ClauseList({ items }) {
+  if (!items || !items.length)
+    return <p className="text-sm italic text-[#8A9A92]">(none captured)</p>;
+  return (
+    <div className="space-y-3">
+      {items.map((it, i) => (
+        <div key={`${it.area}-${i}`} className="rounded-xl bg-[#F5F3E9] px-4 py-3">
+          <div className="text-xs uppercase tracking-[0.2em] text-[#849D8E] mb-1">
+            {it.area}
+          </div>
+          <div className="text-[#2A3631] leading-relaxed">{it.agreement}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function PriorityAgenda({ items }) {
   if (!items?.length)
     return <p className="text-sm italic text-[#8A9A92]">(none captured)</p>;
@@ -51,7 +76,23 @@ function PriorityAgenda({ items }) {
   );
 }
 
-export default function Summary() {
+async function downloadBlob(url, filename) {
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) throw new Error("Download failed");
+  const blob = await res.blob();
+  const objUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(objUrl);
+}
+
+/* ----------------------------- Mediation Tab ----------------------------- */
+
+function MediationSummaryTab() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
@@ -88,146 +129,366 @@ export default function Summary() {
   const download = async () => {
     if (!summary?.summary_id) return;
     try {
-      const res = await fetch(`${API}/mediation/summary/${summary.summary_id}/pdf`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("PDF request failed");
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `mediation-summary-${summary.summary_id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      await downloadBlob(
+        `${API}/mediation/summary/${summary.summary_id}/pdf`,
+        `mediation-summary-${summary.summary_id}.pdf`
+      );
     } catch (err) {
       logError("PDF download failed:", err);
       toast.error("Could not download PDF.");
     }
   };
 
+  if (!summary) {
+    return (
+      <EmptyState
+        icon={<Sparkles size={20} />}
+        title="Generate your mediation summary"
+        body="We'll synthesize your goals, concerns, priority agenda, communication style, and readiness into a single mediator-ready document."
+        cta={loading ? "Synthesizing…" : "Generate summary"}
+        onCta={generate}
+        loading={loading}
+        testId="summary-generate-button"
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-6" data-testid="summary-card">
+      <div className="card-soft p-8">
+        <HeaderRow
+          eyebrow="Readiness"
+          title={
+            <>
+              {summary.readiness_label}{" "}
+              <span className="text-[#8A9A92] text-base">
+                · {summary.readiness_score}/100
+              </span>
+            </>
+          }
+          onRegenerate={generate}
+          onDownload={download}
+          loading={loading}
+          regenerateTestId="summary-regenerate-button"
+          downloadTestId="summary-download-button"
+        />
+
+        <Section title="Child-centered goals">
+          <p className="text-[#2A3631] leading-relaxed">
+            {summary.child_goals_summary}
+          </p>
+        </Section>
+        <Section title="Top concerns">
+          <BulletList items={summary.top_concerns} />
+        </Section>
+        <Section title="Priority agenda">
+          <PriorityAgenda items={summary.priority_agenda} />
+        </Section>
+        <Section title="Flexibility areas">
+          <BulletList items={summary.flexibility_areas} />
+        </Section>
+        <Section title="Communication goals">
+          <BulletList items={summary.communication_goals} />
+        </Section>
+        <Section title="Notes for the mediator">
+          <p className="text-[#2A3631] leading-relaxed italic">
+            {summary.notes_for_mediator}
+          </p>
+        </Section>
+      </div>
+
+      {history.length > 1 && (
+        <HistoryList
+          items={history}
+          activeId={summary.summary_id}
+          labelKey="readiness_label"
+          idKey="summary_id"
+          onSelect={setSummary}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ----------------------------- Agreement Tab ----------------------------- */
+
+function AgreementDraftTab() {
+  const [agreement, setAgreement] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const r = await api.get("/mediation/agreements");
+      const list = r.data || [];
+      setHistory(list);
+      setAgreement((prev) => prev || list[0] || null);
+    } catch (err) {
+      logError("Failed to load agreements:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  const generate = async () => {
+    setLoading(true);
+    try {
+      const r = await api.post("/mediation/agreement");
+      setAgreement(r.data);
+      toast.success("Draft ready.");
+      loadHistory();
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || "Could not generate draft.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const download = async () => {
+    if (!agreement?.agreement_id) return;
+    try {
+      await downloadBlob(
+        `${API}/mediation/agreement/${agreement.agreement_id}/pdf`,
+        `coparenting-agreement-${agreement.agreement_id}.pdf`
+      );
+    } catch (err) {
+      logError("PDF download failed:", err);
+      toast.error("Could not download PDF.");
+    }
+  };
+
+  if (!agreement) {
+    return (
+      <EmptyState
+        icon={<Handshake size={20} />}
+        title="Draft your co-parenting agreement"
+        body="A neutral, child-centered draft based on your captured goals, concerns, and priorities. Bring it to your co-parent or mediator as a starting point — not a legal document."
+        cta={loading ? "Drafting…" : "Generate draft"}
+        onCta={generate}
+        loading={loading}
+        testId="agreement-generate-button"
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-6" data-testid="agreement-card">
+      <div className="card-soft p-8">
+        <HeaderRow
+          eyebrow="Draft"
+          title="Co-Parenting Agreement"
+          onRegenerate={generate}
+          onDownload={download}
+          loading={loading}
+          regenerateTestId="agreement-regenerate-button"
+          downloadTestId="agreement-download-button"
+        />
+
+        {agreement.overview && (
+          <Section title="Overview">
+            <p className="text-[#2A3631] leading-relaxed italic">
+              {agreement.overview}
+            </p>
+          </Section>
+        )}
+        <Section title="Shared goals for our child">
+          <BulletList items={agreement.shared_goals} />
+        </Section>
+        <Section title="Parenting schedule">
+          <ClauseList items={agreement.parenting_schedule} />
+        </Section>
+        <Section title="Communication">
+          <ClauseList items={agreement.communication} />
+        </Section>
+        <Section title="Child needs">
+          <ClauseList items={agreement.child_needs} />
+        </Section>
+        <Section title="Financial">
+          <ClauseList items={agreement.financial} />
+        </Section>
+        <Section title="Household rules">
+          <ClauseList items={agreement.household_rules} />
+        </Section>
+        <Section title="Priority topics to discuss">
+          <PriorityAgenda items={agreement.priority_items} />
+        </Section>
+        {agreement.open_for_discussion?.length > 0 && (
+          <Section title="Open for discussion">
+            <BulletList items={agreement.open_for_discussion} />
+          </Section>
+        )}
+        {agreement.closing_note && (
+          <Section title="A note from the draft">
+            <p className="text-[#2A3631] leading-relaxed italic">
+              {agreement.closing_note}
+            </p>
+          </Section>
+        )}
+
+        <div className="mt-6 rounded-xl bg-[#C28771]/8 border border-[#C28771]/25 px-4 py-3 text-xs text-[#5C6B64]">
+          This is a working draft to start a conversation — not a legal document.
+          Review it together with your co-parent and, when ready, with a mediator or
+          attorney.
+        </div>
+      </div>
+
+      {history.length > 1 && (
+        <HistoryList
+          items={history}
+          activeId={agreement.agreement_id}
+          labelKey="closing_note"
+          idKey="agreement_id"
+          onSelect={setAgreement}
+        />
+      )}
+    </div>
+  );
+}
+
+/* -------------------------- shared sub-components ------------------------ */
+
+function EmptyState({ icon, title, body, cta, onCta, loading, testId }) {
+  return (
+    <div className="card-soft p-10 text-center">
+      <div className="w-14 h-14 rounded-full bg-[#849D8E]/15 text-[#849D8E] grid place-items-center mx-auto mb-4">
+        {icon}
+      </div>
+      <div className="font-serif text-2xl text-[#2A3631] mb-2">{title}</div>
+      <p className="text-[#5C6B64] mb-6 max-w-xl mx-auto">{body}</p>
+      <button
+        onClick={onCta}
+        disabled={loading}
+        className="btn-sage inline-flex items-center gap-2"
+        data-testid={testId}
+      >
+        <Sparkles size={16} />
+        {cta}
+      </button>
+    </div>
+  );
+}
+
+function HeaderRow({
+  eyebrow,
+  title,
+  onRegenerate,
+  onDownload,
+  loading,
+  regenerateTestId,
+  downloadTestId,
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div>
+        <div className="eyebrow mb-1">{eyebrow}</div>
+        <div className="font-serif text-2xl text-[#2A3631]">{title}</div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onRegenerate}
+          className="btn-soft inline-flex items-center gap-2"
+          disabled={loading}
+          data-testid={regenerateTestId}
+        >
+          <RefreshCw size={14} />
+          {loading ? "Working…" : "Regenerate"}
+        </button>
+        <button
+          onClick={onDownload}
+          className="btn-sage inline-flex items-center gap-2"
+          data-testid={downloadTestId}
+        >
+          <Download size={16} />
+          Download PDF
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function HistoryList({ items, activeId, labelKey, idKey, onSelect }) {
+  return (
+    <div className="card-soft p-6">
+      <div className="eyebrow mb-3">Previous versions</div>
+      <div className="space-y-2">
+        {items.slice(0, 8).map((h) => (
+          <button
+            key={h[idKey]}
+            onClick={() => onSelect(h)}
+            disabled={h[idKey] === activeId}
+            className={`w-full text-left rounded-xl px-4 py-3 text-sm flex items-center justify-between transition-colors ${
+              h[idKey] === activeId
+                ? "bg-[#849D8E]/15 text-[#2A3631] ring-1 ring-[#849D8E]/30"
+                : "bg-[#F5F3E9] hover:bg-[#E8ECE9] text-[#2A3631]"
+            }`}
+            data-testid={`history-${h[idKey]}`}
+          >
+            <span className="truncate max-w-[70%]">
+              {h[labelKey] || "Untitled"}
+            </span>
+            <span className="text-[#8A9A92] shrink-0">
+              {new Date(h.generated_at).toLocaleString()}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------------- Page --------------------------------- */
+
+const TABS = [
+  { key: "summary", label: "Mediation Summary", icon: FileText },
+  { key: "agreement", label: "Co-Parenting Agreement Draft", icon: Handshake },
+];
+
+export default function Summary() {
+  const [tab, setTab] = useState("summary");
+
   return (
     <AppShell>
       <div className="fade-up max-w-4xl mx-auto">
         <div className="eyebrow mb-3">Final</div>
         <h1 className="font-serif text-4xl sm:text-5xl text-[#2A3631] mb-3">
-          Your mediation summary.
+          Your prepared documents.
         </h1>
         <p className="text-[#5C6B64] mb-8 max-w-2xl">
-          AI-synthesized from your preparation. Calm, balanced, and ready to share with your
-          mediator.
+          Two AI-synthesized views of your preparation: a focused summary for your
+          mediator, and a neutral draft agreement to start the conversation with your
+          co-parent.
         </p>
 
-        {!summary && (
-          <div className="card-soft p-10 text-center">
-            <div className="w-14 h-14 rounded-full bg-[#849D8E]/15 text-[#849D8E] grid place-items-center mx-auto mb-4">
-              <Sparkles size={20} />
-            </div>
-            <div className="font-serif text-2xl text-[#2A3631] mb-2">
-              Generate your first summary
-            </div>
-            <p className="text-[#5C6B64] mb-6">
-              We'll synthesize your goals, concerns, priority agenda, communication style,
-              and readiness into a single mediator-ready document.
-            </p>
-            <button
-              onClick={generate}
-              disabled={loading}
-              className="btn-sage inline-flex items-center gap-2"
-              data-testid="summary-generate-button"
-            >
-              <Sparkles size={16} />
-              {loading ? "Synthesizing…" : "Generate summary"}
-            </button>
-          </div>
-        )}
+        <div
+          className="inline-flex items-center gap-1 p-1 rounded-full bg-[#F5F3E9] mb-8"
+          role="tablist"
+        >
+          {TABS.map(({ key, label, icon: Icon }) => {
+            const active = tab === key;
+            return (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(key)}
+                data-testid={`summary-tab-${key}`}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors ${
+                  active
+                    ? "bg-white text-[#2A3631] shadow-sm"
+                    : "text-[#5C6B64] hover:text-[#2A3631]"
+                }`}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            );
+          })}
+        </div>
 
-        {summary && (
-          <div className="space-y-6" data-testid="summary-card">
-            <div className="card-soft p-8">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <div>
-                  <div className="eyebrow mb-1">Readiness</div>
-                  <div className="font-serif text-2xl text-[#2A3631]">
-                    {summary.readiness_label}{" "}
-                    <span className="text-[#8A9A92] text-base">
-                      · {summary.readiness_score}/100
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={generate}
-                    className="btn-soft inline-flex items-center gap-2"
-                    disabled={loading}
-                    data-testid="summary-regenerate-button"
-                  >
-                    <RefreshCw size={14} />
-                    {loading ? "Re-generating…" : "Regenerate"}
-                  </button>
-                  <button
-                    onClick={download}
-                    className="btn-sage inline-flex items-center gap-2"
-                    data-testid="summary-download-button"
-                  >
-                    <Download size={16} />
-                    Download PDF
-                  </button>
-                </div>
-              </div>
-
-              <Section title="Child-centered goals">
-                <p className="text-[#2A3631] leading-relaxed">
-                  {summary.child_goals_summary}
-                </p>
-              </Section>
-
-              <Section title="Top concerns">
-                <BulletList items={summary.top_concerns} />
-              </Section>
-
-              <Section title="Priority agenda">
-                <PriorityAgenda items={summary.priority_agenda} />
-              </Section>
-
-              <Section title="Flexibility areas">
-                <BulletList items={summary.flexibility_areas} />
-              </Section>
-
-              <Section title="Communication goals">
-                <BulletList items={summary.communication_goals} />
-              </Section>
-
-              <Section title="Notes for the mediator">
-                <p className="text-[#2A3631] leading-relaxed italic">
-                  {summary.notes_for_mediator}
-                </p>
-              </Section>
-            </div>
-
-            {history.length > 1 && (
-              <div className="card-soft p-6">
-                <div className="eyebrow mb-3">Previous summaries</div>
-                <div className="space-y-2">
-                  {history.slice(0, 8).map((h) => (
-                    <button
-                      key={h.summary_id}
-                      onClick={() => setSummary(h)}
-                      className="w-full text-left rounded-xl px-4 py-3 bg-[#F5F3E9] hover:bg-[#E8ECE9] text-sm flex items-center justify-between"
-                      data-testid={`summary-history-${h.summary_id}`}
-                    >
-                      <span className="text-[#2A3631]">{h.readiness_label}</span>
-                      <span className="text-[#8A9A92]">
-                        {new Date(h.generated_at).toLocaleString()}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {tab === "summary" && <MediationSummaryTab />}
+        {tab === "agreement" && <AgreementDraftTab />}
       </div>
     </AppShell>
   );
