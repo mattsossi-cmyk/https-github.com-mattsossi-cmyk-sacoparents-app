@@ -491,6 +491,7 @@ RESOURCES = [
         "title": "Disengaging from Provocation",
         "description": "How to recognize bait and respond from a place of calm.",
         "kind": "video",
+        "url": "https://youtu.be/7gjQnnUxLBs?si=ITTTAndKFYDaqugb",
     },
     {
         "id": "r8",
