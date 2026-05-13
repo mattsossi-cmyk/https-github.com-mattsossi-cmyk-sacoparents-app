@@ -486,13 +486,6 @@ async def email_mediator(
 # ============ Resources (static seed) ============
 RESOURCES = [
     {
-        "id": "r1",
-        "category": "Communication",
-        "title": "BIFF: Brief, Informative, Friendly, Firm",
-        "description": "A 4-rule framework for replying to high-conflict messages without escalating.",
-        "kind": "article",
-    },
-    {
         "id": "r2",
         "category": "High Conflict",
         "title": "Disengaging from Provocation",
