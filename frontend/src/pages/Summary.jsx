@@ -573,30 +573,3 @@ export default function Summary() {
     </AppShell>
   );
 }
- active = tab === key;
-            return (
-              <button
-                key={key}
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(key)}
-                data-testid={`summary-tab-${key}`}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors ${
-                  active
-                    ? "bg-white text-[#2A3631] shadow-sm"
-                    : "text-[#5C6B64] hover:text-[#2A3631]"
-                }`}
-              >
-                <Icon size={14} />
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        {tab === "summary" && <MediationSummaryTab />}
-        {tab === "agreement" && <AgreementDraftTab />}
-      </div>
-    </AppShell>
-  );
-}

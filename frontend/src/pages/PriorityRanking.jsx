@@ -6,6 +6,7 @@ import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import { GripVertical, Plus, X } from "lucide-react";
+import { ISSUE_TYPES } from "./IssuesConcerns";
 
 const BUCKETS = [
   { key: "urgent", label: "Most urgent", color: "#C28771", tint: "#C28771/12" },
@@ -14,30 +15,27 @@ const BUCKETS = [
   { key: "compromise", label: "Willing to compromise", color: "#D6A374", tint: "#D6A374/12" },
 ];
 
-const LABEL_FROM_CAT = {
-  parenting_schedule: "Parenting schedule",
-  communication: "Communication",
-  child_needs: "Child needs",
-  financial: "Financial",
-  household_rules: "Household rules",
-  safety_concerns: "Safety",
-};
+const ISSUE_LABEL_BY_ID = Object.fromEntries(
+  ISSUE_TYPES.map((it) => [it.id, it.label])
+);
 
 function deriveSuggestionsFromIssues(issues) {
   const suggestions = [];
   if (!issues) return suggestions;
-  Object.entries(issues).forEach(([cat, val]) => {
-    if (typeof val === "string") {
-      if (val.trim()) suggestions.push({ id: `s_${cat}`, label: LABEL_FROM_CAT[cat] || cat });
-    } else if (val && typeof val === "object") {
-      Object.entries(val).forEach(([k, v]) => {
-        if (v && String(v).trim().length > 0) {
-          const label = `${LABEL_FROM_CAT[cat] || cat}: ${k.replace(/_/g, " ")}`;
-          suggestions.push({ id: `s_${cat}_${k}`, label });
-        }
-      });
-    }
-  });
+  // New shape: { items: { issue_id: note }, other: string }
+  if (issues.items && typeof issues.items === "object") {
+    Object.entries(issues.items).forEach(([id, note]) => {
+      if (note && String(note).trim().length > 0) {
+        suggestions.push({
+          id: `s_${id}`,
+          label: ISSUE_LABEL_BY_ID[id] || id,
+        });
+      }
+    });
+  }
+  if (issues.other && String(issues.other).trim().length > 0) {
+    suggestions.push({ id: "s_other", label: "Other (your own notes)" });
+  }
   return suggestions;
 }
 

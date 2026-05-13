@@ -52,12 +52,8 @@ class ChildGoalsPayload(BaseModel):
 
 
 class IssuesPayload(BaseModel):
-    parenting_schedule: Dict[str, str] = {}
-    communication: Dict[str, str] = {}
-    child_needs: Dict[str, str] = {}
-    financial: Dict[str, str] = {}
-    household_rules: Dict[str, str] = {}
-    safety_concerns: str = ""
+    items: Dict[str, str] = {}  # issue_id -> parent's note (empty = not applicable)
+    other: str = ""  # free-text "anything else" field
 
 
 class PriorityItem(BaseModel):
