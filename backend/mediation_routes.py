@@ -531,6 +531,7 @@ RESOURCES = [
         "title": "Helping Your Child Feel Safe",
         "description": "Practical scripts and rituals that anchor your child during transitions.",
         "kind": "video",
+        "url": "https://youtu.be/oKd7PI_GjSs?si=xhm3g3pUjW1NLU3c",
     },
     {
         "id": "r7",
