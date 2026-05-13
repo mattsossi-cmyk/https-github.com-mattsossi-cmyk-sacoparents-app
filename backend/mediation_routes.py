@@ -543,6 +543,14 @@ RESOURCES = [
         "kind": "video",
         "url": "https://www.youtube.com/watch?v=ggXhQLihi54",
     },
+    {
+        "id": "r9",
+        "category": "Communication",
+        "title": "BIFF — Bill Eddy's book (Amazon)",
+        "description": "Get Bill Eddy's pocket-sized guide to writing Brief, Informative, Friendly, Firm responses to hostile emails, texts, and social media — perfect for high-conflict co-parenting.",
+        "kind": "article",
+        "url": "https://www.amazon.com/s?k=Bill+Eddy+BIFF&i=stripbooks",
+    },
 ]
 
 
