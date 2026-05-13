@@ -508,6 +508,14 @@ RESOURCES = [
         "url": "https://www.youtube.com/watch?v=b0IL8baFUmQ",
     },
     {
+        "id": "r10",
+        "category": "Parallel Parenting",
+        "title": "Moving from Co-Parenting to Parallel Parenting (Video)",
+        "description": "When traditional co-parenting isn't working, this walkthrough explains how to transition to a parallel parenting model and what to expect along the way.",
+        "kind": "video",
+        "url": "https://www.youtube.com/watch?v=Tj9zCQgLnxA",
+    },
+    {
         "id": "r4",
         "category": "Communication",
         "title": "I-Statements for Co-Parents",
