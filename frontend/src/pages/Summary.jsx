@@ -1029,7 +1029,50 @@ export default function Summary() {
         {tab === "summary" && <MediationSummaryTab />}
         {tab === "agreement" && <AgreementDraftTab />}
         {tab === "improve" && <ImprovementPlanTab />}
+
+        <OrgContactCard />
       </div>
     </AppShell>
+  );
+}
+
+function OrgContactCard() {
+  return (
+    <div
+      className="mt-12 card-soft p-6 sm:p-7 flex flex-col sm:flex-row items-center gap-5 sm:gap-7"
+      data-testid="org-contact-card"
+    >
+      <img
+        src="https://customer-assets.emergentagent.com/job_prepared-parents/artifacts/3vfnf7kd__sacoparentscharactersacoparents_three_feet_away_rotating_and.png"
+        alt="SA Coparents"
+        className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shrink-0 shadow-sm"
+      />
+      <div className="text-center sm:text-left">
+        <div className="font-serif text-xl text-[#2A3631] mb-1">SA Coparents</div>
+        <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-3">
+          Relational Mediation Prep
+        </div>
+        <address className="not-italic text-sm text-[#5C6B64] leading-relaxed space-y-0.5">
+          <div>16607 Blanco #703, San Antonio, Texas 78232</div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+            <a
+              href="tel:2102241667"
+              className="text-[#5C7A6A] hover:text-[#849D8E] hover:underline"
+              data-testid="org-contact-phone"
+            >
+              210-224-1667
+            </a>
+            <span className="hidden sm:inline text-[#D5D9D5]">·</span>
+            <a
+              href="mailto:mattsossi@bsossi.com"
+              className="text-[#5C7A6A] hover:text-[#849D8E] hover:underline"
+              data-testid="org-contact-email"
+            >
+              mattsossi@bsossi.com
+            </a>
+          </div>
+        </address>
+      </div>
+    </div>
   );
 }

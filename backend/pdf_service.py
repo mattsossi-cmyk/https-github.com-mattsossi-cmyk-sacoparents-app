@@ -1,4 +1,5 @@
 """PDF generation for the Mediation Prep Summary using fpdf2."""
+import os
 from io import BytesIO
 from datetime import datetime
 from typing import Any, Dict, List
@@ -11,6 +12,14 @@ TERRA = (194, 135, 113)
 SAND = (245, 243, 233)
 TEXT_DARK = (42, 54, 49)
 TEXT_MID = (92, 107, 100)
+
+# Org branding shown in every PDF
+ORG_NAME = "SA Coparents"
+ORG_TAGLINE = "Relational Mediation Prep"
+ORG_ADDRESS = "16607 Blanco #703, San Antonio, Texas 78232"
+ORG_PHONE = "210-224-1667"
+ORG_EMAIL = "mattsossi@bsossi.com"
+LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "sa_coparents_logo.png")
 
 
 # fpdf2's built-in Helvetica is a latin-1 font and can't encode characters like
@@ -48,27 +57,40 @@ class PrepSummaryPDF(FPDF):
         return super().multi_cell(w, h, _safe(txt), *args, **kwargs)
 
     def header(self):
+        # Soft sand band
         self.set_fill_color(*SAND)
-        self.rect(0, 0, 210, 30, "F")
+        self.rect(0, 0, 210, 38, "F")
+        # Logo on the left (24mm square block, vertically centered in the band)
+        if os.path.exists(LOGO_PATH):
+            try:
+                self.image(LOGO_PATH, x=12, y=7, w=24, h=24)
+            except Exception:
+                pass
+        # Title + tagline (offset right of the logo)
         self.set_text_color(*TEXT_DARK)
-        self.set_font("Helvetica", "B", 18)
-        self.set_xy(15, 10)
+        self.set_font("Helvetica", "B", 17)
+        self.set_xy(42, 9)
         self.cell(0, 8, "Mediation Preparation Summary", ln=1)
         self.set_font("Helvetica", "", 10)
         self.set_text_color(*TEXT_MID)
-        self.set_x(15)
-        self.cell(0, 5, "SA Coparents - Relational Mediation Prep", ln=1)
+        self.set_x(42)
+        self.cell(0, 5, f"{ORG_NAME} - {ORG_TAGLINE}", ln=1)
+        self.set_x(42)
+        self.cell(0, 5, f"{ORG_ADDRESS}", ln=1)
+        self.set_x(42)
+        self.cell(0, 5, f"{ORG_PHONE} - {ORG_EMAIL}", ln=1)
         self.set_text_color(*TEXT_DARK)
-        self.set_y(35)
+        self.set_y(44)
 
     def footer(self):
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(*TEXT_MID)
         self.cell(
-            0, 8,
-            "Confidential - Prepared for mediation. SA Coparents.",
+            0, 4,
+            f"Confidential - Prepared for mediation. {ORG_NAME} - {ORG_PHONE} - {ORG_EMAIL}",
             align="C",
+            ln=1,
         )
 
     def section_title(self, text: str):
@@ -153,7 +175,7 @@ def build_summary_pdf(
 ) -> bytes:
     pdf = PrepSummaryPDF(format="A4")
     pdf.set_auto_page_break(auto=True, margin=20)
-    pdf.set_margins(15, 30, 15)
+    pdf.set_margins(15, 44, 15)
     pdf.add_page()
 
     _render_meta(pdf, user_name, mediation_date)
@@ -190,26 +212,36 @@ class AgreementPDF(FPDF):
 
     def header(self):
         self.set_fill_color(*SAND)
-        self.rect(0, 0, 210, 30, "F")
+        self.rect(0, 0, 210, 38, "F")
+        if os.path.exists(LOGO_PATH):
+            try:
+                self.image(LOGO_PATH, x=12, y=7, w=24, h=24)
+            except Exception:
+                pass
         self.set_text_color(*TEXT_DARK)
-        self.set_font("Helvetica", "B", 18)
-        self.set_xy(15, 10)
-        self.cell(0, 8, "Co-Parenting Agreement — Draft", ln=1)
+        self.set_font("Helvetica", "B", 17)
+        self.set_xy(42, 9)
+        self.cell(0, 8, "Co-Parenting Agreement - Draft", ln=1)
         self.set_font("Helvetica", "", 10)
         self.set_text_color(*TEXT_MID)
-        self.set_x(15)
-        self.cell(0, 5, "SA Coparents - A starting point for discussion", ln=1)
+        self.set_x(42)
+        self.cell(0, 5, f"{ORG_NAME} - A starting point for discussion", ln=1)
+        self.set_x(42)
+        self.cell(0, 5, f"{ORG_ADDRESS}", ln=1)
+        self.set_x(42)
+        self.cell(0, 5, f"{ORG_PHONE} - {ORG_EMAIL}", ln=1)
         self.set_text_color(*TEXT_DARK)
-        self.set_y(35)
+        self.set_y(44)
 
     def footer(self):
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(*TEXT_MID)
         self.cell(
-            0, 8,
-            "Draft only - not a legal document. Review together and revise. SA Coparents.",
+            0, 4,
+            f"Draft only - not a legal document. {ORG_NAME} - {ORG_PHONE} - {ORG_EMAIL}",
             align="C",
+            ln=1,
         )
 
     def section_title(self, text: str):
@@ -319,7 +351,7 @@ def build_agreement_pdf(
 ) -> bytes:
     pdf = AgreementPDF(format="A4")
     pdf.set_auto_page_break(auto=True, margin=20)
-    pdf.set_margins(15, 30, 15)
+    pdf.set_margins(15, 44, 15)
     pdf.add_page()
 
     _agreement_meta(pdf, user_name, mediation_date)
