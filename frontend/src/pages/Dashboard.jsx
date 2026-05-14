@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { registerPushNotifications } from "../lib/native";
 import {
   Target,
   AlertCircle,
@@ -62,6 +63,8 @@ export default function Dashboard() {
       .get("/mediation/prep")
       .then((r) => setPrep(r.data || { completed: {} }))
       .catch((err) => logError("Failed to load prep:", err));
+    // On native mobile builds only — no-op on web.
+    registerPushNotifications(api);
   }, []);
 
   const completed = prep.completed || {};

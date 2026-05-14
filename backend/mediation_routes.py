@@ -428,6 +428,36 @@ async def list_improvement_plans(
     return await cursor.to_list(20)
 
 
+# ============ Device registration (mobile push notifications) ============
+class DeviceRegistration(BaseModel):
+    token: str = Field(min_length=4, max_length=4096)
+    platform: str = Field(min_length=1, max_length=20)  # "ios" | "android" | "web"
+
+
+@router.post("/devices/register")
+async def register_device(
+    body: DeviceRegistration,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    db = request.app.state.db
+    # Upsert by (user_id, token) so re-registration is idempotent.
+    await db.devices.update_one(
+        {"user_id": current.user_id, "token": body.token},
+        {
+            "$set": {
+                "user_id": current.user_id,
+                "token": body.token,
+                "platform": body.platform,
+                "updated_at": _now(),
+            },
+            "$setOnInsert": {"registered_at": _now()},
+        },
+        upsert=True,
+    )
+    return {"ok": True}
+
+
 # ============ Email to mediator ============
 class MediatorEmailRequest(BaseModel):
     mediator_email: EmailStr

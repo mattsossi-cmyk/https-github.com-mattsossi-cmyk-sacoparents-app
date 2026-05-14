@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import BiometricGate from "@/components/BiometricGate";
 
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
@@ -41,7 +42,8 @@ function HashAuthGuard({ children }) {
 function AppRoutes() {
   return (
     <HashAuthGuard>
-      <Routes>
+      <BiometricGate>
+        <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -115,6 +117,7 @@ function AppRoutes() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </BiometricGate>
     </HashAuthGuard>
   );
 }
