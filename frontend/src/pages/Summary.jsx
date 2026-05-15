@@ -724,16 +724,16 @@ function HeaderRow({
   emailTestId,
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3 mb-6">
       <div>
         <div className="eyebrow mb-1">{eyebrow}</div>
         <div className="font-serif text-2xl text-[#2A3631]">{title}</div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2">
         <RetakeButton />
         <button
           onClick={onRegenerate}
-          className="btn-soft inline-flex items-center gap-2"
+          className="btn-soft inline-flex items-center justify-center gap-2 min-h-[44px]"
           disabled={loading || downloading}
           data-testid={regenerateTestId}
         >
@@ -743,7 +743,7 @@ function HeaderRow({
         {onShare && (
           <button
             onClick={onShare}
-            className="btn-soft inline-flex items-center gap-2"
+            className="btn-soft inline-flex items-center justify-center gap-2 min-h-[44px]"
             disabled={loading || downloading}
             data-testid={shareTestId}
             title="Share a 7-day download link via text message"
@@ -755,7 +755,7 @@ function HeaderRow({
         {onEmail && (
           <button
             onClick={onEmail}
-            className="btn-soft inline-flex items-center gap-2"
+            className="btn-soft inline-flex items-center justify-center gap-2 min-h-[44px]"
             disabled={loading || downloading}
             data-testid={emailTestId}
             title="Email this document directly to your mediator"
@@ -766,7 +766,7 @@ function HeaderRow({
         )}
         <button
           onClick={onDownload}
-          className="btn-sage inline-flex items-center gap-2"
+          className="btn-sage inline-flex items-center justify-center gap-2 min-h-[44px] col-span-2 sm:col-span-1"
           disabled={downloading || loading}
           data-testid={downloadTestId}
         >
@@ -1038,7 +1038,7 @@ export default function Summary() {
     <AppShell>
       <div className="fade-up max-w-4xl mx-auto">
         <div className="eyebrow mb-3">Final</div>
-        <h1 className="font-serif text-4xl sm:text-5xl text-[#2A3631] mb-3">
+        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#2A3631] mb-3 leading-tight">
           Your prepared documents.
         </h1>
         <p className="text-[#5C6B64] mb-8 max-w-2xl">
@@ -1049,7 +1049,7 @@ export default function Summary() {
         </p>
 
         <div
-          className="inline-flex flex-wrap items-center gap-1 p-1 rounded-full bg-[#F5F3E9] mb-8"
+          className="inline-flex flex-wrap items-center gap-1 p-1 rounded-2xl sm:rounded-full bg-[#F5F3E9] mb-8 max-w-full"
           role="tablist"
         >
           {TABS.map(({ key, label, icon: Icon }) => {
