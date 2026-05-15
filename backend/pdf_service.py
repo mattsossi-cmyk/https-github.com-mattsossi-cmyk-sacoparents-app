@@ -180,6 +180,11 @@ def build_summary_pdf(
 
     _render_meta(pdf, user_name, mediation_date)
     _render_readiness_banner(pdf, summary)
+
+    if summary.get("changes_since_last"):
+        pdf.section_title("What's Changed Since Last Time")
+        pdf.body_text(summary["changes_since_last"])
+
     _render_child_goals(pdf, summary, child_goals)
 
     pdf.section_title("Top Concerns")
@@ -356,6 +361,10 @@ def build_agreement_pdf(
 
     _agreement_meta(pdf, user_name, mediation_date)
     _agreement_overview(pdf, agreement.get("overview"))
+
+    if agreement.get("changes_since_last"):
+        pdf.section_title("Updates from the Previous Draft")
+        pdf.body_text(agreement["changes_since_last"])
 
     if agreement.get("shared_goals"):
         pdf.section_title("Shared Goals for Our Child")

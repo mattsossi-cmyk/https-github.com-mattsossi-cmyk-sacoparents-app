@@ -3,7 +3,7 @@ import json
 import os
 import uuid
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
@@ -38,6 +38,40 @@ def _extract_json(text: str) -> Any:
             except json.JSONDecodeError:
                 continue
     raise ValueError("No JSON found in response")
+
+
+def _previous_context_block(previous: Optional[Dict[str, Any]], scope: str) -> str:
+    """Render the previous doc as a compact 'baseline' block for the AI prompt.
+
+    `scope` controls which slice of the prep_snapshot is included:
+      - 'full'        — child_goals, issues, priority, comm_style, readiness
+      - 'agreement'   — child_goals, issues, priority only
+      - 'improvement' — comm_style, readiness only
+    """
+    if not previous or not previous.get("prep_snapshot"):
+        return ""
+    snap = previous["prep_snapshot"]
+    if scope == "agreement":
+        snap = {k: snap.get(k) for k in ("child_goals", "issues", "priority")}
+    elif scope == "improvement":
+        snap = {k: snap.get(k) for k in ("comm_style", "readiness")}
+    return f"""
+=== PREVIOUS PREPARATION (baseline for comparison) ===
+Generated on: {previous.get("generated_at", "unknown date")}
+Previous prep data:
+{json.dumps(snap, indent=2, default=str)}
+"""
+
+
+_CHANGES_INSTRUCTION = """
+This parent has a previous version of this document. Compare the CURRENT prep data
+to the PREVIOUS PREPARATION above. Populate the `changes_since_last` field with a
+warm, SPECIFIC summary of what has shifted — written as if speaking directly to the
+parent. Cite concrete deltas (e.g., "your readiness on listening shifted from 2 to
+4", "you added Geographic Restriction as urgent", "your top concern shifted from X
+to Y"). Acknowledge growth without flattery. If nothing meaningful changed, set
+`changes_since_last` to "" (empty string).
+"""
 
 
 # ============ Communication Style Analysis ============
@@ -82,13 +116,19 @@ SUMMARY_SYSTEM = (
 )
 
 
-async def generate_summary(prep: Dict[str, Any], user_name: str) -> Dict[str, Any]:
+async def generate_summary(
+    prep: Dict[str, Any],
+    user_name: str,
+    previous: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     chat = _make_chat(SUMMARY_SYSTEM)
+    prev_block = _previous_context_block(previous, scope="full")
+    changes_instruction = _CHANGES_INSTRUCTION if previous else ""
     prompt = f"""Generate a mediation prep summary for {user_name}.
 
-Their preparation data:
+Their CURRENT preparation data:
 {json.dumps(prep, indent=2, default=str)}
-
+{prev_block}
 Return strict JSON only with these exact keys:
 {{
   "child_goals_summary": "1-2 sentence synthesis of their child-centered goals",
@@ -100,9 +140,10 @@ Return strict JSON only with these exact keys:
   "communication_goals": ["3 short communication intentions for the session"],
   "notes_for_mediator": "2-3 sentences of context the mediator should know, neutral tone",
   "readiness_label": "one of: Needs Support, Moderately Ready, Prepared for Mediation",
-  "readiness_score": integer 1-100
+  "readiness_score": integer 1-100,
+  "changes_since_last": "ONLY if a previous version exists — a warm, specific summary of what has changed. Otherwise empty string."
 }}
-"""
+{changes_instruction}"""
     response = await chat.send_message(UserMessage(text=prompt))
     return _extract_json(response)
 
@@ -145,9 +186,12 @@ async def generate_improvement_plan(
     comm_style: Dict[str, Any] | None,
     readiness: Dict[str, Any] | None,
     user_name: str,
+    previous: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Compile a 'Things I Can Improve On' plan from communication + readiness data."""
     chat = _make_chat(IMPROVEMENT_SYSTEM)
+    prev_block = _previous_context_block(previous, scope="improvement")
+    changes_instruction = _CHANGES_INSTRUCTION if previous else ""
     prompt = f"""Generate a personalized "Things I Can Improve On" action plan for {user_name}.
 
 Use ONLY these two inputs:
@@ -166,7 +210,7 @@ Readiness self-ratings (6 questions, 1=Not yet, 2=Sometimes, 3=Often, 4=Usually,
 
 Data:
 {json.dumps(readiness or {{}}, indent=2, default=str)}
-
+{prev_block}
 Return strict JSON only with these exact keys:
 {{
   "headline": "1 warm sentence that names the 1-2 biggest growth areas without judgment",
@@ -179,7 +223,8 @@ Return strict JSON only with these exact keys:
     }}
   ],
   "this_week": ["3 small, concrete actions to try in the next 7 days — each starts with a verb"],
-  "encouragement": "1-2 warm sentences acknowledging the courage of doing this work"
+  "encouragement": "1-2 warm sentences acknowledging the courage of doing this work",
+  "changes_since_last": "ONLY if a previous version exists — a warm, specific note on what shifted. Call out growth (a ratings jump) AND new areas surfacing. Otherwise empty string."
 }}
 
 Important:
@@ -188,7 +233,7 @@ Important:
 - Tips must reference real-life co-parenting scenarios (exchanges, texts, child's school events, holidays, etc).
 - Avoid clichés ('be the bigger person', 'communication is key', 'practice mindfulness').
 - If both inputs are mostly empty, return focus_areas=[] and put a gentle note in 'headline' that more reflection is needed.
-"""
+{changes_instruction}"""
     response = await chat.send_message(UserMessage(text=prompt))
     return _extract_json(response)
 
@@ -203,14 +248,20 @@ AGREEMENT_SYSTEM = (
 )
 
 
-async def generate_agreement_draft(prep: Dict[str, Any], user_name: str) -> Dict[str, Any]:
+async def generate_agreement_draft(
+    prep: Dict[str, Any],
+    user_name: str,
+    previous: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     chat = _make_chat(AGREEMENT_SYSTEM)
+    prev_block = _previous_context_block(previous, scope="agreement")
+    changes_instruction = _CHANGES_INSTRUCTION if previous else ""
     prompt = f"""Draft a co-parenting agreement for {user_name} based ONLY on this
 preparation data (ignore any communication-style or readiness data).
 
-Preparation data:
+CURRENT preparation data:
 {json.dumps(prep, indent=2, default=str)}
-
+{prev_block}
 Return strict JSON only with these exact keys:
 {{
   "overview": "1-2 sentence warm intro framing this as a child-centered draft",
@@ -228,7 +279,8 @@ Return strict JSON only with these exact keys:
     {{"rank": 1, "topic": "...", "category": "urgent|difficult|easy|compromise"}}
   ],
   "open_for_discussion": ["topics where no clear agreement was captured yet"],
-  "closing_note": "one warm sentence framing this as a living draft to revisit together"
+  "closing_note": "one warm sentence framing this as a living draft to revisit together",
+  "changes_since_last": "ONLY if a previous version exists — a short neutral list-style summary of what changed (new clauses, removed clauses, refined wording). Otherwise empty string."
 }}
 
 Important:
@@ -236,6 +288,6 @@ Important:
 - If a section has NO captured input, return an empty array [] (do NOT invent content).
 - Spell every co-parent input faithfully; do not add legal-sounding language.
 - Keep each "agreement" clause under ~24 words.
-"""
+{changes_instruction}"""
     response = await chat.send_message(UserMessage(text=prompt))
     return _extract_json(response)

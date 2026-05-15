@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api, API } from "../lib/api";
 import { toast } from "sonner";
@@ -13,9 +14,46 @@ import {
   Mail,
   X,
   Lightbulb,
+  TrendingUp,
+  PenSquare,
 } from "lucide-react";
 
 /* ------------------------------ shared bits ------------------------------ */
+
+function ChangesSinceLast({ text }) {
+  if (!text || !text.trim()) return null;
+  return (
+    <div
+      className="rounded-2xl bg-[#D6A374]/10 border border-[#D6A374]/25 px-5 py-4 mb-6"
+      data-testid="changes-since-last"
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <span className="w-7 h-7 rounded-full bg-[#D6A374]/20 text-[#A26852] grid place-items-center">
+          <TrendingUp size={14} />
+        </span>
+        <div className="text-xs uppercase tracking-[0.2em] text-[#A26852]">
+          What's changed since last time
+        </div>
+      </div>
+      <p className="text-sm text-[#2A3631] leading-relaxed whitespace-pre-line">{text}</p>
+    </div>
+  );
+}
+
+function RetakeButton() {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate("/dashboard")}
+      className="btn-soft inline-flex items-center gap-2"
+      data-testid="retake-assessments-button"
+      title="Update your prep answers and re-generate to track your growth"
+    >
+      <PenSquare size={14} />
+      Retake assessments
+    </button>
+  );
+}
 
 function Section({ title, children }) {
   return (
@@ -230,6 +268,8 @@ function MediationSummaryTab() {
           emailTestId="summary-email-button"
         />
 
+        <ChangesSinceLast text={summary.changes_since_last} />
+
         <Section title="Child-centered goals">
           <p className="text-[#2A3631] leading-relaxed">
             {summary.child_goals_summary}
@@ -392,6 +432,8 @@ function AgreementDraftTab() {
           emailTestId="agreement-email-button"
         />
 
+        <ChangesSinceLast text={agreement.changes_since_last} />
+
         {agreement.overview && (
           <Section title="Overview">
             <p className="text-[#2A3631] leading-relaxed italic">
@@ -515,16 +557,21 @@ function ImprovementPlanTab() {
               {plan.headline}
             </div>
           </div>
-          <button
-            onClick={generate}
-            className="btn-soft inline-flex items-center gap-2"
-            disabled={loading}
-            data-testid="improve-regenerate-button"
-          >
-            <RefreshCw size={14} />
-            {loading ? "Working…" : "Regenerate"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <RetakeButton />
+            <button
+              onClick={generate}
+              className="btn-soft inline-flex items-center gap-2"
+              disabled={loading}
+              data-testid="improve-regenerate-button"
+            >
+              <RefreshCw size={14} />
+              {loading ? "Working…" : "Regenerate"}
+            </button>
+          </div>
         </div>
+
+        <ChangesSinceLast text={plan.changes_since_last} />
 
         {(plan.focus_areas || []).length === 0 && (
           <div className="rounded-2xl bg-[#F5F3E9] px-5 py-4 text-sm text-[#5C6B64]">
@@ -683,6 +730,7 @@ function HeaderRow({
         <div className="font-serif text-2xl text-[#2A3631]">{title}</div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        <RetakeButton />
         <button
           onClick={onRegenerate}
           className="btn-soft inline-flex items-center gap-2"

@@ -57,6 +57,26 @@ async def _load_prep(db, user_id: str) -> Dict[str, Any]:
     return doc or {"user_id": user_id, "completed": {}}
 
 
+def _snapshot_prep(prep: Dict[str, Any]) -> Dict[str, Any]:
+    """Freeze the parts of prep we want to compare across summaries."""
+    return {
+        "child_goals": prep.get("child_goals"),
+        "issues": prep.get("issues"),
+        "priority": prep.get("priority"),
+        "comm_style": prep.get("comm_style"),
+        "readiness": prep.get("readiness"),
+    }
+
+
+async def _previous_doc(db, collection: str, user_id: str) -> Optional[Dict[str, Any]]:
+    """Most recent doc of that type for the user — used as the comparison baseline."""
+    return await db[collection].find_one(
+        {"user_id": user_id, "prep_snapshot": {"$exists": True}},
+        {"_id": 0},
+        sort=[("generated_at", -1)],
+    )
+
+
 # ============ Save endpoints ============
 @router.put("/child-goals")
 async def save_child_goals(
@@ -167,18 +187,20 @@ async def generate_summary(
             status_code=400,
             detail="Please complete at least Child Goals or Issues first.",
         )
+    previous = await _previous_doc(db, "summaries", current.user_id)
     try:
-        summary = await ai_service.generate_summary(prep, current.name)
+        summary = await ai_service.generate_summary(prep, current.name, previous)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI summary failed: {e}")
 
     summary_id = f"sum_{uuid.uuid4().hex[:12]}"
-    # Authoritative fields after the AI spread (defensive against hallucinated keys).
     doc = {
         **summary,
         "summary_id": summary_id,
         "user_id": current.user_id,
         "generated_at": _now(),
+        "prep_snapshot": _snapshot_prep(prep),
+        "previous_summary_id": previous.get("summary_id") if previous else None,
     }
     await db.summaries.insert_one(doc.copy())
     doc.pop("_id", None)
@@ -243,19 +265,20 @@ async def generate_agreement(
         "issues": prep.get("issues"),
         "priority": prep.get("priority"),
     }
+    previous = await _previous_doc(db, "agreements", current.user_id)
     try:
-        agreement = await ai_service.generate_agreement_draft(focused, current.name)
+        agreement = await ai_service.generate_agreement_draft(focused, current.name, previous)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI agreement failed: {e}")
 
     agreement_id = f"agr_{uuid.uuid4().hex[:12]}"
-    # Authoritative fields go AFTER the AI spread so Claude can never overwrite
-    # our identifiers with a hallucinated key.
     doc = {
         **agreement,
         "agreement_id": agreement_id,
         "user_id": current.user_id,
         "generated_at": _now(),
+        "prep_snapshot": _snapshot_prep(prep),
+        "previous_agreement_id": previous.get("agreement_id") if previous else None,
     }
     await db.agreements.insert_one(doc.copy())
     doc.pop("_id", None)
@@ -400,8 +423,9 @@ async def generate_improvement_plan_route(
             status_code=400,
             detail="Please complete the Communication and Readiness steps first.",
         )
+    previous = await _previous_doc(db, "improvement_plans", current.user_id)
     try:
-        plan = await ai_service.generate_improvement_plan(comm, readiness, current.name)
+        plan = await ai_service.generate_improvement_plan(comm, readiness, current.name, previous)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI plan failed: {e}")
 
@@ -411,6 +435,8 @@ async def generate_improvement_plan_route(
         "plan_id": plan_id,
         "user_id": current.user_id,
         "generated_at": _now(),
+        "prep_snapshot": _snapshot_prep(prep),
+        "previous_plan_id": previous.get("plan_id") if previous else None,
     }
     await db.improvement_plans.insert_one(doc.copy())
     doc.pop("_id", None)
