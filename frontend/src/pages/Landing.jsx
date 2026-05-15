@@ -157,8 +157,23 @@ export default function Landing() {
 
       <footer className="border-t border-[#E8ECE9] py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-[#8A9A92]">
-            © SA Coparents — Relational Mediation Prep
+          <div className="text-xs text-[#8A9A92] flex flex-col sm:flex-row items-center gap-x-4 gap-y-1">
+            <span>© SA Coparents — Relational Mediation Prep</span>
+            <span className="hidden sm:inline text-[#D5D9D5]">·</span>
+            <Link
+              to="/privacy"
+              className="hover:text-[#2A3631] transition-colors"
+              data-testid="landing-footer-privacy-link"
+            >
+              Privacy
+            </Link>
+            <Link
+              to="/terms"
+              className="hover:text-[#2A3631] transition-colors"
+              data-testid="landing-footer-terms-link"
+            >
+              Terms
+            </Link>
           </div>
           <div className="flex items-center gap-5">
             <Link
