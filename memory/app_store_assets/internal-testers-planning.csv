@@ -1,0 +1,6 @@
+First Name,Last Name,Email,Role,Notes
+Matt,Sossi,mattsossi@bsossi.com,Account Holder,Owner of the app
+,,,Admin,Optional — second person who can manage the app fully
+,,,App Manager,Manages app submissions but not finances
+,,,Developer,Recommended role for engineers + power testers
+,,,Marketing,Read-only — can see analytics + crash reports
