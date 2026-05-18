@@ -1,0 +1,83 @@
+workflows:
+  android-aab:
+    name: SA Coparents — Android App Bundle (AAB)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      vars:
+        # The package name configured in capacitor.config.ts
+        PACKAGE_NAME: "com.bsossi.sacoparents"
+        # React build output that Capacitor copies into Android
+        WEB_DIR: "build"
+      node: 20.11.1
+      java: 17
+      groups:
+        # Create this group in Codemagic > Teams > Environment variables
+        # and add: REACT_APP_BACKEND_URL = https://your-production-backend.com
+        - production_env
+      android_signing:
+        # Create this reference in Codemagic > Teams > Code signing identities
+        # Choose "Generate new keystore" — Codemagic stores it for you forever.
+        - sacoparents_keystore
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    scripts:
+      - name: Install root + frontend dependencies
+        script: |
+          cd $CM_BUILD_DIR/frontend
+          yarn install --frozen-lockfile
+
+      - name: Build the React web app
+        script: |
+          cd $CM_BUILD_DIR/frontend
+          # REACT_APP_BACKEND_URL is injected from the production_env group above
+          CI=false yarn build
+
+      - name: Generate the Android platform (one-time, idempotent)
+        script: |
+          cd $CM_BUILD_DIR/frontend
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+          npx cap sync android
+
+      - name: Bump version from Codemagic build number
+        script: |
+          cd $CM_BUILD_DIR/frontend/android/app
+          BUILD_NUMBER=$(($PROJECT_BUILD_NUMBER + 1))
+          # Inject versionCode + versionName into Gradle
+          sed -i.bak "s/versionCode .*/versionCode $BUILD_NUMBER/" build.gradle
+          sed -i.bak "s/versionName .*/versionName \"1.0.$BUILD_NUMBER\"/" build.gradle
+          cat build.gradle | grep -E "version(Code|Name)"
+
+      - name: Build signed Android App Bundle (.aab)
+        script: |
+          cd $CM_BUILD_DIR/frontend/android
+          chmod +x gradlew
+          ./gradlew bundleRelease
+
+    artifacts:
+      - frontend/android/app/build/outputs/**/*.aab
+      - frontend/android/app/build/outputs/**/mapping.txt
+
+    publishing:
+      email:
+        # Replace with your real address before the first build
+        recipients:
+          - mattsossi@bsossi.com
+        notify:
+          success: true
+          failure: true
+      # OPTIONAL: auto-upload to Google Play Internal track
+      # Uncomment + add a "google_play" credential in Codemagic > Teams.
+      # google_play:
+      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
+      #   submit_as_draft: true
