@@ -165,6 +165,15 @@ export default function AppShell({ children }) {
                 );
               })}
             </div>
+            <div className="border-t border-[#E8ECE9] px-4 py-3">
+              <Link
+                to="/delete-account"
+                className="block px-4 py-2.5 rounded-xl text-[13px] text-[#C97B63] hover:bg-[#C97B63]/10"
+                data-testid="mobile-nav-delete-account"
+              >
+                Delete my account
+              </Link>
+            </div>
             <div className="border-t border-[#E8ECE9] px-4 py-4 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-sm text-[#2A3631] truncate">{user?.name}</div>

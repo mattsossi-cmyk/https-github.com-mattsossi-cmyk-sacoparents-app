@@ -81,7 +81,7 @@ export default function Privacy() {
           <ul>
             <li><strong>Access</strong> — email us and we'll send you a copy of everything we have about you.</li>
             <li><strong>Correction</strong> — most fields are editable directly in the app. For others, email us.</li>
-            <li><strong>Deletion</strong> — email us and we'll delete your account and all associated data within 30 days. PDFs already shared via expired links can no longer be retrieved.</li>
+            <li><strong>Deletion</strong> &mdash; you can <Link to="/delete-account" className="text-[#5C7A6A] underline">delete your account and all associated data instantly</Link> from inside the app or from that public page. Alternatively, email us and we'll handle it manually within 7 days. PDFs already shared via expired links can no longer be retrieved.</li>
             <li><strong>Portability</strong> — we can export your prep + generated documents as JSON on request.</li>
           </ul>
 

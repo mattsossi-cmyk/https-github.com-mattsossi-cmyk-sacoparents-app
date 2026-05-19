@@ -22,6 +22,7 @@ import Resources from "@/pages/Resources";
 import Safety from "@/pages/Safety";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import DeleteAccount from "@/pages/DeleteAccount";
 
 const TOAST_OPTIONS = {
   style: {
@@ -52,6 +53,7 @@ function AppRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/safety" element={<Safety />} />
 
         <Route

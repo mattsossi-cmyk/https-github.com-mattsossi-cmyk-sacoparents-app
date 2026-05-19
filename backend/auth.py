@@ -322,6 +322,42 @@ async def logout(
     return {"ok": True}
 
 
+@router.delete("/account")
+async def delete_account(
+    request: Request,
+    response: Response,
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Permanently delete the authenticated user's account and ALL their data.
+
+    Required by Google Play & Apple App Store for in-app account deletion.
+    Wipes: users, user_sessions, prep_data, summaries, agreements,
+    improvement_plans, mediator_emails, devices.
+    """
+    user_id = current.user_id
+    collections = (
+        "users",
+        "user_sessions",
+        "prep_data",
+        "summaries",
+        "agreements",
+        "improvement_plans",
+        "mediator_emails",
+        "devices",
+    )
+    deleted = {}
+    for name in collections:
+        result = await db[name].delete_many({"user_id": user_id})
+        deleted[name] = result.deleted_count
+    # Make sure the user document itself is gone (queried by user_id above)
+    await db.users.delete_one({"user_id": user_id})
+
+    response.delete_cookie("session_token", path="/")
+    response.delete_cookie(JWT_COOKIE_NAME, path="/")
+    return {"ok": True, "deleted": deleted}
+
+
 @router.patch("/profile", response_model=UserPublic)
 async def update_profile(
     body: dict,
