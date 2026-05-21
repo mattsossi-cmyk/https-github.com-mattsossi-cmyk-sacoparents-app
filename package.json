@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "description": "SA Coparents — Relational Mediation Prep. Monorepo manifest. The actual React + Capacitor app lives in /frontend, the FastAPI backend in /backend. This root manifest exists so CI tools (Codemagic, GitHub Actions) can detect the project as a Node workspace.",
-  "workspaces": [
-    "frontend"
-  ],
   "scripts": {
     "build": "cd frontend && yarn build",
     "install:frontend": "cd frontend && yarn install --frozen-lockfile",
