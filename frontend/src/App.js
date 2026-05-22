@@ -23,6 +23,7 @@ import Safety from "@/pages/Safety";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
 import DeleteAccount from "@/pages/DeleteAccount";
+import Reflection from "@/pages/Reflection";
 
 const TOAST_OPTIONS = {
   style: {
@@ -117,6 +118,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Resources />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reflection"
+          element={
+            <ProtectedRoute>
+              <Reflection />
             </ProtectedRoute>
           }
         />

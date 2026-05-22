@@ -76,11 +76,26 @@ class ReadinessPayload(BaseModel):
 
 
 class ReflectionPayload(BaseModel):
+    """Personal Reflection journal entries — private to the user.
+
+    Stored as free-text strings keyed by prompt id. Frontend uses the
+    `child_lens`, `own_part`, `best_outcome`, `release` keys but additional
+    keys are accepted (`Config.extra = "allow"`) so the prompt set can
+    evolve without database migrations.
+    """
+    child_lens: str = ""
+    own_part: str = ""
+    best_outcome: str = ""
+    release: str = ""
+    # Legacy keys retained for backward compatibility with older clients.
     worry: str = ""
     triggers: str = ""
     calm_strategy: str = ""
     appreciation: str = ""
     private: bool = True
+
+    class Config:
+        extra = "allow"
 
 
 class PrepDataSnapshot(BaseModel):

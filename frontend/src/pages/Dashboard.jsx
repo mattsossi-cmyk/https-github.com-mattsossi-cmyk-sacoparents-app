@@ -12,6 +12,7 @@ import {
   HeartHandshake,
   FileText,
   BookOpen,
+  Heart,
   ArrowRight,
 } from "lucide-react";
 import { logError } from "../lib/logger";
@@ -176,6 +177,25 @@ export default function Dashboard() {
             <div className="font-serif text-xl text-[#2A3631] mb-1">Mediation Summary</div>
             <p className="text-sm text-[#5C6B64]">
               AI-synthesized, mediator-ready, downloadable PDF.
+            </p>
+          </Link>
+
+          <Link
+            to="/reflection"
+            className="card-soft p-6 hover:-translate-y-0.5 transition-transform"
+            data-testid="dashboard-reflection-card"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-11 h-11 rounded-full grid place-items-center bg-[#C28771]/15 text-[#C28771]">
+                <Heart size={18} />
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#8A9A92]">
+                Optional
+              </div>
+            </div>
+            <div className="font-serif text-xl text-[#2A3631] mb-1">Personal Reflection</div>
+            <p className="text-sm text-[#5C6B64]">
+              Private journal + 4-7-8 breathing. Listen to your wiser self.
             </p>
           </Link>
 
