@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "SA Coparents Coverage Area"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-98.6500, 29.3500],
+              [-98.3500, 29.3500],
+              [-98.3500, 29.6500],
+              [-98.6500, 29.6500],
+              [-98.6500, 29.3500]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
