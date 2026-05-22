@@ -68,7 +68,11 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "test": "craco test",
+    "cap:ios:patch": "node scripts/patch-ios-encryption-exemption.js",
+    "cap:sync:ios": "npx cap sync ios && yarn cap:ios:patch",
+    "cap:add:ios": "npx cap add ios && yarn cap:ios:patch",
+    "cap:sync:android": "npx cap sync android"
   },
   "browserslist": {
     "production": [
