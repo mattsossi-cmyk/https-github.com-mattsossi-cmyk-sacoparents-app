@@ -12,11 +12,40 @@ CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
 PROVIDER = "anthropic"
 
 
+# ============ Universal safety + scope guardrail ============
+# Prepended to every system prompt. Centralises Apple/Google review-friendly
+# guardrails so the AI cannot give legal advice, validate aggression, or
+# minimise safety concerns.
+SAFETY_GUARDRAIL = (
+    "CRITICAL SAFETY & SCOPE RULES — apply these to every response:\n"
+    "1. You are NOT a lawyer, therapist, or licensed mediator. Never give legal "
+    "advice, custody-outcome predictions, or therapeutic diagnoses. If the parent "
+    "asks 'what will the court do' or 'do I have a case', redirect them to consult "
+    "a qualified family attorney or mediator.\n"
+    "2. Never validate, soften, or rationalise aggression, threats, control, "
+    "intimidation, or any form of abuse — physical, sexual, emotional, verbal, or "
+    "financial. If the parent's input contains language suggesting domestic violence, "
+    "stalking, suicidal ideation, or threats to harm anyone (including children, "
+    "themselves, or the co-parent), gently surface that the National DV Hotline "
+    "(1-800-799-7233) and Suicide & Crisis Lifeline (988) are available 24/7. Do not "
+    "lecture; just acknowledge and resource.\n"
+    "3. Never write content that disparages the co-parent personally. Stay focused on "
+    "behaviours, patterns, and the child's wellbeing — not character judgements.\n"
+    "4. If the parent describes a high-conflict or unsafe pattern, gently note that "
+    "parallel parenting (minimal contact, structured communication) may be more "
+    "appropriate than traditional co-parenting. Do not push reconciliation.\n"
+    "5. Centre every recommendation on the child's emotional safety and developmental "
+    "needs — not on what is 'fair' between the parents.\n"
+    "6. Output strict JSON only when the response schema requires it — no prose "
+    "outside the JSON, no apologies, no preamble.\n\n"
+)
+
+
 def _make_chat(system_prompt: str) -> LlmChat:
     return LlmChat(
         api_key=os.environ["EMERGENT_LLM_KEY"],
         session_id=f"sa-coparents-{uuid.uuid4().hex[:10]}",
-        system_message=system_prompt,
+        system_message=SAFETY_GUARDRAIL + system_prompt,
     ).with_model(PROVIDER, CLAUDE_MODEL)
 
 

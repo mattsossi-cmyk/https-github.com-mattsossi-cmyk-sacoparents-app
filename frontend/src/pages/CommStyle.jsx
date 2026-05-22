@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import WizardLayout from "../components/WizardLayout";
+import SafetyAlert from "../components/SafetyAlert";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
+import { detectSafetyConcern } from "../lib/safety";
 import { Sparkles } from "lucide-react";
 
 const QUIZ = [
@@ -160,6 +162,7 @@ export default function CommStyle() {
               placeholder="Stays private to your account."
               data-testid="comm-sample-textarea"
             />
+            <CommSafety sample={sample} />
           </div>
 
           <div className="flex items-center gap-3">
@@ -229,4 +232,11 @@ export default function CommStyle() {
       </WizardLayout>
     </AppShell>
   );
+}
+
+function CommSafety({ sample }) {
+  const [dismissed, setDismissed] = useState(false);
+  const level = useMemo(() => detectSafetyConcern(sample), [sample]);
+  if (!level || dismissed) return null;
+  return <SafetyAlert level={level} onDismiss={() => setDismissed(true)} />;
 }

@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import WizardLayout from "../components/WizardLayout";
+import SafetyAlert from "../components/SafetyAlert";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
+import { detectSafetyConcern } from "../lib/safety";
 import { ShieldAlert } from "lucide-react";
 
 // The fixed list of concerns shown to every parent. Add new items here and the
@@ -123,6 +125,16 @@ export default function IssuesConcerns() {
 
   const updateItem = (id, val) => setItems((prev) => ({ ...prev, [id]: val }));
 
+  // Combine all free-text entries and check for crisis/support signals.
+  // "danger" wins over "support". Memoised so we don't re-scan on every render.
+  const safetyLevel = useMemo(() => {
+    const combined = [other, ...Object.values(items || {})].filter(Boolean).join(" \n ");
+    return detectSafetyConcern(combined);
+  }, [items, other]);
+
+  const [safetyDismissed, setSafetyDismissed] = useState(false);
+  const showSafety = safetyLevel && !safetyDismissed;
+
   const onNext = async () => {
     setSaving(true);
     try {
@@ -149,6 +161,12 @@ export default function IssuesConcerns() {
         onNext={onNext}
       >
         <div className="space-y-3">
+          {showSafety && (
+            <SafetyAlert
+              level={safetyLevel}
+              onDismiss={() => setSafetyDismissed(true)}
+            />
+          )}
           {ISSUE_TYPES.map((it) => (
             <IssueRow
               key={it.id}
