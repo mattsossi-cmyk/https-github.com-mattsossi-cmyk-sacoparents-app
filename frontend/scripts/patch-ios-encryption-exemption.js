@@ -1,18 +1,23 @@
 #!/usr/bin/env node
 /**
- * Patches the Capacitor-generated iOS Info.plist so Apple's Export
- * Compliance question is answered automatically on every build.
+ * Patches the Capacitor-generated iOS Info.plist so:
  *
- * SA Coparents only uses standard iOS HTTPS / system-provided encryption,
- * so it is EXEMPT from Export Compliance (ECCN 5D992.c).
+ *   1. Apple's Export Compliance question is auto-answered "exempt"
+ *      (SA Coparents only uses standard iOS HTTPS / system encryption).
+ *
+ *   2. No routing/navigation capability is ever silently enabled — SA
+ *      Coparents is a co-parenting mediation prep app, NOT a navigation
+ *      app. We actively strip MKDirectionsApplicationSupportedModes if
+ *      anything ever inserts it.
  *
  * Run AFTER `npx cap add ios` or `npx cap sync ios`.
  *
- * What it sets:
- *   ITSAppUsesNonExemptEncryption = false
+ * Keys set:
+ *   ITSAppUsesNonExemptEncryption = false  (skip Apple's encryption question)
  *
- * This single key tells Apple "no, my app does not use non-exempt encryption"
- * so App Store Connect stops asking on every TestFlight / release submission.
+ * Keys removed:
+ *   MKDirectionsApplicationSupportedModes  (forces Apple to ask for a
+ *                                           Routing App Coverage File)
  */
 const fs = require("fs");
 const path = require("path");
@@ -28,28 +33,47 @@ const INFO_PLIST = path.resolve(
 
 if (!fs.existsSync(INFO_PLIST)) {
   console.log(
-    `[encryption-exemption] ${INFO_PLIST} not found — skipping. Run \`npx cap add ios\` first.`
+    `[ios-patch] ${INFO_PLIST} not found — skipping. Run \`npx cap add ios\` first.`
   );
   process.exit(0);
 }
 
 let plist = fs.readFileSync(INFO_PLIST, "utf8");
+let changed = false;
 
-if (plist.includes("ITSAppUsesNonExemptEncryption")) {
-  console.log(
-    "[encryption-exemption] ITSAppUsesNonExemptEncryption already set — nothing to do."
-  );
-  process.exit(0);
-}
-
-// Insert key/value right before the closing </dict></plist>
-const insertion = `	<key>ITSAppUsesNonExemptEncryption</key>
+// 1. Encryption exemption
+if (!plist.includes("ITSAppUsesNonExemptEncryption")) {
+  const insertion = `	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 `;
+  plist = plist.replace("</dict>\n</plist>", `${insertion}</dict>\n</plist>`);
+  changed = true;
+  console.log(
+    "[ios-patch] Added ITSAppUsesNonExemptEncryption=false (Export Compliance auto-answer)."
+  );
+} else {
+  console.log("[ios-patch] ITSAppUsesNonExemptEncryption already set.");
+}
 
-plist = plist.replace("</dict>\n</plist>", `${insertion}</dict>\n</plist>`);
-fs.writeFileSync(INFO_PLIST, plist);
+// 2. Strip routing capability if it ever shows up (SA Coparents is not a nav app)
+const ROUTING_KEY = "MKDirectionsApplicationSupportedModes";
+if (plist.includes(ROUTING_KEY)) {
+  // Match: <key>MKDirectionsApplicationSupportedModes</key>\n  <array>...</array>
+  const routingPattern = new RegExp(
+    `\\s*<key>${ROUTING_KEY}<\\/key>\\s*<array>[\\s\\S]*?<\\/array>`,
+    "g"
+  );
+  plist = plist.replace(routingPattern, "");
+  changed = true;
+  console.log(
+    `[ios-patch] Removed ${ROUTING_KEY} — SA Coparents is not a navigation app.`
+  );
+}
 
-console.log(
-  "[encryption-exemption] OK — added ITSAppUsesNonExemptEncryption=false to Info.plist."
-);
+if (changed) {
+  fs.writeFileSync(INFO_PLIST, plist);
+  console.log("[ios-patch] OK — Info.plist updated.");
+} else {
+  console.log("[ios-patch] Nothing to change.");
+}
+
