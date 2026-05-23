@@ -24,6 +24,7 @@ import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
 import DeleteAccount from "@/pages/DeleteAccount";
 import Reflection from "@/pages/Reflection";
+import Orientation from "@/pages/Orientation";
 
 const TOAST_OPTIONS = {
   style: {
@@ -126,6 +127,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Reflection />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orientation"
+          element={
+            <ProtectedRoute>
+              <Orientation />
             </ProtectedRoute>
           }
         />

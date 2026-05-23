@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
+import { hasSeenOrientation } from "./Orientation";
 import {
   Target,
   AlertCircle,
@@ -13,6 +14,7 @@ import {
   FileText,
   BookOpen,
   Heart,
+  Compass,
   ArrowRight,
 } from "lucide-react";
 import { logError } from "../lib/logger";
@@ -57,7 +59,15 @@ const STEPS = [
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [prep, setPrep] = useState({ completed: {} });
+
+  // First-time visitors: send them through the orientation walkthrough.
+  useEffect(() => {
+    if (!hasSeenOrientation()) {
+      navigate("/orientation", { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     api
@@ -87,6 +97,13 @@ export default function Dashboard() {
                 Take your time. Each step builds toward a calmer, child-centered mediation
                 conversation. Nothing here is graded.
               </p>
+              <Link
+                to="/orientation"
+                className="inline-flex items-center gap-1.5 text-[12px] text-[#849D8E] hover:text-[#6f8576] mt-4 underline-offset-2 hover:underline"
+                data-testid="dashboard-revisit-orientation"
+              >
+                <Compass size={12} /> Revisit the orientation walkthrough
+              </Link>
               <div className="mt-6">
                 <div className="flex items-end justify-between mb-2">
                   <div>
