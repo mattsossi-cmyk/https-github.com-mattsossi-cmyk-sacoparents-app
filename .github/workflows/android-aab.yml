@@ -114,6 +114,35 @@ jobs:
           chmod +x gradlew
           ./gradlew bundleRelease --no-daemon
 
+      - name: Print upload-key SHA-1 + SHA-256 fingerprints
+        if: env.KEYSTORE_PRESENT == 'true'
+        env:
+          KEYSTORE_PRESENT: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        working-directory: frontend/android/app
+        run: |
+          # Use keytool (bundled with JDK) to print the fingerprints of the
+          # upload key. The Google Play "App signing key" fingerprint (the one
+          # used after re-signing by Google) is shown in Play Console -> App
+          # integrity. THIS workflow prints the UPLOAD key fingerprint, which
+          # is what most third-party SDKs (Firebase, Google Sign-In, deep links)
+          # also accept.
+          echo "=== Upload key fingerprints (use these for Firebase / Google Sign-In) ==="
+          keytool -list -v \
+            -keystore release.keystore \
+            -alias "$KEY_ALIAS" \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEYSTORE_PASSWORD" \
+            | grep -E "SHA1|SHA-256|SHA256" | tee $RUNNER_TEMP/fingerprints.txt
+          echo "::group::Raw keytool output (full cert detail)"
+          keytool -list -v \
+            -keystore release.keystore \
+            -alias "$KEY_ALIAS" \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEYSTORE_PASSWORD" || true
+          echo "::endgroup::"
+
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
@@ -144,4 +173,14 @@ jobs:
           else
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "- AAB not produced. Check the build logs above." >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f $RUNNER_TEMP/fingerprints.txt ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Upload key fingerprints" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat $RUNNER_TEMP/fingerprints.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "For Firebase / Google Sign-In setup, paste the SHA-256 above into the relevant SDK console." >> $GITHUB_STEP_SUMMARY
+            echo "For the Play-managed signing key fingerprint, go to Play Console -> Setup -> App integrity." >> $GITHUB_STEP_SUMMARY
           fi
