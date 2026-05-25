@@ -768,7 +768,7 @@ function PhoneScreen({ variant }) {
   const modules = [
     { tone: "purple", label: "Guided Communication" },
     { tone: "teal", label: "Conflict Reduction" },
-    { tone: "magenta", label: "Parenting Plans" },
+    { tone: "magenta", label: "Co-Parenting Agreements" },
     { tone: "blue", label: "Educational Resources" },
     { tone: "green", label: "My Journal" },
   ];
