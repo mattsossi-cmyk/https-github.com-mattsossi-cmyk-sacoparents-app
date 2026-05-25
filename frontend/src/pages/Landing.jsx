@@ -274,8 +274,8 @@ function Features() {
     {
       icon: HeartHandshake,
       tone: "teal",
-      title: "Conflict Reduction Tools",
-      text: "Built-in strategies that help parents pause, reflect, and respond more effectively during difficult interactions.",
+      title: "State Goals, Concerns & Needs",
+      text: "A clear, structured way to articulate what matters most — your goals for your child, your concerns about the situation, and the needs you want addressed in mediation.",
     },
     {
       icon: Heart,
@@ -767,7 +767,7 @@ function PhoneScreen({ variant }) {
   // home variant — brochure-style module list
   const modules = [
     { tone: "purple", label: "Guided Communication" },
-    { tone: "teal", label: "Conflict Reduction" },
+    { tone: "teal", label: "Goals, Concerns & Needs" },
     { tone: "magenta", label: "Co-Parenting Agreements" },
     { tone: "blue", label: "Educational Resources" },
     { tone: "green", label: "My Journal" },
