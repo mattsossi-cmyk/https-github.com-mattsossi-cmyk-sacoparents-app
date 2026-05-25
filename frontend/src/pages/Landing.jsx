@@ -806,18 +806,17 @@ function PhoneScreen({ variant }) {
 
   // home variant — brochure-style module list
   const modules = [
-    { tone: "purple", label: "Guided Communication" },
+    { tone: "purple", label: "Create a Mediation Plan" },
     { tone: "teal", label: "Goals, Concerns & Needs" },
     { tone: "magenta", label: "Co-Parenting Agreements" },
-    { tone: "blue", label: "Educational Resources" },
     { tone: "green", label: "My Journal" },
   ];
   return (
     <div className="h-full flex flex-col">
       <div className="bg-brand-gradient text-white px-5 pt-12 pb-6">
-        <div className="text-[10px] uppercase tracking-[0.2em] opacity-80 mb-1">Welcome</div>
+        <div className="text-[10px] uppercase tracking-[0.2em] opacity-80 mb-1">Step 2</div>
         <div className="font-extrabold text-lg leading-tight">
-          Let's work together for your children.
+          Plan your path forward.
         </div>
       </div>
       <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
