@@ -744,8 +744,6 @@ function PhoneScreen({ variant }) {
       { icon: MessageCircle, tone: "purple", label: "Separate facts from feelings" },
       { icon: Lock, tone: "teal", label: "Identify what you can and cannot control" },
       { icon: TrendingUpIcon, tone: "magenta", label: "Evaluate patterns, not isolated events" },
-      { icon: Heart, tone: "blue", label: "Consider the impact on everyone involved" },
-      { icon: TargetIcon, tone: "green", label: "Define your realistic goals" },
     ];
     return (
       <div className="h-full flex flex-col">
