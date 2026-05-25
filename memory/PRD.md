@@ -1,8 +1,10 @@
-# SA Coparents — Relational Mediation Prep App
+# SACOParents — Helping Families Communicate Better
 
 ## 🎯 Original Problem Statement
 
-A calm, structured, non-judgmental, supportive web/mobile app that moves co-parents from emotionally reactive to child-centered and prepared for relational mediation. Built for separating parents in South Africa and the US (San Antonio area).
+A modern co-parenting communication & support platform that helps separated and divorced parents create healthier communication patterns while keeping the emotional well-being of their children at the center. Moves parents from emotionally reactive to child-centered and prepared for relational mediation. Built for separating parents in South Africa and the US (San Antonio area).
+
+> **Visual identity (Feb 2026 rebrand):** Deep royal purple → teal gradient. Brand mark: stylized heart-shaped family. Wordmark: `SACOParents` (single word, capital SACO, lowercase parents).
 
 ## 👥 Users / Personas
 
@@ -206,3 +208,27 @@ See `/app/memory/test_credentials.md`
 - Supervisor manages services (`sudo supervisorctl restart {frontend|backend}`)
 - Production env vars must include: `MONGO_URL`, `DB_NAME`, `JWT_SECRET`, `CORS_ORIGINS`, `EMERGENT_LLM_KEY`, `SMTP_PASSWORD`
 - After every redeploy: verify `EMERGENT_LLM_KEY` is still set (the most common cause of AI failures in prod)
+
+---
+
+## 📜 Changelog
+
+### Feb 2026 — SACOParents Visual Rebrand (entire app)
+- New palette: deep royal purple `#3D1A78` → teal `#2DB5B5` gradient, with magenta/blue/green/purple accent circles
+- New typography: Plus Jakarta Sans (bold display + body) + Caveat (script accents)
+- New SVG brand mark: gradient heart-shaped family face — replaces legacy `sa-coparents-mark.png` across AppShell, Login, Register, Orientation
+- Brand wordmark renamed from "SA Coparents" → "SACOParents" (55 references swapped)
+- New utility classes: `bg-brand-gradient`, `btn-gradient`, `card-bold`, `text-brand-gradient`, `font-script`, `icon-circle-{purple,teal,magenta,blue,green}`
+- Tailwind extended with `brand` palette and `brand-gradient` background image
+- 600+ hex literals bulk-replaced via sed so existing wizard screens inherit the new look automatically
+- Two-mode design: **Confident** (Landing/Auth/Dashboard — gradients) and **Grounded** (Wizard/Reflection/Safety — calm purple-light wash). Safety alerts stay terra/red.
+- Landing page fully rewritten in brochure style: gradient hero with inline `PhoneMockup` (no static screenshots — all CSS), brochure "struggles list" with script accent, 5-feature icon-circle grid, curved wave dividers, gradient mediator panel, dark footer
+- Service worker version bumped to `sac-v2` to force PWA cache eviction
+- HTML metadata: title, theme-color, manifest, OG tags all renamed
+- AuthCallback now shows actionable error UI with diagnostic code (e.g. `missing_session_id`, `http_401`) instead of silent redirect
+
+### Status
+- ✅ Visual rebrand verified by frontend testing agent — all 10 tested screens render cleanly, no JS errors, no legacy "SA Coparents" text in DOM
+- ⏳ Google OAuth on production `sacoparentsapp.online` — diagnostic UI deployed; awaiting user redeploy + retest to capture failure code
+- ⏳ Marketing assets (`/marketing/raw-*.png`) still show old branding but are no longer referenced from Landing (replaced by inline CSS `PhoneMockup`). App Store screenshot suite in `/app/memory/app_store_assets/` will need refresh before publishing.
+

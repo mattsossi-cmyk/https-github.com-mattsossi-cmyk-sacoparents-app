@@ -178,12 +178,7 @@ function Hero() {
               <div className="absolute -top-12 -right-12 w-72 h-72 rounded-full bg-white/10 blur-2xl" />
               <div className="absolute -bottom-16 -left-12 w-56 h-56 rounded-full bg-[#2DB5B5]/30 blur-2xl" />
               <div className="relative">
-                <img
-                  src="/marketing/raw-summary.png"
-                  alt="SACOParents — Your prepared documents"
-                  className="w-full max-w-sm mx-auto rounded-[36px] shadow-2xl ring-4 ring-white/20"
-                  data-testid="hero-screenshot"
-                />
+                <PhoneMockup />
               </div>
             </div>
           </div>
@@ -383,9 +378,9 @@ function HowItWorks() {
 ============================================================ */
 function ScreenshotShowcase() {
   const shots = [
-    { src: "/marketing/raw-dashboard.png", caption: "Your progress dashboard" },
-    { src: "/marketing/raw-summary.png", caption: "AI-synthesized documents" },
-    { src: "/marketing/raw-safety.png", caption: "Safety, always one tap away" },
+    { variant: "home", caption: "Your guided modules" },
+    { variant: "mediator", caption: "AI-synthesized documents" },
+    { variant: "home", caption: "Safety, always one tap away" },
   ];
   return (
     <section className="bg-[#EFE9F9] py-16 sm:py-24" data-testid="screenshot-showcase">
@@ -399,11 +394,7 @@ function ScreenshotShowcase() {
         <div className="grid sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
           {shots.map((s, i) => (
             <div key={i} className="text-center" data-testid={`screenshot-${i + 1}`}>
-              <img
-                src={s.src}
-                alt={s.caption}
-                className="w-full max-w-[260px] mx-auto rounded-[28px] shadow-2xl ring-1 ring-white"
-              />
+              <PhoneMockup variant={s.variant} className="!max-w-[220px]" />
               <div className="text-[13px] text-[#4B4567] mt-4 font-semibold">{s.caption}</div>
             </div>
           ))}
@@ -462,11 +453,7 @@ function ForMediators() {
           </div>
 
           <div className="lg:col-span-5 relative">
-            <img
-              src="/marketing/raw-summary.png"
-              alt="A mediator-ready summary"
-              className="relative w-full max-w-sm mx-auto rounded-[28px] shadow-2xl ring-4 ring-white/20"
-            />
+            <PhoneMockup variant="mediator" />
           </div>
         </div>
       </div>
@@ -720,6 +707,104 @@ function MarketingFooter() {
         <span>16607 Blanco #703, San Antonio, Texas 78232</span>
       </div>
     </footer>
+  );
+}
+
+/* ============================================================
+   PHONE MOCKUP — inline, brand-correct (no legacy screenshots)
+============================================================ */
+function PhoneMockup({ variant = "home", className = "" }) {
+  return (
+    <div
+      className={`relative w-full max-w-[300px] mx-auto ${className}`}
+      data-testid={`phone-mockup-${variant}`}
+    >
+      <div className="aspect-[9/19] rounded-[40px] bg-[#1A1330] p-[10px] shadow-2xl ring-4 ring-white/20">
+        <div className="w-full h-full rounded-[32px] bg-white overflow-hidden relative">
+          {/* notch */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-5 rounded-full bg-[#1A1330] z-10" />
+          <PhoneScreen variant={variant} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhoneScreen({ variant }) {
+  if (variant === "mediator") {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="bg-brand-gradient text-white px-5 pt-12 pb-6">
+          <div className="text-[9px] uppercase tracking-[0.2em] opacity-80 mb-1">Mediation</div>
+          <div className="font-extrabold text-lg leading-tight">Your prepared documents</div>
+        </div>
+        <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
+          <DocRow icon="🗎" label="Mediation Summary" tone="purple" />
+          <DocRow icon="✦" label="Co-Parenting Agreement" tone="teal" />
+          <DocRow icon="↗" label="Things I Can Improve" tone="magenta" />
+          <div className="pt-3">
+            <div className="text-[9px] uppercase tracking-[0.15em] text-[#857E9C] mb-1.5 font-semibold">
+              Readiness
+            </div>
+            <div className="bg-white rounded-xl border border-[#E5E0EE] p-3">
+              <div className="flex items-end justify-between mb-2">
+                <span className="text-[11px] text-[#4B4567] font-semibold">Prepared</span>
+                <span className="text-base font-extrabold text-[#3D1A78]">75/100</span>
+              </div>
+              <div className="h-1.5 bg-[#EFE9F9] rounded-full overflow-hidden">
+                <div className="h-full bg-brand-gradient" style={{ width: "75%" }} />
+              </div>
+            </div>
+          </div>
+          <button className="w-full mt-2 py-2.5 rounded-full bg-brand-gradient text-white text-xs font-bold">
+            Download PDF
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // home variant — brochure-style module list
+  const modules = [
+    { tone: "purple", label: "Guided Communication" },
+    { tone: "teal", label: "Conflict Reduction" },
+    { tone: "magenta", label: "Parenting Plans" },
+    { tone: "blue", label: "Educational Resources" },
+    { tone: "green", label: "My Journal" },
+  ];
+  return (
+    <div className="h-full flex flex-col">
+      <div className="bg-brand-gradient text-white px-5 pt-12 pb-6">
+        <div className="text-[10px] uppercase tracking-[0.2em] opacity-80 mb-1">Welcome</div>
+        <div className="font-extrabold text-lg leading-tight">
+          Let's work together for your children.
+        </div>
+      </div>
+      <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
+        {modules.map((m) => (
+          <div
+            key={m.label}
+            className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5"
+          >
+            <span className={`icon-circle icon-circle-${m.tone} w-9 h-9`}>
+              <Heart size={14} />
+            </span>
+            <span className="text-[12px] font-semibold text-[#1A1330] leading-tight">
+              {m.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DocRow({ icon, label, tone }) {
+  return (
+    <div className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5">
+      <span className={`icon-circle icon-circle-${tone} w-8 h-8 text-xs font-bold`}>{icon}</span>
+      <span className="text-[12px] font-semibold text-[#1A1330]">{label}</span>
+    </div>
   );
 }
 
