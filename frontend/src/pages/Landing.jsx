@@ -13,7 +13,6 @@ import {
   Apple,
   Play as PlayIcon,
   ChevronDown,
-  Quote,
   Mail,
   BookOpen,
   Lock,
@@ -35,7 +34,6 @@ export default function Landing() {
       <HowItWorks />
       <ScreenshotShowcase />
       <ForMediators />
-      <Testimonials />
       <FAQ />
       <FinalCTA />
       <MarketingFooter />
@@ -461,53 +459,6 @@ function ForMediators() {
           <div className="lg:col-span-5 relative">
             <PhoneMockup variant="mediator" />
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
-   TESTIMONIALS
-============================================================ */
-function Testimonials() {
-  const quotes = [
-    {
-      q: "I walked into my mediation calmer than I'd been in months. Having my answers already on paper made the conversation about my daughter, not about us.",
-      a: "Parent · San Antonio, TX",
-    },
-    {
-      q: "The 'Things I Can Improve On' section was hard to read but exactly what I needed. It changed how I show up.",
-      a: "Parent · Cape Town, ZA",
-    },
-    {
-      q: "I recommend it to every client before our first session. They come prepared and we get to the substance faster.",
-      a: "Family Mediator",
-    },
-  ];
-  return (
-    <section className="bg-white py-16 sm:py-24 border-y border-[#E5E0EE]" data-testid="testimonials">
-      <div className="max-w-7xl mx-auto px-5 sm:px-6">
-        <div className="text-center mb-12">
-          <div className="eyebrow text-[#3D1A78] mb-3">What people say</div>
-          <h2 className="font-sans font-extrabold text-3xl sm:text-4xl text-[#1A1330] tracking-tight">
-            From parents and mediators.
-          </h2>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {quotes.map((q, i) => (
-            <div
-              key={i}
-              className="bg-[#F8F7FC] border border-[#E5E0EE] rounded-2xl p-7 hover:shadow-lg transition-shadow"
-              data-testid={`testimonial-${i + 1}`}
-            >
-              <Quote className="text-[#3D1A78] mb-4" size={22} />
-              <p className="text-[14px] text-[#1A1330] leading-relaxed italic">{q.q}</p>
-              <div className="text-[11px] text-[#857E9C] mt-5 uppercase tracking-wider font-semibold">
-                {q.a}
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </section>
