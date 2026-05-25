@@ -384,9 +384,9 @@ function HowItWorks() {
 ============================================================ */
 function ScreenshotShowcase() {
   const shots = [
-    { variant: "assess", caption: "Assess your situation" },
-    { variant: "home", caption: "Plan your path forward" },
-    { variant: "mediator", caption: "Your prepared documents" },
+    { variant: "assess", caption: "Where you start" },
+    { variant: "home", caption: "What you build" },
+    { variant: "mediator", caption: "What you take to mediation" },
   ];
   return (
     <section className="bg-[#EFE9F9] py-16 sm:py-24" data-testid="screenshot-showcase">
