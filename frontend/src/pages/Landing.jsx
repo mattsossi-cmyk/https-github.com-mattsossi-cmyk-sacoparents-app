@@ -385,7 +385,7 @@ function HowItWorks() {
 ============================================================ */
 function ScreenshotShowcase() {
   const shots = [
-    { variant: "home", caption: "Your guided modules" },
+    { variant: "assess", caption: "Assess Your Situation" },
     { variant: "mediator", caption: "AI-synthesized documents" },
     { variant: "home", caption: "Safety, always one tap away" },
   ];
@@ -738,6 +738,37 @@ function PhoneMockup({ variant = "home", className = "" }) {
 }
 
 function PhoneScreen({ variant }) {
+  if (variant === "assess") {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="bg-brand-gradient text-white px-5 pt-12 pb-6">
+          <div className="text-[9px] uppercase tracking-[0.2em] opacity-80 mb-1">Step 1</div>
+          <div className="font-extrabold text-lg leading-tight">Assess Your Situation</div>
+        </div>
+        <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
+          <div className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-3">
+            <span className="icon-circle icon-circle-purple w-9 h-9">
+              <MessageCircle size={14} />
+            </span>
+            <span className="text-[12px] font-semibold text-[#1A1330] leading-tight">
+              Review Your Communication Skills
+            </span>
+          </div>
+          <div className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-3">
+            <span className="icon-circle icon-circle-teal w-9 h-9">
+              <Heart size={14} />
+            </span>
+            <span className="text-[12px] font-semibold text-[#1A1330] leading-tight">
+              Place Objective
+            </span>
+          </div>
+          <button className="w-full mt-2 py-2.5 rounded-full bg-brand-gradient text-white text-xs font-bold">
+            Begin
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (variant === "mediator") {
     return (
       <div className="h-full flex flex-col">
