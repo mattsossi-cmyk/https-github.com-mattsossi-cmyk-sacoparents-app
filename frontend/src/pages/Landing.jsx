@@ -387,8 +387,8 @@ function HowItWorks() {
 function ScreenshotShowcase() {
   const shots = [
     { variant: "assess", caption: "Assess Your Situation" },
-    { variant: "mediator", caption: "AI-synthesized documents" },
     { variant: "home", caption: "Safety, always one tap away" },
+    { variant: "mediator", caption: "AI-synthesized documents" },
   ];
   return (
     <section className="bg-[#EFE9F9] py-16 sm:py-24" data-testid="screenshot-showcase">
