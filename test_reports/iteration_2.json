@@ -1,0 +1,46 @@
+{
+  "summary": "Frontend-only post-rebrand regression test. Verified the SACOParents purple->teal visual rebrand across Landing, Login, Register, Dashboard, AppShell (desktop + mobile drawer), Reflection, Safety, Summary, AuthCallback error UI (missing_session_id), and DeleteAccount. Login via parent1@test.com / TestPass123! works end-to-end (JWT). Brand wordmark 'SACOParents' is rendered everywhere in user-visible HTML text — NO 'SA Coparents' leftover in any rendered DOM text on any tested page. Gradient hero, brochure-style sections, and new SVG brand mark all render cleanly. Pages reachable: /, /login, /register, /dashboard, /reflection, /safety, /summary, /auth/callback (error UI), /delete-account. Console: clean (no JS errors detected on any tested page).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Direct navigation to wizard routes",
+        "issue": "Direct page.goto to /issues, /priority, /communication, /readiness all redirect back to / (landing). /reflection, /safety, /summary preserve URL correctly. May indicate these wizard step routes are mounted under a different path (e.g. /step/issues) OR a protected-route guard is interpreting them as public — please verify intended routing. Dashboard top-nav 'Issues/Priority/Communication/Readiness' links and module cards exist; clicking through dashboard module cards was not exercised end-to-end.",
+        "affected_selectors": []
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Landing — hero showcase image",
+        "issues": [
+          "The iPhone mockup image inside the hero section (Landing.jsx line ~183 — <img alt='SACOParents — Your prepared documents'>) still has 'SA Coparents' text BAKED INTO the image asset (it shows in the rendered screenshot of the phone mockup). The HTML alt-text was rebranded but the PNG/SVG source itself still says 'SA Coparents'. Replace the image asset file to fully complete the rebrand."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_1.json",
+    "/app/backend/tests/backend_test.py"
+  ],
+  "action_items": [
+    "Replace the hero phone-mockup image asset (Landing.jsx ~line 183) — the embedded PNG/SVG still displays 'SA Coparents' branding inside the picture.",
+    "Verify wizard step routes — direct navigation to /issues, /priority, /communication, /readiness redirects to / (landing). Confirm whether routes are at different paths (e.g. /step/...) or if a redirect/guard is misfiring."
+  ],
+  "critical_code_review_comments": [
+    "Excellent execution of visual rebrand: new tokens (bg-brand-gradient, btn-gradient, card-bold, font-script) work cleanly across all pages.",
+    "AuthCallback error UI is well-designed: shows clear 'Sign-in didn't complete' heading, 'Back to sign in' CTA, 'Return home' secondary, and diagnostic CODE: MISSING_SESSION_ID — meets the spec.",
+    "Mobile drawer (AppShell) renders all 9 routes correctly with new brand wordmark and gradient.",
+    "Dashboard progress bar uses class 'progress-fill' and updates correctly (5/5 = 100% for test user).",
+    "Brochure-style Landing page is visually polished — purple hero, teal accent on 'Healthier Co-Parenting', wavy section divider, philosophy card with script-font tagline, 5 feature cards with colored icon-circles, all consistent with brand guidelines.",
+    "Minor: 1 hero asset image still shows 'SA Coparents' text inside the PNG/SVG — only remaining visible legacy branding."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (frontend-only request)", "frontend": "~95% — all 10 tested screens render cleanly with new brand; 1 image asset has legacy text; wizard direct-route paths need verification"},
+  "test_credentials": "parent1@test.com / TestPass123! works for JWT login",
+  "seed_data_creation": "None — used existing test user",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Rebrand verification complete. Only outstanding item: the hero phone-mockup image asset in Landing.jsx (~line 183) still embeds 'SA Coparents' text in the PNG/SVG itself — the HTML alt-tag was updated but the image source file was not regenerated. This is the only place 'SA Coparents' is still user-visible. Wizard step routes /issues|/priority|/communication|/readiness redirect to / on direct navigation — needs verification of intended routing. All other flows (auth, dashboard, summary, safety, reflection, delete-account, auth callback error UI) verified working with new branding.",
+  "rca of the issue": "N/A — no functional regressions found. Rebrand executed cleanly at the CSS/component level; only the static image asset remains as a residual legacy."
+}

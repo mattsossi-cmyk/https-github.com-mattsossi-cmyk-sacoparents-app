@@ -71,7 +71,7 @@ function IssueRow({ id, label, placeholder, safetyFlag, value, onChange }) {
       className={`rounded-2xl border p-5 transition-colors ${
         safetyFlag
           ? "border-[#C28771]/30 bg-[#C28771]/5"
-          : "border-transparent bg-[#F5F3E9]"
+          : "border-transparent bg-[#EFE9F9]"
       }`}
       data-testid={`issue-${id}`}
     >
@@ -81,10 +81,10 @@ function IssueRow({ id, label, placeholder, safetyFlag, value, onChange }) {
             <ShieldAlert size={14} />
           </div>
         )}
-        <div className="font-serif text-lg text-[#2A3631] leading-snug">{label}</div>
+        <div className="font-serif text-lg text-[#1A1330] leading-snug">{label}</div>
       </div>
       {safetyFlag && (
-        <p className="text-xs text-[#5C6B64] mb-3">
+        <p className="text-xs text-[#4B4567] mb-3">
           If your child is in immediate danger, please call 911 or visit our{" "}
           <Link to="/safety" className="underline text-[#C28771]" data-testid={`issue-${id}-safety-link`}>
             safety resources
@@ -176,11 +176,11 @@ export default function IssuesConcerns() {
             />
           ))}
 
-          <div className="rounded-2xl bg-[#F5F3E9] p-5">
-            <div className="font-serif text-lg text-[#2A3631] mb-2">
+          <div className="rounded-2xl bg-[#EFE9F9] p-5">
+            <div className="font-serif text-lg text-[#1A1330] mb-2">
               Anything else on your mind
             </div>
-            <p className="text-xs text-[#5C6B64] mb-3">
+            <p className="text-xs text-[#4B4567] mb-3">
               Use this space for anything not covered above.
             </p>
             <textarea

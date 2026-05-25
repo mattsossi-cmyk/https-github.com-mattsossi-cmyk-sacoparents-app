@@ -1,48 +1,58 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-    /* SA Coparents — Organic & Earthy palette */
-    --bg-default: #FDFAF3;
-    --bg-alt: #F5F3E9;
+    /* SACOParents — Confident Purple→Teal palette
+       Variable names kept for backwards compatibility with existing JSX. */
+    --bg-default: #F8F7FC;
+    --bg-alt: #EFE9F9;
     --bg-card: #FFFFFF;
-    --bg-accent: #E8ECE9;
+    --bg-accent: #E5E0EE;
 
-    --text-primary: #2A3631;
-    --text-secondary: #5C6B64;
-    --text-tertiary: #8A9A92;
+    --text-primary: #1A1330;
+    --text-secondary: #4B4567;
+    --text-tertiary: #857E9C;
 
-    --brand-sage: #849D8E;
-    --brand-sage-hover: #6C8576;
-    --brand-terra: #C28771;
-    --brand-accent: #E5D9C5;
+    /* "sage" tokens are now deep royal purple — name kept to avoid touching JSX */
+    --brand-sage: #3D1A78;
+    --brand-sage-hover: #2A0F5F;
+    --brand-terra: #C28771;      /* warm accent — used for safety/warning to stay distinct */
+    --brand-accent: #D4C5F0;
+
+    /* New brand tokens */
+    --brand-teal: #2DB5B5;
+    --brand-teal-hover: #1F8F8F;
+    --brand-magenta: #D63A8A;
+    --brand-blue: #2756C8;
+    --brand-green: #2EA66B;
+    --brand-purple-accent: #7C3AED;
 
     --state-warning: #D6A374;
     --state-info: #9CB4C4;
 
-    /* shadcn vars (light) — overridden with our palette */
-    --background: 44 60% 97%;
-    --foreground: 159 13% 18%;
+    /* shadcn vars (light) — purple primary, teal secondary */
+    --background: 252 38% 98%;
+    --foreground: 258 42% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 159 13% 18%;
+    --card-foreground: 258 42% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 159 13% 18%;
-    --primary: 148 14% 56%;
+    --popover-foreground: 258 42% 13%;
+    --primary: 262 65% 29%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 48 30% 93%;
-    --secondary-foreground: 159 13% 18%;
-    --muted: 48 30% 93%;
-    --muted-foreground: 159 8% 39%;
-    --accent: 156 12% 92%;
-    --accent-foreground: 159 13% 18%;
-    --destructive: 16 47% 60%;
+    --secondary: 180 61% 47%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 260 30% 95%;
+    --muted-foreground: 258 19% 35%;
+    --accent: 262 60% 96%;
+    --accent-foreground: 258 42% 13%;
+    --destructive: 0 70% 56%;
     --destructive-foreground: 0 0% 100%;
-    --border: 156 12% 88%;
-    --input: 156 12% 88%;
-    --ring: 148 14% 56%;
+    --border: 258 26% 91%;
+    --input: 258 26% 91%;
+    --ring: 262 65% 45%;
     --radius: 1rem;
 }
 
@@ -58,19 +68,27 @@ body {
     margin: 0;
     background: var(--bg-default);
     color: var(--text-primary);
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, .font-serif {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    letter-spacing: -0.01em;
+    /* Display headings now use the same bold sans — brochure-style */
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.font-script {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    letter-spacing: 0;
 }
 
 ::selection {
-    background: #E5D9C5;
-    color: #2A3631;
+    background: #D4C5F0;
+    color: #1A1330;
 }
 
 /* Grain overlay utility */
@@ -87,8 +105,8 @@ h1, h2, h3, h4, .font-serif {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D8DDD9; border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: #BFC8C2; }
+::-webkit-scrollbar-thumb { background: #D4CDE6; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #B8AED4; }
 
 /* Gentle entrance */
 @keyframes fadeUp {
@@ -104,21 +122,62 @@ h1, h2, h3, h4, .font-serif {
     transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Button micro-interaction */
+/* === BRAND GRADIENT UTILITIES === */
+.bg-brand-gradient {
+    background: linear-gradient(135deg, #3D1A78 0%, #5E2DB5 45%, #2DB5B5 100%);
+}
+.bg-brand-gradient-soft {
+    background: linear-gradient(135deg, rgba(61, 26, 120, 0.08) 0%, rgba(45, 181, 181, 0.08) 100%);
+}
+.text-brand-gradient {
+    background: linear-gradient(135deg, #3D1A78 0%, #2DB5B5 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* === BUTTONS === */
 .btn-sage {
     background: var(--brand-sage);
     color: white;
     border-radius: 999px;
     padding: 0.875rem 2rem;
-    font-weight: 500;
+    font-weight: 600;
     transition: transform .2s ease, background-color .2s ease, box-shadow .2s ease;
-    box-shadow: 0 2px 8px rgba(132, 157, 142, 0.18);
+    box-shadow: 0 4px 14px rgba(61, 26, 120, 0.25);
 }
 .btn-sage:hover:not(:disabled) {
     background: var(--brand-sage-hover);
     transform: scale(1.02);
 }
+.btn-sage:active:not(:disabled) {
+    transform: scale(0.96);
+}
 .btn-sage:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.btn-gradient {
+    background: linear-gradient(135deg, #3D1A78 0%, #5E2DB5 50%, #2DB5B5 100%);
+    background-size: 200% 100%;
+    background-position: 0% 0%;
+    color: white;
+    border-radius: 999px;
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    transition: background-position .35s ease, transform .2s ease, box-shadow .2s ease;
+    box-shadow: 0 6px 20px rgba(61, 26, 120, 0.28);
+}
+.btn-gradient:hover:not(:disabled) {
+    background-position: 100% 0%;
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(61, 26, 120, 0.35);
+}
+.btn-gradient:active:not(:disabled) {
+    transform: scale(0.96);
+}
+.btn-gradient:disabled {
     opacity: .55;
     cursor: not-allowed;
 }
@@ -128,21 +187,61 @@ h1, h2, h3, h4, .font-serif {
     color: var(--text-primary);
     border-radius: 999px;
     padding: 0.875rem 2rem;
-    font-weight: 500;
+    font-weight: 600;
     transition: background-color .2s ease, transform .2s ease;
 }
 .btn-soft:hover:not(:disabled) {
     background: var(--bg-accent);
     transform: scale(1.02);
 }
+.btn-soft:active:not(:disabled) {
+    transform: scale(0.96);
+}
 
+/* === CARDS === */
 .card-soft {
     background: var(--bg-card);
     border-radius: 1.5rem;
-    border: 1px solid #E8ECE9;
-    box-shadow: 0 8px 30px rgba(42, 54, 49, 0.04);
+    border: 1px solid var(--bg-accent);
+    box-shadow: 0 8px 30px rgba(26, 19, 48, 0.05);
 }
 
+.card-bold {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: 1.5rem;
+    padding: 2px;
+    background-image: linear-gradient(135deg, #3D1A78, #2DB5B5);
+    box-shadow: 0 12px 34px rgba(61, 26, 120, 0.12);
+}
+.card-bold > .card-bold-inner {
+    background: var(--bg-card);
+    border-radius: calc(1.5rem - 2px);
+    height: 100%;
+}
+
+/* === ICON CIRCLES (brochure style) === */
+.icon-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    color: white;
+    flex-shrink: 0;
+}
+.icon-circle-purple { background: linear-gradient(135deg, #4A1E9E 0%, #7C3AED 100%); }
+.icon-circle-teal { background: linear-gradient(135deg, #2DB5B5 0%, #4DD0D0 100%); }
+.icon-circle-magenta { background: linear-gradient(135deg, #B71F70 0%, #D63A8A 100%); }
+.icon-circle-blue { background: linear-gradient(135deg, #1F4AB8 0%, #4A78E0 100%); }
+.icon-circle-green { background: linear-gradient(135deg, #1F8F58 0%, #3CC07E 100%); }
+.icon-circle-soft {
+    background: #EFE9F9;
+    color: #3D1A78;
+}
+
+/* === INPUTS === */
 .input-soft {
     background: var(--bg-alt);
     border-radius: 1rem;
@@ -159,7 +258,7 @@ h1, h2, h3, h4, .font-serif {
     outline: none;
     background: #fff;
     border-color: var(--brand-sage);
-    box-shadow: 0 0 0 4px rgba(132, 157, 142, 0.12);
+    box-shadow: 0 0 0 4px rgba(61, 26, 120, 0.15);
 }
 
 /* Mobile-friendly base — prevent iOS form auto-zoom + improve readability */
@@ -170,7 +269,8 @@ h1, h2, h3, h4, .font-serif {
         font-size: 16px;
     }
     .btn-sage,
-    .btn-soft {
+    .btn-soft,
+    .btn-gradient {
         padding: 0.75rem 1.25rem;
     }
 }
@@ -189,5 +289,17 @@ h1, h2, h3, h4, .font-serif {
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--text-tertiary);
-    font-weight: 500;
+    font-weight: 600;
+}
+
+/* Curved divider helper */
+.divider-wave {
+    width: 100%;
+    display: block;
+    line-height: 0;
+}
+.divider-wave svg {
+    width: 100%;
+    height: auto;
+    display: block;
 }

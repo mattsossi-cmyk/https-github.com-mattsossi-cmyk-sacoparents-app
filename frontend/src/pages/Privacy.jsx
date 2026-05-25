@@ -10,21 +10,21 @@ export default function Privacy() {
       <div className="max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-14">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-sm text-[#5C7A6A] hover:text-[#849D8E] mb-6"
+          className="inline-flex items-center gap-2 text-sm text-[#2A0F5F] hover:text-[#3D1A78] mb-6"
           data-testid="privacy-back-link"
         >
-          <ArrowLeft size={14} /> Back to SA Coparents
+          <ArrowLeft size={14} /> Back to SACOParents
         </Link>
 
         <div className="eyebrow mb-3">Privacy Policy</div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#2A3631] mb-2 leading-tight">
+        <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mb-2 leading-tight">
           Your prep is private. Always.
         </h1>
-        <p className="text-sm text-[#8A9A92] mb-8">Last updated: {LAST_UPDATED}</p>
+        <p className="text-sm text-[#857E9C] mb-8">Last updated: {LAST_UPDATED}</p>
 
         <Prose>
           <p>
-            <strong>SA Coparents</strong> (the "app", "we", "us") is operated by
+            <strong>SACOParents</strong> (the "app", "we", "us") is operated by
             Matt Sossi at 16607 Blanco #703, San Antonio, Texas 78232.
             This policy explains what we collect, why, and how we protect it.
             Plain English first. Lawyerly precision second.
@@ -81,18 +81,18 @@ export default function Privacy() {
           <ul>
             <li><strong>Access</strong> — email us and we'll send you a copy of everything we have about you.</li>
             <li><strong>Correction</strong> — most fields are editable directly in the app. For others, email us.</li>
-            <li><strong>Deletion</strong> &mdash; you can <Link to="/delete-account" className="text-[#5C7A6A] underline">delete your account and all associated data instantly</Link> from inside the app or from that public page. Alternatively, email us and we'll handle it manually within 7 days. PDFs already shared via expired links can no longer be retrieved.</li>
+            <li><strong>Deletion</strong> &mdash; you can <Link to="/delete-account" className="text-[#2A0F5F] underline">delete your account and all associated data instantly</Link> from inside the app or from that public page. Alternatively, email us and we'll handle it manually within 7 days. PDFs already shared via expired links can no longer be retrieved.</li>
             <li><strong>Portability</strong> — we can export your prep + generated documents as JSON on request.</li>
           </ul>
 
           <H2>Children</H2>
           <p>
-            SA Coparents is intended for parents and is not directed at children under 13. We do not knowingly collect information from anyone under 13. If you believe we have done so inadvertently, email us and we will delete it.
+            SACOParents is intended for parents and is not directed at children under 13. We do not knowingly collect information from anyone under 13. If you believe we have done so inadvertently, email us and we will delete it.
           </p>
 
           <H2>Safety note for survivors of domestic violence</H2>
           <p>
-            If you're using this app while still in an unsafe situation, please be aware that the app does keep records of what you enter. If your device may be monitored, consider using the <Link to="/safety" className="text-[#5C7A6A] underline">Safety page</Link>'s Quick Exit feature and accessing the app from a private device when possible. The Safety page provides 24/7 hotlines including the National Domestic Violence Hotline (1-800-799-7233) and 988 Suicide & Crisis Lifeline.
+            If you're using this app while still in an unsafe situation, please be aware that the app does keep records of what you enter. If your device may be monitored, consider using the <Link to="/safety" className="text-[#2A0F5F] underline">Safety page</Link>'s Quick Exit feature and accessing the app from a private device when possible. The Safety page provides 24/7 hotlines including the National Domestic Violence Hotline (1-800-799-7233) and 988 Suicide & Crisis Lifeline.
           </p>
 
           <H2>Changes to this policy</H2>
@@ -103,11 +103,11 @@ export default function Privacy() {
           <H2>Contact</H2>
           <p>Questions? Concerns? Want your data deleted?</p>
           <p>
-            Email <a href="mailto:mattsossi@bsossi.com" className="text-[#5C7A6A] underline">mattsossi@bsossi.com</a>
-            {" "}or call <a href="tel:2102241667" className="text-[#5C7A6A] underline">210-224-1667</a>.
+            Email <a href="mailto:mattsossi@bsossi.com" className="text-[#2A0F5F] underline">mattsossi@bsossi.com</a>
+            {" "}or call <a href="tel:2102241667" className="text-[#2A0F5F] underline">210-224-1667</a>.
           </p>
-          <p className="text-xs text-[#8A9A92] italic mt-8">
-            SA Coparents · 16607 Blanco #703, San Antonio, Texas 78232
+          <p className="text-xs text-[#857E9C] italic mt-8">
+            SACOParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>
       </div>
@@ -117,13 +117,13 @@ export default function Privacy() {
 
 function H2({ children }) {
   return (
-    <h2 className="font-serif text-2xl text-[#2A3631] mt-10 mb-3">{children}</h2>
+    <h2 className="font-serif text-2xl text-[#1A1330] mt-10 mb-3">{children}</h2>
   );
 }
 
 function Prose({ children }) {
   return (
-    <div className="prose-soft space-y-3 text-[#2A3631] leading-relaxed [&_p]:text-[#5C6B64] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[#5C6B64] [&_strong]:text-[#2A3631] text-[15px]">
+    <div className="prose-soft space-y-3 text-[#1A1330] leading-relaxed [&_p]:text-[#4B4567] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[#4B4567] [&_strong]:text-[#1A1330] text-[15px]">
       {children}
     </div>
   );

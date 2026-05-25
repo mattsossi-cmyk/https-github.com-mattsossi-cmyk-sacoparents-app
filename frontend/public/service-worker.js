@@ -1,4 +1,4 @@
-/* SA Coparents — Service Worker
+/* SACOParents — Service Worker
    Conservative offline shell:
    - cache-first for static assets (logo, icons, fonts, built JS/CSS)
    - network-first for HTML and API calls

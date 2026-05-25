@@ -87,19 +87,19 @@ export default function Dashboard() {
       <div className="fade-up">
         <div className="grid lg:grid-cols-3 gap-6 mb-10">
           <div className="card-soft p-8 lg:col-span-2 relative overflow-hidden">
-            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#E5D9C5]/40" />
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#D4C5F0]/40" />
             <div className="relative">
               <div className="eyebrow mb-3">Your space</div>
-              <h1 className="font-serif text-4xl sm:text-5xl text-[#2A3631] leading-tight">
+              <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] leading-tight">
                 Hello, {user?.name?.split(" ")[0] || "friend"}.
               </h1>
-              <p className="text-[#5C6B64] mt-3 max-w-lg">
+              <p className="text-[#4B4567] mt-3 max-w-lg">
                 Take your time. Each step builds toward a calmer, child-centered mediation
                 conversation. Nothing here is graded.
               </p>
               <Link
                 to="/orientation"
-                className="inline-flex items-center gap-1.5 text-[12px] text-[#849D8E] hover:text-[#6f8576] mt-4 underline-offset-2 hover:underline"
+                className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] mt-4 underline-offset-2 hover:underline"
                 data-testid="dashboard-revisit-orientation"
               >
                 <Compass size={12} /> Revisit the orientation walkthrough
@@ -107,18 +107,18 @@ export default function Dashboard() {
               <div className="mt-6">
                 <div className="flex items-end justify-between mb-2">
                   <div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92]">
+                    <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C]">
                       Progress
                     </div>
-                    <div className="font-serif text-3xl text-[#2A3631]">
-                      {done} <span className="text-[#8A9A92] text-xl">/ {STEPS.length}</span>
+                    <div className="font-serif text-3xl text-[#1A1330]">
+                      {done} <span className="text-[#857E9C] text-xl">/ {STEPS.length}</span>
                     </div>
                   </div>
-                  <div className="text-sm text-[#5C6B64]">{pct}% complete</div>
+                  <div className="text-sm text-[#4B4567]">{pct}% complete</div>
                 </div>
-                <div className="h-2 bg-[#E8ECE9] rounded-full overflow-hidden">
+                <div className="h-2 bg-[#E5E0EE] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#849D8E] progress-fill"
+                    className="h-full bg-[#3D1A78] progress-fill"
                     style={{ width: `${pct}%` }}
                     data-testid="dashboard-progress-bar"
                   />
@@ -129,10 +129,10 @@ export default function Dashboard() {
 
           <div className="card-soft p-7 flex flex-col">
             <div className="eyebrow mb-2">Next step</div>
-            <div className="font-serif text-2xl text-[#2A3631] mb-1">
+            <div className="font-serif text-2xl text-[#1A1330] mb-1">
               {STEPS.find((s) => !completed[s.key])?.label || "Generate your summary"}
             </div>
-            <p className="text-sm text-[#5C6B64] mb-6">
+            <p className="text-sm text-[#4B4567] mb-6">
               {STEPS.find((s) => !completed[s.key])?.blurb ||
                 "You're prepared. Create your mediator-ready summary."}
             </p>
@@ -143,7 +143,7 @@ export default function Dashboard() {
             >
               Continue <ArrowRight size={16} />
             </Link>
-            <Link to="/summary" className="text-sm text-[#849D8E] hover:underline mt-3 text-center" data-testid="dashboard-summary-link">
+            <Link to="/summary" className="text-sm text-[#3D1A78] hover:underline mt-3 text-center" data-testid="dashboard-summary-link">
               Go to summary
             </Link>
           </div>
@@ -163,36 +163,36 @@ export default function Dashboard() {
                 <div className="flex items-start justify-between mb-4">
                   <div
                     className={`w-11 h-11 rounded-full grid place-items-center ${
-                      isDone ? "bg-[#849D8E] text-white" : "bg-[#F5F3E9] text-[#849D8E]"
+                      isDone ? "bg-[#3D1A78] text-white" : "bg-[#EFE9F9] text-[#3D1A78]"
                     }`}
                   >
                     <Icon size={18} />
                   </div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-[#8A9A92]">
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
                     {isDone ? "Saved" : "To do"}
                   </div>
                 </div>
-                <div className="font-serif text-xl text-[#2A3631] mb-1">{label}</div>
-                <p className="text-sm text-[#5C6B64]">{blurb}</p>
+                <div className="font-serif text-xl text-[#1A1330] mb-1">{label}</div>
+                <p className="text-sm text-[#4B4567]">{blurb}</p>
               </Link>
             );
           })}
 
           <Link
             to="/summary"
-            className="card-soft p-6 hover:-translate-y-0.5 transition-transform bg-gradient-to-br from-[#F5F3E9] to-[#FFFFFF]"
+            className="card-soft p-6 hover:-translate-y-0.5 transition-transform bg-gradient-to-br from-[#EFE9F9] to-[#FFFFFF]"
             data-testid="dashboard-summary-card"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="w-11 h-11 rounded-full grid place-items-center bg-[#C28771]/15 text-[#C28771]">
                 <FileText size={18} />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#8A9A92]">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
                 Final
               </div>
             </div>
-            <div className="font-serif text-xl text-[#2A3631] mb-1">Mediation Summary</div>
-            <p className="text-sm text-[#5C6B64]">
+            <div className="font-serif text-xl text-[#1A1330] mb-1">Mediation Summary</div>
+            <p className="text-sm text-[#4B4567]">
               AI-synthesized, mediator-ready, downloadable PDF.
             </p>
           </Link>
@@ -206,12 +206,12 @@ export default function Dashboard() {
               <div className="w-11 h-11 rounded-full grid place-items-center bg-[#C28771]/15 text-[#C28771]">
                 <Heart size={18} />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#8A9A92]">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
                 Optional
               </div>
             </div>
-            <div className="font-serif text-xl text-[#2A3631] mb-1">Personal Reflection</div>
-            <p className="text-sm text-[#5C6B64]">
+            <div className="font-serif text-xl text-[#1A1330] mb-1">Personal Reflection</div>
+            <p className="text-sm text-[#4B4567]">
               Private journal + 4-7-8 breathing. Listen to your wiser self.
             </p>
           </Link>
@@ -222,15 +222,15 @@ export default function Dashboard() {
             data-testid="dashboard-resources-card"
           >
             <div className="flex items-start justify-between mb-4">
-              <div className="w-11 h-11 rounded-full grid place-items-center bg-[#9CB4C4]/20 text-[#5C6B64]">
+              <div className="w-11 h-11 rounded-full grid place-items-center bg-[#9CB4C4]/20 text-[#4B4567]">
                 <BookOpen size={18} />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#8A9A92]">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
                 Library
               </div>
             </div>
-            <div className="font-serif text-xl text-[#2A3631] mb-1">Resource Center</div>
-            <p className="text-sm text-[#5C6B64]">
+            <div className="font-serif text-xl text-[#1A1330] mb-1">Resource Center</div>
+            <p className="text-sm text-[#4B4567]">
               Short reads & videos: communication, parallel parenting, trust.
             </p>
           </Link>

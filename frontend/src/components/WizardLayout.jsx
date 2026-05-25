@@ -10,9 +10,9 @@ const STEPS = [
   { key: "readiness", label: "Readiness", path: "/prep/readiness" },
 ];
 
-const SEGMENT_ACTIVE = "bg-[#849D8E]";
-const SEGMENT_DONE = "bg-[#849D8E]/70";
-const SEGMENT_IDLE = "bg-[#E8ECE9]";
+const SEGMENT_ACTIVE = "bg-[#3D1A78]";
+const SEGMENT_DONE = "bg-[#3D1A78]/70";
+const SEGMENT_IDLE = "bg-[#E5E0EE]";
 
 function segmentClass(isActive, isDone) {
   if (isActive) return SEGMENT_ACTIVE;
@@ -53,11 +53,11 @@ export default function WizardLayout({
             );
           })}
         </div>
-        <div className="flex justify-between text-[10px] uppercase tracking-[0.2em] text-[#8A9A92]">
+        <div className="flex justify-between text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
           {STEPS.map((s, i) => (
             <div
               key={s.key}
-              className={`flex-1 text-center ${i === idx ? "text-[#2A3631]" : ""}`}
+              className={`flex-1 text-center ${i === idx ? "text-[#1A1330]" : ""}`}
             >
               {s.label}
             </div>
@@ -68,11 +68,11 @@ export default function WizardLayout({
       {/* Header */}
       <div className="mb-8">
         {eyebrow && <div className="eyebrow mb-3">{eyebrow}</div>}
-        <h1 className="font-serif text-4xl sm:text-5xl text-[#2A3631] leading-tight">
+        <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] leading-tight">
           {title}
         </h1>
         {description && (
-          <p className="text-[#5C6B64] mt-4 leading-relaxed max-w-2xl">
+          <p className="text-[#4B4567] mt-4 leading-relaxed max-w-2xl">
             {description}
           </p>
         )}

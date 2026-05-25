@@ -28,7 +28,7 @@ const READINESS_MODERATE_THRESHOLD = 50;
 const SCALE_MAX = 5;
 
 const READINESS_BADGES = {
-  prepared: { label: "Prepared for Mediation", color: "#849D8E" },
+  prepared: { label: "Prepared for Mediation", color: "#3D1A78" },
   moderate: { label: "Moderately Ready", color: "#D6A374" },
   needs_support: { label: "Needs Support", color: "#C28771" },
 };
@@ -102,7 +102,7 @@ export default function ReadinessCheck() {
         <div className="space-y-6">
           {QUESTIONS.map((q) => (
             <div key={q.id}>
-              <div className="text-[#2A3631] mb-2">{q.text}</div>
+              <div className="text-[#1A1330] mb-2">{q.text}</div>
               <div className="grid grid-cols-5 gap-2">
                 {SCALE.map((s) => {
                   const isOn = answers[q.id] === s.v;
@@ -114,8 +114,8 @@ export default function ReadinessCheck() {
                       data-testid={`readiness-${q.id}-${s.v}`}
                       className={`rounded-xl px-2 py-2 text-xs sm:text-sm transition-all ${
                         isOn
-                          ? "bg-[#849D8E] text-white"
-                          : "bg-[#F5F3E9] text-[#5C6B64] hover:bg-[#E8ECE9]"
+                          ? "bg-[#3D1A78] text-white"
+                          : "bg-[#EFE9F9] text-[#4B4567] hover:bg-[#E5E0EE]"
                       }`}
                     >
                       {s.label}
@@ -136,11 +136,11 @@ export default function ReadinessCheck() {
               <div className="font-serif text-3xl" style={{ color: badge.color }}>
                 {badge.label}
               </div>
-              <div className="text-sm text-[#5C6B64]">
+              <div className="text-sm text-[#4B4567]">
                 {total} / {QUESTIONS.length * SCALE_MAX} · {pct}%
               </div>
             </div>
-            <p className="text-sm text-[#5C6B64] mt-3">{readinessAdvice(pct)}</p>
+            <p className="text-sm text-[#4B4567] mt-3">{readinessAdvice(pct)}</p>
           </div>
         </div>
       </WizardLayout>

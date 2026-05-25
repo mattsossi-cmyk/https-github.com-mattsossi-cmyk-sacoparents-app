@@ -29,8 +29,8 @@ import Orientation from "@/pages/Orientation";
 const TOAST_OPTIONS = {
   style: {
     background: "#FFFFFF",
-    color: "#2A3631",
-    border: "1px solid #E8ECE9",
+    color: "#1A1330",
+    border: "1px solid #E5E0EE",
     borderRadius: "16px",
   },
 };

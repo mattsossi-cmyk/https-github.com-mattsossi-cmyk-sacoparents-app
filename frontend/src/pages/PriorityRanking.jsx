@@ -9,7 +9,7 @@ import { GripVertical, Plus, X } from "lucide-react";
 
 const BUCKETS = [
   { key: "urgent", label: "Most urgent", color: "#C28771" },
-  { key: "difficult", label: "Most emotionally difficult", color: "#849D8E" },
+  { key: "difficult", label: "Most emotionally difficult", color: "#3D1A78" },
   { key: "easy", label: "Easier agreements", color: "#9CB4C4" },
   { key: "compromise", label: "Willing to compromise", color: "#D6A374" },
 ];
@@ -35,8 +35,8 @@ const PRIORITY_TOPIC_IDS = new Set(PRIORITY_TOPICS.map((t) => t.id));
 const KIND_META = {
   topic: {
     label: "Topic",
-    text: "text-[#5C7A6A]",
-    chipBg: "bg-[#849D8E]/20",
+    text: "text-[#2A0F5F]",
+    chipBg: "bg-[#3D1A78]/20",
   },
   custom: {
     label: "Added",
@@ -146,7 +146,7 @@ export default function PriorityRanking() {
               return (
                 <div
                   key={b.key}
-                  className="rounded-2xl bg-[#F5F3E9] p-4 min-h-[180px]"
+                  className="rounded-2xl bg-[#EFE9F9] p-4 min-h-[180px]"
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={() => onDropTo(b.key)}
                   data-testid={`priority-bucket-${b.key}`}
@@ -156,14 +156,14 @@ export default function PriorityRanking() {
                       className="w-3 h-3 rounded-full"
                       style={{ background: b.color }}
                     />
-                    <div className="font-serif text-lg text-[#2A3631]">{b.label}</div>
-                    <span className="text-xs text-[#8A9A92] ml-auto">
+                    <div className="font-serif text-lg text-[#1A1330]">{b.label}</div>
+                    <span className="text-xs text-[#857E9C] ml-auto">
                       {bucketItems.length}
                     </span>
                   </div>
                   <div className="space-y-2">
                     {bucketItems.length === 0 && (
-                      <div className="text-xs italic text-[#8A9A92]">
+                      <div className="text-xs italic text-[#857E9C]">
                         Drag topics into this bucket.
                       </div>
                     )}
@@ -174,22 +174,22 @@ export default function PriorityRanking() {
                           key={it.id}
                           draggable
                           onDragStart={() => onDragStart(it.id)}
-                          className="bg-white rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm border border-[#E8ECE9] cursor-grab active:cursor-grabbing"
+                          className="bg-white rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm border border-[#E5E0EE] cursor-grab active:cursor-grabbing"
                           data-testid={`priority-item-${it.id}`}
                         >
-                          <GripVertical size={14} className="text-[#8A9A92] shrink-0" />
+                          <GripVertical size={14} className="text-[#857E9C] shrink-0" />
                           <span
                             className={`text-[10px] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded ${meta.chipBg} ${meta.text} shrink-0`}
                             data-testid={`priority-item-${it.id}-chip`}
                           >
                             {meta.label}
                           </span>
-                          <span className="text-sm text-[#2A3631] flex-1">{it.label}</span>
+                          <span className="text-sm text-[#1A1330] flex-1">{it.label}</span>
                           {!isPredefined(it) && (
                             <button
                               type="button"
                               onClick={() => removeItem(it.id)}
-                              className="text-[#8A9A92] hover:text-[#C28771]"
+                              className="text-[#857E9C] hover:text-[#C28771]"
                               aria-label="Remove"
                               data-testid={`priority-item-${it.id}-remove`}
                             >
@@ -205,7 +205,7 @@ export default function PriorityRanking() {
             })}
           </div>
 
-          <div className="text-xs text-[#8A9A92] italic">
+          <div className="text-xs text-[#857E9C] italic">
             Tip: drag-and-drop to reorganize. The 11 predefined topics always stay
             on this list — only added items can be removed.
           </div>

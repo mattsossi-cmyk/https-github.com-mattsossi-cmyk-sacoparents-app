@@ -5,6 +5,33 @@ import { LogOut, Facebook, ShieldAlert, Menu, X } from "lucide-react";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
+function BrandMark({ className = "" }) {
+  return (
+    <svg
+      width={44}
+      height={44}
+      viewBox="0 0 64 64"
+      className={`w-11 h-11 sm:w-12 sm:h-12 ${className}`}
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id="navBmGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#3D1A78" />
+          <stop offset="55%" stopColor="#5E2DB5" />
+          <stop offset="100%" stopColor="#2DB5B5" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M32 56 C12 42, 4 30, 12 18 C18 9, 28 10, 32 18 C36 10, 46 9, 52 18 C60 30, 52 42, 32 56 Z"
+        fill="url(#navBmGrad)"
+      />
+      <circle cx="24" cy="26" r="4" fill="white" opacity="0.95" />
+      <circle cx="40" cy="26" r="4" fill="white" opacity="0.95" />
+      <path d="M22 36 Q32 44 42 36" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9" />
+    </svg>
+  );
+}
+
 const navLinks = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/prep/child-goals", label: "Child Goals" },
@@ -45,18 +72,16 @@ export default function AppShell({ children }) {
 
   return (
     <div className="min-h-screen gentle-bg">
-      <header className="border-b border-[#E8ECE9]/70 backdrop-blur-md bg-[#FDFAF3]/70 sticky top-0 z-30">
+      <header className="border-b border-[#E5E0EE]/70 backdrop-blur-md bg-[#F8F7FC]/70 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
           {/* Brand */}
-          <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3 min-w-0" data-testid="brand-logo">
-            <img
-              src="/sa-coparents-mark.png"
-              alt="SA Coparents"
-              className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl object-contain bg-[#FDFAF3] ring-1 ring-[#E8ECE9] shrink-0"
-            />
-            <div className="leading-tight min-w-0">
-              <div className="font-serif text-lg sm:text-xl truncate">SA Coparents</div>
-              <div className="hidden sm:block text-[10px] uppercase tracking-[0.25em] text-[#8A9A92]">
+          <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3 shrink-0" data-testid="brand-logo">
+            <BrandMark className="shrink-0" />
+            <div className="leading-tight">
+              <div className="font-sans font-extrabold text-base sm:text-lg whitespace-nowrap text-[#1A1330]">
+                <span className="text-brand-gradient">SACO</span>Parents
+              </div>
+              <div className="hidden xl:block text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
                 Mediation Prep
               </div>
             </div>
@@ -73,8 +98,8 @@ export default function AppShell({ children }) {
                   data-testid={`nav-${l.label.toLowerCase().replace(/\s/g, "-")}`}
                   className={`px-3 py-2 rounded-full text-sm transition-colors ${
                     active
-                      ? "bg-[#E8ECE9] text-[#2A3631]"
-                      : "text-[#5C6B64] hover:text-[#2A3631] hover:bg-[#F5F3E9]"
+                      ? "bg-[#E5E0EE] text-[#1A1330]"
+                      : "text-[#4B4567] hover:text-[#1A1330] hover:bg-[#EFE9F9]"
                   }`}
                 >
                   {l.label}
@@ -95,17 +120,17 @@ export default function AppShell({ children }) {
               <span className="hidden xs:inline sm:inline">Safety</span>
             </Link>
             <div className="hidden lg:block text-right">
-              <div className="text-sm text-[#2A3631] truncate max-w-[160px]">{user?.name}</div>
-              <div className="text-xs text-[#8A9A92] truncate max-w-[160px]">{user?.email}</div>
+              <div className="text-sm text-[#1A1330] truncate max-w-[160px]">{user?.name}</div>
+              <div className="text-xs text-[#857E9C] truncate max-w-[160px]">{user?.email}</div>
             </div>
             {FB_URL && (
               <a
                 href={FB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:grid w-9 h-9 rounded-full bg-[#F5F3E9] hover:bg-[#E8ECE9] place-items-center text-[#849D8E] transition-colors"
-                aria-label="SA Coparents on Facebook"
-                title="SA Coparents on Facebook"
+                className="hidden sm:grid w-9 h-9 rounded-full bg-[#EFE9F9] hover:bg-[#E5E0EE] place-items-center text-[#3D1A78] transition-colors"
+                aria-label="SACOParents on Facebook"
+                title="SACOParents on Facebook"
                 data-testid="header-facebook-link"
               >
                 <Facebook size={16} />
@@ -114,7 +139,7 @@ export default function AppShell({ children }) {
             <button
               onClick={handleLogout}
               data-testid="logout-button"
-              className="hidden sm:grid w-9 h-9 rounded-full bg-[#F5F3E9] hover:bg-[#E8ECE9] place-items-center text-[#5C6B64] transition-colors"
+              className="hidden sm:grid w-9 h-9 rounded-full bg-[#EFE9F9] hover:bg-[#E5E0EE] place-items-center text-[#4B4567] transition-colors"
               aria-label="Sign out"
             >
               <LogOut size={16} />
@@ -123,7 +148,7 @@ export default function AppShell({ children }) {
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="md:hidden w-10 h-10 rounded-full bg-[#F5F3E9] hover:bg-[#E8ECE9] grid place-items-center text-[#2A3631] transition-colors"
+              className="md:hidden w-10 h-10 rounded-full bg-[#EFE9F9] hover:bg-[#E5E0EE] grid place-items-center text-[#1A1330] transition-colors"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
               data-testid="mobile-menu-button"
@@ -138,12 +163,12 @@ export default function AppShell({ children }) {
       {menuOpen && (
         <>
           <div
-            className="fixed inset-0 z-30 bg-[#2A3631]/30 md:hidden"
+            className="fixed inset-0 z-30 bg-[#1A1330]/30 md:hidden"
             onClick={() => setMenuOpen(false)}
             aria-hidden="true"
           />
           <nav
-            className="fixed inset-x-0 top-[72px] z-40 md:hidden bg-[#FDFAF3] border-b border-[#E8ECE9] shadow-lg overflow-y-auto max-h-[calc(100vh-72px)]"
+            className="fixed inset-x-0 top-[72px] z-40 md:hidden bg-[#F8F7FC] border-b border-[#E5E0EE] shadow-lg overflow-y-auto max-h-[calc(100vh-72px)]"
             data-testid="mobile-menu-drawer"
           >
             <div className="px-4 py-4 space-y-1">
@@ -156,8 +181,8 @@ export default function AppShell({ children }) {
                     data-testid={`mobile-nav-${l.label.toLowerCase().replace(/\s/g, "-")}`}
                     className={`block px-4 py-3 rounded-xl text-base transition-colors ${
                       active
-                        ? "bg-[#849D8E]/15 text-[#2A3631] font-medium"
-                        : "text-[#2A3631] hover:bg-[#F5F3E9]"
+                        ? "bg-[#3D1A78]/15 text-[#1A1330] font-medium"
+                        : "text-[#1A1330] hover:bg-[#EFE9F9]"
                     }`}
                   >
                     {l.label}
@@ -165,7 +190,7 @@ export default function AppShell({ children }) {
                 );
               })}
             </div>
-            <div className="border-t border-[#E8ECE9] px-4 py-3">
+            <div className="border-t border-[#E5E0EE] px-4 py-3">
               <Link
                 to="/delete-account"
                 className="block px-4 py-2.5 rounded-xl text-[13px] text-[#C97B63] hover:bg-[#C97B63]/10"
@@ -174,10 +199,10 @@ export default function AppShell({ children }) {
                 Delete my account
               </Link>
             </div>
-            <div className="border-t border-[#E8ECE9] px-4 py-4 flex items-center justify-between gap-3">
+            <div className="border-t border-[#E5E0EE] px-4 py-4 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <div className="text-sm text-[#2A3631] truncate">{user?.name}</div>
-                <div className="text-xs text-[#8A9A92] truncate">{user?.email}</div>
+                <div className="text-sm text-[#1A1330] truncate">{user?.name}</div>
+                <div className="text-xs text-[#857E9C] truncate">{user?.email}</div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {FB_URL && (
@@ -185,7 +210,7 @@ export default function AppShell({ children }) {
                     href={FB_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-[#F5F3E9] hover:bg-[#E8ECE9] grid place-items-center text-[#849D8E]"
+                    className="w-10 h-10 rounded-full bg-[#EFE9F9] hover:bg-[#E5E0EE] grid place-items-center text-[#3D1A78]"
                     aria-label="Facebook"
                   >
                     <Facebook size={18} />
@@ -194,7 +219,7 @@ export default function AppShell({ children }) {
                 <button
                   onClick={handleLogout}
                   data-testid="mobile-logout-button"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5F3E9] hover:bg-[#E8ECE9] text-[#5C6B64]"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#EFE9F9] hover:bg-[#E5E0EE] text-[#4B4567]"
                 >
                   <LogOut size={14} />
                   <span className="text-sm">Sign out</span>

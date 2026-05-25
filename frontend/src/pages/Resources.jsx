@@ -14,12 +14,12 @@ function FacebookFeed() {
   return (
     <div className="card-soft p-6" data-testid="resources-facebook-feed">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-[#9CB4C4]/20 text-[#5C6B64] grid place-items-center">
+        <div className="w-10 h-10 rounded-full bg-[#9CB4C4]/20 text-[#4B4567] grid place-items-center">
           <Facebook size={18} />
         </div>
         <div className="flex-1">
-          <div className="font-serif text-xl text-[#2A3631]">SA Coparents</div>
-          <div className="text-xs text-[#8A9A92] uppercase tracking-[0.2em]">
+          <div className="font-serif text-xl text-[#1A1330]">SACOParents</div>
+          <div className="text-xs text-[#857E9C] uppercase tracking-[0.2em]">
             Live posts & videos
           </div>
         </div>
@@ -27,15 +27,15 @@ function FacebookFeed() {
           href={FB_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-[#849D8E] hover:underline inline-flex items-center gap-1"
+          className="text-sm text-[#3D1A78] hover:underline inline-flex items-center gap-1"
           data-testid="resources-facebook-follow-link"
         >
           Follow <ExternalLink size={12} />
         </a>
       </div>
-      <div className="rounded-2xl overflow-hidden bg-[#F5F3E9] border border-[#E8ECE9]">
+      <div className="rounded-2xl overflow-hidden bg-[#EFE9F9] border border-[#E5E0EE]">
         <iframe
-          title="SA Coparents Facebook feed"
+          title="SACOParents Facebook feed"
           src={src}
           width="340"
           height="520"
@@ -68,10 +68,10 @@ export default function Resources() {
     <AppShell>
       <div className="fade-up">
         <div className="eyebrow mb-3">Library</div>
-        <h1 className="font-serif text-4xl sm:text-5xl text-[#2A3631] mb-3">
+        <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] mb-3">
           Resource Center
         </h1>
-        <p className="text-[#5C6B64] mb-8 max-w-2xl">
+        <p className="text-[#4B4567] mb-8 max-w-2xl">
           Short, useful reads and videos for the everyday work of co-parenting.
         </p>
 
@@ -83,8 +83,8 @@ export default function Resources() {
               data-testid={`resource-filter-${c.toLowerCase().replace(/\s/g, "-")}`}
               className={`px-4 py-2 rounded-full text-sm transition-colors ${
                 filter === c
-                  ? "bg-[#849D8E] text-white"
-                  : "bg-[#F5F3E9] text-[#2A3631] hover:bg-[#E8ECE9]"
+                  ? "bg-[#3D1A78] text-white"
+                  : "bg-[#EFE9F9] text-[#1A1330] hover:bg-[#E5E0EE]"
               }`}
             >
               {c}
@@ -117,21 +117,21 @@ export default function Resources() {
                   data-testid={`resource-card-${r.id}`}
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="w-9 h-9 rounded-full bg-[#849D8E]/15 text-[#849D8E] grid place-items-center">
+                    <div className="w-9 h-9 rounded-full bg-[#3D1A78]/15 text-[#3D1A78] grid place-items-center">
                       <Icon size={16} />
                     </div>
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-[#8A9A92]">
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
                       {r.category}
                     </div>
                     {hasLink && (
-                      <span className="ml-auto inline-flex items-center gap-1 text-xs text-[#849D8E]">
+                      <span className="ml-auto inline-flex items-center gap-1 text-xs text-[#3D1A78]">
                         {r.kind === "video" ? <Play size={12} /> : <ExternalLink size={12} />}
                         {r.kind === "video" ? "Watch" : "Open"}
                       </span>
                     )}
                   </div>
-                  <div className="font-serif text-xl text-[#2A3631] mb-1">{r.title}</div>
-                  <p className="text-sm text-[#5C6B64]">{r.description}</p>
+                  <div className="font-serif text-xl text-[#1A1330] mb-1">{r.title}</div>
+                  <p className="text-sm text-[#4B4567]">{r.description}</p>
                 </CardTag>
               );
             })}

@@ -143,11 +143,11 @@ export default function Safety() {
         <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-3">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm text-[#5C6B64] hover:text-[#2A3631]"
+            className="inline-flex items-center gap-2 text-sm text-[#4B4567] hover:text-[#1A1330]"
             data-testid="safety-back-home"
           >
             <ArrowLeft size={14} />
-            Back to SA Coparents
+            Back to SACOParents
           </Link>
           <button
             type="button"
@@ -174,14 +174,14 @@ export default function Safety() {
               </div>
               <div className="eyebrow">Safety resources</div>
             </div>
-            <h1 className="font-serif text-4xl sm:text-5xl text-[#2A3631] leading-tight mb-4">
+            <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] leading-tight mb-4">
               You are not alone. Help is available.
             </h1>
-            <p className="text-[#5C6B64] leading-relaxed max-w-2xl">
+            <p className="text-[#4B4567] leading-relaxed max-w-2xl">
               If you, your child, or someone you love is experiencing domestic
               violence, intimate partner violence, or feels unsafe — please reach out.
               The contacts below are confidential, free, and staffed by trained
-              advocates. SA Coparents is a preparation tool — it is not a substitute
+              advocates. SACOParents is a preparation tool — it is not a substitute
               for professional safety planning.
             </p>
 
@@ -197,7 +197,7 @@ export default function Safety() {
               </div>
               <a
                 href={EMERGENCY.phoneHref}
-                className="inline-flex items-center gap-2 rounded-full bg-white text-[#C28771] px-5 py-2.5 font-medium hover:bg-[#FDFAF3] transition-colors"
+                className="inline-flex items-center gap-2 rounded-full bg-white text-[#C28771] px-5 py-2.5 font-medium hover:bg-[#F8F7FC] transition-colors"
                 data-testid="safety-call-911"
               >
                 <Phone size={16} /> Call 911
@@ -234,24 +234,24 @@ export default function Safety() {
         {/* Safety planning tips */}
         <SectionHeading eyebrow="A gentle reminder" title="Privacy on this device" />
         <div className="card-soft p-7 mb-12">
-          <ul className="space-y-3 text-[#2A3631]">
+          <ul className="space-y-3 text-[#1A1330]">
             <li className="flex gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#849D8E] mt-2.5 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#3D1A78] mt-2.5 shrink-0" />
               <span>
                 Use the <strong>Quick exit</strong> button at the top, or press the{" "}
-                <kbd className="px-1.5 py-0.5 rounded bg-[#F5F3E9] text-xs">ESC</kbd>{" "}
+                <kbd className="px-1.5 py-0.5 rounded bg-[#EFE9F9] text-xs">ESC</kbd>{" "}
                 key, to leave this page instantly.
               </span>
             </li>
             <li className="flex gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#849D8E] mt-2.5 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#3D1A78] mt-2.5 shrink-0" />
               <span>
                 Consider browsing in <strong>private / incognito mode</strong>, or
                 clearing your browser history after visiting safety resources.
               </span>
             </li>
             <li className="flex gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#849D8E] mt-2.5 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#3D1A78] mt-2.5 shrink-0" />
               <span>
                 If you suspect your phone or computer is being monitored, please call
                 a hotline from a different device — a friend's phone, a public library,
@@ -259,7 +259,7 @@ export default function Safety() {
               </span>
             </li>
             <li className="flex gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#849D8E] mt-2.5 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#3D1A78] mt-2.5 shrink-0" />
               <span>
                 The National DV Hotline can help you build a personalized safety plan,
                 even before you decide on next steps.
@@ -268,7 +268,7 @@ export default function Safety() {
           </ul>
         </div>
 
-        <div className="text-center text-xs text-[#8A9A92] italic">
+        <div className="text-center text-xs text-[#857E9C] italic">
           Information current as of 2026. If a number has changed, please visit the
           linked website or call 211 for local resource referrals.
         </div>
@@ -281,7 +281,7 @@ function SectionHeading({ eyebrow, title }) {
   return (
     <div className="mb-5">
       <div className="eyebrow mb-2">{eyebrow}</div>
-      <h2 className="font-serif text-2xl sm:text-3xl text-[#2A3631]">{title}</h2>
+      <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330]">{title}</h2>
     </div>
   );
 }
@@ -289,13 +289,13 @@ function SectionHeading({ eyebrow, title }) {
 function ResourceCard({ r }) {
   return (
     <div className="card-soft p-6" data-testid={`safety-resource-${r.id}`}>
-      <div className="font-serif text-xl text-[#2A3631] mb-2">{r.name}</div>
-      <p className="text-sm text-[#5C6B64] mb-4 leading-relaxed">{r.description}</p>
+      <div className="font-serif text-xl text-[#1A1330] mb-2">{r.name}</div>
+      <p className="text-sm text-[#4B4567] mb-4 leading-relaxed">{r.description}</p>
       <div className="flex flex-wrap gap-2">
         {r.phone && (
           <a
             href={r.phoneHref}
-            className="inline-flex items-center gap-2 rounded-full bg-[#849D8E] hover:bg-[#6C8576] text-white px-4 py-2 text-sm transition-colors"
+            className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] hover:bg-[#2A0F5F] text-white px-4 py-2 text-sm transition-colors"
             data-testid={`safety-call-${r.id}`}
           >
             <Phone size={14} /> {r.phone}
@@ -304,7 +304,7 @@ function ResourceCard({ r }) {
         {r.text && (
           <a
             href={r.textHref}
-            className="inline-flex items-center gap-2 rounded-full bg-[#F5F3E9] hover:bg-[#E8ECE9] text-[#2A3631] px-4 py-2 text-sm transition-colors"
+            className="inline-flex items-center gap-2 rounded-full bg-[#EFE9F9] hover:bg-[#E5E0EE] text-[#1A1330] px-4 py-2 text-sm transition-colors"
             data-testid={`safety-text-${r.id}`}
           >
             <MessageSquare size={14} /> {r.text}
@@ -315,7 +315,7 @@ function ResourceCard({ r }) {
             href={r.web}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-[#F5F3E9] hover:bg-[#E8ECE9] text-[#2A3631] px-4 py-2 text-sm transition-colors"
+            className="inline-flex items-center gap-2 rounded-full bg-[#EFE9F9] hover:bg-[#E5E0EE] text-[#1A1330] px-4 py-2 text-sm transition-colors"
             data-testid={`safety-web-${r.id}`}
           >
             <Globe size={14} /> Website <ExternalLink size={12} />
@@ -336,23 +336,23 @@ function ParallelParentingSection() {
 
       {/* Lead card */}
       <div className="card-soft p-7 sm:p-8 mb-5 relative overflow-hidden">
-        <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-[#849D8E]/10" />
+        <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-[#3D1A78]/10" />
         <div className="relative">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-[#849D8E]/15 text-[#5C7A6A] grid place-items-center">
+            <div className="w-10 h-10 rounded-full bg-[#3D1A78]/15 text-[#2A0F5F] grid place-items-center">
               <Shield size={18} />
             </div>
             <div className="eyebrow">A different framework</div>
           </div>
-          <p className="text-[#2A3631] leading-relaxed mb-4">
+          <p className="text-[#1A1330] leading-relaxed mb-4">
             When there has been domestic violence, parenting arrangements require a
             very different framework than traditional co-parenting models. In these
             situations, the priority is not improving the parental relationship —
             it is protecting the physical and psychological safety of the child and
             the survivor parent.
           </p>
-          <p className="text-[#5C6B64] leading-relaxed">
-            <strong className="text-[#2A3631]">Parallel parenting</strong> is often
+          <p className="text-[#4B4567] leading-relaxed">
+            <strong className="text-[#1A1330]">Parallel parenting</strong> is often
             considered the safer alternative because it minimizes direct interaction
             between parents while still allowing the child to maintain structured
             contact with both parents when appropriate.
@@ -362,7 +362,7 @@ function ParallelParentingSection() {
 
       {/* Why traditional co-parenting fails */}
       <PPCard title="Why traditional co-parenting often fails in domestic violence cases">
-        <p className="text-[#5C6B64] mb-3">Traditional co-parenting assumes:</p>
+        <p className="text-[#4B4567] mb-3">Traditional co-parenting assumes:</p>
         <PPList items={[
           "Mutual respect",
           "Ability to communicate safely",
@@ -370,7 +370,7 @@ function ParallelParentingSection() {
           "Emotional regulation",
           "Basic trust",
         ]} />
-        <p className="text-[#5C6B64] mt-5 mb-3">
+        <p className="text-[#4B4567] mt-5 mb-3">
           Domestic violence undermines all of these assumptions. Abuse dynamics often
           continue after separation through:
         </p>
@@ -383,7 +383,7 @@ function ParallelParentingSection() {
           "Monitoring the survivor parent's activities",
           "Undermining parenting authority",
         ]} />
-        <p className="text-[#5C6B64] mt-5 italic">
+        <p className="text-[#4B4567] mt-5 italic">
           In these cases, requiring frequent communication can unintentionally
           create continued access for coercive control.
         </p>
@@ -391,24 +391,24 @@ function ParallelParentingSection() {
 
       {/* What parallel parenting means */}
       <PPCard title="What parallel parenting means">
-        <p className="text-[#5C6B64] mb-4">
+        <p className="text-[#4B4567] mb-4">
           Parallel parenting is a high-boundary parenting model designed to reduce
           conflict and limit opportunities for abuse. The parents disengage from each
           other as much as possible while maintaining clear parenting structures.
         </p>
-        <div className="rounded-2xl bg-[#F5F3E9] p-5 mb-5">
-          <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-2">
+        <div className="rounded-2xl bg-[#EFE9F9] p-5 mb-5">
+          <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-2">
             The focus shifts from
           </div>
-          <div className="font-serif text-lg text-[#2A3631] italic mb-3">
+          <div className="font-serif text-lg text-[#1A1330] italic mb-3">
             "How can parents work together?"
           </div>
-          <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-2">to</div>
-          <div className="font-serif text-lg text-[#5C7A6A] italic">
+          <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-2">to</div>
+          <div className="font-serif text-lg text-[#2A0F5F] italic">
             "How can the child remain safe and stable with minimal parental interaction?"
           </div>
         </div>
-        <p className="text-[#5C6B64] mb-3 font-medium text-[#2A3631]">
+        <p className="text-[#4B4567] mb-3 font-medium text-[#1A1330]">
           Core features of parallel parenting
         </p>
         <PPList items={[
@@ -430,7 +430,7 @@ function ParallelParentingSection() {
           title="Ongoing coercive control"
           lead="Even after separation, abuse may continue through parenting interactions."
         >
-          <p className="text-[#5C6B64] mb-2 text-sm">Examples:</p>
+          <p className="text-[#4B4567] mb-2 text-sm">Examples:</p>
           <PPList items={[
             "Excessive messaging",
             "Threats disguised as parenting concerns",
@@ -439,7 +439,7 @@ function ParallelParentingSection() {
             "Refusing to return children on time",
             "Creating crises to maintain control",
           ]} />
-          <p className="text-[#5C6B64] mt-4 italic text-sm">
+          <p className="text-[#4B4567] mt-4 italic text-sm">
             Parallel parenting helps reduce these opportunities by limiting
             discretionary contact.
           </p>
@@ -458,7 +458,7 @@ function ParallelParentingSection() {
             "Parentification",
             "Fear during exchanges",
           ]} />
-          <p className="text-[#5C6B64] mt-4 mb-2 text-sm">
+          <p className="text-[#4B4567] mt-4 mb-2 text-sm">
             Children often benefit from predictable routines and reduced parental
             conflict exposure. A parenting plan should address:
           </p>
@@ -476,7 +476,7 @@ function ParallelParentingSection() {
           title="Communication challenges"
           lead="Direct communication may retraumatize the survivor parent or escalate conflict."
         >
-          <p className="text-[#5C6B64] mb-2 text-sm">Helpful strategies include:</p>
+          <p className="text-[#4B4567] mb-2 text-sm">Helpful strategies include:</p>
           <PPList items={[
             "Written-only communication",
             "BIFF responses (Brief, Informative, Friendly, Firm)",
@@ -484,7 +484,7 @@ function ParallelParentingSection() {
             "Scheduled communication windows",
             "Use of monitored parenting apps",
           ]} />
-          <p className="text-[#5C6B64] mt-4 mb-2 text-sm">Some cases require:</p>
+          <p className="text-[#4B4567] mt-4 mb-2 text-sm">Some cases require:</p>
           <PPList items={[
             "Third-party intermediaries",
             "Parenting coordinators",
@@ -497,7 +497,7 @@ function ParallelParentingSection() {
           title="Decision-making authority"
           lead="Joint decision-making can become another arena for power struggles."
         >
-          <p className="text-[#5C6B64] mb-2 text-sm">
+          <p className="text-[#4B4567] mb-2 text-sm">
             In high-conflict or abusive dynamics, courts sometimes allocate:
           </p>
           <PPList items={[
@@ -505,12 +505,12 @@ function ParallelParentingSection() {
             "Tie-breaking authority",
             "Separate spheres of responsibility",
           ]} />
-          <p className="text-[#5C6B64] mt-4 mb-2 text-sm">For example:</p>
+          <p className="text-[#4B4567] mt-4 mb-2 text-sm">For example:</p>
           <PPList items={[
             "One parent handles medical decisions",
             "One parent handles educational decisions",
           ]} />
-          <p className="text-[#5C6B64] mt-4 italic text-sm">
+          <p className="text-[#4B4567] mt-4 italic text-sm">
             This reduces repeated conflict and manipulation.
           </p>
         </PPSubsection>
@@ -520,7 +520,7 @@ function ParallelParentingSection() {
           title="Exchanges and safety planning"
           lead="Exchanges are often high-risk moments."
         >
-          <p className="text-[#5C6B64] mb-2 text-sm">Safety-focused considerations:</p>
+          <p className="text-[#4B4567] mb-2 text-sm">Safety-focused considerations:</p>
           <PPList items={[
             "Neutral public locations",
             "School-based exchanges",
@@ -528,7 +528,7 @@ function ParallelParentingSection() {
             "Staggered arrival/departure times",
             "No-contact exchange protocols",
           ]} />
-          <p className="text-[#5C6B64] mt-4 mb-2 text-sm">In severe cases:</p>
+          <p className="text-[#4B4567] mt-4 mb-2 text-sm">In severe cases:</p>
           <PPList items={[
             "Supervised visitation may be necessary",
             "Protective orders may affect parenting arrangements",
@@ -541,14 +541,14 @@ function ParallelParentingSection() {
           lead="One major concern is children being drawn into adult conflict."
           last
         >
-          <p className="text-[#5C6B64] mb-2 text-sm">Children should never:</p>
+          <p className="text-[#4B4567] mb-2 text-sm">Children should never:</p>
           <PPList items={[
             "Carry messages",
             "Report on the other parent",
             "Relay financial information",
             "Be pressured to \u201Cchoose sides\u201D",
           ]} />
-          <p className="text-[#5C6B64] mt-4 italic text-sm">
+          <p className="text-[#4B4567] mt-4 italic text-sm">
             Parallel parenting aims to create emotional separation between the
             parental conflict and the child's experience.
           </p>
@@ -558,32 +558,32 @@ function ParallelParentingSection() {
       {/* Clinical / Legal */}
       <PPCard title="Important clinical and legal considerations">
         <div className="mb-5">
-          <div className="font-serif text-lg text-[#2A3631] mb-2">
+          <div className="font-serif text-lg text-[#1A1330] mb-2">
             Domestic violence is not always "mutual conflict"
           </div>
-          <p className="text-[#5C6B64] text-sm mb-2">Professionals must distinguish:</p>
+          <p className="text-[#4B4567] text-sm mb-2">Professionals must distinguish:</p>
           <div className="flex flex-col sm:flex-row items-stretch gap-3">
-            <div className="flex-1 rounded-xl bg-[#F5F3E9] p-4 text-center">
-              <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-1">From</div>
-              <div className="text-[#2A3631]">High-conflict relationships</div>
+            <div className="flex-1 rounded-xl bg-[#EFE9F9] p-4 text-center">
+              <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-1">From</div>
+              <div className="text-[#1A1330]">High-conflict relationships</div>
             </div>
-            <div className="self-center text-[#8A9A92] text-sm">vs.</div>
+            <div className="self-center text-[#857E9C] text-sm">vs.</div>
             <div className="flex-1 rounded-xl bg-[#C28771]/10 p-4 text-center">
               <div className="text-xs uppercase tracking-[0.2em] text-[#A26852] mb-1">To</div>
-              <div className="text-[#2A3631]">Coercive controlling violence</div>
+              <div className="text-[#1A1330]">Coercive controlling violence</div>
             </div>
           </div>
-          <p className="text-[#5C6B64] text-sm mt-3 italic">
+          <p className="text-[#4B4567] text-sm mt-3 italic">
             Treating abuse as simply "poor communication" can endanger survivors
             and children.
           </p>
         </div>
 
         <div className="mb-5">
-          <div className="font-serif text-lg text-[#2A3631] mb-2">
+          <div className="font-serif text-lg text-[#1A1330] mb-2">
             Reunification and family therapy require caution
           </div>
-          <p className="text-[#5C6B64] text-sm mb-2">
+          <p className="text-[#4B4567] text-sm mb-2">
             Family therapy or co-parenting counseling may be inappropriate when:
           </p>
           <PPList items={[
@@ -592,16 +592,16 @@ function ParallelParentingSection() {
             "Abuse is ongoing",
             "Accountability is absent",
           ]} />
-          <p className="text-[#5C6B64] text-sm mt-3 italic">
+          <p className="text-[#4B4567] text-sm mt-3 italic">
             In some cases, conjoint therapy can increase risk.
           </p>
         </div>
 
         <div>
-          <div className="font-serif text-lg text-[#2A3631] mb-2">
+          <div className="font-serif text-lg text-[#1A1330] mb-2">
             Children may need individual support
           </div>
-          <p className="text-[#5C6B64] text-sm mb-2">
+          <p className="text-[#4B4567] text-sm mb-2">
             Children exposed to domestic violence may benefit from:
           </p>
           <PPList items={[
@@ -610,7 +610,7 @@ function ParallelParentingSection() {
             "Emotional regulation work",
             "Psychoeducation about conflict and safety",
           ]} />
-          <p className="text-[#5C6B64] text-sm mt-3 italic">
+          <p className="text-[#4B4567] text-sm mt-3 italic">
             The therapeutic goal is often stabilization and safety — not forcing
             reconciliation between parents.
           </p>
@@ -619,7 +619,7 @@ function ParallelParentingSection() {
 
       {/* Effective plans */}
       <PPCard title="What effective parallel parenting plans usually include">
-        <p className="text-[#5C6B64] mb-3">A strong plan often specifies:</p>
+        <p className="text-[#4B4567] mb-3">A strong plan often specifies:</p>
         <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1">
           <PPList items={[
             "Exact exchange times and locations",
@@ -635,7 +635,7 @@ function ParallelParentingSection() {
             "Dispute resolution procedures",
           ]} />
         </div>
-        <p className="text-[#5C6B64] mt-5 italic">
+        <p className="text-[#4B4567] mt-5 italic">
           The more detailed the plan, the fewer opportunities exist for conflict
           escalation.
         </p>
@@ -646,14 +646,14 @@ function ParallelParentingSection() {
         className="card-soft p-7 sm:p-8 relative overflow-hidden"
         data-testid="safety-pp-goal"
       >
-        <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-[#849D8E]/10" />
+        <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-[#3D1A78]/10" />
         <div className="relative">
           <div className="eyebrow mb-3">The goal of parallel parenting</div>
-          <h3 className="font-serif text-2xl sm:text-3xl text-[#2A3631] mb-4 leading-tight">
+          <h3 className="font-serif text-2xl sm:text-3xl text-[#1A1330] mb-4 leading-tight">
             Not closeness between parents — safety, stability, and predictability
             for the child.
           </h3>
-          <p className="text-[#5C6B64] mb-4">Parallel parenting is about:</p>
+          <p className="text-[#4B4567] mb-4">Parallel parenting is about:</p>
           <PPList items={[
             "Reducing exposure to conflict",
             "Creating predictability",
@@ -661,7 +661,7 @@ function ParallelParentingSection() {
             "Protecting safety",
             "Allowing children to maintain relationships when appropriate",
           ]} />
-          <p className="text-[#5C6B64] mt-5 text-sm">
+          <p className="text-[#4B4567] mt-5 text-sm">
             In some families, parallel parenting eventually evolves into healthier
             co-parenting. In others, long-term structured separation remains the
             safest and healthiest arrangement.
@@ -678,11 +678,11 @@ function PPCard({ title, children }) {
       className="card-soft p-0 mb-5 group overflow-hidden"
       data-testid={`safety-pp-card-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}`}
     >
-      <summary className="cursor-pointer list-none p-6 sm:p-7 flex items-start justify-between gap-4 hover:bg-[#F5F3E9]/40 transition-colors">
-        <h3 className="font-serif text-xl sm:text-2xl text-[#2A3631] leading-snug">
+      <summary className="cursor-pointer list-none p-6 sm:p-7 flex items-start justify-between gap-4 hover:bg-[#EFE9F9]/40 transition-colors">
+        <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug">
           {title}
         </h3>
-        <span className="shrink-0 mt-1 w-7 h-7 rounded-full bg-[#849D8E]/15 text-[#5C7A6A] grid place-items-center text-lg leading-none group-open:rotate-45 transition-transform">
+        <span className="shrink-0 mt-1 w-7 h-7 rounded-full bg-[#3D1A78]/15 text-[#2A0F5F] grid place-items-center text-lg leading-none group-open:rotate-45 transition-transform">
           +
         </span>
       </summary>
@@ -693,12 +693,12 @@ function PPCard({ title, children }) {
 
 function PPSubsection({ number, title, lead, children, last }) {
   return (
-    <div className={last ? "" : "mb-6 pb-6 border-b border-[#E8ECE9]"}>
+    <div className={last ? "" : "mb-6 pb-6 border-b border-[#E5E0EE]"}>
       <div className="flex items-baseline gap-3 mb-2">
-        <span className="font-serif text-lg text-[#5C7A6A]">{number}.</span>
-        <h4 className="font-serif text-lg text-[#2A3631]">{title}</h4>
+        <span className="font-serif text-lg text-[#2A0F5F]">{number}.</span>
+        <h4 className="font-serif text-lg text-[#1A1330]">{title}</h4>
       </div>
-      {lead && <p className="text-[#5C6B64] text-sm mb-3">{lead}</p>}
+      {lead && <p className="text-[#4B4567] text-sm mb-3">{lead}</p>}
       {children}
     </div>
   );
@@ -708,8 +708,8 @@ function PPList({ items }) {
   return (
     <ul className="space-y-2">
       {items.map((it) => (
-        <li key={it} className="flex gap-3 text-[#2A3631] text-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#849D8E] mt-2 shrink-0" />
+        <li key={it} className="flex gap-3 text-[#1A1330] text-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#3D1A78] mt-2 shrink-0" />
           <span>{it}</span>
         </li>
       ))}

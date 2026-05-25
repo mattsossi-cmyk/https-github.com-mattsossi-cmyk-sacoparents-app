@@ -89,15 +89,15 @@ export default function ChildGoals() {
                     data-testid={`goal-option-${g.id}`}
                     className={`text-left rounded-2xl px-5 py-4 border transition-all ${
                       isOn
-                        ? "bg-[#849D8E] text-white border-[#849D8E] shadow-sm"
-                        : "bg-[#F5F3E9] text-[#2A3631] border-transparent hover:bg-[#E8ECE9]"
+                        ? "bg-[#3D1A78] text-white border-[#3D1A78] shadow-sm"
+                        : "bg-[#EFE9F9] text-[#1A1330] border-transparent hover:bg-[#E5E0EE]"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span>{g.label}</span>
                       <span
                         className={`w-5 h-5 rounded-full grid place-items-center text-xs ${
-                          isOn ? "bg-white text-[#849D8E]" : "border border-[#8A9A92]"
+                          isOn ? "bg-white text-[#3D1A78]" : "border border-[#857E9C]"
                         }`}
                       >
                         {isOn ? "✓" : ""}

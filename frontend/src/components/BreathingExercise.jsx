@@ -93,10 +93,10 @@ export default function BreathingExercise({ cycles = 4, onComplete, embedded = f
       {!embedded && (
         <>
           <div className="eyebrow mb-2">Take a moment</div>
-          <div className="font-serif text-2xl sm:text-3xl text-[#2A3631] mb-1">
+          <div className="font-serif text-2xl sm:text-3xl text-[#1A1330] mb-1">
             A breath before you begin.
           </div>
-          <p className="text-[14px] text-[#5C6B64] mb-6 max-w-md mx-auto">
+          <p className="text-[14px] text-[#4B4567] mb-6 max-w-md mx-auto">
             Four cycles of 4-7-8 breathing. About one minute. Lowers the noise so what
             you write here can come from your wiser self, not your reactive one.
           </p>
@@ -106,7 +106,7 @@ export default function BreathingExercise({ cycles = 4, onComplete, embedded = f
       {/* Animated breath circle */}
       <div className="relative h-72 sm:h-80 flex items-center justify-center mb-6">
         <div
-          className="absolute rounded-full bg-[#849D8E]/15 transition-transform duration-1000 ease-in-out"
+          className="absolute rounded-full bg-[#3D1A78]/15 transition-transform duration-1000 ease-in-out"
           style={{
             width: 240,
             height: 240,
@@ -114,7 +114,7 @@ export default function BreathingExercise({ cycles = 4, onComplete, embedded = f
           }}
         />
         <div
-          className="absolute rounded-full bg-[#849D8E]/25 transition-transform duration-1000 ease-in-out"
+          className="absolute rounded-full bg-[#3D1A78]/25 transition-transform duration-1000 ease-in-out"
           style={{
             width: 200,
             height: 200,
@@ -122,7 +122,7 @@ export default function BreathingExercise({ cycles = 4, onComplete, embedded = f
           }}
         />
         <div
-          className="absolute rounded-full bg-[#849D8E]/40 transition-transform duration-1000 ease-in-out flex items-center justify-center"
+          className="absolute rounded-full bg-[#3D1A78]/40 transition-transform duration-1000 ease-in-out flex items-center justify-center"
           style={{
             width: 160,
             height: 160,
@@ -141,17 +141,17 @@ export default function BreathingExercise({ cycles = 4, onComplete, embedded = f
       </div>
 
       {/* Status row */}
-      <div className="flex items-center justify-center gap-6 mb-6 text-[13px] text-[#5C6B64]">
+      <div className="flex items-center justify-center gap-6 mb-6 text-[13px] text-[#4B4567]">
         <div>
-          <div className="uppercase tracking-wider text-[10px] text-[#8A9A92]">Cycle</div>
-          <div className="font-serif text-lg text-[#2A3631]" data-testid="breathing-cycle">
+          <div className="uppercase tracking-wider text-[10px] text-[#857E9C]">Cycle</div>
+          <div className="font-serif text-lg text-[#1A1330]" data-testid="breathing-cycle">
             {cycleNum} / {cycles}
           </div>
         </div>
-        <div className="w-px h-8 bg-[#E8ECE9]" />
+        <div className="w-px h-8 bg-[#E5E0EE]" />
         <div>
-          <div className="uppercase tracking-wider text-[10px] text-[#8A9A92]">Time</div>
-          <div className="font-serif text-lg text-[#2A3631]" data-testid="breathing-countdown">
+          <div className="uppercase tracking-wider text-[10px] text-[#857E9C]">Time</div>
+          <div className="font-serif text-lg text-[#1A1330]" data-testid="breathing-countdown">
             {secondsLeft}s
           </div>
         </div>
@@ -186,20 +186,20 @@ export function BreathingModal({ open, onClose }) {
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 bg-[#2A3631]/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-[#1A1330]/70 backdrop-blur-sm flex items-center justify-center p-4"
       data-testid="breathing-modal"
     >
       <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 relative shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-[#5C6B64] hover:text-[#2A3631]"
+          className="absolute top-4 right-4 p-2 text-[#4B4567] hover:text-[#1A1330]"
           aria-label="Close"
           data-testid="breathing-modal-close"
         >
           <X size={18} />
         </button>
         <div className="flex items-center gap-2 mb-1">
-          <Wind size={16} className="text-[#849D8E]" />
+          <Wind size={16} className="text-[#3D1A78]" />
           <div className="eyebrow">Breathing exercise</div>
         </div>
         <BreathingExercise embedded onComplete={onClose} />

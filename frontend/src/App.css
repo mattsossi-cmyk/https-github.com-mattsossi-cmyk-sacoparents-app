@@ -1,16 +1,16 @@
-/* App-level styles for SA Coparents — most theming lives in index.css */
+/* App-level styles for SACOParents — most theming lives in index.css */
 .App {
     min-height: 100vh;
 }
 
 .gentle-bg {
     background:
-        radial-gradient(60rem 40rem at 110% -10%, rgba(229, 217, 197, 0.45), transparent 60%),
-        radial-gradient(50rem 36rem at -10% 110%, rgba(132, 157, 142, 0.18), transparent 60%),
+        radial-gradient(60rem 40rem at 110% -10%, rgba(124, 58, 237, 0.10), transparent 60%),
+        radial-gradient(50rem 36rem at -10% 110%, rgba(45, 181, 181, 0.10), transparent 60%),
         var(--bg-default);
 }
 
 .divider-line {
     height: 1px;
-    background: linear-gradient(90deg, transparent, #D8DDD9, transparent);
+    background: linear-gradient(90deg, transparent, #D4CDE6, transparent);
 }

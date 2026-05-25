@@ -102,25 +102,25 @@ export default function Reflection() {
       <div className="fade-up max-w-3xl mx-auto" data-testid="reflection-page">
         <Link
           to="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-[#5C7A6A] hover:text-[#849D8E] mb-5"
+          className="inline-flex items-center gap-2 text-sm text-[#2A0F5F] hover:text-[#3D1A78] mb-5"
           data-testid="reflection-back-link"
         >
           <ArrowLeft size={14} /> Back to dashboard
         </Link>
 
         <div className="eyebrow mb-3">Personal Reflection</div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#2A3631] leading-tight">
+        <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
           A quieter conversation with yourself.
         </h1>
-        <p className="text-[15px] text-[#5C6B64] mt-4 leading-relaxed max-w-2xl">
+        <p className="text-[15px] text-[#4B4567] mt-4 leading-relaxed max-w-2xl">
           Before mediation, take ten minutes to listen to your own quieter voice.
           Everything here stays private to you — nothing is ever shared with anyone
           unless you choose to.
         </p>
 
-        <div className="mt-3 flex items-center gap-2 text-[12px] text-[#8A9A92]">
-          <Lock size={12} className="text-[#849D8E]" />
-          <span>End-to-end private. Only you can read this. <Link to="/delete-account" className="underline hover:text-[#5C6B64]">Delete anytime</Link>.</span>
+        <div className="mt-3 flex items-center gap-2 text-[12px] text-[#857E9C]">
+          <Lock size={12} className="text-[#3D1A78]" />
+          <span>End-to-end private. Only you can read this. <Link to="/delete-account" className="underline hover:text-[#4B4567]">Delete anytime</Link>.</span>
         </div>
 
         {/* Breathing exercise card */}
@@ -140,7 +140,7 @@ export default function Reflection() {
         <div className="mt-10">
           <div className="eyebrow mb-4">Prompts</div>
           {loading ? (
-            <div className="text-sm text-[#8A9A92]">Loading…</div>
+            <div className="text-sm text-[#857E9C]">Loading…</div>
           ) : (
             <div className="space-y-4">
               {PROMPTS.map((p) => (
@@ -158,18 +158,18 @@ export default function Reflection() {
         {/* Save bar */}
         <div className="sticky bottom-4 mt-10">
           <div className="card-soft p-4 sm:p-5 flex items-center justify-between gap-4">
-            <div className="text-[13px] text-[#5C6B64] flex items-center gap-2 min-w-0">
+            <div className="text-[13px] text-[#4B4567] flex items-center gap-2 min-w-0">
               {savedAt ? (
                 <>
-                  <Check size={14} className="text-[#849D8E] shrink-0" />
+                  <Check size={14} className="text-[#3D1A78] shrink-0" />
                   <span className="truncate">
                     Saved {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </>
               ) : hasContent ? (
-                <span className="italic text-[#8A9A92]">Unsaved changes</span>
+                <span className="italic text-[#857E9C]">Unsaved changes</span>
               ) : (
-                <span className="text-[#8A9A92]">Your words stay with you.</span>
+                <span className="text-[#857E9C]">Your words stay with you.</span>
               )}
             </div>
             <button
@@ -198,10 +198,10 @@ function PromptCard({ prompt, value, onChange }) {
   return (
     <div className="card-soft p-5 sm:p-6" data-testid={`reflection-prompt-${id}`}>
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-9 h-9 rounded-full bg-[#849D8E]/15 text-[#849D8E] grid place-items-center shrink-0">
+        <div className="w-9 h-9 rounded-full bg-[#3D1A78]/15 text-[#3D1A78] grid place-items-center shrink-0">
           <Icon size={16} />
         </div>
-        <div className="font-serif text-lg sm:text-xl text-[#2A3631] leading-snug">
+        <div className="font-serif text-lg sm:text-xl text-[#1A1330] leading-snug">
           {label}
         </div>
       </div>

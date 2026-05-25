@@ -10,31 +10,31 @@ export default function Terms() {
       <div className="max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-14">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-sm text-[#5C7A6A] hover:text-[#849D8E] mb-6"
+          className="inline-flex items-center gap-2 text-sm text-[#2A0F5F] hover:text-[#3D1A78] mb-6"
           data-testid="terms-back-link"
         >
-          <ArrowLeft size={14} /> Back to SA Coparents
+          <ArrowLeft size={14} /> Back to SACOParents
         </Link>
 
         <div className="eyebrow mb-3">Terms of Service</div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#2A3631] mb-2 leading-tight">
+        <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mb-2 leading-tight">
           Plain-English terms.
         </h1>
-        <p className="text-sm text-[#8A9A92] mb-8">Last updated: {LAST_UPDATED}</p>
+        <p className="text-sm text-[#857E9C] mb-8">Last updated: {LAST_UPDATED}</p>
 
         <Prose>
           <p>
-            Welcome to <strong>SA Coparents</strong> ("we", "us"). By creating an
+            Welcome to <strong>SACOParents</strong> ("we", "us"). By creating an
             account or using the app, you agree to these Terms.
             If you don't agree, please don't use the app.
           </p>
 
           <H2>1. What this app is — and isn't</H2>
           <p>
-            SA Coparents is a <strong>preparation tool</strong> for parents heading into a co-parenting mediation session. It helps you organize your thoughts, identify priorities, and arrive at mediation calm and child-centered.
+            SACOParents is a <strong>preparation tool</strong> for parents heading into a co-parenting mediation session. It helps you organize your thoughts, identify priorities, and arrive at mediation calm and child-centered.
           </p>
           <p>
-            SA Coparents is <strong>NOT</strong>:
+            SACOParents is <strong>NOT</strong>:
           </p>
           <ul>
             <li>Legal advice or a substitute for an attorney</li>
@@ -132,11 +132,11 @@ export default function Terms() {
 
           <H2>14. Contact</H2>
           <p>
-            Email <a href="mailto:mattsossi@bsossi.com" className="text-[#5C7A6A] underline">mattsossi@bsossi.com</a>
-            {" "}or call <a href="tel:2102241667" className="text-[#5C7A6A] underline">210-224-1667</a>.
+            Email <a href="mailto:mattsossi@bsossi.com" className="text-[#2A0F5F] underline">mattsossi@bsossi.com</a>
+            {" "}or call <a href="tel:2102241667" className="text-[#2A0F5F] underline">210-224-1667</a>.
           </p>
-          <p className="text-xs text-[#8A9A92] italic mt-8">
-            SA Coparents · 16607 Blanco #703, San Antonio, Texas 78232
+          <p className="text-xs text-[#857E9C] italic mt-8">
+            SACOParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>
       </div>
@@ -146,13 +146,13 @@ export default function Terms() {
 
 function H2({ children }) {
   return (
-    <h2 className="font-serif text-2xl text-[#2A3631] mt-10 mb-3">{children}</h2>
+    <h2 className="font-serif text-2xl text-[#1A1330] mt-10 mb-3">{children}</h2>
   );
 }
 
 function Prose({ children }) {
   return (
-    <div className="prose-soft space-y-3 text-[#2A3631] leading-relaxed [&_p]:text-[#5C6B64] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[#5C6B64] [&_strong]:text-[#2A3631] text-[15px]">
+    <div className="prose-soft space-y-3 text-[#1A1330] leading-relaxed [&_p]:text-[#4B4567] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[#4B4567] [&_strong]:text-[#1A1330] text-[15px]">
       {children}
     </div>
   );

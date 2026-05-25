@@ -64,10 +64,10 @@ export default function AuthCallback() {
           <div className="text-xs uppercase tracking-[0.25em] text-[#B07A6A] mb-3">
             Sign-in interrupted
           </div>
-          <h1 className="font-serif text-2xl text-[#2A3631] mb-3">
+          <h1 className="font-serif text-2xl text-[#1A1330] mb-3">
             {error.title}
           </h1>
-          <p className="text-[#5C6B64] mb-6">{error.message}</p>
+          <p className="text-[#4B4567] mb-6">{error.message}</p>
           <div className="flex flex-col gap-3">
             <Link
               to="/login"
@@ -80,7 +80,7 @@ export default function AuthCallback() {
             <Link
               to="/"
               replace
-              className="text-sm text-[#849D8E] hover:underline"
+              className="text-sm text-[#3D1A78] hover:underline"
             >
               Return home
             </Link>
@@ -96,10 +96,10 @@ export default function AuthCallback() {
   return (
     <div className="min-h-screen gentle-bg grid place-items-center">
       <div className="text-center" data-testid="auth-callback-loading">
-        <div className="text-xs uppercase tracking-[0.25em] text-[#8A9A92] mb-3">
+        <div className="text-xs uppercase tracking-[0.25em] text-[#857E9C] mb-3">
           Securing your session
         </div>
-        <div className="font-serif text-2xl text-[#2A3631]">One moment…</div>
+        <div className="font-serif text-2xl text-[#1A1330]">One moment…</div>
       </div>
     </div>
   );

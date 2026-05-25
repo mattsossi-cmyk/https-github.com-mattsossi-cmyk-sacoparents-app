@@ -1,13 +1,13 @@
 {
-  "name": "SA Coparents",
-  "short_name": "SA Coparents",
-  "description": "A calm, child-centered way to prepare for co-parenting mediation.",
+  "name": "SACOParents",
+  "short_name": "SACOParents",
+  "description": "Helping families communicate better. Smarter co-parenting starts here.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FDFAF3",
-  "theme_color": "#849D8E",
+  "background_color": "#F8F7FC",
+  "theme_color": "#3D1A78",
   "lang": "en-US",
   "categories": ["health", "lifestyle", "productivity"],
   "icons": [

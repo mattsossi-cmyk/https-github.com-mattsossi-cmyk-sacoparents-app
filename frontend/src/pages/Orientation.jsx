@@ -103,8 +103,8 @@ const SLIDES = [
 
 const ACCENTS = {
   rose: { ring: "ring-[#C28771]/30", icon: "bg-[#C28771]/15 text-[#C28771]" },
-  sage: { ring: "ring-[#849D8E]/30", icon: "bg-[#849D8E]/15 text-[#849D8E]" },
-  sand: { ring: "ring-[#E5D9C5]", icon: "bg-[#F5F3E9] text-[#5C7A6A]" },
+  sage: { ring: "ring-[#3D1A78]/30", icon: "bg-[#3D1A78]/15 text-[#3D1A78]" },
+  sand: { ring: "ring-[#D4C5F0]", icon: "bg-[#EFE9F9] text-[#2A0F5F]" },
   warn: { ring: "ring-[#C28771]/40", icon: "bg-[#C28771]/15 text-[#C28771]" },
 };
 
@@ -141,21 +141,34 @@ export default function Orientation() {
       {/* Top bar */}
       <header className="px-5 sm:px-8 py-5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <img
-            src="/sa-coparents-mark.png"
-            alt="SA Coparents"
-            className="w-10 h-10 rounded-lg ring-1 ring-[#E8ECE9]"
-          />
+          <svg width={40} height={40} viewBox="0 0 64 64" aria-hidden>
+            <defs>
+              <linearGradient id="oriBmGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#3D1A78" />
+                <stop offset="55%" stopColor="#5E2DB5" />
+                <stop offset="100%" stopColor="#2DB5B5" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M32 56 C12 42, 4 30, 12 18 C18 9, 28 10, 32 18 C36 10, 46 9, 52 18 C60 30, 52 42, 32 56 Z"
+              fill="url(#oriBmGrad)"
+            />
+            <circle cx="24" cy="26" r="4" fill="white" opacity="0.95" />
+            <circle cx="40" cy="26" r="4" fill="white" opacity="0.95" />
+            <path d="M22 36 Q32 44 42 36" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9" />
+          </svg>
           <div className="leading-tight">
-            <div className="font-serif text-base text-[#2A3631]">SA Coparents</div>
-            <div className="text-[9px] uppercase tracking-[0.25em] text-[#8A9A92]">
+            <div className="font-sans font-extrabold text-base text-[#1A1330]">
+              <span className="text-brand-gradient">SACO</span>Parents
+            </div>
+            <div className="text-[9px] uppercase tracking-[0.2em] text-[#857E9C]">
               Orientation
             </div>
           </div>
         </div>
         <button
           onClick={skip}
-          className="text-[12px] text-[#5C6B64] hover:text-[#2A3631] inline-flex items-center gap-1.5"
+          className="text-[12px] text-[#4B4567] hover:text-[#1A1330] inline-flex items-center gap-1.5"
           data-testid="orientation-skip-button"
         >
           Skip <X size={12} />
@@ -166,17 +179,17 @@ export default function Orientation() {
       <main className="flex-1 flex items-center justify-center px-5 sm:px-8 py-8">
         <div className="max-w-2xl w-full">
           <div className={`bg-white rounded-3xl ring-1 ${a.ring} p-7 sm:p-10 shadow-sm relative overflow-hidden`} data-testid={`orientation-slide-${idx}`}>
-            <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-[#F5F3E9]/60 pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-[#EFE9F9]/60 pointer-events-none" />
             <div className="relative">
               <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl ${a.icon} mb-6`}>
                 <Icon size={24} />
               </div>
               <div className="eyebrow mb-3">{slide.eyebrow}</div>
-              <h2 className="font-serif text-3xl sm:text-4xl text-[#2A3631] leading-tight mb-4">
+              <h2 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mb-4">
                 {slide.title}
               </h2>
               {slide.body && (
-                <p className="text-[15px] sm:text-[16px] text-[#5C6B64] leading-relaxed">
+                <p className="text-[15px] sm:text-[16px] text-[#4B4567] leading-relaxed">
                   {slide.body}
                 </p>
               )}
@@ -185,10 +198,10 @@ export default function Orientation() {
                   {slide.bullets.map((b, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-2.5 text-[14px] sm:text-[15px] text-[#2A3631]"
+                      className="flex items-start gap-2.5 text-[14px] sm:text-[15px] text-[#1A1330]"
                       data-testid={`orientation-bullet-${idx}-${i}`}
                     >
-                      <Check size={16} className="text-[#849D8E] mt-1 shrink-0" />
+                      <Check size={16} className="text-[#3D1A78] mt-1 shrink-0" />
                       <span className="leading-relaxed">{b}</span>
                     </li>
                   ))}
@@ -205,7 +218,7 @@ export default function Orientation() {
                 onClick={() => setIdx(i)}
                 aria-label={`Go to step ${i + 1}`}
                 className={`h-2 rounded-full transition-all ${
-                  i === idx ? "w-8 bg-[#849D8E]" : "w-2 bg-[#E8ECE9] hover:bg-[#C2D0C8]"
+                  i === idx ? "w-8 bg-[#3D1A78]" : "w-2 bg-[#E5E0EE] hover:bg-[#C9C0DC]"
                 }`}
                 data-testid={`orientation-dot-${i}`}
               />
@@ -223,7 +236,7 @@ export default function Orientation() {
               <ArrowLeft size={14} /> Back
             </button>
 
-            <div className="text-[12px] text-[#8A9A92]">
+            <div className="text-[12px] text-[#857E9C]">
               {idx + 1} / {total}
             </div>
 
@@ -238,9 +251,9 @@ export default function Orientation() {
         </div>
       </main>
 
-      <footer className="text-center pb-5 text-[11px] text-[#8A9A92]">
+      <footer className="text-center pb-5 text-[11px] text-[#857E9C]">
         <span className="inline-flex items-center gap-1.5">
-          <Wind size={11} className="text-[#849D8E]" />
+          <Wind size={11} className="text-[#3D1A78]" />
           Take a breath if you need to — this is your space.
         </span>
       </footer>

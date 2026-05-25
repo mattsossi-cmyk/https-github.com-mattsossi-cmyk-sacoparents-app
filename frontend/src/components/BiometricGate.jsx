@@ -54,7 +54,7 @@ export default function BiometricGate({ children }) {
   const unlock = useCallback(async () => {
     setChecking(true);
     setError("");
-    const ok = await requireBiometric("Unlock your SA Coparents prep");
+    const ok = await requireBiometric("Unlock your SACOParents prep");
     setChecking(false);
     if (ok) setLocked(false);
     else setError("Authentication failed. Please try again.");
@@ -71,16 +71,16 @@ export default function BiometricGate({ children }) {
   if (!locked || !user || !available) return children;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FDFAF3] p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#F8F7FC] p-6">
       <div className="card-soft p-8 text-center max-w-sm w-full">
-        <div className="w-14 h-14 rounded-full bg-[#849D8E]/15 text-[#5C7A6A] grid place-items-center mx-auto mb-5">
+        <div className="w-14 h-14 rounded-full bg-[#3D1A78]/15 text-[#2A0F5F] grid place-items-center mx-auto mb-5">
           <Lock size={22} />
         </div>
         <div className="eyebrow mb-2">Locked</div>
-        <h2 className="font-serif text-2xl text-[#2A3631] mb-3">
+        <h2 className="font-serif text-2xl text-[#1A1330] mb-3">
           Welcome back, {user.name?.split(" ")[0] || "friend"}
         </h2>
-        <p className="text-sm text-[#5C6B64] mb-6">
+        <p className="text-sm text-[#4B4567] mb-6">
           For your privacy, please use Face ID or Touch ID to unlock your prep.
         </p>
         <button

@@ -35,7 +35,7 @@ function ChangesSinceLast({ text }) {
           What's changed since last time
         </div>
       </div>
-      <p className="text-sm text-[#2A3631] leading-relaxed whitespace-pre-line">{text}</p>
+      <p className="text-sm text-[#1A1330] leading-relaxed whitespace-pre-line">{text}</p>
     </div>
   );
 }
@@ -57,7 +57,7 @@ function RetakeButton() {
 
 function Section({ title, children }) {
   return (
-    <div className="py-4 border-t border-[#E8ECE9] first:border-t-0 first:pt-0">
+    <div className="py-4 border-t border-[#E5E0EE] first:border-t-0 first:pt-0">
       <div className="eyebrow mb-2">{title}</div>
       {children}
     </div>
@@ -66,12 +66,12 @@ function Section({ title, children }) {
 
 function BulletList({ items }) {
   if (!items || !items.length)
-    return <p className="text-sm italic text-[#8A9A92]">(none captured)</p>;
+    return <p className="text-sm italic text-[#857E9C]">(none captured)</p>;
   return (
     <ul className="space-y-1.5">
       {items.map((s) => (
-        <li key={s} className="flex gap-2 text-[#2A3631]">
-          <span className="text-[#849D8E] mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full bg-[#849D8E]" />
+        <li key={s} className="flex gap-2 text-[#1A1330]">
+          <span className="text-[#3D1A78] mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full bg-[#3D1A78]" />
           <span>{s}</span>
         </li>
       ))}
@@ -81,15 +81,15 @@ function BulletList({ items }) {
 
 function ClauseList({ items }) {
   if (!items || !items.length)
-    return <p className="text-sm italic text-[#8A9A92]">(none captured)</p>;
+    return <p className="text-sm italic text-[#857E9C]">(none captured)</p>;
   return (
     <div className="space-y-3">
       {items.map((it, i) => (
-        <div key={`${it.area}-${i}`} className="rounded-xl bg-[#F5F3E9] px-4 py-3">
-          <div className="text-xs uppercase tracking-[0.2em] text-[#849D8E] mb-1">
+        <div key={`${it.area}-${i}`} className="rounded-xl bg-[#EFE9F9] px-4 py-3">
+          <div className="text-xs uppercase tracking-[0.2em] text-[#3D1A78] mb-1">
             {it.area}
           </div>
-          <div className="text-[#2A3631] leading-relaxed">{it.agreement}</div>
+          <div className="text-[#1A1330] leading-relaxed">{it.agreement}</div>
         </div>
       ))}
     </div>
@@ -98,17 +98,17 @@ function ClauseList({ items }) {
 
 function PriorityAgenda({ items }) {
   if (!items?.length)
-    return <p className="text-sm italic text-[#8A9A92]">(none captured)</p>;
+    return <p className="text-sm italic text-[#857E9C]">(none captured)</p>;
   return (
     <ol className="space-y-2 list-none">
       {items.map((it, i) => (
         <li key={`${it.rank || i}-${it.topic}`} className="flex gap-3">
-          <span className="font-serif text-xl text-[#849D8E] w-7 shrink-0">
+          <span className="font-serif text-xl text-[#3D1A78] w-7 shrink-0">
             {it.rank || i + 1}.
           </span>
           <div>
-            <div className="text-[#2A3631]">{it.topic}</div>
-            <div className="text-xs text-[#8A9A92] uppercase tracking-wider">
+            <div className="text-[#1A1330]">{it.topic}</div>
+            <div className="text-xs text-[#857E9C] uppercase tracking-wider">
               {it.category}
             </div>
           </div>
@@ -251,7 +251,7 @@ function MediationSummaryTab() {
           title={
             <>
               {summary.readiness_label}{" "}
-              <span className="text-[#8A9A92] text-base">
+              <span className="text-[#857E9C] text-base">
                 · {summary.readiness_score}/100
               </span>
             </>
@@ -271,7 +271,7 @@ function MediationSummaryTab() {
         <ChangesSinceLast text={summary.changes_since_last} />
 
         <Section title="Child-centered goals">
-          <p className="text-[#2A3631] leading-relaxed">
+          <p className="text-[#1A1330] leading-relaxed">
             {summary.child_goals_summary}
           </p>
         </Section>
@@ -288,7 +288,7 @@ function MediationSummaryTab() {
           <BulletList items={summary.communication_goals} />
         </Section>
         <Section title="Notes for the mediator">
-          <p className="text-[#2A3631] leading-relaxed italic">
+          <p className="text-[#1A1330] leading-relaxed italic">
             {summary.notes_for_mediator}
           </p>
         </Section>
@@ -436,7 +436,7 @@ function AgreementDraftTab() {
 
         {agreement.overview && (
           <Section title="Overview">
-            <p className="text-[#2A3631] leading-relaxed italic">
+            <p className="text-[#1A1330] leading-relaxed italic">
               {agreement.overview}
             </p>
           </Section>
@@ -463,13 +463,13 @@ function AgreementDraftTab() {
         )}
         {agreement.closing_note && (
           <Section title="A note from the draft">
-            <p className="text-[#2A3631] leading-relaxed italic">
+            <p className="text-[#1A1330] leading-relaxed italic">
               {agreement.closing_note}
             </p>
           </Section>
         )}
 
-        <div className="mt-6 rounded-xl bg-[#C28771]/8 border border-[#C28771]/25 px-4 py-3 text-xs text-[#5C6B64]">
+        <div className="mt-6 rounded-xl bg-[#C28771]/8 border border-[#C28771]/25 px-4 py-3 text-xs text-[#4B4567]">
           This is a working draft to start a conversation — not a legal document.
           Review it together with your co-parent and, when ready, with a mediator or
           attorney.
@@ -553,7 +553,7 @@ function ImprovementPlanTab() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
             <div className="eyebrow mb-1">Things I can improve on</div>
-            <div className="font-serif text-2xl text-[#2A3631] leading-snug max-w-2xl">
+            <div className="font-serif text-2xl text-[#1A1330] leading-snug max-w-2xl">
               {plan.headline}
             </div>
           </div>
@@ -574,7 +574,7 @@ function ImprovementPlanTab() {
         <ChangesSinceLast text={plan.changes_since_last} />
 
         {(plan.focus_areas || []).length === 0 && (
-          <div className="rounded-2xl bg-[#F5F3E9] px-5 py-4 text-sm text-[#5C6B64]">
+          <div className="rounded-2xl bg-[#EFE9F9] px-5 py-4 text-sm text-[#4B4567]">
             We didn't have enough Communication or Readiness data to compile growth
             areas. Revisit those steps and try again.
           </div>
@@ -587,12 +587,12 @@ function ImprovementPlanTab() {
         </div>
 
         {plan.this_week?.length > 0 && (
-          <div className="mt-8 rounded-2xl bg-[#849D8E]/8 border border-[#849D8E]/25 p-6">
+          <div className="mt-8 rounded-2xl bg-[#3D1A78]/8 border border-[#3D1A78]/25 p-6">
             <div className="eyebrow mb-3">Try this week</div>
             <ol className="space-y-2 list-none">
               {plan.this_week.map((t, i) => (
-                <li key={`${t}-${i}`} className="flex gap-3 text-[#2A3631]">
-                  <span className="font-serif text-xl text-[#5C7A6A] w-6 shrink-0">
+                <li key={`${t}-${i}`} className="flex gap-3 text-[#1A1330]">
+                  <span className="font-serif text-xl text-[#2A0F5F] w-6 shrink-0">
                     {i + 1}.
                   </span>
                   <span>{t}</span>
@@ -604,7 +604,7 @@ function ImprovementPlanTab() {
 
         {plan.encouragement && (
           <div className="mt-6 text-center px-2">
-            <p className="font-serif text-lg text-[#5C7A6A] italic leading-snug">
+            <p className="font-serif text-lg text-[#2A0F5F] italic leading-snug">
               {plan.encouragement}
             </p>
           </div>
@@ -627,19 +627,19 @@ function ImprovementPlanTab() {
 function FocusAreaCard({ fa, index }) {
   return (
     <div
-      className="rounded-2xl bg-[#F5F3E9] p-5 sm:p-6"
+      className="rounded-2xl bg-[#EFE9F9] p-5 sm:p-6"
       data-testid={`improve-focus-${index}`}
     >
       <div className="flex items-start gap-3 mb-3">
-        <span className="font-serif text-xl text-[#849D8E] shrink-0 leading-none mt-0.5">
+        <span className="font-serif text-xl text-[#3D1A78] shrink-0 leading-none mt-0.5">
           {index + 1}.
         </span>
         <div>
-          <div className="font-serif text-xl text-[#2A3631] leading-snug">
+          <div className="font-serif text-xl text-[#1A1330] leading-snug">
             {fa.title}
           </div>
           {fa.why_it_matters && (
-            <p className="text-sm text-[#5C6B64] mt-1.5">{fa.why_it_matters}</p>
+            <p className="text-sm text-[#4B4567] mt-1.5">{fa.why_it_matters}</p>
           )}
         </div>
       </div>
@@ -647,7 +647,7 @@ function FocusAreaCard({ fa, index }) {
       <div className="grid sm:grid-cols-2 gap-4 sm:gap-5 mt-4">
         <TipBlock
           eyebrow="Communication"
-          accent="#849D8E"
+          accent="#3D1A78"
           tips={fa.communication_tips}
         />
         <TipBlock
@@ -672,7 +672,7 @@ function TipBlock({ eyebrow, accent, tips }) {
       </div>
       <ul className="space-y-1.5">
         {tips.map((t, i) => (
-          <li key={`${t}-${i}`} className="flex gap-2 text-sm text-[#2A3631]">
+          <li key={`${t}-${i}`} className="flex gap-2 text-sm text-[#1A1330]">
             <span
               className="w-1.5 h-1.5 rounded-full mt-2 shrink-0"
               style={{ background: accent }}
@@ -691,11 +691,11 @@ function TipBlock({ eyebrow, accent, tips }) {
 function EmptyState({ icon, title, body, cta, onCta, loading, testId }) {
   return (
     <div className="card-soft p-10 text-center">
-      <div className="w-14 h-14 rounded-full bg-[#849D8E]/15 text-[#849D8E] grid place-items-center mx-auto mb-4">
+      <div className="w-14 h-14 rounded-full bg-[#3D1A78]/15 text-[#3D1A78] grid place-items-center mx-auto mb-4">
         {icon}
       </div>
-      <div className="font-serif text-2xl text-[#2A3631] mb-2">{title}</div>
-      <p className="text-[#5C6B64] mb-6 max-w-xl mx-auto">{body}</p>
+      <div className="font-serif text-2xl text-[#1A1330] mb-2">{title}</div>
+      <p className="text-[#4B4567] mb-6 max-w-xl mx-auto">{body}</p>
       <button
         onClick={onCta}
         disabled={loading}
@@ -727,7 +727,7 @@ function HeaderRow({
     <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3 mb-6">
       <div>
         <div className="eyebrow mb-1">{eyebrow}</div>
-        <div className="font-serif text-2xl text-[#2A3631]">{title}</div>
+        <div className="font-serif text-2xl text-[#1A1330]">{title}</div>
       </div>
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2">
         <RetakeButton />
@@ -790,15 +790,15 @@ function HistoryList({ items, activeId, labelKey, idKey, onSelect }) {
             disabled={h[idKey] === activeId}
             className={`w-full text-left rounded-xl px-4 py-3 text-sm flex items-center justify-between transition-colors ${
               h[idKey] === activeId
-                ? "bg-[#849D8E]/15 text-[#2A3631] ring-1 ring-[#849D8E]/30"
-                : "bg-[#F5F3E9] hover:bg-[#E8ECE9] text-[#2A3631]"
+                ? "bg-[#3D1A78]/15 text-[#1A1330] ring-1 ring-[#3D1A78]/30"
+                : "bg-[#EFE9F9] hover:bg-[#E5E0EE] text-[#1A1330]"
             }`}
             data-testid={`history-${h[idKey]}`}
           >
             <span className="truncate max-w-[70%]">
               {h[labelKey] || "Untitled"}
             </span>
-            <span className="text-[#8A9A92] shrink-0">
+            <span className="text-[#857E9C] shrink-0">
               {new Date(h.generated_at).toLocaleString()}
             </span>
           </button>
@@ -861,24 +861,24 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2A3631]/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1A1330]/40 backdrop-blur-sm"
       onClick={onClose}
       data-testid="email-mediator-dialog"
     >
       <form
         onSubmit={onSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#FDFAF3] rounded-2xl shadow-xl w-full max-w-md border border-[#E8ECE9] overflow-hidden"
+        className="bg-[#F8F7FC] rounded-2xl shadow-xl w-full max-w-md border border-[#E5E0EE] overflow-hidden"
       >
         <div className="px-6 pt-6 pb-2 flex items-start justify-between gap-4">
           <div>
-            <div className="w-10 h-10 rounded-full bg-[#849D8E]/15 text-[#5C7A6A] grid place-items-center mb-3">
+            <div className="w-10 h-10 rounded-full bg-[#3D1A78]/15 text-[#2A0F5F] grid place-items-center mb-3">
               <Mail size={18} />
             </div>
-            <div className="font-serif text-2xl text-[#2A3631] leading-tight">
+            <div className="font-serif text-2xl text-[#1A1330] leading-tight">
               Email to your mediator
             </div>
-            <p className="text-sm text-[#5C6B64] mt-1">
+            <p className="text-sm text-[#4B4567] mt-1">
               We'll attach your selected PDF(s) with a short cover note. Replies
               go straight to your inbox.
             </p>
@@ -886,7 +886,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
           <button
             type="button"
             onClick={onClose}
-            className="text-[#8A9A92] hover:text-[#2A3631] -mr-1 -mt-1 p-1"
+            className="text-[#857E9C] hover:text-[#1A1330] -mr-1 -mt-1 p-1"
             aria-label="Close"
             data-testid="email-mediator-close"
           >
@@ -897,7 +897,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
         <div className="px-6 py-4 space-y-4">
           {!configured && (
             <div
-              className="rounded-xl bg-[#C28771]/10 border border-[#C28771]/25 px-4 py-3 text-sm text-[#5C6B64]"
+              className="rounded-xl bg-[#C28771]/10 border border-[#C28771]/25 px-4 py-3 text-sm text-[#4B4567]"
               data-testid="email-mediator-not-configured"
             >
               Email sending isn't fully set up on this account yet. You can still
@@ -908,7 +908,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
           <div>
             <label
               htmlFor="mediator-email"
-              className="block text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-1.5"
+              className="block text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-1.5"
             >
               Mediator's email
             </label>
@@ -928,7 +928,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
           <div>
             <label
               htmlFor="mediator-name"
-              className="block text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-1.5"
+              className="block text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-1.5"
             >
               Mediator's name (optional)
             </label>
@@ -944,7 +944,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
           </div>
 
           <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-2">
               Attach
             </div>
             <div className="space-y-2">
@@ -968,7 +968,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
           </div>
         </div>
 
-        <div className="px-6 py-4 bg-[#F5F3E9] flex items-center justify-end gap-2">
+        <div className="px-6 py-4 bg-[#EFE9F9] flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
@@ -998,24 +998,24 @@ function DocCheckbox({ checked, disabled, onChange, label, hint, testId }) {
     <label
       className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
         disabled
-          ? "border-[#E8ECE9] bg-[#F5F3E9]/40 cursor-not-allowed opacity-60"
+          ? "border-[#E5E0EE] bg-[#EFE9F9]/40 cursor-not-allowed opacity-60"
           : checked
-          ? "border-[#849D8E]/40 bg-[#849D8E]/8 cursor-pointer"
-          : "border-[#E8ECE9] hover:bg-[#F5F3E9]/60 cursor-pointer"
+          ? "border-[#3D1A78]/40 bg-[#3D1A78]/8 cursor-pointer"
+          : "border-[#E5E0EE] hover:bg-[#EFE9F9]/60 cursor-pointer"
       }`}
     >
       <input
         type="checkbox"
-        className="mt-1 accent-[#849D8E]"
+        className="mt-1 accent-[#3D1A78]"
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
         data-testid={testId}
       />
       <span>
-        <span className="block text-[#2A3631] text-sm font-medium">{label}</span>
+        <span className="block text-[#1A1330] text-sm font-medium">{label}</span>
         {hint && (
-          <span className="block text-xs text-[#8A9A92] mt-0.5">{hint}</span>
+          <span className="block text-xs text-[#857E9C] mt-0.5">{hint}</span>
         )}
       </span>
     </label>
@@ -1038,10 +1038,10 @@ export default function Summary() {
     <AppShell>
       <div className="fade-up max-w-4xl mx-auto">
         <div className="eyebrow mb-3">Final</div>
-        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#2A3631] mb-3 leading-tight">
+        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#1A1330] mb-3 leading-tight">
           Your prepared documents.
         </h1>
-        <p className="text-[#5C6B64] mb-8 max-w-2xl">
+        <p className="text-[#4B4567] mb-8 max-w-2xl">
           Three AI-synthesized views of your preparation: a focused summary for your
           mediator, a neutral draft agreement to start the conversation with your
           co-parent, and a personal growth plan compiled from your communication and
@@ -1049,7 +1049,7 @@ export default function Summary() {
         </p>
 
         <div
-          className="inline-flex flex-wrap items-center gap-1 p-1 rounded-2xl sm:rounded-full bg-[#F5F3E9] mb-8 max-w-full"
+          className="inline-flex flex-wrap items-center gap-1 p-1 rounded-2xl sm:rounded-full bg-[#EFE9F9] mb-8 max-w-full"
           role="tablist"
         >
           {TABS.map(({ key, label, icon: Icon }) => {
@@ -1063,8 +1063,8 @@ export default function Summary() {
                 data-testid={`summary-tab-${key}`}
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors ${
                   active
-                    ? "bg-white text-[#2A3631] shadow-sm"
-                    : "text-[#5C6B64] hover:text-[#2A3631]"
+                    ? "bg-white text-[#1A1330] shadow-sm"
+                    : "text-[#4B4567] hover:text-[#1A1330]"
                 }`}
               >
                 <Icon size={14} />
@@ -1092,28 +1092,28 @@ function OrgContactCard() {
     >
       <img
         src="https://customer-assets.emergentagent.com/job_prepared-parents/artifacts/3vfnf7kd__sacoparentscharactersacoparents_three_feet_away_rotating_and.png"
-        alt="SA Coparents"
+        alt="SACOParents"
         className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shrink-0 shadow-sm"
       />
       <div className="text-center sm:text-left">
-        <div className="font-serif text-xl text-[#2A3631] mb-1">SA Coparents</div>
-        <div className="text-xs uppercase tracking-[0.2em] text-[#8A9A92] mb-3">
+        <div className="font-serif text-xl text-[#1A1330] mb-1">SACOParents</div>
+        <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-3">
           Relational Mediation Prep
         </div>
-        <address className="not-italic text-sm text-[#5C6B64] leading-relaxed space-y-0.5">
+        <address className="not-italic text-sm text-[#4B4567] leading-relaxed space-y-0.5">
           <div>16607 Blanco #703, San Antonio, Texas 78232</div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
             <a
               href="tel:2102241667"
-              className="text-[#5C7A6A] hover:text-[#849D8E] hover:underline"
+              className="text-[#2A0F5F] hover:text-[#3D1A78] hover:underline"
               data-testid="org-contact-phone"
             >
               210-224-1667
             </a>
-            <span className="hidden sm:inline text-[#D5D9D5]">·</span>
+            <span className="hidden sm:inline text-[#D6CFE6]">·</span>
             <a
               href="mailto:mattsossi@bsossi.com"
-              className="text-[#5C7A6A] hover:text-[#849D8E] hover:underline"
+              className="text-[#2A0F5F] hover:text-[#3D1A78] hover:underline"
               data-testid="org-contact-email"
             >
               mattsossi@bsossi.com

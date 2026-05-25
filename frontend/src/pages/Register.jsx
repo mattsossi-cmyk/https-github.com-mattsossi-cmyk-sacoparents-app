@@ -47,21 +47,34 @@ export default function Register() {
     <div className="min-h-screen gentle-bg grid place-items-center p-6">
       <div className="w-full max-w-xl fade-up">
         <Link to="/" className="block text-center mb-8">
-          <img
-            src="/sa-coparents-mark.png"
-            alt="SA Coparents"
-            className="w-24 h-24 rounded-2xl object-contain bg-white ring-1 ring-[#E8ECE9] mx-auto mb-3"
-          />
-          <div className="font-serif text-3xl text-[#2A3631]">SA Coparents</div>
-          <div className="text-[10px] uppercase tracking-[0.25em] text-[#8A9A92]">
-            Relational Mediation Prep
+          <svg width={68} height={68} viewBox="0 0 64 64" className="mx-auto mb-3" aria-hidden>
+            <defs>
+              <linearGradient id="regBmGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#3D1A78" />
+                <stop offset="55%" stopColor="#5E2DB5" />
+                <stop offset="100%" stopColor="#2DB5B5" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M32 56 C12 42, 4 30, 12 18 C18 9, 28 10, 32 18 C36 10, 46 9, 52 18 C60 30, 52 42, 32 56 Z"
+              fill="url(#regBmGrad)"
+            />
+            <circle cx="24" cy="26" r="4" fill="white" opacity="0.95" />
+            <circle cx="40" cy="26" r="4" fill="white" opacity="0.95" />
+            <path d="M22 36 Q32 44 42 36" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9" />
+          </svg>
+          <div className="font-sans font-extrabold text-3xl text-[#1A1330] tracking-tight">
+            <span className="text-brand-gradient">SACO</span>Parents
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C] mt-1">
+            Helping families communicate better
           </div>
         </Link>
 
         <div className="card-soft p-8 sm:p-10">
-          <div className="eyebrow mb-3">Begin</div>
-          <h1 className="font-serif text-4xl text-[#2A3631] mb-2">Create your account</h1>
-          <p className="text-[#5C6B64] mb-6">
+          <div className="eyebrow text-[#3D1A78] mb-3">Begin</div>
+          <h1 className="font-sans font-extrabold text-4xl text-[#1A1330] mb-2 tracking-tight">Create your account</h1>
+          <p className="text-[#4B4567] mb-6">
             Private by default. Share only when you choose to.
           </p>
 
@@ -82,7 +95,7 @@ export default function Register() {
 
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 divider-line" />
-            <span className="text-xs text-[#8A9A92]">or with email</span>
+            <span className="text-xs text-[#857E9C]">or with email</span>
             <div className="flex-1 divider-line" />
           </div>
 
@@ -145,7 +158,7 @@ export default function Register() {
                     <button
                       type="button"
                       onClick={() => removeChild(i)}
-                      className="w-10 h-10 rounded-full hover:bg-[#F5F3E9] text-[#8A9A92]"
+                      className="w-10 h-10 rounded-full hover:bg-[#EFE9F9] text-[#857E9C]"
                       aria-label="Remove child"
                       data-testid={`register-child-remove-${i}`}
                     >
@@ -157,7 +170,7 @@ export default function Register() {
               <button
                 type="button"
                 onClick={addChild}
-                className="mt-2 text-sm text-[#849D8E] hover:underline inline-flex items-center gap-1"
+                className="mt-2 text-sm text-[#3D1A78] hover:underline inline-flex items-center gap-1"
                 data-testid="register-add-child"
               >
                 <Plus size={14} /> Add another child
@@ -190,16 +203,16 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-sage w-full"
+              className="btn-gradient w-full"
               data-testid="register-submit-button"
             >
               {loading ? "Creating account…" : "Create my account"}
             </button>
           </form>
 
-          <p className="text-sm text-[#5C6B64] mt-6 text-center">
+          <p className="text-sm text-[#4B4567] mt-6 text-center">
             Already with us?{" "}
-            <Link to="/login" className="text-[#849D8E] hover:underline" data-testid="register-to-login-link">
+            <Link to="/login" className="text-[#3D1A78] hover:underline" data-testid="register-to-login-link">
               Sign in
             </Link>
           </p>

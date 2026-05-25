@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Heart,
-  Compass,
+  MessageCircle,
   Users,
   ArrowRight,
   Facebook,
@@ -16,19 +16,25 @@ import {
   ChevronDown,
   Quote,
   Mail,
+  BookOpen,
+  Lock,
+  HeartHandshake,
+  Brain,
 } from "lucide-react";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
 export default function Landing() {
   return (
-    <div className="min-h-screen gentle-bg">
+    <div className="min-h-screen bg-[#F8F7FC]">
       <MarketingHeader />
       <Hero />
+      <WaveDivider flip color="#F8F7FC" bgColor="transparent" />
       <Philosophy />
+      <Features />
+      <WaveDivider color="#F8F7FC" bgColor="transparent" />
       <HowItWorks />
       <ScreenshotShowcase />
-      <Features />
       <ForMediators />
       <Testimonials />
       <FAQ />
@@ -39,21 +45,56 @@ export default function Landing() {
 }
 
 /* ============================================================
+   BRAND MARK — SVG (heart-shaped family in purple→teal)
+============================================================ */
+function BrandMark({ size = 44, className = "" }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      className={className}
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id="bmGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#3D1A78" />
+          <stop offset="55%" stopColor="#5E2DB5" />
+          <stop offset="100%" stopColor="#2DB5B5" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M32 56 C12 42, 4 30, 12 18 C18 9, 28 10, 32 18 C36 10, 46 9, 52 18 C60 30, 52 42, 32 56 Z"
+        fill="url(#bmGrad)"
+      />
+      <circle cx="24" cy="26" r="4" fill="white" opacity="0.95" />
+      <circle cx="40" cy="26" r="4" fill="white" opacity="0.95" />
+      <path
+        d="M22 36 Q32 44 42 36"
+        stroke="white"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+        opacity="0.9"
+      />
+    </svg>
+  );
+}
+
+/* ============================================================
    HEADER
 ============================================================ */
 function MarketingHeader() {
   return (
-    <header className="max-w-7xl mx-auto px-5 sm:px-6 py-5 sm:py-6 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md bg-[#FDFAF3]/80">
-      <Link to="/" className="flex items-center gap-2 sm:gap-3" data-testid="landing-brand-logo">
-        <img
-          src="/sa-coparents-mark.png"
-          alt="SA Coparents"
-          className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl object-contain bg-[#FDFAF3] ring-1 ring-[#E8ECE9]"
-        />
+    <header className="max-w-7xl mx-auto px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md bg-[#F8F7FC]/85 border-b border-[#E5E0EE]/60">
+      <Link to="/" className="flex items-center gap-2.5 sm:gap-3" data-testid="landing-brand-logo">
+        <BrandMark size={44} className="shrink-0" />
         <div className="leading-tight">
-          <div className="font-serif text-lg sm:text-xl">SA Coparents</div>
-          <div className="hidden sm:block text-[10px] uppercase tracking-[0.25em] text-[#8A9A92]">
-            Relational Mediation Prep
+          <div className="font-sans text-lg sm:text-xl font-extrabold tracking-tight text-[#1A1330]">
+            <span className="text-brand-gradient">SACO</span>Parents
+          </div>
+          <div className="hidden sm:block text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
+            Helping families communicate better
           </div>
         </div>
       </Link>
@@ -66,10 +107,10 @@ function MarketingHeader() {
           <ShieldAlert size={12} />
           Safety
         </Link>
-        <Link to="/login" className="text-sm text-[#5C6B64] hover:text-[#2A3631]" data-testid="nav-sign-in">
+        <Link to="/login" className="text-sm text-[#4B4567] hover:text-[#1A1330] font-semibold" data-testid="nav-sign-in">
           Sign in
         </Link>
-        <Link to="/register" className="btn-sage text-sm" data-testid="nav-get-started">
+        <Link to="/register" className="btn-gradient text-sm" data-testid="nav-get-started">
           Get started
         </Link>
       </div>
@@ -78,90 +119,219 @@ function MarketingHeader() {
 }
 
 /* ============================================================
-   HERO
+   HERO — bold gradient panel
 ============================================================ */
 function Hero() {
   return (
-    <section className="max-w-7xl mx-auto px-5 sm:px-6 pt-10 pb-16 sm:pt-14 sm:pb-24 relative" data-testid="hero">
-      <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center fade-up">
-        <div className="lg:col-span-7">
-          <div className="eyebrow mb-5">A quieter way to prepare</div>
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl leading-[1.05] text-[#2A3631]">
-            Mediation,
-            <br className="hidden sm:block" /> prepared with{" "}
-            <em className="text-[#849D8E] not-italic font-normal italic">care</em>.
-          </h1>
-          <p className="text-base sm:text-lg text-[#5C6B64] mt-6 max-w-xl leading-relaxed">
-            SA Coparents helps separating parents arrive at co-parenting mediation
-            child-centered and emotionally prepared. Five guided steps, AI-synthesized
-            mediator-ready documents, and safety tools — all in one calm, private space.
-          </p>
+    <section className="relative overflow-hidden" data-testid="hero">
+      <div className="bg-brand-gradient text-white">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 pt-14 pb-24 sm:pt-20 sm:pb-32 relative">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center fade-up">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-[11px] uppercase tracking-[0.2em] mb-6">
+                <Sparkles size={12} />
+                Introducing SACOParents
+              </div>
+              <h1 className="font-sans font-extrabold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight">
+                Smarter Communication.
+                <br />
+                <span className="text-[#A8E8E8]">Healthier Co-Parenting.</span>
+                <br />
+                Stronger Families.
+              </h1>
+              <p className="text-[15px] sm:text-lg text-white/85 mt-6 max-w-xl leading-relaxed">
+                A modern co-parenting platform designed to reduce conflict, improve
+                communication, and keep children at the center of every parenting decision.
+              </p>
 
-          <div className="mt-7 flex flex-wrap items-center gap-3">
-            <Link to="/register" className="btn-sage inline-flex items-center gap-2" data-testid="hero-start-button">
-              Start your prep — free <ArrowRight size={16} />
-            </Link>
-            <Link to="/login" className="btn-soft" data-testid="hero-continue-button">
-              Continue my progress
-            </Link>
-          </div>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/register"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#3D1A78] font-bold shadow-lg active:scale-95 transition-transform"
+                  data-testid="hero-start-button"
+                >
+                  Start your prep — free <ArrowRight size={16} />
+                </Link>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/15 text-white font-semibold backdrop-blur-sm hover:bg-white/25 active:scale-95 transition"
+                  data-testid="hero-continue-button"
+                >
+                  I have an account
+                </Link>
+              </div>
 
-          <div className="mt-7 flex items-center gap-3 flex-wrap" data-testid="hero-store-badges">
-            <AppStoreBadge />
-            <GooglePlayBadge />
-          </div>
+              <div className="mt-8 flex items-center gap-5 text-xs text-white/80 flex-wrap">
+                <span className="inline-flex items-center gap-1.5">
+                  <Check size={14} className="text-[#A8E8E8]" /> Free to use
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Check size={14} className="text-[#A8E8E8]" /> Private by default
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Check size={14} className="text-[#A8E8E8]" /> No ads
+                </span>
+              </div>
+            </div>
 
-          <div className="mt-7 flex items-center gap-5 text-xs text-[#8A9A92]">
-            <span className="inline-flex items-center gap-1.5">
-              <Check size={14} className="text-[#849D8E]" /> Free to use
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Check size={14} className="text-[#849D8E]" /> Private by default
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Check size={14} className="text-[#849D8E]" /> No ads
-            </span>
+            <div className="lg:col-span-5 relative">
+              <div className="absolute -top-12 -right-12 w-72 h-72 rounded-full bg-white/10 blur-2xl" />
+              <div className="absolute -bottom-16 -left-12 w-56 h-56 rounded-full bg-[#2DB5B5]/30 blur-2xl" />
+              <div className="relative">
+                <img
+                  src="/marketing/raw-summary.png"
+                  alt="SACOParents — Your prepared documents"
+                  className="w-full max-w-sm mx-auto rounded-[36px] shadow-2xl ring-4 ring-white/20"
+                  data-testid="hero-screenshot"
+                />
+              </div>
+            </div>
           </div>
         </div>
-
-        <div className="lg:col-span-5 relative">
-          <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-[#E5D9C5]/40" />
-          <div className="absolute -bottom-12 -left-10 w-44 h-44 rounded-full bg-[#849D8E]/15" />
-          <div className="relative">
-            <img
-              src="/marketing/raw-summary.png"
-              alt="SA Coparents — Your prepared documents"
-              className="w-full max-w-sm mx-auto rounded-[36px] shadow-2xl ring-1 ring-[#E8ECE9]"
-              data-testid="hero-screenshot"
-            />
-          </div>
-        </div>
+        {/* curved bottom edge */}
+        <WaveDivider color="#F8F7FC" bgColor="transparent" />
       </div>
     </section>
   );
 }
 
 /* ============================================================
-   PHILOSOPHY STRIP
+   WAVE DIVIDER
+============================================================ */
+function WaveDivider({ color = "#F8F7FC", bgColor = "transparent", flip = false }) {
+  return (
+    <div className="divider-wave" style={{ background: bgColor, transform: flip ? "scaleY(-1)" : "none" }}>
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden>
+        <path
+          fill={color}
+          d="M0,40 C240,90 480,90 720,55 C960,20 1200,20 1440,55 L1440,100 L0,100 Z"
+        />
+      </svg>
+    </div>
+  );
+}
+
+/* ============================================================
+   PHILOSOPHY (Co-Parenting Shouldn't Feel Like a Battle)
 ============================================================ */
 function Philosophy() {
-  const items = [
-    { icon: Heart, title: "Child-centered", text: "Every prompt orients toward your child's emotional safety." },
-    { icon: Compass, title: "Structured, not clinical", text: "A guided wizard so nothing important is forgotten on the day." },
-    { icon: Users, title: "Non-judgmental", text: "No winners or losers — only a relational path forward." },
+  const struggles = [
+    { icon: MessageCircle, text: "Tense or reactive conversations" },
+    { icon: MessageCircle, text: "Misunderstandings through text messaging" },
+    { icon: Users, text: "Scheduling and parenting disagreements" },
+    { icon: Brain, text: "Emotional triggers during communication" },
+    { icon: Heart, text: "Keeping children out of adult conflict" },
   ];
   return (
-    <section className="max-w-7xl mx-auto px-5 sm:px-6 py-10 sm:py-16" data-testid="philosophy">
-      <div className="grid md:grid-cols-3 gap-5 sm:gap-6">
-        {items.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="card-soft p-6 sm:p-7" data-testid={`philosophy-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
-            <div className="w-10 h-10 rounded-full bg-[#F5F3E9] grid place-items-center text-[#849D8E] mb-4">
-              <Icon size={18} />
-            </div>
-            <div className="font-serif text-xl sm:text-2xl text-[#2A3631] mb-2">{title}</div>
-            <p className="text-[#5C6B64] leading-relaxed text-[15px]">{text}</p>
+    <section className="max-w-7xl mx-auto px-5 sm:px-6 py-16 sm:py-24" data-testid="philosophy">
+      <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+        <h2 className="font-sans font-extrabold text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] tracking-tight leading-tight">
+          Co-Parenting Shouldn't
+          <br />
+          Feel Like a <span className="text-brand-gradient">Battle</span>.
+        </h2>
+        <p className="text-[#4B4567] mt-5 leading-relaxed">
+          Separation and divorce can create emotional stress for parents and children alike.
+          Miscommunication, conflict escalation, and emotional reactions often make co-parenting
+          more difficult than it needs to be.
+        </p>
+      </div>
+
+      <div className="bg-brand-gradient-soft rounded-3xl p-6 sm:p-10 max-w-3xl mx-auto border border-[#E5E0EE]">
+        <div className="text-center mb-6">
+          <div className="inline-block px-5 py-2 rounded-full bg-brand-gradient text-white font-semibold text-sm">
+            Many parents struggle with:
           </div>
-        ))}
+        </div>
+        <ul className="space-y-3 max-w-xl mx-auto">
+          {struggles.map(({ icon: Icon, text }, i) => (
+            <li
+              key={i}
+              className="flex items-center gap-4 bg-white rounded-2xl px-5 py-3.5 border border-[#E5E0EE]"
+              data-testid={`philosophy-item-${i + 1}`}
+            >
+              <span className="icon-circle icon-circle-purple w-10 h-10">
+                <Icon size={18} />
+              </span>
+              <span className="text-[#1A1330] font-medium text-[15px]">{text}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-center text-[#3D1A78] font-script text-2xl sm:text-3xl mt-7 leading-snug max-w-lg mx-auto">
+          Children are affected most when conflict remains unresolved.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   FEATURES — brochure 5-card grid
+============================================================ */
+function Features() {
+  const features = [
+    {
+      icon: MessageCircle,
+      tone: "purple",
+      title: "Guided Communication Support",
+      text: "Prompts and communication tools designed to encourage respectful, child-centered conversations.",
+    },
+    {
+      icon: HeartHandshake,
+      tone: "teal",
+      title: "Conflict Reduction Tools",
+      text: "Built-in strategies that help parents pause, reflect, and respond more effectively during difficult interactions.",
+    },
+    {
+      icon: Heart,
+      tone: "magenta",
+      title: "Child-Focused Co-Parenting",
+      text: "Encourages decisions that prioritize consistency, emotional safety, and healthy parenting relationships.",
+    },
+    {
+      icon: BookOpen,
+      tone: "blue",
+      title: "Educational Resources",
+      text: "Access practical guidance, communication tips, and co-parenting support tools developed to strengthen family relationships.",
+    },
+    {
+      icon: Lock,
+      tone: "green",
+      title: "Convenient & Secure",
+      text: "Accessible anytime from your mobile device, giving parents a structured place to support healthier communication.",
+    },
+  ];
+
+  return (
+    <section className="bg-white py-16 sm:py-24 border-y border-[#E5E0EE]" data-testid="features">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+          <div className="font-script text-2xl sm:text-3xl text-[#3D1A78] mb-2">Introducing</div>
+          <h2 className="font-sans font-extrabold text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] tracking-tight">
+            <span className="text-brand-gradient">SACOParents</span>
+          </h2>
+          <p className="text-[#4B4567] mt-5 leading-relaxed">
+            A co-parenting communication and support platform built to help separated and divorced
+            parents create healthier communication patterns while focusing on the emotional well-being
+            of their children.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7 max-w-6xl mx-auto">
+          {features.map(({ icon: Icon, tone, title, text }) => (
+            <div
+              key={title}
+              className="bg-white border border-[#E5E0EE] rounded-2xl p-6 sm:p-7 hover:shadow-lg transition-shadow"
+              data-testid={`feature-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+            >
+              <div className={`icon-circle icon-circle-${tone} mb-5`}>
+                <Icon size={20} />
+              </div>
+              <div className="font-sans font-bold text-xl text-[#1A1330] mb-2">{title}</div>
+              <p className="text-[14px] text-[#4B4567] leading-relaxed">{text}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -179,22 +349,28 @@ function HowItWorks() {
     { n: 5, t: "Readiness Check", d: "A short self-assessment that scores how prepared you really are." },
   ];
   return (
-    <section className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20" data-testid="how-it-works">
-      <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
-        <div className="eyebrow mb-3">How it works</div>
-        <h2 className="font-serif text-3xl sm:text-4xl text-[#2A3631]">Five guided steps to clarity.</h2>
-        <p className="text-[#5C6B64] mt-4 text-[15px] leading-relaxed">
+    <section className="max-w-7xl mx-auto px-5 sm:px-6 py-16 sm:py-24" data-testid="how-it-works">
+      <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+        <div className="eyebrow text-[#3D1A78] mb-3">How it works</div>
+        <h2 className="font-sans font-extrabold text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] tracking-tight">
+          Five guided steps to <span className="text-brand-gradient">clarity</span>.
+        </h2>
+        <p className="text-[#4B4567] mt-4 leading-relaxed">
           Each step is short, private, and saves automatically. You can pause any time and pick up where you left off.
         </p>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {steps.map(({ n, t, d }) => (
-          <div key={n} className="card-soft p-5 sm:p-6 relative" data-testid={`step-${n}`}>
-            <div className="w-10 h-10 rounded-full bg-[#849D8E]/15 text-[#849D8E] grid place-items-center font-medium mb-3">
+          <div
+            key={n}
+            className="bg-white border border-[#E5E0EE] rounded-2xl p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition"
+            data-testid={`step-${n}`}
+          >
+            <div className="w-11 h-11 rounded-full bg-brand-gradient text-white grid place-items-center font-bold text-lg mb-4 shadow-md">
               {n}
             </div>
-            <div className="font-serif text-lg text-[#2A3631] mb-1.5 leading-snug">{t}</div>
-            <p className="text-[13px] text-[#5C6B64] leading-relaxed">{d}</p>
+            <div className="font-sans font-bold text-lg text-[#1A1330] mb-1.5 leading-snug">{t}</div>
+            <p className="text-[13px] text-[#4B4567] leading-relaxed">{d}</p>
           </div>
         ))}
       </div>
@@ -212,72 +388,23 @@ function ScreenshotShowcase() {
     { src: "/marketing/raw-safety.png", caption: "Safety, always one tap away" },
   ];
   return (
-    <section className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20" data-testid="screenshot-showcase">
-      <div className="text-center mb-10 sm:mb-12">
-        <div className="eyebrow mb-3">A glimpse</div>
-        <h2 className="font-serif text-3xl sm:text-4xl text-[#2A3631]">Built for calm, not conflict.</h2>
-      </div>
-      <div className="grid sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
-        {shots.map((s, i) => (
-          <div key={i} className="text-center" data-testid={`screenshot-${i + 1}`}>
-            <img
-              src={s.src}
-              alt={s.caption}
-              className="w-full max-w-[260px] mx-auto rounded-[28px] shadow-xl ring-1 ring-[#E8ECE9]"
-            />
-            <div className="text-[13px] text-[#5C6B64] mt-3 italic">{s.caption}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
-   FEATURES
-============================================================ */
-function Features() {
-  const features = [
-    {
-      icon: Sparkles,
-      title: "AI-synthesized documents",
-      text: "Generate a Mediation Summary, Co-Parenting Agreement Draft, and personal Growth Plan in seconds. Download as PDF or email directly to your mediator.",
-    },
-    {
-      icon: ShieldAlert,
-      title: "Safety, built in",
-      text: "One-tap Quick Exit, 24/7 confidential hotlines, and dedicated guidance for high-conflict situations where parallel parenting may be safer.",
-    },
-    {
-      icon: TrendingUp,
-      title: "Track your growth",
-      text: "Retake any assessment over time. See exactly what's changed since your last session — visible evidence of your own emotional progress.",
-    },
-    {
-      icon: FileText,
-      title: "Mediator-ready PDFs",
-      text: "Every document is formatted to be brought into a mediation session — branded, structured, and professional.",
-    },
-  ];
-  return (
-    <section className="bg-[#F5F3E9]/50 border-y border-[#E8ECE9]/60 py-14 sm:py-20" data-testid="features">
+    <section className="bg-[#EFE9F9] py-16 sm:py-24" data-testid="screenshot-showcase">
       <div className="max-w-7xl mx-auto px-5 sm:px-6">
-        <div className="text-center mb-10 sm:mb-14 max-w-2xl mx-auto">
-          <div className="eyebrow mb-3">Features</div>
-          <h2 className="font-serif text-3xl sm:text-4xl text-[#2A3631]">Everything you need, nothing you don't.</h2>
+        <div className="text-center mb-12">
+          <div className="eyebrow text-[#3D1A78] mb-3">A glimpse</div>
+          <h2 className="font-sans font-extrabold text-3xl sm:text-4xl text-[#1A1330] tracking-tight">
+            Built for calm, not conflict.
+          </h2>
         </div>
-        <div className="grid sm:grid-cols-2 gap-5 sm:gap-7 max-w-4xl mx-auto">
-          {features.map(({ icon: Icon, title, text }) => (
-            <div
-              key={title}
-              className="bg-white border border-[#E8ECE9] rounded-2xl p-6 sm:p-7"
-              data-testid={`feature-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-            >
-              <div className="w-11 h-11 rounded-full bg-[#849D8E]/15 text-[#849D8E] grid place-items-center mb-4">
-                <Icon size={20} />
-              </div>
-              <div className="font-serif text-xl text-[#2A3631] mb-2">{title}</div>
-              <p className="text-[14px] text-[#5C6B64] leading-relaxed">{text}</p>
+        <div className="grid sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
+          {shots.map((s, i) => (
+            <div key={i} className="text-center" data-testid={`screenshot-${i + 1}`}>
+              <img
+                src={s.src}
+                alt={s.caption}
+                className="w-full max-w-[260px] mx-auto rounded-[28px] shadow-2xl ring-1 ring-white"
+              />
+              <div className="text-[13px] text-[#4B4567] mt-4 font-semibold">{s.caption}</div>
             </div>
           ))}
         </div>
@@ -287,47 +414,60 @@ function Features() {
 }
 
 /* ============================================================
-   FOR MEDIATORS
+   FOR MEDIATORS — gradient panel
 ============================================================ */
 function ForMediators() {
+  const bullets = [
+    "Reduces session time spent on agenda-setting",
+    "Builds shared vocabulary around the 11 legal custody categories",
+    "Includes safety guidance for high-conflict clients",
+    "Free for clients — no subscription required",
+  ];
   return (
-    <section className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20" data-testid="for-mediators">
-      <div className="grid lg:grid-cols-12 gap-10 items-center">
-        <div className="lg:col-span-7">
-          <div className="eyebrow mb-3">For mediators &amp; family lawyers</div>
-          <h2 className="font-serif text-3xl sm:text-4xl text-[#2A3631] leading-tight">
-            Your clients arrive prepared.
-            <br />
-            Your sessions move faster.
-          </h2>
-          <p className="text-[15px] text-[#5C6B64] mt-5 leading-relaxed max-w-xl">
-            Recommend SA Coparents before the first session and your clients walk in with a
-            child-centered summary, a draft agreement, and a clear sense of what they want
-            to discuss. Less venting, more substance — without you having to coach them
-            yourself.
-          </p>
-          <ul className="mt-6 space-y-2.5 text-[14px] text-[#2A3631]">
-            <li className="flex gap-2.5"><Check size={16} className="text-[#849D8E] mt-1 shrink-0" /> Reduces session time spent on agenda-setting</li>
-            <li className="flex gap-2.5"><Check size={16} className="text-[#849D8E] mt-1 shrink-0" /> Builds a shared vocabulary around the 11 legal custody categories</li>
-            <li className="flex gap-2.5"><Check size={16} className="text-[#849D8E] mt-1 shrink-0" /> Includes safety guidance for high-conflict clients</li>
-            <li className="flex gap-2.5"><Check size={16} className="text-[#849D8E] mt-1 shrink-0" /> Free for clients — no subscription required</li>
-          </ul>
-          <a
-            href="mailto:mattsossi@bsossi.com?subject=Mediator%20partnership%20inquiry"
-            className="btn-sage inline-flex items-center gap-2 mt-7"
-            data-testid="mediator-contact-button"
-          >
-            <Mail size={16} /> Get in touch
-          </a>
-        </div>
+    <section className="max-w-7xl mx-auto px-5 sm:px-6 py-16 sm:py-24" data-testid="for-mediators">
+      <div className="bg-brand-gradient text-white rounded-[32px] p-8 sm:p-14 shadow-2xl overflow-hidden relative">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-[#2DB5B5]/30 blur-3xl" />
 
-        <div className="lg:col-span-5 relative">
-          <div className="absolute -top-6 -left-6 w-40 h-40 rounded-full bg-[#849D8E]/10" />
-          <img
-            src="/marketing/raw-summary.png"
-            alt="A mediator-ready summary"
-            className="relative w-full max-w-sm mx-auto rounded-[32px] shadow-xl ring-1 ring-[#E8ECE9]"
-          />
+        <div className="relative grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-7">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 text-[11px] uppercase tracking-[0.2em] mb-5">
+              For mediators & family lawyers
+            </div>
+            <h2 className="font-sans font-extrabold text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-tight">
+              Your clients arrive prepared.
+              <br />
+              <span className="text-[#A8E8E8]">Your sessions move faster.</span>
+            </h2>
+            <p className="text-white/85 mt-5 leading-relaxed max-w-xl">
+              Recommend SACOParents before the first session and your clients walk in with a
+              child-centered summary, a draft agreement, and a clear sense of what they want
+              to discuss. Less venting, more substance.
+            </p>
+            <ul className="mt-7 space-y-2.5">
+              {bullets.map((b) => (
+                <li key={b} className="flex gap-3 text-[14px]">
+                  <Check size={18} className="text-[#A8E8E8] shrink-0 mt-0.5" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href="mailto:mattsossi@bsossi.com?subject=Mediator%20partnership%20inquiry"
+              className="inline-flex items-center gap-2 mt-8 px-7 py-3.5 rounded-full bg-white text-[#3D1A78] font-bold shadow-lg active:scale-95 transition-transform"
+              data-testid="mediator-contact-button"
+            >
+              <Mail size={16} /> Get in touch
+            </a>
+          </div>
+
+          <div className="lg:col-span-5 relative">
+            <img
+              src="/marketing/raw-summary.png"
+              alt="A mediator-ready summary"
+              className="relative w-full max-w-sm mx-auto rounded-[28px] shadow-2xl ring-4 ring-white/20"
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -353,22 +493,26 @@ function Testimonials() {
     },
   ];
   return (
-    <section className="bg-[#FDFAF3] py-14 sm:py-20 border-y border-[#E8ECE9]/60" data-testid="testimonials">
+    <section className="bg-white py-16 sm:py-24 border-y border-[#E5E0EE]" data-testid="testimonials">
       <div className="max-w-7xl mx-auto px-5 sm:px-6">
-        <div className="text-center mb-10 sm:mb-14">
-          <div className="eyebrow mb-3">What people say</div>
-          <h2 className="font-serif text-3xl sm:text-4xl text-[#2A3631]">From parents and mediators.</h2>
+        <div className="text-center mb-12">
+          <div className="eyebrow text-[#3D1A78] mb-3">What people say</div>
+          <h2 className="font-sans font-extrabold text-3xl sm:text-4xl text-[#1A1330] tracking-tight">
+            From parents and mediators.
+          </h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {quotes.map((q, i) => (
             <div
               key={i}
-              className="bg-white border border-[#E8ECE9] rounded-2xl p-6 sm:p-7"
+              className="bg-[#F8F7FC] border border-[#E5E0EE] rounded-2xl p-7 hover:shadow-lg transition-shadow"
               data-testid={`testimonial-${i + 1}`}
             >
-              <Quote className="text-[#C28771] mb-3" size={20} />
-              <p className="text-[14px] text-[#2A3631] leading-relaxed italic">{q.q}</p>
-              <div className="text-[12px] text-[#8A9A92] mt-4 uppercase tracking-wider">{q.a}</div>
+              <Quote className="text-[#3D1A78] mb-4" size={22} />
+              <p className="text-[14px] text-[#1A1330] leading-relaxed italic">{q.q}</p>
+              <div className="text-[11px] text-[#857E9C] mt-5 uppercase tracking-wider font-semibold">
+                {q.a}
+              </div>
             </div>
           ))}
         </div>
@@ -383,7 +527,7 @@ function Testimonials() {
 function FAQ() {
   const faqs = [
     {
-      q: "Is SA Coparents free?",
+      q: "Is SACOParents free?",
       a: "Yes. Every prep step, AI-generated document, PDF download, and safety resource is free. We don't sell your data and we don't show ads.",
     },
     {
@@ -396,7 +540,7 @@ function FAQ() {
     },
     {
       q: "Do I need a mediator already booked?",
-      a: "No. Many parents use SA Coparents to figure out whether they're ready for mediation in the first place. The Readiness Check helps you decide.",
+      a: "No. Many parents use SACOParents to figure out whether they're ready for mediation in the first place. The Readiness Check helps you decide.",
     },
     {
       q: "Can I delete my account and all my data?",
@@ -408,10 +552,12 @@ function FAQ() {
     },
   ];
   return (
-    <section className="max-w-3xl mx-auto px-5 sm:px-6 py-14 sm:py-20" data-testid="faq">
-      <div className="text-center mb-8 sm:mb-12">
-        <div className="eyebrow mb-3">Questions</div>
-        <h2 className="font-serif text-3xl sm:text-4xl text-[#2A3631]">Things you might be wondering.</h2>
+    <section className="max-w-3xl mx-auto px-5 sm:px-6 py-16 sm:py-24" data-testid="faq">
+      <div className="text-center mb-12">
+        <div className="eyebrow text-[#3D1A78] mb-3">Questions</div>
+        <h2 className="font-sans font-extrabold text-3xl sm:text-4xl text-[#1A1330] tracking-tight">
+          Things you might be wondering.
+        </h2>
       </div>
       <div className="space-y-3">
         {faqs.map((f, i) => (
@@ -425,21 +571,29 @@ function FAQ() {
 function FAQItem({ idx, q, a }) {
   const [open, setOpen] = useState(idx === 0);
   return (
-    <div className="border border-[#E8ECE9] rounded-2xl bg-white" data-testid={`faq-item-${idx + 1}`}>
+    <div
+      className="border border-[#E5E0EE] rounded-2xl bg-white overflow-hidden"
+      data-testid={`faq-item-${idx + 1}`}
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="w-full text-left flex items-center justify-between gap-3 px-5 sm:px-6 py-4 sm:py-5"
         data-testid={`faq-toggle-${idx + 1}`}
       >
-        <span className="font-serif text-[16px] sm:text-[18px] text-[#2A3631] leading-snug">{q}</span>
+        <span className="font-sans font-bold text-[15px] sm:text-[17px] text-[#1A1330] leading-snug">
+          {q}
+        </span>
         <ChevronDown
           size={18}
-          className={`text-[#849D8E] transition-transform shrink-0 ${open ? "rotate-180" : ""}`}
+          className={`text-[#3D1A78] transition-transform shrink-0 ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open && (
-        <div className="px-5 sm:px-6 pb-5 text-[14px] text-[#5C6B64] leading-relaxed" data-testid={`faq-answer-${idx + 1}`}>
+        <div
+          className="px-5 sm:px-6 pb-5 text-[14px] text-[#4B4567] leading-relaxed"
+          data-testid={`faq-answer-${idx + 1}`}
+        >
           {a}
         </div>
       )}
@@ -452,27 +606,37 @@ function FAQItem({ idx, q, a }) {
 ============================================================ */
 function FinalCTA() {
   return (
-    <section className="max-w-5xl mx-auto px-5 sm:px-6 py-16 sm:py-24" data-testid="final-cta">
-      <div className="relative card-soft px-6 sm:px-12 py-12 sm:py-16 text-center overflow-hidden">
-        <div className="absolute -top-16 -right-20 w-72 h-72 rounded-full bg-[#E5D9C5]/40" />
-        <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-[#849D8E]/10" />
+    <section className="max-w-7xl mx-auto px-5 sm:px-6 py-16 sm:py-24" data-testid="final-cta">
+      <div className="relative bg-brand-gradient text-white rounded-[32px] px-6 sm:px-12 py-16 sm:py-20 text-center overflow-hidden shadow-2xl">
+        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-[#2DB5B5]/40 blur-3xl" />
         <div className="relative">
-          <div className="eyebrow mb-4">Ready when you are</div>
-          <h2 className="font-serif text-3xl sm:text-5xl text-[#2A3631] leading-tight max-w-2xl mx-auto">
-            From reactive to prepared — in one quiet afternoon.
+          <div className="font-script text-3xl sm:text-4xl text-[#A8E8E8] mb-3">
+            Start Building Better
+          </div>
+          <h2 className="font-sans font-extrabold text-3xl sm:text-5xl tracking-tight leading-tight max-w-3xl mx-auto">
+            Co-Parenting Conversations Today.
           </h2>
-          <p className="text-[15px] sm:text-base text-[#5C6B64] mt-5 max-w-xl mx-auto leading-relaxed">
+          <p className="text-white/85 mt-6 max-w-xl mx-auto leading-relaxed">
             Start your free preparation today. Nothing is shared with anyone unless you choose to share it.
           </p>
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/register" className="btn-sage inline-flex items-center gap-2" data-testid="final-cta-start-button">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-[#3D1A78] font-bold shadow-lg active:scale-95 transition-transform"
+              data-testid="final-cta-start-button"
+            >
               Start your prep — free <ArrowRight size={16} />
             </Link>
-            <Link to="/login" className="btn-soft" data-testid="final-cta-signin-button">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white/15 text-white font-semibold backdrop-blur-sm hover:bg-white/25 active:scale-95 transition"
+              data-testid="final-cta-signin-button"
+            >
               I already have an account
             </Link>
           </div>
-          <div className="mt-7 flex items-center justify-center gap-3 flex-wrap">
+          <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
             <AppStoreBadge />
             <GooglePlayBadge />
           </div>
@@ -487,43 +651,51 @@ function FinalCTA() {
 ============================================================ */
 function MarketingFooter() {
   return (
-    <footer className="border-t border-[#E8ECE9] py-10" data-testid="landing-footer">
+    <footer className="bg-[#1A1330] text-white py-14" data-testid="landing-footer">
       <div className="max-w-7xl mx-auto px-5 sm:px-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <img src="/sa-coparents-mark.png" alt="SA Coparents" className="w-9 h-9 rounded-lg ring-1 ring-[#E8ECE9]" />
-            <div className="font-serif text-lg text-[#2A3631]">SA Coparents</div>
+          <div className="flex items-center gap-2.5 mb-4">
+            <BrandMark size={40} />
+            <div className="font-sans font-extrabold text-lg">
+              <span className="text-brand-gradient">SACO</span>Parents
+            </div>
           </div>
-          <p className="text-[13px] text-[#8A9A92] leading-relaxed">
-            Relational mediation prep for co-parents. Built with care in San Antonio, Texas.
+          <p className="text-[13px] text-white/65 leading-relaxed">
+            Helping families communicate better. Built with care in San Antonio, Texas.
           </p>
         </div>
         <div>
-          <div className="text-[11px] uppercase tracking-[0.2em] text-[#8A9A92] mb-3">Product</div>
-          <ul className="space-y-2 text-[14px] text-[#5C6B64]">
-            <li><Link to="/register" className="hover:text-[#2A3631]" data-testid="footer-register-link">Get started</Link></li>
-            <li><Link to="/login" className="hover:text-[#2A3631]" data-testid="footer-login-link">Sign in</Link></li>
-            <li><Link to="/safety" className="hover:text-[#2A3631]" data-testid="footer-safety-link">Safety resources</Link></li>
+          <div className="text-[11px] uppercase tracking-[0.2em] text-white/50 mb-3 font-semibold">
+            Product
+          </div>
+          <ul className="space-y-2 text-[14px] text-white/80">
+            <li><Link to="/register" className="hover:text-white" data-testid="footer-register-link">Get started</Link></li>
+            <li><Link to="/login" className="hover:text-white" data-testid="footer-login-link">Sign in</Link></li>
+            <li><Link to="/safety" className="hover:text-white" data-testid="footer-safety-link">Safety resources</Link></li>
           </ul>
         </div>
         <div>
-          <div className="text-[11px] uppercase tracking-[0.2em] text-[#8A9A92] mb-3">Legal</div>
-          <ul className="space-y-2 text-[14px] text-[#5C6B64]">
-            <li><Link to="/privacy" className="hover:text-[#2A3631]" data-testid="footer-privacy-link">Privacy policy</Link></li>
-            <li><Link to="/terms" className="hover:text-[#2A3631]" data-testid="footer-terms-link">Terms of use</Link></li>
-            <li><Link to="/delete-account" className="hover:text-[#2A3631]" data-testid="footer-delete-account-link">Delete my account</Link></li>
+          <div className="text-[11px] uppercase tracking-[0.2em] text-white/50 mb-3 font-semibold">
+            Legal
+          </div>
+          <ul className="space-y-2 text-[14px] text-white/80">
+            <li><Link to="/privacy" className="hover:text-white" data-testid="footer-privacy-link">Privacy policy</Link></li>
+            <li><Link to="/terms" className="hover:text-white" data-testid="footer-terms-link">Terms of use</Link></li>
+            <li><Link to="/delete-account" className="hover:text-white" data-testid="footer-delete-account-link">Delete my account</Link></li>
           </ul>
         </div>
         <div>
-          <div className="text-[11px] uppercase tracking-[0.2em] text-[#8A9A92] mb-3">Contact</div>
-          <ul className="space-y-2 text-[14px] text-[#5C6B64]">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-white/50 mb-3 font-semibold">
+            Contact
+          </div>
+          <ul className="space-y-2 text-[14px] text-white/80">
             <li>
-              <a href="mailto:mattsossi@bsossi.com" className="hover:text-[#2A3631]" data-testid="footer-email-link">
+              <a href="mailto:mattsossi@bsossi.com" className="hover:text-white" data-testid="footer-email-link">
                 mattsossi@bsossi.com
               </a>
             </li>
             <li>
-              <a href="tel:2102241667" className="hover:text-[#2A3631]" data-testid="footer-phone-link">
+              <a href="tel:2102241667" className="hover:text-white" data-testid="footer-phone-link">
                 210-224-1667
               </a>
             </li>
@@ -533,7 +705,7 @@ function MarketingFooter() {
                   href={FB_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 hover:text-[#2A3631]"
+                  className="inline-flex items-center gap-1.5 hover:text-white"
                   data-testid="footer-facebook-link"
                 >
                   <Facebook size={14} /> Facebook
@@ -543,8 +715,8 @@ function MarketingFooter() {
           </ul>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 mt-8 pt-6 border-t border-[#E8ECE9]/70 text-[11px] text-[#8A9A92] flex flex-wrap items-center justify-between gap-2">
-        <span>© SA Coparents — Relational Mediation Prep</span>
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 mt-10 pt-6 border-t border-white/10 text-[11px] text-white/50 flex flex-wrap items-center justify-between gap-2">
+        <span>© SACOParents — Helping families communicate better</span>
         <span>16607 Blanco #703, San Antonio, Texas 78232</span>
       </div>
     </footer>
@@ -552,21 +724,21 @@ function MarketingFooter() {
 }
 
 /* ============================================================
-   APP STORE BADGES (inline SVG-styled buttons)
+   APP STORE BADGES
 ============================================================ */
 function AppStoreBadge() {
   return (
     <a
       href="#"
       onClick={(e) => e.preventDefault()}
-      className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#2A3631] text-white hover:bg-[#1d2723] transition-colors"
+      className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#1A1330] text-white hover:bg-[#0F0A1F] transition-colors"
       data-testid="badge-app-store"
       title="Coming soon to the Apple App Store"
     >
       <Apple size={22} strokeWidth={1.5} />
       <div className="leading-tight text-left">
         <div className="text-[9px] tracking-wider uppercase opacity-80">Coming soon</div>
-        <div className="text-sm font-medium">App Store</div>
+        <div className="text-sm font-bold">App Store</div>
       </div>
     </a>
   );
@@ -577,14 +749,14 @@ function GooglePlayBadge() {
     <a
       href="#"
       onClick={(e) => e.preventDefault()}
-      className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#2A3631] text-white hover:bg-[#1d2723] transition-colors"
+      className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#1A1330] text-white hover:bg-[#0F0A1F] transition-colors"
       data-testid="badge-google-play"
       title="Coming soon to Google Play"
     >
       <PlayIcon size={22} strokeWidth={1.5} className="fill-white" />
       <div className="leading-tight text-left">
         <div className="text-[9px] tracking-wider uppercase opacity-80">Coming soon</div>
-        <div className="text-sm font-medium">Google Play</div>
+        <div className="text-sm font-bold">Google Play</div>
       </div>
     </a>
   );

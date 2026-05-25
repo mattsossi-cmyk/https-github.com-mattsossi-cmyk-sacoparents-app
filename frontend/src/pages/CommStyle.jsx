@@ -131,14 +131,14 @@ export default function CommStyle() {
                       data-testid={`comm-${q.id}-${opt.v}`}
                       className={`w-full text-left rounded-2xl px-4 py-3 border transition-all ${
                         isOn
-                          ? "bg-[#849D8E]/10 border-[#849D8E]/40 text-[#2A3631]"
-                          : "bg-[#F5F3E9] border-transparent text-[#2A3631] hover:bg-[#E8ECE9]"
+                          ? "bg-[#3D1A78]/10 border-[#3D1A78]/40 text-[#1A1330]"
+                          : "bg-[#EFE9F9] border-transparent text-[#1A1330] hover:bg-[#E5E0EE]"
                       }`}
                     >
                       <span className="flex items-center gap-3">
                         <span
                           className={`w-4 h-4 rounded-full border ${
-                            isOn ? "border-[#849D8E] bg-[#849D8E]" : "border-[#8A9A92]"
+                            isOn ? "border-[#3D1A78] bg-[#3D1A78]" : "border-[#857E9C]"
                           }`}
                         />
                         {opt.label}
@@ -177,7 +177,7 @@ export default function CommStyle() {
               {analyzing ? "Reflecting…" : "Get AI reflection"}
             </button>
             {!allAnswered && (
-              <span className="text-xs text-[#8A9A92]">
+              <span className="text-xs text-[#857E9C]">
                 Answer the three prompts above to unlock reflection.
               </span>
             )}
@@ -185,27 +185,27 @@ export default function CommStyle() {
 
           {analysis && (
             <div
-              className="rounded-2xl p-6 bg-[#849D8E]/8 border border-[#849D8E]/25 space-y-4"
+              className="rounded-2xl p-6 bg-[#3D1A78]/8 border border-[#3D1A78]/25 space-y-4"
               data-testid="comm-analysis-result"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#849D8E] grid place-items-center text-white">
+                <div className="w-9 h-9 rounded-full bg-[#3D1A78] grid place-items-center text-white">
                   <Sparkles size={16} />
                 </div>
                 <div>
-                  <div className="font-serif text-xl text-[#2A3631]">
+                  <div className="font-serif text-xl text-[#1A1330]">
                     Style: {analysis.style_label}
                   </div>
-                  <div className="text-xs text-[#8A9A92]">
+                  <div className="text-xs text-[#857E9C]">
                     Mediation readiness score: {analysis.score}/10
                   </div>
                 </div>
               </div>
-              <p className="text-[#2A3631]">{analysis.summary}</p>
+              <p className="text-[#1A1330]">{analysis.summary}</p>
               {analysis.strengths?.length > 0 && (
                 <div>
                   <div className="eyebrow mb-2">Strengths</div>
-                  <ul className="list-disc pl-5 space-y-1 text-[#2A3631]">
+                  <ul className="list-disc pl-5 space-y-1 text-[#1A1330]">
                     {analysis.strengths.map((s) => <li key={s}>{s}</li>)}
                   </ul>
                 </div>
@@ -213,7 +213,7 @@ export default function CommStyle() {
               {analysis.growth_areas?.length > 0 && (
                 <div>
                   <div className="eyebrow mb-2">Growth areas</div>
-                  <ul className="list-disc pl-5 space-y-1 text-[#2A3631]">
+                  <ul className="list-disc pl-5 space-y-1 text-[#1A1330]">
                     {analysis.growth_areas.map((s) => <li key={s}>{s}</li>)}
                   </ul>
                 </div>
@@ -221,7 +221,7 @@ export default function CommStyle() {
               {analysis.suggestions?.length > 0 && (
                 <div>
                   <div className="eyebrow mb-2">Try this</div>
-                  <ul className="list-disc pl-5 space-y-1 text-[#2A3631]">
+                  <ul className="list-disc pl-5 space-y-1 text-[#1A1330]">
                     {analysis.suggestions.map((s) => <li key={s}>{s}</li>)}
                   </ul>
                 </div>

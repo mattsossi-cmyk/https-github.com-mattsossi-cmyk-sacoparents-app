@@ -53,34 +53,34 @@ export default function DeleteAccount() {
       <div className="max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-14">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-sm text-[#5C7A6A] hover:text-[#849D8E] mb-6"
+          className="inline-flex items-center gap-2 text-sm text-[#2A0F5F] hover:text-[#3D1A78] mb-6"
           data-testid="delete-account-back-link"
         >
-          <ArrowLeft size={14} /> Back to SA Coparents
+          <ArrowLeft size={14} /> Back to SACOParents
         </Link>
 
         <div className="eyebrow mb-3">Account &amp; Data Deletion</div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#2A3631] mb-3 leading-tight">
+        <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mb-3 leading-tight">
           Delete your account.
         </h1>
-        <p className="text-[15px] text-[#5C6B64] leading-relaxed mb-8 max-w-2xl">
-          You can permanently delete your SA Coparents account and every piece
+        <p className="text-[15px] text-[#4B4567] leading-relaxed mb-8 max-w-2xl">
+          You can permanently delete your SACOParents account and every piece
           of data we hold for you at any time. There is no waiting period and
           nothing is recoverable afterwards.
         </p>
 
-        <section className="bg-white border border-[#E8ECE9] rounded-2xl p-6 sm:p-7 mb-8">
-          <h2 className="font-serif text-xl text-[#2A3631] mb-3">
+        <section className="bg-white border border-[#E5E0EE] rounded-2xl p-6 sm:p-7 mb-8">
+          <h2 className="font-serif text-xl text-[#1A1330] mb-3">
             What gets deleted
           </h2>
-          <ul className="text-[14px] text-[#5C6B64] space-y-2 list-disc pl-5">
+          <ul className="text-[14px] text-[#4B4567] space-y-2 list-disc pl-5">
             <li>Your account profile (name, email, password, picture)</li>
             <li>All five preparation modules (Child-Centered Goals, Issues &amp; Concerns, Priority Ranking, Communication Style, Readiness Check)</li>
             <li>Every AI-generated Mediation Summary, Agreement Draft and Improvement Plan</li>
             <li>Every email-to-mediator record you've created</li>
             <li>All active sessions and any registered push-notification device tokens</li>
           </ul>
-          <p className="text-[13px] text-[#8A9A92] mt-4 italic">
+          <p className="text-[13px] text-[#857E9C] mt-4 italic">
             PDFs you previously shared via the &ldquo;Share via text&rdquo; 7-day
             link cannot be recalled once shared, but the link itself is
             invalidated within minutes of deletion.
@@ -88,7 +88,7 @@ export default function DeleteAccount() {
         </section>
 
         {loading ? (
-          <div className="text-sm text-[#8A9A92]">Loading…</div>
+          <div className="text-sm text-[#857E9C]">Loading…</div>
         ) : user ? (
           <SignedInDeleteCard
             email={user.email}
@@ -98,8 +98,8 @@ export default function DeleteAccount() {
           <SignedOutDeleteCard />
         )}
 
-        <p className="text-xs text-[#8A9A92] italic mt-10">
-          SA Coparents &middot; 16607 Blanco #703, San Antonio, Texas 78232
+        <p className="text-xs text-[#857E9C] italic mt-10">
+          SACOParents &middot; 16607 Blanco #703, San Antonio, Texas 78232
           <br />
           This page is provided to satisfy Google Play and Apple App Store
           account-deletion requirements.
@@ -109,11 +109,11 @@ export default function DeleteAccount() {
       <Dialog open={confirmOpen} onOpenChange={(v) => !submitting && setConfirmOpen(v)}>
         <DialogContent className="sm:max-w-md" data-testid="delete-account-confirm-dialog">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl text-[#2A3631] flex items-center gap-2">
+            <DialogTitle className="font-serif text-2xl text-[#1A1330] flex items-center gap-2">
               <AlertTriangle size={20} className="text-[#C97B63]" />
               Permanently delete?
             </DialogTitle>
-            <DialogDescription className="text-[14px] text-[#5C6B64] pt-2">
+            <DialogDescription className="text-[14px] text-[#4B4567] pt-2">
               This action is immediate and irreversible. Type <strong>DELETE</strong> below to confirm.
             </DialogDescription>
           </DialogHeader>
@@ -123,7 +123,7 @@ export default function DeleteAccount() {
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder="Type DELETE to confirm"
-            className="w-full border border-[#E8ECE9] rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#C97B63]"
+            className="w-full border border-[#E5E0EE] rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#C97B63]"
             data-testid="delete-account-confirm-input"
             disabled={submitting}
             autoFocus
@@ -164,13 +164,13 @@ export default function DeleteAccount() {
 function SignedInDeleteCard({ email, onConfirm }) {
   return (
     <section
-      className="bg-white border border-[#E8ECE9] rounded-2xl p-6 sm:p-7"
+      className="bg-white border border-[#E5E0EE] rounded-2xl p-6 sm:p-7"
       data-testid="delete-account-signed-in-card"
     >
-      <h2 className="font-serif text-xl text-[#2A3631] mb-2">
+      <h2 className="font-serif text-xl text-[#1A1330] mb-2">
         You're signed in as <span className="font-semibold">{email}</span>
       </h2>
-      <p className="text-[14px] text-[#5C6B64] leading-relaxed mb-5">
+      <p className="text-[14px] text-[#4B4567] leading-relaxed mb-5">
         One tap and everything tied to this account is wiped from our servers.
         You'll be signed out and returned to the home page.
       </p>
@@ -188,52 +188,52 @@ function SignedInDeleteCard({ email, onConfirm }) {
 function SignedOutDeleteCard() {
   return (
     <section
-      className="bg-white border border-[#E8ECE9] rounded-2xl p-6 sm:p-7"
+      className="bg-white border border-[#E5E0EE] rounded-2xl p-6 sm:p-7"
       data-testid="delete-account-signed-out-card"
     >
-      <h2 className="font-serif text-xl text-[#2A3631] mb-2">
+      <h2 className="font-serif text-xl text-[#1A1330] mb-2">
         You're not signed in
       </h2>
-      <p className="text-[14px] text-[#5C6B64] leading-relaxed mb-5">
+      <p className="text-[14px] text-[#4B4567] leading-relaxed mb-5">
         Choose one of the options below to delete your account.
       </p>
 
       <div className="space-y-4">
-        <div className="border border-[#E8ECE9] rounded-xl p-5">
-          <div className="text-[13px] uppercase tracking-wider text-[#8A9A92] mb-2">
+        <div className="border border-[#E5E0EE] rounded-xl p-5">
+          <div className="text-[13px] uppercase tracking-wider text-[#857E9C] mb-2">
             Option 1 &mdash; Fastest
           </div>
-          <p className="text-[14px] text-[#2A3631] mb-3">
+          <p className="text-[14px] text-[#1A1330] mb-3">
             Sign in, then the delete button will appear here.
           </p>
           <Link
             to="/login?next=/delete-account"
-            className="inline-flex items-center justify-center rounded-full px-5 py-2.5 bg-[#5C7A6A] hover:bg-[#849D8E] text-white text-[14px]"
+            className="inline-flex items-center justify-center rounded-full px-5 py-2.5 bg-[#2A0F5F] hover:bg-[#3D1A78] text-white text-[14px]"
             data-testid="delete-account-signin-link"
           >
             Sign in to delete my account
           </Link>
         </div>
 
-        <div className="border border-[#E8ECE9] rounded-xl p-5">
-          <div className="text-[13px] uppercase tracking-wider text-[#8A9A92] mb-2">
+        <div className="border border-[#E5E0EE] rounded-xl p-5">
+          <div className="text-[13px] uppercase tracking-wider text-[#857E9C] mb-2">
             Option 2 &mdash; Email request
           </div>
-          <p className="text-[14px] text-[#2A3631] mb-1">
+          <p className="text-[14px] text-[#1A1330] mb-1">
             If you can't sign in, email us from the address on your account:
           </p>
           <a
             href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-              "Delete my SA Coparents account"
+              "Delete my SACOParents account"
             )}&body=${encodeURIComponent(
-              "Please delete my SA Coparents account and all associated data.\n\nAccount email: \n"
+              "Please delete my SACOParents account and all associated data.\n\nAccount email: \n"
             )}`}
-            className="text-[#5C7A6A] underline text-[14px]"
+            className="text-[#2A0F5F] underline text-[14px]"
             data-testid="delete-account-email-link"
           >
             {SUPPORT_EMAIL}
           </a>
-          <p className="text-[12px] text-[#8A9A92] mt-2">
+          <p className="text-[12px] text-[#857E9C] mt-2">
             Manual requests are processed within 7 days. We'll reply once your
             data is gone.
           </p>
