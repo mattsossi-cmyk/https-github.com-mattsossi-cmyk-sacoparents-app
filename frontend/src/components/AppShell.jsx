@@ -75,7 +75,11 @@ export default function AppShell({ children }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
           {/* Brand */}
           <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3 shrink-0" data-testid="brand-logo">
-            <BrandMark className="shrink-0" />
+            <img
+              src="/sa-coparents-header-logo.png"
+              alt="SACOParents"
+              className="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0"
+            />
             <div className="leading-tight">
               <div className="font-sans font-extrabold text-base sm:text-lg whitespace-nowrap text-[#1A1330]">
                 <span className="text-brand-gradient">SACO</span>Parents
