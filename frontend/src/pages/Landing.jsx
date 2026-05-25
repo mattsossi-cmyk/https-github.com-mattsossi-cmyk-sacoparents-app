@@ -806,10 +806,9 @@ function PhoneScreen({ variant }) {
 
   // home variant — brochure-style module list
   const modules = [
-    { tone: "purple", label: "Create a Mediation Plan" },
-    { tone: "teal", label: "Goals, Concerns & Needs" },
-    { tone: "magenta", label: "Co-Parenting Agreements" },
-    { tone: "green", label: "My Journal" },
+    { tone: "purple", label: "State Goals, Issues & Concerns" },
+    { tone: "teal", label: "Begin Co-Parenting Statement" },
+    { tone: "magenta", label: "Create Mediation Plan" },
   ];
   return (
     <div className="h-full flex flex-col">
