@@ -9,7 +9,6 @@ import {
   ShieldAlert,
   Check,
   Sparkles,
-  TrendingUp as TrendingUpIcon,
   FileText,
   Apple,
   Play as PlayIcon,
@@ -20,7 +19,6 @@ import {
   Lock,
   HeartHandshake,
   Brain,
-  Target as TargetIcon,
 } from "lucide-react";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
@@ -386,9 +384,9 @@ function HowItWorks() {
 ============================================================ */
 function ScreenshotShowcase() {
   const shots = [
-    { variant: "assess", caption: "Assess Your Situation" },
-    { variant: "home", caption: "Safety, always one tap away" },
-    { variant: "mediator", caption: "AI-synthesized documents" },
+    { variant: "assess", caption: "Assess your situation" },
+    { variant: "home", caption: "Plan your path forward" },
+    { variant: "mediator", caption: "Your prepared documents" },
   ];
   return (
     <section className="bg-[#EFE9F9] py-16 sm:py-24" data-testid="screenshot-showcase">
@@ -739,85 +737,47 @@ function PhoneMockup({ variant = "home", className = "" }) {
 }
 
 function PhoneScreen({ variant }) {
-  if (variant === "assess") {
-    const items = [
-      { icon: MessageCircle, tone: "purple", label: "Separate facts from feelings" },
-      { icon: Lock, tone: "teal", label: "Identify what you can and cannot control" },
-      { icon: TrendingUpIcon, tone: "magenta", label: "Evaluate patterns, not isolated events" },
-    ];
-    return (
-      <div className="h-full flex flex-col">
-        <div className="bg-brand-gradient text-white px-4 pt-10 pb-3">
-          <div className="text-[8px] uppercase tracking-[0.2em] opacity-80 mb-0.5">Step 1</div>
-          <div className="font-extrabold text-sm leading-tight">Assess Your Situation</div>
-        </div>
-        <div className="flex-1 px-2.5 py-2.5 space-y-1 bg-[#F8F7FC]">
-          {items.map(({ icon: Icon, tone, label }) => (
-            <div
-              key={label}
-              className="flex items-center gap-2 bg-white rounded-lg border border-[#E5E0EE] px-2 py-1.5"
-            >
-              <span className={`icon-circle icon-circle-${tone} w-6 h-6 shrink-0`}>
-                <Icon size={10} />
-              </span>
-              <span className="text-[9.5px] font-semibold text-[#1A1330] leading-tight">
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-  if (variant === "mediator") {
-    return (
-      <div className="h-full flex flex-col">
-        <div className="bg-brand-gradient text-white px-5 pt-12 pb-6">
-          <div className="text-[9px] uppercase tracking-[0.2em] opacity-80 mb-1">Step 3</div>
-          <div className="font-extrabold text-lg leading-tight">Your prepared documents</div>
-        </div>
-        <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
-          <DocRow icon="🗎" label="Mediation Summary" tone="purple" />
-          <DocRow icon="✦" label="Co-Parenting Agreement" tone="teal" />
-          <DocRow icon="↗" label="Things I Can Improve" tone="magenta" />
-          <div className="pt-3">
-            <div className="text-[9px] uppercase tracking-[0.15em] text-[#857E9C] mb-1.5 font-semibold">
-              Readiness
-            </div>
-            <div className="bg-white rounded-xl border border-[#E5E0EE] p-3">
-              <div className="flex items-end justify-between mb-2">
-                <span className="text-[11px] text-[#4B4567] font-semibold">Prepared</span>
-                <span className="text-base font-extrabold text-[#3D1A78]">75/100</span>
-              </div>
-              <div className="h-1.5 bg-[#EFE9F9] rounded-full overflow-hidden">
-                <div className="h-full bg-brand-gradient" style={{ width: "75%" }} />
-              </div>
-            </div>
-          </div>
-          <button className="w-full mt-2 py-2.5 rounded-full bg-brand-gradient text-white text-xs font-bold">
-            Download PDF
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Unified data model — all 3 columns share the SAME visual structure
+  const screens = {
+    assess: {
+      step: "Step 1",
+      title: "Assess Your Situation",
+      items: [
+        { tone: "purple", label: "Separate facts from feelings" },
+        { tone: "teal", label: "Identify what you can and cannot control" },
+        { tone: "magenta", label: "Evaluate patterns, not isolated events" },
+      ],
+    },
+    home: {
+      step: "Step 2",
+      title: "Plan your path forward.",
+      items: [
+        { tone: "purple", label: "State Goals, Issues & Concerns" },
+        { tone: "teal", label: "Begin Co-Parenting Statement" },
+        { tone: "magenta", label: "Create Mediation Plan" },
+      ],
+    },
+    mediator: {
+      step: "Step 3",
+      title: "Your prepared documents",
+      items: [
+        { tone: "purple", label: "Mediation Summary" },
+        { tone: "teal", label: "Co-Parenting Agreement" },
+        { tone: "magenta", label: "Things I Can Improve" },
+      ],
+    },
+  };
 
-  // home variant — brochure-style module list
-  const modules = [
-    { tone: "purple", label: "State Goals, Issues & Concerns" },
-    { tone: "teal", label: "Begin Co-Parenting Statement" },
-    { tone: "magenta", label: "Create Mediation Plan" },
-  ];
+  const screen = screens[variant] || screens.home;
+
   return (
     <div className="h-full flex flex-col">
       <div className="bg-brand-gradient text-white px-5 pt-12 pb-6">
-        <div className="text-[10px] uppercase tracking-[0.2em] opacity-80 mb-1">Step 2</div>
-        <div className="font-extrabold text-lg leading-tight">
-          Plan your path forward.
-        </div>
+        <div className="text-[10px] uppercase tracking-[0.2em] opacity-80 mb-1">{screen.step}</div>
+        <div className="font-extrabold text-base leading-tight">{screen.title}</div>
       </div>
       <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
-        {modules.map((m) => (
+        {screen.items.map((m) => (
           <div
             key={m.label}
             className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5"
@@ -825,21 +785,12 @@ function PhoneScreen({ variant }) {
             <span className={`icon-circle icon-circle-${m.tone} w-9 h-9`}>
               <Heart size={14} />
             </span>
-            <span className="text-[12px] font-semibold text-[#1A1330] leading-tight">
+            <span className="text-[11.5px] font-semibold text-[#1A1330] leading-tight">
               {m.label}
             </span>
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function DocRow({ icon, label, tone }) {
-  return (
-    <div className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5">
-      <span className={`icon-circle icon-circle-${tone} w-8 h-8 text-xs font-bold`}>{icon}</span>
-      <span className="text-[12px] font-semibold text-[#1A1330]">{label}</span>
     </div>
   );
 }
