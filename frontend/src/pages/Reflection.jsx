@@ -112,10 +112,11 @@ export default function Reflection() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
           A quieter conversation with yourself.
         </h1>
-        <p className="text-[15px] text-[#4B4567] mt-4 leading-relaxed max-w-2xl">
-          Before mediation, take ten minutes to listen to your own quieter voice.
-          Everything here stays private to you — nothing is ever shared with anyone
-          unless you choose to.
+        <p className="text-[15px] text-[#4B4567] mt-4 leading-relaxed max-w-2xl" data-testid="reflection-intro">
+          At the start of each day, take a moment to share your thoughts and feelings about
+          your situation. Everything you write remains completely private and is never shared
+          with anyone unless you decide to do so. Revisit your journal from time to time to
+          reflect on your progress and experiences.
         </p>
 
         <div className="mt-3 flex items-center gap-2 text-[12px] text-[#857E9C]">
