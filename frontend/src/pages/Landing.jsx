@@ -177,8 +177,15 @@ function Hero() {
             <div className="lg:col-span-5 relative">
               <div className="absolute -top-12 -right-12 w-72 h-72 rounded-full bg-white/10 blur-2xl" />
               <div className="absolute -bottom-16 -left-12 w-56 h-56 rounded-full bg-[#2DB5B5]/30 blur-2xl" />
-              <div className="relative">
-                <PhoneMockup />
+              <div className="relative flex items-center justify-center">
+                <div className="bg-white/95 rounded-[36px] p-8 sm:p-10 shadow-2xl ring-4 ring-white/20 backdrop-blur-sm">
+                  <img
+                    src="/sa-coparents-logo.png"
+                    alt="SACOParents logo"
+                    className="w-full max-w-[320px] mx-auto"
+                    data-testid="hero-logo"
+                  />
+                </div>
               </div>
             </div>
           </div>
