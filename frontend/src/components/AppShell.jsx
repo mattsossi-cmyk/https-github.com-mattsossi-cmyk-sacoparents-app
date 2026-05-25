@@ -40,7 +40,6 @@ const navLinks = [
   { to: "/prep/communication", label: "Communication" },
   { to: "/prep/readiness", label: "Readiness" },
   { to: "/summary", label: "Summary" },
-  { to: "/resources", label: "Resources" },
 ];
 
 export default function AppShell({ children }) {

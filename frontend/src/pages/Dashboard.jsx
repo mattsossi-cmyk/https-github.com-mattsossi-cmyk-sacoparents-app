@@ -12,7 +12,6 @@ import {
   MessageCircle,
   HeartHandshake,
   FileText,
-  BookOpen,
   Heart,
   Compass,
   ArrowRight,
@@ -213,25 +212,6 @@ export default function Dashboard() {
             <div className="font-serif text-xl text-[#1A1330] mb-1">Personal Reflection</div>
             <p className="text-sm text-[#4B4567]">
               Private journal + 4-7-8 breathing. Listen to your wiser self.
-            </p>
-          </Link>
-
-          <Link
-            to="/resources"
-            className="card-soft p-6 hover:-translate-y-0.5 transition-transform"
-            data-testid="dashboard-resources-card"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-11 h-11 rounded-full grid place-items-center bg-[#9CB4C4]/20 text-[#4B4567]">
-                <BookOpen size={18} />
-              </div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
-                Library
-              </div>
-            </div>
-            <div className="font-serif text-xl text-[#1A1330] mb-1">Resource Center</div>
-            <p className="text-sm text-[#4B4567]">
-              Short reads & videos: communication, parallel parenting, trust.
             </p>
           </Link>
         </div>

@@ -18,7 +18,6 @@ import PriorityRanking from "@/pages/PriorityRanking";
 import CommStyle from "@/pages/CommStyle";
 import ReadinessCheck from "@/pages/ReadinessCheck";
 import Summary from "@/pages/Summary";
-import Resources from "@/pages/Resources";
 import Safety from "@/pages/Safety";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
@@ -111,14 +110,6 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Summary />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/resources"
-          element={
-            <ProtectedRoute>
-              <Resources />
             </ProtectedRoute>
           }
         />
