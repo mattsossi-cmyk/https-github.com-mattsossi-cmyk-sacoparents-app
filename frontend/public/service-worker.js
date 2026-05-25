@@ -4,7 +4,7 @@
    - network-first for HTML and API calls
    - falls back to last-good cache when offline */
 
-const VERSION = "sac-v1";
+const VERSION = "sac-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
