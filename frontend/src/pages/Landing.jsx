@@ -9,7 +9,7 @@ import {
   ShieldAlert,
   Check,
   Sparkles,
-  TrendingUp,
+  TrendingUp as TrendingUpIcon,
   FileText,
   Apple,
   Play as PlayIcon,
@@ -20,6 +20,7 @@ import {
   Lock,
   HeartHandshake,
   Brain,
+  Target as TargetIcon,
 } from "lucide-react";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
@@ -739,32 +740,33 @@ function PhoneMockup({ variant = "home", className = "" }) {
 
 function PhoneScreen({ variant }) {
   if (variant === "assess") {
+    const items = [
+      { icon: MessageCircle, tone: "purple", label: "Separate facts from feelings" },
+      { icon: Lock, tone: "teal", label: "Identify what you can and cannot control" },
+      { icon: TrendingUpIcon, tone: "magenta", label: "Evaluate patterns, not isolated events" },
+      { icon: Heart, tone: "blue", label: "Consider the impact on everyone involved" },
+      { icon: TargetIcon, tone: "green", label: "Define your realistic goals" },
+    ];
     return (
       <div className="h-full flex flex-col">
-        <div className="bg-brand-gradient text-white px-5 pt-12 pb-6">
-          <div className="text-[9px] uppercase tracking-[0.2em] opacity-80 mb-1">Step 1</div>
-          <div className="font-extrabold text-lg leading-tight">Assess Your Situation</div>
+        <div className="bg-brand-gradient text-white px-4 pt-10 pb-3">
+          <div className="text-[8px] uppercase tracking-[0.2em] opacity-80 mb-0.5">Step 1</div>
+          <div className="font-extrabold text-sm leading-tight">Assess Your Situation</div>
         </div>
-        <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
-          <div className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-3">
-            <span className="icon-circle icon-circle-purple w-9 h-9">
-              <MessageCircle size={14} />
-            </span>
-            <span className="text-[12px] font-semibold text-[#1A1330] leading-tight">
-              Review Your Communication Skills
-            </span>
-          </div>
-          <div className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-3">
-            <span className="icon-circle icon-circle-teal w-9 h-9">
-              <Heart size={14} />
-            </span>
-            <span className="text-[12px] font-semibold text-[#1A1330] leading-tight">
-              Place Objective
-            </span>
-          </div>
-          <button className="w-full mt-2 py-2.5 rounded-full bg-brand-gradient text-white text-xs font-bold">
-            Begin
-          </button>
+        <div className="flex-1 px-2.5 py-2.5 space-y-1 bg-[#F8F7FC]">
+          {items.map(({ icon: Icon, tone, label }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 bg-white rounded-lg border border-[#E5E0EE] px-2 py-1.5"
+            >
+              <span className={`icon-circle icon-circle-${tone} w-6 h-6 shrink-0`}>
+                <Icon size={10} />
+              </span>
+              <span className="text-[9.5px] font-semibold text-[#1A1330] leading-tight">
+                {label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     );
