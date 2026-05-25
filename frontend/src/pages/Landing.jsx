@@ -775,7 +775,7 @@ function PhoneScreen({ variant }) {
     return (
       <div className="h-full flex flex-col">
         <div className="bg-brand-gradient text-white px-5 pt-12 pb-6">
-          <div className="text-[9px] uppercase tracking-[0.2em] opacity-80 mb-1">Stage 3</div>
+          <div className="text-[9px] uppercase tracking-[0.2em] opacity-80 mb-1">Step 3</div>
           <div className="font-extrabold text-lg leading-tight">Your prepared documents</div>
         </div>
         <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
