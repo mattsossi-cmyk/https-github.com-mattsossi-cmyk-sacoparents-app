@@ -45,7 +45,7 @@ export default function Login() {
             <path d="M22 36 Q32 44 42 36" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9" />
           </svg>
           <div className="font-sans font-extrabold text-3xl text-[#1A1330] tracking-tight">
-            <span className="text-brand-gradient">SACO</span>Parents
+            <span className="text-brand-gradient">SA</span> Coparents
           </div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C] mt-1">
             Helping families communicate better

@@ -54,7 +54,7 @@ export default function BiometricGate({ children }) {
   const unlock = useCallback(async () => {
     setChecking(true);
     setError("");
-    const ok = await requireBiometric("Unlock your SACOParents prep");
+    const ok = await requireBiometric("Unlock your SA Coparents prep");
     setChecking(false);
     if (ok) setLocked(false);
     else setError("Authentication failed. Please try again.");

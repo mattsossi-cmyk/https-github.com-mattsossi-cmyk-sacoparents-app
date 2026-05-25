@@ -1092,11 +1092,11 @@ function OrgContactCard() {
     >
       <img
         src="https://customer-assets.emergentagent.com/job_prepared-parents/artifacts/3vfnf7kd__sacoparentscharactersacoparents_three_feet_away_rotating_and.png"
-        alt="SACOParents"
+        alt="SA Coparents"
         className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shrink-0 shadow-sm"
       />
       <div className="text-center sm:text-left">
-        <div className="font-serif text-xl text-[#1A1330] mb-1">SACOParents</div>
+        <div className="font-serif text-xl text-[#1A1330] mb-1">SA Coparents</div>
         <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-3">
           Relational Mediation Prep
         </div>

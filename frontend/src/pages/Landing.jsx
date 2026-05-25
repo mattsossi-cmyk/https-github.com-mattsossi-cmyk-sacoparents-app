@@ -87,12 +87,12 @@ function MarketingHeader() {
       <Link to="/" className="flex items-center gap-2.5 sm:gap-3" data-testid="landing-brand-logo">
         <img
           src="/sa-coparents-header-logo.png"
-          alt="SACOParents"
+          alt="SA Coparents"
           className="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0"
         />
         <div className="leading-tight">
           <div className="font-sans text-lg sm:text-xl font-extrabold tracking-tight text-[#1A1330]">
-            <span className="text-brand-gradient">SACO</span>Parents
+            <span className="text-brand-gradient">SA</span> Coparents
           </div>
           <div className="hidden sm:block text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
             Helping families communicate better
@@ -131,7 +131,7 @@ function Hero() {
             <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-[11px] uppercase tracking-[0.2em] mb-6">
                 <Sparkles size={12} />
-                Introducing SACOParents
+                Introducing SA Coparents
               </div>
               <h1 className="font-sans font-extrabold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight">
                 Smarter Communication.
@@ -182,7 +182,7 @@ function Hero() {
                 <div className="bg-white/95 rounded-[36px] p-4 sm:p-5 shadow-2xl ring-4 ring-white/20 backdrop-blur-sm overflow-hidden">
                   <img
                     src="/sacoparents-3d-logo.jpg"
-                    alt="SACOParents logo"
+                    alt="SA Coparents logo"
                     className="w-full max-w-[360px] mx-auto rounded-[24px]"
                     data-testid="hero-logo"
                   />
@@ -311,7 +311,7 @@ function Features() {
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <div className="font-script text-2xl sm:text-3xl text-[#3D1A78] mb-2">Introducing</div>
           <h2 className="font-sans font-extrabold text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] tracking-tight">
-            <span className="text-brand-gradient">SACOParents</span>
+            <span className="text-brand-gradient">SA Coparents</span>
           </h2>
           <p className="text-[#4B4567] mt-5 leading-relaxed">
             A co-parenting communication and support platform built to help separated and divorced
@@ -439,7 +439,7 @@ function ForMediators() {
               <span className="text-[#A8E8E8]">Your sessions move faster.</span>
             </h2>
             <p className="text-white/85 mt-5 leading-relaxed max-w-xl">
-              Recommend SACOParents before the first session and your clients walk in with a
+              Recommend SA Coparents before the first session and your clients walk in with a
               child-centered summary, a draft agreement, and a clear sense of what they want
               to discuss. Less venting, more substance.
             </p>
@@ -475,7 +475,7 @@ function ForMediators() {
 function FAQ() {
   const faqs = [
     {
-      q: "Is SACOParents free?",
+      q: "Is SA Coparents free?",
       a: "Yes. Every prep step, AI-generated document, PDF download, and safety resource is free. We don't sell your data and we don't show ads.",
     },
     {
@@ -488,7 +488,7 @@ function FAQ() {
     },
     {
       q: "Do I need a mediator already booked?",
-      a: "No. Many parents use SACOParents to figure out whether they're ready for mediation in the first place. The Readiness Check helps you decide.",
+      a: "No. Many parents use SA Coparents to figure out whether they're ready for mediation in the first place. The Readiness Check helps you decide.",
     },
     {
       q: "Can I delete my account and all my data?",
@@ -605,7 +605,7 @@ function MarketingFooter() {
           <div className="flex items-center gap-2.5 mb-4">
             <BrandMark size={40} />
             <div className="font-sans font-extrabold text-lg">
-              <span className="text-brand-gradient">SACO</span>Parents
+              <span className="text-brand-gradient">SA</span> Coparents
             </div>
           </div>
           <p className="text-[13px] text-white/65 leading-relaxed">
@@ -664,7 +664,7 @@ function MarketingFooter() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-5 sm:px-6 mt-10 pt-6 border-t border-white/10 text-[11px] text-white/50 flex flex-wrap items-center justify-between gap-2">
-        <span>© SACOParents — Helping families communicate better</span>
+        <span>© SA Coparents — Helping families communicate better</span>
         <span>16607 Blanco #703, San Antonio, Texas 78232</span>
       </div>
     </footer>
