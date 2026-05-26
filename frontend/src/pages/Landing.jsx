@@ -793,18 +793,24 @@ function PhoneScreen({ variant }) {
         <div className="font-extrabold text-base leading-tight">{screen.title}</div>
       </div>
       <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
-        {screen.items.map((m) => (
-          <div
+        {screen.items.map((m, idx) => (
+          <Link
             key={m.label}
-            className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5"
+            to="/register"
+            className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5 hover:border-[#3D1A78] hover:shadow-md active:scale-[0.98] transition group"
+            data-testid={`phone-${variant}-item-${idx + 1}`}
           >
-            <span className={`icon-circle icon-circle-${m.tone} w-9 h-9`}>
+            <span className={`icon-circle icon-circle-${m.tone} w-9 h-9 shrink-0`}>
               <Heart size={14} />
             </span>
-            <span className="text-[11.5px] font-semibold text-[#1A1330] leading-tight">
+            <span className="text-[11.5px] font-semibold text-[#1A1330] leading-tight flex-1">
               {m.label}
             </span>
-          </div>
+            <ArrowRight
+              size={12}
+              className="text-[#857E9C] group-hover:text-[#3D1A78] shrink-0"
+            />
+          </Link>
         ))}
       </div>
     </div>
