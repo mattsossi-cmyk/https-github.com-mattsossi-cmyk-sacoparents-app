@@ -478,10 +478,9 @@ function ScreenshotShowcase() {
 ============================================================ */
 function ForMediators() {
   const bullets = [
-    "Reduces session time spent on agenda-setting",
-    "Builds shared vocabulary around the 11 legal custody categories",
-    "Includes safety guidance for high-conflict clients",
-    "Free for clients — no subscription required",
+    "Allows parents the ability to assess their actions and roles in coparenting conflict",
+    "Provides the foundation to create a joint coparenting agreement",
+    "Prepares an outline to best present goals and concerns on mediation day",
   ];
   return (
     <section className="max-w-7xl mx-auto px-5 sm:px-6 py-16 sm:py-24" data-testid="for-mediators">
@@ -500,9 +499,8 @@ function ForMediators() {
               <span className="text-[#A8E8E8]">Your sessions move faster.</span>
             </h2>
             <p className="text-white/85 mt-5 leading-relaxed max-w-xl">
-              Recommend SA Coparents before the first session and your clients walk in with a
-              child-centered summary, a draft agreement, and a clear sense of what they want
-              to discuss. Less venting, more substance.
+              SA Coparents helps each parent arrive thoughtful, prepared, and child-centered —
+              so your sessions can focus on substance, not setup.
             </p>
             <ul className="mt-7 space-y-2.5">
               {bullets.map((b) => (
