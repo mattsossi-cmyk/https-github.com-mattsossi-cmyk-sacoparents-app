@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Report poster</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1200px; height: 630px; overflow: hidden; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: linear-gradient(135deg, #3D1A78 0%, #5E2DB5 45%, #2DB5B5 100%);
+      color: #fff; position: relative;
+    }
+    .blob-a { position: absolute; top: -120px; right: -120px; width: 460px; height: 460px;
+      border-radius: 999px; background: rgba(255,255,255,0.10); filter: blur(40px); }
+    .blob-b { position: absolute; bottom: -140px; left: -140px; width: 480px; height: 480px;
+      border-radius: 999px; background: rgba(45,181,181,0.45); filter: blur(40px); }
+    .wrap { position: relative; z-index: 2;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 100%; padding: 64px 72px; gap: 48px; }
+    .left { max-width: 600px; }
+    .badge { display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 16px; border-radius: 999px; background: rgba(255,255,255,0.18);
+      font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700; }
+    .script { font-family: 'Caveat', cursive; font-size: 36px; color: #A8E8E8; margin: 18px 0 4px; line-height: 1; }
+    h1 { font-size: 66px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.04; }
+    h1 .accent { color: #A8E8E8; }
+    .sub { margin-top: 22px; font-size: 19px; line-height: 1.45; color: rgba(255,255,255,0.92); max-width: 540px; }
+    .meta { margin-top: 26px; display: flex; gap: 22px; flex-wrap: wrap; font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.88); }
+    .meta span { display: inline-flex; align-items: center; gap: 6px; }
+    .dot { width: 6px; height: 6px; border-radius: 999px; background: #A8E8E8; display: inline-block; }
+    .right { flex-shrink: 0; position: relative; }
+    /* Document mockup */
+    .doc {
+      width: 360px; height: 480px;
+      background: #FFFFFF; color: #1A1330;
+      border-radius: 14px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.30), 0 0 0 4px rgba(255,255,255,0.18);
+      padding: 28px 26px; position: relative;
+      transform: rotate(2deg);
+    }
+    .doc::before {
+      content: ""; position: absolute; inset: 0; border-radius: 14px;
+      background: linear-gradient(180deg, rgba(248,247,252,0.6), transparent 40%);
+      pointer-events: none;
+    }
+    .doc-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .doc-bar .lg {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #3D1A78, #2DB5B5);
+    }
+    .doc-bar .brand { font-size: 13px; font-weight: 800; letter-spacing: -0.01em; color: #1A1330; }
+    .doc-bar .brand .saco {
+      background: linear-gradient(90deg, #3D1A78, #2DB5B5);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .doc-tag { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #857E9C; font-weight: 700; margin-bottom: 8px; }
+    .doc h2 { font-size: 22px; font-weight: 800; color: #1A1330; line-height: 1.15; margin-bottom: 14px; }
+    .doc .section { margin-top: 12px; }
+    .doc .heading {
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: #3D1A78; font-weight: 800; margin-bottom: 6px;
+    }
+    .doc .line { height: 7px; background: #EFE9F9; border-radius: 4px; margin: 4px 0; }
+    .doc .line.short { width: 60%; }
+    .doc .line.med { width: 82%; }
+    .doc .pill-row { display: flex; gap: 5px; margin-top: 6px; }
+    .doc .pill {
+      font-size: 8px; padding: 3px 8px; border-radius: 999px; font-weight: 700;
+      background: #EFE9F9; color: #3D1A78;
+    }
+    .doc .footer-line {
+      position: absolute; bottom: 18px; left: 26px; right: 26px;
+      display: flex; justify-content: space-between;
+      font-size: 9px; color: #857E9C; font-weight: 700;
+    }
+    /* Floating sticker */
+    .sticker {
+      position: absolute; top: -18px; right: -22px; z-index: 3;
+      background: #fff; color: #3D1A78; font-size: 11px; font-weight: 800;
+      padding: 8px 14px; border-radius: 999px; box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      transform: rotate(8deg);
+    }
+    .url-mini {
+      position: absolute; bottom: 22px; right: 72px; z-index: 4;
+      font-size: 14px; font-weight: 800; opacity: 0.92;
+    }
+    .url-mini .saco {
+      background: linear-gradient(90deg, #A8E8E8, #fff);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <div class="blob-a"></div>
+  <div class="blob-b"></div>
+  <div class="wrap">
+    <div class="left">
+      <div class="badge">✦ Mediation Summary</div>
+      <div class="script">Your prepared documents</div>
+      <h1>Walk into mediation<br/><span class="accent">prepared.</span></h1>
+      <div class="sub">An AI-generated, child-centered summary you can hand to your mediator the moment you sit down.</div>
+      <div class="meta">
+        <span><i class="dot"></i> AI-synthesized</span>
+        <span><i class="dot"></i> PDF + share link</span>
+        <span><i class="dot"></i> Yours alone</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="sticker">Ready to share</div>
+      <div class="doc">
+        <div class="doc-bar">
+          <div class="lg"></div>
+          <div class="brand"><span class="saco">SA</span> Coparents</div>
+        </div>
+        <div class="doc-tag">Mediation Summary</div>
+        <h2>Prepared for our<br/>mediation session</h2>
+
+        <div class="section">
+          <div class="heading">My Child-Centered Goals</div>
+          <div class="line med"></div>
+          <div class="line"></div>
+          <div class="line short"></div>
+        </div>
+
+        <div class="section">
+          <div class="heading">Top Concerns</div>
+          <div class="line med"></div>
+          <div class="line short"></div>
+          <div class="pill-row">
+            <span class="pill">Communication</span>
+            <span class="pill">Schedule</span>
+            <span class="pill">Decisions</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="heading">Readiness</div>
+          <div class="line short" style="background: linear-gradient(90deg, #3D1A78, #2DB5B5);"></div>
+        </div>
+
+        <div class="footer-line">
+          <span>Confidential · For mediator review</span>
+          <span>SA Coparents</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="url-mini"><span class="saco">SA</span> Coparents · sacoparentsapp.online</div>
+</body>
+</html>
