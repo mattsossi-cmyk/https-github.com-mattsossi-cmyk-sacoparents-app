@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api, API } from "../lib/api";
+import { shareViaText } from "../lib/share";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import {
