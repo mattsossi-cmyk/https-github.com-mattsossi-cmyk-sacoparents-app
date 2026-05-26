@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>IG carousel slide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1080px; height: 1350px; overflow: hidden; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: #fff;
+      position: relative;
+      background: linear-gradient(135deg, #3D1A78 0%, #5E2DB5 50%, #2DB5B5 100%);
+    }
+    .blob-a {
+      position: absolute; top: -160px; right: -160px; width: 560px; height: 560px;
+      border-radius: 999px; background: rgba(255,255,255,0.10); filter: blur(60px);
+    }
+    .blob-b {
+      position: absolute; bottom: -200px; left: -200px; width: 600px; height: 600px;
+      border-radius: 999px; background: rgba(45,181,181,0.40); filter: blur(60px);
+    }
+    .wrap {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column;
+      height: 100%; padding: 88px 88px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 10px; align-self: flex-start;
+      padding: 10px 20px; border-radius: 999px; background: rgba(255,255,255,0.18);
+      font-size: 17px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700;
+    }
+    .step {
+      font-family: 'Caveat', cursive;
+      font-size: 64px; color: #A8E8E8; margin-top: 28px;
+      line-height: 1;
+    }
+    h1 {
+      font-size: 92px; font-weight: 800; line-height: 1.02; letter-spacing: -0.02em;
+      margin-top: 16px;
+    }
+    h1 .accent { color: #A8E8E8; }
+    p.sub {
+      margin-top: 36px; font-size: 30px; line-height: 1.42; color: rgba(255,255,255,0.92);
+      max-width: 760px;
+    }
+    .checks {
+      margin-top: 56px; display: flex; flex-direction: column; gap: 18px;
+    }
+    .checks li {
+      list-style: none; font-size: 28px; font-weight: 700;
+      display: flex; align-items: center; gap: 18px;
+    }
+    .checks li::before {
+      content: '✓'; width: 44px; height: 44px; border-radius: 999px;
+      background: rgba(255,255,255,0.96); color: #3D1A78; font-weight: 800;
+      display: inline-flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .footer {
+      margin-top: auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 32px;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 16px;
+    }
+    .brand img {
+      width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
+      ring: 4px solid rgba(255,255,255,0.2);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.2);
+    }
+    .brand .name {
+      font-size: 26px; font-weight: 800; letter-spacing: -0.01em;
+    }
+    .brand .name .saco {
+      background: linear-gradient(90deg, #A8E8E8, #fff);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .brand .tag {
+      font-size: 14px; opacity: 0.8; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700;
+      margin-top: 4px;
+    }
+    .url { font-size: 22px; font-weight: 800; opacity: 0.95; }
+    .swipe {
+      position: absolute; top: 88px; right: 88px; z-index: 3;
+      font-size: 18px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+      opacity: 0.85; display: inline-flex; align-items: center; gap: 8px;
+    }
+
+    /* SLIDE 1: HERO/COVER — center, no checks */
+    body.s1 .wrap { justify-content: center; align-items: center; text-align: center; }
+    body.s1 .step { font-size: 56px; }
+    body.s1 h1 { font-size: 110px; }
+    body.s1 p.sub { font-size: 32px; text-align: center; max-width: 780px; }
+    body.s1 .badge { align-self: center; }
+    body.s1 .hero-img {
+      margin-top: 56px; width: 360px; height: 360px;
+      border-radius: 50%; object-fit: cover;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.30), 0 0 0 8px rgba(255,255,255,0.2);
+    }
+    body.s1 .footer { display: none; }
+
+    /* SLIDE 6: CTA — center */
+    body.s6 .wrap { justify-content: center; align-items: center; text-align: center; }
+    body.s6 .step { font-size: 70px; }
+    body.s6 h1 { font-size: 96px; }
+    body.s6 .cta-pill {
+      margin-top: 56px; padding: 28px 56px; border-radius: 999px;
+      background: #fff; color: #3D1A78; font-weight: 800; font-size: 36px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      display: inline-block;
+    }
+    body.s6 .small {
+      margin-top: 28px; font-size: 22px; opacity: 0.85;
+    }
+    body.s6 .footer { justify-content: center; padding-top: 64px; }
+  </style>
+</head>
+<body class="">
+  <div class="blob-a"></div>
+  <div class="blob-b"></div>
+  <div class="swipe" id="swipe">SWIPE →</div>
+  <div class="wrap" id="wrap"></div>
+
+  <script>
+    const slides = {
+      1: {
+        bodyClass: 's1',
+        showSwipe: true,
+        html: `
+          <div class="badge">✦ Introducing SA Coparents</div>
+          <div class="step">Helping families</div>
+          <h1>Smarter<br/>Communication.<br/><span class="accent">Healthier Co-Parenting.</span></h1>
+          <p class="sub">A modern co-parenting platform that keeps children at the center of every decision.</p>
+          <img class="hero-img" src="/saco-hero-logo.jpg" alt=""/>
+        `
+      },
+      2: {
+        bodyClass: 's2',
+        showSwipe: true,
+        html: `
+          <div class="badge">Step 1 · Assess</div>
+          <div class="step">Where you start</div>
+          <h1>Get clear,<br/>before the hard<br/><span class="accent">conversation.</span></h1>
+          <p class="sub">A calm, structured place to think through what really matters.</p>
+          <ul class="checks">
+            <li>Separate facts from feelings</li>
+            <li>Identify what you can and cannot control</li>
+            <li>Evaluate patterns, not isolated events</li>
+          </ul>
+          ${footerHTML()}
+        `
+      },
+      3: {
+        bodyClass: 's3',
+        showSwipe: true,
+        html: `
+          <div class="badge">Step 2 · Build</div>
+          <div class="step">What you create</div>
+          <h1>Plan your<br/>path<br/><span class="accent">forward.</span></h1>
+          <p class="sub">Turn reflections into a concrete plan for mediation.</p>
+          <ul class="checks">
+            <li>State Goals, Issues &amp; Concerns</li>
+            <li>Begin a Co-Parenting Statement</li>
+            <li>Create a Mediation Plan</li>
+          </ul>
+          ${footerHTML()}
+        `
+      },
+      4: {
+        bodyClass: 's4',
+        showSwipe: true,
+        html: `
+          <div class="badge">Step 3 · Walk in</div>
+          <div class="step">What you take with you</div>
+          <h1>Documents<br/>your mediator can<br/><span class="accent">actually use.</span></h1>
+          <p class="sub">AI synthesizes your prep into clear, sharable artifacts.</p>
+          <ul class="checks">
+            <li>Mediation Summary</li>
+            <li>Co-Parenting Agreement Draft</li>
+            <li>Personal "Things I Can Improve" plan</li>
+          </ul>
+          ${footerHTML()}
+        `
+      },
+      5: {
+        bodyClass: 's5',
+        showSwipe: true,
+        html: `
+          <div class="badge">Safety first</div>
+          <div class="step">Built-in care</div>
+          <h1>Calm tools<br/>for the<br/><span class="accent">heaviest days.</span></h1>
+          <p class="sub">When co-parenting stops being safe, the app stays one tap ahead.</p>
+          <ul class="checks">
+            <li>One-tap Quick Exit</li>
+            <li>24/7 crisis hotlines</li>
+            <li>Parallel parenting toolkit</li>
+            <li>Private journal + breathing exercises</li>
+          </ul>
+          ${footerHTML()}
+        `
+      },
+      6: {
+        bodyClass: 's6',
+        showSwipe: false,
+        html: `
+          <div class="step">Start free today</div>
+          <h1>Try the<br/>24-hour demo.<br/><span class="accent">No signup.</span></h1>
+          <div class="cta-pill">sacoparentsapp.online</div>
+          <div class="small">Free to use · Private by default · No ads</div>
+          <div class="footer">
+            <div class="brand">
+              <img src="/saco-hero-logo.jpg" alt=""/>
+              <div>
+                <div class="name"><span class="saco">SA</span> Coparents</div>
+                <div class="tag">Helping families communicate better</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+    };
+    function footerHTML(){
+      return `
+        <div class="footer">
+          <div class="brand">
+            <img src="/saco-hero-logo.jpg" alt=""/>
+            <div>
+              <div class="name"><span class="saco">SA</span> Coparents</div>
+              <div class="tag">Helping families communicate better</div>
+            </div>
+          </div>
+          <div class="url">sacoparentsapp.online</div>
+        </div>
+      `;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const n = parseInt(params.get('n') || '1', 10);
+    const s = slides[n] || slides[1];
+    document.body.className = s.bodyClass;
+    document.getElementById('wrap').innerHTML = s.html;
+    if (!s.showSwipe) document.getElementById('swipe').remove();
+  </script>
+</body>
+</html>
