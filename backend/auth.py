@@ -11,7 +11,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from models import UserRegister, UserLogin, UserPublic, TokenResponse
+from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -69,14 +69,35 @@ def _serialize_user(doc: dict) -> UserPublic:
         custody_situation=doc.get("custody_situation", ""),
         mediation_date=doc.get("mediation_date"),
         created_at=doc.get("created_at", datetime.now(timezone.utc).isoformat()),
+        is_guest=bool(doc.get("is_guest", False)),
+        guest_expires_at=doc.get("guest_expires_at"),
     )
+
+
+def _is_guest_expired(doc: dict) -> bool:
+    if not doc.get("is_guest"):
+        return False
+    exp = doc.get("guest_expires_at")
+    if not exp:
+        return False
+    try:
+        dt = datetime.fromisoformat(exp) if isinstance(exp, str) else exp
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt <= datetime.now(timezone.utc)
+    except (ValueError, TypeError):
+        return False
 
 
 async def _user_by_id(db, user_id: Optional[str]) -> Optional[UserPublic]:
     if not user_id:
         return None
     doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
-    return _serialize_user(doc) if doc else None
+    if not doc:
+        return None
+    if _is_guest_expired(doc):
+        return None
+    return _serialize_user(doc)
 
 
 async def _user_from_session_token(db, token: Optional[str]) -> Optional[UserPublic]:
@@ -371,3 +392,109 @@ async def update_profile(
         await db.users.update_one({"user_id": current.user_id}, {"$set": update})
     user = await db.users.find_one({"user_id": current.user_id}, {"_id": 0})
     return _serialize_user(user)
+
+
+# ============ Guest Sandbox ============
+GUEST_LIFETIME_HOURS = int(os.environ.get("GUEST_LIFETIME_HOURS", "24"))
+GUEST_RATE_LIMIT_PER_HOUR = int(os.environ.get("GUEST_RATE_LIMIT_PER_HOUR", "3"))
+
+
+def _client_ip(request: Request) -> str:
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+@router.post("/guest", response_model=TokenResponse)
+async def start_guest_session(
+    request: Request,
+    response: Response,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Spin up a temporary 24-hour guest account. Wizard works; premium
+    features (AI summary, PDF, email, share) are gated behind /claim."""
+    ip = _client_ip(request)
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    recent = await db.users.count_documents(
+        {"is_guest": True, "guest_ip": ip, "created_at": {"$gte": one_hour_ago}}
+    )
+    if recent >= GUEST_RATE_LIMIT_PER_HOUR:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many demo sessions from this network. Please try again later or sign up.",
+        )
+
+    short = uuid.uuid4().hex[:8]
+    user_id = f"guest_{short}"
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=GUEST_LIFETIME_HOURS)
+    doc = {
+        "user_id": user_id,
+        "email": f"guest_{short}@demo.local",
+        "name": "Demo user",
+        "hashed_password": None,
+        "auth_method": "guest",
+        "is_guest": True,
+        "guest_expires_at": expires_at.isoformat(),
+        "guest_ip": ip,
+        "children": [],
+        "custody_situation": "",
+        "mediation_date": None,
+        "picture": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.insert_one(doc)
+    token = create_jwt(user_id)
+    _set_jwt_cookie(response, token)
+    return TokenResponse(access_token=token, user=_serialize_user(doc))
+
+
+@router.post("/claim", response_model=TokenResponse)
+async def claim_guest_account(
+    body: GuestClaimPayload,
+    response: Response,
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Convert the current guest session into a permanent account.
+    All wizard data (prep_data, summaries, etc.) is keyed by user_id and
+    therefore preserved automatically."""
+    doc = await db.users.find_one({"user_id": current.user_id}, {"_id": 0})
+    if not doc or not doc.get("is_guest"):
+        raise HTTPException(status_code=400, detail="Not a guest session")
+
+    email = body.email.lower()
+    if await db.users.find_one({"email": email, "user_id": {"$ne": current.user_id}}, {"_id": 0}):
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    await db.users.update_one(
+        {"user_id": current.user_id},
+        {
+            "$set": {
+                "email": email,
+                "name": body.name,
+                "hashed_password": hash_password(body.password),
+                "auth_method": "jwt",
+            },
+            "$unset": {
+                "is_guest": "",
+                "guest_expires_at": "",
+                "guest_ip": "",
+            },
+        },
+    )
+    user = await db.users.find_one({"user_id": current.user_id}, {"_id": 0})
+    token = create_jwt(current.user_id)
+    _set_jwt_cookie(response, token)
+    return TokenResponse(access_token=token, user=_serialize_user(user))
+
+
+def require_active_user(current=Depends(get_current_user)) -> UserPublic:
+    """Like get_current_user but rejects guest sessions with 402 Payment Required.
+    Use on endpoints gated behind sign-up (AI generation, PDF, email, share)."""
+    if current.is_guest:
+        raise HTTPException(
+            status_code=402,
+            detail="Save your work to unlock this feature. Create a free account to continue.",
+        )
+    return current

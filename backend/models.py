@@ -34,12 +34,20 @@ class UserPublic(BaseModel):
     custody_situation: str = ""
     mediation_date: Optional[str] = None
     created_at: str
+    is_guest: bool = False
+    guest_expires_at: Optional[str] = None
 
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserPublic
+
+
+class GuestClaimPayload(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8)
+    name: str
 
 
 # ============ Prep Data Models ============

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from auth import get_current_user, create_share_token, decode_share_token
+from auth import get_current_user, create_share_token, decode_share_token, require_active_user
 from models import (
     ChildGoalsPayload,
     IssuesPayload,
@@ -178,7 +178,7 @@ async def reframe(
 @router.post("/summary")
 async def generate_summary(
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_active_user),
 ):
     db = request.app.state.db
     prep = await _load_prep(db, current.user_id)
@@ -222,7 +222,7 @@ async def list_summaries(
 async def download_summary_pdf(
     summary_id: str,
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_active_user),
 ):
     db = request.app.state.db
     summary = await db.summaries.find_one(
@@ -250,7 +250,7 @@ async def download_summary_pdf(
 @router.post("/agreement")
 async def generate_agreement(
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_active_user),
 ):
     db = request.app.state.db
     prep = await _load_prep(db, current.user_id)
@@ -300,7 +300,7 @@ async def list_agreements(
 async def download_agreement_pdf(
     agreement_id: str,
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_active_user),
 ):
     db = request.app.state.db
     agreement = await db.agreements.find_one(
@@ -327,7 +327,7 @@ async def download_agreement_pdf(
 async def create_summary_share_link(
     summary_id: str,
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_active_user),
 ):
     db = request.app.state.db
     exists = await db.summaries.find_one(
@@ -343,7 +343,7 @@ async def create_summary_share_link(
 async def create_agreement_share_link(
     agreement_id: str,
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_active_user),
 ):
     db = request.app.state.db
     exists = await db.agreements.find_one(
@@ -412,7 +412,7 @@ async def download_shared_pdf(
 @router.post("/improvement-plan")
 async def generate_improvement_plan_route(
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_active_user),
 ):
     db = request.app.state.db
     prep = await _load_prep(db, current.user_id)
@@ -501,7 +501,7 @@ async def email_status(current: UserPublic = Depends(get_current_user)):
 async def email_mediator(
     body: MediatorEmailRequest,
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_active_user),
 ):
     db = request.app.state.db
     if not body.summary_id and not body.agreement_id:

@@ -232,3 +232,18 @@ See `/app/memory/test_credentials.md`
 - ⏳ Google OAuth on production `sacoparentsapp.online` — diagnostic UI deployed; awaiting user redeploy + retest to capture failure code
 - ⏳ Marketing assets (`/marketing/raw-*.png`) still show old branding but are no longer referenced from Landing (replaced by inline CSS `PhoneMockup`). App Store screenshot suite in `/app/memory/app_store_assets/` will need refresh before publishing.
 
+
+### Feb 2026 — 24-Hour Demo Sandbox (P2 → SHIPPED)
+- **New backend endpoints**: `POST /api/auth/guest` (creates a 24h guest user, IP rate-limited 3/hr) and `POST /api/auth/claim` (upgrades guest → permanent account, preserves all wizard data)
+- **User model extended** with `is_guest`, `guest_expires_at`, `guest_ip` fields; `_user_by_id` now rejects expired guests at the auth layer
+- **`require_active_user` dependency** added — gates premium endpoints behind sign-up. Returns HTTP 402 with the message "Save your work to unlock this feature."
+- **Gated endpoints**: `POST /mediation/summary`, `POST /mediation/agreement`, `POST /mediation/improvement-plan`, `GET /summary/:id/pdf`, `GET /agreement/:id/pdf`, `POST /summary/:id/share-link`, `POST /agreement/:id/share-link`, `POST /email-mediator`
+- **Frontend additions**:
+  - `useAuth().startGuest()` and `useAuth().claimGuest()` actions
+  - `<GuestBanner/>` — sticky top banner with live countdown + "Save my work" link, shown only when `user.is_guest`
+  - `/claim` route + page — guest-only signup form that upgrades the existing user record
+  - Global axios 402 interceptor → toast with "Save my work" action
+  - Landing hero: new "Try it free — no signup" button next to "Start your prep — free"
+- **Cost protection**: AI generation, PDF download, email send, share link — all guest-gated, so an anonymous demo session can't burn `EMERGENT_LLM_KEY` budget or generate downloadable artifacts
+- **Verified end-to-end** in preview: guest creation → wizard → 402 on premium endpoint → /claim → permanent account.
+

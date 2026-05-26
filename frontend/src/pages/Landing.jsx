@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Heart,
   MessageCircle,
@@ -19,6 +19,8 @@ import {
   HeartHandshake,
   Brain,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { logError } from "../lib/logger";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
@@ -123,6 +125,28 @@ function MarketingHeader() {
    HERO — bold gradient panel
 ============================================================ */
 function Hero() {
+  const { startGuest } = useAuth();
+  const navigate = useNavigate();
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoError, setDemoError] = useState(null);
+
+  const beginDemo = async () => {
+    if (demoLoading) return;
+    setDemoLoading(true);
+    setDemoError(null);
+    try {
+      await startGuest();
+      navigate("/dashboard");
+    } catch (err) {
+      logError("Guest start failed:", err);
+      setDemoError(
+        err?.response?.data?.detail ||
+          "Couldn't start the demo right now. Please try signing up instead."
+      );
+      setDemoLoading(false);
+    }
+  };
+
   return (
     <section className="relative overflow-hidden" data-testid="hero">
       <div className="bg-brand-gradient text-white">
@@ -153,14 +177,29 @@ function Hero() {
                 >
                   Start your prep — free <ArrowRight size={16} />
                 </Link>
+                <button
+                  type="button"
+                  onClick={beginDemo}
+                  disabled={demoLoading}
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/15 text-white font-semibold backdrop-blur-sm hover:bg-white/25 active:scale-95 transition disabled:opacity-60"
+                  data-testid="hero-try-demo-button"
+                >
+                  <Sparkles size={14} /> {demoLoading ? "Starting demo…" : "Try it free — no signup"}
+                </button>
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/15 text-white font-semibold backdrop-blur-sm hover:bg-white/25 active:scale-95 transition"
+                  className="inline-flex items-center gap-2 px-5 py-3.5 text-white/85 font-semibold underline-offset-4 hover:underline"
                   data-testid="hero-continue-button"
                 >
                   I have an account
                 </Link>
               </div>
+
+              {demoError && (
+                <div className="mt-3 text-xs text-[#FFCFCF] bg-white/10 rounded-xl px-3 py-2 max-w-md" data-testid="hero-demo-error">
+                  {demoError}
+                </div>
+              )}
 
               <div className="mt-8 flex items-center gap-5 text-xs text-white/80 flex-wrap">
                 <span className="inline-flex items-center gap-1.5">

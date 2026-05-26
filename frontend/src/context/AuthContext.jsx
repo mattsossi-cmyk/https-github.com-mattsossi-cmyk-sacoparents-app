@@ -76,9 +76,43 @@ export function AuthProvider({ children }) {
     return res.data;
   }, []);
 
+  const startGuest = useCallback(async () => {
+    const res = await api.post("/auth/guest", {});
+    setUser(res.data.user);
+    return res.data.user;
+  }, []);
+
+  const claimGuest = useCallback(async (payload) => {
+    const res = await api.post("/auth/claim", payload);
+    setUser(res.data.user);
+    return res.data.user;
+  }, []);
+
   const value = useMemo(
-    () => ({ user, loading, login, register, loginWithGoogle, logout, updateProfile, checkAuth }),
-    [user, loading, login, register, loginWithGoogle, logout, updateProfile, checkAuth]
+    () => ({
+      user,
+      loading,
+      login,
+      register,
+      loginWithGoogle,
+      logout,
+      updateProfile,
+      checkAuth,
+      startGuest,
+      claimGuest,
+    }),
+    [
+      user,
+      loading,
+      login,
+      register,
+      loginWithGoogle,
+      logout,
+      updateProfile,
+      checkAuth,
+      startGuest,
+      claimGuest,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

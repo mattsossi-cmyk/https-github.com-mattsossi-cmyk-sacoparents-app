@@ -24,6 +24,7 @@ import Terms from "@/pages/Terms";
 import DeleteAccount from "@/pages/DeleteAccount";
 import Reflection from "@/pages/Reflection";
 import Orientation from "@/pages/Orientation";
+import ClaimAccount from "@/pages/ClaimAccount";
 
 const TOAST_OPTIONS = {
   style: {
@@ -52,6 +53,14 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route
+          path="/claim"
+          element={
+            <ProtectedRoute>
+              <ClaimAccount />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/delete-account" element={<DeleteAccount />} />

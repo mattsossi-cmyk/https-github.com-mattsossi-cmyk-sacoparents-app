@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { LogOut, Facebook, ShieldAlert, Menu, X } from "lucide-react";
 
+import GuestBanner from "./GuestBanner";
+
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
 function BrandMark({ className = "" }) {
@@ -71,6 +73,7 @@ export default function AppShell({ children }) {
 
   return (
     <div className="min-h-screen gentle-bg">
+      <GuestBanner />
       <header className="border-b border-[#E5E0EE]/70 backdrop-blur-md bg-[#F8F7FC]/70 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
           {/* Brand */}
