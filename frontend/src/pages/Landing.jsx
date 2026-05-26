@@ -776,9 +776,9 @@ function PhoneScreen({ variant }) {
       step: "Step 3",
       title: "Your prepared documents",
       items: [
-        { tone: "purple", label: "Share Goals and Concerns" },
-        { tone: "teal", label: "Create Co-Parenting Statements" },
-        { tone: "magenta", label: "Problem Solve" },
+        { tone: "purple", label: "Personal Assessment" },
+        { tone: "teal", label: "Co-Parenting Statement" },
+        { tone: "magenta", label: "Pre-Mediation Statement" },
       ],
     },
   };
