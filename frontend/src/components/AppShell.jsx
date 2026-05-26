@@ -76,9 +76,9 @@ export default function AppShell({ children }) {
           {/* Brand */}
           <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3 shrink-0" data-testid="brand-logo">
             <img
-              src="/sa-coparents-header-logo.png"
+              src="/saco-hero-logo.jpg"
               alt="SA Coparents"
-              className="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-[#3D1A78]/20 shrink-0"
             />
             <div className="leading-tight">
               <div className="font-sans font-extrabold text-base sm:text-lg whitespace-nowrap text-[#1A1330]">
