@@ -386,9 +386,24 @@ function HowItWorks() {
 ============================================================ */
 function ScreenshotShowcase() {
   const shots = [
-    { variant: "assess", caption: "Where you start" },
-    { variant: "home", caption: "What you build" },
-    { variant: "mediator", caption: "What you take to mediation" },
+    {
+      variant: "assess",
+      caption: "Where you start",
+      cta: "Assess my situation",
+      path: "/prep/child-goals",
+    },
+    {
+      variant: "home",
+      caption: "What you build",
+      cta: "Build my plan",
+      path: "/prep/issues",
+    },
+    {
+      variant: "mediator",
+      caption: "What you take to mediation",
+      cta: "See my documents",
+      path: "/summary",
+    },
   ];
   return (
     <section className="bg-[#EFE9F9] py-16 sm:py-24" data-testid="screenshot-showcase">
@@ -401,9 +416,16 @@ function ScreenshotShowcase() {
         </div>
         <div className="grid sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
           {shots.map((s, i) => (
-            <div key={i} className="text-center" data-testid={`screenshot-${i + 1}`}>
+            <div key={i} className="text-center flex flex-col items-center" data-testid={`screenshot-${i + 1}`}>
               <PhoneMockup variant={s.variant} className="!max-w-[220px]" />
               <div className="text-[13px] text-[#4B4567] mt-4 font-semibold">{s.caption}</div>
+              <Link
+                to={s.path}
+                className="mt-3 inline-flex items-center gap-1.5 px-5 py-2 rounded-full border-2 border-[#3D1A78] text-[#3D1A78] text-[12.5px] font-bold hover:bg-[#3D1A78] hover:text-white active:scale-95 transition"
+                data-testid={`showcase-cta-${i + 1}`}
+              >
+                {s.cta} <ArrowRight size={14} />
+              </Link>
             </div>
           ))}
         </div>
