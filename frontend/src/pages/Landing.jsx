@@ -690,6 +690,7 @@ function MarketingFooter() {
           <ul className="space-y-2 text-[14px] text-white/80">
             <li><Link to="/privacy" className="hover:text-white" data-testid="footer-privacy-link">Privacy policy</Link></li>
             <li><Link to="/terms" className="hover:text-white" data-testid="footer-terms-link">Terms of use</Link></li>
+            <li><Link to="/cancel-subscription" className="hover:text-white" data-testid="footer-cancel-sub-link">Manage subscription</Link></li>
             <li><Link to="/delete-account" className="hover:text-white" data-testid="footer-delete-account-link">Delete my account</Link></li>
           </ul>
         </div>

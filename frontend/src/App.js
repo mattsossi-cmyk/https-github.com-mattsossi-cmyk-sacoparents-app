@@ -25,6 +25,7 @@ import DeleteAccount from "@/pages/DeleteAccount";
 import Reflection from "@/pages/Reflection";
 import Orientation from "@/pages/Orientation";
 import ClaimAccount from "@/pages/ClaimAccount";
+import CancelSubscription from "@/pages/CancelSubscription";
 
 const TOAST_OPTIONS = {
   style: {
@@ -64,6 +65,7 @@ function AppRoutes() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/delete-account" element={<DeleteAccount />} />
+        <Route path="/cancel-subscription" element={<CancelSubscription />} />
         <Route path="/safety" element={<Safety />} />
 
         <Route
