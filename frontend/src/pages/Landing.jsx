@@ -390,19 +390,19 @@ function ScreenshotShowcase() {
       variant: "assess",
       caption: "Where you start",
       cta: "Assess my situation",
-      path: "/prep/child-goals",
+      path: "/register",
     },
     {
       variant: "home",
       caption: "What you build",
       cta: "Build my plan",
-      path: "/prep/issues",
+      path: "/register",
     },
     {
       variant: "mediator",
       caption: "What you take to mediation",
       cta: "See my documents",
-      path: "/summary",
+      path: "/register",
     },
   ];
   return (
