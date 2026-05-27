@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
+import { markOrientationSeen } from "./Orientation";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
@@ -136,6 +137,9 @@ function Hero() {
     setDemoError(null);
     try {
       await startGuest();
+      // Skip the 6-slide orientation for demo users — they want to SEE the app,
+      // not read a tutorial. They can still revisit it from the Dashboard.
+      markOrientationSeen();
       navigate("/dashboard");
     } catch (err) {
       logError("Guest start failed:", err);
