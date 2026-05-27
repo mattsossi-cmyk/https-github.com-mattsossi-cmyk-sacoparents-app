@@ -247,3 +247,18 @@ See `/app/memory/test_credentials.md`
 - **Cost protection**: AI generation, PDF download, email send, share link — all guest-gated, so an anonymous demo session can't burn `EMERGENT_LLM_KEY` budget or generate downloadable artifacts
 - **Verified end-to-end** in preview: guest creation → wizard → 402 on premium endpoint → /claim → permanent account.
 
+
+
+### May 2026 — Personal + Admin Analytics Dashboards (P2 → SHIPPED)
+- **New backend file** `/app/backend/analytics_routes.py` mounted at `/api/analytics`
+- **New personal endpoint** `GET /api/analytics/me` — returns the signed-in user's progress (sections completed / total), readiness trend across past summaries, activity counts (summaries, agreements, improvement plans, mediator emails) and the 10 most recent summaries
+- **New admin endpoints** gated to `ADMIN_EMAILS` (defaults to `mattsossi@bsossi.com`, override via env):
+  - `GET /api/analytics/admin/overview` — users (total / new 7d / 30d / guests / claimed-from-guest / auth breakdown), engagement (summaries / agreements / improvement plans / mediator emails — totals + 7d deltas), magic-link conversion %, full prep funnel
+  - `GET /api/analytics/admin/recent-users?limit=N` — recent signups enriched with per-user progress + AI counts (N capped at 100)
+  - `GET /api/analytics/admin/daily-signups?days=N` — N-day signup time series (N capped at 90)
+- **Frontend additions**:
+  - `/progress` route (`pages/Progress.jsx`) — personal dashboard with hero progress bar, 4 stat cards, readiness sparkline, module checklist, recent summaries list
+  - `/admin` route (`pages/AdminDashboard.jsx`) — owner ops dashboard with 4 top stats, daily signup chart, magic-link conversion gauge, prep funnel, auth method breakdown, recent users table; renders friendly "Admin only" message for non-owners
+  - `AppShell.jsx` nav: "Progress" link for all users + conditional "Admin" link for `mattsossi@bsossi.com`
+  - Dashboard hero: "View my progress →" link
+- **Backend tests**: 11 pytest cases at `/app/backend/tests/test_analytics.py` covering auth gating (401 unauth, 403 non-admin, 403 guest), shape validation, day clamping, no-`_id` leak. 100% pass.
