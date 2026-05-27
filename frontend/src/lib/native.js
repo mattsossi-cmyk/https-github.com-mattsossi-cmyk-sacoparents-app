@@ -4,9 +4,9 @@ import { Capacitor } from "@capacitor/core";
 
 export const isNative = () => Capacitor.isNativePlatform();
 
-let _biometricAvailable: boolean | null = null;
+let _biometricAvailable = null;
 
-export async function isBiometricAvailable(): Promise<boolean> {
+export async function isBiometricAvailable() {
   if (!isNative()) return false;
   if (_biometricAvailable !== null) return _biometricAvailable;
   try {
@@ -20,7 +20,7 @@ export async function isBiometricAvailable(): Promise<boolean> {
   }
 }
 
-export async function requireBiometric(reason = "Unlock SA Coparents"): Promise<boolean> {
+export async function requireBiometric(reason = "Unlock SA Coparents") {
   if (!isNative()) return true; // no gate on web
   if (!(await isBiometricAvailable())) return true;
   try {
@@ -39,7 +39,7 @@ export async function requireBiometric(reason = "Unlock SA Coparents"): Promise<
 
 /* Push notifications — registers the device with iOS/Android.
    Posts the token to the backend so it can send mediation reminders later. */
-export async function registerPushNotifications(api: any): Promise<void> {
+export async function registerPushNotifications(api) {
   if (!isNative()) return;
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
