@@ -175,7 +175,7 @@ function Hero() {
                   className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#3D1A78] font-bold shadow-lg active:scale-95 transition-transform"
                   data-testid="hero-start-button"
                 >
-                  Start your prep — free <ArrowRight size={16} />
+                  Set up an account <ArrowRight size={16} />
                 </Link>
                 <button
                   type="button"
@@ -633,7 +633,7 @@ function FinalCTA() {
               className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-[#3D1A78] font-bold shadow-lg active:scale-95 transition-transform"
               data-testid="final-cta-start-button"
             >
-              Start your prep — free <ArrowRight size={16} />
+              Set up an account <ArrowRight size={16} />
             </Link>
             <Link
               to="/login"
