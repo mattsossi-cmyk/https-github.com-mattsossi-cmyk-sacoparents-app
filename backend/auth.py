@@ -1,5 +1,6 @@
 """Authentication: JWT (email/password) + Emergent Google session exchange."""
 import os
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -11,7 +12,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload
+from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume
+from email_service import send_magic_link, EmailNotConfigured, EmailSendError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -498,3 +500,119 @@ def require_active_user(current=Depends(get_current_user)) -> UserPublic:
             detail="Save your work to unlock this feature. Create a free account to continue.",
         )
     return current
+
+
+# ============ Magic Link Sign-In ============
+MAGIC_LINK_LIFETIME_MINUTES = int(os.environ.get("MAGIC_LINK_LIFETIME_MINUTES", "15"))
+MAGIC_LINK_RATE_LIMIT_PER_HOUR = int(os.environ.get("MAGIC_LINK_RATE_LIMIT_PER_HOUR", "5"))
+
+
+def _frontend_origin(request: Request) -> str:
+    """Best-effort detection of the origin to build the magic-link URL on."""
+    origin = request.headers.get("origin") or request.headers.get("referer")
+    if origin:
+        # strip path off referer
+        from urllib.parse import urlparse
+        p = urlparse(origin)
+        if p.scheme and p.netloc:
+            return f"{p.scheme}://{p.netloc}"
+    return os.environ.get("PUBLIC_APP_URL", "").rstrip("/") or "https://sacoparentsapp.online"
+
+
+@router.post("/magic-link/request")
+async def request_magic_link(
+    body: MagicLinkRequest,
+    request: Request,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Issue a short-lived sign-in token and email it.
+    Always returns 200 so we don't leak which emails are registered."""
+    email = body.email.lower().strip()
+
+    # Rate limit per IP — same shape as guest endpoint
+    ip = _client_ip(request)
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    recent = await db.magic_links.count_documents(
+        {"ip": ip, "created_at": {"$gte": one_hour_ago}}
+    )
+    if recent >= MAGIC_LINK_RATE_LIMIT_PER_HOUR:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many sign-in links requested. Please try again later.",
+        )
+
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    sent = False
+    if user and not user.get("is_guest"):
+        raw_token = secrets.token_urlsafe(32)
+        await db.magic_links.insert_one({
+            "token": raw_token,
+            "user_id": user["user_id"],
+            "email": email,
+            "ip": ip,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=MAGIC_LINK_LIFETIME_MINUTES)).isoformat(),
+            "used": False,
+        })
+        origin = _frontend_origin(request)
+        link_url = f"{origin}/auth/magic?token={raw_token}"
+        try:
+            send_magic_link(to_email=email, link_url=link_url, user_name=user.get("name"))
+            sent = True
+        except EmailNotConfigured:
+            # Email not set up — surface a 503 so the UI can offer password sign-in instead
+            await db.magic_links.delete_one({"token": raw_token})
+            raise HTTPException(
+                status_code=503,
+                detail="Magic-link sign-in isn't available right now. Please use your password instead.",
+            )
+        except EmailSendError as e:
+            await db.magic_links.delete_one({"token": raw_token})
+            raise HTTPException(status_code=502, detail=str(e))
+
+    # Privacy: always return the same shape whether or not the email exists.
+    return {
+        "ok": True,
+        "sent": sent,
+        "message": (
+            "If an account exists for that email, we just sent a sign-in link. "
+            "It expires in 15 minutes."
+        ),
+    }
+
+
+@router.post("/magic-link/consume", response_model=TokenResponse)
+async def consume_magic_link(
+    body: MagicLinkConsume,
+    response: Response,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    rec = await db.magic_links.find_one({"token": body.token}, {"_id": 0})
+    if not rec:
+        raise HTTPException(status_code=400, detail="Invalid or expired sign-in link.")
+    if rec.get("used"):
+        raise HTTPException(status_code=400, detail="This sign-in link has already been used.")
+    exp = rec.get("expires_at")
+    if exp:
+        try:
+            dt = datetime.fromisoformat(exp)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if dt <= datetime.now(timezone.utc):
+                raise HTTPException(status_code=400, detail="This sign-in link has expired.")
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid sign-in link.") from None
+
+    user = await db.users.find_one({"user_id": rec["user_id"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=400, detail="Account no longer exists.")
+
+    await db.magic_links.update_one({"token": body.token}, {"$set": {"used": True}})
+    # Invalidate any other outstanding links for this user — single active link policy
+    await db.magic_links.update_many(
+        {"user_id": user["user_id"], "used": False, "token": {"$ne": body.token}},
+        {"$set": {"used": True}},
+    )
+    token = create_jwt(user["user_id"])
+    _set_jwt_cookie(response, token)
+    return TokenResponse(access_token=token, user=_serialize_user(user))

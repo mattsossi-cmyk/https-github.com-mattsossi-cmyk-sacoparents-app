@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../lib/api";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -9,6 +10,8 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [magicLoading, setMagicLoading] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -21,6 +24,33 @@ export default function Login() {
       toast.error(err?.response?.data?.detail || "Could not sign in.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendMagicLink = async () => {
+    if (!email) {
+      toast.error("Enter your email first, then tap 'Email me a sign-in link'.");
+      return;
+    }
+    setMagicLoading(true);
+    try {
+      const r = await api.post("/auth/magic-link/request", { email });
+      setMagicSent(true);
+      toast.success(r?.data?.message || "Check your inbox for a sign-in link.");
+    } catch (err) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+      if (status === 503) {
+        toast.error(
+          detail || "Magic-link sign-in isn't available right now. Use your password instead."
+        );
+      } else if (status === 429) {
+        toast.error(detail || "Too many requests. Please try again later.");
+      } else {
+        toast.error(detail || "Could not send a sign-in link right now.");
+      }
+    } finally {
+      setMagicLoading(false);
     }
   };
 
@@ -92,6 +122,19 @@ export default function Login() {
                 placeholder="you@example.com"
                 data-testid="login-email-input"
               />
+              <button
+                type="button"
+                onClick={sendMagicLink}
+                disabled={magicLoading || magicSent}
+                className="mt-2 text-xs text-[#3D1A78] font-semibold hover:underline disabled:opacity-60"
+                data-testid="login-magic-link-button"
+              >
+                {magicSent
+                  ? "✓ Check your inbox"
+                  : magicLoading
+                  ? "Sending…"
+                  : "Email me a sign-in link instead"}
+              </button>
             </div>
             <div>
               <label className="eyebrow block mb-2">Password</label>

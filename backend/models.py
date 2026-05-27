@@ -50,6 +50,14 @@ class GuestClaimPayload(BaseModel):
     name: str
 
 
+class MagicLinkRequest(BaseModel):
+    email: EmailStr
+
+
+class MagicLinkConsume(BaseModel):
+    token: str
+
+
 # ============ Prep Data Models ============
 class ChildGoalsPayload(BaseModel):
     selected_goals: List[str] = []
