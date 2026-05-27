@@ -12,8 +12,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume
-from email_service import send_magic_link, EmailNotConfigured, EmailSendError
+from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken
+from email_service import send_magic_link, send_setup_link, EmailNotConfigured, EmailSendError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -543,40 +543,56 @@ async def request_magic_link(
 
     user = await db.users.find_one({"email": email}, {"_id": 0})
     sent = False
-    if user and not user.get("is_guest"):
-        raw_token = secrets.token_urlsafe(32)
-        await db.magic_links.insert_one({
-            "token": raw_token,
-            "user_id": user["user_id"],
-            "email": email,
-            "ip": ip,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=MAGIC_LINK_LIFETIME_MINUTES)).isoformat(),
-            "used": False,
-        })
-        origin = _frontend_origin(request)
-        link_url = f"{origin}/auth/magic?token={raw_token}"
-        try:
-            send_magic_link(to_email=email, link_url=link_url, user_name=user.get("name"))
-            sent = True
-        except EmailNotConfigured:
-            # Email not set up — surface a 503 so the UI can offer password sign-in instead
-            await db.magic_links.delete_one({"token": raw_token})
-            raise HTTPException(
-                status_code=503,
-                detail="Magic-link sign-in isn't available right now. Please use your password instead.",
-            )
-        except EmailSendError as e:
-            await db.magic_links.delete_one({"token": raw_token})
-            raise HTTPException(status_code=502, detail=str(e))
+    mode = "signin" if (user and not user.get("is_guest")) else "signup"
 
-    # Privacy: always return the same shape whether or not the email exists.
+    raw_token = secrets.token_urlsafe(32)
+    record = {
+        "token": raw_token,
+        "email": email,
+        "mode": mode,
+        "ip": ip,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=MAGIC_LINK_LIFETIME_MINUTES)).isoformat(),
+        "used": False,
+    }
+    if mode == "signin":
+        record["user_id"] = user["user_id"]
+
+    await db.magic_links.insert_one(record)
+    origin = _frontend_origin(request)
+    if mode == "signin":
+        link_url = f"{origin}/auth/magic?token={raw_token}"
+    else:
+        link_url = f"{origin}/auth/setup?token={raw_token}"
+
+    try:
+        if mode == "signin":
+            send_magic_link(to_email=email, link_url=link_url, user_name=user.get("name"))
+        else:
+            send_setup_link(to_email=email, link_url=link_url)
+        sent = True
+    except EmailNotConfigured:
+        await db.magic_links.delete_one({"token": raw_token})
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Email sign-in isn't available right now. "
+                "Please " + ("use your password instead." if mode == "signin" else "create an account directly.")
+            ),
+        )
+    except EmailSendError as e:
+        await db.magic_links.delete_one({"token": raw_token})
+        raise HTTPException(status_code=502, detail=str(e))
+
+    # Privacy: same shape whether signin or signup. The mode hint helps the UI
+    # tailor the confirmation copy ("check your inbox to sign in" vs "...to set up").
     return {
         "ok": True,
         "sent": sent,
+        "mode": mode,
         "message": (
-            "If an account exists for that email, we just sent a sign-in link. "
-            "It expires in 15 minutes."
+            "If you already have an account, we sent a sign-in link. "
+            "Otherwise, we sent a link to set up your account. It expires in 15 minutes."
         ),
     }
 
@@ -590,6 +606,11 @@ async def consume_magic_link(
     rec = await db.magic_links.find_one({"token": body.token}, {"_id": 0})
     if not rec:
         raise HTTPException(status_code=400, detail="Invalid or expired sign-in link.")
+    if rec.get("mode") == "signup":
+        raise HTTPException(
+            status_code=400,
+            detail="This link is for creating an account. Open it from your email to finish setup.",
+        )
     if rec.get("used"):
         raise HTTPException(status_code=400, detail="This sign-in link has already been used.")
     exp = rec.get("expires_at")
@@ -616,3 +637,80 @@ async def consume_magic_link(
     token = create_jwt(user["user_id"])
     _set_jwt_cookie(response, token)
     return TokenResponse(access_token=token, user=_serialize_user(user))
+
+
+@router.get("/magic-link/preview")
+async def preview_magic_link(
+    token: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Validate a token and return the email it was issued for, so the
+    /auth/setup page can pre-fill it and show context to the user.
+    Does NOT mark the token as used."""
+    rec = await db.magic_links.find_one({"token": token}, {"_id": 0})
+    if not rec:
+        raise HTTPException(status_code=400, detail="Invalid or expired link.")
+    if rec.get("used"):
+        raise HTTPException(status_code=400, detail="This link has already been used.")
+    exp = rec.get("expires_at")
+    if exp:
+        try:
+            dt = datetime.fromisoformat(exp)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if dt <= datetime.now(timezone.utc):
+                raise HTTPException(status_code=400, detail="This link has expired.")
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid link.") from None
+    return {"email": rec["email"], "mode": rec.get("mode", "signin")}
+
+
+@router.post("/signup-from-token", response_model=TokenResponse)
+async def signup_from_token(
+    body: SignupFromToken,
+    response: Response,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Create a new account using a verified email (via a magic link in signup mode).
+    Idempotent against double-clicks: if the token was just used, returns the same user."""
+    rec = await db.magic_links.find_one({"token": body.token}, {"_id": 0})
+    if not rec:
+        raise HTTPException(status_code=400, detail="Invalid or expired link.")
+    if rec.get("mode") != "signup":
+        raise HTTPException(status_code=400, detail="This link can't be used to create an account.")
+    if rec.get("used"):
+        raise HTTPException(status_code=400, detail="This link has already been used.")
+    exp = rec.get("expires_at")
+    if exp:
+        try:
+            dt = datetime.fromisoformat(exp)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if dt <= datetime.now(timezone.utc):
+                raise HTTPException(status_code=400, detail="This link has expired.")
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid link.") from None
+
+    email = rec["email"]
+    existing = await db.users.find_one({"email": email}, {"_id": 0})
+    if existing and not existing.get("is_guest"):
+        raise HTTPException(status_code=400, detail="An account already exists for this email. Please sign in.")
+
+    user_id = uuid.uuid4().hex
+    doc = {
+        "user_id": user_id,
+        "email": email,
+        "name": body.name.strip(),
+        "hashed_password": hash_password(body.password),
+        "auth_method": "jwt",
+        "children": [],
+        "custody_situation": "",
+        "mediation_date": None,
+        "picture": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.insert_one(doc)
+    await db.magic_links.update_one({"token": body.token}, {"$set": {"used": True}})
+    token = create_jwt(user_id)
+    _set_jwt_cookie(response, token)
+    return TokenResponse(access_token=token, user=_serialize_user(doc))

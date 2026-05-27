@@ -58,6 +58,12 @@ class MagicLinkConsume(BaseModel):
     token: str
 
 
+class SignupFromToken(BaseModel):
+    token: str
+    name: str = Field(min_length=1)
+    password: str = Field(min_length=8)
+
+
 # ============ Prep Data Models ============
 class ChildGoalsPayload(BaseModel):
     selected_goals: List[str] = []

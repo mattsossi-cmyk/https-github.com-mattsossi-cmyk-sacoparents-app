@@ -29,20 +29,26 @@ export default function Login() {
 
   const sendMagicLink = async () => {
     if (!email) {
-      toast.error("Enter your email first, then tap 'Email me a sign-in link'.");
+      toast.error("Enter your email first.");
       return;
     }
     setMagicLoading(true);
     try {
       const r = await api.post("/auth/magic-link/request", { email });
       setMagicSent(true);
-      toast.success(r?.data?.message || "Check your inbox for a sign-in link.");
+      if (r?.data?.mode === "signup") {
+        toast.success("Check your inbox — we sent a link to set up your new account.");
+      } else if (r?.data?.mode === "signin") {
+        toast.success("Check your inbox — we sent a sign-in link.");
+      } else {
+        toast.success(r?.data?.message || "Check your inbox.");
+      }
     } catch (err) {
       const status = err?.response?.status;
       const detail = err?.response?.data?.detail;
       if (status === 503) {
         toast.error(
-          detail || "Magic-link sign-in isn't available right now. Use your password instead."
+          detail || "Email-based sign-in isn't available right now. Use your password instead."
         );
       } else if (status === 429) {
         toast.error(detail || "Too many requests. Please try again later.");
@@ -133,7 +139,7 @@ export default function Login() {
                   ? "✓ Check your inbox"
                   : magicLoading
                   ? "Sending…"
-                  : "Email me a sign-in link instead"}
+                  : "Email me a link to sign in or set up an account"}
               </button>
             </div>
             <div>

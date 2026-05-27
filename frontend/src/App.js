@@ -27,6 +27,7 @@ import Orientation from "@/pages/Orientation";
 import ClaimAccount from "@/pages/ClaimAccount";
 import CancelSubscription from "@/pages/CancelSubscription";
 import MagicLinkConsume from "@/pages/MagicLinkConsume";
+import AccountSetup from "@/pages/AccountSetup";
 
 const TOAST_OPTIONS = {
   style: {
@@ -56,6 +57,7 @@ function AppRoutes() {
         <Route path="/register" element={<Register />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/magic" element={<MagicLinkConsume />} />
+        <Route path="/auth/setup" element={<AccountSetup />} />
         <Route
           path="/claim"
           element={
