@@ -1,0 +1,41 @@
+{
+  "summary": "Backend analytics endpoints fully tested. All 11 pytest cases passed covering personal (/api/analytics/me) and admin (/api/analytics/admin/*) routes, plus auth gating (401 unauth, 403 non-admin, 403 guest), shape validation, day-clamping, and no-_id leak assertions.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_analytics.py",
+    "/app/test_reports/pytest/pytest_analytics_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ADMIN_EMAILS is not set in /app/backend/.env — the code falls back to the hard-coded default 'mattsossi@bsossi.com'. For production, set this explicitly in env (also avoid shipping default admin in code).",
+    "/admin/recent-users issues N+1 prep_data + summaries queries per user (acceptable at limit<=100, but consider $lookup/aggregation if user base grows).",
+    "Funnel uses 5 individual count_documents calls — fine for now, could be collapsed into a single aggregation.",
+    "Guest -> claim conversion is approximated via regex on user_id starting with 'guest_' — comment in code already acknowledges this; consider tracking a 'claimed_from_guest_id' field for accuracy.",
+    "_now()-based 7d/30d windows compare ISO strings against created_at — works only because created_at is stored as ISO-8601 UTC strings with the same format. Brittle if the schema ever stores datetimes."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_analytics.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "not tested (backend-only request)"},
+  "test_credentials": "parent1@test.com / TestPass123!  •  mattsossi@bsossi.com / AdminPass123!",
+  "seed_data_creation": "Both accounts auto-created (or logged-in if pre-existing) via _ensure_account helper. test also calls PUT /api/mediation/readiness so personal analytics has data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Analytics suite lives at /app/backend/tests/test_analytics.py — reusable. Uses REACT_APP_BACKEND_URL. Admin gating relies on default ADMIN_EMAILS=mattsossi@bsossi.com (env override possible).",
+  "verified_endpoints": [
+    "GET /api/analytics/me -> 401 unauth, 200 with full shape (user.email, progress.steps_done, steps_total=5, readiness.current, readiness.trend, activity.summaries/agreements/mediator_emails, recent_summaries[])",
+    "GET /api/analytics/admin/overview -> 401 unauth, 403 non-admin, 403 guest, 200 admin with users.total/new_7d/auth_breakdown, engagement.summaries_total, magic_links.conversion_pct, funnel for all 5 sections",
+    "GET /api/analytics/admin/recent-users?limit=5 -> 200 admin, returns users with steps_done/steps_total=5/summaries; 403 non-admin",
+    "GET /api/analytics/admin/daily-signups?days=14 -> 200 with 14 date+count buckets",
+    "GET /api/analytics/admin/daily-signups?days=999 -> clamped to 90 (days==90, len(series)==90); 403 non-admin",
+    "No MongoDB _id leak detected in any response (recursive walk assertion)"
+  ]
+}

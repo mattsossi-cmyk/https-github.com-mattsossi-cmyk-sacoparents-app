@@ -1,0 +1,320 @@
+import React, { useEffect, useState } from "react";
+import AppShell from "../components/AppShell";
+import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
+import { Navigate } from "react-router-dom";
+import {
+  Users,
+  UserPlus,
+  Sparkles,
+  FileText,
+  Mail,
+  KeyRound,
+  ShieldCheck,
+  TrendingUp,
+} from "lucide-react";
+import { logError } from "../lib/logger";
+
+const FUNNEL_STEPS = [
+  { key: "child_goals", label: "Child Goals" },
+  { key: "issues", label: "Issues" },
+  { key: "priority", label: "Priority" },
+  { key: "comm_style", label: "Communication" },
+  { key: "readiness", label: "Readiness" },
+];
+
+function Stat({ icon: Icon, label, value, hint, accent = "purple", testid }) {
+  const accents = {
+    purple: { bg: "bg-[#EFE9F9]", fg: "text-[#3D1A78]" },
+    teal: { bg: "bg-[#D5F2F2]", fg: "text-[#0E7A7A]" },
+    amber: { bg: "bg-[#FFF1E2]", fg: "text-[#B6663B]" },
+  };
+  const a = accents[accent] || accents.purple;
+  return (
+    <div className="card-soft p-5" data-testid={testid}>
+      <div className="flex items-center gap-2 mb-2">
+        <div className={`w-9 h-9 rounded-full ${a.bg} grid place-items-center ${a.fg}`}>
+          <Icon size={16} />
+        </div>
+        <div className="eyebrow">{label}</div>
+      </div>
+      <div className="font-serif text-3xl text-[#1A1330] leading-none">{value}</div>
+      {hint && <div className="text-xs text-[#857E9C] mt-1.5">{hint}</div>}
+    </div>
+  );
+}
+
+function fmtDate(iso) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function SignupChart({ series }) {
+  if (!series?.length) return null;
+  const max = Math.max(1, ...series.map((d) => d.count));
+  return (
+    <div className="flex items-end gap-1 h-32" data-testid="admin-signup-chart">
+      {series.map((d) => (
+        <div
+          key={d.date}
+          className="flex-1 min-w-[3px] bg-gradient-to-t from-[#3D1A78] to-[#2DB5B5] rounded-t"
+          style={{ height: `${(d.count / max) * 100}%` }}
+          title={`${d.date}: ${d.count}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+export default function AdminDashboard() {
+  const { user, loading } = useAuth();
+  const [overview, setOverview] = useState(null);
+  const [recentUsers, setRecentUsers] = useState([]);
+  const [signups, setSignups] = useState([]);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([
+      api.get("/analytics/admin/overview"),
+      api.get("/analytics/admin/recent-users?limit=25"),
+      api.get("/analytics/admin/daily-signups?days=30"),
+    ])
+      .then(([o, r, s]) => {
+        setOverview(o.data);
+        setRecentUsers(r.data.users || []);
+        setSignups(s.data.series || []);
+      })
+      .catch((e) => {
+        logError("admin analytics failed", e);
+        if (e?.response?.status === 403) {
+          setErr("forbidden");
+        } else {
+          setErr("Could not load admin analytics.");
+        }
+      });
+  }, [user]);
+
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (err === "forbidden") {
+    return (
+      <AppShell>
+        <div className="card-soft p-8 text-center max-w-lg mx-auto" data-testid="admin-forbidden">
+          <div className="w-12 h-12 mx-auto rounded-full bg-[#FFF1E2] grid place-items-center text-[#B6663B] mb-3">
+            <ShieldCheck size={20} />
+          </div>
+          <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
+          <p className="text-sm text-[#4B4567] mt-2">
+            This dashboard is restricted to the SA Coparents app owner.
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (err) {
+    return (
+      <AppShell>
+        <div className="card-soft p-8 text-center">
+          <p className="text-sm text-[#4B4567]">{err}</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!overview) {
+    return (
+      <AppShell>
+        <div className="card-soft p-8 text-center text-sm tracking-[0.2em] uppercase text-[#857E9C] animate-pulse">
+          Loading admin analytics…
+        </div>
+      </AppShell>
+    );
+  }
+
+  const { users: U, engagement: E, magic_links: ML, funnel } = overview;
+  const top = funnel.child_goals || 1;
+
+  return (
+    <AppShell>
+      <div className="fade-up space-y-8" data-testid="admin-dashboard">
+        <div className="card-soft p-7 relative overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#D4C5F0]/40" />
+          <div className="relative">
+            <div className="eyebrow mb-2">Admin</div>
+            <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330]">
+              SA Coparents — operations
+            </h1>
+            <p className="text-sm text-[#4B4567] mt-2">
+              Quiet metrics for the people building this. Refreshed each request.
+            </p>
+          </div>
+        </div>
+
+        {/* Top stats */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Stat
+            icon={Users}
+            label="Total users"
+            value={U.total}
+            hint={`+${U.new_7d} in last 7d · +${U.new_30d} in last 30d`}
+            testid="admin-stat-users"
+          />
+          <Stat
+            icon={UserPlus}
+            label="Active guests"
+            value={U.guests_active}
+            hint={`${U.claimed_from_guest} converted to accounts`}
+            accent="teal"
+            testid="admin-stat-guests"
+          />
+          <Stat
+            icon={Sparkles}
+            label="AI summaries"
+            value={E.summaries_total}
+            hint={`+${E.summaries_7d} this week`}
+            testid="admin-stat-summaries"
+          />
+          <Stat
+            icon={Mail}
+            label="Mediator emails"
+            value={E.mediator_emails_total}
+            hint={`+${E.mediator_emails_7d} this week`}
+            accent="amber"
+            testid="admin-stat-emails"
+          />
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Signup chart */}
+          <div className="card-soft p-6 lg:col-span-2">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="eyebrow">Daily signups</div>
+                <div className="font-serif text-xl text-[#1A1330]">Last 30 days</div>
+              </div>
+              <TrendingUp size={16} className="text-[#3D1A78]" />
+            </div>
+            <SignupChart series={signups} />
+            <div className="flex justify-between text-[10px] text-[#857E9C] mt-2 uppercase tracking-[0.15em]">
+              <span>{signups[0]?.date}</span>
+              <span>{signups[signups.length - 1]?.date}</span>
+            </div>
+          </div>
+
+          {/* Magic links */}
+          <div className="card-soft p-6">
+            <div className="eyebrow mb-2">Magic links</div>
+            <div className="font-serif text-3xl text-[#1A1330]">
+              {ML.conversion_pct}%
+            </div>
+            <div className="text-xs text-[#857E9C] mb-4">
+              {ML.used} of {ML.requested} requested links used
+            </div>
+            <div className="flex items-center gap-2 text-xs text-[#4B4567]">
+              <KeyRound size={12} />
+              Email-based sign-in conversion
+            </div>
+          </div>
+        </div>
+
+        {/* Funnel + auth breakdown */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="card-soft p-6">
+            <div className="eyebrow mb-3">Prep funnel</div>
+            <div className="space-y-3" data-testid="admin-funnel">
+              {FUNNEL_STEPS.map((s, i) => {
+                const n = funnel[s.key] || 0;
+                const prev = i === 0 ? n : funnel[FUNNEL_STEPS[i - 1].key] || 1;
+                const pct = top ? Math.round((n / top) * 100) : 0;
+                const dropRate = prev ? Math.round((n / prev) * 100) : 0;
+                return (
+                  <div key={s.key}>
+                    <div className="flex items-baseline justify-between text-sm mb-1">
+                      <span className="text-[#1A1330] font-medium">{s.label}</span>
+                      <span className="text-[#4B4567]">
+                        {n} <span className="text-[#857E9C]">({pct}% of top · {dropRate}% kept)</span>
+                      </span>
+                    </div>
+                    <div className="h-2 bg-[#E5E0EE] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5]"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="card-soft p-6">
+            <div className="eyebrow mb-3">Auth method</div>
+            <ul className="space-y-2" data-testid="admin-auth-breakdown">
+              {Object.entries(U.auth_breakdown || {}).map(([m, n]) => (
+                <li
+                  key={m}
+                  className="flex items-center justify-between text-sm py-2 border-b border-[#E5E0EE] last:border-0"
+                >
+                  <span className="capitalize text-[#1A1330]">{m}</span>
+                  <span className="text-[#4B4567]">{n}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="eyebrow mt-5 mb-3">Engagement</div>
+            <ul className="space-y-2 text-sm">
+              <li className="flex justify-between"><span>Agreement drafts</span><span className="text-[#4B4567]">{E.agreements_total} (<span className="text-[#857E9C]">+{E.agreements_7d}/wk</span>)</span></li>
+              <li className="flex justify-between"><span>Improvement plans</span><span className="text-[#4B4567]">{E.improvement_plans_total}</span></li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Recent users */}
+        <div className="card-soft p-6">
+          <div className="eyebrow mb-3">Recent signups</div>
+          {recentUsers.length === 0 ? (
+            <div className="text-sm text-[#857E9C]">No users yet.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm" data-testid="admin-recent-users">
+                <thead>
+                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]">
+                    <th className="text-left py-2 pr-3">Name</th>
+                    <th className="text-left py-2 pr-3">Email</th>
+                    <th className="text-left py-2 pr-3">Auth</th>
+                    <th className="text-left py-2 pr-3">Joined</th>
+                    <th className="text-left py-2 pr-3">Progress</th>
+                    <th className="text-left py-2">AI</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentUsers.map((u) => (
+                    <tr key={u.user_id} className="border-t border-[#E5E0EE]">
+                      <td className="py-2 pr-3 text-[#1A1330] truncate max-w-[160px]">{u.name || "—"}</td>
+                      <td className="py-2 pr-3 text-[#4B4567] truncate max-w-[200px]">{u.email}</td>
+                      <td className="py-2 pr-3 text-[#4B4567] capitalize">{u.auth_method}</td>
+                      <td className="py-2 pr-3 text-[#4B4567]">{fmtDate(u.created_at)}</td>
+                      <td className="py-2 pr-3 text-[#4B4567]">{u.steps_done}/{u.steps_total}</td>
+                      <td className="py-2 text-[#4B4567]">{u.summaries}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </AppShell>
+  );
+}

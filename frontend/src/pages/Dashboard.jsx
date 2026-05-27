@@ -103,6 +103,13 @@ export default function Dashboard() {
               >
                 <Compass size={12} /> Revisit the orientation walkthrough
               </Link>
+              <Link
+                to="/progress"
+                className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] mt-1 ml-4 underline-offset-2 hover:underline"
+                data-testid="dashboard-view-progress"
+              >
+                View my progress →
+              </Link>
               <div className="mt-6">
                 <div className="flex items-end justify-between mb-2">
                   <div>

@@ -42,7 +42,10 @@ const navLinks = [
   { to: "/prep/communication", label: "Communication" },
   { to: "/prep/readiness", label: "Readiness" },
   { to: "/summary", label: "Summary" },
+  { to: "/progress", label: "Progress" },
 ];
+
+const ADMIN_EMAILS = new Set(["mattsossi@bsossi.com"]);
 
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
@@ -71,6 +74,11 @@ export default function AppShell({ children }) {
     navigate("/");
   };
 
+  const isAdmin = user?.email && ADMIN_EMAILS.has(user.email.toLowerCase());
+  const linksForUser = isAdmin
+    ? [...navLinks, { to: "/admin", label: "Admin" }]
+    : navLinks;
+
   return (
     <div className="min-h-screen gentle-bg">
       <GuestBanner />
@@ -95,7 +103,7 @@ export default function AppShell({ children }) {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((l) => {
+            {linksForUser.map((l) => {
               const active = location.pathname.startsWith(l.to);
               return (
                 <Link
@@ -178,7 +186,7 @@ export default function AppShell({ children }) {
             data-testid="mobile-menu-drawer"
           >
             <div className="px-4 py-4 space-y-1">
-              {navLinks.map((l) => {
+              {linksForUser.map((l) => {
                 const active = location.pathname.startsWith(l.to);
                 return (
                   <Link

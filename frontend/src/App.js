@@ -28,6 +28,8 @@ import ClaimAccount from "@/pages/ClaimAccount";
 import CancelSubscription from "@/pages/CancelSubscription";
 import MagicLinkConsume from "@/pages/MagicLinkConsume";
 import AccountSetup from "@/pages/AccountSetup";
+import ProgressPage from "@/pages/Progress";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 const TOAST_OPTIONS = {
   style: {
@@ -141,6 +143,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Orientation />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/progress"
+          element={
+            <ProtectedRoute>
+              <ProgressPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />
