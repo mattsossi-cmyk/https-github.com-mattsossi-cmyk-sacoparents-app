@@ -165,11 +165,22 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-sm text-[#4B4567] mt-6 text-center">
-            New here?{" "}
-            <Link to="/register" className="text-[#3D1A78] font-semibold hover:underline" data-testid="login-to-register-link">
-              Create an account
-            </Link>
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 divider-line" />
+            <span className="text-xs text-[#857E9C]">new here?</span>
+            <div className="flex-1 divider-line" />
+          </div>
+
+          <Link
+            to="/register"
+            className="btn-soft w-full flex items-center justify-center gap-2 font-semibold"
+            data-testid="login-create-account-button"
+          >
+            Create a new account
+          </Link>
+
+          <p className="text-xs text-[#857E9C] mt-4 text-center">
+            Free to use. Takes about 30 seconds.
           </p>
         </div>
       </div>
