@@ -80,19 +80,32 @@ api_router.include_router(analytics_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.
-# When CORS_ORIGINS contains "*", browsers (per CORS spec) reject
-# `Access-Control-Allow-Credentials: true` paired with `*`. Starlette refuses
-# to send the wildcard with credentials, so we degrade gracefully.
+#
+# Browsers (per CORS spec) reject `Access-Control-Allow-Origin: *` when the
+# request has credentials. To support cookie-based auth across BOTH same-origin
+# production deploys AND cross-origin preview/mobile clients, we use
+# `allow_origin_regex` whenever CORS_ORIGINS is "*". The regex reflects the
+# request's Origin header back as ACAO, which IS allowed with credentials.
 cors_origins_raw = os.environ.get("CORS_ORIGINS", "*")
 cors_origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()]
-allow_credentials = "*" not in cors_origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=allow_credentials,
-    allow_origins=cors_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if "*" in cors_origins:
+    # Permissive: any origin, credentials enabled (Origin reflected per-request).
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=True,
+        allow_origin_regex=".*",
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    # Explicit whitelist.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=True,
+        allow_origins=cors_origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.on_event("startup")
