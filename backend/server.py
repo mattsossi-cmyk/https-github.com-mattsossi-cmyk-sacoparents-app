@@ -1,4 +1,5 @@
 """FastAPI entrypoint for SA Coparents Relational Mediation Prep App."""
+import asyncio
 import logging
 import os
 from pathlib import Path
@@ -55,12 +56,21 @@ async def health():
 
 @api_router.get("/ready")
 async def ready(response: Response):
-    """Readiness probe — also fast, but verifies the Mongo client object exists.
-    Returns 503 if Mongo client failed to construct (which would have already
-    crashed import time, so this is mainly for symmetry with /health)."""
+    """Readiness probe — runs a cheap Mongo ping with a tight timeout.
+    Returns 503 if the pod cannot reach MongoDB so k8s removes it from
+    the service endpoints and stops routing traffic to it. This is what
+    prevents the 'one bad replica leaks 502s' production pattern."""
     if app.state.db is None:
         response.status_code = 503
         return {"status": "db-not-ready"}
+    try:
+        # 1.5s budget — fast enough to not block the probe, slow enough
+        # to ride out transient blips without flapping.
+        await asyncio.wait_for(app.state.db.command("ping"), timeout=1.5)
+    except (asyncio.TimeoutError, Exception) as exc:  # noqa: BLE001
+        logger.warning("Readiness probe DB ping failed: %s", exc)
+        response.status_code = 503
+        return {"status": "db-unreachable"}
     return {"status": "ready"}
 
 
