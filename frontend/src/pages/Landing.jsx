@@ -82,9 +82,43 @@ function BrandMark({ size = 44, className = "" }) {
 }
 
 /* ============================================================
+   ENTER BUTTON — shared CTA across landing surfaces.
+   Single front door into the app; auth flows are temporarily
+   removed from the UI (routes remain wired for the contractor).
+============================================================ */
+function useEnterApp() {
+  const { startGuest } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const enter = async () => {
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await startGuest();
+      // Skip the orientation tutorial — let parents land in the app.
+      markOrientationSeen();
+      navigate("/dashboard");
+    } catch (err) {
+      logError("Enter app failed:", err);
+      setError(
+        err?.response?.data?.detail ||
+          "Couldn't open the app right now. Please try again in a moment."
+      );
+      setLoading(false);
+    }
+  };
+
+  return { enter, loading, error };
+}
+
+/* ============================================================
    HEADER
 ============================================================ */
 function MarketingHeader() {
+  const { enter, loading } = useEnterApp();
   return (
     <header className="max-w-7xl mx-auto px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md bg-[#F8F7FC]/85 border-b border-[#E5E0EE]/60">
       <Link to="/" className="flex items-center gap-2.5 sm:gap-3" data-testid="landing-brand-logo">
@@ -111,12 +145,15 @@ function MarketingHeader() {
           <ShieldAlert size={12} />
           Safety
         </Link>
-        <Link to="/login" className="text-sm text-[#4B4567] hover:text-[#1A1330] font-semibold" data-testid="nav-sign-in">
-          Sign in
-        </Link>
-        <Link to="/register" className="btn-gradient text-sm" data-testid="nav-get-started">
-          Get started
-        </Link>
+        <button
+          type="button"
+          onClick={enter}
+          disabled={loading}
+          className="btn-gradient text-sm disabled:opacity-60"
+          data-testid="nav-enter-app"
+        >
+          {loading ? "Opening…" : "Enter the App"}
+        </button>
       </div>
     </header>
   );
@@ -126,30 +163,7 @@ function MarketingHeader() {
    HERO — bold gradient panel
 ============================================================ */
 function Hero() {
-  const { startGuest } = useAuth();
-  const navigate = useNavigate();
-  const [demoLoading, setDemoLoading] = useState(false);
-  const [demoError, setDemoError] = useState(null);
-
-  const beginDemo = async () => {
-    if (demoLoading) return;
-    setDemoLoading(true);
-    setDemoError(null);
-    try {
-      await startGuest();
-      // Skip the 6-slide orientation for demo users — they want to SEE the app,
-      // not read a tutorial. They can still revisit it from the Dashboard.
-      markOrientationSeen();
-      navigate("/dashboard");
-    } catch (err) {
-      logError("Guest start failed:", err);
-      setDemoError(
-        err?.response?.data?.detail ||
-          "Couldn't start the demo right now. Please try signing up instead."
-      );
-      setDemoLoading(false);
-    }
-  };
+  const { enter, loading, error } = useEnterApp();
 
   return (
     <section className="relative overflow-hidden" data-testid="hero">
@@ -174,34 +188,20 @@ function Hero() {
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link
-                  to="/register"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#3D1A78] font-bold shadow-lg active:scale-95 transition-transform"
-                  data-testid="hero-start-button"
-                >
-                  Set up an account <ArrowRight size={16} />
-                </Link>
                 <button
                   type="button"
-                  onClick={beginDemo}
-                  disabled={demoLoading}
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/15 text-white font-semibold backdrop-blur-sm hover:bg-white/25 active:scale-95 transition disabled:opacity-60"
-                  data-testid="hero-try-demo-button"
+                  onClick={enter}
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-[#3D1A78] font-bold shadow-lg active:scale-95 transition-transform disabled:opacity-60"
+                  data-testid="hero-enter-button"
                 >
-                  <Sparkles size={14} /> {demoLoading ? "Starting demo…" : "Try it free — no signup"}
+                  {loading ? "Opening…" : "Enter the App"} <ArrowRight size={16} />
                 </button>
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-2 px-5 py-3.5 text-white/85 font-semibold underline-offset-4 hover:underline"
-                  data-testid="hero-continue-button"
-                >
-                  I have an account
-                </Link>
               </div>
 
-              {demoError && (
-                <div className="mt-3 text-xs text-[#FFCFCF] bg-white/10 rounded-xl px-3 py-2 max-w-md" data-testid="hero-demo-error">
-                  {demoError}
+              {error && (
+                <div className="mt-3 text-xs text-[#FFCFCF] bg-white/10 rounded-xl px-3 py-2 max-w-md" data-testid="hero-enter-error">
+                  {error}
                 </div>
               )}
 
@@ -616,6 +616,7 @@ function FAQItem({ idx, q, a }) {
    FINAL CTA
 ============================================================ */
 function FinalCTA() {
+  const { enter, loading, error } = useEnterApp();
   return (
     <section className="max-w-7xl mx-auto px-5 sm:px-6 py-16 sm:py-24" data-testid="final-cta">
       <div className="relative bg-brand-gradient text-white rounded-[32px] px-6 sm:px-12 py-16 sm:py-20 text-center overflow-hidden shadow-2xl">
@@ -629,24 +630,24 @@ function FinalCTA() {
             Co-Parenting Conversations Today.
           </h2>
           <p className="text-white/85 mt-6 max-w-xl mx-auto leading-relaxed">
-            Start your free preparation today. Nothing is shared with anyone unless you choose to share it.
+            Open the app and begin your preparation. Nothing is shared with anyone unless you choose to share it.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-[#3D1A78] font-bold shadow-lg active:scale-95 transition-transform"
-              data-testid="final-cta-start-button"
+            <button
+              type="button"
+              onClick={enter}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-[#3D1A78] font-bold shadow-lg active:scale-95 transition-transform disabled:opacity-60"
+              data-testid="final-cta-enter-button"
             >
-              Set up an account <ArrowRight size={16} />
-            </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white/15 text-white font-semibold backdrop-blur-sm hover:bg-white/25 active:scale-95 transition"
-              data-testid="final-cta-signin-button"
-            >
-              I already have an account
-            </Link>
+              {loading ? "Opening…" : "Enter the App"} <ArrowRight size={16} />
+            </button>
           </div>
+          {error && (
+            <div className="mt-4 text-xs text-[#FFCFCF] bg-white/10 rounded-xl px-3 py-2 max-w-md mx-auto" data-testid="final-cta-error">
+              {error}
+            </div>
+          )}
           <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
             <AppStoreBadge />
             <GooglePlayBadge />
@@ -680,8 +681,7 @@ function MarketingFooter() {
             Product
           </div>
           <ul className="space-y-2 text-[14px] text-white/80">
-            <li><Link to="/register" className="hover:text-white" data-testid="footer-register-link">Get started</Link></li>
-            <li><Link to="/login" className="hover:text-white" data-testid="footer-login-link">Sign in</Link></li>
+            <li><Link to="/" className="hover:text-white" data-testid="footer-enter-link">Enter the App</Link></li>
             <li><Link to="/safety" className="hover:text-white" data-testid="footer-safety-link">Safety resources</Link></li>
           </ul>
         </div>
@@ -788,6 +788,7 @@ function PhoneScreen({ variant }) {
   };
 
   const screen = screens[variant] || screens.home;
+  const { enter, loading } = useEnterApp();
 
   return (
     <div className="h-full flex flex-col">
@@ -797,10 +798,12 @@ function PhoneScreen({ variant }) {
       </div>
       <div className="flex-1 px-4 py-4 space-y-2.5 bg-[#F8F7FC]">
         {screen.items.map((m, idx) => (
-          <Link
+          <button
             key={m.label}
-            to="/register"
-            className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5 hover:border-[#3D1A78] hover:shadow-md active:scale-[0.98] transition group"
+            type="button"
+            onClick={enter}
+            disabled={loading}
+            className="w-full flex items-center gap-3 bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5 hover:border-[#3D1A78] hover:shadow-md active:scale-[0.98] transition group text-left disabled:opacity-60"
             data-testid={`phone-${variant}-item-${idx + 1}`}
           >
             <span className={`icon-circle icon-circle-${m.tone} w-9 h-9 shrink-0`}>
@@ -813,7 +816,7 @@ function PhoneScreen({ variant }) {
               size={12}
               className="text-[#857E9C] group-hover:text-[#3D1A78] shrink-0"
             />
-          </Link>
+          </button>
         ))}
       </div>
     </div>
