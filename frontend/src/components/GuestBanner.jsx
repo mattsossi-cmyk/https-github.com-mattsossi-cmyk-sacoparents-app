@@ -38,7 +38,7 @@ export default function GuestBanner() {
     >
       <Sparkles size={14} className="shrink-0" />
       <span className="text-center">
-        You're using a 24-hour demo — <strong>{remaining || "expires soon"}</strong> left.{" "}
+        Demo mode — full access for <strong>{remaining || "a little longer"}</strong>.{" "}
         <Link
           to="/claim"
           className="underline font-bold ml-1"
