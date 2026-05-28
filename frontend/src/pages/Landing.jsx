@@ -145,6 +145,13 @@ function MarketingHeader() {
           <ShieldAlert size={12} />
           Safety
         </Link>
+        <Link
+          to="/signup"
+          className="hidden sm:inline-flex text-sm text-[#4B4567] hover:text-[#1A1330] font-semibold px-2"
+          data-testid="nav-signup"
+        >
+          Sign up
+        </Link>
         <button
           type="button"
           onClick={enter}
@@ -197,6 +204,13 @@ function Hero() {
                 >
                   {loading ? "Opening…" : "Enter the App"} <ArrowRight size={16} />
                 </button>
+                <Link
+                  to="/signup"
+                  className="inline-flex items-center gap-2 px-7 py-4 rounded-full bg-white/15 text-white font-semibold backdrop-blur-sm hover:bg-white/25 active:scale-95 transition"
+                  data-testid="hero-signup-button"
+                >
+                  <Mail size={15} /> Set up an account
+                </Link>
               </div>
 
               {error && (
@@ -642,6 +656,13 @@ function FinalCTA() {
             >
               {loading ? "Opening…" : "Enter the App"} <ArrowRight size={16} />
             </button>
+            <Link
+              to="/signup"
+              className="inline-flex items-center gap-2 px-7 py-4 rounded-full bg-white/15 text-white font-semibold backdrop-blur-sm hover:bg-white/25 active:scale-95 transition"
+              data-testid="final-cta-signup-button"
+            >
+              <Mail size={15} /> Set up an account
+            </Link>
           </div>
           {error && (
             <div className="mt-4 text-xs text-[#FFCFCF] bg-white/10 rounded-xl px-3 py-2 max-w-md mx-auto" data-testid="final-cta-error">
@@ -682,6 +703,7 @@ function MarketingFooter() {
           </div>
           <ul className="space-y-2 text-[14px] text-white/80">
             <li><Link to="/" className="hover:text-white" data-testid="footer-enter-link">Enter the App</Link></li>
+            <li><Link to="/signup" className="hover:text-white" data-testid="footer-signup-link">Set up an account</Link></li>
             <li><Link to="/safety" className="hover:text-white" data-testid="footer-safety-link">Safety resources</Link></li>
           </ul>
         </div>

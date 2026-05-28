@@ -30,6 +30,7 @@ import MagicLinkConsume from "@/pages/MagicLinkConsume";
 import AccountSetup from "@/pages/AccountSetup";
 import ProgressPage from "@/pages/Progress";
 import AdminDashboard from "@/pages/AdminDashboard";
+import SignUp from "@/pages/SignUp";
 
 const TOAST_OPTIONS = {
   style: {
@@ -60,6 +61,7 @@ function AppRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/magic" element={<MagicLinkConsume />} />
         <Route path="/auth/setup" element={<AccountSetup />} />
+        <Route path="/signup" element={<SignUp />} />
         <Route
           path="/claim"
           element={
