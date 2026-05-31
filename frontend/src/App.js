@@ -31,6 +31,7 @@ import AccountSetup from "@/pages/AccountSetup";
 import ProgressPage from "@/pages/Progress";
 import AdminDashboard from "@/pages/AdminDashboard";
 import SignUp from "@/pages/SignUp";
+import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
   style: {
@@ -177,6 +178,7 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <AuthProvider>
+          <LegalAcknowledgment />
           <AppRoutes />
           <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
         </AuthProvider>
