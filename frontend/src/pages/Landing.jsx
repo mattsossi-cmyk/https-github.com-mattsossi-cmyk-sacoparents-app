@@ -39,8 +39,8 @@ export default function Landing() {
       <ScreenshotShowcase />
       <ForMediators />
       <FAQ />
-      <FacebookFeed />
       <FinalCTA />
+      <FacebookFeed />
       <MarketingFooter />
     </div>
   );

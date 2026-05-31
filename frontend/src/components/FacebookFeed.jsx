@@ -1,7 +1,7 @@
 import React from "react";
 import { Facebook, Radio } from "lucide-react";
 
-const FB_URL = process.env.REACT_APP_FACEBOOK_URL || "https://www.facebook.com/sacoparents";
+const FB_URL = process.env.REACT_APP_FACEBOOK_URL || "https://www.facebook.com/SACoparent";
 
 /**
  * Embeds Facebook's Page Plugin iframe.
@@ -40,7 +40,7 @@ export default function FacebookFeed() {
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl text-[#1A1330] tracking-tight leading-tight">
             Join the conversation —{" "}
-            <span className="text-brand-gradient">@sacoparents</span>
+            <span className="text-brand-gradient">@SACoparent</span>
           </h2>
           <p className="text-[#4B4567] mt-4 leading-relaxed max-w-md">
             Follow along for live sessions on co-parenting, mediation prep, and
