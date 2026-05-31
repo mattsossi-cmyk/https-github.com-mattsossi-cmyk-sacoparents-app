@@ -403,7 +403,7 @@ function Features() {
 function HowItWorks() {
   const steps = [
     { n: 1, t: "Child-Centered Goals", d: "Define what you want for your child — emotional safety, schedule, relationships." },
-    { n: 2, t: "Issues & Concerns", d: "Map the concerns you want to raise, calmly and clearly." },
+    { n: 2, t: "Issues & Concerns", d: "Map the concerns you want to raise, calmly and clearly. Short, factual notes work best, and remember to strive to be objective about these issues." },
     { n: 3, t: "Priority Ranking", d: "Sort the eleven legal custody topics into urgency buckets." },
     { n: 4, t: "Communication Style", d: "Reflect on your patterns and get AI-coached reframes." },
     { n: 5, t: "Readiness Check", d: "A short self-assessment that scores how prepared you really are." },
