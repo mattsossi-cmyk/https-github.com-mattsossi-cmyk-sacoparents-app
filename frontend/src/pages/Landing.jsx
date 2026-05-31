@@ -688,7 +688,12 @@ function MarketingFooter() {
       <div className="max-w-7xl mx-auto px-5 sm:px-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <div>
           <div className="flex items-center gap-2.5 mb-4">
-            <BrandMark size={40} />
+            <img
+              src="/saco-hero-logo.jpg"
+              alt="SA Coparents"
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-white/15"
+              data-testid="landing-footer-logo"
+            />
             <div className="font-sans font-extrabold text-lg">
               <span className="text-brand-gradient">SA</span> Coparents
             </div>
