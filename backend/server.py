@@ -16,6 +16,7 @@ from auth import router as auth_router  # noqa: E402
 from mediation_routes import router as mediation_router  # noqa: E402
 from analytics_routes import router as analytics_router  # noqa: E402
 from journal_routes import router as journal_router  # noqa: E402
+from mediator_routes import router as mediator_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -79,6 +80,7 @@ api_router.include_router(auth_router)
 api_router.include_router(mediation_router)
 api_router.include_router(analytics_router)
 api_router.include_router(journal_router)
+api_router.include_router(mediator_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.

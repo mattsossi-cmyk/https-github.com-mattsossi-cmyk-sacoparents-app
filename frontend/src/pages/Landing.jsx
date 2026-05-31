@@ -709,6 +709,7 @@ function MarketingFooter() {
           <ul className="space-y-2 text-[14px] text-white/80">
             <li><Link to="/" className="hover:text-white" data-testid="footer-enter-link">Enter the App</Link></li>
             <li><Link to="/signup" className="hover:text-white" data-testid="footer-signup-link">Set up an account</Link></li>
+            <li><Link to="/mediator-badge" className="hover:text-white" data-testid="footer-mediator-link">For mediators</Link></li>
             <li><Link to="/safety" className="hover:text-white" data-testid="footer-safety-link">Safety resources</Link></li>
           </ul>
         </div>

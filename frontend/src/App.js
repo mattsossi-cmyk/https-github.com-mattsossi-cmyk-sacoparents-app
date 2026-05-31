@@ -31,6 +31,7 @@ import AccountSetup from "@/pages/AccountSetup";
 import ProgressPage from "@/pages/Progress";
 import AdminDashboard from "@/pages/AdminDashboard";
 import SignUp from "@/pages/SignUp";
+import MediatorBadge from "@/pages/MediatorBadge";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -63,6 +64,7 @@ function AppRoutes() {
         <Route path="/auth/magic" element={<MagicLinkConsume />} />
         <Route path="/auth/setup" element={<AccountSetup />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/mediator-badge" element={<MediatorBadge />} />
         <Route
           path="/claim"
           element={
