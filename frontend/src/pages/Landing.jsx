@@ -22,7 +22,6 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { markOrientationSeen } from "./Orientation";
-import FacebookFeed from "../components/FacebookFeed";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
@@ -40,7 +39,6 @@ export default function Landing() {
       <ForMediators />
       <FAQ />
       <FinalCTA />
-      <FacebookFeed />
       <MarketingFooter />
     </div>
   );
