@@ -23,6 +23,7 @@ from models import (
 import ai_service
 import pdf_service
 import email_service
+import journal_routes
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -134,7 +135,11 @@ async def save_reflection(
     request: Request,
     current: UserPublic = Depends(get_current_user),
 ):
-    await _save_section(request.app.state.db, current.user_id, "reflection", body.dict())
+    payload = body.dict()
+    db = request.app.state.db
+    await _save_section(db, current.user_id, "reflection", payload)
+    # Quietly archive a journal snapshot if the content changed since last save.
+    await journal_routes.maybe_snapshot_reflection(db, current.user_id, payload)
     return {"ok": True}
 
 

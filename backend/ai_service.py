@@ -320,3 +320,62 @@ Important:
 {changes_instruction}"""
     response = await chat.send_message(UserMessage(text=prompt))
     return _extract_json(response)
+
+
+
+# ============ Journal weekly recap ============
+async def generate_journal_weekly_recap(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Summarize the past week of journal entries into 2–4 reflective
+    sentences plus 3–5 short theme tags. Tone is warm, calm, and
+    non-judgmental — this is for the parent's own eyes only.
+
+    `entries` is a chronological list of dicts:
+        { kind, content, prompt_text, created_at }
+    """
+    if not entries:
+        return {"recap_text": None, "themes": []}
+
+    rendered_entries = []
+    for e in entries:
+        when = (e.get("created_at") or "")[:10]
+        prompt = e.get("prompt_text")
+        kind = e.get("kind") or "daily"
+        body = (e.get("content") or "").strip()
+        if not body:
+            continue
+        header = f"[{when} · {kind}]"
+        if prompt:
+            header += f" Prompt: {prompt}"
+        rendered_entries.append(f"{header}\n{body}")
+    journal_block = "\n\n".join(rendered_entries[-30:])  # safety cap
+
+    system_prompt = (
+        "You are a gentle, encouraging journaling companion writing a weekly "
+        "recap for a co-parent navigating mediation prep. You write in a warm, "
+        "calm, non-judgmental voice. You do not give legal or mental-health "
+        "advice. You speak in plain second-person ('you wrote about…')."
+    )
+    chat = _make_chat(system_prompt)
+    prompt = f"""Below are the parent's journal entries from the past week.
+Write a 2–4 sentence recap of what showed up most — the feelings, the themes,
+and any small wins or hard moments. Be kind. Speak to them directly using "you".
+Then list 3–5 short, lowercase theme tags (1–3 words each) describing what
+came up. Do not quote them verbatim. Do not give advice.
+
+=== ENTRIES ===
+{journal_block}
+
+Return ONLY valid JSON in this exact shape:
+{{
+  "recap_text": "string — 2 to 4 sentences",
+  "themes": ["tag one", "tag two", "tag three"]
+}}
+"""
+    response = await chat.send_message(UserMessage(text=prompt))
+    data = _extract_json(response)
+    recap_text = (data.get("recap_text") or "").strip() or None
+    themes = data.get("themes") or []
+    if not isinstance(themes, list):
+        themes = []
+    themes = [str(t).strip().lower() for t in themes if str(t).strip()][:6]
+    return {"recap_text": recap_text, "themes": themes}
