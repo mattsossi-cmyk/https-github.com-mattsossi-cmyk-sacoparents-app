@@ -140,6 +140,9 @@ async def create_entry(
 ):
     db = request.app.state.db
     content = body.content.strip()
+    # Pydantic min_length=1 already rejects empty bodies with 422 before
+    # we get here; this strip-then-check defends against whitespace-only
+    # submissions like "   \n".
     if not content:
         raise HTTPException(status_code=400, detail="Entry can't be empty.")
 
@@ -292,7 +295,10 @@ async def weekly_recap(
     now = _now()
     wk = _week_iso(now)
 
-    # Fetch this week's entries (so we always know the entry count)
+    # Rolling 7-day window — recap reflects "the last 7 days from now",
+    # which gives a useful view any day of the week. The CACHE key
+    # (week_iso) is aligned to the ISO week so a fresh recap is generated
+    # at most once per calendar week per user, keeping LLM spend bounded.
     week_start = now - timedelta(days=7)
     cursor = db.journal_entries.find(
         {"user_id": current.user_id, "created_at": {"$gte": _iso(week_start)}},
