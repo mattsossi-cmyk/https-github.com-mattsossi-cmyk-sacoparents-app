@@ -80,13 +80,13 @@ export default function LegalAcknowledgment() {
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-[0.2em] opacity-80">
-              Before you begin
+              A quick note before we start
             </div>
             <h2
               id="legal-ack-title"
               className="font-sans font-bold text-xl leading-tight"
             >
-              Important — please read
+              Just so we're on the same page
             </h2>
           </div>
         </div>

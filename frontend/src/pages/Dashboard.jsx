@@ -81,6 +81,41 @@ export default function Dashboard() {
   const done = STEPS.filter((s) => completed[s.key]).length;
   const pct = Math.round((done / STEPS.length) * 100);
 
+  // "Day N of prep" — counted from when the user started their session
+  // (or first wrote to prep_data, whichever came first).
+  const startedAt = prep.created_at || user?.created_at;
+  let dayOfPrep = 1;
+  if (startedAt) {
+    try {
+      const days = Math.floor(
+        (Date.now() - new Date(startedAt).getTime()) / 86_400_000
+      );
+      dayOfPrep = Math.max(1, days + 1);
+    } catch {
+      /* keep default */
+    }
+  }
+
+  // Human-friendly "last touched" hint to reinforce continuity across visits.
+  let lastTouchedLabel = null;
+  if (prep.updated_at) {
+    try {
+      const updated = new Date(prep.updated_at);
+      const diffMs = Date.now() - updated.getTime();
+      const diffH = diffMs / 3_600_000;
+      const diffD = diffMs / 86_400_000;
+      if (diffH < 1) lastTouchedLabel = "Last touched just now";
+      else if (diffH < 24) lastTouchedLabel = `Last touched ${Math.round(diffH)}h ago`;
+      else if (diffD < 7) lastTouchedLabel = `Last touched ${Math.round(diffD)}d ago`;
+      else lastTouchedLabel = `Last touched ${updated.toLocaleDateString()}`;
+    } catch {
+      /* keep null */
+    }
+  }
+
+  const nextStep = STEPS.find((s) => !completed[s.key]);
+  const allDone = !nextStep;
+
   return (
     <AppShell>
       <div className="fade-up">
@@ -88,33 +123,55 @@ export default function Dashboard() {
           <div className="card-soft p-8 lg:col-span-2 relative overflow-hidden">
             <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#D4C5F0]/40" />
             <div className="relative">
-              <div className="eyebrow mb-3">Your space</div>
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <span className="eyebrow">Your space</span>
+                <span
+                  className="text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 rounded-full bg-[#3D1A78]/10 text-[#3D1A78]"
+                  data-testid="dashboard-day-of-prep"
+                >
+                  Day {dayOfPrep} of prep
+                </span>
+                {lastTouchedLabel && (
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]" data-testid="dashboard-last-touched">
+                    · {lastTouchedLabel}
+                  </span>
+                )}
+              </div>
               <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] leading-tight">
                 Hello, {user?.name?.split(" ")[0] || "friend"}.
               </h1>
-              <p className="text-[#4B4567] mt-3 max-w-lg">
-                Take your time. Each step builds toward a calmer, child-centered mediation
-                conversation. Nothing here is graded.
+              <p className="text-[#4B4567] mt-3 max-w-lg leading-relaxed">
+                Mediation prep happens in pieces — over days, not minutes. Come back
+                tomorrow. Pick up where you left off. Nothing here is graded.
               </p>
-              <Link
-                to="/orientation"
-                className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] mt-4 underline-offset-2 hover:underline"
-                data-testid="dashboard-revisit-orientation"
-              >
-                <Compass size={12} /> Revisit the orientation walkthrough
-              </Link>
-              <Link
-                to="/progress"
-                className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] mt-1 ml-4 underline-offset-2 hover:underline"
-                data-testid="dashboard-view-progress"
-              >
-                View my progress →
-              </Link>
+              <div className="flex items-center gap-4 mt-4 flex-wrap">
+                <Link
+                  to="/orientation"
+                  className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] underline-offset-2 hover:underline"
+                  data-testid="dashboard-revisit-orientation"
+                >
+                  <Compass size={12} /> Revisit the orientation walkthrough
+                </Link>
+                <Link
+                  to="/progress"
+                  className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] underline-offset-2 hover:underline"
+                  data-testid="dashboard-view-progress"
+                >
+                  View my progress →
+                </Link>
+                <Link
+                  to="/reflection"
+                  className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] underline-offset-2 hover:underline"
+                  data-testid="dashboard-open-journal"
+                >
+                  <Heart size={12} /> Open my journal
+                </Link>
+              </div>
               <div className="mt-6">
                 <div className="flex items-end justify-between mb-2">
                   <div>
                     <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C]">
-                      Progress
+                      Modules touched
                     </div>
                     <div className="font-serif text-3xl text-[#1A1330]">
                       {done} <span className="text-[#857E9C] text-xl">/ {STEPS.length}</span>
@@ -134,21 +191,28 @@ export default function Dashboard() {
           </div>
 
           <div className="card-soft p-7 flex flex-col">
-            <div className="eyebrow mb-2">Next step</div>
+            <div className="eyebrow mb-2">
+              {allDone ? "Ready when you are" : `Next up — Day ${dayOfPrep}`}
+            </div>
             <div className="font-serif text-2xl text-[#1A1330] mb-1">
-              {STEPS.find((s) => !completed[s.key])?.label || "Generate your summary"}
+              {nextStep?.label || "Generate your summary"}
             </div>
             <p className="text-sm text-[#4B4567] mb-6">
-              {STEPS.find((s) => !completed[s.key])?.blurb ||
+              {nextStep?.blurb ||
                 "You're prepared. Create your mediator-ready summary."}
             </p>
             <Link
-              to={STEPS.find((s) => !completed[s.key])?.path || "/summary"}
+              to={nextStep?.path || "/summary"}
               className="btn-sage w-full text-center inline-flex items-center justify-center gap-2"
               data-testid="dashboard-continue-button"
             >
-              Continue <ArrowRight size={16} />
+              {allDone ? "Generate summary" : "Continue"} <ArrowRight size={16} />
             </Link>
+            {!allDone && (
+              <p className="text-[11px] text-[#857E9C] mt-3 text-center leading-relaxed">
+                Tip: even 10 minutes of prep moves the needle.
+              </p>
+            )}
             <Link to="/summary" className="text-sm text-[#3D1A78] hover:underline mt-3 text-center" data-testid="dashboard-summary-link">
               Go to summary
             </Link>

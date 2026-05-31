@@ -155,7 +155,7 @@ export default function IssuesConcerns() {
         currentKey="issues"
         eyebrow="Step 2 of 5"
         title="Name the concerns — without escalating them."
-        description="For each item that applies to you, briefly note what you've experienced. Leave any item blank if it doesn't apply. Short, factual notes work best."
+        description="For each item that applies to you, briefly note what you've experienced. Leave any item blank if it doesn't apply. Short, factual notes work best, and remember to strive to be objective about these issues."
         completed={completed}
         saving={saving}
         onNext={onNext}
@@ -167,6 +167,19 @@ export default function IssuesConcerns() {
               onDismiss={() => setSafetyDismissed(true)}
             />
           )}
+
+          <div className="rounded-2xl bg-[#EFE9F9] border border-[#3D1A78]/15 p-4 sm:p-5 flex gap-3" data-testid="issues-objective-tip">
+            <div className="w-8 h-8 rounded-full bg-white grid place-items-center text-[#3D1A78] shrink-0 mt-0.5">
+              <ShieldAlert size={14} />
+            </div>
+            <div className="text-[13px] sm:text-sm text-[#4B4567] leading-relaxed">
+              <strong className="text-[#1A1330]">A gentle reminder.</strong>{" "}
+              The mediator will read what you write. Short, factual notes —
+              <em> "Pickup was 40 minutes late on May 3"</em> — land far better than
+              feelings-first phrasing. Strive to be objective. You're describing
+              <strong> what happened</strong>, not making a case.
+            </div>
+          </div>
           {ISSUE_TYPES.map((it) => (
             <IssueRow
               key={it.id}

@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api, API } from "../lib/api";
 import { shareViaText } from "../lib/share";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
+import { useAuth } from "../context/AuthContext";
 import {
   Sparkles,
   Download,
@@ -17,9 +18,57 @@ import {
   Lightbulb,
   TrendingUp,
   PenSquare,
+  BookmarkPlus,
 } from "lucide-react";
 
 /* ------------------------------ shared bits ------------------------------ */
+
+/**
+ * Soft, dismissible upgrade nudge shown to guest users at the moment of
+ * realized value (just after they generate an AI summary). Not a paywall —
+ * just a gentle "want this saved beyond this browser?" invitation.
+ */
+function GuestSaveNudge() {
+  const { user } = useAuth();
+  const [dismissed, setDismissed] = useState(false);
+  if (!user?.is_guest || dismissed) return null;
+  return (
+    <div
+      className="mt-2 mb-6 rounded-2xl bg-gradient-to-br from-[#EFE9F9] to-[#D5F2F2]/40 border border-[#3D1A78]/15 p-4 sm:p-5 flex items-start gap-3"
+      data-testid="guest-save-nudge"
+    >
+      <div className="w-10 h-10 rounded-full bg-white grid place-items-center text-[#3D1A78] shrink-0">
+        <BookmarkPlus size={16} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-serif text-base sm:text-lg text-[#1A1330] leading-snug">
+          Want this saved beyond this browser?
+        </div>
+        <p className="text-[13px] text-[#4B4567] mt-1 leading-relaxed">
+          Set up an account in 30 seconds and your summary, journal, and prep
+          stay with you on any device.
+        </p>
+        <div className="mt-3 flex items-center gap-3 flex-wrap">
+          <Link
+            to="/signup"
+            className="btn-gradient text-sm inline-flex items-center gap-1.5"
+            data-testid="guest-save-nudge-signup"
+          >
+            Set up an account →
+          </Link>
+          <button
+            type="button"
+            onClick={() => setDismissed(true)}
+            className="text-xs text-[#857E9C] hover:text-[#4B4567]"
+            data-testid="guest-save-nudge-dismiss"
+          >
+            Not now
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ChangesSinceLast({ text }) {
   if (!text || !text.trim()) return null;
@@ -268,6 +317,8 @@ function MediationSummaryTab() {
           shareTestId="summary-share-button"
           emailTestId="summary-email-button"
         />
+
+        <GuestSaveNudge />
 
         <ChangesSinceLast text={summary.changes_since_last} />
 
