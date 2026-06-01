@@ -1,7 +1,7 @@
 """Mediation prep routes: save/load prep data, AI analysis, summary, PDF export."""
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import Any, Dict, Optional
 
@@ -10,6 +10,10 @@ from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from auth import get_current_user, create_share_token, decode_share_token, require_active_user
+
+# Daily email cap for demo/guest accounts. Permanent accounts are uncapped.
+# Overridable via env so an admin can dial this without a redeploy.
+GUEST_EMAIL_DAILY_LIMIT = int(os.environ.get("GUEST_EMAIL_DAILY_LIMIT", "1"))
 from models import (
     ChildGoalsPayload,
     IssuesPayload,
@@ -332,7 +336,7 @@ async def download_agreement_pdf(
 async def create_summary_share_link(
     summary_id: str,
     request: Request,
-    current: UserPublic = Depends(require_active_user),
+    current: UserPublic = Depends(get_current_user),
 ):
     db = request.app.state.db
     exists = await db.summaries.find_one(
@@ -348,7 +352,7 @@ async def create_summary_share_link(
 async def create_agreement_share_link(
     agreement_id: str,
     request: Request,
-    current: UserPublic = Depends(require_active_user),
+    current: UserPublic = Depends(get_current_user),
 ):
     db = request.app.state.db
     exists = await db.agreements.find_one(
@@ -506,9 +510,26 @@ async def email_status(current: UserPublic = Depends(get_current_user)):
 async def email_mediator(
     body: MediatorEmailRequest,
     request: Request,
-    current: UserPublic = Depends(require_active_user),
+    current: UserPublic = Depends(get_current_user),
 ):
     db = request.app.state.db
+
+    # Spam guardrail for demo/guest accounts. Permanent accounts have no
+    # daily cap — they're identified, so misuse is recoverable.
+    if current.is_guest:
+        since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+        recent = await db.mediator_emails.count_documents(
+            {"user_id": current.user_id, "sent_at": {"$gte": since}}
+        )
+        if recent >= GUEST_EMAIL_DAILY_LIMIT:
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    f"You've already sent {recent} email(s) today from a demo session. "
+                    "Set up a free account to send more."
+                ),
+            )
+
     if not body.summary_id and not body.agreement_id:
         raise HTTPException(
             status_code=400,
