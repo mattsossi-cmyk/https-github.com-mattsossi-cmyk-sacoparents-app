@@ -45,10 +45,10 @@ const PROMPTS = [
     icon: Wind,
   },
   {
-    id: "release",
-    label: "What you'd like to set down",
+    id: "coparent_feedback",
+    label: "Through your co-parent's eyes",
     placeholder:
-      "What feeling, story, or hope are you carrying that you'd like to release before mediation?",
+      "What feedback might my child's other parent give about how I handled this interaction? (Try to imagine it honestly — even if you disagree.)",
     icon: Lock,
   },
 ];

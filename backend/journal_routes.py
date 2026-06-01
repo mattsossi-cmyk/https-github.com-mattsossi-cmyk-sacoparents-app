@@ -231,6 +231,8 @@ def _format_reflection_snapshot(reflection: dict) -> str:
         "child_lens": "Through your child's eyes",
         "own_part": "Your own part",
         "best_outcome": "Your best-case outcome",
+        "coparent_feedback": "Through your co-parent's eyes",
+        # Older field name kept for back-compat with any historical saves.
         "release": "What you'd like to set down",
     }
     for key, label in labels.items():

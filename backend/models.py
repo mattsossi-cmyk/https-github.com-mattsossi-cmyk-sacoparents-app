@@ -108,7 +108,8 @@ class ReflectionPayload(BaseModel):
     child_lens: str = ""
     own_part: str = ""
     best_outcome: str = ""
-    release: str = ""
+    coparent_feedback: str = ""
+    release: str = ""  # Older prompt — kept for back-compat with historical saves.
     # Legacy keys retained for backward compatibility with older clients.
     worry: str = ""
     triggers: str = ""
