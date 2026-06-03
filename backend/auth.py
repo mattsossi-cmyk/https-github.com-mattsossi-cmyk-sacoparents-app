@@ -99,6 +99,9 @@ async def _user_by_id(db, user_id: Optional[str]) -> Optional[UserPublic]:
         return None
     if _is_guest_expired(doc):
         return None
+    # Suspended accounts cannot use the app — treated as logged-out.
+    if doc.get("suspended"):
+        return None
     return _serialize_user(doc)
 
 
@@ -236,6 +239,11 @@ async def login(
         raise HTTPException(status_code=401, detail="Invalid email or password")
     if not verify_password(body.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    if user.get("suspended"):
+        raise HTTPException(
+            status_code=403,
+            detail="This account is suspended. Please contact support.",
+        )
     token = create_jwt(user["user_id"])
     _set_jwt_cookie(response, token)
     return TokenResponse(access_token=token, user=_serialize_user(user))

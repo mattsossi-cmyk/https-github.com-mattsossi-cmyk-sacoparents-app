@@ -294,3 +294,203 @@ async def admin_daily_signups(
         d = (_now() - timedelta(days=i)).strftime("%Y-%m-%d")
         series.append({"date": d, "count": buckets.get(d, 0)})
     return {"days": days, "series": series}
+
+
+
+# ============ User management (admin) ============
+from fastapi import Body  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
+
+try:
+    from email_service import send_magic_link as _send_setup_email  # noqa: E402
+    from email_service import EmailNotConfigured, EmailSendError  # noqa: E402
+except Exception:  # pragma: no cover
+    _send_setup_email = None  # type: ignore
+    EmailNotConfigured = EmailSendError = Exception  # type: ignore
+
+import secrets as _secrets  # noqa: E402
+
+
+def _public_user(doc: dict) -> dict:
+    """Strip the user doc to fields safe for the admin panel."""
+    return {
+        "user_id": doc.get("user_id"),
+        "email": doc.get("email"),
+        "name": doc.get("name") or "",
+        "auth_method": doc.get("auth_method", "jwt"),
+        "is_guest": bool(doc.get("is_guest", False)),
+        "guest_expires_at": doc.get("guest_expires_at"),
+        "created_at": doc.get("created_at"),
+        "suspended": bool(doc.get("suspended", False)),
+        "suspended_at": doc.get("suspended_at"),
+        "suspended_reason": doc.get("suspended_reason"),
+    }
+
+
+@router.get("/admin/users")
+async def admin_list_users(
+    request: Request,
+    _admin: UserPublic = Depends(require_admin),
+    q: Optional[str] = None,
+    suspended: Optional[bool] = None,
+    include_guests: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Paginated user list with optional name/email search + suspended filter."""
+    db = request.app.state.db
+    limit = max(1, min(limit, 200))
+    offset = max(0, offset)
+
+    query: dict = {}
+    if not include_guests:
+        query["is_guest"] = {"$ne": True}
+    if suspended is True:
+        query["suspended"] = True
+    elif suspended is False:
+        query["suspended"] = {"$ne": True}
+    if q:
+        q_safe = q.strip()
+        if q_safe:
+            esc = "".join(("\\" + c if c in r".*+?^$()[]{}|\\" else c) for c in q_safe)
+            query["$or"] = [
+                {"email": {"$regex": esc, "$options": "i"}},
+                {"name": {"$regex": esc, "$options": "i"}},
+            ]
+
+    total = await db.users.count_documents(query)
+    cursor = (
+        db.users.find(query, {"_id": 0})
+        .sort("created_at", -1)
+        .skip(offset)
+        .limit(limit)
+    )
+    rows = [_public_user(u) async for u in cursor]
+    return {"users": rows, "total": total, "limit": limit, "offset": offset}
+
+
+@router.get("/admin/users/{user_id}")
+async def admin_user_detail(
+    user_id: str,
+    request: Request,
+    _admin: UserPublic = Depends(require_admin),
+):
+    db = request.app.state.db
+    doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="User not found.")
+    prep = await db.prep_data.find_one({"user_id": user_id}, {"_id": 0}) or {}
+    completed = prep.get("completed") or {}
+    return {
+        "user": _public_user(doc),
+        "progress": {
+            "completed": [k for k in PREP_SECTIONS if completed.get(k)],
+            "remaining": [k for k in PREP_SECTIONS if not completed.get(k)],
+            "steps_done": sum(1 for k in PREP_SECTIONS if completed.get(k)),
+            "steps_total": len(PREP_SECTIONS),
+        },
+        "counts": {
+            "summaries": await db.summaries.count_documents({"user_id": user_id}),
+            "agreements": await db.agreements.count_documents({"user_id": user_id}),
+            "improvement_plans": await db.improvement_plans.count_documents({"user_id": user_id}),
+            "mediator_emails": await db.mediator_emails.count_documents({"user_id": user_id}),
+            "journal_entries": await db.journal_entries.count_documents({"user_id": user_id}),
+        },
+    }
+
+
+class SuspendBody(BaseModel):
+    reason: Optional[str] = None
+
+
+@router.post("/admin/users/{user_id}/suspend")
+async def admin_suspend(
+    user_id: str,
+    request: Request,
+    body: SuspendBody = Body(default_factory=SuspendBody),
+    admin: UserPublic = Depends(require_admin),
+):
+    if user_id == admin.user_id:
+        raise HTTPException(status_code=400, detail="You can't suspend your own account.")
+    db = request.app.state.db
+    res = await db.users.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "suspended": True,
+                "suspended_at": _iso(_now()),
+                "suspended_reason": (body.reason or "").strip() or None,
+                "suspended_by": admin.email,
+            }
+        },
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return {"ok": True, "user_id": user_id, "suspended": True}
+
+
+@router.post("/admin/users/{user_id}/unsuspend")
+async def admin_unsuspend(
+    user_id: str,
+    request: Request,
+    _admin: UserPublic = Depends(require_admin),
+):
+    db = request.app.state.db
+    res = await db.users.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {"suspended": False},
+            "$unset": {"suspended_at": "", "suspended_reason": "", "suspended_by": ""},
+        },
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return {"ok": True, "user_id": user_id, "suspended": False}
+
+
+class ResetBody(BaseModel):
+    expires_minutes: int = 60
+
+
+@router.post("/admin/users/{user_id}/send-reset-link")
+async def admin_send_reset_link(
+    user_id: str,
+    request: Request,
+    body: ResetBody = Body(default_factory=ResetBody),
+    _admin: UserPublic = Depends(require_admin),
+):
+    """Email the user a magic-link they can use to log in / reset their password.
+    Reuses the existing magic-link infrastructure.
+    """
+    db = request.app.state.db
+    doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="User not found.")
+    email = doc.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="User has no email on file.")
+
+    token = _secrets.token_urlsafe(32)
+    minutes = max(5, min(int(body.expires_minutes or 60), 60 * 24))
+    expires = _now() + timedelta(minutes=minutes)
+    await db.magic_links.insert_one({
+        "token": token,
+        "email": email.lower(),
+        "mode": "signin",
+        "used": False,
+        "created_at": _iso(_now()),
+        "expires_at": _iso(expires),
+    })
+
+    public_url = os.environ.get("PUBLIC_APP_URL", "").rstrip("/")
+    link = f"{public_url}/auth/magic?token={token}" if public_url else f"/auth/magic?token={token}"
+
+    if _send_setup_email is None:
+        return {"ok": True, "emailed": False, "reason": "email-service-unavailable", "link": link}
+    try:
+        await _send_setup_email(to_email=email, link=link, mode="signin", name=doc.get("name") or "")
+    except EmailNotConfigured:
+        return {"ok": True, "emailed": False, "reason": "smtp-not-configured", "link": link}
+    except EmailSendError as exc:
+        return {"ok": True, "emailed": False, "reason": f"smtp-error:{exc}"[:200], "link": link}
+    return {"ok": True, "emailed": True, "expires_at": _iso(expires)}
