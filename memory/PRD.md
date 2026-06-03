@@ -262,3 +262,16 @@ See `/app/memory/test_credentials.md`
   - `AppShell.jsx` nav: "Progress" link for all users + conditional "Admin" link for `mattsossi@bsossi.com`
   - Dashboard hero: "View my progress →" link
 - **Backend tests**: 11 pytest cases at `/app/backend/tests/test_analytics.py` covering auth gating (401 unauth, 403 non-admin, 403 guest), shape validation, day clamping, no-`_id` leak. 100% pass.
+
+
+### Feb 2026 — Admin User Management Page (P0 → SHIPPED)
+- **New page** `/admin/users` (`AdminUsers.jsx`) — searchable, filterable user table for the app owner:
+  - Search by name/email (case-insensitive substring)
+  - Filter chips: Active / Suspended / All
+  - "Include guests" checkbox toggle
+  - Paginated 25 rows per page with Previous / Next controls
+  - Per-row actions: **Suspend** (with reason modal), **Restore**, **Reset link** (emails the user a magic-link to sign in / reset password; falls back to clipboard copy when SMTP isn't configured in preview)
+  - Hard block: admin can't suspend their own account
+- **AdminDashboard** now exposes a "Manage all users →" link to the new page
+- **Backend fix**: `admin_send_reset_link` had a kwarg-mismatch bug (called `send_magic_link` with `link=`/`name=`/`mode=` and `await` on a sync fn) — corrected to use `link_url=`/`user_name=` and a sync call. SMTP-not-configured path now correctly returns the fallback link for clipboard copy.
+- **Tests**: 11/11 pytest cases pass at `/app/backend/tests/test_admin_users.py` (auth gating, listing shape, search, suspended filter, include_guests, pagination clamp, self-suspend block, full suspend→login-403→unsuspend→login-200 cycle, reset-link). Frontend verified end-to-end by testing agent.

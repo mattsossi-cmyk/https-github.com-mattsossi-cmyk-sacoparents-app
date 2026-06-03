@@ -302,10 +302,10 @@ from fastapi import Body  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
 try:
-    from email_service import send_magic_link as _send_setup_email  # noqa: E402
+    from email_service import send_magic_link as _send_magic_link  # noqa: E402
     from email_service import EmailNotConfigured, EmailSendError  # noqa: E402
 except Exception:  # pragma: no cover
-    _send_setup_email = None  # type: ignore
+    _send_magic_link = None  # type: ignore
     EmailNotConfigured = EmailSendError = Exception  # type: ignore
 
 import secrets as _secrets  # noqa: E402
@@ -485,10 +485,10 @@ async def admin_send_reset_link(
     public_url = os.environ.get("PUBLIC_APP_URL", "").rstrip("/")
     link = f"{public_url}/auth/magic?token={token}" if public_url else f"/auth/magic?token={token}"
 
-    if _send_setup_email is None:
+    if _send_magic_link is None:
         return {"ok": True, "emailed": False, "reason": "email-service-unavailable", "link": link}
     try:
-        await _send_setup_email(to_email=email, link=link, mode="signin", name=doc.get("name") or "")
+        _send_magic_link(to_email=email, link_url=link, user_name=doc.get("name") or "")
     except EmailNotConfigured:
         return {"ok": True, "emailed": False, "reason": "smtp-not-configured", "link": link}
     except EmailSendError as exc:
