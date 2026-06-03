@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import {
   Users,
   UserPlus,
@@ -282,7 +282,16 @@ export default function AdminDashboard() {
 
         {/* Recent users */}
         <div className="card-soft p-6">
-          <div className="eyebrow mb-3">Recent signups</div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="eyebrow">Recent signups</div>
+            <Link
+              to="/admin/users"
+              className="text-xs font-medium text-[#3D1A78] hover:underline"
+              data-testid="admin-manage-users-link"
+            >
+              Manage all users →
+            </Link>
+          </div>
           {recentUsers.length === 0 ? (
             <div className="text-sm text-[#857E9C]">No users yet.</div>
           ) : (

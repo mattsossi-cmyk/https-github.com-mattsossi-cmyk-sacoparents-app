@@ -1,0 +1,52 @@
+{
+  "summary": "End-to-end test of the new /admin/users management page + supporting backend endpoints. 10/11 backend pytest cases pass; the only failure is POST /api/analytics/admin/users/{id}/send-reset-link returning 500. All frontend flows verified: page rendering, search, active/suspended/all filter, suspend modal, suspend->Suspended badge, restore->Active badge, pagination present, admin-only forbidden screen for non-admin, and /admin -> 'Manage all users' link wired up. parent1@test.com left in unsuspended/Active state at the end of the run.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/analytics/admin/users/{user_id}/send-reset-link",
+        "issue": "500 Internal Server Error. analytics_routes.py:491 calls `_send_setup_email(to_email=email, link=link, mode=\"signin\", name=...)` but the underlying email_service.send_magic_link() signature is `send_magic_link(*, to_email, link_url, user_name=None)`. Three problems: (1) wrong kwarg `link` should be `link_url`, (2) wrong kwarg `name` should be `user_name`, (3) extraneous kwarg `mode` is not accepted, (4) the function is sync (def, not async) but the call uses `await`. Backend log shows `TypeError: send_magic_link() got an unexpected keyword argument 'link'`. The fallback `EmailNotConfigured` path is never reachable because the TypeError fires before SMTP is contacted.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Admin -> Reset link button",
+        "issue": "Triggers backend 500. The UI correctly surfaces a 'Could not send reset link.' error toast (graceful), but the feature itself is broken because of the backend bug above. Once the backend is fixed, the fallback clipboard-copy path (when SMTP not configured in preview) should also work end-to-end.",
+        "affected_selectors": ["[data-testid^=admin-user-reset-btn-]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_admin_users.py",
+    "/app/test_reports/pytest/pytest_admin_users.xml"
+  ],
+  "action_items": [
+    "Fix analytics_routes.py admin_send_reset_link: change the email call to `_send_setup_email(to_email=email, link_url=link, user_name=doc.get('name') or '')` and drop `await` (the function is sync). Or import the async sender. After fix, the existing pytest case `test_send_reset_link_creates_magic_link` will pass without changes.",
+    "Optional: wrap the email-send call in try/except for unexpected TypeError to avoid leaking 500s if the email backend ever changes signatures again."
+  ],
+  "critical_code_review_comments": [
+    "analytics_routes.py:488-496 — the alias `_send_setup_email = send_magic_link` is misleading (one name suggests setup mode, the other signin). Prefer importing send_magic_link directly and use it without alias.",
+    "analytics_routes.py:486 — the fallback link uses `public_url` from env; in preview PUBLIC_APP_URL is unset and the relative `/auth/magic?token=…` is returned. Frontend correctly prepends window.location.origin before copying to clipboard, so this works — but worth documenting.",
+    "auth.py:103-104 — `if doc.get('suspended'): return None` in `_user_by_id` silently turns suspended users into 401s on every authenticated call. Good defense-in-depth, but consider returning a 403 with a clear message via a separate dependency for already-signed-in tokens, so the suspended user gets actionable feedback in the UI instead of an unexplained logout.",
+    "analytics_routes.py:355 — regex-escape loop builds the escape set including stray backslash; works but `re.escape(q_safe)` from stdlib is cleaner and exhaustive.",
+    "AdminUsers.jsx:144 — `window.location.origin + data.link` is prepended only if backend returns a path-relative link. If backend ever returns an absolute URL, prefix will produce an invalid double-origin URL. Consider `data.link.startsWith('http') ? data.link : window.location.origin + data.link`."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_admin_users.py"
+  ],
+  "success_rate": {
+    "backend": "10/11 pytest (91%) — 1 hard failure on send-reset-link due to TypeError",
+    "frontend": "8/8 UI flows verified (100%)"
+  },
+  "test_credentials": "Used existing admin (mattsossi@bsossi.com / AdminPass123!) and parent1@test.com / TestPass123!. Both confirmed working. parent1 is ACTIVE at end of run.",
+  "seed_data_creation": "None — used existing accounts.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend test suite at /app/backend/tests/test_admin_users.py covers auth gating, listing shape, search, suspended filter, include_guests, limit clamping (max 200), self-suspend block, full suspend->login-403->unsuspend->login-200 cycle, and reset-link. Re-run with `pytest /app/backend/tests/test_admin_users.py -v`. Frontend dismissed legal modal via localStorage key `sac_legal_ack_v1` = `{version: 'v1', at: ISO}`. The Reset Link bug is in analytics_routes.py admin_send_reset_link calling send_magic_link with wrong kwargs; once fixed, the fallback path should return 200 with `{ok:true, emailed:false, reason:'smtp-not-configured', link:'/auth/magic?token=...'}` in preview.",
+  "rca of the issue": "Reset-link 500: signature mismatch between admin_send_reset_link (analytics_routes.py:491) and email_service.send_magic_link. Fix: change the call to `send_magic_link(to_email=email, link_url=link, user_name=doc.get('name') or '')` (no await, no `mode` arg) and the EmailNotConfigured fallback path returns the magic link for clipboard copy — exactly what the AdminUsers.jsx UI expects."
+}
