@@ -6,6 +6,7 @@ import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
+import PasswordStrengthMeter, { scorePassword } from "../components/PasswordStrengthMeter";
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -53,6 +54,10 @@ export default function ResetPassword() {
     e.preventDefault();
     if (password.length < 8) {
       toast.error("Password must be at least 8 characters.");
+      return;
+    }
+    if (scorePassword(password).score < 2) {
+      toast.error("Please choose a stronger password.");
       return;
     }
     if (password !== confirmPwd) {
@@ -133,6 +138,10 @@ export default function ResetPassword() {
                     placeholder="At least 8 characters"
                     autoFocus
                     data-testid="reset-password-input"
+                  />
+                  <PasswordStrengthMeter
+                    password={password}
+                    testid="reset-password-strength"
                   />
                 </div>
                 <div>
