@@ -275,3 +275,17 @@ See `/app/memory/test_credentials.md`
 - **AdminDashboard** now exposes a "Manage all users →" link to the new page
 - **Backend fix**: `admin_send_reset_link` had a kwarg-mismatch bug (called `send_magic_link` with `link=`/`name=`/`mode=` and `await` on a sync fn) — corrected to use `link_url=`/`user_name=` and a sync call. SMTP-not-configured path now correctly returns the fallback link for clipboard copy.
 - **Tests**: 11/11 pytest cases pass at `/app/backend/tests/test_admin_users.py` (auth gating, listing shape, search, suspended filter, include_guests, pagination clamp, self-suspend block, full suspend→login-403→unsuspend→login-200 cycle, reset-link). Frontend verified end-to-end by testing agent.
+
+
+### Feb 2026 — Forgot Password / Reset Password Flow (P0 → SHIPPED)
+- **New backend endpoints**:
+  - `POST /api/auth/password-reset/request` — generates a 15-min reset token; SMTP-not-configured path logs the link instead of leaking 5xx
+  - `GET /api/auth/password-reset/preview?token=…` — validates a token and returns the email (no consumption)
+  - `POST /api/auth/password-reset/confirm` — updates `hashed_password`, burns the token + any siblings, sets the auth cookie (auto-signs-in)
+- **New email**: `send_password_reset_link()` in `email_service.py` (matches the existing magic-link / setup-link template)
+- **New frontend pages**:
+  - `/forgot-password` (`ForgotPassword.jsx`) — email input → success state with "Check your inbox"
+  - `/reset-password?token=…` (`ResetPassword.jsx`) — token preview → new+confirm password → auto-signin → `/dashboard`
+- **Login.jsx** now has a "Forgot password?" link under the password field
+- **Privacy**: unknown / suspended emails return the same human-readable message as real emails to prevent account enumeration
+- **Tests**: 7/7 pytest pass at `/app/backend/tests/test_password_reset.py`; 4/4 frontend flows verified end-to-end. parent1@test.com password restored to `TestPass123!` after the test run.
