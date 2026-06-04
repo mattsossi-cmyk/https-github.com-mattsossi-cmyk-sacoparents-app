@@ -36,6 +36,7 @@ class UserPublic(BaseModel):
     created_at: str
     is_guest: bool = False
     guest_expires_at: Optional[str] = None
+    email_verified: bool = False
 
 
 class TokenResponse(BaseModel):
@@ -71,6 +72,10 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetConfirm(BaseModel):
     token: str
     password: str = Field(min_length=8)
+
+
+class EmailVerifyConfirm(BaseModel):
+    token: str
 
 
 # ============ Prep Data Models ============

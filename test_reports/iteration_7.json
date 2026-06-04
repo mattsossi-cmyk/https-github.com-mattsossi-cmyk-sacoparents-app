@@ -1,0 +1,37 @@
+{
+  "summary": "End-to-end testing of the new soft-nudge email verification flow on SA Coparents. Backend: 13/13 pytest cases pass (register issues mode=verify row + email_verified=false, UserPublic.email_verified field on register/me, /verify-email/send auth-required/guest-rejected/already-verified/rate-limit 4th=429, /verify-email/confirm valid/used-idempotent/bogus/wrong-mode, auto-verify on password-reset/confirm + magic-link/consume). Frontend: VerificationBanner renders on /dashboard for unverified user with email rendered, Resend button shows 'Verification link generated' info toast (SMTP unconfigured), X dismiss hides banner + sets localStorage 'sac_verify_banner_dismissed_at' + persists across reload, /verify-email with no token shows 'Missing verification token...' error, /verify-email?token=<bogus> shows 'Invalid or expired verification link.' error, /verify-email?token=<valid> shows 'Email confirmed' title and Continue navigates to /dashboard with banner no longer shown (because user.email_verified=true). parent1@test.com remains email_verified=true with password TestPass123!.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_email_verification.py",
+    "/app/test_reports/pytest/pytest_email_verify.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Per-user rate limit for /verify-email/send is 3/hour (hard-coded), but the magic-link/password-reset endpoints use MAGIC_LINK_RATE_LIMIT_PER_HOUR (env-configurable, default 5). Consider unifying or making EMAIL_VERIFY_RATE_LIMIT_PER_HOUR configurable for consistency.",
+    "magic_links collection now holds three logically distinct token modes (verify, reset/password_reset, magic/login) all keyed in the same collection. A compound index on (mode, used, expires_at) would speed lookups and rate-limit counts as volume grows. Also consider a TTL index on expires_at to auto-purge stale tokens.",
+    "VerificationBanner reads localStorage 'sac_verify_banner_dismissed_at' but the timestamp is stored as Date.now() (number) — the 24h check works, but if the banner is dismissed and the user verifies via another tab/email link, the AuthContext refresh on /dashboard correctly hides the banner because email_verified=true short-circuits the dismissed-check (confirmed visually). No fix needed, just confirming the precedence is correct.",
+    "Register endpoint's best-effort verification email is wrapped in try/except Exception and silently logged — good for not blocking signup, but consider surfacing a non-blocking flag in the TokenResponse (e.g. verification_email_sent:false) so the UI can show a contextual notice instead of always showing 'we sent a confirmation link' wording. Currently the banner text says 'We sent a confirmation link' even when SMTP isn't configured, which is technically misleading in this preview env (the link is only in backend logs). Not a regression, just UX polish.",
+    "/api/auth/verify-email/confirm tries to parse expires_at with datetime.fromisoformat then raises HTTPException 400 inside the except — the `raise ... from None` re-uses the just-raised HTTPException's chain but is fine. No action."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_email_verification.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13)",
+    "frontend": "100% (8/8 flows verified: banner shown, resend toast, dismiss + persistence, no-token error, bogus-token error, valid-token success, continue navigation, banner hidden post-verify; plus parent1 verified user does NOT see banner)"
+  },
+  "test_credentials": "parent1@test.com / TestPass123! (verified, intact) ; mattsossi@bsossi.com / AdminPass123! (admin, untouched)",
+  "seed_data_creation": "Created transient TEST_uiverify_*@test.com and TEST_verify_*@test.com users to exercise unverified paths. Test harness now also clears any leftover TEST_*@test.com users and TEST_-prefixed magic_links rows at the end of the run (26 stale users + 33 stale magic_links cleared from prior iterations).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests live in /app/backend/tests/test_email_verification.py. They read magic_links tokens directly from Mongo (mongodb://localhost:27017 / test_database) instead of grepping logs — this is more robust against log rotation/races. For the magic-link/consume auto-verify check, the public /magic-link/request endpoint returns 503 in preview ('Email sign-in isn't available right now') because SMTP isn't configured AND the magic-link feature has a guard; the test instead inserts a magic_links row directly (modes tried: magic|login|signin|magic_link — 'magic' worked) and then calls /api/auth/magic-link/consume. If the backend changes the mode string, update the loop. Frontend testing requires (a) setting localStorage 'sac_legal_ack_v1' to dismiss the legal modal, AND (b) setting localStorage 'sacoparents.orientation_seen.v1'='true' to skip the orientation gate — otherwise login redirects to /orientation, not /dashboard, and the banner never mounts.",
+  "rca of the issue": "N/A — all backend + frontend assertions pass on first complete run."
+}

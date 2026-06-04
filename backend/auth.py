@@ -12,8 +12,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm
-from email_service import send_magic_link, send_setup_link, send_password_reset_link, EmailNotConfigured, EmailSendError
+from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm
+from email_service import send_magic_link, send_setup_link, send_password_reset_link, send_verification_link, EmailNotConfigured, EmailSendError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -73,6 +73,7 @@ def _serialize_user(doc: dict) -> UserPublic:
         created_at=doc.get("created_at", datetime.now(timezone.utc).isoformat()),
         is_guest=bool(doc.get("is_guest", False)),
         guest_expires_at=doc.get("guest_expires_at"),
+        email_verified=bool(doc.get("email_verified", False)),
     )
 
 
@@ -202,6 +203,7 @@ def _set_jwt_cookie(response: Response, token: str) -> None:
 @router.post("/register", response_model=TokenResponse)
 async def register(
     body: UserRegister,
+    request: Request,
     response: Response,
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
@@ -220,9 +222,24 @@ async def register(
         "custody_situation": body.custody_situation or "",
         "mediation_date": body.mediation_date,
         "picture": None,
+        "email_verified": False,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.users.insert_one(doc)
+
+    # Best-effort: send a verification email. Failure here doesn't block signup.
+    try:
+        await _issue_verification_link(
+            db,
+            user_id=user_id,
+            email=doc["email"],
+            name=body.name,
+            origin=_frontend_origin(request),
+        )
+    except Exception:  # pragma: no cover - never block signup
+        import logging as _logging
+        _logging.getLogger(__name__).exception("Failed to issue verification link during register")
+
     token = create_jwt(user_id)
     _set_jwt_cookie(response, token)
     return TokenResponse(access_token=token, user=_serialize_user(doc))
@@ -284,6 +301,7 @@ async def _upsert_oauth_user(
         "children": [],
         "custody_situation": "",
         "mediation_date": None,
+        "email_verified": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.users.insert_one(user_doc)
@@ -642,6 +660,13 @@ async def consume_magic_link(
         {"user_id": user["user_id"], "used": False, "token": {"$ne": body.token}},
         {"$set": {"used": True}},
     )
+    # Magic-link sign-in proves the user controls this email — mark it verified.
+    if not user.get("email_verified"):
+        await db.users.update_one(
+            {"user_id": user["user_id"]},
+            {"$set": {"email_verified": True}},
+        )
+        user["email_verified"] = True
     token = create_jwt(user["user_id"])
     _set_jwt_cookie(response, token)
     return TokenResponse(access_token=token, user=_serialize_user(user))
@@ -715,6 +740,7 @@ async def signup_from_token(
         "custody_situation": "",
         "mediation_date": None,
         "picture": None,
+        "email_verified": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.users.insert_one(doc)
@@ -825,6 +851,7 @@ async def confirm_password_reset(
         raise HTTPException(status_code=400, detail="Account not available.")
 
     # Update password; ensure user can authenticate via JWT going forward.
+    # Password reset via emailed link proves email ownership, so mark verified.
     await db.users.update_one(
         {"user_id": user["user_id"]},
         {
@@ -832,6 +859,7 @@ async def confirm_password_reset(
                 "hashed_password": hash_password(body.password),
                 "auth_method": user.get("auth_method") or "jwt",
                 "password_changed_at": datetime.now(timezone.utc).isoformat(),
+                "email_verified": True,
             }
         },
     )
@@ -871,3 +899,122 @@ async def preview_password_reset(
         except (ValueError, TypeError):
             raise HTTPException(status_code=400, detail="Invalid reset link.") from None
     return {"email": rec["email"]}
+
+
+
+# ============ Email Verification ============
+EMAIL_VERIFY_LIFETIME_HOURS = 24
+
+
+async def _issue_verification_link(
+    db: AsyncIOMotorDatabase,
+    *,
+    user_id: str,
+    email: str,
+    name: Optional[str],
+    origin: str,
+) -> tuple[bool, Optional[str]]:
+    """Create a verification token, persist it, and try to email it.
+    Returns (sent, fallback_link). `sent` is True only if SMTP send succeeded."""
+    raw_token = secrets.token_urlsafe(32)
+    record = {
+        "token": raw_token,
+        "email": email.lower(),
+        "user_id": user_id,
+        "mode": "verify",
+        "used": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "expires_at": (
+            datetime.now(timezone.utc) + timedelta(hours=EMAIL_VERIFY_LIFETIME_HOURS)
+        ).isoformat(),
+    }
+    await db.magic_links.insert_one(record)
+    link_url = f"{origin}/verify-email?token={raw_token}"
+    try:
+        send_verification_link(to_email=email, link_url=link_url, user_name=name)
+        return True, None
+    except EmailNotConfigured:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Verification link generated but SMTP not configured. Link for %s: %s",
+            email,
+            link_url,
+        )
+        return False, link_url
+    except EmailSendError as e:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Verification email send failed for %s: %s. Link: %s", email, e, link_url
+        )
+        return False, link_url
+
+
+@router.post("/verify-email/send")
+async def send_verify_email(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Send (or re-send) the email verification link to the signed-in user."""
+    if current.is_guest:
+        raise HTTPException(status_code=400, detail="Guest accounts don't have email verification.")
+    if current.email_verified:
+        return {"ok": True, "sent": False, "already_verified": True, "message": "Email already verified."}
+
+    # Lightweight rate limit: at most 3 verification links per user per hour.
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    recent = await db.magic_links.count_documents(
+        {"user_id": current.user_id, "mode": "verify", "created_at": {"$gte": one_hour_ago}}
+    )
+    if recent >= 3:
+        raise HTTPException(status_code=429, detail="Too many verification emails. Please try again later.")
+
+    origin = _frontend_origin(request)
+    user_doc = await db.users.find_one({"user_id": current.user_id}, {"_id": 0})
+    sent, _link = await _issue_verification_link(
+        db,
+        user_id=current.user_id,
+        email=current.email,
+        name=(user_doc or {}).get("name"),
+        origin=origin,
+    )
+    return {
+        "ok": True,
+        "sent": sent,
+        "message": (
+            "Verification email sent. It expires in 24 hours."
+            if sent
+            else "Verification link generated but email is not configured in this environment."
+        ),
+    }
+
+
+@router.post("/verify-email/confirm")
+async def confirm_verify_email(
+    body: EmailVerifyConfirm,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Consume a verification token and mark the user as email_verified."""
+    rec = await db.magic_links.find_one({"token": body.token}, {"_id": 0})
+    if not rec or rec.get("mode") != "verify":
+        raise HTTPException(status_code=400, detail="Invalid or expired verification link.")
+    if rec.get("used"):
+        # Idempotent: a refreshed page or double-click shouldn't show an error.
+        return {"ok": True, "already_used": True}
+    exp = rec.get("expires_at")
+    if exp:
+        try:
+            dt = datetime.fromisoformat(exp)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if dt <= datetime.now(timezone.utc):
+                raise HTTPException(status_code=400, detail="This verification link has expired.")
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid verification link.") from None
+
+    await db.users.update_one(
+        {"user_id": rec["user_id"]},
+        {"$set": {"email_verified": True, "email_verified_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    await db.magic_links.update_one({"token": body.token}, {"$set": {"used": True}})
+    return {"ok": True, "email": rec.get("email")}
