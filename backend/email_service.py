@@ -207,6 +207,61 @@ def send_setup_link(*, to_email: str, link_url: str) -> None:
         ) from e
 
 
+def send_password_reset_link(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
+    """Send a password-reset link. Raises EmailNotConfigured / EmailSendError."""
+    if not is_configured():
+        raise EmailNotConfigured(
+            "Email sending is not configured. Set SMTP credentials and try again."
+        )
+    cfg = _config()
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    plain = (
+        f"{greeting}\n\n"
+        "Someone (probably you) asked to reset the password on your SA Coparents account. "
+        "Tap the link below to choose a new password. It expires in 15 minutes "
+        "and can only be used once.\n\n"
+        f"{link_url}\n\n"
+        "If you didn't request this, you can safely ignore this email — your password hasn't changed.\n\n"
+        "— SA Coparents · sacoparentsapp.online\n"
+    )
+    html = f"""<!doctype html>
+<html><body style="font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#F8F7FC;color:#1A1330;margin:0;padding:40px 24px;">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:24px;padding:36px;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
+    <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:12px;">SA Coparents</div>
+    <h1 style="font-size:24px;font-weight:800;color:#1A1330;letter-spacing:-0.02em;margin:0 0 16px 0;">Reset your password</h1>
+    <p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">{greeting} Tap the button below to choose a new password. The link expires in <strong>15 minutes</strong> and can only be used once.</p>
+    <p style="margin:0 0 24px 0;"><a href="{link_url}" style="display:inline-block;background:linear-gradient(135deg,#3D1A78,#2DB5B5);color:#fff;text-decoration:none;font-weight:700;padding:14px 28px;border-radius:999px;">Reset my password</a></p>
+    <p style="font-size:13px;color:#857E9C;line-height:1.55;margin:0;">If the button doesn't work, copy this link into your browser:<br/><span style="word-break:break-all;color:#3D1A78;">{link_url}</span></p>
+    <hr style="border:none;border-top:1px solid #E5E0EE;margin:28px 0;"/>
+    <p style="font-size:12px;color:#857E9C;line-height:1.55;margin:0;">Didn't request this? You can safely ignore this email — your password hasn't changed.</p>
+  </div>
+</body></html>"""
+    msg = EmailMessage()
+    msg["Subject"] = "Reset your SA Coparents password"
+    msg["From"] = f'"{cfg["from_name"]}" <{cfg["from_email"]}>'
+    msg["To"] = to_email
+    msg.set_content(plain)
+    msg.add_alternative(html, subtype="html")
+
+    try:
+        with smtplib.SMTP(cfg["host"], cfg["port"], timeout=20) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+            smtp.login(cfg["username"], cfg["password"])
+            smtp.send_message(msg)
+    except smtplib.SMTPAuthenticationError as e:
+        logger.exception("SMTP auth failed (password reset)")
+        raise EmailSendError(
+            "Email service authentication failed. Please verify SMTP credentials."
+        ) from e
+    except (smtplib.SMTPException, OSError) as e:
+        logger.exception("SMTP send failed (password reset)")
+        raise EmailSendError(
+            "Could not send your reset link right now. Please try again in a moment."
+        ) from e
+
+
 def send_mediator_email(
     *,
     to_email: str,

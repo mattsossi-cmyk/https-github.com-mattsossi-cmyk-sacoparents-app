@@ -31,6 +31,8 @@ import AccountSetup from "@/pages/AccountSetup";
 import ProgressPage from "@/pages/Progress";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
@@ -64,6 +66,8 @@ function AppRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/magic" element={<MagicLinkConsume />} />
         <Route path="/auth/setup" element={<AccountSetup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
         <Route

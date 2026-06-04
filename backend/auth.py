@@ -12,8 +12,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken
-from email_service import send_magic_link, send_setup_link, EmailNotConfigured, EmailSendError
+from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm
+from email_service import send_magic_link, send_setup_link, send_password_reset_link, EmailNotConfigured, EmailSendError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -722,3 +722,152 @@ async def signup_from_token(
     token = create_jwt(user_id)
     _set_jwt_cookie(response, token)
     return TokenResponse(access_token=token, user=_serialize_user(doc))
+
+
+
+# ============ Password Reset ============
+@router.post("/password-reset/request")
+async def request_password_reset(
+    body: PasswordResetRequest,
+    request: Request,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Email a short-lived password-reset link.
+    Always returns 200 (privacy: don't leak which emails exist)."""
+    email = body.email.lower().strip()
+
+    # Rate limit per IP — reuses the magic_links collection
+    ip = _client_ip(request)
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    recent = await db.magic_links.count_documents(
+        {"ip": ip, "created_at": {"$gte": one_hour_ago}}
+    )
+    if recent >= MAGIC_LINK_RATE_LIMIT_PER_HOUR:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many reset requests. Please try again later.",
+        )
+
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    # Only send if a real (non-guest) account exists.
+    if not user or user.get("is_guest") or user.get("suspended"):
+        # Privacy: pretend we sent it.
+        return {
+            "ok": True,
+            "sent": False,
+            "message": "If an account exists for that email, we sent a reset link. It expires in 15 minutes.",
+        }
+
+    raw_token = secrets.token_urlsafe(32)
+    record = {
+        "token": raw_token,
+        "email": email,
+        "mode": "reset",
+        "ip": ip,
+        "user_id": user["user_id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=MAGIC_LINK_LIFETIME_MINUTES)).isoformat(),
+        "used": False,
+    }
+    await db.magic_links.insert_one(record)
+    origin = _frontend_origin(request)
+    link_url = f"{origin}/reset-password?token={raw_token}"
+
+    try:
+        send_password_reset_link(to_email=email, link_url=link_url, user_name=user.get("name"))
+    except EmailNotConfigured:
+        # Don't leak existence — log the link for ops/preview and return the
+        # same shape as the not-found path.
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Password reset requested but SMTP not configured. Link for %s: %s",
+            email,
+            link_url,
+        )
+    except EmailSendError as e:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Password reset email send failed for %s: %s. Link: %s", email, e, link_url
+        )
+
+    return {
+        "ok": True,
+        "sent": True,
+        "message": "If an account exists for that email, we sent a reset link. It expires in 15 minutes.",
+    }
+
+
+@router.post("/password-reset/confirm", response_model=TokenResponse)
+async def confirm_password_reset(
+    body: PasswordResetConfirm,
+    response: Response,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Set a new password using a reset token, then sign the user in."""
+    rec = await db.magic_links.find_one({"token": body.token}, {"_id": 0})
+    if not rec or rec.get("mode") != "reset":
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link.")
+    if rec.get("used"):
+        raise HTTPException(status_code=400, detail="This reset link has already been used.")
+    exp = rec.get("expires_at")
+    if exp:
+        try:
+            dt = datetime.fromisoformat(exp)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if dt <= datetime.now(timezone.utc):
+                raise HTTPException(status_code=400, detail="This reset link has expired.")
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid reset link.") from None
+
+    user = await db.users.find_one({"user_id": rec["user_id"]}, {"_id": 0})
+    if not user or user.get("suspended"):
+        raise HTTPException(status_code=400, detail="Account not available.")
+
+    # Update password; ensure user can authenticate via JWT going forward.
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {
+            "$set": {
+                "hashed_password": hash_password(body.password),
+                "auth_method": user.get("auth_method") or "jwt",
+                "password_changed_at": datetime.now(timezone.utc).isoformat(),
+            }
+        },
+    )
+    # Burn this token + invalidate any other outstanding links for this user.
+    await db.magic_links.update_one({"token": body.token}, {"$set": {"used": True}})
+    await db.magic_links.update_many(
+        {"user_id": user["user_id"], "used": False, "token": {"$ne": body.token}},
+        {"$set": {"used": True}},
+    )
+
+    # Sign them in.
+    fresh = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    token = create_jwt(user["user_id"])
+    _set_jwt_cookie(response, token)
+    return TokenResponse(access_token=token, user=_serialize_user(fresh))
+
+
+@router.get("/password-reset/preview")
+async def preview_password_reset(
+    token: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Validate a reset token (without consuming it) so the page can show the email."""
+    rec = await db.magic_links.find_one({"token": token}, {"_id": 0})
+    if not rec or rec.get("mode") != "reset":
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link.")
+    if rec.get("used"):
+        raise HTTPException(status_code=400, detail="This reset link has already been used.")
+    exp = rec.get("expires_at")
+    if exp:
+        try:
+            dt = datetime.fromisoformat(exp)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if dt <= datetime.now(timezone.utc):
+                raise HTTPException(status_code=400, detail="This reset link has expired.")
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid reset link.") from None
+    return {"email": rec["email"]}

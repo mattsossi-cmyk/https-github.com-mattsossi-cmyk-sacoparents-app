@@ -154,6 +154,15 @@ export default function Login() {
                 placeholder="••••••••"
                 data-testid="login-password-input"
               />
+              <div className="mt-2 text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-[#3D1A78] font-semibold hover:underline"
+                  data-testid="login-forgot-password-link"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
             <button
               type="submit"
