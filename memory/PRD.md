@@ -289,3 +289,17 @@ See `/app/memory/test_credentials.md`
 - **Login.jsx** now has a "Forgot password?" link under the password field
 - **Privacy**: unknown / suspended emails return the same human-readable message as real emails to prevent account enumeration
 - **Tests**: 7/7 pytest pass at `/app/backend/tests/test_password_reset.py`; 4/4 frontend flows verified end-to-end. parent1@test.com password restored to `TestPass123!` after the test run.
+
+
+### Feb 2026 — Email Verification (soft-nudge) (P1 → SHIPPED)
+- **New `email_verified` field** on `UserPublic` + `users` collection (default `false`)
+- **Auto-verify paths** (the user proved email ownership): Google login, magic-link sign-in (`/auth/magic-link/consume`), magic-link sign-up (`/auth/signup-from-token`), and password-reset confirm
+- **New backend endpoints**:
+  - `POST /api/auth/verify-email/send` (auth-required) — issues a 24h verification token + emails it; 3/hour rate-limit per user; refuses guests; returns `already_verified:true` if applicable
+  - `POST /api/auth/verify-email/confirm` — consumes the token, flips `email_verified:true`; idempotent on already-used tokens
+- **New email**: `send_verification_link()` in `email_service.py`
+- **Register flow** best-effort issues a verification email on signup (failure does NOT block account creation)
+- **Frontend**:
+  - `<VerificationBanner>` on Dashboard — shown only for unverified non-guest users; "Resend email" + 24h-dismiss localStorage
+  - `/verify-email?token=…` (`VerifyEmail.jsx`) — confirms token → refreshes auth → "Email confirmed" success or graceful error
+- **Tests**: 13/13 backend pytest + 8/8 frontend flows pass (iteration_7.json). New test file `/app/backend/tests/test_email_verification.py`.
