@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
+import PasswordStrengthMeter, { scorePassword } from "../components/PasswordStrengthMeter";
 
 export default function AccountSetup() {
   const [params] = useSearchParams();
@@ -61,6 +62,10 @@ export default function AccountSetup() {
   const submit = async (e) => {
     e.preventDefault();
     setFormError(null);
+    if (scorePassword(password).score < 2) {
+      setFormError("Please choose a stronger password.");
+      return;
+    }
     setSubmitting(true);
     try {
       const token = params.get("token");
@@ -160,6 +165,10 @@ export default function AccountSetup() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-soft mt-1.5"
                 data-testid="setup-password-input"
+              />
+              <PasswordStrengthMeter
+                password={password}
+                testid="setup-password-strength"
               />
               <span className="text-[11px] text-[#857E9C] mt-1 block">
                 At least 8 characters. You'll use this to sign in next time.

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
+import PasswordStrengthMeter, { scorePassword } from "../components/PasswordStrengthMeter";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -24,6 +25,10 @@ export default function Register() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    if (scorePassword(password).score < 2) {
+      toast.error("Please choose a stronger password.");
+      return;
+    }
     setLoading(true);
     try {
       await register({
@@ -133,6 +138,10 @@ export default function Register() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-soft"
                 data-testid="register-password-input"
+              />
+              <PasswordStrengthMeter
+                password={password}
+                testid="register-password-strength"
               />
             </div>
 
