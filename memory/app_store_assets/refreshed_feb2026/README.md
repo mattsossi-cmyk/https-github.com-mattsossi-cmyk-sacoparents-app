@@ -11,7 +11,10 @@ Generated screenshot suite matching the new purple → teal SACOParents brand an
 | `ipad_12_9/` | 2048×2732 | App Store Connect — iPad Pro 12.9". Only needed if you're publishing the iPad app. |
 | `android_phone/` | 1080×1920 | Google Play Console — Phone screenshots. |
 | `play_feature_graphic/feature_graphic.png` | 1024×500 | Google Play Console — Feature Graphic (the wide banner on the listing). |
+| `preview_video/preview_iphone_6_7.mp4` | 1080×2340, H.264, ~28s | App Store Connect — **App Preview** (one per device size). |
+| `preview_video/preview_play_store.mp4` | 1080×2340, H.264, ~28s | Google Play Console — Promo Video (or YouTube link). |
 | `raw/` | 1290×2796 | Just the unframed app UI. Source for the composer. Don't upload these. |
+| `preview_video/raw.webm` | 540×1170 | Source recording. Don't upload. |
 
 ## Screen list (in the order they should appear)
 
@@ -35,6 +38,12 @@ PLAYWRIGHT_BROWSERS_PATH=/pw-browsers python refresh_capture.py
 
 # 2. Compose marketing-framed screenshots for every store size
 python refresh_compose.py
+
+# 3. Record the 28s app preview video tour
+PLAYWRIGHT_BROWSERS_PATH=/pw-browsers python refresh_video_record.py
+
+# 4. Compose intro/outro + transcode to App-Store-ready MP4
+python refresh_video_compose.py
 ```
 
 The capture script logs into the admin test account, sets localStorage to dismiss the Legal Acknowledgment + Verification banner + Orientation gate, then screenshots each route at iPhone 6.7" pixel-perfect resolution.
