@@ -303,3 +303,16 @@ See `/app/memory/test_credentials.md`
   - `<VerificationBanner>` on Dashboard — shown only for unverified non-guest users; "Resend email" + 24h-dismiss localStorage
   - `/verify-email?token=…` (`VerifyEmail.jsx`) — confirms token → refreshes auth → "Email confirmed" success or graceful error
 - **Tests**: 13/13 backend pytest + 8/8 frontend flows pass (iteration_7.json). New test file `/app/backend/tests/test_email_verification.py`.
+
+
+### Feb 2026 — Migrated Email from Gmail SMTP → Resend (P0 → SHIPPED)
+- **Problem**: Production signup was failing with "Couldn't send the setup link right now." Gmail SMTP requires App Passwords + domain quirks (`bsossi.com` not necessarily Workspace-hosted).
+- **Solution**: Swapped `email_service.py` from `smtplib` → Resend SDK. Single `RESEND_API_KEY` env var. Public function signatures preserved — `auth.py` and `mediation_routes.py` unchanged.
+- **Env vars** (preview set, prod needs to be set too):
+  - `RESEND_API_KEY=re_csdm6jeD_*` (Resend dashboard → API Keys)
+  - `RESEND_FROM_EMAIL=onboarding@resend.dev` (or `noreply@sacoparentsapp.online` after domain verification)
+  - `RESEND_FROM_NAME=SA Coparents`
+  - `RESEND_REPLY_TO=` (optional)
+- **Templates**: Refactored HTML templates into a shared `_branded_html()` helper. All 4 email types (magic-link, setup, reset, verification) + mediator-PDF-attachment all working.
+- **Testing**: 31/31 backend pytest pass. Smoke tests confirmed all 4 email types deliver via Resend API.
+- **Known limitation**: Resend account is in test mode — until a domain is verified at https://resend.com/domains, emails only deliver to the account owner's own email. After domain verification, set `RESEND_FROM_EMAIL=noreply@sacoparentsapp.online` and recipients can be anyone.

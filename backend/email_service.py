@@ -1,38 +1,131 @@
-"""Email service for sending PDF documents to mediators via SMTP."""
-import os
-import smtplib
+"""Email service for SA Coparents — uses Resend (https://resend.com).
+
+Public interface (unchanged, callers don't need to be updated):
+  - EmailNotConfigured, EmailSendError
+  - send_magic_link(to_email, link_url, user_name=None)
+  - send_setup_link(to_email, link_url)
+  - send_password_reset_link(to_email, link_url, user_name=None)
+  - send_verification_link(to_email, link_url, user_name=None)
+  - send_mediator_email(to_email, mediator_name, user_name, user_email, attachments, doc_labels)
+
+All emails are sent through the Resend HTTP API via the `resend` SDK.
+Templates remain HTML + plain-text fallback.
+"""
+import base64
 import logging
-from email.message import EmailMessage
+import os
 from typing import List, Optional, Tuple
+
+import resend
 
 
 logger = logging.getLogger(__name__)
 
 
 class EmailNotConfigured(Exception):
-    """SMTP credentials are missing — feature should be reported as disabled."""
+    """Resend API key is missing — feature should be reported as disabled."""
 
 
 class EmailSendError(Exception):
-    """SMTP send failed — surface a friendly message to the user."""
+    """Resend send failed — surface a friendly message to the user."""
 
 
 def _config() -> dict:
-    cfg = {
-        "host": os.environ.get("SMTP_HOST", "").strip(),
-        "port": int(os.environ.get("SMTP_PORT") or 587),
-        "username": os.environ.get("SMTP_USERNAME", "").strip(),
-        "password": os.environ.get("SMTP_PASSWORD", "").strip(),
-        "from_email": os.environ.get("SMTP_FROM_EMAIL", "").strip()
-        or os.environ.get("SMTP_USERNAME", "").strip(),
-        "from_name": os.environ.get("SMTP_FROM_NAME", "SA Coparents").strip(),
+    return {
+        "api_key": os.environ.get("RESEND_API_KEY", "").strip(),
+        "from_email": (
+            os.environ.get("RESEND_FROM_EMAIL", "").strip()
+            or "onboarding@resend.dev"
+        ),
+        "from_name": os.environ.get("RESEND_FROM_NAME", "SA Coparents").strip(),
+        "reply_to": os.environ.get("RESEND_REPLY_TO", "").strip(),
     }
-    return cfg
 
 
 def is_configured() -> bool:
-    c = _config()
-    return bool(c["host"] and c["username"] and c["password"] and c["from_email"])
+    return bool(_config()["api_key"])
+
+
+def _from_header(cfg: dict) -> str:
+    """Return a `Name <email>` formatted From header."""
+    return f'{cfg["from_name"]} <{cfg["from_email"]}>'
+
+
+def _send(
+    *,
+    to_email: str,
+    subject: str,
+    html: str,
+    text: str,
+    reply_to: Optional[str] = None,
+    attachments: Optional[List[Tuple[str, bytes]]] = None,
+    failure_message: str,
+) -> None:
+    """Internal: send via Resend with consistent error handling."""
+    if not is_configured():
+        raise EmailNotConfigured(
+            "Email sending is not configured. Set RESEND_API_KEY and try again."
+        )
+    cfg = _config()
+    resend.api_key = cfg["api_key"]
+
+    params: dict = {
+        "from": _from_header(cfg),
+        "to": [to_email],
+        "subject": subject,
+        "html": html,
+        "text": text,
+    }
+    if reply_to or cfg["reply_to"]:
+        params["reply_to"] = [reply_to or cfg["reply_to"]]
+    if attachments:
+        params["attachments"] = [
+            {
+                "filename": name,
+                "content": base64.b64encode(data).decode("ascii"),
+            }
+            for name, data in attachments
+        ]
+
+    try:
+        resend.Emails.send(params)
+    except Exception as e:
+        # Resend raises subclasses of resend.exceptions.ResendError, but the SDK
+        # also lets through requests / network errors. Treat them all as send failures.
+        logger.exception("Resend send failed: %s", subject)
+        raise EmailSendError(failure_message) from e
+
+
+# ============ Internal helpers ============
+def _branded_html(*, headline: str, body_html: str, cta_label: str, cta_url: Optional[str] = None) -> str:
+    """Wrap content in the SA Coparents branded email shell."""
+    cta = (
+        f'<p style="margin:0 0 24px 0;"><a href="{cta_url}" '
+        f'style="display:inline-block;background:linear-gradient(135deg,#3D1A78,#2DB5B5);'
+        f'color:#fff;text-decoration:none;font-weight:700;padding:14px 28px;'
+        f'border-radius:999px;">{cta_label}</a></p>'
+        if cta_url
+        else ""
+    )
+    fallback = (
+        f'<p style="font-size:13px;color:#857E9C;line-height:1.55;margin:0;">'
+        f"If the button doesn't work, copy this link into your browser:<br/>"
+        f'<span style="word-break:break-all;color:#3D1A78;">{cta_url}</span></p>'
+        if cta_url
+        else ""
+    )
+    return f"""<!doctype html>
+<html><body style="font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#F8F7FC;color:#1A1330;margin:0;padding:40px 24px;">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:24px;padding:36px;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
+    <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:12px;">SA Coparents</div>
+    <h1 style="font-size:24px;font-weight:800;color:#1A1330;letter-spacing:-0.02em;margin:0 0 16px 0;">{headline}</h1>
+    {body_html}
+    {cta}
+    {fallback}
+    <hr style="border:none;border-top:1px solid #E5E0EE;margin:28px 0;"/>
+    <p style="font-size:12px;color:#857E9C;line-height:1.55;margin:0;">SA Coparents · <a href="https://sacoparentsapp.online" style="color:#3D1A78;text-decoration:none;">sacoparentsapp.online</a></p>
+  </div>
+</body></html>"""
 
 
 def _cover_note(
@@ -41,72 +134,36 @@ def _cover_note(
     mediator_name: Optional[str],
     doc_labels: List[str],
 ) -> Tuple[str, str]:
-    """Return (plain_text, html) cover note."""
-    greeting = f"Hi {mediator_name}," if mediator_name else "Hello,"
-    docs_phrase = (
-        doc_labels[0]
-        if len(doc_labels) == 1
-        else (" and ".join(doc_labels) if len(doc_labels) == 2 else ", ".join(doc_labels[:-1]) + ", and " + doc_labels[-1])
-    )
-    display_name = user_name or user_email
-
+    """Build plain + html cover note for the mediator email."""
+    greeting = f"Hi {mediator_name}," if mediator_name else "Hi,"
+    bullet_lines = "".join([f"<li>{d}</li>" for d in doc_labels])
     plain = (
         f"{greeting}\n\n"
-        f"{display_name} has completed preparation for your upcoming relational "
-        f"mediation session using SA Coparents, and would like to share the "
-        f"attached {docs_phrase} with you ahead of time.\n\n"
-        f"These documents include their child-centered goals, top concerns, "
-        f"priority agenda, communication preferences, and readiness reflection — "
-        f"intended to help your session start from a focused, child-centered "
-        f"place.\n\n"
-        f"Please feel free to reply directly to this email "
-        f"({user_email}) with any questions or scheduling notes.\n\n"
-        f"Warmly,\n"
-        f"SA Coparents — Relational Mediation Prep\n"
-        f"This email was sent on behalf of {display_name} via the SA Coparents app."
+        f"I've prepared the attached documents for our mediation. "
+        f"Please review them before our session.\n\n"
+        f"Attached:\n" + "\n".join([f"- {d}" for d in doc_labels]) + "\n\n"
+        f"You can reply directly to this email if you have any questions.\n\n"
+        f"Thanks,\n{user_name}\n{user_email}\n"
     )
-
-    html = f"""<!doctype html>
-<html><body style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:#2A3631; line-height:1.55; max-width:560px; margin:0 auto; padding:24px;">
-  <div style="background:#F5F3E9; border-radius:14px; padding:24px 22px; margin-bottom:20px;">
-    <div style="color:#849D8E; font-size:11px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:6px;">SA Coparents</div>
-    <div style="font-family: Georgia, 'Times New Roman', serif; font-size:22px; color:#2A3631;">Relational mediation prep — shared by {display_name}</div>
-  </div>
-
-  <p>{greeting}</p>
-
-  <p>{display_name} has completed preparation for your upcoming relational
-  mediation session using <strong>SA Coparents</strong>, and would like to share
-  the attached <strong>{docs_phrase}</strong> with you ahead of time.</p>
-
-  <p>These documents include their child-centered goals, top concerns, priority
-  agenda, communication preferences, and readiness reflection — intended to help
-  your session start from a focused, child-centered place.</p>
-
-  <p>Please feel free to reply directly to this email
-  (<a href="mailto:{user_email}" style="color:#5C7A6A;">{user_email}</a>)
-  with any questions or scheduling notes.</p>
-
-  <p style="margin-top:28px;">Warmly,<br/>
-  <span style="color:#5C6B64;">SA Coparents — Relational Mediation Prep</span></p>
-
-  <hr style="border:none; border-top:1px solid #E8ECE9; margin:24px 0;"/>
-  <p style="font-size:12px; color:#8A9A92; font-style:italic;">
-    This email was sent on behalf of {display_name} via the SA Coparents app.
-    Replies will go directly to {user_email}.
-  </p>
-</body></html>"""
-
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"{greeting} I've prepared the attached documents for our mediation. "
+        f"Please review them before our session.</p>"
+        f'<ul style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;padding-left:20px;">'
+        f"{bullet_lines}</ul>"
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"You can reply directly to this email if you have any questions.</p>"
+        f'<p style="font-size:15px;line-height:1.55;color:#1A1330;margin:0;">'
+        f"Thanks,<br/><strong>{user_name}</strong><br/>"
+        f'<a href="mailto:{user_email}" style="color:#3D1A78;text-decoration:none;">{user_email}</a></p>'
+    )
+    html = _branded_html(headline="Mediation prep documents", body_html=body_html, cta_label="")
     return plain, html
 
 
+# ============ Public API ============
 def send_magic_link(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
-    """Send a one-tap sign-in link. Raises EmailNotConfigured or EmailSendError."""
-    if not is_configured():
-        raise EmailNotConfigured(
-            "Email sending is not configured. Set SMTP credentials and try again."
-        )
-    cfg = _config()
+    """Send a one-tap sign-in link."""
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
     plain = (
         f"{greeting}\n\n"
@@ -116,51 +173,28 @@ def send_magic_link(*, to_email: str, link_url: str, user_name: Optional[str] = 
         "If you didn't request this, you can safely ignore this email.\n\n"
         "— SA Coparents · sacoparentsapp.online\n"
     )
-    html = f"""<!doctype html>
-<html><body style="font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#F8F7FC;color:#1A1330;margin:0;padding:40px 24px;">
-  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:24px;padding:36px;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
-    <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:12px;">SA Coparents</div>
-    <h1 style="font-size:24px;font-weight:800;color:#1A1330;letter-spacing:-0.02em;margin:0 0 16px 0;">Tap to sign in</h1>
-    <p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">{greeting} Use the button below to sign in. The link expires in <strong>15 minutes</strong> and can only be used once.</p>
-    <p style="margin:0 0 24px 0;"><a href="{link_url}" style="display:inline-block;background:linear-gradient(135deg,#3D1A78,#2DB5B5);color:#fff;text-decoration:none;font-weight:700;padding:14px 28px;border-radius:999px;">Sign in to SA Coparents</a></p>
-    <p style="font-size:13px;color:#857E9C;line-height:1.55;margin:0;">If the button doesn't work, copy this link into your browser:<br/><span style="word-break:break-all;color:#3D1A78;">{link_url}</span></p>
-    <hr style="border:none;border-top:1px solid #E5E0EE;margin:28px 0;"/>
-    <p style="font-size:12px;color:#857E9C;line-height:1.55;margin:0;">Didn't request this? You can safely ignore this email — your account hasn't changed.</p>
-  </div>
-</body></html>"""
-    msg = EmailMessage()
-    msg["Subject"] = "Your SA Coparents sign-in link"
-    msg["From"] = f'"{cfg["from_name"]}" <{cfg["from_email"]}>'
-    msg["To"] = to_email
-    msg.set_content(plain)
-    msg.add_alternative(html, subtype="html")
-
-    try:
-        with smtplib.SMTP(cfg["host"], cfg["port"], timeout=20) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-            smtp.login(cfg["username"], cfg["password"])
-            smtp.send_message(msg)
-    except smtplib.SMTPAuthenticationError as e:
-        logger.exception("SMTP auth failed (magic link)")
-        raise EmailSendError(
-            "Email service authentication failed. Please verify SMTP credentials."
-        ) from e
-    except (smtplib.SMTPException, OSError) as e:
-        logger.exception("SMTP send failed (magic link)")
-        raise EmailSendError(
-            "Could not send your sign-in link right now. Please try again in a moment."
-        ) from e
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
+        f"{greeting} Use the button below to sign in. The link expires in "
+        f"<strong>15 minutes</strong> and can only be used once.</p>"
+    )
+    html = _branded_html(
+        headline="Tap to sign in",
+        body_html=body_html,
+        cta_label="Sign in to SA Coparents",
+        cta_url=link_url,
+    )
+    _send(
+        to_email=to_email,
+        subject="Your SA Coparents sign-in link",
+        html=html,
+        text=plain,
+        failure_message="Could not send your sign-in link right now. Please try again in a moment.",
+    )
 
 
 def send_setup_link(*, to_email: str, link_url: str) -> None:
-    """Send a one-tap 'create your account' link. Raises EmailNotConfigured / EmailSendError."""
-    if not is_configured():
-        raise EmailNotConfigured(
-            "Email sending is not configured. Set SMTP credentials and try again."
-        )
-    cfg = _config()
+    """Send a one-tap 'create your account' link."""
     plain = (
         "Welcome to SA Coparents.\n\n"
         "Someone (probably you) requested an account for this email. "
@@ -169,51 +203,28 @@ def send_setup_link(*, to_email: str, link_url: str) -> None:
         "If this wasn't you, you can safely ignore this email — no account was created.\n\n"
         "— SA Coparents · sacoparentsapp.online\n"
     )
-    html = f"""<!doctype html>
-<html><body style="font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#F8F7FC;color:#1A1330;margin:0;padding:40px 24px;">
-  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:24px;padding:36px;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
-    <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:12px;">SA Coparents</div>
-    <h1 style="font-size:24px;font-weight:800;color:#1A1330;letter-spacing:-0.02em;margin:0 0 16px 0;">Set up your account</h1>
-    <p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">Welcome. Tap the button below to finish creating your SA Coparents account. The link expires in <strong>15 minutes</strong>.</p>
-    <p style="margin:0 0 24px 0;"><a href="{link_url}" style="display:inline-block;background:linear-gradient(135deg,#3D1A78,#2DB5B5);color:#fff;text-decoration:none;font-weight:700;padding:14px 28px;border-radius:999px;">Set up my account</a></p>
-    <p style="font-size:13px;color:#857E9C;line-height:1.55;margin:0;">If the button doesn't work, copy this link into your browser:<br/><span style="word-break:break-all;color:#3D1A78;">{link_url}</span></p>
-    <hr style="border:none;border-top:1px solid #E5E0EE;margin:28px 0;"/>
-    <p style="font-size:12px;color:#857E9C;line-height:1.55;margin:0;">Didn't request this? You can safely ignore this email — no account was created.</p>
-  </div>
-</body></html>"""
-    msg = EmailMessage()
-    msg["Subject"] = "Set up your SA Coparents account"
-    msg["From"] = f'"{cfg["from_name"]}" <{cfg["from_email"]}>'
-    msg["To"] = to_email
-    msg.set_content(plain)
-    msg.add_alternative(html, subtype="html")
-
-    try:
-        with smtplib.SMTP(cfg["host"], cfg["port"], timeout=20) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-            smtp.login(cfg["username"], cfg["password"])
-            smtp.send_message(msg)
-    except smtplib.SMTPAuthenticationError as e:
-        logger.exception("SMTP auth failed (setup link)")
-        raise EmailSendError(
-            "Email service authentication failed. Please verify SMTP credentials."
-        ) from e
-    except (smtplib.SMTPException, OSError) as e:
-        logger.exception("SMTP send failed (setup link)")
-        raise EmailSendError(
-            "Could not send your setup link right now. Please try again in a moment."
-        ) from e
+    body_html = (
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
+        "Welcome. Tap the button below to finish creating your SA Coparents account. "
+        "The link expires in <strong>15 minutes</strong>.</p>"
+    )
+    html = _branded_html(
+        headline="Set up your account",
+        body_html=body_html,
+        cta_label="Set up my account",
+        cta_url=link_url,
+    )
+    _send(
+        to_email=to_email,
+        subject="Set up your SA Coparents account",
+        html=html,
+        text=plain,
+        failure_message="Couldn't send the setup link right now. Please try again.",
+    )
 
 
 def send_password_reset_link(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
-    """Send a password-reset link. Raises EmailNotConfigured / EmailSendError."""
-    if not is_configured():
-        raise EmailNotConfigured(
-            "Email sending is not configured. Set SMTP credentials and try again."
-        )
-    cfg = _config()
+    """Send a password-reset link."""
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
     plain = (
         f"{greeting}\n\n"
@@ -224,51 +235,28 @@ def send_password_reset_link(*, to_email: str, link_url: str, user_name: Optiona
         "If you didn't request this, you can safely ignore this email — your password hasn't changed.\n\n"
         "— SA Coparents · sacoparentsapp.online\n"
     )
-    html = f"""<!doctype html>
-<html><body style="font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#F8F7FC;color:#1A1330;margin:0;padding:40px 24px;">
-  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:24px;padding:36px;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
-    <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:12px;">SA Coparents</div>
-    <h1 style="font-size:24px;font-weight:800;color:#1A1330;letter-spacing:-0.02em;margin:0 0 16px 0;">Reset your password</h1>
-    <p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">{greeting} Tap the button below to choose a new password. The link expires in <strong>15 minutes</strong> and can only be used once.</p>
-    <p style="margin:0 0 24px 0;"><a href="{link_url}" style="display:inline-block;background:linear-gradient(135deg,#3D1A78,#2DB5B5);color:#fff;text-decoration:none;font-weight:700;padding:14px 28px;border-radius:999px;">Reset my password</a></p>
-    <p style="font-size:13px;color:#857E9C;line-height:1.55;margin:0;">If the button doesn't work, copy this link into your browser:<br/><span style="word-break:break-all;color:#3D1A78;">{link_url}</span></p>
-    <hr style="border:none;border-top:1px solid #E5E0EE;margin:28px 0;"/>
-    <p style="font-size:12px;color:#857E9C;line-height:1.55;margin:0;">Didn't request this? You can safely ignore this email — your password hasn't changed.</p>
-  </div>
-</body></html>"""
-    msg = EmailMessage()
-    msg["Subject"] = "Reset your SA Coparents password"
-    msg["From"] = f'"{cfg["from_name"]}" <{cfg["from_email"]}>'
-    msg["To"] = to_email
-    msg.set_content(plain)
-    msg.add_alternative(html, subtype="html")
-
-    try:
-        with smtplib.SMTP(cfg["host"], cfg["port"], timeout=20) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-            smtp.login(cfg["username"], cfg["password"])
-            smtp.send_message(msg)
-    except smtplib.SMTPAuthenticationError as e:
-        logger.exception("SMTP auth failed (password reset)")
-        raise EmailSendError(
-            "Email service authentication failed. Please verify SMTP credentials."
-        ) from e
-    except (smtplib.SMTPException, OSError) as e:
-        logger.exception("SMTP send failed (password reset)")
-        raise EmailSendError(
-            "Could not send your reset link right now. Please try again in a moment."
-        ) from e
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
+        f"{greeting} Tap the button below to choose a new password. The link expires in "
+        f"<strong>15 minutes</strong> and can only be used once.</p>"
+    )
+    html = _branded_html(
+        headline="Reset your password",
+        body_html=body_html,
+        cta_label="Reset my password",
+        cta_url=link_url,
+    )
+    _send(
+        to_email=to_email,
+        subject="Reset your SA Coparents password",
+        html=html,
+        text=plain,
+        failure_message="Could not send your reset link right now. Please try again in a moment.",
+    )
 
 
 def send_verification_link(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
-    """Send an email-address verification link. Raises EmailNotConfigured / EmailSendError."""
-    if not is_configured():
-        raise EmailNotConfigured(
-            "Email sending is not configured. Set SMTP credentials and try again."
-        )
-    cfg = _config()
+    """Send an email-address verification link."""
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
     plain = (
         f"{greeting}\n\n"
@@ -279,42 +267,24 @@ def send_verification_link(*, to_email: str, link_url: str, user_name: Optional[
         "If you didn't create an account, you can safely ignore this email.\n\n"
         "— SA Coparents · sacoparentsapp.online\n"
     )
-    html = f"""<!doctype html>
-<html><body style="font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#F8F7FC;color:#1A1330;margin:0;padding:40px 24px;">
-  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:24px;padding:36px;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
-    <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:12px;">SA Coparents</div>
-    <h1 style="font-size:24px;font-weight:800;color:#1A1330;letter-spacing:-0.02em;margin:0 0 16px 0;">Confirm your email</h1>
-    <p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">{greeting} Please confirm your email address so we can keep your account secure. The link expires in <strong>24 hours</strong>.</p>
-    <p style="margin:0 0 24px 0;"><a href="{link_url}" style="display:inline-block;background:linear-gradient(135deg,#3D1A78,#2DB5B5);color:#fff;text-decoration:none;font-weight:700;padding:14px 28px;border-radius:999px;">Confirm my email</a></p>
-    <p style="font-size:13px;color:#857E9C;line-height:1.55;margin:0;">If the button doesn't work, copy this link into your browser:<br/><span style="word-break:break-all;color:#3D1A78;">{link_url}</span></p>
-    <hr style="border:none;border-top:1px solid #E5E0EE;margin:28px 0;"/>
-    <p style="font-size:12px;color:#857E9C;line-height:1.55;margin:0;">Didn't create an account? You can safely ignore this email.</p>
-  </div>
-</body></html>"""
-    msg = EmailMessage()
-    msg["Subject"] = "Confirm your SA Coparents email"
-    msg["From"] = f'"{cfg["from_name"]}" <{cfg["from_email"]}>'
-    msg["To"] = to_email
-    msg.set_content(plain)
-    msg.add_alternative(html, subtype="html")
-
-    try:
-        with smtplib.SMTP(cfg["host"], cfg["port"], timeout=20) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-            smtp.login(cfg["username"], cfg["password"])
-            smtp.send_message(msg)
-    except smtplib.SMTPAuthenticationError as e:
-        logger.exception("SMTP auth failed (verification)")
-        raise EmailSendError(
-            "Email service authentication failed. Please verify SMTP credentials."
-        ) from e
-    except (smtplib.SMTPException, OSError) as e:
-        logger.exception("SMTP send failed (verification)")
-        raise EmailSendError(
-            "Could not send your verification link right now. Please try again in a moment."
-        ) from e
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
+        f"{greeting} Please confirm your email address so we can keep your account "
+        f"secure. The link expires in <strong>24 hours</strong>.</p>"
+    )
+    html = _branded_html(
+        headline="Confirm your email",
+        body_html=body_html,
+        cta_label="Confirm my email",
+        cta_url=link_url,
+    )
+    _send(
+        to_email=to_email,
+        subject="Confirm your SA Coparents email",
+        html=html,
+        text=plain,
+        failure_message="Could not send your verification link right now. Please try again in a moment.",
+    )
 
 
 def send_mediator_email(
@@ -323,51 +293,20 @@ def send_mediator_email(
     mediator_name: Optional[str],
     user_name: str,
     user_email: str,
-    attachments: List[Tuple[str, bytes]],  # (filename, pdf_bytes)
+    attachments: List[Tuple[str, bytes]],
     doc_labels: List[str],
 ) -> None:
-    """Send PDFs to a mediator. Raises EmailNotConfigured or EmailSendError."""
-    if not is_configured():
-        raise EmailNotConfigured(
-            "Email sending is not configured yet. Please contact the app administrator."
-        )
+    """Send PDFs to a mediator. attachments is a list of (filename, pdf_bytes)."""
     if not attachments:
         raise EmailSendError("No documents selected to send.")
-
-    cfg = _config()
     plain, html = _cover_note(user_name, user_email, mediator_name, doc_labels)
-
-    msg = EmailMessage()
-    msg["Subject"] = f"Mediation prep from {user_name or user_email}"
-    msg["From"] = f'"{cfg["from_name"]}" <{cfg["from_email"]}>'
-    msg["To"] = to_email
-    if user_email:
-        msg["Reply-To"] = user_email
-    msg.set_content(plain)
-    msg.add_alternative(html, subtype="html")
-
-    for filename, data in attachments:
-        msg.add_attachment(
-            data,
-            maintype="application",
-            subtype="pdf",
-            filename=filename,
-        )
-
-    try:
-        with smtplib.SMTP(cfg["host"], cfg["port"], timeout=20) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-            smtp.login(cfg["username"], cfg["password"])
-            smtp.send_message(msg)
-    except smtplib.SMTPAuthenticationError as e:
-        logger.exception("SMTP auth failed")
-        raise EmailSendError(
-            "Email service authentication failed. Please verify SMTP credentials."
-        ) from e
-    except (smtplib.SMTPException, OSError) as e:
-        logger.exception("SMTP send failed")
-        raise EmailSendError(
-            "Could not send email right now. Please try again in a moment."
-        ) from e
+    subject = f"Mediation prep from {user_name or user_email}"
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=html,
+        text=plain,
+        reply_to=user_email or None,
+        attachments=attachments,
+        failure_message="Could not send email right now. Please try again in a moment.",
+    )
