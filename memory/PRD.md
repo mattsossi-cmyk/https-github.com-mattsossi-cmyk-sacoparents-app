@@ -316,3 +316,12 @@ See `/app/memory/test_credentials.md`
 - **Templates**: Refactored HTML templates into a shared `_branded_html()` helper. All 4 email types (magic-link, setup, reset, verification) + mediator-PDF-attachment all working.
 - **Testing**: 31/31 backend pytest pass. Smoke tests confirmed all 4 email types deliver via Resend API.
 - **Known limitation**: Resend account is in test mode — until a domain is verified at https://resend.com/domains, emails only deliver to the account owner's own email. After domain verification, set `RESEND_FROM_EMAIL=noreply@sacoparentsapp.online` and recipients can be anyone.
+
+
+### Feb 2026 — Resend Webhook Handler (P2 → SHIPPED)
+- **New endpoint**: `POST /api/email/webhook` receives Resend delivery events. Signature verified via Svix.
+- **Idempotency**: dedupes on `svix-id`. Events stored in MongoDB `email_events` collection. Helper: `GET /api/email/webhook/recent?limit=N`.
+- **User flagging**: `email.bounced` → `users.email_bounced=true`; `email.complained` → `users.email_complained=true` (with reasons captured).
+- **Frontend**: new `<EmailHealthBanner>` on Dashboard surfaces delivery problems to the user. `UserPublic` extended with both flags.
+- **Setup for user**: Resend dashboard → Webhooks → Add Endpoint → `https://sacoparentsapp.online/api/email/webhook` → copy signing secret → set `RESEND_WEBHOOK_SECRET` in prod env → redeploy.
+- **Tests**: 42 tests pass (5 new for webhooks; 4 pre-existing mediator tests updated for Resend era).

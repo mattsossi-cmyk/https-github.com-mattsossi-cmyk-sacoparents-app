@@ -74,6 +74,8 @@ def _serialize_user(doc: dict) -> UserPublic:
         is_guest=bool(doc.get("is_guest", False)),
         guest_expires_at=doc.get("guest_expires_at"),
         email_verified=bool(doc.get("email_verified", False)),
+        email_bounced=bool(doc.get("email_bounced", False)),
+        email_complained=bool(doc.get("email_complained", False)),
     )
 
 

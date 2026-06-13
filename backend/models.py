@@ -37,6 +37,8 @@ class UserPublic(BaseModel):
     is_guest: bool = False
     guest_expires_at: Optional[str] = None
     email_verified: bool = False
+    email_bounced: bool = False
+    email_complained: bool = False
 
 
 class TokenResponse(BaseModel):

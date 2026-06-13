@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import VerificationBanner from "../components/VerificationBanner";
+import EmailHealthBanner from "../components/EmailHealthBanner";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -120,6 +121,7 @@ export default function Dashboard() {
   return (
     <AppShell>
       <div className="fade-up">
+        <EmailHealthBanner />
         <VerificationBanner />
         <div className="grid lg:grid-cols-3 gap-6 mb-10 mt-6">
           <div className="card-soft p-8 lg:col-span-2 relative overflow-hidden">

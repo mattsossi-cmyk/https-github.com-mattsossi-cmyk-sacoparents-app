@@ -1,12 +1,15 @@
-"""Tests for the new Email-to-Mediator feature.
+"""Tests for the Email-to-Mediator feature.
 
-Backend env intentionally has SMTP_PASSWORD blank, so /email/status must
-return {configured: false} and the actual send must return 503.
+With Resend configured in this environment, /email/status reports configured=True.
+The pure-validation tests (auth gating, payload shape) still apply unchanged.
 """
 import os
 import uuid
 import pytest
 import requests
+from dotenv import load_dotenv
+
+load_dotenv("/app/backend/.env")
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
@@ -16,15 +19,18 @@ if not BASE_URL:
                 BASE_URL = line.split("=", 1)[1].strip().rstrip("/")
 
 
+def _email_configured() -> bool:
+    return bool(os.environ.get("RESEND_API_KEY", "").strip())
+
+
 # ============ /email/status ============
 class TestEmailStatus:
-    def test_status_returns_not_configured(self, auth_client):
+    def test_status_reflects_configured_state(self, auth_client):
         r = auth_client.get(f"{BASE_URL}/api/mediation/email/status", timeout=15)
         assert r.status_code == 200, r.text
         body = r.json()
         assert "configured" in body
-        # SMTP_PASSWORD is intentionally blank → must be False
-        assert body["configured"] is False
+        assert body["configured"] is _email_configured()
 
     def test_status_requires_auth(self, api_client):
         r = api_client.get(f"{BASE_URL}/api/mediation/email/status", timeout=15)
@@ -81,9 +87,13 @@ class TestEmailMediatorValidation:
         assert r.status_code == 404
 
 
-# ============ End-to-end with real summary → expects 503 not_configured ============
-class TestEmailNotConfiguredPath:
-    def test_valid_summary_returns_503_when_smtp_blank(self, auth_client):
+# ============ End-to-end with real summary ============
+class TestEmailEndToEnd:
+    def test_valid_summary_send_path(self, auth_client):
+        """When email is configured: send returns 200 OR 502 (Resend rejects unverified domains in test mode).
+        When email is NOT configured: send returns 503.
+        Either is acceptable — we just verify the route doesn't crash and reflects the right state.
+        """
         # Ensure prep exists then generate a real summary
         auth_client.put(
             f"{BASE_URL}/api/mediation/child-goals",
@@ -114,7 +124,6 @@ class TestEmailNotConfiguredPath:
         assert r.status_code == 200, r.text
         summary_id = r.json()["summary_id"]
 
-        # Now attempt to email — SMTP is intentionally not configured
         r2 = auth_client.post(
             f"{BASE_URL}/api/mediation/email-mediator",
             json={
@@ -124,6 +133,12 @@ class TestEmailNotConfiguredPath:
             },
             timeout=30,
         )
-        assert r2.status_code == 503, r2.text
-        detail = r2.json().get("detail", "")
-        assert "not configured" in detail.lower()
+        configured = _email_configured()
+        if configured:
+            # Email service connected — either succeeds (200) or Resend rejects
+            # the recipient (502, e.g. test-mode "can only send to your own address").
+            assert r2.status_code in (200, 502), r2.text
+        else:
+            assert r2.status_code == 503, r2.text
+            detail = r2.json().get("detail", "")
+            assert "not configured" in detail.lower()
