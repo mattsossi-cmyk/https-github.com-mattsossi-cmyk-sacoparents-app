@@ -89,28 +89,29 @@ def main():
         color=(255, 255, 255, 220),
     )
 
-    # Headline (2 lines)
-    draw_text(bg, "Prepare for", 84, (pad, 130))
-    draw_text(bg, "mediation, calmly.", 84, (pad, 230))
+    # Headline (3 lines for the longer copy)
+    draw_text(bg, "The First Steps", 78, (pad, 120))
+    draw_text(bg, "to Co-Parenting", 78, (pad, 215))
+    draw_text(bg, "Starts Here.", 78, (pad, 310))
 
     # Subhead
     draw_text(
         bg, "Child-centered prep, in your pocket.",
-        30, (pad, 360),
+        28, (pad, 420),
         color=(255, 255, 255, 235),
     )
 
     # CTA pill
-    pill = Image.new("RGBA", (320, 64), (0, 0, 0, 0))
+    pill = Image.new("RGBA", (320, 56), (0, 0, 0, 0))
     pd = ImageDraw.Draw(pill)
-    pd.rounded_rectangle((0, 0, 319, 63), radius=32, fill=(255, 255, 255, 235))
-    bg.alpha_composite(pill, (pad, 440))
-    cf = ImageFont.truetype(FONT, 22)
+    pd.rounded_rectangle((0, 0, 319, 55), radius=28, fill=(255, 255, 255, 235))
+    bg.alpha_composite(pill, (pad, 490))
+    cf = ImageFont.truetype(FONT, 20)
     cd = ImageDraw.Draw(bg)
     cta_text = "sacoparentsapp.online  →"
     tb = cf.getbbox(cta_text)
     cta_x = pad + (320 - (tb[2] - tb[0])) // 2
-    cd.text((cta_x, 440 + (64 - (tb[3] - tb[1])) // 2 - 4), cta_text, font=cf, fill=(61, 26, 120, 255))
+    cd.text((cta_x, 490 + (56 - (tb[3] - tb[1])) // 2 - 4), cta_text, font=cf, fill=(61, 26, 120, 255))
 
     # Logo — right side, vertical center, with subtle glow
     if LOGO.exists():
