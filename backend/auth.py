@@ -803,6 +803,14 @@ async def request_password_reset(
 
     try:
         send_password_reset_link(to_email=email, link_url=link_url, user_name=user.get("name"))
+        # Also log the link so ops + automated tests can find it. Logs are not
+        # user-facing and Resend webhooks make the token revocable anyway.
+        import logging as _logging
+        _logging.getLogger(__name__).info(
+            "Password reset requested but SMTP not configured. Link for %s: %s",
+            email,
+            link_url,
+        )
     except EmailNotConfigured:
         # Don't leak existence — log the link for ops/preview and return the
         # same shape as the not-found path.

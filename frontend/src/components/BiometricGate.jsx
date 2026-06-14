@@ -38,15 +38,15 @@ export default function BiometricGate({ children }) {
         listener = await App.addListener("appStateChange", ({ isActive }) => {
           if (isActive && user) setLocked(true);
         });
-      } catch {
-        /* ignore */
+      } catch (_e) {
+        /* @capacitor/app not installed in this build — ignore */
       }
     })();
     return () => {
       try {
         listener?.remove?.();
-      } catch {
-        /* ignore */
+      } catch (_e) {
+        /* listener already removed — ignore */
       }
     };
   }, [user]);

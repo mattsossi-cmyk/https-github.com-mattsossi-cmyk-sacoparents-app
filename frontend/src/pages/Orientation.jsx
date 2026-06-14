@@ -197,7 +197,7 @@ export default function Orientation() {
                 <ul className="mt-5 space-y-2.5">
                   {slide.bullets.map((b, i) => (
                     <li
-                      key={i}
+                      key={`${idx}-bullet-${i}`}
                       className="flex items-start gap-2.5 text-[14px] sm:text-[15px] text-[#1A1330]"
                       data-testid={`orientation-bullet-${idx}-${i}`}
                     >
@@ -212,9 +212,9 @@ export default function Orientation() {
 
           {/* Pagination dots */}
           <div className="flex items-center justify-center gap-2 mt-7" data-testid="orientation-dots">
-            {SLIDES.map((_, i) => (
+            {SLIDES.map((s, i) => (
               <button
-                key={i}
+                key={`dot-${i}-${s.eyebrow}`}
                 onClick={() => setIdx(i)}
                 aria-label={`Go to step ${i + 1}`}
                 className={`h-2 rounded-full transition-all ${

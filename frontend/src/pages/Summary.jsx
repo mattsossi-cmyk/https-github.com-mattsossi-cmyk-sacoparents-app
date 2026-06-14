@@ -212,6 +212,8 @@ function MediationSummaryTab() {
     } catch (err) {
       logError("Failed to load summaries:", err);
     }
+    // Stable refs (api, setters, logError); no need to over-depend.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -224,6 +226,8 @@ function MediationSummaryTab() {
       .get("/mediation/agreements")
       .then((r) => setLatestAgreementId((r.data || [])[0]?.agreement_id || null))
       .catch(() => {});
+    // Mount-only fetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const generate = async () => {
@@ -385,6 +389,7 @@ function AgreementDraftTab() {
     } catch (err) {
       logError("Failed to load agreements:", err);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -397,6 +402,7 @@ function AgreementDraftTab() {
       .get("/mediation/summaries")
       .then((r) => setLatestSummaryId((r.data || [])[0]?.summary_id || null))
       .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const generate = async () => {
@@ -565,6 +571,7 @@ function ImprovementPlanTab() {
     } catch (err) {
       logError("Failed to load improvement plans:", err);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

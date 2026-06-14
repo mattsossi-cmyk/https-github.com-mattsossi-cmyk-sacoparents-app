@@ -69,14 +69,14 @@ export default function SafetyAlert({ level, onDismiss }) {
               const testId = `safety-action-${res.level}-${i}`;
               if (a.to) {
                 return (
-                  <Link key={i} to={a.to} className={className} data-testid={testId}>
+                  <Link key={`act-${res.level}-${a.label}-${i}`} to={a.to} className={className} data-testid={testId}>
                     {a.label}
                   </Link>
                 );
               }
               return (
                 <a
-                  key={i}
+                  key={`act-${res.level}-${a.label}-${i}`}
                   href={a.href}
                   target={a.external ? "_blank" : undefined}
                   rel={a.external ? "noopener noreferrer" : undefined}

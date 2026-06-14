@@ -93,7 +93,7 @@ export default function Dashboard() {
         (Date.now() - new Date(startedAt).getTime()) / 86_400_000
       );
       dayOfPrep = Math.max(1, days + 1);
-    } catch {
+    } catch (_e) {
       /* keep default */
     }
   }
@@ -110,7 +110,7 @@ export default function Dashboard() {
       else if (diffH < 24) lastTouchedLabel = `Last touched ${Math.round(diffH)}h ago`;
       else if (diffD < 7) lastTouchedLabel = `Last touched ${Math.round(diffD)}d ago`;
       else lastTouchedLabel = `Last touched ${updated.toLocaleDateString()}`;
-    } catch {
+    } catch (_e) {
       /* keep null */
     }
   }

@@ -138,6 +138,8 @@ export default function ReadinessCheck() {
         if (r.data?.readiness?.answers) setAnswers(r.data.readiness.answers);
       })
       .catch((err) => logError("Failed to load prep:", err));
+    // Mount-only fetch. `api`, setters, logError are stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { total, pct, badge, answered } = useMemo(() => {

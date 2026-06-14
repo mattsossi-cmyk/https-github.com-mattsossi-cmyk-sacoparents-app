@@ -79,6 +79,8 @@ export default function PriorityRanking() {
         setItems([...seeded, ...customCarriedOver]);
       })
       .catch((err) => logError("Failed to load prep:", err));
+    // Mount-only seed. Topic constants + api are stable references.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const addItem = () => {

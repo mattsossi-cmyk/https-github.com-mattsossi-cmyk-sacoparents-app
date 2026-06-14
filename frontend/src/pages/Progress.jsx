@@ -70,7 +70,7 @@ function ReadinessSparkline({ points }) {
       </defs>
       <path d={path} stroke="url(#readGrad)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
       {xs.map((x, i) => (
-        <circle key={i} cx={x} cy={ys[i]} r={3} fill="#3D1A78" />
+        <circle key={`pt-${i}-${ys[i]?.toFixed?.(1) || i}`} cx={x} cy={ys[i]} r={3} fill="#3D1A78" />
       ))}
     </svg>
   );

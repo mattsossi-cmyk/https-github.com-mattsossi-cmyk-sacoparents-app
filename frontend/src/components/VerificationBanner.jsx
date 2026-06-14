@@ -19,7 +19,7 @@ export default function VerificationBanner() {
       const at = Number(raw);
       if (!Number.isFinite(at)) return false;
       return Date.now() - at < DISMISS_HOURS * 60 * 60 * 1000;
-    } catch {
+    } catch (_e) {
       return false;
     }
   });
@@ -32,8 +32,8 @@ export default function VerificationBanner() {
   const dismiss = () => {
     try {
       window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
-    } catch {
-      /* private mode */
+    } catch (_e) {
+      /* private mode — best-effort only */
     }
     setDismissed(true);
   };

@@ -42,7 +42,7 @@ export async function shareViaText(_kind, endpoint, title) {
     if (navigator?.clipboard?.writeText) {
       await navigator.clipboard.writeText(url);
     }
-  } catch {
+  } catch (_e) {
     // Clipboard write can fail on insecure origins / sandboxed iframes;
     // we still return the URL so the caller can render it directly.
   }

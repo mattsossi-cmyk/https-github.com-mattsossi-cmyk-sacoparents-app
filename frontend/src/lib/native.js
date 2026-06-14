@@ -52,11 +52,11 @@ export async function registerPushNotifications(api) {
           token: token.value,
           platform: Capacitor.getPlatform(),
         });
-      } catch {
+      } catch (_e) {
         /* non-fatal */
       }
     });
-  } catch {
+  } catch (_e) {
     /* Plugin not available — running on the web, ignore */
   }
 }

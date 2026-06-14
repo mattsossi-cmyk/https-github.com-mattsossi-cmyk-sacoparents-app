@@ -14,7 +14,7 @@ export function hasAcknowledgedLegal() {
     if (!raw) return false;
     const parsed = JSON.parse(raw);
     return parsed?.version === VERSION;
-  } catch {
+  } catch (_e) {
     return false;
   }
 }
@@ -25,7 +25,7 @@ function recordAck() {
       STORAGE_KEY,
       JSON.stringify({ version: VERSION, at: new Date().toISOString() })
     );
-  } catch {
+  } catch (_e) {
     /* private mode — best-effort only */
   }
 }

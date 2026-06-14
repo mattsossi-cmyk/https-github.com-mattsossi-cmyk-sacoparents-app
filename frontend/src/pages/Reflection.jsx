@@ -92,6 +92,8 @@ export default function Reflection() {
       })
       .catch((err) => logError("Failed to load reflection:", err))
       .finally(() => setLoading(false));
+    // Mount-only fetch. `api`, setters, logError are stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateEntry = (id, val) =>
