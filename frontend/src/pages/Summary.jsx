@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import InviteCoparentCard from "../components/InviteCoparentCard";
 import { api, API } from "../lib/api";
 import { shareViaText } from "../lib/share";
 import { toast } from "sonner";
@@ -1136,6 +1137,10 @@ export default function Summary() {
         {tab === "summary" && <MediationSummaryTab />}
         {tab === "agreement" && <AgreementDraftTab />}
         {tab === "improve" && <ImprovementPlanTab />}
+
+        <div className="mt-12">
+          <InviteCoparentCard variant="summary" />
+        </div>
 
         <OrgContactCard />
       </div>

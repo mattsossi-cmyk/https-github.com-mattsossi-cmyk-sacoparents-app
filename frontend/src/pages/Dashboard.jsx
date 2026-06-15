@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import VerificationBanner from "../components/VerificationBanner";
 import EmailHealthBanner from "../components/EmailHealthBanner";
 import IntroTourModal from "../components/IntroTourModal";
+import InviteCoparentCard from "../components/InviteCoparentCard";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -301,6 +302,12 @@ export default function Dashboard() {
             </p>
           </Link>
         </div>
+
+        {!user?.is_guest && (
+          <div className="mt-2">
+            <InviteCoparentCard variant="dashboard" />
+          </div>
+        )}
       </div>
     </AppShell>
   );

@@ -335,6 +335,20 @@ See `/app/memory/test_credentials.md`
 - Modal: `IntroTourModal.jsx` (skip-after-3s, tap-to-unmute fallback, `localStorage` flag so returning users don't see it again)
 
 
+### Feb 2026 — Invite Co-parent Flow (P2 → SHIPPED)
+- **One-tap email invite** lets a signed-in parent email their co-parent a link to prep in their **own private workspace** — answers never shared between the two accounts.
+- **Card placed in two locations**: Dashboard (always visible for non-guests) + Summary page (after first prep is complete).
+- **Email-only invite** (no custom note in v1, keeps the email body universally neutral — important for estranged-couple context).
+- **Rate limit**: 3 fresh invites per inviter per 24h. Resends of an existing invite don't count against the cap but are gated to once every 5 minutes per invite.
+- **Status tracking**: Sent → Opened → Joined badges visible to the inviter. Resend button on any non-joined invite.
+- **Recipient experience**: `/invite/:token` shows "[Inviter] invited you to prep with you" + private-account signup form (name + password). Email pre-filled. Token expires after 30 days. Already-accepted tokens 409 with sign-in nudge.
+- **Backend files**: new `invite_routes.py` (token + idempotency + rate limit + tracking). New `send_coparent_invite()` in `email_service.py`.
+- **Frontend files**: new `components/InviteCoparentCard.jsx` (reusable for Dashboard + Summary), new `pages/InviteAccept.jsx` (public token-based signup).
+- **DB**: new `coparent_invites` collection — `{invite_id, token, inviter_user_id, inviter_name, inviter_email, invitee_email, status, created_at, expires_at, last_sent_at, opened_at, signed_up_at, signed_up_user_id}`. New users created via invite get `invited_by_user_id` for analytics.
+- **Env knobs**: `COPARENT_INVITE_PER_DAY=3`, `COPARENT_INVITE_LIFETIME_DAYS=30` (optional overrides).
+- **Tests**: 4/4 pytest pass at `/app/backend/tests/test_coparent_invite.py` (auth gate, full invite→accept cycle, self-invite block, invalid token 404). Frontend smoke verified via Playwright.
+
+
 ### Feb 2026 — Post-Event "How Was Mediation?" Survey (P2 → SHIPPED)
 - **Trigger**: Auto-scheduled 7 days after a user generates their first Mediation Summary (idempotent — re-runs on subsequent summaries no-op). Skipped for guest sessions without an email.
 - **Reminder**: Single follow-up email 7 days later if no response. Then stops.

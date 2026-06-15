@@ -287,6 +287,44 @@ def send_verification_link(*, to_email: str, link_url: str, user_name: Optional[
     )
 
 
+def send_coparent_invite(*, to_email: str, link_url: str, inviter_name: Optional[str] = None) -> None:
+    """Invite a co-parent to prep for mediation in their own private account."""
+    inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"
+    plain = (
+        f"{inviter} has invited you to prep for mediation using SA CoParenting App.\n\n"
+        "It's a guided, child-centered workspace that helps both parents arrive at "
+        "mediation prepared, calm, and focused on what matters most: your child.\n\n"
+        "Your prep is completely private — your co-parent never sees your answers.\n\n"
+        f"Get started here:\n{link_url}\n\n"
+        "This link expires in 30 days.\n\n"
+        "— SA CoParenting App · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"<strong>{inviter}</strong> has invited you to prep for mediation using "
+        f"SA CoParenting App.</p>"
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        "It's a guided, child-centered workspace that helps both parents arrive at "
+        "mediation prepared, calm, and focused on what matters most.</p>"
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">'
+        "Your prep is completely <strong>private</strong> — your co-parent never "
+        "sees your answers. This link expires in 30 days.</p>"
+    )
+    html = _branded_html(
+        headline=f"{inviter} invited you to prep together",
+        body_html=body_html,
+        cta_label="Start my private prep",
+        cta_url=link_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=f"{inviter} invited you to prep for mediation on SA CoParenting App",
+        html=html,
+        text=plain,
+        failure_message="Could not send the co-parent invitation right now.",
+    )
+
+
 def send_post_event_survey(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
     """Initial post-event ("How was mediation?") survey email — sent 7 days
     after a user generates their Mediation Summary."""

@@ -33,6 +33,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminSurveys from "@/pages/AdminSurveys";
 import PostEventSurvey from "@/pages/PostEventSurvey";
+import InviteAccept from "@/pages/InviteAccept";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
@@ -75,6 +76,7 @@ function AppRoutes() {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
         <Route path="/survey/:token" element={<PostEventSurvey />} />
+        <Route path="/invite/:token" element={<InviteAccept />} />
         <Route
           path="/claim"
           element={
