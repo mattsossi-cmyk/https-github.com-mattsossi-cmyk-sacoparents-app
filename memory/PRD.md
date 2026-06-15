@@ -325,3 +325,30 @@ See `/app/memory/test_credentials.md`
 - **Frontend**: new `<EmailHealthBanner>` on Dashboard surfaces delivery problems to the user. `UserPublic` extended with both flags.
 - **Setup for user**: Resend dashboard → Webhooks → Add Endpoint → `https://sacoparentsapp.online/api/email/webhook` → copy signing secret → set `RESEND_WEBHOOK_SECRET` in prod env → redeploy.
 - **Tests**: 42 tests pass (5 new for webhooks; 4 pre-existing mediator tests updated for Resend era).
+
+
+### Feb 2026 — Intro Tour Video (P1 → SHIPPED)
+- 67.5-second narrated walkthrough auto-plays once per device after "Enter the App"
+- Voiceover regenerated with **OpenAI TTS `tts-1-hd` (voice: nova)** explaining the three core reports — Co-Parenting Assessment, Co-Parenting Agreement Draft, Child Needs Statement
+- Build scripts at `/app/memory/build_intro_narration.py` + `build_intro_video_compose.py`
+- Files: `/app/frontend/public/intro-tour.mp4` (10.2 MB H.264 + AAC, portrait 1080×2340) + `/app/frontend/public/downloads/sacoparents-intro-tour.mp4`
+- Modal: `IntroTourModal.jsx` (skip-after-3s, tap-to-unmute fallback, `localStorage` flag so returning users don't see it again)
+
+
+### Feb 2026 — Post-Event "How Was Mediation?" Survey (P2 → SHIPPED)
+- **Trigger**: Auto-scheduled 7 days after a user generates their first Mediation Summary (idempotent — re-runs on subsequent summaries no-op). Skipped for guest sessions without an email.
+- **Reminder**: Single follow-up email 7 days later if no response. Then stops.
+- **Survey questions** (12 total): primary reason for use, ease of navigation, helpfulness of each of the 3 reports, preparedness change, child-focus agreement, most valuable feature (long text), improvements (long text), NPS 0-10, optional outcome change + explanation.
+- **Public flow** (no login): email link → `/survey/<token>` → answers → submit → branded **Thank-you screen** ("Your feedback helps us make SA CoParenting App better…").
+- **Admin**: New `/admin/surveys` tab → counts (scheduled / sent / responded / response-rate / avg NPS), distribution bars for every multi-choice + scale question, full open-text replies, recent surveys table. **CSV export** at `/api/surveys/admin/post-event.csv`.
+- **Backend files**: new `survey_routes.py` (routes + idempotent scheduler hook + background `asyncio` sweeper that runs every 30 min, sends due emails + reminders). New `send_post_event_survey()` and `send_post_event_survey_reminder()` in `email_service.py`.
+- **Frontend files**: new `pages/PostEventSurvey.jsx` (public branded standalone page), new `pages/AdminSurveys.jsx` (admin tab with charts + CSV). Link from AdminDashboard added.
+- **DB schema**: new `post_event_surveys` collection — `{survey_id, token, user_id, summary_id, email, name, status, created_at, scheduled_send_at, sent_at, reminder_sent_at, responded_at, responses}`.
+- **Env knobs**: `POST_EVENT_SURVEY_DELAY_DAYS=7`, `POST_EVENT_SURVEY_REMINDER_DAYS=7`, `POST_EVENT_SURVEY_SWEEP_SECONDS=1800` (all optional, sensible defaults).
+- **Tests**: 4/4 pytest pass at `/app/backend/tests/test_post_event_survey.py` (idempotency, guest-skip, full submit cycle, invalid token 404). End-to-end frontend flow verified via Playwright (load → fill → submit → thank-you screen).
+
+
+### 📋 Backlog (P2 remaining)
+- Invite Co-parent flow (one-tap "Email my co-parent a prep link")
+- Server-side legal-acknowledgment audit trail (who/when)
+- Two-week post-summary check-in email (auto journal recap nudge)

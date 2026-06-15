@@ -284,13 +284,22 @@ export default function AdminDashboard() {
         <div className="card-soft p-6">
           <div className="flex items-center justify-between mb-3">
             <div className="eyebrow">Recent signups</div>
-            <Link
-              to="/admin/users"
-              className="text-xs font-medium text-[#3D1A78] hover:underline"
-              data-testid="admin-manage-users-link"
-            >
-              Manage all users →
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/admin/surveys"
+                className="text-xs font-medium text-[#3D1A78] hover:underline"
+                data-testid="admin-surveys-link"
+              >
+                Post-event surveys →
+              </Link>
+              <Link
+                to="/admin/users"
+                className="text-xs font-medium text-[#3D1A78] hover:underline"
+                data-testid="admin-manage-users-link"
+              >
+                Manage all users →
+              </Link>
+            </div>
           </div>
           {recentUsers.length === 0 ? (
             <div className="text-sm text-[#857E9C]">No users yet.</div>

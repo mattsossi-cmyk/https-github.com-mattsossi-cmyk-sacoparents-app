@@ -18,6 +18,7 @@ from analytics_routes import router as analytics_router  # noqa: E402
 from journal_routes import router as journal_router  # noqa: E402
 from mediator_routes import router as mediator_router  # noqa: E402
 from email_webhook_routes import router as email_webhook_router  # noqa: E402
+from survey_routes import router as survey_router, survey_scheduler_loop  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -83,6 +84,7 @@ api_router.include_router(analytics_router)
 api_router.include_router(journal_router)
 api_router.include_router(mediator_router)
 api_router.include_router(email_webhook_router)
+api_router.include_router(survey_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.
@@ -117,6 +119,9 @@ else:
 @app.on_event("startup")
 async def startup_log():
     logger.info("SA Coparents backend ready. DB=%s", os.environ.get("DB_NAME"))
+    # Kick off the post-event survey scheduler. It sleeps internally so it
+    # won't run before the DB is warm.
+    asyncio.create_task(survey_scheduler_loop(app))
 
 
 @app.on_event("shutdown")

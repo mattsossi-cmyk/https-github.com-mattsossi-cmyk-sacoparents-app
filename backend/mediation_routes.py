@@ -213,6 +213,23 @@ async def generate_summary(
     }
     await db.summaries.insert_one(doc.copy())
     doc.pop("_id", None)
+
+    # Schedule a 7-day post-event "How was mediation?" survey (idempotent —
+    # only the first summary per user actually creates a doc; subsequent
+    # summaries no-op).
+    try:
+        import survey_routes  # local import to avoid circular at module load
+        await survey_routes.schedule_post_event_survey(
+            db,
+            user_id=current.user_id,
+            email=current.email if not current.is_guest else None,
+            name=current.name,
+            summary_id=summary_id,
+        )
+    except Exception:  # noqa: BLE001
+        # Survey scheduling must never block summary generation.
+        pass
+
     return doc
 
 

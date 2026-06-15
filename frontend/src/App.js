@@ -31,6 +31,8 @@ import AccountSetup from "@/pages/AccountSetup";
 import ProgressPage from "@/pages/Progress";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
+import AdminSurveys from "@/pages/AdminSurveys";
+import PostEventSurvey from "@/pages/PostEventSurvey";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
@@ -72,6 +74,7 @@ function AppRoutes() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
+        <Route path="/survey/:token" element={<PostEventSurvey />} />
         <Route
           path="/claim"
           element={
@@ -179,6 +182,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/surveys"
+          element={
+            <ProtectedRoute>
+              <AdminSurveys />
             </ProtectedRoute>
           }
         />

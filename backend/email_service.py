@@ -287,6 +287,76 @@ def send_verification_link(*, to_email: str, link_url: str, user_name: Optional[
     )
 
 
+def send_post_event_survey(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
+    """Initial post-event ("How was mediation?") survey email — sent 7 days
+    after a user generates their Mediation Summary."""
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    plain = (
+        f"{greeting}\n\n"
+        "Now that you've had a chance to use SA CoParenting App, we'd love to hear how it went.\n\n"
+        "Your feedback helps us improve the app for other parents — and if you've shared it "
+        "with a mediator, therapist, or attorney, your perspective is incredibly valuable.\n\n"
+        "The survey takes about 3 minutes:\n\n"
+        f"{link_url}\n\n"
+        "Thank you for taking the time to help us build something better for families.\n\n"
+        "— SA CoParenting App · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"{greeting} Now that you've had a chance to use SA CoParenting App, we'd "
+        f"love to hear how it went.</p>"
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
+        "Your answers help us improve the app for other parents. It takes about "
+        "<strong>3 minutes</strong>.</p>"
+    )
+    html = _branded_html(
+        headline="How did it go?",
+        body_html=body_html,
+        cta_label="Take the 3-minute survey",
+        cta_url=link_url,
+    )
+    _send(
+        to_email=to_email,
+        subject="How did SA CoParenting App work for you?",
+        html=html,
+        text=plain,
+        failure_message="Could not send the survey invitation right now.",
+    )
+
+
+def send_post_event_survey_reminder(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
+    """Single reminder if the parent didn't respond to the first email."""
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    plain = (
+        f"{greeting}\n\n"
+        "Just a gentle follow-up — when you have a spare 3 minutes, we'd really value "
+        "your honest feedback on SA CoParenting App.\n\n"
+        f"{link_url}\n\n"
+        "If you'd rather not respond, no worries — this is the last reminder you'll get.\n\n"
+        "— SA CoParenting App · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"{greeting} A gentle follow-up — when you have 3 minutes, we'd really value "
+        f"your honest feedback.</p>"
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 24px 0;">'
+        "This is the last reminder you'll get about this survey.</p>"
+    )
+    html = _branded_html(
+        headline="One quick favour",
+        body_html=body_html,
+        cta_label="Share your feedback",
+        cta_url=link_url,
+    )
+    _send(
+        to_email=to_email,
+        subject="A quick favour — how did SA CoParenting App work for you?",
+        html=html,
+        text=plain,
+        failure_message="Could not send the survey reminder right now.",
+    )
+
+
 def send_mediator_email(
     *,
     to_email: str,
