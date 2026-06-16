@@ -22,25 +22,86 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { markOrientationSeen } from "./Orientation";
+import IntroTourModal from "../components/IntroTourModal";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
+/* ============================================================
+   ENTER-APP CONTEXT
+   Shared across the Landing page so every "Enter the App" CTA
+   plays the intro video first, then proceeds into the app once
+   the video closes.
+============================================================ */
+const EnterAppContext = React.createContext(null);
+
+function EnterAppProvider({ children }) {
+  const { startGuest } = useAuth();
+  const navigate = useNavigate();
+  const [showIntro, setShowIntro] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const proceedIntoApp = async () => {
+    try {
+      await startGuest();
+      markOrientationSeen();
+      navigate("/dashboard");
+    } catch (err) {
+      logError("Enter app failed:", err);
+      setError(
+        err?.response?.data?.detail ||
+          "Couldn't open the app right now. Please try again in a moment."
+      );
+      setLoading(false);
+    }
+  };
+
+  const enter = () => {
+    if (loading || showIntro) return;
+    setError(null);
+    setLoading(true);
+    setShowIntro(true);
+  };
+
+  const handleVideoEnd = async () => {
+    setShowIntro(false);
+    await proceedIntoApp();
+  };
+
+  return (
+    <EnterAppContext.Provider value={{ enter, loading, error }}>
+      {children}
+      <IntroTourModal open={showIntro} onClose={handleVideoEnd} />
+    </EnterAppContext.Provider>
+  );
+}
+
+function useEnterApp() {
+  const ctx = React.useContext(EnterAppContext);
+  if (!ctx) {
+    throw new Error("useEnterApp must be used inside an EnterAppProvider");
+  }
+  return ctx;
+}
+
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-[#F8F7FC]">
-      <MarketingHeader />
-      <Hero />
-      <WaveDivider flip color="#F8F7FC" bgColor="transparent" />
-      <Philosophy />
-      <Features />
-      <WaveDivider color="#F8F7FC" bgColor="transparent" />
-      <HowItWorks />
-      <ScreenshotShowcase />
-      <ForMediators />
-      <FAQ />
-      <FinalCTA />
-      <MarketingFooter />
-    </div>
+    <EnterAppProvider>
+      <div className="min-h-screen bg-[#F8F7FC]">
+        <MarketingHeader />
+        <Hero />
+        <WaveDivider flip color="#F8F7FC" bgColor="transparent" />
+        <Philosophy />
+        <Features />
+        <WaveDivider color="#F8F7FC" bgColor="transparent" />
+        <HowItWorks />
+        <ScreenshotShowcase />
+        <ForMediators />
+        <FAQ />
+        <FinalCTA />
+        <MarketingFooter />
+      </div>
+    </EnterAppProvider>
   );
 }
 
@@ -83,36 +144,9 @@ function BrandMark({ size = 44, className = "" }) {
 
 /* ============================================================
    ENTER BUTTON — shared CTA across landing surfaces.
-   Single front door into the app; auth flows are temporarily
-   removed from the UI (routes remain wired for the contractor).
+   Now uses the EnterAppContext provider at the top of Landing
+   so a click first plays the intro video, then enters the app.
 ============================================================ */
-function useEnterApp() {
-  const { startGuest } = useAuth();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const enter = async () => {
-    if (loading) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await startGuest();
-      // Skip the orientation tutorial — let parents land in the app.
-      markOrientationSeen();
-      navigate("/dashboard");
-    } catch (err) {
-      logError("Enter app failed:", err);
-      setError(
-        err?.response?.data?.detail ||
-          "Couldn't open the app right now. Please try again in a moment."
-      );
-      setLoading(false);
-    }
-  };
-
-  return { enter, loading, error };
-}
 
 /* ============================================================
    HEADER
