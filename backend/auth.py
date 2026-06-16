@@ -425,7 +425,9 @@ async def update_profile(
 
 
 # ============ Guest Sandbox ============
-GUEST_LIFETIME_HOURS = int(os.environ.get("GUEST_LIFETIME_HOURS", "24"))
+# 1 year by default — matches the original spec's "1-year Demo Sandbox". Override
+# via the GUEST_LIFETIME_HOURS env var if needed.
+GUEST_LIFETIME_HOURS = int(os.environ.get("GUEST_LIFETIME_HOURS", str(24 * 365)))
 GUEST_RATE_LIMIT_PER_HOUR = int(os.environ.get("GUEST_RATE_LIMIT_PER_HOUR", "3"))
 
 
@@ -442,8 +444,10 @@ async def start_guest_session(
     response: Response,
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    """Spin up a temporary 24-hour guest account. Wizard works; premium
-    features (AI summary, PDF, email, share) are gated behind /claim."""
+    """Spin up a 1-year demo guest account. Wizard works; premium
+    features behave the same as a permanent account — the demo is full
+    read+write, it just expires after the lifetime. After expiry the user
+    can `/claim` to keep their data."""
     ip = _client_ip(request)
     one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
     recent = await db.users.count_documents(

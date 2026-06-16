@@ -109,10 +109,13 @@ async def send_coparent_invite(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """Send (or re-use) an invite to the given co-parent email."""
-    if current.is_guest:
+    # Demo (guest) accounts can invite a co-parent too — the recipient signs up
+    # as their own permanent account, completely independent of the demo.
+    # When the guest later claims their own account, both halves persist.
+    if current.is_guest and not current.email:
         raise HTTPException(
-            status_code=402,
-            detail="Save your work to unlock inviting your co-parent.",
+            status_code=400,
+            detail="Demo sessions can't send invites without an email address.",
         )
     invitee = _normalize_email(body.email)
     if not invitee:

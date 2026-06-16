@@ -335,6 +335,15 @@ See `/app/memory/test_credentials.md`
 - Modal: `IntroTourModal.jsx` (skip-after-3s, tap-to-unmute fallback, `localStorage` flag so returning users don't see it again)
 
 
+### Feb 2026 — Demo Mode Restored to 1-Year Sandbox (P0 → SHIPPED)
+- **Original PRD spec restored**: guest demo sessions now last **1 year** (was 24 hours). Override via `GUEST_LIFETIME_HOURS` env var if needed.
+- **Full read+write parity with permanent accounts**: demo users can use every feature — wizard, AI summary, PDF, mediator email, invite co-parent, journal, weekly recap. No artificial paywalls.
+- **Soft upgrade nudge** still shown on Summary page (gentle, dismissible — not a block).
+- **Files changed**: `auth.py` (GUEST_LIFETIME_HOURS default 24 → 8760; updated docstring), `invite_routes.py` (removed 402 block — guests with an email can now invite co-parents).
+- **Entry point**: Landing page "Enter the App" CTA already calls `startGuest()` — no UI changes needed. The button was never removed; only the session lifetime had been shortened.
+- **Verified**: `curl POST /api/auth/guest` returns a session with `expires_at` 364 days in the future. All 8 invite + survey tests still pass.
+
+
 ### Feb 2026 — Invite Co-parent Flow (P2 → SHIPPED)
 - **One-tap email invite** lets a signed-in parent email their co-parent a link to prep in their **own private workspace** — answers never shared between the two accounts.
 - **Card placed in two locations**: Dashboard (always visible for non-guests) + Summary page (after first prep is complete).
