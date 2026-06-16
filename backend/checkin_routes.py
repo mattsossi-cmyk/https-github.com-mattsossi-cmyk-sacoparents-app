@@ -54,14 +54,29 @@ async def schedule_post_summary_checkin(
     name: Optional[str],
     summary_id: str,
 ) -> None:
-    """Idempotent: skips if a check-in already exists for this (user, summary).
-    Also skips guests without a real email."""
+    """Schedule a 14-day check-in for this user.
+
+    Idempotency / spam-protection:
+      - Skip if a check-in already exists for this exact (user, summary).
+      - Skip if the user had ANY check-in (pending OR sent) within the last
+        30 days. This stops summary regenerations on the same day from
+        producing duplicate emails, while still letting long-engaged users
+        receive a fresh check-in after a real gap.
+      - Skip guests / demo emails.
+    """
     if not email or "@demo.local" in email:
         return
     existing = await db.post_summary_checkins.find_one(
         {"user_id": user_id, "summary_id": summary_id}, {"_id": 0, "checkin_id": 1}
     )
     if existing:
+        return
+    recent_cutoff = _iso(_now() - timedelta(days=30))
+    recent = await db.post_summary_checkins.find_one(
+        {"user_id": user_id, "created_at": {"$gte": recent_cutoff}},
+        {"_id": 0, "checkin_id": 1},
+    )
+    if recent:
         return
     await db.post_summary_checkins.insert_one({
         "checkin_id": f"chk_{uuid.uuid4().hex[:12]}",

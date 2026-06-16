@@ -132,3 +132,44 @@ async def test_send_due_skips_future_scheduled(db, cleanup):
     doc = await db.post_summary_checkins.find_one({"user_id": uid})
     assert doc["status"] == "pending"
     assert doc["sent_at"] is None
+
+
+@pytest.mark.asyncio
+async def test_summary_regeneration_same_day_no_duplicate(db, cleanup):
+    """Regenerating a summary on the same day should NOT spawn a second
+    check-in (spam protection)."""
+    uid = cleanup
+    await checkin_routes.schedule_post_summary_checkin(
+        db, user_id=uid, email="t@example.com", name="Test", summary_id="sum_v1",
+    )
+    await checkin_routes.schedule_post_summary_checkin(
+        db, user_id=uid, email="t@example.com", name="Test", summary_id="sum_v2",
+    )
+    n = await db.post_summary_checkins.count_documents({"user_id": uid})
+    assert n == 1
+
+
+@pytest.mark.asyncio
+async def test_summary_regeneration_after_30_days_creates_new(db, cleanup):
+    """Long-engaged user who regenerates a summary >30 days later SHOULD
+    receive a fresh check-in."""
+    uid = cleanup
+    # Insert an old check-in (already sent, 60 days back).
+    old_iso = _iso(datetime.now(timezone.utc) - timedelta(days=60))
+    await db.post_summary_checkins.insert_one({
+        "checkin_id": f"chk_{uuid.uuid4().hex[:8]}",
+        "user_id": uid,
+        "summary_id": "sum_old",
+        "email": "t@example.com",
+        "name": "Test",
+        "status": "sent",
+        "created_at": old_iso,
+        "scheduled_send_at": old_iso,
+        "sent_at": old_iso,
+    })
+
+    await checkin_routes.schedule_post_summary_checkin(
+        db, user_id=uid, email="t@example.com", name="Test", summary_id="sum_new",
+    )
+    n = await db.post_summary_checkins.count_documents({"user_id": uid})
+    assert n == 2
