@@ -230,6 +230,19 @@ async def generate_summary(
         # Survey scheduling must never block summary generation.
         pass
 
+    # Also schedule a 14-day check-in with a personalised journal recap.
+    try:
+        import checkin_routes
+        await checkin_routes.schedule_post_summary_checkin(
+            db,
+            user_id=current.user_id,
+            email=current.email if not current.is_guest else None,
+            name=current.name,
+            summary_id=summary_id,
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
     return doc
 
 

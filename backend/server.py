@@ -20,6 +20,7 @@ from mediator_routes import router as mediator_router  # noqa: E402
 from email_webhook_routes import router as email_webhook_router  # noqa: E402
 from survey_routes import router as survey_router, survey_scheduler_loop  # noqa: E402
 from invite_routes import router as invite_router  # noqa: E402
+from checkin_routes import checkin_scheduler_loop  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -124,6 +125,7 @@ async def startup_log():
     # Kick off the post-event survey scheduler. It sleeps internally so it
     # won't run before the DB is warm.
     asyncio.create_task(survey_scheduler_loop(app))
+    asyncio.create_task(checkin_scheduler_loop(app))
 
 
 @app.on_event("shutdown")

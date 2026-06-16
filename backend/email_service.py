@@ -287,6 +287,75 @@ def send_verification_link(*, to_email: str, link_url: str, user_name: Optional[
     )
 
 
+def send_post_summary_checkin(
+    *,
+    to_email: str,
+    user_name: Optional[str] = None,
+    recap_text: Optional[str] = None,
+    journal_url: str = "",
+) -> None:
+    """Two-week post-summary check-in. Embeds the user's AI-generated weekly
+    journal recap if they have one; otherwise sends a simpler check-in note."""
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    cta_url = journal_url or "https://sacoparentsapp.online/journal"
+
+    if recap_text:
+        plain = (
+            f"{greeting}\n\n"
+            "It's been two weeks since you put your Mediation Prep Summary together. "
+            "We just wanted to check in.\n\n"
+            "Here's a short recap of your journal from the past week:\n\n"
+            f"{recap_text}\n\n"
+            f"Pick up where you left off:\n{cta_url}\n\n"
+            "— SA CoParenting App · sacoparentsapp.online\n"
+        )
+        body_html = (
+            f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+            f"{greeting} It's been two weeks since you put your Mediation Prep "
+            f"Summary together. We wanted to check in.</p>"
+            '<div style="background:#F8F7FC;border-left:3px solid #3D1A78;'
+            'padding:14px 18px;border-radius:6px;margin:0 0 22px 0;">'
+            '<div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;'
+            'color:#3D1A78;font-weight:700;margin-bottom:6px;">Your week in review</div>'
+            f'<div style="font-size:14px;line-height:1.6;color:#1A1330;white-space:pre-wrap;">'
+            f"{recap_text}</div></div>"
+        )
+        subject = "Two weeks on — your check-in from SA CoParenting App"
+    else:
+        plain = (
+            f"{greeting}\n\n"
+            "It's been two weeks since you put together your Mediation Prep Summary. "
+            "We just wanted to check in.\n\n"
+            "How are things going? A few quiet minutes in the journal — even one short "
+            "entry — can help you stay grounded and focused on what matters most.\n\n"
+            f"Open your journal:\n{cta_url}\n\n"
+            "— SA CoParenting App · sacoparentsapp.online\n"
+        )
+        body_html = (
+            f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+            f"{greeting} It's been two weeks since you put together your Mediation "
+            f"Prep Summary. We wanted to check in.</p>"
+            '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 22px 0;">'
+            "How are things going? A few quiet minutes in the journal — even one short "
+            "entry — can help you stay grounded and focused on what matters most.</p>"
+        )
+        subject = "Two weeks on — your check-in from SA CoParenting App"
+
+    html = _branded_html(
+        headline="Just checking in",
+        body_html=body_html,
+        cta_label="Open my journal",
+        cta_url=cta_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=html,
+        text=plain,
+        failure_message="Could not send the check-in email right now.",
+    )
+
+
 def send_coparent_invite(*, to_email: str, link_url: str, inviter_name: Optional[str] = None) -> None:
     """Invite a co-parent to prep for mediation in their own private account."""
     inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"

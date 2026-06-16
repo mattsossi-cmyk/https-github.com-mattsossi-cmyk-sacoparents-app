@@ -335,6 +335,17 @@ See `/app/memory/test_credentials.md`
 - Modal: `IntroTourModal.jsx` (skip-after-3s, tap-to-unmute fallback, `localStorage` flag so returning users don't see it again)
 
 
+### Feb 2026 — Two-Week Post-Summary Check-in Email (P2 → SHIPPED)
+- **Auto-scheduled 14 days** after a user generates their first Mediation Summary. Idempotent per (user, summary). Skipped for guests / demo emails.
+- **Personalised content**: if the user has ≥2 journal entries in the past 7 days, the email embeds an **AI-generated weekly recap** (Claude via Emergent LLM Key) in a branded callout. If not, sends a simpler "How are things going?" check-in note.
+- **CTA**: "Open my journal" → `/journal`.
+- **Background sweeper**: new `asyncio` task `checkin_scheduler_loop` runs every 30 minutes (configurable via `POST_SUMMARY_CHECKIN_SWEEP_SECONDS`). Bails gracefully if Resend isn't configured. Per-doc try/except so one bad row never blocks the queue.
+- **Backend files**: new `checkin_routes.py` (scheduling helper + sweeper). New `send_post_summary_checkin()` in `email_service.py`. Hooked into `POST /api/mediation/summary` alongside the existing post-event survey scheduler.
+- **DB**: new `post_summary_checkins` collection — `{checkin_id, user_id, summary_id, email, name, status, created_at, scheduled_send_at, sent_at}`.
+- **Env knobs**: `POST_SUMMARY_CHECKIN_DELAY_DAYS=14`, `POST_SUMMARY_CHECKIN_SWEEP_SECONDS=1800` (both optional with sensible defaults).
+- **Tests**: 5/5 pytest pass at `/app/backend/tests/test_post_summary_checkin.py` (idempotency, demo-skip, 14-day scheduling, due-send marks `sent`, future-scheduled stays `pending`). 13/13 across all three growth-loop test suites.
+
+
 ### Feb 2026 — Landing Page Rewrite (P1 → SHIPPED)
 - **Replaced the entire marketing page** with the user-authored 6-section structure focused on the SA CoParents positioning:
   1. **Hero** — "Stop Parent Conflict Before It Reaches the Courtroom" + dual CTAs ("Take the Free Assessment" / "See How It Works") + 4 trust badges
@@ -394,6 +405,4 @@ See `/app/memory/test_credentials.md`
 
 
 ### 📋 Backlog (P2 remaining)
-- Invite Co-parent flow (one-tap "Email my co-parent a prep link")
 - Server-side legal-acknowledgment audit trail (who/when)
-- Two-week post-summary check-in email (auto journal recap nudge)
