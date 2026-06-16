@@ -335,6 +335,20 @@ See `/app/memory/test_credentials.md`
 - Modal: `IntroTourModal.jsx` (skip-after-3s, tap-to-unmute fallback, `localStorage` flag so returning users don't see it again)
 
 
+### Feb 2026 — Landing Page Rewrite (P1 → SHIPPED)
+- **Replaced the entire marketing page** with the user-authored 6-section structure focused on the SA CoParents positioning:
+  1. **Hero** — "Stop Parent Conflict Before It Reaches the Courtroom" + dual CTAs ("Take the Free Assessment" / "See How It Works") + 4 trust badges
+  2. **The Problem** — "When Parents Fight, Children Feel It" + 6 common challenges + good-news block
+  3. **How It Works** — 3-step process (Assess → Learn → Prepare)
+  4. **Why Different** — Child-Centered Focus, Child-Focused Mediation Prep, Foundation Statement card with 5 outcomes, Co-Parenting Agreement card
+  5. **Built on Child-Focused Mediation** — 5 helps + Pre-Mediation Assessment with 5 benefits + closing quote card ("Children thrive when parents work together…")
+  6. **Final CTA** — "Your Children Deserve Parents Who Can Work Together" + dual CTAs + tagline
+- **All CTAs route through `EnterAppProvider`** — every "Take the Free Assessment" click plays the intro video first, then drops the user into the guest demo wizard.
+- **Removed**: FAQ, App Store screenshots, mediator panel, App Store badges (user requested "replace everything").
+- **Cache-busted video URL** (`/intro-tour.mp4?v=3-reports-2026-06`) and bumped storage key so every browser picks up the new narration.
+- **File**: `pages/Landing.jsx` fully rewritten (~710 lines, single-file for now — extract subcomponents only if a section grows further).
+
+
 ### Feb 2026 — Intro Video Plays on Landing + Cache Busted (P1 → SHIPPED)
 - **Moved trigger from Dashboard → Landing**. The 67.5-second narrated tour now plays as soon as a user clicks **"Enter the App"** (any CTA on the marketing page), before they reach the dashboard. Every click triggers it; the modal closes via `onEnded` and then `startGuest()` + navigate to dashboard run.
 - **Architecture**: Added `EnterAppProvider` context at the top of `pages/Landing.jsx` — exposes `useEnterApp()` for every CTA, manages modal state, loading, errors centrally. The modal is mounted once at the Landing root.
