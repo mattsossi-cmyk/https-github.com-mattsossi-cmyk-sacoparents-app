@@ -335,6 +335,25 @@ See `/app/memory/test_credentials.md`
 - Modal: `IntroTourModal.jsx` (skip-after-3s, tap-to-unmute fallback, `localStorage` flag so returning users don't see it again)
 
 
+### Feb 2026 — Admin Weekly Insights Page (P3 → SHIPPED)
+- **AI-generated 5-minute Monday read** for the platform owner. Pulls 7 days of: post-event survey open-text, journal snippets, legal acks, sign-ups, summaries, invites + acceptance rate, and the NPS distribution. Sends the structured payload to **Claude (Emergent LLM Key)** with a strict-JSON contract.
+- **Output schema**: `{headline, highlights[], user_voice_themes[], concerning_patterns[], recommended_actions[], closing_note}`. The `concerning_patterns` block surfaces anything hinting at DV / suicidal ideation / child welfare — rendered in a red-edged callout card.
+- **Caching**: keyed by ISO week (`weekly_insights` collection). Generated automatically on first GET each week; admin can hit **Regenerate** any time to force a fresh build.
+- **Backend**: new `insights_routes.py`. Reuses `SAFETY_GUARDRAIL` + `CLAUDE_MODEL` from `ai_service.py`. Tolerant JSON parser handles fenced/wrapped responses.
+- **Frontend**: new `pages/AdminInsights.jsx` route at `/admin/insights`. Linked from AdminDashboard. Loading state explains the ~30s first-build delay.
+- **Endpoints**: `GET /api/insights/admin/weekly`, `POST /api/insights/admin/weekly/regenerate` — both admin-gated.
+- **Tests**: 4/4 pytest pass — auth gate, non-admin 403, real-DB signal gathering (no crashes on empty collections), and `_build_and_cache` writes a doc keyed by ISO week (LLM mocked).
+
+
+### Feb 2026 — Legal Acknowledgment Audit Trail (P2 → SHIPPED)
+- **Server-side record** of who acknowledged the legal disclaimer and when — durable record for liability defense. The frontend modal still gates the UI via localStorage; the audit trail is in addition to it, not instead of it.
+- **Endpoint**: `POST /api/legal/acknowledge` — records `{user_id, email, name, is_guest, version, ip (honors x-forwarded-for), user_agent, acknowledged_at}` in the `legal_acknowledgments` collection. **Idempotent upsert** on `(user_id, version)` so refreshes don't bloat the table; `first_acknowledged_at` is preserved on re-acks.
+- **Admin endpoints**: `GET /api/legal/admin/acks` (recent list + counts), `GET /api/legal/admin/acks.csv` (full CSV export). Linked from AdminDashboard top bar.
+- **Frontend**: `LegalAcknowledgment.jsx` now fires the POST in the background when the user clicks "I acknowledge — continue". Best-effort: if the user isn't authed yet (rare; modal usually appears after they enter), the request 401s silently.
+- **DB**: new `legal_acknowledgments` collection.
+- **Tests**: 4/4 pytest pass at `/app/backend/tests/test_legal_ack.py` (auth gate, row + metadata recorded, idempotent upsert, admin gate).
+
+
 ### Feb 2026 — Two-Week Post-Summary Check-in Email (P2 → SHIPPED)
 - **Auto-scheduled 14 days** after a user generates their first Mediation Summary. Idempotent per (user, summary). Skipped for guests / demo emails.
 - **Personalised content**: if the user has ≥2 journal entries in the past 7 days, the email embeds an **AI-generated weekly recap** (Claude via Emergent LLM Key) in a branded callout. If not, sends a simpler "How are things going?" check-in note.
@@ -405,4 +424,4 @@ See `/app/memory/test_credentials.md`
 
 
 ### 📋 Backlog (P2 remaining)
-- Server-side legal-acknowledgment audit trail (who/when)
+_All P2 items shipped — backlog empty. Next priorities will come from real user signals._

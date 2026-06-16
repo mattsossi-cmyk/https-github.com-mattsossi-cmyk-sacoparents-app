@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ScrollText, Check } from "lucide-react";
+import { api } from "../lib/api";
+import { logError } from "../lib/logger";
 
 const STORAGE_KEY = "sac_legal_ack_v1";
 const VERSION = "v1";
@@ -63,6 +65,12 @@ export default function LegalAcknowledgment() {
     recordAck();
     setOpen(false);
     document.body.style.overflow = "";
+    // Best-effort server-side audit trail. Don't block the UI on this — if the
+    // user isn't signed in yet (rare; the modal usually appears post-Landing),
+    // the request 401s and we silently move on.
+    api.post("/legal/acknowledge", { version: VERSION }).catch((e) => {
+      logError("legal ack server log failed", e);
+    });
   };
 
   return (

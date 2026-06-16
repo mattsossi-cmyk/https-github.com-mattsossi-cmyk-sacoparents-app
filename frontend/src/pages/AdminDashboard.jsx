@@ -323,6 +323,20 @@ export default function AdminDashboard() {
             <div className="eyebrow">Recent signups</div>
             <div className="flex items-center gap-4">
               <Link
+                to="/admin/insights"
+                className="text-xs font-medium text-[#3D1A78] hover:underline"
+                data-testid="admin-insights-link"
+              >
+                Weekly insights →
+              </Link>
+              <a
+                href={`${process.env.REACT_APP_BACKEND_URL}/api/legal/admin/acks.csv`}
+                className="text-xs font-medium text-[#3D1A78] hover:underline"
+                data-testid="admin-legal-csv-link"
+              >
+                Legal acks CSV →
+              </a>
+              <Link
                 to="/admin/surveys"
                 className="text-xs font-medium text-[#3D1A78] hover:underline"
                 data-testid="admin-surveys-link"

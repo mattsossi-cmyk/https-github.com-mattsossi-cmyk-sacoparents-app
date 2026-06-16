@@ -32,6 +32,7 @@ import ProgressPage from "@/pages/Progress";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminSurveys from "@/pages/AdminSurveys";
+import AdminInsights from "@/pages/AdminInsights";
 import PostEventSurvey from "@/pages/PostEventSurvey";
 import InviteAccept from "@/pages/InviteAccept";
 import ForgotPassword from "@/pages/ForgotPassword";
@@ -192,6 +193,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <AdminSurveys />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/insights"
+          element={
+            <ProtectedRoute>
+              <AdminInsights />
             </ProtectedRoute>
           }
         />
