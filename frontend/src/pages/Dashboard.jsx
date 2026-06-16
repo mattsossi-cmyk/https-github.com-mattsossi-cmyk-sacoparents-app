@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import VerificationBanner from "../components/VerificationBanner";
 import EmailHealthBanner from "../components/EmailHealthBanner";
-import IntroTourModal from "../components/IntroTourModal";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
@@ -64,7 +63,6 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [prep, setPrep] = useState({ completed: {} });
-  const [showIntro, setShowIntro] = useState(false);
 
   // First-time visitors: send them through the orientation walkthrough.
   useEffect(() => {
@@ -72,14 +70,6 @@ export default function Dashboard() {
       navigate("/orientation", { replace: true });
     }
   }, [navigate]);
-
-  // Show the narrated intro tour once per device — fires whenever a user
-  // lands on the dashboard for the first time (guest, signup, or login).
-  useEffect(() => {
-    if (!IntroTourModal.hasBeenSeen()) {
-      setShowIntro(true);
-    }
-  }, []);
 
   useEffect(() => {
     api
@@ -131,7 +121,6 @@ export default function Dashboard() {
 
   return (
     <AppShell>
-      <IntroTourModal open={showIntro} onClose={() => setShowIntro(false)} />
       <div className="fade-up">
         <EmailHealthBanner />
         <VerificationBanner />

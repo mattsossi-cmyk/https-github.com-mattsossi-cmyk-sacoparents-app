@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { X, Volume2, VolumeX } from "lucide-react";
 
-const STORAGE_KEY = "sac_intro_tour_seen_v1";
+const STORAGE_KEY = "sac_intro_tour_seen_v2_3reports";
 const SKIP_AFTER_MS = 3000;
 
 /**
@@ -77,7 +77,7 @@ export default function IntroTourModal({ open, onClose }) {
     >
       <video
         ref={videoRef}
-        src="/intro-tour.mp4"
+        src="/intro-tour.mp4?v=3-reports-2026-06"
         autoPlay
         playsInline
         onEnded={close}

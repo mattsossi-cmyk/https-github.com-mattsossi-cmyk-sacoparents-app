@@ -335,6 +335,14 @@ See `/app/memory/test_credentials.md`
 - Modal: `IntroTourModal.jsx` (skip-after-3s, tap-to-unmute fallback, `localStorage` flag so returning users don't see it again)
 
 
+### Feb 2026 — Intro Video Plays on Landing + Cache Busted (P1 → SHIPPED)
+- **Moved trigger from Dashboard → Landing**. The 67.5-second narrated tour now plays as soon as a user clicks **"Enter the App"** (any CTA on the marketing page), before they reach the dashboard. Every click triggers it; the modal closes via `onEnded` and then `startGuest()` + navigate to dashboard run.
+- **Architecture**: Added `EnterAppProvider` context at the top of `pages/Landing.jsx` — exposes `useEnterApp()` for every CTA, manages modal state, loading, errors centrally. The modal is mounted once at the Landing root.
+- **Dashboard cleaned up**: removed the duplicate trigger + `IntroTourModal` import from `Dashboard.jsx`.
+- **Cache-busted video URL**: `/intro-tour.mp4?v=3-reports-2026-06` — forces every browser to pull the **latest 3-reports narration** even if the old version was aggressively cached. Bumped `STORAGE_KEY` to `sac_intro_tour_seen_v2_3reports` so any user who already "saw" the previous video gets the new one once.
+- **Files**: `pages/Landing.jsx`, `pages/Dashboard.jsx`, `components/IntroTourModal.jsx`.
+
+
 ### Feb 2026 — Demo Mode Restored to 1-Year Sandbox (P0 → SHIPPED)
 - **Original PRD spec restored**: guest demo sessions now last **1 year** (was 24 hours). Override via `GUEST_LIFETIME_HOURS` env var if needed.
 - **Full read+write parity with permanent accounts**: demo users can use every feature — wizard, AI summary, PDF, mediator email, invite co-parent, journal, weekly recap. No artificial paywalls.
