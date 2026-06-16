@@ -22,7 +22,10 @@ from survey_routes import router as survey_router, survey_scheduler_loop  # noqa
 from invite_routes import router as invite_router  # noqa: E402
 from checkin_routes import checkin_scheduler_loop, router as checkin_router  # noqa: E402
 from legal_routes import router as legal_router  # noqa: E402
-from insights_routes import router as insights_router  # noqa: E402
+from insights_routes import (  # noqa: E402
+    router as insights_router,
+    admin_briefing_scheduler_loop,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -131,6 +134,7 @@ async def startup_log():
     # won't run before the DB is warm.
     asyncio.create_task(survey_scheduler_loop(app))
     asyncio.create_task(checkin_scheduler_loop(app))
+    asyncio.create_task(admin_briefing_scheduler_loop(app))
 
 
 @app.on_event("shutdown")

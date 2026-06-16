@@ -124,3 +124,85 @@ def test_build_and_cache_writes_to_mongo(cleanup_week):
             client.close()
 
     asyncio.run(run())
+
+
+# ============ Monday-morning auto-email sweeper ============
+def test_monday_sender_no_op_on_tuesday(cleanup_week):
+    """Outside Monday 8AM window, no email goes out."""
+    week = cleanup_week
+
+    class FakeTue(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 6, 16, 9, 0, tzinfo=tz or timezone.utc)  # Tuesday
+
+    async def run():
+        client = AsyncIOMotorClient(MONGO_URL)
+        try:
+            db = client[DB_NAME]
+            await db.weekly_insights_emails.delete_many({"week_iso": week})
+            with (
+                patch.object(insights_routes, "_now_local", lambda: FakeTue(2026, 6, 16, 9, 0, tzinfo=timezone.utc)),
+                patch.object(insights_routes.email_service, "send_admin_weekly_briefing") as fake_send,
+            ):
+                result = await insights_routes._send_monday_briefing(db)
+            assert result is False
+            fake_send.assert_not_called()
+        finally:
+            await client[DB_NAME].weekly_insights_emails.delete_many({"week_iso": week})
+            client.close()
+
+    asyncio.run(run())
+
+
+def test_monday_sender_sends_once_per_week(cleanup_week):
+    """On Monday at/after 8AM local, the briefing is built, emailed to each
+    admin, and idempotent on repeat invocations within the same ISO week."""
+    week = cleanup_week
+    fake_briefing = {
+        "headline": "Good week.",
+        "highlights": ["A"],
+        "user_voice_themes": [],
+        "concerning_patterns": [],
+        "recommended_actions": ["B"],
+        "closing_note": "",
+    }
+    fake_signals = {"counts": {}, "nps": {"count": 0, "avg": None}}
+
+    async def run():
+        client = AsyncIOMotorClient(MONGO_URL)
+        try:
+            db = client[DB_NAME]
+            await db.weekly_insights.delete_many({"week_iso": week})
+            await db.weekly_insights_emails.delete_many({"week_iso": week})
+            # Pre-cache the briefing so we don't actually call the LLM.
+            await db.weekly_insights.insert_one({
+                "week_iso": week,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "signals": fake_signals,
+                "briefing": fake_briefing,
+            })
+
+            monday_8 = datetime(2026, 6, 15, 8, 30, tzinfo=timezone.utc)  # Monday
+            with (
+                patch.object(insights_routes, "_now_local", lambda: monday_8),
+                patch.object(insights_routes, "ADMIN_EMAILS", {"a@example.com", "b@example.com"}),
+                patch.object(insights_routes.email_service, "send_admin_weekly_briefing") as fake_send,
+            ):
+                first = await insights_routes._send_monday_briefing(db)
+                second = await insights_routes._send_monday_briefing(db)
+
+            assert first is True
+            assert second is False  # idempotent within the same ISO week
+            assert fake_send.call_count == 2  # two admin recipients on first call only
+            recorded = await db.weekly_insights_emails.find_one(
+                {"week_iso": week}, {"_id": 0}
+            )
+            assert recorded["sent_at"]
+            assert sorted(recorded["recipients"]) == ["a@example.com", "b@example.com"]
+        finally:
+            await client[DB_NAME].weekly_insights.delete_many({"week_iso": week})
+            await client[DB_NAME].weekly_insights_emails.delete_many({"week_iso": week})
+            client.close()
+
+    asyncio.run(run())

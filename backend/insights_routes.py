@@ -14,18 +14,27 @@ Cached per ISO week so we don't burn tokens on every page load.
 Endpoints:
   - GET  /api/insights/admin/weekly             (admin only — read cached/build)
   - POST /api/insights/admin/weekly/regenerate  (admin only — force a fresh build)
+
+Background scheduler:
+  - Every Monday at ADMIN_BRIEFING_HOUR (default 8) local time
+    (ADMIN_BRIEFING_TZ, default America/New_York), the weekly briefing is
+    auto-built (if not already cached) and emailed to every ADMIN_EMAILS
+    recipient. Cached "last sent" key prevents duplicates.
 """
+import asyncio
 import json
 import logging
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from analytics_routes import require_admin
+import email_service
+from analytics_routes import ADMIN_EMAILS, require_admin
 from ai_service import CLAUDE_MODEL, PROVIDER, SAFETY_GUARDRAIL
 from models import UserPublic
 
@@ -230,3 +239,89 @@ async def regenerate_weekly_insights(
 ):
     """Force a fresh build for the current ISO week (overwrites the cache)."""
     return await _build_and_cache(request.app.state.db)
+
+
+# ============ Monday-morning auto-email ============
+ADMIN_BRIEFING_TZ = os.environ.get("ADMIN_BRIEFING_TZ", "America/New_York")
+ADMIN_BRIEFING_HOUR = int(os.environ.get("ADMIN_BRIEFING_HOUR", "8"))
+# How often the sweeper wakes up to check the clock. 15 min is plenty —
+# we'll catch Monday 8 AM within 15 minutes of it arriving.
+ADMIN_BRIEFING_SWEEP_SECONDS = int(os.environ.get("ADMIN_BRIEFING_SWEEP_SECONDS", "900"))
+
+
+def _now_local() -> datetime:
+    try:
+        tz = ZoneInfo(ADMIN_BRIEFING_TZ)
+    except ZoneInfoNotFoundError:
+        logger.warning("Unknown ADMIN_BRIEFING_TZ=%s; defaulting to UTC", ADMIN_BRIEFING_TZ)
+        tz = ZoneInfo("UTC")
+    return datetime.now(tz)
+
+
+async def _send_monday_briefing(db) -> bool:
+    """If it's Monday at/after the configured hour (local) and we haven't sent
+    this week's briefing yet, build it (or read from cache) and email each
+    admin. Returns True if an email actually went out."""
+    if not ADMIN_EMAILS:
+        return False
+    local = _now_local()
+    if local.weekday() != 0 or local.hour < ADMIN_BRIEFING_HOUR:
+        return False
+
+    week = _week_iso(_now())
+    sent_row = await db.weekly_insights_emails.find_one({"week_iso": week}, {"_id": 0})
+    if sent_row and sent_row.get("sent_at"):
+        return False
+
+    # Build or fetch the briefing for this week.
+    cached = await db.weekly_insights.find_one({"week_iso": week}, {"_id": 0})
+    if cached:
+        doc = cached
+    else:
+        doc = await _build_and_cache(db)
+
+    briefing = doc.get("briefing") or {}
+    signals = doc.get("signals") or {}
+
+    any_sent = False
+    for to_email in sorted(ADMIN_EMAILS):
+        try:
+            email_service.send_admin_weekly_briefing(
+                to_email=to_email,
+                week_iso=week,
+                briefing=briefing,
+                signals=signals,
+                view_url=_admin_insights_url(),
+            )
+            any_sent = True
+        except email_service.EmailNotConfigured:
+            logger.warning("Resend not configured; skipping admin briefing email.")
+            return False
+        except Exception:  # noqa: BLE001
+            logger.exception("Failed to send admin briefing to %s", to_email)
+
+    if any_sent:
+        await db.weekly_insights_emails.update_one(
+            {"week_iso": week},
+            {"$set": {"sent_at": _iso(_now()), "recipients": list(ADMIN_EMAILS)}},
+            upsert=True,
+        )
+    return any_sent
+
+
+def _admin_insights_url() -> str:
+    base = (os.environ.get("PUBLIC_APP_URL") or "").rstrip("/")
+    return f"{base}/admin/insights" if base else "/admin/insights"
+
+
+async def admin_briefing_scheduler_loop(app) -> None:
+    """Wakes up every 15 minutes and, if it's Monday 8 AM local, emails the
+    weekly briefing to each admin (once per ISO week)."""
+    await asyncio.sleep(120)  # warmup
+    while True:
+        try:
+            db = app.state.db
+            await _send_monday_briefing(db)
+        except Exception:  # noqa: BLE001
+            logger.exception("Admin briefing sweep failed; will retry.")
+        await asyncio.sleep(ADMIN_BRIEFING_SWEEP_SECONDS)

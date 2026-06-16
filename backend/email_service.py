@@ -356,6 +356,141 @@ def send_post_summary_checkin(
     )
 
 
+def send_admin_weekly_briefing(
+    *,
+    to_email: str,
+    week_iso: str,
+    briefing: dict,
+    signals: dict,
+    view_url: str = "",
+) -> None:
+    """Monday 8 AM admin email — wraps the AI-generated weekly briefing in
+    branded HTML."""
+
+    def _ul(items):
+        items = [i for i in (items or []) if i]
+        if not items:
+            return ""
+        lis = "".join(
+            f'<li style="margin:0 0 8px 0;color:#1A1330;font-size:14px;line-height:1.55;">{i}</li>'
+            for i in items
+        )
+        return f'<ul style="margin:0 0 18px 18px;padding:0;list-style:disc;">{lis}</ul>'
+
+    counts = (signals or {}).get("counts") or {}
+    avg_nps = ((signals or {}).get("nps") or {}).get("avg")
+    nps_line = f"Avg NPS {avg_nps}/10" if avg_nps is not None else "No NPS yet"
+    sign_ups = (counts.get("new_users") or 0) + (counts.get("new_guests") or 0)
+    counts_strip = (
+        '<table role="presentation" cellspacing="0" cellpadding="0" border="0" '
+        'style="width:100%;margin:0 0 22px 0;border-collapse:collapse;">'
+        '<tr>'
+        f'<td style="width:25%;background:#F8F7FC;padding:14px 12px;border-radius:8px;text-align:center;">'
+        f'<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#857E9C;font-weight:700;">Signups</div>'
+        f'<div style="font-size:22px;color:#1A1330;margin-top:4px;font-family:Georgia,serif;">{sign_ups}</div>'
+        '</td>'
+        '<td style="width:8px;"></td>'
+        f'<td style="width:25%;background:#F8F7FC;padding:14px 12px;border-radius:8px;text-align:center;">'
+        f'<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#857E9C;font-weight:700;">Summaries</div>'
+        f'<div style="font-size:22px;color:#1A1330;margin-top:4px;font-family:Georgia,serif;">{counts.get("summaries_generated", 0)}</div>'
+        '</td>'
+        '<td style="width:8px;"></td>'
+        f'<td style="width:25%;background:#F8F7FC;padding:14px 12px;border-radius:8px;text-align:center;">'
+        f'<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#857E9C;font-weight:700;">Surveys</div>'
+        f'<div style="font-size:22px;color:#1A1330;margin-top:4px;font-family:Georgia,serif;">{counts.get("survey_responses", 0)}</div>'
+        f'<div style="font-size:10px;color:#857E9C;margin-top:2px;">{nps_line}</div>'
+        '</td>'
+        '<td style="width:8px;"></td>'
+        f'<td style="width:25%;background:#F8F7FC;padding:14px 12px;border-radius:8px;text-align:center;">'
+        f'<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#857E9C;font-weight:700;">Invites</div>'
+        f'<div style="font-size:22px;color:#1A1330;margin-top:4px;font-family:Georgia,serif;">{counts.get("invites_sent", 0)}</div>'
+        f'<div style="font-size:10px;color:#857E9C;margin-top:2px;">{counts.get("invites_accepted", 0)} accepted</div>'
+        '</td>'
+        '</tr></table>'
+    )
+
+    concerning = briefing.get("concerning_patterns") or []
+    concerning_block = ""
+    if concerning:
+        lis = "".join(
+            f'<li style="margin:0 0 6px 0;color:#9A3A23;font-size:14px;line-height:1.5;">{i}</li>'
+            for i in concerning
+        )
+        concerning_block = (
+            '<div style="background:#FCE3DC;border-left:4px solid #9A3A23;'
+            'padding:14px 18px;border-radius:6px;margin:0 0 22px 0;">'
+            '<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#9A3A23;'
+            'font-weight:700;margin-bottom:6px;">Worth a closer look</div>'
+            f'<ul style="margin:6px 0 0 18px;padding:0;list-style:disc;">{lis}</ul>'
+            '</div>'
+        )
+
+    headline = briefing.get("headline") or "Quiet week — too little data to call."
+    _empty_msg = (
+        '<p style="font-size:13px;color:#857E9C;margin:0 0 18px 0;">Nothing this week.</p>'
+    )
+    _empty_actions = (
+        '<p style="font-size:13px;color:#857E9C;margin:0 0 18px 0;">No suggestions this week.</p>'
+    )
+    body_html = (
+        f'<p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin:0 0 4px 0;">Weekly insights · {week_iso}</p>'
+        f'<p style="font-family:Georgia,serif;font-size:20px;line-height:1.4;color:#1A1330;margin:0 0 22px 0;">{headline}</p>'
+        f"{counts_strip}"
+        f"{concerning_block}"
+        '<p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin:0 0 6px 0;">Highlights</p>'
+        f"{_ul(briefing.get('highlights')) or _empty_msg}"
+        '<p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin:0 0 6px 0;">User voice themes</p>'
+        f"{_ul(briefing.get('user_voice_themes')) or _empty_msg}"
+        '<p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin:0 0 6px 0;">Recommended actions</p>'
+        f"{_ul(briefing.get('recommended_actions')) or _empty_actions}"
+    )
+
+    if briefing.get("closing_note"):
+        body_html += (
+            f'<p style="font-family:Georgia,serif;font-style:italic;font-size:14px;color:#4B4567;'
+            f'border-top:1px solid #E5E0EE;padding-top:14px;margin:18px 0 0 0;">'
+            f'&ldquo;{briefing["closing_note"]}&rdquo;</p>'
+        )
+
+    plain_lines = [
+        f"Weekly insights · {week_iso}",
+        "",
+        headline,
+        "",
+        f"Signups: {sign_ups} | Summaries: {counts.get('summaries_generated', 0)} | "
+        f"Survey responses: {counts.get('survey_responses', 0)} ({nps_line}) | "
+        f"Invites: {counts.get('invites_sent', 0)} ({counts.get('invites_accepted', 0)} accepted)",
+    ]
+    if concerning:
+        plain_lines += ["", "Worth a closer look:"]
+        plain_lines += [f"  • {i}" for i in concerning]
+    for label, key in (
+        ("Highlights", "highlights"),
+        ("User voice themes", "user_voice_themes"),
+        ("Recommended actions", "recommended_actions"),
+    ):
+        items = briefing.get(key) or []
+        if items:
+            plain_lines += ["", f"{label}:"] + [f"  • {i}" for i in items]
+    if briefing.get("closing_note"):
+        plain_lines += ["", briefing["closing_note"]]
+    plain_lines += ["", f"Open the dashboard: {view_url or 'https://sacoparentsapp.online/admin/insights'}"]
+
+    html = _branded_html(
+        headline="Your 5-minute Monday read",
+        body_html=body_html,
+        cta_label="Open the full dashboard",
+        cta_url=view_url or "https://sacoparentsapp.online/admin/insights",
+    )
+    _send(
+        to_email=to_email,
+        subject=f"SA CoParents — weekly insights ({week_iso})",
+        html=html,
+        text="\n".join(plain_lines),
+        failure_message="Could not send the weekly admin briefing email.",
+    )
+
+
 def send_coparent_invite(*, to_email: str, link_url: str, inviter_name: Optional[str] = None) -> None:
     """Invite a co-parent to prep for mediation in their own private account."""
     inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"
