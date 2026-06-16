@@ -20,7 +20,7 @@ from mediator_routes import router as mediator_router  # noqa: E402
 from email_webhook_routes import router as email_webhook_router  # noqa: E402
 from survey_routes import router as survey_router, survey_scheduler_loop  # noqa: E402
 from invite_routes import router as invite_router  # noqa: E402
-from checkin_routes import checkin_scheduler_loop  # noqa: E402
+from checkin_routes import checkin_scheduler_loop, router as checkin_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -88,6 +88,7 @@ api_router.include_router(mediator_router)
 api_router.include_router(email_webhook_router)
 api_router.include_router(survey_router)
 api_router.include_router(invite_router)
+api_router.include_router(checkin_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.

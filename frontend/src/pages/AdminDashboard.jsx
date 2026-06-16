@@ -12,8 +12,10 @@ import {
   KeyRound,
   ShieldCheck,
   TrendingUp,
+  Send,
 } from "lucide-react";
 import { logError } from "../lib/logger";
+import { toast } from "sonner";
 
 const FUNNEL_STEPS = [
   { key: "child_goals", label: "Child Goals" },
@@ -22,6 +24,38 @@ const FUNNEL_STEPS = [
   { key: "comm_style", label: "Communication" },
   { key: "readiness", label: "Readiness" },
 ];
+
+function CheckinPreviewButton() {
+  const [sending, setSending] = useState(false);
+  const handleClick = async () => {
+    setSending(true);
+    try {
+      const r = await api.post("/checkins/admin/send-me-preview");
+      toast.success(
+        r.data?.recap_included
+          ? `Sent to ${r.data.sent_to} — recap included.`
+          : `Sent to ${r.data.sent_to}. (No recap — add at least 2 journal entries in the past 7 days to include one.)`
+      );
+    } catch (e) {
+      logError("checkin preview failed", e);
+      toast.error(e?.response?.data?.detail || "Could not send the preview.");
+    } finally {
+      setSending(false);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={sending}
+      data-testid="admin-checkin-preview-button"
+      className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/70 hover:bg-white border border-[#3D1A78]/15 text-xs font-semibold text-[#3D1A78] transition-colors disabled:opacity-60"
+    >
+      <Send size={12} />
+      {sending ? "Sending…" : "Preview check-in email"}
+    </button>
+  );
+}
 
 function Stat({ icon: Icon, label, value, hint, accent = "purple", testid }) {
   const accents = {
@@ -150,14 +184,17 @@ export default function AdminDashboard() {
       <div className="fade-up space-y-8" data-testid="admin-dashboard">
         <div className="card-soft p-7 relative overflow-hidden">
           <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#D4C5F0]/40" />
-          <div className="relative">
-            <div className="eyebrow mb-2">Admin</div>
-            <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330]">
-              SA Coparents — operations
-            </h1>
-            <p className="text-sm text-[#4B4567] mt-2">
-              Quiet metrics for the people building this. Refreshed each request.
-            </p>
+          <div className="relative flex items-start justify-between gap-4">
+            <div>
+              <div className="eyebrow mb-2">Admin</div>
+              <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330]">
+                SA Coparents — operations
+              </h1>
+              <p className="text-sm text-[#4B4567] mt-2">
+                Quiet metrics for the people building this. Refreshed each request.
+              </p>
+            </div>
+            <CheckinPreviewButton />
           </div>
         </div>
 

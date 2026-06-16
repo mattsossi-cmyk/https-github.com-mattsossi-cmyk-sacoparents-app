@@ -161,3 +161,40 @@ async def checkin_scheduler_loop(app) -> None:
         except Exception:  # noqa: BLE001
             logger.exception("Check-in scheduler sweep failed; will retry.")
         await asyncio.sleep(SCHEDULER_INTERVAL_SECONDS)
+
+
+# ============ Admin preview endpoint ============
+from fastapi import APIRouter, Depends, Request  # noqa: E402
+
+from analytics_routes import require_admin  # noqa: E402
+from models import UserPublic  # noqa: E402
+
+router = APIRouter(prefix="/checkins", tags=["checkins"])
+
+
+@router.post("/admin/send-me-preview")
+async def admin_send_me_preview(
+    request: Request,
+    admin: UserPublic = Depends(require_admin),
+):
+    """Fire the post-summary check-in email to the signed-in admin's inbox
+    using their real journal entries. Lets the owner sanity-check copy /
+    layout without waiting 14 days."""
+    db = request.app.state.db
+    recap_text = await _build_recap_text(db, admin.user_id)
+    try:
+        email_service.send_post_summary_checkin(
+            to_email=admin.email,
+            user_name=admin.name or "",
+            recap_text=recap_text,
+            journal_url=_journal_link(),
+        )
+    except email_service.EmailNotConfigured:
+        raise email_service.EmailNotConfigured(
+            "Resend isn't configured — set RESEND_API_KEY before previewing."
+        )
+    return {
+        "ok": True,
+        "sent_to": admin.email,
+        "recap_included": bool(recap_text),
+    }
