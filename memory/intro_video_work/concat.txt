@@ -1,0 +1,2 @@
+file '/app/memory/intro_video_work/intro_norm.mp4'
+file '/app/memory/intro_video_work/tour_norm.mp4'
