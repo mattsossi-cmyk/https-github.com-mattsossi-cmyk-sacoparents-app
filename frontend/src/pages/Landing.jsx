@@ -212,9 +212,26 @@ function MarketingFooter() {
 function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#F8F7FC] via-[#EFE9F9] to-[#E4F1F1] pt-28 sm:pt-32 pb-24 sm:pb-28">
+      {/* Branded looping background video — muted, autoplays, falls back to poster */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster="/intro-loop-poster.jpg"
+        className="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none"
+        aria-hidden="true"
+        data-testid="hero-loop-video"
+      >
+        <source src="/intro-loop.mp4?v=1" type="video/mp4" />
+      </video>
+      {/* Tint overlay so the headline stays readable on top of the video */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#F8F7FC]/60 via-[#EFE9F9]/55 to-[#E4F1F1]/70 pointer-events-none" />
+
       {/* soft floating shapes */}
-      <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-[#D4C5F0]/40 blur-3xl" />
-      <div className="absolute -bottom-40 -right-32 w-[30rem] h-[30rem] rounded-full bg-[#A8DCDC]/40 blur-3xl" />
+      <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-[#D4C5F0]/40 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-32 w-[30rem] h-[30rem] rounded-full bg-[#A8DCDC]/40 blur-3xl pointer-events-none" />
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center fade-up">
         <Eyebrow>The SA CoParents App</Eyebrow>
