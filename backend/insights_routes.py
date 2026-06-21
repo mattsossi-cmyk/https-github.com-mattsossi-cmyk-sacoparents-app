@@ -232,6 +232,19 @@ async def get_weekly_insights(
     return await _build_and_cache(db)
 
 
+@router.get("/brochure/mediator.pdf")
+async def download_mediator_brochure():
+    """Public download of the mediator brochure PDF — shareable marketing
+    material, no auth required."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-mediator-brochure.pdf"
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="SA-CoParents-Mediator-Brochure.pdf",
+    )
+
+
 @router.post("/admin/weekly/regenerate")
 async def regenerate_weekly_insights(
     request: Request,
@@ -239,6 +252,19 @@ async def regenerate_weekly_insights(
 ):
     """Force a fresh build for the current ISO week (overwrites the cache)."""
     return await _build_and_cache(request.app.state.db)
+
+
+@router.get("/admin/brochure/mediator.pdf")
+async def admin_download_mediator_brochure_legacy(_admin: UserPublic = Depends(require_admin)):
+    """Admin-gated variant kept for completeness; the public `/brochure/...`
+    endpoint above is the one the UI uses."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-mediator-brochure.pdf"
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="SA-CoParents-Mediator-Brochure.pdf",
+    )
 
 
 # ============ Monday-morning auto-email ============
