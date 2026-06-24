@@ -428,7 +428,7 @@ async def update_profile(
 # 1 year by default — matches the original spec's "1-year Demo Sandbox". Override
 # via the GUEST_LIFETIME_HOURS env var if needed.
 GUEST_LIFETIME_HOURS = int(os.environ.get("GUEST_LIFETIME_HOURS", str(24 * 365)))
-GUEST_RATE_LIMIT_PER_HOUR = int(os.environ.get("GUEST_RATE_LIMIT_PER_HOUR", "3"))
+GUEST_RATE_LIMIT_PER_HOUR = int(os.environ.get("GUEST_RATE_LIMIT_PER_HOUR", "30"))
 
 
 def _client_ip(request: Request) -> str:

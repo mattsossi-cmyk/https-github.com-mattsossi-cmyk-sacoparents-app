@@ -423,5 +423,14 @@ See `/app/memory/test_credentials.md`
 - **Tests**: 4/4 pytest pass at `/app/backend/tests/test_post_event_survey.py` (idempotency, guest-skip, full submit cycle, invalid token 404). End-to-end frontend flow verified via Playwright (load → fill → submit → thank-you screen).
 
 
+### Feb 2026 — Demo Mode Auto-Bootstrap on Every Protected Route (P0 → SHIPPED)
+- **Reported bug**: "please undo the changes from yesterday - i'm having problems saving the data now - we need people to sign in using demo mode - not signing into the account - on all pages of the app"
+- **Root cause**: `ProtectedRoute` previously redirected any unauthenticated visitor to `/login`. So (a) every protected route presented a sign-in barrier, and (b) when a session was lost mid-flow (cookie expired, browser cleared cookies, cross-domain SameSite quirks), the user was bounced to `/login` and their unsaved wizard data was orphaned.
+- **Fix**: `/app/frontend/src/components/ProtectedRoute.jsx` now silently calls `startGuest()` (POST `/api/auth/guest`) instead of redirecting when `user` is null. The httpOnly cookie is set fresh and the user stays inside the app. Bootstrap is one-shot per mount (useRef guard) with a friendly "Try again" screen if the guest endpoint fails.
+- **Why saves work now**: All `PUT /api/mediation/{child-goals,issues,priority,comm-style,readiness}` handlers already use `get_current_user` (NOT `require_active_user`), so guest sessions can save. The previous bug wasn't a save bug — it was a session-loss bug masquerading as a save bug.
+- **Rate limit bumped**: `GUEST_RATE_LIMIT_PER_HOUR` default 3 → 30 because shared IPs (corporate NAT, household, mobile carrier) hitting auto-bootstrap on multiple devices could otherwise trip a false 429. Override via env if needed.
+- **Tests**: 9/9 backend pytest pass at `/app/backend/tests/test_guest_autobootstrap.py`. Frontend cold-start deep-link verified end-to-end: `/prep/child-goals` no longer redirects to `/login`; observed `GET /auth/me=401 → POST /auth/guest=200 → GET /mediation/prep=200`. Cookie persists across refresh; saved data reappears. `/login` route still reachable for explicit sign-in (regression OK).
+- **What was NOT changed**: Per user instruction (option 4d), the new 6-section Landing page and the IntroTourModal are preserved untouched.
+
 ### 📋 Backlog (P2 remaining)
 _All P2 items shipped — backlog empty. Next priorities will come from real user signals._
