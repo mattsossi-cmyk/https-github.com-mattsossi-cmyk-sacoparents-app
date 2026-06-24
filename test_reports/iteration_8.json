@@ -1,0 +1,35 @@
+{
+  "summary": "Validated the P0 fix: ProtectedRoute now auto-bootstraps a guest demo session instead of redirecting to /login. Backend: 9/9 pytest pass (POST /api/auth/guest sets httpOnly auth_token cookie + returns is_guest=true; /auth/me works on the cookie alone; PUT /api/mediation/{child-goals,issues,priority,comm-style,readiness} all return 200 {ok:true} AND GET /api/mediation/prep returns the persisted payload; cookie-only refresh keeps the user logged in as the same guest with their data intact; /auth/login still works for parent1@test.com). Frontend (cold start, cookies cleared): deep-linking to /prep/child-goals does NOT redirect to /login — observed exact network sequence GET /auth/me=401 -> POST /auth/guest=200 -> GET /mediation/prep=200, auth_token cookie set with httpOnly/secure/SameSite=None. After dismissing the legal modal, the wizard renders and the GuestBanner shows 'Demo expires in 365 days · Save your work to keep it forever · Save my work' as specified. /login page still reachable and renders the email input (regression OK).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_guest_autobootstrap.py",
+    "/app/test_reports/pytest/pytest_guest_autobootstrap.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ProtectedRoute.jsx uses a useRef ('attemptedRef') to ensure startGuest() is called only once per mount, which is correct. However, if the very first POST /auth/guest fails (e.g. transient 502), the ref is set true and the user is stuck on the 'We couldn't open your demo' screen until they click Try again. Consider exposing a 'reset and retry' path that also clears the ref instead of relying on a full window.location.reload — minor UX polish, not blocking.",
+    "The guest IP rate limit GUEST_RATE_LIMIT_PER_HOUR (default 3) is enforced on the same network. With ProtectedRoute auto-bootstrapping on every deep-link visit, a single shared corporate / NAT'd IP could trip 429 unexpectedly. The backend returns 429 with detail 'Too many demo sessions...' — the frontend currently surfaces this via bootstrapError. Worth confirming the production GUEST_RATE_LIMIT_PER_HOUR is high enough (e.g. 20+) or change the rate window to be per-fingerprint instead of per-IP.",
+    "Pydantic models for the save payloads (ChildGoalsPayload, IssuesPayload, etc.) silently drop unknown fields by default, so a frontend that posts a typo'd field name will get a 200 {ok:true} with empty persistence — exactly the failure mode I hit while writing tests. Consider Config.extra = 'forbid' (or 'allow') in models to make schema drift visible instead of silent."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_guest_autobootstrap.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9)",
+    "frontend": "100% (cold-start deep-link auto-bootstrap verified end-to-end: no /login redirect, /auth/guest 200, cookie set, prep loads, GuestBanner visible with 365-day copy, /login route still reachable)"
+  },
+  "test_credentials": "parent1@test.com / TestPass123! (intact, login regression passing) ; mattsossi@bsossi.com / AdminPass123! (admin, not tested this iteration)",
+  "seed_data_creation": "Each test run creates one transient guest user per fixture (guest_<8hex>@demo.local) plus one TEST_-prefixed prep_data row. Guest accounts auto-expire in 365 days; no manual cleanup needed.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Test file is /app/backend/tests/test_guest_autobootstrap.py — note it loads REACT_APP_BACKEND_URL from /app/frontend/.env directly because pytest doesn't auto-load that dotenv. Frontend flow validated: deep-link to ANY ProtectedRoute (tested /prep/child-goals, /dashboard) with no cookies triggers POST /api/auth/guest, sets auth_token cookie (httpOnly+secure+SameSite=None — required for the cross-site preview <-> emergentagent.com), and renders the page. The Legal acknowledgement modal AND the Orientation gate both appear in front of the actual content — main agent should know that for deeper UI flows the testing agent must dismiss both before reaching the wizard. localStorage keys to dismiss them are 'sac_legal_ack_v1' and 'sacoparents.orientation_seen.v1'='true' (per iteration_7 notes).",
+  "rca of the issue": "Original bug: ProtectedRoute previously redirected unauthenticated users to /login, which (a) presented a sign-in barrier on every protected route, and (b) when a session was lost / cookie expired mid-flow the user was bounced to /login and their unsaved wizard data was orphaned because the next visit became a new (non-guest) anonymous user with no cookie. Fix: ProtectedRoute now silently calls startGuest() (POST /api/auth/guest) instead of redirecting, so the cookie is restored to a fresh 1-year guest session and the user stays inside the app. Mediation save endpoints (mediation_routes.py PUT handlers) already use get_current_user (NOT require_active_user), so guest sessions can save. Verified end-to-end: cold-start visitor to /prep/child-goals reaches the wizard, can PUT save, and on refresh the cookie persists + saved data reappears via GET /mediation/prep."
+}
