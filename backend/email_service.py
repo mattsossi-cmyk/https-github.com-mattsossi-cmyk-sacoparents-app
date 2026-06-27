@@ -622,3 +622,57 @@ def send_mediator_email(
         attachments=attachments,
         failure_message="Could not send email right now. Please try again in a moment.",
     )
+
+
+def send_safety_assessment_report(
+    *,
+    to_email: str,
+    user_name: str,
+    level: int,
+    pathway_title: str,
+    pathway_summary: str,
+    pdf_bytes: bytes,
+) -> None:
+    """Email the IPV Communication Safety Assessment report (with PDF attached)."""
+    greeting = f"Hi {user_name}," if user_name and not user_name.lower().startswith("demo") else "Hi,"
+    safety_line = (
+        "Reminder: This assessment is not a diagnosis or legal advice. "
+        "If you are in immediate danger, call 911. "
+        "National Domestic Violence Hotline: 800-799-7233 (text START to 88788)."
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">{greeting}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"Here is the copy of your IPV Communication Safety Assessment you requested. "
+        f"Your recommended pathway is:</p>"
+        f'<div style="background:#F8F7FC;border-radius:16px;padding:18px 20px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
+        f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:6px;">Level {level}</div>'
+        f'<div style="font-size:18px;font-weight:800;color:#1A1330;margin-bottom:8px;">{pathway_title}</div>'
+        f'<div style="font-size:14px;color:#4B4567;line-height:1.55;">{pathway_summary}</div>'
+        f"</div>"
+        f'<p style="font-size:14px;line-height:1.55;color:#4B4567;margin:0 0 12px 0;">'
+        f"The full report with your answers and recommendations is attached as a PDF. "
+        f"You can share it with an attorney, advocate, mediator, or trusted support person.</p>"
+        f'<p style="font-size:13px;line-height:1.55;color:#9A3A23;margin:0 0 8px 0;background:#FCE3DC;border-radius:12px;padding:12px 14px;border:1px solid #9A3A23;border-opacity:0.2;">'
+        f"{safety_line}</p>"
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"Your IPV Communication Safety Assessment result is attached.\n\n"
+        f"Level {level}: {pathway_title}\n\n"
+        f"{pathway_summary}\n\n"
+        f"{safety_line}\n"
+    )
+    html = _branded_html(
+        headline="Your Safety Assessment report",
+        body_html=body_html,
+        cta_label="",
+    )
+    _send(
+        to_email=to_email,
+        subject="Your IPV Communication Safety Assessment - SA Coparents",
+        html=html,
+        text=plain,
+        attachments=[("safety-assessment.pdf", pdf_bytes)],
+        failure_message="Couldn't email your safety assessment right now. Please try again in a moment.",
+    )

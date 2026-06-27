@@ -217,6 +217,61 @@ export default function Safety() {
           ))}
         </div>
 
+        {/* Self-help tools: IPV assessment + worksheet */}
+        <div
+          className="card-soft p-6 sm:p-8 mb-12 border-2 border-[#3D1A78]/20"
+          data-testid="safety-self-help-tools"
+        >
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="rounded-2xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] text-white p-6 flex flex-col">
+              <div className="text-[11px] uppercase tracking-[0.22em] font-bold opacity-90 mb-2">
+                Confidential self-assessment
+              </div>
+              <h3 className="font-bold text-2xl mb-2 leading-tight">
+                IPV Communication Safety Assessment
+              </h3>
+              <p className="text-sm leading-relaxed opacity-95 mb-5">
+                Find out whether direct co-parenting communication is safe right
+                now — or whether structured, assisted, or restricted contact is
+                a better fit. Takes about 5 minutes. Downloadable PDF at the end.
+              </p>
+              <div className="mt-auto">
+                <Link
+                  to="/safety-assessment"
+                  data-testid="safety-take-assessment-cta"
+                  className="inline-flex items-center gap-2 rounded-full bg-white text-[#3D1A78] px-5 py-2.5 text-sm font-bold hover:bg-[#F8F7FC] transition-colors"
+                >
+                  Take the assessment
+                  <Shield size={14} />
+                </Link>
+              </div>
+            </div>
+            <div className="rounded-2xl bg-white border border-[#E5E0EE] p-6 flex flex-col">
+              <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+                One decision at a time
+              </div>
+              <h3 className="font-bold text-2xl text-[#1A1330] mb-2 leading-tight">
+                Problem-Solving Worksheet
+              </h3>
+              <p className="text-sm text-[#4B4567] leading-relaxed mb-5">
+                Walk through a parenting decision step-by-step: child&rsquo;s
+                need, your concern, three options, safest pathway, next step.
+                Save as many as you want.
+              </p>
+              <div className="mt-auto">
+                <Link
+                  to="/problem-solving"
+                  data-testid="safety-open-worksheet-cta"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#1A1330] text-white px-5 py-2.5 text-sm font-bold hover:bg-[#2a2245] transition-colors"
+                >
+                  Open the worksheet
+                  <ExternalLink size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* San Antonio */}
         <SectionHeading
           eyebrow="San Antonio & Bexar County"

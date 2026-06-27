@@ -40,6 +40,8 @@ import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
+import SafetyAssessment from "@/pages/SafetyAssessment";
+import ProblemSolvingWorksheet from "@/pages/ProblemSolvingWorksheet";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -91,6 +93,23 @@ function AppRoutes() {
         <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/cancel-subscription" element={<CancelSubscription />} />
         <Route path="/safety" element={<Safety />} />
+
+        <Route
+          path="/safety-assessment"
+          element={
+            <ProtectedRoute>
+              <SafetyAssessment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/problem-solving"
+          element={
+            <ProtectedRoute>
+              <ProblemSolvingWorksheet />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/dashboard"
