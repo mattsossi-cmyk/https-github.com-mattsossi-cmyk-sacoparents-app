@@ -432,5 +432,18 @@ See `/app/memory/test_credentials.md`
 - **Tests**: 9/9 backend pytest pass at `/app/backend/tests/test_guest_autobootstrap.py`. Frontend cold-start deep-link verified end-to-end: `/prep/child-goals` no longer redirects to `/login`; observed `GET /auth/me=401 → POST /auth/guest=200 → GET /mediation/prep=200`. Cookie persists across refresh; saved data reappears. `/login` route still reachable for explicit sign-in (regression OK).
 - **What was NOT changed**: Per user instruction (option 4d), the new 6-section Landing page and the IntroTourModal are preserved untouched.
 
+### Feb 2026 — IPV Communication Safety Assessment + Problem-Solving Worksheet (P0 → SHIPPED)
+- **New feature**: Confidential self-assessment that maps a parent's safety/control answers to one of 4 communication pathways (No Direct → Structured Written → Assisted → Cooperative). Texas DV resources baked into every result.
+- **Discoverability**: Two large CTAs on `/safety` ("Take the assessment" + "Open the worksheet"), per user choice 1b. No surfacing on Dashboard.
+- **Safety affordances**:
+  - Full-screen `HighConcernOverlay` fires the instant a user toggles "Yes" on any of 5 high-concern questions (threats, strangulation/restraint, stalking, abduction threats, protective-order violations). Overlay includes tap-to-call 911 + 800-799-7233 + text START to 88788. ESC = Quick Exit (replaces page with google.com). "Change my answer" clears the Yes.
+  - Sticky "Quick exit" button on every screen of the assessment + worksheet.
+  - Server-side scoring (`score_assessment()`) so the pathway can never be tampered with via the wire.
+- **Results delivery**: In-app card + Download PDF (`fpdf2`, branded) + Email-me-a-copy (Resend). Guests get a "Save my work" toast that routes to `/claim`.
+- **Problem-Solving Worksheet**: Standalone route `/problem-solving` (9 prompts + 3 option fields) AND surfaced contextually from any assessment result. Saved worksheets list shows most recent 5.
+- **Endpoints (mounted at `/api/safety-assessment`)**: `GET /questions`, `POST /`, `GET /me`, `GET /me/history`, `GET /{id}/pdf`, `POST /{id}/email`, `POST /problem-solving`, `GET /problem-solving/me`.
+- **Tests**: 16/16 pytest at `/app/backend/tests/test_safety_assessment.py` (pure-function scoring across all 4 levels + every endpoint). Frontend Playwright covered intro → all 18 questions → high-concern overlay UX → L4 result → PDF/Email/Worksheet CTAs end-to-end. 100% pass.
+- **Files added**: `/app/backend/safety_assessment_routes.py`, `/app/backend/safety_assessment_pdf.py`, `/app/frontend/src/pages/SafetyAssessment.jsx`, `/app/frontend/src/pages/ProblemSolvingWorksheet.jsx`, `/app/frontend/src/components/HighConcernOverlay.jsx`. `email_service.send_safety_assessment_report` appended.
+
 ### 📋 Backlog (P2 remaining)
 _All P2 items shipped — backlog empty. Next priorities will come from real user signals._
