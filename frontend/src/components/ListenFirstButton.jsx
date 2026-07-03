@@ -66,6 +66,7 @@ export default function ListenFirstButton({
   const toggle = async () => {
     const a = audioRef.current;
     if (!a) return;
+    setError(null);
     if (playing) {
       a.pause();
       setPlaying(false);
