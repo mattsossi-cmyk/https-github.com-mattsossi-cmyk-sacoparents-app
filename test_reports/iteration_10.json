@@ -1,0 +1,59 @@
+{
+  "summary": "Verified the intro-tour.mp4 trim (first 7s removed). Asset is served correctly and is a valid H.264/AAC MP4. Regression on /safety-assessment, /problem-solving, /prep/child-goals, /: no console errors. NOTE: Actual visual playback of the trimmed video inside IntroTourModal could NOT be visually confirmed in Playwright because Playwright's headless Chromium ships without proprietary H.264 codec support (canPlayType('avc1.*') returned ''). We confirmed this is a Playwright limitation — the untouched /intro-tour.original.mp4 fails with the exact same 'DEMUXER_ERROR_NO_SUPPORTED_STREAMS' inside Playwright — so it is NOT a regression caused by the trim. Real user browsers (Chrome/Edge/Safari/Firefox) will decode this file normally.",
+  "asset_verification": {
+    "url": "https://prepared-parents.preview.emergentagent.com/intro-tour.mp4",
+    "http_status": 200,
+    "content_type": "video/mp4",
+    "content_length_bytes": 9795416,
+    "content_length_matches_expected": true,
+    "range_requests_supported": "yes (HTTP 206 on Range: bytes=0-1000)",
+    "remote_md5_matches_local": "yes (7487783e4cf93276bf588430915584ed)",
+    "ffprobe_duration_seconds": 70.067,
+    "duration_matches_expected_70_07s": true,
+    "video_codec": "h264 High profile Level 5.0, 1080x2340, 30fps",
+    "audio_codec": "AAC LC, 44100 Hz stereo",
+    "faststart_moov_before_mdat": true,
+    "ftyp_brand": "isom / iso2 / avc1 / mp4"
+  },
+  "modal_integration": {
+    "intro_tour_modal_appears_on_hero_cta": true,
+    "video_src_in_dom": "/intro-tour.mp4?v=branded-2026-06-17",
+    "modal_testid_present": "intro-tour-modal",
+    "video_testid_present": "intro-tour-video",
+    "skip_button_dismisses_modal": true,
+    "playwright_chromium_can_actually_decode_h264": false,
+    "note": "Because Playwright Chromium can't decode H.264, video.error was code 4 for BOTH the trimmed and original files. Real Chrome/Edge/Safari support this codec by default."
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "regression_checks": {
+    "/safety-assessment": "loads, no console errors",
+    "/problem-solving": "loads, no console errors",
+    "/prep/child-goals": "loads, no console errors",
+    "/": "loads, no console errors, hero CTA opens IntroTourModal with correct trimmed video src"
+  },
+  "test_report_links": [],
+  "action_items": [
+    "None required for the trim itself — asset is valid H.264/AAC MP4, faststart, 70.067s, byte-identical between local and CDN. Visual playback should be verified once in a real Chrome/Edge browser by a human, since Playwright's headless Chromium lacks H.264 support.",
+    "OPTIONAL: If you ever want automated Playwright visual verification of this video in the future, consider providing an additional WebM/VP9 <source> in IntroTourModal.jsx, since Chromium OSS supports WebM natively. Not required for real users."
+  ],
+  "critical_code_review_comments": [
+    "IntroTourModal.jsx: the video has a single <source> via src attribute (H.264 only). This is fine for real browsers but breaks in Playwright Chromium and would also break in any pure Chromium build without proprietary codecs. Adding a WebM fallback would make it more robust and testable.",
+    "IntroTourModal uses ?v=branded-2026-06-17 as a cache-buster in the src — after this asset change, the query string wasn't updated. Since Cache-Control is 'no-store, no-cache, must-revalidate' from the server it isn't blocking, but bumping the query string (e.g., ?v=branded-2026-06-17-trim7s) would be a cleaner practice to guarantee stale CDN/browser caches are invalidated for returning users."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend-only asset change)",
+    "frontend": "100% for what could be tested — HTTP delivery, content-length, duration, ftyp/moov, faststart, byte-identical CDN payload, modal DOM integration, Skip button, and regression across /safety-assessment, /problem-solving, /prep/child-goals, /. Actual video decoding in the browser was unverifiable in Playwright due to Chromium OSS H.264 limitation (same behavior on untouched original file), NOT a regression."
+  },
+  "test_credentials": "N/A (guest flow)",
+  "seed_data_creation": "In-browser: seeded localStorage['sac_legal_ack_v1'] with {version:'v1', at:...} and localStorage['sacoparents.orientation_seen.v1']='true' to bypass modals. Also cleared 'sac_intro_tour_seen_v3_branded' to force IntroTourModal to appear.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Playwright's bundled Chromium (HeadlessChrome/145.0.7632.0 on this env) DOES NOT support H.264 — video.canPlayType('video/mp4; codecs=\"avc1.*\"') returns ''. This means <video> elements pointing to any H.264 MP4 will emit MEDIA_ERR_SRC_NOT_SUPPORTED (code 4) with 'DEMUXER_ERROR_NO_SUPPORTED_STREAMS'. Do NOT interpret this as a broken asset — verify by testing a known-good MP4 (e.g., /intro-tour.original.mp4). To confirm an MP4 is well-formed inside this env, use ffprobe on the file and curl -I on the URL (200 + video/mp4 + expected Content-Length). WebM playback works ('probably'). If future automated tests need to visually verify intro-tour playback, add a WebM source to IntroTourModal or use a headed browser with proprietary codec support.",
+  "rca_of_the_issue": "N/A — trim change is working correctly. The only observable 'issue' (video error in Playwright) is a testing-environment limitation, not a product bug. Root cause: Playwright's Chromium build omits proprietary H.264/AAC codecs; the same error occurs on the pre-trim original file, ruling out any encoding regression from the ffmpeg re-encode."
+}
