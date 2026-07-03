@@ -1,0 +1,87 @@
+{
+  "summary": "Frontend-only verification of the new IPV Communication Safety Assessment 'Listen First' audio swap on /safety-assessment. All acceptance criteria pass: (1) new asset step-ipv-assessment.mp3 serves at HTTP 200, Content-Type audio/mpeg, Content-Length 980640 bytes (~957 KB), duration 49.032s (matches the ~49s spec); (2) /safety-assessment intro card renders ListenFirstButton with data-testid='safety-assessment-listen-panel' and the toggle data-testid='safety-assessment-listen-toggle-button' — clicking play advances currentTime from 0 to ~3.14s within 3.2s and audio.paused=false; (3) panel label chip now reads 'LISTEN FIRST · FAMILY VIOLENCE ASSESSMENT' (source string 'Listen First · Family Violence Assessment', CSS-uppercased in DOM) and the subtitle heading reads 'Intimate Partner Violence — listen before you begin'; the previous 'Assess Your Family Situation' subtitle is completely removed from the page. All 4 REGRESSION Listen First panels still work (child-goals, communication, readiness, reflection Write) with their original mp3s (files unchanged). Safety-assessment Start button still moves to Section 1 and HighConcernOverlay still triggers on a high-concern S1 Yes (s1_q1). Guest auto-bootstrap on /safety-assessment still works — a fresh guest hits /safety-assessment and stays there (no /login redirect).",
+  "audio_asset_verification": {
+    "step-ipv-assessment.mp3": {
+      "http": 200,
+      "content_type": "audio/mpeg",
+      "content_length_bytes": 980640,
+      "duration_seconds": 49.032,
+      "matches_spec": true
+    },
+    "old_step-1-assess-family-situation.mp3": {
+      "http": 200,
+      "note": "Still on disk but no longer referenced by any page — cosmetic-only, safe to leave"
+    }
+  },
+  "safety_assessment_panel_verification": {
+    "panel_testid": "safety-assessment-listen-panel",
+    "toggle_testid": "safety-assessment-listen-toggle-button",
+    "audio_testid": "safety-assessment-listen-audio",
+    "audio_src": "/audio/listen-first/step-ipv-assessment.mp3",
+    "label_text_rendered": "LISTEN FIRST · FAMILY VIOLENCE ASSESSMENT",
+    "label_source_string": "Listen First · Family Violence Assessment",
+    "subtitle_text": "Intimate Partner Violence — listen before you begin",
+    "old_subtitle_removed_from_panel": true,
+    "old_subtitle_removed_from_full_page": true,
+    "duration_metadata_s": 49.032,
+    "play_currentTime_after_3.2s_s": 3.13695,
+    "audio_paused_after_click": false,
+    "progress_bar_advances": true
+  },
+  "regression_listen_first_panels": {
+    "/prep/child-goals (child-goals-listen)": {
+      "audio_src": "/audio/listen-first/step-3-child-needs.mp3",
+      "duration_s": 55.92,
+      "currentTime_after_2.5s_s": 2.417,
+      "play_works": true
+    },
+    "/prep/communication (comm-style-listen)": {
+      "audio_src": "/audio/listen-first/step-2-coparenting-relationship.mp3",
+      "duration_s": 58.848,
+      "currentTime_after_2.5s_s": 2.460,
+      "play_works": true
+    },
+    "/prep/readiness (readiness-listen)": {
+      "audio_src": "/audio/listen-first/step-5-prepare-mediation.mp3",
+      "duration_s": 58.824,
+      "currentTime_after_2.5s_s": 2.460,
+      "play_works": true
+    },
+    "/reflection Write tab (reflection-listen)": {
+      "audio_src": "/audio/listen-first/step-4-foundation-statement.mp3",
+      "duration_s": 56.448,
+      "currentTime_after_2.5s_s": 2.459,
+      "play_works": true
+    }
+  },
+  "safety_assessment_flow_regression": {
+    "guest_auto_bootstrap_no_login_redirect": true,
+    "intro_card_visible": true,
+    "start_button_moves_to_section_1": true,
+    "high_concern_overlay_triggers_on_s1_q1_yes": true,
+    "high_concern_overlay_testid": "high-concern-overlay"
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "critical_code_review_comments": [
+    "SafetyAssessment.jsx line 402-407: only 3 line values changed (audioSrc, label, subtitle) as documented — clean, targeted swap. No regressions introduced.",
+    "The old file /audio/listen-first/step-1-assess-family-situation.mp3 is still on disk (HTTP 200) but unreferenced by any page. Consider deleting it in a future cleanup pass to reduce bundle bloat — not urgent since it isn't preloaded anywhere.",
+    "Previous iteration_11 remarks about ListenFirstButton (stale-error not cleared on successful play, no preload='none' option, no global playback coordination) still apply — see iteration_11.json critical_code_review_comments. This iteration did not touch that component."
+  ],
+  "test_report_links": [],
+  "updated_files": [],
+  "action_items": [
+    "OPTIONAL: delete /app/frontend/public/audio/listen-first/step-1-assess-family-situation.mp3 since no page references it now."
+  ],
+  "success_rate": {"backend": "N/A (frontend-only)", "frontend": "100% — new IPV audio serves correctly, /safety-assessment panel renders + plays, label + subtitle updated, old subtitle removed, all 4 regression panels play, Start + HighConcernOverlay + guest bootstrap all still working"},
+  "test_credentials": "parent1@test.com / TestPass123!",
+  "seed_data_creation": "In-browser localStorage: sac_legal_ack_v1 = JSON.stringify({version:'v1',at:...}), sacoparents.orientation_seen.v1 = '1', sac_intro_tour_seen_v3_branded = '1'. Note the correct FORMAT for sac_legal_ack_v1 is a stringified JSON object with version='v1' — simply setting it to '1' does NOT bypass the modal (found and corrected during this iteration).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Content swap only — 3 line values in SafetyAssessment.jsx step===0 intro card. Testid prefix on the swapped panel is still 'safety-assessment-listen' (NOT 'step-5-listen') even though users refer to this as 'Step 5' in the narration model. Duration of the new asset is 49.032s, ~980640 bytes. To bypass legal modal in Playwright, seed localStorage 'sac_legal_ack_v1' as JSON {version:'v1',at:<isoDate>} — plain '1' does not work (STORAGE_KEY reads parsed.version === 'v1'). Guest auto-bootstrap works fine for /safety-assessment even without login. The other 4 Listen First panels require login (mediation pages are auth-gated).",
+  "rca_of_the_issue": "N/A — no bugs; targeted content swap verified end-to-end."
+}

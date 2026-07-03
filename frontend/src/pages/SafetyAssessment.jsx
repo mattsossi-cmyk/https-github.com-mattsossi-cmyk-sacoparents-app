@@ -400,8 +400,9 @@ export default function SafetyAssessment() {
 
             <div className="mb-7">
               <ListenFirstButton
-                audioSrc="/audio/listen-first/step-1-assess-family-situation.mp3"
-                subtitle="Assess Your Family Situation — a short guide before you begin"
+                audioSrc="/audio/listen-first/step-ipv-assessment.mp3"
+                label="Listen First · Family Violence Assessment"
+                subtitle="Intimate Partner Violence — listen before you begin"
                 testid="safety-assessment-listen"
               />
             </div>
