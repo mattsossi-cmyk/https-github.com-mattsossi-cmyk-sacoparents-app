@@ -5,6 +5,7 @@ import WizardLayout from "../components/WizardLayout";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
+import ListenFirstButton from "../components/ListenFirstButton";
 
 export const GOAL_OPTIONS = [
   { id: "emotional_safety", label: "Emotional safety" },
@@ -76,6 +77,11 @@ export default function ChildGoals() {
         onNext={onNext}
       >
         <div className="space-y-8">
+          <ListenFirstButton
+            audioSrc="/audio/listen-first/step-3-child-needs.mp3"
+            subtitle="Identify Child Needs — a short guide before you begin"
+            testid="child-goals-listen"
+          />
           <div>
             <div className="eyebrow mb-3">Select what feels true</div>
             <div className="grid sm:grid-cols-2 gap-3">

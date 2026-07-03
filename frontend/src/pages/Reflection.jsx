@@ -21,6 +21,7 @@ import BreathingExercise from "../components/BreathingExercise";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 import { detectSafetyConcern } from "../lib/safety";
+import ListenFirstButton from "../components/ListenFirstButton";
 
 const PROMPTS = [
   {
@@ -182,6 +183,14 @@ export default function Reflection() {
 
         {tab === "write" ? (
           <>
+            <div className="mt-8">
+              <ListenFirstButton
+                audioSrc="/audio/listen-first/step-4-foundation-statement.mp3"
+                subtitle="Create Foundation Statement — listen before you write"
+                testid="reflection-listen"
+              />
+            </div>
+
             {/* Breathing exercise card */}
             <div className="mt-8">
               <BreathingExercise cycles={4} />

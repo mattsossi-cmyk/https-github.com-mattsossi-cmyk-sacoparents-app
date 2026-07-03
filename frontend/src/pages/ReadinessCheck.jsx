@@ -5,6 +5,7 @@ import WizardLayout from "../components/WizardLayout";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
+import ListenFirstButton from "../components/ListenFirstButton";
 
 // 1-5 agreement scale (used for Sections A–C and E)
 const AGREE_SCALE = [
@@ -177,6 +178,11 @@ export default function ReadinessCheck() {
         nextLabel="Generate my summary"
       >
         <div className="space-y-10" data-testid="readiness-sections">
+          <ListenFirstButton
+            audioSrc="/audio/listen-first/step-5-prepare-mediation.mp3"
+            subtitle="Prepare for Mediation — listen before you begin"
+            testid="readiness-listen"
+          />
           {SECTIONS.map((section, sIdx) => (
             <section
               key={section.id}

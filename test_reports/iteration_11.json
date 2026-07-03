@@ -1,0 +1,83 @@
+{
+  "summary": "Frontend-only testing of the new 'Listen First' audio narration feature across all 5 guided-journey steps. All 5 mp3 assets are served correctly (HTTP 200, Content-Type: audio/mpeg, ~1.1MB each). ListenFirstButton renders and functions correctly on all 5 pages (safety-assessment, comm-style, child-goals, reflection Write tab, readiness). Play/Pause/Resume cycles work, progress advances, currentTime freezes on pause and resumes from paused position on next click. Unmount cleanup verified — audio stops when navigating away. All 4 wizard PUT regressions pass (PUT /mediation/child-goals, /mediation/comm-style, /mediation/reflection, /mediation/readiness all returned 200). Safety Assessment intro card still shows the Start button and the HighConcernOverlay still triggers when a high-concern S1 question is answered Yes.",
+  "audio_asset_verification": {
+    "step-1-assess-family-situation.mp3": {"http": 200, "content_type": "audio/mpeg", "bytes": 1237440},
+    "step-2-coparenting-relationship.mp3": {"http": 200, "content_type": "audio/mpeg", "bytes": 1176960},
+    "step-3-child-needs.mp3": {"http": 200, "content_type": "audio/mpeg", "bytes": 1118400},
+    "step-4-foundation-statement.mp3": {"http": 200, "content_type": "audio/mpeg", "bytes": 1128960},
+    "step-5-prepare-mediation.mp3": {"http": 200, "content_type": "audio/mpeg", "bytes": 1176480}
+  },
+  "listen_first_button_verification": {
+    "/safety-assessment (intro card, prefix 'safety-assessment-listen')": {
+      "panel_visible_BEFORE_start_click": true,
+      "audio_src": "step-1-assess-family-situation.mp3",
+      "duration_s": 61.87,
+      "play_currentTime_after_2.5s": 2.463,
+      "pause_freezes_currentTime": true,
+      "resume_from_paused_position": true
+    },
+    "/prep/communication (prefix 'comm-style-listen')": {
+      "note": "Review request wrote '/prep/comm-style' but actual route is '/prep/communication' (see App.js line 147). Panel works on the real route.",
+      "audio_src": "step-2-coparenting-relationship.mp3",
+      "duration_s": 58.85,
+      "play_pause_resume_all_working": true
+    },
+    "/prep/child-goals (prefix 'child-goals-listen')": {
+      "audio_src": "step-3-child-needs.mp3",
+      "duration_s": 55.92,
+      "play_pause_resume_all_working": true
+    },
+    "/reflection Write tab (prefix 'reflection-listen')": {
+      "audio_src": "step-4-foundation-statement.mp3",
+      "duration_s": 56.45,
+      "play_pause_resume_all_working": true
+    },
+    "/prep/readiness (prefix 'readiness-listen')": {
+      "audio_src": "step-5-prepare-mediation.mp3",
+      "duration_s": 58.82,
+      "play_pause_resume_all_working": true
+    },
+    "unmount_pause_cleanup": {
+      "verified": true,
+      "detail": "Started playback on /prep/child-goals (currentTime=1.46s, paused=false), navigated to /dashboard. On /dashboard: no <audio> element present at all (component fully unmounted) and no audio still playing."
+    }
+  },
+  "regression_puts": {
+    "PUT /api/mediation/child-goals": 200,
+    "PUT /api/mediation/comm-style": 200,
+    "PUT /api/mediation/reflection": 200,
+    "PUT /api/mediation/readiness": 200
+  },
+  "safety_assessment_regression": {
+    "intro_card_visible": true,
+    "start_button_visible": true,
+    "high_concern_overlay_triggers_on_yes": true,
+    "overlay_testid_present": "high-concern-overlay",
+    "high_concern_ids_from_api": ["s1_q1", "s1_q10", "s1_q2", "s1_q4", "s1_q5"]
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "critical_code_review_comments": [
+    "Route naming inconsistency (not a bug, minor documentation issue): The review request refers to the Communication Style page as '/prep/comm-style', but the actual route in App.js is '/prep/communication'. The data-testid prefix on the ListenFirstButton uses 'comm-style-listen' which does not match the route. Consider aligning naming to reduce future confusion — either rename the route to '/prep/comm-style' or rename the testid prefix to 'communication-listen'.",
+    "ListenFirstButton.jsx (line 66-80): the async toggle() is missing error state clearing. If a first attempt sets error='Tap play again if audio didn't start.', a subsequent successful play does not clear that message. Consider setError(null) at the top of toggle() so stale error UI disappears on successful play.",
+    "ListenFirstButton.jsx: the audio element is not marked with any preload='none' fallback — 5 * ~1.1MB assets load metadata on every page visit. This is fine but could be optimized to preload='none' with a click-to-load handshake if page weight ever becomes a concern.",
+    "Only one audio can meaningfully play at a time site-wide, but there is no global coordination — if a future page ever mounts two ListenFirstButtons simultaneously (e.g., a preview widget), both could play. Currently no page does this, so not a bug today."
+  ],
+  "test_report_links": [],
+  "updated_files": [],
+  "action_items": [
+    "OPTIONAL: Update the review-request-level path from '/prep/comm-style' to '/prep/communication' in future task notes, OR update the actual route in App.js so it matches the naming convention.",
+    "OPTIONAL: Clear the transient error string in ListenFirstButton.toggle() on a successful subsequent play."
+  ],
+  "success_rate": {"backend": "N/A (frontend-only)", "frontend": "100% — all 5 audio panels play/pause/resume, all 4 wizard PUTs return 200, Safety Assessment intro + Start button + HighConcernOverlay all still working"},
+  "test_credentials": "parent1@test.com / TestPass123!",
+  "seed_data_creation": "In-browser localStorage: sac_legal_ack_v1, sacoparents.orientation_seen.v1, sac_intro_tour_seen_v3_branded — set to bypass onboarding modals before login.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "ListenFirstButton renders in 5 places. Testids follow pattern '{prefix}-panel', '{prefix}-toggle-button', '{prefix}-audio'. Real routes: /safety-assessment ('safety-assessment-listen'), /prep/communication (NOT /prep/comm-style — 'comm-style-listen'), /prep/child-goals ('child-goals-listen'), /reflection Write tab ('reflection-listen'), /prep/readiness ('readiness-listen'). Duration lengths: 55–62 s. Audio needs ~500ms to start after first click but plays reliably in Chromium (unlike H.264 video which cannot play in Playwright). To bypass modals during test setup, seed 3 localStorage keys before login (see seed_data_creation).",
+  "rca_of_the_issue": "N/A — no issues found. The only friction was a route-path mislabel in the review request ('/prep/comm-style' vs actual '/prep/communication'); the ListenFirstButton itself works correctly on the real route."
+}

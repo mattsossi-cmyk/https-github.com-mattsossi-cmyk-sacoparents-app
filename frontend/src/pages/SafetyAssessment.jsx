@@ -18,6 +18,7 @@ import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";
 import { useAuth } from "../context/AuthContext";
 import HighConcernOverlay from "../components/HighConcernOverlay";
+import ListenFirstButton from "../components/ListenFirstButton";
 
 const TONE_STYLES = {
   danger: {
@@ -396,6 +397,14 @@ export default function SafetyAssessment() {
                 <span>You can download or email yourself a PDF copy at the end.</span>
               </li>
             </ul>
+
+            <div className="mb-7">
+              <ListenFirstButton
+                audioSrc="/audio/listen-first/step-1-assess-family-situation.mp3"
+                subtitle="Assess Your Family Situation — a short guide before you begin"
+                testid="safety-assessment-listen"
+              />
+            </div>
 
             <div className="flex flex-wrap gap-3">
               <button
