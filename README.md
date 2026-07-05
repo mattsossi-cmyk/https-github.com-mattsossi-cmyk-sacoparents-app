@@ -6,6 +6,8 @@ Relational mediation prep app for separated parents. React + FastAPI + MongoDB. 
 
 ## ⚠️ READ BEFORE APPLYING ANY "CODE QUALITY REPORT"
 
+**➡ For machine-readable ignore rules see [`/app/.codequalityignore`](./.codequalityignore).**
+
 The automated static-analysis bot regularly produces a "Code Quality Recommendations" report. **The vast majority of its findings are known false positives in this codebase** and applying them as-written will break working, tested features.
 
 Every item in the typical report has been audited multiple times. Here's the canonical ignore list:
