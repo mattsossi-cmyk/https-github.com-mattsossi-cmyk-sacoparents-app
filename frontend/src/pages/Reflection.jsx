@@ -21,7 +21,7 @@ import BreathingExercise from "../components/BreathingExercise";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 import { detectSafetyConcern } from "../lib/safety";
-import ListenFirstButton from "../components/ListenFirstButton";
+import WatchFirstVideo from "../components/WatchFirstVideo";
 
 const PROMPTS = [
   {
@@ -184,10 +184,10 @@ export default function Reflection() {
         {tab === "write" ? (
           <>
             <div className="mt-8">
-              <ListenFirstButton
-                audioSrc="/audio/listen-first/step-4-foundation-statement.mp3"
-                subtitle="Create Foundation Statement — listen before you write"
-                testid="reflection-listen"
+              <WatchFirstVideo
+                videoSrc="/videos/reflection-foundation.mp4"
+                subtitle="Create Foundation Statement — watch before you write"
+                testid="reflection-watch"
               />
             </div>
 

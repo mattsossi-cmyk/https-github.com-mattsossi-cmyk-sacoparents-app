@@ -224,6 +224,22 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <a
+          href="/images/sa-coparents-collage.png"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-3xl overflow-hidden border border-[#E5E0EE] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all mb-10 group"
+          data-testid="dashboard-collage-band"
+          aria-label="Open the SA Coparents co-parenting overview poster"
+        >
+          <img
+            src="/images/sa-coparents-collage.png"
+            alt="SA Coparents co-parenting overview: reflect, prepare, connect for a better co-parenting relationship."
+            loading="lazy"
+            className="w-full h-auto block bg-[#F8F6EE] group-hover:brightness-[1.03] transition-[filter]"
+          />
+        </a>
+
         <div className="eyebrow mb-4">Preparation modules</div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {STEPS.map(({ key, label, path, icon: Icon, blurb }) => {

@@ -7,7 +7,7 @@ import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import { detectSafetyConcern } from "../lib/safety";
-import ListenFirstButton from "../components/ListenFirstButton";
+import WatchFirstVideo from "../components/WatchFirstVideo";
 import { Sparkles } from "lucide-react";
 
 const QUIZ = [
@@ -118,10 +118,10 @@ export default function CommStyle() {
         onNext={onNext}
       >
         <div className="space-y-8">
-          <ListenFirstButton
-            audioSrc="/audio/listen-first/step-2-coparenting-relationship.mp3"
-            subtitle="Understand Your Co-Parenting Relationship — listen before you answer"
-            testid="comm-style-listen"
+          <WatchFirstVideo
+            videoSrc="/videos/comm-style-reflection.mp4"
+            subtitle="Understand Your Co-Parenting Relationship — watch before you answer"
+            testid="comm-style-watch"
           />
           {QUIZ.map((q) => (
             <div key={q.id}>

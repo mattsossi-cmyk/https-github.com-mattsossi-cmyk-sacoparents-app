@@ -1,0 +1,63 @@
+{
+  "summary": "Frontend-only regression for iteration 14 (Dashboard collage band + 4 additional WatchFirstVideo swaps). All 12 features under test verified passing on the preview URL. 5 videos + 1 collage image serve HTTP 200 with correct MIME. All 5 pages render WatchFirstVideo with correct testids/subtitles/src; no legacy `-listen-panel` testids present anywhere. All 4 wizard save PUTs return 200. Safety Assessment Start advances to Section 1 and HighConcernOverlay triggers on high-concern Yes. Guest auto-bootstrap works on /dashboard (no /login redirect).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_details": {
+    "asset_HEAD_checks": {
+      "/videos/safety-assessment-reflection.mp4": "200 video/mp4",
+      "/videos/comm-style-reflection.mp4": "200 video/mp4",
+      "/videos/reflection-foundation.mp4": "200 video/mp4",
+      "/videos/readiness-reflection.mp4": "200 video/mp4",
+      "/videos/child-goals-reflection.mp4": "200 video/mp4",
+      "/images/sa-coparents-collage.png": "200 image/png"
+    },
+    "dashboard_collage_band": {
+      "data-testid": "dashboard-collage-band present",
+      "anchor_href": "/images/sa-coparents-collage.png",
+      "anchor_target": "_blank",
+      "img_src": "/images/sa-coparents-collage.png",
+      "img_naturalWidth": 1536,
+      "position": "hero(227) < collage(569) < preparation-modules(1431) — placement correct"
+    },
+    "watch_first_video_panels": {
+      "safety-assessment-watch-panel": "present, src=/videos/safety-assessment-reflection.mp4, subtitle contains 'Intimate Partner Violence — watch before you begin', label 'Watch First · Family Violence Assessment' rendered uppercase via CSS; toggle+mute+fullscreen testids present; toggle click OK; NO safety-assessment-listen-panel",
+      "comm-style-watch-panel": "present, src=/videos/comm-style-reflection.mp4, subtitle 'Understand Your Co-Parenting Relationship — watch before you answer'; controls present; NO comm-style-listen-panel",
+      "reflection-watch-panel": "present on Write tab, src=/videos/reflection-foundation.mp4, subtitle 'Create Foundation Statement — watch before you write'; controls present; NO reflection-listen-panel",
+      "readiness-watch-panel": "present, src=/videos/readiness-reflection.mp4, subtitle 'Prepare for Mediation — watch before you begin'; controls present; NO readiness-listen-panel",
+      "child-goals-watch-panel": "still present (iteration 13 regression), src=/videos/child-goals-reflection.mp4"
+    },
+    "wizard_save_regressions": {
+      "PUT /api/mediation/child-goals": 200,
+      "PUT /api/mediation/comm-style": 200,
+      "PUT /api/mediation/reflection": 200,
+      "PUT /api/mediation/readiness": 200
+    },
+    "safety_assessment": {
+      "start_button_advances_to_section_1": true,
+      "section_heading_seen": "Section 1 · Immediate Safety Screen",
+      "high_concern_overlay_triggered_on_yes": true,
+      "overlay_content_seen": "Your safety comes first / Call 911 / National DV Hotline · 800-799-7233"
+    },
+    "guest_auto_bootstrap": "Visiting /dashboard as fresh session lands on /dashboard (rendered 'Hello, Demo.') — no /login redirect",
+    "audio_reference_cleanup": "grep of src/pages/ for '/audio/listen-first' returns 0 matches (as expected)"
+  },
+  "test_report_links": ["/app/test_reports/iteration_14.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "WatchFirstVideo panel shows 'Couldn’t play the video. Try refreshing.' error text in Playwright headless Chromium because H.264 is not decoded. This is a known Playwright/Chromium codec limitation; real browsers on user devices play H.264 natively. No fix needed per iteration 13 context note.",
+    "Old /audio/listen-first/*.mp3 assets remain on disk but are no longer referenced from any src/pages file. Safe to clean up in a follow-up housekeeping pass.",
+    "Dashboard.jsx: collage band uses `loading=\"lazy\"` — good; alt text is descriptive; anchor has aria-label. No accessibility issues found."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only pass)", "frontend": "100%"},
+  "test_credentials": "Guest auto-bootstrap used — no login needed. parent1@test.com / TestPass123! available if needed.",
+  "seed_data_creation": "None (guest bootstrap creates disposable demo user)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 14 confirms: (1) dashboard-collage-band renders above 'Preparation modules' and below the Hello hero, (2) all 5 wizard steps use WatchFirstVideo with matching testids/subtitles/sources, (3) all 4 wizard save endpoints return 200, (4) Safety Assessment start + HighConcernOverlay both regression-clean. To bypass legal modal: localStorage.setItem('sac_legal_ack_v1', JSON.stringify({version:'v1', at:new Date().toISOString()})). To skip orientation redirect: localStorage.setItem('sacoparents.orientation_seen.v1','true'). Header banner text 'Save my work to keep it forever' is fine and expected for guest sessions.",
+  "rca of the issue": "N/A — no bugs found in this iteration."
+}

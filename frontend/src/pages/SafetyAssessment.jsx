@@ -18,7 +18,7 @@ import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";
 import { useAuth } from "../context/AuthContext";
 import HighConcernOverlay from "../components/HighConcernOverlay";
-import ListenFirstButton from "../components/ListenFirstButton";
+import WatchFirstVideo from "../components/WatchFirstVideo";
 
 const TONE_STYLES = {
   danger: {
@@ -399,11 +399,11 @@ export default function SafetyAssessment() {
             </ul>
 
             <div className="mb-7">
-              <ListenFirstButton
-                audioSrc="/audio/listen-first/step-ipv-assessment.mp3"
-                label="Listen First · Family Violence Assessment"
-                subtitle="Intimate Partner Violence — listen before you begin"
-                testid="safety-assessment-listen"
+              <WatchFirstVideo
+                videoSrc="/videos/safety-assessment-reflection.mp4"
+                label="Watch First · Family Violence Assessment"
+                subtitle="Intimate Partner Violence — watch before you begin"
+                testid="safety-assessment-watch"
               />
             </div>
 
