@@ -30,6 +30,7 @@ const STEPS = [
     path: "/prep/child-goals",
     icon: Target,
     blurb: "What do you want your child to experience?",
+    celebration: "You named what your child needs from you.",
   },
   {
     key: "issues",
@@ -37,6 +38,7 @@ const STEPS = [
     path: "/prep/issues",
     icon: AlertCircle,
     blurb: "Map schedule, communication, finances, safety.",
+    celebration: "You named the issues honestly and without blame.",
   },
   {
     key: "priority",
@@ -44,6 +46,7 @@ const STEPS = [
     path: "/prep/priority",
     icon: ListOrdered,
     blurb: "Rank what matters most — and where you flex.",
+    celebration: "You know which battles are worth having, and which to let go.",
   },
   {
     key: "comm_style",
@@ -51,6 +54,7 @@ const STEPS = [
     path: "/prep/communication",
     icon: MessageCircle,
     blurb: "Notice patterns; receive AI-coached suggestions.",
+    celebration: "You noticed the patterns that shape your co-parenting.",
   },
   {
     key: "readiness",
@@ -58,8 +62,18 @@ const STEPS = [
     path: "/prep/readiness",
     icon: HeartHandshake,
     blurb: "How prepared do you feel — honestly?",
+    celebration: "You measured yourself honestly. That takes courage.",
   },
 ];
+
+// Aspirational progress statements shown under the Dashboard progress bar.
+// The phrasing is intentional — every parent should feel their prep is
+// *transforming* the outcome for their child, not just ticking boxes.
+function progressStatement(pct, done, total) {
+  if (done === 0) return "The first step is the hardest. Start when you're ready.";
+  if (pct === 100) return "You built a full, child-focused parenting plan. Bring it to mediation.";
+  return `You're ${pct}% of the way toward a child-focused parenting plan.`;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -178,13 +192,13 @@ export default function Dashboard() {
                 <div className="flex items-end justify-between mb-2">
                   <div>
                     <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C]">
-                      Modules touched
+                      Today&apos;s progress
                     </div>
                     <div className="font-serif text-3xl text-[#1A1330]">
                       {done} <span className="text-[#857E9C] text-xl">/ {STEPS.length}</span>
                     </div>
                   </div>
-                  <div className="text-sm text-[#4B4567]">{pct}% complete</div>
+                  <div className="text-sm text-[#4B4567]">{pct}%</div>
                 </div>
                 <div className="h-2 bg-[#E5E0EE] rounded-full overflow-hidden">
                   <div
@@ -193,6 +207,12 @@ export default function Dashboard() {
                     data-testid="dashboard-progress-bar"
                   />
                 </div>
+                <p
+                  className="text-sm text-[#4B4567] mt-3 leading-relaxed italic"
+                  data-testid="dashboard-progress-statement"
+                >
+                  {progressStatement(pct, done, STEPS.length)}
+                </p>
               </div>
             </div>
           </div>
@@ -244,7 +264,7 @@ export default function Dashboard() {
 
         <div className="eyebrow mb-4">Preparation modules</div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {STEPS.map(({ key, label, path, icon: Icon, blurb }) => {
+          {STEPS.map(({ key, label, path, icon: Icon, blurb, celebration }) => {
             const isDone = !!completed[key];
             return (
               <Link
@@ -262,11 +282,13 @@ export default function Dashboard() {
                     <Icon size={18} />
                   </div>
                   <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
-                    {isDone ? "Saved" : "To do"}
+                    {isDone ? "Today's accomplishment" : "To do"}
                   </div>
                 </div>
                 <div className="font-serif text-xl text-[#1A1330] mb-1">{label}</div>
-                <p className="text-sm text-[#4B4567]">{blurb}</p>
+                <p className="text-sm text-[#4B4567]">
+                  {isDone ? celebration : blurb}
+                </p>
               </Link>
             );
           })}

@@ -15,6 +15,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Circle,
+  Printer,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -25,6 +26,17 @@ const SECTION_META = {
   comm_style: { label: "Communication", icon: MessageCircle, path: "/prep/communication" },
   readiness: { label: "Readiness", icon: HeartHandshake, path: "/prep/readiness" },
 };
+
+// Human-facing labels used in the printable Progress Report — softer and more
+// action-forward than the internal SECTION_META names.
+const REPORT_LABEL = {
+  child_goals: "Identify Your Child's Needs",
+  issues: "Name Your Concerns",
+  priority: "Rank Your Priorities",
+  comm_style: "Co-Parenting Reflection",
+  readiness: "Mediation Readiness",
+};
+const REPORT_ORDER = ["child_goals", "comm_style", "issues", "priority", "readiness"];
 
 function StatCard({ icon: Icon, label, value, hint, testid }) {
   return (
@@ -138,8 +150,8 @@ export default function ProgressPage() {
               How prep is going.
             </h1>
             <p className="text-[#4B4567] mt-3 max-w-xl">
-              A quiet snapshot of the work you've put in — no scores, no rankings, just
-              what you've completed and how you're feeling.
+              A quiet snapshot of the work you&apos;ve put in — no scores, no rankings, just
+              what you&apos;ve completed and how you&apos;re feeling.
             </p>
             {user?.mediation_date && (
               <div
@@ -158,7 +170,7 @@ export default function ProgressPage() {
                   {progress.steps_done}{" "}
                   <span className="text-[#857E9C] text-xl">/ {progress.steps_total}</span>
                 </div>
-                <div className="text-sm text-[#4B4567]">{progress.pct}% complete</div>
+                <div className="text-sm text-[#4B4567]">{progress.pct}%</div>
               </div>
               <div className="h-2 bg-[#E5E0EE] rounded-full overflow-hidden">
                 <div
@@ -167,9 +179,114 @@ export default function ProgressPage() {
                   data-testid="progress-bar"
                 />
               </div>
+              <p
+                className="text-sm text-[#4B4567] mt-3 leading-relaxed italic"
+                data-testid="progress-statement"
+              >
+                {progress.steps_done === 0
+                  ? "The first step is the hardest. Start when you're ready."
+                  : progress.pct === 100
+                  ? "You built a full, child-focused parenting plan. Bring it to mediation."
+                  : `You're ${progress.pct}% of the way toward a child-focused parenting plan.`}
+              </p>
             </div>
           </div>
         </div>
+
+        {/* Progress Report — designed to be shared with a mediator or counselor. */}
+        {(() => {
+          const completedKeys = REPORT_ORDER.filter((k) => progress.completed.includes(k));
+          const nextKey = REPORT_ORDER.find((k) => !progress.completed.includes(k));
+          const generatedOn = new Date().toLocaleDateString(undefined, {
+            year: "numeric", month: "long", day: "numeric",
+          });
+          return (
+            <div
+              className="card-soft p-6 sm:p-8 print:shadow-none print:border print:border-[#3D1A78]/30"
+              data-testid="progress-report-card"
+            >
+              <div className="flex items-start justify-between gap-4 mb-5 flex-wrap">
+                <div>
+                  <div className="eyebrow">Progress Report</div>
+                  <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-1">
+                    {user?.name ? `${user.name}'s ` : "Your "}
+                    co-parenting prep
+                  </h2>
+                  <div className="text-xs text-[#857E9C] mt-1">
+                    Generated {generatedOn} · sacoparentsapp.online
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  data-testid="progress-report-print-button"
+                  className="print:hidden inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E0EE] text-[#1A1330] px-4 py-2 text-sm font-semibold hover:bg-[#F8F7FC]"
+                >
+                  <Printer size={14} />
+                  Print / Save PDF
+                </button>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div data-testid="progress-report-completed">
+                  <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
+                    Completed
+                  </div>
+                  {completedKeys.length === 0 ? (
+                    <p className="text-sm text-[#857E9C] italic">
+                      No steps completed yet. The first step is the hardest.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {completedKeys.map((k) => (
+                        <li key={k} className="flex items-start gap-2 text-[15px] text-[#1A1330]">
+                          <CheckCircle2 size={18} className="shrink-0 mt-0.5 text-[#3D1A78]" />
+                          <span>{REPORT_LABEL[k]}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div data-testid="progress-report-next-step">
+                  <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
+                    Next step
+                  </div>
+                  {nextKey ? (
+                    <div className="rounded-2xl bg-[#EFE9F9] border border-[#3D1A78]/15 p-4">
+                      <div className="font-serif text-lg text-[#1A1330] leading-tight">
+                        {REPORT_LABEL[nextKey]}
+                      </div>
+                      <Link
+                        to={SECTION_META[nextKey].path}
+                        className="print:hidden inline-flex items-center gap-1.5 text-sm text-[#3D1A78] hover:underline mt-2"
+                        data-testid="progress-report-next-link"
+                      >
+                        Continue →
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl bg-[#DCEEDF] border border-[#3C7858]/25 p-4">
+                      <div className="font-serif text-lg text-[#1F5C3B] leading-tight">
+                        All prep steps complete.
+                      </div>
+                      <p className="text-sm text-[#4B4567] mt-1">
+                        Bring your Summary to mediation.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 pt-5 border-t border-[#E5E0EE] text-xs text-[#4B4567] leading-relaxed italic">
+                Professionals: parents can bring this report to mediation,
+                co-parenting counseling, or family therapy sessions. It reflects
+                self-reported progress inside the SA Coparents App and is not
+                a clinical or legal assessment.
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Stats */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -247,7 +364,7 @@ export default function ProgressPage() {
                   <div className="flex-1 min-w-0">
                     <div className="font-serif text-lg text-[#1A1330]">{meta.label}</div>
                     <div className="text-xs text-[#857E9C]">
-                      {done ? "Completed" : "Not yet"}
+                      {done ? "Today's accomplishment" : "Not yet"}
                     </div>
                   </div>
                   {done ? (
