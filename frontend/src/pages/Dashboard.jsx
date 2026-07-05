@@ -31,6 +31,7 @@ const STEPS = [
     icon: Target,
     blurb: "What do you want your child to experience?",
     celebration: "You named what your child needs from you.",
+    tip: "Children thrive on predictability. Pick one small routine to keep the same across both homes this week.",
   },
   {
     key: "issues",
@@ -39,6 +40,7 @@ const STEPS = [
     icon: AlertCircle,
     blurb: "Map schedule, communication, finances, safety.",
     celebration: "You named the issues honestly and without blame.",
+    tip: "One issue per conversation. If you raise three concerns in one text, the other parent hears none of them.",
   },
   {
     key: "priority",
@@ -47,6 +49,7 @@ const STEPS = [
     icon: ListOrdered,
     blurb: "Rank what matters most — and where you flex.",
     celebration: "You know which battles are worth having, and which to let go.",
+    tip: "Trade small things to protect big things. Be generous where it costs you little; hold firm where it protects your child.",
   },
   {
     key: "comm_style",
@@ -55,6 +58,7 @@ const STEPS = [
     icon: MessageCircle,
     blurb: "Notice patterns; receive AI-coached suggestions.",
     celebration: "You noticed the patterns that shape your co-parenting.",
+    tip: "Kids don't remember what you said. They remember how the room felt. Aim for one calm exchange today.",
   },
   {
     key: "readiness",
@@ -63,6 +67,7 @@ const STEPS = [
     icon: HeartHandshake,
     blurb: "How prepared do you feel — honestly?",
     celebration: "You measured yourself honestly. That takes courage.",
+    tip: "Sleep before mediation matters more than notes. Rested parents advocate better for their kids.",
   },
 ];
 
@@ -264,13 +269,13 @@ export default function Dashboard() {
 
         <div className="eyebrow mb-4">Preparation modules</div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {STEPS.map(({ key, label, path, icon: Icon, blurb, celebration }) => {
+          {STEPS.map(({ key, label, path, icon: Icon, blurb, celebration, tip }) => {
             const isDone = !!completed[key];
             return (
               <Link
                 to={path}
                 key={key}
-                className="card-soft p-6 hover:-translate-y-0.5 transition-transform group"
+                className="card-soft p-6 hover:-translate-y-0.5 transition-transform group flex flex-col"
                 data-testid={`dashboard-step-${key}`}
               >
                 <div className="flex items-start justify-between mb-4">
@@ -289,6 +294,22 @@ export default function Dashboard() {
                 <p className="text-sm text-[#4B4567]">
                   {isDone ? celebration : blurb}
                 </p>
+                {isDone && tip && (
+                  <div
+                    className="mt-4 pt-4 border-t border-[#E5E0EE] flex items-start gap-2"
+                    data-testid={`dashboard-step-${key}-tip`}
+                  >
+                    <div className="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-[#DCEEDF] text-[#1F5C3B] grid place-items-center">
+                      <Sprout size={12} />
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#1F5C3B] mb-1">
+                        Tip you unlocked
+                      </div>
+                      <p className="text-xs text-[#4B4567] leading-relaxed">{tip}</p>
+                    </div>
+                  </div>
+                )}
               </Link>
             );
           })}
