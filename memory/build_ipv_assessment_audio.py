@@ -1,10 +1,6 @@
-"""Generate the IPV Assessment 'Listen First' narration.
+"""Regenerate the IPV (Intimate Partner Violence) Assessment narration.
 
-Outputs: /app/frontend/public/audio/listen-first/step-ipv-assessment.mp3
-
-This narration is used on the /safety-assessment page (the IPV Communication
-Safety Assessment). It replaces the earlier 'Assess Your Family Situation'
-narration on that page.
+Output: /app/frontend/public/audio/listen-first/step-ipv-assessment.mp3
 """
 import asyncio
 import os
@@ -18,31 +14,25 @@ load_dotenv("/app/backend/.env")
 OUT = Path("/app/frontend/public/audio/listen-first/step-ipv-assessment.mp3")
 
 SCRIPT = (
-    "When in Need, Use Our SA Coparents Family Violence Assessment. "
-    "Not every parenting situation is the same, and before discussing communication "
-    "or co-parenting, it's important to understand whether safety concerns exist. "
-    "This confidential assessment helps identify signs of family violence, coercive "
-    "control, intimidation, harassment, or other behaviors that may affect parenting "
-    "decisions and communication. "
-    "Your responses will help determine the safest and most appropriate pathway for "
-    "your family. If concerns are identified, the focus will be on protecting you and "
-    "your children while exploring child-focused options for communication, parenting, "
-    "and future decision-making. "
-    "At SA Coparents, we believe every child deserves a safe environment, and every "
-    "parenting plan should begin with safety first."
+    "Every family's situation is different. If your relationship has involved "
+    "intimidation, threats, coercive control, emotional abuse, or physical "
+    "violence, your safety — and your child's safety — must come first. "
+    "This assessment is designed to help you reflect on your current situation "
+    "and identify the safest way to communicate and make parenting decisions. "
+    "There are no right or wrong answers. Simply answer honestly based on your "
+    "experience. "
+    "Your responses will help identify strategies that protect your well-being "
+    "while supporting your child's needs. "
+    "At SA Coparents, we believe every child benefits from healthy parenting — "
+    "but healthy parenting always begins with safety."
 )
 
 
 async def main() -> None:
     tts = OpenAITextToSpeech(api_key=os.environ["EMERGENT_LLM_KEY"])
-    audio_bytes = await tts.generate_speech(
-        text=SCRIPT,
-        model="tts-1-hd",
-        voice="nova",
-        speed=1.0,
-    )
-    OUT.write_bytes(audio_bytes)
-    print(f"wrote {OUT} ({len(audio_bytes) // 1024} KB)")
+    audio = await tts.generate_speech(text=SCRIPT, model="tts-1-hd", voice="nova", speed=1.0)
+    OUT.write_bytes(audio)
+    print(f"wrote {OUT} ({len(audio) // 1024} KB)")
 
 
 if __name__ == "__main__":
