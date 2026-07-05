@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import VerificationBanner from "../components/VerificationBanner";
 import EmailHealthBanner from "../components/EmailHealthBanner";
 import InviteCoparentCard from "../components/InviteCoparentCard";
+import BadgeShelf from "../components/BadgeShelf";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -22,6 +23,17 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { logError } from "../lib/logger";
+
+import { CheckCircle2, ChevronRight } from "lucide-react";
+
+// Human-friendly labels for the compact Progress Report preview on the Dashboard.
+const REPORT_LABEL = {
+  child_goals: "Identify Your Child's Needs",
+  issues: "Name Your Concerns",
+  priority: "Rank Your Priorities",
+  comm_style: "Co-Parenting Reflection",
+  readiness: "Mediation Readiness",
+};
 
 const STEPS = [
   {
@@ -84,6 +96,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [prep, setPrep] = useState({ completed: {} });
+  const [summariesCount, setSummariesCount] = useState(0);
 
   // First-time visitors: send them through the orientation walkthrough.
   useEffect(() => {
@@ -97,13 +110,22 @@ export default function Dashboard() {
       .get("/mediation/prep")
       .then((r) => setPrep(r.data || { completed: {} }))
       .catch((err) => logError("Failed to load prep:", err));
+    // Grab the summary count so the "Journey Complete" badge can unlock.
+    api
+      .get("/analytics/personal")
+      .then((r) => setSummariesCount((r.data?.recent_summaries || []).length))
+      .catch(() => {
+        /* non-blocking */
+      });
     // On native mobile builds only — no-op on web.
     registerPushNotifications(api);
   }, []);
 
   const completed = prep.completed || {};
-  const done = STEPS.filter((s) => completed[s.key]).length;
+  const completedKeys = STEPS.filter((s) => completed[s.key]).map((s) => s.key);
+  const done = completedKeys.length;
   const pct = Math.round((done / STEPS.length) * 100);
+  const nextStep = STEPS.find((s) => !completed[s.key]) || null;
 
   // "Day N of prep" — counted from when the user started their session
   // (or first wrote to prep_data, whichever came first).
@@ -137,7 +159,6 @@ export default function Dashboard() {
     }
   }
 
-  const nextStep = STEPS.find((s) => !completed[s.key]);
   const allDone = !nextStep;
 
   return (
@@ -266,6 +287,59 @@ export default function Dashboard() {
             className="w-full h-auto block bg-[#F8F6EE] group-hover:brightness-[1.03] transition-[filter]"
           />
         </a>
+
+        {/* Compact Progress Report teaser — links to /progress for the full report */}
+        {done > 0 && (
+          <Link
+            to="/progress"
+            className="block rounded-3xl bg-white border border-[#E5E0EE] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all mb-8"
+            data-testid="dashboard-progress-report-teaser"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="eyebrow mb-1">Progress Report</div>
+                <div className="flex items-center gap-2 text-sm text-[#1A1330] mb-1">
+                  <CheckCircle2 size={14} className="shrink-0 text-[#3D1A78]" />
+                  <span className="truncate">
+                    {done === 1 ? "1 step completed" : `${done} steps completed`}
+                    {completedKeys.length > 0 && (
+                      <>
+                        {" — "}
+                        <span className="text-[#4B4567]">
+                          {REPORT_LABEL[completedKeys[completedKeys.length - 1]]}
+                        </span>
+                      </>
+                    )}
+                  </span>
+                </div>
+                {nextStep && (
+                  <div className="text-sm text-[#4B4567]">
+                    <span className="font-bold text-[#3D1A78]">Next step:</span>{" "}
+                    {REPORT_LABEL[nextStep.key] || nextStep.label}
+                  </div>
+                )}
+                {!nextStep && (
+                  <div className="text-sm text-[#1F5C3B]">
+                    <span className="font-bold">All prep steps complete.</span>{" "}
+                    Bring your Summary to mediation.
+                  </div>
+                )}
+              </div>
+              <div className="shrink-0 inline-flex items-center gap-1 text-sm text-[#3D1A78] font-bold">
+                See full report
+                <ChevronRight size={14} />
+              </div>
+            </div>
+          </Link>
+        )}
+
+        {/* Achievement badge shelf */}
+        <div className="mb-10">
+          <BadgeShelf
+            progress={{ completed: completedKeys }}
+            summariesCount={summariesCount}
+          />
+        </div>
 
         <div className="eyebrow mb-4">Preparation modules</div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
