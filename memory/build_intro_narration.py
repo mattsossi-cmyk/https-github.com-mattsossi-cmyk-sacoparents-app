@@ -1,4 +1,4 @@
-"""One-off script: generate the app intro narration.
+"""Generate the app intro narration.
 
 Output: /app/frontend/public/intro-narration.mp3
 """
@@ -6,27 +6,34 @@ import asyncio
 import os
 
 from dotenv import load_dotenv
-
 from emergentintegrations.llm.openai import OpenAITextToSpeech
 
 load_dotenv("/app/backend/.env")
 
+
 SCRIPT = (
-    "Welcome to our free SA Coparents App. "
-    "In divorce and separation, kids' needs can get lost in the equation as their parents' "
-    "conflict takes center stage. "
-    "For us, helping parents meet those needs means helping parents meet their kids' needs, "
-    "regardless of the quality of the relationship they share with their child's other parent — "
-    "you know, your ex. "
-    "To meet this challenge, the SA Coparents App provides you with three important resources. "
-    "First, we help you assess your co-parenting relationship with your child's other parent "
-    "from your perspective. "
-    "Second, we help you create a Foundation Statement to clearly state the goals, concerns, "
-    "and needs of your child. It is the Foundation Statement that we intend to use to create "
-    "a Co-Parenting Commitment Agreement. "
-    "Lastly, the app provides you a report we'd like you to take to your mediator, to ensure "
-    "that your agreement matches the future goals you have envisioned for your children, as "
-    "well as ensuring that your children's needs and concerns are met."
+    "When parents separate or divorce, it is easy for conflict to become the focus "
+    "while children's needs unintentionally take a back seat. "
+    "At SA Coparents, we believe every parenting decision should begin with one "
+    "question: What does our child need? "
+    "Regardless of your relationship with your child's other parent, our goal is to "
+    "help you stay focused on your child's well-being by providing practical tools "
+    "that support thoughtful, child-centered decision-making. "
+    "The SA Coparents App guides you through three important steps. "
+    "Step One. Assess Your Co-Parenting Relationship. "
+    "Complete a confidential assessment to better understand your current co-parenting "
+    "relationship from your perspective. Your personalized report identifies strengths, "
+    "challenges, and opportunities for improvement. "
+    "Step Two. Create Your Foundation Statement. "
+    "Develop a clear statement outlining your child's needs, your parenting goals, and "
+    "the concerns you believe should be addressed. This Foundation Statement serves as "
+    "the starting point for creating a meaningful Co-Parenting Commitment Agreement. "
+    "Step Three. Prepare for Mediation. "
+    "Receive a report designed to support productive mediation by helping ensure that "
+    "any parenting agreement reflects your child's needs, your long-term parenting "
+    "goals, and the commitments both parents make moving forward. "
+    "Our mission is simple: help parents reduce conflict, improve communication when "
+    "appropriate, and create parenting agreements that place children first."
 )
 
 
