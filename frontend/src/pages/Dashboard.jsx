@@ -318,33 +318,55 @@ export default function Dashboard() {
 
         <div className="mt-8">
           <div className="eyebrow mb-4">For the kids</div>
-          <a
-            href="https://www.seedsforsuccess.net"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="dashboard-seeds-for-success-card"
-            className="group flex flex-col sm:flex-row sm:items-center gap-5 rounded-3xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] text-white p-6 sm:p-7 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all"
-          >
-            <div className="shrink-0 w-14 h-14 rounded-full bg-white/15 grid place-items-center">
-              <Sprout size={26} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] uppercase tracking-[0.22em] font-bold opacity-90 mb-1">
-                Support for children of divorce
+          <div className="grid gap-4 sm:grid-cols-2">
+            <a
+              href="https://www.seedsforsuccess.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="dashboard-seeds-for-success-card"
+              className="group flex items-center gap-4 rounded-3xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] text-white p-5 sm:p-6 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            >
+              <div className="shrink-0 w-12 h-12 rounded-full bg-white/15 grid place-items-center">
+                <Sprout size={22} />
               </div>
-              <div className="font-serif text-2xl leading-tight mb-1">
-                Seeds for Success
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.22em] font-bold opacity-90 mb-0.5">
+                  Support for children of divorce
+                </div>
+                <div className="font-serif text-xl leading-tight mb-1">
+                  Seeds for Success · Website
+                </div>
+                <p className="text-xs sm:text-sm opacity-95 leading-relaxed">
+                  Tools and guidance to help kids feel heard, safe, and supported.
+                </p>
               </div>
-              <p className="text-sm sm:text-base opacity-95 leading-relaxed">
-                A trusted resource with tools and guidance to help kids feel
-                heard, safe, and supported while their family changes.
-              </p>
-            </div>
-            <div className="shrink-0 inline-flex items-center gap-2 rounded-full bg-white text-[#3D1A78] px-4 py-2 text-sm font-bold group-hover:scale-105 transition-transform">
-              Visit
-              <ExternalLink size={14} />
-            </div>
-          </a>
+              <ExternalLink size={16} className="shrink-0 opacity-80" />
+            </a>
+
+            <a
+              href="https://www.facebook.com/61581958982281"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="dashboard-seeds-facebook-card"
+              className="group flex items-center gap-4 rounded-3xl bg-white text-[#1A1330] border border-[#E5E0EE] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+            >
+              <div className="shrink-0 w-12 h-12 rounded-full bg-[#1877F2] text-white grid place-items-center font-black text-lg">
+                f
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-0.5">
+                  Follow the community
+                </div>
+                <div className="font-serif text-xl leading-tight mb-1">
+                  Seeds for Success · Facebook
+                </div>
+                <p className="text-xs sm:text-sm text-[#4B4567] leading-relaxed">
+                  San Antonio-based, child-focused. Posts for divorcing parents.
+                </p>
+              </div>
+              <ExternalLink size={16} className="shrink-0 text-[#857E9C]" />
+            </a>
+          </div>
         </div>
       </div>
     </AppShell>
