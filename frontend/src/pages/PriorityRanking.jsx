@@ -5,6 +5,7 @@ import WizardLayout from "../components/WizardLayout";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
+import WatchFirstVideo from "../components/WatchFirstVideo";
 import { GripVertical, Plus, X } from "lucide-react";
 
 const BUCKETS = [
@@ -128,6 +129,11 @@ export default function PriorityRanking() {
         onNext={onNext}
       >
         <div className="space-y-6">
+          <WatchFirstVideo
+            videoSrc="/videos/priority-reflection.mp4"
+            subtitle="Rank what matters most — watch before you begin"
+            testid="priority-watch"
+          />
           <div className="flex gap-2">
             <input
               className="input-soft"

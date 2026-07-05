@@ -6,6 +6,7 @@ import SafetyAlert from "../components/SafetyAlert";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
+import WatchFirstVideo from "../components/WatchFirstVideo";
 import { detectSafetyConcern } from "../lib/safety";
 import { ShieldAlert } from "lucide-react";
 
@@ -161,6 +162,11 @@ export default function IssuesConcerns() {
         onNext={onNext}
       >
         <div className="space-y-3">
+          <WatchFirstVideo
+            videoSrc="/videos/issues-reflection.mp4"
+            subtitle="Name your concerns — watch before you begin"
+            testid="issues-watch"
+          />
           {showSafety && (
             <SafetyAlert
               level={safetyLevel}

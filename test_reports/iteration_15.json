@@ -1,0 +1,72 @@
+{
+  "summary": "Iteration 15 frontend-only regression: 2 new WatchFirstVideo panels wired on /prep/issues and /prep/priority, plus all 8 rebuilt logo-screen videos verified. Every feature under test passes. All 8 videos return HTTP 200 with Content-Type video/mp4. New issues-watch-panel and priority-watch-panel both render with matching video srcs and are positioned above the objective-tip/safety-alert and Add-a-topic input respectively. 5 previously wired panels (safety, comm-style, child-goals, reflection, readiness) still render with correct src attributes and NO legacy '-listen-panel' testids. All 6 wizard save PUTs return 200. Safety Assessment Start advances to Section 1 and HighConcernOverlay fires on a high-concern Yes. Guest auto-bootstrap on /dashboard works with no /login redirect.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_details": {
+    "asset_HEAD_checks": {
+      "/videos/safety-assessment-reflection.mp4": "200 video/mp4 (1449646 bytes)",
+      "/videos/comm-style-reflection.mp4": "200 video/mp4 (1786047 bytes)",
+      "/videos/child-goals-reflection.mp4": "200 video/mp4 (1654188 bytes)",
+      "/videos/reflection-foundation.mp4": "200 video/mp4 (1663115 bytes)",
+      "/videos/readiness-reflection.mp4": "200 video/mp4 (1784562 bytes)",
+      "/videos/issues-reflection.mp4": "200 video/mp4 (1227572 bytes)",
+      "/videos/priority-reflection.mp4": "200 video/mp4 (1186477 bytes)",
+      "/intro-tour.mp4": "200 video/mp4 (2982503 bytes)"
+    },
+    "new_watch_panels": {
+      "issues-watch-panel": {
+        "present": true,
+        "video_src": "/videos/issues-reflection.mp4",
+        "src_ok": true,
+        "toggle_click": "clicked_no_throw",
+        "ordering": "panel top=536px, objective-tip top=1029.75px, first issue row top=1143.75px — panel renders ABOVE safety-alert/objective-tip/issue rows as required"
+      },
+      "priority-watch-panel": {
+        "present": true,
+        "video_src": "/videos/priority-reflection.mp4",
+        "src_ok": true,
+        "toggle_click": "clicked_no_throw",
+        "ordering": "panel top=462px, priority-add-input top=967.75px — panel renders ABOVE the 'Add a topic' input as required"
+      }
+    },
+    "regression_watch_panels": {
+      "/safety-assessment": "panel present, src=/videos/safety-assessment-reflection.mp4, NO legacy listen-panel",
+      "/prep/communication": "comm-style-watch-panel present, src=/videos/comm-style-reflection.mp4, NO legacy listen-panel",
+      "/prep/child-goals": "child-goals-watch-panel present, src=/videos/child-goals-reflection.mp4, NO legacy listen-panel",
+      "/prep/readiness": "readiness-watch-panel present, src=/videos/readiness-reflection.mp4, NO legacy listen-panel",
+      "/reflection": "reflection-watch-panel present on Write tab, src=/videos/reflection-foundation.mp4, NO legacy listen-panel"
+    },
+    "wizard_save_regressions": {
+      "PUT /api/mediation/issues": 200,
+      "PUT /api/mediation/priority": 200,
+      "PUT /api/mediation/child-goals": 200,
+      "PUT /api/mediation/comm-style": 200,
+      "PUT /api/mediation/reflection": 200,
+      "PUT /api/mediation/readiness": 200
+    },
+    "safety_assessment": {
+      "start_button_advances_to_section_1": true,
+      "high_concern_overlay_triggered_on_yes": true,
+      "overlay_content_seen": "Your safety comes first / Call 911 / National DV Hotline · 800-799-7233 / Text START to 88788"
+    },
+    "guest_auto_bootstrap": "Fresh session cleared -> /dashboard renders 'Hello, Demo.' with no /login redirect; final_url = /dashboard"
+  },
+  "test_report_links": ["/app/test_reports/iteration_15.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "WatchFirstVideo error listener still surfaces 'Couldn't play the video. Try refreshing.' when Playwright headless Chromium fails to decode H.264 — same known codec limitation from iterations 13/14. Real browsers on user devices decode H.264 fine; no action needed.",
+    "IssuesConcerns.jsx and PriorityRanking.jsx correctly nest WatchFirstVideo as the FIRST child of the space-y-3 / space-y-6 wrapper, keeping the intended visual hierarchy above safety alerts / add-topic input."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (6/6 PUT endpoints)", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! used for PUT endpoint auth tokens; UI flow used guest auto-bootstrap.",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 15 confirms both new WatchFirstVideo panels (/prep/issues and /prep/priority) render with correct srcs, positioning, and clickable toggles. All 8 rebuilt logo-screen videos serve 200 video/mp4. All 5 previously wired watch panels remain regression-clean with no legacy '-listen-panel' testids. All 6 wizard save PUTs return 200. Safety Assessment start + HighConcernOverlay working. Guest bootstrap OK. To bypass legal modal: localStorage.setItem('sac_legal_ack_v1', JSON.stringify({version:'v1', at:new Date().toISOString()})). To skip orientation: localStorage.setItem('sacoparents.orientation_seen.v1','true').",
+  "rca of the issue": "N/A — no bugs found in this iteration."
+}
