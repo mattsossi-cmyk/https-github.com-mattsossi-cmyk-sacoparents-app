@@ -18,6 +18,8 @@ import {
   Heart,
   Compass,
   ArrowRight,
+  Sprout,
+  ExternalLink,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -313,6 +315,37 @@ export default function Dashboard() {
             <InviteCoparentCard variant="dashboard" />
           </div>
         )}
+
+        <div className="mt-8">
+          <div className="eyebrow mb-4">For the kids</div>
+          <a
+            href="https://www.seedsforsuccess.net"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="dashboard-seeds-for-success-card"
+            className="group flex flex-col sm:flex-row sm:items-center gap-5 rounded-3xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] text-white p-6 sm:p-7 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all"
+          >
+            <div className="shrink-0 w-14 h-14 rounded-full bg-white/15 grid place-items-center">
+              <Sprout size={26} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] uppercase tracking-[0.22em] font-bold opacity-90 mb-1">
+                Support for children of divorce
+              </div>
+              <div className="font-serif text-2xl leading-tight mb-1">
+                Seeds for Success
+              </div>
+              <p className="text-sm sm:text-base opacity-95 leading-relaxed">
+                A trusted resource with tools and guidance to help kids feel
+                heard, safe, and supported while their family changes.
+              </p>
+            </div>
+            <div className="shrink-0 inline-flex items-center gap-2 rounded-full bg-white text-[#3D1A78] px-4 py-2 text-sm font-bold group-hover:scale-105 transition-transform">
+              Visit
+              <ExternalLink size={14} />
+            </div>
+          </a>
+        </div>
       </div>
     </AppShell>
   );
