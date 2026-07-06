@@ -445,5 +445,19 @@ See `/app/memory/test_credentials.md`
 - **Tests**: 16/16 pytest at `/app/backend/tests/test_safety_assessment.py` (pure-function scoring across all 4 levels + every endpoint). Frontend Playwright covered intro → all 18 questions → high-concern overlay UX → L4 result → PDF/Email/Worksheet CTAs end-to-end. 100% pass.
 - **Files added**: `/app/backend/safety_assessment_routes.py`, `/app/backend/safety_assessment_pdf.py`, `/app/frontend/src/pages/SafetyAssessment.jsx`, `/app/frontend/src/pages/ProblemSolvingWorksheet.jsx`, `/app/frontend/src/components/HighConcernOverlay.jsx`. `email_service.send_safety_assessment_report` appended.
 
+### Jul 2026 — Watch-First image refresh · Badge share · Mediator email CTA · Coercive threshold (P0/P1/P2 → SHIPPED)
+- **Watch-First image refresh (P0)**: Replaced user-supplied illustrations for the four hero modules and regenerated the corresponding TTS videos via `/app/memory/build_step_videos_from_images.py`:
+  - `step-safety-assessment.png` (Assess Your Family Situation)
+  - `step-comm-style.png` (Understand Your Co-Parenting Relationship)
+  - `step-child-goals.png` (Identify Your Child's Goals & Needs)
+  - `step-foundation.png` (Create Your Foundation Statement)
+  Videos: `safety-assessment-reflection.mp4`, `comm-style-reflection.mp4`, `child-goals-reflection.mp4`, `reflection-foundation.mp4` all rebuilt from the same narration MP3s. Confirmed 200 responses with correct byte counts and `Content-Type: video/mp4`.
+- **Badge share (P1)**: `BadgeShelf.jsx` now renders a Share pill (`data-testid=badge-share-<id>`) under every **earned** badge chip. Uses `navigator.share` when available (mobile), otherwise falls back to `navigator.clipboard.writeText`. Distinct toasts differentiate the two paths; a user-cancelled share (`AbortError`) is silently ignored. Locked badges stay minimal (no share affordance until earned).
+- **Email my pathway to my mediator (P1)**: New CTA button `[data-testid=results-email-mediator-button]` on the IPV Safety Assessment results card opens `MediatorEmailDialog` capturing mediator email (required), mediator name (optional) and a short parent message (optional). POSTs to new backend endpoint `POST /api/safety-assessment/{assessment_id}/email-mediator`. Endpoint validates email format, rejects `@demo.local`, requires a non-guest user with a real email, and sends the full assessment PDF via Resend with the parent's email set as `Reply-To`. All send failures now surface as **503** (was 502) so Cloudflare doesn't rewrite the JSON body into raw HTML — the frontend shows friendly copy instead. `mediator_emails` array is pushed to the assessment doc on success.
+- **Coercive-flag threshold change (P2 — user chose "Level 2")**: A **single** yes on any of the five coercive-control questions (`s1_q3, s1_q6, s1_q7, s1_q8, s1_q9`) now escalates the pathway to Level 2 — Structured Written Communication (previously required 2+). Level 3 gate simplified to `section_2_concerns >= 3` since coercive s1 hits now short-circuit to Level 2.
+- **Backend files touched**: `safety_assessment_routes.py` (scoring + new `email_assessment_to_mediator` endpoint + `MediatorEmailBody` model), `email_service.py` (new `send_mediator_safety_assessment`).
+- **Frontend files touched**: `pages/SafetyAssessment.jsx` (new dialog + wiring), `components/BadgeShelf.jsx` (share button + `shareBadge` helper).
+- **Tests**: 28/28 backend pytest in `test_safety_assessment.py` + new `test_safety_assessment_mediator_email.py`. Coercive-yes → Level 2 verified for s1_q3, s1_q6, s1_q7, s1_q8, s1_q9. Level 1/3/4 regressions all pass. Frontend E2E: badge-share clipboard fallback toast, mediator dialog open/validate/close, all `data-testid` selectors match.
+
 ### 📋 Backlog (P2 remaining)
 _All P2 items shipped — backlog empty. Next priorities will come from real user signals._

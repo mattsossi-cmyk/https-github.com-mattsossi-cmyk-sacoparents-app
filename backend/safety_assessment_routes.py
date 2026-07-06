@@ -515,7 +515,13 @@ async def email_assessment_to_mediator(
             detail="Email isn’t configured on this environment. Download the PDF and share it directly.",
         )
     except EmailSendError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        # 503 keeps the error body as JSON through Cloudflare so the frontend
+        # can show a friendly toast instead of the raw gateway HTML page.
+        logger.warning("Mediator email send failed: %s", e)
+        raise HTTPException(
+            status_code=503,
+            detail="Couldn’t send to your mediator right now. Please try again in a moment.",
+        )
 
     await db.safety_assessments.update_one(
         {"assessment_id": assessment_id, "user_id": current.user_id},

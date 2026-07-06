@@ -245,7 +245,10 @@ class TestEmailMediatorValidation:
             assert body.get("ok") is True
             assert body.get("emailed_to") == "mediator@example.com"
         elif r.status_code == 503:
-            assert "email" in r.json().get("detail", "").lower()
+            detail = (r.json().get("detail", "") or "").lower()
+            # Either EmailNotConfigured ("email isn't configured...") or the
+            # mapped EmailSendError ("couldn't send to your mediator...") is fine.
+            assert "email" in detail or "send" in detail or "mediator" in detail
 
 
 # =======================================================
