@@ -19,6 +19,7 @@ import CommStyle from "@/pages/CommStyle";
 import ReadinessCheck from "@/pages/ReadinessCheck";
 import Summary from "@/pages/Summary";
 import Safety from "@/pages/Safety";
+import Watch from "@/pages/Watch";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
 import DeleteAccount from "@/pages/DeleteAccount";
@@ -93,6 +94,7 @@ function AppRoutes() {
         <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/cancel-subscription" element={<CancelSubscription />} />
         <Route path="/safety" element={<Safety />} />
+        <Route path="/watch" element={<Watch />} />
 
         <Route
           path="/safety-assessment"

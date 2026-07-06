@@ -260,6 +260,18 @@ function Hero() {
           </SecondaryCTA>
         </div>
 
+        <div className="mt-4 text-center">
+          <a
+            href="/watch"
+            data-testid="hero-watch-videos-link"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#3D1A78] hover:text-[#1A1330] transition-colors"
+          >
+            <span aria-hidden="true" className="w-2 h-2 rounded-full bg-[#2DB5B5]" />
+            Watch the 21-second and 45-second program trailers
+            <ArrowRight size={14} />
+          </a>
+        </div>
+
         {/* Trust indicators */}
         <ul className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl mx-auto">
           {[

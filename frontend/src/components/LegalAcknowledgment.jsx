@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { ScrollText, Check } from "lucide-react";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
 const STORAGE_KEY = "sac_legal_ack_v1";
 const VERSION = "v1";
+
+// Public marketing / legal pages where the acknowledgment modal would
+// create pointless friction (visitors arriving from Facebook, etc.).
+const PUBLIC_MARKETING_PATHS = new Set([
+  "/watch",
+  "/privacy",
+  "/terms",
+]);
 
 /**
  * Returns true if this device has already acknowledged the current version
@@ -43,10 +52,19 @@ function recordAck() {
  * the user clicks "I acknowledge — continue".
  */
 export default function LegalAcknowledgment() {
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
+    if (PUBLIC_MARKETING_PATHS.has(location.pathname)) {
+      // Public marketing / legal pages should never gate a visitor.
+      if (open) {
+        setOpen(false);
+        document.body.style.overflow = "";
+      }
+      return;
+    }
     if (!hasAcknowledgedLegal()) {
       setOpen(true);
       // Lock body scroll while the modal is open.
@@ -56,7 +74,7 @@ export default function LegalAcknowledgment() {
         document.body.style.overflow = prev;
       };
     }
-  }, []);
+  }, [location.pathname, open]);
 
   if (!open) return null;
 
@@ -94,7 +112,7 @@ export default function LegalAcknowledgment() {
               id="legal-ack-title"
               className="font-sans font-bold text-xl leading-tight"
             >
-              Just so we're on the same page
+              Just so we&apos;re on the same page
             </h2>
           </div>
         </div>
@@ -107,7 +125,7 @@ export default function LegalAcknowledgment() {
           <p className="text-[15px] text-[#1A1330] leading-relaxed">
             I understand that this site likewise does not provide mental health
             services and is simply here to provide me with conflict management
-            tools to resolve my co-parenting relationship with my child's other
+            tools to resolve my co-parenting relationship with my child&apos;s other
             parent.
           </p>
         </div>
