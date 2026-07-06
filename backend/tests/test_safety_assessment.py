@@ -110,11 +110,19 @@ class TestScoreAssessment:
         assert result["level"] == 2
         assert set(result["coercive_hits"]) == {"s1_q3", "s1_q6"}
 
-    def test_one_mild_yes_is_level_3(self):
-        s1 = {q["id"]: "no" for q in SECTION_1_QUESTIONS}
-        s1["s1_q7"] = "yes"  # one coercive yes, not high concern
-        result = score_assessment(AssessmentSubmit(section_1=s1, section_2={}))
-        assert result["level"] == 3
+    def test_single_coercive_yes_is_level_2(self):
+        """New rule (2026-01): a single coercive-control yes escalates to Level 2."""
+        for qid in ["s1_q3", "s1_q6", "s1_q7", "s1_q8", "s1_q9"]:
+            s1 = {q["id"]: "no" for q in SECTION_1_QUESTIONS}
+            s1[qid] = "yes"
+            s2 = {
+                "s2_q1": "yes", "s2_q2": "yes", "s2_q3": "yes",
+                "s2_q4": "yes", "s2_q5": "yes", "s2_q6": "yes",
+                "s2_q7": "yes", "s2_q8": "no",
+            }
+            result = score_assessment(AssessmentSubmit(section_1=s1, section_2=s2))
+            assert result["level"] == 2, f"{qid}: expected level 2 got {result['level']}"
+            assert qid in result["coercive_hits"]
 
     def test_three_section2_concerns_is_level_3(self):
         s1 = {q["id"]: "no" for q in SECTION_1_QUESTIONS}

@@ -24,7 +24,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
-from email_service import EmailNotConfigured, EmailSendError, send_safety_assessment_report
+from email_service import EmailNotConfigured, EmailSendError, send_mediator_safety_assessment, send_safety_assessment_report
 from safety_assessment_pdf import build_safety_assessment_pdf
 
 
@@ -216,6 +216,12 @@ class AssessmentSubmit(BaseModel):
     section_2: Dict[str, AnswerYNU] = Field(default_factory=dict)
 
 
+class MediatorEmailBody(BaseModel):
+    mediator_email: str = Field(min_length=3, max_length=254)
+    mediator_name: str = ""
+    parent_message: str = ""
+
+
 class ProblemSolvingSubmit(BaseModel):
     parenting_issue: str = ""
     child_need: str = ""
@@ -263,11 +269,13 @@ def score_assessment(payload: AssessmentSubmit) -> Dict[str, Any]:
                 section_2_concerns += 1
 
     # ---- Level decision ----
+    # Any single yes on a coercive-control question (s1_q3, s1_q6, s1_q7, s1_q8, s1_q9)
+    # escalates to Level 2 — structured written communication only.
     if high_concern_hits:
         level = 1
-    elif len(coercive_hits) >= 2 or section_1_yes >= 4:
+    elif len(coercive_hits) >= 1 or section_1_yes >= 4:
         level = 2
-    elif section_1_yes >= 1 or section_2_concerns >= 3:
+    elif section_2_concerns >= 3:
         level = 3
     else:
         level = 4
@@ -452,6 +460,72 @@ async def email_assessment(
         {"$set": {"emailed_at": datetime.now(timezone.utc).isoformat()}},
     )
     return {"ok": True, "emailed_to": to_email}
+
+
+@router.post("/{assessment_id}/email-mediator")
+async def email_assessment_to_mediator(
+    assessment_id: str,
+    body: MediatorEmailBody,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """One-tap CTA: forward this parent's IPV Safety Assessment pathway to their mediator."""
+    mediator_email = (body.mediator_email or "").strip().lower()
+    if "@" not in mediator_email or "." not in mediator_email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="That doesn’t look like a valid email address.")
+    if mediator_email.endswith("@demo.local"):
+        raise HTTPException(status_code=400, detail="Please use your mediator’s real email address.")
+
+    doc = await _load_for_user(db, assessment_id, current.user_id)
+    if doc.get("is_guest"):
+        raise HTTPException(
+            status_code=400,
+            detail="Save your work first so we can email this to your mediator.",
+        )
+
+    parent_email = current.email or ""
+    if not parent_email or parent_email.endswith("@demo.local"):
+        raise HTTPException(
+            status_code=400,
+            detail="Add a real email to your account so your mediator can reply to you.",
+        )
+
+    pdf_bytes = _build_pdf_bytes(doc)
+    result = doc.get("result") or {}
+    level = int(result.get("level") or 0)
+    pathway_title = result.get("pathway_title") or ""
+    filename = f"sacoparents-safety-assessment-level-{level or 'x'}.pdf"
+
+    try:
+        send_mediator_safety_assessment(
+            to_email=mediator_email,
+            mediator_name=(body.mediator_name or "").strip(),
+            parent_name=current.name or "",
+            parent_email=parent_email,
+            parent_message=(body.parent_message or "").strip(),
+            level=level,
+            pathway_title=pathway_title,
+            pathway_summary=result.get("pathway_summary") or "",
+            pdf_bytes=pdf_bytes,
+            pdf_filename=filename,
+        )
+    except EmailNotConfigured:
+        raise HTTPException(
+            status_code=503,
+            detail="Email isn’t configured on this environment. Download the PDF and share it directly.",
+        )
+    except EmailSendError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    await db.safety_assessments.update_one(
+        {"assessment_id": assessment_id, "user_id": current.user_id},
+        {"$push": {"mediator_emails": {
+            "to": mediator_email,
+            "name": (body.mediator_name or "").strip(),
+            "sent_at": datetime.now(timezone.utc).isoformat(),
+        }}},
+    )
+    return {"ok": True, "emailed_to": mediator_email}
 
 
 # ============================================================

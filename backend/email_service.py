@@ -676,3 +676,77 @@ def send_safety_assessment_report(
         attachments=[("safety-assessment.pdf", pdf_bytes)],
         failure_message="Couldn't email your safety assessment right now. Please try again in a moment.",
     )
+
+
+def send_mediator_safety_assessment(
+    *,
+    to_email: str,
+    mediator_name: str,
+    parent_name: str,
+    parent_email: str,
+    parent_message: str,
+    level: int,
+    pathway_title: str,
+    pathway_summary: str,
+    pdf_bytes: bytes,
+    pdf_filename: str,
+) -> None:
+    """One-tap CTA: forward a parent's IPV Safety Assessment pathway to their mediator."""
+    greeting = f"Hi {mediator_name}," if mediator_name else "Hi,"
+    who = parent_name or parent_email
+    optional_note_html = (
+        f'<p style="font-size:14px;line-height:1.6;color:#1A1330;margin:0 0 16px 0;'
+        f'background:#F8F7FC;border-radius:14px;padding:14px 16px;border:1px solid #E5E0EE;">'
+        f'<span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;">'
+        f'Note from {who}</span><br/>{parent_message}</p>'
+        if parent_message
+        else ""
+    )
+    optional_note_plain = f"\nNote from {who}:\n{parent_message}\n" if parent_message else ""
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">{greeting}</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'<strong>{who}</strong> is preparing for mediation through SA Coparents and asked me to send you '
+        f'their IPV Communication Safety Assessment result so you have the safest starting point for their case.'
+        f'</p>'
+        f'<div style="background:#F8F7FC;border-radius:16px;padding:18px 20px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
+        f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:6px;">'
+        f'Level {level} pathway</div>'
+        f'<div style="font-size:18px;font-weight:800;color:#1A1330;margin-bottom:8px;">{pathway_title}</div>'
+        f'<div style="font-size:14px;color:#4B4567;line-height:1.55;">{pathway_summary}</div>'
+        f'</div>'
+        f'{optional_note_html}'
+        f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 12px 0;">'
+        f'The full assessment with each answer and the recommended pathway is attached as a PDF. '
+        f'You can reply directly to this email to reach {who}.</p>'
+        f'<p style="font-size:12px;line-height:1.55;color:#857E9C;margin:0;">'
+        f'This assessment is a screening tool, not a diagnosis or legal advice. If there is immediate danger, '
+        f'call 911. National Domestic Violence Hotline: 800-799-7233.</p>'
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"{who} is preparing for mediation through SA Coparents and asked me to forward "
+        f"their IPV Communication Safety Assessment.\n\n"
+        f"Level {level}: {pathway_title}\n{pathway_summary}\n"
+        f"{optional_note_plain}"
+        f"\nThe full report is attached as a PDF. You can reply directly to reach {who}"
+        f" ({parent_email}).\n\n"
+        f"This assessment is a screening tool, not a diagnosis or legal advice. "
+        f"If there is immediate danger, call 911. National Domestic Violence Hotline: 800-799-7233.\n"
+    )
+    html = _branded_html(
+        headline=f"Safety pathway from {who}",
+        body_html=body_html,
+        cta_label="",
+    )
+    subject = f"Mediation safety pathway from {who}"
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=html,
+        text=plain,
+        reply_to=parent_email or None,
+        attachments=[(pdf_filename or "safety-assessment.pdf", pdf_bytes)],
+        failure_message="Couldn't email your mediator right now. Please try again in a moment.",
+    )

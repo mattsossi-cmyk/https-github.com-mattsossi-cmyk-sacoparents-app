@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { toast } from "sonner";
 import {
   Sparkles,
   Heart,
@@ -9,6 +10,7 @@ import {
   Trophy,
   Lock,
   Check,
+  Share2,
 } from "lucide-react";
 
 /**
@@ -87,7 +89,7 @@ const BADGE_DEFS = [
   },
 ];
 
-function BadgeChip({ badge, earned }) {
+function BadgeChip({ badge, earned, onShare }) {
   const Icon = badge.icon;
   const capstone = badge.isCapstone;
   return (
@@ -139,8 +141,50 @@ function BadgeChip({ badge, earned }) {
       >
         {badge.label}
       </div>
+      {earned && (
+        <button
+          type="button"
+          onClick={() => onShare(badge)}
+          data-testid={`badge-share-${badge.id}`}
+          className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] hover:bg-[#3D1A78] hover:text-white text-[#3D1A78] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors"
+        >
+          <Share2 size={10} />
+          Share
+        </button>
+      )}
     </div>
   );
+}
+
+/**
+ * Web Share API with a graceful clipboard fallback so users on desktop
+ * can still copy the celebratory line.
+ */
+async function shareBadge(badge) {
+  const shareText = `I just earned the "${badge.label}" badge on SA Coparents — small, meaningful steps toward a calmer co-parenting relationship for our kids.`;
+  const shareUrl = "https://sacoparentsapp.online";
+  try {
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      await navigator.share({
+        title: "My SA Coparents badge",
+        text: shareText,
+        url: shareUrl,
+      });
+      return { shared: true };
+    }
+    if (
+      typeof navigator !== "undefined" &&
+      navigator.clipboard &&
+      typeof navigator.clipboard.writeText === "function"
+    ) {
+      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      return { copied: true };
+    }
+  } catch (e) {
+    if (e?.name === "AbortError") return { aborted: true };
+    // Fall through and let caller handle a generic failure.
+  }
+  return { failed: true };
 }
 
 /**
@@ -151,6 +195,21 @@ function BadgeChip({ badge, earned }) {
 export default function BadgeShelf({ progress, summariesCount = 0 }) {
   const extras = { summaries_generated: summariesCount };
   const earnedCount = BADGE_DEFS.filter((b) => b.condition(progress, extras)).length;
+  const [sharing, setSharing] = useState(false);
+
+  const handleShare = async (badge) => {
+    if (sharing) return;
+    setSharing(true);
+    const outcome = await shareBadge(badge);
+    if (outcome.shared) {
+      toast.success("Shared. Thanks for spreading the word.");
+    } else if (outcome.copied) {
+      toast.success("Copied to clipboard — paste it anywhere.");
+    } else if (!outcome.aborted) {
+      toast.error("Couldn’t share on this device. Try copying the text instead.");
+    }
+    setSharing(false);
+  };
 
   return (
     <section
@@ -165,7 +224,7 @@ export default function BadgeShelf({ progress, summariesCount = 0 }) {
           </h2>
           <p className="text-sm text-[#4B4567] mt-1 leading-relaxed">
             Earn a badge for each meaningful step you take toward child-focused
-            co-parenting.
+            co-parenting. Tap Share on any earned badge to celebrate the win.
           </p>
         </div>
         <div
@@ -183,6 +242,7 @@ export default function BadgeShelf({ progress, summariesCount = 0 }) {
             key={b.id}
             badge={b}
             earned={!!b.condition(progress, extras)}
+            onShare={handleShare}
           />
         ))}
       </div>
