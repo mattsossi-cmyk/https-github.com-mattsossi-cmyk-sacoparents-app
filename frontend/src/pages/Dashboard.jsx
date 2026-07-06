@@ -343,8 +343,13 @@ export default function Dashboard() {
         </div>
 
         {/* 21-second Meet the Program trailer — playable + downloadable share asset */}
+        <div className="mb-4">
+          <MeetTheProgramCard trailerId="meet-the-program" />
+        </div>
+
+        {/* 45-second Three Reports trailer — Conflict Assessment, Foundation Statement, Mediation Declaration */}
         <div className="mb-10">
-          <MeetTheProgramCard />
+          <MeetTheProgramCard trailerId="three-reports" />
         </div>
 
         <div className="eyebrow mb-4">Preparation modules</div>
