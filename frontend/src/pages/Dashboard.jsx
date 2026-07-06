@@ -5,6 +5,7 @@ import VerificationBanner from "../components/VerificationBanner";
 import EmailHealthBanner from "../components/EmailHealthBanner";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import BadgeShelf from "../components/BadgeShelf";
+import MeetTheProgramCard from "../components/MeetTheProgramCard";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -339,6 +340,11 @@ export default function Dashboard() {
             progress={{ completed: completedKeys }}
             summariesCount={summariesCount}
           />
+        </div>
+
+        {/* 21-second Meet the Program trailer — playable + downloadable share asset */}
+        <div className="mb-10">
+          <MeetTheProgramCard />
         </div>
 
         <div className="eyebrow mb-4">Preparation modules</div>
