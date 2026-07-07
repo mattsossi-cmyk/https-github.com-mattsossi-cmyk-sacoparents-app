@@ -24,17 +24,18 @@ LEGACY_OUT = Path("/app/frontend/public/intro-tour.mp4")
 AUDIO_OUT = Path("/app/frontend/public/intro-narration.mp3")
 PAD_OUT = Path("/app/memory/_intro_slideshow_pad.wav")
 
-# 9 slides aligned to the voice-over rhythm; sum = 55s.
+# 9 slides in requested order: app first → branded posters 1-7 → graduation last.
+# Total = 55s (~6.1s per slide).
 SLIDES = [
-    ("07-welcome-6step.png",  7.0),
-    ("01-journey.png",        6.0),
-    ("02-app.png",            5.0),
-    ("06-assess.png",         6.0),
-    ("03-identify.png",       6.0),
-    ("04-communicate.png",    6.0),
-    ("05-prepare.png",        6.0),
-    ("08-better.png",         6.0),
-    ("10-three-reports.png",  7.0),
+    ("02-app.png",           6.0),  # SA CoParents App phone mockup — opening
+    ("06-assess.png",        6.0),  # #1 Assess Your Family Situation
+    ("11-understand.png",    6.0),  # #2 Understand Your Co-Parenting Relationship
+    ("03-identify.png",      6.0),  # #3 Identify Your Child's Goals & Needs
+    ("12-foundation.png",    6.0),  # #4 Create Your Foundation Statement
+    ("05-prepare.png",       6.0),  # #5 Prepare for Mediation
+    ("04-communicate.png",   6.0),  # #6 Strengthen Communication & Problem Solving
+    ("08-better.png",        6.0),  # #7 Better Co-Parenting, Better Outcomes
+    ("07-welcome-6step.png", 7.0),  # Graduation — Welcome to SA CoParents · Class of 2026
 ]
 TOTAL_SECONDS = int(sum(d for _, d in SLIDES))  # 55
 FADE = 0.4
