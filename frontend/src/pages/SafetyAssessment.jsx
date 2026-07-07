@@ -567,9 +567,10 @@ export default function SafetyAssessment() {
 
             <div className="mb-7">
               <WatchFirstVideo
-                videoSrc="/videos/safety-assessment-reflection.mp4"
-                label="Watch First · Family Violence Assessment"
-                subtitle="Intimate Partner Violence — watch before you begin"
+                videoSrc="/videos/ipv-assessment-intro.mp4"
+                posterSrc="/images/ipv-assessment-poster.png"
+                label="Watch First · IPV Assessment for Co-Parents"
+                subtitle="Safety First. Informed Choices. Better Outcomes for Your Children."
                 testid="safety-assessment-watch"
               />
             </div>
