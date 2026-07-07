@@ -9,12 +9,105 @@ import {
   ExternalLink,
   Heart,
   Facebook,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { toast } from "sonner";
 import { TRAILERS } from "@/components/MeetTheProgramCard";
 
 const FACEBOOK_URL = "https://www.facebook.com/61581958982281";
 const SEEDS_URL = "https://www.seedsforsuccess.net";
+const INTRO_VIDEO_SRC = "/videos/intro-collage.mp4";
+
+/**
+ * Autoplaying muted hero video with an "Unmute + Play with sound" overlay.
+ * Muted autoplay is universally allowed by browsers; the overlay button
+ * gives visitors a one-tap way to hear the narration when they're ready.
+ */
+function IntroHeroVideo() {
+  const videoRef = useRef(null);
+  const [muted, setMuted] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(true);
+
+  const unmuteAndPlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = false;
+    setMuted(false);
+    setShowOverlay(false);
+    // Restart from the top so visitors hear the full welcome.
+    v.currentTime = 0;
+    v.play().catch(() => {});
+  };
+
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setMuted(v.muted);
+    if (!v.muted && v.paused) v.play().catch(() => {});
+  };
+
+  return (
+    <section
+      className="relative rounded-3xl overflow-hidden shadow-xl border border-[#E5E0EE] bg-black"
+      data-testid="watch-intro-hero"
+    >
+      <video
+        ref={videoRef}
+        src={INTRO_VIDEO_SRC}
+        autoPlay
+        muted
+        playsInline
+        loop
+        preload="metadata"
+        className="w-full aspect-[4/5] sm:aspect-[16/10] object-cover bg-black"
+        data-testid="watch-intro-hero-video"
+      />
+
+      {/* Small mute toggle in the top-right — always visible once overlay is dismissed */}
+      {!showOverlay && (
+        <button
+          type="button"
+          onClick={toggleMute}
+          data-testid="watch-intro-hero-mute-toggle"
+          aria-label={muted ? "Unmute the intro video" : "Mute the intro video"}
+          className="absolute top-4 right-4 w-11 h-11 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-sm text-white grid place-items-center transition-colors"
+        >
+          {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+        </button>
+      )}
+
+      {/* Full-frame overlay CTA — visible until the visitor unmutes */}
+      {showOverlay && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/40 grid place-items-center px-6 text-center">
+          <div className="max-w-md">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white px-3 py-1 text-[10px] uppercase tracking-[0.22em] font-bold mb-4">
+              <Film size={12} /> 55-second welcome
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl text-white leading-tight mb-3 drop-shadow-lg">
+              Meet the SA CoParents App
+            </h2>
+            <p className="text-sm sm:text-base text-white/85 leading-relaxed mb-6 drop-shadow">
+              Tap play with sound to hear the full welcome — or scroll down to
+              watch the shorter trailers.
+            </p>
+            <button
+              type="button"
+              onClick={unmuteAndPlay}
+              data-testid="watch-intro-hero-unmute"
+              className="inline-flex items-center gap-2 rounded-full bg-white hover:bg-[#FFD766] text-[#1A1330] px-6 py-3 text-sm font-bold shadow-xl hover:-translate-y-0.5 transition-all"
+            >
+              <Volume2 size={16} />
+              Play with sound
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 
 /**
  * Public /watch page — no auth required. Designed as a soft-landing for
@@ -185,6 +278,10 @@ export default function Watch() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        <section className="mb-10 sm:mb-14">
+          <IntroHeroVideo />
+        </section>
+
         <section className="max-w-3xl mb-10 sm:mb-14">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#EFE9F9] text-[#3D1A78] px-4 py-1.5 text-[10px] uppercase tracking-[0.22em] font-bold mb-4">
             <Heart size={12} /> A preview of the program
