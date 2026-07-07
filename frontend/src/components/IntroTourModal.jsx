@@ -77,7 +77,7 @@ export default function IntroTourModal({ open, onClose }) {
     >
       <video
         ref={videoRef}
-        src="/intro-tour.mp4?v=slideshow-2026-07-07e"
+        src="/intro-tour.mp4?v=slideshow-2026-07-07f"
         autoPlay
         playsInline
         onEnded={close}
