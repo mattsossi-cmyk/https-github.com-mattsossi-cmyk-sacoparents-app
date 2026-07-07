@@ -31,6 +31,18 @@ export const TRAILERS = {
     shareText:
       "Three private reports that help you walk into mediation with clarity, confidence, and a child-first plan.",
   },
+  "before-you-begin": {
+    id: "before-you-begin",
+    eyebrow: "Watch first · 70 seconds",
+    title: "Before you begin — a message for you",
+    blurb:
+      "A short coaching message from us. Slow down, reflect, and answer honestly — SA CoParents is a journey, not a form.",
+    videoSrc: "/videos/before-you-begin.mp4",
+    posterSrc: "/images/before-you-begin-poster.png",
+    downloadName: "sa-coparents-before-you-begin.mp4",
+    shareText:
+      "A short coaching message that primes parents to slow down, reflect, and start their SA CoParents journey with intention.",
+  },
 };
 
 async function shareTrailer(shareText, title = "SA Coparents") {

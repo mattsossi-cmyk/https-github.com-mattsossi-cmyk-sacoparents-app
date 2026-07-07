@@ -352,6 +352,12 @@ export default function Dashboard() {
           <MeetTheProgramCard trailerId="three-reports" />
         </div>
 
+        {/* Before-you-begin coaching video — plays before starting the prep modules */}
+        <div className="mb-8">
+          <div className="eyebrow mb-3">Start here</div>
+          <MeetTheProgramCard trailerId="before-you-begin" />
+        </div>
+
         <div className="eyebrow mb-4">Preparation modules</div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {STEPS.map(({ key, label, path, icon: Icon, blurb, celebration, tip }) => {
