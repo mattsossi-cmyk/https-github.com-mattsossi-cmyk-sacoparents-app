@@ -99,6 +99,7 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
   const trailer = TRAILERS[trailerId] || TRAILERS["meet-the-program"];
   const [open, setOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const videoRef = useRef(null);
 
   const openPlayer = () => {
@@ -127,10 +128,27 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
     return trailer.chapters.find((c) => c.at > currentTime + 0.5) || null;
   }, [trailer.chapters, currentTime]);
 
+  const currentChapterIndex = React.useMemo(() => {
+    if (!trailer.chapters?.length) return -1;
+    let idx = 0;
+    for (let i = 0; i < trailer.chapters.length; i++) {
+      if (currentTime + 0.05 >= trailer.chapters[i].at) idx = i;
+      else break;
+    }
+    return idx;
+  }, [trailer.chapters, currentTime]);
+
   const skipToNext = () => {
     const v = videoRef.current;
     if (!v || !nextChapter) return;
     v.currentTime = nextChapter.at;
+    if (v.paused) v.play().catch(() => {});
+  };
+
+  const jumpToChapter = (at) => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.currentTime = at;
     if (v.paused) v.play().catch(() => {});
   };
 
@@ -214,6 +232,7 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
               playsInline
               onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime || 0)}
               onSeeked={(e) => setCurrentTime(e.currentTarget.currentTime || 0)}
+              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
               className="w-full rounded-2xl shadow-2xl bg-black"
               data-testid={`trailer-video-${trailer.id}`}
             />
@@ -229,6 +248,62 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
                 <span className="hidden sm:inline">Skip to</span> {nextChapter.label}
               </button>
             )}
+
+            {trailer.chapters?.length > 1 && (() => {
+              // Duration might not be set until onLoadedMetadata fires; fall
+              // back to the last chapter's timestamp + a small tail so the
+              // markers always render at meaningful positions.
+              const totalSeconds =
+                duration > 0
+                  ? duration
+                  : trailer.chapters[trailer.chapters.length - 1].at + 8;
+              return (
+              <div
+                className="mt-3 px-1"
+                data-testid={`trailer-chapter-bar-${trailer.id}`}
+              >
+                <div
+                  className="relative h-2 rounded-full bg-white/15 overflow-hidden"
+                  aria-label="Chapters"
+                >
+                  {/* Elapsed fill */}
+                  <div
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FFD766] to-[#F5A623] transition-[width] duration-200"
+                    style={{ width: `${Math.min(100, (currentTime / totalSeconds) * 100)}%` }}
+                  />
+                  {/* Chapter markers */}
+                  {trailer.chapters.map((c, i) => {
+                    const pct = Math.min(100, (c.at / totalSeconds) * 100);
+                    const active = i === currentChapterIndex;
+                    return (
+                      <button
+                        key={c.at}
+                        type="button"
+                        onClick={() => jumpToChapter(c.at)}
+                        data-testid={`trailer-chapter-dot-${trailer.id}-${i}`}
+                        aria-label={`Jump to ${c.label}`}
+                        title={c.label}
+                        className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full transition-all ${
+                          active
+                            ? "w-4 h-4 bg-white ring-2 ring-[#FFD766]"
+                            : "w-2.5 h-2.5 bg-white/70 hover:bg-white hover:scale-125"
+                        }`}
+                        style={{ left: `${pct}%` }}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] font-bold text-white/70">
+                  <span data-testid={`trailer-chapter-current-${trailer.id}`}>
+                    {trailer.chapters[currentChapterIndex]?.label || trailer.chapters[0].label}
+                  </span>
+                  <span>
+                    {currentChapterIndex + 1} / {trailer.chapters.length}
+                  </span>
+                </div>
+              </div>
+              );
+            })()}
           </div>
         </div>
       )}
