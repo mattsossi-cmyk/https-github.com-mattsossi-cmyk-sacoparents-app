@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import InviteCoparentCard from "../components/InviteCoparentCard";
+import WatchFirstVideo from "../components/WatchFirstVideo";
 import { api, API } from "../lib/api";
 import { shareViaText } from "../lib/share";
 import { toast } from "sonner";
@@ -1107,6 +1108,16 @@ export default function Summary() {
           co-parent, and a personal growth plan compiled from your communication and
           readiness reflections.
         </p>
+
+        <div className="mb-8">
+          <WatchFirstVideo
+            videoSrc="/videos/summary-journey.mp4"
+            posterSrc="/images/summary-journey-poster.jpg"
+            label="Watch first · 48 seconds"
+            subtitle="Summary of your journey — how to use these reports"
+            testid="summary-journey-watch"
+          />
+        </div>
 
         <div
           className="inline-flex flex-wrap items-center gap-1 p-1 rounded-2xl sm:rounded-full bg-[#EFE9F9] mb-8 max-w-full"
