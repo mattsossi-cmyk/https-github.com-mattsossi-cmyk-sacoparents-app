@@ -352,10 +352,11 @@ export default function Dashboard() {
           <MeetTheProgramCard trailerId="three-reports" />
         </div>
 
-        {/* Before-you-begin coaching video — plays before starting the prep modules */}
+        {/* Welcome coaching video — plays with the same "before you begin" voice-over
+            but uses the wide "Better co-parenting starts with a plan" hero. */}
         <div className="mb-8">
           <div className="eyebrow mb-3">Start here</div>
-          <MeetTheProgramCard trailerId="before-you-begin" />
+          <MeetTheProgramCard trailerId="dashboard-welcome" />
         </div>
 
         <div className="eyebrow mb-4">Preparation modules</div>

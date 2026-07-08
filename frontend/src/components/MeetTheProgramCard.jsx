@@ -43,6 +43,18 @@ export const TRAILERS = {
     shareText:
       "A short coaching message that primes parents to slow down, reflect, and start their SA CoParents journey with intention.",
   },
+  "dashboard-welcome": {
+    id: "dashboard-welcome",
+    eyebrow: "Watch first · 70 seconds",
+    title: "Welcome — better co-parenting starts with a plan",
+    blurb:
+      "Take 70 seconds. Slow down, reflect, and answer honestly. SA CoParents is a guided journey — not a form to fill out.",
+    videoSrc: "/videos/dashboard-welcome.mp4",
+    posterSrc: "/images/dashboard-welcome-poster.jpg",
+    downloadName: "sa-coparents-dashboard-welcome.mp4",
+    shareText:
+      "A 70-second welcome that shows how SA CoParents guides parents through a calmer, more child-focused mediation prep.",
+  },
 };
 
 async function shareTrailer(shareText, title = "SA Coparents") {
