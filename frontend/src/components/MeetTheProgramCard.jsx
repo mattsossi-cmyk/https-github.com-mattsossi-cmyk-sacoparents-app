@@ -158,15 +158,28 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
         className="rounded-3xl bg-gradient-to-br from-[#1A1330] via-[#2A1057] to-[#3D1A78] text-white border border-[#3D1A78]/40 shadow-sm overflow-hidden"
         data-testid={`trailer-card-${trailer.id}`}
       >
-        <div className="flex items-center gap-5 p-5 sm:p-6 flex-wrap sm:flex-nowrap">
+        <div className="flex items-stretch gap-5 p-5 sm:p-6 flex-wrap sm:flex-nowrap">
           <button
             type="button"
             onClick={openPlayer}
             data-testid={`trailer-play-${trailer.id}`}
             aria-label={`Play the trailer: ${trailer.title}`}
-            className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 grid place-items-center transition-colors"
+            className="group relative shrink-0 rounded-2xl overflow-hidden border border-white/20 bg-white/10 hover:bg-white/15 transition-colors w-full sm:w-56 md:w-64 aspect-[16/10] sm:aspect-video"
           >
-            <Play size={28} className="text-white translate-x-0.5" />
+            {trailer.posterSrc && (
+              <img
+                src={trailer.posterSrc}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
+            <span className="absolute inset-0 bg-black/25 group-hover:bg-black/15 transition-colors" />
+            <span className="absolute inset-0 grid place-items-center">
+              <span className="w-14 h-14 rounded-full bg-white/95 grid place-items-center shadow-xl group-hover:scale-105 transition-transform">
+                <Play size={22} className="text-[#3D1A78] translate-x-0.5" />
+              </span>
+            </span>
           </button>
           <div className="flex-1 min-w-[220px]">
             <div className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-bold text-[#FFD766] mb-1">
