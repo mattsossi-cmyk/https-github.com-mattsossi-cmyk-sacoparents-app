@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Play, X, Download, Share2, Film } from "lucide-react";
+import { Play, X, Download, Share2, Film, SkipForward } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -42,6 +42,14 @@ export const TRAILERS = {
     downloadName: "sa-coparents-before-you-begin.mp4",
     shareText:
       "A short coaching message that primes parents to slow down, reflect, and start their SA CoParents journey with intention.",
+    chapters: [
+      { label: "Welcome",           at: 0 },
+      { label: "Take your time",    at: 14 },
+      { label: "Discover strengths", at: 28 },
+      { label: "Each section builds", at: 42 },
+      { label: "Reflection & growth", at: 56 },
+      { label: "Let's begin",       at: 64 },
+    ],
   },
   "dashboard-welcome": {
     id: "dashboard-welcome",
@@ -54,6 +62,14 @@ export const TRAILERS = {
     downloadName: "sa-coparents-dashboard-welcome.mp4",
     shareText:
       "A 70-second welcome that shows how SA CoParents guides parents through a calmer, more child-focused mediation prep.",
+    chapters: [
+      { label: "Welcome",           at: 0 },
+      { label: "Take your time",    at: 14 },
+      { label: "Discover strengths", at: 26 },
+      { label: "Each section builds", at: 38 },
+      { label: "Reflection & growth", at: 52 },
+      { label: "Let's begin",       at: 62 },
+    ],
   },
 };
 
@@ -82,10 +98,12 @@ async function shareTrailer(shareText, title = "SA Coparents") {
 export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
   const trailer = TRAILERS[trailerId] || TRAILERS["meet-the-program"];
   const [open, setOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef(null);
 
   const openPlayer = () => {
     setOpen(true);
+    setCurrentTime(0);
     // Slight delay so the video mounts before we call .play()
     setTimeout(() => videoRef.current?.play().catch(() => {}), 60);
   };
@@ -102,6 +120,20 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
     else if (!outcome.aborted) toast.error("Couldn’t share on this device.");
   };
 
+  // Find the next chapter whose start time is at least 0.5s ahead of the
+  // current playback position so the button reveals the upcoming label.
+  const nextChapter = React.useMemo(() => {
+    if (!trailer.chapters?.length) return null;
+    return trailer.chapters.find((c) => c.at > currentTime + 0.5) || null;
+  }, [trailer.chapters, currentTime]);
+
+  const skipToNext = () => {
+    const v = videoRef.current;
+    if (!v || !nextChapter) return;
+    v.currentTime = nextChapter.at;
+    if (v.paused) v.play().catch(() => {});
+  };
+
   return (
     <>
       <section
@@ -112,7 +144,7 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
           <button
             type="button"
             onClick={openPlayer}
-            data-testid="meet-the-program-play"
+            data-testid={`trailer-play-${trailer.id}`}
             aria-label={`Play the trailer: ${trailer.title}`}
             className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 grid place-items-center transition-colors"
           >
@@ -180,9 +212,23 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
               poster={trailer.posterSrc}
               controls
               playsInline
+              onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime || 0)}
+              onSeeked={(e) => setCurrentTime(e.currentTarget.currentTime || 0)}
               className="w-full rounded-2xl shadow-2xl bg-black"
               data-testid={`trailer-video-${trailer.id}`}
             />
+            {nextChapter && (
+              <button
+                type="button"
+                onClick={skipToNext}
+                data-testid={`trailer-skip-next-${trailer.id}`}
+                aria-label={`Skip to ${nextChapter.label}`}
+                className="absolute bottom-16 right-4 inline-flex items-center gap-2 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white pl-3 pr-4 py-2 text-xs font-bold shadow-lg transition-colors"
+              >
+                <SkipForward size={14} />
+                <span className="hidden sm:inline">Skip to</span> {nextChapter.label}
+              </button>
+            )}
           </div>
         </div>
       )}
