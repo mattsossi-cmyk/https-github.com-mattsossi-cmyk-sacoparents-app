@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from fpdf import FPDF
+from PIL import Image
 
 
 SAGE = (132, 157, 142)
@@ -20,6 +21,50 @@ ORG_ADDRESS = "16607 Blanco #703, San Antonio, Texas 78232"
 ORG_PHONE = "210-224-1667"
 ORG_EMAIL = "mattsossi@bsossi.com"
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "sa_coparents_logo.png")
+
+# Numbered branded posters (public/images/steps/*) that also appear in the intro
+# slideshow and every Watch-First card. Reused here as full-page section covers so
+# the printed prep summary mirrors the on-screen visual language.
+_STEPS_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "images", "steps")
+)
+POSTER_PATHS = {
+    "assess":      os.path.join(_STEPS_DIR, "step-safety-assessment.png"),
+    "understand":  os.path.join(_STEPS_DIR, "step-comm-style.png"),
+    "identify":    os.path.join(_STEPS_DIR, "step-child-goals.png"),
+    "foundation":  os.path.join(_STEPS_DIR, "step-foundation.png"),
+    "prepare":     os.path.join(_STEPS_DIR, "step-readiness.png"),
+    "communicate": os.path.join(_STEPS_DIR, "step-issues.png"),
+    "better":      os.path.join(_STEPS_DIR, "step-priority.png"),
+}
+
+# Downscaled poster cache — full-res source posters are 1024x1536 (~2MB each);
+# for print they only need to be ~720px wide, saving ~85% file size per cover.
+_POSTER_CACHE_DIR = os.path.join(os.path.dirname(__file__), "assets", "poster_cache")
+_POSTER_CACHE_MAX_W = 720  # px, matches 130mm at ~140 DPI
+
+
+def _cached_poster(poster_key: str) -> str | None:
+    """Return a path to a print-optimised copy of the given poster.
+    Regenerates the cache if the source has changed (mtime-based)."""
+    src = POSTER_PATHS.get(poster_key)
+    if not src or not os.path.exists(src):
+        return None
+    os.makedirs(_POSTER_CACHE_DIR, exist_ok=True)
+    dst = os.path.join(_POSTER_CACHE_DIR, f"{poster_key}.jpg")
+    try:
+        src_mtime = os.path.getmtime(src)
+        if os.path.exists(dst) and os.path.getmtime(dst) >= src_mtime:
+            return dst
+        with Image.open(src) as im:
+            im = im.convert("RGB")
+            if im.width > _POSTER_CACHE_MAX_W:
+                new_h = int(im.height * _POSTER_CACHE_MAX_W / im.width)
+                im = im.resize((_POSTER_CACHE_MAX_W, new_h), Image.LANCZOS)
+            im.save(dst, "JPEG", quality=85, optimize=True)
+        return dst
+    except Exception:
+        return src  # Fall back to the raw source if anything goes wrong.
 
 
 # fpdf2's built-in Helvetica is a latin-1 font and can't encode characters like
@@ -50,6 +95,11 @@ def _safe(text: Any) -> str:
 
 
 class PrepSummaryPDF(FPDF):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Flag toggled during poster cover pages so header/footer stay hidden.
+        self._chromeless = False
+
     def cell(self, w=0, h=0, txt="", *args, **kwargs):
         return super().cell(w, h, _safe(txt), *args, **kwargs)
 
@@ -57,6 +107,8 @@ class PrepSummaryPDF(FPDF):
         return super().multi_cell(w, h, _safe(txt), *args, **kwargs)
 
     def header(self):
+        if self._chromeless:
+            return
         # Soft sand band
         self.set_fill_color(*SAND)
         self.rect(0, 0, 210, 38, "F")
@@ -83,6 +135,8 @@ class PrepSummaryPDF(FPDF):
         self.set_y(44)
 
     def footer(self):
+        if self._chromeless:
+            return
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(*TEXT_MID)
@@ -120,6 +174,34 @@ class PrepSummaryPDF(FPDF):
             self.multi_cell(0, 6, str(item))
             self.ln(0.5)
         self.ln(1)
+
+    def poster_cover(self, poster_key: str) -> None:
+        """
+        Insert a full-page cover using one of the numbered branded posters
+        (see POSTER_PATHS). The poster is 2:3 portrait; A4 is ~1:1.414 so we
+        center it horizontally and leave breathing room top and bottom on a
+        soft sand background — mirrors the app's Watch-First card aesthetic.
+        Header and footer are suppressed on the cover page.
+        """
+        path = _cached_poster(poster_key)
+        if not path or not os.path.exists(path):
+            return
+        self._chromeless = True
+        try:
+            self.add_page()
+            # Sand background across the full A4 canvas.
+            self.set_fill_color(*SAND)
+            self.rect(0, 0, 210, 297, "F")
+            # 2:3 portrait poster fitted into 130 x 195 mm, centered.
+            img_w, img_h = 130, 195
+            x = (210 - img_w) / 2
+            y = (297 - img_h) / 2 - 6
+            try:
+                self.image(path, x=x, y=y, w=img_w, h=img_h)
+            except Exception:
+                pass
+        finally:
+            self._chromeless = False
 
 
 def _render_meta(pdf: "PrepSummaryPDF", user_name: str, mediation_date: str | None) -> None:
@@ -176,6 +258,10 @@ def build_summary_pdf(
     pdf = PrepSummaryPDF(format="A4")
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_margins(15, 44, 15)
+
+    # Opening cover — #4 "Create Your Foundation Statement" poster.
+    pdf.poster_cover("foundation")
+
     pdf.add_page()
 
     _render_meta(pdf, user_name, mediation_date)
@@ -185,21 +271,33 @@ def build_summary_pdf(
         pdf.section_title("What's Changed Since Last Time")
         pdf.body_text(summary["changes_since_last"])
 
+    # Cover for Child-Centered Goals — #3 poster.
+    pdf.poster_cover("identify")
+    pdf.add_page()
     _render_child_goals(pdf, summary, child_goals)
 
     pdf.section_title("Top Concerns")
     pdf.bullet_list(summary.get("top_concerns", []))
 
+    # Cover for Priority Agenda — #5 "Prepare for Mediation" poster.
+    pdf.poster_cover("prepare")
+    pdf.add_page()
     _render_priority_agenda(pdf, summary.get("priority_agenda", []))
 
     pdf.section_title("Flexibility Areas")
     pdf.bullet_list(summary.get("flexibility_areas", []))
 
+    # Cover for Communication Goals — #6 "Strengthen Communication" poster.
+    pdf.poster_cover("communicate")
+    pdf.add_page()
     pdf.section_title("Communication Goals")
     pdf.bullet_list(summary.get("communication_goals", []))
 
     pdf.section_title("Notes for the Mediator")
     pdf.body_text(summary.get("notes_for_mediator", ""))
+
+    # Closing cover — #7 "Better Co-Parenting, Better Outcomes" poster.
+    pdf.poster_cover("better")
 
     out = pdf.output(dest="S")
     if isinstance(out, str):
