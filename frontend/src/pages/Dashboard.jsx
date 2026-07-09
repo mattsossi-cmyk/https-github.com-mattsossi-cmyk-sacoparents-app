@@ -199,8 +199,8 @@ export default function Dashboard() {
                   </span>
                 )}
               </div>
-              <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] leading-tight">
-                Hello, {user?.name?.split(" ")[0] || "friend"}.
+              <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] leading-tight" data-testid="dashboard-greeting">
+                {timeGreeting()}, {user?.name?.split(" ")[0] || "friend"}.
               </h1>
               <p className="text-[#4B4567] mt-3 max-w-lg leading-relaxed">
                 Mediation prep happens in pieces — over days, not minutes. Come back
@@ -248,8 +248,54 @@ export default function Dashboard() {
                     data-testid="dashboard-progress-bar"
                   />
                 </div>
+                {!allDone && (
+                  <div
+                    className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#857E9C] flex items-center gap-1.5"
+                    data-testid="dashboard-estimated-completion"
+                  >
+                    <Compass size={12} className="text-[#3D1A78]" />
+                    Estimated completion ·{" "}
+                    <span className="text-[#1A1330] normal-case tracking-normal font-semibold">
+                      {(STEPS.length - done) * AVG_MINUTES_PER_STEP} min
+                    </span>
+                  </div>
+                )}
+                <ul className="mt-4 space-y-1.5" data-testid="dashboard-step-checklist">
+                  {STEPS.map((s) => {
+                    const isDone = !!completed[s.key];
+                    return (
+                      <li
+                        key={s.key}
+                        className="flex items-center gap-2.5 text-sm"
+                        data-testid={`dashboard-checklist-${s.key}`}
+                      >
+                        {isDone ? (
+                          <CheckCircle2
+                            size={16}
+                            className="text-[#3D1A78] shrink-0"
+                            aria-label="Completed"
+                          />
+                        ) : (
+                          <span
+                            className="w-4 h-4 rounded border-2 border-[#D6CFE6] shrink-0"
+                            aria-label="Not yet"
+                          />
+                        )}
+                        <span
+                          className={
+                            isDone
+                              ? "text-[#1A1330]"
+                              : "text-[#4B4567]"
+                          }
+                        >
+                          {s.label}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
                 <p
-                  className="text-sm text-[#4B4567] mt-3 leading-relaxed italic"
+                  className="text-sm text-[#4B4567] mt-4 leading-relaxed italic"
                   data-testid="dashboard-progress-statement"
                 >
                   {progressStatement(pct, done, STEPS.length)}
