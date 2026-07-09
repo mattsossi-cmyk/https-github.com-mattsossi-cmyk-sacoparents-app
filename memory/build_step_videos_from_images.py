@@ -17,15 +17,21 @@ VIDEO_ROOT.mkdir(parents=True, exist_ok=True)
 FONT_BOLD = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
 FONT_REG = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
 
-# (image filename, narration filename, output mp4)
+# (image filename, narration filename, output mp4, bg_color, image_scale)
+# bg_color is the canvas colour behind the illustration (used as the
+# letterbox background when image_scale < 1.0). image_scale controls how
+# much of the 1080×1350 canvas the illustration occupies — 1.0 = fill-cover
+# (no visible background), 0.88 = leaves a brand-purple matte border.
+CREAM_BG = (248, 246, 238)   # #F8F6EE — original warm cream
+PURPLE_BG = (61, 26, 120)    # #3D1A78 — brand primary
 STEPS = [
-    ("step-safety-assessment.png", "step-ipv-assessment.mp3",         VIDEO_ROOT / "safety-assessment-reflection.mp4"),
-    ("step-comm-style.png",        "step-2-coparenting-relationship.mp3", VIDEO_ROOT / "comm-style-reflection.mp4"),
-    ("step-child-goals.png",       "step-3-child-needs.mp3",          VIDEO_ROOT / "child-goals-reflection.mp4"),
-    ("step-issues.png",            "step-issues.mp3",                 VIDEO_ROOT / "issues-reflection.mp4"),
-    ("step-priority.png",          "step-priority.mp3",               VIDEO_ROOT / "priority-reflection.mp4"),
-    ("step-foundation.png",        "step-4-foundation-statement.mp3", VIDEO_ROOT / "reflection-foundation.mp4"),
-    ("step-readiness.png",         "step-5-prepare-mediation.mp3",    VIDEO_ROOT / "readiness-reflection.mp4"),
+    ("step-safety-assessment.png", "step-ipv-assessment.mp3",         VIDEO_ROOT / "safety-assessment-reflection.mp4", CREAM_BG,  1.00),
+    ("step-comm-style.png",        "step-2-coparenting-relationship.mp3", VIDEO_ROOT / "comm-style-reflection.mp4",   PURPLE_BG, 0.88),
+    ("step-child-goals.png",       "step-3-child-needs.mp3",          VIDEO_ROOT / "child-goals-reflection.mp4",     CREAM_BG,  1.00),
+    ("step-issues.png",            "step-issues.mp3",                 VIDEO_ROOT / "issues-reflection.mp4",          PURPLE_BG, 0.88),
+    ("step-priority.png",          "step-priority.mp3",               VIDEO_ROOT / "priority-reflection.mp4",        PURPLE_BG, 0.88),
+    ("step-foundation.png",        "step-4-foundation-statement.mp3", VIDEO_ROOT / "reflection-foundation.mp4",      CREAM_BG,  1.00),
+    ("step-readiness.png",         "step-5-prepare-mediation.mp3",    VIDEO_ROOT / "readiness-reflection.mp4",       PURPLE_BG, 0.88),
 ]
 
 
@@ -37,27 +43,50 @@ def probe_duration(path: Path) -> float:
     return float(out.strip())
 
 
-def prepare_card(img_path: Path, out_png: Path) -> None:
-    """Fit the illustration into a 1080x1350 canvas on a warm cream background,
-    with a subtle domain footer + gradient scrim at the very bottom.
+def prepare_card(img_path: Path, out_png: Path, bg_color: tuple = (248, 246, 238), image_scale: float = 1.0) -> None:
+    """Fit the illustration into a 1080x1350 canvas.
+
+    * ``bg_color``   — canvas fill (defaults to warm cream ``#F8F6EE``).
+    * ``image_scale`` — 1.0 means fit-cover (no visible background around
+      the illustration). Values <1.0 letterbox the image inside a bg_color
+      matte (used to render a brand-purple frame around specific steps).
+    Always renders a subtle domain footer with a bottom scrim for legibility.
     """
     W, H = 1080, 1350
-    canvas = Image.new("RGB", (W, H), (248, 246, 238))  # #F8F6EE cream
+    canvas = Image.new("RGB", (W, H), bg_color)
     img = Image.open(img_path).convert("RGB")
-    # Fit-cover to 1080 wide, then crop / letterbox to 1350 tall.
-    scale = W / img.width
-    new_h = int(img.height * scale)
-    img = img.resize((W, new_h), Image.LANCZOS)
-    if new_h >= H:
-        top = (new_h - H) // 3  # bias upward so faces aren't clipped
-        img = img.crop((0, top, W, top + H))
-    else:
-        y = (H - new_h) // 2 - 40  # slight upward bias
-        y = max(0, y)
-        canvas.paste(img, (0, y))
-        img = canvas
 
-    canvas = img if img.size == (W, H) else canvas
+    if image_scale >= 1.0:
+        # Fit-cover to 1080 wide, then crop / letterbox to 1350 tall.
+        scale = W / img.width
+        new_h = int(img.height * scale)
+        img = img.resize((W, new_h), Image.LANCZOS)
+        if new_h >= H:
+            top = (new_h - H) // 3  # bias upward so faces aren't clipped
+            img = img.crop((0, top, W, top + H))
+            canvas = img
+        else:
+            y = (H - new_h) // 2 - 40
+            y = max(0, y)
+            canvas.paste(img, (0, y))
+    else:
+        # Fit-inside a scaled inner box → visible bg_color matte around it.
+        inner_w = int(W * image_scale)
+        inner_h = int(H * image_scale)
+        img_ratio = img.width / img.height
+        box_ratio = inner_w / inner_h
+        if img_ratio > box_ratio:
+            fit_w = inner_w
+            fit_h = int(inner_w / img_ratio)
+        else:
+            fit_h = inner_h
+            fit_w = int(inner_h * img_ratio)
+        img = img.resize((fit_w, fit_h), Image.LANCZOS)
+        # Slight upward bias so the domain footer has breathing room
+        y_offset = ((H - fit_h) // 2) - 20
+        y_offset = max((H - inner_h) // 2, y_offset)
+        canvas.paste(img, ((W - fit_w) // 2, y_offset))
+
     canvas = canvas.convert("RGBA")
     draw = ImageDraw.Draw(canvas, "RGBA")
 
@@ -110,11 +139,11 @@ def compose(card_png: Path, narration: Path, out_mp4: Path) -> None:
 
 
 def main() -> None:
-    for img_name, narration_name, out_mp4 in STEPS:
+    for img_name, narration_name, out_mp4, bg_color, image_scale in STEPS:
         img_path = IMG_ROOT / img_name
         narration = AUDIO_ROOT / narration_name
         card_png = Path("/tmp") / f"card-{out_mp4.stem}.png"
-        prepare_card(img_path, card_png)
+        prepare_card(img_path, card_png, bg_color=bg_color, image_scale=image_scale)
         compose(card_png, narration, out_mp4)
         size_kb = out_mp4.stat().st_size // 1024
         print(f"wrote {out_mp4.name} ({size_kb} KB)")

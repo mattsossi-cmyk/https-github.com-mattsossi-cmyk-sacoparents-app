@@ -21,6 +21,13 @@ FRAME_DIR = Path("/app/memory/before_you_begin_frames")
 VIDEO_OUT = Path("/app/frontend/public/videos/before-you-begin.mp4")
 AUDIO_OUT = Path("/app/frontend/public/audio/before-you-begin.mp3")
 PAD_OUT = Path("/app/memory/_before_you_begin_pad.wav")
+OCEAN_OUT = Path("/app/memory/_before_you_begin_ocean.wav")
+
+# Music bed windows: ocean surf plays only during intro & outro (bracketing
+# the voice-over); the warm strings pad carries the middle section.
+INTRO_END = 14.0        # ocean fades out by this second
+OUTRO_START = 56.0      # ocean fades back in from this second
+CROSSFADE = 2.0         # length of fade transitions between beds
 
 # 5 slides — sum to TOTAL_SECONDS (70s).
 SLIDES = [
@@ -59,6 +66,11 @@ SCRIPT = (
 
 
 async def generate_voiceover() -> None:
+    # Idempotent: skip if the narration MP3 already exists so we don't
+    # re-spend TTS credits when we're only re-scoring the music bed.
+    if AUDIO_OUT.exists() and AUDIO_OUT.stat().st_size > 20_000:
+        print(f"voice-over already present at {AUDIO_OUT} — skipping regen")
+        return
     tts = OpenAITextToSpeech(api_key=os.environ["EMERGENT_LLM_KEY"])
     audio_bytes = await tts.generate_speech(
         text=SCRIPT, model="tts-1-hd", voice="nova", speed=1.05,
@@ -66,6 +78,51 @@ async def generate_voiceover() -> None:
     AUDIO_OUT.parent.mkdir(parents=True, exist_ok=True)
     AUDIO_OUT.write_bytes(audio_bytes)
     print(f"wrote {AUDIO_OUT} ({len(audio_bytes)//1024} KB)")
+
+
+def synth_ocean_bed() -> None:
+    """Light rain + cafe ambience bed. Two layered noise sources:
+      • pink noise → gentle patter of light rain (upper frequencies)
+      • brown noise → warm room hum of a café (lower frequencies)
+    A slow LFO on the pink layer gives the rain its natural breathe/lull.
+    Output is at full loudness — the volume envelope is applied in the
+    main video mix so this file is reusable at any dynamic level.
+    (Filename kept as _ocean.wav for backward compatibility with the
+    video build step; the bed is now rain+cafe.)"""
+    filter_chain = (
+        # === RAIN layer (pink noise + lowpass to remove hiss + gentle LFO)
+        f"anoisesrc=color=pink:sample_rate=44100:amplitude=0.55:duration={TOTAL_SECONDS}"
+        "[rain_src];"
+        "[rain_src]"
+        "lowpass=f=1800,"
+        "highpass=f=260,"
+        # slow "breathing" of the rain — 0.11 Hz ≈ one swell every 9s
+        "tremolo=f=0.11:d=0.55,"
+        # tiny stereo widening so the rain isn't dead-centre
+        "aecho=0.6:0.4:35|55:0.35|0.30,"
+        "volume=0.75"
+        "[rain];"
+        # === CAFE layer (brown noise + reverb — warm background murmur)
+        f"anoisesrc=color=brown:sample_rate=44100:amplitude=0.75:duration={TOTAL_SECONDS}"
+        "[cafe_src];"
+        "[cafe_src]"
+        "lowpass=f=520,"
+        "highpass=f=80,"
+        # bigger reverb tail — feels like a room with distant conversation
+        "aecho=0.85:0.75:280|520|900:0.45|0.32|0.22,"
+        # very slow swell (~0.04 Hz) mimics natural crowd ebb & flow
+        "volume=volume='0.55+0.15*sin(2*PI*0.04*t)':eval=frame"
+        "[cafe];"
+        # === MIX ==================================================
+        "[rain][cafe]amix=inputs=2:duration=first:normalize=0,"
+        "aformat=channel_layouts=stereo"
+    )
+    subprocess.run(
+        ["ffmpeg", "-y", "-filter_complex", filter_chain,
+         "-t", str(TOTAL_SECONDS), "-c:a", "pcm_s16le", str(OCEAN_OUT)],
+        check=True, capture_output=True,
+    )
+    print(f"wrote {OCEAN_OUT} ({OCEAN_OUT.stat().st_size//1024} KB) — rain+cafe bed")
 
 
 def synth_warm_string_pad() -> None:
@@ -95,7 +152,7 @@ def build_slideshow() -> None:
     for name, dur in SLIDES:
         inputs += ["-loop", "1", "-t", f"{dur + FADE:.3f}",
                    "-i", str(FRAME_DIR / name)]
-    inputs += ["-i", str(AUDIO_OUT), "-i", str(PAD_OUT)]
+    inputs += ["-i", str(AUDIO_OUT), "-i", str(PAD_OUT), "-i", str(OCEAN_OUT)]
 
     parts = []
     for i in range(len(SLIDES)):
@@ -119,13 +176,42 @@ def build_slideshow() -> None:
 
     v_idx = len(SLIDES)
     p_idx = len(SLIDES) + 1
+    o_idx = len(SLIDES) + 2
+
+    # Voice — unchanged
     parts.append(
         f"[{v_idx}:a]apad=whole_dur={TOTAL_SECONDS},"
         f"atrim=duration={TOTAL_SECONDS},volume=1.0[avoice]"
     )
-    parts.append(f"[{p_idx}:a]atrim=duration={TOTAL_SECONDS},volume=0.15[apad]")
+
+    # Strings pad — audible only in the MIDDLE. Fade in a couple seconds
+    # before ocean fades out; fade back out just as ocean returns.
+    strings_in_start = INTRO_END - CROSSFADE          # 12s
+    strings_out_start = OUTRO_START - CROSSFADE       # 54s
     parts.append(
-        f"[avoice][apad]amix=inputs=2:duration=first:dropout_transition=3:normalize=0,"
+        f"[{p_idx}:a]atrim=duration={TOTAL_SECONDS},"
+        f"afade=t=in:st={strings_in_start:.2f}:d={CROSSFADE*2:.2f},"
+        f"afade=t=out:st={strings_out_start:.2f}:d={CROSSFADE*2:.2f},"
+        f"volume=0.16[apad]"
+    )
+
+    # Ocean bed — audible only in INTRO (0 → INTRO_END) and OUTRO
+    # (OUTRO_START → END). Two fade-in/out pairs.
+    intro_out_start = INTRO_END - CROSSFADE           # 12s
+    outro_in_start = OUTRO_START                      # 56s
+    outro_out_start = TOTAL_SECONDS - CROSSFADE       # 68s
+    parts.append(
+        f"[{o_idx}:a]atrim=duration={TOTAL_SECONDS},"
+        f"afade=t=in:st=0:d=2.0,"
+        f"afade=t=out:st={intro_out_start:.2f}:d={CROSSFADE:.2f},"
+        f"afade=t=in:st={outro_in_start:.2f}:d={CROSSFADE:.2f},"
+        f"afade=t=out:st={outro_out_start:.2f}:d={CROSSFADE:.2f},"
+        f"volume=0.30[aocean]"
+    )
+
+    parts.append(
+        f"[avoice][apad][aocean]amix=inputs=3:duration=first:"
+        f"dropout_transition=3:normalize=0,"
         f"afade=t=out:st={TOTAL_SECONDS-1.2}:d=1.2[aout]"
     )
 
@@ -150,6 +236,7 @@ def build_slideshow() -> None:
 async def main():
     await generate_voiceover()
     synth_warm_string_pad()
+    synth_ocean_bed()
     build_slideshow()
 
 
