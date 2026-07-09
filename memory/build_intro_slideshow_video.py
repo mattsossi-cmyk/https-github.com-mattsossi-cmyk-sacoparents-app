@@ -114,7 +114,8 @@ def build_slideshow() -> None:
     for name, dur in SLIDES:
         inputs += ["-loop", "1", "-t", f"{dur + FADE:.3f}",
                    "-i", str(SLIDE_DIR / name)]
-    inputs += ["-i", str(AUDIO_OUT), "-i", str(PAD_OUT)]
+    # Music/ambient bed removed at user request — narration plays clean.
+    inputs += ["-i", str(AUDIO_OUT)]
 
     parts = []
     for i in range(len(SLIDES)):
@@ -137,14 +138,9 @@ def build_slideshow() -> None:
     parts.append(f"[{prev}]trim=duration={TOTAL_SECONDS},setpts=PTS-STARTPTS[vout]")
 
     v_idx = len(SLIDES)
-    p_idx = len(SLIDES) + 1
     parts.append(
         f"[{v_idx}:a]apad=whole_dur={TOTAL_SECONDS},"
-        f"atrim=duration={TOTAL_SECONDS},volume=1.0[avoice]"
-    )
-    parts.append(f"[{p_idx}:a]atrim=duration={TOTAL_SECONDS},volume=0.35[apad]")
-    parts.append(
-        f"[avoice][apad]amix=inputs=2:duration=first:dropout_transition=3:normalize=0,"
+        f"atrim=duration={TOTAL_SECONDS},volume=1.0,"
         f"afade=t=out:st={TOTAL_SECONDS-1.0}:d=1.0[aout]"
     )
 
@@ -170,7 +166,7 @@ def build_slideshow() -> None:
 
 async def main():
     await generate_voiceover()
-    synth_warm_string_pad()
+    # Ambient bed removed at user request — no synth_warm_string_pad() call.
     build_slideshow()
 
 
