@@ -93,6 +93,20 @@ function progressStatement(pct, done, total) {
   return `You're ${pct}% of the way toward a child-focused parenting plan.`;
 }
 
+// Time-of-day salutation. Uses the visitor's browser clock so the greeting
+// matches the actual moment they log in, not the server's timezone.
+function timeGreeting() {
+  const h = new Date().getHours();
+  if (h < 5) return "Good evening";
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+// Average minutes a parent spends per prep step. Used to give an at-a-glance
+// "how long till done?" estimate on the Dashboard hero card.
+const AVG_MINUTES_PER_STEP = 6;
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
