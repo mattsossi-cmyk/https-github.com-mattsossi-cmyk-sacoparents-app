@@ -32,6 +32,13 @@ PAD_OUT = Path("/app/memory/_summary_journey_pad.wav")
 W, H = 1920, 1080
 ASPECT = W / H  # 1.777
 
+# Purple matte around each panel. Brand primary #3D1A78 (matches the app
+# gradient) — the Ken-Burns crop sits centred on this background with a
+# small breathing room border.
+MATTE_COLOR = "0x3D1A78"
+# Fraction of the frame each cropped image occupies (rest is purple matte).
+IMAGE_SCALE = 0.88
+
 # Ken-Burns slide plan. `cx`/`cy` are 0..1 normalised centres on the
 # source image, `zoom` is 1.0=whole image. Times chosen so the whole
 # video is ~48s at Nova speed 1.10 (fits the 155-word script comfortably).
@@ -95,9 +102,16 @@ def build_frames() -> None:
     FRAME_DIR.mkdir(parents=True, exist_ok=True)
     for name, cx, cy, zoom, _ in SLIDES:
         crop_kenburns(img, cx, cy, zoom).save(FRAME_DIR / name)
-    # Poster: the establishing shot at higher quality
+    # Poster: establishing shot on the same purple matte so the video's
+    # first frame matches the still shown before playback starts.
     POSTER_OUT.parent.mkdir(parents=True, exist_ok=True)
-    crop_kenburns(img, 0.50, 0.50, 1.00).save(POSTER_OUT, quality=82)
+    establishing = crop_kenburns(img, 0.50, 0.50, 1.00)
+    inner_w = int(W * IMAGE_SCALE)
+    inner_h = int(H * IMAGE_SCALE)
+    establishing_scaled = establishing.resize((inner_w, inner_h), Image.LANCZOS)
+    matte = Image.new("RGB", (W, H), (0x3D, 0x1A, 0x78))
+    matte.paste(establishing_scaled, ((W - inner_w) // 2, (H - inner_h) // 2))
+    matte.save(POSTER_OUT, quality=82)
     print(f"wrote {len(SLIDES)} frames + poster")
 
 
@@ -146,10 +160,12 @@ def build_slideshow() -> None:
     inputs += ["-i", str(AUDIO_OUT), "-i", str(PAD_OUT)]
 
     parts = []
+    inner_w = int(W * IMAGE_SCALE)
+    inner_h = int(H * IMAGE_SCALE)
     for i in range(len(SLIDES)):
         parts.append(
-            f"[{i}:v]scale={W}:{H}:force_original_aspect_ratio=decrease,"
-            f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=0x1A1330,"
+            f"[{i}:v]scale={inner_w}:{inner_h}:force_original_aspect_ratio=decrease,"
+            f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color={MATTE_COLOR},"
             f"setsar=1,fps=30,format=yuv420p[v{i}]"
         )
 
