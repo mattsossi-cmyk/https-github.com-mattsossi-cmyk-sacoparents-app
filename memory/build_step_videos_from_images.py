@@ -17,20 +17,16 @@ VIDEO_ROOT.mkdir(parents=True, exist_ok=True)
 FONT_BOLD = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
 FONT_REG = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
 
-# (image filename, narration filename, output mp4, bg_color, image_scale)
-# bg_color is the canvas colour behind the illustration (used as the
-# letterbox background when image_scale < 1.0). image_scale controls how
-# much of the 1080×1350 canvas the illustration occupies — 1.0 = fill-cover
-# (no visible background), 0.88 = leaves a brand-purple matte border.
-CREAM_BG = (248, 246, 238)   # #F8F6EE — original warm cream
 PURPLE_BG = (61, 26, 120)    # #3D1A78 — brand primary
+# All 7 module step videos use the brand-purple matte for consistency.
+# image_scale 0.88 leaves a visible purple frame around each illustration.
 STEPS = [
-    ("step-safety-assessment.png", "step-ipv-assessment.mp3",         VIDEO_ROOT / "safety-assessment-reflection.mp4", CREAM_BG,  1.00),
+    ("step-safety-assessment.png", "step-ipv-assessment.mp3",         VIDEO_ROOT / "safety-assessment-reflection.mp4", PURPLE_BG, 0.88),
     ("step-comm-style.png",        "step-2-coparenting-relationship.mp3", VIDEO_ROOT / "comm-style-reflection.mp4",   PURPLE_BG, 0.88),
-    ("step-child-goals.png",       "step-3-child-needs.mp3",          VIDEO_ROOT / "child-goals-reflection.mp4",     CREAM_BG,  1.00),
+    ("step-child-goals.png",       "step-3-child-needs.mp3",          VIDEO_ROOT / "child-goals-reflection.mp4",     PURPLE_BG, 0.88),
     ("step-issues.png",            "step-issues.mp3",                 VIDEO_ROOT / "issues-reflection.mp4",          PURPLE_BG, 0.88),
     ("step-priority.png",          "step-priority.mp3",               VIDEO_ROOT / "priority-reflection.mp4",        PURPLE_BG, 0.88),
-    ("step-foundation.png",        "step-4-foundation-statement.mp3", VIDEO_ROOT / "reflection-foundation.mp4",      CREAM_BG,  1.00),
+    ("step-foundation.png",        "step-4-foundation-statement.mp3", VIDEO_ROOT / "reflection-foundation.mp4",      PURPLE_BG, 0.88),
     ("step-readiness.png",         "step-5-prepare-mediation.mp3",    VIDEO_ROOT / "readiness-reflection.mp4",       PURPLE_BG, 0.88),
 ]
 
