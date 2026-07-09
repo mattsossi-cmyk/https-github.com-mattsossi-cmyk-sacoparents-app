@@ -239,15 +239,29 @@ function Hero() {
           Stop Parent Conflict Before
           <br className="hidden sm:block" /> It Reaches the Courtroom
         </h1>
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] mt-7 leading-relaxed">
-          The SA CoParents App helps separated and divorced parents{" "}
-          <strong className="text-[#1A1330]">reduce conflict</strong>, improve
-          communication, and become better partners in raising their children.
+        <h2 className="font-serif text-2xl sm:text-3xl text-[#3D1A78] mt-8 leading-tight">
+          Welcome to the SA CoParents Assessment
+        </h2>
+        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] mt-5 leading-relaxed">
+          Every family is different, and every co-parenting relationship has
+          its own strengths and challenges. This assessment is designed to
+          help you reflect on your current situation through a{" "}
+          <strong className="text-[#1A1330]">child-focused lens</strong>.
         </p>
         <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-4 leading-relaxed">
-          Build healthier co-parenting habits, keep your children at the center
-          of every decision, and gain the tools needed to create lasting family
-          stability.
+          There are no right or wrong answers, and this is not about assigning
+          blame. Instead, your responses will help identify areas of strength,
+          opportunities for growth, and practical ways to better support your
+          child.
+        </p>
+        <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-4 leading-relaxed">
+          The more honest your answers, the more meaningful your personalized
+          recommendations will be.
+        </p>
+        <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-4 leading-relaxed">
+          Our goal is simple: to help parents make decisions that promote
+          stability, healthy communication, and positive outcomes for their
+          children.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
