@@ -49,7 +49,7 @@ SCRIPTS = [
 async def main() -> None:
     tts = OpenAITextToSpeech(api_key=os.environ["EMERGENT_LLM_KEY"])
     for filename, script in SCRIPTS:
-        audio = await tts.generate_speech(text=script, model="tts-1-hd", voice="nova", speed=1.0)
+        audio = await tts.generate_speech(text=script, model="tts-1-hd", voice="shimmer", speed=1.0)
         (OUT / filename).write_bytes(audio)
         print(f"wrote {filename} ({len(audio) // 1024} KB)")
 

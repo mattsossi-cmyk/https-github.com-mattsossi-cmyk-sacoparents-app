@@ -132,7 +132,7 @@ async def main() -> None:
         audio_bytes = await tts.generate_speech(
             text=script,
             model="tts-1-hd",
-            voice="nova",
+            voice="shimmer",
             speed=1.0,
         )
         out.write_bytes(audio_bytes)

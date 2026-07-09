@@ -51,7 +51,7 @@ async def generate_narration() -> None:
     audio_bytes = await tts.generate_speech(
         text=SCRIPT,
         model="tts-1-hd",
-        voice="nova",
+        voice="shimmer",
         speed=1.0,
     )
     NARRATION.write_bytes(audio_bytes)

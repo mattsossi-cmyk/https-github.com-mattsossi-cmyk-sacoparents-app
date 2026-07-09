@@ -63,7 +63,7 @@ async def generate_voiceover() -> None:
         return
     tts = OpenAITextToSpeech(api_key=os.environ["EMERGENT_LLM_KEY"])
     audio_bytes = await tts.generate_speech(
-        text=SCRIPT, model="tts-1-hd", voice="nova", speed=1.02,
+        text=SCRIPT, model="tts-1-hd", voice="shimmer", speed=1.00,
     )
     AUDIO_OUT.parent.mkdir(parents=True, exist_ok=True)
     AUDIO_OUT.write_bytes(audio_bytes)

@@ -33,7 +33,7 @@ async def main():
     audio_bytes = await tts.generate_speech(
         text=SCRIPT,
         model="tts-1-hd",
-        voice="nova",
+        voice="shimmer",
         speed=1.0,
     )
     out = "/app/frontend/public/intro-narration.mp3"

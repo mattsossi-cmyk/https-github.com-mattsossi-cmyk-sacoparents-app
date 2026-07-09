@@ -120,8 +120,8 @@ async def generate_voiceover() -> None:
     audio_bytes = await tts.generate_speech(
         text=SCRIPT,
         model="tts-1-hd",
-        voice="nova",
-        speed=1.10,
+        voice="shimmer",
+        speed=1.00,
     )
     AUDIO_OUT.parent.mkdir(parents=True, exist_ok=True)
     AUDIO_OUT.write_bytes(audio_bytes)
