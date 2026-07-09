@@ -71,17 +71,29 @@ async def generate_voiceover() -> None:
 
 
 def synth_warm_string_pad() -> None:
-    notes = [130.81, 164.81, 196.00, 246.94, 261.63]
-    aeval = "+".join(
-        f"0.18*sin(2*PI*{f}*t)*(0.7+0.3*sin(2*PI*0.15*t+{i}))"
-        for i, f in enumerate(notes)
-    )
+    """Now: gentle raindrops instead of a warm strings pad.
+
+    The bed is audible only in the FIRST 5 seconds and the LAST 5 seconds
+    of the video; the middle 45 s is silent so the narration carries alone.
+    Rain is synthesized from filtered pink noise + fast tremolo (many small
+    amplitude flickers like patter) + a peak filter to give drops sparkle.
+    """
     filter_chain = (
-        f"aevalsrc='{aeval}':d={TOTAL_SECONDS}:s=44100,"
-        "volume=1.6,lowpass=f=2600,"
-        "chorus=0.5:0.9:50|60:0.35|0.45:0.25|0.30:2|2.5,"
-        "aecho=0.8:0.7:60|120|240:0.25|0.18|0.10,"
-        f"afade=t=in:st=0:d=1.5,afade=t=out:st={TOTAL_SECONDS-2.0}:d=2.0,"
+        # Base rain layer — pink noise band-passed into the drop range and
+        # flickered at ~8 Hz to imitate many small drops hitting a surface.
+        f"anoisesrc=color=pink:sample_rate=44100:amplitude=0.9:duration={TOTAL_SECONDS},"
+        "highpass=f=220,"
+        "lowpass=f=5500,"
+        "tremolo=f=8:d=0.45,"
+        # Presence peak around 2 kHz gives water-sparkle without hiss.
+        "equalizer=f=2000:width_type=q:width=1:g=3,"
+        # Subtle stereo widening reverb — helps rain feel spatial, not mono.
+        "aecho=0.6:0.5:40|75:0.30|0.22,"
+        # Two-window envelope: on 0-5s, silent 5-50s, on 50-55s.
+        "afade=t=in:st=0:d=1.0,"
+        f"afade=t=out:st=3:d=2.0,"
+        f"afade=t=in:st={TOTAL_SECONDS-5}:d=2.0,"
+        f"afade=t=out:st={TOTAL_SECONDS-1}:d=1.0,"
         "aformat=channel_layouts=stereo"
     )
     subprocess.run(
@@ -130,7 +142,7 @@ def build_slideshow() -> None:
         f"[{v_idx}:a]apad=whole_dur={TOTAL_SECONDS},"
         f"atrim=duration={TOTAL_SECONDS},volume=1.0[avoice]"
     )
-    parts.append(f"[{p_idx}:a]atrim=duration={TOTAL_SECONDS},volume=0.15[apad]")
+    parts.append(f"[{p_idx}:a]atrim=duration={TOTAL_SECONDS},volume=0.35[apad]")
     parts.append(
         f"[avoice][apad]amix=inputs=2:duration=first:dropout_transition=3:normalize=0,"
         f"afade=t=out:st={TOTAL_SECONDS-1.0}:d=1.0[aout]"
