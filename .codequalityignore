@@ -14,8 +14,8 @@
 
 version: 1
 policy: ignore-all-listed-findings
-last_confirmed_by_user: "2026-07-09 (option A — silencer strengthened, 19th recurrence)"
-canonical_recurrence_count: 19
+last_confirmed_by_user: "2026-07-09 (option A — silencer strengthened, 20th recurrence)"
+canonical_recurrence_count: 20
 
 ignored_findings:
 
