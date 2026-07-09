@@ -103,7 +103,89 @@ to Y"). Acknowledge growth without flattery. If nothing meaningful changed, set
 """
 
 
-# ============ Communication Style Analysis ============
+# ============ Section-level coaching (Readiness / Comm Style / Safety) ============
+# The user-facing intent: replace "your score is 68" with a coaching card that
+# names strengths first, gently surfaces one growth area, and offers ONE
+# specific next step. All three sections that produce a score feed into the
+# same synthesis function to keep the tone identical across the app.
+COACHING_SYSTEM = (
+    "You are a compassionate, objective, child-focused, non-judgmental, hopeful "
+    "co-parenting coach — not a scorekeeper. You speak directly to the parent "
+    "using 'you'. You NEVER lead with the number. You always start with a real "
+    "strength, then acknowledge one gentle growth area (framed as an opportunity, "
+    "never a deficit), then offer ONE specific, small, this-week-doable next step. "
+    "Output strict JSON only. No preamble."
+)
+
+_SECTION_LENSES = {
+    "readiness": (
+        "Section context: Mediation Readiness Check — a self-report where the "
+        "parent scored themselves 1-5 across five sections (Emotional Preparation, "
+        "Practical Preparation, Communication Skills, Child-Focused Mindset, "
+        "Mediation Readiness). The `pct` is 0-100. Low sub-scores show growth "
+        "areas; the highest sub-score points to a genuine strength."
+    ),
+    "comm-style": (
+        "Section context: Communication Style Assessment. The `style_label` "
+        "captures the parent's dominant communication pattern (Avoider, "
+        "Escalator, Defensive Responder, Over-Explainer, Passive Communicator, "
+        "or Balanced). The `score` is 1-10 mediation-readiness. Their strengths "
+        "and growth_areas are the parent's own listed traits."
+    ),
+    "safety": (
+        "Section context: IPV / Safety Assessment pathway. The `level` is one of "
+        "Green (healthy communication ok), Yellow (structured co-parenting with "
+        "boundaries), Red (parallel parenting / safety-first / professional "
+        "support). NEVER encourage direct communication if level=Red. Prioritise "
+        "child safety over co-parenting harmony."
+    ),
+}
+
+
+async def generate_section_coaching(section: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Return three coaching insights for a scored section.
+
+    Response schema (strict JSON):
+      {
+        "strengths":  "1-2 warm sentences naming what the parent is doing well",
+        "attention":  "1-2 sentences naming ONE growth area, non-judgmental",
+        "next_step":  "One specific, do-this-week action, single sentence",
+        "opener":     "A single sentence framing the coaching (no score, no label)"
+      }
+    """
+    lens = _SECTION_LENSES.get(section, "")
+    chat = _make_chat(COACHING_SYSTEM + "\n\n" + lens)
+    prompt = f"""The parent just completed the {section} section. Their raw data:
+
+{json.dumps(payload, indent=2, default=str)}
+
+Write coaching feedback that a caring mediator would give. Do NOT quote the
+score. Do NOT list the answers back to them. Instead, translate the data into
+three insights. Address the parent directly as "you".
+
+Return strict JSON only:
+{{
+  "opener": "one warm framing sentence — no score, no label",
+  "strengths": "1 to 2 sentences naming a specific strength",
+  "attention": "1 to 2 sentences naming ONE growth area with kindness",
+  "next_step": "one specific, small, this-week-doable action"
+}}
+"""
+    response = await chat.send_message(UserMessage(text=prompt))
+    data = _extract_json(response)
+    # Coerce to strings (defensive — Claude sometimes returns arrays for these keys).
+    for key in ("opener", "strengths", "attention", "next_step"):
+        val = data.get(key)
+        if isinstance(val, list):
+            data[key] = " ".join(str(v) for v in val)
+        elif val is None:
+            data[key] = ""
+        else:
+            data[key] = str(val)
+    return data
+
+
+
 COMM_SYSTEM = (
     "You are a compassionate co-parenting mediation coach. Your tone is warm, "
     "non-judgmental, and focused on the child's wellbeing. You speak directly to the "
