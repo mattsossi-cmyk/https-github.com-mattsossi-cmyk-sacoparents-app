@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import WatchFirstVideo from "../components/WatchFirstVideo";
+import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
 import { api, API } from "../lib/api";
 import { shareViaText } from "../lib/share";
 import { toast } from "sonner";
@@ -301,6 +302,7 @@ function MediationSummaryTab() {
 
   return (
     <div className="space-y-6" data-testid="summary-card">
+      <PersonalizedRecommendations summary={summary} />
       <div className="card-soft p-8">
         <HeaderRow
           eyebrow="Readiness"
