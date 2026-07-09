@@ -21,6 +21,7 @@ import { logError } from "../lib/logger";
 import { useAuth } from "../context/AuthContext";
 import HighConcernOverlay from "../components/HighConcernOverlay";
 import WatchFirstVideo from "../components/WatchFirstVideo";
+import SectionCoaching from "../components/SectionCoaching";
 
 const TONE_STYLES = {
   danger: {
@@ -700,6 +701,20 @@ export default function SafetyAssessment() {
               onEmailMediator={openMediatorDialog}
               sending={emailing}
             />
+
+            <div className="mt-6">
+              <SectionCoaching
+                section="safety"
+                ready={Boolean(result?.result)}
+                data={{
+                  level: result?.result?.level,
+                  pathway_tone: result?.result?.pathway_tone,
+                  pathway_title: result?.result?.pathway_title,
+                  pathway_summary: result?.result?.pathway_summary,
+                  recommendations: result?.result?.recommendations || [],
+                }}
+              />
+            </div>
 
             <div className="mt-6 rounded-2xl bg-[#F8F7FC] border border-[#E5E0EE] p-4 sm:p-5 text-sm text-[#4B4567] leading-relaxed">
               <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">

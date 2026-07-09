@@ -6,6 +6,7 @@ import { api } from "../lib/api";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import WatchFirstVideo from "../components/WatchFirstVideo";
+import SectionCoaching from "../components/SectionCoaching";
 
 // 1-5 agreement scale (used for Sections A–C and E)
 const AGREE_SCALE = [
@@ -259,6 +260,27 @@ export default function ReadinessCheck() {
               </p>
             )}
           </div>
+
+          <SectionCoaching
+            section="readiness"
+            ready={answered === TOTAL_QUESTIONS}
+            data={{
+              score_total: total,
+              max_score: TOTAL_MAX,
+              pct,
+              label: badge.label,
+              answers,
+              section_averages: SECTIONS.map((s) => ({
+                key: s.key,
+                title: s.title,
+                avg:
+                  s.questions.reduce(
+                    (acc, q) => acc + (Number(answers[q.id]) || 0),
+                    0,
+                  ) / s.questions.length,
+              })),
+            }}
+          />
         </div>
       </WizardLayout>
     </AppShell>

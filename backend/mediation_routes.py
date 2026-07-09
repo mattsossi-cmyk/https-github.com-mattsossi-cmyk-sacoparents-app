@@ -184,6 +184,32 @@ async def reframe(
         raise HTTPException(status_code=500, detail=f"AI reframe failed: {e}")
 
 
+# Section-level coaching insights — replaces bare scores with 3 warm insights
+# (strength, growth area, next step). Called from ReadinessCheck, CommStyle,
+# and SafetyAssessment result cards. Section values: readiness | comm-style | safety
+_ALLOWED_COACHING_SECTIONS = {"readiness", "comm-style", "safety"}
+
+
+@router.post("/section-coaching")
+async def section_coaching(
+    body: dict,
+    current: UserPublic = Depends(get_current_user),
+):
+    section = (body.get("section") or "").strip()
+    payload = body.get("data") or {}
+    if section not in _ALLOWED_COACHING_SECTIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"section must be one of {sorted(_ALLOWED_COACHING_SECTIONS)}",
+        )
+    if not isinstance(payload, dict) or not payload:
+        raise HTTPException(status_code=400, detail="data must be a non-empty object")
+    try:
+        return await ai_service.generate_section_coaching(section, payload)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Coaching failed: {e}")
+
+
 @router.post("/summary")
 async def generate_summary(
     request: Request,

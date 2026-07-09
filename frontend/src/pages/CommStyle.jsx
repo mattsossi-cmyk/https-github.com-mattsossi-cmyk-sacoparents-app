@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import { detectSafetyConcern } from "../lib/safety";
 import WatchFirstVideo from "../components/WatchFirstVideo";
+import SectionCoaching from "../components/SectionCoaching";
 import { Sparkles } from "lucide-react";
 
 const QUIZ = [
@@ -234,6 +235,12 @@ export default function CommStyle() {
               )}
             </div>
           )}
+
+          <SectionCoaching
+            section="comm-style"
+            ready={Boolean(analysis)}
+            data={analysis || {}}
+          />
         </div>
       </WizardLayout>
     </AppShell>
