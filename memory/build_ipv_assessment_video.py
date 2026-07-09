@@ -49,6 +49,11 @@ SCRIPT = (
 
 
 async def generate_voiceover() -> None:
+    # Idempotent: skip if the narration MP3 already exists so we don't
+    # re-spend TTS credits when we're only re-scoring or re-framing.
+    if AUDIO_OUT.exists() and AUDIO_OUT.stat().st_size > 20_000:
+        print(f"voice-over already present at {AUDIO_OUT} — skipping regen")
+        return
     tts = OpenAITextToSpeech(api_key=os.environ["EMERGENT_LLM_KEY"])
     # Slightly slower speed so the safety-critical script lands calmly.
     audio_bytes = await tts.generate_speech(
@@ -88,18 +93,27 @@ def synth_warm_string_pad() -> None:
 
 
 def build_slideshow() -> None:
-    W, H = 1080, 1350
+    # Landscape 16:9 to match the new source graphic (1536x1024) and the
+    # summary-journey/dashboard-welcome trailers. Purple brand-matte border
+    # is applied by scaling the frame to IMAGE_SCALE and padding with
+    # MATTE_COLOR so a visible band of colour sits behind the panel.
+    W, H = 1920, 1080
+    MATTE_COLOR = "0x3D1A78"   # brand primary
+    IMAGE_SCALE = 0.88
+
     inputs = []
     for name, dur in SLIDES:
         inputs += ["-loop", "1", "-t", f"{dur + FADE:.3f}",
                    "-i", str(FRAME_DIR / name)]
     inputs += ["-i", str(AUDIO_OUT), "-i", str(PAD_OUT)]
 
+    inner_w = int(W * IMAGE_SCALE)
+    inner_h = int(H * IMAGE_SCALE)
     parts = []
     for i in range(len(SLIDES)):
         parts.append(
-            f"[{i}:v]scale={W}:{H}:force_original_aspect_ratio=decrease,"
-            f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=0x1A1330,"
+            f"[{i}:v]scale={inner_w}:{inner_h}:force_original_aspect_ratio=decrease,"
+            f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color={MATTE_COLOR},"
             f"setsar=1,fps=30,format=yuv420p[v{i}]"
         )
 
