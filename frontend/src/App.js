@@ -12,6 +12,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AuthCallback from "@/pages/AuthCallback";
 import Dashboard from "@/pages/Dashboard";
+import MyPlan from "@/pages/MyPlan";
 import ChildGoals from "@/pages/ChildGoals";
 import IssuesConcerns from "@/pages/IssuesConcerns";
 import PriorityRanking from "@/pages/PriorityRanking";
@@ -118,6 +119,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-plan"
+          element={
+            <ProtectedRoute>
+              <MyPlan />
             </ProtectedRoute>
           }
         />

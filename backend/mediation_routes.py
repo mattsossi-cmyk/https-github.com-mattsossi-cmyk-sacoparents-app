@@ -187,7 +187,7 @@ async def reframe(
 # Section-level coaching insights — replaces bare scores with 3 warm insights
 # (strength, growth area, next step). Called from ReadinessCheck, CommStyle,
 # and SafetyAssessment result cards. Section values: readiness | comm-style | safety
-_ALLOWED_COACHING_SECTIONS = {"readiness", "comm-style", "safety"}
+_ALLOWED_COACHING_SECTIONS = {"readiness", "comm-style", "safety", "overall"}
 
 
 @router.post("/section-coaching")

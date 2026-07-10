@@ -327,9 +327,22 @@ export default function Dashboard() {
                 Tip: even 10 minutes of prep moves the needle.
               </p>
             )}
-            <Link to="/summary" className="text-sm text-[#3D1A78] hover:underline mt-3 text-center" data-testid="dashboard-summary-link">
-              Go to summary
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-3">
+              <Link
+                to="/my-plan"
+                className="text-sm text-[#3D1A78] hover:underline font-semibold"
+                data-testid="dashboard-my-plan-link"
+              >
+                View Your Plan →
+              </Link>
+              <Link
+                to="/summary"
+                className="text-sm text-[#3D1A78] hover:underline"
+                data-testid="dashboard-summary-link"
+              >
+                Go to summary
+              </Link>
+            </div>
           </div>
         </div>
 

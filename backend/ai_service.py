@@ -139,6 +139,13 @@ _SECTION_LENSES = {
         "support). NEVER encourage direct communication if level=Red. Prioritise "
         "child safety over co-parenting harmony."
     ),
+    "overall": (
+        "Section context: WHOLE-JOURNEY snapshot. The payload aggregates every "
+        "module the parent has completed — child goals, issues, priorities, "
+        "communication style, foundation statement, readiness check, and safety "
+        "assessment. Zoom out and coach on the pattern across everything, not "
+        "one section. `opener` should acknowledge the whole journey."
+    ),
 }
 
 
