@@ -212,23 +212,6 @@ function MarketingFooter() {
 function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#F8F7FC] via-[#EFE9F9] to-[#E4F1F1] pt-28 sm:pt-32 pb-24 sm:pb-28">
-      {/* Branded looping background video — muted, autoplays, falls back to poster */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        poster="/intro-loop-poster.jpg"
-        className="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none"
-        aria-hidden="true"
-        data-testid="hero-loop-video"
-      >
-        <source src="/intro-loop.mp4?v=1" type="video/mp4" />
-      </video>
-      {/* Tint overlay so the headline stays readable on top of the video */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#F8F7FC]/60 via-[#EFE9F9]/55 to-[#E4F1F1]/70 pointer-events-none" />
-
       {/* soft floating shapes */}
       <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-[#D4C5F0]/40 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-32 w-[30rem] h-[30rem] rounded-full bg-[#A8DCDC]/40 blur-3xl pointer-events-none" />
@@ -242,11 +225,11 @@ function Hero() {
         <h2 className="font-serif text-2xl sm:text-3xl text-[#3D1A78] mt-8 leading-tight">
           Welcome to the SA CoParents Assessment
         </h2>
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] mt-5 leading-relaxed">
+        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#1A1330] font-semibold mt-5 leading-relaxed">
           Every family is different, and every co-parenting relationship has
           its own strengths and challenges. This assessment is designed to
-          help you reflect on your current situation through a{" "}
-          <strong className="text-[#1A1330]">child-focused lens</strong>.
+          help you reflect on your current situation through a child-focused
+          lens.
         </p>
         <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-4 leading-relaxed">
           There are no right or wrong answers, and this is not about assigning
