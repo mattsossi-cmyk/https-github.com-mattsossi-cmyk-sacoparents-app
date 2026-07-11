@@ -38,12 +38,12 @@ logger = logging.getLogger(__name__)
 SECTION_1_QUESTIONS = [
     {
         "id": "s1_q1",
-        "text": "Threatened to hurt you, the children, themselves, or someone you love?",
+        "text": "Threatened to hurt or kill you, the children, themselves, or someone you love?",
         "high_concern": True,
     },
     {
         "id": "s1_q2",
-        "text": "Physically hurt you, blocked you from leaving, restrained you, strangled you, or damaged property?",
+        "text": "Physically hurt you, blocked you from leaving, restrained you, choked or strangled you, or damaged property?",
         "high_concern": True,
     },
     {
@@ -53,7 +53,7 @@ SECTION_1_QUESTIONS = [
     },
     {
         "id": "s1_q4",
-        "text": "Shown up unexpectedly at your home, work, school, or exchanges?",
+        "text": "Shown up unexpectedly at your home, work, school, or exchanges — or stalked or followed you?",
         "high_concern": True,
     },
     {
@@ -85,6 +85,58 @@ SECTION_1_QUESTIONS = [
         "id": "s1_q10",
         "text": "Violated a protective order, court order, or agreed safety boundary?",
         "high_concern": True,
+    },
+    # ---- Lethality-domain items informed by the Danger Assessment (Campbell) ----
+    # These are the domains most predictive of severe / fatal outcomes and any
+    # single 'yes' should escalate the pathway to safety planning. Wording is
+    # softened to reflection-prompt form; framing (not scoring) is ours.
+    {
+        "id": "s1_q11",
+        "text": "Has the physical violence increased in frequency or severity over the last year?",
+        "high_concern": True,
+        "da_domain": True,
+    },
+    {
+        "id": "s1_q12",
+        "text": "Owns or has access to a gun, or has threatened you with any weapon?",
+        "high_concern": True,
+        "da_domain": True,
+    },
+    {
+        "id": "s1_q13",
+        "text": "Ever tried to choke or strangle you, or cut off your breathing?",
+        "high_concern": True,
+        "da_domain": True,
+    },
+    {
+        "id": "s1_q14",
+        "text": "Ever forced you into sexual activity when you did not want to?",
+        "high_concern": True,
+        "da_domain": True,
+    },
+    {
+        "id": "s1_q15",
+        "text": "Ever threatened or attempted suicide, or said \u201cif I can\u2019t have you no one will\u201d?",
+        "high_concern": True,
+        "da_domain": True,
+    },
+    {
+        "id": "s1_q16",
+        "text": "Uses alcohol or drugs (including stimulants) daily or in a way that changes their behaviour?",
+        "high_concern": True,
+        "da_domain": True,
+    },
+    {
+        "id": "s1_q17",
+        "text": "Is intensely jealous, or controls most of your daily activities?",
+        "high_concern": True,
+        "da_domain": True,
+    },
+    {
+        "id": "s1_q18",
+        "text": "Is currently unemployed or was recently fired, and appears despondent or hopeless?",
+        "high_concern": True,
+        "da_domain": True,
     },
 ]
 

@@ -521,10 +521,14 @@ export default function SafetyAssessment() {
               IPV Communication Safety Assessment
             </h1>
             <p className="text-[#4B4567] leading-relaxed mb-4">
-              This assessment helps identify whether co-parenting communication
-              should be direct, structured, assisted, or restricted because of
-              family violence, coercive control, intimidation, stalking,
-              harassment, or safety concerns.
+              This is a <strong className="text-[#1A1330]">reflection guide</strong> — not
+              a clinical assessment — to help you notice patterns of family
+              violence, coercive control, intimidation, stalking, or safety
+              concerns before deciding how (or whether) to communicate with
+              your co-parent. Several items are informed by the Danger
+              Assessment (Campbell) domains most predictive of severe harm.
+              A trained professional should be involved in any high-risk
+              situation.
             </p>
 
             <div className="rounded-2xl bg-[#FCE3DC] border border-[#9A3A23]/25 text-[#9A3A23] p-4 sm:p-5 mb-6">

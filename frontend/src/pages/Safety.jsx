@@ -108,6 +108,116 @@ const EMERGENCY = {
   phoneHref: "tel:911",
 };
 
+// -------- Parallel Parenting resources -------------------------------------
+// For high-conflict co-parents who need structure, distance, and disciplined
+// adherence to court orders. Communication is minimal, written, and neutral.
+const PARALLEL_PARENTING_RESOURCES = [
+  {
+    id: "ofw",
+    name: "OurFamilyWizard",
+    web: "https://www.ourfamilywizard.com",
+    description:
+      "Court-recognised co-parenting app with tone meter, expense log, calendar, and immutable message history — often ordered in high-conflict custody cases.",
+  },
+  {
+    id: "talking_parents",
+    name: "Talking Parents",
+    web: "https://talkingparents.com",
+    description:
+      "Documented, unalterable communication and shared calendar built to reduce misinterpretation and provide records for the court.",
+  },
+  {
+    id: "coparenter",
+    name: "coParenter",
+    web: "https://coparenter.com",
+    description:
+      "In-app mediation prompts, communication filter, and access to on-call professionals for stuck decisions.",
+  },
+  {
+    id: "high_conflict_institute",
+    name: "High Conflict Institute — Bill Eddy",
+    web: "https://highconflictinstitute.com/",
+    description:
+      "Books, videos, and courses on the BIFF response, EAR statements, and dealing with a high-conflict co-parent without escalating.",
+  },
+  {
+    id: "biff_book",
+    name: "BIFF for CoParent Communication (Eddy & Kreger)",
+    web: "https://unhookedmedia.com/collections/biff",
+    description:
+      "Structured Brief, Informative, Friendly, Firm response template designed to defuse hostile messages between co-parents.",
+  },
+  {
+    id: "custody_x_change",
+    name: "Custody X Change",
+    web: "https://www.custodyxchange.com",
+    description:
+      "Parenting-plan builder, custody calendar, expense tracking, and court-ready reports designed for parents adhering to a court order.",
+  },
+  {
+    id: "aaml_directory",
+    name: "AAML Family-Law Attorney Directory",
+    web: "https://aaml.org/find-a-lawyer/",
+    description:
+      "Locate a board-certified family-law attorney if the other parent is not complying with the court order or if enforcement is needed.",
+  },
+];
+
+// -------- Cooperative Co-Parenting resources -------------------------------
+// For parents who can communicate directly, share decisions, and want tools
+// to keep that cooperation strong.
+const COPARENTING_RESOURCES = [
+  {
+    id: "twohappyhomes",
+    name: "2Houses",
+    web: "https://www.2houses.com",
+    description:
+      "Shared calendar, expense splitter, medical journal, and photo album for parents who want a single source of truth.",
+  },
+  {
+    id: "cozi",
+    name: "Cozi Family Organizer",
+    web: "https://www.cozi.com",
+    description:
+      "Free shared calendar, to-do lists, and grocery lists — works well when both parents are comfortable co-planning.",
+  },
+  {
+    id: "google_family",
+    name: "Google Family Link / Shared Calendar",
+    web: "https://families.google.com",
+    description:
+      "Simple, free shared calendar and child-account controls for cooperative households already using Google.",
+  },
+  {
+    id: "up_to_parents",
+    name: "Up To Parents — Free Online Course",
+    web: "https://www.uptoparents.org",
+    description:
+      "Free, self-paced course used by many family courts. Focused on keeping children out of parental conflict.",
+  },
+  {
+    id: "putting_kids_first",
+    name: "Putting Kids First (Wittmann)",
+    web: "https://www.puttingkidsfirstbook.com",
+    description:
+      "Practical guide for divorced parents who want to raise emotionally healthy children together, even after separation.",
+  },
+  {
+    id: "cbf",
+    name: "The Co-Parenting Handbook (Karen Bonnell)",
+    web: "https://coparentinghandbook.com",
+    description:
+      "Written by a certified mediator — communication frameworks, transitions, and long-term planning for functioning co-parents.",
+  },
+  {
+    id: "family_bridges",
+    name: "Family Bridges — Sesame Workshop",
+    web: "https://sesameworkshop.org/topics/divorce/",
+    description:
+      "Free child-friendly videos and printables to help children of divorce understand and adjust — great for cooperative homes.",
+  },
+];
+
 function quickExit() {
   try {
     // Best-effort: scrub the current entry and replace the tab with a neutral site.
@@ -279,6 +389,41 @@ export default function Safety() {
         />
         <div className="grid sm:grid-cols-2 gap-5 mb-12">
           {SAN_ANTONIO_RESOURCES.map((r) => (
+            <ResourceCard key={r.id} r={r} />
+          ))}
+        </div>
+
+        {/* Parallel Parenting resources — high conflict / court order adherence */}
+        <SectionHeading
+          eyebrow="For parallel parents"
+          title="Tools for high-conflict co-parenting & sticking to the court order"
+        />
+        <p className="text-[#4B4567] max-w-3xl -mt-2 mb-5">
+          When direct conversation isn&apos;t safe or productive, these apps and
+          resources keep communication structured, documented, and centred on
+          your child. Written channels, immutable message history, and clear
+          calendars help both parents follow the court order without daily
+          negotiation.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-5 mb-12" data-testid="safety-parallel-parenting-resources">
+          {PARALLEL_PARENTING_RESOURCES.map((r) => (
+            <ResourceCard key={r.id} r={r} />
+          ))}
+        </div>
+
+        {/* Cooperative Co-Parenting resources */}
+        <SectionHeading
+          eyebrow="For cooperative co-parents"
+          title="Tools for parents who can communicate directly"
+        />
+        <p className="text-[#4B4567] max-w-3xl -mt-2 mb-5">
+          When both parents can talk, share, and plan together, these tools
+          help you stay organised, keep decisions consistent, and put the
+          kids at the centre — without letting logistics become a source of
+          conflict.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-5 mb-12" data-testid="safety-coparenting-resources">
+          {COPARENTING_RESOURCES.map((r) => (
             <ResourceCard key={r.id} r={r} />
           ))}
         </div>
