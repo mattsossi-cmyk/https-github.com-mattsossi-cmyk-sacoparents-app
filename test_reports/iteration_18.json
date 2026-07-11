@@ -1,0 +1,83 @@
+{
+  "summary": "Iteration 18 — end-to-end verification of session changes on SA CoParents preview (https://prepared-parents.preview.emergentagent.com). Everything the request asked for was verified working. Backend: 13/13 pytest passing (POST /api/auth/guest returns access_token; POST /api/mediation/section-coaching accepts all 4 sections {readiness, comm-style, safety, overall} and returns strict JSON with keys opener/strengths/attention/next_step; invalid section returns 400; unauth returns 401/403; GET /api/safety-assessment/questions returns 18 Section-1 items; s1_q11..s1_q18 all have high_concern=True and DA-informed wording (strangulation, weapon/gun, threats/'if I can't have you', jealousy/control, drugs, unemployment, escalation); POST /api/safety-assessment with s1_q11=yes escalates to Level 1 (No Direct Communication Recommended) — NOT Level 4/Cooperative Green; HEAD /videos/{facebook-intro,social-journey,app-showcase,summary-journey}.mp4 → 200 video/mp4). Frontend (Playwright): (1) /login shows both data-testid='login-demo-mode-button' and data-testid='google-login-button' visible+enabled; clicking demo button starts guest session and navigates to /dashboard. (2) / renders 'Welcome to the SA CoParents Assessment' heading and the 'Every family is different…' paragraph carries class font-semibold; NO <video data-testid='hero-loop-video'> exists (count=0). (3) /safety renders both data-testid='safety-parallel-parenting-resources' and data-testid='safety-coparenting-resources' with all 8 tools present (OurFamilyWizard, Talking Parents, BIFF, Custody X Change, 2Houses, Cozi, Up To Parents, Family Bridges). (4) /my-plan renders all 4 cards (myplan-progress, myplan-foundation, myplan-child-goals, myplan-mediation). /dashboard has data-testid='dashboard-my-plan-link' with href='/my-plan'. (5) /safety-assessment intro page shows the reflection-guide copy ('This is a reflection guide — not a clinical assessment…'). Important Advisory JSX is confirmed present in source with all four required phrases ('not intended to diagnose domestic violence', 'family law attorney', 'Law enforcement or emergency services immediately', 'safety of you and your child should always come before').",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_details": {
+    "login_page": {
+      "url": "/login",
+      "demo_button": {"testid": "login-demo-mode-button", "visible": true, "enabled": true, "click_navigates_to": "/dashboard"},
+      "google_button": {"testid": "google-login-button", "visible": true, "enabled": true}
+    },
+    "landing_page": {
+      "url": "/",
+      "heading_visible": true,
+      "paragraph_font_semibold": true,
+      "paragraph_classes": "max-w-2xl mx-auto text-base sm:text-lg text-[#1A1330] font-semibold mt-5 leading-relaxed",
+      "hero_loop_video_count": 0
+    },
+    "safety_resources_page": {
+      "url": "/safety",
+      "parallel_parenting_testid_count": 1,
+      "coparenting_testid_count": 1,
+      "all_8_tools_present": true
+    },
+    "my_plan_page": {
+      "url": "/my-plan",
+      "cards_present": ["myplan-progress", "myplan-foundation", "myplan-child-goals", "myplan-mediation"]
+    },
+    "dashboard": {
+      "my_plan_link_testid": "dashboard-my-plan-link",
+      "my_plan_link_href": "/my-plan"
+    },
+    "safety_assessment_intro": {
+      "reflection_guide_present": true,
+      "not_a_clinical_assessment_present": true,
+      "advisory_source_verified": true,
+      "advisory_phrases_in_source": ["not intended to diagnose domestic violence", "family law attorney", "Law enforcement or emergency services immediately", "safety of you and your child should always come before"]
+    },
+    "ipv_assessment_scoring": {
+      "section_1_count": 18,
+      "s1_q11_yes_result_level": 1,
+      "s1_q11_yes_result_pathway_title": "No Direct Communication Recommended",
+      "landed_on_green_level_4": false
+    },
+    "section_coaching_endpoint": {
+      "sections_tested": ["readiness", "comm-style", "safety", "overall"],
+      "all_return_json_with_required_keys": true,
+      "invalid_section_returns_4xx": true,
+      "unauth_returns_401_or_403": true
+    },
+    "video_assets": {
+      "all_head_200_video_mp4": true,
+      "tested": ["facebook-intro.mp4", "social-journey.mp4", "app-showcase.mp4", "summary-journey.mp4"]
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration_18_regression.py",
+    "/app/test_reports/pytest/pytest_iteration_18.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "safety_assessment_routes.py Level mapping is INVERTED from the review-request wording. Level 1 = 'No Direct Communication Recommended' (RED/danger, highest concern), Level 4 = 'Cooperative Co-Parenting Communication' (GREEN/safest). The review request says 'result pathway is NOT Green/Level 1' — this reads as if Level 1 were Green, which is the opposite. Recommend clarifying docs/review copy: DA-item YES escalates TO Level 1 (danger) AND away from Level 4 (Green). Product behavior is correct; only doc wording is confusing.",
+    "ai_service.py _SECTION_LENSES for 'safety' describes levels as Green/Yellow/Red, but the backend actually emits Level 1..4 with pathway_title strings. Not a bug — Claude receives whatever the caller passes in — but the internal mental model is inconsistent between the safety route (numeric 1-4) and the coaching lens (color band).",
+    "mediation_routes.py section_coaching wraps any AI failure as HTTP 500. Consider mapping upstream 429/503 from Claude to 503 with Retry-After so the frontend can retry gracefully. Low-priority hardening.",
+    "Login.jsx 'startDemo' relies on cookie-based session (no localStorage token) which is correct given AuthContext.startGuest, but note that a stray 'sac_token' check anywhere in the codebase would falsely conclude the user is not authenticated. Verified end-to-end demo flow still works via session_token cookie."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration_18_regression.py (NEW)"
+  ],
+  "success_rate": {"backend": "100% (13/13 pytest)", "frontend": "100% (all in-scope acceptance criteria met)"},
+  "test_credentials": "Guest auth via POST /api/auth/guest (empty body). No fixed credentials needed.",
+  "seed_data_creation": "None persisted. Each pytest run creates ephemeral guest users via /api/auth/guest.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend: run `python -m pytest /app/backend/tests/test_iteration_18_regression.py -v` for full regression (~30s incl. 4 real Claude coaching calls). Guest auth path is POST /api/auth/guest with empty JSON body, returns {access_token, user}. Safety assessment submit path is POST /api/safety-assessment (NOT /submit). Level mapping is inverted from intuitive: Level 1 = danger (No Direct Communication), Level 4 = Green (Cooperative). Frontend gate localStorage keys: sac_legal_ack_v1, sacoparents.orientation_seen.v1, sac_intro_tour_seen_v3_branded. Google button testid differs by page (login = google-login-button, register = google-register-button — see iteration_17 notes).",
+  "rca of the issue": "N/A — verification-only pass; all requested changes for the session are working end-to-end. Only observation is docs/wording inconsistency around the Level 1 ↔ Green mapping in the review request text (product behavior is correct)."
+}
