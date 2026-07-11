@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 
 VIDEO_OUT = Path("/app/frontend/public/videos/social-journey.mp4")
+VIDEO_SQUARE_OUT = Path("/app/frontend/public/videos/social-journey-square.mp4")
 MUSIC_OUT = Path("/app/memory/_social_journey_music.wav")
 
 STEPS_DIR = Path("/app/frontend/public/images/steps")
