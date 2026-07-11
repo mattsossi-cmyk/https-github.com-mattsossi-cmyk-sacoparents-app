@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ShieldAlert,
+  Shield,
   CheckCircle2,
   Download,
   Mail,
@@ -718,6 +719,68 @@ export default function SafetyAssessment() {
                   recommendations: result?.result?.recommendations || [],
                 }}
               />
+            </div>
+
+            {/* Important Advisory — legally-worded post-assessment disclaimer */}
+            <div
+              className="mt-6 rounded-2xl bg-[#FFF7E6] border-2 border-[#E8A628] p-5 sm:p-7 text-[#1A1330]"
+              data-testid="safety-important-advisory"
+            >
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-bold text-[#B8891C] mb-3">
+                <Shield size={13} /> Important Advisory
+              </div>
+              <p className="leading-relaxed mb-3">
+                The SA CoParents Intimate Partner Violence (IPV) Assessment is
+                designed to help you reflect on your parenting and communication
+                situation. It is <strong>not intended to diagnose domestic
+                violence, determine legal rights, predict future behavior, or
+                replace professional advice</strong>.
+              </p>
+              <p className="leading-relaxed mb-3">
+                Your responses are based solely on the information you provide
+                and may not reflect the complete circumstances of your family.
+              </p>
+              <p className="leading-relaxed mb-4">
+                If your assessment suggests concerns about intimidation,
+                coercive control, threats, stalking, harassment, or violence,
+                we strongly encourage you to seek additional guidance before
+                making parenting or communication decisions.
+              </p>
+              <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+                Consider consulting with
+              </div>
+              <ul className="space-y-2 text-sm mb-4">
+                <li className="flex gap-2">
+                  <span className="text-[#B8891C] mt-1">•</span>
+                  A qualified <strong>family law attorney</strong> to
+                  understand your legal rights and available protections.
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-[#B8891C] mt-1">•</span>
+                  A licensed <strong>therapist or domestic violence
+                  professional</strong> experienced in intimate partner
+                  violence.
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-[#B8891C] mt-1">•</span>
+                  Your local <strong>domestic violence advocacy
+                  organization</strong> or victim assistance program.
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-[#B8891C] mt-1">•</span>
+                  <strong>Law enforcement or emergency services immediately</strong>{" "}
+                  if you believe you or your child are in immediate danger.
+                </li>
+              </ul>
+              <p className="text-sm font-semibold text-[#1A1330] mb-2">
+                The safety of you and your child should always come before
+                attempts to improve communication or co-parenting.
+              </p>
+              <p className="text-xs text-[#6B6580] italic leading-relaxed">
+                This assessment is intended to support informed decision-making
+                — not to replace professional legal, therapeutic, or safety
+                planning services.
+              </p>
             </div>
 
             <div className="mt-6 rounded-2xl bg-[#F8F7FC] border border-[#E5E0EE] p-4 sm:p-5 text-sm text-[#4B4567] leading-relaxed">
