@@ -1,0 +1,75 @@
+{
+  "summary": "Verified Emergent Google OAuth wiring end-to-end on preview. Backend contract: 5/5 pytest pass — POST /api/auth/google/session correctly rejects missing/empty X-Session-ID with 400 and gracefully returns 401 (never 500) when given a bogus session_id (upstream demobackend returns non-200). No cookies set on failure. GET /api/auth/me returns 401 when unauthenticated. Frontend /login: 'Continue with Google' button (data-testid='google-login-button') is visible/enabled at the top of the sign-in card above the 'or with email' divider; clicking it redirects to https://auth.emergentagent.com/oauth/?redirect=https%3A%2F%2Fprepared-parents.preview.emergentagent.com%2Fauth%2Fcallback with no JS errors. Frontend /register: same 'Continue with Google' button is visible/enabled and clicks through to the same Emergent OAuth URL — however it uses data-testid='google-register-button', NOT 'google-login-button' as referenced in the review request. This is a testid naming inconsistency (both testids should probably match, or the review docs should note the two names). Real Google chooser completion is not testable in headless (needs real Google credentials) — out of scope, and explicitly excluded by the request.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/register — 'Mediation Date (optional)'",
+        "issues": [
+          "Uses the browser default date picker (native <input type='date'>, mm/dd/yyyy). Consider swapping in the shadcn Calendar/Popover for a consistent look. Out of scope for this OAuth verification but flagged per general review guideline."
+        ]
+      }
+    ]
+  },
+  "verification_details": {
+    "backend_pytest_endpoint": "POST /api/auth/google/session",
+    "backend_pytest_results": "5/5 pass in 1.96s",
+    "backend_cases": {
+      "missing_X-Session-ID": "400 Missing X-Session-ID",
+      "empty_X-Session-ID": "400 (treated as missing)",
+      "bogus_session_id (random hex)": "401 Invalid session — upstream demobackend returned non-200, handled gracefully, NO 500 crash",
+      "bogus_session_id_no_cookies_set": "verified — neither session_token nor auth_token cookie is set on failure",
+      "GET_/api/auth/me_unauth": "401 Not authenticated"
+    },
+    "frontend_login_page": {
+      "url": "/login",
+      "google_button_testid": "google-login-button",
+      "visible": true,
+      "enabled": true,
+      "text": "Continue with Google",
+      "renders_above_email_divider": true,
+      "click_redirects_to": "https://auth.emergentagent.com/oauth/?redirect=https%3A%2F%2Fprepared-parents.preview.emergentagent.com%2Fauth%2Fcallback",
+      "js_errors_on_click": "none (only expected 401 for /auth/me pre-auth)"
+    },
+    "frontend_register_page": {
+      "url": "/register",
+      "google_button_testid": "google-register-button (NOT google-login-button)",
+      "visible": true,
+      "enabled": true,
+      "text": "Continue with Google",
+      "click_redirects_to": "https://auth.emergentagent.com/oauth/?redirect=https%3A%2F%2Fprepared-parents.preview.emergentagent.com%2Fauth%2Fcallback",
+      "js_errors_on_click": "none"
+    },
+    "legal_ack_gate": "Bypassed via localStorage['sac_legal_ack_v1'] = JSON.stringify({version:'v1', at:<ISO>}) — modal never appeared on /login or /register during test."
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_google_oauth_endpoint.py",
+    "/app/test_reports/pytest/pytest_iteration_17_google_oauth.xml"
+  ],
+  "action_items": [
+    "MINOR: The review request describes the Google button testid as 'google-login-button' on both /login and /register. On /register, the actual testid is 'google-register-button'. Either (a) rename the /register button testid to 'google-login-button' for consistency, or (b) update the review/docs to note the two distinct testids. No user-facing impact — button label, styling and click behavior are identical.",
+    "OUT OF SCOPE (noted for future work): /register uses the browser native date picker for 'Mediation Date'. Consider using a shadcn Calendar for design consistency."
+  ],
+  "critical_code_review_comments": [
+    "AuthContext.loginWithGoogle() correctly builds the redirect from window.location.origin + '/auth/callback' with no hardcoded URL or fallback — follows the 'DO NOT HARDCODE THE URL' reminder in-file. Good.",
+    "auth.py::google_session() correctly gates on missing X-Session-ID (400) before any upstream call, and _fetch_emergent_oauth_data() surfaces upstream non-200 as HTTPException(401) — no bare-500 surface. httpx timeout=15 is reasonable. Good.",
+    "auth.py::_upsert_oauth_user() unconditionally overwrites name/picture on existing user login. If a JWT user later signs in with Google using the same email, their local name is overwritten by Google's. Might be intentional (Google is source of truth) but worth confirming as product decision — not a bug.",
+    "MINOR: auth.py::google_session accesses data['session_token'] without a KeyError guard. If the Emergent demobackend ever returns 200 with a payload missing 'session_token', this would 500. Consider .get() + explicit 502 mapping. Low risk (upstream contract stable) but easy hardening.",
+    "Login.jsx has data-testid='google-login-button'; Register.jsx has data-testid='google-register-button'. Naming inconsistency (already flagged in action_items)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_google_oauth_endpoint.py (NEW — 5 test cases for /auth/google/session contract)"
+  ],
+  "success_rate": {"backend": "100% (5/5 pytest)", "frontend": "100% (all in-scope acceptance criteria met)"},
+  "test_credentials": "N/A — this verification does not require sign-in; real Google OAuth completion is explicitly out of scope.",
+  "seed_data_creation": "None.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "For OAuth flow testing on preview: bypass Legal Ack modal with localStorage.setItem('sac_legal_ack_v1', JSON.stringify({version:'v1', at:<ISO>})) on the app origin BEFORE navigating. Google button testid is 'google-login-button' on /login but 'google-register-button' on /register. Real Google chooser cannot be automated headlessly. Backend endpoint POST /api/auth/google/session accepts X-Session-ID header (not body); returns 400 for missing, 401 for invalid, 200 with {user, access_token} + Set-Cookie: session_token on success.",
+  "rca of the issue": "N/A — verification-only request. Everything the request asked to verify works: button present on both pages, click initiates OAuth (redirects to auth.emergentagent.com/oauth/?redirect=<app>/auth/callback), no JS errors on click, backend endpoint returns 400 for missing session_id and 401 (not 500) for invalid session_id. Only observation is a minor testid naming inconsistency between /login and /register."
+}
