@@ -6,12 +6,26 @@ import { toast } from "sonner";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, startGuest } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [magicLoading, setMagicLoading] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
+
+  const startDemo = async () => {
+    setDemoLoading(true);
+    try {
+      await startGuest();
+      toast.success("Welcome — you're in demo mode.");
+      navigate("/dashboard");
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Could not start demo mode.");
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -187,6 +201,26 @@ export default function Login() {
           >
             Create a new account
           </Link>
+
+          <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 divider-line" />
+            <span className="text-xs text-[#857E9C]">or just try it</span>
+            <div className="flex-1 divider-line" />
+          </div>
+
+          <button
+            type="button"
+            onClick={startDemo}
+            disabled={demoLoading}
+            className="w-full py-3 rounded-full border-2 border-dashed border-[#3D1A78] text-[#3D1A78] font-semibold hover:bg-[#F1EBFA] transition-colors disabled:opacity-60"
+            data-testid="login-demo-mode-button"
+          >
+            {demoLoading ? "Starting demo…" : "Try the demo — no account needed"}
+          </button>
+          <p className="text-[11px] text-[#857E9C] mt-2 text-center leading-relaxed">
+            Full access for 1 year. You can save your work anytime by
+            creating an account later.
+          </p>
 
           <p className="text-xs text-[#857E9C] mt-4 text-center">
             Free to use. Takes about 30 seconds.
