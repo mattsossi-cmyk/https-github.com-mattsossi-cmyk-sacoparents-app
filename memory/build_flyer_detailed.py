@@ -39,6 +39,7 @@ SANS_B = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
 LOGO_PATH = Path("/app/backend/assets/sa_coparents_logo.png")
 REPORTS_POSTER = Path("/app/frontend/public/images/three-reports-poster.png")
 PHONE_MOCKUP = Path("/app/memory/app_store_assets/refreshed_feb2026/iphone_6_7/01_dashboard.png")
+HERO_SOCCER = Path("/app/frontend/public/flyers/hero-soccer-parents.png")
 OUT_DIR = Path("/app/frontend/public/flyers")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -170,27 +171,44 @@ def build_letter() -> Path:
     W, H = 2550, 3300
     img = vgradient(W, H, DEEP_PURPLE, TEAL, mid=MID_PURPLE)
 
-    # Top glow
-    glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(glow)
-    for radius in range(1600, 200, -80):
-        alpha = int(60 * (1 - radius / 1600))
-        gd.ellipse((W // 2 - radius, -radius + 260, W // 2 + radius, radius + 260),
-                   fill=(255, 255, 255, alpha))
-    glow = glow.filter(ImageFilter.GaussianBlur(80))
-    img.paste(glow, (0, 0), glow)
-
     d = ImageDraw.Draw(img, "RGBA")
 
-    # ============ HEADER ============
-    # Real logo (chip on white for legibility)
+    # ============ HERO SOCCER BANNER ============
+    hero = Image.open(HERO_SOCCER).convert("RGB")
+    hero_target_w = W
+    hero_ratio = hero_target_w / hero.width
+    hero_h = int(hero.height * hero_ratio)
+    hero = hero.resize((hero_target_w, hero_h), Image.LANCZOS)
+    # Crop the hero so it's a shorter cinematic band (top portion of flyer)
+    band_h = 1300
+    if hero.height > band_h:
+        # crop centred vertically, slightly favouring the ground
+        top_crop = (hero.height - band_h) // 2 + 60
+        hero = hero.crop((0, top_crop, hero.width, top_crop + band_h))
+    img.paste(hero, (0, 0))
+
+    # Purple gradient overlay across the hero for text legibility.
+    # Darkens the top ~60% subtly, then fades to full-opacity purple at bottom
+    # so the join to the flyer body is seamless.
+    overlay = Image.new("RGBA", (W, band_h), (0, 0, 0, 0))
+    od = ImageDraw.Draw(overlay)
+    for yy in range(band_h):
+        t = yy / band_h
+        if t < 0.55:
+            alpha = int(210 * (1 - t / 0.55) + 45)  # 255 → 45 across the top
+        else:
+            local = (t - 0.55) / 0.45
+            alpha = int(45 + (255 - 45) * local)  # 45 → 255 at the bottom edge
+        # darken with deep purple
+        od.line([(0, yy), (W, yy)], fill=(*DEEP_PURPLE, alpha))
+    img.paste(overlay, (0, 0), overlay)
+
+    # ============ HEADER (logo + wordmark, over hero) ============
     logo = Image.open(LOGO_PATH).convert("RGBA")
-    logo_size = 460
     logo_thumb = logo.copy()
-    logo_thumb.thumbnail((logo_size, logo_size))
-    # White circular chip
-    chip_r = 250
-    chip_cx, chip_cy = W // 2, 340
+    logo_thumb.thumbnail((360, 360))
+    chip_r = 200
+    chip_cx, chip_cy = W // 2, 260
     d.ellipse((chip_cx - chip_r, chip_cy - chip_r,
                chip_cx + chip_r, chip_cy + chip_r), fill=WHITE)
     lx = chip_cx - logo_thumb.width // 2
@@ -201,18 +219,18 @@ def build_letter() -> Path:
     f_brand = font(SANS_B, 120)
     brand = "SA Coparents"
     bw = d.textlength(brand, font=f_brand)
-    d.text(((W - bw) // 2, 640), brand, fill=WHITE, font=f_brand)
+    d.text(((W - bw) // 2, 500), brand, fill=WHITE, font=f_brand)
 
     # Eyebrow tagline
     f_eye = font(SANS_B, 42)
     eye = "AN APP FOR FAMILIES · MADE WITH CARE"
     ew = d.textlength(eye, font=f_eye)
-    d.text(((W - ew) // 2, 790), eye, fill=(255, 255, 255, 220), font=f_eye)
-    d.rectangle(((W - ew) // 2, 850, (W - ew) // 2 + ew, 854), fill=(255, 255, 255, 180))
+    d.text(((W - ew) // 2, 650), eye, fill=(255, 255, 255, 235), font=f_eye)
+    d.rectangle(((W - ew) // 2, 710, (W - ew) // 2 + ew, 714), fill=(255, 255, 255, 220))
 
     # Headline
     f_h1 = font(SERIF, 150)
-    y = 940
+    y = 800
     for line in ["Helping parents", "communicate better."]:
         lw = d.textlength(line, font=f_h1)
         d.text(((W - lw) // 2, y), line, fill=WHITE, font=f_h1)
@@ -221,7 +239,7 @@ def build_letter() -> Path:
     # Deck
     f_deck = font(SERIF_R, 56)
     deck = "Less conflict. More calm. A private space for co-parenting families to reflect, plan, and communicate — with their child at the centre."
-    y += 20
+    y += 30
     y = draw_wrap(d, deck, (200, y), W - 400, f_deck, (255, 255, 255, 235), 1.32)
 
     # ============ THREE REPORTS PANEL ============
