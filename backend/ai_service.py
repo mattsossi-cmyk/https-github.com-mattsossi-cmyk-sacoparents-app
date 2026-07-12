@@ -468,3 +468,82 @@ Return ONLY valid JSON in this exact shape:
         themes = []
     themes = [str(t).strip().lower() for t in themes if str(t).strip()][:6]
     return {"recap_text": recap_text, "themes": themes}
+
+
+# ============ Gmail Draft Assistant ============
+
+async def draft_coparent_reply(
+    *,
+    original_body: str,
+    original_subject: Optional[str] = None,
+    original_from: Optional[str] = None,
+    intent: Optional[str] = None,
+    my_draft: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Rewrite (or draft-from-scratch) a co-parenting email reply in a
+    child-centered, calm, non-blaming tone.
+
+    Args:
+      original_body: the message the parent is replying to.
+      original_subject / original_from: for context (optional).
+      intent: what the parent wants to say, in their own words. Optional if
+        they haven't written a draft yet.
+      my_draft: the parent's current emotionally-loaded draft to rewrite.
+        Optional; if absent we generate a fresh, factual reply.
+    """
+    system_prompt = (
+        "You are a compassionate co-parenting communication coach. Your job is "
+        "to help a separated parent respond to a message from their child's "
+        "other parent in a way that is: (a) calm and non-defensive, (b) focused "
+        "on the child's needs, (c) free of blame, character attacks, or "
+        "sarcasm, (d) specific and logistical rather than emotional. You "
+        "preserve the parent's core intent — you do NOT invent facts, agree to "
+        "things they didn't agree to, or soften a legitimate boundary. If the "
+        "original message contains threats, coercion, or abuse, you gently "
+        "note that direct de-escalated replies may not be appropriate and "
+        "point them to the Safety page and hotlines. Output strict JSON only."
+    )
+
+    intent_block = f"\n=== PARENT'S INTENT ===\n{intent.strip()}\n" if intent and intent.strip() else ""
+    draft_block = f"\n=== PARENT'S CURRENT DRAFT (rewrite this) ===\n{my_draft.strip()}\n" if my_draft and my_draft.strip() else ""
+
+    prompt = f"""Rewrite (or draft) a reply to the following co-parenting email.
+
+=== ORIGINAL MESSAGE ===
+From: {original_from or "co-parent"}
+Subject: {original_subject or "(no subject)"}
+
+{original_body.strip()[:4000]}
+{intent_block}{draft_block}
+
+Guidelines:
+- Keep it short (aim for 3-8 short sentences).
+- Lead with acknowledgement (one sentence), then the specifics (logistics,
+  dates, boundaries), then a brief close.
+- No character attacks, no "you always / you never", no sarcasm, no emojis.
+- Use "our child" / the child's first name if provided in the original.
+- If the original message is aggressive, model calm without capitulating.
+- If safety is at risk (threats, coercion), set safety_flag=true and keep
+  the reply minimal and neutral.
+
+Return ONLY valid JSON in this exact shape:
+{{
+  "draft": "string — the rewritten reply body, plain text with newlines",
+  "tone_notes": ["short bullet 1", "short bullet 2", "short bullet 3"],
+  "safety_flag": false
+}}
+"""
+    chat = _make_chat(system_prompt)
+    response = await chat.send_message(UserMessage(text=prompt))
+    data = _extract_json(response)
+    draft = (data.get("draft") or "").strip()
+    tone_notes = data.get("tone_notes") or []
+    if not isinstance(tone_notes, list):
+        tone_notes = []
+    tone_notes = [str(t).strip() for t in tone_notes if str(t).strip()][:5]
+    return {
+        "draft": draft,
+        "tone_notes": tone_notes,
+        "safety_flag": bool(data.get("safety_flag", False)),
+    }
+

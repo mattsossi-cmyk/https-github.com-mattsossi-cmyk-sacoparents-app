@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Inbox, Search, Send, RefreshCw, Unplug, Loader2, Mail } from "lucide-react";
+import { ArrowLeft, Inbox, Search, Send, RefreshCw, Unplug, Loader2, Mail, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
@@ -14,11 +14,13 @@ import { api } from "../lib/api";
  * Fernet-encrypted — the frontend never sees them.
  */
 
-function Composer({ prefill, onClose, onSent }) {
+function Composer({ prefill, sourceMessage, onClose, onSent }) {
   const [to, setTo] = useState(prefill?.to || "");
   const [subject, setSubject] = useState(prefill?.subject || "");
   const [body, setBody] = useState(prefill?.body || "");
   const [sending, setSending] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+  const [toneNotes, setToneNotes] = useState([]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -39,11 +41,38 @@ function Composer({ prefill, onClose, onSent }) {
     }
   };
 
+  const draftWithCoach = async () => {
+    if (!sourceMessage) {
+      toast.error("The coach needs the original message to draft from.");
+      return;
+    }
+    setDrafting(true);
+    try {
+      const { data } = await api.post("/gmail/draft-reply", {
+        original_body: sourceMessage.body || sourceMessage.snippet || "",
+        original_subject: sourceMessage.subject || "",
+        original_from: sourceMessage.from || "",
+        my_draft: body || undefined,
+      });
+      setBody(data.draft || "");
+      setToneNotes(data.tone_notes || []);
+      if (data.safety_flag) {
+        toast.warning("Safety concern detected — see the Safety page before replying directly.");
+      } else {
+        toast.success("Coach-drafted reply ready.");
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "The coach couldn't draft this one.");
+    } finally {
+      setDrafting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" data-testid="gmail-composer">
       <form
         onSubmit={submit}
-        className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-xl p-6 shadow-2xl"
+        className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-xl p-6 shadow-2xl max-h-[95vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-serif text-xl text-[#1A1330]">New email</h3>
@@ -74,15 +103,44 @@ function Composer({ prefill, onClose, onSent }) {
           required
           data-testid="composer-subject"
         />
-        <label className="block text-xs font-semibold text-[#4B4567] mb-1">Message</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-xs font-semibold text-[#4B4567]">Message</label>
+          {sourceMessage && (
+            <button
+              type="button"
+              onClick={draftWithCoach}
+              disabled={drafting}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3D1A78] hover:underline disabled:opacity-60"
+              data-testid="composer-draft-coach-btn"
+            >
+              {drafting ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+              {drafting ? "Coach is drafting…" : body ? "Rewrite with coach" : "Draft a co-parenting reply"}
+            </button>
+          )}
+        </div>
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          rows={8}
-          className="w-full border border-[#E5E0EE] rounded-lg px-3 py-2 mb-4 text-sm"
+          rows={10}
+          className="w-full border border-[#E5E0EE] rounded-lg px-3 py-2 mb-2 text-sm"
           required
           data-testid="composer-body"
         />
+        {toneNotes.length > 0 && (
+          <div className="mb-4 rounded-lg bg-[#F5F2FA] border border-[#E5E0EE] p-3" data-testid="composer-tone-notes">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1.5">
+              <Sparkles size={11} /> Coach&apos;s notes
+            </div>
+            <ul className="text-xs text-[#4B4567] space-y-1">
+              {toneNotes.map((n, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className="text-[#3D1A78]">•</span>
+                  <span>{n}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="flex items-center justify-end gap-2">
           <button
             type="button"
@@ -106,7 +164,7 @@ function Composer({ prefill, onClose, onSent }) {
   );
 }
 
-function MessageDetail({ msg, onBack, onReply }) {
+function MessageDetail({ msg, onBack, onReply, onDraftReply, drafting }) {
   return (
     <section className="card-soft p-6" data-testid="gmail-message-detail">
       <button
@@ -124,13 +182,22 @@ function MessageDetail({ msg, onBack, onReply }) {
       <div className="mt-4 whitespace-pre-wrap text-sm text-[#1A1330] leading-relaxed border-t border-[#E5E0EE] pt-4">
         {msg.body || msg.snippet || "(empty message)"}
       </div>
-      <div className="mt-6 flex gap-2">
+      <div className="mt-6 flex flex-wrap gap-2">
         <button
           onClick={onReply}
           className="px-4 py-2 rounded-lg bg-[#3D1A78] text-white text-sm font-medium flex items-center gap-2"
           data-testid="gmail-reply-btn"
         >
           <Send size={14} /> Reply
+        </button>
+        <button
+          onClick={onDraftReply}
+          disabled={drafting}
+          className="px-4 py-2 rounded-lg border border-[#3D1A78] text-[#3D1A78] text-sm font-medium flex items-center gap-2 hover:bg-[#F5F2FA] disabled:opacity-60"
+          data-testid="gmail-draft-coach-btn"
+        >
+          {drafting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+          {drafting ? "Coach is drafting…" : "Draft a co-parenting reply"}
         </button>
       </div>
     </section>
@@ -147,6 +214,8 @@ export default function Gmail() {
   const [selected, setSelected] = useState(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerPrefill, setComposerPrefill] = useState(null);
+  const [composerSource, setComposerSource] = useState(null);
+  const [drafting, setDrafting] = useState(false);
 
   const loadStatus = useCallback(async () => {
     setLoadingStatus(true);
@@ -237,11 +306,43 @@ export default function Gmail() {
       subject: selected.subject?.startsWith("Re:") ? selected.subject : `Re: ${selected.subject || ""}`,
       body: `\n\n---\nOn ${selected.date}, ${selected.from} wrote:\n> ${(selected.body || selected.snippet || "").split("\n").join("\n> ")}`,
     });
+    setComposerSource(selected);
     setComposerOpen(true);
+  };
+
+  const draftReplyWithCoach = async () => {
+    if (!selected) return;
+    setDrafting(true);
+    try {
+      const { data } = await api.post("/gmail/draft-reply", {
+        original_body: selected.body || selected.snippet || "",
+        original_subject: selected.subject || "",
+        original_from: selected.from || "",
+      });
+      if (data.safety_flag) {
+        toast.warning("Safety concern detected — see the Safety page before replying directly.");
+      } else {
+        toast.success("Coach-drafted reply ready — review before sending.");
+      }
+      const fromMatch = /<([^>]+)>/.exec(selected.from);
+      const toEmail = fromMatch ? fromMatch[1] : selected.from;
+      setComposerPrefill({
+        to: toEmail,
+        subject: selected.subject?.startsWith("Re:") ? selected.subject : `Re: ${selected.subject || ""}`,
+        body: data.draft || "",
+      });
+      setComposerSource(selected);
+      setComposerOpen(true);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "The coach couldn't draft this one.");
+    } finally {
+      setDrafting(false);
+    }
   };
 
   const startCompose = () => {
     setComposerPrefill(null);
+    setComposerSource(null);
     setComposerOpen(true);
   };
 
@@ -306,6 +407,8 @@ export default function Gmail() {
               msg={selected}
               onBack={() => setSelected(null)}
               onReply={startReply}
+              onDraftReply={draftReplyWithCoach}
+              drafting={drafting}
             />
           </div>
         ) : (
@@ -400,6 +503,7 @@ export default function Gmail() {
       {composerOpen && (
         <Composer
           prefill={composerPrefill}
+          sourceMessage={composerSource}
           onClose={() => setComposerOpen(false)}
           onSent={() => loadMessages(query)}
         />

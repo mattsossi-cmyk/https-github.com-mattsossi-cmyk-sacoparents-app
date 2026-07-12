@@ -35,6 +35,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field
 
 from auth import get_current_user, get_db
+from ai_service import draft_coparent_reply
 
 logger = logging.getLogger(__name__)
 
@@ -468,3 +469,36 @@ async def send_email(
         raise HTTPException(status_code=e.resp.status if e.resp else 500, detail=f"Gmail error: {e}") from e
 
     return {"ok": True, "id": sent.get("id"), "thread_id": sent.get("threadId")}
+
+
+# ---- AI-assisted co-parenting draft ---------------------------------------
+
+
+class DraftReplyRequest(BaseModel):
+    original_body: str = Field(..., min_length=1, max_length=20000)
+    original_subject: Optional[str] = None
+    original_from: Optional[str] = None
+    intent: Optional[str] = Field(default=None, max_length=2000)
+    my_draft: Optional[str] = Field(default=None, max_length=10000)
+
+
+@router.post("/gmail/draft-reply")
+async def draft_reply(
+    body: DraftReplyRequest,
+    current=Depends(get_current_user),
+):
+    """Use Claude Sonnet 4.5 to rewrite an emotionally-charged reply into a
+    calm, child-centered co-parenting response. Works either by rewriting the
+    parent's current draft (`my_draft`) or by generating from their intent."""
+    try:
+        result = await draft_coparent_reply(
+            original_body=body.original_body,
+            original_subject=body.original_subject,
+            original_from=body.original_from,
+            intent=body.intent,
+            my_draft=body.my_draft,
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.exception("draft-reply failed for user=%s", current.user_id)
+        raise HTTPException(status_code=502, detail=f"Coach could not draft a reply: {e}") from e
+    return result
