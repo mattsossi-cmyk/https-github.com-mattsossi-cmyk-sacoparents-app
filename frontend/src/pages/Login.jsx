@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, loginWithGoogle, startGuest } = useAuth();
+  const { login, startGuest } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -111,21 +111,6 @@ export default function Login() {
 
           <button
             type="button"
-            onClick={loginWithGoogle}
-            className="btn-soft w-full flex items-center justify-center gap-3 mb-3"
-            data-testid="google-login-button"
-          >
-            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.3 2.8l5.7-5.7C33.6 6.7 29 5 24 5 13.5 5 5 13.5 5 24s8.5 19 19 19 19-8.5 19-19c0-1.2-.1-2.3-.4-3.5z" />
-              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c2.8 0 5.4 1.1 7.3 2.8l5.7-5.7C33.6 6.7 29 5 24 5 16.3 5 9.8 9.1 6.3 14.7z" />
-              <path fill="#4CAF50" d="M24 43c5 0 9.5-1.6 13-4.3l-6-5.1c-1.9 1.4-4.4 2.4-7 2.4-5.2 0-9.7-3.5-11.3-8.3l-6.5 5C9.8 38.9 16.3 43 24 43z" />
-              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.6l6 5.1C40.9 35 44 30 44 24c0-1.2-.1-2.3-.4-3.5z" />
-            </svg>
-            Continue with Google
-          </button>
-
-          <button
-            type="button"
             onClick={startDemo}
             disabled={demoLoading}
             className="btn-soft w-full flex items-center justify-center gap-3 mb-5 border-2 border-dashed border-[#3D1A78] text-[#3D1A78] font-semibold hover:bg-[#F1EBFA] disabled:opacity-60"
@@ -139,7 +124,7 @@ export default function Login() {
 
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 divider-line" />
-            <span className="text-xs text-[#857E9C]">or with email</span>
+            <span className="text-xs text-[#857E9C]">or sign in with email</span>
             <div className="flex-1 divider-line" />
           </div>
 
