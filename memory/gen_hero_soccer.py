@@ -18,16 +18,21 @@ OUT.parent.mkdir(parents=True, exist_ok=True)
 
 PROMPT = (
     "Photorealistic cinematic photograph, warm golden-hour light. Composition: "
-    "seen from slightly behind and above the parents. A mother and father stand "
-    "close together on the sideline of a bright green grass soccer field, "
-    "watching their young child (roughly 8 years old) play soccer. The parents "
-    "are unified — the mother's hand rests gently on the father's arm — showing "
-    "quiet partnership even though we cannot see their faces. In the middle "
-    "distance, the child in a colourful soccer jersey is mid-stride kicking a "
-    "ball toward a goal, other kids visible around. Soft bokeh in the "
-    "background, sunlight filtering through trees, hopeful, calm, family-first "
-    "atmosphere. No text, no logos, no watermarks. Landscape orientation, "
-    "cinematic 16:10 aspect ratio."
+    "seen from behind. A mother and a father stand on the sideline of a bright "
+    "green grass soccer field, watching their young child (roughly 8 years old) "
+    "play soccer. IMPORTANT: the two parents are clearly APART from each other "
+    "— they are separated by a visible gap of empty grass between them, "
+    "standing several feet apart, not touching, not looking at each other. "
+    "Each parent is a lone silhouette, arms crossed or hands in pockets, "
+    "individually focused on the child. Their body language shows they are "
+    "co-parents who came separately — polite distance, no interaction between "
+    "them. The mother is on the left, wearing a navy sweater and jeans. The "
+    "father is on the right, wearing a plaid shirt and dark pants. Between "
+    "them, in the middle distance on the field, their child in a colourful "
+    "soccer jersey (number 8) is mid-stride kicking a ball. Other kids and a "
+    "goal net in the background. Soft bokeh, hopeful light, quiet dignity, "
+    "no bitterness — just distance. No text, no logos, no watermarks. "
+    "Landscape orientation, cinematic 16:10 aspect ratio."
 )
 
 
