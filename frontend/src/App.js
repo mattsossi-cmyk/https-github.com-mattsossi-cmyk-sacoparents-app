@@ -13,6 +13,7 @@ import Register from "@/pages/Register";
 import AuthCallback from "@/pages/AuthCallback";
 import Dashboard from "@/pages/Dashboard";
 import MyPlan from "@/pages/MyPlan";
+import Gmail from "@/pages/Gmail";
 import ChildGoals from "@/pages/ChildGoals";
 import IssuesConcerns from "@/pages/IssuesConcerns";
 import PriorityRanking from "@/pages/PriorityRanking";
@@ -127,6 +128,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <MyPlan />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gmail"
+          element={
+            <ProtectedRoute>
+              <Gmail />
             </ProtectedRoute>
           }
         />

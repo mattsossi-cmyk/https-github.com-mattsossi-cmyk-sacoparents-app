@@ -110,6 +110,22 @@ A modern co-parenting communication & support platform that helps separated and 
 - CORS configured with credentials
 - All env vars from `os.environ` only
 
+### Gmail Integration (Feb 2026 — this session)
+- Google OAuth 2.0 connect flow at `/gmail` (frontend) with `Connect Gmail` card on `/my-plan`
+- Backend routes: `GET /api/oauth/gmail/{login,callback}`, `GET /api/gmail/status`,
+  `POST /api/gmail/disconnect`, `GET /api/gmail/messages` (with `?q=` search),
+  `GET /api/gmail/messages/{id}`, `POST /api/gmail/send`
+- Scopes: `gmail.readonly`, `gmail.send`, `openid`, `userinfo.email`
+- Refresh tokens Fernet-encrypted in `gmail_tokens` collection (never returned to client)
+- OAuth state persisted in `gmail_oauth_states` with 10-min TTL, cleared on callback
+- Automatic token refresh + reconnect flow on expiry
+- `PUBLIC_API_URL` env pins the redirect URI to the external URL (prevents
+  cluster-internal hostname leaking into Google's OAuth request)
+
+### Login Sign-in Options (Feb 2026 — this session)
+- Demo mode ("Try the demo — no account needed") promoted to first-class
+  alternative sign-in method, sitting directly beneath "Continue with Google"
+
 ### App Store Assets Generated
 - iPhone screenshots (1242×2688 portrait, 1284×2778 portrait, 2688×1242 landscape)
 - Marketing portrait compositions with branded captions (1242×2688)

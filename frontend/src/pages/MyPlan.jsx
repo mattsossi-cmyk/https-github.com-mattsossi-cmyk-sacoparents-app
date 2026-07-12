@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ClipboardCheck, Heart, Shield, Compass } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, Heart, Shield, Compass, Mail } from "lucide-react";
 import AppShell from "../components/AppShell";
 import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
 import SectionCoaching from "../components/SectionCoaching";
@@ -70,6 +70,7 @@ function Empty({ text, to, cta }) {
 export default function MyPlan() {
   const [prep, setPrep] = useState({ completed: {}, data: {} });
   const [summary, setSummary] = useState(null);
+  const [gmail, setGmail] = useState({ connected: false });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,12 +78,14 @@ export default function MyPlan() {
     Promise.all([
       api.get("/mediation/prep").catch(() => ({ data: {} })),
       api.get("/mediation/summaries").catch(() => ({ data: [] })),
-    ]).then(([p, s]) => {
+      api.get("/gmail/status").catch(() => ({ data: { connected: false } })),
+    ]).then(([p, s, g]) => {
       if (cancelled) return;
       setPrep(p.data || { completed: {}, data: {} });
       // Latest summary = first entry (backend returns newest first)
       const list = Array.isArray(s?.data) ? s.data : s?.data?.summaries || [];
       setSummary(list.length > 0 ? list[0] : null);
+      setGmail(g.data || { connected: false });
       setLoading(false);
     });
     return () => {
@@ -113,7 +116,7 @@ export default function MyPlan() {
           Your Plan
         </h1>
         <p className="text-[#4B4567] mt-2 max-w-2xl">
-          A snapshot of everything you've built — your progress, your goals, and
+          A snapshot of everything you&apos;ve built — your progress, your goals, and
           what to focus on next.
         </p>
 
@@ -212,6 +215,37 @@ export default function MyPlan() {
                   to="/dashboard"
                   cta="Continue"
                 />
+              )}
+            </Card>
+
+            {/* Gmail connection */}
+            <Card title="Gmail" icon={Mail} testid="myplan-gmail">
+              {gmail.connected ? (
+                <>
+                  <div className="text-sm text-[#1A1330]">
+                    Connected as <span className="font-semibold">{gmail.google_email || "your Google account"}</span>.
+                  </div>
+                  <Link
+                    to="/gmail"
+                    className="inline-flex items-center gap-1 text-sm text-[#3D1A78] hover:underline mt-3 font-medium"
+                    data-testid="myplan-open-gmail"
+                  >
+                    Open inbox →
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-[#4B4567]">
+                    Read, search, and send co-parenting emails without leaving the app.
+                  </p>
+                  <Link
+                    to="/gmail"
+                    className="inline-flex items-center gap-1 text-sm text-[#3D1A78] hover:underline mt-3 font-medium"
+                    data-testid="myplan-connect-gmail"
+                  >
+                    Connect Gmail →
+                  </Link>
+                </>
               )}
             </Card>
 

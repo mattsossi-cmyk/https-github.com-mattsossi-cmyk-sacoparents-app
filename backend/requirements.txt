@@ -35,6 +35,7 @@ google-api-core==2.30.3
 google-api-python-client==2.196.0
 google-auth==2.52.0
 google-auth-httplib2==0.4.0
+google-auth-oauthlib==1.4.0
 google-genai==2.0.1
 google-generativeai==0.8.6
 googleapis-common-protos==1.75.0
@@ -94,6 +95,7 @@ PyJWT==2.12.1
 pymongo==4.5.0
 pyparsing==3.3.2
 pytest==9.0.3
+pytest-asyncio==1.4.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 python-jose==3.5.0

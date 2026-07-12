@@ -112,7 +112,7 @@ export default function Login() {
           <button
             type="button"
             onClick={loginWithGoogle}
-            className="btn-soft w-full flex items-center justify-center gap-3 mb-5"
+            className="btn-soft w-full flex items-center justify-center gap-3 mb-3"
             data-testid="google-login-button"
           >
             <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
@@ -122,6 +122,19 @@ export default function Login() {
               <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.6l6 5.1C40.9 35 44 30 44 24c0-1.2-.1-2.3-.4-3.5z" />
             </svg>
             Continue with Google
+          </button>
+
+          <button
+            type="button"
+            onClick={startDemo}
+            disabled={demoLoading}
+            className="btn-soft w-full flex items-center justify-center gap-3 mb-5 border-2 border-dashed border-[#3D1A78] text-[#3D1A78] font-semibold hover:bg-[#F1EBFA] disabled:opacity-60"
+            data-testid="login-demo-mode-button"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.9 6.5 19.5l1-6.3L3 8.9 9 8z" />
+            </svg>
+            {demoLoading ? "Starting demo…" : "Try the demo — no account needed"}
           </button>
 
           <div className="flex items-center gap-3 my-5">
@@ -201,26 +214,6 @@ export default function Login() {
           >
             Create a new account
           </Link>
-
-          <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 divider-line" />
-            <span className="text-xs text-[#857E9C]">or just try it</span>
-            <div className="flex-1 divider-line" />
-          </div>
-
-          <button
-            type="button"
-            onClick={startDemo}
-            disabled={demoLoading}
-            className="w-full py-3 rounded-full border-2 border-dashed border-[#3D1A78] text-[#3D1A78] font-semibold hover:bg-[#F1EBFA] transition-colors disabled:opacity-60"
-            data-testid="login-demo-mode-button"
-          >
-            {demoLoading ? "Starting demo…" : "Try the demo — no account needed"}
-          </button>
-          <p className="text-[11px] text-[#857E9C] mt-2 text-center leading-relaxed">
-            Full access for 1 year. You can save your work anytime by
-            creating an account later.
-          </p>
 
           <p className="text-xs text-[#857E9C] mt-4 text-center">
             Free to use. Takes about 30 seconds.
