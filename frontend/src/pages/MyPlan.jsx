@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ClipboardCheck, Heart, Shield, Compass, Mail } from "lucide-react";
 import AppShell from "../components/AppShell";
+import DemoModeBanner from "../components/DemoModeBanner";
 import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
 import SectionCoaching from "../components/SectionCoaching";
 import { api } from "../lib/api";
@@ -119,6 +120,10 @@ export default function MyPlan() {
           A snapshot of everything you&apos;ve built — your progress, your goals, and
           what to focus on next.
         </p>
+
+        <div className="mt-6">
+          <DemoModeBanner />
+        </div>
 
         {loading ? (
           <div className="mt-10 text-[#857E9C]" data-testid="my-plan-loading">Loading your plan…</div>

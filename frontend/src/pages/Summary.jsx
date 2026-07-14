@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import DemoModeBanner from "../components/DemoModeBanner";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import WatchFirstVideo from "../components/WatchFirstVideo";
 import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
@@ -1110,6 +1111,8 @@ export default function Summary() {
           co-parent, and a personal growth plan compiled from your communication and
           readiness reflections.
         </p>
+
+        <DemoModeBanner />
 
         <div className="mb-8">
           <WatchFirstVideo
