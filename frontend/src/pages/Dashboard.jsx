@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import VerificationBanner from "../components/VerificationBanner";
 import EmailHealthBanner from "../components/EmailHealthBanner";
+import DemoModeBanner from "../components/DemoModeBanner";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import BadgeShelf from "../components/BadgeShelf";
 import MeetTheProgramCard from "../components/MeetTheProgramCard";
@@ -181,6 +182,7 @@ export default function Dashboard() {
       <div className="fade-up">
         <EmailHealthBanner />
         <VerificationBanner />
+        <DemoModeBanner />
         <div className="grid lg:grid-cols-3 gap-6 mb-10 mt-6">
           <div className="card-soft p-8 lg:col-span-2 relative overflow-hidden">
             <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#D4C5F0]/40" />
