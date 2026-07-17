@@ -506,10 +506,16 @@ async def generate_improvement_plan_route(
             detail="Please complete the Communication and Readiness steps first.",
         )
     previous = await _previous_doc(db, "improvement_plans", current.user_id)
+    from readiness_scoring import compute_readiness  # local import
+    readiness_scores = compute_readiness(prep)
     try:
-        plan = await ai_service.generate_improvement_plan(comm, readiness, current.name, previous)
+        plan = await ai_service.generate_improvement_plan(
+            comm, readiness, current.name, previous, readiness_scores=readiness_scores
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI plan failed: {e}")
+
+    plan["readiness"] = readiness_scores
 
     plan_id = f"imp_{uuid.uuid4().hex[:12]}"
     doc = {

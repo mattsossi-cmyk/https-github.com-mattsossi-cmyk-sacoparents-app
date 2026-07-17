@@ -350,52 +350,76 @@ async def generate_improvement_plan(
     readiness: Dict[str, Any] | None,
     user_name: str,
     previous: Optional[Dict[str, Any]] = None,
+    readiness_scores: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Compile a 'Things I Can Improve On' plan from communication + readiness data."""
+    """Compile a 'Personal Growth Plan' from communication + readiness data.
+
+    `readiness_scores` (optional) is the deterministic scoring bundle from
+    readiness_scoring.compute_readiness() — used to inform Areas of Concern
+    but never to replace the AI's own coaching guidance.
+    """
     chat = _make_chat(IMPROVEMENT_SYSTEM)
     prev_block = _previous_context_block(previous, scope="improvement")
     changes_instruction = _CHANGES_INSTRUCTION if previous else ""
-    prompt = f"""Generate a personalized "Things I Can Improve On" action plan for {user_name}.
 
-Use ONLY these two inputs:
+    scores_block = ""
+    if readiness_scores:
+        scores_block = f"""
+=== READINESS SCORES (reference — do not restate the numbers verbatim) ===
+Overall: {readiness_scores['overall']}/100 ({readiness_scores['label']})
+Communication:    {readiness_scores['dimensions']['communication']['score']}/100
+Trust:            {readiness_scores['dimensions']['trust']['score']}/100
+Child alignment:  {readiness_scores['dimensions']['child_alignment']['score']}/100
+Conflict (managed, higher = better): {readiness_scores['dimensions']['conflict']['score']}/100
+"""
 
-Communication self-assessment (3 questions, each tagged with one of:
-avoider, escalator, defensive, over_explainer, passive, balanced):
+    prompt = f"""Generate a court-respectable Personal Growth Plan for {user_name}.
+
+Use these inputs:
+
+Communication self-assessment (tagged as avoider, escalator, defensive,
+over_explainer, passive, or balanced):
 {json.dumps(comm_style or {{}}, indent=2, default=str)}
 
-Readiness self-ratings (6 questions, 1=Not yet, 2=Sometimes, 3=Often, 4=Usually, 5=Yes consistently):
-- listen: can listen without interrupting
-- past: can discuss without raising past relationship pain
-- future: willing to focus on future solutions
-- separate: can separate parenting from personal hurt
-- calm: have strategies to stay calm under pressure
-- respect: can speak respectfully even when disagreeing
-
+Readiness self-ratings (1=Not yet, 2=Sometimes, 3=Often, 4=Usually, 5=Yes consistently):
+- listen, past, future, separate, calm, respect
 Data:
 {json.dumps(readiness or {{}}, indent=2, default=str)}
-{prev_block}
+{prev_block}{scores_block}
+This report will be shared alongside the Co-Parenting Assessment and
+Alignment Statement. It must read as a professional growth plan a
+therapist or mediator would respect — never breezy, never punitive.
+
 Return strict JSON only with these exact keys:
 {{
+  "executive_summary": "2-3 dignified sentences: what this growth plan is, where the parent is starting from, and how it complements the wider preparation.",
+  "parent_strengths": ["3-5 short phrases naming the specific strengths visible in this data — balanced answers, high self-ratings, self-awareness itself"],
+  "areas_of_concern": ["2-4 short phrases naming the growth areas the data itself points to — never judgmental, always the parent's own frame"],
   "headline": "1 warm sentence that names the 1-2 biggest growth areas without judgment",
   "focus_areas": [
     {{
       "title": "short title of the growth area (e.g. 'Pausing before responding')",
       "why_it_matters": "1 sentence on how this affects your child and your day-to-day",
-      "communication_tips": ["3 SPECIFIC tips for messages/conversations — actionable phrases or rituals"],
-      "quality_of_life_tips": ["2 SPECIFIC tips for self-care, regulation, or habits that support this growth area"]
+      "communication_tips": ["3 SPECIFIC tips — actionable phrases or rituals"],
+      "quality_of_life_tips": ["2 SPECIFIC tips for self-care, regulation, or habits"]
     }}
   ],
-  "this_week": ["3 small, concrete actions to try in the next 7 days — each starts with a verb"],
+  "recommended_next_steps": {{
+    "this_week": ["2-3 small, concrete actions to try in the next 7 days — each starts with a verb"],
+    "before_mediation": ["2-3 preparation habits to establish before the next mediation session"],
+    "long_term": ["1-2 growth intentions to keep in view over the next 3 months"]
+  }},
   "encouragement": "1-2 warm sentences acknowledging the courage of doing this work",
-  "changes_since_last": "ONLY if a previous version exists — a warm, specific note on what shifted. Call out growth (a ratings jump) AND new areas surfacing. Otherwise empty string."
+  "changes_since_last": "ONLY if a previous version exists — a warm, specific note on what shifted. Otherwise empty string."
 }}
 
 Important:
-- Pick 2-4 focus_areas based on the WEAKEST patterns in their data — do not list everything.
-- A 'balanced' answer or a 4-5 rating is a STRENGTH, not a growth area — only flag genuine gaps.
+- Pick 2-4 focus_areas based on the WEAKEST patterns — do not list everything.
+- A 'balanced' answer or a 4-5 rating is a STRENGTH, not a growth area.
 - Tips must reference real-life co-parenting scenarios (exchanges, texts, child's school events, holidays, etc).
 - Avoid clichés ('be the bigger person', 'communication is key', 'practice mindfulness').
-- If both inputs are mostly empty, return focus_areas=[] and put a gentle note in 'headline' that more reflection is needed.
+- If both inputs are mostly empty, return focus_areas=[] and put a gentle note in 'headline'.
+- Tone: warm, professional, evaluator-grade.
 {changes_instruction}"""
     response = await chat.send_message(UserMessage(text=prompt))
     return _extract_json(response)

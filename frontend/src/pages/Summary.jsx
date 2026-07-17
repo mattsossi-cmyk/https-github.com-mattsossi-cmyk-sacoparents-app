@@ -719,7 +719,7 @@ function ImprovementPlanTab() {
       <div className="card-soft p-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
-            <div className="eyebrow mb-1">Things I can improve on</div>
+            <div className="eyebrow mb-1">Personal Growth Plan</div>
             <div className="font-serif text-2xl text-[#1A1330] leading-snug max-w-2xl">
               {plan.headline}
             </div>
@@ -740,43 +740,60 @@ function ImprovementPlanTab() {
 
         <ChangesSinceLast text={plan.changes_since_last} />
 
+        {plan.executive_summary && (
+          <Section title="Executive summary">
+            <p className="text-[#1A1330] leading-relaxed">{plan.executive_summary}</p>
+          </Section>
+        )}
+      </div>
+
+      {plan.readiness && (
+        <ReadinessDashboard readiness={plan.readiness} />
+      )}
+
+      <div className="card-soft p-8">
+        {plan.parent_strengths && plan.parent_strengths.length > 0 && (
+          <Section title="Parent strengths">
+            <BulletList items={plan.parent_strengths} />
+          </Section>
+        )}
+        {plan.areas_of_concern && plan.areas_of_concern.length > 0 && (
+          <Section title="Areas of concern">
+            <BulletList items={plan.areas_of_concern} />
+          </Section>
+        )}
+
         {(plan.focus_areas || []).length === 0 && (
           <div className="rounded-2xl bg-[#EFE9F9] px-5 py-4 text-sm text-[#4B4567]">
-            We didn't have enough Communication or Readiness data to compile growth
+            We didn&apos;t have enough Communication or Readiness data to compile growth
             areas. Revisit those steps and try again.
           </div>
         )}
 
-        <div className="space-y-5">
+        <div className="space-y-5 mt-6">
           {(plan.focus_areas || []).map((fa, i) => (
             <FocusAreaCard key={`${fa.title}-${i}`} fa={fa} index={i} />
           ))}
         </div>
 
-        {plan.this_week?.length > 0 && (
-          <div className="mt-8 rounded-2xl bg-[#3D1A78]/8 border border-[#3D1A78]/25 p-6">
-            <div className="eyebrow mb-3">Try this week</div>
-            <ol className="space-y-2 list-none">
-              {plan.this_week.map((t, i) => (
-                <li key={`${t}-${i}`} className="flex gap-3 text-[#1A1330]">
-                  <span className="font-serif text-xl text-[#2A0F5F] w-6 shrink-0">
-                    {i + 1}.
-                  </span>
-                  <span>{t}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        )}
-
         {plan.encouragement && (
-          <div className="mt-6 text-center px-2">
+          <div className="mt-8 text-center px-2">
             <p className="font-serif text-lg text-[#2A0F5F] italic leading-snug">
               {plan.encouragement}
             </p>
           </div>
         )}
       </div>
+
+      {/* New structured next steps replaces the old plan.this_week block */}
+      {(plan.recommended_next_steps || plan.this_week) && (
+        <NextStepsPanel
+          nextSteps={
+            plan.recommended_next_steps ||
+            { this_week: plan.this_week }
+          }
+        />
+      )}
 
       {history.length > 1 && (
         <HistoryList
