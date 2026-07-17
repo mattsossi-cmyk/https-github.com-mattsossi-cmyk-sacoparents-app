@@ -14,6 +14,8 @@ import AuthCallback from "@/pages/AuthCallback";
 import Dashboard from "@/pages/Dashboard";
 import MyPlan from "@/pages/MyPlan";
 import Gmail from "@/pages/Gmail";
+import Neurodivergent from "@/pages/Neurodivergent";
+import NeurodivergentReports from "@/pages/NeurodivergentReports";
 import ChildGoals from "@/pages/ChildGoals";
 import IssuesConcerns from "@/pages/IssuesConcerns";
 import PriorityRanking from "@/pages/PriorityRanking";
@@ -136,6 +138,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Gmail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/neurodivergent"
+          element={
+            <ProtectedRoute>
+              <Neurodivergent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/neurodivergent/reports"
+          element={
+            <ProtectedRoute>
+              <NeurodivergentReports />
             </ProtectedRoute>
           }
         />

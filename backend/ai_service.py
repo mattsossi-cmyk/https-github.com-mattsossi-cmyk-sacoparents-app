@@ -547,3 +547,188 @@ Return ONLY valid JSON in this exact shape:
         "safety_flag": bool(data.get("safety_flag", False)),
     }
 
+
+
+# ============ Neurodivergent Child Pathway ============
+
+_ND_REPORT_INSTRUCTIONS = {
+    "needs_summary": {
+        "role": (
+            "You are a compassionate co-parenting educator helping a parent "
+            "write a short, warm 'Child Needs & Strengths Summary' about "
+            "their neurodivergent (or additional-needs) child. This is a "
+            "preparation document. It is NOT a diagnosis and NOT medical or "
+            "legal advice."
+        ),
+        "goal": (
+            "Produce a warm, plain-language 300-450 word summary that a "
+            "co-parent, mediator, teacher, or therapist could read in under "
+            "two minutes and immediately understand: (1) who this child is "
+            "at their best (strengths first), (2) how they communicate and "
+            "regulate, (3) sensory profile essentials, (4) the small handful "
+            "of things that reliably help."
+        ),
+        "structure": (
+            "Use short paragraphs and gentle prose. Open with strengths. "
+            "Then a paragraph on how they communicate. Then a paragraph on "
+            "sensory + regulation. Then a paragraph on what helps. Never "
+            "use clinical or diagnostic language the parent didn't use "
+            "themselves. Refer to the child by the name the parent provided."
+        ),
+    },
+    "two_home_plan": {
+        "role": (
+            "You are a compassionate co-parenting educator helping a parent "
+            "draft a 'Two-Home Support & Transition Plan' — a set of "
+            "concrete, practical suggestions for keeping enough consistency "
+            "between two households so their neurodivergent child feels "
+            "understood and supported. This is NOT a legal document."
+        ),
+        "goal": (
+            "Produce a practical plan (400-600 words) that a co-parent could "
+            "actually follow. Focus on routines, transitions between homes, "
+            "and communication about the child. The goal is NOT to make "
+            "both homes identical — it is enough consistency for the child "
+            "to feel safe."
+        ),
+        "structure": (
+            "Use short, scannable sections with clear headings like "
+            "'Routines to keep consistent', 'Handling transitions between "
+            "homes', 'When your child becomes overwhelmed', 'What we tell "
+            "each other'. Use bullet lists where appropriate. Keep it "
+            "child-centred, non-blaming, and specific."
+        ),
+    },
+    "mediation_statement": {
+        "role": (
+            "You are a compassionate co-parenting educator helping a parent "
+            "prepare a short 'Neurodivergent Child Mediation Statement' "
+            "they can bring to a mediation session, family lawyer meeting, "
+            "or parenting-plan discussion. This is a preparation tool. It "
+            "is NOT legal advice."
+        ),
+        "goal": (
+            "Produce a calm, dignified 250-400 word statement written in "
+            "the parent's own voice ('I' / 'we'). It should state what the "
+            "child needs, why consistency matters, and what the parent "
+            "hopes the co-parent (and any professional) will help them "
+            "protect. It must be firm but not adversarial — no blame, no "
+            "character attacks."
+        ),
+        "structure": (
+            "One paragraph introducing the child (name, age, brief "
+            "description in the parent's language). One paragraph on what "
+            "the child needs across both homes. One paragraph on what the "
+            "parent hopes the parenting arrangement will preserve. Close "
+            "with one sentence about the child's future. No headings, just "
+            "flowing prose."
+        ),
+    },
+}
+
+
+def _format_nd_answers(answers: Dict[str, Any], questions: List[Dict[str, Any]]) -> str:
+    """Render the answers as a readable Q&A block for the LLM."""
+    lines: List[str] = []
+    q_by_id = {q["id"]: q for q in questions}
+    for qid, value in answers.items():
+        q = q_by_id.get(qid)
+        if not q:
+            continue
+        prompt = q["prompt"]
+        if isinstance(value, list):
+            v = ", ".join(str(x) for x in value if x is not None)
+        elif value is None:
+            v = "(no answer)"
+        else:
+            v = str(value)
+        v = v.strip()
+        if not v:
+            continue
+        lines.append(f"Q: {prompt}\nA: {v}\n")
+    return "\n".join(lines) if lines else "(no answers yet)"
+
+
+async def generate_nd_report(
+    *,
+    report_type: str,
+    answers: Dict[str, Any],
+    parent_name: Optional[str],
+    questions: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Generate a single neurodivergent-pathway report of the given type."""
+    instructions = _ND_REPORT_INSTRUCTIONS.get(report_type)
+    if not instructions:
+        raise ValueError(f"Unknown report_type: {report_type}")
+
+    system_prompt = (
+        f"{instructions['role']} Output STRICT JSON only, no other text."
+    )
+
+    answers_block = _format_nd_answers(answers, questions)
+    parent_line = f"The parent's name is {parent_name}." if parent_name else ""
+
+    prompt = f"""{parent_line}
+
+The parent has answered the following questions about their child. Some
+answers may be short or missing — that's fine, work with what you have.
+
+=== PARENT'S ANSWERS ===
+{answers_block}
+
+=== YOUR TASK ===
+{instructions['goal']}
+
+=== STRUCTURE ===
+{instructions['structure']}
+
+=== HARD CONSTRAINTS ===
+- Do NOT invent facts the parent didn't say.
+- Do NOT diagnose or use clinical language the parent didn't use themselves.
+- Do NOT give medical or legal advice.
+- Do NOT be preachy or use hedged corporate language.
+- Refer to the child by the name the parent provided (or 'your child' if
+  they didn't provide one).
+- Warm, plain, specific. Written for a tired co-parent, not a committee.
+
+Return ONLY valid JSON in this exact shape:
+{{
+  "content": "string — the full report body, plain text with newlines and simple markdown-style headings if the structure calls for them",
+  "highlights": ["short bullet 1", "short bullet 2", "short bullet 3"]
+}}
+The 'highlights' field is 3-5 short bullets summarising the single most
+important takeaways from this report (each ≤ 100 characters).
+"""
+
+    chat = _make_chat(system_prompt)
+    response = await chat.send_message(UserMessage(text=prompt))
+    data = _extract_json(response)
+    # Defensive: Claude occasionally returns a list of sections instead of a
+    # single {content, highlights} object — coerce back to our shape.
+    if isinstance(data, list):
+        # If the list looks like [{content:..., highlights:...}] use the first.
+        if data and isinstance(data[0], dict) and ("content" in data[0] or "highlights" in data[0]):
+            data = data[0]
+        else:
+            # Otherwise join list items as sections of the content.
+            joined = []
+            for item in data:
+                if isinstance(item, dict):
+                    heading = item.get("heading") or item.get("title") or ""
+                    body = item.get("content") or item.get("body") or ""
+                    if heading:
+                        joined.append(f"## {heading}\n{body}")
+                    elif body:
+                        joined.append(str(body))
+                else:
+                    joined.append(str(item))
+            data = {"content": "\n\n".join(joined), "highlights": []}
+    if not isinstance(data, dict):
+        data = {"content": str(data), "highlights": []}
+    content = (data.get("content") or "").strip()
+    highlights = data.get("highlights") or []
+    if not isinstance(highlights, list):
+        highlights = []
+    highlights = [str(h).strip() for h in highlights if str(h).strip()][:5]
+    return {"content": content, "highlights": highlights}
+

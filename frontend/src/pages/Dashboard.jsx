@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
-import { CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight, Puzzle } from "lucide-react";
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
 const REPORT_LABEL = {
@@ -525,6 +525,33 @@ export default function Dashboard() {
             <InviteCoparentCard variant="dashboard" />
           </div>
         )}
+
+        {/* Neurodivergent / additional-needs optional pathway */}
+        <div className="mt-6">
+          <Link
+            to="/neurodivergent"
+            data-testid="dashboard-neurodivergent-card"
+            className="group flex items-center gap-4 rounded-3xl bg-white border border-[#E5E0EE] hover:border-[#3D1A78] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+          >
+            <div className="shrink-0 w-12 h-12 rounded-full bg-[#F1EBFA] grid place-items-center text-[#3D1A78]">
+              <Puzzle size={22} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-0.5">
+                Optional pathway
+              </div>
+              <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
+                Does your child have additional needs?
+              </div>
+              <p className="text-xs sm:text-sm text-[#4B4567] leading-relaxed">
+                A gentle, one-question-at-a-time space to describe your neurodivergent
+                child in your own words — and generate three warm reports to share
+                with a co-parent, teacher, or therapist.
+              </p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-[#3D1A78]" />
+          </Link>
+        </div>
 
         <div className="mt-8">
           <div className="eyebrow mb-4">For the kids</div>
