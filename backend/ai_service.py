@@ -238,29 +238,74 @@ async def generate_summary(
     prep: Dict[str, Any],
     user_name: str,
     previous: Optional[Dict[str, Any]] = None,
+    readiness: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    """Generate the Co-Parenting Assessment report (court-respectable structure).
+
+    The `readiness` argument is the deterministic rule-based score bundle
+    from readiness_scoring.compute_readiness() — the AI interprets those
+    numbers into narrative but does not invent them.
+    """
     chat = _make_chat(SUMMARY_SYSTEM)
     prev_block = _previous_context_block(previous, scope="full")
     changes_instruction = _CHANGES_INSTRUCTION if previous else ""
-    prompt = f"""Generate a mediation prep summary for {user_name}.
+
+    readiness_block = ""
+    if readiness:
+        readiness_block = f"""
+=== READINESS SCORES (deterministic — do NOT change the numbers) ===
+Overall: {readiness['overall']}/100 ({readiness['label']})
+Communication:    {readiness['dimensions']['communication']['score']}/100
+Trust:            {readiness['dimensions']['trust']['score']}/100
+Child alignment:  {readiness['dimensions']['child_alignment']['score']}/100
+Conflict (higher = better): {readiness['dimensions']['conflict']['score']}/100
+Signals feeding the scores: {json.dumps({k: v['reasons'] for k, v in readiness['dimensions'].items()})}
+"""
+
+    prompt = f"""Generate a court-respectable Co-Parenting Assessment for {user_name}.
 
 Their CURRENT preparation data:
 {json.dumps(prep, indent=2, default=str)}
-{prev_block}
+{prev_block}{readiness_block}
+This report will be shared with mediators, therapists, and family lawyers.
+It must read as a professional evaluation document — dignified, evidence-based,
+and child-centred. Refer to the parent as "the parent" or by first name.
+Never blame the other parent. Ground every claim in the parent's own answers.
+
 Return strict JSON only with these exact keys:
 {{
-  "child_goals_summary": "1-2 sentence synthesis of their child-centered goals",
-  "top_concerns": ["3-5 top concerns, each a short phrase"],
+  "executive_summary": "2-3 sentences setting the scene: who is preparing, for what, and how they arrive at this moment. Neutral, dignified tone.",
+  "child_priorities": ["3-6 short phrases describing what this parent is prioritising for their child — pulled from child_goals and priority answers"],
+  "parent_strengths": ["3-5 short phrases naming the parent's demonstrated strengths (from goals articulated, communication self-awareness, safety awareness, willingness to prepare, etc.)"],
+  "areas_of_concern": ["2-4 short phrases naming the areas the parent themselves has flagged as difficult or requiring support — never diagnostic, always in the parent's own frame"],
+  "readiness_narrative": "2-3 sentence interpretation of the OVERALL readiness score in plain, warm language. Do NOT restate the number — describe what it means for how mediation might go.",
+  "dimension_narratives": {{
+    "communication": "1 sentence describing what this score means in practice",
+    "trust": "1 sentence describing what this score means in practice",
+    "child_alignment": "1 sentence describing what this score means in practice",
+    "conflict": "1 sentence describing what this score means in practice"
+  }},
+  "recommended_next_steps": {{
+    "this_week": ["2-3 concrete, specific actions the parent can take in the next 7 days — each starts with a verb"],
+    "before_mediation": ["2-3 concrete preparation steps to complete before the actual mediation session"],
+    "long_term": ["1-2 growth intentions to keep in view over the next 3 months"]
+  }},
+  "notes_for_mediator": "2-3 sentences of context a mediator should know — neutral, respectful, does not disparage the co-parent",
+  "top_concerns": ["2-4 top logistical concerns to raise in session (schedule/communication/finances/safety) — legacy field, keep populated"],
   "priority_agenda": [
     {{"rank": 1, "topic": "...", "category": "urgent|difficult|easy|compromise"}}
   ],
-  "flexibility_areas": ["areas where the parent is open to compromise"],
-  "communication_goals": ["3 short communication intentions for the session"],
-  "notes_for_mediator": "2-3 sentences of context the mediator should know, neutral tone",
+  "flexibility_areas": ["3-5 short phrases describing where the parent has stated openness to compromise"],
+  "communication_goals": ["3 short communication intentions the parent wants to hold in session"],
   "readiness_label": "one of: Needs Support, Moderately Ready, Prepared for Mediation",
   "readiness_score": integer 1-100,
   "changes_since_last": "ONLY if a previous version exists — a warm, specific summary of what has changed. Otherwise empty string."
 }}
+
+Constraints:
+- Do NOT recompute readiness_score or readiness_label — use the deterministic values from the READINESS SCORES block above if provided.
+- Every strength/priority/concern must be grounded in the parent's actual answers. No fabrication.
+- Tone: warm, professional, evaluator-like. Never breezy, never clinical-cold.
 {changes_instruction}"""
     response = await chat.send_message(UserMessage(text=prompt))
     return _extract_json(response)
@@ -356,13 +401,17 @@ Important:
     return _extract_json(response)
 
 AGREEMENT_SYSTEM = (
-    "You are a co-parenting agreement drafting assistant. Take what each parent has "
+    "You are a co-parenting alignment specialist. You take what one parent has "
     "captured during their preparation and translate it into a CALM, NEUTRAL, "
-    "CHILD-CENTERED DRAFT agreement that two co-parents could review together. "
-    "This is NOT a legal document — it is a starting point for discussion. "
-    "Use first-person plural ('we', 'our') where natural. Avoid blame, never name "
-    "either parent. Keep each clause short, factual, and constructive. "
-    "Output strict JSON only — no prose outside the JSON."
+    "CHILD-CENTERED Alignment Statement that two co-parents could bring to a "
+    "mediator, therapist, or family lawyer as a starting point for discussion. "
+    "This is NOT a legal document — it is a professionally-structured summary "
+    "of where alignment already exists, where it is still needed, and what the "
+    "parent proposes moving forward. Use first-person plural ('we', 'our') "
+    "when talking about shared goals; use 'the parent' when describing that "
+    "individual's proposals. Never blame, never name either parent. Keep every "
+    "clause short, factual, and constructive. Output strict JSON only — no "
+    "prose outside the JSON."
 )
 
 
@@ -370,20 +419,40 @@ async def generate_agreement_draft(
     prep: Dict[str, Any],
     user_name: str,
     previous: Optional[Dict[str, Any]] = None,
+    readiness: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     chat = _make_chat(AGREEMENT_SYSTEM)
     prev_block = _previous_context_block(previous, scope="agreement")
     changes_instruction = _CHANGES_INSTRUCTION if previous else ""
-    prompt = f"""Draft a co-parenting agreement for {user_name} based ONLY on this
-preparation data (ignore any communication-style or readiness data).
+
+    alignment_block = ""
+    if readiness:
+        alignment_block = f"""
+=== ALIGNMENT SIGNALS (reference — do not restate the numbers) ===
+Child alignment score: {readiness['dimensions']['child_alignment']['score']}/100
+Overall readiness:     {readiness['overall']}/100 ({readiness['label']})
+Signals: {json.dumps({k: v['reasons'] for k, v in readiness['dimensions'].items()})}
+"""
+
+    prompt = f"""Draft a court-respectable Alignment Statement for {user_name}.
 
 CURRENT preparation data:
 {json.dumps(prep, indent=2, default=str)}
-{prev_block}
+{prev_block}{alignment_block}
+This document will be shared with mediators and family professionals as an
+evidence-based starting point for co-parenting conversations. It must read
+as a dignified statement of intent — never sarcastic, never blaming, always
+child-first.
+
 Return strict JSON only with these exact keys:
 {{
-  "overview": "1-2 sentence warm intro framing this as a child-centered draft",
-  "shared_goals": ["3-6 short statements of what we want our child to experience"],
+  "executive_summary": "2-3 sentence dignified opening — what this document is, what the parent is proposing, why the child is at the centre",
+  "shared_goals": ["3-6 short statements of what we want our child to experience — pulled from child_goals"],
+  "areas_of_alignment": [
+    {{"area": "Communication|Child needs|Household rhythms|Other", "statement": "one neutral sentence — 'We agree that...' — max ~24 words"}}
+  ],
+  "areas_needing_discussion": ["3-6 short topics where clear alignment has NOT yet been captured — phrased neutrally as 'we still need to discuss X'"],
+  "parent_strengths": ["3-4 short phrases naming what the parent brings to the conversation — grounded in their actual answers"],
   "communication": [
     {{"area": "Texting|Response times|Emergency|Other", "agreement": "one neutral sentence"}}
   ],
@@ -396,16 +465,21 @@ Return strict JSON only with these exact keys:
   "priority_items": [
     {{"rank": 1, "topic": "...", "category": "urgent|difficult|easy|compromise"}}
   ],
-  "open_for_discussion": ["topics where no clear agreement was captured yet"],
-  "closing_note": "one warm sentence framing this as a living draft to revisit together",
-  "changes_since_last": "ONLY if a previous version exists — a short neutral list-style summary of what changed (new clauses, removed clauses, refined wording). Otherwise empty string."
+  "recommended_next_steps": {{
+    "this_week": ["2-3 concrete actions the parent proposes this week"],
+    "before_next_conversation": ["2-3 items to prepare before the next co-parenting conversation"],
+    "for_the_mediator": ["1-2 short things the parent asks the mediator to help facilitate"]
+  }},
+  "closing_note": "one warm sentence framing this as a living document that will grow with the conversation",
+  "changes_since_last": "ONLY if a previous version exists — a short neutral list-style summary of what changed. Otherwise empty string."
 }}
 
 Important:
-- Do NOT include any parenting-schedule or financial clauses, even if such data was captured. Those topics will be handled separately.
+- Do NOT include any parenting-schedule or financial clauses, even if such data was captured.
 - If a section has NO captured input, return an empty array [] (do NOT invent content).
-- Spell every co-parent input faithfully; do not add legal-sounding language.
-- Keep each "agreement" clause under ~24 words.
+- Do NOT add legal-sounding language.
+- Keep each clause under ~24 words.
+- Tone: dignified, warm, evaluator-grade.
 {changes_instruction}"""
     response = await chat.send_message(UserMessage(text=prompt))
     return _extract_json(response)

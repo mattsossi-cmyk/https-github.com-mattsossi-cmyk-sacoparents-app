@@ -24,6 +24,8 @@ import {
   PenSquare,
   BookmarkPlus,
 } from "lucide-react";
+import ReadinessDashboard from "../components/ReadinessDashboard";
+import NextStepsPanel from "../components/NextStepsPanel";
 
 /* ------------------------------ shared bits ------------------------------ */
 
@@ -144,6 +146,26 @@ function ClauseList({ items }) {
             {it.area}
           </div>
           <div className="text-[#1A1330] leading-relaxed">{it.agreement}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AlignmentList({ items }) {
+  if (!items || !items.length)
+    return <p className="text-sm italic text-[#857E9C]">(none captured)</p>;
+  return (
+    <div className="space-y-3">
+      {items.map((it, i) => (
+        <div
+          key={`${it.area}-${i}`}
+          className="rounded-xl border-l-4 border-[#2DB5B5] bg-white px-4 py-3"
+        >
+          <div className="text-xs uppercase tracking-[0.2em] text-[#2DB5B5] mb-1 font-semibold">
+            {it.area}
+          </div>
+          <div className="text-[#1A1330] leading-relaxed">{it.statement}</div>
         </div>
       ))}
     </div>
@@ -304,9 +326,11 @@ function MediationSummaryTab() {
   return (
     <div className="space-y-6" data-testid="summary-card">
       <PersonalizedRecommendations summary={summary} />
+
+      {/* Court-quality Co-Parenting Assessment layout */}
       <div className="card-soft p-8">
         <HeaderRow
-          eyebrow="Readiness"
+          eyebrow="Co-Parenting Assessment"
           title={
             <>
               {summary.readiness_label}{" "}
@@ -331,12 +355,50 @@ function MediationSummaryTab() {
 
         <ChangesSinceLast text={summary.changes_since_last} />
 
-        <Section title="Child-centered goals">
-          <p className="text-[#1A1330] leading-relaxed">
-            {summary.child_goals_summary}
-          </p>
-        </Section>
-        <Section title="Top concerns">
+        {summary.executive_summary && (
+          <Section title="Executive summary">
+            <p className="text-[#1A1330] leading-relaxed">
+              {summary.executive_summary}
+            </p>
+          </Section>
+        )}
+
+        {summary.child_goals_summary && !summary.executive_summary && (
+          <Section title="Child-centered goals">
+            <p className="text-[#1A1330] leading-relaxed">
+              {summary.child_goals_summary}
+            </p>
+          </Section>
+        )}
+      </div>
+
+      {/* Readiness dashboard with 4-dimension bars */}
+      {summary.readiness && (
+        <ReadinessDashboard
+          readiness={summary.readiness}
+          narrative={summary.readiness_narrative}
+          dimensionNarratives={summary.dimension_narratives}
+        />
+      )}
+
+      {/* Court-quality body */}
+      <div className="card-soft p-8">
+        {summary.child_priorities && summary.child_priorities.length > 0 && (
+          <Section title="Child priorities">
+            <BulletList items={summary.child_priorities} />
+          </Section>
+        )}
+        {summary.parent_strengths && summary.parent_strengths.length > 0 && (
+          <Section title="Parent strengths">
+            <BulletList items={summary.parent_strengths} />
+          </Section>
+        )}
+        {summary.areas_of_concern && summary.areas_of_concern.length > 0 && (
+          <Section title="Areas of concern">
+            <BulletList items={summary.areas_of_concern} />
+          </Section>
+        )}
+        <Section title="Top concerns to raise">
           <BulletList items={summary.top_concerns} />
         </Section>
         <Section title="Priority agenda">
@@ -354,6 +416,11 @@ function MediationSummaryTab() {
           </p>
         </Section>
       </div>
+
+      {/* Next Steps momentum block */}
+      {summary.recommended_next_steps && (
+        <NextStepsPanel nextSteps={summary.recommended_next_steps} />
+      )}
 
       {history.length > 1 && (
         <HistoryList
@@ -481,8 +548,8 @@ function AgreementDraftTab() {
     <div className="space-y-6" data-testid="agreement-card">
       <div className="card-soft p-8">
         <HeaderRow
-          eyebrow="Draft"
-          title="Co-Parenting Agreement"
+          eyebrow="Alignment Statement"
+          title="Co-Parenting Alignment Statement"
           onRegenerate={generate}
           onDownload={download}
           onShare={shareText}
@@ -497,29 +564,61 @@ function AgreementDraftTab() {
 
         <ChangesSinceLast text={agreement.changes_since_last} />
 
-        {agreement.overview && (
+        {agreement.executive_summary && (
+          <Section title="Executive summary">
+            <p className="text-[#1A1330] leading-relaxed">
+              {agreement.executive_summary}
+            </p>
+          </Section>
+        )}
+        {agreement.overview && !agreement.executive_summary && (
           <Section title="Overview">
             <p className="text-[#1A1330] leading-relaxed italic">
               {agreement.overview}
             </p>
           </Section>
         )}
+      </div>
+
+      {agreement.readiness && (
+        <ReadinessDashboard
+          readiness={agreement.readiness}
+          narrative={undefined}
+        />
+      )}
+
+      <div className="card-soft p-8">
         <Section title="Shared goals for our child">
           <BulletList items={agreement.shared_goals} />
         </Section>
+        {agreement.areas_of_alignment && agreement.areas_of_alignment.length > 0 && (
+          <Section title="Areas of alignment">
+            <AlignmentList items={agreement.areas_of_alignment} />
+          </Section>
+        )}
+        {agreement.parent_strengths && agreement.parent_strengths.length > 0 && (
+          <Section title="Parent strengths">
+            <BulletList items={agreement.parent_strengths} />
+          </Section>
+        )}
+        {agreement.areas_needing_discussion && agreement.areas_needing_discussion.length > 0 && (
+          <Section title="Areas needing discussion">
+            <BulletList items={agreement.areas_needing_discussion} />
+          </Section>
+        )}
         <Section title="Communication">
           <ClauseList items={agreement.communication} />
         </Section>
         <Section title="Child needs">
           <ClauseList items={agreement.child_needs} />
         </Section>
-        <Section title="Household rules">
+        <Section title="Household rhythms">
           <ClauseList items={agreement.household_rules} />
         </Section>
         <Section title="Priority topics to discuss">
           <PriorityAgenda items={agreement.priority_items} />
         </Section>
-        {agreement.open_for_discussion?.length > 0 && (
+        {agreement.open_for_discussion?.length > 0 && !agreement.areas_needing_discussion?.length && (
           <Section title="Open for discussion">
             <BulletList items={agreement.open_for_discussion} />
           </Section>
@@ -533,11 +632,15 @@ function AgreementDraftTab() {
         )}
 
         <div className="mt-6 rounded-xl bg-[#C28771]/8 border border-[#C28771]/25 px-4 py-3 text-xs text-[#4B4567]">
-          This is a working draft to start a conversation — not a legal document.
-          Review it together with your co-parent and, when ready, with a mediator or
-          attorney.
+          This Alignment Statement is a working document to start a conversation
+          — not a legal document. Review it together with your co-parent and,
+          when ready, with a mediator or family lawyer.
         </div>
       </div>
+
+      {agreement.recommended_next_steps && (
+        <NextStepsPanel nextSteps={agreement.recommended_next_steps} />
+      )}
 
       {history.length > 1 && (
         <HistoryList

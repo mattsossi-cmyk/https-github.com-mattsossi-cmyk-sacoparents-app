@@ -223,10 +223,20 @@ async def generate_summary(
             detail="Please complete at least Child Goals or Issues first.",
         )
     previous = await _previous_doc(db, "summaries", current.user_id)
+    # Compute deterministic readiness scores from raw prep data (0-100 per
+    # dimension, plus overall). The AI narrative interprets these numbers
+    # but never changes them.
+    from readiness_scoring import compute_readiness  # local import
+    readiness = compute_readiness(prep)
     try:
-        summary = await ai_service.generate_summary(prep, current.name, previous)
+        summary = await ai_service.generate_summary(prep, current.name, previous, readiness=readiness)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI summary failed: {e}")
+
+    # Force the deterministic values onto the summary — trust the math, not the LLM.
+    summary["readiness_score"] = readiness["overall"]
+    summary["readiness_label"] = readiness["label"]
+    summary["readiness"] = readiness
 
     summary_id = f"sum_{uuid.uuid4().hex[:12]}"
     doc = {
@@ -331,10 +341,17 @@ async def generate_agreement(
         "priority": prep.get("priority"),
     }
     previous = await _previous_doc(db, "agreements", current.user_id)
+    from readiness_scoring import compute_readiness  # local import
+    readiness = compute_readiness(prep)
     try:
-        agreement = await ai_service.generate_agreement_draft(focused, current.name, previous)
+        agreement = await ai_service.generate_agreement_draft(
+            focused, current.name, previous, readiness=readiness
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI agreement failed: {e}")
+
+    # Attach the deterministic readiness bundle so the frontend can draw bars.
+    agreement["readiness"] = readiness
 
     agreement_id = f"agr_{uuid.uuid4().hex[:12]}"
     doc = {
