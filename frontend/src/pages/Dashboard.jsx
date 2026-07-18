@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
-import { CheckCircle2, ChevronRight, Puzzle } from "lucide-react";
+import { CheckCircle2, ChevronRight, Puzzle, Shield } from "lucide-react";
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
 const REPORT_LABEL = {
@@ -551,6 +551,32 @@ export default function Dashboard() {
               </p>
             </div>
             <ChevronRight size={16} className="shrink-0 text-[#3D1A78]" />
+          </Link>
+
+          {/* Safety / IPV Assessment — sits directly beneath Special Needs */}
+          <Link
+            to="/safety"
+            data-testid="dashboard-safety-assessment-card"
+            className="mt-4 group flex items-center gap-4 rounded-3xl bg-white border border-[#E5E0EE] hover:border-[#C28771] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+          >
+            <div className="shrink-0 w-12 h-12 rounded-full bg-[#F8EDE4] grid place-items-center text-[#C28771]">
+              <Shield size={22} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#C28771] mb-0.5">
+                Safety Assessment
+              </div>
+              <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
+                Is it safe to co-parent through direct communication?
+              </div>
+              <p className="text-xs sm:text-sm text-[#4B4567] leading-relaxed">
+                A confidential, DA-informed intimate-partner-violence
+                screening. Not a diagnosis and not legal advice — a private
+                space to name what&apos;s happening and, if needed, be pointed
+                to safer pathways than mediation.
+              </p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-[#C28771]" />
           </Link>
         </div>
 
