@@ -289,15 +289,15 @@ export default function Neurodivergent() {
 
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="eyebrow text-[#3D1A78]">Optional pathway</div>
+              <div className="eyebrow text-[#3D1A78]">Special Needs Assessment</div>
               <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mt-1" data-testid="nd-title">
-                Supporting your neurodivergent child across two homes
+                Supporting your child across two homes
               </h1>
               <p className={`mt-2 text-[#4B4567] max-w-2xl ${prefs.fontClass}`}>
-                A gentle, one-question-at-a-time space to describe your child in
-                your own words. Nothing here diagnoses anyone. Nothing here is
-                legal or medical advice. Take your time — your answers save as
-                you go.
+                A gentle, one-question-at-a-time space to describe your child
+                in your own words — across six practical pillars. Nothing here
+                diagnoses anyone. Nothing here is legal or medical advice. Take
+                your time — your answers save as you go.
               </p>
             </div>
             <div className="flex flex-wrap gap-2 items-center">

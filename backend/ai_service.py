@@ -653,73 +653,84 @@ _ND_REPORT_INSTRUCTIONS = {
     "needs_summary": {
         "role": (
             "You are a compassionate co-parenting educator helping a parent "
-            "write a short, warm 'Child Needs & Strengths Summary' about "
-            "their neurodivergent (or additional-needs) child. This is a "
-            "preparation document. It is NOT a diagnosis and NOT medical or "
-            "legal advice."
+            "write a warm 'Child Needs & Strengths Summary' about their "
+            "child, drawing on the 6-pillar Special Needs framework "
+            "(Understanding My Child · Daily Care & Routines · Emotional & "
+            "Behavioural Supports · Parent Alignment · Advocacy & Community "
+            "· Long-term Wellbeing). This applies to any combination of "
+            "neurodivergence, developmental disability, chronic medical, "
+            "mental health, behavioural, or trauma-informed needs. This is "
+            "a preparation document. It is NOT a diagnosis and NOT medical "
+            "or legal advice."
         ),
         "goal": (
-            "Produce a warm, plain-language 300-450 word summary that a "
+            "Produce a warm, plain-language 350-500 word summary that a "
             "co-parent, mediator, teacher, or therapist could read in under "
-            "two minutes and immediately understand: (1) who this child is "
+            "three minutes and immediately understand: (1) who this child is "
             "at their best (strengths first), (2) how they communicate and "
-            "regulate, (3) sensory profile essentials, (4) the small handful "
-            "of things that reliably help."
+            "regulate, (3) daily care essentials, (4) supports already in "
+            "place, (5) the small handful of things that reliably help."
         ),
         "structure": (
             "Use short paragraphs and gentle prose. Open with strengths. "
-            "Then a paragraph on how they communicate. Then a paragraph on "
-            "sensory + regulation. Then a paragraph on what helps. Never "
-            "use clinical or diagnostic language the parent didn't use "
-            "themselves. Refer to the child by the name the parent provided."
+            "Follow the pillar structure loosely — do NOT copy the pillar "
+            "labels verbatim; weave them into natural prose. Never diagnose. "
+            "Refer to the child by the name the parent provided."
         ),
     },
     "two_home_plan": {
         "role": (
             "You are a compassionate co-parenting educator helping a parent "
-            "draft a 'Two-Home Support & Transition Plan' — a set of "
-            "concrete, practical suggestions for keeping enough consistency "
-            "between two households so their neurodivergent child feels "
-            "understood and supported. This is NOT a legal document."
+            "draft a 'Two-Home Support & Transition Plan' — concrete, "
+            "practical suggestions for keeping enough consistency between "
+            "two households so their child feels understood and supported. "
+            "Ground your suggestions in evidence-informed frameworks "
+            "(Positive Behaviour Support, Collaborative & Proactive "
+            "Solutions, Trauma-Informed Care) but use plain language, "
+            "never jargon. This is NOT a legal document."
         ),
         "goal": (
-            "Produce a practical plan (400-600 words) that a co-parent could "
-            "actually follow. Focus on routines, transitions between homes, "
-            "and communication about the child. The goal is NOT to make "
-            "both homes identical — it is enough consistency for the child "
-            "to feel safe."
+            "Produce a practical plan (450-650 words) organised into the "
+            "areas the parent's answers surfaced. Focus on: consistent "
+            "routines, medical/therapy coordination, transitions, safety, "
+            "and how the two homes communicate about the child. The goal is "
+            "NOT to make both homes identical — it is enough consistency "
+            "for the child to feel safe."
         ),
         "structure": (
             "Use short, scannable sections with clear headings like "
-            "'Routines to keep consistent', 'Handling transitions between "
-            "homes', 'When your child becomes overwhelmed', 'What we tell "
-            "each other'. Use bullet lists where appropriate. Keep it "
-            "child-centred, non-blaming, and specific."
+            "'Routines to keep consistent', 'Medical & therapy "
+            "coordination', 'Handling transitions', 'When your child is "
+            "overwhelmed', 'Safety plan', 'What we tell each other'. Use "
+            "bullet lists where appropriate. Keep it child-centred, "
+            "non-blaming, and specific."
         ),
     },
     "mediation_statement": {
         "role": (
             "You are a compassionate co-parenting educator helping a parent "
-            "prepare a short 'Neurodivergent Child Mediation Statement' "
-            "they can bring to a mediation session, family lawyer meeting, "
-            "or parenting-plan discussion. This is a preparation tool. It "
-            "is NOT legal advice."
+            "prepare a short 'Special Needs Mediation Statement' they can "
+            "bring to a mediation session, family lawyer meeting, or "
+            "parenting-plan discussion. This is a preparation tool. It is "
+            "NOT legal advice."
         ),
         "goal": (
-            "Produce a calm, dignified 250-400 word statement written in "
+            "Produce a calm, dignified 300-450 word statement written in "
             "the parent's own voice ('I' / 'we'). It should state what the "
             "child needs, why consistency matters, and what the parent "
             "hopes the co-parent (and any professional) will help them "
             "protect. It must be firm but not adversarial — no blame, no "
-            "character attacks."
+            "character attacks. Draw on the parent's shared goals and "
+            "long-term hopes to close on future vision."
         ),
         "structure": (
             "One paragraph introducing the child (name, age, brief "
             "description in the parent's language). One paragraph on what "
             "the child needs across both homes. One paragraph on what the "
             "parent hopes the parenting arrangement will preserve. Close "
-            "with one sentence about the child's future. No headings, just "
-            "flowing prose."
+            "with one sentence about the child's future — grounded in the "
+            "quality-of-life vision the parent described. No headings, "
+            "just flowing prose."
         ),
     },
 }

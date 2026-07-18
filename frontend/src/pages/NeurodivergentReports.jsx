@@ -128,7 +128,7 @@ export default function NeurodivergentReports() {
 
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="eyebrow text-[#3D1A78]">Your reports</div>
+            <div className="eyebrow text-[#3D1A78]">Special Needs Assessment</div>
             <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mt-1" data-testid="nd-reports-title">
               Supporting your child across two homes
             </h1>
