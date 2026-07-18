@@ -555,7 +555,7 @@ export default function Dashboard() {
 
           {/* Safety / IPV Assessment — sits directly beneath Special Needs */}
           <Link
-            to="/safety"
+            to="/safety-assessment"
             data-testid="dashboard-safety-assessment-card"
             className="mt-4 group flex items-center gap-4 rounded-3xl bg-white border border-[#E5E0EE] hover:border-[#C28771] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
           >

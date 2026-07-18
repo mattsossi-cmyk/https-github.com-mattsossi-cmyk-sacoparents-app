@@ -556,6 +556,60 @@ export default function SafetyAssessment() {
               </a>
             </div>
 
+            {/* 4-dimension clinical model — Safety is one of four separate lenses */}
+            <div className="rounded-2xl border border-[#E5E0EE] bg-[#F8F5FF] p-5 sm:p-6 mb-6" data-testid="four-dimension-model">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 rounded-full bg-[#3D1A78]/12 grid place-items-center text-[#3D1A78] text-[10px] font-bold">
+                  1/4
+                </div>
+                <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                  Where this assessment sits in the bigger picture
+                </div>
+              </div>
+              <p className="text-sm text-[#4B4567] leading-relaxed mb-4">
+                We evaluate co-parenting on four separate dimensions, so that a
+                communication difference (for example, from autism or ADHD) is
+                never confused with a genuine safety concern. This
+                assessment focuses on the first one — <strong>Safety</strong>.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="rounded-xl border-2 border-[#C28771] bg-white p-3">
+                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#C28771] mb-1">
+                    Dimension 1 · Safety <span className="text-[#857E9C]">(you are here)</span>
+                  </div>
+                  <div className="text-sm text-[#1A1330] font-semibold mb-1">IPV, coercive control, fear</div>
+                  <div className="text-xs text-[#4B4567]">→ Safety recommendations &amp; safer pathways</div>
+                </div>
+                <div className="rounded-xl border border-[#E5E0EE] bg-white p-3">
+                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
+                    Dimension 2 · Communication
+                  </div>
+                  <div className="text-sm text-[#1A1330] font-semibold mb-1">Communication profile</div>
+                  <div className="text-xs text-[#4B4567]">→ Communication strategies</div>
+                </div>
+                <div className="rounded-xl border border-[#E5E0EE] bg-white p-3">
+                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
+                    Dimension 3 · Emotional regulation
+                  </div>
+                  <div className="text-sm text-[#1A1330] font-semibold mb-1">Stress &amp; conflict response</div>
+                  <div className="text-xs text-[#4B4567]">→ Regulation tools</div>
+                </div>
+                <div className="rounded-xl border border-[#E5E0EE] bg-white p-3">
+                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
+                    Dimension 4 · Executive function
+                  </div>
+                  <div className="text-sm text-[#1A1330] font-semibold mb-1">Organisation, planning, follow-through</div>
+                  <div className="text-xs text-[#4B4567]">→ Practical supports</div>
+                </div>
+              </div>
+              <p className="text-xs text-[#4B4567] mt-4">
+                Dimensions 2, 3 &amp; 4 are covered in the{" "}
+                <Link to="/neurodivergent" className="text-[#3D1A78] font-semibold hover:underline" data-testid="four-dim-nd-link">
+                  Special Needs Assessment →
+                </Link>
+              </p>
+            </div>
+
             <ul className="text-sm text-[#4B4567] space-y-2 mb-7">
               <li className="flex items-start gap-2">
                 <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-[#3D1A78]" />
