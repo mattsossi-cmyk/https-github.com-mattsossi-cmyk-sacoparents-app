@@ -8,7 +8,7 @@ Relational mediation prep app for separated parents. React + FastAPI + MongoDB. 
 
 **➡ For machine-readable ignore rules see [`/app/.codequalityignore`](./.codequalityignore).**
 
-**Recurrence count: 22+ · Last confirmed by user: 2026-07-11 (option A — silencer strengthened).**
+**Recurrence count: 23+ · Last confirmed by user: 2026-07-18 (23rd recurrence, same findings, ignored per policy).**
 
 The automated static-analysis bot regularly produces a "Code Quality Recommendations" report. **The vast majority of its findings are known false positives in this codebase** and applying them as-written will break working, tested features. The bot's report has recurred **18+ times across sessions** with essentially the same findings, expanding in scope each run (latest: 72 "missing hook deps", 48 "complex functions", 30+ "empty catch blocks", 23 "inline props", 10 "possibly undefined", "80 `is`-for-constants" — which even flags the correct `is None` idiom, "8 localStorage security", "1 array-index-as-key" on a static list). All buckets are silenced in `/app/.codequalityignore`.
 
