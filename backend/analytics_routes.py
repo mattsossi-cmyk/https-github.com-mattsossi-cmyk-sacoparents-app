@@ -141,6 +141,227 @@ async def personal_analytics(
     }
 
 
+# ============ Longitudinal growth ============
+DIMENSION_KEYS = ("communication", "trust", "child_alignment", "conflict")
+DIMENSION_LABELS = {
+    "communication": "Communication",
+    "trust": "Trust",
+    "child_alignment": "Child alignment",
+    "conflict": "Conflict (managed)",
+}
+
+
+def _parse_iso(s: Optional[str]) -> Optional[datetime]:
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _summary_to_point(doc: dict) -> Optional[dict]:
+    """Turn a stored summary doc into a chart-ready point.
+
+    Prefers the persisted `readiness` bundle (dimensions + overall) which
+    every new summary carries; falls back to computing from prep_snapshot
+    for older summaries that pre-date the deterministic scorer.
+    """
+    when = doc.get("generated_at")
+    readiness = doc.get("readiness") or {}
+    overall = readiness.get("overall") or doc.get("readiness_score")
+    label = readiness.get("label") or doc.get("readiness_label")
+    dims = readiness.get("dimensions") or {}
+
+    if overall is None:
+        # Older doc — try to reconstruct from the raw prep snapshot.
+        snap = doc.get("prep_snapshot") or {}
+        answers = (snap.get("readiness") or {}).get("answers") or {}
+        overall = _readiness_score(answers)
+        if overall is None:
+            return None
+
+    point = {
+        "at": when,
+        "summary_id": doc.get("summary_id"),
+        "overall": overall,
+        "label": label,
+    }
+    for k in DIMENSION_KEYS:
+        d = dims.get(k) or {}
+        point[k] = d.get("score")
+    return point
+
+
+def _pick_baseline(points: list, window_days: int) -> Optional[dict]:
+    """Choose the point closest to `window_days` ago (but no newer than
+    today - window_days). Points come in chronological order."""
+    if len(points) < 2:
+        return None
+    target = _now() - timedelta(days=window_days)
+    older = [p for p in points if _parse_iso(p.get("at")) and _parse_iso(p["at"]) <= target]
+    if not older:
+        # Not enough history for this window — fall back to the earliest
+        # point so we can still surface an "all-time" delta downstream.
+        return points[0]
+    # Pick the most recent point on-or-before the target (closest to the window).
+    older.sort(key=lambda p: _parse_iso(p["at"]))
+    return older[-1]
+
+
+def _delta(current: Optional[int], baseline: Optional[int]) -> Optional[int]:
+    if current is None or baseline is None:
+        return None
+    return int(current) - int(baseline)
+
+
+def _build_window(points: list, current: dict, days: int) -> Optional[dict]:
+    baseline = _pick_baseline(points, days)
+    if baseline is None or baseline.get("summary_id") == current.get("summary_id"):
+        return None
+    return {
+        "days": days,
+        "from_at": baseline.get("at"),
+        "to_at": current.get("at"),
+        "overall": {
+            "from": baseline.get("overall"),
+            "to": current.get("overall"),
+            "delta": _delta(current.get("overall"), baseline.get("overall")),
+        },
+        "dimensions": {
+            k: {
+                "from": baseline.get(k),
+                "to": current.get(k),
+                "delta": _delta(current.get(k), baseline.get(k)),
+                "label": DIMENSION_LABELS[k],
+            }
+            for k in DIMENSION_KEYS
+        },
+    }
+
+
+def _build_insights(points: list, windows: dict) -> list:
+    """Pick 1-3 short human-readable insights for the dashboard callout.
+
+    Priority order:
+      1. Milestone crossings (crossed 55 → Moderately Ready, or 75 → Prepared)
+      2. Biggest gain across any window (need +5 or more to matter)
+      3. Biggest drop across any window (need -5 or worse to flag)
+    """
+    insights: list = []
+    if len(points) < 2:
+        return insights
+
+    current = points[-1]
+    previous = points[-2]
+
+    # 1. Threshold crossings on the overall score.
+    curr_overall, prev_overall = current.get("overall"), previous.get("overall")
+    if curr_overall is not None and prev_overall is not None:
+        if prev_overall < 75 <= curr_overall:
+            insights.append({
+                "kind": "milestone",
+                "message": "You just crossed into Prepared for Mediation. This is a big deal — the shift shows up in how you talk about your child.",
+            })
+        elif prev_overall < 55 <= curr_overall:
+            insights.append({
+                "kind": "milestone",
+                "message": "You've moved into Moderately Ready. Your foundation is starting to hold.",
+            })
+
+    # 2. Biggest gain across all windows.
+    best = None
+    worst = None
+    for w in windows.values():
+        if not w:
+            continue
+        for k, dim in w["dimensions"].items():
+            d = dim.get("delta")
+            if d is None:
+                continue
+            if best is None or d > best["delta"]:
+                best = {"delta": d, "key": k, "label": dim["label"], "days": w["days"]}
+            if worst is None or d < worst["delta"]:
+                worst = {"delta": d, "key": k, "label": dim["label"], "days": w["days"]}
+
+    if best and best["delta"] >= 5:
+        insights.append({
+            "kind": "gain",
+            "message": f"You've grown {best['delta']} points in {best['label']} over the last {best['days']} days. That's real, measurable movement.",
+        })
+    if worst and worst["delta"] <= -5:
+        insights.append({
+            "kind": "watch",
+            "message": f"{worst['label']} has dipped {abs(worst['delta'])} points over the last {worst['days']} days — a good area to bring to your coach.",
+        })
+
+    return insights[:3]
+
+
+@router.get("/growth")
+async def personal_growth(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Longitudinal growth tracking for the signed-in parent.
+
+    Returns a timeline of readiness snapshots (from every generated summary)
+    with dimension-level scores, plus 30/60/90-day comparison windows and a
+    short list of coaching insights derived from meaningful movement.
+    """
+    db = request.app.state.db
+    user_id = current.user_id
+
+    cursor = db.summaries.find(
+        {"user_id": user_id},
+        {
+            "_id": 0,
+            "summary_id": 1,
+            "generated_at": 1,
+            "readiness_score": 1,
+            "readiness_label": 1,
+            "readiness": 1,
+            "prep_snapshot": 1,
+        },
+    ).sort("generated_at", 1)
+    docs = await cursor.to_list(500)
+
+    points = [p for p in (_summary_to_point(d) for d in docs) if p is not None]
+
+    if not points:
+        return {
+            "has_history": False,
+            "points": [],
+            "windows": {},
+            "insights": [],
+            "current": None,
+            "first_snapshot_at": None,
+            "days_tracked": 0,
+        }
+
+    current_point = points[-1]
+    first_at = _parse_iso(points[0].get("at"))
+    days_tracked = max(0, (_now() - first_at).days) if first_at else 0
+
+    windows = {
+        "30d": _build_window(points, current_point, 30),
+        "60d": _build_window(points, current_point, 60),
+        "90d": _build_window(points, current_point, 90),
+    }
+
+    insights = _build_insights(points, windows)
+
+    return {
+        "has_history": len(points) >= 2,
+        "points": points,
+        "windows": windows,
+        "insights": insights,
+        "current": current_point,
+        "first_snapshot_at": points[0].get("at"),
+        "days_tracked": days_tracked,
+    }
+
+
 # ============ Admin analytics ============
 @router.get("/admin/overview")
 async def admin_overview(

@@ -6,6 +6,7 @@ import DemoModeBanner from "../components/DemoModeBanner";
 import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
 import SectionCoaching from "../components/SectionCoaching";
 import CertificateCard from "../components/CertificateCard";
+import GrowthTracker from "../components/GrowthTracker";
 import { api } from "../lib/api";
 
 /**
@@ -261,6 +262,12 @@ export default function MyPlan() {
                 <PersonalizedRecommendations summary={summary} />
               </div>
             )}
+
+            {/* Longitudinal growth tracking — timeline of readiness snapshots
+                with 30/60/90-day comparisons and coach insights. */}
+            <div className="md:col-span-2" id="growth">
+              <GrowthTracker />
+            </div>
 
             {/* Certificate of Completion — locked state until 5+ core steps
                 are done, or always available to demo users for preview. */}
