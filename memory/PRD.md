@@ -477,12 +477,29 @@ See `/app/memory/test_credentials.md`
   - Collections: `coach_sessions`, `coach_messages`.
 - **Frontend** (`pages/Coach.jsx` + routes in `App.js`):
   - `/coach` empty state renders 5 starter prompt cards + "Start blank" link.
-  - `/coach/:sessionId` renders the thread with react-markdown assistant bubbles (bold, italic, lists, links), safety-aware banner when the session has flagged content, and follow-up suggestion pills after each assistant turn.
+  - `/coach/:sessionId` renders the thread with react-markdown assistant bubbles, safety-aware banner when the session has flagged content, and follow-up suggestion pills after each assistant turn.
   - Composer: Enter to send, Shift+Enter for newline, in-flight spinner, disclaimer under every state.
   - Past-conversations sidebar with title + delete (with confirm).
   - Discoverable from Pillar 4 of `FivePillarJourney` as "AI Coach Chat (in the moment)".
-- **Tests**: 12/12 backend pytest — starters, session lifecycle, list order, delete-cascade, auth gating, content validation, LLM single-turn shape + title derivation, multi-turn context continuity, safety-relevant schema. Full frontend Playwright: empty → starter click → optimistic bubble → assistant reply with Markdown rendering → follow-up pills → sidebar → delete flow. All 100% pass.
+- **Tests**: 12/12 backend pytest + full frontend Playwright. All 100% pass.
 - **Dependency added**: `react-markdown` (via yarn).
+
+### Feb 2026 — Longitudinal Growth Tracking (P1 → SHIPPED)
+- **What**: A timeline of readiness snapshots (from every generated Mediation Summary) with 30/60/90-day comparison windows and coach-authored insights. Parents can see growth — dimension by dimension — across weeks and months.
+- **Backend** (`analytics_routes.py`):
+  - `GET /api/analytics/growth` returns `{has_history, points, windows, insights, current, first_snapshot_at, days_tracked}`.
+  - Points carry `{at, summary_id, overall, label, communication, trust, child_alignment, conflict}` in chronological order.
+  - Windows pick baseline as the newest snapshot on-or-before `today - N days` (falls back to earliest when history is short). Overall + per-dimension deltas.
+  - Insights engine: milestone crossings (55, 75), biggest gain (≥+5), biggest drop (≤-5). Max 3 insights.
+  - Legacy summary handling: docs without a persisted `readiness.dimensions` block still emit valid points via `_readiness_score` fallback (dimensions become null).
+- **Frontend** (`components/GrowthTracker.jsx`):
+  - Recharts LineChart with dashed "Prepared" (y=75, green) and "Moderately ready" (y=55, tan) reference lines.
+  - Current score panel (top-right) with `/100` and label.
+  - InsightsPanel with lightbulb-icon coach narratives.
+  - Three WindowCards (30/60/90d), each with an overall delta chip and per-dimension rows (from → to, delta).
+  - Empty state, single-snapshot state, and full-history state all handled.
+  - Mounted on `/my-plan` at anchor `id="growth"`, above the Certificate card.
+- **Tests**: 7/7 backend pytest (auth, empty state, full-shape, delta math, days_tracked, repeated-call stability, legacy-summary handling) + full frontend Playwright (empty state, chart render, window cards, delta chip colouring). 100% pass.
 
 ### Jul 2026 — Watch-First image refresh · Badge share · Mediator email CTA · Coercive threshold (P0/P1/P2 → SHIPPED)
 - **Watch-First image refresh (P0)**: Replaced user-supplied illustrations for the four hero modules and regenerated the corresponding TTS videos via `/app/memory/build_step_videos_from_images.py`:
