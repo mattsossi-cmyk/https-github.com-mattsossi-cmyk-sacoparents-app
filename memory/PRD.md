@@ -477,3 +477,19 @@ See `/app/memory/test_credentials.md`
 
 ### 📋 Backlog (P2 remaining)
 _All P2 items shipped — backlog empty. Next priorities will come from real user signals._
+
+### Feb 2026 — Certificate of Completion (P1 → SHIPPED)
+- **What**: Personalised Certificate of Completion. Overlays parent's name (Great Vibes cursive, auto-shrinks to fit) and today's date (Playfair Display bold) onto the branded template `certificate-template.png`. Returned as a downloadable PDF and previewed inline as PNG.
+- **Backend** (`certificate_service.py` + 3 new routes in `mediation_routes.py`):
+  - `GET /api/mediation/certificate/eligibility` — threshold is 5 of 6 core steps done (child_goals, issues, priority, comm_style, readiness, reflection). Guests are always eligible so they can preview.
+  - `GET /api/mediation/certificate/preview` — returns image/png with optional `?name=` override.
+  - `POST /api/mediation/certificate/download` — returns application/pdf with `Content-Disposition: attachment`. Optional `{name}` in body; falls back to account name, then to "Committed Co-Parent". Logs to `certificates_issued` best-effort.
+  - Template has baked-in placeholder text ("Parent Name Here", "May 15, 2026") which the compositor masks with the cream paper colour before drawing real values.
+  - Fonts bundled at `/app/backend/assets/fonts/` (GreatVibes-Regular.ttf, PlayfairDisplay-Bold.ttf).
+- **Frontend** (`components/CertificateCard.jsx`):
+  - Loading, locked, and earned states.
+  - Live PNG preview refreshes as the user edits the name inline.
+  - "Download certificate (PDF)" button with in-flight spinner and success toast.
+  - Rendered under `Personalized Recommendations` on `/my-plan` (with `#certificate` anchor) and after the tab content on `/summary`.
+  - Discoverable from Pillar 5 (Reports & Action Center) of `FivePillarJourney.jsx` — links to `/my-plan#certificate`. Dashboard populates a new `hasCertificate` pillar flag from the eligibility endpoint.
+- **Tests**: 12/12 backend pytest at `/app/backend/tests/test_certificate.py` (eligibility guest+JWT, PNG preview magic bytes, name-override, blank-name fallback, PDF magic bytes, filename sanitisation, auth gating). Frontend Playwright covered eligibility → PNG preview → name edit → PDF download flow (with %PDF magic byte verification) on both /my-plan and /summary. All 100% pass.

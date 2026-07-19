@@ -17,7 +17,7 @@ build_certificate_pdf(name, date_str=None) -> bytes
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 from typing import Optional
 
@@ -99,7 +99,7 @@ def _format_date(date_str: Optional[str]) -> str:
             return dt.strftime("%B %-d, %Y")
         except Exception:  # noqa: BLE001
             return date_str
-    return datetime.utcnow().strftime("%B %-d, %Y")
+    return datetime.now(timezone.utc).strftime("%B %-d, %Y")
 
 
 def _render(name: str, date_str: Optional[str]) -> Image.Image:
