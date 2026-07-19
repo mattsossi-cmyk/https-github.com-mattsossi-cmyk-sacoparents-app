@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import VerificationBanner from "../components/VerificationBanner";
 import EmailHealthBanner from "../components/EmailHealthBanner";
 import DemoModeBanner from "../components/DemoModeBanner";
+import FivePillarJourney from "../components/FivePillarJourney";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import BadgeShelf from "../components/BadgeShelf";
 import MeetTheProgramCard from "../components/MeetTheProgramCard";
@@ -113,6 +114,12 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [prep, setPrep] = useState({ completed: {} });
   const [summariesCount, setSummariesCount] = useState(0);
+  const [pillarFlags, setPillarFlags] = useState({
+    hasSummary: false,
+    hasNdAnswers: false,
+    hasNdReports: false,
+    hasSafetyAssessment: false,
+  });
 
   // First-time visitors: send them through the orientation walkthrough.
   useEffect(() => {
@@ -129,10 +136,39 @@ export default function Dashboard() {
     // Grab the summary count so the "Journey Complete" badge can unlock.
     api
       .get("/analytics/personal")
-      .then((r) => setSummariesCount((r.data?.recent_summaries || []).length))
+      .then((r) => {
+        const s = (r.data?.recent_summaries || []).length;
+        setSummariesCount(s);
+        setPillarFlags((p) => ({ ...p, hasSummary: s > 0 }));
+      })
       .catch(() => {
         /* non-blocking */
       });
+
+    // Enrich pillar completion flags from the other feature endpoints.
+    api
+      .get("/neurodivergent/prep")
+      .then((r) => {
+        const answers = r.data?.answers || {};
+        setPillarFlags((p) => ({ ...p, hasNdAnswers: Object.keys(answers).length > 0 }));
+      })
+      .catch(() => { /* non-blocking */ });
+    api
+      .get("/neurodivergent/reports")
+      .then((r) => {
+        const rs = r.data?.reports || [];
+        setPillarFlags((p) => ({ ...p, hasNdReports: rs.length > 0 }));
+      })
+      .catch(() => { /* non-blocking */ });
+    api
+      .get("/safety-assessment/me")
+      .then((r) => {
+        // Endpoint returns null if not yet taken, or an object with answers otherwise.
+        const answered = !!(r.data && (r.data.answers || r.data.risk_level || r.data.id));
+        setPillarFlags((p) => ({ ...p, hasSafetyAssessment: answered }));
+      })
+      .catch(() => { /* non-blocking */ });
+
     // On native mobile builds only — no-op on web.
     registerPushNotifications(api);
   }, []);
@@ -434,8 +470,15 @@ export default function Dashboard() {
           <MeetTheProgramCard trailerId="dashboard-welcome" />
         </div>
 
-        <div className="eyebrow mb-4">Preparation modules</div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <FivePillarJourney completed={completed} flags={pillarFlags} />
+
+        <details className="mt-8 group">
+          <summary className="cursor-pointer text-sm text-[#3D1A78] hover:underline inline-flex items-center gap-1" data-testid="dashboard-legacy-modules-toggle">
+            Show the classic step-by-step module view →
+          </summary>
+          <div className="mt-4">
+            <div className="eyebrow mb-4">Preparation modules</div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {STEPS.map(({ key, label, path, icon: Icon, blurb, celebration, tip }) => {
             const isDone = !!completed[key];
             return (
@@ -519,6 +562,8 @@ export default function Dashboard() {
             </p>
           </Link>
         </div>
+          </div>
+        </details>
 
         {!user?.is_guest && (
           <div className="mt-2">
