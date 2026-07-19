@@ -501,6 +501,13 @@ See `/app/memory/test_credentials.md`
   - Mounted on `/my-plan` at anchor `id="growth"`, above the Certificate card.
 - **Tests**: 7/7 backend pytest (auth, empty state, full-shape, delta math, days_tracked, repeated-call stability, legacy-summary handling) + full frontend Playwright (empty state, chart render, window cards, delta chip colouring). 100% pass.
 
+### Feb 2026 — Dashboard Growth Widget (P1 enhancement → SHIPPED)
+- **What**: Compact "Your growth" chip on the main Dashboard between the Progress Report teaser and the Achievement badges. Surfaces current readiness score, best-available window delta chip (30d → 60d → 90d fallback), and a one-liner narrative ("You're up 8 points this month — real, measurable movement." / "You've dipped 25 points this month — a good moment to sit with your coach.").
+- **Reuses**: `GET /api/analytics/growth` — no new endpoints.
+- **Behaviour**: Hides itself entirely when the parent has no snapshots yet (returns null), so first-time visitors don't see an empty box. Deep-links to `/my-plan#growth` for the full experience.
+- **File**: `frontend/src/components/GrowthWidget.jsx` + Dashboard integration.
+- **Verification**: Screenshot smoke test on parent1@test.com (4 summaries → shows widget with -25 delta and 66-day tracking) + curl-verified null-render for fresh guest.
+
 ### Jul 2026 — Watch-First image refresh · Badge share · Mediator email CTA · Coercive threshold (P0/P1/P2 → SHIPPED)
 - **Watch-First image refresh (P0)**: Replaced user-supplied illustrations for the four hero modules and regenerated the corresponding TTS videos via `/app/memory/build_step_videos_from_images.py`:
   - `step-safety-assessment.png` (Assess Your Family Situation)

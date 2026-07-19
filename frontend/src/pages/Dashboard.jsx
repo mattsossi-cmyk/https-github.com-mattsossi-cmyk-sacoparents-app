@@ -8,6 +8,7 @@ import FivePillarJourney from "../components/FivePillarJourney";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import BadgeShelf from "../components/BadgeShelf";
 import MeetTheProgramCard from "../components/MeetTheProgramCard";
+import GrowthWidget from "../components/GrowthWidget";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -456,6 +457,11 @@ export default function Dashboard() {
             </div>
           </Link>
         )}
+
+        {/* Compact growth pulse — hides itself for first-time visitors with
+            no summary snapshots yet. Deep-links to the full growth tracker
+            on /my-plan. */}
+        <GrowthWidget />
 
         {/* Achievement badge shelf */}
         <div className="mb-10">
