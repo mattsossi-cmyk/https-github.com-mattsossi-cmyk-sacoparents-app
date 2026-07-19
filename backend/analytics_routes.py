@@ -242,21 +242,38 @@ async def admin_recent_users(
     ).sort("created_at", -1).limit(limit)
     users = await cursor.to_list(limit)
 
-    # Enrich each with their progress + AI counts (cheap parallelisable reads,
-    # done sequentially to keep the code simple — typical limit is 25.)
+    # Batch-fetch progress + summary counts in two queries total (was N+1
+    # per user). For the summary counts we group at the DB layer so we
+    # never pull document bodies over the wire.
+    user_ids = [u["user_id"] for u in users]
+
+    prep_map: dict[str, dict] = {}
+    if user_ids:
+        prep_cursor = db.prep_data.find(
+            {"user_id": {"$in": user_ids}},
+            {"_id": 0, "user_id": 1, "completed": 1},
+        )
+        async for p in prep_cursor:
+            prep_map[p["user_id"]] = p.get("completed") or {}
+
+    summary_counts: dict[str, int] = {}
+    if user_ids:
+        pipeline = [
+            {"$match": {"user_id": {"$in": user_ids}}},
+            {"$group": {"_id": "$user_id", "count": {"$sum": 1}}},
+        ]
+        async for row in db.summaries.aggregate(pipeline):
+            summary_counts[row["_id"]] = row["count"]
+
     enriched = []
     for u in users:
-        prep = await db.prep_data.find_one(
-            {"user_id": u["user_id"]}, {"_id": 0, "completed": 1}
-        )
-        completed_map = (prep or {}).get("completed") or {}
+        completed_map = prep_map.get(u["user_id"], {})
         steps_done = sum(1 for s in PREP_SECTIONS if completed_map.get(s))
-        summaries_count = await db.summaries.count_documents({"user_id": u["user_id"]})
         enriched.append({
             **u,
             "steps_done": steps_done,
             "steps_total": len(PREP_SECTIONS),
-            "summaries": summaries_count,
+            "summaries": summary_counts.get(u["user_id"], 0),
         })
     return {"users": enriched}
 

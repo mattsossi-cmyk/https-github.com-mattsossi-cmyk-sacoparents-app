@@ -461,6 +461,11 @@ See `/app/memory/test_credentials.md`
 - **Tests**: 16/16 pytest at `/app/backend/tests/test_safety_assessment.py` (pure-function scoring across all 4 levels + every endpoint). Frontend Playwright covered intro → all 18 questions → high-concern overlay UX → L4 result → PDF/Email/Worksheet CTAs end-to-end. 100% pass.
 - **Files added**: `/app/backend/safety_assessment_routes.py`, `/app/backend/safety_assessment_pdf.py`, `/app/frontend/src/pages/SafetyAssessment.jsx`, `/app/frontend/src/pages/ProblemSolvingWorksheet.jsx`, `/app/frontend/src/components/HighConcernOverlay.jsx`. `email_service.send_safety_assessment_report` appended.
 
+### Feb 2026 — Admin analytics N+1 query fix (P2 → SHIPPED)
+- **What**: `/api/analytics/admin/recent-users` used to issue 1 + 2N Mongo queries (one prep_data.find_one + one summaries.count_documents per user, up to 100 users → 201 queries). Now issues exactly 3 total: `users.find`, `prep_data.find({user_id: $in})`, and a `summaries.aggregate` `$group` by `user_id`.
+- **Verified**: 25 users returned in ~105ms (previously grew linearly with limit). Response shape unchanged so admin dashboard consumers are untouched.
+- **File**: `/app/backend/analytics_routes.py` (function `admin_recent_users`).
+
 ### Jul 2026 — Watch-First image refresh · Badge share · Mediator email CTA · Coercive threshold (P0/P1/P2 → SHIPPED)
 - **Watch-First image refresh (P0)**: Replaced user-supplied illustrations for the four hero modules and regenerated the corresponding TTS videos via `/app/memory/build_step_videos_from_images.py`:
   - `step-safety-assessment.png` (Assess Your Family Situation)
