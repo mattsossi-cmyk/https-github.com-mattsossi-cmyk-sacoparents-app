@@ -14,8 +14,8 @@
 
 version: 1
 policy: ignore-all-listed-findings
-last_confirmed_by_user: "2026-07-18 (23rd recurrence — same findings, ignored per policy)"
-canonical_recurrence_count: 23
+last_confirmed_by_user: "2026-07-19 (24th recurrence — same findings, ignored per policy)"
+canonical_recurrence_count: 24
 
 ignored_findings:
 
