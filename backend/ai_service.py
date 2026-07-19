@@ -841,3 +841,131 @@ important takeaways from this report (each ≤ 100 characters).
     highlights = [str(h).strip() for h in highlights if str(h).strip()][:5]
     return {"content": content, "highlights": highlights}
 
+
+# ============ Interactive AI Coach Chat (BIFF-first) ============
+
+_COACH_SYSTEM_PROMPT = (
+    "You are the SA CoParents AI Coach — a warm, grounded, non-judgemental "
+    "co-parenting companion. You help a separated parent move from "
+    "emotionally reactive to child-centered in the moments that matter "
+    "most (right after a heated exchange, before a hard reply, when they "
+    "feel stuck).\n\n"
+    "Your operating principles:\n"
+    "1. VALIDATE FIRST, ALWAYS. Before offering any suggestion, briefly "
+    "reflect what the parent is feeling in ONE sentence. Never skip this.\n"
+    "2. GROUND IN THE CHILD. Every practical suggestion must trace back to "
+    "the child's emotional safety, developmental needs, and long-term "
+    "wellbeing. When the parent shares their child's goals, use them.\n"
+    "3. TEACH THE BIFF METHOD (Bill Eddy). When drafting a reply is on the "
+    "table, structure suggestions as: Brief (2-4 short sentences), "
+    "Informative (factual, dates and specifics), Friendly (courteous tone "
+    "even under attack), Firm (a clear close that doesn't invite "
+    "escalation). Label the BIFF pieces inline the first time you use them.\n"
+    "4. NO CHARACTER ATTACKS. Never disparage the co-parent or diagnose "
+    "them ('narcissist', 'unstable', etc.). Talk about behaviours and "
+    "patterns, not identity.\n"
+    "5. MAX 200 WORDS. Long walls of text lose parents in high emotion. "
+    "Use short paragraphs, occasional bullets, and one clear next step.\n"
+    "6. OFFER, DON'T DIRECT. Frame suggestions as 'you might try…' or "
+    "'one option is…' — never 'you must' or 'you should'.\n"
+    "7. SAFETY OVERRIDE. If the parent describes threats, coercion, "
+    "stalking, or violence, drop the BIFF framing and gently name what "
+    "you're seeing, then point them to the Safety page in-app, the "
+    "National DV Hotline (1-800-799-7233), or 988. Set safety_flag=true.\n\n"
+    "Output strict JSON in this shape:\n"
+    "{\n"
+    "  \"reply\": \"string — your response in Markdown. Use short paragraphs "
+    "and light Markdown (bold, bullets). No headings above ##.\",\n"
+    "  \"suggested_followups\": [\"short prompt 1\", \"short prompt 2\", "
+    "\"short prompt 3\"],\n"
+    "  \"safety_flag\": false\n"
+    "}\n"
+    "The suggested_followups are optional short prompts the parent might "
+    "tap to continue the conversation (e.g., 'Draft the reply for me', "
+    "'What if they don't respond?'). Return 2-4 of them, never more."
+)
+
+
+def _coach_context_block(prep_context: Optional[Dict[str, Any]]) -> str:
+    """Fold the parent's saved prep into a short context header the coach
+    can reference. Skipped entirely when the parent hasn't started prep."""
+    if not prep_context:
+        return ""
+    parts: List[str] = []
+    goals = prep_context.get("child_goals")
+    if isinstance(goals, dict):
+        selected = goals.get("selected_goals") or goals.get("goals") or []
+        labels = [g if isinstance(g, str) else (g.get("label") or g.get("id") or "") for g in selected]
+        labels = [str(l).strip() for l in labels if str(l).strip()][:6]
+        if labels:
+            parts.append("Child-centered goals this parent has committed to: " + "; ".join(labels))
+    foundation = (prep_context.get("reflection") or {}).get("text")
+    if isinstance(foundation, str) and foundation.strip():
+        parts.append("Their Foundation Statement (excerpt): \"" + foundation.strip()[:280] + "\"")
+    priority = prep_context.get("priority")
+    if isinstance(priority, dict):
+        top = priority.get("top_items") or priority.get("ranked") or []
+        top = [t if isinstance(t, str) else (t.get("label") or t.get("id") or "") for t in top][:3]
+        top = [str(t).strip() for t in top if str(t).strip()]
+        if top:
+            parts.append("Their top mediation priorities: " + "; ".join(top))
+    child_name = prep_context.get("child_name")
+    if isinstance(child_name, str) and child_name.strip():
+        parts.append(f"The parent refers to their child as \"{child_name.strip()[:40]}\".")
+    if not parts:
+        return ""
+    return "\n\nPARENT CONTEXT (use lightly, do not recite verbatim):\n- " + "\n- ".join(parts)
+
+
+async def generate_coach_reply(
+    *,
+    user_message: str,
+    history: Optional[List[Dict[str, str]]] = None,
+    prep_context: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Multi-turn chat reply for the AI Coach.
+
+    Args:
+      user_message: what the parent just typed.
+      history: prior turns as [{"role": "user"|"assistant", "content": str}, ...]
+        in chronological order. The system message is prepended internally.
+      prep_context: optional prep data snapshot (child_goals, reflection,
+        priority) used to personalise the reply.
+    """
+    system_message = SAFETY_GUARDRAIL + _COACH_SYSTEM_PROMPT + _coach_context_block(prep_context)
+
+    # Rebuild the conversation for LlmChat. `initial_messages` must include
+    # the system message ourselves when we bypass the default constructor
+    # path (see LlmChat.__init__).
+    initial: List[Dict[str, Any]] = [{"role": "system", "content": system_message}]
+    for turn in (history or [])[-20:]:  # cap history so prompts stay small
+        role = turn.get("role")
+        content = (turn.get("content") or "").strip()
+        if role in ("user", "assistant") and content:
+            initial.append({"role": role, "content": content})
+
+    chat = LlmChat(
+        api_key=os.environ["EMERGENT_LLM_KEY"],
+        session_id=f"sa-coparents-coach-{uuid.uuid4().hex[:10]}",
+        system_message=system_message,
+        initial_messages=initial,
+    ).with_model(PROVIDER, CLAUDE_MODEL)
+
+    response = await chat.send_message(UserMessage(text=user_message.strip()[:4000]))
+    data = _extract_json(response) or {}
+    reply = (data.get("reply") or "").strip()
+    if not reply:
+        # Bare fallback so the UI never renders an empty bubble.
+        reply = (
+            "I hear you. Take one slow breath before we work through this "
+            "together — tell me a bit more about what just happened."
+        )
+    followups = data.get("suggested_followups") or []
+    if not isinstance(followups, list):
+        followups = []
+    followups = [str(f).strip() for f in followups if str(f).strip()][:4]
+    return {
+        "reply": reply,
+        "suggested_followups": followups,
+        "safety_flag": bool(data.get("safety_flag", False)),
+    }

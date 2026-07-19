@@ -80,6 +80,7 @@ const PILLARS = [
     color: "#2DB5B5",
     tools: [
       { label: "Communication Style & AI Coach", to: "/prep/communication", completedKey: "comm_style" },
+      { label: "AI Coach Chat (in the moment)", to: "/coach" },
       { label: "Safety & Parallel Parenting Toolkit", to: "/safety" },
       { label: "Journal / Reflection Space", to: "/reflection" },
       { label: "Gmail — Coach-drafted replies", to: "/gmail" },
