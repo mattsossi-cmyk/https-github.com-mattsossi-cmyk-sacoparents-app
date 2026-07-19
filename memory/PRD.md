@@ -540,3 +540,20 @@ _All P2 items shipped — backlog empty. Next priorities will come from real use
   - Rendered under `Personalized Recommendations` on `/my-plan` (with `#certificate` anchor) and after the tab content on `/summary`.
   - Discoverable from Pillar 5 (Reports & Action Center) of `FivePillarJourney.jsx` — links to `/my-plan#certificate`. Dashboard populates a new `hasCertificate` pillar flag from the eligibility endpoint.
 - **Tests**: 12/12 backend pytest at `/app/backend/tests/test_certificate.py` (eligibility guest+JWT, PNG preview magic bytes, name-override, blank-name fallback, PDF magic bytes, filename sanitisation, auth gating). Frontend Playwright covered eligibility → PNG preview → name edit → PDF download flow (with %PDF magic byte verification) on both /my-plan and /summary. All 100% pass.
+
+### Feb 2026 — Product Maturation, Phase 1: "Do this next" Dashboard hero (SHIPPED)
+- **Why**: The app had grown to hold assessments, videos, badges, reports, IPV tools, special-needs modules, Foundation Statements — all competing for attention on the home. Per user's product feedback: the home screen should answer one question immediately — **What should I do next?**
+- **What**: New `NextStepJourney` component at the very top of the Dashboard, above every other section. Collapses the entire app into a single linear 6-stage journey and auto-detects where the parent actually is:
+  1. **Assess** — Readiness Check + Communication Style (category: Assessment)
+  2. **Understand Your Child** — Child-Centered Goals + Special Needs (category: Reflection & Wellness)
+  3. **Set Priorities** — Priority & Agenda (category: Mediation Preparation)
+  4. **Build Your Foundation** — Foundation Statement + Journal (category: Reflection & Wellness)
+  5. **Prepare for Mediation** — Issues, Alignment Statement, Summary (category: Mediation Preparation)
+  6. **Review Progress** — My Plan, Growth, Certificate (category: Review & Progress)
+- **Hero card** (`data-testid="journey-stage-hero"`): purple gradient with step number of 6, category chip, "Start here" / "Do this next" / "You've completed the journey" eyebrow (context-aware), stage title, blurb, activity bullets, and a large white CTA linking to the appropriate start route.
+- **Progress rail** (`data-testid="journey-progress-rail"`): compact horizontal 6-step indicator with completed stages showing a filled dark bar + CheckCircle2 icon; the current stage highlighted in `#3D1A78`.
+- **Up-next teaser**: small "Up next: <category> · <next stage> →" line that hides itself when the parent is on stage 6.
+- **Toolkit demotion**: The existing 5-pillar journey UI moved into a collapsible `<details data-testid="toolkit-collapsible">` labelled "Full toolkit — every module, assessment, and report", closed by default. Nothing was removed; progressive disclosure over overwhelming grids.
+- **Pre-existing bug fixed on the way**: Dashboard was calling a non-existent `/api/analytics/personal` (returned 404) — swapped to `/api/analytics/me` reading `activity.summaries` so the summary count flag (used by Step 5 detection and the "Journey Complete" badge) actually populates.
+- **File**: `frontend/src/components/NextStepJourney.jsx` + minor changes in `frontend/src/pages/Dashboard.jsx`.
+- **Testing**: Full frontend Playwright — fresh guest lands on Step 1 with "Start here" eyebrow and CTA linking to `/prep/readiness`; parent1@test.com (4 summaries + all core steps + certificate-eligible) lands on Step 6 with "You've completed the journey" eyebrow. Progress rail + toolkit collapsible + all regression checks (BadgeShelf, GrowthWidget, trailers, classic module <details>) pass. Backend regression check on `/api/analytics/me`. 100% pass, zero issues.
