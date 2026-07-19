@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import ReadinessDashboard from "../components/ReadinessDashboard";
 import NextStepsPanel from "../components/NextStepsPanel";
+import CertificateCard from "../components/CertificateCard";
 
 /* ------------------------------ shared bits ------------------------------ */
 
@@ -1273,6 +1274,11 @@ export default function Summary() {
         {tab === "summary" && <MediationSummaryTab />}
         {tab === "agreement" && <AgreementDraftTab />}
         {tab === "improve" && <ImprovementPlanTab />}
+
+        <div className="mt-12">
+          <div className="eyebrow text-[#3D1A78] mb-3">Your reward</div>
+          <CertificateCard />
+        </div>
 
         <div className="mt-12">
           <InviteCoparentCard variant="summary" />

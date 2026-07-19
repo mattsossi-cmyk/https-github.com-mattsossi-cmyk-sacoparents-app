@@ -26,6 +26,7 @@ from models import (
 )
 import ai_service
 import pdf_service
+import certificate_service
 import email_service
 import journal_routes
 from pydantic import BaseModel, EmailStr, Field
@@ -317,6 +318,93 @@ async def download_summary_pdf(
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'attachment; filename="mediation_summary_{summary_id}.pdf"'
+        },
+    )
+
+
+# ============ Certificate of Completion ============
+class CertificateRequest(BaseModel):
+    # Optional override — parents can dedicate the certificate to a display
+    # name that differs from their account name (e.g. married name, preferred
+    # name). Falls back to the account name when omitted or blank.
+    name: Optional[str] = Field(default=None, max_length=120)
+
+
+@router.get("/certificate/eligibility")
+async def certificate_eligibility(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Report whether the parent has completed enough of the program to earn
+    a certificate. The threshold is intentionally forgiving: 5 of 6 core prep
+    steps done. Demo/guest users are always eligible so they can preview.
+    """
+    db = request.app.state.db
+    prep = await _load_prep(db, current.user_id)
+    completed = prep.get("completed") or {}
+    core_steps = ["child_goals", "issues", "priority", "comm_style", "readiness", "reflection"]
+    done = [k for k in core_steps if completed.get(k)]
+    threshold = 5
+    is_eligible = current.is_guest or len(done) >= threshold
+    return {
+        "eligible": is_eligible,
+        "is_guest": current.is_guest,
+        "completed_steps": done,
+        "required_steps": core_steps,
+        "threshold": threshold,
+        "display_name": current.name or "",
+    }
+
+
+@router.get("/certificate/preview")
+async def preview_certificate(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+    name: Optional[str] = None,
+):
+    """Return the composed certificate as an inline PNG for on-screen preview."""
+    display = (name or current.name or "").strip()
+    png = certificate_service.build_certificate_png(display)
+    return StreamingResponse(
+        BytesIO(png),
+        media_type="image/png",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/certificate/download")
+async def download_certificate(
+    body: CertificateRequest,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Return the certificate as a downloadable PDF. Any authenticated user
+    (including a demo/guest) can generate one; the demo watermark on the
+    account itself communicates the sandbox state, not this document."""
+    display = (body.name or current.name or "").strip()
+    if not display:
+        display = "Committed Co-Parent"
+    pdf_bytes = certificate_service.build_certificate_pdf(display)
+
+    # Best-effort audit trail — never fail the download over logging.
+    try:
+        await request.app.state.db.certificates_issued.insert_one(
+            {
+                "user_id": current.user_id,
+                "display_name": display,
+                "is_guest": current.is_guest,
+                "issued_at": _now(),
+            }
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
+    safe_name = "".join(c if c.isalnum() else "_" for c in display).strip("_") or "certificate"
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="SA_CoParents_Certificate_{safe_name}.pdf"'
         },
     )
 

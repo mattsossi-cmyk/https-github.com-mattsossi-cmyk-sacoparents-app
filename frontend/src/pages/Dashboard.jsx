@@ -119,6 +119,7 @@ export default function Dashboard() {
     hasNdAnswers: false,
     hasNdReports: false,
     hasSafetyAssessment: false,
+    hasCertificate: false,
   });
 
   // First-time visitors: send them through the orientation walkthrough.
@@ -166,6 +167,17 @@ export default function Dashboard() {
         // Endpoint returns null if not yet taken, or an object with answers otherwise.
         const answered = !!(r.data && (r.data.answers || r.data.risk_level || r.data.id));
         setPillarFlags((p) => ({ ...p, hasSafetyAssessment: answered }));
+      })
+      .catch(() => { /* non-blocking */ });
+    api
+      .get("/mediation/certificate/eligibility")
+      .then((r) => {
+        // Only mark the pillar tool as "done" when the parent has actually
+        // hit the completion bar (not just because a demo user can preview).
+        const d = r.data || {};
+        const completed = (d.completed_steps || []).length;
+        const threshold = d.threshold || 5;
+        setPillarFlags((p) => ({ ...p, hasCertificate: completed >= threshold }));
       })
       .catch(() => { /* non-blocking */ });
 

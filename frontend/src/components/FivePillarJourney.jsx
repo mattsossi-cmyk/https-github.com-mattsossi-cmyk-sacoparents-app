@@ -97,6 +97,7 @@ const PILLARS = [
       { label: "Alignment Statement", to: "/summary?tab=agreement", completedFlag: "hasSummary" },
       { label: "Personal Growth Plan", to: "/summary?tab=improve", completedFlag: "hasSummary" },
       { label: "Special Needs Reports", to: "/neurodivergent/reports", completedFlag: "hasNdReports" },
+      { label: "Certificate of Completion", to: "/my-plan#certificate", completedFlag: "hasCertificate" },
       { label: "My Plan (progress snapshot)", to: "/my-plan" },
     ],
   },

@@ -1,0 +1,33 @@
+{
+  "summary": "End-to-end testing of the Certificate of Completion feature (backend endpoints + CertificateCard on /my-plan and /summary). All 12 backend pytest cases pass and the full frontend flow (eligibility → PNG preview → PDF download) works cleanly for a guest session. Loading state, name-override input, and cross-page rendering all verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_certificate.py",
+    "/app/test_reports/pytest/cert_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "certificate_service._format_date uses strftime('%B %-d, %Y') — '%-d' is Linux/glibc-only. Fine for the containerised backend, but flag if we ever move to a Windows/non-glibc runtime.",
+    "certificate_service uses datetime.utcnow() which is deprecated in Python 3.12+; prefer datetime.now(timezone.utc). Not blocking on 3.11.",
+    "Frontend CertificateCard input caps at maxLength=80 while backend accepts max_length=120 — stricter on the client, so no bug, but consider aligning to reduce confusion.",
+    "Pre-existing (out of scope): POST /api/auth/guest ignores the client-provided `name` field and always creates the account as 'Demo user'. Certificate rightly falls back to that name — but if the intent is to let guests pick their name at signup, the guest bootstrap needs to honour body.name."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_certificate.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Used POST /api/auth/guest (no creds needed) to exercise both the backend and the browser tests. parent1@test.com / TestPass123! used as the JWT fixture to verify eligibility logic for non-guest users.",
+  "seed_data_creation": "No permanent seed. Guest sessions are ephemeral; TEST_ prefixed display names used for the download filename sanitisation checks.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The Certificate of Completion feature is fully working end-to-end. Backend tests live in /app/backend/tests/test_certificate.py and cover eligibility (guest + JWT), preview PNG (magic bytes + name override + blank-name fallback), download PDF (magic bytes + filename sanitisation + fallback to 'Committed Co-Parent'), and auth gating (401 without token). Run with `REACT_APP_BACKEND_URL=... pytest backend/tests/test_certificate.py -v`. Frontend flow verified via Playwright: guest cookie set via fetch('/api/auth/guest'), localStorage sac_legal_ack_v1 + orientation_seen seeded, then /my-plan and /summary both render certificate-card-earned with a live PNG preview and a functional PDF download (checked %PDF magic bytes on the downloaded file). Raw certificate/download endpoint responds in ~190ms with a 150KB PDF.",
+  "rca of the issue": "N/A — no bugs found."
+}

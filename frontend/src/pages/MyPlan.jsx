@@ -5,6 +5,7 @@ import AppShell from "../components/AppShell";
 import DemoModeBanner from "../components/DemoModeBanner";
 import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
 import SectionCoaching from "../components/SectionCoaching";
+import CertificateCard from "../components/CertificateCard";
 import { api } from "../lib/api";
 
 /**
@@ -260,6 +261,12 @@ export default function MyPlan() {
                 <PersonalizedRecommendations summary={summary} />
               </div>
             )}
+
+            {/* Certificate of Completion — locked state until 5+ core steps
+                are done, or always available to demo users for preview. */}
+            <div className="md:col-span-2" id="certificate">
+              <CertificateCard />
+            </div>
 
             {/* Overall coaching (Strengths + Growth Areas + One Next Step) */}
             {summary && (
