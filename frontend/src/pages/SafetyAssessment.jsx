@@ -23,6 +23,7 @@ import { useAuth } from "../context/AuthContext";
 import HighConcernOverlay from "../components/HighConcernOverlay";
 import WatchFirstVideo from "../components/WatchFirstVideo";
 import SectionCoaching from "../components/SectionCoaching";
+import MethodologyCard from "../components/MethodologyCard";
 
 const TONE_STYLES = {
   danger: {
@@ -521,6 +522,9 @@ export default function SafetyAssessment() {
             <h1 className="font-bold text-3xl sm:text-4xl text-[#1A1330] tracking-tight mb-3">
               IPV Communication Safety Assessment
             </h1>
+
+            <MethodologyCard id="safety" defaultOpen={false} />
+
             <p className="text-[#4B4567] leading-relaxed mb-4">
               This is a <strong className="text-[#1A1330]">reflection guide</strong> — not
               a clinical assessment — to help you notice patterns of family

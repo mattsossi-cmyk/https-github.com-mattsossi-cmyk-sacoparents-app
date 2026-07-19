@@ -9,6 +9,7 @@ import { logError } from "../lib/logger";
 import { detectSafetyConcern } from "../lib/safety";
 import WatchFirstVideo from "../components/WatchFirstVideo";
 import SectionCoaching from "../components/SectionCoaching";
+import MethodologyCard from "../components/MethodologyCard";
 import { Sparkles } from "lucide-react";
 
 const QUIZ = [
@@ -119,6 +120,7 @@ export default function CommStyle() {
         onNext={onNext}
       >
         <div className="space-y-8">
+          <MethodologyCard id="comm_style" />
           <WatchFirstVideo
             videoSrc="/videos/comm-style-reflection.mp4"
             subtitle="Understand Your Co-Parenting Relationship — watch before you answer"

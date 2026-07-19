@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import WatchFirstVideo from "../components/WatchFirstVideo";
 import SectionCoaching from "../components/SectionCoaching";
+import MethodologyCard from "../components/MethodologyCard";
 
 // 1-5 agreement scale (used for Sections A–C and E)
 const AGREE_SCALE = [
@@ -179,6 +180,7 @@ export default function ReadinessCheck() {
         nextLabel="Generate my summary"
       >
         <div className="space-y-10" data-testid="readiness-sections">
+          <MethodologyCard id="readiness" />
           <WatchFirstVideo
             videoSrc="/videos/readiness-reflection.mp4"
             subtitle="Prepare for Mediation — watch before you begin"

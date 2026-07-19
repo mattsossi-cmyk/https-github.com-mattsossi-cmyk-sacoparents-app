@@ -6,6 +6,7 @@ import {
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import DemoModeBanner from "../components/DemoModeBanner";
+import MethodologyCard from "../components/MethodologyCard";
 import { api } from "../lib/api";
 
 /**
@@ -330,6 +331,10 @@ export default function Neurodivergent() {
 
           <div className="mt-6">
             <DemoModeBanner />
+          </div>
+
+          <div className="mt-6">
+            <MethodologyCard id="special_needs" />
           </div>
 
           {/* Progress */}
