@@ -5,6 +5,7 @@ import VerificationBanner from "../components/VerificationBanner";
 import EmailHealthBanner from "../components/EmailHealthBanner";
 import DemoModeBanner from "../components/DemoModeBanner";
 import FivePillarJourney from "../components/FivePillarJourney";
+import NextStepJourney from "../components/NextStepJourney";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import BadgeShelf from "../components/BadgeShelf";
 import MeetTheProgramCard from "../components/MeetTheProgramCard";
@@ -110,6 +111,42 @@ function timeGreeting() {
 // "how long till done?" estimate on the Dashboard hero card.
 const AVG_MINUTES_PER_STEP = 6;
 
+/**
+ * FivePillarJourneyToolkit — the classic 5-pillar view demoted to a
+ * collapsible "Full toolkit" section, so it stops competing with the
+ * new linear NextStepJourney at the top of the Dashboard.
+ *
+ * The parent can still reach every module — it's just no longer the
+ * first thing they see. Progressive disclosure over overwhelming grids.
+ */
+function FivePillarJourneyToolkit({ completed, pillarFlags }) {
+  return (
+    <details className="mt-4 group" data-testid="toolkit-collapsible">
+      <summary
+        className="cursor-pointer list-none rounded-2xl border border-[#E5E0EE] bg-white px-5 py-4 flex items-center justify-between hover:border-[#3D1A78] transition-colors"
+        data-testid="toolkit-summary"
+      >
+        <div>
+          <div className="eyebrow text-[#3D1A78]">Full toolkit</div>
+          <div className="text-sm text-[#4B4567] mt-0.5">
+            Every module, assessment, and report — organised by the 5 pillars
+            of relational mediation prep.
+          </div>
+        </div>
+        <span className="text-[#3D1A78] text-sm font-bold group-open:hidden">
+          Show →
+        </span>
+        <span className="hidden group-open:inline text-[#3D1A78] text-sm font-bold">
+          Hide ↑
+        </span>
+      </summary>
+      <div className="mt-4">
+        <FivePillarJourney completed={completed} flags={pillarFlags} />
+      </div>
+    </details>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -135,11 +172,11 @@ export default function Dashboard() {
       .get("/mediation/prep")
       .then((r) => setPrep(r.data || { completed: {} }))
       .catch((err) => logError("Failed to load prep:", err));
-    // Grab the summary count so the "Journey Complete" badge can unlock.
+    // Grab the summary count so downstream badges/journey stages can unlock.
     api
-      .get("/analytics/personal")
+      .get("/analytics/me")
       .then((r) => {
-        const s = (r.data?.recent_summaries || []).length;
+        const s = r.data?.activity?.summaries ?? 0;
         setSummariesCount(s);
         setPillarFlags((p) => ({ ...p, hasSummary: s > 0 }));
       })
@@ -232,6 +269,16 @@ export default function Dashboard() {
         <EmailHealthBanner />
         <VerificationBanner />
         <DemoModeBanner />
+
+        {/* Primary "Do this next" home — auto-detects the parent's current
+            stage on the 6-step linear journey and surfaces one big action.
+            Everything else on this page is a supporting reference. */}
+        <NextStepJourney
+          completed={completed}
+          summariesCount={summariesCount}
+          hasCertificate={pillarFlags.hasCertificate}
+        />
+
         <div className="grid lg:grid-cols-3 gap-6 mb-10 mt-6">
           <div className="card-soft p-8 lg:col-span-2 relative overflow-hidden">
             <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#D4C5F0]/40" />
@@ -488,7 +535,10 @@ export default function Dashboard() {
           <MeetTheProgramCard trailerId="dashboard-welcome" />
         </div>
 
-        <FivePillarJourney completed={completed} flags={pillarFlags} />
+        <FivePillarJourneyToolkit
+          completed={completed}
+          pillarFlags={pillarFlags}
+        />
 
         <details className="mt-8 group">
           <summary className="cursor-pointer text-sm text-[#3D1A78] hover:underline inline-flex items-center gap-1" data-testid="dashboard-legacy-modules-toggle">

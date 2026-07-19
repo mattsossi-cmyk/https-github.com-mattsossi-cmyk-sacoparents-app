@@ -1,0 +1,24 @@
+{
+  "summary": "Verified NextStepJourney Dashboard restructure end-to-end. Backend /api/analytics/me returns activity.summaries as integer (4 for parent1). Fresh guest lands on Step 1 'Assess' with 'Start here' eyebrow and CTA linking to /prep/readiness; parent1@test.com (4 summaries + all core steps done + certificate-eligible) lands on Step 6 'Review Progress' with 'You've completed the journey' eyebrow. Progress rail renders all 6 items with correct data-testids; completed steps show lucide-circle-check icon. Toolkit collapsible closed by default, expands on click and reveals FivePillarJourney. All regression elements (greeting, progress bar, checklist, classic step-by-step details) still render. NextStepJourney is DOM-positioned before the 'Your space' greeting card. CTA click navigates to /prep/readiness.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "NextStepJourney.jsx: The eyebrow uses `Object.keys(completed).length === 0 && summariesCount === 0` for isFirstEver. Note that Dashboard sets `prep = { completed: {} }` initially but the /mediation/prep endpoint returns a fully-populated `completed` object (including false values) for signed-in users — the current isFirstEver flag only triggers cleanly for fresh guests. Works as intended for the two acceptance flows tested, but be aware for mid-journey users the eyebrow will read 'Do this next' rather than 'Start here'.",
+    "Dashboard.jsx (line ~177): /analytics/me call uses `.catch(() => {})` swallowing errors silently. Consider at least a logError call so future 500s aren't invisible.",
+    "The `data-testid=journey-stage-number` DOM text is 'Step 1 of 6' (mixed case); the CSS `uppercase` utility renders it visually as 'STEP 1 OF 6'. Any Playwright/E2E assertion using text_content will get the mixed-case string — worth documenting for downstream test authors."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "100%", "frontend": "100%" },
+  "test_credentials": "parent1@test.com / TestPass123! (JWT), fresh guest via POST /api/auth/guest",
+  "seed_data_creation": "none — parent1 pre-seeded from prior iterations (6 completed steps, 4 summaries, cert eligible)",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "NextStepJourney Phase 1 restructure verified. Two acceptance flows confirmed: (1) fresh guest → Step 1 'Assess' + 'Start here' + CTA /prep/readiness, (2) parent1 fully completed → Step 6 'Review Progress' + 'You've completed the journey' + Up-next hidden. Backend fix /analytics/personal → /analytics/me works (returns activity.summaries=4). Toolkit collapsible + classic step-by-step details both preserved.",
+  "rca of the issue": "n/a — no defects found"
+}
