@@ -466,6 +466,24 @@ See `/app/memory/test_credentials.md`
 - **Verified**: 25 users returned in ~105ms (previously grew linearly with limit). Response shape unchanged so admin dashboard consumers are untouched.
 - **File**: `/app/backend/analytics_routes.py` (function `admin_recent_users`).
 
+### Feb 2026 — Interactive AI Coach Chat (P1 → SHIPPED)
+- **What**: A warm, BIFF-first, prep-aware chat surface for the heat-of-the-moment moments (right after a hard exchange, before a hard reply, when stuck). Multi-turn conversations persisted per user.
+- **Backend** (`coach_routes.py` + append to `ai_service.py`):
+  - Endpoints: `GET /api/coach/starters`, `POST /coach/sessions`, `GET /coach/sessions`, `GET /coach/sessions/{id}`, `DELETE /coach/sessions/{id}`, `POST /coach/sessions/{id}/message`.
+  - Uses Claude Sonnet 4.5 via `emergentintegrations` `LlmChat` with `initial_messages` carrying full conversation history (capped at last 20 turns) so context is preserved.
+  - System prompt enforces: validate feelings first, ground in child, teach BIFF, no character attacks, ≤200 words, offer-don't-direct, and a safety override that flips `safety_flag=true` and surfaces DV/988 hotlines.
+  - Prep-aware: pulls child_goals, reflection, priority, and child_name from `prep_data` and folds them into the system prompt so the coach references the parent's actual goals.
+  - First user message auto-derives a 60-char session title. Session `safety_flag` is promoted to true if any assistant reply carries one.
+  - Collections: `coach_sessions`, `coach_messages`.
+- **Frontend** (`pages/Coach.jsx` + routes in `App.js`):
+  - `/coach` empty state renders 5 starter prompt cards + "Start blank" link.
+  - `/coach/:sessionId` renders the thread with react-markdown assistant bubbles (bold, italic, lists, links), safety-aware banner when the session has flagged content, and follow-up suggestion pills after each assistant turn.
+  - Composer: Enter to send, Shift+Enter for newline, in-flight spinner, disclaimer under every state.
+  - Past-conversations sidebar with title + delete (with confirm).
+  - Discoverable from Pillar 4 of `FivePillarJourney` as "AI Coach Chat (in the moment)".
+- **Tests**: 12/12 backend pytest — starters, session lifecycle, list order, delete-cascade, auth gating, content validation, LLM single-turn shape + title derivation, multi-turn context continuity, safety-relevant schema. Full frontend Playwright: empty → starter click → optimistic bubble → assistant reply with Markdown rendering → follow-up pills → sidebar → delete flow. All 100% pass.
+- **Dependency added**: `react-markdown` (via yarn).
+
 ### Jul 2026 — Watch-First image refresh · Badge share · Mediator email CTA · Coercive threshold (P0/P1/P2 → SHIPPED)
 - **Watch-First image refresh (P0)**: Replaced user-supplied illustrations for the four hero modules and regenerated the corresponding TTS videos via `/app/memory/build_step_videos_from_images.py`:
   - `step-safety-assessment.png` (Assess Your Family Situation)
