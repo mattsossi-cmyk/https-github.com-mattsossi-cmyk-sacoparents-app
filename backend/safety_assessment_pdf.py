@@ -73,7 +73,7 @@ class SafetyAssessmentPDF(FPDF):
         self.set_text_color(*TEXT_DARK)
         self.set_font("Helvetica", "B", 16)
         self.set_xy(42, 9)
-        self.cell(0, 8, "IPV Communication Safety Assessment", ln=1)
+        self.cell(0, 8, "Family Violence & Communication Safety Assessment", ln=1)
         self.set_font("Helvetica", "", 10)
         self.set_text_color(*TEXT_MID)
         self.set_x(42)

@@ -643,7 +643,7 @@ def send_safety_assessment_report(
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">{greeting}</p>'
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
-        f"Here is the copy of your IPV Communication Safety Assessment you requested. "
+        f"Here is the copy of your Family Violence & Communication Safety Assessment you requested. "
         f"Your recommended pathway is:</p>"
         f'<div style="background:#F8F7FC;border-radius:16px;padding:18px 20px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
         f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:6px;">Level {level}</div>'
@@ -658,7 +658,7 @@ def send_safety_assessment_report(
     )
     plain = (
         f"{greeting}\n\n"
-        f"Your IPV Communication Safety Assessment result is attached.\n\n"
+        f"Your Family Violence & Communication Safety Assessment result is attached.\n\n"
         f"Level {level}: {pathway_title}\n\n"
         f"{pathway_summary}\n\n"
         f"{safety_line}\n"
@@ -670,7 +670,7 @@ def send_safety_assessment_report(
     )
     _send(
         to_email=to_email,
-        subject="Your IPV Communication Safety Assessment - SA Coparents",
+        subject="Your Family Violence & Communication Safety Assessment - SA Coparents",
         html=html,
         text=plain,
         attachments=[("safety-assessment.pdf", pdf_bytes)],
@@ -708,7 +708,7 @@ def send_mediator_safety_assessment(
         f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">{greeting}</p>'
         f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
         f'<strong>{who}</strong> is preparing for mediation through SA Coparents and asked me to send you '
-        f'their IPV Communication Safety Assessment result so you have the safest starting point for their case.'
+        f'their Family Violence & Communication Safety Assessment result so you have the safest starting point for their case.'
         f'</p>'
         f'<div style="background:#F8F7FC;border-radius:16px;padding:18px 20px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
         f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:6px;">'
@@ -727,7 +727,7 @@ def send_mediator_safety_assessment(
     plain = (
         f"{greeting}\n\n"
         f"{who} is preparing for mediation through SA Coparents and asked me to forward "
-        f"their IPV Communication Safety Assessment.\n\n"
+        f"their Family Violence & Communication Safety Assessment.\n\n"
         f"Level {level}: {pathway_title}\n{pathway_summary}\n"
         f"{optional_note_plain}"
         f"\nThe full report is attached as a PDF. You can reply directly to reach {who}"

@@ -520,7 +520,7 @@ export default function SafetyAssessment() {
               </div>
             </div>
             <h1 className="font-bold text-3xl sm:text-4xl text-[#1A1330] tracking-tight mb-3">
-              IPV Communication Safety Assessment
+              Family Violence &amp; Communication Safety Assessment
             </h1>
 
             <MethodologyCard id="safety" defaultOpen={false} />
@@ -581,7 +581,7 @@ export default function SafetyAssessment() {
                   <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#C28771] mb-1">
                     Dimension 1 · Safety <span className="text-[#857E9C]">(you are here)</span>
                   </div>
-                  <div className="text-sm text-[#1A1330] font-semibold mb-1">IPV, coercive control, fear</div>
+                  <div className="text-sm text-[#1A1330] font-semibold mb-1">Family violence, coercive control, fear</div>
                   <div className="text-xs text-[#4B4567]">→ Safety recommendations &amp; safer pathways</div>
                 </div>
                 <div className="rounded-xl border border-[#E5E0EE] bg-white p-3">
@@ -633,7 +633,7 @@ export default function SafetyAssessment() {
               <WatchFirstVideo
                 videoSrc="/videos/ipv-assessment-intro.mp4"
                 posterSrc="/images/ipv-assessment-poster.png"
-                label="Watch First · IPV Assessment for Co-Parents"
+                label="Watch First · Family Violence &amp; Communication Safety Assessment for Co-Parents"
                 subtitle="Safety First. Informed Choices. Better Outcomes for Your Children."
                 testid="safety-assessment-watch"
               />
@@ -788,11 +788,11 @@ export default function SafetyAssessment() {
                 <Shield size={13} /> Important Advisory
               </div>
               <p className="leading-relaxed mb-3">
-                The SA CoParents Intimate Partner Violence (IPV) Assessment is
-                designed to help you reflect on your parenting and communication
-                situation. It is <strong>not intended to diagnose domestic
-                violence, determine legal rights, predict future behavior, or
-                replace professional advice</strong>.
+                The SA CoParents Family Violence &amp; Communication Safety
+                Assessment is designed to help you reflect on your parenting
+                and communication situation. It is <strong>not intended to
+                diagnose domestic violence, determine legal rights, predict
+                future behavior, or replace professional advice</strong>.
               </p>
               <p className="leading-relaxed mb-3">
                 Your responses are based solely on the information you provide
