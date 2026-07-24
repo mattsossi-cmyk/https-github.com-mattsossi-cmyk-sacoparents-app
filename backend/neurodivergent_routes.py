@@ -1,27 +1,13 @@
-"""Special Needs Assessment — 6-pillar, evidence-informed pathway.
+"""Special Needs Assessment — v2, child-centered coordination rebuild.
 
-This assessment supports co-parents whose child has ANY of the following
-(alone or in combination) — never diagnostic, always parent-led:
+The v2 assessment moves from a single "co-parent quality" number to
+seven coordination scores plus a per-domain rollup. See
+`special_needs_questions.py` for the question catalogue and
+`special_needs_scoring.py` for the deterministic scorer.
 
-  * Neurodivergence (autism, ADHD, dyslexia, sensory, executive function,
-    twice-exceptional / gifted)
-  * Developmental disabilities (Down Syndrome, intellectual disability,
-    cerebral palsy, global delay, genetic conditions)
-  * Chronic medical conditions (diabetes, epilepsy, heart conditions,
-    feeding disorders, cancer survivorship, etc.)
-  * Mental health (anxiety, depression, OCD, PTSD, bipolar, eating disorders)
-  * Behavioural challenges (aggression, elopement, self-injury, school refusal)
-  * Trauma history (foster care, abuse, DV exposure, community violence, grief)
-  * Attachment / regulation needs (any age)
-
-Organised as six practical pillars, drawing on:
-  Neurodiversity · Developmental Disability · Chronic Medical · Mental Health ·
-  Behavioural Support · Trauma-Informed Care · Attachment · Executive Function ·
-  Family Systems · Collaborative & Proactive Solutions (Ross Greene) ·
-  Positive Behaviour Support · WHO Quality-of-Life Framework.
-
-Endpoints unchanged from the previous version — this file just replaces the
-QUESTIONS catalogue and the report prompt language.
+Legacy `nd_prep` documents (v1 question ids) are still readable but
+never mixed with v2 answers — v2 uses `answers_v2` on the same doc so
+we don't fragment collections while migrating in-flight parents.
 """
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -32,6 +18,8 @@ from pydantic import BaseModel, Field
 
 from auth import get_current_user
 import ai_service
+import special_needs_questions as sn_q
+import special_needs_scoring as sn_scoring
 
 
 router = APIRouter(prefix="/neurodivergent", tags=["special-needs"])
@@ -43,6 +31,10 @@ def get_db(request: Request) -> AsyncIOMotorDatabase:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+# The v1 catalogue is retained below for any lingering v1 report generator
+# call sites — it will be removed once the frontend fully cuts over.
 
 
 # ============================================================================
@@ -332,13 +324,26 @@ class AnswerPayload(BaseModel):
     value: Any = None
 
 
+class BulkAnswerPayload(BaseModel):
+    # Used by the wizard to save multiple items in one call (e.g. when the
+    # user completes an 8-domain section and moves on).
+    answers: Dict[str, Any] = Field(default_factory=dict)
+
+
 # ============================================================================
-#  Endpoints
+#  v2 endpoints (child-centered coordination assessment)
 # ============================================================================
+
+@router.get("/schema")
+async def get_schema(current=Depends(get_current_user)):
+    """Full v2 assessment structure (sections, items, scales, domains)."""
+    return sn_q.get_schema()
+
 
 @router.get("/questions")
 async def list_questions(current=Depends(get_current_user)):
-    return {"questions": QUESTIONS}
+    """Legacy v1 shape kept only to avoid a hard 404 on stale clients."""
+    return {"questions": []}
 
 
 @router.get("/prep")
@@ -348,7 +353,12 @@ async def get_prep(
 ):
     doc = await db.nd_prep.find_one({"user_id": current.user_id}, {"_id": 0})
     if not doc:
-        return {"user_id": current.user_id, "answers": {}, "completed": False}
+        return {"user_id": current.user_id, "answers": {}, "completed": False, "version": 2}
+    # The wizard writes to `answers_v2`. Return that as `answers` so the
+    # frontend has one place to look; legacy `answers` (v1) is left alone
+    # in-place for archival.
+    doc.setdefault("answers", doc.get("answers_v2") or {})
+    doc["version"] = 2 if doc.get("answers_v2") is not None else 1
     return doc
 
 
@@ -358,14 +368,14 @@ async def save_answer(
     current=Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    valid_ids = {q["id"] for q in QUESTIONS}
+    valid_ids = set(sn_q.all_question_ids())
     if payload.question_id not in valid_ids:
         raise HTTPException(status_code=400, detail="Unknown question id")
     await db.nd_prep.update_one(
         {"user_id": current.user_id},
         {
             "$set": {
-                f"answers.{payload.question_id}": payload.value,
+                f"answers_v2.{payload.question_id}": payload.value,
                 "updated_at": _now_iso(),
             },
             "$setOnInsert": {"user_id": current.user_id, "created_at": _now_iso()},
@@ -373,6 +383,37 @@ async def save_answer(
         upsert=True,
     )
     return {"ok": True}
+
+
+@router.post("/answers/bulk")
+async def save_answers_bulk(
+    payload: BulkAnswerPayload,
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    valid_ids = set(sn_q.all_question_ids())
+    unknown = [k for k in payload.answers if k not in valid_ids]
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"Unknown question ids: {unknown[:5]}")
+    update: Dict[str, Any] = {"updated_at": _now_iso()}
+    for k, v in payload.answers.items():
+        update[f"answers_v2.{k}"] = v
+    await db.nd_prep.update_one(
+        {"user_id": current.user_id},
+        {"$set": update, "$setOnInsert": {"user_id": current.user_id, "created_at": _now_iso()}},
+        upsert=True,
+    )
+    return {"ok": True, "saved": len(payload.answers)}
+
+
+@router.get("/scores")
+async def get_scores(
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    doc = await db.nd_prep.find_one({"user_id": current.user_id}, {"_id": 0}) or {}
+    answers = doc.get("answers_v2") or {}
+    return sn_scoring.compute_scores(answers)
 
 
 @router.post("/complete")
