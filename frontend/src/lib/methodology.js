@@ -61,22 +61,23 @@ export const METHODOLOGIES = {
 
   special_needs: {
     id: "special_needs",
-    name: "Special Needs 6-Pillar Assessment",
+    name: "Special Needs Coordination Assessment",
     category: "assessment",
     purpose:
-      "To help you and your co-parent align on your child's neurodevelopmental, medical, emotional, educational, sensory, and social needs so mediation and the parenting plan reflect the child's actual experience — not just the schedule.",
+      "To help two co-parents move from disagreement about the child to a coordinated plan for the child. It produces seven coordination scores (understanding, information sharing, follow-through, consistency between homes, professional collaboration, decision-making, transition stability) plus a recommended co-parenting structure — cooperative, structured, or parallel.",
     limitations:
-      "This assessment does not diagnose your child, produce an educational classification, or determine services eligibility. It does not replace a formal evaluation by a pediatrician, psychologist, developmental specialist, or IEP team. Its outputs are prep material for mediation, not clinical findings.",
+      "This assessment does not diagnose your child, produce an educational classification, determine services eligibility, or measure parental fitness. It does not replace a formal evaluation by a pediatrician, psychologist, developmental specialist, or IEP team. Its outputs are prep material for mediation and coordination, not clinical findings.",
     sources: [
-      "The AAP's Bright Futures framework for developmental surveillance",
-      "The CDC's Learn the Signs / Act Early milestones",
-      "The IDEA framework of educational categories (US) — used only as vocabulary, not as an eligibility test",
-      "Trauma-informed care principles (SAMHSA)",
+      "AAP Bright Futures framework for developmental surveillance",
+      "AAP Coordinating Care for a Child with Disabilities — organized records, tracking, provider collaboration",
+      "CDC Learn the Signs / Act Early — act on concerns, don't wait and see",
+      "IDEA framework of educational categories (US) — used as vocabulary only, not as an eligibility test",
+      "SAMHSA trauma-informed care principles",
     ],
     logic:
-      "Your 32 answers are grouped by pillar. Each pillar gets a rule-based composite score. Claude Sonnet 4.5 then generates a narrative report per pillar with concrete co-parenting adjustments to raise in mediation. Numbers are deterministic; narratives are AI-authored using the numbers as anchors.",
+      "The 21 coordination items each map to a fixed weight on a shared 7-point behaviour-based scale (Almost always → Almost never, plus Not applicable / I do not know / Parents disagree). Scores are the mean of the scored items per dimension — deterministic, so the same answers always produce the same numbers. Answers of 'I do not know' or 'Parents disagree' are surfaced as flags to bring to your coach rather than being treated as bad behaviour. AI narratives are layered on top of the numbers.",
     professionalHelp:
-      "If any pillar surfaces a red flag (developmental regression, sudden mood/behaviour change, self-harm, unsafe access) contact your pediatrician or a licensed child psychologist. If a formal diagnosis exists, share it with your mediator so accommodations are baked into the plan.",
+      "If any pillar surfaces a red flag (developmental regression, sudden mood/behaviour change, self-harm, unsafe access, family violence affecting healthcare decisions, missed medication, refused records) contact your pediatrician or a licensed child psychologist. If a formal diagnosis exists, share it with your mediator so accommodations are baked into the plan.",
     retake:
       "Retake at each developmental transition — starting school, puberty, changes in household structure — or annually. Children change; the plan should too.",
   },

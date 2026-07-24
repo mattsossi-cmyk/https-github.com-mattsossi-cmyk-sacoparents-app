@@ -4,6 +4,7 @@ import { ArrowLeft, RefreshCw, Loader2, FileText, Home, ScrollText, Copy } from 
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import DemoModeBanner from "../components/DemoModeBanner";
+import SpecialNeedsScoreDashboard from "../components/SpecialNeedsScoreDashboard";
 import { api } from "../lib/api";
 
 /**
@@ -151,6 +152,10 @@ export default function NeurodivergentReports() {
 
         <div className="mt-6">
           <DemoModeBanner />
+        </div>
+
+        <div className="mt-8">
+          <SpecialNeedsScoreDashboard />
         </div>
 
         {loading ? (
