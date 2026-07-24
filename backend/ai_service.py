@@ -969,3 +969,112 @@ async def generate_coach_reply(
         "suggested_followups": followups,
         "safety_flag": bool(data.get("safety_flag", False)),
     }
+
+
+# ============ Special Needs Assessment — v2 6-part report ============
+
+_SN_V2_SYSTEM = (
+    "You are a warm, grounded co-parenting coach writing a 6-part care plan "
+    "for two parents who are preparing a mediation on their child with "
+    "additional support needs. Your job is to move the parents from "
+    "disagreement about the child to a coordinated plan for the child.\n\n"
+    "Operating principles:\n"
+    "1. LEAD WITH THE CHILD. Never define the child by limitations. The "
+    "opening always names the child's strengths and interests first.\n"
+    "2. DIAGNOSIS-NEUTRAL. Do not diagnose. When a concern is parent-observed "
+    "but not documented, name the next professional step, not a label.\n"
+    "3. COORDINATION, NOT PERFECTION. The report is about how the two homes "
+    "coordinate, never about which parent is 'better'.\n"
+    "4. USE THE PROVIDED NUMBERS. The 7 coordination scores are deterministic. "
+    "Reference them explicitly; do not re-score.\n"
+    "5. ACTIONABLE. Every gap must resolve into a specific action with an "
+    "owner, an information channel, and a review date placeholder.\n"
+    "6. NEVER LEGAL OR CLINICAL ADVICE. This is a planning document.\n\n"
+    "Return STRICT JSON in this exact shape:\n"
+    "{\n"
+    "  \"child_profile\": { \"summary\": str, \"strengths\": [str,...], "
+    "\"what_helps\": [str,...], \"support_needs\": [str,...] },\n"
+    "  \"agreement_areas\": [ { \"title\": str, \"detail\": str } ],\n"
+    "  \"coordination_gaps\": [ { \"title\": str, \"detail\": str, "
+    "\"dimension\": str } ],\n"
+    "  \"priorities\": { \"immediate\": [str,...], \"thirty_day\": [str,...], "
+    "\"longer_term\": [str,...] },\n"
+    "  \"structure_reasoning\": str,\n"
+    "  \"action_plan\": [ { \"need\": str, \"action\": str, "
+    "\"responsible\": str, \"channel\": str, \"review\": str } ],\n"
+    "  \"disclaimer\": \"This assessment is a co-parenting and planning tool. "
+    "It does not diagnose a child, determine parental fitness, replace a "
+    "medical or psychological evaluation, or provide legal advice.\"\n"
+    "}\n"
+    "action_plan should carry 4-7 rows. immediate/thirty_day/longer_term "
+    "should each carry 1-4 items."
+)
+
+
+def _sn_context(profile, concerns, scores, disagreement):
+    parts = []
+    child_name = (profile or {}).get("child_name") or "the child"
+    parts.append(f"CHILD NAME: {child_name}")
+    for k in ("child_age", "strengths", "what_helps", "child_communication", "child_voice"):
+        v = (profile or {}).get(k)
+        if v:
+            parts.append(f"{k}: {str(v)[:600]}")
+    for k, label in (
+        ("documented_needs", "DOCUMENTED"),
+        ("under_eval_needs", "UNDER EVALUATION"),
+        ("parent_observed_needs", "PARENT-OBSERVED"),
+    ):
+        v = (concerns or {}).get(k)
+        if v:
+            parts.append(f"{label}: {str(v)[:400]}")
+    dims = (scores or {}).get("dimensions") or {}
+    dim_lines = []
+    for k, d in dims.items():
+        if d.get("no_signal"):
+            dim_lines.append(f"  - {d['label']}: not enough answers")
+        else:
+            dim_lines.append(f"  - {d['label']}: {d['score']}/100 ({d['bucket']})")
+    if dim_lines:
+        parts.append("COORDINATION SCORES:\n" + "\n".join(dim_lines))
+    structure = (scores or {}).get("structure") or {}
+    if structure:
+        parts.append(f"RECOMMENDED STRUCTURE: {structure.get('label')} — {structure.get('blurb','')}")
+    if disagreement:
+        parts.append(f"DISAGREEMENT-RESPONSE SELF-REFLECTION: {disagreement}")
+    return "\n\n".join(parts)
+
+
+async def generate_special_needs_report_v2(*, profile, concerns, scores, disagreement, parent_name=None):
+    """Generate the 6-part Special Needs care plan.
+
+    profile / concerns are dicts of the raw answers for those sections.
+    scores is the output of special_needs_scoring.compute_scores().
+    disagreement is the value from the concern_response single_select.
+    """
+    context = _sn_context(profile, concerns, scores, disagreement)
+    prompt = (
+        f"Parent preparing the report: {parent_name or 'the parent'}.\n\n"
+        f"ASSESSMENT INPUT:\n{context}\n\n"
+        "Write the 6-part care plan now. JSON only."
+    )
+    chat = LlmChat(
+        api_key=os.environ["EMERGENT_LLM_KEY"],
+        session_id=f"sa-sn-v2-{uuid.uuid4().hex[:10]}",
+        system_message=SAFETY_GUARDRAIL + _SN_V2_SYSTEM,
+    ).with_model(PROVIDER, CLAUDE_MODEL)
+
+    response = await chat.send_message(UserMessage(text=prompt))
+    data = _extract_json(response) or {}
+    # Defensive shaping so the frontend never has to handle missing keys.
+    return {
+        "child_profile": data.get("child_profile") or {},
+        "agreement_areas": data.get("agreement_areas") or [],
+        "coordination_gaps": data.get("coordination_gaps") or [],
+        "priorities": data.get("priorities") or {"immediate": [], "thirty_day": [], "longer_term": []},
+        "structure_reasoning": data.get("structure_reasoning") or "",
+        "action_plan": data.get("action_plan") or [],
+        "disclaimer": data.get("disclaimer") or (
+            "This assessment is a co-parenting and planning tool. It does not diagnose a child, "
+            "determine parental fitness, replace a medical or psychological evaluation, or provide legal advice."
+        ),
+    }

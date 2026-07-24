@@ -582,3 +582,22 @@ _All P2 items shipped — backlog empty. Next priorities will come from real use
 - **Files added**: `backend/special_needs_questions.py`, `backend/special_needs_scoring.py`, `frontend/src/components/SpecialNeedsScoreDashboard.jsx`. Files rewritten: `backend/neurodivergent_routes.py` (heavy), `frontend/src/pages/Neurodivergent.jsx` (full). Files touched: `frontend/src/pages/NeurodivergentReports.jsx`, `frontend/src/lib/methodology.js`.
 - **Testing**: Backend curl loop verified — POST /answers/bulk → GET /scores returns dimensions, structure, overall_signal correctly (deterministic — same input → same output). Screenshot smoke on `/neurodivergent` shows Question 1/31 loading with new v2 catalogue and section header "Begin with the child"; Question 10/31 shows the coordination-scale item "During the past six months, how often did both parents receive important medical information…". Screenshot on `/neurodivergent/reports` shows the score dashboard with 7 dimension bars, "Structured Coordination" recommendation, no-signal state for Professional collaboration, and a flags line summarising disagree / dont_know / unanswered counts.
 - **Phase B (Consistency Between Homes) · Phase C (6-part report + PDF + share link) · Phase D (safeguards & disagreement pathway) · Phase E (IEP/504 sub-module) remain queued.**
+
+### Feb 2026 — Special Needs Rebuild, Phase C: 6-part report + HTML view + PDF + share link (SHIPPED)
+- **What**: The new v2 Special Needs Coordination Report — six-part care plan generated from the parent's answers + the deterministic 7 coordination scores. Available as an HTML view, a downloadable PDF, and a signed share link for the pediatrician / therapist / school team / mediator / attorney.
+- **Structure (per the product spec)**:
+  1. Child Profile — summary + strengths & interests + what helps + support needs (documented / under-evaluation / parent-observed)
+  2. Areas of Parent Agreement
+  3. Coordination Gaps (with the coordination dimension tagged)
+  4. Priority Levels — Immediate · Within 30 days · Longer-term
+  5. Recommended Co-Parenting Structure — Cooperative / Structured / Parallel narrative (references the deterministic score-based recommendation)
+  6. Special Needs Parenting Plan Worksheet — action table with columns: *Child's need · Agreed action · Responsible · Info shared by · Review date*
+- **Backend**:
+  - `ai_service.generate_special_needs_report_v2()` — Claude Sonnet 4.5 emits strict JSON in the 6-part shape; system prompt enforces child-first framing, diagnosis-neutrality, coordination-not-perfection, and never-legal-or-clinical-advice.
+  - New `backend/sn_report_pdf.py` — FPDF renderer for the 6 sections including a paginated action-plan table with per-row height calculation, latin-1 character normalisation (em-dash / curly quotes / ellipsis → ASCII), full-page-width bullet rendering, and a footer disclaimer.
+  - Endpoints on `neurodivergent_routes.py`: `POST /report/generate` (create/regenerate), `GET /report` (fetch current), `GET /report/pdf` (download PDF), `POST /report/{id}/share-link` (create signed token), `GET /report/shared/{token}` (public route with `?format=json` or default PDF).
+  - Storage: one live report per user in `sn_v2_reports` — `replace_one` on insert so the latest generation is always what the parent sees.
+- **Frontend**: Full rewrite of `NeurodivergentReports.jsx` — hero with Download PDF / Copy share link / Regenerate buttons, `SpecialNeedsScoreDashboard` above the report, six section cards (`nd-sec-profile`, `nd-sec-agreement`, `nd-sec-gaps`, `nd-sec-priorities`, `nd-sec-structure`, `nd-sec-action-plan`), priority tri-tone (rust immediate · purple 30-day · green longer-term), action table with 5 columns, disclaimer footer.
+- **Testing**: Backend curl loop confirmed the full flow — bulk-save answers → generate report → 4 agreement areas + 3 gaps + 3/3/3 priorities + 7 action rows returned by Claude; `/report/pdf` returns `HTTP=200 SIZE=8828 %PDF-`; share-link endpoint returns a signed JWT with `/api/neurodivergent/report/shared/{token}` path. Frontend Playwright verified all 6 section data-testids visible and the "A care plan for Ada" title.
+- **Files added**: `backend/sn_report_pdf.py`. Files rewritten: `frontend/src/pages/NeurodivergentReports.jsx`. Files touched: `backend/ai_service.py` (append), `backend/neurodivergent_routes.py` (v2 report endpoints appended).
+- **Phase D (safeguards & disagreement pathway) · Phase E (IEP/504 sub-module) remain queued.**

@@ -500,3 +500,157 @@ async def list_reports(
     order = {t: i for i, t in enumerate(REPORT_TYPES)}
     reports.sort(key=lambda r: order.get(r.get("report_type"), 99))
     return {"reports": reports}
+
+
+# ============================================================================
+#  v2 report — generate / read / PDF / share
+# ============================================================================
+import uuid  # noqa: E402
+from io import BytesIO  # noqa: E402
+from fastapi.responses import StreamingResponse  # noqa: E402
+from auth import create_share_token, decode_share_token  # noqa: E402
+import sn_report_pdf  # noqa: E402
+
+
+def _extract_profile(answers: Dict[str, Any]) -> Dict[str, Any]:
+    keys = [q["id"] for q in sn_q.CHILD_PROFILE]
+    return {k: answers.get(k) for k in keys if answers.get(k) is not None}
+
+
+def _extract_concerns(answers: Dict[str, Any]) -> Dict[str, Any]:
+    keys = [q["id"] for q in sn_q.CONCERNS_ITEMS]
+    return {k: answers.get(k) for k in keys if answers.get(k) is not None}
+
+
+@router.post("/report/generate")
+async def generate_v2_report(
+    request: Request,
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Generate (or regenerate) the 6-part care plan from saved v2 answers."""
+    doc = await db.nd_prep.find_one({"user_id": current.user_id}, {"_id": 0}) or {}
+    answers = doc.get("answers_v2") or {}
+    if not answers:
+        raise HTTPException(status_code=400, detail="Please answer some questions before generating the report.")
+
+    scores = sn_scoring.compute_scores(answers)
+    try:
+        report = await ai_service.generate_special_needs_report_v2(
+            profile=_extract_profile(answers),
+            concerns=_extract_concerns(answers),
+            scores=scores,
+            disagreement=answers.get("concern_response"),
+            parent_name=current.name,
+        )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Report generation failed: {e}")
+
+    report_id = f"sn_{uuid.uuid4().hex[:12]}"
+    child_name = (answers.get("child_name") or "").strip() or "your child"
+    doc_out = {
+        "report_id": report_id,
+        "user_id": current.user_id,
+        "child_name": child_name,
+        "generated_at": _now_iso(),
+        "scores": scores,
+        "report": report,
+    }
+    # Store as the parent's current v2 report — replace-on-insert keeps
+    # exactly one live report per user.
+    await db.sn_v2_reports.replace_one(
+        {"user_id": current.user_id}, doc_out, upsert=True
+    )
+    doc_out.pop("_id", None)
+    return doc_out
+
+
+@router.get("/report")
+async def get_v2_report(
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    doc = await db.sn_v2_reports.find_one({"user_id": current.user_id}, {"_id": 0})
+    if not doc:
+        return {"report": None}
+    return doc
+
+
+@router.get("/report/pdf")
+async def download_v2_report_pdf(
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    doc = await db.sn_v2_reports.find_one({"user_id": current.user_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Generate the report first.")
+    pdf_bytes = sn_report_pdf.build_special_needs_pdf(
+        user_name=current.name or "",
+        child_name=doc.get("child_name") or "",
+        report=doc.get("report") or {},
+    )
+    safe_child = "".join(c if c.isalnum() else "_" for c in (doc.get("child_name") or "child")).strip("_")
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="SN_Care_Plan_{safe_child}.pdf"'},
+    )
+
+
+@router.post("/report/{report_id}/share-link")
+async def create_v2_report_share_link(
+    report_id: str,
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    doc = await db.sn_v2_reports.find_one(
+        {"report_id": report_id, "user_id": current.user_id}, {"_id": 0, "report_id": 1}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Report not found")
+    token = create_share_token("sn_report", report_id, current.user_id)
+    return {"token": token, "path": f"/api/neurodivergent/report/shared/{token}"}
+
+
+@router.get("/report/shared/{token}")
+async def shared_v2_report(
+    token: str,
+    request: Request,
+    format: str = "pdf",
+):
+    """Public read-only route. `?format=json` returns the report JSON so a
+    frontend page can render the HTML view; default is a PDF download."""
+    payload = decode_share_token(token)
+    if not payload or payload.get("doc_type") != "sn_report":
+        raise HTTPException(status_code=404, detail="This link has expired or is invalid.")
+    db = request.app.state.db
+    user = await db.users.find_one({"user_id": payload["sub"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="This link is no longer valid.")
+    doc = await db.sn_v2_reports.find_one(
+        {"report_id": payload["doc_id"], "user_id": user["user_id"]}, {"_id": 0}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    if format == "json":
+        return {
+            "report_id": doc.get("report_id"),
+            "child_name": doc.get("child_name"),
+            "generated_at": doc.get("generated_at"),
+            "scores": doc.get("scores"),
+            "report": doc.get("report"),
+            "shared_by": user.get("name") or "A co-parent",
+        }
+
+    pdf_bytes = sn_report_pdf.build_special_needs_pdf(
+        user_name=user.get("name") or "",
+        child_name=doc.get("child_name") or "",
+        report=doc.get("report") or {},
+    )
+    safe = "".join(c if c.isalnum() else "_" for c in (doc.get("child_name") or "child")).strip("_")
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="SN_Care_Plan_{safe}.pdf"'},
+    )
