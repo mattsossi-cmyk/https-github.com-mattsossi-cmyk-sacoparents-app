@@ -161,8 +161,52 @@ DOMAIN_ITEMS = [
      "prompt": "How often do professionals (doctors, therapists, teachers) have accurate contact information for both parents?"},
 ]
 
+NEEDS_CONSISTENCY_SCALE = [
+    {"value": "yes",      "label": "Yes — this needs to be consistent for my child"},
+    {"value": "can_flex", "label": "It can flex between our two homes"},
+    {"value": "uncertain","label": "I'm not sure"},
+]
+
 # ---------------------------------------------------------------------------
-# 4. Disagreement response self-reflection (single question).
+# 5. Consistency Between Homes — the signature Phase B module.
+#
+# Eight compound items, each scored on TWO axes:
+#   1. How consistent is this across the two homes today?  (COORDINATION_SCALE)
+#   2. Does the child actually need this consistent, or can it flex?
+#
+# The scorer only counts an item toward the Consistency coordination score
+# when the parent has flagged that consistency is needed (or is uncertain,
+# which we treat as "needs" to be safe). Items marked `can_flex` become
+# informational — surfaced in the report as "areas both parents can hold
+# differently" — but never drag the coordination score down.
+#
+# Each backend item id has a paired `<id>__needs` companion that stores
+# the consistency-need flag. `type: "consistency_pair"` is a UI marker so
+# the wizard renders both selectors on one screen.
+# ---------------------------------------------------------------------------
+
+CONSISTENCY_ITEMS = [
+    {"id": "cons_medication",   "topic": "Medication timing & administration",
+     "prompt": "Medication timing and administration",
+     "help": "How consistently is this handled across the two homes right now?"},
+    {"id": "cons_sleep_food",   "topic": "Sleep & eating routines",
+     "prompt": "Sleep and eating routines"},
+    {"id": "cons_therapy",      "topic": "Therapy exercises & behavioural strategies",
+     "prompt": "Therapy exercises and behavioural strategies"},
+    {"id": "cons_screen_sensory","topic": "Screen use & sensory regulation",
+     "prompt": "Screen time and sensory-regulation strategies"},
+    {"id": "cons_school",       "topic": "Schoolwork & attendance",
+     "prompt": "Schoolwork, homework, and attendance"},
+    {"id": "cons_discipline",   "topic": "Discipline & emotional dysregulation",
+     "prompt": "Discipline and responses to emotional dysregulation"},
+    {"id": "cons_equipment",    "topic": "Transportation of medical / adaptive equipment",
+     "prompt": "Transportation of medical or adaptive equipment between homes"},
+    {"id": "cons_change_comm",  "topic": "Communicating changes in the child's functioning",
+     "prompt": "How changes in your child's functioning are communicated to the other parent"},
+]
+
+# ---------------------------------------------------------------------------
+# 6. Disagreement response self-reflection (single question).
 # ---------------------------------------------------------------------------
 
 DISAGREEMENT_RESPONSE = {
@@ -195,6 +239,11 @@ def all_question_ids():
     ids = [q["id"] for q in CHILD_PROFILE]
     ids += [q["id"] for q in CONCERNS_ITEMS]
     ids += [q["id"] for q in DOMAIN_ITEMS]
+    # Consistency: each topic saves TWO answers — the coordination-scale
+    # value under `<id>` and the needs-consistency flag under `<id>__needs`.
+    for c in CONSISTENCY_ITEMS:
+        ids.append(c["id"])
+        ids.append(f"{c['id']}__needs")
     ids += [DISAGREEMENT_RESPONSE["id"]]
     return ids
 
@@ -204,12 +253,16 @@ def get_schema():
     return {
         "version": 2,
         "scale": COORDINATION_SCALE,
+        "needs_consistency_scale": NEEDS_CONSISTENCY_SCALE,
         "concern_sources": CONCERN_SOURCES,
         "domains": DOMAINS,
         "sections": [
             {"id": "child_profile", "title": "Begin with the child", "items": CHILD_PROFILE},
             {"id": "concerns",      "title": "Diagnosed, under evaluation, or parent-observed", "items": CONCERNS_ITEMS},
             {"id": "coordination",  "title": "How you coordinate across 8 domains", "items": DOMAIN_ITEMS, "grouped_by": "domain"},
+            {"id": "consistency",   "title": "Consistency between homes",
+             "intro": "Identical homes are not the goal. For each area, tell us how aligned the two homes are today — and whether your child actually needs it aligned or can hold it flexibly.",
+             "items": [{**c, "type": "consistency_pair"} for c in CONSISTENCY_ITEMS]},
             {"id": "disagreement",  "title": "When the other parent raises a concern", "items": [DISAGREEMENT_RESPONSE]},
         ],
     }

@@ -21,6 +21,7 @@ from special_needs_questions import (
     COORDINATION_SCALE,
     DOMAIN_ITEMS,
     DOMAINS,
+    CONSISTENCY_ITEMS,
 )
 
 
@@ -104,6 +105,23 @@ def compute_scores(answers: Dict[str, Any]) -> dict:
         scored = _score_answer(item, answers.get(item["id"]))
         if scored is not None:
             by_dim[dim].append(scored)
+
+    # Phase B — Consistency Between Homes items also feed the `consistency`
+    # coordination score. An item only counts if the parent flagged that
+    # consistency is actually needed for the child (or left it as
+    # `uncertain`, which we treat as "needs" to be safe). `can_flex` items
+    # are surfaced elsewhere as "areas that can hold differently" but never
+    # drag the score.
+    consistency_flex: List[str] = []
+    for item in CONSISTENCY_ITEMS:
+        need_flag = answers.get(f"{item['id']}__needs")
+        dim_items["consistency"].append(item)
+        if need_flag == "can_flex":
+            consistency_flex.append(item.get("topic") or item["id"])
+            continue
+        scored = _score_answer(item, answers.get(item["id"]))
+        if scored is not None:
+            by_dim["consistency"].append(scored)
 
     dimensions: Dict[str, dict] = {}
     for dim, values in by_dim.items():
@@ -192,4 +210,5 @@ def compute_scores(answers: Dict[str, Any]) -> dict:
         "dimensions": dimensions,
         "domains": domain_rollups,
         "structure": structure,
+        "consistency_can_flex": consistency_flex,
     }

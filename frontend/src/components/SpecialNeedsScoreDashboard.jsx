@@ -137,7 +137,7 @@ export default function SpecialNeedsScoreDashboard() {
 
   if (!state.data) return null;
 
-  const { dimensions, structure, overall_signal } = state.data;
+  const { dimensions, structure, overall_signal, consistency_can_flex } = state.data;
   const dimEntries = Object.entries(dimensions || {});
   const hasAny = dimEntries.some(([, d]) => !d.no_signal);
   const structureStyle =
@@ -213,6 +213,17 @@ export default function SpecialNeedsScoreDashboard() {
       )}
 
       <FlagsLine dimensions={dimensions} />
+
+      {consistency_can_flex && consistency_can_flex.length > 0 && (
+        <div
+          className="mt-3 rounded-2xl bg-[#E4F4EC] border border-[#C6DECF] p-3 text-xs text-[#1F5C3B]"
+          data-testid="nd-flex-areas"
+        >
+          <span className="font-bold">Areas your child can hold flexibly:</span>{" "}
+          {consistency_can_flex.join(" · ")}. Identical homes aren&apos;t the
+          goal — this list won&apos;t drag your Consistency score.
+        </div>
+      )}
     </section>
   );
 }

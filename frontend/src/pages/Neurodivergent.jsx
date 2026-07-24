@@ -100,8 +100,41 @@ function ScaleChoices({ scale, value, onChange, testidBase }) {
   );
 }
 
-function AnswerInput({ item, value, onChange, schema, fontClass }) {
+function AnswerInput({ item, value, onChange, schema, fontClass, answers, onChangeNeeds }) {
   const testid = `nd-input-${item.id}`;
+
+  if (item.type === "consistency_pair") {
+    // Compound: coordination-scale value under item.id AND needs-flag under
+    // `<id>__needs`. Rendered as two labelled selector groups on one screen.
+    const needsScale = schema.needs_consistency_scale || [];
+    const needsValue = answers?.[`${item.id}__needs`] ?? null;
+    return (
+      <div className="space-y-6" data-testid={`nd-pair-${item.id}`}>
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">
+            Today — how consistent is this across your two homes?
+          </div>
+          <ScaleChoices
+            scale={schema.scale}
+            value={value ?? null}
+            onChange={onChange}
+            testidBase={`nd-scale-${item.id}`}
+          />
+        </div>
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">
+            Does your child actually need this to be consistent between homes?
+          </div>
+          <ScaleChoices
+            scale={needsScale}
+            value={needsValue}
+            onChange={(v) => onChangeNeeds && onChangeNeeds(v)}
+            testidBase={`nd-needs-${item.id}`}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (item.type === "coordination") {
     return (
@@ -221,6 +254,14 @@ export default function Neurodivergent() {
     setAnswers((a) => ({ ...a, [q.id]: v }));
   };
 
+  // Consistency-pair items save a second field (`<id>__needs`) — the wizard
+  // needs a dedicated setter so the paired selector can update independently
+  // from the primary consistency-scale answer.
+  const onChangeNeeds = (v) => {
+    if (!q) return;
+    setAnswers((a) => ({ ...a, [`${q.id}__needs`]: v }));
+  };
+
   const persist = useCallback(
     async (id, val) => {
       if (!id) return;
@@ -237,7 +278,14 @@ export default function Neurodivergent() {
   );
 
   const goNext = async () => {
-    if (q) await persist(q.id, value);
+    if (q) {
+      await persist(q.id, value);
+      if (q.type === "consistency_pair") {
+        const needsId = `${q.id}__needs`;
+        const needsVal = answers[needsId];
+        if (needsVal !== undefined) await persist(needsId, needsVal);
+      }
+    }
     if (currentIdx < total - 1) {
       setCurrentIdx((i) => i + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -253,7 +301,14 @@ export default function Neurodivergent() {
   };
 
   const goPrev = async () => {
-    if (q) await persist(q.id, value);
+    if (q) {
+      await persist(q.id, value);
+      if (q.type === "consistency_pair") {
+        const needsId = `${q.id}__needs`;
+        const needsVal = answers[needsId];
+        if (needsVal !== undefined) await persist(needsId, needsVal);
+      }
+    }
     setCurrentIdx((i) => Math.max(0, i - 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -420,6 +475,8 @@ export default function Neurodivergent() {
                   item={q}
                   value={value}
                   onChange={onChange}
+                  onChangeNeeds={onChangeNeeds}
+                  answers={answers}
                   schema={schema}
                   fontClass={prefs.fontClass}
                 />

@@ -601,3 +601,20 @@ _All P2 items shipped — backlog empty. Next priorities will come from real use
 - **Testing**: Backend curl loop confirmed the full flow — bulk-save answers → generate report → 4 agreement areas + 3 gaps + 3/3/3 priorities + 7 action rows returned by Claude; `/report/pdf` returns `HTTP=200 SIZE=8828 %PDF-`; share-link endpoint returns a signed JWT with `/api/neurodivergent/report/shared/{token}` path. Frontend Playwright verified all 6 section data-testids visible and the "A care plan for Ada" title.
 - **Files added**: `backend/sn_report_pdf.py`. Files rewritten: `frontend/src/pages/NeurodivergentReports.jsx`. Files touched: `backend/ai_service.py` (append), `backend/neurodivergent_routes.py` (v2 report endpoints appended).
 - **Phase D (safeguards & disagreement pathway) · Phase E (IEP/504 sub-module) remain queued.**
+
+### Feb 2026 — Special Needs Rebuild, Phase B: Consistency Between Homes module (SHIPPED)
+- **Why**: Per the product spec, the assessment's signature feature. Identical homes should never be assumed. The parent should be able to name which routines the *child* actually needs consistent and which areas can hold flexibly between the two homes.
+- **What**: New assessment section with 8 compound items — each rendered on a single wizard screen with two labelled selector groups:
+  1. Medication timing & administration
+  2. Sleep & eating routines
+  3. Therapy exercises & behavioural strategies
+  4. Screen use & sensory regulation
+  5. Schoolwork & attendance
+  6. Discipline & emotional dysregulation
+  7. Transportation of medical / adaptive equipment
+  8. Communicating changes in the child's functioning
+- **Data model**: Each topic saves TWO answers on a flat dict — `<id>` (coordination scale) + `<id>__needs` (yes / can_flex / uncertain). The scorer only counts an item toward the **Consistency coordination score** when the parent flagged consistency as needed (or left it uncertain — treated as "needs" to be safe). `can_flex` items are surfaced elsewhere as informational, never dragging the score.
+- **Backend**: `CONSISTENCY_ITEMS` + `NEEDS_CONSISTENCY_SCALE` added to `special_needs_questions.py`; schema returned by `/api/neurodivergent/schema` now has 5 sections (child_profile · concerns · coordination · **consistency** · disagreement). Scorer in `special_needs_scoring.py` reads `<id>__needs`, filters can_flex items, and adds a `consistency_can_flex` list to the response payload.
+- **Frontend**: New `consistency_pair` item type in the wizard — `AnswerInput` renders two `ScaleChoices` groups labelled "Today — how consistent is this across your two homes?" + "Does your child actually need this to be consistent between homes?". `onChangeNeeds` prop threads the paired setter; `goNext`/`goPrev` persist both fields together. Score dashboard now surfaces a green "Areas your child can hold flexibly:" pill listing the `can_flex` items when present.
+- **Testing**: Backend curl confirmed 5-section schema with 8 consistency items and 3-value needs scale. Bulk-save + `/scores` correctly excluded 2 `can_flex` items from the 10-item consistency dimension pool (6 scored) and surfaced them in `consistency_can_flex`. Frontend Playwright verified Question 31 of 39 renders the compound pair with both selector groups, correct eyebrows, and all option labels visible.
+- **Phase D (safeguards & disagreement pathway) · Phase E (IEP/504 sub-module) remain queued.**
