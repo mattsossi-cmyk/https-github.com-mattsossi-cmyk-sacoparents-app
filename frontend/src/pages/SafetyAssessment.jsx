@@ -779,6 +779,16 @@ export default function SafetyAssessment() {
               />
             </div>
 
+            <div className="mt-6 flex justify-center">
+              <Link
+                to="/next-steps/safety"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#3D1A78] text-white font-semibold hover:bg-[#2D0F63]"
+                data-testid="safety-next-steps-cta"
+              >
+                See your Next Three Steps <ArrowRight size={14} />
+              </Link>
+            </div>
+
             {/* Important Advisory — legally-worded post-assessment disclaimer */}
             <div
               className="mt-6 rounded-2xl bg-[#FFF7E6] border-2 border-[#E8A628] p-5 sm:p-7 text-[#1A1330]"

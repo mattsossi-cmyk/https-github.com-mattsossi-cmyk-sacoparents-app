@@ -292,8 +292,8 @@ export default function Neurodivergent() {
     } else {
       try {
         await api.post("/neurodivergent/complete", {});
-        toast.success("Assessment saved — heading to your reports.");
-        navigate("/neurodivergent/reports");
+        toast.success("Assessment saved — heading to your next steps.");
+        navigate("/next-steps/special_needs");
       } catch {
         toast.error("We saved your answers but couldn't mark complete. Please try again.");
       }

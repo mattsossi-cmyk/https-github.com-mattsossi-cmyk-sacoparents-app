@@ -158,7 +158,7 @@ export default function ReadinessCheck() {
     try {
       await api.put("/mediation/readiness", { answers });
       toast.success("Readiness saved.");
-      navigate("/summary");
+      navigate("/next-steps/readiness");
     } catch (err) {
       logError("Save readiness failed:", err);
       toast.error("Could not save.");

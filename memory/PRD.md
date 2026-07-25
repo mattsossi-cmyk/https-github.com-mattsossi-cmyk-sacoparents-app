@@ -618,3 +618,20 @@ _All P2 items shipped — backlog empty. Next priorities will come from real use
 - **Frontend**: New `consistency_pair` item type in the wizard — `AnswerInput` renders two `ScaleChoices` groups labelled "Today — how consistent is this across your two homes?" + "Does your child actually need this to be consistent between homes?". `onChangeNeeds` prop threads the paired setter; `goNext`/`goPrev` persist both fields together. Score dashboard now surfaces a green "Areas your child can hold flexibly:" pill listing the `can_flex` items when present.
 - **Testing**: Backend curl confirmed 5-section schema with 8 consistency items and 3-value needs scale. Bulk-save + `/scores` correctly excluded 2 `can_flex` items from the 10-item consistency dimension pool (6 scored) and surfaced them in `consistency_can_flex`. Frontend Playwright verified Question 31 of 39 renders the compound pair with both selector groups, correct eyebrows, and all option labels visible.
 - **Phase D (safeguards & disagreement pathway) · Phase E (IEP/504 sub-module) remain queued.**
+
+### Feb 2026 — "Your Next Three Steps" page after every assessment (SHIPPED)
+- **Why**: Per user's product feedback, every assessment should end with a personalised routing surface — three specific, actionable next moves the parent can take right now. Removes the "I finished, what now?" moment across all four assessments.
+- **What**: New `/next-steps/:assessment` page auto-loaded on completion of Readiness Check · Communication Style · Family Violence & Safety · Special Needs Coordination. Each step shows **What · Why it matters · How long · CTA to the next surface** with a category chip (reflection · preparation · safety · review). Parents can Mark done · Not right now · Bring it back — with visual state (strikethrough for done, muted for dismissed).
+- **Backend** (`next_steps_routes.py` — rule-based, deterministic, no AI):
+  - `GET /api/next-steps/{assessment}` — returns cached three steps (auto-generates on first call).
+  - `POST /api/next-steps/{assessment}/generate` — force recompute from latest answers/scores.
+  - `POST /api/next-steps/{assessment}/{step_id}/action` — done / dismiss / undo.
+  - Per-assessment engines:
+    - **readiness**: reads `prep_data` + `readiness_scoring.compute_readiness()`, routes by lowest dimension (communication → coach, trust → alignment, child_alignment → child goals, conflict → safety) + course by overall (≥75 → summary, ≥55 → growth, <55 → coach check-in).
+    - **comm_style**: BIFF-practice → trigger reflection → Gmail AI draft.
+    - **safety**: reads latest `safety_assessments` doc — L3/L4 routes to hotlines + parallel parenting + share-with-advocate; L1/L2 routes to BIFF + safety plan + retake reminder.
+    - **special_needs**: reads `special_needs_scoring.compute_scores()`, always suggests generating the care plan + routes by weakest coordination dimension (info_sharing / consistency / follow_through / understanding / professional / decision_making / transitions) + structure-specific step (Cooperative/Structured/Parallel).
+  - Storage: `next_steps` collection, one doc per (user_id, assessment) with `replace_one` on regeneration.
+- **Frontend** (`pages/NextSteps.jsx`): route `/next-steps/:assessment`, protected. Category-chip tricolor, numbered step cards, done/dismiss/undo per step, "Regenerate" button, deep-link back to the source assessment.
+- **Auto-navigation wired**: `ReadinessCheck.jsx` on submit → `/next-steps/readiness`, `CommStyle.jsx` on submit → `/next-steps/comm_style`, `Neurodivergent.jsx` on completion → `/next-steps/special_needs`, and a "See your Next Three Steps →" CTA on the Safety Assessment result screen → `/next-steps/safety`.
+- **Testing**: Backend curl verified all 4 engines produce sensible steps for parent1@test.com (readiness → 3 steps, comm_style → 3 steps, safety → 3 steps, special_needs → 2 steps due to no v2 answers). Action endpoint correctly toggles done/dismissed state. Frontend screenshot verified all state variants (done strikethrough with Bring-it-back, active with primary CTA + Mark done / Not right now, category chips green/purple).

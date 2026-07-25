@@ -15,6 +15,7 @@ import Dashboard from "@/pages/Dashboard";
 import MyPlan from "@/pages/MyPlan";
 import Gmail from "@/pages/Gmail";
 import Coach from "@/pages/Coach";
+import NextSteps from "@/pages/NextSteps";
 import Neurodivergent from "@/pages/Neurodivergent";
 import NeurodivergentReports from "@/pages/NeurodivergentReports";
 import ChildGoals from "@/pages/ChildGoals";
@@ -155,6 +156,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Coach />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/next-steps/:assessment"
+          element={
+            <ProtectedRoute>
+              <NextSteps />
             </ProtectedRoute>
           }
         />

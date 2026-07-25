@@ -97,7 +97,7 @@ export default function CommStyle() {
         free_text_sample: sample,
       });
       toast.success("Saved.");
-      navigate("/prep/readiness");
+      navigate("/next-steps/comm_style");
     } catch (err) {
       logError("Save comm-style failed:", err);
       toast.error("Could not save.");
