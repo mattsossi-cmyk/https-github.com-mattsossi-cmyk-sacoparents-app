@@ -1,6 +1,20 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Special Needs Phase D — Safeguards & Disagreement Pathway (Feb 2026)
+Fully deterministic engine that maps a family's current protective structures + disagreement signals into a 4-tier recommendation pathway. Delivered end-to-end (backend + frontend + PDF + share-controls + tests).
+
+- **New assessment module** — 13-item Safeguards section with 4-value scale (In place / Partial / Not yet / Not needed) grouped into Care team · Documents & tools · Neutrals
+- **Pathway engine** (`/app/backend/sn_pathway.py`) — computes `safeguards.overall_score` (0–100), `disagreement.index` (0–10), and maps to one of 4 tiers:
+  - **T1** — Add missing safeguards (light touch)
+  - **T2** — Structured written communication
+  - **T3** — Parenting Coordinator / Family Facilitator recommended (`idx ≥ 5 OR (idx ≥ 3 AND risky concern_response)`)
+  - **T4** — Specialist mediator + separate professional consults (`idx ≥ 8 OR (idx ≥ 5 AND missing safeguards in 2 groups)`)
+- Each tier ships 3–6 tier-appropriate actions with concrete "when" timelines
+- **Report integration** — new Part 6 in the SN care plan PDF + HTML; old worksheet renumbered to Part 7
+- **Selective sharing** — `safeguards_pathway` key added to `sn_report` catalog (Phase 2 compatibility)
+- **Testing** — 17 unit tests + 15 live-API e2e tests, all passing (iteration_27)
+
 ## 🆕 Landing Page + SEO Overhaul (Feb 2026)
 Four workstreams shipped together, all frontend-visible on / :
 1. **"Which assessment should I take?" guided selector** — 3-question inline quiz that maps answers to one of 4 result cards (Mediation / Safety / Special Needs / All-three). Live at #which-assessment. Full data-testid coverage for automation.
