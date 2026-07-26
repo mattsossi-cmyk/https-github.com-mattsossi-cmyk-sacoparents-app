@@ -48,6 +48,7 @@ REPORT_SECTIONS: Dict[str, List[Dict[str, str]]] = {
         {"key": "coordination_gaps", "label": "Coordination gaps",              "description": "Where information sharing or follow-through is breaking down."},
         {"key": "priorities",        "label": "Priority levels",                "description": "Immediate / within 30 days / longer-term action buckets."},
         {"key": "structure",         "label": "Recommended co-parenting structure","description": "Cooperative / Structured / Parallel narrative."},
+        {"key": "safeguards_pathway","label": "Safeguards & disagreement pathway","description": "Which safeguards are in place, which are missing, and the recommended pathway tier (T1–T4)."},
         {"key": "action_plan",       "label": "Parenting-plan worksheet",       "description": "The action-table with responsible parent + review dates."},
     ],
     "safety": [
@@ -154,6 +155,8 @@ def filter_sn_report(report: Dict[str, Any], excluded: Iterable[str] | None) -> 
         out["priorities"] = {}
     if "structure" in excluded:
         out["structure_reasoning"] = ""
+    if "safeguards_pathway" in excluded:
+        out["safeguards_pathway"] = None
     if "action_plan" in excluded:
         out["action_plan"] = []
     return out

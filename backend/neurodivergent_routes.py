@@ -20,6 +20,7 @@ from auth import get_current_user
 import ai_service
 import special_needs_questions as sn_q
 import special_needs_scoring as sn_scoring
+import sn_pathway
 import report_visibility
 
 
@@ -414,7 +415,9 @@ async def get_scores(
 ):
     doc = await db.nd_prep.find_one({"user_id": current.user_id}, {"_id": 0}) or {}
     answers = doc.get("answers_v2") or {}
-    return sn_scoring.compute_scores(answers)
+    scores = sn_scoring.compute_scores(answers)
+    scores["pathway"] = sn_pathway.build_pathway(answers, dimensions=scores.get("dimensions"))
+    return scores
 
 
 @router.post("/complete")
@@ -536,6 +539,7 @@ async def generate_v2_report(
         raise HTTPException(status_code=400, detail="Please answer some questions before generating the report.")
 
     scores = sn_scoring.compute_scores(answers)
+    pathway = sn_pathway.build_pathway(answers, dimensions=scores.get("dimensions"))
     try:
         report = await ai_service.generate_special_needs_report_v2(
             profile=_extract_profile(answers),
@@ -547,6 +551,11 @@ async def generate_v2_report(
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"Report generation failed: {e}")
 
+    # Merge Phase D pathway output into the report payload so PDF/HTML/share
+    # renderers can access it without re-running the engine.
+    if isinstance(report, dict):
+        report["safeguards_pathway"] = pathway
+
     report_id = f"sn_{uuid.uuid4().hex[:12]}"
     child_name = (answers.get("child_name") or "").strip() or "your child"
     doc_out = {
@@ -555,6 +564,7 @@ async def generate_v2_report(
         "child_name": child_name,
         "generated_at": _now_iso(),
         "scores": scores,
+        "pathway": pathway,
         "report": report,
     }
     # Store as the parent's current v2 report — replace-on-insert keeps

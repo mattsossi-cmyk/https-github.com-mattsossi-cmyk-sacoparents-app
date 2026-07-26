@@ -224,6 +224,80 @@ DISAGREEMENT_RESPONSE = {
     ],
 }
 
+# Response values considered "risky" — they feed the disagreement_index used
+# by the pathway engine (Phase D).
+DISAGREEMENT_RISKY_VALUES = {"delay", "dismiss", "conflict"}
+
+
+# ---------------------------------------------------------------------------
+# 7. Safeguards & disagreement pathway (Phase D).
+#
+# The presence/quality of safeguards is not a moral judgement — it's a way
+# of surfacing which protective structures are already helping the child
+# and which are missing. Missing safeguards feed the pathway engine's
+# recommendation tier.
+# ---------------------------------------------------------------------------
+
+SAFEGUARD_SCALE = [
+    {"value": "in_place",   "label": "In place",       "weight": 100},
+    {"value": "partial",    "label": "Partial",        "weight": 55},
+    {"value": "not_yet",    "label": "Not yet",        "weight": 0},
+    {"value": "not_needed", "label": "Not needed for this child", "weight": None},
+]
+
+SAFEGUARDS_ITEMS = [
+    # Care team (5) --------------------------------------------------------
+    {"id": "sg_pediatrician",     "group": "care_team",
+     "label": "Primary pediatrician or family physician",
+     "prompt": "Do you have a primary pediatrician or family physician both parents can talk to?"},
+    {"id": "sg_therapist",        "group": "care_team",
+     "label": "Mental-health therapist or counsellor",
+     "prompt": "Does your child have a therapist or counsellor both parents can coordinate with?"},
+    {"id": "sg_specialists",      "group": "care_team",
+     "label": "Specialists (OT / PT / speech / developmental)",
+     "prompt": "Are appropriate specialists (OT / PT / speech / developmental) involved when needed?"},
+    {"id": "sg_school_liaison",   "group": "care_team",
+     "label": "School liaison / case manager",
+     "prompt": "Is there a designated school liaison (case manager, counsellor, or teacher lead) both parents can contact?"},
+    {"id": "sg_iep_coordinator",  "group": "care_team",
+     "label": "IEP / 504 coordinator",
+     "prompt": "If your child has (or is being evaluated for) an IEP or 504, is there a coordinator both parents work with?"},
+
+    # Documents & tools (5) ------------------------------------------------
+    {"id": "sg_care_plan",        "group": "documents",
+     "label": "Written care plan",
+     "prompt": "Is there a written care plan (medical, therapy, behavioural) that lives in both homes?"},
+    {"id": "sg_iep",              "group": "documents",
+     "label": "IEP or 504 plan document",
+     "prompt": "Do both parents have a current copy of the IEP or 504 plan?"},
+    {"id": "sg_sick_day",         "group": "documents",
+     "label": "Sick-day / emergency protocol",
+     "prompt": "Is there a written protocol for what happens on sick days or medical emergencies?"},
+    {"id": "sg_shared_calendar",  "group": "documents",
+     "label": "Shared calendar or co-parenting app",
+     "prompt": "Do both parents share a calendar or co-parenting app (OurFamilyWizard, TalkingParents, etc.) for the child's schedule?"},
+    {"id": "sg_med_log",          "group": "documents",
+     "label": "Medication / therapy log that travels",
+     "prompt": "Is there a medication or therapy log that reliably travels between homes?"},
+
+    # Neutral third parties (3) --------------------------------------------
+    {"id": "sg_mediator_pc",      "group": "neutrals",
+     "label": "Mediator or Parenting Coordinator",
+     "prompt": "Do you have a mediator or Parenting Coordinator you can call when parents get stuck?"},
+    {"id": "sg_family_therapist", "group": "neutrals",
+     "label": "Family therapist",
+     "prompt": "Is there a family therapist working with your family system (not just your child individually)?"},
+    {"id": "sg_neutral_other",    "group": "neutrals",
+     "label": "Other neutral (case manager, advocate)",
+     "prompt": "Is there any other neutral third party (case manager, advocate, extended-family helper) involved when parents disagree?"},
+]
+
+SAFEGUARD_GROUPS = [
+    {"id": "care_team", "label": "Care team", "help": "The professionals actively supporting your child."},
+    {"id": "documents", "label": "Documents & tools", "help": "Written plans and shared tools that live in both homes."},
+    {"id": "neutrals",  "label": "Neutrals", "help": "Third parties who help when the two parents get stuck."},
+]
+
 
 # ---------------------------------------------------------------------------
 # Public helpers
@@ -245,6 +319,7 @@ def all_question_ids():
         ids.append(c["id"])
         ids.append(f"{c['id']}__needs")
     ids += [DISAGREEMENT_RESPONSE["id"]]
+    ids += [q["id"] for q in SAFEGUARDS_ITEMS]
     return ids
 
 
@@ -256,6 +331,8 @@ def get_schema():
         "needs_consistency_scale": NEEDS_CONSISTENCY_SCALE,
         "concern_sources": CONCERN_SOURCES,
         "domains": DOMAINS,
+        "safeguard_scale": SAFEGUARD_SCALE,
+        "safeguard_groups": SAFEGUARD_GROUPS,
         "sections": [
             {"id": "child_profile", "title": "Begin with the child", "items": CHILD_PROFILE},
             {"id": "concerns",      "title": "Diagnosed, under evaluation, or parent-observed", "items": CONCERNS_ITEMS},
@@ -263,6 +340,10 @@ def get_schema():
             {"id": "consistency",   "title": "Consistency between homes",
              "intro": "Identical homes are not the goal. For each area, tell us how aligned the two homes are today — and whether your child actually needs it aligned or can hold it flexibly.",
              "items": [{**c, "type": "consistency_pair"} for c in CONSISTENCY_ITEMS]},
+            {"id": "safeguards",    "title": "Safeguards already in place",
+             "intro": "For each protective structure, tell us if it's in place, partial, not yet, or not needed for your child. Missing safeguards aren't a failing — they're a starting list.",
+             "items": [{**s, "type": "safeguard"} for s in SAFEGUARDS_ITEMS],
+             "grouped_by": "group"},
             {"id": "disagreement",  "title": "When the other parent raises a concern", "items": [DISAGREEMENT_RESPONSE]},
         ],
     }

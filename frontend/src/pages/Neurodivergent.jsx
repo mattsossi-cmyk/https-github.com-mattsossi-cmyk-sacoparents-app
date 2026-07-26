@@ -147,6 +147,18 @@ function AnswerInput({ item, value, onChange, schema, fontClass, answers, onChan
     );
   }
 
+  if (item.type === "safeguard") {
+    // Phase D — safeguards use their own 4-value scale.
+    return (
+      <ScaleChoices
+        scale={schema.safeguard_scale || []}
+        value={value ?? null}
+        onChange={onChange}
+        testidBase={`nd-safeguard-${item.id}`}
+      />
+    );
+  }
+
   if (item.type === "single_select") {
     return (
       <ScaleChoices

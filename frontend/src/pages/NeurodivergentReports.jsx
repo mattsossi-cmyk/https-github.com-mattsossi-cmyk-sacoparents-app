@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft, RefreshCw, Loader2, Baby, Handshake,
-  AlertTriangle, ListChecks, Compass, Table,
+  AlertTriangle, ListChecks, Compass, Table, ShieldCheck,
+  CheckCircle2, Circle, CircleDashed,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
@@ -102,6 +103,144 @@ function ActionTable({ rows }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+const TIER_TONE = {
+  info:   { border: "border-[#B1E6DE]", bg: "bg-[#E8F7F5]",  chip: "bg-[#0E7A7A] text-white",   accent: "text-[#0E7A7A]" },
+  warn:   { border: "border-[#F5C147]/50", bg: "bg-[#FFF7E3]", chip: "bg-[#B27700] text-white",  accent: "text-[#B27700]" },
+  urgent: { border: "border-[#B85B00]/40", bg: "bg-[#FFEDDE]", chip: "bg-[#B85B00] text-white", accent: "text-[#B85B00]" },
+};
+
+function SafeguardsPathwayCard({ pathway }) {
+  const tier = pathway?.tier || {};
+  const sg = pathway?.safeguards || {};
+  const disagree = pathway?.disagreement || {};
+  const actions = pathway?.actions || [];
+  const tone = TIER_TONE[tier.tone] || TIER_TONE.info;
+
+  return (
+    <section
+      className={`rounded-3xl border-2 ${tone.border} ${tone.bg} p-6 sm:p-8`}
+      data-testid="nd-sec-safeguards-pathway"
+    >
+      <div className="flex items-start gap-3">
+        <div className={`shrink-0 w-10 h-10 rounded-full ${tone.chip} flex items-center justify-center`}>
+          <ShieldCheck size={18} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className={`text-[11px] uppercase tracking-[0.14em] font-bold ${tone.accent}`}>Section 6</div>
+          <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-0.5" data-testid="nd-pathway-tier-label">
+            {tier.label || "Safeguards & disagreement pathway"}
+          </h3>
+          {tier.summary && (
+            <p className="text-sm text-[#4B4567] mt-2 leading-relaxed" data-testid="nd-pathway-tier-summary">
+              {tier.summary}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Safeguards snapshot */}
+      <div className="mt-5 grid sm:grid-cols-3 gap-3" data-testid="nd-pathway-safeguards">
+        <SafeguardColumn
+          icon={<CheckCircle2 size={16} className="text-[#0E7A7A]" />}
+          label="In place"
+          items={sg.in_place || []}
+          testid="nd-sg-in-place"
+          emptyText="None flagged yet."
+        />
+        <SafeguardColumn
+          icon={<CircleDashed size={16} className="text-[#B27700]" />}
+          label="Partial"
+          items={sg.partial || []}
+          testid="nd-sg-partial"
+          emptyText="None partial."
+        />
+        <SafeguardColumn
+          icon={<Circle size={16} className="text-[#B85B00]" />}
+          label="Not yet"
+          items={sg.missing || []}
+          testid="nd-sg-missing"
+          emptyText="Nothing missing."
+        />
+      </div>
+
+      {/* Disagreement index */}
+      {typeof disagree.index === "number" && (
+        <div
+          className="mt-5 flex flex-wrap items-center gap-3 text-sm text-[#4B4567]"
+          data-testid="nd-pathway-disagreement"
+        >
+          <span className="rounded-full bg-white/70 border border-[#E5E0EE] px-3 py-1 text-xs font-semibold text-[#1A1330]">
+            Disagreement index: {disagree.index} / 10
+          </span>
+          {disagree.risky_concern_response && (
+            <span className="rounded-full bg-[#B85B00] text-white px-3 py-1 text-xs font-semibold">
+              Risky response pattern
+            </span>
+          )}
+          {(disagree.critical_low_domains || []).map((d) => (
+            <span
+              key={d}
+              className="rounded-full bg-[#FFEDDE] border border-[#B85B00]/30 text-[#B85B00] px-3 py-1 text-xs font-semibold"
+            >
+              Critical-domain low: {d}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Actions */}
+      {actions.length > 0 && (
+        <div className="mt-6" data-testid="nd-pathway-actions">
+          <div className="text-xs uppercase tracking-[0.14em] font-bold text-[#1A1330] mb-3">
+            Recommended next steps
+          </div>
+          <ol className="space-y-3">
+            {actions.map((a, i) => (
+              <li
+                key={i}
+                className="rounded-2xl bg-white border border-[#E5E0EE] p-4"
+                data-testid={`nd-pathway-action-${i}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="font-semibold text-[#1A1330] text-[15px]">{a.title}</div>
+                  {a.when && (
+                    <span className="shrink-0 rounded-full bg-[#F5F2FA] text-[#3D1A78] px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap">
+                      {a.when}
+                    </span>
+                  )}
+                </div>
+                {a.detail && (
+                  <p className="text-sm text-[#4B4567] mt-1.5 leading-relaxed">{a.detail}</p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SafeguardColumn({ icon, label, items, testid, emptyText }) {
+  return (
+    <div className="rounded-2xl bg-white/70 border border-[#E5E0EE] p-3" data-testid={testid}>
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] font-bold text-[#1A1330] mb-1.5">
+        {icon}
+        {label}
+      </div>
+      {items.length === 0 ? (
+        <div className="text-xs text-[#857E9C] italic">{emptyText}</div>
+      ) : (
+        <ul className="space-y-1 text-[13px] text-[#4B4567]">
+          {items.map((it) => (
+            <li key={it.id || it.label} className="leading-snug">• {it.label}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -271,7 +410,11 @@ export default function NeurodivergentReports() {
               <p className="text-sm text-[#1A1330] leading-relaxed">{r.structure_reasoning}</p>
             </ReportSection>
 
-            <ReportSection icon={Table} title="6. Special Needs parenting-plan worksheet" testid="nd-sec-action-plan">
+            {r.safeguards_pathway && (
+              <SafeguardsPathwayCard pathway={r.safeguards_pathway} />
+            )}
+
+            <ReportSection icon={Table} title="7. Special Needs parenting-plan worksheet" testid="nd-sec-action-plan">
               <ActionTable rows={r.action_plan} />
             </ReportSection>
 

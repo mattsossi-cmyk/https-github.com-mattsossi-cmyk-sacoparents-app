@@ -203,9 +203,93 @@ def build_special_needs_pdf(
         pdf.h2("5. Recommended co-parenting structure")
         pdf.body(_safe(report.get("structure_reasoning")))
 
-    # 6. Action Plan
+    # 6. Safeguards & disagreement pathway (Phase D)
+    if "safeguards_pathway" not in ex:
+        pw = report.get("safeguards_pathway") or {}
+        if pw:
+            pdf.h2("6. Safeguards & disagreement pathway")
+            tier = pw.get("tier") or {}
+            sg = pw.get("safeguards") or {}
+            disagree = pw.get("disagreement") or {}
+            actions = pw.get("actions") or []
+
+            def _reset_x():
+                pdf.set_x(pdf.l_margin)
+
+            # Tier callout
+            if tier.get("label"):
+                _reset_x()
+                pdf.set_font("Helvetica", "B", 11)
+                pdf.set_text_color(61, 26, 120)
+                pdf.multi_cell(pdf.epw, 6, _safe(tier["label"]))
+                _reset_x()
+                pdf.set_font("Helvetica", "", 10)
+                pdf.set_text_color(52, 46, 78)
+                pdf.multi_cell(pdf.epw, 5, _safe(tier.get("summary", "")))
+                pdf.ln(2)
+
+            # Safeguards snapshot
+            if sg:
+                overall = sg.get("overall_score")
+                if overall is not None:
+                    _reset_x()
+                    pdf.set_font("Helvetica", "B", 10.5)
+                    pdf.set_text_color(26, 19, 48)
+                    pdf.multi_cell(pdf.epw, 6, _safe(f"Safeguards score: {overall} / 100"))
+                for label, items in (
+                    ("In place", sg.get("in_place") or []),
+                    ("Partial", sg.get("partial") or []),
+                    ("Not yet in place", sg.get("missing") or []),
+                ):
+                    if not items:
+                        continue
+                    _reset_x()
+                    pdf.set_font("Helvetica", "B", 10)
+                    pdf.set_text_color(61, 26, 120)
+                    pdf.multi_cell(pdf.epw, 5.5, _safe(label))
+                    pdf.bullets([_safe(it.get("label") or "") for it in items])
+
+            # Disagreement index
+            if disagree:
+                _reset_x()
+                pdf.set_font("Helvetica", "B", 10)
+                pdf.set_text_color(61, 26, 120)
+                pdf.multi_cell(pdf.epw, 5.5, _safe(f"Disagreement index: {disagree.get('index', 0)} / 10"))
+                cr = disagree.get("concern_response") or ""
+                if cr:
+                    _reset_x()
+                    pdf.set_font("Helvetica", "", 9.5)
+                    pdf.set_text_color(52, 46, 78)
+                    pdf.multi_cell(pdf.epw, 4.5, _safe(f"Your response to concerns: {cr}"))
+                    pdf.ln(1)
+
+            # Actions
+            if actions:
+                _reset_x()
+                pdf.set_font("Helvetica", "B", 10.5)
+                pdf.set_text_color(26, 19, 48)
+                pdf.multi_cell(pdf.epw, 6, "Recommended next steps")
+                for a in actions:
+                    title = _safe(a.get("title", ""))
+                    when = _safe(a.get("when", ""))
+                    detail = _safe(a.get("detail", ""))
+                    _reset_x()
+                    pdf.set_font("Helvetica", "B", 10)
+                    pdf.set_text_color(61, 26, 120)
+                    if when:
+                        pdf.multi_cell(pdf.epw, 5, f"- {title}  ({when})")
+                    else:
+                        pdf.multi_cell(pdf.epw, 5, f"- {title}")
+                    if detail:
+                        _reset_x()
+                        pdf.set_font("Helvetica", "", 9.5)
+                        pdf.set_text_color(52, 46, 78)
+                        pdf.multi_cell(pdf.epw, 4.5, f"  {detail}")
+                    pdf.ln(0.5)
+
+    # 7. Action Plan (worksheet)
     if "action_plan" not in ex:
-        pdf.h2("6. Special Needs Parenting Plan worksheet")
+        pdf.h2("7. Special Needs Parenting Plan worksheet")
         rows = report.get("action_plan") or []
         if rows:
             # Table header
