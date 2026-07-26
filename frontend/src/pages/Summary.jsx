@@ -27,6 +27,7 @@ import {
 import ReadinessDashboard from "../components/ReadinessDashboard";
 import NextStepsPanel from "../components/NextStepsPanel";
 import CertificateCard from "../components/CertificateCard";
+import ReportShareControls, { pdfAbs } from "../components/ReportShareControls";
 
 /* ------------------------------ shared bits ------------------------------ */
 
@@ -354,6 +355,16 @@ function MediationSummaryTab() {
 
         <GuestSaveNudge />
 
+        <ReportShareControls
+          reportType="summary"
+          pdfUrl={pdfAbs(`/mediation/summary/${summary.summary_id}/pdf`)}
+          shareUrl={`/mediation/summary/${summary.summary_id}/share-link`}
+          visibilityUrl={`/mediation/summary/${summary.summary_id}/visibility`}
+          initialExcluded={summary?.visibility?.excluded || []}
+          filename={`mediation-summary-${summary.summary_id}.pdf`}
+          testIdPrefix="summary-share"
+        />
+
         <ChangesSinceLast text={summary.changes_since_last} />
 
         {summary.executive_summary && (
@@ -561,6 +572,16 @@ function AgreementDraftTab() {
           downloadTestId="agreement-download-button"
           shareTestId="agreement-share-button"
           emailTestId="agreement-email-button"
+        />
+
+        <ReportShareControls
+          reportType="agreement"
+          pdfUrl={pdfAbs(`/mediation/agreement/${agreement.agreement_id}/pdf`)}
+          shareUrl={`/mediation/agreement/${agreement.agreement_id}/share-link`}
+          visibilityUrl={`/mediation/agreement/${agreement.agreement_id}/visibility`}
+          initialExcluded={agreement?.visibility?.excluded || []}
+          filename={`coparenting-agreement-${agreement.agreement_id}.pdf`}
+          testIdPrefix="agreement-share"
         />
 
         <ChangesSinceLast text={agreement.changes_since_last} />

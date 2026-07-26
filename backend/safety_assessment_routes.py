@@ -23,9 +23,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
-from auth import UserPublic, get_current_user, get_db
+from auth import UserPublic, get_current_user, get_db, create_share_token, decode_share_token
 from email_service import EmailNotConfigured, EmailSendError, send_mediator_safety_assessment, send_safety_assessment_report
 from safety_assessment_pdf import build_safety_assessment_pdf
+import report_visibility
 
 
 router = APIRouter(prefix="/safety-assessment", tags=["safety-assessment"])
@@ -434,7 +435,7 @@ async def _load_for_user(
     return doc
 
 
-def _build_pdf_bytes(doc: Dict[str, Any]) -> bytes:
+def _build_pdf_bytes(doc: Dict[str, Any], excluded_sections: list | None = None) -> bytes:
     section_1_rows = [
         {"text": _question_lookup(q["id"]), "answer": doc.get("section_1", {}).get(q["id"], "") or "—"}
         for q in SECTION_1_QUESTIONS
@@ -450,6 +451,7 @@ def _build_pdf_bytes(doc: Dict[str, Any]) -> bytes:
         section_1_rows=section_1_rows,
         section_2_rows=section_2_rows,
         texas_resource_block=TEXAS_RESOURCE_BLOCK,
+        excluded_sections=excluded_sections or [],
     )
 
 
@@ -458,14 +460,91 @@ async def download_pdf(
     assessment_id: str,
     current: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
+    excluded: Optional[str] = None,
 ):
     doc = await _load_for_user(db, assessment_id, current.user_id)
-    pdf_bytes = _build_pdf_bytes(doc)
+    if excluded is not None:
+        raw = [x for x in excluded.split(",") if x]
+    else:
+        raw = list(((doc.get("visibility") or {}).get("excluded") or []))
+    ex_list = report_visibility.clean_excluded("safety", raw)
+    pdf_bytes = _build_pdf_bytes(doc, excluded_sections=ex_list)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'inline; filename="sacoparents-safety-assessment-{assessment_id}.pdf"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+class SafetyVisibilityBody(BaseModel):
+    excluded: List[str] = Field(default_factory=list)
+
+
+class SafetyShareBody(BaseModel):
+    excluded: Optional[List[str]] = None
+
+
+@router.patch("/{assessment_id}/visibility")
+async def update_safety_visibility(
+    assessment_id: str,
+    body: SafetyVisibilityBody,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    ex = report_visibility.clean_excluded("safety", body.excluded)
+    result = await db.safety_assessments.update_one(
+        {"assessment_id": assessment_id, "user_id": current.user_id},
+        {"$set": {"visibility": {"excluded": ex, "updated_at": datetime.now(timezone.utc).isoformat()}}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    return {"assessment_id": assessment_id, "excluded": ex}
+
+
+@router.post("/{assessment_id}/share-link")
+async def create_safety_share_link(
+    assessment_id: str,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    body: Optional[SafetyShareBody] = None,
+):
+    doc = await _load_for_user(db, assessment_id, current.user_id)
+    incoming = (body.excluded if body else None)
+    if incoming is None:
+        incoming = (doc.get("visibility") or {}).get("excluded") or []
+    ex = report_visibility.clean_excluded("safety", incoming)
+    token = create_share_token("safety", assessment_id, current.user_id, excluded_sections=ex)
+    return {
+        "token": token,
+        "path": f"/api/safety-assessment/shared/{token}",
+        "excluded": ex,
+    }
+
+
+@router.get("/shared/{token}")
+async def shared_safety_assessment(
+    token: str,
+    request: Request,
+):
+    payload = decode_share_token(token)
+    if not payload or payload.get("doc_type") != "safety":
+        raise HTTPException(status_code=404, detail="This link has expired or is invalid.")
+    db: AsyncIOMotorDatabase = request.app.state.db
+    doc = await db.safety_assessments.find_one(
+        {"assessment_id": payload["doc_id"], "user_id": payload["sub"]}, {"_id": 0}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    ex_list = report_visibility.clean_excluded("safety", payload.get("ex") or [])
+    pdf_bytes = _build_pdf_bytes(doc, excluded_sections=ex_list)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="sacoparents-safety-assessment.pdf"',
             "Cache-Control": "no-store",
         },
     )

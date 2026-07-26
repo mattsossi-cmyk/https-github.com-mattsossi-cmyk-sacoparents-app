@@ -20,6 +20,7 @@ from auth import get_current_user
 import ai_service
 import special_needs_questions as sn_q
 import special_needs_scoring as sn_scoring
+import report_visibility
 
 
 router = APIRouter(prefix="/neurodivergent", tags=["special-needs"])
@@ -580,14 +581,22 @@ async def get_v2_report(
 async def download_v2_report_pdf(
     current=Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
+    excluded: Optional[str] = None,
 ):
     doc = await db.sn_v2_reports.find_one({"user_id": current.user_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Generate the report first.")
+    # Resolve visibility: per-request query wins, else stored preference on doc.
+    if excluded is not None:
+        raw = [x for x in excluded.split(",") if x]
+    else:
+        raw = list(((doc.get("visibility") or {}).get("excluded") or []))
+    ex_list = report_visibility.clean_excluded("sn_report", raw)
     pdf_bytes = sn_report_pdf.build_special_needs_pdf(
         user_name=current.name or "",
         child_name=doc.get("child_name") or "",
         report=doc.get("report") or {},
+        excluded_sections=ex_list,
     )
     safe_child = "".join(c if c.isalnum() else "_" for c in (doc.get("child_name") or "child")).strip("_")
     return StreamingResponse(
@@ -597,19 +606,51 @@ async def download_v2_report_pdf(
     )
 
 
+class SNVisibilityBody(BaseModel):
+    excluded: List[str] = Field(default_factory=list)
+
+
+@router.patch("/report/visibility")
+async def update_sn_visibility(
+    body: SNVisibilityBody,
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Persist the parent's section-visibility preference for their current
+    Special Needs report. Used to prefill the visibility panel next time and
+    to seed subsequent PDF/share generations that don't override explicitly."""
+    ex = report_visibility.clean_excluded("sn_report", body.excluded)
+    result = await db.sn_v2_reports.update_one(
+        {"user_id": current.user_id},
+        {"$set": {"visibility": {"excluded": ex, "updated_at": _now_iso()}}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="No report to update. Generate one first.")
+    return {"excluded": ex}
+
+
+class SNShareBody(BaseModel):
+    excluded: Optional[List[str]] = None
+
+
 @router.post("/report/{report_id}/share-link")
 async def create_v2_report_share_link(
     report_id: str,
     current=Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
+    body: Optional[SNShareBody] = None,
 ):
     doc = await db.sn_v2_reports.find_one(
-        {"report_id": report_id, "user_id": current.user_id}, {"_id": 0, "report_id": 1}
+        {"report_id": report_id, "user_id": current.user_id}, {"_id": 0}
     )
     if not doc:
         raise HTTPException(status_code=404, detail="Report not found")
-    token = create_share_token("sn_report", report_id, current.user_id)
-    return {"token": token, "path": f"/api/neurodivergent/report/shared/{token}"}
+    incoming = (body.excluded if body else None)
+    if incoming is None:
+        incoming = (doc.get("visibility") or {}).get("excluded") or []
+    ex = report_visibility.clean_excluded("sn_report", incoming)
+    token = create_share_token("sn_report", report_id, current.user_id, excluded_sections=ex)
+    return {"token": token, "path": f"/api/neurodivergent/report/shared/{token}", "excluded": ex}
 
 
 @router.get("/report/shared/{token}")
@@ -633,13 +674,17 @@ async def shared_v2_report(
     if not doc:
         raise HTTPException(status_code=404, detail="Report not found")
 
+    ex_list = report_visibility.clean_excluded("sn_report", payload.get("ex") or [])
+
     if format == "json":
+        filtered = report_visibility.filter_sn_report(doc.get("report") or {}, ex_list)
         return {
             "report_id": doc.get("report_id"),
             "child_name": doc.get("child_name"),
             "generated_at": doc.get("generated_at"),
             "scores": doc.get("scores"),
-            "report": doc.get("report"),
+            "report": filtered,
+            "excluded_sections": ex_list,
             "shared_by": user.get("name") or "A co-parent",
         }
 
@@ -647,6 +692,7 @@ async def shared_v2_report(
         user_name=user.get("name") or "",
         child_name=doc.get("child_name") or "",
         report=doc.get("report") or {},
+        excluded_sections=ex_list,
     )
     safe = "".join(c if c.isalnum() else "_" for c in (doc.get("child_name") or "child")).strip("_")
     return StreamingResponse(

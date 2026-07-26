@@ -29,7 +29,9 @@ import pdf_service
 import certificate_service
 import email_service
 import journal_routes
+import report_visibility
 from pydantic import BaseModel, EmailStr, Field
+from typing import List
 
 
 router = APIRouter(prefix="/mediation", tags=["mediation"])
@@ -299,6 +301,7 @@ async def download_summary_pdf(
     summary_id: str,
     request: Request,
     current: UserPublic = Depends(get_current_user),
+    excluded: Optional[str] = None,
 ):
     db = request.app.state.db
     summary = await db.summaries.find_one(
@@ -307,11 +310,13 @@ async def download_summary_pdf(
     if not summary:
         raise HTTPException(status_code=404, detail="Summary not found")
     prep = await _load_prep(db, current.user_id)
+    ex_list = _resolve_excluded("summary", excluded, summary.get("visibility"))
     pdf_bytes = pdf_service.build_summary_pdf(
         user_name=current.name,
         summary=summary,
         child_goals=prep.get("child_goals"),
         mediation_date=current.mediation_date,
+        excluded_sections=ex_list,
     )
     return StreamingResponse(
         BytesIO(pdf_bytes),
@@ -471,6 +476,7 @@ async def download_agreement_pdf(
     agreement_id: str,
     request: Request,
     current: UserPublic = Depends(get_current_user),
+    excluded: Optional[str] = None,
 ):
     db = request.app.state.db
     agreement = await db.agreements.find_one(
@@ -478,10 +484,12 @@ async def download_agreement_pdf(
     )
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
+    ex_list = _resolve_excluded("agreement", excluded, agreement.get("visibility"))
     pdf_bytes = pdf_service.build_agreement_pdf(
         user_name=current.name,
         agreement=agreement,
         mediation_date=current.mediation_date,
+        excluded_sections=ex_list,
     )
     return StreamingResponse(
         BytesIO(pdf_bytes),
@@ -493,20 +501,97 @@ async def download_agreement_pdf(
 
 
 # ============ Shareable download links (no-auth, signed) ============
+class ShareLinkBody(BaseModel):
+    excluded: Optional[List[str]] = None
+
+
+class VisibilityBody(BaseModel):
+    excluded: List[str] = Field(default_factory=list)
+
+
+def _resolve_excluded(
+    report_type: str,
+    query_csv: Optional[str],
+    stored_visibility: Optional[Dict[str, Any]],
+) -> List[str]:
+    """Merge three sources of section-visibility with priority:
+      1. Query string (per-request override)
+      2. Persisted visibility on the doc
+      3. Empty (nothing excluded)
+    Always cleaned/validated against the report type's catalog + locked keys."""
+    raw: List[str] = []
+    if query_csv is not None:
+        raw = [x for x in query_csv.split(",") if x]
+    elif stored_visibility:
+        raw = list((stored_visibility or {}).get("excluded") or [])
+    return report_visibility.clean_excluded(report_type, raw)
+
+
+@router.get("/reports/sections/{report_type}")
+async def get_section_catalog(report_type: str):
+    """Return the section catalog (used by the frontend visibility panel)."""
+    sections = report_visibility.REPORT_SECTIONS.get(report_type)
+    if sections is None:
+        raise HTTPException(status_code=404, detail="Unknown report type")
+    return {"report_type": report_type, "sections": sections}
+
+
+@router.patch("/summary/{summary_id}/visibility")
+async def update_summary_visibility(
+    summary_id: str,
+    body: VisibilityBody,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    db = request.app.state.db
+    ex = report_visibility.clean_excluded("summary", body.excluded)
+    result = await db.summaries.update_one(
+        {"summary_id": summary_id, "user_id": current.user_id},
+        {"$set": {"visibility": {"excluded": ex, "updated_at": _now()}}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Summary not found")
+    return {"summary_id": summary_id, "excluded": ex}
+
+
+@router.patch("/agreement/{agreement_id}/visibility")
+async def update_agreement_visibility(
+    agreement_id: str,
+    body: VisibilityBody,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    db = request.app.state.db
+    ex = report_visibility.clean_excluded("agreement", body.excluded)
+    result = await db.agreements.update_one(
+        {"agreement_id": agreement_id, "user_id": current.user_id},
+        {"$set": {"visibility": {"excluded": ex, "updated_at": _now()}}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    return {"agreement_id": agreement_id, "excluded": ex}
+
+
 @router.post("/summary/{summary_id}/share-link")
 async def create_summary_share_link(
     summary_id: str,
     request: Request,
     current: UserPublic = Depends(get_current_user),
+    body: Optional[ShareLinkBody] = None,
 ):
     db = request.app.state.db
-    exists = await db.summaries.find_one(
-        {"summary_id": summary_id, "user_id": current.user_id}, {"_id": 0, "summary_id": 1}
+    summary = await db.summaries.find_one(
+        {"summary_id": summary_id, "user_id": current.user_id}, {"_id": 0}
     )
-    if not exists:
+    if not summary:
         raise HTTPException(status_code=404, detail="Summary not found")
-    token = create_share_token("summary", summary_id, current.user_id)
-    return {"token": token, "path": f"/api/mediation/shared/{token}"}
+    # Body excluded overrides stored preference (per-request snapshot).
+    incoming = (body.excluded if body else None)
+    if incoming is None:
+        incoming = (summary.get("visibility") or {}).get("excluded") or []
+    ex = report_visibility.clean_excluded("summary", incoming)
+    token = create_share_token("summary", summary_id, current.user_id, excluded_sections=ex)
+    return {"token": token, "path": f"/api/mediation/shared/{token}", "excluded": ex}
 
 
 @router.post("/agreement/{agreement_id}/share-link")
@@ -514,16 +599,20 @@ async def create_agreement_share_link(
     agreement_id: str,
     request: Request,
     current: UserPublic = Depends(get_current_user),
+    body: Optional[ShareLinkBody] = None,
 ):
     db = request.app.state.db
-    exists = await db.agreements.find_one(
-        {"agreement_id": agreement_id, "user_id": current.user_id},
-        {"_id": 0, "agreement_id": 1},
+    agreement = await db.agreements.find_one(
+        {"agreement_id": agreement_id, "user_id": current.user_id}, {"_id": 0}
     )
-    if not exists:
+    if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
-    token = create_share_token("agreement", agreement_id, current.user_id)
-    return {"token": token, "path": f"/api/mediation/shared/{token}"}
+    incoming = (body.excluded if body else None)
+    if incoming is None:
+        incoming = (agreement.get("visibility") or {}).get("excluded") or []
+    ex = report_visibility.clean_excluded("agreement", incoming)
+    token = create_share_token("agreement", agreement_id, current.user_id, excluded_sections=ex)
+    return {"token": token, "path": f"/api/mediation/shared/{token}", "excluded": ex}
 
 
 @router.get("/shared/{token}")
@@ -542,6 +631,7 @@ async def download_shared_pdf(
 
     doc_type = payload["doc_type"]
     doc_id = payload["doc_id"]
+    token_excluded = payload.get("ex") or []
     if doc_type == "summary":
         doc = await db.summaries.find_one(
             {"summary_id": doc_id, "user_id": user["user_id"]}, {"_id": 0}
@@ -554,6 +644,7 @@ async def download_shared_pdf(
             summary=doc,
             child_goals=prep.get("child_goals"),
             mediation_date=user.get("mediation_date"),
+            excluded_sections=report_visibility.clean_excluded("summary", token_excluded),
         )
         filename = f"mediation_summary_{doc_id}.pdf"
     elif doc_type == "agreement":
@@ -566,6 +657,7 @@ async def download_shared_pdf(
             user_name=user.get("name", ""),
             agreement=doc,
             mediation_date=user.get("mediation_date"),
+            excluded_sections=report_visibility.clean_excluded("agreement", token_excluded),
         )
         filename = f"coparenting_agreement_{doc_id}.pdf"
     else:

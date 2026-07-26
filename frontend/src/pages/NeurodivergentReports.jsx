@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowLeft, RefreshCw, Loader2, Download, Share2, Copy, Baby, Handshake,
+  ArrowLeft, RefreshCw, Loader2, Baby, Handshake,
   AlertTriangle, ListChecks, Compass, Table,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import DemoModeBanner from "../components/DemoModeBanner";
 import SpecialNeedsScoreDashboard from "../components/SpecialNeedsScoreDashboard";
-import { api, API } from "../lib/api";
+import ReportShareControls, { pdfAbs } from "../components/ReportShareControls";
+import { api } from "../lib/api";
 
 /**
  * Special Needs Coordination Report — v2, 6-part care plan.
@@ -140,38 +141,6 @@ export default function NeurodivergentReports() {
     }
   };
 
-  const downloadPdf = async () => {
-    try {
-      const res = await fetch(`${API}/neurodivergent/report/pdf`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("pdf failed");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `SN_Care_Plan_${doc?.child_name || "child"}.pdf`.replace(/[^\w.-]/g, "_");
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch {
-      toast.error("Couldn't download the PDF. Please try again.");
-    }
-  };
-
-  const copyShareLink = async () => {
-    if (!doc?.report_id) return;
-    try {
-      const { data } = await api.post(`/neurodivergent/report/${doc.report_id}/share-link`);
-      const full = `${window.location.origin}${data.path}`;
-      await navigator.clipboard.writeText(full);
-      toast.success("Shareable PDF link copied.");
-    } catch {
-      toast.error("Couldn't create the share link.");
-    }
-  };
-
   const r = doc?.report || null;
 
   return (
@@ -198,24 +167,6 @@ export default function NeurodivergentReports() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {doc && (
-              <>
-                <button
-                  onClick={downloadPdf}
-                  className="inline-flex items-center gap-2 text-sm border border-[#E5E0EE] rounded-full px-4 py-2 hover:bg-[#F5F2FA] text-[#3D1A78] font-semibold"
-                  data-testid="nd-download-pdf-btn"
-                >
-                  <Download size={14} /> Download PDF
-                </button>
-                <button
-                  onClick={copyShareLink}
-                  className="inline-flex items-center gap-2 text-sm border border-[#E5E0EE] rounded-full px-4 py-2 hover:bg-[#F5F2FA] text-[#3D1A78] font-semibold"
-                  data-testid="nd-share-link-btn"
-                >
-                  <Share2 size={14} /> Copy share link
-                </button>
-              </>
-            )}
             <button
               onClick={() => generate(!!doc)}
               disabled={busy}
@@ -231,6 +182,20 @@ export default function NeurodivergentReports() {
         <div className="mt-6">
           <DemoModeBanner />
         </div>
+
+        {doc && (
+          <div className="mt-6">
+            <ReportShareControls
+              reportType="sn_report"
+              pdfUrl={pdfAbs("/neurodivergent/report/pdf")}
+              shareUrl={`/neurodivergent/report/${doc.report_id}/share-link`}
+              visibilityUrl="/neurodivergent/report/visibility"
+              initialExcluded={doc?.visibility?.excluded || []}
+              filename={`SN_Care_Plan_${(doc?.child_name || "child").replace(/[^\w.-]/g, "_")}.pdf`}
+              testIdPrefix="nd-share"
+            />
+          </div>
+        )}
 
         <div className="mt-8">
           <SpecialNeedsScoreDashboard />

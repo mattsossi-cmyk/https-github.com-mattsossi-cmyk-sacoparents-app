@@ -166,16 +166,28 @@ JWT_COOKIE_MAX_AGE = ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 SHARE_TOKEN_EXPIRE_DAYS = 7
 
 
-def create_share_token(doc_type: str, doc_id: str, user_id: str) -> str:
-    """Issue a short-lived signed token that lets anyone with the link download a PDF."""
+def create_share_token(
+    doc_type: str,
+    doc_id: str,
+    user_id: str,
+    excluded_sections: Optional[list] = None,
+) -> str:
+    """Issue a short-lived signed token that lets anyone with the link download a PDF.
+
+    `excluded_sections` snapshots the user's section-visibility choice at share
+    time so revoking or changing preferences later doesn't retroactively alter
+    already-shared links. Recipients see exactly the view the parent chose."""
     payload = {
         "kind": "share",
-        "doc_type": doc_type,  # "summary" | "agreement"
+        "doc_type": doc_type,  # "summary" | "agreement" | "sn_report" | "safety"
         "doc_id": doc_id,
         "sub": user_id,
         "exp": datetime.now(timezone.utc) + timedelta(days=SHARE_TOKEN_EXPIRE_DAYS),
         "iat": datetime.now(timezone.utc),
     }
+    if excluded_sections:
+        # Store as a stable sorted list — keeps the token deterministic for tests.
+        payload["ex"] = sorted({str(x) for x in excluded_sections})
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
 
 

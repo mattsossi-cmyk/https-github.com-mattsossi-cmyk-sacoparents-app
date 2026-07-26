@@ -122,8 +122,15 @@ def _obj_bullets(items, title_key, detail_key) -> List[str]:
     return out
 
 
-def build_special_needs_pdf(*, user_name: str, child_name: str, report: Dict[str, Any]) -> bytes:
+def build_special_needs_pdf(
+    *,
+    user_name: str,
+    child_name: str,
+    report: Dict[str, Any],
+    excluded_sections: set | list | None = None,
+) -> bytes:
     """Compose the 6-part care plan as a PDF."""
+    ex = set(excluded_sections or [])
     pdf = _SNReportPDF()
     pdf.add_page()
 
@@ -135,118 +142,124 @@ def build_special_needs_pdf(*, user_name: str, child_name: str, report: Dict[str
         pdf.ln(2)
 
     # 1. Child Profile
-    profile = report.get("child_profile") or {}
-    pdf.h2("1. Child profile")
-    pdf.body(_safe(profile.get("summary")))
-    if profile.get("strengths"):
-        pdf.set_font("Helvetica", "B", 10.5)
-        pdf.set_text_color(26, 19, 48)
-        pdf.cell(0, 6, "Strengths & interests", ln=1)
-        pdf.bullets(_bullets_from(profile.get("strengths")))
-    if profile.get("what_helps"):
-        pdf.set_font("Helvetica", "B", 10.5)
-        pdf.set_text_color(26, 19, 48)
-        pdf.cell(0, 6, "What helps this child feel safe and successful", ln=1)
-        pdf.bullets(_bullets_from(profile.get("what_helps")))
-    if profile.get("support_needs"):
-        pdf.set_font("Helvetica", "B", 10.5)
-        pdf.set_text_color(26, 19, 48)
-        pdf.cell(0, 6, "Support needs (documented, under evaluation, or observed)", ln=1)
-        pdf.bullets(_bullets_from(profile.get("support_needs")))
+    if "child_profile" not in ex:
+        profile = report.get("child_profile") or {}
+        pdf.h2("1. Child profile")
+        pdf.body(_safe(profile.get("summary")))
+        if profile.get("strengths"):
+            pdf.set_font("Helvetica", "B", 10.5)
+            pdf.set_text_color(26, 19, 48)
+            pdf.cell(0, 6, "Strengths & interests", ln=1)
+            pdf.bullets(_bullets_from(profile.get("strengths")))
+        if profile.get("what_helps"):
+            pdf.set_font("Helvetica", "B", 10.5)
+            pdf.set_text_color(26, 19, 48)
+            pdf.cell(0, 6, "What helps this child feel safe and successful", ln=1)
+            pdf.bullets(_bullets_from(profile.get("what_helps")))
+        if profile.get("support_needs"):
+            pdf.set_font("Helvetica", "B", 10.5)
+            pdf.set_text_color(26, 19, 48)
+            pdf.cell(0, 6, "Support needs (documented, under evaluation, or observed)", ln=1)
+            pdf.bullets(_bullets_from(profile.get("support_needs")))
 
     # 2. Areas of Parent Agreement
-    pdf.h2("2. Areas of parent agreement")
-    agreements = _obj_bullets(report.get("agreement_areas"), "title", "detail")
-    if agreements:
-        pdf.bullets(agreements)
-    else:
-        pdf.body("No agreement areas surfaced yet — a good place to start the conversation.")
+    if "agreement_areas" not in ex:
+        pdf.h2("2. Areas of parent agreement")
+        agreements = _obj_bullets(report.get("agreement_areas"), "title", "detail")
+        if agreements:
+            pdf.bullets(agreements)
+        else:
+            pdf.body("No agreement areas surfaced yet — a good place to start the conversation.")
 
     # 3. Coordination Gaps
-    pdf.h2("3. Coordination gaps")
-    gaps = _obj_bullets(report.get("coordination_gaps"), "title", "detail")
-    if gaps:
-        pdf.bullets(gaps)
-    else:
-        pdf.body("No major gaps flagged.")
+    if "coordination_gaps" not in ex:
+        pdf.h2("3. Coordination gaps")
+        gaps = _obj_bullets(report.get("coordination_gaps"), "title", "detail")
+        if gaps:
+            pdf.bullets(gaps)
+        else:
+            pdf.body("No major gaps flagged.")
 
     # 4. Priority Levels
-    priorities = report.get("priorities") or {}
-    pdf.h2("4. Priority levels")
-    for label, key in (
-        ("Immediate", "immediate"),
-        ("Within 30 days", "thirty_day"),
-        ("Longer-term", "longer_term"),
-    ):
-        pdf.set_font("Helvetica", "B", 10.5)
-        pdf.set_text_color(26, 19, 48)
-        pdf.cell(0, 6, label, ln=1)
-        items = _bullets_from(priorities.get(key))
-        if items:
-            pdf.bullets(items)
-        else:
-            pdf.body("- (none flagged)")
+    if "priorities" not in ex:
+        priorities = report.get("priorities") or {}
+        pdf.h2("4. Priority levels")
+        for label, key in (
+            ("Immediate", "immediate"),
+            ("Within 30 days", "thirty_day"),
+            ("Longer-term", "longer_term"),
+        ):
+            pdf.set_font("Helvetica", "B", 10.5)
+            pdf.set_text_color(26, 19, 48)
+            pdf.cell(0, 6, label, ln=1)
+            items = _bullets_from(priorities.get(key))
+            if items:
+                pdf.bullets(items)
+            else:
+                pdf.body("- (none flagged)")
 
     # 5. Recommended Structure
-    pdf.h2("5. Recommended co-parenting structure")
-    pdf.body(_safe(report.get("structure_reasoning")))
+    if "structure" not in ex:
+        pdf.h2("5. Recommended co-parenting structure")
+        pdf.body(_safe(report.get("structure_reasoning")))
 
     # 6. Action Plan
-    pdf.h2("6. Special Needs Parenting Plan worksheet")
-    rows = report.get("action_plan") or []
-    if rows:
-        # Table header
-        pdf.set_font("Helvetica", "B", 8.5)
-        pdf.set_fill_color(239, 233, 249)
-        pdf.set_text_color(61, 26, 120)
-        col_widths = [38, 52, 30, 32, 28]
-        headers = ["Child's need", "Agreed action", "Responsible", "Info shared by", "Review date"]
-        for w, h in zip(col_widths, headers):
-            pdf.cell(w, 6.5, h, border=0, fill=True)
-        pdf.ln(6.5)
-        pdf.set_font("Helvetica", "", 8.5)
-        pdf.set_text_color(52, 46, 78)
-        for r in rows:
-            def _clip(text, max_len):
-                # Break unusually long unbroken tokens (URLs, emails) so
-                # multi_cell always has a word-break option in narrow cells.
-                t = _safe(text)
-                out = []
-                for word in t.split(" "):
-                    if len(word) > max_len:
-                        for i in range(0, len(word), max_len):
-                            out.append(word[i:i + max_len])
-                    else:
-                        out.append(word)
-                return " ".join(out) if out else ""
+    if "action_plan" not in ex:
+        pdf.h2("6. Special Needs Parenting Plan worksheet")
+        rows = report.get("action_plan") or []
+        if rows:
+            # Table header
+            pdf.set_font("Helvetica", "B", 8.5)
+            pdf.set_fill_color(239, 233, 249)
+            pdf.set_text_color(61, 26, 120)
+            col_widths = [38, 52, 30, 32, 28]
+            headers = ["Child's need", "Agreed action", "Responsible", "Info shared by", "Review date"]
+            for w, h in zip(col_widths, headers):
+                pdf.cell(w, 6.5, h, border=0, fill=True)
+            pdf.ln(6.5)
+            pdf.set_font("Helvetica", "", 8.5)
+            pdf.set_text_color(52, 46, 78)
+            for r in rows:
+                def _clip(text, max_len):
+                    # Break unusually long unbroken tokens (URLs, emails) so
+                    # multi_cell always has a word-break option in narrow cells.
+                    t = _safe(text)
+                    out = []
+                    for word in t.split(" "):
+                        if len(word) > max_len:
+                            for i in range(0, len(word), max_len):
+                                out.append(word[i:i + max_len])
+                        else:
+                            out.append(word)
+                    return " ".join(out) if out else ""
 
-            values = [
-                _clip(r.get("need") or "", 22),
-                _clip(r.get("action") or "", 32),
-                _clip(r.get("responsible") or "", 18),
-                _clip(r.get("channel") or "", 20),
-                _clip(r.get("review") or "", 18),
-            ]
-            # Compute row height as the max of multi_cell heights.
-            heights = []
-            for w, v in zip(col_widths, values):
-                lines = pdf.multi_cell(w, 4.2, v or " ", split_only=True)
-                heights.append(max(1, len(lines)) * 4.2)
-            row_h = max(heights) + 1
-            # Break-page guard.
-            if pdf.get_y() + row_h > pdf.h - 20:
-                pdf.add_page()
-            x0 = pdf.get_x()
-            y0 = pdf.get_y()
-            for w, v in zip(col_widths, values):
-                x = pdf.get_x()
-                y = pdf.get_y()
-                pdf.rect(x, y, w, row_h)
-                pdf.multi_cell(w, 4.2, v or " ")
-                pdf.set_xy(x + w, y0)
-            pdf.set_xy(x0, y0 + row_h)
-    else:
-        pdf.body("(No action rows yet — regenerate the report once more answers are in.)")
+                values = [
+                    _clip(r.get("need") or "", 22),
+                    _clip(r.get("action") or "", 32),
+                    _clip(r.get("responsible") or "", 18),
+                    _clip(r.get("channel") or "", 20),
+                    _clip(r.get("review") or "", 18),
+                ]
+                # Compute row height as the max of multi_cell heights.
+                heights = []
+                for w, v in zip(col_widths, values):
+                    lines = pdf.multi_cell(w, 4.2, v or " ", split_only=True)
+                    heights.append(max(1, len(lines)) * 4.2)
+                row_h = max(heights) + 1
+                # Break-page guard.
+                if pdf.get_y() + row_h > pdf.h - 20:
+                    pdf.add_page()
+                x0 = pdf.get_x()
+                y0 = pdf.get_y()
+                for w, v in zip(col_widths, values):
+                    x = pdf.get_x()
+                    y = pdf.get_y()
+                    pdf.rect(x, y, w, row_h)
+                    pdf.multi_cell(w, 4.2, v or " ")
+                    pdf.set_xy(x + w, y0)
+                pdf.set_xy(x0, y0 + row_h)
+        else:
+            pdf.body("(No action rows yet — regenerate the report once more answers are in.)")
 
     # Disclaimer footer
     pdf.ln(3)

@@ -24,6 +24,7 @@ import HighConcernOverlay from "../components/HighConcernOverlay";
 import WatchFirstVideo from "../components/WatchFirstVideo";
 import SectionCoaching from "../components/SectionCoaching";
 import MethodologyCard from "../components/MethodologyCard";
+import ReportShareControls, { pdfAbs } from "../components/ReportShareControls";
 
 const TONE_STYLES = {
   danger: {
@@ -764,6 +765,20 @@ export default function SafetyAssessment() {
               onEmailMediator={openMediatorDialog}
               sending={emailing}
             />
+
+            {result?.assessment_id && (
+              <div className="mt-6">
+                <ReportShareControls
+                  reportType="safety"
+                  pdfUrl={pdfAbs(`/safety-assessment/${result.assessment_id}/pdf`)}
+                  shareUrl={`/safety-assessment/${result.assessment_id}/share-link`}
+                  visibilityUrl={`/safety-assessment/${result.assessment_id}/visibility`}
+                  initialExcluded={result?.visibility?.excluded || []}
+                  filename={`safety-assessment-${result.assessment_id}.pdf`}
+                  testIdPrefix="safety-share"
+                />
+              </div>
+            )}
 
             <div className="mt-6">
               <SectionCoaching

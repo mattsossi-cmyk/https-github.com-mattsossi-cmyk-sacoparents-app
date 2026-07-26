@@ -254,7 +254,9 @@ def build_summary_pdf(
     summary: Dict[str, Any],
     child_goals: Dict[str, Any] | None = None,
     mediation_date: str | None = None,
+    excluded_sections: set | list | None = None,
 ) -> bytes:
+    ex = set(excluded_sections or [])
     pdf = PrepSummaryPDF(format="A4")
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_margins(15, 44, 15)
@@ -265,36 +267,43 @@ def build_summary_pdf(
     pdf.add_page()
 
     _render_meta(pdf, user_name, mediation_date)
-    _render_readiness_banner(pdf, summary)
+    if "readiness" not in ex:
+        _render_readiness_banner(pdf, summary)
 
-    if summary.get("changes_since_last"):
+    if "changes_since_last" not in ex and summary.get("changes_since_last"):
         pdf.section_title("What's Changed Since Last Time")
         pdf.body_text(summary["changes_since_last"])
 
-    # Cover for Child-Centered Goals — #3 poster.
-    pdf.poster_cover("identify")
-    pdf.add_page()
-    _render_child_goals(pdf, summary, child_goals)
+    if "child_goals" not in ex:
+        # Cover for Child-Centered Goals — #3 poster.
+        pdf.poster_cover("identify")
+        pdf.add_page()
+        _render_child_goals(pdf, summary, child_goals)
 
-    pdf.section_title("Top Concerns")
-    pdf.bullet_list(summary.get("top_concerns", []))
+    if "top_concerns" not in ex:
+        pdf.section_title("Top Concerns")
+        pdf.bullet_list(summary.get("top_concerns", []))
 
-    # Cover for Priority Agenda — #5 "Prepare for Mediation" poster.
-    pdf.poster_cover("prepare")
-    pdf.add_page()
-    _render_priority_agenda(pdf, summary.get("priority_agenda", []))
+    if "priority_agenda" not in ex:
+        # Cover for Priority Agenda — #5 "Prepare for Mediation" poster.
+        pdf.poster_cover("prepare")
+        pdf.add_page()
+        _render_priority_agenda(pdf, summary.get("priority_agenda", []))
 
-    pdf.section_title("Flexibility Areas")
-    pdf.bullet_list(summary.get("flexibility_areas", []))
+    if "flexibility_areas" not in ex:
+        pdf.section_title("Flexibility Areas")
+        pdf.bullet_list(summary.get("flexibility_areas", []))
 
-    # Cover for Communication Goals — #6 "Strengthen Communication" poster.
-    pdf.poster_cover("communicate")
-    pdf.add_page()
-    pdf.section_title("Communication Goals")
-    pdf.bullet_list(summary.get("communication_goals", []))
+    if "communication_goals" not in ex:
+        # Cover for Communication Goals — #6 "Strengthen Communication" poster.
+        pdf.poster_cover("communicate")
+        pdf.add_page()
+        pdf.section_title("Communication Goals")
+        pdf.bullet_list(summary.get("communication_goals", []))
 
-    pdf.section_title("Notes for the Mediator")
-    pdf.body_text(summary.get("notes_for_mediator", ""))
+    if "notes_for_mediator" not in ex:
+        pdf.section_title("Notes for the Mediator")
+        pdf.body_text(summary.get("notes_for_mediator", ""))
 
     # Closing cover — #7 "Better Co-Parenting, Better Outcomes" poster.
     pdf.poster_cover("better")
@@ -451,7 +460,9 @@ def build_agreement_pdf(
     user_name: str,
     agreement: Dict[str, Any],
     mediation_date: str | None = None,
+    excluded_sections: set | list | None = None,
 ) -> bytes:
+    ex = set(excluded_sections or [])
     pdf = AgreementPDF(format="A4")
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_margins(15, 44, 15)
@@ -460,24 +471,28 @@ def build_agreement_pdf(
     _agreement_meta(pdf, user_name, mediation_date)
     _agreement_overview(pdf, agreement.get("overview"))
 
-    if agreement.get("changes_since_last"):
+    if "changes_since_last" not in ex and agreement.get("changes_since_last"):
         pdf.section_title("Updates from the Previous Draft")
         pdf.body_text(agreement["changes_since_last"])
 
-    if agreement.get("shared_goals"):
+    if "shared_goals" not in ex and agreement.get("shared_goals"):
         pdf.section_title("Shared Goals for Our Child")
         pdf.bullet_list(agreement["shared_goals"])
 
-    _agreement_section(pdf, "Communication", agreement.get("communication", []))
-    _agreement_section(pdf, "Child Needs", agreement.get("child_needs", []))
-    _agreement_section(pdf, "Household Rules", agreement.get("household_rules", []))
-    _agreement_priority_items(pdf, agreement.get("priority_items", []))
+    if "communication" not in ex:
+        _agreement_section(pdf, "Communication", agreement.get("communication", []))
+    if "child_needs" not in ex:
+        _agreement_section(pdf, "Child Needs", agreement.get("child_needs", []))
+    if "household_rules" not in ex:
+        _agreement_section(pdf, "Household Rules", agreement.get("household_rules", []))
+    if "priority_items" not in ex:
+        _agreement_priority_items(pdf, agreement.get("priority_items", []))
 
-    if agreement.get("open_for_discussion"):
+    if "open_for_discussion" not in ex and agreement.get("open_for_discussion"):
         pdf.section_title("Open for Discussion")
         pdf.bullet_list(agreement["open_for_discussion"])
 
-    if agreement.get("closing_note"):
+    if "closing_note" not in ex and agreement.get("closing_note"):
         pdf.section_title("A Note from the Draft")
         pdf.set_font("Helvetica", "I", 11)
         pdf.multi_cell(0, 6, agreement["closing_note"])

@@ -216,15 +216,20 @@ def build_safety_assessment_pdf(
     section_1_rows: List[Dict[str, str]],
     section_2_rows: List[Dict[str, str]],
     texas_resource_block: str,
+    excluded_sections: set | list | None = None,
 ) -> bytes:
+    ex = set(excluded_sections or [])
     pdf = SafetyAssessmentPDF()
     pdf.set_auto_page_break(auto=True, margin=18)
     pdf.add_page()
     _render_meta(pdf, user_name, generated_at)
     _render_disclaimer(pdf)
+    # Pathway and Texas resources are locked-on for safety reasons.
     _render_pathway(pdf, result)
-    _render_answers(pdf, "Section 1 - Immediate safety screen (past 12 months)", section_1_rows)
-    _render_answers(pdf, "Section 2 - Communication readiness", section_2_rows)
+    if "section_1" not in ex:
+        _render_answers(pdf, "Section 1 - Immediate safety screen (past 12 months)", section_1_rows)
+    if "section_2" not in ex:
+        _render_answers(pdf, "Section 2 - Communication readiness", section_2_rows)
     _render_texas_block(pdf, texas_resource_block)
 
     out = pdf.output(dest="S")
