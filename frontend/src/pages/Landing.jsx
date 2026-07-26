@@ -228,41 +228,29 @@ function Hero() {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center fade-up">
         <Eyebrow>The SA CoParents App</Eyebrow>
         <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#1A1330] leading-[1.05] tracking-tight">
-          Stop Parent Conflict Before
-          <br className="hidden sm:block" /> It Reaches the Courtroom
+          Start with your situation.
+          <br />
+          <span className="text-[#3D1A78]">Focus on your child.</span>
+          <br />
+          Leave ready to meet your child&rsquo;s&nbsp;needs.
         </h1>
-        <h2 className="font-serif text-2xl sm:text-3xl text-[#3D1A78] mt-8 leading-tight">
-          Welcome to the SA CoParents Assessment
-        </h2>
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#1A1330] font-semibold mt-5 leading-relaxed">
-          Every family is different, and every co-parenting relationship has
-          its own strengths and challenges. This assessment is designed to
-          help you reflect on your current situation through a child-focused
-          lens.
+        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#1A1330] font-semibold mt-8 leading-relaxed">
+          The SA CoParents App helps you understand your co-parenting
+          situation, identify your child&rsquo;s individual needs, and prepare
+          for child-focused discussions and mediation.
         </p>
         <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-4 leading-relaxed">
-          There are no right or wrong answers, and this is not about assigning
-          blame. Instead, your responses will help identify areas of strength,
-          opportunities for growth, and practical ways to better support your
-          child.
-        </p>
-        <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-4 leading-relaxed">
-          The more honest your answers, the more meaningful your personalized
-          recommendations will be.
-        </p>
-        <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-4 leading-relaxed">
-          Our goal is simple: to help parents make decisions that promote
-          stability, healthy communication, and positive outcomes for their
-          children.
+          Through personalized assessments and practical reports, you can
+          move forward with greater clarity, confidence, and purpose.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <PrimaryCTA testid="hero-primary-cta">Take the Free Assessment</PrimaryCTA>
+          <PrimaryCTA testid="hero-primary-cta">Start Your Assessment</PrimaryCTA>
           <SecondaryCTA
             testid="hero-secondary-cta"
             onClick={() => scrollToId("how-it-works")}
           >
-            See How It Works
+            Learn How It Works
           </SecondaryCTA>
         </div>
 
@@ -698,7 +686,7 @@ function FinalCTA() {
         </p>
 
         <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <PrimaryCTA testid="final-primary-cta">Take the Free Assessment</PrimaryCTA>
+          <PrimaryCTA testid="final-primary-cta">Start Your Assessment</PrimaryCTA>
           <SecondaryCTA
             testid="final-secondary-cta"
             onClick={() => scrollToId("child-focused-mediation")}
