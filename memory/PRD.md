@@ -1,6 +1,15 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Phase 4 — Public Trust Pages (Feb 2026)
+Published Privacy, Data-Retention, Accessibility, and Assessment-Validation info prominently across the app.
+- **/accessibility** — WCAG 2.2 AA statement, keyboard shortcuts, screen-reader support, contrast policy, known gaps, contact
+- **/methodology** — Full transparency about every score (Mediation Readiness, Family Violence, Special Needs 7-domain, AI Coach, Next-Three-Steps engine) including source instruments (Danger Assessment, HITS, WEB Scale, ODARA), rule locations, and honest disclosure of where we lack empirical validation
+- **/data-retention** — Retention schedule table (10 data types), export & deletion workflows, GDPR/CCPA/POPIA rights, third-party processors
+- **`AppFooter.jsx`** — persistent slim footer on every in-app page linking to Privacy · Terms · Data retention · Methodology · Accessibility · Crisis resources + educational-tool disclaimer
+- Marketing footer on Landing page also updated with new links
+- Cross-links added from Privacy → the 3 companion pages
+
 ## 🆕 Phase 2 — Selective Section Sharing (Feb 2026)
 Parents can now hide any section of a report before downloading a PDF or copying a share link. Applied to all 4 report types:
 - Mediation Summary (8 sections)

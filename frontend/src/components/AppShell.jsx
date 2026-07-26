@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { LogOut, Facebook, ShieldAlert, Menu, X } from "lucide-react";
 
 import GuestBanner from "./GuestBanner";
+import AppFooter from "./AppFooter";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
@@ -245,6 +246,7 @@ export default function AppShell({ children }) {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">{children}</main>
+      <AppFooter />
     </div>
   );
 }

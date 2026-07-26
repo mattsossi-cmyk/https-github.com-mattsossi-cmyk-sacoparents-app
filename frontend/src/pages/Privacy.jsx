@@ -106,6 +106,13 @@ export default function Privacy() {
             Email <a href="mailto:mattsossi@bsossi.com" className="text-[#2A0F5F] underline">mattsossi@bsossi.com</a>
             {" "}or call <a href="tel:2102241667" className="text-[#2A0F5F] underline">210-224-1667</a>.
           </p>
+
+          <H2>See also</H2>
+          <ul>
+            <li><Link to="/data-retention" className="text-[#2A0F5F] underline">Data retention policy</Link> — how long we keep each data type, and how to delete or export.</li>
+            <li><Link to="/methodology" className="text-[#2A0F5F] underline">Methodology &amp; assessment validation</Link> — how our scoring works and its limits.</li>
+            <li><Link to="/accessibility" className="text-[#2A0F5F] underline">Accessibility statement</Link> — WCAG 2.2 AA commitments.</li>
+          </ul>
           <p className="text-xs text-[#857E9C] italic mt-8">
             SA Coparents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>

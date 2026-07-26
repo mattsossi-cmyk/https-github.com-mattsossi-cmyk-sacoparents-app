@@ -28,6 +28,9 @@ import Safety from "@/pages/Safety";
 import Watch from "@/pages/Watch";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import Accessibility from "@/pages/Accessibility";
+import Methodology from "@/pages/Methodology";
+import DataRetention from "@/pages/DataRetention";
 import DeleteAccount from "@/pages/DeleteAccount";
 import Reflection from "@/pages/Reflection";
 import Orientation from "@/pages/Orientation";
@@ -97,6 +100,9 @@ function AppRoutes() {
         />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/accessibility" element={<Accessibility />} />
+        <Route path="/methodology" element={<Methodology />} />
+        <Route path="/data-retention" element={<DataRetention />} />
         <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/cancel-subscription" element={<CancelSubscription />} />
         <Route path="/safety" element={<Safety />} />

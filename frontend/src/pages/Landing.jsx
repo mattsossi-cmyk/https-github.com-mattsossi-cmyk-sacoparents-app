@@ -182,6 +182,15 @@ function MarketingFooter() {
             <Link to="/privacy" className="hover:text-white" data-testid="footer-privacy-link">
               Privacy
             </Link>
+            <Link to="/data-retention" className="hover:text-white" data-testid="footer-data-retention-link">
+              Data retention
+            </Link>
+            <Link to="/methodology" className="hover:text-white" data-testid="footer-methodology-link">
+              Methodology
+            </Link>
+            <Link to="/accessibility" className="hover:text-white" data-testid="footer-accessibility-link">
+              Accessibility
+            </Link>
             {FB_URL && (
               <a
                 href={FB_URL}
