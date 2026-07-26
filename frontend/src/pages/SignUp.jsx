@@ -43,7 +43,7 @@ export default function SignUp() {
         setErrMsg(
           "Email setup links aren't available on this deployment yet. " +
           "We're working on it. In the meantime, tap " +
-          '"Enter the App without an account" below to start using SA Coparents right away.'
+          '"Enter the App without an account" below to start using SA CoParents right away.'
         );
       } else if (status === 429) {
         setErrMsg(detail || "Too many requests. Please wait a few minutes and try again.");

@@ -13,7 +13,7 @@ export default function Terms() {
           className="inline-flex items-center gap-2 text-sm text-[#2A0F5F] hover:text-[#3D1A78] mb-6"
           data-testid="terms-back-link"
         >
-          <ArrowLeft size={14} /> Back to SA Coparents
+          <ArrowLeft size={14} /> Back to SA CoParents
         </Link>
 
         <div className="eyebrow mb-3">Terms of Service</div>
@@ -24,17 +24,17 @@ export default function Terms() {
 
         <Prose>
           <p>
-            Welcome to <strong>SA Coparents</strong> ("we", "us"). By creating an
+            Welcome to <strong>SA CoParents</strong> ("we", "us"). By creating an
             account or using the app, you agree to these Terms.
             If you don't agree, please don't use the app.
           </p>
 
           <H2>1. What this app is — and isn't</H2>
           <p>
-            SA Coparents is a <strong>preparation tool</strong> for parents heading into a co-parenting mediation session. It helps you organize your thoughts, identify priorities, and arrive at mediation calm and child-centered.
+            SA CoParents is a <strong>preparation tool</strong> for parents heading into a co-parenting mediation session. It helps you organize your thoughts, identify priorities, and arrive at mediation calm and child-centered.
           </p>
           <p>
-            SA Coparents is <strong>NOT</strong>:
+            SA CoParents is <strong>NOT</strong>:
           </p>
           <ul>
             <li>Legal advice or a substitute for an attorney</li>
@@ -136,7 +136,7 @@ export default function Terms() {
             {" "}or call <a href="tel:2102241667" className="text-[#2A0F5F] underline">210-224-1667</a>.
           </p>
           <p className="text-xs text-[#857E9C] italic mt-8">
-            SA Coparents · 16607 Blanco #703, San Antonio, Texas 78232
+            SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>
       </div>

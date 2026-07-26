@@ -1,4 +1,4 @@
-"""Email service for SA Coparents — uses Resend (https://resend.com).
+"""Email service for SA CoParents — uses Resend (https://resend.com).
 
 Public interface (unchanged, callers don't need to be updated):
   - EmailNotConfigured, EmailSendError
@@ -37,7 +37,7 @@ def _config() -> dict:
             os.environ.get("RESEND_FROM_EMAIL", "").strip()
             or "onboarding@resend.dev"
         ),
-        "from_name": os.environ.get("RESEND_FROM_NAME", "SA Coparents").strip(),
+        "from_name": os.environ.get("RESEND_FROM_NAME", "SA CoParents").strip(),
         "reply_to": os.environ.get("RESEND_REPLY_TO", "").strip(),
     }
 
@@ -98,7 +98,7 @@ def _send(
 
 # ============ Internal helpers ============
 def _branded_html(*, headline: str, body_html: str, cta_label: str, cta_url: Optional[str] = None) -> str:
-    """Wrap content in the SA Coparents branded email shell."""
+    """Wrap content in the SA CoParents branded email shell."""
     cta = (
         f'<p style="margin:0 0 24px 0;"><a href="{cta_url}" '
         f'style="display:inline-block;background:linear-gradient(135deg,#3D1A78,#2DB5B5);'
@@ -117,13 +117,13 @@ def _branded_html(*, headline: str, body_html: str, cta_label: str, cta_url: Opt
     return f"""<!doctype html>
 <html><body style="font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#F8F7FC;color:#1A1330;margin:0;padding:40px 24px;">
   <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:24px;padding:36px;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
-    <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:12px;">SA Coparents</div>
+    <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:12px;">SA CoParents</div>
     <h1 style="font-size:24px;font-weight:800;color:#1A1330;letter-spacing:-0.02em;margin:0 0 16px 0;">{headline}</h1>
     {body_html}
     {cta}
     {fallback}
     <hr style="border:none;border-top:1px solid #E5E0EE;margin:28px 0;"/>
-    <p style="font-size:12px;color:#857E9C;line-height:1.55;margin:0;">SA Coparents · <a href="https://sacoparentsapp.online" style="color:#3D1A78;text-decoration:none;">sacoparentsapp.online</a></p>
+    <p style="font-size:12px;color:#857E9C;line-height:1.55;margin:0;">SA CoParents · <a href="https://sacoparentsapp.online" style="color:#3D1A78;text-decoration:none;">sacoparentsapp.online</a></p>
   </div>
 </body></html>"""
 
@@ -167,11 +167,11 @@ def send_magic_link(*, to_email: str, link_url: str, user_name: Optional[str] = 
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
     plain = (
         f"{greeting}\n\n"
-        "Tap the link below to sign in to SA Coparents. It expires in 15 minutes "
+        "Tap the link below to sign in to SA CoParents. It expires in 15 minutes "
         "and can only be used once.\n\n"
         f"{link_url}\n\n"
         "If you didn't request this, you can safely ignore this email.\n\n"
-        "— SA Coparents · sacoparentsapp.online\n"
+        "— SA CoParents · sacoparentsapp.online\n"
     )
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
@@ -181,12 +181,12 @@ def send_magic_link(*, to_email: str, link_url: str, user_name: Optional[str] = 
     html = _branded_html(
         headline="Tap to sign in",
         body_html=body_html,
-        cta_label="Sign in to SA Coparents",
+        cta_label="Sign in to SA CoParents",
         cta_url=link_url,
     )
     _send(
         to_email=to_email,
-        subject="Your SA Coparents sign-in link",
+        subject="Your SA CoParents sign-in link",
         html=html,
         text=plain,
         failure_message="Could not send your sign-in link right now. Please try again in a moment.",
@@ -196,16 +196,16 @@ def send_magic_link(*, to_email: str, link_url: str, user_name: Optional[str] = 
 def send_setup_link(*, to_email: str, link_url: str) -> None:
     """Send a one-tap 'create your account' link."""
     plain = (
-        "Welcome to SA Coparents.\n\n"
+        "Welcome to SA CoParents.\n\n"
         "Someone (probably you) requested an account for this email. "
         "Tap the link below to set up your account. It expires in 15 minutes.\n\n"
         f"{link_url}\n\n"
         "If this wasn't you, you can safely ignore this email — no account was created.\n\n"
-        "— SA Coparents · sacoparentsapp.online\n"
+        "— SA CoParents · sacoparentsapp.online\n"
     )
     body_html = (
         '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
-        "Welcome. Tap the button below to finish creating your SA Coparents account. "
+        "Welcome. Tap the button below to finish creating your SA CoParents account. "
         "The link expires in <strong>15 minutes</strong>.</p>"
     )
     html = _branded_html(
@@ -216,7 +216,7 @@ def send_setup_link(*, to_email: str, link_url: str) -> None:
     )
     _send(
         to_email=to_email,
-        subject="Set up your SA Coparents account",
+        subject="Set up your SA CoParents account",
         html=html,
         text=plain,
         failure_message="Couldn't send the setup link right now. Please try again.",
@@ -228,12 +228,12 @@ def send_password_reset_link(*, to_email: str, link_url: str, user_name: Optiona
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
     plain = (
         f"{greeting}\n\n"
-        "Someone (probably you) asked to reset the password on your SA Coparents account. "
+        "Someone (probably you) asked to reset the password on your SA CoParents account. "
         "Tap the link below to choose a new password. It expires in 15 minutes "
         "and can only be used once.\n\n"
         f"{link_url}\n\n"
         "If you didn't request this, you can safely ignore this email — your password hasn't changed.\n\n"
-        "— SA Coparents · sacoparentsapp.online\n"
+        "— SA CoParents · sacoparentsapp.online\n"
     )
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
@@ -248,7 +248,7 @@ def send_password_reset_link(*, to_email: str, link_url: str, user_name: Optiona
     )
     _send(
         to_email=to_email,
-        subject="Reset your SA Coparents password",
+        subject="Reset your SA CoParents password",
         html=html,
         text=plain,
         failure_message="Could not send your reset link right now. Please try again in a moment.",
@@ -260,12 +260,12 @@ def send_verification_link(*, to_email: str, link_url: str, user_name: Optional[
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
     plain = (
         f"{greeting}\n\n"
-        "Please confirm this is your email address so we can keep your SA Coparents "
+        "Please confirm this is your email address so we can keep your SA CoParents "
         "account secure and send you important updates. Tap the link below — "
         "it expires in 24 hours.\n\n"
         f"{link_url}\n\n"
         "If you didn't create an account, you can safely ignore this email.\n\n"
-        "— SA Coparents · sacoparentsapp.online\n"
+        "— SA CoParents · sacoparentsapp.online\n"
     )
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
@@ -280,7 +280,7 @@ def send_verification_link(*, to_email: str, link_url: str, user_name: Optional[
     )
     _send(
         to_email=to_email,
-        subject="Confirm your SA Coparents email",
+        subject="Confirm your SA CoParents email",
         html=html,
         text=plain,
         failure_message="Could not send your verification link right now. Please try again in a moment.",
@@ -670,7 +670,7 @@ def send_safety_assessment_report(
     )
     _send(
         to_email=to_email,
-        subject="Your Family Violence & Communication Safety Assessment - SA Coparents",
+        subject="Your Family Violence & Communication Safety Assessment - SA CoParents",
         html=html,
         text=plain,
         attachments=[("safety-assessment.pdf", pdf_bytes)],
@@ -707,7 +707,7 @@ def send_mediator_safety_assessment(
     body_html = (
         f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">{greeting}</p>'
         f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
-        f'<strong>{who}</strong> is preparing for mediation through SA Coparents and asked me to send you '
+        f'<strong>{who}</strong> is preparing for mediation through SA CoParents and asked me to send you '
         f'their Family Violence & Communication Safety Assessment result so you have the safest starting point for their case.'
         f'</p>'
         f'<div style="background:#F8F7FC;border-radius:16px;padding:18px 20px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
@@ -726,7 +726,7 @@ def send_mediator_safety_assessment(
     )
     plain = (
         f"{greeting}\n\n"
-        f"{who} is preparing for mediation through SA Coparents and asked me to forward "
+        f"{who} is preparing for mediation through SA CoParents and asked me to forward "
         f"their Family Violence & Communication Safety Assessment.\n\n"
         f"Level {level}: {pathway_title}\n{pathway_summary}\n"
         f"{optional_note_plain}"

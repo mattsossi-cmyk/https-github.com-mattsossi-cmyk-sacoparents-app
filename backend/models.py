@@ -1,4 +1,4 @@
-"""Pydantic models for SA Coparents Mediation Prep App."""
+"""Pydantic models for SA CoParents Mediation Prep App."""
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone

@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 :root {
-    /* SA Coparents — Confident Purple→Teal palette
+    /* SA CoParents — Confident Purple→Teal palette
        Variable names kept for backwards compatibility with existing JSX. */
     --bg-default: #F8F7FC;
     --bg-alt: #EFE9F9;

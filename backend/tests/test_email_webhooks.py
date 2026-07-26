@@ -39,7 +39,7 @@ def _post_event(event_type: str, to_email: str | None = None, extra_data: dict |
         "data": {
             "email_id": f"em_{uuid.uuid4().hex[:12]}",
             "to": [to_email] if to_email else ["someone@example.com"],
-            "subject": "Your SA Coparents sign-in link",
+            "subject": "Your SA CoParents sign-in link",
             **(extra_data or {}),
         },
     }

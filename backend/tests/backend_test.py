@@ -1,4 +1,4 @@
-"""End-to-end backend tests for SA Coparents Mediation Prep app."""
+"""End-to-end backend tests for SA CoParents Mediation Prep app."""
 import os
 import uuid
 import pytest

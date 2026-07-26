@@ -174,7 +174,7 @@ export default function AdminUsers() {
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
           <p className="text-sm text-[#4B4567] mt-2">
-            This page is restricted to the SA Coparents app owner.
+            This page is restricted to the SA CoParents app owner.
           </p>
         </div>
       </AppShell>

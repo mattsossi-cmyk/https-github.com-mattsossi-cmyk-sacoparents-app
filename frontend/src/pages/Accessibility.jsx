@@ -13,7 +13,7 @@ export default function Accessibility() {
           className="inline-flex items-center gap-2 text-sm text-[#2A0F5F] hover:text-[#3D1A78] mb-6"
           data-testid="accessibility-back-link"
         >
-          <ArrowLeft size={14} /> Back to SA Coparents
+          <ArrowLeft size={14} /> Back to SA CoParents
         </Link>
 
         <div className="eyebrow mb-3">Accessibility</div>
@@ -91,7 +91,7 @@ export default function Accessibility() {
 
           <H2>Tell us when we get it wrong</H2>
           <p>
-            If any part of SA Coparents blocks or confuses you, please email
+            If any part of SA CoParents blocks or confuses you, please email
             {" "}<a href="mailto:mattsossi@bsossi.com" className="text-[#2A0F5F] underline">mattsossi@bsossi.com</a>{" "}
             with a short description (and a screenshot if you can). We treat
             accessibility bug reports as P0 and will get back to you within
@@ -99,7 +99,7 @@ export default function Accessibility() {
           </p>
 
           <p className="text-xs text-[#857E9C] italic mt-8">
-            SA Coparents · 16607 Blanco #703, San Antonio, Texas 78232
+            SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>
       </div>

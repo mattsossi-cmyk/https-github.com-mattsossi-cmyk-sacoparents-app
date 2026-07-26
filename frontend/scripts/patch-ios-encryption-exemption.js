@@ -3,7 +3,7 @@
  * Patches the Capacitor-generated iOS Info.plist so:
  *
  *   1. Apple's Export Compliance question is auto-answered "exempt"
- *      (SA Coparents only uses standard iOS HTTPS / system encryption).
+ *      (SA CoParents only uses standard iOS HTTPS / system encryption).
  *
  *   2. No routing/navigation capability is ever silently enabled — SA
  *      Coparents is a co-parenting mediation prep app, NOT a navigation
@@ -55,7 +55,7 @@ if (!plist.includes("ITSAppUsesNonExemptEncryption")) {
   console.log("[ios-patch] ITSAppUsesNonExemptEncryption already set.");
 }
 
-// 2. Strip routing capability if it ever shows up (SA Coparents is not a nav app)
+// 2. Strip routing capability if it ever shows up (SA CoParents is not a nav app)
 const ROUTING_KEY = "MKDirectionsApplicationSupportedModes";
 if (plist.includes(ROUTING_KEY)) {
   // Match: <key>MKDirectionsApplicationSupportedModes</key>\n  <array>...</array>
@@ -66,7 +66,7 @@ if (plist.includes(ROUTING_KEY)) {
   plist = plist.replace(routingPattern, "");
   changed = true;
   console.log(
-    `[ios-patch] Removed ${ROUTING_KEY} — SA Coparents is not a navigation app.`
+    `[ios-patch] Removed ${ROUTING_KEY} — SA CoParents is not a navigation app.`
   );
 }
 

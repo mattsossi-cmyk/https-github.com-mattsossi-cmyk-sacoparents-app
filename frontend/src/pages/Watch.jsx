@@ -133,7 +133,7 @@ function TrailerRow({ trailer, autoOpen = false }) {
     try {
       if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
         await navigator.share({
-          title: `SA Coparents — ${trailer.title}`,
+          title: `SA CoParents — ${trailer.title}`,
           text: trailer.shareText,
           url: shareUrl,
         });
@@ -290,7 +290,7 @@ export default function Watch() {
             Walk into mediation with clarity — not a fight.
           </h1>
           <p className="text-base sm:text-lg text-[#4B4567] leading-relaxed">
-            SA Coparents is a private, guided prep tool that helps parents move
+            SA CoParents is a private, guided prep tool that helps parents move
             from emotionally reactive to child-centered before they ever sit at
             the mediation table. Take a minute to see how it works — then start
             free when you’re ready.
@@ -385,7 +385,7 @@ export default function Watch() {
                   seedsforsuccess.net
                 </div>
                 <p className="text-sm text-[#4B4567] leading-relaxed">
-                  Learn about the Seeds for Success mediation practice behind SA Coparents.
+                  Learn about the Seeds for Success mediation practice behind SA CoParents.
                 </p>
                 <div className="mt-3 inline-flex items-center gap-1 text-[#3D1A78] text-xs font-bold">
                   Open in a new tab <ExternalLink size={12} />
@@ -398,7 +398,7 @@ export default function Watch() {
 
       <footer className="border-t border-[#E5E0EE] bg-white/60">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[#857E9C]">
-          <div>© SA Coparents · A Seeds for Success project</div>
+          <div>© SA CoParents · A Seeds for Success project</div>
           <div className="flex items-center gap-4">
             <Link to="/privacy" className="hover:text-[#3D1A78]" data-testid="watch-privacy-link">
               Privacy

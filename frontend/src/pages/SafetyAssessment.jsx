@@ -517,7 +517,7 @@ export default function SafetyAssessment() {
                 <ShieldAlert size={18} />
               </div>
               <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
-                SA Coparents
+                SA CoParents
               </div>
             </div>
             <h1 className="font-bold text-3xl sm:text-4xl text-[#1A1330] tracking-tight mb-3">

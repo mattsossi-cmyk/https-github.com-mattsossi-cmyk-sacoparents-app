@@ -1,7 +1,7 @@
 """PDF rendering for the IPV Communication Safety Assessment.
 
 Uses the same fpdf2 stack and brand assets as the rest of the app so the
-downloadable / emailed report looks like it belongs in the SA Coparents family.
+downloadable / emailed report looks like it belongs in the SA CoParents family.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ WARN = (160, 92, 30)
 INFO = (60, 89, 138)
 OK = (60, 120, 90)
 
-ORG_NAME = "SA Coparents"
+ORG_NAME = "SA CoParents"
 ORG_TAGLINE = "Relational Mediation Prep"
 ORG_PHONE = "210-224-1667"
 ORG_EMAIL = "mattsossi@bsossi.com"

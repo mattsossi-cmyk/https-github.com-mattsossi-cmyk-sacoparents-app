@@ -1,4 +1,4 @@
-"""FastAPI entrypoint for SA Coparents Relational Mediation Prep App."""
+"""FastAPI entrypoint for SA CoParents Relational Mediation Prep App."""
 import asyncio
 import logging
 import os
@@ -38,7 +38,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="SA Coparents Mediation Prep API")
+app = FastAPI(title="SA CoParents Mediation Prep API")
 
 # Mongo — keep connection limits modest so production Atlas free-tier (max ~500
 # concurrent conns) is never exhausted. maxPoolSize defaults to 100 per client
@@ -139,7 +139,7 @@ else:
 
 @app.on_event("startup")
 async def startup_log():
-    logger.info("SA Coparents backend ready. DB=%s", os.environ.get("DB_NAME"))
+    logger.info("SA CoParents backend ready. DB=%s", os.environ.get("DB_NAME"))
     # Kick off the post-event survey scheduler. It sleeps internally so it
     # won't run before the DB is warm.
     asyncio.create_task(survey_scheduler_loop(app))

@@ -1,0 +1,70 @@
+{
+  "summary": "Frontend-only testing for SA CoParents landing page enhancements (AssessmentSelector, TrustSignals, SampleReports, SEO, brand rename). Landing page renders all new sections correctly. All 4 assessment-selector answer-tag mappings (safety/mediation/special-needs/all) resolve to the correct result card. Trust signals cards, sample-report tabs, footer links, hero CTAs, and the 'which assessment' scroll link are all present and functional. SEO checks pass after frontend restart: canonical, JSON-LD (Organization + WebApplication + FAQPage), meta robots 'index, follow', rich noscript block with h1/h2. robots.txt and sitemap.xml served correctly. Phase 2 selective sharing panel and Phase 4 footer both render on /summary for authenticated user. CRITICAL P0: 'SA Coparents' (lowercase 'p') still appears in the authenticated-app header (AppShell) and 6+ other user-facing pages — this is the exact P0 case flagged by the review request.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "AppShell header (visible on ALL authenticated pages: Dashboard, Summary, Progress, Coach, Neurodivergent, SafetyAssessment, etc.)",
+        "issue": "P0 BRAND BUG: header still renders 'SA Coparents' (lowercase 'p') instead of 'SA CoParents'. Visible in /summary screenshot — top-left logo text reads 'SA Coparents  MEDIATION PREP'.",
+        "selector": "/app/frontend/src/components/AppShell.jsx:97 — `<span className=\"text-brand-gradient\">SA</span> Coparents`",
+        "priority": "P0/CRITICAL"
+      },
+      {
+        "component": "Login page brand wordmark",
+        "issue": "P0: /app/frontend/src/pages/Login.jsx:98 renders 'SA Coparents' (lowercase p). This is the sign-in page — heavily user-facing.",
+        "selector": "Login.jsx:98",
+        "priority": "P0/CRITICAL"
+      },
+      {
+        "component": "Register / SignUp brand wordmark",
+        "issue": "P0: /app/frontend/src/pages/Register.jsx:72 renders 'SA Coparents' (lowercase p). Review request explicitly calls out sign-up page.",
+        "selector": "Register.jsx:72",
+        "priority": "P0/CRITICAL"
+      },
+      {
+        "component": "Orientation page brand wordmark",
+        "issue": "P0: /app/frontend/src/pages/Orientation.jsx:162 renders 'SA Coparents' (lowercase p). This is the first screen users see after login.",
+        "selector": "Orientation.jsx:162",
+        "priority": "P0/CRITICAL"
+      },
+      {
+        "component": "CancelSubscription page",
+        "issue": "P0: /app/frontend/src/pages/CancelSubscription.jsx:20 renders 'SA Coparents' (lowercase p).",
+        "selector": "CancelSubscription.jsx:20",
+        "priority": "P0/CRITICAL"
+      },
+      {
+        "component": "MediatorBadge page",
+        "issue": "P0: /app/frontend/src/pages/MediatorBadge.jsx:140 renders 'SA Coparents' (lowercase p) in user-facing wordmark.",
+        "selector": "MediatorBadge.jsx:140",
+        "priority": "P0/CRITICAL"
+      },
+      {
+        "component": "Watch page hero wordmark",
+        "issue": "P0: /app/frontend/src/pages/Watch.jsx:253 renders `SA<span> Coparents</span>` (lowercase p).",
+        "selector": "Watch.jsx:253",
+        "priority": "P0/CRITICAL"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "P0 BRAND FIX: Replace 'SA</span> Coparents' with 'SA</span> CoParents' (or equivalent) in these 7 user-facing files: AppShell.jsx:97, Login.jsx:98, Register.jsx:72, Orientation.jsx:162, CancelSubscription.jsx:20, MediatorBadge.jsx:140, Watch.jsx:253. Grep pattern: `grep -rn '> Coparents\\|>Coparents\\|SA</span> Coparents' /app/frontend/src/` — safest search is: `grep -rEn '\\bCoparents\\b' /app/frontend/src/` (excluding domain strings 'sacoparentsapp.online' and asset file names like 'sa-coparents-collage.png' which are OK to leave).",
+    "Also fix Watch.jsx:253 which uses a different markup pattern: `SA<span class='...'> Coparents</span>` — same lowercase-p issue.",
+    "NOTE: After main agent fixes, retest by loading /login, /register, /orientation, /summary (authenticated) and confirming header wordmark reads 'SA CoParents'."
+  ],
+  "critical_code_review_comments": [
+    "public/index.html changes require a frontend supervisor restart to take effect (HtmlWebpackPlugin caches the template at dev-server start). Before the restart, the served index.html was the old 68-line default with no canonical/JSON-LD/robots meta. After `sudo supervisorctl restart frontend` all SEO markers appeared. Main agent should be aware of this whenever public/index.html is edited.",
+    "Brand rename effort missed the .jsx wordmark pattern `<span>SA</span> Coparents` — a broader grep for `\\bCoparents\\b` (not just 'SA Coparents' as a full phrase) would have caught these 7 files."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend only)", "frontend": "90% (all new features work; brand rename incomplete)"},
+  "test_credentials": "parent1@test.com / TestPass123! — login worked, /summary loaded, selective sharing panel + footer present.",
+  "seed_data_creation": "None.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "AssessmentSelector 3-question flow with 4 answer-tag mappings verified end-to-end (safety, mediation, special-needs, all). SEO check: after any change to /app/frontend/public/index.html, run `sudo supervisorctl restart frontend` and wait ~10s before curling. LegalAcknowledgment modal bypass: add_init_script setting localStorage 'sac_legal_ack_v1' works. The 7 P0 brand files above must be re-verified after main-agent fix.",
+  "rca of the issue": "RCA (brand P0): Rename effort focused on the exact string 'SA Coparents' (as a full contiguous phrase) inside strings/text nodes. It missed JSX patterns where the wordmark is split across elements — e.g. `<span className='text-brand-gradient'>SA</span> Coparents` — because 'SA Coparents' is not a substring of the source file (only 'Coparents' is). A grep for 'SA Coparents' as run in verification (which returns 0 hits) gives a false-clean signal. Correct grep: `grep -rEn '>[[:space:]]*Coparents\\b|SA<[^>]*>[[:space:]]*Coparents' /app/frontend/src/`. Reproduction: log in as parent1@test.com → land on /orientation or navigate to /summary → header top-left visibly reads 'SA Coparents'. Mitigation: apply the 7 targeted edits listed in action_items; retest with the broader regex."
+}

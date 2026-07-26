@@ -20,14 +20,14 @@ export async function isBiometricAvailable() {
   }
 }
 
-export async function requireBiometric(reason = "Unlock SA Coparents") {
+export async function requireBiometric(reason = "Unlock SA CoParents") {
   if (!isNative()) return true; // no gate on web
   if (!(await isBiometricAvailable())) return true;
   try {
     const { NativeBiometric } = await import("capacitor-native-biometric");
     await NativeBiometric.verifyIdentity({
       reason,
-      title: "SA Coparents",
+      title: "SA CoParents",
       subtitle: "Use Face ID or Touch ID to continue",
       description: "",
     });

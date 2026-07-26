@@ -8,7 +8,7 @@ const LAST_UPDATED = "February 26, 2026";
  * Methodology & Assessment Validation
  *
  * Publishes the sourcing, scoring logic, and known limitations of every
- * scored assessment inside SA Coparents. Explicitly clarifies that these
+ * scored assessment inside SA CoParents. Explicitly clarifies that these
  * are educational readiness snapshots — not clinical instruments.
  */
 export default function Methodology() {
@@ -20,7 +20,7 @@ export default function Methodology() {
           className="inline-flex items-center gap-2 text-sm text-[#2A0F5F] hover:text-[#3D1A78] mb-6"
           data-testid="methodology-back-link"
         >
-          <ArrowLeft size={14} /> Back to SA Coparents
+          <ArrowLeft size={14} /> Back to SA CoParents
         </Link>
 
         <div className="eyebrow mb-3">Methodology & Validation</div>
@@ -45,7 +45,7 @@ export default function Methodology() {
 
         <Prose>
           <p>
-            SA Coparents is an educational and preparation tool. Whenever we
+            SA CoParents is an educational and preparation tool. Whenever we
             show you a score, this page tells you exactly where that number
             came from, what it measures, and where it stops.
           </p>
@@ -143,7 +143,7 @@ export default function Methodology() {
 
           <H2>Where we lack empirical validation</H2>
           <p>
-            SA Coparents is a new tool. The Mediation Readiness, Special
+            SA CoParents is a new tool. The Mediation Readiness, Special
             Needs 7-domain, and Communication Readiness scores are{" "}
             <strong>not yet externally validated</strong> by a peer-reviewed
             study. We are actively collecting anonymized outcome signals
@@ -179,7 +179,7 @@ export default function Methodology() {
           </div>
 
           <p className="text-xs text-[#857E9C] italic mt-8">
-            SA Coparents · 16607 Blanco #703, San Antonio, Texas 78232
+            SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>
       </div>

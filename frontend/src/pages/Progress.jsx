@@ -281,7 +281,7 @@ export default function ProgressPage() {
               <div className="mt-6 pt-5 border-t border-[#E5E0EE] text-xs text-[#4B4567] leading-relaxed italic">
                 Professionals: parents can bring this report to mediation,
                 co-parenting counseling, or family therapy sessions. It reflects
-                self-reported progress inside the SA Coparents App and is not
+                self-reported progress inside the SA CoParents App and is not
                 a clinical or legal assessment.
               </div>
             </div>

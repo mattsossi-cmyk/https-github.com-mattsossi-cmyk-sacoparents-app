@@ -1,4 +1,4 @@
-"""Backend tests for the SA Coparents IPV Communication Safety Assessment.
+"""Backend tests for the SA CoParents IPV Communication Safety Assessment.
 
 Covers:
 - GET  /api/safety-assessment/questions metadata

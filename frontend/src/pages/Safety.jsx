@@ -257,7 +257,7 @@ export default function Safety() {
             data-testid="safety-back-home"
           >
             <ArrowLeft size={14} />
-            Back to SA Coparents
+            Back to SA CoParents
           </Link>
           <button
             type="button"
@@ -291,7 +291,7 @@ export default function Safety() {
               If you, your child, or someone you love is experiencing domestic
               violence, intimate partner violence, or feels unsafe — please reach out.
               The contacts below are confidential, free, and staffed by trained
-              advocates. SA Coparents is a preparation tool — it is not a substitute
+              advocates. SA CoParents is a preparation tool — it is not a substitute
               for professional safety planning.
             </p>
 

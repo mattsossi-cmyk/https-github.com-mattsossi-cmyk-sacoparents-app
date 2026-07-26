@@ -1,0 +1,34 @@
+# SA CoParents — https://sacoparentsapp.online
+# Full crawler access to public marketing surfaces; auth'd app routes are
+# behind login and don't render sensitive data to unauthenticated crawlers,
+# but we exclude them explicitly for cleanliness.
+
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Allow: /accessibility
+Allow: /methodology
+Allow: /data-retention
+Allow: /safety
+Allow: /watch
+Allow: /login
+Allow: /signup
+
+Disallow: /admin
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /coach
+Disallow: /neurodivergent
+Disallow: /safety-assessment
+Disallow: /journal
+Disallow: /my-plan
+Disallow: /issues
+Disallow: /priority
+Disallow: /child-goals
+Disallow: /communication
+Disallow: /readiness
+Disallow: /summary
+Disallow: /progress
+
+Sitemap: https://sacoparentsapp.online/sitemap.xml

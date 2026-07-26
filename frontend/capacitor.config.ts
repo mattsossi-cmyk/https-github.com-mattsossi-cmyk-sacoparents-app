@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.bsossi.sacoparents",
-  appName: "SA Coparents",
+  appName: "SA CoParents",
   webDir: "build",
   // Hide native splash on app load — we control reveal from JS
   plugins: {

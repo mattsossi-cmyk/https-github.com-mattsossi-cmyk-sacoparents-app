@@ -450,11 +450,11 @@ export default function Dashboard() {
           rel="noopener noreferrer"
           className="block rounded-3xl overflow-hidden border border-[#E5E0EE] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all mb-10 group"
           data-testid="dashboard-collage-band"
-          aria-label="Open the SA Coparents co-parenting overview poster"
+          aria-label="Open the SA CoParents co-parenting overview poster"
         >
           <img
             src="/images/sa-coparents-collage.png"
-            alt="SA Coparents co-parenting overview: reflect, prepare, connect for a better co-parenting relationship."
+            alt="SA CoParents co-parenting overview: reflect, prepare, connect for a better co-parenting relationship."
             loading="lazy"
             className="w-full h-auto block bg-[#F8F6EE] group-hover:brightness-[1.03] transition-[filter]"
           />

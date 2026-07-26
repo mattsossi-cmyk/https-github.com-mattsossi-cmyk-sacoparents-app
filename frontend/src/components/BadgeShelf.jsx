@@ -161,12 +161,12 @@ function BadgeChip({ badge, earned, onShare }) {
  * can still copy the celebratory line.
  */
 async function shareBadge(badge) {
-  const shareText = `I just earned the "${badge.label}" badge on SA Coparents — small, meaningful steps toward a calmer co-parenting relationship for our kids.`;
+  const shareText = `I just earned the "${badge.label}" badge on SA CoParents — small, meaningful steps toward a calmer co-parenting relationship for our kids.`;
   const shareUrl = "https://sacoparentsapp.online";
   try {
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       await navigator.share({
-        title: "My SA Coparents badge",
+        title: "My SA CoParents badge",
         text: shareText,
         url: shareUrl,
       });

@@ -11,13 +11,13 @@ export const TRAILERS = {
   "meet-the-program": {
     id: "meet-the-program",
     eyebrow: "21-second trailer",
-    title: "Meet the SA Coparents program",
+    title: "Meet the SA CoParents program",
     blurb: "A quick walk through the seven steps — perfect to share on Facebook or Instagram.",
     videoSrc: "/videos/meet-the-program.mp4",
     posterSrc: "/images/steps/step-safety-assessment.png",
     downloadName: "sa-coparents-meet-the-program.mp4",
     shareText:
-      "Preparing for mediation shouldn't feel like a fight — take a look at how SA Coparents guides you through it.",
+      "Preparing for mediation shouldn't feel like a fight — take a look at how SA CoParents guides you through it.",
   },
   "three-reports": {
     id: "three-reports",
@@ -73,7 +73,7 @@ export const TRAILERS = {
   },
 };
 
-async function shareTrailer(shareText, title = "SA Coparents") {
+async function shareTrailer(shareText, title = "SA CoParents") {
   const shareUrl = "https://sacoparentsapp.online";
   try {
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
@@ -115,7 +115,7 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
   };
 
   const handleShare = async () => {
-    const outcome = await shareTrailer(trailer.shareText, `SA Coparents — ${trailer.title}`);
+    const outcome = await shareTrailer(trailer.shareText, `SA CoParents — ${trailer.title}`);
     if (outcome.shared) toast.success("Shared. Thanks for spreading the word.");
     else if (outcome.copied) toast.success("Link copied — paste it anywhere.");
     else if (!outcome.aborted) toast.error("Couldn’t share on this device.");

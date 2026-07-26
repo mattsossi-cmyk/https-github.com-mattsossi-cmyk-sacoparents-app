@@ -89,7 +89,7 @@ export default function AppShell({ children }) {
           <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3 shrink-0" data-testid="brand-logo">
             <img
               src="/saco-hero-logo.jpg"
-              alt="SA Coparents"
+              alt="SA CoParents"
               className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-[#3D1A78]/20 shrink-0"
             />
             <div className="leading-tight">
@@ -144,8 +144,8 @@ export default function AppShell({ children }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden sm:grid w-9 h-9 rounded-full bg-[#EFE9F9] hover:bg-[#E5E0EE] place-items-center text-[#3D1A78] transition-colors"
-                aria-label="SA Coparents on Facebook"
-                title="SA Coparents on Facebook"
+                aria-label="SA CoParents on Facebook"
+                title="SA CoParents on Facebook"
                 data-testid="header-facebook-link"
               >
                 <Facebook size={16} />

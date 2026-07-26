@@ -56,7 +56,7 @@ export default function DeleteAccount() {
           className="inline-flex items-center gap-2 text-sm text-[#2A0F5F] hover:text-[#3D1A78] mb-6"
           data-testid="delete-account-back-link"
         >
-          <ArrowLeft size={14} /> Back to SA Coparents
+          <ArrowLeft size={14} /> Back to SA CoParents
         </Link>
 
         <div className="eyebrow mb-3">Account &amp; Data Deletion</div>
@@ -64,7 +64,7 @@ export default function DeleteAccount() {
           Delete your account.
         </h1>
         <p className="text-[15px] text-[#4B4567] leading-relaxed mb-8 max-w-2xl">
-          You can permanently delete your SA Coparents account and every piece
+          You can permanently delete your SA CoParents account and every piece
           of data we hold for you at any time. There is no waiting period and
           nothing is recoverable afterwards.
         </p>
@@ -99,7 +99,7 @@ export default function DeleteAccount() {
         )}
 
         <p className="text-xs text-[#857E9C] italic mt-10">
-          SA Coparents &middot; 16607 Blanco #703, San Antonio, Texas 78232
+          SA CoParents &middot; 16607 Blanco #703, San Antonio, Texas 78232
           <br />
           This page is provided to satisfy Google Play and Apple App Store
           account-deletion requirements.
@@ -224,9 +224,9 @@ function SignedOutDeleteCard() {
           </p>
           <a
             href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-              "Delete my SA Coparents account"
+              "Delete my SA CoParents account"
             )}&body=${encodeURIComponent(
-              "Please delete my SA Coparents account and all associated data.\n\nAccount email: \n"
+              "Please delete my SA CoParents account and all associated data.\n\nAccount email: \n"
             )}`}
             className="text-[#2A0F5F] underline text-[14px]"
             data-testid="delete-account-email-link"

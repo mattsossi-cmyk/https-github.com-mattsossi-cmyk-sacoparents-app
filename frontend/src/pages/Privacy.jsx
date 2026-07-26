@@ -13,7 +13,7 @@ export default function Privacy() {
           className="inline-flex items-center gap-2 text-sm text-[#2A0F5F] hover:text-[#3D1A78] mb-6"
           data-testid="privacy-back-link"
         >
-          <ArrowLeft size={14} /> Back to SA Coparents
+          <ArrowLeft size={14} /> Back to SA CoParents
         </Link>
 
         <div className="eyebrow mb-3">Privacy Policy</div>
@@ -24,7 +24,7 @@ export default function Privacy() {
 
         <Prose>
           <p>
-            <strong>SA Coparents</strong> (the "app", "we", "us") is operated by
+            <strong>SA CoParents</strong> (the "app", "we", "us") is operated by
             Matt Sossi at 16607 Blanco #703, San Antonio, Texas 78232.
             This policy explains what we collect, why, and how we protect it.
             Plain English first. Lawyerly precision second.
@@ -87,7 +87,7 @@ export default function Privacy() {
 
           <H2>Children</H2>
           <p>
-            SA Coparents is intended for parents and is not directed at children under 13. We do not knowingly collect information from anyone under 13. If you believe we have done so inadvertently, email us and we will delete it.
+            SA CoParents is intended for parents and is not directed at children under 13. We do not knowingly collect information from anyone under 13. If you believe we have done so inadvertently, email us and we will delete it.
           </p>
 
           <H2>Safety note for survivors of domestic violence</H2>
@@ -114,7 +114,7 @@ export default function Privacy() {
             <li><Link to="/accessibility" className="text-[#2A0F5F] underline">Accessibility statement</Link> — WCAG 2.2 AA commitments.</li>
           </ul>
           <p className="text-xs text-[#857E9C] italic mt-8">
-            SA Coparents · 16607 Blanco #703, San Antonio, Texas 78232
+            SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>
       </div>

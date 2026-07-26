@@ -13,7 +13,7 @@ export default function CancelSubscription() {
         >
           <img
             src="/saco-hero-logo.jpg"
-            alt="SA Coparents"
+            alt="SA CoParents"
             className="w-10 h-10 rounded-full object-cover ring-2 ring-[#3D1A78]/20"
           />
           <div className="font-sans font-extrabold text-lg text-[#1A1330]">
@@ -38,7 +38,7 @@ export default function CancelSubscription() {
             There's nothing to cancel.
           </h1>
           <p className="text-[#4B4567] text-[15px] leading-relaxed">
-            SA Coparents is <strong>free to use</strong>. We don't sell subscriptions,
+            SA CoParents is <strong>free to use</strong>. We don't sell subscriptions,
             we don't run trials that convert to paid plans, and we don't store any
             payment information.
           </p>

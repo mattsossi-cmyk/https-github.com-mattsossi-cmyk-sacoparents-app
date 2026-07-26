@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for SA Coparents Mediation Prep backend tests."""
+"""Shared pytest fixtures for SA CoParents Mediation Prep backend tests."""
 import os
 import uuid
 import pytest

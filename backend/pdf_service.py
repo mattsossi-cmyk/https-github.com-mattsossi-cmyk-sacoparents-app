@@ -15,7 +15,7 @@ TEXT_DARK = (42, 54, 49)
 TEXT_MID = (92, 107, 100)
 
 # Org branding shown in every PDF
-ORG_NAME = "SA Coparents"
+ORG_NAME = "SA CoParents"
 ORG_TAGLINE = "Relational Mediation Prep"
 ORG_ADDRESS = "16607 Blanco #703, San Antonio, Texas 78232"
 ORG_PHONE = "210-224-1667"

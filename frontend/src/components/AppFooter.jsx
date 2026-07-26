@@ -23,7 +23,7 @@ export default function AppFooter() {
           <FooterLink to="/safety" icon={<LifeBuoy size={13} />} testId="footer-safety">Crisis resources</FooterLink>
         </div>
         <p className="text-[11px] text-[#857E9C] text-center mt-4 max-w-3xl mx-auto leading-relaxed">
-          SA Coparents is an educational and preparation tool. It is not legal
+          SA CoParents is an educational and preparation tool. It is not legal
           advice, therapy, or a substitute for professional mediation. Always
           consult qualified family-law and mental-health professionals for
           your situation.

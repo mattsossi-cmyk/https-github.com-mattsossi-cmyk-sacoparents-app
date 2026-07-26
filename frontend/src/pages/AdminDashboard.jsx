@@ -149,7 +149,7 @@ export default function AdminDashboard() {
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
           <p className="text-sm text-[#4B4567] mt-2">
-            This dashboard is restricted to the SA Coparents app owner.
+            This dashboard is restricted to the SA CoParents app owner.
           </p>
         </div>
       </AppShell>
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
             <div>
               <div className="eyebrow mb-2">Admin</div>
               <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330]">
-                SA Coparents — operations
+                SA CoParents — operations
               </h1>
               <p className="text-sm text-[#4B4567] mt-2">
                 Quiet metrics for the people building this. Refreshed each request.

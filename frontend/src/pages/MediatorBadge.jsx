@@ -78,8 +78,8 @@ export default function MediatorBadge() {
   }, [name]);
 
   const altText = name
-    ? `Recommended by SA Coparents — Mediation Prep · ${name}`
-    : "Recommended by SA Coparents — Mediation Prep";
+    ? `Recommended by SA CoParents — Mediation Prep · ${name}`
+    : "Recommended by SA CoParents — Mediation Prep";
 
   const embedHtml = useMemo(() => {
     const safeRef = escAttr(referralUrl);
@@ -96,7 +96,7 @@ export default function MediatorBadge() {
       await navigator.clipboard.writeText(embedHtml);
       setCopied(true);
       toast.success("Embed code copied.");
-      // Best-effort log so the SA Coparents team can see who's promoting the app.
+      // Best-effort log so the SA CoParents team can see who's promoting the app.
       if (canSubmit && !logged) {
         try {
           await api.post("/mediator/badge", {
@@ -133,7 +133,7 @@ export default function MediatorBadge() {
         <Link to="/" className="flex items-center gap-2.5" data-testid="badge-page-brand">
           <img
             src="/saco-hero-logo.jpg"
-            alt="SA Coparents"
+            alt="SA CoParents"
             className="w-10 h-10 rounded-full object-cover ring-2 ring-[#3D1A78]/20"
           />
           <div className="font-sans font-extrabold text-base text-[#1A1330]">
@@ -162,7 +162,7 @@ export default function MediatorBadge() {
               Give your families a calmer way to prepare.
             </h1>
             <p className="text-[#4B4567] mt-4 leading-relaxed">
-              SA Coparents helps parents arrive at mediation child-centered,
+              SA CoParents helps parents arrive at mediation child-centered,
               regulated, and ready to talk. If you recommend it, embed this badge
               on your practice site — your clients land directly in the app, and
               your name shows up on their screen as the mediator who pointed them

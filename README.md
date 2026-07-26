@@ -78,7 +78,7 @@ JWT_SECRET=...
 # Resend (transactional email)
 RESEND_API_KEY=re_...
 RESEND_FROM_EMAIL=mattsossi@sacoparentsapp.online   # verified sending address
-RESEND_FROM_NAME=SA Coparents
+RESEND_FROM_NAME=SA CoParents
 RESEND_REPLY_TO=mattsossi@sacoparentsapp.online
 RESEND_WEBHOOK_SECRET=whsec_...                      # signing secret from resend.com/webhooks
 
