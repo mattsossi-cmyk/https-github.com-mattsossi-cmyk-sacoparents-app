@@ -1,5 +1,25 @@
 # SACOParents — Helping Families Communicate Better
 
+<!-- Changelog latest entry -->
+## 🆕 Phase 2 — Selective Section Sharing (Feb 2026)
+Parents can now hide any section of a report before downloading a PDF or copying a share link. Applied to all 4 report types:
+- Mediation Summary (8 sections)
+- Co-Parenting Agreement Draft (8 sections)
+- Special Needs Care Plan (6 sections)
+- Family Violence & Communication Safety Assessment (4 sections; `pathway` + `texas_resources` are locked-on for survivor safety)
+
+Implementation:
+- Shared catalog + filter helpers in `/app/backend/report_visibility.py`
+- Reusable `<ReportShareControls />` React panel in `/app/frontend/src/components/`
+- New endpoints per report:
+  - `GET /api/mediation/reports/sections/{report_type}` — catalog
+  - `PATCH /api/mediation/summary/{id}/visibility` (+ agreement/sn_report/safety variants)
+  - Existing PDF endpoints extended with `?excluded=csv` query override
+  - Existing `share-link` POST endpoints extended to accept `{"excluded":[...]}` body; the list is JWT-snapshotted as `ex` so recipients see the exact view chosen at share time
+- 33 automated backend tests (9 unit + 24 HTTP) — all passing.
+
+
+
 ## 🎯 Original Problem Statement
 
 A modern co-parenting communication & support platform that helps separated and divorced parents create healthier communication patterns while keeping the emotional well-being of their children at the center. Moves parents from emotionally reactive to child-centered and prepared for relational mediation. Built for separating parents in South Africa and the US (San Antonio area).
