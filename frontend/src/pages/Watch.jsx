@@ -250,7 +250,7 @@ export default function Watch() {
             className="flex items-center gap-2 group"
           >
             <span className="font-serif text-xl sm:text-2xl font-bold text-[#1A1330] group-hover:text-[#3D1A78]">
-              SA<span className="text-[#3D1A78]"> Coparents</span>
+              SA<span className="text-[#3D1A78]"> CoParents</span>
             </span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">

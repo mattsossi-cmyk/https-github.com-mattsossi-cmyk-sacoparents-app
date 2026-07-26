@@ -159,7 +159,7 @@ export default function Orientation() {
           </svg>
           <div className="leading-tight">
             <div className="font-sans font-extrabold text-base text-[#1A1330]">
-              <span className="text-brand-gradient">SA</span> Coparents
+              <span className="text-brand-gradient">SA</span> CoParents
             </div>
             <div className="text-[9px] uppercase tracking-[0.2em] text-[#857E9C]">
               Orientation

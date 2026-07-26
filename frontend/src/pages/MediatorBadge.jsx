@@ -137,7 +137,7 @@ export default function MediatorBadge() {
             className="w-10 h-10 rounded-full object-cover ring-2 ring-[#3D1A78]/20"
           />
           <div className="font-sans font-extrabold text-base text-[#1A1330]">
-            <span className="text-brand-gradient">SA</span> Coparents
+            <span className="text-brand-gradient">SA</span> CoParents
           </div>
         </Link>
         <Link

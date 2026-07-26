@@ -94,7 +94,7 @@ export default function AppShell({ children }) {
             />
             <div className="leading-tight">
               <div className="font-sans font-extrabold text-base sm:text-lg whitespace-nowrap text-[#1A1330]">
-                <span className="text-brand-gradient">SA</span> Coparents
+                <span className="text-brand-gradient">SA</span> CoParents
               </div>
               <div className="hidden xl:block text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
                 Mediation Prep
