@@ -1,6 +1,19 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Landing Page + SEO Overhaul (Feb 2026)
+Four workstreams shipped together, all frontend-visible on / :
+1. **"Which assessment should I take?" guided selector** — 3-question inline quiz that maps answers to one of 4 result cards (Mediation / Safety / Special Needs / All-three). Live at #which-assessment. Full data-testid coverage for automation.
+2. **Trust signals section** — 4 pillar cards (Created by Matt Sossi · Data protection · What it can/can't do · When to seek professional help) with deep links to /privacy, /data-retention, /methodology, /safety.
+3. **Sample report previews** — tabbed mini-renders of Mediation Summary, Special Needs Care Plan, Safety Assessment, and Growth Snapshot so parents see the deliverable before investing time.
+4. **SEO + brand rename**:
+   - Canonical URL, JSON-LD schema (Organization + WebApplication + FAQPage), robots meta, keyword meta
+   - Rich `<noscript>` block: h1 + subheading + assessments list + trust bullets + crisis lines (crawler-visible even before JS runs)
+   - New `/robots.txt` and `/sitemap.xml` at `/public/`
+   - **Brand rename** "SA Coparents" → "SA CoParents" (capital P) across 60+ files — including 7 JSX-split wordmark files caught during retest (AppShell, Login, Register, Orientation, CancelSubscription, MediatorBadge, Watch)
+
+Testing: iteration_25 → iteration_26 fully green.
+
 ## 🆕 Phase 4 — Public Trust Pages (Feb 2026)
 Published Privacy, Data-Retention, Accessibility, and Assessment-Validation info prominently across the app.
 - **/accessibility** — WCAG 2.2 AA statement, keyboard shortcuts, screen-reader support, contrast policy, known gaps, contact
