@@ -1,6 +1,13 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 "Your chosen path" pill on dashboard (Feb 2026)
+Closes the loop between the landing situation picker and the returning user's dashboard.
+- New `PickerChoicePill` component at the top of `/dashboard` reading `sac_recommended_focus_v1` (set by `enterWithFocus` on the landing picker)
+- Three focus flavours: **mediation** (purple, → Readiness), **safety** (orange, → Safety Assessment), **special-needs** (teal, → Neurodivergent). Each with the right icon + accent + direct continue-CTA
+- Dismiss × clears localStorage so returning users who no longer need the reminder aren't nagged
+- Renders nothing if no focus set — invisible for users who came via /login without picker interaction
+
 ## 🆕 Landing UX Items 3–8 (Feb 2026)
 Safety-first situation opening + three-reports strip + softer legal ack + rewired CTAs + progressive-disclosure dashboard.
 - **Item 3 — Situation-first opening (safety-critical)**: Hero-level 6-option situation picker replaces the old "everyone starts at readiness" flow. Picks are routed as follows:

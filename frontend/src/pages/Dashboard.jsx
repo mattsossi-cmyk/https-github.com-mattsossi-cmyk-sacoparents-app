@@ -6,6 +6,7 @@ import EmailHealthBanner from "../components/EmailHealthBanner";
 import DemoModeBanner from "../components/DemoModeBanner";
 import FivePillarJourney from "../components/FivePillarJourney";
 import NextStepJourney from "../components/NextStepJourney";
+import PickerChoicePill from "../components/PickerChoicePill";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import BadgeShelf from "../components/BadgeShelf";
 import MeetTheProgramCard from "../components/MeetTheProgramCard";
@@ -300,6 +301,10 @@ export default function Dashboard() {
         <EmailHealthBanner />
         <VerificationBanner />
         <DemoModeBanner />
+
+        {/* Reminder pill for parents who arrived via the landing situation
+            picker. Renders only when localStorage has a chosen focus. */}
+        <PickerChoicePill />
 
         {/* Primary "Do this next" home — auto-detects the parent's current
             stage on the 6-step linear journey and surfaces one big action.
