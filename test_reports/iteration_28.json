@@ -1,0 +1,32 @@
+{
+  "summary": "Frontend-only regression of the landing overhaul (items 3–8). Tested situation picker (6 options + result flow + routing), three-reports strip, legal ack behaviour on landing + gated pages, rewired hero CTAs (watch, guest), and dashboard 'More resources' collapsible behaviour for new vs returning users. Also verified brand sweep: no 'SA Coparents' (lowercase p) remains anywhere under /app/frontend or /app/backend. All acceptance criteria met EXCEPT one: clicking situation-high-conflict does NOT render the safety banner even though the spec explicitly requires it.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "SituationPicker (Landing.jsx SITUATIONS[key='high-conflict'])",
+        "issue": "Spec: 'Clicking situation-high-conflict also shows the safety banner (Ongoing high conflict deserves a private safety screen BEFORE cooperation work)'. Actual: The high-conflict SITUATIONS entry has no `safetyBanner` field, so [data-testid=situation-picker-safety-banner] does NOT render. Confirmed via automated test — banner=False for high-conflict, banner=True for safety. Fix: add `safetyBanner: 'If you are in immediate danger, call 911. Suicide & Crisis Lifeline: 988. National Domestic Violence Hotline: 1-800-799-SAFE.'` to the high-conflict result object at /app/frontend/src/pages/Landing.jsx around line 317-325 (mirror the safety entry).",
+        "selector": "[data-testid=situation-picker-safety-banner]",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Add safetyBanner property to the high-conflict SITUATIONS entry in /app/frontend/src/pages/Landing.jsx so the orange 911/988/1-800-799-SAFE banner also appears when parents pick 'We experience ongoing high conflict'. All other items passed."
+  ],
+  "critical_code_review_comments": [
+    "Landing.jsx is now ~1500+ lines and heavy — consider splitting SituationPicker, ThreeReportsStrip, AssessmentSelector, SampleReports into their own files for maintainability.",
+    "AssessmentSelector still references useEnterApp().enter which no longer exists in the provider (only enterAssessments/enterGuest/watchIntro/enterWithFocus). If this section is ever rendered on the landing, clicking assessment-selector-cta will throw. Consider either wiring it to enterAssessments/enterWithFocus or removing the dead component."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only test)", "frontend": "92% (12/13 acceptance items passed; 1 missing safety banner on high-conflict)"},
+  "test_credentials": "parent1@test.com / TestPass123! (RETURNING user, 6/6 prep steps). Guest via POST /api/auth/guest for NEW user variant.",
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All landing-picker options render and route correctly (safety+high-conflict→/safety-assessment, others→/dashboard). Hero-watch-cta → /watch and hero-guest-cta → /dashboard confirmed. Legal ack modal is correctly suppressed on /, /watch, /privacy, /terms, /accessibility, /methodology, /data-retention, /safety, /login, /signup, and appears on /dashboard for a fresh guest with the exact single-sentence body + Terms/Privacy links. Dashboard 'more-resources' collapsible present + closed for new users (0 done <3), absent for parent1@test.com (6/6). Only remaining defect: high-conflict pick should show the orange safety banner but doesn't (missing safetyBanner property on the SITUATIONS array entry). Note for auth: hasSeenOrientation() looks at localStorage key `sacoparents.orientation_seen.v1` set to string 'true' (not JSON) — needed to bypass the /orientation auto-redirect when testing parent1.",
+  "rca of the issue": "In /app/frontend/src/pages/Landing.jsx the SITUATIONS array defines a `safetyBanner` string only on the `safety` entry (line ~338). The `high-conflict` entry (line ~313) has body copy that references safety-first invariants but does not include a `safetyBanner` field. The SituationPicker result renderer at line ~431 only shows [data-testid=situation-picker-safety-banner] when `picked.result.safetyBanner` is truthy — so high-conflict silently falls through. Reproduction: open /, click [data-testid=situation-high-conflict], observe absence of [data-testid=situation-picker-safety-banner]. Mitigation: add the identical safetyBanner string to the high-conflict entry."
+}

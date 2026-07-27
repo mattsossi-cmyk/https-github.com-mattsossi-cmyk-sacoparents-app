@@ -23,29 +23,50 @@ import {
   Baby,
   AlertTriangle,
   Scale,
+  Handshake,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { markOrientationSeen } from "./Orientation";
-import IntroTourModal from "../components/IntroTourModal";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
 /* ============================================================
    ENTER-APP CONTEXT
-   Every "Take the Free Assessment" CTA flows through the same
-   provider so the intro video always plays first.
+   Multiple entry paths:
+     - enterAssessments: scrolls to the situation picker (default primary CTA)
+     - enterGuest:       creates guest session + goes straight to /dashboard
+                         (skips the intro video)
+     - watchIntro:       goes to /watch (public trailer)
+     - enterWithFocus:   used by the situation picker — creates guest session,
+                         records the user's chosen focus in localStorage so the
+                         dashboard can prioritize the right assessment,
+                         then navigates to /dashboard with the intro video
+                         SKIPPED for safety-oriented picks.
 ============================================================ */
 const EnterAppContext = React.createContext(null);
+
+const FOCUS_STORAGE_KEY = "sac_recommended_focus_v1";
 
 function EnterAppProvider({ children }) {
   const { startGuest } = useAuth();
   const navigate = useNavigate();
-  const [showIntro, setShowIntro] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const proceed = async () => {
+  const enterAssessments = () => {
+    // Just scroll to the situation picker. This is the primary CTA.
+    scrollToId("situation-picker");
+  };
+
+  const watchIntro = () => {
+    navigate("/watch");
+  };
+
+  const enterGuest = async () => {
+    if (loading) return;
+    setError(null);
+    setLoading(true);
     try {
       await startGuest();
       markOrientationSeen();
@@ -60,22 +81,34 @@ function EnterAppProvider({ children }) {
     }
   };
 
-  const enter = () => {
-    if (loading || showIntro) return;
+  const enterWithFocus = async ({ focus, route }) => {
+    // Focus goes into localStorage so the dashboard can pin the right
+    // "Do this next" card. `route` is the target path after guest session.
+    if (loading) return;
     setError(null);
     setLoading(true);
-    setShowIntro(true);
-  };
-
-  const handleVideoEnd = async () => {
-    setShowIntro(false);
-    await proceed();
+    try {
+      if (focus) {
+        try { localStorage.setItem(FOCUS_STORAGE_KEY, focus); } catch { /* ignore */ }
+      }
+      await startGuest();
+      markOrientationSeen();
+      navigate(route || "/dashboard");
+    } catch (err) {
+      logError("Enter app with focus failed:", err);
+      setError(
+        err?.response?.data?.detail ||
+          "Couldn't open the app right now. Please try again in a moment."
+      );
+      setLoading(false);
+    }
   };
 
   return (
-    <EnterAppContext.Provider value={{ enter, loading, error }}>
+    <EnterAppContext.Provider
+      value={{ enterAssessments, enterGuest, watchIntro, enterWithFocus, loading, error }}
+    >
       {children}
-      <IntroTourModal open={showIntro} onClose={handleVideoEnd} />
     </EnterAppContext.Provider>
   );
 }
@@ -100,17 +133,30 @@ function Eyebrow({ children, color = "text-[#3D1A78]" }) {
 }
 
 function PrimaryCTA({ children, testid }) {
-  const { enter, loading } = useEnterApp();
+  const { enterAssessments } = useEnterApp();
   return (
     <button
       type="button"
-      onClick={enter}
+      onClick={enterAssessments}
+      data-testid={testid}
+      className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white font-semibold text-sm shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all"
+    >
+      {children}
+      <ArrowRight size={16} />
+    </button>
+  );
+}
+
+function TertiaryCTA({ children, onClick, testid, loading }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
       disabled={loading}
       data-testid={testid}
-      className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white font-semibold text-sm shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-60"
+      className="text-sm font-semibold text-[#4B4567] hover:text-[#3D1A78] hover:underline underline-offset-2 disabled:opacity-60"
     >
-      {loading ? "Loading…" : children}
-      {!loading && <ArrowRight size={16} />}
+      {loading ? "Opening…" : children}
     </button>
   );
 }
@@ -228,10 +274,209 @@ function MarketingFooter() {
 /* ============================================================
    SECTION 1 — HERO
 ============================================================ */
-function Hero() {
+/* ============================================================
+   SITUATION-FIRST OPENING
+   6 situation choices → routed to the safest & most relevant next step.
+   Coercive-control / safety pickers go DIRECTLY to the Safety Assessment
+   with NO cooperation messaging shown first.
+============================================================ */
+const SITUATIONS = [
+  {
+    key: "cooperate",
+    label: "We generally cooperate",
+    icon: <Handshake />,
+    focus: "mediation",
+    route: "/dashboard",
+    result: {
+      title: "Start with the Mediation Readiness Assessment.",
+      body: "You have a foundation to build on. This assessment turns your existing goodwill into a concrete, child-centered agenda you can bring to any co-parenting conversation.",
+      cta: "Start the readiness assessment",
+      tone: "cooperative",
+      icon: <Scale size={20} />,
+    },
+  },
+  {
+    key: "difficult",
+    label: "Communication is difficult",
+    icon: <MessageCircle />,
+    focus: "mediation",
+    route: "/dashboard",
+    result: {
+      title: "Start with the Mediation Readiness Assessment.",
+      body: "The Readiness Assessment includes a communication-clarity dimension. It will name what's breaking down and give you scripts for the highest-leverage conversations.",
+      cta: "Start the readiness assessment",
+      tone: "warn",
+      icon: <MessageCircle size={20} />,
+    },
+  },
+  {
+    key: "high-conflict",
+    label: "We experience ongoing high conflict",
+    icon: <AlertTriangle />,
+    focus: "safety",
+    route: "/safety-assessment",
+    result: {
+      title: "Start with the Family Violence & Communication Safety Assessment.",
+      body: "Ongoing high conflict deserves a private safety screen BEFORE any cooperation work. We'll help you identify the safest communication pathway — from structured written to assisted — and surface Texas crisis resources.",
+      cta: "Start the safety assessment",
+      tone: "urgent",
+      icon: <ShieldCheck size={20} />,
+    },
+  },
+  {
+    key: "safety",
+    label: "I have safety or family-violence concerns",
+    icon: <ShieldCheck />,
+    focus: "safety",
+    route: "/safety-assessment",
+    result: {
+      title: "Start with the Family Violence & Communication Safety Assessment.",
+      body: "Your safety and your child's safety come first. This is a private screen that never asks you to cooperate with the other parent. It recommends the safest communication pathway (including no-direct-contact) and includes Texas crisis hotlines.",
+      cta: "Start the safety assessment",
+      tone: "urgent",
+      icon: <ShieldCheck size={20} />,
+      safetyBanner: "If you are in immediate danger, call 911. Suicide & Crisis Lifeline: 988. National Domestic Violence Hotline: 1-800-799-SAFE.",
+    },
+  },
+  {
+    key: "special-needs",
+    label: "Our child has additional or special needs",
+    icon: <Baby />,
+    focus: "special-needs",
+    route: "/dashboard",
+    result: {
+      title: "Start with the Special Needs Assessment.",
+      body: "A 7-domain evaluation with a Consistency-Between-Homes score. You'll get a 7-part care plan you can hand to your pediatrician, school, or mediator — plus a safeguards-and-disagreement pathway if the two homes are out of sync.",
+      cta: "Start the special needs assessment",
+      tone: "cooperative",
+      icon: <Baby size={20} />,
+    },
+  },
+  {
+    key: "mediation",
+    label: "I am preparing for mediation or court",
+    icon: <Scale />,
+    focus: "mediation",
+    route: "/dashboard",
+    result: {
+      title: "Start with the Mediation Readiness Assessment.",
+      body: "You'll build a child-centered agenda, name your priorities and flexibility areas, and download a Mediation Summary PDF ready to hand to your mediator.",
+      cta: "Start the readiness assessment",
+      tone: "cooperative",
+      icon: <Scale size={20} />,
+    },
+  },
+];
+
+const TONE_STYLES = {
+  cooperative: { border: "border-[#3D1A78]/25", bg: "bg-white", chipBg: "bg-[#EFE9F9]", chipText: "text-[#3D1A78]", cta: "bg-[#3D1A78] hover:bg-[#2D0F63]" },
+  warn:        { border: "border-[#F5C147]/40", bg: "bg-[#FFFAEC]", chipBg: "bg-[#FFF3D1]", chipText: "text-[#B27700]", cta: "bg-[#B27700] hover:bg-[#8F6100]" },
+  urgent:      { border: "border-[#B85B00]/40", bg: "bg-[#FFF3E9]", chipBg: "bg-[#FFDFC4]", chipText: "text-[#8F4600]", cta: "bg-[#B85B00] hover:bg-[#8F4600]" },
+};
+
+function SituationPicker() {
+  const { enterWithFocus, loading } = useEnterApp();
+  const [picked, setPicked] = useState(null);
+
+  const choose = (s) => setPicked(s);
+  const reset = () => setPicked(null);
+  const proceed = () => {
+    if (!picked) return;
+    enterWithFocus({ focus: picked.focus, route: picked.route });
+  };
+
+  if (!picked) {
+    return (
+      <div
+        id="situation-picker"
+        className="rounded-3xl border border-[#E5E0EE] bg-white/85 backdrop-blur-sm p-6 sm:p-8 shadow-sm max-w-3xl mx-auto"
+        data-testid="situation-picker"
+      >
+        <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">
+          Step 1
+        </div>
+        <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug">
+          What best describes your situation?
+        </h2>
+        <p className="text-sm text-[#4B4567] mt-2">
+          There are no wrong answers. Your choice helps us route you to the
+          safest and most relevant starting point.
+        </p>
+        <div className="mt-5 grid sm:grid-cols-2 gap-2.5">
+          {SITUATIONS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => choose(s)}
+              className="group text-left rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-center gap-3"
+              data-testid={`situation-${s.key}`}
+            >
+              <div className="shrink-0 w-9 h-9 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center group-hover:bg-[#3D1A78] group-hover:text-white transition-colors">
+                {s.icon}
+              </div>
+              <span className="text-sm sm:text-[15px] text-[#1A1330] leading-snug">{s.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const tone = TONE_STYLES[picked.result.tone] || TONE_STYLES.cooperative;
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#F8F7FC] via-[#EFE9F9] to-[#E4F1F1] pt-28 sm:pt-32 pb-24 sm:pb-28">
-      {/* soft floating shapes */}
+    <div
+      id="situation-picker"
+      className={`rounded-3xl border-2 ${tone.border} ${tone.bg} p-6 sm:p-8 shadow-sm max-w-3xl mx-auto fade-up`}
+      data-testid="situation-picker-result"
+    >
+      {picked.result.safetyBanner && (
+        <div
+          className="rounded-2xl border border-[#B85B00]/40 bg-[#FFF3E9] p-3 mb-5 text-xs sm:text-sm text-[#8F4600] leading-relaxed"
+          data-testid="situation-picker-safety-banner"
+        >
+          <strong>Your safety comes first.</strong> {picked.result.safetyBanner}
+        </div>
+      )}
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`shrink-0 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${tone.chipBg} ${tone.chipText}`}>
+          {picked.result.icon}
+          {picked.label}
+        </div>
+      </div>
+      <h3 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug" data-testid="situation-picker-result-title">
+        {picked.result.title}
+      </h3>
+      <p className="text-sm sm:text-base text-[#4B4567] mt-3 leading-relaxed">
+        {picked.result.body}
+      </p>
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <button
+          onClick={proceed}
+          disabled={loading}
+          className={`inline-flex items-center gap-2 text-white font-semibold px-6 py-3 rounded-full text-sm sm:text-base transition-colors ${tone.cta} disabled:opacity-60`}
+          data-testid="situation-picker-cta"
+        >
+          {loading ? "Opening…" : picked.result.cta}
+          {!loading && <ArrowRight size={16} />}
+        </button>
+        <button
+          onClick={reset}
+          className="text-sm text-[#4B4567] hover:text-[#3D1A78] hover:underline"
+          data-testid="situation-picker-reset"
+        >
+          Change my answer
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   SECTION 1 — HERO (tagline + situation picker embedded)
+============================================================ */
+function Hero() {
+  const { enterGuest, loading: guestLoading, watchIntro } = useEnterApp();
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-br from-[#F8F7FC] via-[#EFE9F9] to-[#E4F1F1] pt-28 sm:pt-32 pb-16 sm:pb-20">
       <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-[#D4C5F0]/40 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-32 w-[30rem] h-[30rem] rounded-full bg-[#A8DCDC]/40 blur-3xl pointer-events-none" />
 
@@ -244,45 +489,31 @@ function Hero() {
           <br />
           Leave ready to meet your child&rsquo;s&nbsp;needs.
         </h1>
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#1A1330] font-semibold mt-8 leading-relaxed">
-          The SA CoParents App helps you understand your co-parenting
-          situation, identify your child&rsquo;s individual needs, and prepare
-          for child-focused discussions and mediation.
-        </p>
-        <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-4 leading-relaxed">
-          Through personalized assessments and practical reports, you can
-          move forward with greater clarity, confidence, and purpose.
+        <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-6 leading-relaxed">
+          Personalized assessments and practical reports to move forward with
+          greater clarity, confidence, and purpose.
         </p>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <PrimaryCTA testid="hero-primary-cta">Start Your Assessment</PrimaryCTA>
+        {/* Hero-level situation picker */}
+        <div className="mt-10">
+          <SituationPicker />
+        </div>
+
+        {/* Rewired CTAs */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <SecondaryCTA
-            testid="hero-secondary-cta"
-            onClick={() => scrollToId("how-it-works")}
+            testid="hero-watch-cta"
+            onClick={watchIntro}
           >
-            Learn How It Works
+            Watch How It Works
           </SecondaryCTA>
-        </div>
-        <div className="mt-4">
-          <button
-            onClick={() => scrollToId("which-assessment")}
-            className="text-sm font-semibold text-[#3D1A78] hover:text-[#1A1330] hover:underline underline-offset-2"
-            data-testid="hero-which-assessment-link"
+          <TertiaryCTA
+            testid="hero-guest-cta"
+            onClick={enterGuest}
+            loading={guestLoading}
           >
-            Not sure where to start? Take our 20-second guide →
-          </button>
-        </div>
-
-        <div className="mt-4 text-center">
-          <a
-            href="/watch"
-            data-testid="hero-watch-videos-link"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#3D1A78] hover:text-[#1A1330] transition-colors"
-          >
-            <span aria-hidden="true" className="w-2 h-2 rounded-full bg-[#2DB5B5]" />
-            Watch the 21-second and 45-second program trailers
-            <ArrowRight size={14} />
-          </a>
+            Or explore as a guest &rarr;
+          </TertiaryCTA>
         </div>
 
         {/* Trust indicators */}
@@ -308,6 +539,72 @@ function Hero() {
         </ul>
       </div>
     </section>
+  );
+}
+
+/* ============================================================
+   THREE REPORTS STRIP — compact "at a glance" trio showing the
+   three primary artefacts parents receive.
+============================================================ */
+function ThreeReportsStrip() {
+  return (
+    <section id="three-reports" className="relative py-14 sm:py-16 bg-white border-y border-[#EFE9F9]">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+        <Eyebrow>Three reports you can receive</Eyebrow>
+        <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-2">
+          Real deliverables you can hand to a mediator, therapist, or attorney.
+        </h2>
+      </div>
+      <div className="mt-8 grid md:grid-cols-3 gap-4 max-w-6xl mx-auto px-4 sm:px-6">
+        <ThreeReportsCover
+          testid="three-reports-situation"
+          number="1"
+          title="Understand your co-parenting situation"
+          body="A private snapshot of how you and the other parent are actually communicating today — with concrete next steps."
+          accent="#3D1A78"
+        />
+        <ThreeReportsCover
+          testid="three-reports-foundation"
+          number="2"
+          title="Create your Foundation Statement"
+          body="A one-page statement of your child-centered goals — the anchor you can return to whenever things get emotionally hot."
+          accent="#2DB5B5"
+        />
+        <ThreeReportsCover
+          testid="three-reports-child-needs"
+          number="3"
+          title="Prepare a Child Needs Statement for mediation"
+          body="A structured, child-focused agenda you can bring straight into your mediation session or attorney meeting."
+          accent="#B85B00"
+        />
+      </div>
+    </section>
+  );
+}
+
+function ThreeReportsCover({ testid, number, title, body, accent }) {
+  return (
+    <article
+      data-testid={testid}
+      className="rounded-2xl border border-[#E5E0EE] bg-gradient-to-br from-white to-[#F7F4FC] p-6 sm:p-7 relative overflow-hidden hover:shadow-md transition-shadow"
+    >
+      <div
+        className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center font-serif text-lg font-semibold text-white"
+        style={{ backgroundColor: accent }}
+      >
+        {number}
+      </div>
+      <div className="mb-3">
+        <FileText size={20} style={{ color: accent }} />
+      </div>
+      <h3 className="font-serif text-lg text-[#1A1330] leading-snug pr-10">
+        {title}
+      </h3>
+      <p className="text-sm text-[#4B4567] mt-3 leading-relaxed">{body}</p>
+      <div className="mt-4 inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.14em] font-bold" style={{ color: accent }}>
+        Downloadable PDF · shareable
+      </div>
+    </article>
   );
 }
 
@@ -1243,7 +1540,7 @@ export default function Landing() {
       <div className="min-h-screen bg-[#F8F7FC]">
         <MarketingHeader />
         <Hero />
-        <AssessmentSelector />
+        <ThreeReportsStrip />
         <TheProblem />
         <HowItWorks />
         <SampleReports />

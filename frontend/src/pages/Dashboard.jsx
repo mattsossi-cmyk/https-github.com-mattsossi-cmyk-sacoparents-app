@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
-import { CheckCircle2, ChevronRight, Puzzle, Shield } from "lucide-react";
+import { CheckCircle2, ChevronRight, ChevronDown, Puzzle, Shield } from "lucide-react";
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
 const REPORT_LABEL = {
@@ -142,6 +142,37 @@ function FivePillarJourneyToolkit({ completed, pillarFlags }) {
       </summary>
       <div className="mt-4">
         <FivePillarJourney completed={completed} flags={pillarFlags} />
+      </div>
+    </details>
+  );
+}
+
+/**
+ * DashboardMoreResources — progressive disclosure wrapper for new users.
+ *
+ * The dashboard packs a lot: badges, three trailer cards, the classic
+ * toolkit, invite-a-coparent nudges, Special Needs + Safety pathway
+ * cards, and external community resources. That's the right density for
+ * a parent who has been in the app for a week — but it's overwhelming
+ * on first visit.
+ *
+ * For new users (fewer than 3 completed prep steps) we collapse all
+ * that content behind a single "More resources" toggle. Returning users
+ * see it inline as before.
+ */
+function DashboardMoreResources({ collapsed, children }) {
+  if (!collapsed) return <>{children}</>;
+  return (
+    <details className="mt-8 group" data-testid="dashboard-more-resources">
+      <summary
+        className="cursor-pointer list-none rounded-full border border-[#E5E0EE] bg-white px-5 py-3 inline-flex items-center gap-2 text-sm font-semibold text-[#3D1A78] hover:border-[#3D1A78] hover:shadow-md transition-all"
+        data-testid="dashboard-more-resources-summary"
+      >
+        <ChevronDown size={14} className="group-open:rotate-180 transition-transform" />
+        More resources — badges, videos, toolkit, external links
+      </summary>
+      <div className="mt-6 space-y-6">
+        {children}
       </div>
     </details>
   );
@@ -444,6 +475,8 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <DashboardMoreResources collapsed={done < 3}>
+
         <a
           href="/images/sa-coparents-collage.png"
           target="_blank"
@@ -745,6 +778,8 @@ export default function Dashboard() {
             </a>
           </div>
         </div>
+
+        </DashboardMoreResources>
       </div>
     </AppShell>
   );

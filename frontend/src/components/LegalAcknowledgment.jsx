@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { ScrollText, Check } from "lucide-react";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -9,10 +9,18 @@ const VERSION = "v1";
 
 // Public marketing / legal pages where the acknowledgment modal would
 // create pointless friction (visitors arriving from Facebook, etc.).
+// The modal appears once the visitor actually enters the app.
 const PUBLIC_MARKETING_PATHS = new Set([
+  "/",
   "/watch",
   "/privacy",
   "/terms",
+  "/accessibility",
+  "/methodology",
+  "/data-retention",
+  "/safety",
+  "/login",
+  "/signup",
 ]);
 
 /**
@@ -117,16 +125,17 @@ export default function LegalAcknowledgment() {
           </div>
         </div>
 
-        <div className="px-6 py-6 space-y-4 max-h-[60vh] overflow-y-auto">
+        <div className="px-6 py-6 space-y-3 max-h-[60vh] overflow-y-auto">
           <p className="text-[15px] text-[#1A1330] leading-relaxed">
-            I acknowledge that this site is not intended to provide legal services
-            and does not establish an attorney-client relationship.
+            SA CoParents provides educational conflict-management and
+            mediation-preparation tools. It does not provide legal advice,
+            therapy, or create an attorney-client relationship.
           </p>
-          <p className="text-[15px] text-[#1A1330] leading-relaxed">
-            I understand that this site likewise does not provide mental health
-            services and is simply here to provide me with conflict management
-            tools to resolve my co-parenting relationship with my child&apos;s other
-            parent.
+          <p className="text-[13px] text-[#4B4567] leading-relaxed">
+            Full details are in our{" "}
+            <Link to="/terms" className="text-[#3D1A78] underline">Terms of Use</Link>
+            {" "}and{" "}
+            <Link to="/privacy" className="text-[#3D1A78] underline">Privacy Policy</Link>.
           </p>
         </div>
 
