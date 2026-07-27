@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SA CoParents — How to access the app</title>
+  <meta name="description" content="Printable one-page flyer explaining how parents can access the SA CoParents app: URL, QR code, first-time setup, and crisis resources." />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple: #3D1A78;
+      --purple-dark: #2A0F5F;
+      --teal: #2DB5B5;
+      --teal-dark: #0E7A7A;
+      --ink: #1A1330;
+      --muted: #4B4567;
+      --soft: #F7F4FC;
+      --line: #E5E0EE;
+      --warn: #B85B00;
+      --warn-bg: #FFF3E9;
+    }
+
+    html, body {
+      background: #ffffff;
+      color: var(--ink);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* A4 portrait — the browser print preview will scale this to Letter too. */
+    @page { size: A4 portrait; margin: 0; }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 18mm 16mm 14mm;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 8mm;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ambient decorative shapes (light, print-friendly) */
+    .blob {
+      position: absolute; border-radius: 999px; filter: blur(30px); opacity: 0.35; pointer-events: none;
+    }
+    .blob-a { top: -50mm; right: -40mm; width: 160mm; height: 160mm; background: #E4D9F5; }
+    .blob-b { bottom: -60mm; left: -60mm; width: 180mm; height: 180mm; background: #C7EFEF; }
+
+    /* Header */
+    .head {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 6mm;
+      border-bottom: 1.5px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 8mm; }
+    .brand-mark {
+      width: 15mm; height: 15mm; border-radius: 999px;
+      background: linear-gradient(135deg, var(--purple) 0%, var(--teal) 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-family: 'Fraunces', serif; font-weight: 700; font-size: 20pt;
+    }
+    .brand-name {
+      font-family: 'Fraunces', serif;
+      font-size: 22pt;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    .brand-name b { color: var(--purple); }
+    .brand-tag {
+      font-size: 9pt;
+      color: var(--muted);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .head-right {
+      text-align: right;
+      font-size: 9pt;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* Hero */
+    .hero { text-align: center; }
+    .hero .eyebrow {
+      display: inline-block;
+      font-size: 9pt;
+      letter-spacing: 0.24em;
+      color: var(--purple);
+      background: #EFE9F9;
+      padding: 3mm 5mm;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 34pt;
+      line-height: 1.05;
+      letter-spacing: -0.015em;
+      margin-top: 5mm;
+    }
+    .hero h1 .accent { color: var(--purple); }
+    .hero p {
+      font-size: 12pt;
+      color: var(--muted);
+      max-width: 150mm;
+      margin: 4mm auto 0;
+      line-height: 1.45;
+    }
+
+    /* Access panel — URL + QR side by side */
+    .access {
+      background: linear-gradient(135deg, var(--purple) 0%, var(--teal-dark) 100%);
+      color: #fff;
+      border-radius: 8mm;
+      padding: 10mm;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10mm;
+      align-items: center;
+      box-shadow: 0 8mm 20mm rgba(61, 26, 120, 0.18);
+    }
+    .access-label {
+      font-size: 9pt;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      opacity: 0.85;
+      font-weight: 700;
+    }
+    .access-url {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 26pt;
+      margin-top: 3mm;
+      letter-spacing: -0.015em;
+      word-break: keep-all;
+      white-space: nowrap;
+    }
+    .access-note {
+      font-size: 10pt;
+      opacity: 0.9;
+      margin-top: 4mm;
+      line-height: 1.5;
+    }
+    .qr {
+      width: 44mm;
+      height: 44mm;
+      background: #fff;
+      border-radius: 4mm;
+      padding: 3mm;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .qr img { width: 38mm; height: 38mm; display: block; }
+    .qr-label { font-size: 8pt; color: var(--ink); font-weight: 700; margin-top: 1mm; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* Steps */
+    .steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5mm;
+    }
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 5mm;
+      padding: 5mm 6mm;
+      background: #fff;
+      position: relative;
+    }
+    .step-num {
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      width: 9mm; height: 9mm; border-radius: 999px;
+      background: var(--purple); color: #fff;
+      font-family: 'Fraunces', serif; font-weight: 700; font-size: 13pt;
+    }
+    .step h3 {
+      font-family: 'Fraunces', serif;
+      color: var(--ink);
+      font-size: 14pt;
+      margin-top: 3mm;
+      line-height: 1.15;
+    }
+    .step p {
+      font-size: 10.5pt;
+      color: var(--muted);
+      margin-top: 2mm;
+      line-height: 1.5;
+    }
+    .step .hint {
+      display: inline-block;
+      margin-top: 3mm;
+      font-size: 9pt;
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    /* What you'll get */
+    .receive {
+      background: var(--soft);
+      border-radius: 6mm;
+      padding: 6mm 7mm;
+    }
+    .receive-title {
+      font-family: 'Fraunces', serif;
+      font-size: 14pt;
+      color: var(--ink);
+      margin-bottom: 3mm;
+    }
+    .receive ul {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4mm;
+      list-style: none;
+    }
+    .receive li {
+      font-size: 10pt;
+      color: var(--ink);
+      line-height: 1.4;
+      padding-left: 5mm;
+      position: relative;
+    }
+    .receive li::before {
+      content: "";
+      position: absolute; left: 0; top: 1.5mm;
+      width: 3mm; height: 3mm; border-radius: 999px; background: var(--teal-dark);
+    }
+    .receive li b { display: block; color: var(--purple); font-family: 'Fraunces', serif; font-weight: 700; font-size: 11pt; }
+
+    /* Safety strip */
+    .safety {
+      display: flex;
+      align-items: center;
+      gap: 5mm;
+      background: var(--warn-bg);
+      border: 1px solid rgba(184, 91, 0, 0.25);
+      border-radius: 5mm;
+      padding: 4mm 6mm;
+    }
+    .safety-icon {
+      width: 12mm; height: 12mm; border-radius: 999px;
+      background: var(--warn); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Fraunces', serif; font-weight: 700; font-size: 14pt;
+      flex-shrink: 0;
+    }
+    .safety p {
+      font-size: 9.5pt;
+      color: #5C2E00;
+      line-height: 1.45;
+    }
+    .safety p b { color: var(--warn); font-weight: 700; }
+
+    /* Footer */
+    .foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 6mm;
+      padding-top: 4mm;
+      border-top: 1.5px solid var(--line);
+      font-size: 8.5pt;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .foot b { color: var(--ink); }
+    .foot .disc {
+      max-width: 110mm;
+      font-size: 8pt;
+      color: #857E9C;
+      font-style: italic;
+    }
+
+    /* Print tuning */
+    @media print {
+      .blob { display: none; }
+      .access { box-shadow: none; }
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="blob blob-a"></div>
+    <div class="blob blob-b"></div>
+
+    <!-- HEADER -->
+    <header class="head">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <div class="brand-name">SA <b>CoParents</b></div>
+          <div class="brand-tag">Mediation Prep · San Antonio, TX</div>
+        </div>
+      </div>
+      <div class="head-right">
+        Free · Web + iOS + Android<br />
+        mattsossi@bsossi.com · 210-224-1667
+      </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="eyebrow">How to access the app</div>
+      <h1><span class="accent">Stop.</span> Assess.<br />Meet Your Children&rsquo;s Needs.</h1>
+      <p>Follow the instructions below to open SA CoParents on your phone or computer. It's free, requires no download to try, and works in any modern browser.</p>
+    </section>
+
+    <!-- ACCESS PANEL -->
+    <section class="access">
+      <div>
+        <div class="access-label">Open the app at</div>
+        <div class="access-url">sacoparentsapp.online</div>
+        <div class="access-note">
+          Or scan the QR code with your phone camera &rarr;<br />
+          No download required. You can install it as an app afterwards from your browser menu.
+        </div>
+      </div>
+      <div class="qr">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?data=https%3A%2F%2Fsacoparentsapp.online&size=380x380&margin=0&color=1A1330&bgcolor=FFFFFF" alt="QR code linking to sacoparentsapp.online" />
+        <div class="qr-label">Scan me</div>
+      </div>
+    </section>
+
+    <!-- STEPS -->
+    <section class="steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <h3>Open the app in your browser.</h3>
+        <p>Visit <b>sacoparentsapp.online</b> or scan the QR code above. Works on any phone, tablet, or computer.</p>
+        <span class="hint">No credit card. No email needed to start.</span>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <h3>Choose your situation.</h3>
+        <p>Pick from six situations (cooperative, communication difficult, high-conflict, safety concerns, special needs, preparing for mediation). We route you to the safest starting point.</p>
+        <span class="hint">Takes about 15 seconds.</span>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <h3>Take your first assessment.</h3>
+        <p>Answer honestly — there are no right or wrong answers. Everything is private and never sold or used to train AI.</p>
+        <span class="hint">15&ndash;25 minutes. Save and come back any time.</span>
+      </div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <h3>Download your report.</h3>
+        <p>Every assessment ends with a downloadable PDF report you can hand to a mediator, attorney, therapist, or pediatrician.</p>
+        <span class="hint">You control what to share &mdash; hide any section before sending.</span>
+      </div>
+    </section>
+
+    <!-- WHAT YOU'LL RECEIVE -->
+    <section class="receive">
+      <div class="receive-title">Three reports you can receive</div>
+      <ul>
+        <li><b>1. Situation Snapshot</b>Understand how you and the other parent are actually communicating today.</li>
+        <li><b>2. Foundation Statement</b>Your one-page anchor of child-centered goals to return to whenever things get emotionally hot.</li>
+        <li><b>3. Child Needs Statement</b>Structured, child-focused mediation agenda you can bring to your session or attorney meeting.</li>
+      </ul>
+    </section>
+
+    <!-- SAFETY STRIP -->
+    <section class="safety">
+      <div class="safety-icon">!</div>
+      <p>
+        <b>Your safety comes first.</b> If you are in immediate danger, call
+        <b>911</b>. Suicide &amp; Crisis Lifeline: <b>988</b>.
+        National Domestic Violence Hotline: <b>1-800-799-SAFE (7233)</b>.
+        SA CoParents is a preparation tool &mdash; it does not replace a mediator, attorney, therapist, or physician.
+      </p>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="foot">
+      <div>
+        <b>SA CoParents</b><br />
+        16607 Blanco #703, San Antonio, TX 78232<br />
+        mattsossi@bsossi.com · 210-224-1667
+      </div>
+      <div class="disc">
+        Educational and preparation tool. Does not provide legal advice, therapy, or create an attorney-client relationship. See sacoparentsapp.online/terms.
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
