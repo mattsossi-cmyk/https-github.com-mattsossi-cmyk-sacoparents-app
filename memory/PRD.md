@@ -1,6 +1,20 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Landing UX Items 3–8 (Feb 2026)
+Safety-first situation opening + three-reports strip + softer legal ack + rewired CTAs + progressive-disclosure dashboard.
+- **Item 3 — Situation-first opening (safety-critical)**: Hero-level 6-option situation picker replaces the old "everyone starts at readiness" flow. Picks are routed as follows:
+  - `We generally cooperate` / `Communication is difficult` / `I am preparing for mediation or court` → Mediation Readiness
+  - `Our child has additional or special needs` → Special Needs Assessment
+  - `I have safety or family-violence concerns` / `We experience ongoing high conflict` → **directly to Safety Assessment with a prominent orange safety banner** (911, 988, 1-800-799-SAFE) and NO cooperation messaging
+- **Item 4 — Three reports visible earlier**: new compact strip directly below hero showing "Understand your situation" · "Foundation Statement" · "Child Needs Statement for mediation"
+- **Item 5 — Shorter legal ack**: modal body reduced to the single-sentence version with links to full Terms + Privacy. Landing `/` and all public marketing pages (`/watch`, `/privacy`, `/terms`, `/accessibility`, `/methodology`, `/data-retention`, `/safety`, `/login`, `/signup`) now bypass the modal entirely
+- **Item 6 — CTA rewiring**: Primary "Take the Free Assessment" now scrolls to the situation picker (not a video). "Watch How It Works" navigates to `/watch`. "Explore as a guest" starts a guest session and lands on `/dashboard` (skipping the intro video). "Loading…" flicker killed
+- **Item 7 — Progressive-disclosure dashboard**: new users (<3 completed prep steps) see only NextStepJourney + greeting + progress ring; badges, videos, toolkit, invite-a-coparent, SN/Safety cards, and external resources collapse into a single "More resources ▾" `<details>`. Returning users (≥3) see the full dashboard inline
+- **Item 8 — Brand rename**: final sweep including HTML posters + SVG badges
+- Landing.jsx trimmed from 1557 → 1367 lines by removing the dead 3-question `AssessmentSelector` (superseded by the hero picker)
+- Testing: iteration_28 → 12/13; safety-banner fix on high-conflict shipped and verified via screenshot
+
 ## 🆕 Special Needs Phase D — Safeguards & Disagreement Pathway (Feb 2026)
 Fully deterministic engine that maps a family's current protective structures + disagreement signals into a 4-tier recommendation pathway. Delivered end-to-end (backend + frontend + PDF + share-controls + tests).
 
