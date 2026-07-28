@@ -29,18 +29,19 @@
       print-color-adjust: exact;
     }
 
-    /* A4 portrait — the browser print preview will scale this to Letter too. */
-    @page { size: A4 portrait; margin: 0; }
+    /* Letter portrait — 8.5 × 11 in (216 × 279 mm). Browser print will
+       also accept A4 without overflow because the content is < 279mm. */
+    @page { size: letter portrait; margin: 0; }
 
     .page {
-      width: 210mm;
-      height: 297mm;
+      width: 216mm;
+      height: 279mm;
       margin: 0 auto;
-      padding: 9mm 12mm 8mm;
+      padding: 8mm 12mm 7mm;
       background: #ffffff;
       display: flex;
       flex-direction: column;
-      gap: 3.5mm;
+      gap: 3.2mm;
       position: relative;
       overflow: hidden;
     }
