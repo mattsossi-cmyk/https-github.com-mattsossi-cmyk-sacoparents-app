@@ -45,20 +45,23 @@
     p + p { margin-top: 2mm; }
 
     /* Pathway callout */
-    .pathway { border:2px solid var(--warn); background:var(--warn-bg); border-radius:5mm; padding:6mm 7mm; margin-top:4mm; }
-    .pathway-tier { display:inline-block; background:var(--warn); color:#fff; font-size:9pt; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; padding:1.5mm 4mm; border-radius:999px; }
-    .pathway h3 { font-family:'Fraunces',serif; font-size:18pt; color:var(--warn); margin-top:3mm; line-height:1.15; }
-    .pathway p { font-size:10.5pt; color:#5C2E00; margin-top:2mm; line-height:1.5; }
-    .pathway ul { margin-top:2.5mm; list-style:none; }
-    .pathway ul li { font-size:9.5pt; color:#5C2E00; padding-left:5mm; margin-top:1.5mm; position:relative; }
-    .pathway ul li::before { content:""; position:absolute; left:0; top:2.4mm; width:2mm; height:2mm; border-radius:999px; background:var(--warn); }
+    .pathway { border:2px solid var(--warn); background:var(--warn-bg); border-radius:5mm; padding:4mm 6mm; margin-top:2.5mm; }
+    .pathway-tier { display:inline-block; background:var(--warn); color:#fff; font-size:8pt; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; padding:1mm 3mm; border-radius:999px; }
+    .pathway h3 { font-family:'Fraunces',serif; font-size:14pt; color:var(--warn); margin-top:2mm; line-height:1.15; }
+    .pathway p { font-size:9.5pt; color:#5C2E00; margin-top:1.5mm; line-height:1.45; }
+    .pathway ul { margin-top:1.5mm; list-style:none; }
+    .pathway ul li { font-size:8.5pt; color:#5C2E00; padding-left:5mm; margin-top:1mm; position:relative; line-height:1.4; }
+    .pathway ul li::before { content:""; position:absolute; left:0; top:2mm; width:1.8mm; height:1.8mm; border-radius:999px; background:var(--warn); }
 
     /* Answer table */
-    .answer-table { margin-top:2.5mm; }
-    .answer-row { display:grid; grid-template-columns:1fr auto; gap:5mm; padding:2mm 3mm; border-bottom:1px solid var(--line); align-items:start; }
+    .answer-table { margin-top:2mm; }
+    .answer-row { display:grid; grid-template-columns:1fr auto; gap:4mm; padding:0.8mm 3mm; border-bottom:1px solid var(--line); align-items:center; }
     .answer-row:last-child { border-bottom:none; }
-    .answer-q { font-size:9.5pt; color:var(--ink); line-height:1.45; }
-    .answer-a { font-size:9.5pt; font-weight:700; padding:1mm 3mm; border-radius:999px; font-family:'Fraunces',serif; white-space:nowrap; }
+    .answer-q { font-size:8pt; color:var(--ink); line-height:1.3; }
+    .answer-a { font-size:7.5pt; font-weight:700; padding:0.4mm 2.5mm; border-radius:999px; font-family:'Fraunces',serif; white-space:nowrap; }
+    .answer-table.cols-2 { display:grid; grid-template-columns:1fr 1fr; column-gap:6mm; row-gap:0; }
+    .answer-table.cols-2 .answer-row { padding:0.6mm 2mm; }
+    .answer-table.cols-2 .answer-q { font-size:7.5pt; line-height:1.25; }
     .a-yes { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-border); }
     .a-no { background:var(--success-bg); color:var(--success); border:1px solid rgba(14,122,122,.35); }
     .a-neutral { background:var(--soft); color:var(--muted); border:1px solid var(--line); }
@@ -115,28 +118,44 @@
   <section class="block">
     <h2>Recommended Communication Pathway</h2>
     <div class="pathway">
-      <span class="pathway-tier">Tier 2 · Structured Written</span>
-      <h3>Structured written communication is the safest starting point.</h3>
-      <p>Based on Jane&rsquo;s responses, direct verbal or in-person communication with the other parent is not recommended at this time. A monitored written channel reduces reactive escalation and preserves a record of coordination decisions.</p>
+      <span class="pathway-tier">Tier 2 · Structured Written Communication Only</span>
+      <h3>Communication should be structured and limited to written, child-focused topics.</h3>
+      <p>Based on Jane&rsquo;s responses, direct verbal or in-person communication may increase conflict. A written communication plan can help reduce escalation and protect the child from being placed in the middle.</p>
       <ul>
-        <li>Use OurFamilyWizard, TalkingParents, or a similar co-parenting app for schedule, medical, and school updates.</li>
-        <li>Avoid live phone or in-person exchanges for the next 90 days.</li>
-        <li>Route emotionally-charged topics through a mediator, therapist, or attorney &mdash; not directly.</li>
+        <li>App-based written communication only (OurFamilyWizard, TalkingParents, AppClose).</li>
+        <li><b>BIFF format</b>: brief, informative, focused, firm &mdash; one issue per message.</li>
+        <li>Child-related topics only; no emotional history, blame, insults, or threats.</li>
+        <li>Response window of 24&ndash;48 hours unless urgent; written record maintained.</li>
         <li>Re-take this assessment every 90 days to track whether conditions are changing.</li>
       </ul>
     </div>
   </section>
 
   <section class="block">
-    <h2>Section 1 — Immediate Safety Screen (past 12 months)</h2>
-    <div class="answer-table">
-      <div class="answer-row"><div class="answer-q">Has the other parent ever physically hurt you or threatened to hurt you?</div><div class="answer-a a-no">No</div></div>
-      <div class="answer-row"><div class="answer-q">Has the other parent ever used a weapon or threatened you with one?</div><div class="answer-a a-no">No</div></div>
-      <div class="answer-row"><div class="answer-q">Do you fear for your safety when interacting with the other parent?</div><div class="answer-a a-yes">Yes</div></div>
-      <div class="answer-row"><div class="answer-q">Has the other parent controlled who you can see, where you can go, or your finances?</div><div class="answer-a a-yes">Yes</div></div>
-      <div class="answer-row"><div class="answer-q">Has the other parent stalked, monitored, or repeatedly contacted you against your wishes?</div><div class="answer-a a-yes">Yes</div></div>
-      <div class="answer-row"><div class="answer-q">Has any child in your care been harmed or been present during a violent event?</div><div class="answer-a a-no">No</div></div>
-      <div class="answer-row"><div class="answer-q">Is there a current protective or restraining order in place?</div><div class="answer-a a-no">No</div></div>
+    <h2>Section 1 &mdash; Immediate Safety Screen (past 12 months)</h2>
+    <p style="font-size:8.5pt;color:var(--muted);margin-top:1mm;">Has the other parent ever&hellip;</p>
+    <div class="answer-table cols-2">
+      <div class="answer-row"><div class="answer-q">1. Threatened to hurt or kill you, the children, themselves, or someone you love?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">2. Physically hurt you, blocked you from leaving, restrained you, choked or strangled you, or damaged property?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">3. Used parenting communication to intimidate, harass, monitor, or control you?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">4. Shown up unexpectedly at your home, work, school, or exchanges &mdash; or stalked or followed you?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">5. Threatened to take the children, withhold them, or use court to punish you?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">6. Controlled money, transportation, phone access, accounts, passwords, or location tracking?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">7. Used insults, humiliation, interrogation, or repeated messaging to wear you down?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">8. Made you afraid to disagree, set boundaries, or say no?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">9. Involved the children in threats, pressure, spying, or message-carrying?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">10. Violated a protective order, court order, or agreed safety boundary?</div><div class="answer-a a-no">No</div></div>
+    </div>
+    <p style="font-size:8pt;color:var(--muted);margin-top:2.5mm;margin-bottom:0.5mm;font-style:italic;">Danger Assessment lethality indicators (Campbell, 1986)</p>
+    <div class="answer-table cols-2">
+      <div class="answer-row"><div class="answer-q">11. Has the physical violence increased in frequency or severity over the last year?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">12. Owns or has access to a gun, or has threatened you with any weapon?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">13. Ever tried to choke or strangle you, or cut off your breathing?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">14. Ever forced you into sexual activity when you did not want to?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">15. Ever threatened or attempted suicide, or said &ldquo;if I can&rsquo;t have you no one will&rdquo;?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">16. Uses alcohol or drugs daily or in a way that changes their behaviour?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">17. Is intensely jealous, or controls most of your daily activities?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">18. Is currently unemployed or was recently fired, and appears despondent or hopeless?</div><div class="answer-a a-no">No</div></div>
     </div>
   </section>
 </main>
@@ -155,23 +174,23 @@
   </header>
 
   <section class="block">
-    <h2>Section 2 — Communication Readiness</h2>
+    <h2>Section 2 &mdash; Communication Readiness</h2>
     <div class="answer-table">
-      <div class="answer-row"><div class="answer-q">Can you set clear limits with the other parent without conflict escalating?</div><div class="answer-a a-no">Rarely</div></div>
-      <div class="answer-row"><div class="answer-q">Does the other parent respect written boundaries you have set?</div><div class="answer-a a-no">Rarely</div></div>
-      <div class="answer-row"><div class="answer-q">Are conversations about the child usually kept focused on the child?</div><div class="answer-a a-neutral">Sometimes</div></div>
-      <div class="answer-row"><div class="answer-q">Do you feel emotionally safe raising a concern about the child with the other parent?</div><div class="answer-a a-no">No</div></div>
-      <div class="answer-row"><div class="answer-q">Have you and the other parent ever resolved a disagreement about the child successfully?</div><div class="answer-a a-neutral">Occasionally</div></div>
-      <div class="answer-row"><div class="answer-q">Do you have a support system (therapist, attorney, friend) you can call after difficult exchanges?</div><div class="answer-a a-yes">Yes</div></div>
-      <div class="answer-row"><div class="answer-q">Is a neutral third party currently helping coordinate parenting decisions?</div><div class="answer-a a-no">No</div></div>
-      <div class="answer-row"><div class="answer-q">Are you willing to shift to a monitored written channel for the next 90 days?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">1. Can you respond without fear of retaliation?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">2. Can you say &ldquo;no&rdquo; without escalation?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">3. Can communication remain child-focused?</div><div class="answer-a a-neutral">Unsure</div></div>
+      <div class="answer-row"><div class="answer-q">4. Can written communication occur without harassment?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">5. Can exchanges occur without intimidation?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">6. Can both parents follow limits on time, topic, and tone?</div><div class="answer-a a-neutral">Unsure</div></div>
+      <div class="answer-row"><div class="answer-q">7. Can problems be discussed without threats?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">8. Would a neutral third party reduce conflict?</div><div class="answer-a a-yes">Yes</div></div>
     </div>
   </section>
 
   <section class="block">
     <h2>Interpretation</h2>
-    <p>Jane&rsquo;s Section&nbsp;1 answers surface patterns consistent with coercive control &mdash; fear, monitoring, and prior controlling behaviour &mdash; without recent physical violence or an active protective order. Her Section&nbsp;2 answers indicate that boundary-setting and emotional safety with the other parent are currently very difficult, but a strong personal support system exists and she is open to structured written communication.</p>
-    <p>This combination places her in the <b>Tier 2 — Structured Written</b> pathway rather than a No-Direct-Contact recommendation. If Section&nbsp;1 answers change (e.g. any &ldquo;Yes&rdquo; on physical harm, weapons, or child harm), the pathway would automatically escalate to Tier&nbsp;4 &mdash; No direct contact &mdash; and Jane should immediately consult a family-violence-trained attorney.</p>
+    <p>Jane&rsquo;s Section&nbsp;1 answers surface patterns consistent with <b>coercive control</b> &mdash; intimidation via communication (Q3), controlling finances and location (Q6), interrogation and wearing-down messaging (Q7), fear of disagreement (Q8), and intense jealousy or control of daily activities (Q17) &mdash; without recent physical violence or Danger Assessment lethality indicators. Her Section&nbsp;2 answers show multiple &ldquo;No&rdquo; responses on retaliation, escalation, intimidation, and threat topics.</p>
+    <p>This combination places her in <b>Tier 2 &mdash; Structured Written Communication Only</b>. If any Section&nbsp;1 high-concern item (Q1, Q2, Q4, Q5, Q10) or any Danger Assessment item (Q11&ndash;Q18) changes to &ldquo;Yes&rdquo;, the pathway would <b>automatically escalate to Tier 1 &mdash; No Direct Communication Recommended</b>, and Jane should immediately consult a family-violence-trained attorney or advocate.</p>
   </section>
 
   <div class="crisis">
