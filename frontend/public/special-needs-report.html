@@ -49,12 +49,12 @@
     .opening p { font-size:9.5pt; line-height:1.45; color:var(--ink); }
     .opening p + p { margin-top:1.5mm; }
 
-    /* Readiness table */
-    .readiness { border:1px solid var(--line); border-radius:3mm; overflow:hidden; margin-top:2mm; }
-    .readiness-row { display:grid; grid-template-columns:1fr auto; align-items:center; padding:2mm 5mm; border-bottom:1px solid var(--line); background:#fff; }
-    .readiness-row:last-child { border-bottom:none; }
-    .readiness-row:nth-child(even) { background:var(--soft); }
-    .readiness-area { font-family:'Fraunces',serif; font-size:10pt; color:var(--ink); }
+    /* Overall Readiness banner */
+    .rating { background:linear-gradient(135deg, #F5EEFF 0%, #E5F7F4 100%); border:1.5px solid var(--line); border-radius:4mm; padding:3.5mm 5mm; margin-top:2mm; }
+    .rating-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; }
+    .rating-value { font-family:'Fraunces',serif; font-size:20pt; color:var(--teal-dark); margin-top:0.5mm; line-height:1.1; }
+    .rating-note { font-size:9.5pt; color:var(--ink); margin-top:2mm; line-height:1.5; }
+    .rating-note b { color: var(--purple); }
     .rating-pill { font-family:'Fraunces',serif; font-weight:700; font-size:9pt; padding:1mm 4mm; border-radius:999px; border:1px solid transparent; white-space:nowrap; letter-spacing:0.02em; }
     .r-excellent { background:var(--success-bg); color:var(--success); border-color:rgba(14,122,122,.35); }
     .r-good { background:#EEE4FF; color:var(--purple); border-color:rgba(61,26,120,.35); }
@@ -62,10 +62,14 @@
     .r-needs { background:var(--warn-bg); color:var(--warn); border-color:rgba(184,91,0,.4); }
 
     /* 8-section coverage grid */
-    .coverage { display:grid; grid-template-columns:repeat(4,1fr); gap:2mm; margin-top:1.5mm; }
-    .coverage-cell { background:var(--soft); border:1px solid var(--line); border-radius:2mm; padding:2mm 3mm; }
+    .coverage { display:grid; grid-template-columns:repeat(2,1fr); gap:2mm; margin-top:1.5mm; }
+    .coverage-cell { background:#fff; border:1px solid var(--line); border-radius:2.5mm; padding:2.5mm 3.5mm; }
+    .coverage-head { display:flex; justify-content:space-between; align-items:flex-start; gap:2mm; }
+    .coverage-title { flex:1; }
     .coverage-num { font-size:6.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; }
-    .coverage-name { font-family:'Fraunces',serif; font-size:9.5pt; color:var(--ink); margin-top:0.5mm; line-height:1.2; }
+    .coverage-name { font-family:'Fraunces',serif; font-size:9.5pt; color:var(--ink); margin-top:0.3mm; line-height:1.2; }
+    .coverage-pill { font-family:'Fraunces',serif; font-weight:700; font-size:7.5pt; padding:0.5mm 2.5mm; border-radius:999px; border:1px solid transparent; white-space:nowrap; letter-spacing:0.02em; height:fit-content; }
+    .coverage-find { font-size:8.5pt; color:var(--muted); line-height:1.35; margin-top:1.5mm; }
 
     /* Checkmark list */
     ul.checked { list-style:none; margin-top:1.5mm; }
@@ -142,30 +146,10 @@
   </section>
 
   <section class="block">
-    <h2>Overall Readiness Score</h2>
-    <div class="readiness">
-      <div class="readiness-row"><div class="readiness-area">Understanding Child</div><div class="rating-pill r-excellent">Excellent</div></div>
-      <div class="readiness-row"><div class="readiness-area">Medical Coordination</div><div class="rating-pill r-good">Good</div></div>
-      <div class="readiness-row"><div class="readiness-area">School Collaboration</div><div class="rating-pill r-fair">Fair</div></div>
-      <div class="readiness-row"><div class="readiness-area">Communication</div><div class="rating-pill r-needs">Needs Improvement</div></div>
-      <div class="readiness-row"><div class="readiness-area">Home Consistency</div><div class="rating-pill r-good">Good</div></div>
-      <div class="readiness-row"><div class="readiness-area">Transition Planning</div><div class="rating-pill r-fair">Fair</div></div>
-      <div class="readiness-row"><div class="readiness-area">Problem Solving</div><div class="rating-pill r-needs">Needs Improvement</div></div>
-    </div>
-  </section>
-
-  <section class="block">
-    <h2>Assessment Coverage &mdash; 8 Sections</h2>
-    <p class="lede">This report is built from responses across eight structured sections. Each section is designed to keep the child&rsquo;s needs at the center rather than measure whether parents &ldquo;get along.&rdquo;</p>
-    <div class="coverage">
-      <div class="coverage-cell"><div class="coverage-num">Section 1</div><div class="coverage-name">Understanding Your Child</div></div>
-      <div class="coverage-cell"><div class="coverage-num">Section 2</div><div class="coverage-name">Medical &amp; Therapeutic Care</div></div>
-      <div class="coverage-cell"><div class="coverage-num">Section 3</div><div class="coverage-name">Educational Support</div></div>
-      <div class="coverage-cell"><div class="coverage-num">Section 4</div><div class="coverage-name">Daily Living Consistency</div></div>
-      <div class="coverage-cell"><div class="coverage-num">Section 5</div><div class="coverage-name">Communication Between Parents</div></div>
-      <div class="coverage-cell"><div class="coverage-num">Section 6</div><div class="coverage-name">Child Regulation &amp; Transitions</div></div>
-      <div class="coverage-cell"><div class="coverage-num">Section 7</div><div class="coverage-name">Parent Collaboration Readiness</div></div>
-      <div class="coverage-cell"><div class="coverage-num">Section 8</div><div class="coverage-name">Future Planning</div></div>
+    <div class="rating">
+      <div class="rating-label">Overall co-parenting readiness</div>
+      <div class="rating-value">Good Progress</div>
+      <div class="rating-note">Both parents demonstrate commitment to their child&rsquo;s needs. Strongest areas are <b>Understanding the child</b> and <b>Medical &amp; therapeutic care</b>. Priority focus areas are <b>Communication between parents</b> and <b>Parent collaboration readiness</b>. Full findings for each of the eight assessment sections follow on the next page.</div>
     </div>
   </section>
 </main>
@@ -181,6 +165,114 @@
       </div>
     </div>
     <div class="doc-label">Page 2</div>
+  </header>
+
+  <section class="block" style="margin-top:0;">
+    <h2>Assessment Findings by Section</h2>
+    <p class="lede">Each of the eight sections is summarized below with its own rating and a brief finding.</p>
+    <div class="coverage">
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 1</div>
+            <div class="coverage-name">Understanding Your Child</div>
+          </div>
+          <span class="coverage-pill r-excellent">Excellent</span>
+        </div>
+        <div class="coverage-find">Both parents accept the child&rsquo;s diagnosis and can describe her core strengths and challenges. There is no significant disagreement about the developmental picture.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 2</div>
+            <div class="coverage-name">Medical &amp; Therapeutic Care</div>
+          </div>
+          <span class="coverage-pill r-good">Good</span>
+        </div>
+        <div class="coverage-find">Therapy attendance is consistent and both parents are aware of appointments. One parent is noticeably more familiar with the current treatment plan than the other.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 3</div>
+            <div class="coverage-name">Educational Support</div>
+          </div>
+          <span class="coverage-pill r-fair">Fair</span>
+        </div>
+        <div class="coverage-find">Both parents receive most school communications, but only one regularly attends ARD/IEP meetings. Homework routines differ between the two homes.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 4</div>
+            <div class="coverage-name">Daily Living Consistency</div>
+          </div>
+          <span class="coverage-pill r-good">Good</span>
+        </div>
+        <div class="coverage-find">Meals, hygiene, and homework expectations are similar between homes. Bedtime, screen-time limits, and transition routines still vary.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 5</div>
+            <div class="coverage-name">Communication Between Parents</div>
+          </div>
+          <span class="coverage-pill r-needs">Needs Improvement</span>
+        </div>
+        <div class="coverage-find">Information about medications, sleep, and behavioral changes is shared inconsistently, usually only after a problem escalates. No shared calendar or communication app is in use today.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 6</div>
+            <div class="coverage-name">Child Regulation &amp; Transitions</div>
+          </div>
+          <span class="coverage-pill r-fair">Fair</span>
+        </div>
+        <div class="coverage-find">The child shows anxiety before exchanges. Visual schedules and sensory supports are used in one home but not the other, producing a noticeable regulation drop after transitions.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 7</div>
+            <div class="coverage-name">Parent Collaboration Readiness</div>
+          </div>
+          <span class="coverage-pill r-needs">Needs Improvement</span>
+        </div>
+        <div class="coverage-find">Most disagreements are about day-to-day parenting decisions, not the diagnosis. Structured mediation or child-focused coaching is likely to help.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 8</div>
+            <div class="coverage-name">Future Planning</div>
+          </div>
+          <span class="coverage-pill r-fair">Fair</span>
+        </div>
+        <div class="coverage-find">Both parents share a positive long-term vision but have not yet documented decisions around middle-school placement, guardianship, adult services, or financial planning.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PAGE 2 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <img class="brand-mark" src="icon-256.png" alt="SA CoParents logo" />
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span class="brand-tm">&trade;</span></div>
+        <div class="brand-tag">Special Needs Assessment &middot; Sample &middot; SCP-SN-2026-A</div>
+      </div>
+    </div>
+    <div class="doc-label">Page 3</div>
   </header>
 
   <section class="block">
@@ -245,7 +337,7 @@
         <div class="brand-tag">Special Needs Assessment &middot; Sample &middot; SCP-SN-2026-A</div>
       </div>
     </div>
-    <div class="doc-label">Page 3</div>
+    <div class="doc-label">Page 4</div>
   </header>
 
   <section class="block">
