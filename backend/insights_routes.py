@@ -260,6 +260,21 @@ async def download_access_flyer():
     )
 
 
+@router.get("/foundation-statement.pdf")
+async def download_foundation_statement():
+    """Public download of the 3-page Child-Focused Foundation Statement
+    template (Letter, 8.5x11 in). Serves as an example parents can print
+    and fill in by hand OR use as inspiration for their own draft inside
+    the app."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-foundation-statement.pdf"
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="SA-CoParents-Foundation-Statement.pdf",
+    )
+
+
 @router.post("/admin/weekly/regenerate")
 async def regenerate_weekly_insights(
     request: Request,

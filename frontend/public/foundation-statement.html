@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SA CoParents — Child-Focused Foundation Statement</title>
+  <meta name="description" content="Printable Foundation Statement template that captures a parent's child-centered vision, priorities, commitments, and 12-month goals." />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple: #3D1A78;
+      --purple-dark: #2A0F5F;
+      --teal: #2DB5B5;
+      --teal-dark: #0E7A7A;
+      --ink: #1A1330;
+      --muted: #4B4567;
+      --soft: #F7F4FC;
+      --line: #E5E0EE;
+      --warn: #B85B00;
+    }
+    html, body {
+      background: #ffffff;
+      color: var(--ink);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    @page { size: letter portrait; margin: 0; }
+
+    .page {
+      width: 216mm;
+      margin: 0 auto;
+      padding: 12mm 16mm;
+      background: #ffffff;
+      position: relative;
+    }
+    .page:not(:last-child) { break-after: page; page-break-after: always; }
+
+    /* Header */
+    .head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 4mm;
+      border-bottom: 2px solid var(--line);
+      margin-bottom: 6mm;
+    }
+    .brand { display: flex; align-items: center; gap: 4mm; }
+    .brand-mark {
+      width: 10mm; height: 10mm; border-radius: 999px;
+      background: linear-gradient(135deg, var(--purple) 0%, var(--teal) 100%);
+      color: #fff; font-family: 'Fraunces', serif; font-weight: 700; font-size: 14pt;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-name {
+      font-family: 'Fraunces', serif; font-size: 15pt; color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    .brand-name b { color: var(--purple); }
+    .brand-tag {
+      font-size: 7.5pt; color: var(--muted); letter-spacing: 0.14em;
+      text-transform: uppercase; font-weight: 700;
+    }
+    .doc-label {
+      text-align: right;
+      font-size: 7.5pt; color: var(--purple); letter-spacing: 0.2em;
+      text-transform: uppercase; font-weight: 700;
+    }
+
+    /* Title */
+    .title-block {
+      text-align: center;
+      margin-bottom: 6mm;
+      padding-bottom: 4mm;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 24pt;
+      line-height: 1.1;
+      letter-spacing: -0.015em;
+    }
+    h1 .accent { color: var(--purple); }
+    .subtitle {
+      font-family: 'Fraunces', serif;
+      font-size: 11pt;
+      color: var(--teal-dark);
+      margin-top: 1.5mm;
+      font-style: italic;
+    }
+
+    /* Meta table */
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4mm;
+      margin-top: 4mm;
+    }
+    .meta-cell {
+      background: var(--soft);
+      border-radius: 2.5mm;
+      padding: 2.5mm 3.5mm;
+    }
+    .meta-label {
+      font-size: 7pt;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--purple);
+      font-weight: 700;
+    }
+    .meta-value {
+      font-family: 'Fraunces', serif;
+      font-size: 12pt;
+      color: var(--ink);
+      margin-top: 0.5mm;
+    }
+
+    /* Section */
+    section.block { margin-top: 5mm; }
+    h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 13pt;
+      color: var(--purple);
+      margin-bottom: 2mm;
+      padding-bottom: 1.5mm;
+      border-bottom: 1px solid var(--line);
+      letter-spacing: -0.005em;
+    }
+    p, li {
+      font-size: 10pt;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    p + p { margin-top: 2mm; }
+    ul {
+      list-style: none;
+      margin-top: 1.5mm;
+    }
+    ul li {
+      position: relative;
+      padding-left: 5mm;
+      margin-top: 1.5mm;
+    }
+    ul li::before {
+      content: "";
+      position: absolute; left: 0; top: 2.4mm;
+      width: 2mm; height: 2mm; border-radius: 999px; background: var(--teal-dark);
+    }
+
+    /* Signature block */
+    .signature {
+      margin-top: 8mm;
+      padding-top: 5mm;
+      border-top: 2px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10mm;
+    }
+    .sig-line {
+      border-bottom: 1.5px solid var(--ink);
+      height: 10mm;
+    }
+    .sig-label {
+      margin-top: 1.5mm;
+      font-size: 8pt;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* Footer */
+    .foot {
+      margin-top: 8mm;
+      padding-top: 4mm;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 5mm;
+      font-size: 7.5pt;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .foot b { color: var(--ink); }
+    .foot .disc {
+      max-width: 100mm;
+      font-size: 7pt;
+      color: #857E9C;
+      font-style: italic;
+    }
+
+    /* Ambient decoration on page 1 only */
+    .blob {
+      position: absolute; border-radius: 999px; filter: blur(30px);
+      opacity: 0.22; pointer-events: none; z-index: 0;
+    }
+    .blob-a { top: -40mm; right: -40mm; width: 130mm; height: 130mm; background: #E4D9F5; }
+    .blob-b { bottom: -50mm; left: -50mm; width: 150mm; height: 150mm; background: #C7EFEF; }
+    .page > * { position: relative; z-index: 1; }
+
+    @media print {
+      .blob { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- PAGE 1 -->
+  <main class="page">
+    <div class="blob blob-a"></div>
+    <div class="blob blob-b"></div>
+
+    <header class="head">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <div class="brand-name">SA <b>CoParents</b></div>
+          <div class="brand-tag">Foundation Statement</div>
+        </div>
+      </div>
+      <div class="doc-label">Child-Focused<br />Foundation Statement</div>
+    </header>
+
+    <div class="title-block">
+      <h1><span class="accent">Child-Focused</span> Foundation Statement</h1>
+      <div class="subtitle">A parent&rsquo;s commitment to their child&rsquo;s well-being</div>
+      <div class="meta">
+        <div class="meta-cell">
+          <div class="meta-label">Parent name</div>
+          <div class="meta-value">Jane Smith</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">Child</div>
+          <div class="meta-value">Emma Smith</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">Date</div>
+          <div class="meta-value">July 29, 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <section class="block">
+      <h2>Our Shared Purpose</h2>
+      <p>Regardless of the circumstances that brought our family to this point, our child deserves parents who make decisions based on her needs rather than our disagreements. This Foundation Statement reflects the goals, values, and priorities I believe will best support Emma&rsquo;s healthy development and long-term well-being.</p>
+    </section>
+
+    <section class="block">
+      <h2>My Vision for My Child</h2>
+      <p>I want Emma to grow up feeling safe, loved, and supported by both of her parents. I want her to know that she never has to choose between us and that she is free to love each parent without guilt or pressure.</p>
+      <p>I hope she develops confidence, resilience, healthy relationships, and a strong sense of security as she grows into adulthood.</p>
+    </section>
+
+    <section class="block">
+      <h2>My Parenting Priorities</h2>
+      <p>The following priorities will guide my parenting decisions:</p>
+      <ul>
+        <li>Protect Emma from adult conflict.</li>
+        <li>Maintain consistent routines between both homes whenever possible.</li>
+        <li>Support her emotional, physical, educational, and medical needs.</li>
+        <li>Encourage respectful communication between parents whenever it is safe and appropriate.</li>
+        <li>Make decisions based on Emma&rsquo;s best interests rather than past disagreements.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- PAGE 2 -->
+  <main class="page">
+    <header class="head">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <div class="brand-name">SA <b>CoParents</b></div>
+          <div class="brand-tag">Foundation Statement · Jane Smith · Emma Smith</div>
+        </div>
+      </div>
+      <div class="doc-label">Page 2</div>
+    </header>
+
+    <section class="block">
+      <h2>My Child&rsquo;s Strengths</h2>
+      <p>Emma is compassionate, creative, curious, and enjoys learning. She has close relationships with extended family and benefits from positive encouragement, predictable routines, and opportunities to express herself through art and sports.</p>
+    </section>
+
+    <section class="block">
+      <h2>My Child&rsquo;s Current Needs</h2>
+      <p>Based on my observations, Emma currently benefits from:</p>
+      <ul>
+        <li>Stable daily routines.</li>
+        <li>Consistent expectations in both homes.</li>
+        <li>Calm transitions between parents.</li>
+        <li>Emotional reassurance during times of change.</li>
+        <li>Open communication with teachers and healthcare providers.</li>
+        <li>Opportunities to participate in extracurricular activities.</li>
+      </ul>
+    </section>
+
+    <section class="block">
+      <h2>Areas of Concern</h2>
+      <p>The greatest challenges currently affecting our child include:</p>
+      <ul>
+        <li>Ongoing conflict between parents.</li>
+        <li>Differences in parenting styles.</li>
+        <li>Difficulty communicating about school and medical decisions.</li>
+        <li>Increased stress during parenting exchanges.</li>
+      </ul>
+      <p style="margin-top:3mm;">These concerns should be addressed with solutions that reduce conflict and increase predictability for Emma.</p>
+    </section>
+
+    <section class="block">
+      <h2>Commitments I Am Making</h2>
+      <p>I commit to:</p>
+      <ul>
+        <li>Keeping Emma out of adult disagreements.</li>
+        <li>Speaking respectfully about her other parent in her presence.</li>
+        <li>Sharing important information regarding school, health, and activities.</li>
+        <li>Remaining open to problem-solving when disagreements arise.</li>
+        <li>Continuing to learn and improve my co-parenting skills.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- PAGE 3 -->
+  <main class="page">
+    <header class="head">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <div class="brand-name">SA <b>CoParents</b></div>
+          <div class="brand-tag">Foundation Statement · Jane Smith · Emma Smith</div>
+        </div>
+      </div>
+      <div class="doc-label">Page 3</div>
+    </header>
+
+    <section class="block">
+      <h2>Goals for the Next 12 Months</h2>
+      <p>Over the next year, I hope we can:</p>
+      <ul>
+        <li>Reduce conflict during communication.</li>
+        <li>Create more consistent routines between homes.</li>
+        <li>Improve cooperation regarding school and healthcare.</li>
+        <li>Support Emma&rsquo;s emotional well-being during transitions.</li>
+        <li>Build a healthier co-parenting relationship focused on our child.</li>
+      </ul>
+    </section>
+
+    <section class="block">
+      <h2>My Child&rsquo;s Future</h2>
+      <p>When Emma looks back on this period of her life, I hope she remembers that both of her parents loved her deeply and worked to put her needs first. I want her to feel secure, valued, and confident that the adults in her life chose cooperation over conflict whenever possible.</p>
+    </section>
+
+    <div class="signature">
+      <div>
+        <div class="sig-line"></div>
+        <div class="sig-label">Parent signature</div>
+      </div>
+      <div>
+        <div class="sig-line"></div>
+        <div class="sig-label">Date</div>
+      </div>
+    </div>
+
+    <footer class="foot">
+      <div>
+        <b>SA CoParents</b><br />
+        16607 Blanco #703, San Antonio, TX 78232<br />
+        mattsossi@bsossi.com · 210-224-1667<br />
+        sacoparentsapp.online
+      </div>
+      <div class="disc">
+        This Foundation Statement is a personal, child-focused
+        commitment. It is not a legal agreement. Consult a family-law
+        attorney before signing any custody or parenting-plan document.
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
