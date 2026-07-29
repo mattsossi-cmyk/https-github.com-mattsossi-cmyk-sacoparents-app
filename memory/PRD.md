@@ -1,6 +1,29 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Co-Parenting Phase 2 — Dynamic Report Generation (Feb 2026)
+The 10-section Co-Parenting Assessment now produces a real, dynamically-built report from a user's actual answers (deterministic — no LLM).
+
+**New files**
+- `/app/backend/cp_report_content.py` — deterministic builder that turns (answers, scores) into `{overall_rating, overall_summary, strengths, growth_areas, sections, communication_toolkit, next_steps, disclaimer}`. Section-level guidance library keyed by section id + rating band. Communication toolkit surfaces only when Section 1 rating is Fair / Needs Improvement.
+- `/app/backend/cp_report_pdf.py` — FPDF renderer mirroring `sn_report_pdf.py` style (SA CoParents brand purple, header/footer, US Letter). Includes `filter_cp_report()` selective-visibility helper.
+- `/app/backend/tests/test_cp_report.py` — 5 unit tests covering full-Excellent, full-Needs (toolkit trigger), PDF bytes, selective visibility, partial-answers safety. **17/17 total tests pass across cp_report + coparenting + sn_v3.**
+
+**Route additions in `/app/backend/coparenting_routes.py`** (all under `/api/coparenting`):
+- `POST /report/generate` — build/rebuild deterministic report; stored 1-per-user in `cp_reports` (upsert).
+- `GET /report` — return current stored report doc.
+- `GET /report/pdf` — US Letter PDF download; honors stored `visibility.excluded` or `?excluded=` query.
+- `PATCH /report/visibility` — persist parent's excluded-section preference.
+- `POST /report/{report_id}/share-link` — signed JWT share token (same `create_share_token` pattern as SN v2).
+- `GET /report/shared/{token}?format=pdf|json` — public read; strips excluded sections client-side of the token payload.
+
+**Report_visibility catalog** — added `cp_report` entry with 6 hideable sections: `overall`, `strengths`, `growth_areas`, `communication_toolkit`, `sections`, `next_steps`.
+
+**End-to-end verification** — parent1@test.com round-trip: bulk-answer 67 questions → complete → generate → get → PDF (5.1 KB) → visibility patch → share-link (unauth) → shared JSON + PDF all return 200 with the correct `excluded_sections` respected.
+
+**Not part of this phase** — Co-Parenting frontend assessment/report UI (Phase 3) remains unbuilt; SN v3 dynamic PDF (Phase 4) still pending.
+
+<!-- Changelog latest entry -->
 ## 🆕 Phase 3(b) — Special Needs v3 frontend (Feb 2026)
 Wired the completed 10-principle backend (`/api/special-needs-v3/*`) into an actual React assessment flow.
 

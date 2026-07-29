@@ -51,6 +51,14 @@ REPORT_SECTIONS: Dict[str, List[Dict[str, str]]] = {
         {"key": "safeguards_pathway","label": "Safeguards & disagreement pathway","description": "Which safeguards are in place, which are missing, and the recommended pathway tier (T1–T4)."},
         {"key": "action_plan",       "label": "Parenting-plan worksheet",       "description": "The action-table with responsible parent + review dates."},
     ],
+    "cp_report": [
+        {"key": "overall",              "label": "Overall rating & summary",       "description": "The banner rating and the opening paragraph."},
+        {"key": "strengths",            "label": "Your strengths",                 "description": "Sections currently rated Excellent or Good."},
+        {"key": "growth_areas",         "label": "Priority focus areas",           "description": "Sections currently rated Fair or Needs Improvement."},
+        {"key": "communication_toolkit","label": "Communication toolkit",          "description": "Practical tools surfaced when Section 1 needs work."},
+        {"key": "sections",             "label": "Section-by-section detail",      "description": "All 10 sections with rating, findings, and recommendations."},
+        {"key": "next_steps",           "label": "Recommended next steps",         "description": "Prioritized actions distilled from your growth areas."},
+    ],
     "safety": [
         {"key": "pathway",           "label": "Recommended communication pathway","description": "The pathway (No-direct / Structured written / Assisted / Cooperative) and rationale.", "locked": "true"},
         {"key": "section_1",         "label": "Section 1 answers (safety screen)","description": "Your Yes/No answers to the immediate safety questions."},
