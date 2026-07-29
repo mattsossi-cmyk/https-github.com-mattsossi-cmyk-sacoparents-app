@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <title>SA CoParents — Special Needs Co-Parenting Assessment Report</title>
-  <meta name="description" content="Sample Special Needs Co-Parenting Assessment Report — 8-section framework, Overall Readiness Score, strengths, areas to improve, personalized recommendations, Foundation Statement, and Child Impact Predictor." />
+  <meta name="description" content="Sample Special Needs Co-Parenting Assessment Report — 10-section framework tailored for developmental, medical, therapeutic, and educational differences. Includes BIFF communication toolkit and Child Impact Predictor." />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,24 +19,21 @@
     .page { width: 216mm; margin: 0 auto; padding: 12mm 16mm; background: #fff; position: relative; }
     .page:not(:last-child) { break-after: page; page-break-after: always; }
 
-    /* Header */
     .head { display:flex; align-items:center; justify-content:space-between; padding-bottom:3.5mm; border-bottom:2px solid var(--line); margin-bottom:5mm; }
     .brand { display:flex; align-items:center; gap:4mm; }
-    .brand-mark { width:13mm; height:13mm; border-radius:2.5mm; object-fit:cover; display:block; box-shadow: 0 0 0 1px var(--line); }
+    .brand-mark { width:13mm; height:13mm; border-radius:2.5mm; object-fit:cover; display:block; box-shadow:0 0 0 1px var(--line); }
     .brand-name { font-family:'Fraunces',serif; font-size:15pt; color:var(--ink); }
     .brand-name b { color: var(--purple); }
     .brand-tm { font-size:9pt; color:var(--teal-dark); vertical-align:super; }
     .brand-tag { font-size:7.5pt; color:var(--muted); letter-spacing:0.14em; text-transform:uppercase; font-weight:700; }
     .doc-label { text-align:right; font-size:7.5pt; color:var(--purple); letter-spacing:0.18em; text-transform:uppercase; font-weight:700; line-height:1.4; }
 
-    /* Title */
     .title-block { text-align:center; margin-bottom:3.5mm; padding-bottom:3mm; border-bottom:1px solid var(--line); }
     h1 { font-family:'Fraunces',serif; font-weight:700; color:var(--ink); font-size:19pt; line-height:1.1; }
     h1 .accent { color: var(--purple); }
     h1 .tm { font-size:10pt; vertical-align:super; color:var(--teal-dark); }
     .subtitle { font-family:'Fraunces',serif; font-size:10pt; color:var(--teal-dark); margin-top:1.5mm; font-style:italic; }
 
-    /* Sections */
     section.block { margin-top:3.5mm; }
     section.block.tight { margin-top:2.5mm; }
     h2 { font-family:'Fraunces',serif; font-size:12.5pt; color:var(--purple); margin-bottom:1.5mm; padding-bottom:1.2mm; border-bottom:1px solid var(--line); }
@@ -44,12 +41,10 @@
     p + p { margin-top: 1.5mm; }
     .lede { font-size:9.5pt; color:var(--muted); line-height:1.45; }
 
-    /* Opening paragraph */
     .opening { background:var(--soft); border-left:3mm solid var(--teal-dark); border-radius:0 3mm 3mm 0; padding:3mm 5mm; margin-top:1mm; }
     .opening p { font-size:9.5pt; line-height:1.45; color:var(--ink); }
     .opening p + p { margin-top:1.5mm; }
 
-    /* Overall Readiness banner */
     .rating { background:linear-gradient(135deg, #F5EEFF 0%, #E5F7F4 100%); border:1.5px solid var(--line); border-radius:4mm; padding:3.5mm 5mm; margin-top:2mm; }
     .rating-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; }
     .rating-value { font-family:'Fraunces',serif; font-size:20pt; color:var(--teal-dark); margin-top:0.5mm; line-height:1.1; }
@@ -61,7 +56,6 @@
     .r-fair { background:var(--amber-bg); color:var(--amber); border-color:rgba(165,107,0,.35); }
     .r-needs { background:var(--warn-bg); color:var(--warn); border-color:rgba(184,91,0,.4); }
 
-    /* 8-section coverage grid */
     .coverage { display:grid; grid-template-columns:repeat(2,1fr); gap:2mm; margin-top:1.5mm; }
     .coverage-cell { background:#fff; border:1px solid var(--line); border-radius:2.5mm; padding:2.5mm 3.5mm; }
     .coverage-head { display:flex; justify-content:space-between; align-items:flex-start; gap:2mm; }
@@ -71,48 +65,59 @@
     .coverage-pill { font-family:'Fraunces',serif; font-weight:700; font-size:7.5pt; padding:0.5mm 2.5mm; border-radius:999px; border:1px solid transparent; white-space:nowrap; letter-spacing:0.02em; height:fit-content; }
     .coverage-find { font-size:8.5pt; color:var(--muted); line-height:1.35; margin-top:1.5mm; }
 
-    /* Checkmark list */
     ul.checked { list-style:none; margin-top:1.5mm; }
     ul.checked li { position:relative; padding-left:6mm; font-size:9.5pt; line-height:1.4; margin-top:1mm; color:var(--ink); }
-    ul.checked li::before {
-      content:"\2713"; position:absolute; left:0; top:0;
-      color:var(--teal-dark); font-weight:700; font-size:10.5pt;
-    }
+    ul.checked li::before { content:"\2713"; position:absolute; left:0; top:0; color:var(--teal-dark); font-weight:700; font-size:10.5pt; }
 
-    /* Plain bullets */
     ul.bulleted { list-style:none; margin-top:1mm; }
     ul.bulleted li { position:relative; padding-left:5mm; font-size:9.5pt; line-height:1.4; margin-top:0.8mm; }
     ul.bulleted li::before { content:""; position:absolute; left:0; top:1.8mm; width:1.8mm; height:1.8mm; border-radius:999px; background:var(--teal-dark); }
     ul.bulleted.cols-2 { columns: 2; column-gap: 8mm; }
     ul.bulleted.cols-2 li { break-inside: avoid; }
 
-    /* Recommendations grid */
     .rec-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:2mm; margin-top:1.5mm; }
     .rec-item { background:#fff; border:1px solid var(--line); border-radius:2mm; padding:2mm 3.5mm; font-size:9.5pt; color:var(--ink); position:relative; padding-left:8mm; }
-    .rec-item::before {
-      content:"\2192"; position:absolute; left:3mm; top:1.7mm;
-      color:var(--purple); font-weight:700; font-size:11pt;
-    }
+    .rec-item::before { content:"\2192"; position:absolute; left:3mm; top:1.7mm; color:var(--purple); font-weight:700; font-size:11pt; }
 
-    /* Predictor callout */
+    .focus-card { background:var(--soft); border:1px solid var(--line); border-radius:3mm; padding:3mm 4.5mm 3.5mm; margin-top:2mm; }
+    .focus-head { display:flex; justify-content:space-between; align-items:flex-start; gap:3mm; }
+    .focus-head h3 { font-family:'Fraunces',serif; font-size:11.5pt; color:var(--purple); line-height:1.15; }
+    .focus-find { font-size:9pt; color:var(--muted); margin-top:1.5mm; line-height:1.4; }
+    .focus-recs { list-style:none; margin-top:1.5mm; }
+    .focus-recs li { position:relative; padding-left:5mm; font-size:9pt; line-height:1.4; margin-top:0.8mm; color:var(--ink); }
+    .focus-recs li::before { content:"\2192"; position:absolute; left:0; top:0; color:var(--teal-dark); font-weight:700; font-size:10pt; }
+    .focus-recs li b { color: var(--purple); }
+
+    .toolkit { border:1.5px solid rgba(184,91,0,.35); background:#FFFBF5; border-radius:4mm; padding:4mm 5mm; margin-top:2.5mm; }
+    .toolkit-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--warn); font-weight:700; }
+    .toolkit h3 { font-family:'Fraunces',serif; font-size:13pt; color:var(--purple); margin-top:0.5mm; }
+    .toolkit .why { font-size:9pt; color:var(--muted); margin-top:1mm; line-height:1.4; }
+    .toolkit .biff { display:grid; grid-template-columns:repeat(4,1fr); gap:2mm; margin-top:2.5mm; }
+    .biff-letter { background:#fff; border:1px solid var(--line); border-radius:2.5mm; padding:2mm 3mm; }
+    .biff-l { font-family:'Fraunces',serif; font-size:16pt; color:var(--purple); font-weight:700; line-height:1; }
+    .biff-w { font-family:'Fraunces',serif; font-size:9.5pt; color:var(--ink); margin-top:0.5mm; }
+    .biff-d { font-size:8pt; color:var(--muted); margin-top:0.5mm; line-height:1.35; }
+    .apps { display:grid; grid-template-columns:1fr 1fr; gap:2mm; margin-top:2.5mm; }
+    .app-card { background:#fff; border:1px solid var(--line); border-radius:2.5mm; padding:2.5mm 3.5mm; }
+    .app-name { font-family:'Fraunces',serif; font-size:11pt; color:var(--purple); }
+    .app-tag { font-size:7.5pt; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-dark); font-weight:700; margin-top:0.3mm; }
+    .app-desc { font-size:8.5pt; color:var(--muted); margin-top:1.5mm; line-height:1.4; }
+
+    /* Child Impact Predictor */
     .predictor { background:linear-gradient(135deg, #F5EEFF 0%, #E5F7F4 100%); border:1.5px solid var(--line); border-radius:4mm; padding:3.5mm 5mm; margin-top:2.5mm; }
     .predictor-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; }
     .predictor h3 { font-family:'Fraunces',serif; font-size:12.5pt; color:var(--purple); margin-top:1mm; line-height:1.1; }
-    .predictor p { font-size:9.5pt; color:var(--ink); margin-top:1.5mm; line-height:1.45; }
+    .predictor p { font-size:9pt; color:var(--ink); margin-top:1.5mm; line-height:1.45; }
     .predictor .dims { display:flex; flex-wrap:wrap; gap:1.5mm; margin-top:2mm; }
     .predictor .dim { background:#fff; border:1px solid var(--line); color:var(--teal-dark); font-family:'Fraunces',serif; font-size:8.5pt; font-weight:600; padding:0.8mm 3mm; border-radius:999px; }
 
     /* Foundation Statement */
     .foundation { background:var(--soft); border:1.5px solid var(--line); border-radius:4mm; padding:5mm 6mm; margin-top:2.5mm; position:relative; }
-    .foundation::before {
-      content:"\201C"; position:absolute; top:-1mm; left:3mm;
-      font-family:'Fraunces',serif; font-size:40pt; color:var(--purple); line-height:1; opacity:0.35;
-    }
+    .foundation::before { content:"\201C"; position:absolute; top:-1mm; left:3mm; font-family:'Fraunces',serif; font-size:40pt; color:var(--purple); line-height:1; opacity:0.35; }
     .foundation-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; margin-left:10mm; }
     .foundation h3 { font-family:'Fraunces',serif; font-size:12.5pt; color:var(--purple); margin-top:0.5mm; margin-left:10mm; }
     .foundation p { font-family:'Fraunces',serif; font-style:italic; font-size:10pt; color:var(--ink); line-height:1.55; margin-top:2.5mm; }
 
-    /* Notice */
     .notice { background:var(--warn-bg); border:1.5px solid rgba(184,91,0,.35); border-radius:3mm; padding:2.5mm 4mm; margin-top:2.5mm; }
     .notice .label { font-size:7pt; letter-spacing:0.16em; text-transform:uppercase; color:var(--warn); font-weight:700; }
     .notice p { font-size:9pt; color:#5C2E00; margin-top:0.5mm; line-height:1.4; }
@@ -135,21 +140,21 @@
 
   <div class="title-block">
     <h1><span class="accent">Special Needs</span> Co-Parenting Assessment Report<span class="tm">&trade;</span></h1>
-    <div class="subtitle">A child-focused reflection built from your responses across an 8-section assessment</div>
+    <div class="subtitle">A child-focused reflection built from your responses across a 10-section assessment</div>
   </div>
 
   <section class="block">
     <div class="opening">
       <p>Thank you for completing the SA CoParents&trade; Special Needs Co-Parenting Assessment.</p>
-      <p>This report reflects <b>your</b> responses about how your family currently supports your child&rsquo;s needs. It highlights your strengths, identifies where you can grow, and gives you practical strategies to try &mdash; whether or not the other parent participates yet. It is not intended to diagnose any medical, psychological, educational, or developmental condition. It offers guidance to help you keep your child&rsquo;s needs at the center of every decision.</p>
+      <p>This report reflects <b>your</b> responses about how your family supports a child with developmental, medical, therapeutic, educational, or behavioral differences. It highlights your strengths, identifies where you can grow, and gives you practical strategies to try &mdash; whether or not the other parent participates yet. It is not a psychological evaluation, medical diagnosis, or legal opinion. It is a preparation tool to help you keep your child&rsquo;s needs at the center of every decision.</p>
     </div>
   </section>
 
   <section class="block">
     <div class="rating">
       <div class="rating-label">Overall co-parenting readiness</div>
-      <div class="rating-value">Good Progress</div>
-      <div class="rating-note">Your responses show clear commitment to your child&rsquo;s needs. Your strongest areas are <b>your understanding of your child</b> and <b>your involvement in medical &amp; therapeutic care</b>. Your priority focus areas are <b>communication with the other parent</b> and <b>collaboration readiness</b>. Full findings for each of the eight assessment sections follow on the next page.</div>
+      <div class="rating-value">Building Progress</div>
+      <div class="rating-note">Your responses show a clear commitment to your child&rsquo;s unique needs. Your strongest areas are <b>Safety &amp; Supervision</b> and <b>Medical &amp; Healthcare Coordination</b>. Your priority focus area is <b>Communication &amp; Information Sharing</b> &mdash; where the SA CoParents&trade; Communication Toolkit later in this report is specifically recommended for you. Because your child has additional support needs, the <b>Child Impact Predictor</b> also appears in this report.</div>
     </div>
   </section>
 </main>
@@ -169,160 +174,119 @@
 
   <section class="block" style="margin-top:0;">
     <h2>Assessment Findings by Section</h2>
-    <p class="lede">Each of the eight sections is summarized below with its own rating and a brief finding.</p>
+    <p class="lede">Each of the ten sections is summarized below with its own rating and a one-line finding based on your responses.</p>
     <div class="coverage">
+
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 1</div>
-            <div class="coverage-name">Understanding Your Child</div>
+            <div class="coverage-name">Communication &amp; Information Sharing</div>
           </div>
-          <span class="coverage-pill r-excellent">Excellent</span>
+          <span class="coverage-pill r-needs">Needs Improvement</span>
         </div>
-        <div class="coverage-find">You clearly understand your child&rsquo;s diagnosis and can describe her core strengths and challenges. Based on your responses, you and the other parent share a similar developmental picture.</div>
+        <div class="coverage-find">Therapy updates, medication changes, IEP notes, and behavioral incidents are shared inconsistently with the other parent. No shared calendar or messaging app is in place today. <b>Priority focus.</b></div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 2</div>
-            <div class="coverage-name">Medical &amp; Therapeutic Care</div>
+            <div class="coverage-name">Pick-Up, Drop-Off &amp; Transitions</div>
           </div>
-          <span class="coverage-pill r-good">Good</span>
+          <span class="coverage-pill r-needs">Needs Improvement</span>
         </div>
-        <div class="coverage-find">You attend therapy consistently and stay informed about appointments. You may be carrying more of the current treatment-plan detail than the other parent &mdash; sharing a written summary would help even the load.</div>
+        <div class="coverage-find">Your child shows anxiety before exchanges. Visual schedules and comfort items help in your home but you&rsquo;re unsure they travel to the other home. Regulation drops for 24&ndash;48 hours after transitions.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 3</div>
-            <div class="coverage-name">Educational Support</div>
+            <div class="coverage-name">Educational Needs</div>
           </div>
           <span class="coverage-pill r-fair">Fair</span>
         </div>
-        <div class="coverage-find">You receive most school communications and follow up on your child&rsquo;s academic progress. You attend ARD/IEP meetings more often than the other parent, and homework expectations differ between the two homes.</div>
+        <div class="coverage-find">You attend ARD/IEP meetings and support classroom accommodations. The other parent receives some school communications but doesn&rsquo;t reliably see IEP updates or 504 changes.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 4</div>
-            <div class="coverage-name">Daily Living Consistency</div>
+            <div class="coverage-name">Medical &amp; Healthcare Needs</div>
           </div>
           <span class="coverage-pill r-good">Good</span>
         </div>
-        <div class="coverage-find">In your home, meals, hygiene, and homework expectations are consistent and predictable. Bedtime, screen-time limits, and transition routines still differ from the other home.</div>
+        <div class="coverage-find">You coordinate specialist visits, medications, and therapy appointments consistently. Sharing the full treatment plan and specialist contacts with the other parent would close the gap.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 5</div>
-            <div class="coverage-name">Communication Between Parents</div>
+            <div class="coverage-name">Daily Routines &amp; Home Consistency</div>
           </div>
-          <span class="coverage-pill r-needs">Needs Improvement</span>
+          <span class="coverage-pill r-fair">Fair</span>
         </div>
-        <div class="coverage-find">You&rsquo;d like to share medications, sleep patterns, and behavioral changes more proactively with the other parent, but there is no shared calendar or communication app in place. Information often flows only after a problem escalates.</div>
+        <div class="coverage-find">Your morning and bedtime routines, meals, and sensory environment are predictable. Bedtime, screen-time limits, and sensory supports still differ from the other home.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 6</div>
-            <div class="coverage-name">Child Regulation &amp; Transitions</div>
+            <div class="coverage-name">Emotional &amp; Behavioral Support</div>
           </div>
           <span class="coverage-pill r-fair">Fair</span>
         </div>
-        <div class="coverage-find">You notice that your child shows anxiety before exchanges. You use visual schedules and sensory supports at home, but you&rsquo;re unsure whether the other parent does &mdash; your child experiences a noticeable regulation drop after transitions.</div>
+        <div class="coverage-find">You actively use co-regulation strategies, coping tools, and positive reinforcement. Meltdown response is a strength in your home; the same approach isn&rsquo;t always used in the other home.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 7</div>
-            <div class="coverage-name">Parent Collaboration Readiness</div>
+            <div class="coverage-name">Therapy &amp; Skill Reinforcement</div>
           </div>
-          <span class="coverage-pill r-needs">Needs Improvement</span>
+          <span class="coverage-pill r-fair">Fair</span>
         </div>
-        <div class="coverage-find">Most disagreements between you and the other parent are about day-to-day parenting decisions rather than the diagnosis itself. Structured mediation or child-focused coaching is likely to help you move from reactive conversations to planned ones.</div>
+        <div class="coverage-find">You reinforce speech, OT, and behavioral homework consistently. Therapy carryover during the other parent&rsquo;s time is inconsistent, which slows overall progress.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 8</div>
-            <div class="coverage-name">Future Planning</div>
+            <div class="coverage-name">Safety &amp; Supervision</div>
+          </div>
+          <span class="coverage-pill r-excellent">Excellent</span>
+        </div>
+        <div class="coverage-find">Medication safety, allergy management, emergency contacts, environmental safety, and elopement prevention are all clearly in place in your home.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 9</div>
+            <div class="coverage-name">Social &amp; Community Participation</div>
           </div>
           <span class="coverage-pill r-fair">Fair</span>
         </div>
-        <div class="coverage-find">You have a positive long-term vision for your child, but decisions around middle-school placement, guardianship, adult services, and financial planning have not yet been documented or discussed with the other parent.</div>
+        <div class="coverage-find">Your child participates in adaptive sports and a social-skills group. Sensory-heavy events (birthday parties, assemblies) need better preparation and cross-home coordination.</div>
       </div>
-    </div>
-  </section>
-</main>
 
-<!-- ============ PAGE 2 ============ -->
-<main class="page">
-  <header class="head">
-    <div class="brand">
-      <img class="brand-mark" src="icon-256.png" alt="SA CoParents logo" />
-      <div>
-        <div class="brand-name">SA <b>CoParents</b><span class="brand-tm">&trade;</span></div>
-        <div class="brand-tag">Special Needs Assessment &middot; Sample &middot; SCP-SN-2026-A</div>
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 10</div>
+            <div class="coverage-name">Long-Term Child Success</div>
+          </div>
+          <span class="coverage-pill r-good">Good</span>
+        </div>
+        <div class="coverage-find">You actively build your child&rsquo;s independence, self-advocacy, and life skills through visual supports, structured practice, and celebrated small wins.</div>
       </div>
-    </div>
-    <div class="doc-label">Page 3</div>
-  </header>
 
-  <section class="block">
-    <h2>Your Strengths</h2>
-    <ul class="checked">
-      <li>You clearly recognize your child&rsquo;s diagnosis and needs.</li>
-      <li>You maintain consistent therapy attendance.</li>
-      <li>Your long-term goals for your child are stable and child-centered.</li>
-      <li>Your home actively supports your child&rsquo;s educational success.</li>
-    </ul>
-  </section>
-
-  <section class="block">
-    <h2>Areas to Improve</h2>
-    <ul class="bulleted">
-      <li>Propose a shared therapy calendar to the other parent.</li>
-      <li>Advocate for consistent bedtime expectations across both homes.</li>
-      <li>Establish a written channel for medication updates.</li>
-      <li>Create a transition routine you use before every exchange.</li>
-      <li>Prepare with the other parent before annual IEP meetings.</li>
-    </ul>
-  </section>
-
-  <section class="block">
-    <h2>Personalized Recommendations</h2>
-    <p class="lede">Based on your responses, consider exploring the following supports over the next several months. You can pursue any of these on your own; some are stronger when the other parent joins.</p>
-    <div class="rec-grid">
-      <div class="rec-item">Shared communication tools (calendar, app, notebook)</div>
-      <div class="rec-item">Parent coaching for co-parenting skills</div>
-      <div class="rec-item">Child-focused mediation</div>
-      <div class="rec-item">Family therapy</div>
-      <div class="rec-item">Occupational therapy consultation</div>
-      <div class="rec-item">Pediatric follow-up</div>
-      <div class="rec-item">Educational advocacy resources</div>
-      <div class="rec-item">Structured IEP / 504 planning support</div>
-    </div>
-  </section>
-
-  <section class="block">
-    <div class="predictor">
-      <div class="predictor-label">SA CoParents&trade; distinguishing feature</div>
-      <h3>Child Impact Predictor</h3>
-      <p>Rather than identifying areas of disagreement alone, the Child Impact Predictor estimates how differences between households may affect your child in practical, day-to-day areas. This shifts the focus away from blaming the other parent and toward understanding how specific co-parenting patterns influence the child&rsquo;s lived experience &mdash; consistent with SA CoParents&trade;&rsquo; guiding message.</p>
-      <div class="dims">
-        <span class="dim">Routines</span>
-        <span class="dim">School performance</span>
-        <span class="dim">Therapy participation</span>
-        <span class="dim">Emotional regulation</span>
-        <span class="dim">Transitions between homes</span>
-      </div>
     </div>
   </section>
 </main>
@@ -337,39 +301,223 @@
         <div class="brand-tag">Special Needs Assessment &middot; Sample &middot; SCP-SN-2026-A</div>
       </div>
     </div>
+    <div class="doc-label">Page 3</div>
+  </header>
+
+  <section class="block" style="margin-top:0;">
+    <h2>Your Strengths</h2>
+    <ul class="checked">
+      <li>You clearly understand your child&rsquo;s diagnosis, strengths, and support needs.</li>
+      <li>Your home offers predictable routines, sensory supports, and a calm regulation environment.</li>
+      <li>You consistently reinforce therapy homework and skill practice at home.</li>
+      <li>You attend medical, therapy, and IEP/ARD meetings and stay informed.</li>
+      <li>You encourage your child&rsquo;s participation in adaptive activities and celebrate her progress.</li>
+      <li>You are actively seeking a lower-conflict path so your child can regulate more easily.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Practical Focus Areas</h2>
+    <p class="lede">Where your day-to-day support of a child with additional needs actually happens. Each subsection has a rating and specific next actions.</p>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Pick-Up &amp; Drop-Off (Sensory-Aware Transitions)</h3>
+        <span class="coverage-pill r-needs">Needs Improvement</span>
+      </div>
+      <div class="focus-find">Your child shows anxiety before exchanges. Regulation drops after transitions, especially when supports don&rsquo;t travel with her.</div>
+      <ul class="focus-recs">
+        <li>Consider a <b>neutral, low-stimulation exchange location</b> &mdash; school parking lot, familiar quiet park, or library entrance &mdash; instead of the front door.</li>
+        <li>Use a <b>visual schedule / transition countdown</b> at both homes 24 hours before each exchange.</li>
+        <li>Ensure comfort items (weighted blanket, headphones, favorite toy) <b>always travel</b> with your child.</li>
+        <li>Establish a scripted, predictable hand-off routine your child can rely on.</li>
+        <li>If safety is ever a concern, most cities offer designated <b>&ldquo;safe exchange&rdquo; locations</b> at police stations.</li>
+      </ul>
+    </div>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Meeting Your Child&rsquo;s Educational Needs (IEP / 504)</h3>
+        <span class="coverage-pill r-fair">Fair</span>
+      </div>
+      <div class="focus-find">You attend ARD/IEP meetings and reinforce accommodations at home. The other parent isn&rsquo;t reliably included in IEP updates, 504 changes, or classroom behavior plans.</div>
+      <ul class="focus-recs">
+        <li>Add <b>both parents</b> to the school&rsquo;s parent portal, teacher email lists, and special-education case-manager updates.</li>
+        <li>Attend IEP/ARD/504 meetings <b>together</b> when possible; if not, send a written summary within 48 hours.</li>
+        <li>Align classroom accommodations (visual supports, sensory breaks, extended time) with home routines.</li>
+        <li>Share progress-monitoring data, behavior plans, and executive-function goals in one central document.</li>
+        <li>Coordinate on tutoring, therapy pull-outs, and adaptive extracurricular sign-ups.</li>
+      </ul>
+    </div>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Medical, Therapy &amp; Skill Reinforcement</h3>
+        <span class="coverage-pill r-good">Good</span>
+      </div>
+      <div class="focus-find">You coordinate specialists, therapy appointments, and medications well. Therapy carryover at the other parent&rsquo;s home is inconsistent, which slows progress.</div>
+      <ul class="focus-recs">
+        <li>Maintain one <b>shared medical &amp; therapy calendar</b> (AppClose, OFW, or a shared Google Calendar).</li>
+        <li>Attend annual well-checks, specialist evaluations, and IEP-related medical letters together when possible.</li>
+        <li>Share a <b>one-page therapy homework sheet</b> from OT, speech, and behavioral providers so both homes reinforce the same skills.</li>
+        <li>Use identical medication routines &mdash; same time, same dose, same tracker &mdash; in both homes.</li>
+        <li>Agree on an <b>emergency contact protocol</b>: who to call first, in what order, and how quickly.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PAGE 4 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <img class="brand-mark" src="icon-256.png" alt="SA CoParents logo" />
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span class="brand-tm">&trade;</span></div>
+        <div class="brand-tag">Special Needs Assessment &middot; Sample &middot; SCP-SN-2026-A</div>
+      </div>
+    </div>
     <div class="doc-label">Page 4</div>
   </header>
 
-  <section class="block">
-    <h2>Child Needs Foundation Statement</h2>
-    <p class="lede">Instead of ending on a numeric score, the SA CoParents&trade; assessment closes with your personal, child-centered statement &mdash; something you can return to during future decisions and mediation, regardless of whether the other parent participates.</p>
-    <div class="foundation">
-      <div class="foundation-label">Foundation statement</div>
-      <h3>My commitment to my child</h3>
-      <p>&ldquo;My child benefits from predictable routines, coordinated medical care, consistent educational support, and calm communication with the other parent. I recognize that although our parenting styles may differ, my responsibility is to provide stability, reduce unnecessary conflict, and support my child&rsquo;s developmental, emotional, and educational needs. I commit to making decisions that prioritize my child&rsquo;s well-being and to seeking professional guidance whenever needed.&rdquo;</p>
+  <section class="block" style="margin-top:0;">
+    <h2>More Practical Focus Areas</h2>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Special Events at School</h3>
+        <span class="coverage-pill r-fair">Fair</span>
+      </div>
+      <div class="focus-find">You attend most classroom performances and awards, but sensory-heavy events (Field Day, holiday parties) can overwhelm your child without coordinated supports.</div>
+      <ul class="focus-recs">
+        <li>Share the <b>school-year calendar</b> with the other parent each semester &mdash; conferences, IEP meetings, performances, field trips.</li>
+        <li>Before large or sensory-heavy events, coordinate <b>sensory supports</b> (headphones, quiet area, exit plan) with the teacher <b>and</b> the other parent.</li>
+        <li>Confirm with your child which parent will attend so she isn&rsquo;t caught in scheduling ambiguity.</li>
+        <li>Attend IEP/ARD/504 progress-review meetings <b>together</b> when possible.</li>
+        <li>Celebrate promotions, awards, and small wins in <b>both</b> homes.</li>
+      </ul>
+    </div>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Extracurricular &amp; Adaptive Activities</h3>
+        <span class="coverage-pill r-fair">Fair</span>
+      </div>
+      <div class="focus-find">Your child does adaptive swimming and a social-skills group. Attendance during your time is consistent; you&rsquo;re less certain about the other parent&rsquo;s time.</div>
+      <ul class="focus-recs">
+        <li>Share the <b>season/term activity schedule</b> with the other parent as early as possible.</li>
+        <li>Coordinate transportation and equipment hand-offs; make sure sensory supports, communication devices, and comfort items travel with her.</li>
+        <li>Support the same activity during <b>both</b> parenting times &mdash; inconsistent attendance erodes skill progress and social confidence.</li>
+        <li>Give coaches, instructors, and social-skills leaders a <b>single point of contact</b> and share her strengths and support needs proactively.</li>
+        <li>Consider therapy-based activities (therapeutic riding, adaptive recreation, sensory play groups) that reinforce OT/speech goals.</li>
+      </ul>
     </div>
   </section>
 
   <section class="block">
-    <h2>What Happens Next in the SA CoParents App</h2>
-    <ul class="bulleted cols-2">
-      <li>Review this assessment and save it to your dashboard.</li>
-      <li>Complete your personalized Foundation Statement.</li>
-      <li>Build your Child Needs Statement for mediation.</li>
-      <li>Create your Co-Parenting Commitment.</li>
-      <li>Prepare shared materials for mediation, IEP, or medical meetings.</li>
-      <li>Reassess after significant changes in your child&rsquo;s needs.</li>
-    </ul>
+    <div class="toolkit">
+      <div class="toolkit-label">SA CoParents&trade; communication toolkit</div>
+      <h3>Because communication is your priority focus area</h3>
+      <div class="why">Two evidence-based tools are recommended when co-parent communication is flagged as <b>Needs Improvement</b>. Both are widely used in family courts, by mediators, and by special-education case managers.</div>
+
+      <div class="biff">
+        <div class="biff-letter">
+          <div class="biff-l">B</div>
+          <div class="biff-w">Brief</div>
+          <div class="biff-d">Keep messages to 3&ndash;4 sentences. Long replies invite escalation.</div>
+        </div>
+        <div class="biff-letter">
+          <div class="biff-l">I</div>
+          <div class="biff-w">Informative</div>
+          <div class="biff-d">Facts only &mdash; therapy times, medication doses, IEP updates. No interpretation.</div>
+        </div>
+        <div class="biff-letter">
+          <div class="biff-l">F</div>
+          <div class="biff-w">Friendly</div>
+          <div class="biff-d">Polite tone, no sarcasm. Assume it will be read in court.</div>
+        </div>
+        <div class="biff-letter">
+          <div class="biff-l">F</div>
+          <div class="biff-w">Firm</div>
+          <div class="biff-d">Clear about what you need. Close the loop; don&rsquo;t invite further debate.</div>
+        </div>
+      </div>
+
+      <div class="apps">
+        <div class="app-card">
+          <div class="app-name">AppClose</div>
+          <div class="app-tag">Free &middot; iOS &amp; Android</div>
+          <div class="app-desc">Shared calendar, secure messaging, expense tracking, and swap requests. Message history is court-admissible. A strong first step when cost is a barrier.</div>
+        </div>
+        <div class="app-card">
+          <div class="app-name">OurFamilyWizard (OFW)</div>
+          <div class="app-tag">Subscription &middot; Court-mandated in many states</div>
+          <div class="app-desc">Calendar, messaging with <b>ToneMeter&trade;</b> that flags emotional language before you send, expense ledger, and journal. Widely accepted by family courts as an evidentiary record.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PAGE 5 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <img class="brand-mark" src="icon-256.png" alt="SA CoParents logo" />
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span class="brand-tm">&trade;</span></div>
+        <div class="brand-tag">Special Needs Assessment &middot; Sample &middot; SCP-SN-2026-A</div>
+      </div>
+    </div>
+    <div class="doc-label">Page 5</div>
+  </header>
+
+  <section class="block" style="margin-top:0;">
+    <div class="predictor" style="padding:3mm 5mm;">
+      <div class="predictor-label">SA CoParents&trade; distinguishing feature</div>
+      <h3>Child Impact Predictor</h3>
+      <p>Rather than identifying areas of disagreement alone, the Child Impact Predictor estimates how differences between households may affect your child in practical, day-to-day areas &mdash; especially important when your child has additional support needs. This shifts the focus away from blaming the other parent and toward understanding how specific co-parenting patterns influence your child&rsquo;s regulation, therapy progress, and school success.</p>
+      <div class="dims">
+        <span class="dim">Routines</span>
+        <span class="dim">School performance</span>
+        <span class="dim">Therapy participation</span>
+        <span class="dim">Emotional regulation</span>
+        <span class="dim">Transitions between homes</span>
+        <span class="dim">Sensory regulation</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="block tight">
+    <h2>Personalized Recommendations</h2>
+    <div class="rec-grid">
+      <div class="rec-item">Adopt the BIFF method for every co-parenting message this month.</div>
+      <div class="rec-item">Choose one shared calendar/messaging app (AppClose or OFW).</div>
+      <div class="rec-item">Build a written IEP/504 summary and share within 48 hours of every update.</div>
+      <div class="rec-item">Create a one-page &ldquo;how my child regulates&rdquo; sheet for both homes and providers.</div>
+      <div class="rec-item">Ensure sensory supports and comfort items always travel with your child.</div>
+      <div class="rec-item">Book a child-focused mediation session with a mediator experienced in special-needs cases.</div>
+      <div class="rec-item">Add both parents to therapy carryover updates from OT, speech, and behavioral providers.</div>
+      <div class="rec-item">Consult a special-needs family attorney if any issue remains unresolved after 60 days.</div>
+    </div>
+  </section>
+
+  <section class="block tight">
+    <h2>Child Needs Foundation Statement</h2>
+    <div class="foundation" style="padding:4mm 6mm;">
+      <div class="foundation-label">Foundation statement</div>
+      <h3>My commitment to my child</h3>
+      <p>&ldquo;My child benefits from predictable routines, coordinated medical and therapeutic care, consistent educational support, and calm communication with the other parent. I recognize that although the other parent and I may see things differently, my responsibility is to provide stability, reduce unnecessary conflict, and support my child&rsquo;s developmental, emotional, and educational needs. I commit to making decisions that prioritize my child&rsquo;s well-being and to seeking professional guidance whenever needed.&rdquo;</p>
+    </div>
   </section>
 
   <div class="notice">
     <div class="label">Important reminder</div>
-    <p>Every child develops differently. This report is educational and informational only. It is not a psychological evaluation, medical diagnosis, therapy, or legal advice. If you have concerns regarding your child&rsquo;s development, learning, behavior, or safety, consult the appropriate healthcare provider, educational professional, therapist, or attorney.</p>
+    <p>Every child develops differently. This report is educational and informational only. It is not a psychological evaluation, medical diagnosis, therapy, or legal advice. If you have concerns regarding your child&rsquo;s development, learning, behavior, or safety, consult the appropriate healthcare provider, educational professional, therapist, or attorney. If you are in crisis, call 911 or the National Domestic Violence Hotline at 1-800-799-7233.</p>
+    <p style="text-align:center;margin-top:1.5mm;font-family:'Fraunces',serif;font-style:italic;color:var(--teal-dark);font-size:9pt;">
+      Every positive step you take toward cooperation strengthens your child&rsquo;s foundation for success.
+    </p>
   </div>
-
-  <p style="text-align:center;margin-top:4mm;font-family:'Fraunces',serif;font-style:italic;color:var(--teal-dark);font-size:10.5pt;">
-    Every positive step you take toward cooperation strengthens your child&rsquo;s foundation for success.
-  </p>
 </main>
 
 </body>
