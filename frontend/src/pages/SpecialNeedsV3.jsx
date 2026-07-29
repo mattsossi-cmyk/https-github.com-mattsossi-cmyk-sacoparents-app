@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft, ArrowRight, Check, Loader2, Save, RotateCcw, Sparkles,
-  AlertTriangle, TrendingUp, MessageCircle, FileText, Download,
+  AlertTriangle, TrendingUp, MessageCircle, FileText, Download, Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
@@ -68,7 +68,7 @@ function Progress({ answered, total }) {
 }
 
 const SAMPLE_HTML_URL = "/special-needs-report.html";
-const SAMPLE_PDF_URL = "/api/insights/special-needs-report.pdf";
+const SAMPLE_PDF_URL = "/api/insights/special-needs-dynamic-sample.pdf";
 
 function SampleReportCallout({ variant = "default" }) {
   const isCompact = variant === "compact";
@@ -119,128 +119,200 @@ function SampleReportCallout({ variant = "default" }) {
   );
 }
 
-function ResultsView({ scores, schema, onRestart }) {
+function ResultsView({ report, scores, schema, onRestart, onDownloadPdf, onShare, downloading, sharing }) {
   const sectionById = useMemo(() => {
     const m = {};
     (schema?.sections || []).forEach((s) => { m[s.id] = s; });
     return m;
   }, [schema]);
 
-  const overall = scores?.overall_rating || "—";
-  const strongest = (scores?.strongest_section_ids || []).map((id) => sectionById[id]).filter(Boolean);
-  const priority = (scores?.priority_focus || []).map((id) => sectionById[id]).filter(Boolean);
+  const overall = report?.overall_rating || scores?.overall_rating || "—";
+  const overallSummary = report?.overall_summary || "";
+  const strengths = report?.strengths || [];
+  const growth = report?.growth_areas || [];
+  const toolkit = report?.communication_toolkit || [];
+  const nextSteps = report?.next_steps || [];
+  const sections = report?.sections || scores?.sections || [];
 
   return (
     <div className="space-y-6" data-testid="snv3-results">
+      {/* Overall banner + action buttons */}
       <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
-              Your Special Needs assessment results
+              Your Special Needs Co-Parenting Report · 10 principles
             </div>
             <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330]" data-testid="snv3-overall">
               {overall}
             </h2>
-            <p className="text-sm text-[#4B4567] mt-2 max-w-2xl">
-              A snapshot of how you&apos;re currently supporting your child across the 10
-              special-needs co-parenting principles. Not a diagnosis. Not legal advice.
-            </p>
+            {overallSummary && (
+              <p className="text-sm text-[#4B4567] mt-2 max-w-2xl leading-relaxed">
+                {overallSummary}
+              </p>
+            )}
           </div>
-          <button
-            onClick={onRestart}
-            className="inline-flex items-center gap-2 text-sm text-[#3D1A78] border border-[#E5E0EE] hover:border-[#3D1A78] rounded-full px-4 py-2"
-            data-testid="snv3-restart-btn"
-          >
-            <RotateCcw size={14} /> Retake assessment
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={onDownloadPdf}
+              disabled={downloading}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-[#3D1A78] hover:bg-[#2D0F63] disabled:opacity-50 rounded-full px-4 py-2"
+              data-testid="snv3-download-pdf-btn"
+            >
+              {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} PDF
+            </button>
+            <button
+              onClick={onShare}
+              disabled={sharing}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#3D1A78] border border-[#E5E0EE] hover:border-[#3D1A78] disabled:opacity-50 rounded-full px-4 py-2"
+              data-testid="snv3-share-btn"
+            >
+              {sharing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />} Share
+            </button>
+            <button
+              onClick={onRestart}
+              className="inline-flex items-center gap-1.5 text-sm text-[#3D1A78] border border-[#E5E0EE] hover:border-[#3D1A78] rounded-full px-4 py-2"
+              data-testid="snv3-restart-btn"
+            >
+              <RotateCcw size={14} /> Retake
+            </button>
+          </div>
         </div>
       </div>
 
-      {strongest.length > 0 && (
-        <div className="rounded-3xl border border-[#B8DDC6] bg-[#E4F4EC] p-6" data-testid="snv3-strongest">
-          <div className="flex items-center gap-2 text-[#1F5C3B] font-bold text-xs uppercase tracking-[0.18em] mb-2">
-            <TrendingUp size={14} /> Your strongest area
+      {/* Strengths */}
+      {strengths.length > 0 && (
+        <div className="rounded-3xl border border-[#B8DDC6] bg-[#E4F4EC] p-6" data-testid="snv3-strengths">
+          <div className="flex items-center gap-2 text-[#1F5C3B] font-bold text-xs uppercase tracking-[0.18em] mb-3">
+            <TrendingUp size={14} /> Strengths
           </div>
-          <div className="text-lg font-serif text-[#1A1330]">
-            {strongest.map((s) => `Principle ${s.number}: ${s.name}`).join(" · ")}
-          </div>
-        </div>
-      )}
-
-      {priority.length > 0 && (
-        <div className="rounded-3xl border border-[#F0B6A0] bg-[#FEF1EC] p-6" data-testid="snv3-priority">
-          <div className="flex items-center gap-2 text-[#C2481F] font-bold text-xs uppercase tracking-[0.18em] mb-2">
-            <AlertTriangle size={14} /> Priority focus
-          </div>
-          <ul className="space-y-1.5">
-            {priority.map((s) => (
-              <li key={s.id} className="text-[#1A1330]">
-                <span className="font-semibold">Principle {s.number}: {s.name}</span>
-                {s.goal && <span className="text-[#4B4567]"> — {s.goal}</span>}
+          <ul className="space-y-2.5">
+            {strengths.map((s) => (
+              <li key={s.section_id} className="text-[#1A1330]" data-testid={`snv3-strength-${s.section_id}`}>
+                <div className="font-semibold">{s.title}</div>
+                {s.detail && <div className="text-sm text-[#4B4567]">{s.detail}</div>}
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      {scores?.show_communication_toolkit && (
-        <div className="rounded-3xl border border-[#CFC1EA] bg-[#EFE9F9] p-6" data-testid="snv3-toolkit">
-          <div className="flex items-center gap-2 text-[#3D1A78] font-bold text-xs uppercase tracking-[0.18em] mb-2">
-            <MessageCircle size={14} /> Communication toolkit recommended
+      {/* Priority focus / Growth areas */}
+      {growth.length > 0 && (
+        <div className="rounded-3xl border border-[#F0B6A0] bg-[#FEF1EC] p-6" data-testid="snv3-priority">
+          <div className="flex items-center gap-2 text-[#C2481F] font-bold text-xs uppercase tracking-[0.18em] mb-3">
+            <AlertTriangle size={14} /> Priority focus areas
           </div>
-          <p className="text-sm text-[#1A1330] leading-relaxed">
-            Your responses on <strong>Principle 3 (Maintain Open, Child-Focused Communication)</strong> suggest
-            structured tools would help. Consider using shared calendars/apps, a written change-log
-            for medications and therapies, and scheduled child-focused check-ins with the other parent.
-          </p>
+          <ul className="space-y-3">
+            {growth.map((g) => (
+              <li key={g.section_id} data-testid={`snv3-growth-${g.section_id}`}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-[#1A1330]">{g.title}</span>
+                  {g.rating && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#F0B6A0] bg-white text-[#C2481F]">
+                      {g.rating}
+                    </span>
+                  )}
+                </div>
+                {g.why_it_matters && <div className="text-sm text-[#4B4567] mt-1"><span className="font-semibold text-[#1A1330]">Why:</span> {g.why_it_matters}</div>}
+                {g.first_step && <div className="text-sm text-[#4B4567] mt-0.5"><span className="font-semibold text-[#1A1330]">First step:</span> {g.first_step}</div>}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
+      {/* Communication toolkit */}
+      {toolkit.length > 0 && (
+        <div className="rounded-3xl border border-[#CFC1EA] bg-[#EFE9F9] p-6" data-testid="snv3-toolkit">
+          <div className="flex items-center gap-2 text-[#3D1A78] font-bold text-xs uppercase tracking-[0.18em] mb-3">
+            <MessageCircle size={14} /> Communication toolkit
+          </div>
+          <p className="text-sm text-[#4B4567] mb-3">
+            Highlighted because Principle 3 (Maintain Open, Child-Focused Communication) is currently Fair or Needs Improvement.
+          </p>
+          <ul className="space-y-2.5">
+            {toolkit.map((tip, i) => (
+              <li key={i} className="text-[#1A1330]" data-testid={`snv3-tip-${i}`}>
+                <div className="font-semibold">{tip.title}</div>
+                {tip.detail && <div className="text-sm text-[#4B4567]">{tip.detail}</div>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Principle-by-principle detail */}
       <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8">
-        <h3 className="font-serif text-xl text-[#1A1330] mb-4">Principle-by-principle breakdown</h3>
+        <h3 className="font-serif text-xl text-[#1A1330] mb-4">Principle-by-principle detail</h3>
         <div className="space-y-3">
-          {(scores?.sections || []).map((sec) => {
+          {sections.map((sec) => {
             const meta = sectionById[sec.id];
             const tone = RATING_TONE[sec.rating] || RATING_TONE.Fair;
             return (
-              <div
-                key={sec.id}
-                className="flex items-start justify-between gap-3 border border-[#E5E0EE] rounded-2xl p-4"
-                data-testid={`snv3-sec-${sec.id}`}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-0.5">
-                    Principle {sec.number}
+              <div key={sec.id} className="border border-[#E5E0EE] rounded-2xl p-4" data-testid={`snv3-sec-${sec.id}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-0.5">
+                      Principle {sec.number}
+                    </div>
+                    <div className="font-semibold text-[#1A1330]">{sec.name}</div>
+                    {(sec.goal || meta?.goal) && (
+                      <div className="text-xs text-[#4B4567] mt-0.5">{sec.goal || meta.goal}</div>
+                    )}
                   </div>
-                  <div className="font-semibold text-[#1A1330]">{sec.name}</div>
-                  {meta?.goal && (
-                    <div className="text-xs text-[#4B4567] mt-0.5">{meta.goal}</div>
-                  )}
+                  <div className="shrink-0 text-right">
+                    {sec.rating ? (
+                      <span
+                        className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full border ${tone.bg} ${tone.text} ${tone.border}`}
+                        data-testid={`snv3-rating-${sec.id}`}
+                      >
+                        {sec.rating}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#857E9C] italic">Not answered</span>
+                    )}
+                    {typeof sec.avg === "number" && (
+                      <div className="text-[11px] text-[#857E9C] mt-1">Avg {sec.avg} / 4</div>
+                    )}
+                  </div>
                 </div>
-                <div className="shrink-0 text-right">
-                  {sec.rating ? (
-                    <span
-                      className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full border ${tone.bg} ${tone.text} ${tone.border}`}
-                      data-testid={`snv3-rating-${sec.id}`}
-                    >
-                      {sec.rating}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-[#857E9C] italic">Not answered</span>
-                  )}
-                  {typeof sec.avg === "number" && (
-                    <div className="text-[11px] text-[#857E9C] mt-1">Avg {sec.avg} / 4</div>
-                  )}
-                </div>
+                {(sec.findings || []).length > 0 && (
+                  <div className="mt-3">
+                    <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">Findings</div>
+                    <ul className="text-sm text-[#1A1330] list-disc pl-4 space-y-0.5">
+                      {sec.findings.map((f, i) => <li key={i}>{f}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {(sec.recommendations || []).length > 0 && (
+                  <div className="mt-3">
+                    <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">Recommendations</div>
+                    <ul className="text-sm text-[#1A1330] list-disc pl-4 space-y-0.5">
+                      {sec.recommendations.map((f, i) => <li key={i}>{f}</li>)}
+                    </ul>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       </div>
 
+      {/* Next steps */}
+      {nextSteps.length > 0 && (
+        <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6" data-testid="snv3-next-steps">
+          <h3 className="font-serif text-xl text-[#1A1330] mb-3">Recommended next steps</h3>
+          <ol className="list-decimal pl-5 space-y-1.5 text-[#1A1330]">
+            {nextSteps.map((s, i) => (
+              <li key={i} data-testid={`snv3-step-${i}`}>{s}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+
       <p className="text-xs text-[#857E9C] italic text-center px-6">
-        This assessment is educational and does not replace professional advice or diagnostic evaluation.
-        SA CoParents supports families preparing for mediation and everyday co-parenting decisions.
+        {report?.disclaimer || "This assessment is educational and does not replace professional advice or diagnostic evaluation."}
       </p>
     </div>
   );
@@ -250,10 +322,14 @@ export default function SpecialNeedsV3() {
   const [schema, setSchema] = useState(null);
   const [answers, setAnswers] = useState({});
   const [scores, setScores] = useState(null);
+  const [report, setReport] = useState(null);
+  const [reportId, setReportId] = useState(null);
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [sectionIdx, setSectionIdx] = useState(0);
 
   const load = useCallback(async () => {
@@ -269,6 +345,14 @@ export default function SpecialNeedsV3() {
         if (me.data.completed && me.data.scores) {
           setScores(me.data.scores);
           setCompleted(true);
+          // Try to load an existing report; ignore 404.
+          try {
+            const { data: rep } = await api.get("/special-needs-v3/report");
+            if (rep && rep.report_id) {
+              setReport(rep.report);
+              setReportId(rep.report_id);
+            }
+          } catch { /* no report yet */ }
         }
       }
     } catch {
@@ -339,6 +423,14 @@ export default function SpecialNeedsV3() {
       const { data } = await api.post("/special-needs-v3/complete", {});
       setScores(data.scores);
       setCompleted(true);
+      // Auto-generate the full deterministic report so the rich results render.
+      try {
+        const { data: rep } = await api.post("/special-needs-v3/report/generate");
+        setReport(rep.report);
+        setReportId(rep.report_id);
+      } catch {
+        toast.error("Scored, but couldn't build the report right now.");
+      }
       toast.success("Assessment complete — here are your results.");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -348,12 +440,52 @@ export default function SpecialNeedsV3() {
     }
   };
 
+  const downloadPdf = async () => {
+    setDownloading(true);
+    try {
+      const res = await api.get("/special-needs-v3/report/pdf", { responseType: "blob" });
+      const url = window.URL.createObjectURL(res.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Special_Needs_Report.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Couldn't download the PDF. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const share = async () => {
+    if (!reportId) return;
+    setSharing(true);
+    try {
+      const { data } = await api.post(`/special-needs-v3/report/${reportId}/share-link`, {});
+      const url = `${window.location.origin}${data.viewer_path}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Share link copied to clipboard");
+      } catch {
+        toast.info(url);
+      }
+    } catch {
+      toast.error("Couldn't create a share link.");
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const restart = async () => {
     if (!window.confirm("Retake the assessment? Your current answers will be cleared.")) return;
     try {
       await api.delete("/special-needs-v3/me");
       setAnswers({});
       setScores(null);
+      setReport(null);
+      setReportId(null);
       setCompleted(false);
       setSectionIdx(0);
       toast.success("Ready when you are.");
@@ -384,7 +516,16 @@ export default function SpecialNeedsV3() {
             >
               <ArrowLeft size={14} /> Back to Dashboard
             </Link>
-            <ResultsView scores={scores} schema={schema} onRestart={restart} />
+            <ResultsView
+              report={report}
+              scores={scores}
+              schema={schema}
+              onRestart={restart}
+              onDownloadPdf={downloadPdf}
+              onShare={share}
+              downloading={downloading}
+              sharing={sharing}
+            />
             <div className="mt-6">
               <SampleReportCallout variant="compact" />
             </div>

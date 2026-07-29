@@ -1,6 +1,31 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Special Needs Report Reconciliation (Feb 2026)
+Special Needs v3 now has the exact same dynamic report pipeline as Co-Parenting Phase 2 — same JSON shape, same PDF style, same public shared-viewer page, same visibility & share controls.
+
+**Backend (new files)**
+- `sn_v3_report_content.py` — deterministic 10-principle report builder (JSON shape identical to `cp_report_content.py`).
+- `sn_v3_report_pdf.py` — FPDF US-Letter renderer with SA CoParents brand + `filter_sn_v3_report()` selective visibility.
+- `tests/test_sn_v3_report.py` — 5 unit tests. **22/22 total tests pass** across cp_report + sn_v3_report + coparenting + sn_v3.
+
+**Backend (extensions)**
+- `sn_v3_routes.py` — added 6 report endpoints under `/api/special-needs-v3` mirroring CP exactly: `POST /report/generate`, `GET /report`, `GET /report/pdf`, `PATCH /report/visibility`, `POST /report/{report_id}/share-link` (returns `viewer_path`), `GET /report/shared/{token}?format=pdf|json` (public).
+- `report_visibility.py` — added `sn_v3_report` catalog (same 6 hideable sections as CP).
+- `insights_routes.py` — added `/special-needs-dynamic-sample.pdf|png|thumb.png` endpoints. **The legacy `/special-needs-report.pdf` route now serves the same reconciled dynamic layout** (the old static hand-crafted collateral was replaced on disk).
+
+**Frontend**
+- `SharedSpecialNeedsReport.jsx` — new public viewer at route `/shared/special-needs/:token`, structurally identical to `SharedCoParentingReport.jsx`.
+- `SpecialNeedsV3.jsx` — `ResultsView` now renders the full dynamic report (Strengths / Priority focus areas with Why & First step / Communication toolkit / Principle-by-principle detail with findings & recommendations / Next steps / disclaimer), plus **Download PDF** and **Share** buttons that hit the new endpoints. Assessment auto-generates the report on completion; existing users also load their stored report on page mount. Sample-report callout now links to the new dynamic sample.
+- `App.js` — new public route `/shared/special-needs/:token`.
+
+**Static + dynamic collateral assets** (`/app/frontend/public/downloads/`)
+- `sacoparents-special-needs-dynamic-sample.pdf/png/jpg/thumb.png` — new dynamic sample (US Letter, 4 pages, 7.7 KB PDF, curated mixed-quality profile so all report blocks light up).
+- `sacoparents-special-needs-report.pdf/png/jpg` — replaced in place with the new dynamic layout.
+
+**End-to-end verification (parent1@test.com)** — reset → bulk-answer 60 questions → complete → generate → PDF 7.8 KB → share-link with `excluded=["next_steps"]` → shared JSON + shared PDF + shared React viewer all render correctly (banner, strengths, growth areas, toolkit, sections, CTA), with `next_steps` correctly hidden. No legal-ack modal blocking `/shared/*` visitors.
+
+<!-- Changelog latest entry -->
 ## 🆕 Co-Parenting Phase 2 — Dynamic Report Generation (Feb 2026)
 The 10-section Co-Parenting Assessment now produces a real, dynamically-built report from a user's actual answers (deterministic — no LLM).
 
