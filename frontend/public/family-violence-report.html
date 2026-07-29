@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SA CoParents — Family Violence & Communication Safety Assessment Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple: #3D1A78; --teal: #2DB5B5; --teal-dark: #0E7A7A;
+      --warn: #B85B00; --warn-bg: #FFF3E9; --warn-border: rgba(184,91,0,.35);
+      --ink: #1A1330; --muted: #4B4567; --soft: #F7F4FC;
+      --line: #E5E0EE; --success: #0E7A7A; --success-bg: #E8F7F5;
+    }
+    html, body { background:#fff; color:var(--ink); font-family:'Plus Jakarta Sans',sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    @page { size: letter portrait; margin: 0; }
+    .page { width: 216mm; margin: 0 auto; padding: 12mm 16mm; background: #fff; position: relative; }
+    .page:not(:last-child) { break-after: page; page-break-after: always; }
+
+    /* Header */
+    .head { display:flex; align-items:center; justify-content:space-between; padding-bottom:4mm; border-bottom:2px solid var(--line); margin-bottom:6mm; }
+    .brand { display:flex; align-items:center; gap:4mm; }
+    .brand-mark { width:10mm; height:10mm; border-radius:999px; background:linear-gradient(135deg,var(--purple),var(--teal)); color:#fff; font-family:'Fraunces',serif; font-weight:700; font-size:14pt; display:flex; align-items:center; justify-content:center; }
+    .brand-name { font-family:'Fraunces',serif; font-size:15pt; color:var(--ink); }
+    .brand-name b { color: var(--purple); }
+    .brand-tag { font-size:7.5pt; color:var(--muted); letter-spacing:0.14em; text-transform:uppercase; font-weight:700; }
+    .doc-label { text-align:right; font-size:7.5pt; color:var(--purple); letter-spacing:0.18em; text-transform:uppercase; font-weight:700; line-height:1.4; }
+
+    /* Title */
+    .title-block { text-align:center; margin-bottom:6mm; padding-bottom:4mm; border-bottom:1px solid var(--line); }
+    h1 { font-family:'Fraunces',serif; font-weight:700; color:var(--ink); font-size:22pt; line-height:1.1; }
+    h1 .accent { color: var(--purple); }
+    .subtitle { font-family:'Fraunces',serif; font-size:11pt; color:var(--teal-dark); margin-top:1.5mm; font-style:italic; }
+
+    /* Meta */
+    .meta { display:grid; grid-template-columns:repeat(4,1fr); gap:3mm; margin-top:4mm; }
+    .meta-cell { background:var(--soft); border-radius:2.5mm; padding:2.5mm 3mm; }
+    .meta-label { font-size:6.5pt; letter-spacing:0.16em; text-transform:uppercase; color:var(--purple); font-weight:700; }
+    .meta-value { font-family:'Fraunces',serif; font-size:11pt; color:var(--ink); margin-top:0.5mm; }
+
+    /* Sections */
+    section.block { margin-top:5mm; }
+    h2 { font-family:'Fraunces',serif; font-size:13pt; color:var(--purple); margin-bottom:2mm; padding-bottom:1.5mm; border-bottom:1px solid var(--line); }
+    p, li { font-size:10pt; color:var(--ink); line-height:1.5; }
+    p + p { margin-top: 2mm; }
+
+    /* Pathway callout */
+    .pathway { border:2px solid var(--warn); background:var(--warn-bg); border-radius:5mm; padding:6mm 7mm; margin-top:4mm; }
+    .pathway-tier { display:inline-block; background:var(--warn); color:#fff; font-size:9pt; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; padding:1.5mm 4mm; border-radius:999px; }
+    .pathway h3 { font-family:'Fraunces',serif; font-size:18pt; color:var(--warn); margin-top:3mm; line-height:1.15; }
+    .pathway p { font-size:10.5pt; color:#5C2E00; margin-top:2mm; line-height:1.5; }
+    .pathway ul { margin-top:2.5mm; list-style:none; }
+    .pathway ul li { font-size:9.5pt; color:#5C2E00; padding-left:5mm; margin-top:1.5mm; position:relative; }
+    .pathway ul li::before { content:""; position:absolute; left:0; top:2.4mm; width:2mm; height:2mm; border-radius:999px; background:var(--warn); }
+
+    /* Answer table */
+    .answer-table { margin-top:2.5mm; }
+    .answer-row { display:grid; grid-template-columns:1fr auto; gap:5mm; padding:2mm 3mm; border-bottom:1px solid var(--line); align-items:start; }
+    .answer-row:last-child { border-bottom:none; }
+    .answer-q { font-size:9.5pt; color:var(--ink); line-height:1.45; }
+    .answer-a { font-size:9.5pt; font-weight:700; padding:1mm 3mm; border-radius:999px; font-family:'Fraunces',serif; white-space:nowrap; }
+    .a-yes { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-border); }
+    .a-no { background:var(--success-bg); color:var(--success); border:1px solid rgba(14,122,122,.35); }
+    .a-neutral { background:var(--soft); color:var(--muted); border:1px solid var(--line); }
+
+    /* Crisis resources — LOCKED, always in report */
+    .crisis { background:#FFEDDE; border:2px solid var(--warn); border-radius:5mm; padding:5mm 6mm; margin-top:5mm; }
+    .crisis-label { font-size:8pt; letter-spacing:0.16em; text-transform:uppercase; color:var(--warn); font-weight:700; }
+    .crisis h3 { font-family:'Fraunces',serif; font-size:14pt; color:var(--warn); margin-top:1mm; }
+    .crisis .lines { margin-top:3mm; display:grid; grid-template-columns:1fr 1fr; gap:2mm 6mm; }
+    .crisis .lines div { font-size:10pt; color:#5C2E00; line-height:1.4; }
+    .crisis .lines b { color: var(--warn); font-family:'Fraunces',serif; font-weight:700; }
+
+    /* Next steps */
+    .steps { margin-top:3mm; }
+    .step { display:flex; gap:4mm; padding:3mm 0; border-bottom:1px solid var(--line); }
+    .step:last-child { border-bottom:none; }
+    .step-num { flex-shrink:0; width:7mm; height:7mm; border-radius:999px; background:var(--purple); color:#fff; font-family:'Fraunces',serif; font-weight:700; font-size:11pt; display:flex; align-items:center; justify-content:center; }
+    .step-content h4 { font-family:'Fraunces',serif; font-size:11pt; color:var(--ink); }
+    .step-content p { font-size:9.5pt; color:var(--muted); margin-top:1mm; }
+    .step-when { display:inline-block; background:var(--soft); color:var(--purple); font-size:8pt; font-weight:700; padding:0.5mm 2.5mm; border-radius:999px; margin-top:1.5mm; }
+
+    /* Footer */
+    .foot { margin-top:8mm; padding-top:4mm; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-end; gap:5mm; font-size:7.5pt; color:var(--muted); line-height:1.4; }
+    .foot b { color: var(--ink); }
+    .foot .disc { max-width:100mm; font-size:7pt; color:#857E9C; font-style:italic; }
+  </style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div>
+        <div class="brand-name">SA <b>CoParents</b></div>
+        <div class="brand-tag">Family Violence &amp; Communication Safety Assessment</div>
+      </div>
+    </div>
+    <div class="doc-label">Report ID<br />SCP-2026-001245</div>
+  </header>
+
+  <div class="title-block">
+    <h1><span class="accent">Family Violence &amp; Communication</span><br />Safety Assessment Report</h1>
+    <div class="subtitle">Confidential — for the parent, their attorney, and their mediator only</div>
+    <div class="meta">
+      <div class="meta-cell"><div class="meta-label">Parent</div><div class="meta-value">Jane Smith</div></div>
+      <div class="meta-cell"><div class="meta-label">Child</div><div class="meta-value">Emma Smith</div></div>
+      <div class="meta-cell"><div class="meta-label">Assessment date</div><div class="meta-value">July 29, 2026</div></div>
+      <div class="meta-cell"><div class="meta-label">Report ID</div><div class="meta-value">SCP-2026-001245</div></div>
+    </div>
+  </div>
+
+  <section class="block">
+    <h2>Recommended Communication Pathway</h2>
+    <div class="pathway">
+      <span class="pathway-tier">Tier 2 · Structured Written</span>
+      <h3>Structured written communication is the safest starting point.</h3>
+      <p>Based on Jane&rsquo;s responses, direct verbal or in-person communication with the other parent is not recommended at this time. A monitored written channel reduces reactive escalation and preserves a record of coordination decisions.</p>
+      <ul>
+        <li>Use OurFamilyWizard, TalkingParents, or a similar co-parenting app for schedule, medical, and school updates.</li>
+        <li>Avoid live phone or in-person exchanges for the next 90 days.</li>
+        <li>Route emotionally-charged topics through a mediator, therapist, or attorney &mdash; not directly.</li>
+        <li>Re-take this assessment every 90 days to track whether conditions are changing.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Section 1 — Immediate Safety Screen (past 12 months)</h2>
+    <div class="answer-table">
+      <div class="answer-row"><div class="answer-q">Has the other parent ever physically hurt you or threatened to hurt you?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">Has the other parent ever used a weapon or threatened you with one?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">Do you fear for your safety when interacting with the other parent?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">Has the other parent controlled who you can see, where you can go, or your finances?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">Has the other parent stalked, monitored, or repeatedly contacted you against your wishes?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">Has any child in your care been harmed or been present during a violent event?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">Is there a current protective or restraining order in place?</div><div class="answer-a a-no">No</div></div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PAGE 2 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div>
+        <div class="brand-name">SA <b>CoParents</b></div>
+        <div class="brand-tag">Safety Assessment · Jane Smith · SCP-2026-001245</div>
+      </div>
+    </div>
+    <div class="doc-label">Page 2</div>
+  </header>
+
+  <section class="block">
+    <h2>Section 2 — Communication Readiness</h2>
+    <div class="answer-table">
+      <div class="answer-row"><div class="answer-q">Can you set clear limits with the other parent without conflict escalating?</div><div class="answer-a a-no">Rarely</div></div>
+      <div class="answer-row"><div class="answer-q">Does the other parent respect written boundaries you have set?</div><div class="answer-a a-no">Rarely</div></div>
+      <div class="answer-row"><div class="answer-q">Are conversations about the child usually kept focused on the child?</div><div class="answer-a a-neutral">Sometimes</div></div>
+      <div class="answer-row"><div class="answer-q">Do you feel emotionally safe raising a concern about the child with the other parent?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">Have you and the other parent ever resolved a disagreement about the child successfully?</div><div class="answer-a a-neutral">Occasionally</div></div>
+      <div class="answer-row"><div class="answer-q">Do you have a support system (therapist, attorney, friend) you can call after difficult exchanges?</div><div class="answer-a a-yes">Yes</div></div>
+      <div class="answer-row"><div class="answer-q">Is a neutral third party currently helping coordinate parenting decisions?</div><div class="answer-a a-no">No</div></div>
+      <div class="answer-row"><div class="answer-q">Are you willing to shift to a monitored written channel for the next 90 days?</div><div class="answer-a a-yes">Yes</div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Interpretation</h2>
+    <p>Jane&rsquo;s Section&nbsp;1 answers surface patterns consistent with coercive control &mdash; fear, monitoring, and prior controlling behaviour &mdash; without recent physical violence or an active protective order. Her Section&nbsp;2 answers indicate that boundary-setting and emotional safety with the other parent are currently very difficult, but a strong personal support system exists and she is open to structured written communication.</p>
+    <p>This combination places her in the <b>Tier 2 — Structured Written</b> pathway rather than a No-Direct-Contact recommendation. If Section&nbsp;1 answers change (e.g. any &ldquo;Yes&rdquo; on physical harm, weapons, or child harm), the pathway would automatically escalate to Tier&nbsp;4 &mdash; No direct contact &mdash; and Jane should immediately consult a family-violence-trained attorney.</p>
+  </section>
+
+  <div class="crisis">
+    <div class="crisis-label">Locked · always included when this report is shared</div>
+    <h3>Texas &amp; national crisis resources</h3>
+    <div class="lines">
+      <div><b>911</b> &nbsp;·&nbsp; Immediate danger</div>
+      <div><b>988</b> &nbsp;·&nbsp; Suicide &amp; Crisis Lifeline (call or text)</div>
+      <div><b>1-800-799-SAFE (7233)</b><br />National Domestic Violence Hotline</div>
+      <div><b>210-733-8810</b><br />Family Violence Prevention Services (Bexar County)</div>
+      <div><b>1-800-374-HOPE (4673)</b><br />Texas Advocacy Project — family-law legal help</div>
+      <div><b>Text START to 88788</b> &nbsp;·&nbsp; National DV text line</div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ PAGE 3 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div>
+        <div class="brand-name">SA <b>CoParents</b></div>
+        <div class="brand-tag">Safety Assessment · Jane Smith · SCP-2026-001245</div>
+      </div>
+    </div>
+    <div class="doc-label">Page 3</div>
+  </header>
+
+  <section class="block">
+    <h2>Recommended Next Steps</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Move all coordination onto a written co-parenting app.</h4>
+          <p>Set up OurFamilyWizard or TalkingParents this week. Route every schedule, medical, and school topic through the app. Delete direct SMS threads that turn hostile.</p>
+          <span class="step-when">This week</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Consult a family-law attorney trained in coercive control.</h4>
+          <p>Because Section&nbsp;1 surfaced control/monitoring patterns, an attorney can help you document, plan safe exchanges, and evaluate whether a protective order is warranted.</p>
+          <span class="step-when">Within 14 days</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Build a safety plan with a DV advocate.</h4>
+          <p>Call Family Violence Prevention Services (210-733-8810) or the National DV Hotline. A trained advocate will help you build a personalised safety plan and, if needed, plan a safe exit.</p>
+          <span class="step-when">Within 7 days</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Consider a Parenting Coordinator for high-stakes decisions.</h4>
+          <p>A neutral PC can hold decisions about school, medical care, and vacations when direct discussion is unsafe. Ask your attorney or the Texas Association of Mediators for a referral.</p>
+          <span class="step-when">Within 30 days</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h4>Re-take this assessment every 90 days.</h4>
+          <p>Communication safety changes with the situation. Regular re-assessment tracks whether the pathway should escalate or ease over time.</p>
+          <span class="step-when">Ongoing</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>How this report was generated</h2>
+    <p>This assessment adapts questions from the <em>Danger Assessment</em> (Campbell, 1986) and the <em>HITS</em> screening tool (Sherin et&nbsp;al., 1998). Scoring is deterministic and rule-based; no AI classification is used to assign a pathway. Any &ldquo;Yes&rdquo; response on the Section&nbsp;1 immediate-safety questions triggers a stricter pathway regardless of Section&nbsp;2 answers.</p>
+    <p>This is a <b>screening tool, not a risk assessment</b>. It should not be used in court proceedings without accompanying professional evaluation. See sacoparentsapp.online/methodology for the full scoring rules.</p>
+  </section>
+
+  <footer class="foot">
+    <div>
+      <b>SA CoParents</b><br />
+      16607 Blanco #703, San Antonio, TX 78232<br />
+      mattsossi@bsossi.com · 210-224-1667<br />
+      sacoparentsapp.online
+    </div>
+    <div class="disc">
+      Confidential. Prepared for Jane Smith. This report is an
+      educational preparation tool and does not provide legal advice,
+      therapy, or a clinical diagnosis. If you are in immediate danger,
+      call 911.
+    </div>
+  </footer>
+</main>
+
+</body>
+</html>

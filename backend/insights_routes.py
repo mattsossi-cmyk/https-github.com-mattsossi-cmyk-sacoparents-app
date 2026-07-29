@@ -275,6 +275,21 @@ async def download_foundation_statement():
     )
 
 
+@router.get("/family-violence-report.pdf")
+async def download_family_violence_report():
+    """Public download of the 3-page sample Family Violence & Communication
+    Safety Assessment Report (Letter, 8.5x11 in). Fictional example data so
+    parents, attorneys, and mediators can see the format and depth of the
+    real report before completing the assessment."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-family-violence-report.pdf"
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="SA-CoParents-Family-Violence-Report-Sample.pdf",
+    )
+
+
 @router.post("/admin/weekly/regenerate")
 async def regenerate_weekly_insights(
     request: Request,

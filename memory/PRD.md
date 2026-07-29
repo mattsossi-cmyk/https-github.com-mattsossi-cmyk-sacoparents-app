@@ -1,6 +1,21 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Sample Family Violence & Communication Safety Assessment Report (Feb 2026)
+Branded, printable 3-page sample of the safety-assessment output — parity with the Foundation Statement and Access Flyer collateral. Purely fictional example data so parents, attorneys, and mediators can review the format and depth before completing the real assessment.
+
+- **HTML source** `/app/frontend/public/family-violence-report.html` — 3-page US Letter layout with cover meta grid, Tier-2 pathway callout, Section 1 (Immediate Safety Screen), Section 2 (Communication Readiness), interpretation, locked Texas/national crisis resources block, 5 recommended next steps with concrete timelines, methodology (Danger Assessment + HITS references), professional disclaimer.
+- **Assets generated** (Chromium headless + pdftoppm + PIL stitching):
+  - `/app/frontend/public/downloads/sacoparents-family-violence-report.pdf` (158 KB, 3 pages, 612×792 pt Letter)
+  - `/app/frontend/public/downloads/sacoparents-family-violence-report.png` (795 KB stitched preview)
+  - `/app/frontend/public/downloads/sacoparents-family-violence-report.jpg` (782 KB stitched preview)
+- **Public download endpoint** `GET /api/insights/family-violence-report.pdf` — verified `200` + `application/pdf` + 3 Letter pages
+- **Safety-first framing** — sample answer set intentionally surfaces coercive-control patterns (fear, control, monitoring) without recent physical violence, landing on the Tier-2 "Structured Written" pathway and referencing automatic Tier-4 escalation rules.
+- **Disclaimers** — clearly labelled screening tool (not a risk assessment / not legal advice / not therapy / not a diagnosis). 911 + 988 + National DV Hotline visible in the report body.
+- Testing: HTML rendered via preview URL screenshot (page 1 verified); PDF endpoint verified via `pdfinfo` on server response.
+
+
+<!-- Changelog latest entry -->
 ## 🆕 "Your chosen path" pill on dashboard (Feb 2026)
 Closes the loop between the landing situation picker and the returning user's dashboard.
 - New `PickerChoicePill` component at the top of `/dashboard` reading `sac_recommended_focus_v1` (set by `enterWithFocus` on the landing picker)
