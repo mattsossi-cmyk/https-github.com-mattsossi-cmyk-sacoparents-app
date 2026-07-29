@@ -563,6 +563,8 @@ function ThreeReportsStrip() {
           title="Understand your co-parenting situation"
           body="A private snapshot of how you and the other parent are actually communicating today — with concrete next steps."
           accent="#3D1A78"
+          sampleHref="/downloads/sacoparents-family-violence-report.pdf"
+          sampleLabel="View sample safety report (PDF)"
         />
         <ThreeReportsCover
           testid="three-reports-foundation"
@@ -570,6 +572,8 @@ function ThreeReportsStrip() {
           title="Create your Foundation Statement"
           body="A one-page statement of your child-centered goals — the anchor you can return to whenever things get emotionally hot."
           accent="#2DB5B5"
+          sampleHref="/downloads/sacoparents-foundation-statement.pdf"
+          sampleLabel="View sample Foundation Statement (PDF)"
         />
         <ThreeReportsCover
           testid="three-reports-child-needs"
@@ -577,17 +581,18 @@ function ThreeReportsStrip() {
           title="Prepare a Child Needs Statement for mediation"
           body="A structured, child-focused agenda you can bring straight into your mediation session or attorney meeting."
           accent="#B85B00"
+          sampleLabel="Printable sample coming soon"
         />
       </div>
     </section>
   );
 }
 
-function ThreeReportsCover({ testid, number, title, body, accent }) {
+function ThreeReportsCover({ testid, number, title, body, accent, sampleHref, sampleLabel }) {
   return (
     <article
       data-testid={testid}
-      className="rounded-2xl border border-[#E5E0EE] bg-gradient-to-br from-white to-[#F7F4FC] p-6 sm:p-7 relative overflow-hidden hover:shadow-md transition-shadow"
+      className="rounded-2xl border border-[#E5E0EE] bg-gradient-to-br from-white to-[#F7F4FC] p-6 sm:p-7 relative overflow-hidden hover:shadow-md transition-shadow flex flex-col"
     >
       <div
         className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center font-serif text-lg font-semibold text-white"
@@ -602,8 +607,30 @@ function ThreeReportsCover({ testid, number, title, body, accent }) {
         {title}
       </h3>
       <p className="text-sm text-[#4B4567] mt-3 leading-relaxed">{body}</p>
-      <div className="mt-4 inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.14em] font-bold" style={{ color: accent }}>
+      <div className="mt-4 text-[11px] uppercase tracking-[0.14em] font-bold" style={{ color: accent }}>
         Downloadable PDF · shareable
+      </div>
+      <div className="mt-auto pt-4">
+        {sampleHref ? (
+          <a
+            data-testid={`${testid}-sample-link`}
+            href={sampleHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold rounded-full px-3.5 py-1.5 border transition-colors"
+            style={{ color: accent, borderColor: accent, backgroundColor: "rgba(255,255,255,0.6)" }}
+          >
+            {sampleLabel}
+            <span aria-hidden>→</span>
+          </a>
+        ) : (
+          <span
+            data-testid={`${testid}-sample-placeholder`}
+            className="inline-flex items-center gap-1.5 text-xs italic text-[#857E9C]"
+          >
+            {sampleLabel}
+          </span>
+        )}
       </div>
     </article>
   );
