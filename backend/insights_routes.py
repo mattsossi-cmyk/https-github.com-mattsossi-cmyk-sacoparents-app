@@ -290,6 +290,21 @@ async def download_family_violence_report():
     )
 
 
+@router.get("/coparenting-report.pdf")
+async def download_coparenting_report():
+    """Public download of the 4-page sample Co-Parenting Assessment Report
+    (Letter, 8.5x11 in). Single-parent voice, 8 assessment sections, and the
+    SA CoParents Communication Toolkit (BIFF method + AppClose + OurFamilyWizard)
+    that surfaces when communication is flagged as a priority focus area."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-coparenting-report.pdf"
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="SA-CoParents-Co-Parenting-Report-Sample.pdf",
+    )
+
+
 @router.get("/special-needs-report.pdf")
 async def download_special_needs_report():
     """Public download of the 3-page sample Special Needs Co-Parenting

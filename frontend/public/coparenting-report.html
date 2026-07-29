@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SA CoParents — Co-Parenting Assessment Report</title>
+  <meta name="description" content="Sample Co-Parenting Assessment Report — an individual parent's child-focused reflection on goals, concerns, issues, and next steps, with the SA CoParents Communication Toolkit (BIFF method + AppClose + OurFamilyWizard)." />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple: #3D1A78; --teal: #2DB5B5; --teal-dark: #0E7A7A;
+      --warn: #B85B00; --warn-bg: #FFF3E9;
+      --amber: #A56B00; --amber-bg: #FFF6E5;
+      --ink: #1A1330; --muted: #4B4567; --soft: #F7F4FC;
+      --line: #E5E0EE; --success: #0E7A7A; --success-bg: #E8F7F5;
+    }
+    html, body { background:#fff; color:var(--ink); font-family:'Plus Jakarta Sans',sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    @page { size: letter portrait; margin: 0; }
+    .page { width: 216mm; margin: 0 auto; padding: 12mm 16mm; background: #fff; position: relative; }
+    .page:not(:last-child) { break-after: page; page-break-after: always; }
+
+    .head { display:flex; align-items:center; justify-content:space-between; padding-bottom:3.5mm; border-bottom:2px solid var(--line); margin-bottom:5mm; }
+    .brand { display:flex; align-items:center; gap:4mm; }
+    .brand-mark { width:13mm; height:13mm; border-radius:2.5mm; object-fit:cover; display:block; box-shadow:0 0 0 1px var(--line); }
+    .brand-name { font-family:'Fraunces',serif; font-size:15pt; color:var(--ink); }
+    .brand-name b { color: var(--purple); }
+    .brand-tm { font-size:9pt; color:var(--teal-dark); vertical-align:super; }
+    .brand-tag { font-size:7.5pt; color:var(--muted); letter-spacing:0.14em; text-transform:uppercase; font-weight:700; }
+    .doc-label { text-align:right; font-size:7.5pt; color:var(--purple); letter-spacing:0.18em; text-transform:uppercase; font-weight:700; line-height:1.4; }
+
+    .title-block { text-align:center; margin-bottom:3.5mm; padding-bottom:3mm; border-bottom:1px solid var(--line); }
+    h1 { font-family:'Fraunces',serif; font-weight:700; color:var(--ink); font-size:19pt; line-height:1.1; }
+    h1 .accent { color: var(--purple); }
+    h1 .tm { font-size:10pt; vertical-align:super; color:var(--teal-dark); }
+    .subtitle { font-family:'Fraunces',serif; font-size:10pt; color:var(--teal-dark); margin-top:1.5mm; font-style:italic; }
+
+    section.block { margin-top:3.5mm; }
+    section.block.tight { margin-top:2.5mm; }
+    h2 { font-family:'Fraunces',serif; font-size:12.5pt; color:var(--purple); margin-bottom:1.5mm; padding-bottom:1.2mm; border-bottom:1px solid var(--line); }
+    p { font-size:9.5pt; color:var(--ink); line-height:1.45; }
+    p + p { margin-top: 1.5mm; }
+    .lede { font-size:9.5pt; color:var(--muted); line-height:1.45; }
+
+    .opening { background:var(--soft); border-left:3mm solid var(--teal-dark); border-radius:0 3mm 3mm 0; padding:3mm 5mm; margin-top:1mm; }
+    .opening p { font-size:9.5pt; line-height:1.45; color:var(--ink); }
+    .opening p + p { margin-top:1.5mm; }
+
+    .rating { background:linear-gradient(135deg, #F5EEFF 0%, #E5F7F4 100%); border:1.5px solid var(--line); border-radius:4mm; padding:3.5mm 5mm; margin-top:2mm; }
+    .rating-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; }
+    .rating-value { font-family:'Fraunces',serif; font-size:20pt; color:var(--teal-dark); margin-top:0.5mm; line-height:1.1; }
+    .rating-note { font-size:9.5pt; color:var(--ink); margin-top:2mm; line-height:1.5; }
+    .rating-note b { color: var(--purple); }
+    .rating-pill { font-family:'Fraunces',serif; font-weight:700; font-size:9pt; padding:1mm 4mm; border-radius:999px; border:1px solid transparent; white-space:nowrap; letter-spacing:0.02em; }
+    .r-excellent { background:var(--success-bg); color:var(--success); border-color:rgba(14,122,122,.35); }
+    .r-good { background:#EEE4FF; color:var(--purple); border-color:rgba(61,26,120,.35); }
+    .r-fair { background:var(--amber-bg); color:var(--amber); border-color:rgba(165,107,0,.35); }
+    .r-needs { background:var(--warn-bg); color:var(--warn); border-color:rgba(184,91,0,.4); }
+
+    .coverage { display:grid; grid-template-columns:repeat(2,1fr); gap:2mm; margin-top:1.5mm; }
+    .coverage-cell { background:#fff; border:1px solid var(--line); border-radius:2.5mm; padding:2.5mm 3.5mm; }
+    .coverage-head { display:flex; justify-content:space-between; align-items:flex-start; gap:2mm; }
+    .coverage-title { flex:1; }
+    .coverage-num { font-size:6.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; }
+    .coverage-name { font-family:'Fraunces',serif; font-size:9.5pt; color:var(--ink); margin-top:0.3mm; line-height:1.2; }
+    .coverage-pill { font-family:'Fraunces',serif; font-weight:700; font-size:7.5pt; padding:0.5mm 2.5mm; border-radius:999px; border:1px solid transparent; white-space:nowrap; letter-spacing:0.02em; height:fit-content; }
+    .coverage-find { font-size:8.5pt; color:var(--muted); line-height:1.35; margin-top:1.5mm; }
+
+    ul.checked { list-style:none; margin-top:1.5mm; }
+    ul.checked li { position:relative; padding-left:6mm; font-size:9.5pt; line-height:1.4; margin-top:1mm; color:var(--ink); }
+    ul.checked li::before { content:"\2713"; position:absolute; left:0; top:0; color:var(--teal-dark); font-weight:700; font-size:10.5pt; }
+
+    ul.bulleted { list-style:none; margin-top:1mm; }
+    ul.bulleted li { position:relative; padding-left:5mm; font-size:9.5pt; line-height:1.4; margin-top:0.8mm; }
+    ul.bulleted li::before { content:""; position:absolute; left:0; top:1.8mm; width:1.8mm; height:1.8mm; border-radius:999px; background:var(--teal-dark); }
+    ul.bulleted.cols-2 { columns: 2; column-gap: 8mm; }
+    ul.bulleted.cols-2 li { break-inside: avoid; }
+
+    .rec-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:2mm; margin-top:1.5mm; }
+    .rec-item { background:#fff; border:1px solid var(--line); border-radius:2mm; padding:2mm 3.5mm; font-size:9.5pt; color:var(--ink); position:relative; padding-left:8mm; }
+    .rec-item::before { content:"\2192"; position:absolute; left:3mm; top:1.7mm; color:var(--purple); font-weight:700; font-size:11pt; }
+
+    /* Communication toolkit */
+    .toolkit { border:1.5px solid rgba(184,91,0,.35); background:#FFFBF5; border-radius:4mm; padding:4mm 5mm; margin-top:2.5mm; }
+    .toolkit-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--warn); font-weight:700; }
+    .toolkit h3 { font-family:'Fraunces',serif; font-size:13pt; color:var(--purple); margin-top:0.5mm; }
+    .toolkit .why { font-size:9pt; color:var(--muted); margin-top:1mm; line-height:1.4; }
+    .toolkit .biff { display:grid; grid-template-columns:repeat(4,1fr); gap:2mm; margin-top:2.5mm; }
+    .biff-letter { background:#fff; border:1px solid var(--line); border-radius:2.5mm; padding:2mm 3mm; }
+    .biff-l { font-family:'Fraunces',serif; font-size:16pt; color:var(--purple); font-weight:700; line-height:1; }
+    .biff-w { font-family:'Fraunces',serif; font-size:9.5pt; color:var(--ink); margin-top:0.5mm; }
+    .biff-d { font-size:8pt; color:var(--muted); margin-top:0.5mm; line-height:1.35; }
+    .apps { display:grid; grid-template-columns:1fr 1fr; gap:2mm; margin-top:2.5mm; }
+    .app-card { background:#fff; border:1px solid var(--line); border-radius:2.5mm; padding:2.5mm 3.5mm; }
+    .app-name { font-family:'Fraunces',serif; font-size:11pt; color:var(--purple); }
+    .app-tag { font-size:7.5pt; letter-spacing:0.14em; text-transform:uppercase; color:var(--teal-dark); font-weight:700; margin-top:0.3mm; }
+    .app-desc { font-size:8.5pt; color:var(--muted); margin-top:1.5mm; line-height:1.4; }
+
+    /* Foundation Statement */
+    .foundation { background:var(--soft); border:1.5px solid var(--line); border-radius:4mm; padding:5mm 6mm; margin-top:2.5mm; position:relative; }
+    .foundation::before { content:"\201C"; position:absolute; top:-1mm; left:3mm; font-family:'Fraunces',serif; font-size:40pt; color:var(--purple); line-height:1; opacity:0.35; }
+    .foundation-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; margin-left:10mm; }
+    .foundation h3 { font-family:'Fraunces',serif; font-size:12.5pt; color:var(--purple); margin-top:0.5mm; margin-left:10mm; }
+    .foundation p { font-family:'Fraunces',serif; font-style:italic; font-size:10pt; color:var(--ink); line-height:1.55; margin-top:2.5mm; }
+
+    .notice { background:var(--warn-bg); border:1.5px solid rgba(184,91,0,.35); border-radius:3mm; padding:2.5mm 4mm; margin-top:2.5mm; }
+    .notice .label { font-size:7pt; letter-spacing:0.16em; text-transform:uppercase; color:var(--warn); font-weight:700; }
+    .notice p { font-size:9pt; color:#5C2E00; margin-top:0.5mm; line-height:1.4; }
+  </style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <img class="brand-mark" src="icon-256.png" alt="SA CoParents logo" />
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span class="brand-tm">&trade;</span></div>
+        <div class="brand-tag">Co-Parenting Assessment</div>
+      </div>
+    </div>
+    <div class="doc-label">Sample Report<br />SCP-CP-2026-A</div>
+  </header>
+
+  <div class="title-block">
+    <h1><span class="accent">Co-Parenting</span> Assessment Report<span class="tm">&trade;</span></h1>
+    <div class="subtitle">A child-focused reflection built from your responses across an 8-section assessment</div>
+  </div>
+
+  <section class="block">
+    <div class="opening">
+      <p>Thank you for completing the SA CoParents&trade; Co-Parenting Assessment.</p>
+      <p>This report reflects <b>your</b> responses about your goals, concerns, and open issues as they relate to your child. It highlights your strengths, identifies where you can grow, and gives you practical strategies to try &mdash; whether or not the other parent participates yet. It is not legal, medical, or therapeutic advice. It is a preparation tool to help you keep your child&rsquo;s needs at the center of every conversation.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="rating">
+      <div class="rating-label">Overall co-parenting readiness</div>
+      <div class="rating-value">Building Progress</div>
+      <div class="rating-note">Your responses show a clear child-focused mindset and consistent day-to-day parenting. Your strongest areas are <b>your goals for your child</b> and <b>consistency in your home</b>. Your priority focus area is <b>communication with the other parent</b> &mdash; where the SA CoParents&trade; Communication Toolkit on page 3 is specifically recommended for you.</div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PAGE 2 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <img class="brand-mark" src="icon-256.png" alt="SA CoParents logo" />
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span class="brand-tm">&trade;</span></div>
+        <div class="brand-tag">Co-Parenting Assessment &middot; Sample &middot; SCP-CP-2026-A</div>
+      </div>
+    </div>
+    <div class="doc-label">Page 2</div>
+  </header>
+
+  <section class="block" style="margin-top:0;">
+    <h2>Assessment Findings by Section</h2>
+    <p class="lede">Each of the eight sections is summarized below with its own rating and a brief finding based on your responses.</p>
+    <div class="coverage">
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 1</div>
+            <div class="coverage-name">Understanding Your Child</div>
+          </div>
+          <span class="coverage-pill r-excellent">Excellent</span>
+        </div>
+        <div class="coverage-find">You know your child&rsquo;s day-to-day well &mdash; routine, friendships, school activities, and emotional signals. You can describe her personality with specifics rather than generalities.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 2</div>
+            <div class="coverage-name">Your Goals for Your Child</div>
+          </div>
+          <span class="coverage-pill r-excellent">Excellent</span>
+        </div>
+        <div class="coverage-find">Your top three goals &mdash; emotional safety, school success, and stable relationships with both parents &mdash; are clear, child-centered, and realistic.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 3</div>
+            <div class="coverage-name">Your Concerns About Your Child</div>
+          </div>
+          <span class="coverage-pill r-fair">Fair</span>
+        </div>
+        <div class="coverage-find">You reported concerns about your child&rsquo;s sleep, anxiety around exchanges, and school focus. These are common but worth documenting so patterns become visible over time.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 4</div>
+            <div class="coverage-name">Issues You Want to Resolve</div>
+          </div>
+          <span class="coverage-pill r-needs">Needs Improvement</span>
+        </div>
+        <div class="coverage-find">Several issues remain open: exchange logistics, holiday scheduling, and school-related decisions. These would benefit from a structured mediation session or written proposal.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 5</div>
+            <div class="coverage-name">Communication with the Other Parent</div>
+          </div>
+          <span class="coverage-pill r-needs">Needs Improvement</span>
+        </div>
+        <div class="coverage-find">Conversations often escalate or go unanswered. There is no shared calendar or dedicated co-parenting channel. This is your <b>priority</b> focus area &mdash; see the Communication Toolkit on page 3.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 6</div>
+            <div class="coverage-name">Consistency Between Homes</div>
+          </div>
+          <span class="coverage-pill r-good">Good</span>
+        </div>
+        <div class="coverage-find">In your home, routines around meals, bedtime, and screen time are predictable. You&rsquo;re less certain how closely the other home mirrors these expectations, especially around transitions.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 7</div>
+            <div class="coverage-name">Boundaries &amp; Decision-Making</div>
+          </div>
+          <span class="coverage-pill r-fair">Fair</span>
+        </div>
+        <div class="coverage-find">You have clear personal boundaries but decision-making processes with the other parent are informal. Larger decisions (school, activities, medical) would benefit from a written framework.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 8</div>
+            <div class="coverage-name">Long-Term Vision &amp; Planning</div>
+          </div>
+          <span class="coverage-pill r-good">Good</span>
+        </div>
+        <div class="coverage-find">You have a positive long-term vision for your child, including school transitions and life-skill development. Financial and legal planning steps are next on the horizon.</div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<!-- ============ PAGE 3 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <img class="brand-mark" src="icon-256.png" alt="SA CoParents logo" />
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span class="brand-tm">&trade;</span></div>
+        <div class="brand-tag">Co-Parenting Assessment &middot; Sample &middot; SCP-CP-2026-A</div>
+      </div>
+    </div>
+    <div class="doc-label">Page 3</div>
+  </header>
+
+  <section class="block" style="margin-top:0;">
+    <h2>Your Strengths</h2>
+    <ul class="checked">
+      <li>You know your child in specific, observable detail.</li>
+      <li>Your goals for your child are child-centered and consistent over time.</li>
+      <li>Your home offers predictable routines your child can count on.</li>
+      <li>You are actively seeking a lower-conflict path for your child.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Areas to Improve</h2>
+    <ul class="bulleted">
+      <li>Move day-to-day co-parenting messages into a written, dedicated channel.</li>
+      <li>Document your open issues so they can be resolved one at a time in mediation.</li>
+      <li>Propose a written decision-making framework for medical, school, and activity choices.</li>
+      <li>Build a consistent hand-off routine your child can rely on before exchanges.</li>
+      <li>Track your child&rsquo;s sleep, mood, and school focus so patterns are visible.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <div class="toolkit">
+      <div class="toolkit-label">SA CoParents&trade; communication toolkit</div>
+      <h3>Because communication is your priority focus area</h3>
+      <div class="why">Two evidence-based tools are recommended when co-parent communication is flagged as <b>Needs Improvement</b>. Both are widely used in family courts and by mediators.</div>
+
+      <div class="biff">
+        <div class="biff-letter">
+          <div class="biff-l">B</div>
+          <div class="biff-w">Brief</div>
+          <div class="biff-d">Keep messages to 3&ndash;4 sentences. Long replies invite escalation.</div>
+        </div>
+        <div class="biff-letter">
+          <div class="biff-l">I</div>
+          <div class="biff-w">Informative</div>
+          <div class="biff-d">Facts only &mdash; dates, times, decisions. No emotional interpretation.</div>
+        </div>
+        <div class="biff-letter">
+          <div class="biff-l">F</div>
+          <div class="biff-w">Friendly</div>
+          <div class="biff-d">Polite tone, no sarcasm. Assume it will be read in court.</div>
+        </div>
+        <div class="biff-letter">
+          <div class="biff-l">F</div>
+          <div class="biff-w">Firm</div>
+          <div class="biff-d">Clear about what you need. Close the loop; don&rsquo;t invite further debate.</div>
+        </div>
+      </div>
+
+      <div class="apps">
+        <div class="app-card">
+          <div class="app-name">AppClose</div>
+          <div class="app-tag">Free &middot; iOS &amp; Android</div>
+          <div class="app-desc">Shared calendar, secure messaging, expense tracking, and swap requests. Message history is court-admissible. A strong first step when cost is a barrier.</div>
+        </div>
+        <div class="app-card">
+          <div class="app-name">OurFamilyWizard (OFW)</div>
+          <div class="app-tag">Subscription &middot; Court-mandated in many states</div>
+          <div class="app-desc">Calendar, messaging with <b>ToneMeter&trade;</b> that flags emotional language before you send, expense ledger, and journal. Widely accepted by family courts as an evidentiary record.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PAGE 4 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <img class="brand-mark" src="icon-256.png" alt="SA CoParents logo" />
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span class="brand-tm">&trade;</span></div>
+        <div class="brand-tag">Co-Parenting Assessment &middot; Sample &middot; SCP-CP-2026-A</div>
+      </div>
+    </div>
+    <div class="doc-label">Page 4</div>
+  </header>
+
+  <section class="block" style="margin-top:0;">
+    <h2>Personalized Recommendations</h2>
+    <p class="lede">You can pursue any of these on your own; several become stronger if the other parent joins.</p>
+    <div class="rec-grid">
+      <div class="rec-item">Adopt the BIFF method for every co-parenting message this month.</div>
+      <div class="rec-item">Choose one shared calendar/messaging app (AppClose or OFW).</div>
+      <div class="rec-item">Draft your top three open issues as a written mediation agenda.</div>
+      <div class="rec-item">Book a child-focused mediation session.</div>
+      <div class="rec-item">Schedule 15 min/week of quiet reflection using this app&rsquo;s journal.</div>
+      <div class="rec-item">Review your child&rsquo;s teacher and pediatrician contacts with the other parent.</div>
+      <div class="rec-item">Establish a written decision-making framework for medical/school choices.</div>
+      <div class="rec-item">Consult a family attorney if any issue remains unresolved after 60 days.</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Child-Focused Foundation Statement</h2>
+    <p class="lede">Instead of ending on a numeric score, the SA CoParents&trade; assessment closes with your personal, child-centered statement &mdash; something you can carry into mediation, court, or difficult conversations regardless of whether the other parent participates.</p>
+    <div class="foundation">
+      <div class="foundation-label">Foundation statement</div>
+      <h3>My commitment to my child</h3>
+      <p>&ldquo;My child benefits from predictable routines, calm communication, and consistent care between homes. I recognize that although the other parent and I may see things differently, my responsibility is to protect my child from unnecessary conflict, honor her emotional needs, and make decisions that keep her at the center. I commit to communicating in ways that could be read aloud in a courtroom, using structured tools when direct conversation is difficult, and seeking professional guidance whenever an issue is beyond us.&rdquo;</p>
+    </div>
+  </section>
+
+  <section class="block tight">
+    <h2>What Happens Next in the SA CoParents App</h2>
+    <ul class="bulleted cols-2">
+      <li>Save this assessment to your dashboard.</li>
+      <li>Complete your personalized Foundation Statement.</li>
+      <li>Build your Child Needs Statement for mediation.</li>
+      <li>Create your Co-Parenting Commitment.</li>
+      <li>Reassess after significant changes in your family.</li>
+      <li>Reach out to a mediator or attorney when needed.</li>
+    </ul>
+  </section>
+
+  <div class="notice">
+    <div class="label">Important reminder</div>
+    <p>This report is an educational preparation tool. It is not legal advice, therapy, mediation, or a psychological evaluation. If you are experiencing family violence, coercive control, or fear for your or your child&rsquo;s safety, contact 911 in an emergency or the National Domestic Violence Hotline at 1-800-799-7233.</p>
+  </div>
+
+  <p style="text-align:center;margin-top:3mm;font-family:'Fraunces',serif;font-style:italic;color:var(--teal-dark);font-size:10.5pt;">
+    A calm parent gives a child a calmer world.
+  </p>
+</main>
+
+</body>
+</html>

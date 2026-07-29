@@ -563,8 +563,8 @@ function ThreeReportsStrip() {
           title="Understand your co-parenting situation"
           body="A private snapshot of how you and the other parent are actually communicating today — with concrete next steps."
           accent="#3D1A78"
-          sampleHref="/downloads/sacoparents-family-violence-report.pdf"
-          sampleLabel="View sample safety report (PDF)"
+          sampleHref="/downloads/sacoparents-coparenting-report.pdf"
+          sampleLabel="View sample Co-Parenting report (PDF)"
         />
         <ThreeReportsCover
           testid="three-reports-foundation"
