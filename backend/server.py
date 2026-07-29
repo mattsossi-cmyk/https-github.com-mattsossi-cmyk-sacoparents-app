@@ -27,6 +27,7 @@ from gmail_routes import router as gmail_router  # noqa: E402
 from neurodivergent_routes import router as neurodivergent_router  # noqa: E402
 from coparenting_routes import router as coparenting_router  # noqa: E402
 from sn_v3_routes import router as sn_v3_router  # noqa: E402
+from family_report_routes import router as family_report_router  # noqa: E402
 from coach_routes import router as coach_router  # noqa: E402
 from next_steps_routes import router as next_steps_router  # noqa: E402
 from insights_routes import (  # noqa: E402
@@ -107,6 +108,7 @@ api_router.include_router(gmail_router)
 api_router.include_router(neurodivergent_router)
 api_router.include_router(coparenting_router)
 api_router.include_router(sn_v3_router)
+api_router.include_router(family_report_router)
 api_router.include_router(insights_router)
 api_router.include_router(coach_router)
 api_router.include_router(next_steps_router)

@@ -425,6 +425,48 @@ async def download_special_needs_dynamic_sample_thumb():
     )
 
 
+@router.get("/family-report-dynamic-sample.pdf")
+async def download_family_report_dynamic_sample():
+    """Public download of a fictional-data Family Report rendered by the live
+    dynamic PDF renderer (family_report_pdf.build_family_pdf).
+
+    Combines example Co-Parenting, Special Needs, and Safety findings into
+    one branded document — mirroring exactly what a real user gets after
+    generating their Family Report from `/family-report`."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-family-report-dynamic-sample.pdf"
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="SA-CoParents-Family-Report-Dynamic-Sample.pdf",
+    )
+
+
+@router.get("/family-report-dynamic-sample.png")
+async def download_family_report_dynamic_sample_png():
+    """Full-length stitched PNG preview of the dynamic Family Report sample."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-family-report-dynamic-sample.png"
+    return FileResponse(
+        path,
+        media_type="image/png",
+        filename="SA-CoParents-Family-Report-Dynamic-Sample.png",
+    )
+
+
+@router.get("/family-report-dynamic-sample-thumb.png")
+async def download_family_report_dynamic_sample_thumb():
+    """Page-1 thumbnail preview of the dynamic Family Report sample."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-family-report-dynamic-sample-thumb.png"
+    return FileResponse(
+        path,
+        media_type="image/png",
+        filename="SA-CoParents-Family-Report-Dynamic-Sample-Thumb.png",
+    )
+
+
+
 
 @router.post("/admin/weekly/regenerate")
 async def regenerate_weekly_insights(

@@ -24,7 +24,7 @@ from auth import get_current_user
 
 router = APIRouter(prefix="/next-steps", tags=["next-steps"])
 
-ASSESSMENTS = ("readiness", "comm_style", "safety", "special_needs")
+ASSESSMENTS = ("readiness", "comm_style", "safety", "special_needs", "coparenting")
 
 
 def _now_iso() -> str:
@@ -377,6 +377,131 @@ def _sn_steps(db_scores: dict) -> List[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Deterministic step-builders for the new 10-principle Special Needs (v3)
+# assessment and the new 10-section Co-Parenting assessment.
+#
+# Both accept the shared scoring shape from cp_scoring / sn_v3_scoring:
+#   { sections: [{id, number, name, rating, avg, ...}],
+#     overall_rating, priority_focus: [section_id, ...],
+#     show_communication_toolkit: bool }
+# ---------------------------------------------------------------------------
+def _priority_step_from(scores: dict, section_lookup: dict, *, cta_label: str, cta_path: str) -> Optional[dict]:
+    """Convert the top priority-focus id into a 'first step here' recommendation."""
+    priority_ids = scores.get("priority_focus") or []
+    if not priority_ids:
+        return None
+    sid = priority_ids[0]
+    sec = section_lookup.get(sid)
+    if not sec:
+        return None
+    return _step(
+        f"pf_{sid}",
+        what=f"Start with {sec['name']}",
+        why=f"This scored lowest in your assessment ({sec.get('rating') or 'Fair'}). "
+            "Even a single change here will move the needle further than working on stronger areas.",
+        how_long="15 minutes",
+        cta_label=cta_label,
+        cta_path=cta_path,
+        category="preparation",
+    )
+
+
+def _sn_v3_steps(scores: dict) -> List[dict]:
+    """Special Needs v3 (10-principle) — 3 deterministic steps."""
+    from sn_v3_questions import SECTIONS as SN_SECTIONS
+    lookup = {s["id"]: s for s in SN_SECTIONS}
+
+    steps: List[dict] = []
+    steps.append(_step(
+        "snv3_open_report",
+        what="Open your personalised Special Needs report",
+        why="You just finished a 10-principle self-assessment. Your report has "
+            "strengths, priority focus areas, and next steps ready to share with "
+            "your co-parent, mediator, or Parenting Facilitator.",
+        how_long="3 minutes",
+        cta_label="Open my report",
+        cta_path="/special-needs-v3",
+        category="review",
+    ))
+
+    pf = _priority_step_from(scores, lookup, cta_label="Open my report", cta_path="/special-needs-v3")
+    if pf:
+        steps.append(pf)
+
+    if scores.get("show_communication_toolkit"):
+        steps.append(_step(
+            "snv3_toolkit",
+            what="Use the Communication Toolkit for the next 2 weeks",
+            why="Principle 3 (Maintain Open, Child-Focused Communication) needs "
+                "attention. BIFF messages + a shared parenting app will remove most "
+                "of the friction before your next mediation session.",
+            how_long="10 minutes",
+            cta_label="Open my plan",
+            cta_path="/my-plan",
+            category="preparation",
+        ))
+    else:
+        steps.append(_step(
+            "snv3_share",
+            what="Share the report with your co-parent or Parenting Facilitator",
+            why="A shared link keeps everyone aligned on the same 10-principle "
+                "framework — no diagnostic language, just practical coordination.",
+            how_long="2 minutes",
+            cta_label="Open my report",
+            cta_path="/special-needs-v3",
+            category="preparation",
+        ))
+    return steps[:3]
+
+
+def _cp_steps(scores: dict) -> List[dict]:
+    """Co-Parenting (10-section) — 3 deterministic steps."""
+    from coparenting_questions import SECTIONS as CP_SECTIONS
+    lookup = {s["id"]: s for s in CP_SECTIONS}
+
+    steps: List[dict] = []
+    steps.append(_step(
+        "cp_open_report",
+        what="Open your personalised Co-Parenting report",
+        why="You just finished the 10-section self-assessment. Your report is "
+            "ready with strengths, priority focus areas, and next steps.",
+        how_long="3 minutes",
+        cta_label="Open my report",
+        cta_path="/dashboard",
+        category="review",
+    ))
+
+    pf = _priority_step_from(scores, lookup, cta_label="Open my report", cta_path="/dashboard")
+    if pf:
+        steps.append(pf)
+
+    if scores.get("show_communication_toolkit"):
+        steps.append(_step(
+            "cp_toolkit",
+            what="Adopt the Communication Toolkit for the next 2 weeks",
+            why="Communication & Information Sharing (Section 1) is currently "
+                "your priority area. BIFF messages + a shared parenting app "
+                "resolve most communication gaps.",
+            how_long="10 minutes",
+            cta_label="Open my plan",
+            cta_path="/my-plan",
+            category="preparation",
+        ))
+    else:
+        steps.append(_step(
+            "cp_share",
+            what="Share the report with your co-parent or mediator",
+            why="A signed share link keeps everyone aligned on the same "
+                "practical framework before your next mediation session.",
+            how_long="2 minutes",
+            cta_label="Open my dashboard",
+            cta_path="/dashboard",
+            category="preparation",
+        ))
+    return steps[:3]
+
+
+# ---------------------------------------------------------------------------
 # Router
 # ---------------------------------------------------------------------------
 async def _load_prep(db, user_id: str) -> dict:
@@ -399,12 +524,29 @@ async def _generate(db, assessment: str, current) -> List[dict]:
             prep = {**prep, "safety_assessment": sa}
         return _safety_steps(prep)
     if assessment == "special_needs":
-        # Reuse the deterministic scorer.
+        # Prefer new SN v3 (10-principle); fallback to legacy nd_prep so existing
+        # users' next-steps keep working.
+        v3 = await db.sn_v3_assessments.find_one(
+            {"user_id": current.user_id}, {"_id": 0}, sort=[("updated_at", -1)]
+        )
+        if v3 and (v3.get("scores") or v3.get("answers")):
+            from sn_v3_scoring import compute_scores as sn_v3_compute
+            scores = v3.get("scores") or sn_v3_compute(v3.get("answers") or {})
+            return _sn_v3_steps(scores)
         import special_needs_scoring as sn_scoring
         nd = await db.nd_prep.find_one({"user_id": current.user_id}, {"_id": 0}) or {}
         answers = nd.get("answers_v2") or {}
         scores = sn_scoring.compute_scores(answers)
         return _sn_steps(scores)
+    if assessment == "coparenting":
+        cp = await db.cp_assessments.find_one(
+            {"user_id": current.user_id}, {"_id": 0}, sort=[("updated_at", -1)]
+        )
+        if not cp or not (cp.get("answers") or {}):
+            raise HTTPException(status_code=404, detail="No Co-Parenting assessment on file yet.")
+        from coparenting_scoring import compute_scores as cp_compute
+        scores = cp.get("scores") or cp_compute(cp.get("answers") or {})
+        return _cp_steps(scores)
     raise HTTPException(status_code=400, detail=f"Unknown assessment: {assessment}")
 
 
