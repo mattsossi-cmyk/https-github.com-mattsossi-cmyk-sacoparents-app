@@ -1,6 +1,25 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Special Needs 10-Principle Assessment + reworked sample (Feb 2026)
+Mirrors the 10-principle framework the user supplied (Build Individualized Plan · Consistent Routines · Open Communication · Aligned Expectations · Understand Diagnosis · Coordinate Education/Therapy · Manage Transitions · Flexibility · Support Network · Compassion).
+
+**Sample Special Needs report** (`/api/insights/special-needs-report.pdf`, 5 US Letter pages)
+- Page 2 findings grid replaced with 10 principle cards, each with rating pill + one-line finding.
+- Banner + subtitle updated to reference the 10-principle framework.
+- Sample ratings: p1=Fair, p2=Good, p3=Needs (priority + toolkit trigger), p4=Fair, p5=Excellent, p6=Good, p7=Fair, p8=Good, p9=Good, p10=Excellent.
+
+**In-app backend (Phase 1 for SN)**
+- `/app/backend/sn_v3_questions.py` — 10 principles × 6 Likert questions each = **60 questions**, 5-point scale, reverse-scored items on p3q6 and p7q5.
+- `/app/backend/sn_v3_scoring.py` — deterministic engine, thresholds Excellent ≥ 3.25 / Good ≥ 2.5 / Fair ≥ 1.5 / Needs < 1.5, Communication Toolkit triggers when p3 is Fair or Needs Improvement.
+- `/app/backend/sn_v3_routes.py` — mounted at `/api/special-needs-v3`: `GET /schema`, `GET /me`, `POST /answer`, `POST /answers/bulk`, `POST /complete`, `GET /scores`, `DELETE /me`.
+- `/app/backend/tests/test_sn_v3_scoring.py` — **4/4 passing** including reproduction of the sample-report rating pattern.
+- MongoDB collection `sn_v3_assessments`.
+- Registered in `server.py`; **12/12 backend scoring tests passing across coparenting + sn_v3**.
+- Existing SN v2 (`neurodivergent_routes.py`, `special_needs_scoring.py`) untouched — safe rollout via a parallel path.
+
+
+<!-- Changelog latest entry -->
 ## 🆕 Special Needs Report — 8-section framework + Child Impact Predictor + Foundation Statement (Feb 2026)
 Third rewrite of the Special Needs sample to reflect the full 8-section family assessment structure requested by the user, plus two distinguishing features: the Child Needs Foundation Statement (verbatim closing paragraph) and the Child Impact Predictor.
 
