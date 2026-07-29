@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft, Loader2, Download, Share2, RefreshCw, CheckCircle2,
-  Circle, FileText, AlertTriangle, ShieldCheck, TrendingUp, MessageCircle,
+  Circle, FileText, Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
@@ -14,6 +14,55 @@ import { FamilyReportBody } from "../components/FamilyReportBody";
  * Renders the FULL CP + SN v3 reports embedded in-line, plus Safety pathway.
  * Visual language matches SharedCoParentingReport / SharedSpecialNeedsReport.
  */
+
+const SAMPLE_PDF_URL = "/api/insights/family-report-dynamic-sample.pdf";
+const SAMPLE_PNG_URL = "/api/insights/family-report-dynamic-sample.png";
+
+function SampleReportCallout() {
+  return (
+    <div className="rounded-2xl border border-[#CFC1EA] bg-[#F5F0FE] p-5" data-testid="familyreport-sample-callout">
+      <div className="flex items-start gap-3">
+        <div className="shrink-0 w-9 h-9 rounded-full bg-white grid place-items-center text-[#3D1A78] border border-[#CFC1EA]">
+          <FileText size={16} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-0.5">
+            Sample report
+          </div>
+          <div className="font-semibold text-[#1A1330]">
+            See what a completed Family Report looks like
+          </div>
+          <p className="text-xs sm:text-sm text-[#4B4567] mt-1 leading-relaxed">
+            A branded, fictional SA CoParents Family Report using the same
+            renderer as your live version. Full detail across all three
+            assessments — great to share with your co-parent, mediator, or
+            attorney as a preview.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a
+              href={SAMPLE_PNG_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3D1A78] bg-white border border-[#CFC1EA] hover:border-[#3D1A78] rounded-full px-3 py-1.5"
+              data-testid="familyreport-sample-preview-btn"
+            >
+              <ImageIcon size={12} /> Preview sample (PNG)
+            </a>
+            <a
+              href={SAMPLE_PDF_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#3D1A78] hover:bg-[#2D0F63] rounded-full px-3 py-1.5"
+              data-testid="familyreport-sample-pdf-btn"
+            >
+              <Download size={12} /> Download sample PDF
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function SourceRow({ label, path, completed, generatedAt, testid }) {
   const date = generatedAt ? new Date(generatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
@@ -144,6 +193,10 @@ export default function FamilyReport() {
           <p className="mt-2 text-[#4B4567] max-w-2xl text-[15px] leading-relaxed">
             A single branded PDF you can share with your co-parent, mediator, or attorney. Contains the full detail of the reports you already generated — safety findings are summarised (level + pathway only), never question-level.
           </p>
+
+          <div className="mt-6">
+            <SampleReportCallout />
+          </div>
 
           {/* Source status */}
           <div className="mt-8 rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-7" data-testid="familyreport-sources">
