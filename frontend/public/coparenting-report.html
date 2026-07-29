@@ -79,6 +79,16 @@
     .rec-item { background:#fff; border:1px solid var(--line); border-radius:2mm; padding:2mm 3.5mm; font-size:9.5pt; color:var(--ink); position:relative; padding-left:8mm; }
     .rec-item::before { content:"\2192"; position:absolute; left:3mm; top:1.7mm; color:var(--purple); font-weight:700; font-size:11pt; }
 
+    /* Practical focus subsections */
+    .focus-card { background:var(--soft); border:1px solid var(--line); border-radius:3mm; padding:3mm 4.5mm 3.5mm; margin-top:2mm; }
+    .focus-head { display:flex; justify-content:space-between; align-items:flex-start; gap:3mm; }
+    .focus-head h3 { font-family:'Fraunces',serif; font-size:11.5pt; color:var(--purple); line-height:1.15; }
+    .focus-find { font-size:9pt; color:var(--muted); margin-top:1.5mm; line-height:1.4; }
+    .focus-recs { list-style:none; margin-top:1.5mm; }
+    .focus-recs li { position:relative; padding-left:5mm; font-size:9pt; line-height:1.4; margin-top:0.8mm; color:var(--ink); }
+    .focus-recs li::before { content:"\2192"; position:absolute; left:0; top:0; color:var(--teal-dark); font-weight:700; font-size:10pt; }
+    .focus-recs li b { color: var(--purple); }
+
     /* Communication toolkit */
     .toolkit { border:1.5px solid rgba(184,91,0,.35); background:#FFFBF5; border-radius:4mm; padding:4mm 5mm; margin-top:2.5mm; }
     .toolkit-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--warn); font-weight:700; }
@@ -124,7 +134,7 @@
 
   <div class="title-block">
     <h1><span class="accent">Co-Parenting</span> Assessment Report<span class="tm">&trade;</span></h1>
-    <div class="subtitle">A child-focused reflection built from your responses across an 8-section assessment</div>
+    <div class="subtitle">A child-focused reflection built from your responses across a 10-section assessment</div>
   </div>
 
   <section class="block">
@@ -138,7 +148,7 @@
     <div class="rating">
       <div class="rating-label">Overall co-parenting readiness</div>
       <div class="rating-value">Building Progress</div>
-      <div class="rating-note">Your responses show a clear child-focused mindset and consistent day-to-day parenting. Your strongest areas are <b>your goals for your child</b> and <b>consistency in your home</b>. Your priority focus area is <b>communication with the other parent</b> &mdash; where the SA CoParents&trade; Communication Toolkit on page 3 is specifically recommended for you.</div>
+      <div class="rating-note">Your responses show a clear child-focused mindset and consistent day-to-day parenting. Your strongest area is <b>Safety &amp; Supervision</b>, with solid ratings in <b>Educational Needs</b>, <b>Daily Routines</b>, and <b>Emotional &amp; Behavioral Support</b>. Your priority focus area is <b>Communication &amp; Information Sharing</b> &mdash; where the SA CoParents&trade; Communication Toolkit later in this report is specifically recommended for you.</div>
     </div>
   </section>
 </main>
@@ -158,95 +168,117 @@
 
   <section class="block" style="margin-top:0;">
     <h2>Assessment Findings by Section</h2>
-    <p class="lede">Each of the eight sections is summarized below with its own rating and a brief finding based on your responses.</p>
+    <p class="lede">Each of the ten sections is summarized below with its own rating and a one-line finding based on your responses.</p>
     <div class="coverage">
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 1</div>
-            <div class="coverage-name">Understanding Your Child</div>
+            <div class="coverage-name">Communication &amp; Information Sharing</div>
           </div>
-          <span class="coverage-pill r-excellent">Excellent</span>
+          <span class="coverage-pill r-needs">Needs Improvement</span>
         </div>
-        <div class="coverage-find">You know your child&rsquo;s day-to-day well &mdash; routine, friendships, school activities, and emotional signals. You can describe her personality with specifics rather than generalities.</div>
+        <div class="coverage-find">Important updates about school, medical, and behavioral concerns are shared inconsistently. No shared calendar or messaging app is in place today. <b>Priority focus.</b></div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 2</div>
-            <div class="coverage-name">Your Goals for Your Child</div>
+            <div class="coverage-name">Pick-Up, Drop-Off &amp; Transitions</div>
           </div>
-          <span class="coverage-pill r-excellent">Excellent</span>
+          <span class="coverage-pill r-fair">Fair</span>
         </div>
-        <div class="coverage-find">Your top three goals &mdash; emotional safety, school success, and stable relationships with both parents &mdash; are clear, child-centered, and realistic.</div>
+        <div class="coverage-find">Exchanges happen on time and your child arrives prepared, but the exchange location is not neutral and transition routines remain informal.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 3</div>
-            <div class="coverage-name">Your Concerns About Your Child</div>
+            <div class="coverage-name">Educational Needs</div>
           </div>
-          <span class="coverage-pill r-fair">Fair</span>
+          <span class="coverage-pill r-good">Good</span>
         </div>
-        <div class="coverage-find">You reported concerns about your child&rsquo;s sleep, anxiety around exchanges, and school focus. These are common but worth documenting so patterns become visible over time.</div>
+        <div class="coverage-find">You support homework, attend school events, and manage classroom communication. IEP/504 and extracurricular coordination could be tighter with the other parent.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 4</div>
-            <div class="coverage-name">Issues You Want to Resolve</div>
+            <div class="coverage-name">Medical &amp; Healthcare Needs</div>
           </div>
-          <span class="coverage-pill r-needs">Needs Improvement</span>
+          <span class="coverage-pill r-fair">Fair</span>
         </div>
-        <div class="coverage-find">Several issues remain open: exchange logistics, holiday scheduling, and school-related decisions. These would benefit from a structured mediation session or written proposal.</div>
+        <div class="coverage-find">You attend routine appointments and manage medications well. The other parent lacks visibility into the current treatment plan and specialist coordination.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 5</div>
-            <div class="coverage-name">Communication with the Other Parent</div>
+            <div class="coverage-name">Daily Routines &amp; Home Consistency</div>
           </div>
-          <span class="coverage-pill r-needs">Needs Improvement</span>
+          <span class="coverage-pill r-good">Good</span>
         </div>
-        <div class="coverage-find">Conversations often escalate or go unanswered. There is no shared calendar or dedicated co-parenting channel. This is your <b>priority</b> focus area &mdash; see the Communication Toolkit on page 3.</div>
+        <div class="coverage-find">Your morning and bedtime routines, meals, and homework time are predictable. Bedtime and screen-time limits still differ from the other home.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 6</div>
-            <div class="coverage-name">Consistency Between Homes</div>
+            <div class="coverage-name">Emotional &amp; Behavioral Support</div>
           </div>
           <span class="coverage-pill r-good">Good</span>
         </div>
-        <div class="coverage-find">In your home, routines around meals, bedtime, and screen time are predictable. You&rsquo;re less certain how closely the other home mirrors these expectations, especially around transitions.</div>
+        <div class="coverage-find">You use positive reinforcement, coping strategies, and consistent behavioral expectations at home. Meltdown and transition management is a strength.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 7</div>
-            <div class="coverage-name">Boundaries &amp; Decision-Making</div>
+            <div class="coverage-name">Therapy &amp; Skill Reinforcement</div>
           </div>
           <span class="coverage-pill r-fair">Fair</span>
         </div>
-        <div class="coverage-find">You have clear personal boundaries but decision-making processes with the other parent are informal. Larger decisions (school, activities, medical) would benefit from a written framework.</div>
+        <div class="coverage-find">You reinforce therapy homework, speech practice, and OT exercises at home. You&rsquo;re unsure whether the other parent does the same across visits.</div>
       </div>
 
       <div class="coverage-cell">
         <div class="coverage-head">
           <div class="coverage-title">
             <div class="coverage-num">Section 8</div>
-            <div class="coverage-name">Long-Term Vision &amp; Planning</div>
+            <div class="coverage-name">Safety &amp; Supervision</div>
+          </div>
+          <span class="coverage-pill r-excellent">Excellent</span>
+        </div>
+        <div class="coverage-find">Supervision, transportation, medication safety, allergy management, and emergency contacts are all clearly in place in your home.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 9</div>
+            <div class="coverage-name">Social &amp; Community Participation</div>
           </div>
           <span class="coverage-pill r-good">Good</span>
         </div>
-        <div class="coverage-find">You have a positive long-term vision for your child, including school transitions and life-skill development. Financial and legal planning steps are next on the horizon.</div>
+        <div class="coverage-find">Your child maintains friendships, participates in sports and clubs, and attends social events. Coordination with the other parent on activities could improve.</div>
+      </div>
+
+      <div class="coverage-cell">
+        <div class="coverage-head">
+          <div class="coverage-title">
+            <div class="coverage-num">Section 10</div>
+            <div class="coverage-name">Long-Term Child Success</div>
+          </div>
+          <span class="coverage-pill r-good">Good</span>
+        </div>
+        <div class="coverage-find">You actively build your child&rsquo;s independence, confidence, self-advocacy, and problem-solving through daily interactions and celebrated achievements.</div>
       </div>
 
     </div>
@@ -272,19 +304,88 @@
       <li>You know your child in specific, observable detail.</li>
       <li>Your goals for your child are child-centered and consistent over time.</li>
       <li>Your home offers predictable routines your child can count on.</li>
+      <li>You consistently encourage your child&rsquo;s participation in school and extracurricular activities.</li>
+      <li>You recognize the importance of celebrating your child&rsquo;s achievements &mdash; big and small.</li>
       <li>You are actively seeking a lower-conflict path for your child.</li>
     </ul>
   </section>
 
   <section class="block">
-    <h2>Areas to Improve</h2>
-    <ul class="bulleted">
-      <li>Move day-to-day co-parenting messages into a written, dedicated channel.</li>
-      <li>Document your open issues so they can be resolved one at a time in mediation.</li>
-      <li>Propose a written decision-making framework for medical, school, and activity choices.</li>
-      <li>Build a consistent hand-off routine your child can rely on before exchanges.</li>
-      <li>Track your child&rsquo;s sleep, mood, and school focus so patterns are visible.</li>
-    </ul>
+    <h2>Practical Focus Areas</h2>
+    <p class="lede">Where your day-to-day co-parenting actually happens. Each subsection has a rating and specific next actions.</p>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Pick-Up &amp; Drop-Off (Exchange)</h3>
+        <span class="coverage-pill r-fair">Fair</span>
+      </div>
+      <div class="focus-find">Exchanges take place at your home. Your child sometimes shows anxiety in the 24 hours before a transition.</div>
+      <ul class="focus-recs">
+        <li>Consider a <b>neutral exchange location</b> &mdash; school parking lot, library, or a familiar coffee shop &mdash; to reduce tension at your front door.</li>
+        <li>Establish a consistent hand-off routine: 5-minute buffer, no adult conversation at the door, a scripted goodbye your child can rely on.</li>
+        <li>Use a written weekly schedule so exchange times are never in dispute.</li>
+        <li>If safety is ever a concern, many cities designate <b>&ldquo;safe exchange&rdquo; locations</b> at police stations.</li>
+      </ul>
+    </div>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Meeting Your Child&rsquo;s Educational Needs</h3>
+        <span class="coverage-pill r-good">Good</span>
+      </div>
+      <div class="focus-find">You attend most school events and manage the homework routine. The other parent receives some school communications directly but not all.</div>
+      <ul class="focus-recs">
+        <li>Add <b>both parents</b> to the school&rsquo;s parent portal, email list, and app notifications.</li>
+        <li>Align on homework expectations across both homes (same start time, same location, same length).</li>
+        <li>Attend ARD/IEP meetings, teacher conferences, and report-card reviews together when possible.</li>
+        <li>Share report cards, progress notes, and behavior updates within 48 hours of receiving them.</li>
+      </ul>
+    </div>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Attention to Medical &amp; Therapeutic Needs</h3>
+        <span class="coverage-pill r-fair">Fair</span>
+      </div>
+      <div class="focus-find">You schedule and attend most medical appointments. The other parent knows the treatment plan in general terms but not the specifics.</div>
+      <ul class="focus-recs">
+        <li>Maintain one <b>shared medical calendar</b> (AppClose, OFW, or a shared Google Calendar).</li>
+        <li>Attend annual well-checks and any specialist visits together when possible.</li>
+        <li>Use identical medication routines &mdash; same time, same dose, same tracker &mdash; in both homes.</li>
+        <li>Share pediatrician, dentist, and therapist contact info in one central document.</li>
+        <li>Agree on an <b>emergency contact protocol</b>: who to call first, in what order, and how quickly.</li>
+      </ul>
+    </div>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Special Events at School</h3>
+        <span class="coverage-pill r-good">Good</span>
+      </div>
+      <div class="focus-find">You attend most parent-teacher conferences, classroom performances, and awards ceremonies. The school calendar is not currently shared with the other parent, which occasionally creates scheduling confusion for your child.</div>
+      <ul class="focus-recs">
+        <li>Share the <b>school-year calendar</b> with the other parent at the start of each semester &mdash; conferences, performances, field days, holiday parties, science fairs.</li>
+        <li>Confirm with your child which parent will attend <b>before</b> each event so she isn&rsquo;t caught in scheduling ambiguity on the day.</li>
+        <li>Attend IEP/ARD/504 meetings, progress reviews, and awards ceremonies <b>together</b> when possible.</li>
+        <li>For large or sensory-heavy events (Field Day, assemblies, performances), coordinate sensory supports and expectations with the teacher <b>and</b> the other parent in advance.</li>
+        <li>Celebrate promotions, awards, and recognitions in both homes &mdash; a child hears the message loudest when both parents show up.</li>
+      </ul>
+    </div>
+
+    <div class="focus-card">
+      <div class="focus-head">
+        <h3>Extracurricular Activities</h3>
+        <span class="coverage-pill r-fair">Fair</span>
+      </div>
+      <div class="focus-find">Your child participates in one sport and one arts program. Attendance from your home is consistent; you&rsquo;re less certain about attendance during the other parent&rsquo;s time.</div>
+      <ul class="focus-recs">
+        <li>Share the <b>season/term activity schedule</b> with the other parent as early as possible &mdash; practices, games, recitals, uniform pick-ups.</li>
+        <li>Coordinate transportation and equipment hand-offs so nothing (uniform, instrument, water bottle, medication) is ever left behind at the other home.</li>
+        <li>Support the same activity during <b>both</b> parenting times &mdash; inconsistent attendance erodes team standing, friendships, and momentum.</li>
+        <li>If your child uses sensory supports, visual schedules, or comfort items, make sure they travel with her to every practice and event.</li>
+        <li>Give coaches, activity leaders, and instructors a <b>single point of contact</b> and share her strengths and support needs proactively.</li>
+      </ul>
+    </div>
   </section>
 
   <section class="block">
