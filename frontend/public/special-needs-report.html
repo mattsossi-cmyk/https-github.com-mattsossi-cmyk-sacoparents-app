@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <title>SA CoParents — Special Needs Co-Parenting Assessment Report</title>
-  <meta name="description" content="Sample Special Needs Co-Parenting Assessment Report — an encouraging, child-focused summary of a family's strengths, growth opportunities, and practical next steps." />
+  <meta name="description" content="Sample Special Needs Co-Parenting Assessment Report — 8-section framework, Overall Readiness Score, strengths, areas to improve, personalized recommendations, Foundation Statement, and Child Impact Predictor." />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --purple: #3D1A78; --teal: #2DB5B5; --teal-dark: #0E7A7A;
       --warn: #B85B00; --warn-bg: #FFF3E9;
+      --amber: #A56B00; --amber-bg: #FFF6E5;
       --ink: #1A1330; --muted: #4B4567; --soft: #F7F4FC;
       --line: #E5E0EE; --success: #0E7A7A; --success-bg: #E8F7F5;
     }
@@ -19,7 +20,7 @@
     .page:not(:last-child) { break-after: page; page-break-after: always; }
 
     /* Header */
-    .head { display:flex; align-items:center; justify-content:space-between; padding-bottom:4mm; border-bottom:2px solid var(--line); margin-bottom:6mm; }
+    .head { display:flex; align-items:center; justify-content:space-between; padding-bottom:3.5mm; border-bottom:2px solid var(--line); margin-bottom:5mm; }
     .brand { display:flex; align-items:center; gap:4mm; }
     .brand-mark { width:10mm; height:10mm; border-radius:999px; background:linear-gradient(135deg,var(--purple),var(--teal)); color:#fff; font-family:'Fraunces',serif; font-weight:700; font-size:14pt; display:flex; align-items:center; justify-content:center; }
     .brand-name { font-family:'Fraunces',serif; font-size:15pt; color:var(--ink); }
@@ -29,30 +30,42 @@
     .doc-label { text-align:right; font-size:7.5pt; color:var(--purple); letter-spacing:0.18em; text-transform:uppercase; font-weight:700; line-height:1.4; }
 
     /* Title */
-    .title-block { text-align:center; margin-bottom:4mm; padding-bottom:3mm; border-bottom:1px solid var(--line); }
-    h1 { font-family:'Fraunces',serif; font-weight:700; color:var(--ink); font-size:20pt; line-height:1.1; }
+    .title-block { text-align:center; margin-bottom:3.5mm; padding-bottom:3mm; border-bottom:1px solid var(--line); }
+    h1 { font-family:'Fraunces',serif; font-weight:700; color:var(--ink); font-size:19pt; line-height:1.1; }
     h1 .accent { color: var(--purple); }
     h1 .tm { font-size:10pt; vertical-align:super; color:var(--teal-dark); }
-    .subtitle { font-family:'Fraunces',serif; font-size:10.5pt; color:var(--teal-dark); margin-top:1.5mm; font-style:italic; }
+    .subtitle { font-family:'Fraunces',serif; font-size:10pt; color:var(--teal-dark); margin-top:1.5mm; font-style:italic; }
 
     /* Sections */
     section.block { margin-top:3.5mm; }
     section.block.tight { margin-top:2.5mm; }
     h2 { font-family:'Fraunces',serif; font-size:12.5pt; color:var(--purple); margin-bottom:1.5mm; padding-bottom:1.2mm; border-bottom:1px solid var(--line); }
-    h3.sub { font-family:'Fraunces',serif; font-size:11pt; color:var(--teal-dark); margin-top:3mm; margin-bottom:1mm; }
     p { font-size:9.5pt; color:var(--ink); line-height:1.45; }
     p + p { margin-top: 1.5mm; }
+    .lede { font-size:9.5pt; color:var(--muted); line-height:1.45; }
 
     /* Opening paragraph */
     .opening { background:var(--soft); border-left:3mm solid var(--teal-dark); border-radius:0 3mm 3mm 0; padding:3mm 5mm; margin-top:1mm; }
     .opening p { font-size:9.5pt; line-height:1.45; color:var(--ink); }
     .opening p + p { margin-top:1.5mm; }
 
-    /* Rating banner */
-    .rating { background:linear-gradient(135deg, #F5EEFF 0%, #E5F7F4 100%); border:1.5px solid var(--line); border-radius:3mm; padding:3mm 5mm; margin-top:1.5mm; }
-    .rating-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; }
-    .rating-value { font-family:'Fraunces',serif; font-size:17pt; color:var(--teal-dark); margin-top:0.5mm; line-height:1.1; }
-    .rating-note { font-size:9pt; color:var(--muted); margin-top:1.5mm; line-height:1.45; }
+    /* Readiness table */
+    .readiness { border:1px solid var(--line); border-radius:3mm; overflow:hidden; margin-top:2mm; }
+    .readiness-row { display:grid; grid-template-columns:1fr auto; align-items:center; padding:2mm 5mm; border-bottom:1px solid var(--line); background:#fff; }
+    .readiness-row:last-child { border-bottom:none; }
+    .readiness-row:nth-child(even) { background:var(--soft); }
+    .readiness-area { font-family:'Fraunces',serif; font-size:10pt; color:var(--ink); }
+    .rating-pill { font-family:'Fraunces',serif; font-weight:700; font-size:9pt; padding:1mm 4mm; border-radius:999px; border:1px solid transparent; white-space:nowrap; letter-spacing:0.02em; }
+    .r-excellent { background:var(--success-bg); color:var(--success); border-color:rgba(14,122,122,.35); }
+    .r-good { background:#EEE4FF; color:var(--purple); border-color:rgba(61,26,120,.35); }
+    .r-fair { background:var(--amber-bg); color:var(--amber); border-color:rgba(165,107,0,.35); }
+    .r-needs { background:var(--warn-bg); color:var(--warn); border-color:rgba(184,91,0,.4); }
+
+    /* 8-section coverage grid */
+    .coverage { display:grid; grid-template-columns:repeat(4,1fr); gap:2mm; margin-top:1.5mm; }
+    .coverage-cell { background:var(--soft); border:1px solid var(--line); border-radius:2mm; padding:2mm 3mm; }
+    .coverage-num { font-size:6.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; }
+    .coverage-name { font-family:'Fraunces',serif; font-size:9.5pt; color:var(--ink); margin-top:0.5mm; line-height:1.2; }
 
     /* Checkmark list */
     ul.checked { list-style:none; margin-top:1.5mm; }
@@ -61,8 +74,6 @@
       content:"\2713"; position:absolute; left:0; top:0;
       color:var(--teal-dark); font-weight:700; font-size:10.5pt;
     }
-    ul.checked.cols-2 { columns: 2; column-gap: 8mm; margin-top:1mm; }
-    ul.checked.cols-2 li { break-inside: avoid; margin-top:0.8mm; }
 
     /* Plain bullets */
     ul.bulleted { list-style:none; margin-top:1mm; }
@@ -71,39 +82,36 @@
     ul.bulleted.cols-2 { columns: 2; column-gap: 8mm; }
     ul.bulleted.cols-2 li { break-inside: avoid; }
 
-    /* Growth subsection cards */
-    .growth-card { background:var(--soft); border-radius:3mm; padding:2.5mm 5mm 3mm; margin-top:2mm; }
-    .growth-card h3 { font-family:'Fraunces',serif; font-size:11pt; color:var(--purple); }
-    .growth-card p { font-size:9pt; color:var(--muted); margin-top:0.5mm; line-height:1.35; }
-    .growth-card ul.bulleted { margin-top:0.5mm; }
-    .growth-card ul.bulleted li { font-size:9pt; margin-top:0.4mm; }
-    .growth-card .footnote { font-size:8.5pt; font-style:italic; color:var(--muted); margin-top:1.5mm; line-height:1.4; }
+    /* Recommendations grid */
+    .rec-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:2mm; margin-top:1.5mm; }
+    .rec-item { background:#fff; border:1px solid var(--line); border-radius:2mm; padding:2mm 3.5mm; font-size:9.5pt; color:var(--ink); position:relative; padding-left:8mm; }
+    .rec-item::before {
+      content:"\2192"; position:absolute; left:3mm; top:1.7mm;
+      color:var(--purple); font-weight:700; font-size:11pt;
+    }
 
-    /* Priority list */
-    .priorities { margin-top:1mm; }
-    .priority { display:flex; align-items:flex-start; gap:4mm; padding:1.2mm 0; border-bottom:1px solid var(--line); }
-    .priority:last-child { border-bottom:none; }
-    .priority-num { flex-shrink:0; width:7mm; height:7mm; border-radius:999px; background:var(--purple); color:#fff; font-family:'Fraunces',serif; font-weight:700; font-size:10pt; display:flex; align-items:center; justify-content:center; }
-    .priority-body { flex:1; padding-top:0.3mm; }
-    .priority-title { font-family:'Fraunces',serif; font-size:9pt; color:var(--purple); text-transform:uppercase; letter-spacing:0.08em; }
-    .priority-text { font-size:9.5pt; color:var(--ink); margin-top:0.3mm; line-height:1.3; }
-    .priority-text em { font-style:italic; color:var(--teal-dark); }
+    /* Predictor callout */
+    .predictor { background:linear-gradient(135deg, #F5EEFF 0%, #E5F7F4 100%); border:1.5px solid var(--line); border-radius:4mm; padding:3.5mm 5mm; margin-top:2.5mm; }
+    .predictor-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; }
+    .predictor h3 { font-family:'Fraunces',serif; font-size:12.5pt; color:var(--purple); margin-top:1mm; line-height:1.1; }
+    .predictor p { font-size:9.5pt; color:var(--ink); margin-top:1.5mm; line-height:1.45; }
+    .predictor .dims { display:flex; flex-wrap:wrap; gap:1.5mm; margin-top:2mm; }
+    .predictor .dim { background:#fff; border:1px solid var(--line); color:var(--teal-dark); font-family:'Fraunces',serif; font-size:8.5pt; font-weight:600; padding:0.8mm 3mm; border-radius:999px; }
 
-    /* Notice callout */
+    /* Foundation Statement */
+    .foundation { background:var(--soft); border:1.5px solid var(--line); border-radius:4mm; padding:5mm 6mm; margin-top:2.5mm; position:relative; }
+    .foundation::before {
+      content:"\201C"; position:absolute; top:-1mm; left:3mm;
+      font-family:'Fraunces',serif; font-size:40pt; color:var(--purple); line-height:1; opacity:0.35;
+    }
+    .foundation-label { font-size:7.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--purple); font-weight:700; margin-left:10mm; }
+    .foundation h3 { font-family:'Fraunces',serif; font-size:12.5pt; color:var(--purple); margin-top:0.5mm; margin-left:10mm; }
+    .foundation p { font-family:'Fraunces',serif; font-style:italic; font-size:10pt; color:var(--ink); line-height:1.55; margin-top:2.5mm; }
+
+    /* Notice */
     .notice { background:var(--warn-bg); border:1.5px solid rgba(184,91,0,.35); border-radius:3mm; padding:2.5mm 4mm; margin-top:2.5mm; }
     .notice .label { font-size:7pt; letter-spacing:0.16em; text-transform:uppercase; color:var(--warn); font-weight:700; }
     .notice p { font-size:9pt; color:#5C2E00; margin-top:0.5mm; line-height:1.4; }
-
-    /* Final reflection */
-    .reflection { text-align:center; background:var(--soft); border-radius:3mm; padding:2.5mm 8mm; margin-top:2mm; page-break-inside: avoid; break-inside: avoid; }
-    .reflection h3 { font-family:'Fraunces',serif; font-size:12pt; color:var(--purple); }
-    .reflection p { font-size:9pt; color:var(--ink); margin-top:1mm; line-height:1.4; }
-
-    /* Footer */
-    .foot-sample { text-align:center; font-size:8pt; color:var(--muted); font-style:italic; margin-top:2mm; }
-    .foot { margin-top:5mm; padding-top:3mm; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-end; gap:5mm; font-size:7.5pt; color:var(--muted); line-height:1.4; }
-    .foot b { color: var(--ink); }
-    .foot .disc { max-width:100mm; font-size:7pt; color:#857E9C; font-style:italic; }
   </style>
 </head>
 <body>
@@ -122,50 +130,43 @@
   </header>
 
   <div class="title-block">
-    <h1><span class="accent">Special Needs</span> Co-Parenting<br />Assessment Report<span class="tm">&trade;</span></h1>
-    <div class="subtitle">A child-focused reflection on your family&rsquo;s strengths and next steps</div>
+    <h1><span class="accent">Special Needs</span> Co-Parenting Assessment Report<span class="tm">&trade;</span></h1>
+    <div class="subtitle">A child-focused reflection built from an 8-section family assessment</div>
   </div>
 
   <section class="block">
     <div class="opening">
       <p>Thank you for completing the SA CoParents&trade; Special Needs Co-Parenting Assessment.</p>
-      <p>Every child is unique. Children with developmental, medical, behavioral, learning, or emotional differences often benefit most when the important adults in their lives provide consistent support, predictable routines, and coordinated decision-making.</p>
       <p>This report is designed to help you identify your family&rsquo;s strengths, recognize opportunities for growth, and focus on practical strategies that support your child&rsquo;s well-being. It is not intended to diagnose any medical, psychological, educational, or developmental condition. Rather, it offers guidance to help co-parents work together more effectively while keeping the child&rsquo;s needs at the center of every decision.</p>
     </div>
   </section>
 
   <section class="block">
-    <h2>Assessment Summary</h2>
-    <div class="rating">
-      <div class="rating-label">Overall co-parenting support rating</div>
-      <div class="rating-value">Good Progress</div>
-      <div class="rating-note">Your responses suggest that both parents demonstrate a commitment to supporting your child&rsquo;s needs. While there are areas of strength, there are also opportunities to improve consistency, communication, and coordination across both households.</div>
+    <h2>Overall Readiness Score</h2>
+    <div class="readiness">
+      <div class="readiness-row"><div class="readiness-area">Understanding Child</div><div class="rating-pill r-excellent">Excellent</div></div>
+      <div class="readiness-row"><div class="readiness-area">Medical Coordination</div><div class="rating-pill r-good">Good</div></div>
+      <div class="readiness-row"><div class="readiness-area">School Collaboration</div><div class="rating-pill r-fair">Fair</div></div>
+      <div class="readiness-row"><div class="readiness-area">Communication</div><div class="rating-pill r-needs">Needs Improvement</div></div>
+      <div class="readiness-row"><div class="readiness-area">Home Consistency</div><div class="rating-pill r-good">Good</div></div>
+      <div class="readiness-row"><div class="readiness-area">Transition Planning</div><div class="rating-pill r-fair">Fair</div></div>
+      <div class="readiness-row"><div class="readiness-area">Problem Solving</div><div class="rating-pill r-needs">Needs Improvement</div></div>
     </div>
   </section>
 
   <section class="block">
-    <h2>Child Support Profile</h2>
-    <p style="font-weight:600;color:var(--purple);">Your child may benefit most from:</p>
-    <ul class="checked cols-2">
-      <li>Predictable daily routines</li>
-      <li>Consistent expectations between households</li>
-      <li>Coordinated educational support</li>
-      <li>Shared communication regarding medical and therapeutic care</li>
-      <li>Calm and child-focused parental interactions</li>
-    </ul>
-  </section>
-
-  <section class="block">
-    <h2>Areas of Strength</h2>
-    <p>Based on your assessment, your family demonstrates several positive qualities. Examples include:</p>
-    <ul class="bulleted">
-      <li>Both parents recognize the importance of meeting the child&rsquo;s individual needs.</li>
-      <li>Parents share similar long-term goals for the child.</li>
-      <li>Medical and educational services are generally supported.</li>
-      <li>Each parent demonstrates a willingness to help the child succeed.</li>
-      <li>Both homes provide opportunities for learning and development.</li>
-    </ul>
-    <p style="margin-top:2mm;font-style:italic;color:var(--muted);">These strengths provide an excellent foundation for continued collaboration.</p>
+    <h2>Assessment Coverage &mdash; 8 Sections</h2>
+    <p class="lede">This report is built from responses across eight structured sections. Each section is designed to keep the child&rsquo;s needs at the center rather than measure whether parents &ldquo;get along.&rdquo;</p>
+    <div class="coverage">
+      <div class="coverage-cell"><div class="coverage-num">Section 1</div><div class="coverage-name">Understanding Your Child</div></div>
+      <div class="coverage-cell"><div class="coverage-num">Section 2</div><div class="coverage-name">Medical &amp; Therapeutic Care</div></div>
+      <div class="coverage-cell"><div class="coverage-num">Section 3</div><div class="coverage-name">Educational Support</div></div>
+      <div class="coverage-cell"><div class="coverage-num">Section 4</div><div class="coverage-name">Daily Living Consistency</div></div>
+      <div class="coverage-cell"><div class="coverage-num">Section 5</div><div class="coverage-name">Communication Between Parents</div></div>
+      <div class="coverage-cell"><div class="coverage-num">Section 6</div><div class="coverage-name">Child Regulation &amp; Transitions</div></div>
+      <div class="coverage-cell"><div class="coverage-num">Section 7</div><div class="coverage-name">Parent Collaboration Readiness</div></div>
+      <div class="coverage-cell"><div class="coverage-num">Section 8</div><div class="coverage-name">Future Planning</div></div>
+    </div>
   </section>
 </main>
 
@@ -183,71 +184,54 @@
   </header>
 
   <section class="block">
-    <h2>Opportunities for Growth</h2>
-    <p>The assessment identified several areas that may benefit from additional attention.</p>
+    <h2>Strengths</h2>
+    <ul class="checked">
+      <li>Both parents recognize the child&rsquo;s diagnosis.</li>
+      <li>Therapy attendance is consistent.</li>
+      <li>Parents share similar long-term goals.</li>
+      <li>Both homes support educational success.</li>
+    </ul>
+  </section>
 
-    <div class="growth-card">
-      <h3>Communication</h3>
-      <p>Continue sharing important information regarding:</p>
-      <ul class="bulleted cols-2">
-        <li>school progress</li>
-        <li>appointments</li>
-        <li>medications</li>
-        <li>behavioral changes</li>
-        <li>successes and concerns</li>
-      </ul>
-    </div>
+  <section class="block">
+    <h2>Areas to Improve</h2>
+    <ul class="bulleted">
+      <li>Develop one shared therapy calendar.</li>
+      <li>Create consistent bedtime routines.</li>
+      <li>Improve communication about medications.</li>
+      <li>Build a transition routine between homes.</li>
+      <li>Prepare together for annual IEP meetings.</li>
+    </ul>
+  </section>
 
-    <div class="growth-card">
-      <h3>Consistency</h3>
-      <p>Children often benefit from similar expectations regarding:</p>
-      <ul class="bulleted cols-2">
-        <li>bedtime</li>
-        <li>homework</li>
-        <li>routines</li>
-        <li>screen time</li>
-        <li>behavior expectations</li>
-      </ul>
-      <p class="footnote">Consistency does not require identical households. Rather, it provides children with predictability and reduces unnecessary stress.</p>
-    </div>
-
-    <div class="growth-card">
-      <h3>School Collaboration</h3>
-      <p>Continue working together by:</p>
-      <ul class="bulleted cols-2">
-        <li>attending school meetings whenever possible</li>
-        <li>reviewing teacher recommendations</li>
-        <li>supporting homework routines</li>
-        <li>celebrating academic growth</li>
-        <li>communicating respectfully with school personnel</li>
-      </ul>
-    </div>
-
-    <div class="growth-card">
-      <h3>Medical and Therapy Coordination</h3>
-      <p>If your child receives professional services, both parents should strive to:</p>
-      <ul class="bulleted cols-2">
-        <li>understand treatment goals</li>
-        <li>reinforce therapeutic strategies at home</li>
-        <li>share important updates</li>
-        <li>communicate changes promptly</li>
-      </ul>
+  <section class="block">
+    <h2>Personalized Recommendations</h2>
+    <p class="lede">Based on your responses, consider exploring the following supports over the next several months.</p>
+    <div class="rec-grid">
+      <div class="rec-item">Shared communication tools (calendar, app, notebook)</div>
+      <div class="rec-item">Parent coaching for co-parenting skills</div>
+      <div class="rec-item">Child-focused mediation</div>
+      <div class="rec-item">Family therapy</div>
+      <div class="rec-item">Occupational therapy consultation</div>
+      <div class="rec-item">Pediatric follow-up</div>
+      <div class="rec-item">Educational advocacy resources</div>
+      <div class="rec-item">Structured IEP / 504 planning support</div>
     </div>
   </section>
 
   <section class="block">
-    <h2>Developmental &amp; Educational Readiness</h2>
-    <p>Your responses indicate opportunities to continue supporting your child&rsquo;s development through:</p>
-    <ul class="bulleted cols-2">
-      <li>language development</li>
-      <li>emotional regulation</li>
-      <li>social relationships</li>
-      <li>independence</li>
-      <li>executive functioning</li>
-      <li>confidence</li>
-      <li>classroom success</li>
-    </ul>
-    <p style="margin-top:2mm;font-style:italic;color:var(--muted);">Small, consistent efforts from both parents often produce meaningful long-term growth.</p>
+    <div class="predictor">
+      <div class="predictor-label">SA CoParents&trade; distinguishing feature</div>
+      <h3>Child Impact Predictor</h3>
+      <p>Rather than identifying areas of disagreement alone, the Child Impact Predictor estimates how differences between households may affect your child in practical, day-to-day areas. This shifts the focus away from blaming the other parent and toward understanding how specific co-parenting patterns influence the child&rsquo;s lived experience &mdash; consistent with SA CoParents&trade;&rsquo; guiding message.</p>
+      <div class="dims">
+        <span class="dim">Routines</span>
+        <span class="dim">School performance</span>
+        <span class="dim">Therapy participation</span>
+        <span class="dim">Emotional regulation</span>
+        <span class="dim">Transitions between homes</span>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -265,87 +249,35 @@
   </header>
 
   <section class="block">
-    <h2>Child Impact Reflection</h2>
-    <p>Children often experience greater confidence and emotional security when they know both parents are working toward the same goals.</p>
-    <p style="margin-top:2mm;">Even when parents disagree with one another, children generally benefit when adults:</p>
-    <ul class="bulleted cols-2">
-      <li>reduce conflict</li>
-      <li>communicate respectfully</li>
-      <li>support school success</li>
-      <li>reinforce therapeutic goals</li>
-      <li>maintain predictable routines</li>
-      <li>encourage healthy relationships</li>
-    </ul>
-  </section>
-
-  <section class="block">
-    <h2>Personalized Recommendations</h2>
-    <p>Based upon your assessment, consider focusing on the following priorities during the next several months.</p>
-    <div class="priorities">
-      <div class="priority">
-        <div class="priority-num">1</div>
-        <div class="priority-body">
-          <div class="priority-title">Priority One</div>
-          <div class="priority-text">Develop one shared calendar for school, therapy, and medical appointments.</div>
-        </div>
-      </div>
-      <div class="priority">
-        <div class="priority-num">2</div>
-        <div class="priority-body">
-          <div class="priority-title">Priority Two</div>
-          <div class="priority-text">Create consistent routines for homework, bedtime, and transitions between homes.</div>
-        </div>
-      </div>
-      <div class="priority">
-        <div class="priority-num">3</div>
-        <div class="priority-body">
-          <div class="priority-title">Priority Three</div>
-          <div class="priority-text">Share important information regarding your child&rsquo;s progress on a regular basis.</div>
-        </div>
-      </div>
-      <div class="priority">
-        <div class="priority-num">4</div>
-        <div class="priority-body">
-          <div class="priority-title">Priority Four</div>
-          <div class="priority-text">Review your child&rsquo;s educational and therapeutic goals together several times each year.</div>
-        </div>
-      </div>
-      <div class="priority">
-        <div class="priority-num">5</div>
-        <div class="priority-body">
-          <div class="priority-title">Priority Five</div>
-          <div class="priority-text">Continue making decisions by asking: <em>&ldquo;How will this decision help meet our child&rsquo;s needs?&rdquo;</em></div>
-        </div>
-      </div>
+    <h2>Child Needs Foundation Statement</h2>
+    <p class="lede">Instead of ending on a numeric score, the SA CoParents&trade; assessment closes with a shared, child-centered statement both parents can return to during future decisions and mediation.</p>
+    <div class="foundation">
+      <div class="foundation-label">Foundation statement</div>
+      <h3>Our commitment to our child</h3>
+      <p>&ldquo;Our child benefits from predictable routines, coordinated medical care, consistent educational support, and calm communication between parents. We recognize that although our parenting styles may differ, our shared responsibility is to provide stability, reduce unnecessary conflict, and support our child&rsquo;s developmental, emotional, and educational needs. We commit to making decisions that prioritize our child&rsquo;s well-being and to seeking professional guidance whenever needed.&rdquo;</p>
     </div>
   </section>
 
-  <section class="block tight">
-    <h2>Building Your Child&rsquo;s Foundation</h2>
-    <p>Healthy co-parenting begins by creating a shared understanding of what your child needs most.</p>
-    <p style="margin-top:2mm;">The next step in the SA CoParents&trade; process is to complete your <b>Foundation Statement</b>, where you will identify:</p>
+  <section class="block">
+    <h2>What Happens Next in the SA CoParents App</h2>
     <ul class="bulleted cols-2">
-      <li>your child&rsquo;s strengths</li>
-      <li>your child&rsquo;s unique needs</li>
-      <li>shared goals</li>
-      <li>important concerns</li>
-      <li>parenting priorities</li>
-      <li>hopes for the future</li>
+      <li>Review this assessment and save it to your dashboard.</li>
+      <li>Complete your personalized Foundation Statement.</li>
+      <li>Build your Child Needs Statement for mediation.</li>
+      <li>Create your Co-Parenting Commitment.</li>
+      <li>Prepare shared materials for mediation, IEP, or medical meetings.</li>
+      <li>Reassess after significant changes in your child&rsquo;s needs.</li>
     </ul>
-    <p style="margin-top:2mm;font-style:italic;color:var(--muted);">This statement becomes the foundation for productive conversations, mediation, and future co-parenting decisions.</p>
   </section>
 
   <div class="notice">
     <div class="label">Important reminder</div>
-    <p>Every child develops differently. This report should not be used as a substitute for medical, psychological, educational, or legal advice. If you have concerns regarding your child&rsquo;s development, learning, behavior, or safety, consult the appropriate healthcare provider, educational professional, therapist, or attorney.</p>
+    <p>Every child develops differently. This report is educational and informational only. It is not a psychological evaluation, medical diagnosis, therapy, or legal advice. If you have concerns regarding your child&rsquo;s development, learning, behavior, or safety, consult the appropriate healthcare provider, educational professional, therapist, or attorney.</p>
   </div>
 
-  <div class="reflection">
-    <h3>Final Reflection</h3>
-    <p>Your child does not need perfect parents.</p>
-    <p>Your child benefits most from parents who continue learning, adapting, and working together to provide stability, encouragement, and opportunities for growth.</p>
-    <p style="font-family:'Fraunces',serif;font-style:italic;color:var(--teal-dark);">Every positive step you take toward cooperation strengthens your child&rsquo;s foundation for success.</p>
-  </div>
+  <p style="text-align:center;margin-top:4mm;font-family:'Fraunces',serif;font-style:italic;color:var(--teal-dark);font-size:10.5pt;">
+    Every positive step you take toward cooperation strengthens your child&rsquo;s foundation for success.
+  </p>
 </main>
 
 </body>

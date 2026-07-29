@@ -1,18 +1,15 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
-## 🆕 Special Needs Assessment Report — rewritten with warm, encouraging narrative (Feb 2026)
-Replaced the earlier clinical/scorecard Special Needs sample with a warmer, prose-first report per user's exact copy. Keeps parity with the trio (safety · foundation · special-needs) and remains 3-page US Letter.
+## 🆕 Special Needs Report — 8-section framework + Child Impact Predictor + Foundation Statement (Feb 2026)
+Third rewrite of the Special Needs sample to reflect the full 8-section family assessment structure requested by the user, plus two distinguishing features: the Child Needs Foundation Statement (verbatim closing paragraph) and the Child Impact Predictor.
 
-- **New tone & structure**: opening thank-you card, "Good Progress" overall rating banner (no numeric scoring), Child Support Profile with 5 checkmarks, 5 strengths, 4 Opportunities-for-Growth cards (Communication · Consistency · School · Medical & Therapy), 7-item Developmental & Educational Readiness, Child Impact Reflection, 5 numbered priorities culminating in the "How will this decision help meet our child's needs?" question, Building Your Child's Foundation (routes to the Foundation Statement flow), Important Reminder, centered Final Reflection callout ("Your child does not need perfect parents…").
-- **Pagination**: fits into 3 US Letter pages via tightened block spacing, 2-column bullet/checkmark lists, and compact priority rows.
-- **Files regenerated**:
-  - `/app/frontend/public/special-needs-report.html` (overwrite)
-  - `/app/frontend/public/downloads/sacoparents-special-needs-report.pdf` (154 KB, 3 Letter pages)
-  - `/app/frontend/public/downloads/sacoparents-special-needs-report.png` (807 KB stitched)
-  - `/app/frontend/public/downloads/sacoparents-special-needs-report.jpg` (729 KB stitched)
-- **API** `GET /api/insights/special-needs-report.pdf` verified `200 · application/pdf · 3 Letter pages`.
-- **Landing wiring** unchanged — card 3 continues to link to `/downloads/sacoparents-special-needs-report.pdf`.
+- **Page 1** — Cover + opening thank-you card + 7-area **Overall Readiness Score** table (Understanding Child · Medical Coordination · School Collaboration · Communication · Home Consistency · Transition Planning · Problem Solving) with color-coded rating pills (Excellent teal / Good purple / Fair amber / Needs Improvement orange) + Assessment Coverage grid showing all 8 sections (Understanding Your Child · Medical &amp; Therapeutic Care · Educational Support · Daily Living Consistency · Communication Between Parents · Child Regulation &amp; Transitions · Parent Collaboration Readiness · Future Planning).
+- **Page 2** — Strengths (4 ✓ items) · Areas to Improve (5 bullet items) · Personalized Recommendations (8 → items in 2-col grid: communication tools, parent coaching, child-focused mediation, family therapy, OT consultation, pediatric follow-up, educational advocacy, IEP/504 planning) · **Child Impact Predictor** callout (SA CoParents&trade; distinguishing feature) with 5 dimension chips (Routines · School performance · Therapy participation · Emotional regulation · Transitions between homes).
+- **Page 3** — Child Needs **Foundation Statement** callout with the verbatim first-person paragraph the user provided · "What Happens Next in the SA CoParents App" (6 steps, 2-col) · Important Reminder disclaimer · closing italic line.
+- Assets regenerated: PDF 152 KB / PNG / JPG · all US Letter, 3 pages.
+- API `GET /api/insights/special-needs-report.pdf` verified 200 · application/pdf · 3 Letter pages.
+- Landing card 3 already links to this file (no change needed).
 
 
 <!-- Changelog latest entry -->
