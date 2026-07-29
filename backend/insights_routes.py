@@ -320,6 +320,26 @@ async def download_coparenting_options():
     )
 
 
+@router.get("/coparenting-dynamic-sample.pdf")
+async def download_coparenting_dynamic_sample():
+    """Public download of a fictional-data Co-Parenting Assessment report
+    rendered by the *live* dynamic PDF renderer (cp_report_pdf.build_coparenting_pdf).
+
+    Unlike coparenting-report.pdf (static hand-crafted collateral), this file
+    is generated from a curated mixed-quality answer profile so it reflects
+    exactly what a real user will download after finishing the assessment —
+    including strengths, priority focus areas, the Communication Toolkit
+    trigger, per-section detail, and next steps."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-coparenting-dynamic-sample.pdf"
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="SA-CoParents-Co-Parenting-Dynamic-Sample.pdf",
+    )
+
+
+
 @router.get("/special-needs-report.pdf")
 async def download_special_needs_report():
     """Public download of the 3-page sample Special Needs Co-Parenting
