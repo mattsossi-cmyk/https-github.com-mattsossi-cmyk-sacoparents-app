@@ -43,7 +43,7 @@ def _safe(text: Any) -> str:
 
 class _CPReportPDF(FPDF):
     def __init__(self):
-        super().__init__()
+        super().__init__(format="Letter")
         self.set_auto_page_break(auto=True, margin=18)
         self.set_margins(15, 18, 15)
         self.alias_nb_pages()

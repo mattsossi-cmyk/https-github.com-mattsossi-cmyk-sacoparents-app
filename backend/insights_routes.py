@@ -339,6 +339,34 @@ async def download_coparenting_dynamic_sample():
     )
 
 
+@router.get("/coparenting-dynamic-sample.png")
+async def download_coparenting_dynamic_sample_png():
+    """Full-length PNG preview of the dynamic Co-Parenting sample report.
+    All 4 pages stitched vertically at 150 DPI. Useful for marketing tiles
+    or as a hero image for the sample-report callout on the assessment page."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-coparenting-dynamic-sample.png"
+    return FileResponse(
+        path,
+        media_type="image/png",
+        filename="SA-CoParents-Co-Parenting-Dynamic-Sample.png",
+    )
+
+
+@router.get("/coparenting-dynamic-sample-thumb.png")
+async def download_coparenting_dynamic_sample_thumb():
+    """Single-page (page 1) thumbnail preview of the dynamic Co-Parenting sample.
+    Constrained to ~900 px wide for use in cards / tiles."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-coparenting-dynamic-sample-thumb.png"
+    return FileResponse(
+        path,
+        media_type="image/png",
+        filename="SA-CoParents-Co-Parenting-Dynamic-Sample-Thumb.png",
+    )
+
+
+
 
 @router.get("/special-needs-report.pdf")
 async def download_special_needs_report():
