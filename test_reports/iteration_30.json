@@ -1,0 +1,38 @@
+{
+  "summary": "Validated the new public shared Co-Parenting report viewer (/shared/coparenting/:token) end-to-end. Backend contract for share-link (token, path, viewer_path, excluded) and shared JSON/PDF endpoints work without auth. Frontend renders branded page correctly, hides excluded next_steps section, shows error card for invalid tokens, and does NOT surface the legal acknowledgment modal on /shared/* routes. Backend unit regression (test_cp_report + test_coparenting_scoring + test_sn_v3_scoring): 17 passed as expected.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_shared_cp_viewer.py",
+    "/app/test_reports/pytest/shared_cp_viewer.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "coparenting_routes.py::shared_report default `format=pdf`: consider defaulting to json or explicitly enumerating format via Literal['json','pdf'] to avoid silent PDF response when caller forgets the param.",
+    "SharedCoParentingReport.jsx uses `fetch` directly with credentials:'omit' — good. However backend endpoint /report/shared/{token} is publicly cacheable; consider adding Cache-Control: private, no-store to avoid intermediary caching of a signed shared token URL."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_shared_cp_viewer.py"
+  ],
+  "success_rate": { "backend": "100%", "frontend": "100%" },
+  "test_credentials": "parent1@test.com / TestPass123! (JWT)",
+  "seed_data_creation": "Reset + bulk-answered 67 CP questions for parent1@test.com, completed, generated report, created share link with excluded=['next_steps']. Token persisted to /tmp/share_token.txt during testing.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite: `cd /app/backend && python -m pytest tests/test_cp_report.py tests/test_coparenting_scoring.py tests/test_sn_v3_scoring.py tests/test_shared_cp_viewer.py -q` = 20 passed. Shared viewer route confirmed: /shared/coparenting/:token exempted from LegalAcknowledgment modal via /shared/* prefix check.",
+  "verified_flows": [
+    "POST /api/coparenting/answers/bulk (67 answers) -> 200 answered=67",
+    "POST /api/coparenting/complete -> 200",
+    "POST /api/coparenting/report/generate -> report_id",
+    "POST /api/coparenting/report/{id}/share-link {excluded:['next_steps']} -> {token, path, viewer_path:'/shared/coparenting/<token>', excluded:['next_steps']}",
+    "GET /api/coparenting/report/shared/{token}?format=json (no auth) -> shared_by=Sam Parent, excluded_sections=['next_steps'], report.overall_rating set",
+    "GET /api/coparenting/report/shared/{token}?format=pdf (no auth) -> application/pdf, magic %PDF",
+    "GET /api/coparenting/report/shared/INVALID_TOKEN -> 404",
+    "Frontend /shared/coparenting/<token>: banner (Early Progress · Sam Parent · July 29, 2026), strengths, growth, sections, CTA rendered; next_steps hidden; legal modal NOT rendered; PDF button href points to backend PDF endpoint (fetched status 200 application/pdf); CTA primary -> '/', CTA signup -> '/signup'.",
+    "Frontend /shared/coparenting/INVALID_TOKEN: shows sharedcp-error card, no legal modal, no crash."
+  ]
+}

@@ -342,7 +342,12 @@ async def create_report_share_link(
         incoming = (doc.get("visibility") or {}).get("excluded") or []
     ex = report_visibility.clean_excluded("cp_report", incoming)
     token = create_share_token("cp_report", report_id, user.user_id, excluded_sections=ex)
-    return {"token": token, "path": f"/api/coparenting/report/shared/{token}", "excluded": ex}
+    return {
+        "token": token,
+        "path": f"/api/coparenting/report/shared/{token}",
+        "viewer_path": f"/shared/coparenting/{token}",
+        "excluded": ex,
+    }
 
 
 @router.get("/report/shared/{token}")

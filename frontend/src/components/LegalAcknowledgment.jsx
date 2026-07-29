@@ -73,6 +73,16 @@ export default function LegalAcknowledgment() {
       }
       return;
     }
+    // Public shared-report links (sent to co-parents, mediators, attorneys)
+    // must also be viewable without the disclaimer modal — the report itself
+    // carries the required disclaimer footer.
+    if (location.pathname.startsWith("/shared/")) {
+      if (open) {
+        setOpen(false);
+        document.body.style.overflow = "";
+      }
+      return;
+    }
     if (!hasAcknowledgedLegal()) {
       setOpen(true);
       // Lock body scroll while the modal is open.
