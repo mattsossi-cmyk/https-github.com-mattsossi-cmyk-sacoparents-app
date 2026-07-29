@@ -27,7 +27,7 @@ from report_visibility import (
 
 
 def test_report_types_present():
-    assert set(REPORT_SECTIONS.keys()) == {"summary", "agreement", "sn_report", "safety"}
+    assert set(REPORT_SECTIONS.keys()) == {"summary", "agreement", "sn_report", "safety", "cp_report", "sn_v3_report"}
     for report_type, sections in REPORT_SECTIONS.items():
         # Every section has stable key + human-readable label
         for s in sections:
