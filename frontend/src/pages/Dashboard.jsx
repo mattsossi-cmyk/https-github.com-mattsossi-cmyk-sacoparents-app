@@ -704,7 +704,30 @@ export default function Dashboard() {
             <ChevronRight size={16} className="shrink-0 text-[#3D1A78]" />
           </Link>
 
-          {/* Safety / IPV Assessment — sits directly beneath Special Needs */}
+          {/* Special Needs Assessment v3 — 10-principle single-parent framework */}
+          <Link
+            to="/special-needs-v3"
+            data-testid="dashboard-special-needs-v3-card"
+            className="mt-4 group flex items-center gap-4 rounded-3xl bg-white border border-[#E5E0EE] hover:border-[#3D1A78] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+          >
+            <div className="shrink-0 w-12 h-12 rounded-full bg-[#F1EBFA] grid place-items-center text-[#3D1A78]">
+              <Puzzle size={22} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-0.5">
+                Special Needs · 10 Principles (new)
+              </div>
+              <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
+                Rate your co-parenting across 10 special-needs principles
+              </div>
+              <p className="text-xs sm:text-sm text-[#4B4567] leading-relaxed">
+                A single-parent, 5-point self-assessment aligned with the SA
+                CoParents 10-principle framework. 60 questions. Get an overall
+                rating, your strongest area, and priority focuses in minutes.
+              </p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-[#3D1A78]" />
+          </Link>
           <Link
             to="/safety-assessment"
             data-testid="dashboard-safety-assessment-card"

@@ -18,6 +18,7 @@ import Coach from "@/pages/Coach";
 import NextSteps from "@/pages/NextSteps";
 import Neurodivergent from "@/pages/Neurodivergent";
 import NeurodivergentReports from "@/pages/NeurodivergentReports";
+import SpecialNeedsV3 from "@/pages/SpecialNeedsV3";
 import ChildGoals from "@/pages/ChildGoals";
 import IssuesConcerns from "@/pages/IssuesConcerns";
 import PriorityRanking from "@/pages/PriorityRanking";
@@ -186,6 +187,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <NeurodivergentReports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v3"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV3 />
             </ProtectedRoute>
           }
         />
