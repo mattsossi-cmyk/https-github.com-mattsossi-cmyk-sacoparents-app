@@ -163,7 +163,7 @@ def compute_disagreement(
 # ---- Pathway engine ------------------------------------------------------
 
 # Balanced escalation thresholds — user chose option (b) from the plan.
-# Tier 3 (Parenting Coordinator recommended) triggers when:
+# Tier 3 (Parenting Facilitator recommended) triggers when:
 #   index >= 5, OR
 #   index >= 3 AND concern_response is risky
 #
@@ -204,9 +204,9 @@ _TIER_META = {
     },
     "T3": {
         "id": "T3",
-        "label": "Tier 3 — Parenting Coordinator recommended",
+        "label": "Tier 3 — Parenting Facilitator recommended",
         "tone": "warn",
-        "summary": "Repeated disagreement or risky response patterns are surfacing. A Parenting Coordinator or Family Facilitator can hold decisions when the two parents get stuck.",
+        "summary": "Repeated disagreement or risky response patterns are surfacing. A Parenting Facilitator can hold decisions when the two parents get stuck.",
     },
     "T4": {
         "id": "T4",
@@ -257,7 +257,7 @@ def _actions_for(tier: str, safeguards: Dict[str, Any], disagreement: Dict[str, 
     }
 
     call_pc = {
-        "title": "Consult a Parenting Coordinator or Family Facilitator",
+        "title": "Consult a Parenting Facilitator",
         "detail": "A PC / Family Facilitator is a neutral trained to hold decisions when co-parents get stuck. In Texas, search the Texas Association of Mediators or ask your family lawyer for a referral.",
         "when": "Within 14 days",
     }

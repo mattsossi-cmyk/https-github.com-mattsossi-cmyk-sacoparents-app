@@ -174,7 +174,7 @@ PATHWAYS: Dict[int, Dict[str, Any]] = {
             "repeated harassment, protective order violations, or immediate safety concerns."
         ),
         "recommendations": [
-            "Communication only through attorneys, court-approved platforms, parenting coordinator, or supervised channel",
+            "Communication only through attorneys, court-approved platforms, parenting facilitator, or supervised channel",
             "No phone calls or in-person discussions",
             "Neutral or supervised exchanges",
             "Emergency-only communication protocol",
@@ -224,7 +224,7 @@ PATHWAYS: Dict[int, Dict[str, Any]] = {
             "Each parent offers options",
             "Compare options by safety, stability, and child impact",
             "Create a written agreement",
-            "Consider mediator, parenting coordinator, therapist, or neutral support",
+            "Consider mediator, parenting facilitator, therapist, or neutral support",
         ],
     },
     4: {

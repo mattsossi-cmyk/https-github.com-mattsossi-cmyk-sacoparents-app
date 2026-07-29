@@ -282,8 +282,8 @@ SAFEGUARDS_ITEMS = [
 
     # Neutral third parties (3) --------------------------------------------
     {"id": "sg_mediator_pc",      "group": "neutrals",
-     "label": "Mediator or Parenting Coordinator",
-     "prompt": "Do you have a mediator or Parenting Coordinator you can call when parents get stuck?"},
+     "label": "Mediator or Parenting Facilitator",
+     "prompt": "Do you have a mediator or Parenting Facilitator you can call when parents get stuck?"},
     {"id": "sg_family_therapist", "group": "neutrals",
      "label": "Family therapist",
      "prompt": "Is there a family therapist working with your family system (not just your child individually)?"},
