@@ -1,6 +1,21 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Phase 3(b) — Special Needs v3 frontend (Feb 2026)
+Wired the completed 10-principle backend (`/api/special-needs-v3/*`) into an actual React assessment flow.
+
+- New page **`/app/frontend/src/pages/SpecialNeedsV3.jsx`** at route **`/special-needs-v3`** (added in `App.js`).
+- Section-by-section flow: 10 principles × 6 questions, 5-point Likert (Never / Rarely / Sometimes / Often / Always).
+- Autosave per principle via `POST /answers/bulk`; save-and-resume via `GET /me`.
+- On finish → `POST /complete` returns deterministic scores; results render inline with overall rating, strongest area, priority focuses, per-principle rating chips, and a **communication toolkit** callout (only when Principle 3 rating is Fair/Needs Improvement).
+- Restart button hits `DELETE /me` to clear and start over.
+- New Dashboard entry `dashboard-special-needs-v3-card` links to the new flow.
+- **Sample report callout** on both questionnaire and results views links to the existing branded static sample (HTML at `/special-needs-report.html`, PDF at `/api/insights/special-needs-report.pdf`).
+- Legacy `/neurodivergent` flow untouched and still works.
+
+**Testing** — `testing_agent_v3` iteration 29: all backend unit + new API integration tests pass; all frontend flows pass with no bugs. Screenshot smoke test verified sample-report callout renders correctly.
+
+<!-- Changelog latest entry -->
 ## 🆕 Special Needs 10-Principle Assessment + reworked sample (Feb 2026)
 Mirrors the 10-principle framework the user supplied (Build Individualized Plan · Consistent Routines · Open Communication · Aligned Expectations · Understand Diagnosis · Coordinate Education/Therapy · Manage Transitions · Flexibility · Support Network · Compassion).
 

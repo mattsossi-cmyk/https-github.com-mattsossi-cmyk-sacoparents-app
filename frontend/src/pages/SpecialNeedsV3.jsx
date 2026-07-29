@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   ArrowLeft, ArrowRight, Check, Loader2, Save, RotateCcw, Sparkles,
-  AlertTriangle, TrendingUp, MessageCircle,
+  AlertTriangle, TrendingUp, MessageCircle, FileText, Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
@@ -62,6 +62,58 @@ function Progress({ answered, total }) {
       </div>
       <div className="h-1.5 bg-[#EFE9F9] rounded-full overflow-hidden">
         <div className="h-full bg-[#3D1A78] transition-all" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+const SAMPLE_HTML_URL = "/special-needs-report.html";
+const SAMPLE_PDF_URL = "/api/insights/special-needs-report.pdf";
+
+function SampleReportCallout({ variant = "default" }) {
+  const isCompact = variant === "compact";
+  return (
+    <div
+      className={`rounded-2xl border border-[#CFC1EA] bg-[#F5F0FE] ${isCompact ? "p-4" : "p-5"}`}
+      data-testid="snv3-sample-report-callout"
+    >
+      <div className="flex items-start gap-3">
+        <div className="shrink-0 w-9 h-9 rounded-full bg-white grid place-items-center text-[#3D1A78] border border-[#CFC1EA]">
+          <FileText size={16} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-0.5">
+            Sample report
+          </div>
+          <div className="font-semibold text-[#1A1330]">
+            See what a completed Special Needs report looks like
+          </div>
+          <p className="text-xs sm:text-sm text-[#4B4567] mt-1 leading-relaxed">
+            A branded, fictional SA CoParents sample using the 10-principle
+            framework. Great to preview before you finish, or to share with
+            your co-parent, mediator, or Parenting Facilitator.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a
+              href={SAMPLE_HTML_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3D1A78] bg-white border border-[#CFC1EA] hover:border-[#3D1A78] rounded-full px-3 py-1.5"
+              data-testid="snv3-sample-view-btn"
+            >
+              <FileText size={12} /> View sample (HTML)
+            </a>
+            <a
+              href={SAMPLE_PDF_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#3D1A78] hover:bg-[#2D0F63] rounded-full px-3 py-1.5"
+              data-testid="snv3-sample-pdf-btn"
+            >
+              <Download size={12} /> Download sample PDF
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -195,7 +247,6 @@ function ResultsView({ scores, schema, onRestart }) {
 }
 
 export default function SpecialNeedsV3() {
-  useNavigate();
   const [schema, setSchema] = useState(null);
   const [answers, setAnswers] = useState({});
   const [scores, setScores] = useState(null);
@@ -334,6 +385,9 @@ export default function SpecialNeedsV3() {
               <ArrowLeft size={14} /> Back to Dashboard
             </Link>
             <ResultsView scores={scores} schema={schema} onRestart={restart} />
+            <div className="mt-6">
+              <SampleReportCallout variant="compact" />
+            </div>
           </div>
         </div>
       </AppShell>
@@ -371,6 +425,10 @@ export default function SpecialNeedsV3() {
 
           <div className="mt-6">
             <DemoModeBanner />
+          </div>
+
+          <div className="mt-6">
+            <SampleReportCallout />
           </div>
 
           <div className="mt-8">
