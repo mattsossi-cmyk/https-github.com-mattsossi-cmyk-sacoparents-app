@@ -1,17 +1,18 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
-## 🆕 Sample Special Needs Co-Parenting Assessment Report (Feb 2026)
-Third and final printable sample in the landing-page collateral trio. Completes parity across all three "Three reports you can receive" cards.
+## 🆕 Special Needs Assessment Report — rewritten with warm, encouraging narrative (Feb 2026)
+Replaced the earlier clinical/scorecard Special Needs sample with a warmer, prose-first report per user's exact copy. Keeps parity with the trio (safety · foundation · special-needs) and remains 3-page US Letter.
 
-- **HTML source** `/app/frontend/public/special-needs-report.html` — 3-page US Letter layout: Purpose + Important Notice, Child Profile (age + chip row of primary need areas), Overall Assessment Results (3 scorecards — 82/100 alignment · Moderate readiness · 64/100 consistency), Child Strengths, Areas Needing Additional Support (4 cards: communication / medical / educational / sensory-emotional), Child-Centered Priorities, Recommendations (Immediate / 30-day / Long-term blocks), Suggested Next Steps in the SA CoParents App (6-step 2-column list), sample-report attribution + disclaimer footer.
-- **Assets** (Chromium headless + pdftoppm + PIL stitching):
-  - `/app/frontend/public/downloads/sacoparents-special-needs-report.pdf` (365 KB, 3 pages, Letter)
-  - `/app/frontend/public/downloads/sacoparents-special-needs-report.png` (381 KB stitched preview)
-  - `/app/frontend/public/downloads/sacoparents-special-needs-report.jpg` (624 KB stitched preview)
-- **Public download endpoint** `GET /api/insights/special-needs-report.pdf` — verified `200` + `application/pdf` + 3 Letter pages
-- **Landing wiring** — third strip card ("Prepare a Child Needs Statement for mediation") now links via `three-reports-child-needs-sample-link` to the new PDF, replacing the earlier "coming soon" placeholder. All three landing cards (safety · foundation · special-needs) now have working "View sample" pills.
-- **Brand consistency** — SA CoParents&trade; wordmark and TM mark applied throughout the report and footer per user's exact spec.
+- **New tone & structure**: opening thank-you card, "Good Progress" overall rating banner (no numeric scoring), Child Support Profile with 5 checkmarks, 5 strengths, 4 Opportunities-for-Growth cards (Communication · Consistency · School · Medical & Therapy), 7-item Developmental & Educational Readiness, Child Impact Reflection, 5 numbered priorities culminating in the "How will this decision help meet our child's needs?" question, Building Your Child's Foundation (routes to the Foundation Statement flow), Important Reminder, centered Final Reflection callout ("Your child does not need perfect parents…").
+- **Pagination**: fits into 3 US Letter pages via tightened block spacing, 2-column bullet/checkmark lists, and compact priority rows.
+- **Files regenerated**:
+  - `/app/frontend/public/special-needs-report.html` (overwrite)
+  - `/app/frontend/public/downloads/sacoparents-special-needs-report.pdf` (154 KB, 3 Letter pages)
+  - `/app/frontend/public/downloads/sacoparents-special-needs-report.png` (807 KB stitched)
+  - `/app/frontend/public/downloads/sacoparents-special-needs-report.jpg` (729 KB stitched)
+- **API** `GET /api/insights/special-needs-report.pdf` verified `200 · application/pdf · 3 Letter pages`.
+- **Landing wiring** unchanged — card 3 continues to link to `/downloads/sacoparents-special-needs-report.pdf`.
 
 
 <!-- Changelog latest entry -->
