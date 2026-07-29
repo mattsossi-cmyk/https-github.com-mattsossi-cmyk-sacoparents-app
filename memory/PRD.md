@@ -1,6 +1,20 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Sample Special Needs Co-Parenting Assessment Report (Feb 2026)
+Third and final printable sample in the landing-page collateral trio. Completes parity across all three "Three reports you can receive" cards.
+
+- **HTML source** `/app/frontend/public/special-needs-report.html` — 3-page US Letter layout: Purpose + Important Notice, Child Profile (age + chip row of primary need areas), Overall Assessment Results (3 scorecards — 82/100 alignment · Moderate readiness · 64/100 consistency), Child Strengths, Areas Needing Additional Support (4 cards: communication / medical / educational / sensory-emotional), Child-Centered Priorities, Recommendations (Immediate / 30-day / Long-term blocks), Suggested Next Steps in the SA CoParents App (6-step 2-column list), sample-report attribution + disclaimer footer.
+- **Assets** (Chromium headless + pdftoppm + PIL stitching):
+  - `/app/frontend/public/downloads/sacoparents-special-needs-report.pdf` (365 KB, 3 pages, Letter)
+  - `/app/frontend/public/downloads/sacoparents-special-needs-report.png` (381 KB stitched preview)
+  - `/app/frontend/public/downloads/sacoparents-special-needs-report.jpg` (624 KB stitched preview)
+- **Public download endpoint** `GET /api/insights/special-needs-report.pdf` — verified `200` + `application/pdf` + 3 Letter pages
+- **Landing wiring** — third strip card ("Prepare a Child Needs Statement for mediation") now links via `three-reports-child-needs-sample-link` to the new PDF, replacing the earlier "coming soon" placeholder. All three landing cards (safety · foundation · special-needs) now have working "View sample" pills.
+- **Brand consistency** — SA CoParents&trade; wordmark and TM mark applied throughout the report and footer per user's exact spec.
+
+
+<!-- Changelog latest entry -->
 ## 🆕 Sample Family Violence & Communication Safety Assessment Report (Feb 2026)
 Branded, printable 3-page sample of the safety-assessment output — parity with the Foundation Statement and Access Flyer collateral. Purely fictional example data so parents, attorneys, and mediators can review the format and depth before completing the real assessment.
 

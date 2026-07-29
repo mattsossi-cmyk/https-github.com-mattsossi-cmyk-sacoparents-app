@@ -290,6 +290,21 @@ async def download_family_violence_report():
     )
 
 
+@router.get("/special-needs-report.pdf")
+async def download_special_needs_report():
+    """Public download of the 3-page sample Special Needs Co-Parenting
+    Assessment Report (Letter, 8.5x11 in). Fictional example data so
+    parents, mediators, and referring professionals can preview the format
+    before completing the actual Special Needs assessment inside the app."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-special-needs-report.pdf"
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="SA-CoParents-Special-Needs-Report-Sample.pdf",
+    )
+
+
 @router.post("/admin/weekly/regenerate")
 async def regenerate_weekly_insights(
     request: Request,

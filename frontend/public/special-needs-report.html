@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SA CoParents — Special Needs Co-Parenting Assessment Report</title>
+  <meta name="description" content="Sample Special Needs Co-Parenting Assessment Report — identify a child's unique developmental, medical, behavioral, and educational needs so co-parenting decisions stay child-focused." />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple: #3D1A78; --teal: #2DB5B5; --teal-dark: #0E7A7A;
+      --warn: #B85B00; --warn-bg: #FFF3E9;
+      --ink: #1A1330; --muted: #4B4567; --soft: #F7F4FC;
+      --line: #E5E0EE; --success: #0E7A7A; --success-bg: #E8F7F5;
+    }
+    html, body { background:#fff; color:var(--ink); font-family:'Plus Jakarta Sans',sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    @page { size: letter portrait; margin: 0; }
+    .page { width: 216mm; margin: 0 auto; padding: 12mm 16mm; background: #fff; position: relative; }
+    .page:not(:last-child) { break-after: page; page-break-after: always; }
+
+    /* Header */
+    .head { display:flex; align-items:center; justify-content:space-between; padding-bottom:4mm; border-bottom:2px solid var(--line); margin-bottom:6mm; }
+    .brand { display:flex; align-items:center; gap:4mm; }
+    .brand-mark { width:10mm; height:10mm; border-radius:999px; background:linear-gradient(135deg,var(--purple),var(--teal)); color:#fff; font-family:'Fraunces',serif; font-weight:700; font-size:14pt; display:flex; align-items:center; justify-content:center; }
+    .brand-name { font-family:'Fraunces',serif; font-size:15pt; color:var(--ink); }
+    .brand-name b { color: var(--purple); }
+    .brand-tag { font-size:7.5pt; color:var(--muted); letter-spacing:0.14em; text-transform:uppercase; font-weight:700; }
+    .doc-label { text-align:right; font-size:7.5pt; color:var(--purple); letter-spacing:0.18em; text-transform:uppercase; font-weight:700; line-height:1.4; }
+
+    /* Title */
+    .title-block { text-align:center; margin-bottom:6mm; padding-bottom:4mm; border-bottom:1px solid var(--line); }
+    h1 { font-family:'Fraunces',serif; font-weight:700; color:var(--ink); font-size:22pt; line-height:1.1; }
+    h1 .accent { color: var(--purple); }
+    h1 .tm { font-size:11pt; vertical-align:super; color:var(--teal-dark); }
+    .subtitle { font-family:'Fraunces',serif; font-size:11pt; color:var(--teal-dark); margin-top:1.5mm; font-style:italic; }
+
+    /* Meta */
+    .meta { display:grid; grid-template-columns:repeat(3,1fr); gap:3mm; margin-top:4mm; }
+    .meta-cell { background:var(--soft); border-radius:2.5mm; padding:2.5mm 3mm; }
+    .meta-label { font-size:6.5pt; letter-spacing:0.16em; text-transform:uppercase; color:var(--purple); font-weight:700; }
+    .meta-value { font-family:'Fraunces',serif; font-size:11pt; color:var(--ink); margin-top:0.5mm; }
+
+    /* Sections */
+    section.block { margin-top:5mm; }
+    section.block.tight { margin-top:3.5mm; }
+    h2 { font-family:'Fraunces',serif; font-size:13pt; color:var(--purple); margin-bottom:2mm; padding-bottom:1.5mm; border-bottom:1px solid var(--line); }
+    h3.sub { font-family:'Fraunces',serif; font-size:11pt; color:var(--teal-dark); margin-top:3mm; margin-bottom:1mm; }
+    p, li { font-size:10pt; color:var(--ink); line-height:1.5; }
+    p + p { margin-top: 2mm; }
+
+    /* Notice callout */
+    .notice { background:var(--warn-bg); border:1.5px solid rgba(184,91,0,.35); border-radius:3mm; padding:3.5mm 5mm; margin-top:3mm; }
+    .notice .label { font-size:7pt; letter-spacing:0.16em; text-transform:uppercase; color:var(--warn); font-weight:700; }
+    .notice p { font-size:9.5pt; color:#5C2E00; margin-top:1mm; line-height:1.45; }
+
+    /* Bulleted list */
+    ul.bulleted { list-style:none; margin-top:1.5mm; }
+    ul.bulleted li { position:relative; padding-left:5mm; margin-top:1.5mm; }
+    ul.bulleted li::before { content:""; position:absolute; left:0; top:2.4mm; width:2mm; height:2mm; border-radius:999px; background:var(--teal-dark); }
+    ul.bulleted.cols-2 { columns: 2; column-gap: 8mm; margin-top:1mm; }
+    ul.bulleted.cols-2 li { break-inside: avoid; margin-top:1mm; }
+
+    /* Areas of need chips */
+    .chip-row { display:flex; flex-wrap:wrap; gap:2mm; margin-top:2mm; }
+    .chip { background:var(--soft); color:var(--purple); border:1px solid var(--line); border-radius:999px; padding:1mm 4mm; font-size:9pt; font-weight:600; font-family:'Fraunces',serif; }
+
+    /* Score cards */
+    .scorecards { display:grid; grid-template-columns:repeat(3,1fr); gap:3mm; margin-top:3mm; }
+    .scorecard { border:1px solid var(--line); border-radius:4mm; padding:4mm 4mm 5mm; background:#fff; position:relative; overflow:hidden; }
+    .scorecard::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2mm; }
+    .sc-purple::before { background:var(--purple); }
+    .sc-teal::before   { background:var(--teal-dark); }
+    .sc-warn::before   { background:var(--warn); }
+    .sc-label { font-size:7pt; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+    .sc-value { font-family:'Fraunces',serif; font-size:22pt; color:var(--ink); margin-top:1mm; line-height:1; }
+    .sc-value .u { font-size:11pt; color:var(--muted); font-weight:400; }
+    .sc-note { font-size:9pt; color:var(--muted); margin-top:2mm; line-height:1.35; }
+
+    /* Recommendation rows */
+    .rec-block { border:1px solid var(--line); border-radius:3mm; padding:3mm 5mm; margin-top:2.5mm; background:#fff; }
+    .rec-title { display:flex; align-items:center; gap:3mm; margin-bottom:1mm; }
+    .rec-pill { font-size:8pt; letter-spacing:0.14em; text-transform:uppercase; font-weight:700; padding:1mm 3.5mm; border-radius:999px; }
+    .rec-immediate { background:#FFEDDE; color:var(--warn); }
+    .rec-30 { background:var(--soft); color:var(--purple); }
+    .rec-long { background:var(--success-bg); color:var(--success); }
+    .rec-block ul.bulleted { margin-top:0.5mm; }
+    .rec-block ul.bulleted li { margin-top:1mm; }
+    .rec-block p { font-size:9.5pt; margin-top:0.5mm; }
+
+    /* Support subsection card */
+    .support-card { background:var(--soft); border-radius:3mm; padding:3.5mm 5mm; margin-top:3mm; }
+    .support-card h3 { font-family:'Fraunces',serif; font-size:11pt; color:var(--purple); }
+    .support-card p { font-size:9.5pt; color:var(--muted); margin-top:1mm; line-height:1.45; }
+    .support-card .recommend { margin-top:2mm; font-size:9.5pt; color:var(--ink); }
+    .support-card .recommend b { color: var(--teal-dark); }
+
+    /* Next steps in-app */
+    .next-app { margin-top:2mm; counter-reset:na; }
+    .na-step { display:flex; align-items:flex-start; gap:4mm; padding:1.5mm 0; border-bottom:1px solid var(--line); }
+    .na-step:last-child { border-bottom:none; }
+    .na-num { flex-shrink:0; width:6mm; height:6mm; border-radius:999px; background:var(--teal-dark); color:#fff; font-family:'Fraunces',serif; font-weight:700; font-size:9.5pt; display:flex; align-items:center; justify-content:center; }
+    .na-text { font-size:10pt; color:var(--ink); line-height:1.4; padding-top:0.5mm; }
+    .next-app.cols-2 { display:grid; grid-template-columns:1fr 1fr; column-gap:6mm; }
+
+    /* Footer */
+    .foot { margin-top:6mm; padding-top:3mm; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-end; gap:5mm; font-size:7.5pt; color:var(--muted); line-height:1.4; }
+    .foot b { color: var(--ink); }
+    .foot .disc { max-width:100mm; font-size:7pt; color:#857E9C; font-style:italic; }
+    .foot-sample { text-align:center; font-size:8.5pt; color:var(--muted); font-style:italic; margin-top:4mm; }
+  </style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span style="font-size:9pt;color:var(--teal-dark);vertical-align:super;">&trade;</span></div>
+        <div class="brand-tag">Special Needs Co-Parenting Assessment</div>
+      </div>
+    </div>
+    <div class="doc-label">Sample Report<br />SCP-SN-2026-A</div>
+  </header>
+
+  <div class="title-block">
+    <h1><span class="accent">Special Needs</span> Co-Parenting<br />Assessment Report<span class="tm">&trade;</span></h1>
+    <div class="subtitle">A child-focused snapshot for parents raising a child with additional needs</div>
+    <div class="meta">
+      <div class="meta-cell"><div class="meta-label">Assessment date</div><div class="meta-value">July 29, 2026</div></div>
+      <div class="meta-cell"><div class="meta-label">Assessment type</div><div class="meta-value">Special Needs</div></div>
+      <div class="meta-cell"><div class="meta-label">Sample ID</div><div class="meta-value">SCP-SN-2026-A</div></div>
+    </div>
+  </div>
+
+  <section class="block">
+    <h2>Purpose</h2>
+    <p>This assessment is designed to help parents identify the unique needs of a child with developmental, medical, behavioral, emotional, educational, or neurodivergent differences. The goal is to improve co-parenting decisions by keeping the child&rsquo;s needs at the center of every conversation.</p>
+    <div class="notice">
+      <div class="label">Important notice</div>
+      <p>This report is educational and informational only. It is not a psychological evaluation, medical diagnosis, or legal opinion. Parents are encouraged to consult qualified medical, educational, therapeutic, and legal professionals when appropriate.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Child Profile</h2>
+    <p><b>Child age:</b> 9</p>
+    <p style="margin-top:2.5mm;"><b>Primary areas of need:</b></p>
+    <div class="chip-row">
+      <span class="chip">Autism Spectrum Disorder</span>
+      <span class="chip">ADHD</span>
+      <span class="chip">Speech Therapy</span>
+      <span class="chip">Occupational Therapy</span>
+      <span class="chip">Sensory Processing Challenges</span>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Overall Assessment Results</h2>
+    <div class="scorecards">
+      <div class="scorecard sc-purple">
+        <div class="sc-label">Child needs alignment</div>
+        <div class="sc-value">82<span class="u"> / 100</span></div>
+        <div class="sc-note">Parents generally understand the child&rsquo;s needs.</div>
+      </div>
+      <div class="scorecard sc-teal">
+        <div class="sc-label">Co-parenting readiness</div>
+        <div class="sc-value">Moderate</div>
+        <div class="sc-note">Parents show commitment but need stronger coordination.</div>
+      </div>
+      <div class="scorecard sc-warn">
+        <div class="sc-label">Consistency between homes</div>
+        <div class="sc-value">64<span class="u"> / 100</span></div>
+        <div class="sc-note">Routines and expectations differ between households.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PAGE 2 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span style="font-size:9pt;color:var(--teal-dark);vertical-align:super;">&trade;</span></div>
+        <div class="brand-tag">Special Needs Assessment · Sample · SCP-SN-2026-A</div>
+      </div>
+    </div>
+    <div class="doc-label">Page 2</div>
+  </header>
+
+  <section class="block">
+    <h2>Child Strengths</h2>
+    <ul class="bulleted">
+      <li>Strong relationship with both parents.</li>
+      <li>Responds well to routines.</li>
+      <li>Enjoys visual schedules.</li>
+      <li>Positive relationship with teachers.</li>
+      <li>Benefits from praise and encouragement.</li>
+      <li>Shows resilience during transitions when prepared.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Areas Needing Additional Support</h2>
+
+    <div class="support-card">
+      <h3>Communication Between Parents</h3>
+      <p>Parents reported differing opinions regarding therapy goals, school communication, behavioral expectations, homework routines, and transitions between homes.</p>
+      <div class="recommend"><b>Recommendation:</b> Create one shared communication plan focused only on the child&rsquo;s needs.</div>
+    </div>
+
+    <div class="support-card">
+      <h3>Medical Decision-Making</h3>
+      <ul class="bulleted" style="margin-top:1mm;">
+        <li>Attend evaluations together whenever appropriate.</li>
+        <li>Share medical reports promptly.</li>
+        <li>Maintain one shared medical calendar.</li>
+      </ul>
+    </div>
+
+    <div class="support-card">
+      <h3>Educational Collaboration</h3>
+      <p>Both parents should receive school communications and jointly review educational goals, accommodations, and IEP-related information.</p>
+    </div>
+
+    <div class="support-card">
+      <h3>Sensory and Emotional Regulation</h3>
+      <ul class="bulleted" style="margin-top:1mm;">
+        <li>Quiet environments.</li>
+        <li>Transition warnings.</li>
+        <li>Sensory breaks.</li>
+        <li>Visual supports.</li>
+        <li>Predictable routines.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PAGE 3 ============ -->
+<main class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div>
+        <div class="brand-name">SA <b>CoParents</b><span style="font-size:9pt;color:var(--teal-dark);vertical-align:super;">&trade;</span></div>
+        <div class="brand-tag">Special Needs Assessment · Sample · SCP-SN-2026-A</div>
+      </div>
+    </div>
+    <div class="doc-label">Page 3</div>
+  </header>
+
+  <section class="block">
+    <h2>Child-Centered Priorities</h2>
+    <ul class="bulleted cols-2">
+      <li>Emotional safety.</li>
+      <li>Educational success.</li>
+      <li>Stable routines.</li>
+      <li>Physical health.</li>
+      <li>Positive relationships with both parents.</li>
+      <li>Continued therapy.</li>
+      <li>Consistent expectations.</li>
+    </ul>
+  </section>
+
+  <section class="block tight">
+    <h2>Recommendations</h2>
+
+    <div class="rec-block">
+      <div class="rec-title"><span class="rec-pill rec-immediate">Immediate</span></div>
+      <ul class="bulleted">
+        <li>Share therapy schedules.</li>
+        <li>Develop one transition routine.</li>
+        <li>Create a shared medical notebook or secure app.</li>
+        <li>Establish consistent bedtime expectations.</li>
+      </ul>
+    </div>
+
+    <div class="rec-block">
+      <div class="rec-title"><span class="rec-pill rec-30">Next 30 days</span></div>
+      <ul class="bulleted">
+        <li>Attend one medical or therapy appointment together when appropriate.</li>
+        <li>Review educational accommodations.</li>
+        <li>Develop a shared list of calming strategies.</li>
+        <li>Create emergency contact procedures.</li>
+      </ul>
+    </div>
+
+    <div class="rec-block">
+      <div class="rec-title"><span class="rec-pill rec-long">Long-term</span></div>
+      <p>Develop a written <b>Child Support Plan</b> addressing medical care, therapy goals, school accommodations, communication guidelines, crisis planning, transitions, and future developmental goals.</p>
+    </div>
+  </section>
+
+  <section class="block tight">
+    <h2>Suggested Next Steps in the SA CoParents App</h2>
+    <div class="next-app cols-2">
+      <div class="na-step"><div class="na-num">1</div><div class="na-text">Review this assessment.</div></div>
+      <div class="na-step"><div class="na-num">2</div><div class="na-text">Complete your Foundation Statement.</div></div>
+      <div class="na-step"><div class="na-num">3</div><div class="na-text">Build your Child Needs Statement.</div></div>
+      <div class="na-step"><div class="na-num">4</div><div class="na-text">Create your Co-Parenting Commitment.</div></div>
+      <div class="na-step"><div class="na-num">5</div><div class="na-text">Prepare for mediation.</div></div>
+      <div class="na-step"><div class="na-num">6</div><div class="na-text">Reassess after significant changes in the child&rsquo;s needs.</div></div>
+    </div>
+  </section>
+
+  <div class="foot-sample">Sample report prepared for SA CoParents&trade; &nbsp;·&nbsp; sacoparentsapp.online</div>
+
+  <footer class="foot">
+    <div>
+      <b>SA CoParents&trade;</b><br />
+      16607 Blanco #703, San Antonio, TX 78232<br />
+      mattsossi@bsossi.com &nbsp;·&nbsp; 210-224-1667<br />
+      sacoparentsapp.online
+    </div>
+    <div class="disc">
+      This report is an educational preparation tool. It is not a
+      psychological evaluation, medical diagnosis, therapy, or legal
+      advice. Consult qualified professionals for clinical, educational,
+      or legal decisions.
+    </div>
+  </footer>
+</main>
+
+</body>
+</html>

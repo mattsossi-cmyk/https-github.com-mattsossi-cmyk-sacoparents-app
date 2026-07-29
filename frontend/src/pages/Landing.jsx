@@ -581,7 +581,8 @@ function ThreeReportsStrip() {
           title="Prepare a Child Needs Statement for mediation"
           body="A structured, child-focused agenda you can bring straight into your mediation session or attorney meeting."
           accent="#B85B00"
-          sampleLabel="Printable sample coming soon"
+          sampleHref="/downloads/sacoparents-special-needs-report.pdf"
+          sampleLabel="View sample Special Needs report (PDF)"
         />
       </div>
     </section>
