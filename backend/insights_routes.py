@@ -305,6 +305,21 @@ async def download_coparenting_report():
     )
 
 
+@router.get("/coparenting-options.pdf")
+async def download_coparenting_options():
+    """Public download of the 2-page SA CoParents Co-Parenting Options
+    reference handout (Letter, 8.5x11 in). Ten evidence-based communication
+    and decision-making approaches, cross-referenced from the Family Violence,
+    Co-Parenting, and Special Needs assessment reports."""
+    from fastapi.responses import FileResponse
+    path = "/app/frontend/public/downloads/sacoparents-coparenting-options.pdf"
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="SA-CoParents-Co-Parenting-Options-Reference.pdf",
+    )
+
+
 @router.get("/special-needs-report.pdf")
 async def download_special_needs_report():
     """Public download of the 3-page sample Special Needs Co-Parenting
