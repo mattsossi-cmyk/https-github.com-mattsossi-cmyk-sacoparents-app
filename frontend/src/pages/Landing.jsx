@@ -340,6 +340,20 @@ const SITUATIONS = [
     },
   },
   {
+    key: "special-needs",
+    label: "I have concerns for my child's educational, medical or psychological needs",
+    icon: <Baby />,
+    focus: "special-needs",
+    route: "/special-needs-v2",
+    result: {
+      title: "Start with the Special Needs Co-Parenting Assessment.",
+      body: "Children's needs don't always fit one category. You'll pick every area that applies — medical, educational, psychological, or interconnected — and walk through a coordinated eight-step assessment that ends in an individualized action plan you can share with your co-parent, mediator, or provider.",
+      cta: "Start the Special Needs assessment",
+      tone: "cooperative",
+      icon: <Baby size={20} />,
+    },
+  },
+  {
     key: "mediation",
     label: "I am preparing for mediation or court",
     icon: <Scale />,
