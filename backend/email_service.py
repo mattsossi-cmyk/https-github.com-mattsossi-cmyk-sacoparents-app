@@ -599,6 +599,89 @@ def send_post_event_survey_reminder(*, to_email: str, link_url: str, user_name: 
     )
 
 
+def send_snc_report_ready(
+    *,
+    to_email: str,
+    user_name: Optional[str],
+    child_first_name: Optional[str],
+    priority_concerns: List[str],
+    open_report_url: str,
+    pdf_bytes: bytes,
+) -> None:
+    """Notify the parent that their Special Needs Co-Parenting report is ready.
+
+    Attaches the individual-parent PDF and includes a short recap of their
+    highest-priority items. The email is sent from a single 'ready' notification —
+    it is not sent again on regenerate, so we don't spam the parent every time
+    they edit an answer.
+    """
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    child_line = (
+        f"Your report for {child_first_name} is ready to review and share."
+        if child_first_name
+        else "Your report is ready to review and share."
+    )
+
+    concerns = [c for c in (priority_concerns or []) if c]
+    concerns_html = ""
+    concerns_plain = ""
+    if concerns:
+        items_html = "".join(
+            f'<li style="margin:0 0 6px 0;color:#1A1330;font-size:14px;line-height:1.55;">{c}</li>'
+            for c in concerns[:5]
+        )
+        concerns_html = (
+            '<div style="background:#F8F7FC;border-left:3px solid #3D1A78;'
+            'padding:14px 18px;border-radius:6px;margin:0 0 22px 0;">'
+            '<div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;'
+            'color:#3D1A78;font-weight:700;margin-bottom:6px;">Your priority items</div>'
+            f'<ul style="margin:6px 0 0 18px;padding:0;list-style:disc;">{items_html}</ul>'
+            "</div>"
+        )
+        concerns_plain = "\nYour priority items:\n" + "\n".join(
+            f"  • {c}" for c in concerns[:5]
+        ) + "\n"
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">{greeting}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"{child_line} The individual parent report attached to this email is built "
+        f"only from your answers — it does not compare you to the other parent, does "
+        f"not diagnose your child, and does not determine parental fitness.</p>"
+        f"{concerns_html}"
+        '<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        "You can share the attached PDF with a mediator, teacher, treating "
+        "professional, or your co-parent — you decide who sees it.</p>"
+        '<p style="font-size:12px;line-height:1.55;color:#857E9C;margin:0;">'
+        "Your Family Violence &amp; Communication Safety answers, if any, are kept "
+        "out of the shared/scored parts of this document.</p>"
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"{child_line}\n\n"
+        "The attached PDF is your individual parent report. It's built only from "
+        "your answers — it doesn't compare you to the other parent, doesn't diagnose "
+        "your child, and doesn't determine parental fitness.\n"
+        f"{concerns_plain}\n"
+        f"Open your report online:\n{open_report_url}\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    html = _branded_html(
+        headline="Your Special Needs Co-Parenting report is ready",
+        body_html=body_html,
+        cta_label="Open my report",
+        cta_url=open_report_url,
+    )
+    _send(
+        to_email=to_email,
+        subject="Your Special Needs Co-Parenting report is ready",
+        html=html,
+        text=plain,
+        attachments=[("Special_Needs_Co-Parenting_Report.pdf", pdf_bytes)],
+        failure_message="Couldn't email your Special Needs report right now.",
+    )
+
+
 def send_mediator_email(
     *,
     to_email: str,

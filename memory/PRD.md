@@ -6,14 +6,17 @@
 - **Special Needs Co-Parenting (SNC):** Phase A + Phase C shipped previously; Phase B (persistence, routes, cached report, save-and-resume) + frontend (assessment, report, dashboard card, PDF download, regenerate) now shipped in this session. Testing agent iteration 33 — backend 19/19 API tests pass, frontend flows verified.
 
 ### Files added (backend) — SNC Phase B 2026-07-30
-- `backend/snc_routes.py` — full `/api/snc` router (schema, me, answer, answers/bulk, complete, scores, report/status, report/generate, report/regenerate, report, report/pdf, DELETE /me)
+- `backend/snc_routes.py` — full `/api/snc` router (schema, me, answer, answers/bulk, complete, scores, report/status, report/generate, report/regenerate, report, report/pdf, report/email, DELETE /me)
 - `backend/tests/test_snc_api.py` — 19 API tests, all pass
 - Registered `snc_router` in `server.py`; MongoDB collections `snc_assessments` and `snc_reports` (indexed by `user_id`)
 - Updated `snc_report_pdf.py` header to include the shared SA CoParents branded logo band (matches co-parenting / safety PDFs)
+- Extended `email_service.py` with `send_snc_report_ready()` — SA CoParents branded email with the PDF attached; one-time send on first successful report generation, and a manual "Email me the PDF" endpoint (`POST /api/snc/report/email`)
+- Report cache now tracks `notified_at`; the "your report is ready" email is only sent the first time a cached report is created for a parent (regenerate does NOT re-notify)
+- **Known deployment blocker (not code):** Resend send fails with `The sacoparentsapp.online domain is not verified` — same root cause affects the existing survey-reminder emails. `POST /api/snc/report/email` returns `{"sent": false, "reason": "…"}` cleanly and the UI surfaces that as a toast. Fix: verify the sender domain in Resend at https://resend.com/domains.
 
 ### Files added (frontend) — SNC Phase B 2026-07-30
 - `frontend/src/pages/SpecialNeedsCoParenting.jsx` — 13-section assessment, autosave, progress bar, section navigator, Save-and-come-back button, Complete + auto-generate
-- `frontend/src/pages/SpecialNeedsReport.jsx` — 17-section report render, "Last generated · Regenerate", PDF download, safety block with automatic referral to the full Safety Assessment
+- `frontend/src/pages/SpecialNeedsReport.jsx` — 17-section report render, "Last generated · Regenerate", "Download PDF", "Email me the PDF" (uses the new report/email endpoint), safety block with automatic referral to the full Safety Assessment
 - `App.js` — routes `/special-needs` and `/special-needs/report` (both `ProtectedRoute`)
 - `Dashboard.jsx` — new `[data-testid=dashboard-snc-card]` with cached-report status, links to assessment or report based on state
 

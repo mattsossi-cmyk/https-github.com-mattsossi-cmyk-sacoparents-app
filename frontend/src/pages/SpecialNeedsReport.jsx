@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   FileText,
   ArrowLeft,
+  Mail,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -180,6 +181,24 @@ export default function SpecialNeedsReport() {
     }
   };
 
+  const emailMe = async () => {
+    setBusy(true);
+    try {
+      const res = await api.post("/snc/report/email");
+      if (res.data?.sent) {
+        toast.success(`Sent to ${res.data.to || "your email"}.`);
+      } else {
+        toast.error(res.data?.reason || "Could not email your report.");
+      }
+      await load();
+    } catch (err) {
+      logError("snc email", err);
+      toast.error(err?.response?.data?.detail || "Could not email your report.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (state.loading) {
     return (
       <AppShell>
@@ -270,6 +289,14 @@ export default function SpecialNeedsReport() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60"
             >
               <Download size={13} /> Download PDF
+            </button>
+            <button
+              onClick={emailMe}
+              disabled={busy}
+              data-testid="snc-report-email"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60"
+            >
+              <Mail size={13} /> Email me the PDF
             </button>
             <button
               onClick={regenerate}
