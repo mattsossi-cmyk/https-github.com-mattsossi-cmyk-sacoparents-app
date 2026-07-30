@@ -1,144 +1,64 @@
-# SA CoParents — PRD (SNC Phase B/C shipped)
+# SA CoParents — PRD
 
-## Status snapshot (2026-07-30 · updated)
+## Status snapshot (2026-07-30 · v2 shipped)
 
-- **Family Report:** fully removed at user request (this session).
-- **Special Needs Co-Parenting (SNC):** Phase A + Phase C shipped previously; Phase B (persistence, routes, cached report, save-and-resume) + frontend (assessment, report, dashboard card, PDF download, regenerate) now shipped in this session. Testing agent iteration 33 — backend 19/19 API tests pass, frontend flows verified.
-
-### Files added (backend) — SNC Phase P1 (invite + comparison) 2026-07-30
-- `backend/snc_comparison.py` — neutral pair-comparison logic (5 buckets: agreement, different observations, missing information, professional questions, coordination areas). Section 11 (Safety) hard-excluded. Verbatim narratives never copied. No winner language.
-- `backend/snc_comparison_pdf.py` — branded SA CoParents PDF renderer for the neutral side-by-side (matches the individual-report aesthetic; sand header band with the shared logo; cover + counts + three buckets + professional questions + coordination areas + disclaimer). Guardrails enforced by unit tests: no s11 anywhere in the byte stream, no verbatim narrative sentinels, no winner language, dedup applied to professional questions.
-- `backend/snc_invite_routes.py` — `/api/snc/invite/*` and `/api/snc/comparison/*` endpoints (create, list, public token lookup, accept, resend with 5-min cooldown, revoke; comparison ready-state + cache + regenerate + **PDF download**).
-- `backend/tests/test_snc_comparison.py` — 8 unit tests (guardrails: s11 never present, no verbatim narrative leak, no winner language, dedup, missing-info bucket).
-- `backend/tests/test_snc_comparison_pdf.py` — 6 unit tests for the comparison PDF (signature, size, s11 exclusion, sentinel narrative absent, no winner language, safety notice + bucket titles present, dedup of shared professional questions).
-- `backend/tests/test_snc_invite_api.py` — 21 API integration tests — all pass.
-- `email_service.send_snc_coparent_invite()` — SA CoParents-branded invitation email with the accept URL.
-- `snc_report_content.py` — summary rows now include `id` for structured comparison (backward-compatible; existing 18 report tests still pass).
-
-### Files added (frontend) — SNC Phase P1 2026-07-30
-- `SpecialNeedsInvite.jsx` — send invite by email, list sent+received invites, copy accept-link, resend (cooldown-aware), cancel, jump into comparison when accepted.
-- `SpecialNeedsInviteAccept.jsx` — public landing page: describes the flow, honours already-accepted state, redirects unauthenticated users to `/login?next=` and preserves the token.
-- `SpecialNeedsComparison.jsx` — neutral comparison view with safety-notice banner, counts strip, three category buckets, professional questions, coordination areas, disclaimer, regenerate button, and **Download PDF** button ([data-testid=snc-cmp-download-pdf]).
-- Route wiring in `App.js` (`/special-needs/invite`, `/special-needs/invite/:token`, `/special-needs/comparison/:inviteId`).
-- `SpecialNeedsReport.jsx` — new "Invite co-parent" button ([data-testid=snc-report-invite-coparent]) in the cache header.
-
-### Files added (backend) — SNC Phase B 2026-07-30
-- `backend/snc_routes.py` — full `/api/snc` router (schema, me, answer, answers/bulk, complete, scores, report/status, report/generate, report/regenerate, report, report/pdf, report/email, DELETE /me)
-- `backend/tests/test_snc_api.py` — 19 API tests, all pass
-- Registered `snc_router` in `server.py`; MongoDB collections `snc_assessments` and `snc_reports` (indexed by `user_id`)
-- Updated `snc_report_pdf.py` header to include the shared SA CoParents branded logo band (matches co-parenting / safety PDFs)
-- Extended `email_service.py` with `send_snc_report_ready()` — SA CoParents branded email with the PDF attached; one-time send on first successful report generation, and a manual "Email me the PDF" endpoint (`POST /api/snc/report/email`)
-- Report cache now tracks `notified_at`; the "your report is ready" email is only sent the first time a cached report is created for a parent (regenerate does NOT re-notify)
-- **Known deployment blocker (not code):** Resend send fails with `The sacoparentsapp.online domain is not verified` — same root cause affects the existing survey-reminder emails. `POST /api/snc/report/email` returns `{"sent": false, "reason": "…"}` cleanly and the UI surfaces that as a toast. Fix: verify the sender domain in Resend at https://resend.com/domains.
-
-### Files added (frontend) — SNC Phase B 2026-07-30
-- `frontend/src/pages/SpecialNeedsCoParenting.jsx` — 13-section assessment, autosave, progress bar, section navigator, Save-and-come-back button, Complete + auto-generate
-- `frontend/src/pages/SpecialNeedsReport.jsx` — 17-section report render, "Last generated · Regenerate", "Download PDF", "Email me the PDF" (uses the new report/email endpoint), safety block with automatic referral to the full Safety Assessment
-- `App.js` — routes `/special-needs` and `/special-needs/report` (both `ProtectedRoute`)
-- `Dashboard.jsx` — new `[data-testid=dashboard-snc-card]` with cached-report status, links to assessment or report based on state
-
-### Files removed (backend) — Family Report demolition 2026-07-30
-- `backend/family_report_content.py`, `family_report_pdf.py`, `family_report_routes.py`
-- `backend/tests/test_family_report.py`
-- Removed `/api/insights/family-report-dynamic-sample.{pdf,png}` (+ thumb) endpoints
-- Unregistered `family_report_router` from `server.py`
-- MongoDB collection `family_reports` dropped
-
-### Files removed (frontend) — Family Report demolition 2026-07-30
-- `frontend/src/pages/FamilyReport.jsx`, `SharedFamilyReport.jsx`
-- `frontend/src/components/FamilyReportBody.jsx`
-- Removed `/family-report` and `/shared/family/:token` routes from `App.js`
-- Removed the "Family Report" dashboard card + `FileHeart` icon import from `Dashboard.jsx`
-- Removed `public/downloads/sacoparents-family-report-*` samples (PDF, PNG, JPG, thumbs)
-
-### What remains untouched after Family Report removal
-- Co-Parenting Assessment + Report (+ its own share links + dynamic sample)
-- Family Violence & Communication Safety Assessment + Report
-- SNC Phase A + Phase C core (questions, scoring, report content, PDF renderer, sample PDF)
-- Auth, invites, gmail, coach, insights, admin, next-steps
+- **Family Report:** fully removed at user request.
+- **Special Needs Co-Parenting v1** (13-section flat product): fully deleted per user's "replace it" directive. Backend routes `/api/snc/*`, frontend `/special-needs*` pages, comparison + invite endpoints, associated tests, sample PDFs, and MongoDB collections `snc_assessments`, `snc_reports`, `snc_invites`, `snc_comparisons` all removed.
+- **Special Needs Co-Parenting v2** shipped at `/special-needs-v2`. Category-gated (Medical / Educational / Psychological or Behavioural / Multiple) 8-step workflow (Understand the Concern → Identify Current Needs → Review Professional Recommendations → Each Parent's Understanding → Coordination Between Homes → Agreement and Disagreement → Practical Co-Parenting Options → Create an Action Plan) that yields a branded individual parent report + cached-report/regenerate lifecycle + PDF download.
+- **Retained products**: Co-Parenting Assessment + Report (+ share links), Family Violence & Communication Safety Assessment + Report, auth, invites (general co-parent), gmail, coach, insights, admin, next-steps.
 
 ---
 
-## Prior demolition record — Special Needs (retained for history)
+## v2 Implementation summary
 
-### Files removed (backend)
-- `sn_v3_questions.py`, `sn_v3_scoring.py`, `sn_v3_routes.py`, `sn_v3_report_content.py`, `sn_v3_report_pdf.py`, `sn_report_pdf.py`
-- `special_needs_questions.py`, `special_needs_scoring.py`
-- `neurodivergent_routes.py`, `sn_pathway.py`
-- `scripts/regen_sn_sample.py`
-- `tests/test_sn_v3_*.py`, `tests/test_sn_pathway*.py`, `tests/test_phase2_share_endpoints.py`
+### Backend
+- `backend/snc2_questions.py` — 4 pathways, 8-step template, parametric per-pathway prompts + options; `build_schema()` compiles per-selection schemas.
+- `backend/snc2_scoring.py` — Per-pathway composite `understanding` + `coordination` scores plus a reported-impact banding.
+- `backend/snc2_report_content.py` — Structured report matching the 8-step workflow with the response → finding → child impact → suggested → action step pattern.
+- `backend/snc2_report_pdf.py` — SA CoParents-branded PDF renderer (sand header band + logo + purple accents).
+- `backend/snc2_routes.py` — `/api/snc2/*` API (pathways, schema, me, select, answer, answers/bulk, complete, scores, delete, report/status, report/generate, report/regenerate, report, report/pdf).
+- MongoDB collections `snc2_assessments`, `snc2_reports`.
 
-### Files removed (frontend)
-- `pages/SpecialNeedsV3.jsx`, `pages/SharedSpecialNeedsReport.jsx`, `pages/SpecialNeedsInviteAccept.jsx`
-- `pages/Neurodivergent.jsx`, `pages/NeurodivergentReports.jsx`
-- `components/SpecialNeedsScoreDashboard.jsx`
-- `public/special-needs-report.html`
-- `public/downloads/sacoparents-special-needs*.pdf/.png`, `parent1-special-needs-report.pdf`
+### Frontend
+- `frontend/src/pages/SpecialNeedsV2.jsx` — category picker → 8-step assessment (autosave, progress bar, step tabs, Save-and-come-back, Complete).
+- `frontend/src/pages/SpecialNeedsV2Report.jsx` — At-a-glance, pathway scores, 8 step blocks, cache bar with Download PDF + Regenerate.
+- `App.js` routes `/special-needs-v2`, `/special-needs-v2/report`.
+- `Dashboard.jsx` card `[data-testid=dashboard-snc-card]` deep-links to v2 URLs.
 
-### Files updated (wiring cleaned)
-- `backend/server.py` — SN routers unregistered
-- `backend/family_report_content.py`, `family_report_pdf.py`, `family_report_routes.py` — Family Report composes CP + Safety only
-- `backend/next_steps_routes.py` — `special_needs` handler stubbed out
-- `backend/insights_routes.py` — sample endpoints removed
-- `backend/report_visibility.py` — `sn_v3_report` entry removed
-- `backend/tests/test_family_report.py` — CP + Safety only
-- `frontend/src/App.js` — SN routes/imports removed
-- `frontend/src/pages/Dashboard.jsx` — SN cards + neurodivergent data fetching removed
-- `frontend/src/components/FamilyReportBody.jsx`, `FivePillarJourney.jsx`, `NextStepJourney.jsx`, `PickerChoicePill.jsx` — SN entries removed
-- `frontend/src/pages/Landing.jsx`, `Methodology.jsx`, `NextSteps.jsx`, `SafetyAssessment.jsx` — SN mentions removed
-- `frontend/src/lib/methodology.js` — special_needs entry removed
+### Tests
+- `tests/test_snc2.py` — 9 unit tests (schema resolve/build, validation, scoring bands, report structure, PDF signature + guardrails, catalog).
+- `tests/test_snc2_api.py` — 11 API integration tests (added by testing agent).
+- Testing agent iteration 35 — zero critical/minor issues. Guardrails verified: no `correct parent`, `wrong parent`, `winner`, `right parent`, `incorrect parent` in payload or PDF bytes.
 
-### MongoDB collections dropped
-- `sn_v3_assessments`, `sn_v3_reports`, `sn_v3_invites`, `nd_prep`, `nd_reports`, `sn_v2_reports`
+### Public samples
+- `frontend/public/downloads/snc-sample-individual-report.pdf` — filled with rich fictitious "Multiple pathways" data (ADHD + IEP + emotional regulation).
+- `frontend/public/downloads/snc-sample-assessment.pdf` — blank 8-step workbook printout with all three pathways.
 
-### What remains untouched
-- Co-Parenting Assessment + Report (backend, dynamic report, PDF, share links)
-- Family Violence & Communication Safety Assessment + Report
-- All auth, invites, gmail, coach, insights, admin, next-steps for the remaining assessments
+---
 
-### Tests still passing
-- 26/26 relevant backend tests (family_report, cp_report, coparenting_scoring, report_visibility).
-- Backend running clean, `/api/health` = 200.
+## Backlog / Next work
 
-## Next step (Phase B of the rebuild)
+### P1
+- **Independent parent invitation + neutral comparison for v2**. The v1 invite/comparison flow was deleted; build a fresh invite (`/api/snc2/invite/*`) + comparison (`/api/snc2/comparison/*`) with a **category filter** so a parent can view a Medical-only side-by-side. Guardrails to preserve: never label a parent correct/wrong; never expose safety data automatically.
+- **Report email attachment** for v2 (mirror the v1 `POST /api/snc2/report/email` we shipped earlier — SA CoParents-branded email with the PDF attached).
 
-Phase A landed on 2026-07-30. The next session picks up with the React assessment flow at `/special-needs`.
+### P2
+- **Reintroduce a Family Report** that stitches CP + Safety + SNC v2 into a single PDF, if user wants it.
+- **AI narrative** (through `integration_playbook_expert_v2`) that turns the 8-step report into a plain-language executive summary.
+- **Comparison PDF** for the new v2 side-by-side once the invite + comparison lands.
+- **Verify Resend sender domain** so all outbound email (survey reminders, SNC report emails, invitations) actually delivers.
+- Split `PRD.md` into PRD / CHANGELOG / ROADMAP if it grows past ~700 lines.
 
-### Phase A delivered
-- `backend/snc_questions.py` — 13-section framework, verbatim question wording, response scales, meta-flags. Assertion in module guarantees `SCORED_CATEGORY_IDS == (s2..s10, s12)`.
-- `backend/snc_scoring.py` — deterministic 1–5 averaging, classification tiers 4.25/3.50/2.75/2.00, Section 6 consistency mapping 5→2 (Unknown/NA excluded), Section 11 safety captured separately with levels {unanswered, clear, declined, concerns}.
-- `backend/snc_report_content.py` — 17-section Individual Parent Report with the required `response → finding → child impact → suggested option → action step` pattern for every scored section, auto-derived Section 16 "Questions for the Other Parent", 30-day step list, Section 15 Action Plan sourced from the lowest-scoring categories, closing summary. `include_safety=False` fully redacts Report Section 12.
-- `backend/tests/test_snc_scoring.py` and `backend/tests/test_snc_report.py` — 25 tests, all passing.
+---
 
-**Total scored items**: 92 (Sections 2 8 + 3 9 + 4 10 + 5 10 + 6 12 + 7 8 + 8 8 + 9 10 + 10 7 + 12 10).
+## Existing (retained) products & endpoints
 
-### Phase B deliverables
-- FastAPI routes at `/api/snc` (schema, answers, complete, generate report, etc.).
-- MongoDB collections: `snc_assessments`, `snc_reports`.
-- React assessment page at `/special-needs` (intake → 13 sections → completion → individual report).
-- **Save-and-resume from day one (user-approved 2026-07-30):**
-  - Server-side autosave every time a field changes (debounced, batched by section).
-  - Resumable progress meter that shows overall progress AND per-section progress.
-  - Explicit "Save & come back later" checkpoints at the end of each section (13 checkpoints).
-  - On return, the flow jumps to the first unfinished section (not the beginning).
-  - Optional weekly reminder email if the user hasn't finished within 7 days (opt-in, off by default).
-- Dashboard card + landing/methodology mentions restored (with new naming).
+- **Auth**: `/api/auth/*` (JWT + Emergent Google Auth)
+- **Co-Parenting**: `/api/coparenting/*`
+- **Safety**: `/api/safety-assessment/*`
+- **Invites (general)**: `/api/invites/*`
+- **Coach**: `/api/coach/*`
+- **Insights / admin**: `/api/insights/*`
 
-### Phase C partial — PDF renderer landed
-- `backend/snc_report_pdf.py` — full 17-section Individual Parent Report renderer built on FPDF. Uses `pdf.epw` explicit widths and `set_x(l_margin)` before every multi_cell to stay resilient to prior cursor positions. Sample profile renders to ~41KB / multi-page.
-- Safety redaction verified end-to-end: the same `include_safety` flag threaded through `build_individual_report()` produces PDFs that strictly omit Section 12 flag/safeguard text in the shared view.
-- `backend/tests/test_snc_report_pdf.py` — **6 tests** covering signature/size, empty-answers rendering, safety redaction (both directions), absence of old vocabulary, presence of all 17 report section markers, and no judgemental phrases (`is wrong`, `better parent`, etc.).
-- Sample PDF at `/app/frontend/public/downloads/snc-sample-individual-report.pdf` (accessible via the preview URL) uses a curated mixed profile so every classification tier appears.
-
-### Phase C remaining (share link + public viewer) — next session
-- FastAPI routes under `/api/snc` for share-link generation and shared-report fetch (JSON + PDF).
-- Signed share tokens with visibility exclusion controls (mirror `report_visibility.py` pattern).
-- React public viewer at `/shared/snc/:token`.
-- Register SNC in `report_visibility.py` REPORT_SECTIONS with the correct section keys (`at_a_glance`, `category_summary`, `sections`, `action_plan`, etc.).
-
-### Phase D deliverables (later)
-- Invite/accept flow at `/invites/snc/:token`.
-- Comparison view (never labels a parent correct; Section 12 always redacted).
-
-### Test credentials
+## Test credentials
 See `/app/memory/test_credentials.md`.
