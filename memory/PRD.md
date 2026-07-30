@@ -1,8 +1,21 @@
-# SA CoParents — PRD (post-demolition, pre-rebuild of Special Needs)
+# SA CoParents — PRD (SNC Phase B/C shipped)
 
 ## Status snapshot (2026-07-30 · updated)
 
-The Special Needs Co-Parenting Assessment and Report have been **completely removed** and are being reworked from a new 13-section framework. **Family Report has also been fully removed at user request (2026-07-30)** — the app no longer stitches Co-Parenting + Safety into a combined report.
+- **Family Report:** fully removed at user request (this session).
+- **Special Needs Co-Parenting (SNC):** Phase A + Phase C shipped previously; Phase B (persistence, routes, cached report, save-and-resume) + frontend (assessment, report, dashboard card, PDF download, regenerate) now shipped in this session. Testing agent iteration 33 — backend 19/19 API tests pass, frontend flows verified.
+
+### Files added (backend) — SNC Phase B 2026-07-30
+- `backend/snc_routes.py` — full `/api/snc` router (schema, me, answer, answers/bulk, complete, scores, report/status, report/generate, report/regenerate, report, report/pdf, DELETE /me)
+- `backend/tests/test_snc_api.py` — 19 API tests, all pass
+- Registered `snc_router` in `server.py`; MongoDB collections `snc_assessments` and `snc_reports` (indexed by `user_id`)
+- Updated `snc_report_pdf.py` header to include the shared SA CoParents branded logo band (matches co-parenting / safety PDFs)
+
+### Files added (frontend) — SNC Phase B 2026-07-30
+- `frontend/src/pages/SpecialNeedsCoParenting.jsx` — 13-section assessment, autosave, progress bar, section navigator, Save-and-come-back button, Complete + auto-generate
+- `frontend/src/pages/SpecialNeedsReport.jsx` — 17-section report render, "Last generated · Regenerate", PDF download, safety block with automatic referral to the full Safety Assessment
+- `App.js` — routes `/special-needs` and `/special-needs/report` (both `ProtectedRoute`)
+- `Dashboard.jsx` — new `[data-testid=dashboard-snc-card]` with cached-report status, links to assessment or report based on state
 
 ### Files removed (backend) — Family Report demolition 2026-07-30
 - `backend/family_report_content.py`, `family_report_pdf.py`, `family_report_routes.py`
