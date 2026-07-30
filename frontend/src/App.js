@@ -59,6 +59,8 @@ import SpecialNeedsV2EducationalDeepDive from "@/pages/SpecialNeedsV2Educational
 import SpecialNeedsV2EducationalDeepDiveReport from "@/pages/SpecialNeedsV2EducationalDeepDiveReport";
 import SpecialNeedsV2PsychologicalDeepDive from "@/pages/SpecialNeedsV2PsychologicalDeepDive";
 import SpecialNeedsV2PsychologicalDeepDiveReport from "@/pages/SpecialNeedsV2PsychologicalDeepDiveReport";
+import SpecialNeedsV2MedicalDeepDive from "@/pages/SpecialNeedsV2MedicalDeepDive";
+import SpecialNeedsV2MedicalDeepDiveReport from "@/pages/SpecialNeedsV2MedicalDeepDiveReport";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -250,6 +252,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <SpecialNeedsV2PsychologicalDeepDiveReport />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/medical-deep-dive"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2MedicalDeepDive />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/medical-deep-dive/report"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2MedicalDeepDiveReport />
             </ProtectedRoute>
           }
         />

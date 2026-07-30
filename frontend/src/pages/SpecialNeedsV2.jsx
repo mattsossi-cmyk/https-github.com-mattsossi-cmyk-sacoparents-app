@@ -211,7 +211,7 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         </button>
       </div>
 
-      <div className="mt-6 grid sm:grid-cols-2 gap-4">
+      <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="rounded-3xl border-2 border-[#3D1A78]/30 bg-gradient-to-br from-[#EEE9F7] to-[#F5F0FA] p-5 sm:p-6" data-testid="snc2-edu-deep-dive-cta">
           <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 flex items-center gap-2">
             <Sparkles size={12} /> Optional deep dive
@@ -236,6 +236,19 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
           <Link to="/special-needs-v2/psychological-deep-dive" data-testid="snc2-psych-deep-dive-cta-link"
             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-[#3D1A78] text-white hover:brightness-110">
             <Sparkles size={13} /> Open Psychological Deep Dive
+          </Link>
+        </div>
+        <div className="rounded-3xl border-2 border-[#3D1A78]/30 bg-gradient-to-br from-[#EEE9F7] to-[#F5F0FA] p-5 sm:p-6" data-testid="snc2-med-deep-dive-cta">
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 flex items-center gap-2">
+            <Sparkles size={12} /> Optional deep dive
+          </div>
+          <h2 className="font-serif text-lg text-[#1A1330]">Medical · Prescription & Medication — 10-Section Deep Dive</h2>
+          <p className="text-xs text-[#4B4567] mt-1 mb-4">
+            For families coordinating prescriptions, refills, administration, school meds, and controlled medications across two homes.
+          </p>
+          <Link to="/special-needs-v2/medical-deep-dive" data-testid="snc2-med-deep-dive-cta-link"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-[#3D1A78] text-white hover:brightness-110">
+            <Sparkles size={13} /> Open Medical Deep Dive
           </Link>
         </div>
       </div>
@@ -460,6 +473,10 @@ export default function SpecialNeedsV2() {
           <Link to="/special-needs-v2/psychological-deep-dive" data-testid="snc2-open-psych-deep-dive"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
             <Sparkles size={13} /> Psychological Deep Dive
+          </Link>
+          <Link to="/special-needs-v2/medical-deep-dive" data-testid="snc2-open-med-deep-dive"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
+            <Sparkles size={13} /> Medical Deep Dive
           </Link>
         </div>
         <div className="mb-4">
