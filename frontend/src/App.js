@@ -55,6 +55,8 @@ import SpecialNeedsV2 from "@/pages/SpecialNeedsV2";
 import SpecialNeedsV2Report from "@/pages/SpecialNeedsV2Report";
 import SpecialNeedsV2Compare from "@/pages/SpecialNeedsV2Compare";
 import SpecialNeedsV2CompareView from "@/pages/SpecialNeedsV2CompareView";
+import SpecialNeedsV2EducationalDeepDive from "@/pages/SpecialNeedsV2EducationalDeepDive";
+import SpecialNeedsV2EducationalDeepDiveReport from "@/pages/SpecialNeedsV2EducationalDeepDiveReport";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -214,6 +216,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <SpecialNeedsV2CompareView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/educational-deep-dive"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2EducationalDeepDive />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/educational-deep-dive/report"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2EducationalDeepDiveReport />
             </ProtectedRoute>
           }
         />

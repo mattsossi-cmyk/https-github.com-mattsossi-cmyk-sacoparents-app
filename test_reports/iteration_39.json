@@ -1,0 +1,41 @@
+{
+  "summary": "Full E2E backend + frontend testing of the new Educational Deep Dive product. Backend: 16/16 unit tests (test_edu_deep.py) and 9/9 new live E2E tests (test_edu_deep_live.py) pass. SNC v2 regression suite: 79 passed, 1 skipped. Frontend: /special-needs-v2/educational-deep-dive renders with edu-deep-root, 12 progress dot pattern (visible sections only), sticky prev/save/next nav all present. Selecting TX in s1_school_state reveals goto-s3 dot; switching to CA hides it. Report page renders with edu-deep-report-root + edu-deep-report-download testids and correct summary (5 flagged, 1 strength). Guest requests to /api/edu-deep/report/generate correctly blocked. PDF endpoint returns %PDF, > 5000 bytes, application/pdf. All spec requirements met. Test data cleaned via DELETE /api/edu-deep/me.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/edu-deep/report/generate", "issue": "Spec description says summary.flagged_sections/strength_sections are 'arrays' but implementation returns int counters (arrays live under flagged_names/strength_names). Not a bug — both counters and name arrays exist. Update spec wording OR alias arrays."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "SpecialNeedsV2.jsx CTA card", "issue": "data-testid='snc2-edu-deep-dive-cta' and 'snc2-edu-deep-dive-cta-link' live INSIDE the child-picker block. For a returning user who already has an active assessment (like parent1) the picker isn't shown, so the CTA card + link are not rendered. The persistent top-toolbar link data-testid='snc2-open-edu-deep-dive' IS shown, so the deep dive is still reachable, but the spec's exact testids fail for returning users.", "selector": "[data-testid='snc2-edu-deep-dive-cta']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Educational Deep Dive assessment page + Report page", "issues": ["The LegalAcknowledgment modal (z-1000) reappears on every route inside /special-needs-v2/* including /educational-deep-dive and /educational-deep-dive/report. It doesn't intercept once dismissed, but returning users see it on every visit — verify it stays dismissed after acknowledgment (may be intended)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_edu_deep.py",
+    "/app/backend/tests/test_edu_deep_live.py"
+  ],
+  "action_items": [
+    "Move the snc2-edu-deep-dive-cta card OUT of the child-picker conditional block on /special-needs-v2 so returning users also see the CTA card+link with the exact testids from the spec.",
+    "OPTIONAL: rename summary.flagged_sections/strength_sections to _count and expose flagged_sections/strength_sections as the arrays (or update the review-request wording)."
+  ],
+  "critical_code_review_comments": [
+    "edu_deep_report.py uses several deprecated fpdf2 kwargs (ln=1, dest='S'). Migrate to new_x=XPos.LMARGIN/new_y=YPos.NEXT and pdf.output() without dest.",
+    "Frontend SingleRow/MultiRow chips do not carry per-option data-testid — the state chip container has a testid but individual state buttons don't. Adding data-testid={testid}-{opt} on each option button would make E2E testing dramatically more reliable.",
+    "Legal acknowledgment modal blocks Playwright pointer events on every entry to the deep-dive route; storing acknowledgment in localStorage keyed per-user could avoid re-prompting once accepted."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_edu_deep_live.py"
+  ],
+  "success_rate": {"backend": "100% (16/16 unit + 9/9 live + 79/79 SNC v2 regression)", "frontend": "~90% (CTA testids missing for returning users; all deep-dive UI + report UI work)"},
+  "test_credentials": "parent1@test.com / TestPass123!",
+  "seed_data_creation": "Created and then deleted (via DELETE /api/edu-deep/me) a full TX+IEP filled assessment + generated report for parent1. Final state: clean.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend routes are stable. Frontend E2E must (1) log in as parent1, (2) dismiss the LegalAcknowledgment modal via data-testid='legal-ack-checkbox' + 'legal-ack-continue-button' BEFORE interacting with the deep dive. State chip options don't have individual testids — click by button text inside container [data-testid='edu-deep-s1_school_state']. Report page only renders edu-deep-report-root once a report has been generated via /api/edu-deep/report/generate.",
+  "rca of the issue": "N/A — no functional issues. Only spec-vs-implementation naming mismatch (flagged_sections int vs array) and a conditional-rendering scope for the snc2-edu-deep-dive-cta testids."
+}

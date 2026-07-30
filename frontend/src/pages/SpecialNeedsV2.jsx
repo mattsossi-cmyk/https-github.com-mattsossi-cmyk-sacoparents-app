@@ -211,6 +211,24 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         </button>
       </div>
 
+      <div className="mt-6 rounded-3xl border-2 border-[#3D1A78]/30 bg-gradient-to-br from-[#EEE9F7] to-[#F5F0FA] p-5 sm:p-7" data-testid="snc2-edu-deep-dive-cta">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="max-w-2xl">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 flex items-center gap-2">
+              <Sparkles size={12} /> New optional deep dive
+            </div>
+            <h2 className="font-serif text-xl text-[#1A1330]">Educational Needs — 12-Section Deep Dive</h2>
+            <p className="text-xs text-[#4B4567] mt-1">
+              A companion assessment for parents with an IEP, 504, ARD process (Texas), school counsellor, tutoring, or complex educational decisions to coordinate. Only surfaces sections where your answers show a real concern.
+            </p>
+          </div>
+          <Link to="/special-needs-v2/educational-deep-dive" data-testid="snc2-edu-deep-dive-cta-link"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full text-sm font-semibold bg-[#3D1A78] text-white hover:brightness-110 shrink-0">
+            <Sparkles size={14} /> Open Deep Dive
+          </Link>
+        </div>
+      </div>
+
       <div className="mt-10 rounded-3xl border border-[#E5E0EE] bg-[#FCFBFE] p-5 sm:p-7" data-testid="snc2-samples-block">
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Prefer to preview first?</div>
         <h2 className="font-serif text-xl text-[#1A1330] mb-3">Download a Special Needs sample</h2>
@@ -423,6 +441,10 @@ export default function SpecialNeedsV2() {
           <Link to="/special-needs-v2/compare" data-testid="snc2-open-compare"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
             <Users size={13} /> Co-Parent Compare
+          </Link>
+          <Link to="/special-needs-v2/educational-deep-dive" data-testid="snc2-open-edu-deep-dive"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
+            <Sparkles size={13} /> Educational Deep Dive
           </Link>
         </div>
         <div className="mb-4">
