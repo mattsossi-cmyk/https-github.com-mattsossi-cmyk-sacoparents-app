@@ -199,6 +199,29 @@ def build_comparison_pdf(*, comparison: Dict[str, Any], safety_notice: str = "")
     if comparison.get("category_filter"):
         pdf.small(f"Category filter: {comparison['category_filter']}")
 
+    highlights = comparison.get("highlights") or []
+    if highlights:
+        pdf.ln(2)
+        pdf.h2(f"5 things you already agree on")
+        pdf.small(
+            "A neutral snapshot of your strongest shared ground. Consider "
+            "starting your co-parent conversation here."
+        )
+        for idx, h in enumerate(highlights, start=1):
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(31, 92, 59)
+            pdf.multi_cell(pdf.epw, 5, _safe(f"{idx}. {h.get('prompt') or ''}"))
+            pdf.set_font("Helvetica", "", 9.5)
+            pdf.set_text_color(30, 24, 54)
+            pdf.multi_cell(pdf.epw, 4.6, _safe(h.get("summary") or ""))
+            pdf.set_font("Helvetica", "I", 8.5)
+            pdf.set_text_color(110, 100, 130)
+            pdf.multi_cell(
+                pdf.epw, 4.4,
+                _safe(f"Step {h.get('step_number')} · {h.get('step_name')} · {h.get('pathway_name')}"),
+            )
+            pdf.ln(0.8)
+
     labels = comparison.get("alignment_labels") or {}
     for step in comparison.get("steps") or []:
         # Skip steps with nothing to show under the current filter

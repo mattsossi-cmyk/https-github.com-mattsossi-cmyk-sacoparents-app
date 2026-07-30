@@ -10,7 +10,7 @@ import { Link, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles } from "lucide-react";
 import { logError } from "../lib/logger";
 
 const ALIGN_STYLES = {
@@ -172,6 +172,41 @@ export default function SpecialNeedsV2CompareView() {
                 {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
               </button>
             </div>
+
+            {(data.comparison.highlights || []).length > 0 && (
+              <section className="mt-5 rounded-3xl border border-[#B5DFC5] bg-[#F1F9F4] p-5 sm:p-7 shadow-sm" data-testid="snc2-compare-highlights">
+                <div className="flex items-center gap-2 text-[#1F5C3B]">
+                  <Sparkles size={16} />
+                  <span className="text-[10px] uppercase tracking-[0.22em] font-bold">Where you already agree</span>
+                </div>
+                <h2 className="font-serif text-2xl text-[#1A1330] mt-1 mb-1">
+                  {(data.comparison.highlights || []).length === 1
+                    ? "1 thing you already agree on"
+                    : `${(data.comparison.highlights || []).length} things you already agree on`}
+                </h2>
+                <p className="text-xs text-[#4B4567] mb-4 italic">
+                  A neutral snapshot of your strongest shared ground. Consider starting your co-parent conversation here.
+                </p>
+                <ol className="space-y-3">
+                  {(data.comparison.highlights || []).map((h, i) => (
+                    <li key={`${h.step_id}-${h.pathway_id}-${h.item_id}`}
+                      data-testid={`snc2-compare-highlight-${i}`}
+                      className="rounded-2xl border border-[#B5DFC5] bg-white p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="shrink-0 w-7 h-7 rounded-full bg-[#1F5C3B] text-white text-xs font-bold flex items-center justify-center">{i + 1}</div>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-[#1A1330]">{h.prompt}</div>
+                          <div className="text-sm text-[#1F5C3B] mt-1">{h.summary}</div>
+                          <div className="text-[10px] uppercase tracking-[0.16em] text-[#4B4567] mt-2">
+                            Step {h.step_number} · {h.step_name} · {h.pathway_name}
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
 
             {/* Category filter */}
             <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="snc2-compare-category-filter">

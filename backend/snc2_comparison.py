@@ -152,6 +152,103 @@ def _summary(all_alignments: List[str]) -> Dict[str, Any]:
     }
 
 
+def _highlight_score(step_num: int, item: Dict[str, Any]) -> Optional[float]:
+    """Score aligned items so we can rank the "you agree" highlights.
+
+    Higher score = more meaningful positive agreement. Returns None for items
+    that should be excluded from the highlights (divergent, insufficient,
+    text one_only).
+
+    Priorities baked in:
+      * Likert 4-5 with a 0-1 gap ranks highest (strong shared confidence).
+      * Multi selects with overlap and at least one shared choice.
+      * Text "both_responded" gets a modest score.
+      * Later workflow steps rank slightly higher (they capture the action
+        plan, which is the most useful thing to celebrate).
+    """
+    t = item.get("type")
+    align = item.get("alignment")
+    if align in {"divergent", "insufficient", "one_only"}:
+        return None
+    step_weight = 1.0 + step_num * 0.05  # step 8 > step 1
+    if t == "likert":
+        a = (item.get("parent_a") or {}).get("value")
+        b = (item.get("parent_b") or {}).get("value")
+        if not (isinstance(a, int) and isinstance(b, int)):
+            return None
+        avg = (a + b) / 2
+        gap = abs(a - b)
+        # Only celebrate genuine shared confidence: both >= 3 and gap <= 1.
+        if avg < 3.0 or gap > 1:
+            return None
+        return step_weight * (4.0 + avg - gap * 0.5)
+    if t == "multi":
+        overlap = item.get("overlap") or 0
+        both = item.get("both") or []
+        if not both:
+            return None
+        return step_weight * (2.5 + overlap * 3.0 + min(len(both), 3) * 0.3)
+    if t == "single":
+        if align == "aligned":
+            return step_weight * 3.0
+        return None
+    # text
+    if align == "both_responded":
+        return step_weight * 1.5
+    return None
+
+
+def _extract_highlights(steps: List[Dict[str, Any]], limit: int = 5) -> List[Dict[str, Any]]:
+    """Pick the top-N "we already agree" items across all shared pathways."""
+    scored: List[Dict[str, Any]] = []
+    for step in steps:
+        for path in step.get("pathways") or []:
+            for item in path.get("items") or []:
+                score = _highlight_score(step.get("number") or 0, item)
+                if score is None:
+                    continue
+                scored.append({"score": score, "step": step, "path": path, "item": item})
+    scored.sort(key=lambda x: x["score"], reverse=True)
+
+    highlights: List[Dict[str, Any]] = []
+    for row in scored[:limit]:
+        item = row["item"]
+        h: Dict[str, Any] = {
+            "step_id": row["step"]["id"],
+            "step_number": row["step"]["number"],
+            "step_name": row["step"]["name"],
+            "pathway_id": row["path"]["id"],
+            "pathway_name": row["path"]["name"],
+            "item_id": item["id"],
+            "prompt": item.get("prompt", ""),
+            "alignment": item.get("alignment"),
+            "type": item.get("type"),
+        }
+        t = item.get("type")
+        if t == "likert":
+            a = (item.get("parent_a") or {}).get("value")
+            b = (item.get("parent_b") or {}).get("value")
+            h["parent_a_value"] = a
+            h["parent_b_value"] = b
+            h["gap"] = item.get("gap")
+            avg = (a + b) / 2 if isinstance(a, int) and isinstance(b, int) else None
+            h["summary"] = (
+                f"Both scored this a strong {min(a, b)}-{max(a, b)}."
+                if avg and avg >= 4
+                else "Both are broadly aligned here."
+            )
+        elif t == "multi":
+            h["both"] = item.get("both") or []
+            h["summary"] = "You both chose: " + ", ".join(h["both"][:4])
+        elif t == "single":
+            h["value"] = (item.get("parent_a") or {}).get("value")
+            h["summary"] = f"You both chose \"{h['value']}\"."
+        else:  # text
+            h["summary"] = "You both took the time to describe this in your own words."
+        highlights.append(h)
+    return highlights
+
+
 def build_comparison(
     *,
     parent_a_name: str,
@@ -217,5 +314,6 @@ def build_comparison(
         "only_parent_b_pathways": only_parent_b,
         "steps": steps,
         "summary": _summary(all_alignments),
+        "highlights": _extract_highlights(steps, limit=5),
         "alignment_labels": ALIGNMENT_LABELS,
     }

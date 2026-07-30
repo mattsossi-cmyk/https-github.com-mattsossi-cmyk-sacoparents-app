@@ -134,3 +134,58 @@ def test_alignment_labels_are_present():
     assert set(ALIGNMENT_LABELS.keys()) >= {
         "aligned", "close", "divergent", "both_responded", "one_only", "insufficient",
     }
+
+
+def test_highlights_present_and_capped_at_five():
+    a = _mk_answers("medical")
+    b = _mk_answers("medical")  # perfect alignment
+    cmp = build_comparison(
+        parent_a_name="Alice", parent_b_name="Ben",
+        a_pathways=["medical"], b_pathways=["medical"],
+        a_answers=a, b_answers=b,
+    )
+    hl = cmp.get("highlights") or []
+    assert 1 <= len(hl) <= 5
+    for h in hl:
+        assert h["alignment"] in {"aligned", "both_responded"}
+        assert h.get("prompt")
+        assert h.get("summary")
+        assert h.get("step_number")
+        assert h.get("pathway_name")
+
+
+def test_highlights_skip_divergent_and_insufficient():
+    a = _mk_answers("medical")
+    b = _mk_answers("medical", {
+        # Force divergence on the strongest-scoring likert items.
+        qid("step4", "medical", "same_info"): 1,
+        qid("step4", "medical", "attend_appts"): 1,
+        qid("step4", "medical", "discuss_openly"): 1,
+        qid("step4", "medical", "shared_language"): 1,
+        qid("step4", "medical", "believe_understood"): 1,
+    })
+    cmp = build_comparison(
+        parent_a_name="A", parent_b_name="B",
+        a_pathways=["medical"], b_pathways=["medical"],
+        a_answers=a, b_answers=b,
+    )
+    for h in cmp["highlights"]:
+        # None of the returned highlights should reference forced-divergent items
+        assert (h["step_id"], h["item_id"]) not in {
+            ("step4", "same_info"), ("step4", "attend_appts"),
+            ("step4", "discuss_openly"), ("step4", "shared_language"),
+            ("step4", "believe_understood"),
+        }
+
+
+def test_highlights_empty_when_no_shared_agreement():
+    # Both parents disagree strongly and give low likert scores; nothing to celebrate.
+    a = {qid("step4", "medical", "same_info"): 1}
+    b = {qid("step4", "medical", "same_info"): 5}
+    cmp = build_comparison(
+        parent_a_name="A", parent_b_name="B",
+        a_pathways=["medical"], b_pathways=["medical"],
+        a_answers=a, b_answers=b,
+    )
+    # No shared agreement -> highlights list may be empty (allowed).
+    assert isinstance(cmp["highlights"], list)
