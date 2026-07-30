@@ -44,21 +44,31 @@ The Special Needs Co-Parenting Assessment and Report have been **completely remo
 - 26/26 relevant backend tests (family_report, cp_report, coparenting_scoring, report_visibility).
 - Backend running clean, `/api/health` = 200.
 
-## Next step (Phase A of the rebuild)
+## Next step (Phase B of the rebuild)
 
-User provided the full spec for the new **Special Needs Coparenting Assessment** (13 sections) and the full **Individual Parent Report** structure (17 sections). Both specs are captured verbatim in `/app/memory/SPECIAL_NEEDS_REBUILD_SPEC.md`.
+Phase A landed on 2026-07-30. The next session picks up with the React assessment flow at `/special-needs`.
 
-### Confirmed decisions
-1. **Phase A only next session:** backend schema + deterministic scoring + deterministic report content builder + pytest coverage. No frontend, no PDF, no invite/comparison.
-2. **Section 11 (Family Violence):** captured privately, excluded from every general score, included in the parent's own report, redacted by default in any shared/comparison view, positives surface the standalone Family Violence Assessment.
-3. **Scoring rules:** Sections 1 and 13 are context. Section 11 is safety-only. All multi-select / intake fields in Sections 3, 4, 7, 8, 9, 10, 11 are context. **Scored categories = Sections 2, 3, 4, 5, 6, 7, 8, 9, 10, 12** (10 rows). Section 6 consistency scale maps Consistent 5 · Mostly consistent 4 · Sometimes inconsistent 3 · Frequently inconsistent 2 · Unknown/NA excluded.
-4. **Fresh names:** files `snc_questions.py` / `snc_scoring.py` / `snc_report_content.py`; API prefix `/api/snc`; collections `snc_assessments` / `snc_reports` / `snc_invites`; Phase B frontend route `/special-needs`; Phase C shared viewer `/shared/snc/:token`; Phase D invite `/invites/snc/:token`. `snc` = Special Needs Co-parenting.
+### Phase A delivered
+- `backend/snc_questions.py` — 13-section framework, verbatim question wording, response scales, meta-flags. Assertion in module guarantees `SCORED_CATEGORY_IDS == (s2..s10, s12)`.
+- `backend/snc_scoring.py` — deterministic 1–5 averaging, classification tiers 4.25/3.50/2.75/2.00, Section 6 consistency mapping 5→2 (Unknown/NA excluded), Section 11 safety captured separately with levels {unanswered, clear, declined, concerns}.
+- `backend/snc_report_content.py` — 17-section Individual Parent Report with the required `response → finding → child impact → suggested option → action step` pattern for every scored section, auto-derived Section 16 "Questions for the Other Parent", 30-day step list, Section 15 Action Plan sourced from the lowest-scoring categories, closing summary. `include_safety=False` fully redacts Report Section 12.
+- `backend/tests/test_snc_scoring.py` and `backend/tests/test_snc_report.py` — 25 tests, all passing.
 
-### Phase A deliverables
-- `backend/snc_questions.py` — full 13-section framework, verbatim question wording, response scales, meta-flags.
-- `backend/snc_scoring.py` — deterministic scoring: 10 category averages 1–5 (N/A excluded); classification map (4.25–5.00 Established strength · 3.50–4.24 Generally supported · 2.75–3.49 Coordination opportunity · 2.00–2.74 Significant inconsistency · 1.00–1.99 Priority concern); Section 6 consistency-scale numeric map; Section 11 safety captured but never scored.
-- `backend/snc_report_content.py` — deterministic Individual Parent Report matching the 17-section blueprint, with each section following the `response → finding → child impact → suggested option → action step` pattern. Must accept `include_safety: bool` (default True for own view, False for shared) and produce a fully populated report.
-- `backend/tests/test_snc_scoring.py` and `backend/tests/test_snc_report.py` — thorough unit coverage.
+**Total scored items**: 92 (Sections 2 8 + 3 9 + 4 10 + 5 10 + 6 12 + 7 8 + 8 8 + 9 10 + 10 7 + 12 10).
+
+### Phase B deliverables
+- FastAPI routes at `/api/snc` (schema, answers, complete, generate report, etc.).
+- MongoDB collections: `snc_assessments`, `snc_reports`.
+- React assessment page at `/special-needs` (intake → 13 sections → completion → individual report).
+- Dashboard card + landing/methodology mentions restored (with new naming).
+
+### Phase C deliverables (later)
+- PDF renderer.
+- Share link + public viewer at `/shared/snc/:token`.
+
+### Phase D deliverables (later)
+- Invite/accept flow at `/invites/snc/:token`.
+- Comparison view (never labels a parent correct; Section 12 always redacted).
 
 ### Test credentials
 See `/app/memory/test_credentials.md`.
