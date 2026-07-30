@@ -1,0 +1,28 @@
+{
+  "summary": "Validated SNC Phase P1 co-parent invite + neutral pair-comparison end-to-end. Added 21 API integration tests in /app/backend/tests/test_snc_invite_api.py — ALL PASS. Regression: original 19 tests in test_snc_api.py + 8 unit tests in test_snc_comparison.py still green (27/27). Frontend flow via Playwright verified every required data-testid and guardrail: no s11 in payload, no verbatim narrative leak (seeded 'PARENT_A_NARRATIVE_SECRET' / 'PARENT_B_NARRATIVE_SECRET' were absent from comparison DOM), no winner/right/correct parent language, safety notice, counts strip, four buckets, and functioning regenerate button. Invite creation, self-invite rejection, sender-token visibility, public token lookup, own-accept rejection (400), second-account accept conflict (409), 5-minute resend cooldown (429), inviter-only DELETE, third-party comparison 403 — all verified.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_snc_invite_api.py",
+    "/app/test_reports/pytest/snc_invite_api.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "snc_invite_routes.py correctly hides token from anyone who is not the inviter via _serialize_invite viewer_id branch. Sent list only exposes token to from_user_id.",
+    "GET /snc/invite/by-token is public and correctly omits the raw token from the response body (only status/from_name/invitee_email returned).",
+    "_authorised_invite guards comparison access to (from_user_id, accepted_by_user_id) only — 403 for third parties confirmed.",
+    "snc_comparison.compare_reports strips id=='s11' before bucketing and never consults raw answer/narrative fields — only category_summary rows, questions_for_other_parent, and at_a_glance.coordination_areas.",
+    "Resend cooldown (5 min) is enforced via last_sent_at diff. NOTE: create_snc_invite ALSO sets last_sent_at on every call, so a resend within 5 min of the initial create hits 429 — verified.",
+    "Comparison caching keyed on (source_updated.a, source_updated.b) via _is_comparison_stale — regenerate correctly rebuilds and marks cached=false; second GET returns cached=true.",
+    "DISCLAIMER string in snc_comparison contains the word 'correct' inside a quoted phrase ('Neither parent is the \"correct\" one'). Guardrail-check for the specific phrase 'correct parent' still passes; if the guardrail is ever tightened to substring 'correct', the disclaimer will need re-wording.",
+    "Individual report (SpecialNeedsReport page) intentionally shows the OWNER's own narrative (e.g. child strengths) — this is by design and NOT a leak; the leak-check must only be applied to the shared /special-needs/comparison view (which we do)."
+  ],
+  "updated_files": ["/app/backend/tests/test_snc_invite_api.py"],
+  "success_rate": {"backend": "100% (21/21 new + 27/27 regression)", "frontend": "100% of covered flows"},
+  "test_credentials": "Ephemeral TEST_snc_a_*, TEST_snc_b_*, TEST_snc_c_*, TEST_ui_snc_a_*, TEST_ui_snc_b_* users registered per run via POST /api/auth/register with password TestPass123!.",
+  "seed_data_creation": "For each parent that needed a report: POST /api/snc/answers/bulk with the full 92-item answer set (all Likert=4, s6 consistency=5, s11_flags='None of these apply.', narrative fields seeded with 'PARENT_A_NARRATIVE_SECRET' / 'PARENT_B_NARRATIVE_SECRET') then POST /api/snc/report/generate. Invite created via POST /api/snc/invite/coparent then accepted by Parent B via POST /api/snc/invite/accept/{token}.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The SNC invite + comparison feature is fully covered by /app/backend/tests/test_snc_invite_api.py (21 tests) plus /app/backend/tests/test_snc_comparison.py (8 unit) and /app/backend/tests/test_snc_api.py (19 base). Frontend routes: /special-needs/invite (send + list), /special-needs/invite/:token (accept landing), /special-needs/comparison/:inviteId (neutral side-by-side). Emails do not actually send in preview (Resend domain unverified) — endpoint returns {sent:false, accept_url:...}; this is expected. Cookie-based auth (auth_token httpOnly cookie set by POST /api/auth/login) — Playwright APIRequestContext + browser share cookies naturally.",
+  "rca of the issue": "N/A — no functional issues found. All Phase P1 acceptance criteria satisfied."
+}

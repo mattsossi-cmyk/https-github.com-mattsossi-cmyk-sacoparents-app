@@ -53,6 +53,9 @@ import ProblemSolvingWorksheet from "@/pages/ProblemSolvingWorksheet";
 import SharedCoParentingReport from "@/pages/SharedCoParentingReport";
 import SpecialNeedsCoParenting from "@/pages/SpecialNeedsCoParenting";
 import SpecialNeedsReport from "@/pages/SpecialNeedsReport";
+import SpecialNeedsInvite from "@/pages/SpecialNeedsInvite";
+import SpecialNeedsInviteAccept from "@/pages/SpecialNeedsInviteAccept";
+import SpecialNeedsComparison from "@/pages/SpecialNeedsComparison";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -196,6 +199,26 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <SpecialNeedsReport />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs/invite"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsInvite />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs/invite/:token"
+          element={<SpecialNeedsInviteAccept />}
+        />
+        <Route
+          path="/special-needs/comparison/:inviteId"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsComparison />
             </ProtectedRoute>
           }
         />

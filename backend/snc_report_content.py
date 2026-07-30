@@ -309,12 +309,14 @@ def build_individual_report(
 
     # ------- Section 2: Category Summary table --------------------------
     summary_table = [
-        {"category": r["name"], "score": r["score"], "classification": r["classification"] or "Not enough data",
+        {"id": r["id"], "category": r["name"], "score": r["score"],
+         "classification": r["classification"] or "Not enough data",
          "primary_finding": r["finding"]}
         for r in rated_rows
     ]
     # Safety row is always shown but never scored.
     safety_row = {
+        "id": "s11",
         "category": "Safety considerations",
         "score": "Not scored",
         "classification": "Separate review",

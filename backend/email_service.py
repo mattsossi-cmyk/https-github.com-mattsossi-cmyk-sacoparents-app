@@ -599,6 +599,55 @@ def send_post_event_survey_reminder(*, to_email: str, link_url: str, user_name: 
     )
 
 
+def send_snc_coparent_invite(
+    *,
+    to_email: str,
+    inviter_name: Optional[str],
+    accept_url: str,
+) -> None:
+    """Invite a co-parent to complete their own Special Needs Co-Parenting
+    assessment. Their answers stay private — the only shared output is a
+    neutral side-by-side once both parents finish."""
+    inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"
+    plain = (
+        f"{inviter} has invited you to complete the SA CoParents "
+        f"Special Needs Co-Parenting Assessment.\n\n"
+        "You'll each answer the same 13-section questionnaire in your own "
+        "private account. Your answers are never shown to the other parent — "
+        "the only shared output is a neutral, side-by-side comparison once "
+        "both of you complete it.\n\n"
+        f"Get started here:\n{accept_url}\n\n"
+        "This link expires in 60 days.\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"<strong>{inviter}</strong> has invited you to complete the SA CoParents "
+        f"<strong>Special Needs Co-Parenting Assessment</strong>.</p>"
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        "You'll each answer the same 13-section questionnaire in your own "
+        "<em>private</em> account. Your answers are never shown to the other "
+        "parent — the only shared output is a neutral, side-by-side comparison "
+        "once both of you complete it.</p>"
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">'
+        "Safety responses are always kept out of the shared comparison. "
+        "This link expires in 60 days.</p>"
+    )
+    html = _branded_html(
+        headline=f"{inviter} invited you to a side-by-side",
+        body_html=body_html,
+        cta_label="Start my private assessment",
+        cta_url=accept_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=f"{inviter} invited you to the Special Needs Co-Parenting Assessment",
+        html=html,
+        text=plain,
+        failure_message="Could not send the SNC invitation right now.",
+    )
+
+
 def send_snc_report_ready(
     *,
     to_email: str,

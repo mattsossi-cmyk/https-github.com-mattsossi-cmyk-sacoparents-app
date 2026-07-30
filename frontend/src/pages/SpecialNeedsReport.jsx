@@ -18,6 +18,7 @@ import {
   FileText,
   ArrowLeft,
   Mail,
+  UserPlus,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -306,6 +307,13 @@ export default function SpecialNeedsReport() {
             >
               {busy ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />} Regenerate
             </button>
+            <Link
+              to="/special-needs/invite"
+              data-testid="snc-report-invite-coparent"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]"
+            >
+              <UserPlus size={13} /> Invite co-parent
+            </Link>
           </div>
         </div>
 
