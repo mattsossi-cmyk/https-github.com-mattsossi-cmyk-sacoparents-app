@@ -1,0 +1,192 @@
+"""Psychological Deep Dive API — mounted at /api/psych-deep."""
+from __future__ import annotations
+
+import logging
+import uuid
+from datetime import datetime, timezone
+from io import BytesIO
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from pydantic import BaseModel
+
+from auth import UserPublic, get_current_user, get_db
+from psych_deep_questions import DEEP_DIVE_VERSION, public_schema, validate_answer
+from psych_deep_report import build_deep_dive_pdf, build_deep_dive_report
+from psych_deep_scoring import score_deep_dive
+
+
+router = APIRouter(prefix="/psych-deep", tags=["psych-deep"])
+logger = logging.getLogger(__name__)
+
+ASSESSMENTS = "psych_deep_assessments"
+REPORTS = "psych_deep_reports"
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _safe_filename(name: str) -> str:
+    return "".join(c if c.isalnum() else "_" for c in (name or "me")).strip("_") or "me"
+
+
+async def _load(db, user_id):
+    return await db[ASSESSMENTS].find_one({"user_id": user_id}, {"_id": 0})
+
+
+async def _upsert(db, user_id, updates):
+    now = _now_iso(); updates.setdefault("updated_at", now)
+    existing = await _load(db, user_id)
+    if existing:
+        await db[ASSESSMENTS].update_one({"user_id": user_id}, {"$set": updates})
+        return {**existing, **updates}
+    doc = {
+        "assessment_id": f"psych_deep_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id, "created_at": now, "updated_at": now,
+        "completed": False, "responses": {}, "deep_dive_version": DEEP_DIVE_VERSION,
+    }
+    doc.update(updates)
+    await db[ASSESSMENTS].insert_one(doc.copy()); doc.pop("_id", None)
+    return doc
+
+
+class AnswerIn(BaseModel):
+    question_id: str
+    value: Any
+
+
+class BulkAnswerIn(BaseModel):
+    answers: Dict[str, Any]
+
+
+class ProfileIn(BaseModel):
+    child_name: Optional[str] = None
+
+
+@router.get("/schema")
+async def schema(_user: UserPublic = Depends(get_current_user)) -> Dict[str, Any]:
+    return public_schema()
+
+
+@router.get("/me")
+async def me(user: UserPublic = Depends(get_current_user),
+             db: AsyncIOMotorDatabase = Depends(get_db)):
+    doc = await _load(db, user.user_id)
+    return {"has_assessment": bool(doc), "assessment": doc or None}
+
+
+@router.post("/profile")
+async def profile(body: ProfileIn, user: UserPublic = Depends(get_current_user),
+                  db: AsyncIOMotorDatabase = Depends(get_db)):
+    doc = await _upsert(db, user.user_id, {"child_name": body.child_name})
+    return {"ok": True, "assessment": doc}
+
+
+@router.post("/answer")
+async def answer(body: AnswerIn, user: UserPublic = Depends(get_current_user),
+                 db: AsyncIOMotorDatabase = Depends(get_db)):
+    if not validate_answer(body.question_id, body.value):
+        raise HTTPException(status_code=400, detail=f"Invalid answer for {body.question_id}.")
+    existing = await _load(db, user.user_id) or {}
+    responses = dict(existing.get("responses") or {})
+    responses[body.question_id] = body.value
+    await _upsert(db, user.user_id, {"responses": responses})
+    return {"ok": True}
+
+
+@router.post("/answers/bulk")
+async def answers_bulk(body: BulkAnswerIn, user: UserPublic = Depends(get_current_user),
+                       db: AsyncIOMotorDatabase = Depends(get_db)):
+    valid, rejected = {}, []
+    for k, v in (body.answers or {}).items():
+        if validate_answer(k, v): valid[k] = v
+        else: rejected.append(k)
+    existing = await _load(db, user.user_id) or {}
+    responses = dict(existing.get("responses") or {}); responses.update(valid)
+    await _upsert(db, user.user_id, {"responses": responses})
+    return {"ok": True, "answered": len(valid), "rejected": rejected}
+
+
+@router.post("/complete")
+async def complete(user: UserPublic = Depends(get_current_user),
+                   db: AsyncIOMotorDatabase = Depends(get_db)):
+    doc = await _load(db, user.user_id)
+    if not doc:
+        raise HTTPException(status_code=400, detail="Please answer some questions first.")
+    await _upsert(db, user.user_id, {"completed": True})
+    return {"ok": True, "completed": True}
+
+
+@router.delete("/me")
+async def delete_me(user: UserPublic = Depends(get_current_user),
+                    db: AsyncIOMotorDatabase = Depends(get_db)):
+    a = await db[ASSESSMENTS].delete_many({"user_id": user.user_id})
+    r = await db[REPORTS].delete_many({"user_id": user.user_id})
+    return {"ok": True, "deleted_assessments": a.deleted_count, "deleted_reports": r.deleted_count}
+
+
+@router.get("/score")
+async def score(user: UserPublic = Depends(get_current_user),
+                db: AsyncIOMotorDatabase = Depends(get_db)):
+    doc = await _load(db, user.user_id)
+    if not doc:
+        return {"has_assessment": False}
+    return {"has_assessment": True, "score": score_deep_dive(doc.get("responses") or {})}
+
+
+async def _cached(db, user_id):
+    return await db[REPORTS].find_one({"user_id": user_id}, {"_id": 0})
+
+
+def _is_stale(doc, report):
+    if not report: return True
+    if report.get("stale"): return True
+    return (doc.get("updated_at") or "") > (report.get("source_updated_at") or "")
+
+
+async def _build_and_cache(db, user, doc):
+    responses = doc.get("responses") or {}
+    if not responses:
+        raise HTTPException(status_code=400, detail="Please answer some questions first.")
+    if user.is_guest:
+        raise HTTPException(status_code=403, detail="Please claim an account before generating your report.")
+    content = build_deep_dive_report(parent_name=user.name,
+                                     child_name=doc.get("child_name"),
+                                     responses=responses)
+    rec = {
+        "report_id": f"psych_deep_r_{uuid.uuid4().hex[:12]}",
+        "user_id": user.user_id, "assessment_id": doc.get("assessment_id"),
+        "source_updated_at": doc.get("updated_at"), "generated_at": _now_iso(),
+        "deep_dive_version": DEEP_DIVE_VERSION, "stale": False, "report": content,
+    }
+    await db[REPORTS].replace_one({"user_id": user.user_id}, rec, upsert=True)
+    rec.pop("_id", None)
+    return rec
+
+
+@router.post("/report/generate")
+async def generate(user: UserPublic = Depends(get_current_user),
+                   db: AsyncIOMotorDatabase = Depends(get_db)):
+    doc = await _load(db, user.user_id)
+    if not doc:
+        raise HTTPException(status_code=400, detail="Please answer some questions first.")
+    cached = await _cached(db, user.user_id)
+    if cached and not _is_stale(doc, cached):
+        return {"cached": True, **cached}
+    fresh = await _build_and_cache(db, user, doc)
+    return {"cached": False, **fresh}
+
+
+@router.get("/report/pdf")
+async def report_pdf(user: UserPublic = Depends(get_current_user),
+                     db: AsyncIOMotorDatabase = Depends(get_db)):
+    cached = await _cached(db, user.user_id)
+    if not cached:
+        raise HTTPException(status_code=404, detail="Generate the report first.")
+    pdf_bytes = build_deep_dive_pdf(report=cached.get("report") or {})
+    fn = f"Psychological_Deep_Dive_{_safe_filename(user.name or 'me')}.pdf"
+    return StreamingResponse(BytesIO(pdf_bytes), media_type="application/pdf",
+                             headers={"Content-Disposition": f'attachment; filename="{fn}"'})
