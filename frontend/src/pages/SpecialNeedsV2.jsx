@@ -210,6 +210,37 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
           <Sparkles size={14} /> Start assessment
         </button>
       </div>
+
+      <div className="mt-10 rounded-3xl border border-[#E5E0EE] bg-[#FCFBFE] p-5 sm:p-7" data-testid="snc2-samples-block">
+        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Prefer to preview first?</div>
+        <h2 className="font-serif text-xl text-[#1A1330] mb-3">Download a Special Needs sample</h2>
+        <p className="text-xs text-[#4B4567] mb-4 max-w-2xl">
+          See exactly what SA CoParents will build for you before you start. Each sample is a real, branded PDF you can print, share with your mediator, or use as a workbook.
+        </p>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <a href="/downloads/snc-sample-assessment.pdf" target="_blank" rel="noreferrer noopener"
+            data-testid="snc2-sample-assessment"
+            className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Blank workbook</div>
+            <div className="font-semibold text-sm text-[#1A1330]">Sample Assessment</div>
+            <div className="text-xs text-[#4B4567] mt-1">A printable version of every question so you can gather your thoughts first.</div>
+          </a>
+          <a href="/downloads/snc-sample-individual-report.pdf" target="_blank" rel="noreferrer noopener"
+            data-testid="snc2-sample-report"
+            className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Filled sample</div>
+            <div className="font-semibold text-sm text-[#1A1330]">Individual Report</div>
+            <div className="text-xs text-[#4B4567] mt-1">A synthetic parent&apos;s completed 9-section polished report with action plan.</div>
+          </a>
+          <a href="/downloads/snc-sample-comparison-report.pdf" target="_blank" rel="noreferrer noopener"
+            data-testid="snc2-sample-comparison"
+            className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Both parents</div>
+            <div className="font-semibold text-sm text-[#1A1330]">Co-Parent Comparison</div>
+            <div className="text-xs text-[#4B4567] mt-1">The neutral side-by-side report with alignment pills and shared highlights.</div>
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

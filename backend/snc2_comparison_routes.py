@@ -400,3 +400,45 @@ async def get_comparison_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+
+@router.get("/dashboard/highlights")
+async def dashboard_highlights(
+    me: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Compact "5 things you already agree on" summary for the dashboard.
+
+    Returns the top highlights from the parent's most-recent active,
+    ready-to-view comparison. Silently returns an empty result when no active
+    comparison exists, or when the safety guardrail would otherwise block the
+    viewer.
+    """
+    empty = {"ready": False, "share_id": None, "partner_name": None,
+             "total_items": 0, "aligned_pct": 0, "highlights": []}
+
+    # Safety guardrail — never expose comparison data if the viewer is safety-blocked.
+    my_level = await _latest_safety_level(db, me.user_id)
+    if my_level in BLOCKING_SAFETY_LEVELS:
+        return empty
+
+    cursor = db[SHARES].find(
+        {"user_pair": me.user_id, "status": "active"},
+        {"_id": 0},
+    ).sort("updated_at", -1)
+    async for share in cursor:
+        try:
+            comparison = await _load_comparison(db, share, me.user_id, category=None)
+        except HTTPException:
+            continue  # not ready yet (either partner still consenting / assessing)
+        view = _partner_view(share, me.user_id)
+        return {
+            "ready": True,
+            "share_id": share.get("share_id"),
+            "partner_name": view.get("partner_name") or view.get("partner_email") or "",
+            "total_items": (comparison.get("summary") or {}).get("total_items", 0),
+            "aligned_pct": (comparison.get("summary") or {}).get("aligned_pct", 0),
+            "highlights": (comparison.get("highlights") or [])[:5],
+        }
+    return empty

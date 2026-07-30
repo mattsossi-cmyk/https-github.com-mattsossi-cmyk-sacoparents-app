@@ -192,6 +192,7 @@ export default function Dashboard() {
     hasCertificate: false,
   });
   const [sncStatus, setSncStatus] = useState(null);
+  const [sncHighlights, setSncHighlights] = useState(null);
 
   // First-time visitors: send them through the orientation walkthrough.
   useEffect(() => {
@@ -245,6 +246,12 @@ export default function Dashboard() {
     api
       .get("/snc2/report/status")
       .then((r) => setSncStatus(r.data || null))
+      .catch(() => { /* non-blocking */ });
+
+    // SNC v2 co-parent comparison "you already agree" highlights for the Growth Wins card.
+    api
+      .get("/snc2/compare/dashboard/highlights")
+      .then((r) => setSncHighlights(r.data || null))
       .catch(() => { /* non-blocking */ });
   }, []);
 
@@ -716,6 +723,41 @@ export default function Dashboard() {
             <ChevronRight size={16} className="shrink-0 text-[#CFC1EA]" />
           </Link>
         </div>
+
+        {/* Growth Wins — "you already agree" highlights from the co-parent comparison */}
+        {sncHighlights?.ready && (sncHighlights.highlights || []).length > 0 && (
+          <div className="mt-4" data-testid="dashboard-snc-highlights">
+            <Link
+              to={`/special-needs-v2/compare/${sncHighlights.share_id}`}
+              className="group block rounded-3xl border border-[#B5DFC5] bg-[#F1F9F4] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+            >
+              <div className="flex items-center gap-2 text-[#1F5C3B]">
+                <Sparkles size={16} />
+                <span className="text-[10px] uppercase tracking-[0.22em] font-bold">Where you already agree</span>
+              </div>
+              <div className="mt-1 font-serif text-lg text-[#1A1330]">
+                {sncHighlights.aligned_pct}% aligned with {sncHighlights.partner_name || "your co-parent"}
+              </div>
+              <p className="text-xs text-[#4B4567] mt-1 mb-3">
+                Top wins from your Special Needs comparison. Start your next conversation from your shared ground.
+              </p>
+              <ol className="space-y-2">
+                {(sncHighlights.highlights || []).slice(0, 3).map((h, i) => (
+                  <li key={i} className="flex items-start gap-3" data-testid={`dashboard-highlight-${i}`}>
+                    <div className="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-[#1F5C3B] text-white text-[11px] font-bold flex items-center justify-center">{i + 1}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm text-[#1A1330] font-semibold leading-snug truncate">{h.prompt}</div>
+                      <div className="text-xs text-[#1F5C3B]">{h.summary}</div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-3 text-[11px] font-semibold text-[#1F5C3B] inline-flex items-center gap-1">
+                See the full comparison <ChevronRight size={12} />
+              </div>
+            </Link>
+          </div>
+        )}
 
         {/* Safety Assessment */}
         <div className="mt-6">

@@ -452,7 +452,18 @@ def _s8_parent_alignment(answers: Dict[str, Any], pathways: List[str]) -> Dict[s
 
 def _s9_recommended_structure(
     answers: Dict[str, Any], pathways: List[str], summaries: List[Dict[str, Any]], tags: List[str],
+    safety_level: Optional[int] = None,
 ) -> Dict[str, Any]:
+    """Build the recommended co-parenting structure section.
+
+    `safety_level` is the parent's most recent Family Violence & Communication
+    Safety Assessment result (1=No Direct, 2=Structured Written Only,
+    3=Structured Communication, 4=Open Communication). When level 1 or 2 is
+    present, we HARD-OVERRIDE any lower-tier recommendation up to at least
+    "structured" (level 2) or "parallel_or_supported" (level 1), regardless of
+    the SNC v2 scores. This ensures joint/cooperative communication is never
+    recommended when the parent has already documented safety concerns.
+    """
     # Structure selection based on the parent's own signals.
     understanding_scores = [s["understanding"]["score"] for s in summaries
                             if (s.get("understanding") or {}).get("score") is not None]
@@ -487,6 +498,39 @@ def _s9_recommended_structure(
             "assigned responsibilities usually reduces friction."
         )
 
+    # ---------- Safety guardrail override ----------
+    safety_override_applied = False
+    order = {"cooperative": 0, "structured": 1, "parallel_or_supported": 2}
+    if safety_level == 1:
+        required_id = "parallel_or_supported"
+    elif safety_level == 2:
+        # Level 2 = Structured Written Only. Never recommend cooperative here.
+        required_id = "structured"
+    else:
+        required_id = None
+
+    if required_id and order[required_id] > order[rec_id]:
+        safety_override_applied = True
+        rec_id = required_id
+        if rec_id == "parallel_or_supported":
+            rec_name = "Parallel or Professionally Supported Structure"
+            rationale = (
+                "Your most recent Family Violence & Communication Safety "
+                "Assessment recommends no direct co-parent communication. That "
+                "recommendation takes priority here: a parallel or "
+                "professionally supported structure keeps you and your child "
+                "safer while the concern is active."
+            )
+        else:  # structured
+            rec_name = "Structured Co-Parenting (written channel only)"
+            rationale = (
+                "Your most recent Family Violence & Communication Safety "
+                "Assessment recommends structured, written-only communication. "
+                "That recommendation takes priority here: keep all co-parenting "
+                "communication written, short, and factual — never joint or "
+                "in-person about sensitive decisions — while the concern is active."
+            )
+
     safeguards_by_id = {
         "cooperative": [
             "Keep a shared calendar for appointments, meetings, and events.",
@@ -515,6 +559,8 @@ def _s9_recommended_structure(
         "structure_name": rec_name,
         "rationale": rationale,
         "safeguards": safeguards_by_id[rec_id],
+        "safety_level": safety_level,
+        "safety_override_applied": safety_override_applied,
         "safety_notice": (
             "If you experience family violence, coercive control, intimidation, "
             "or fear in this co-parenting relationship, please complete the SA "
@@ -535,6 +581,7 @@ def build_report(
     child_name: Optional[str],
     selected_pathways: List[str],
     answers: Dict[str, Any],
+    safety_level: Optional[int] = None,
 ) -> Dict[str, Any]:
     pathways = resolve_pathways(selected_pathways)
     if not pathways:
@@ -561,7 +608,9 @@ def build_report(
         "child_impact":           _s6_child_impact(answers, pathways, summaries),
         "detailed_findings":      _s7_detailed_findings(answers, pathways, summaries),
         "parent_alignment":       alignment,
-        "recommended_structure":  _s9_recommended_structure(answers, pathways, summaries, alignment["tags"]),
+        "recommended_structure":  _s9_recommended_structure(
+            answers, pathways, summaries, alignment["tags"], safety_level=safety_level,
+        ),
         "pathway_summaries":      summaries,   # kept for the dashboard status pill; no scores shown in the new PDF
         "disclaimer":             DISCLAIMER,
     }

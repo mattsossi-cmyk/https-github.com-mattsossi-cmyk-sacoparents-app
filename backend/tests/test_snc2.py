@@ -113,3 +113,58 @@ def test_pdf_is_valid_and_contains_workflow_headers():
 def test_pathways_catalog_contains_all_four_options():
     ids = [p["id"] for p in PATHWAYS]
     assert ids == ["medical", "educational", "psychological", "multiple"]
+
+
+
+def _cooperative_seed_answers():
+    """High-alignment answers so the un-overridden recommendation is 'cooperative'."""
+    ans = _seed_answers()
+    for step in ("step4", "step5"):
+        for pid in ("medical", "educational", "psychological"):
+            for k in ("same_info", "attend_appts", "discuss_openly",
+                      "shared_language", "believe_understood",
+                      "routines_consistent", "follow_recs", "share_updates",
+                      "carry_over_supplies", "handoffs_reliable"):
+                key = qid(step, pid, k)
+                if key in ans:
+                    ans[key] = 5
+    return ans
+
+
+def test_safety_level_1_forces_parallel_or_supported():
+    ans = _cooperative_seed_answers()
+    r_none = build_report(parent_name="Sam", child_name="K",
+                          selected_pathways=["multiple"], answers=ans,
+                          safety_level=None)
+    r_l1 = build_report(parent_name="Sam", child_name="K",
+                       selected_pathways=["multiple"], answers=ans,
+                       safety_level=1)
+    # Without safety: cooperative or structured is fine.
+    assert r_none["recommended_structure"]["structure_id"] in {"cooperative", "structured"}
+    assert r_none["recommended_structure"]["safety_override_applied"] is False
+    # Level-1 must force parallel_or_supported.
+    assert r_l1["recommended_structure"]["structure_id"] == "parallel_or_supported"
+    assert r_l1["recommended_structure"]["safety_override_applied"] is True
+    assert r_l1["recommended_structure"]["safety_level"] == 1
+
+
+def test_safety_level_2_forces_at_least_structured():
+    ans = _cooperative_seed_answers()
+    r_l2 = build_report(parent_name="Sam", child_name="K",
+                       selected_pathways=["multiple"], answers=ans,
+                       safety_level=2)
+    # Level 2 must never leave the recommendation at "cooperative".
+    assert r_l2["recommended_structure"]["structure_id"] in {"structured", "parallel_or_supported"}
+    # If baseline was cooperative, the override should have fired.
+    if r_l2["recommended_structure"]["structure_id"] == "structured":
+        assert r_l2["recommended_structure"]["safety_override_applied"] is True
+
+
+def test_safety_level_3_and_4_never_override():
+    ans = _cooperative_seed_answers()
+    for lvl in (3, 4):
+        r = build_report(parent_name="Sam", child_name="K",
+                        selected_pathways=["multiple"], answers=ans,
+                        safety_level=lvl)
+        assert r["recommended_structure"]["safety_override_applied"] is False
+        assert r["recommended_structure"]["safety_level"] == lvl

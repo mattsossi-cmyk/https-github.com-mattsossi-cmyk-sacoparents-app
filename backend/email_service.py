@@ -882,3 +882,52 @@ def send_mediator_safety_assessment(
         attachments=[(pdf_filename or "safety-assessment.pdf", pdf_bytes)],
         failure_message="Couldn't email your mediator right now. Please try again in a moment.",
     )
+
+
+
+def send_snc_report_pdf(
+    *,
+    to_email: str,
+    user_name: Optional[str],
+    pdf_bytes: bytes,
+    pdf_filename: str = "Special_Needs_Report.pdf",
+) -> None:
+    """Email the authenticated parent their own Special Needs v2 report PDF."""
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    plain = (
+        f"{greeting}\n\n"
+        "Your Special Needs Co-Parenting report is attached as a branded PDF.\n\n"
+        "It's a neutral, individualized summary you can keep for yourself, share "
+        "with your mediator, or bring to a family professional. It does not "
+        "diagnose, determine parental fitness, or replace legal advice.\n\n"
+        "If your circumstances change, generate the report again from the SA "
+        "CoParents app and any new information will be included.\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"{greeting}</p>"
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        "Your <strong>Special Needs Co-Parenting</strong> report is attached "
+        "as a branded PDF.</p>"
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 22px 0;">'
+        "It's a neutral, individualized summary you can keep for yourself, "
+        "share with your mediator, or bring to a family professional.</p>"
+        '<p style="font-size:12px;line-height:1.5;color:#857E9C;margin:0 0 14px 0;">'
+        "This report does not diagnose, determine parental fitness, or replace "
+        "legal advice.</p>"
+    )
+    html = _branded_html(
+        headline="Your Special Needs report",
+        body_html=body_html,
+        cta_label="Open SA CoParents",
+        cta_url="https://sacoparentsapp.online",
+    )
+    _send(
+        to_email=to_email,
+        subject="Your Special Needs Co-Parenting report",
+        html=html,
+        text=plain,
+        attachments=[(pdf_filename or "Special_Needs_Report.pdf", pdf_bytes)],
+        failure_message="Couldn't email your Special Needs report right now. Please try again in a moment.",
+    )

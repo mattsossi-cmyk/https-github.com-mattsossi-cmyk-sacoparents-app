@@ -38,6 +38,7 @@ from snc2_questions import (
 from snc2_scoring import compute_scores, validate_answer
 from snc2_report_content import build_report
 from snc2_report_pdf import build_snc2_pdf
+import email_service
 
 
 router = APIRouter(prefix="/snc2", tags=["snc2"])
@@ -230,24 +231,50 @@ async def _cached(db: AsyncIOMotorDatabase, user_id: str) -> Optional[Dict[str, 
     return await db[REPORTS].find_one({"user_id": user_id}, {"_id": 0})
 
 
-def _is_stale(assessment: Dict[str, Any], report: Optional[Dict[str, Any]]) -> bool:
+def _is_stale(
+    assessment: Dict[str, Any],
+    report: Optional[Dict[str, Any]],
+    current_safety_level: Optional[int] = None,
+) -> bool:
     if not report:
         return True
     if report.get("stale") is True:
         return True
     src = report.get("source_updated_at") or ""
-    return (assessment.get("updated_at") or "") > src
+    if (assessment.get("updated_at") or "") > src:
+        return True
+    # Safety level changed since the report was cached → treat as stale so the
+    # recommended structure re-runs the safety guardrail.
+    if current_safety_level is not None:
+        if report.get("safety_level_at_generation") != current_safety_level:
+            return True
+    return False
+
+
+async def _latest_safety_level(db: AsyncIOMotorDatabase, user_id: str) -> Optional[int]:
+    """Return the parent's latest Family Violence & Communication Safety
+    Assessment level (1-4), or None if none exists."""
+    doc = await db["safety_assessments"].find_one(
+        {"user_id": user_id}, {"_id": 0, "result": 1},
+        sort=[("created_at", -1)],
+    )
+    if not doc:
+        return None
+    lvl = (doc.get("result") or {}).get("level")
+    return lvl if isinstance(lvl, int) else None
 
 
 async def _build_and_cache(db: AsyncIOMotorDatabase, user: UserPublic,
                            assessment: Dict[str, Any]) -> Dict[str, Any]:
     if not assessment.get("selected_pathways"):
         raise HTTPException(status_code=400, detail="Please pick at least one needs category first.")
+    safety_level = await _latest_safety_level(db, user.user_id)
     report_content = build_report(
         parent_name=user.name,
         child_name=assessment.get("child_name"),
         selected_pathways=assessment.get("selected_pathways") or [],
         answers=assessment.get("answers") or {},
+        safety_level=safety_level,
     )
     doc = {
         "report_id": f"snc2_{uuid.uuid4().hex[:12]}",
@@ -257,6 +284,7 @@ async def _build_and_cache(db: AsyncIOMotorDatabase, user: UserPublic,
         "generated_at": _now_iso(),
         "assessment_version": ASSESSMENT_VERSION,
         "stale": False,
+        "safety_level_at_generation": safety_level,
         "report": report_content,
     }
     await db[REPORTS].replace_one({"user_id": user.user_id}, doc, upsert=True)
@@ -271,6 +299,7 @@ async def report_status(user: UserPublic = Depends(get_current_user),
     report = await _cached(db, user.user_id)
     if not assessment:
         return {"has_assessment": False, "has_report": False}
+    safety_level = await _latest_safety_level(db, user.user_id)
     return {
         "has_assessment": True,
         "assessment_completed": bool(assessment.get("completed")),
@@ -278,7 +307,7 @@ async def report_status(user: UserPublic = Depends(get_current_user),
         "selected_pathways": assessment.get("selected_pathways") or [],
         "has_report": report is not None,
         "generated_at": (report or {}).get("generated_at"),
-        "stale": _is_stale(assessment, report),
+        "stale": _is_stale(assessment, report, current_safety_level=safety_level),
     }
 
 
@@ -298,7 +327,8 @@ async def generate(user: UserPublic = Depends(get_current_user),
                    db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     assessment = await _load_assessment(db, user.user_id)
     report = await _cached(db, user.user_id)
-    if report and not _is_stale(assessment, report):
+    safety_level = await _latest_safety_level(db, user.user_id)
+    if report and not _is_stale(assessment, report, current_safety_level=safety_level):
         return {"cached": True, **report}
     doc = await _build_and_cache(db, user, assessment)
     return {"cached": False, **doc}
@@ -331,3 +361,47 @@ async def report_pdf(user: UserPublic = Depends(get_current_user),
     filename = f"Special_Needs_Report_{_safe_filename(user.name or 'me')}.pdf"
     return StreamingResponse(BytesIO(pdf_bytes), media_type="application/pdf",
                              headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+class EmailReportIn(BaseModel):
+    to_email: Optional[str] = None  # defaults to the authenticated user's email
+
+
+@router.post("/report/email")
+async def email_report(
+    body: EmailReportIn,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Email the parent's own Special Needs v2 report as a branded PDF."""
+    if user.is_guest:
+        raise HTTPException(
+            status_code=403,
+            detail="Please claim an account before emailing your report.",
+        )
+    to_email = (body.to_email or user.email or "").strip().lower()
+    if not to_email:
+        raise HTTPException(status_code=400, detail="No email address on file.")
+
+    r = await _cached(db, user.user_id)
+    if not r:
+        raise HTTPException(status_code=404, detail="Generate the report first.")
+    pdf_bytes = build_snc2_pdf(report=r.get("report") or {})
+    filename = f"Special_Needs_Report_{_safe_filename(user.name or 'me')}.pdf"
+
+    try:
+        email_service.send_snc_report_pdf(
+            to_email=to_email,
+            user_name=user.name,
+            pdf_bytes=pdf_bytes,
+            pdf_filename=filename,
+        )
+    except email_service.EmailNotConfigured:
+        raise HTTPException(
+            status_code=503,
+            detail="Email delivery isn't configured on this environment.",
+        )
+    except email_service.EmailSendError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    return {"ok": True, "sent_to": to_email, "filename": filename}

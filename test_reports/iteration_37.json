@@ -1,0 +1,41 @@
+{
+  "summary": "Iteration 37: tested 4 SNC v2 enhancements (Sample Buttons, Safety Recommend Override, Email My Report, Growth Wins Dashboard Card). Wrote /app/backend/tests/test_snc2_enhancements.py with 11 targeted tests — all pass. Regression: all 50 existing SNC v2 tests (test_snc2.py=12, test_snc2_api.py=11, test_snc2_comparison.py=9, test_snc2_compare_api.py=18) still pass — the iteration-36 _latest_safety_level fix is intact. Frontend verified in Chromium: dashboard-snc-highlights card renders on /dashboard for parent1 with 86% aligned with Riley Parent, 3 highlight rows (data-testid dashboard-highlight-0..2), and click navigates to /special-needs-v2/compare/snc2_share_a8d0dccb74cc. snc2-samples-block on /special-needs-v2 (verified with fresh user because parent1 has an in-progress assessment) shows 3 sample links with correct /downloads/snc-sample-*.pdf hrefs and target=_blank. snc2-report-email button present on report page next to Download PDF / Regenerate / Co-Parent Compare and click triggers success (Resend accepted, body contained parent1@test.com).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Post-login onboarding",
+        "issues": ["Legal Acknowledgment modal AND a 1/6 Welcome/Orientation slideshow both intercept the dashboard on first visit — Skip button on /orientation left the app at /orientation instead of /dashboard; had to explicit-goto /dashboard for card verification. Not a functional bug, but adds three barriers before the dashboard for a returning parent."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_snc2_enhancements.py",
+    "/app/test_reports/pytest/snc2_enhancements.xml",
+    "/app/test_reports/pytest/snc2_regression.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "snc2_routes.py::_is_stale correctly compares report.safety_level_at_generation against the current latest safety_level — cache invalidates as expected. Good defensive check.",
+    "snc2_report_content.py::_s9_recommended_structure hard-override logic uses an ordered map {cooperative:0, structured:1, parallel_or_supported:2} and only escalates upward via `order[required] > order[rec]`. Correct: cannot silently downgrade a safety-driven recommendation to cooperative.",
+    "snc2_comparison_routes.py::dashboard_highlights swallows HTTPException from _load_comparison (for non-ready shares) and iterates to the next active share — good ergonomics for the Growth Wins card. Also correctly returns the empty payload when the viewer is safety-blocked (verified with L1 assessment).",
+    "email_service.send_snc_report_pdf: verified end-to-end via Resend (200 accepted, actual delivery not asserted). Endpoint returns 503 (with friendly detail) when RESEND_API_KEY is missing — good failure-mode isolation.",
+    "The Dashboard onboarding chain (legal modal + orientation slideshow + potential guest-claim modal) is heavy for a returning user. Consider persisting orientation-seen and skipping the slideshow on subsequent logins.",
+    "There is no DELETE endpoint for safety_assessments — tests still have to reach into pymongo (documented pattern from iteration 36). Consider adding a self-service DELETE for the parent's own latest safety_assessment."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_snc2_enhancements.py (new)"
+  ],
+  "success_rate": {"backend": "100% (11/11 new + 50/50 regression = 61/61)", "frontend": "100% (highlights card, sample buttons, email button all verified)"},
+  "test_credentials": "parent1@test.com / TestPass123! (Sam Parent), parent2@test.com / TestPass123! (Riley Parent). Ephemeral TEST_* users are used for guardrail/edge scenarios and cleaned up.",
+  "seed_data_creation": "Backend tests re-seed parent1 and parent2 with medical-only SNC v2 assessments each run, and re-create the active happy-path share if absent. Safety assessments used for override tests are deleted after each test via direct pymongo. Autouse module cleanup also purges lingering safety records for parent1@test.com.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 4 enhancements verified end-to-end. When testing frontend for parent1, be aware of THREE overlays before /dashboard renders: legal-ack modal (dismiss via [data-testid=legal-ack-checkbox] then [data-testid=legal-ack-continue-button]), the /orientation slideshow (Skip button doesn't redirect — must explicitly goto /dashboard), and a possible reload state. Sample buttons only render on the picker screen — parent1 has an in-progress assessment so use a fresh TEST_* user to see snc2-samples-block. parent1 currently has an active share snc2_share_a8d0dccb74cc with parent2, both medical-only, 86% aligned; 5 highlights available via /api/snc2/compare/dashboard/highlights.",
+  "rca of the issue": "No new issues. Iteration 36's _latest_safety_level nested-field fix confirmed intact and now applied consistently in snc2_routes.py (for report safety override + cache staleness) and in snc2_comparison_routes.py (for creation/consent/view guardrails + dashboard highlights)."
+}

@@ -16,7 +16,7 @@ import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { toast } from "sonner";
-import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert, Users } from "lucide-react";
+import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert, Users, Mail } from "lucide-react";
 import { logError } from "../lib/logger";
 
 const STATUS_COLOR = {
@@ -89,6 +89,16 @@ export default function SpecialNeedsV2Report() {
     } catch (err) { logError("snc2 pdf", err); toast.error(err?.response?.data?.detail || "Could not download the PDF."); }
     finally { setBusy(false); }
   };
+  const emailReport = async () => {
+    setBusy(true);
+    try {
+      const res = await api.post("/snc2/report/email", {});
+      toast.success(`Report emailed to ${res.data?.sent_to || "your inbox"}.`);
+    } catch (err) {
+      logError("snc2 email", err);
+      toast.error(err?.response?.data?.detail || "Could not email your report right now.");
+    } finally { setBusy(false); }
+  };
 
   if (state.loading) return <AppShell><div className="max-w-3xl mx-auto px-4 py-10 text-[#4B4567]"><Loader2 className="animate-spin inline" /> Loading report…</div></AppShell>;
 
@@ -153,7 +163,11 @@ export default function SpecialNeedsV2Report() {
             </Link>
             <button onClick={downloadPdf} disabled={busy} data-testid="snc2-report-download-pdf"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
-              <Download size={13} /> Download PDF
+              {busy ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
+            </button>
+            <button onClick={emailReport} disabled={busy} data-testid="snc2-report-email"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
+              <Mail size={13} /> Email me the PDF
             </button>
             <button onClick={regenerate} disabled={busy} data-testid="snc2-report-regenerate"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
