@@ -1,0 +1,29 @@
+{
+  "summary": "Full-stack testing of Special Needs v3 after removal of family-violence subsystem + reorg to CP vocabulary. Backend: 21/21 pytest passes (7 new API integration tests in test_sn_v3_cp_vocab_api.py + 14 pre-existing unit tests for scoring/report). Frontend: dashboard SN card shows '9 Sections' (no '10 Domains/Principles/2026'); /special-needs-v3 results view shows CP-style Building Progress banner (purple), STRENGTHS (green), PRIORITY FOCUS AREAS (orange) with 'Good'/'Excellent'/'Fair'/'Needs Improvement' chips, Section-by-section detail with 'Section N' headings for all d1..d9, no safety-alert/safety-link/Take-the-Safety-Assessment CTA; intake step renders and skip works; Section 1 step shows 6 questions each with 5 correctly-labelled Likert buttons + exactly 3 meta chips (na/need_info/want_help, NO safety chip); snv3-next-btn is disabled until all 6 in the section are answered then enables; snv3-finish-btn does not appear until Section 9; shared viewer /shared/special-needs/<token> renders CP-style layout with matching tone maps and NO forbidden strings ('Safety-Sensitive', 'Existing strength', '10 Principles', '10 Domains', 'Domain 10', 'Principle', 'Family violence'); family report generate/status still works with SN block content free of forbidden strings; legacy find_domain still aliased to find_section and scores.domains == scores.sections.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_sn_v3_cp_vocab_api.py",
+    "/app/backend/tests/test_sn_v3_scoring.py",
+    "/app/backend/tests/test_sn_v3_report.py",
+    "/app/test_reports/pytest/sn_v3_cp_vocab.xml"
+  ],
+  "action_items": [
+    "(Nit) test_happy_path_report in the new file returns report_id -> pytest emits a warning; harmless. Convert 'return' to a local assignment or move to a fixture if preferred.",
+    "(Nit) sn_v3_report_pdf.py still uses deprecated fpdf ln=1 / dest='S' parameters (deprecation warnings from fpdf2 2.5.x). Non-blocking but worth cleaning up.",
+    "(Nit) SharedSpecialNeedsReport.jsx & SpecialNeedsV3.jsx still duplicate CATEGORY_TONE/OVERALL_TONE maps — worth extracting to a shared module now that the two must match Co-Parenting exactly."
+  ],
+  "critical_code_review_comments": [
+    "sn_v3_routes.get_comparison still returns both sections and domains alias — good backward compat. shared_priorities list-comp is very long; consider a small helper for readability.",
+    "sn_v3_scoring.compute_scores returns sections and domains as the SAME list reference — anyone mutating one will mutate the other. Safe for current read-only callers but should be a copy if future code mutates.",
+    "Family-violence copy is fully removed from schema, scoring, report content, PDF, and comparison — verified programmatically and by decoded PDF text scan (pdftotext).",
+    "Legal Acknowledgment modal still blocks first-time interactions on /special-needs-v3 (pre-existing; bypassed in tests via localStorage as documented)."
+  ],
+  "updated_files": ["/app/backend/tests/test_sn_v3_cp_vocab_api.py (new)"],
+  "success_rate": {"backend": "100% (21/21)", "frontend": "100% on required flows"},
+  "test_credentials": "parent1@test.com / TestPass123!  +  parent2_snv3_<random>@test.com auto-registered by fixture",
+  "seed_data_creation": "During test run: reset + bulk 54 answers (value=3) + complete + report/generate for parent1 (Building Progress). Two-parent comparison seeded a fresh parent2 with 54 answers value=2.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "New API test file is /app/backend/tests/test_sn_v3_cp_vocab_api.py (7 tests). Uses pdftotext for PDF text scanning (already installed at /usr/bin/pdftotext). Schema: 9 sections d1..d9, 54 questions, meta_flags={na,need_info,want_help}, scale labels match CP. Ratings vocab: Excellent/Good/Fair/Needs Improvement per section, Excellent Progress/Building Progress/Early Progress/Not enough data overall. No safety_triggered, no Domain 10, no Principle. Comparison endpoint returns sections keyed d1..d9 with inviter.rating/acceptor.rating (no category, no safety_flag). Playwright: set localStorage 'sac_legal_ack_v1' before navigating to /special-needs-v3."
+}

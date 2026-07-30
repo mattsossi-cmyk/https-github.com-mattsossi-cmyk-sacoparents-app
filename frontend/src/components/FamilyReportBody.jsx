@@ -204,7 +204,7 @@ export function FamilyReportBody({ report }) {
 
       <SafetyBlock safety={report.safety} />
       <FullReportBlock title="Co-Parenting Assessment" block={report.coparenting} unitLabel="Section" testidPrefix="famrep-cp" />
-      <FullReportBlock title="Special Needs Assessment" block={report.special_needs} unitLabel="Principle" testidPrefix="famrep-sn" />
+      <FullReportBlock title="Special Needs Assessment" block={report.special_needs} unitLabel="Section" testidPrefix="famrep-sn" />
 
       {(report.combined_next_steps || []).length > 0 && (
         <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6" data-testid="famrep-combined-next-steps">

@@ -1,4 +1,4 @@
-"""PDF renderer for the Special Needs (10-Principle) Assessment Report.
+"""PDF renderer for the Special Needs Assessment Report.
 
 Near-identical to cp_report_pdf.py so the two dynamic reports feel like part of
 the same product. Differences are cosmetic (title/header/labels).
@@ -16,16 +16,10 @@ _RATING_COLOR = {
     "Good":              (61, 26, 120),
     "Fair":              (140, 90, 44),
     "Needs Improvement": (194, 72, 31),
-    # 2026 framework categories (per-domain + overall variants)
-    "Existing strength":                 (31, 92, 59),
-    "Existing Strength Overall":         (31, 92, 59),
-    "Developing area":                   (61, 26, 120),
-    "Developing Overall":                (61, 26, 120),
-    "Priority for planning":             (140, 90, 44),
-    "Priority Focus Overall":            (140, 90, 44),
-    "Professional guidance recommended": (140, 90, 44),
-    "Safety-sensitive concern":          (194, 72, 31),
-    "Safety-Sensitive Review Recommended": (194, 72, 31),
+    # Overall labels
+    "Excellent Progress": (31, 92, 59),
+    "Building Progress":  (61, 26, 120),
+    "Early Progress":     (194, 72, 31),
 }
 
 
@@ -129,7 +123,7 @@ def build_special_needs_pdf(
         pdf.set_font("Helvetica", "I", 10)
         pdf.set_text_color(133, 126, 156)
         pdf.set_x(pdf.l_margin)
-        pdf.multi_cell(pdf.epw, 5, _safe(f"Prepared for {prepared_by}  ·  10-principle framework"))
+        pdf.multi_cell(pdf.epw, 5, _safe(f"Prepared for {prepared_by}  ·  9-section framework"))
         pdf.ln(2)
 
     if "overall" not in ex:
@@ -187,14 +181,13 @@ def build_special_needs_pdf(
                     pdf.multi_cell(pdf.epw, 5, f"    First step: {_safe(first)}")
                 pdf.ln(1)
         else:
-            pdf.body("No priority principles — great work.")
+            pdf.body("No priority sections — great work.")
 
     if "communication_toolkit" not in ex and report.get("show_communication_toolkit"):
         pdf.h2("Communication toolkit")
         pdf.body(
-            "Because Domain 6 (Communication) is currently a Priority for "
-            "planning or Professional guidance recommended, these tools are "
-            "highlighted for you."
+            "Because Section 6 (Communication) is currently rated Fair or "
+            "Needs Improvement, these tools are highlighted for you."
         )
         for tip in report.get("communication_toolkit") or []:
             pdf.set_font("Helvetica", "B", 10.5)
@@ -210,9 +203,9 @@ def build_special_needs_pdf(
             pdf.ln(0.5)
 
     if "sections" not in ex:
-        pdf.h2("Domain-by-domain detail")
+        pdf.h2("Section-by-section detail")
         for sec in report.get("sections") or []:
-            title = _safe(f"Domain {sec.get('number')}: {sec.get('name')}")
+            title = _safe(f"Section {sec.get('number')}: {sec.get('name')}")
             pdf.set_font("Helvetica", "B", 11.5)
             pdf.set_text_color(26, 19, 48)
             pdf.set_x(pdf.l_margin)

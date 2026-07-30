@@ -715,16 +715,16 @@ export default function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-0.5">
-                Special Needs · 10 Domains (2026)
+                Special Needs · 9 Sections
               </div>
               <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
-                Rate your co-parenting across 10 special-needs domains
+                Rate your co-parenting across 9 special-needs sections
               </div>
               <p className="text-xs sm:text-sm text-[#4B4567] leading-relaxed">
-                A single-parent, 5-point self-assessment aligned with the SA
-                CoParents 2026 framework. Intake profile + 60 questions across
-                10 domains, safety-sensitive handling, meta-options, and an
-                optional side-by-side comparison with your co-parent.
+                A single-parent, 5-point self-assessment using the same rating
+                vocabulary and report structure as the Co-Parenting Assessment.
+                Intake profile + 54 questions across 9 sections, meta-options,
+                and an optional side-by-side comparison with your co-parent.
               </p>
             </div>
             <ChevronRight size={16} className="shrink-0 text-[#3D1A78]" />

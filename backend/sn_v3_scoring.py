@@ -1,61 +1,102 @@
-"""Scoring engine for the redesigned Special Needs Co-Parenting Assessment.
+"""Scoring engine for the Special Needs Co-Parenting Assessment.
 
-Result categories (from framework Section 17):
-    - Existing strength
-    - Developing area
-    - Priority for planning
-    - Professional guidance recommended
-    - Safety-sensitive concern
-
-Rules:
-  * Each domain (except Safety) is averaged over answered non-N/A items on
-    the 0-4 scale, then mapped to a category:
-        avg >= 3.25  → Existing strength
-        avg >= 2.25  → Developing area
-        avg <  2.25  → Priority for planning
-  * A domain is elevated to "Professional guidance recommended" if the parent
-    flagged `want_help` on 2+ questions in that domain (regardless of avg).
-  * Domain 10 (Safety) is NEVER averaged into strength ratings. If ANY
-    reverse-scored safety item is Agree/Strongly agree (raw >= 3) OR any
-    `safety` meta-flag is set, the Safety domain is marked
-    "Safety-sensitive concern" and surfaces as a top-priority review.
-  * Overall assessment rating:
-        - "Safety-sensitive concern" if Safety triggered.
-        - Otherwise a summary of strengths vs. priorities.
+Mirrors coparenting_scoring.py so the two products score, rate, and label
+identically. The only additions kept for Special Needs are the meta-flag
+outputs (na, need_info, want_help) which flow into the report but never
+change section ratings.
 """
 from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
 
-from sn_v3_questions import DOMAINS, total_question_count
+from sn_v3_questions import SECTIONS, total_question_count
 
 
-# Category constants (used in reports + frontend chips)
-CAT_STRENGTH  = "Existing strength"
-CAT_DEVELOP   = "Developing area"
-CAT_PRIORITY  = "Priority for planning"
-CAT_PROFESSIONAL = "Professional guidance recommended"
-CAT_SAFETY    = "Safety-sensitive concern"
+RATING_EXCELLENT = "Excellent"
+RATING_GOOD      = "Good"
+RATING_FAIR      = "Fair"
+RATING_NEEDS     = "Needs Improvement"
 
-RESULT_CATEGORIES = [CAT_STRENGTH, CAT_DEVELOP, CAT_PRIORITY, CAT_PROFESSIONAL, CAT_SAFETY]
-
-
-OVERALL_STRENGTH   = "Existing Strength Overall"
-OVERALL_DEVELOPING = "Developing Overall"
-OVERALL_PRIORITY   = "Priority Focus Overall"
-OVERALL_SAFETY     = "Safety-Sensitive Review Recommended"
+# Section rating thresholds — identical to Co-Parenting.
+THRESHOLD_EXCELLENT = 3.25
+THRESHOLD_GOOD      = 2.5
+THRESHOLD_FAIR      = 1.5
 
 
-def _effective(raw: int, reverse: bool) -> int:
-    return (4 - raw) if reverse else raw
+OVERALL_EXCELLENT  = "Excellent Progress"
+OVERALL_BUILDING   = "Building Progress"
+OVERALL_EARLY      = "Early Progress"
 
 
-def _category_from_avg(avg: float) -> str:
-    if avg >= 3.25:
-        return CAT_STRENGTH
-    if avg >= 2.25:
-        return CAT_DEVELOP
-    return CAT_PRIORITY
+def _rating_for_avg(avg: float) -> str:
+    if avg >= THRESHOLD_EXCELLENT:
+        return RATING_EXCELLENT
+    if avg >= THRESHOLD_GOOD:
+        return RATING_GOOD
+    if avg >= THRESHOLD_FAIR:
+        return RATING_FAIR
+    return RATING_NEEDS
+
+
+def _score_section(section: Dict[str, Any], answers: Dict[str, int], meta: Dict[str, Dict[str, bool]]) -> Dict[str, Any]:
+    values: List[int] = []
+    na_count = 0
+    want_help_hits = 0
+    need_info_hits = 0
+    for q in section["questions"]:
+        qid = q["id"]
+        m = meta.get(qid) or {}
+        if m.get("na"):
+            na_count += 1
+            continue  # N/A items don't count toward the section average.
+        if m.get("want_help"):
+            want_help_hits += 1
+        if m.get("need_info"):
+            need_info_hits += 1
+        if qid in answers:
+            values.append(int(answers[qid]))
+    total = len(section["questions"])
+    answered = len(values)
+    if answered == 0:
+        return {
+            "id": section["id"],
+            "number": section["number"],
+            "name": section["name"],
+            "rating": None,
+            "avg": None,
+            "answered": 0,
+            "total": total,
+            "na_count": na_count,
+            "want_help_hits": want_help_hits,
+            "need_info_hits": need_info_hits,
+        }
+    avg = sum(values) / answered
+    return {
+        "id": section["id"],
+        "number": section["number"],
+        "name": section["name"],
+        "rating": _rating_for_avg(avg),
+        "avg": round(avg, 3),
+        "answered": answered,
+        "total": total,
+        "na_count": na_count,
+        "want_help_hits": want_help_hits,
+        "need_info_hits": need_info_hits,
+    }
+
+
+def _overall_rating(section_scores: List[Dict[str, Any]]) -> str:
+    rated = [s for s in section_scores if s["rating"] is not None]
+    if not rated:
+        return "Not enough data"
+    excellent = sum(1 for s in rated if s["rating"] == RATING_EXCELLENT)
+    good = sum(1 for s in rated if s["rating"] == RATING_GOOD)
+    needs = sum(1 for s in rated if s["rating"] == RATING_NEEDS)
+    if excellent >= 6:
+        return OVERALL_EXCELLENT
+    if needs >= 4 or (excellent + good) < len(rated) / 2:
+        return OVERALL_EARLY
+    return OVERALL_BUILDING
 
 
 def compute_scores(
@@ -63,118 +104,54 @@ def compute_scores(
     *,
     meta: Dict[str, Dict[str, bool]] | None = None,
 ) -> Dict[str, Any]:
-    """Return the scored payload for an assessment.
+    """Compute the full scoring result.
 
     Args:
-      answers: {question_id -> int(0-4)}. Missing = unanswered.
-      meta:    {question_id -> {"na": bool, "need_info": bool, "want_help": bool, "safety": bool}}
+        answers: {question_id -> int(0-4)}. Missing keys = unanswered.
+        meta:    {question_id -> {"na": bool, "need_info": bool, "want_help": bool}}
     """
     answers = answers or {}
     meta = meta or {}
 
-    domains_out: List[Dict[str, Any]] = []
-    safety_hit = False
-    safety_questions: List[str] = []
+    section_scores: List[Dict[str, Any]] = [_score_section(s, answers, meta) for s in SECTIONS]
 
-    for d in DOMAINS:
-        did = d["id"]
-        is_safety_domain = bool(d.get("safety_sensitive"))
-        answered = 0
-        na_count = 0
-        want_help_hits = 0
-        raw_scores: List[int] = []
-        eff_scores: List[int] = []
-        d_safety_hits: List[str] = []
+    overall = _overall_rating(section_scores)
 
-        for q in d["questions"]:
-            qid = q["id"]
-            m = meta.get(qid) or {}
-            if m.get("na"):
-                na_count += 1
-                # N/A items don't count toward avg and don't trigger flags.
-                continue
-            if m.get("want_help"):
-                want_help_hits += 1
-            # Safety meta flag can be set on ANY domain question.
-            if m.get("safety"):
-                safety_hit = True
-                d_safety_hits.append(qid)
-            if qid in answers:
-                answered += 1
-                raw = int(answers[qid])
-                raw_scores.append(raw)
-                eff = _effective(raw, bool(q.get("reverse")))
-                eff_scores.append(eff)
-                # Safety-domain reverse item — high raw = concern
-                if is_safety_domain and q.get("safety_flag") and raw >= 3:
-                    safety_hit = True
-                    d_safety_hits.append(qid)
+    rated = [s for s in section_scores if s["rating"] is not None]
 
-        avg = round(sum(eff_scores) / len(eff_scores), 2) if eff_scores else None
-        # Category selection
-        if is_safety_domain:
-            category = CAT_SAFETY if d_safety_hits else CAT_STRENGTH
-        elif avg is None:
-            category = None
-        else:
-            category = _category_from_avg(avg)
-            if want_help_hits >= 2:
-                # Parent explicitly asked for help in this area
-                category = CAT_PROFESSIONAL
-
-        domains_out.append({
-            "id": did,
-            "number": d["number"],
-            "name": d["name"],
-            "goal": d.get("goal"),
-            "framework_ref": d.get("framework_ref"),
-            "avg": avg,
-            "answered": answered,
-            "total": len(d["questions"]),
-            "na_count": na_count,
-            "want_help_hits": want_help_hits,
-            "safety_hits": d_safety_hits,
-            "category": category,
-        })
-        if d_safety_hits:
-            safety_questions.extend(d_safety_hits)
-
-    # Rankings for report composition (exclude safety domain from strength/priority lists)
-    non_safety = [d for d in domains_out if d["id"] != "d10" and d["avg"] is not None]
-    strongest = [d["id"] for d in sorted(non_safety, key=lambda x: -x["avg"])[:2] if d["avg"] >= 3.0]
-    priority = [
-        d["id"] for d in sorted(non_safety, key=lambda x: (x["avg"], x["number"]))
-        if d["category"] in (CAT_PRIORITY, CAT_PROFESSIONAL, CAT_DEVELOP)
-    ][:4]
-
-    # Communication toolkit trigger: Domain 6 (Communication) is Priority/Professional
-    d6 = next((d for d in domains_out if d["id"] == "d6"), None)
-    show_toolkit = bool(d6 and d6.get("category") in (CAT_PRIORITY, CAT_PROFESSIONAL))
-
-    # Overall rating
-    if safety_hit:
-        overall = OVERALL_SAFETY
-    elif not non_safety:
-        overall = "Not enough data"
+    # Priority focus areas — any section currently Needs Improvement.
+    # If none, use the lowest-avg rated section so parents always see something to work on.
+    needs_sections = [s["id"] for s in rated if s["rating"] == RATING_NEEDS]
+    if needs_sections:
+        priority_focus = needs_sections
+    elif rated:
+        lowest = min(rated, key=lambda s: s["avg"])
+        priority_focus = [lowest["id"]]
     else:
-        strengths_count = sum(1 for d in non_safety if d["category"] == CAT_STRENGTH)
-        priorities_count = sum(1 for d in non_safety if d["category"] in (CAT_PRIORITY, CAT_PROFESSIONAL))
-        if strengths_count >= 6 and priorities_count <= 1:
-            overall = OVERALL_STRENGTH
-        elif priorities_count >= 4:
-            overall = OVERALL_PRIORITY
-        else:
-            overall = OVERALL_DEVELOPING
+        priority_focus = []
+
+    # Communication Toolkit surfaces when Section 6 (Communication) is Fair or Needs Improvement.
+    d6 = next((s for s in section_scores if s["id"] == "d6"), None)
+    show_toolkit = bool(d6 and d6["rating"] in (RATING_FAIR, RATING_NEEDS))
+
+    strongest: List[str] = []
+    weakest: List[str] = []
+    if rated:
+        top_avg = max(s["avg"] for s in rated)
+        strongest = [s["id"] for s in rated if s["avg"] == top_avg]
+        low_avg = min(s["avg"] for s in rated)
+        weakest = [s["id"] for s in rated if s["avg"] == low_avg]
 
     return {
-        "domains": domains_out,
+        "sections": section_scores,
+        # Legacy alias kept for any existing readers.
+        "domains": section_scores,
         "overall_rating": overall,
-        "safety_triggered": safety_hit,
-        "safety_questions": safety_questions,
-        "strongest_domain_ids": strongest,
-        "priority_focus_ids": priority,
+        "priority_focus": priority_focus,
         "show_communication_toolkit": show_toolkit,
-        "answered_count": sum(d["answered"] for d in domains_out),
+        "strongest_section_ids": strongest,
+        "weakest_section_ids": weakest,
+        "answered_count": sum(s["answered"] for s in section_scores),
         "total_count": total_question_count(),
     }
 

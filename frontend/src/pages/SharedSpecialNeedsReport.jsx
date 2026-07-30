@@ -2,53 +2,47 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Download, Loader2, AlertTriangle, TrendingUp, MessageCircle,
-  ShieldCheck, ShieldAlert, ArrowUpRight, ExternalLink, Share2, ChevronDown, ChevronUp,
+  ShieldCheck, ArrowUpRight, ExternalLink, Share2, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
 
 /**
- * Public shared Special Needs report viewer (2026 framework).
- * Reads the SIGNED share token (no auth required) and mirrors the individual
- * report chrome so the two report types feel like one product family.
+ * Public shared Special Needs report viewer.
+ * Same visual language as the Co-Parenting shared viewer.
  */
 
-const CATEGORY_TONE = {
-  "Existing strength":                  { chip: "text-[#1F5C3B] bg-[#E4F4EC] border-[#B8DDC6]" },
-  "Developing area":                    { chip: "text-[#3D1A78] bg-[#EFE9F9] border-[#CFC1EA]" },
-  "Priority for planning":              { chip: "text-[#C2481F] bg-[#FEF1EC] border-[#F0B6A0]" },
-  "Professional guidance recommended":  { chip: "text-[#8C5A2C] bg-[#FFF7E3] border-[#F5C147]" },
-  "Safety-sensitive concern":           { chip: "text-white bg-[#B02A2A] border-[#B02A2A]" },
+const RATING_TONE = {
+  "Excellent Progress": { bg: "bg-[#E4F4EC]", text: "text-[#1F5C3B]", border: "border-[#B8DDC6]" },
+  "Building Progress":  { bg: "bg-[#EFE9F9]", text: "text-[#3D1A78]", border: "border-[#CFC1EA]" },
+  "Early Progress":     { bg: "bg-[#FEF1EC]", text: "text-[#C2481F]", border: "border-[#F0B6A0]" },
 };
 
-const OVERALL_TONE = {
-  "Existing Strength Overall":            { bg: "bg-[#E4F4EC]", text: "text-[#1F5C3B]", border: "border-[#B8DDC6]" },
-  "Developing Overall":                   { bg: "bg-[#EFE9F9]", text: "text-[#3D1A78]", border: "border-[#CFC1EA]" },
-  "Priority Focus Overall":               { bg: "bg-[#FEF1EC]", text: "text-[#C2481F]", border: "border-[#F0B6A0]" },
-  "Safety-Sensitive Review Recommended":  { bg: "bg-[#FCE9E9]", text: "text-[#8B1E1E]", border: "border-[#F2B4B4]" },
+const SECTION_CHIP = {
+  Excellent:           "text-[#1F5C3B] bg-[#E4F4EC] border-[#B8DDC6]",
+  Good:                "text-[#3D1A78] bg-[#EFE9F9] border-[#CFC1EA]",
+  Fair:                "text-[#8C5A2C] bg-[#FFF7E3] border-[#F5C147]",
+  "Needs Improvement": "text-[#C2481F] bg-[#FEF1EC] border-[#F0B6A0]",
 };
 
-function CategoryChip({ category, testid }) {
-  if (!category) return <span className="text-xs italic text-[#857E9C]">Not answered</span>;
-  const tone = CATEGORY_TONE[category] || CATEGORY_TONE["Developing area"];
+function RatingChip({ rating, testid }) {
+  if (!rating) return <span className="text-xs italic text-[#857E9C]">Not answered</span>;
+  const cls = SECTION_CHIP[rating] || SECTION_CHIP.Fair;
   return (
-    <span
-      className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full border ${tone.chip}`}
-      data-testid={testid}
-    >
-      {category}
+    <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full border ${cls}`} data-testid={testid}>
+      {rating}
     </span>
   );
 }
 
 function Banner({ overall, sharedBy, generatedAt }) {
-  const tone = OVERALL_TONE[overall] || OVERALL_TONE["Developing Overall"];
+  const tone = RATING_TONE[overall] || RATING_TONE["Building Progress"];
   const date = generatedAt
     ? new Date(generatedAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })
     : null;
   return (
     <div className={`rounded-3xl border ${tone.border} ${tone.bg} p-6 sm:p-8`} data-testid="sharedsn-banner">
       <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
-        Special Needs Co-Parenting Report · 2026 framework · 10 domains
+        Special Needs Co-Parenting Report · 9 sections · shared report
       </div>
       <h1 className={`font-serif text-3xl sm:text-4xl leading-tight ${tone.text}`} data-testid="sharedsn-overall">
         {overall || "Not enough data"}
@@ -179,9 +173,8 @@ function SharedSpecialNeedsReport() {
 
   const { report, scores, shared_by: sharedBy, generated_at: generatedAt, excluded_sections: excluded = [] } = state.data || {};
   const ex = new Set(excluded);
-  const domainList = report?.domains || report?.sections || [];
-  const hasDomains = domainList.length > 0;
-  const safetyTriggered = !!report?.safety_triggered;
+  const sectionList = report?.sections || report?.domains || [];
+  const hasSections = sectionList.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F8F5FF] via-white to-white">
@@ -224,31 +217,10 @@ function SharedSpecialNeedsReport() {
           <p className="text-[15px] text-[#1A1330] leading-relaxed">{report.overall_summary}</p>
         )}
 
-        {safetyTriggered && (
-          <div className="rounded-3xl border-2 border-[#B02A2A] bg-[#FCE9E9] p-6" data-testid="sharedsn-safety-alert">
-            <div className="flex items-start gap-3">
-              <ShieldAlert size={22} className="text-[#8B1E1E] shrink-0 mt-0.5" />
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8B1E1E] mb-1">
-                  Safety-sensitive concern
-                </div>
-                <div className="font-serif text-xl text-[#8B1E1E] leading-tight">
-                  Ordinary co-parenting recommendations may not be appropriate.
-                </div>
-                <p className="text-sm text-[#1A1330] mt-2 leading-relaxed">
-                  This report intentionally does not recommend joint meetings or shared decision
-                  sessions until a qualified professional has assessed the situation. Please
-                  prioritise safety.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {!ex.has("strengths") && (report?.strengths || []).length > 0 && (
           <div className="rounded-3xl border border-[#B8DDC6] bg-[#E4F4EC] p-6" data-testid="sharedsn-strengths">
             <div className="flex items-center gap-2 text-[#1F5C3B] font-bold text-xs uppercase tracking-[0.18em] mb-3">
-              <TrendingUp size={14} /> Existing strengths
+              <TrendingUp size={14} /> Strengths
             </div>
             <ul className="space-y-2.5">
               {report.strengths.map((s) => (
@@ -271,7 +243,7 @@ function SharedSpecialNeedsReport() {
                 <li key={g.section_id} data-testid={`sharedsn-growth-${g.section_id}`}>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-[#1A1330]">{g.title}</span>
-                    <CategoryChip category={g.rating} testid={`sharedsn-growth-chip-${g.section_id}`} />
+                    <RatingChip rating={g.rating} testid={`sharedsn-growth-chip-${g.section_id}`} />
                   </div>
                   {g.why_it_matters && <div className="text-sm text-[#4B4567] mt-1"><span className="font-semibold text-[#1A1330]">Why:</span> {g.why_it_matters}</div>}
                   {g.first_step && <div className="text-sm text-[#4B4567] mt-0.5"><span className="font-semibold text-[#1A1330]">First step:</span> {g.first_step}</div>}
@@ -297,23 +269,23 @@ function SharedSpecialNeedsReport() {
           </div>
         )}
 
-        {!ex.has("sections") && hasDomains && (
+        {!ex.has("sections") && hasSections && (
           <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8" data-testid="sharedsn-sections">
-            <h2 className="font-serif text-xl text-[#1A1330] mb-4">Domain-by-domain detail</h2>
+            <h2 className="font-serif text-xl text-[#1A1330] mb-4">Section-by-section detail</h2>
             <div className="space-y-3">
-              {domainList.map((sec) => (
+              {sectionList.map((sec) => (
                 <div key={sec.id} className="border border-[#E5E0EE] rounded-2xl p-4" data-testid={`sharedsn-sec-${sec.id}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-0.5">
-                        Domain {sec.number}
+                        Section {sec.number}
                       </div>
                       <div className="font-semibold text-[#1A1330]">{sec.name}</div>
                       {sec.goal && <div className="text-xs text-[#4B4567] mt-0.5">{sec.goal}</div>}
                     </div>
                     <div className="shrink-0 text-right">
-                      <CategoryChip category={sec.category || sec.rating} testid={`sharedsn-rating-${sec.id}`} />
-                      {typeof sec.avg === "number" && sec.id !== "d10" && (
+                      <RatingChip rating={sec.rating} testid={`sharedsn-rating-${sec.id}`} />
+                      {typeof sec.avg === "number" && (
                         <div className="text-[11px] text-[#857E9C] mt-1">Avg {sec.avg} / 4</div>
                       )}
                     </div>
@@ -356,7 +328,7 @@ function SharedSpecialNeedsReport() {
         {!ex.has("sections") && scores && (
           <div className="rounded-3xl bg-[#F8F5FF] border border-[#E5E0EE] p-4 text-xs text-[#4B4567] flex items-center gap-2" data-testid="sharedsn-progress">
             <ShieldCheck size={14} className="text-[#3D1A78]" />
-            Based on {scores.answered_count || 0} of {scores.total_count || 60} answered questions across 10 domains.
+            Based on {scores.answered_count || 0} of {scores.total_count || 54} answered questions across 9 sections.
           </div>
         )}
 
@@ -368,8 +340,9 @@ function SharedSpecialNeedsReport() {
             Supporting your special-needs child across two homes.
           </div>
           <p className="text-sm text-[#CFC1EA] mt-2 max-w-lg">
-            Take the 10-domain assessment yourself and get a deterministic, child-focused report
-            you can share with your co-parent, mediator, or Parenting Facilitator.
+            Take the 9-section assessment yourself and get a deterministic,
+            child-focused report you can share with your co-parent, mediator, or
+            Parenting Facilitator.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link

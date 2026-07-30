@@ -80,13 +80,13 @@ def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
 @router.get("/schema")
 async def get_schema() -> Dict[str, Any]:
     return {
-        "framework": "SA CoParents Special Needs Co-Parenting Assessment (2026)",
+        "framework": "SA CoParents Special Needs Co-Parenting Assessment (9 sections)",
         "response_scale": RESPONSE_SCALE,
         "meta_flags": META_FLAGS,
         "intake_profile": INTAKE_PROFILE,
-        "domains": DOMAINS,
-        # Legacy alias for anything that still reads schema.sections
         "sections": DOMAINS,
+        # Legacy alias for callers still reading schema.domains
+        "domains": DOMAINS,
         "total_questions": total_question_count(),
     }
 
@@ -473,13 +473,13 @@ async def get_comparison(
             "detail": "Waiting for the other parent to finish their assessment.",
             "you_completed": bool(my_doc.get("completed")),
         }
-    # Build a comparison payload: for each domain, both parents' categories + avgs.
+    # Build a comparison payload: for each section, both parents' ratings + avgs.
     dom_ids = [d["id"] for d in DOMAINS]
     by_did = {}
     for label, d in (("inviter", inviter), ("acceptor", acceptor)):
-        for row in (d.get("scores") or {}).get("domains") or []:
+        for row in (d.get("scores") or {}).get("sections") or (d.get("scores") or {}).get("domains") or []:
             by_did.setdefault(row["id"], {})[label] = {
-                "category": row.get("category"),
+                "rating": row.get("rating"),
                 "avg": row.get("avg"),
                 "want_help_hits": row.get("want_help_hits", 0),
             }
@@ -489,7 +489,7 @@ async def get_comparison(
         pair = by_did.get(did, {})
         inviter_row = pair.get("inviter") or {}
         acceptor_row = pair.get("acceptor") or {}
-        aligned = (inviter_row.get("category") == acceptor_row.get("category")) and inviter_row.get("category") is not None
+        aligned = (inviter_row.get("rating") == acceptor_row.get("rating")) and inviter_row.get("rating") is not None
         domains_cmp.append({
             "id": did,
             "number": d.get("number"),
@@ -503,10 +503,8 @@ async def get_comparison(
         "invite_id": inv_id,
         "status": "ready",
         "domains": domains_cmp,
-        "shared_priorities": [d["id"] for d in domains_cmp if d["inviter"].get("category") in ("Priority for planning", "Professional guidance recommended") and d["acceptor"].get("category") in ("Priority for planning", "Professional guidance recommended")],
-        "safety_flag": any(
-            (d.get("scores") or {}).get("safety_triggered") for d in [inviter, acceptor]
-        ),
+        "sections": domains_cmp,
+        "shared_priorities": [d["id"] for d in domains_cmp if d["inviter"].get("rating") == "Needs Improvement" and d["acceptor"].get("rating") == "Needs Improvement"],
         "generated_at": _now_iso(),
     }
 

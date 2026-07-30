@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Loader2, ShieldAlert, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
@@ -67,17 +67,8 @@ export default function SpecialNeedsInviteAccept() {
                   Your co-parent shared this link. Accept it to attach your assessment to theirs so
                   the two of you can see a side-by-side comparison of alignment, different
                   observations, and priorities. Each parent&apos;s answers remain private — the
-                  comparison only shows domain-level results.
+                  comparison only shows section-level results.
                 </p>
-
-                <div className="mt-4 rounded-2xl border border-[#F2B4B4] bg-[#FCE9E9] p-3 flex items-start gap-2 text-xs text-[#8B1E1E]">
-                  <ShieldAlert size={14} className="shrink-0 mt-0.5" />
-                  <span>
-                    If you have safety concerns, you do not have to accept. Take the assessment on
-                    your own instead — safety is always treated separately from ordinary
-                    co-parenting recommendations.
-                  </span>
-                </div>
 
                 {state.error && (
                   <div className="mt-4 rounded-xl border border-[#F0B6A0] bg-[#FEF1EC] p-3 text-sm text-[#C2481F]" data-testid="sn-invite-error">
