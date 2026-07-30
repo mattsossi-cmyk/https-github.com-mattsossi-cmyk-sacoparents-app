@@ -1,92 +1,53 @@
 /**
- * SpecialNeedsV2Report.jsx — SNC v2 report view.
+ * SpecialNeedsV2Report.jsx — 9-section polished report view.
  *
- * Renders the 8-step workflow report split per pathway with the
- * response → finding → child impact → suggested → action step pattern.
+ *   1. Report Introduction
+ *   2. Your Family Situation
+ *   3. Areas of Need
+ *   4. Your Co-Parenting Strengths
+ *   5. Co-Parenting Challenges
+ *   6. Child Impact Summary
+ *   7. Detailed Findings by Category
+ *   8. Parent Alignment Summary
+ *   9. Recommended Co-Parenting Structure
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { toast } from "sonner";
-import {
-  Download, RefreshCcw, Loader2, ArrowLeft, FileText,
-} from "lucide-react";
+import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert } from "lucide-react";
 import { logError } from "../lib/logger";
 
-
-const CLS_COLOR = {
-  "Well aligned":               "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
-  "Generally aligned":          "bg-[#EEE9F7] text-[#3D1A78] border-[#D6CFE8]",
-  "Coordination opportunity":   "bg-[#FBEDDA] text-[#8C5A2C] border-[#EDD5B0]",
-  "Significant inconsistency":  "bg-[#FBE0D3] text-[#C2481F] border-[#F1BDA1]",
-  "Priority concern":           "bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]",
-  "Not enough data":            "bg-[#EEEAF3] text-[#6E6E82] border-[#D6CFE8]",
-  "High reported impact":       "bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]",
-  "Notable reported impact":    "bg-[#FBE0D3] text-[#C2481F] border-[#F1BDA1]",
-  "Moderate reported impact":   "bg-[#FBEDDA] text-[#8C5A2C] border-[#EDD5B0]",
-  "Limited reported impact":    "bg-[#EEE9F7] text-[#3D1A78] border-[#D6CFE8]",
-  "Minimal reported impact":    "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
+const STATUS_COLOR = {
+  "Strength":                          "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
+  "Developing":                        "bg-[#EEE9F7] text-[#3D1A78] border-[#D6CFE8]",
+  "Needs Attention":                   "bg-[#FBEDDA] text-[#8C5A2C] border-[#EDD5B0]",
+  "Priority Concern":                  "bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]",
+  "Professional Guidance Recommended": "bg-[#EEEAF3] text-[#6E6E82] border-[#D6CFE8]",
 };
 
-function Pill({ label }) {
-  if (!label) return null;
-  const cls = CLS_COLOR[label] || CLS_COLOR["Not enough data"];
-  return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${cls}`}>{label}</span>;
+function StatusPill({ status }) {
+  if (!status) return null;
+  const cls = STATUS_COLOR[status] || STATUS_COLOR.Developing;
+  return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${cls}`}>{status}</span>;
 }
 
 function BulletList({ items = [], testId }) {
   if (!items || items.length === 0) return <div className="text-sm text-[#8471B3] italic">—</div>;
   return <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1" data-testid={testId}>
-    {items.map((it, i) => <li key={`${i}-${String(it).slice(0, 30)}`}>{it}</li>)}
+    {items.map((it, i) => <li key={`${i}-${String(it).slice(0, 40)}`}>{it}</li>)}
   </ul>;
 }
 
-function fmtScore(v) {
-  if (v === null || v === undefined) return "—";
-  if (typeof v === "number") return v.toFixed(2);
-  return String(v);
-}
-
-function StepBlock({ step }) {
+function Section({ id, number, title, children }) {
   return (
-    <section className="mt-6 bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm" data-testid={`snc2-report-step-${step.id}`}>
-      <h2 className="font-serif text-2xl text-[#1A1330] mb-4">Step {step.number}. {step.name}</h2>
-      <div className="space-y-5">
-        {(step.pathways || []).map((pw) => (
-          <div key={pw.id} className="rounded-2xl border border-[#EEE9F7] bg-[#FBF9FE] p-4" data-testid={`snc2-report-${step.id}-${pw.id}`}>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">{pw.name}</div>
-            {pw.finding && (
-              <div className="mb-3">
-                <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Finding</div>
-                <div className="text-sm text-[#1A1330]">{pw.finding}</div>
-              </div>
-            )}
-            {pw.child_impact && (
-              <div className="mb-3">
-                <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Child impact</div>
-                <div className="text-sm text-[#1A1330]">{pw.child_impact}</div>
-              </div>
-            )}
-            {pw.suggested && (
-              <div className="mb-3">
-                <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Suggested option</div>
-                <div className="text-sm text-[#1A1330]">{pw.suggested}</div>
-              </div>
-            )}
-            {pw.action && (
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Action step</div>
-                <div className="text-sm text-[#1A1330]">{pw.action}</div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+    <section className="mt-6 bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm" data-testid={`snc2-report-${id}`}>
+      <h2 className="font-serif text-2xl text-[#1A1330] mb-3">{number ? `${number}. ` : ""}{title}</h2>
+      {children}
     </section>
   );
 }
-
 
 export default function SpecialNeedsV2Report() {
   const [state, setState] = useState({ loading: true, doc: null, status: null });
@@ -94,10 +55,7 @@ export default function SpecialNeedsV2Report() {
 
   const load = useCallback(async () => {
     try {
-      const [rep, st] = await Promise.all([
-        api.get("/snc2/report"),
-        api.get("/snc2/report/status"),
-      ]);
+      const [rep, st] = await Promise.all([api.get("/snc2/report"), api.get("/snc2/report/status")]);
       setState({ loading: false, doc: rep.data?.report ? rep.data : null, status: st.data });
     } catch (err) {
       logError("snc2 report load", err);
@@ -109,27 +67,16 @@ export default function SpecialNeedsV2Report() {
 
   const generate = async () => {
     setBusy(true);
-    try {
-      await api.post("/snc2/report/generate");
-      await load();
-    } catch (err) {
-      logError("snc2 generate", err);
-      toast.error(err?.response?.data?.detail || "Could not generate the report.");
-    } finally { setBusy(false); }
+    try { await api.post("/snc2/report/generate"); await load(); }
+    catch (err) { logError("snc2 generate", err); toast.error(err?.response?.data?.detail || "Could not generate the report."); }
+    finally { setBusy(false); }
   };
-
   const regenerate = async () => {
     setBusy(true);
-    try {
-      await api.post("/snc2/report/regenerate");
-      await load();
-      toast.success("Report regenerated.");
-    } catch (err) {
-      logError("snc2 regen", err);
-      toast.error(err?.response?.data?.detail || "Regenerate failed.");
-    } finally { setBusy(false); }
+    try { await api.post("/snc2/report/regenerate"); await load(); toast.success("Report regenerated."); }
+    catch (err) { logError("snc2 regen", err); toast.error(err?.response?.data?.detail || "Regenerate failed."); }
+    finally { setBusy(false); }
   };
-
   const downloadPdf = async () => {
     setBusy(true);
     try {
@@ -139,62 +86,65 @@ export default function SpecialNeedsV2Report() {
       a.href = url; a.download = "Special_Needs_Report.pdf";
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
-    } catch (err) {
-      logError("snc2 pdf", err);
-      toast.error(err?.response?.data?.detail || "Could not download the PDF.");
-    } finally { setBusy(false); }
+    } catch (err) { logError("snc2 pdf", err); toast.error(err?.response?.data?.detail || "Could not download the PDF."); }
+    finally { setBusy(false); }
   };
 
-  if (state.loading) {
-    return <AppShell><div className="max-w-3xl mx-auto px-4 py-10 text-[#4B4567]"><Loader2 className="animate-spin inline" /> Loading report…</div></AppShell>;
-  }
+  if (state.loading) return <AppShell><div className="max-w-3xl mx-auto px-4 py-10 text-[#4B4567]"><Loader2 className="animate-spin inline" /> Loading report…</div></AppShell>;
 
-  if (!state.doc) {
-    return (
-      <AppShell>
-        <div className="max-w-3xl mx-auto px-4 py-10">
-          <h1 className="font-serif text-3xl text-[#1A1330] mb-2">Special Needs Co-Parenting Report</h1>
-          <p className="text-sm text-[#4B4567] mb-6">No report has been generated yet.</p>
-          <div className="flex flex-wrap gap-3">
-            <Link to="/special-needs-v2" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110" data-testid="snc2-report-empty-open">
-              Open the assessment
-            </Link>
-            {state.status?.has_assessment && (
-              <button onClick={generate} disabled={busy} data-testid="snc2-report-empty-generate"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
-                {busy ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Generate report
-              </button>
-            )}
-          </div>
+  if (!state.doc) return (
+    <AppShell>
+      <div className="max-w-3xl mx-auto px-4 py-10">
+        <h1 className="font-serif text-3xl text-[#1A1330] mb-2">Special Needs Co-Parenting Report</h1>
+        <p className="text-sm text-[#4B4567] mb-6">No report has been generated yet.</p>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/special-needs-v2" data-testid="snc2-report-empty-open"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110">
+            Open the assessment
+          </Link>
+          {state.status?.has_assessment && (
+            <button onClick={generate} disabled={busy} data-testid="snc2-report-empty-generate"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
+              {busy ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Generate report
+            </button>
+          )}
         </div>
-      </AppShell>
-    );
-  }
+      </div>
+    </AppShell>
+  );
 
   const doc = state.doc;
-  const report = doc.report || {};
+  const r = doc.report || {};
   const status = state.status || {};
-  const generatedAt = doc.generated_at;
   const stale = status.stale === true;
-  const summaries = report.pathway_summaries || [];
-  const ag = report.at_a_glance || {};
+  const cover = r.cover || {};
+  const intro = r.intro || {};
+  const fam = r.family_situation || {};
+  const areas = r.areas_of_need || {};
+  const strengths = r.strengths || {};
+  const challenges = r.challenges || {};
+  const childImpact = r.child_impact || {};
+  const detailed = r.detailed_findings || {};
+  const alignment = r.parent_alignment || {};
+  const structure = r.recommended_structure || {};
 
   return (
     <AppShell>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10" data-testid="snc2-report-root">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 text-xs text-[#4B4567] underline mb-4" data-testid="snc2-report-back">
+        <Link to="/dashboard" data-testid="snc2-report-back" className="inline-flex items-center gap-2 text-xs text-[#4B4567] underline mb-4">
           <ArrowLeft size={12} /> Back to dashboard
         </Link>
-
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Individual Parent Report</div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">Special Needs Co-Parenting Report</h1>
-        <p className="text-sm text-[#4B4567] mt-3 max-w-3xl">{report.purpose}</p>
+        <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
+          {intro.title || "Your Special Needs Co-Parenting Report"}
+        </h1>
+        <p className="text-sm text-[#4B4567] mt-3 whitespace-pre-wrap max-w-3xl">{intro.body}</p>
 
         {/* Cache header */}
         <div className="mt-6 rounded-3xl border border-[#E5E0EE] p-4 sm:p-5 bg-white flex flex-wrap items-center justify-between gap-3 shadow-sm" data-testid="snc2-report-cache-bar">
           <div className="text-xs text-[#4B4567]">
             {stale ? <span className="text-[#B02A2A] font-medium">Your answers have changed since this report was generated.</span>
-                   : <span>Last generated {generatedAt ? new Date(generatedAt).toLocaleString() : "—"}.</span>}
+                   : <span>Last generated {doc.generated_at ? new Date(doc.generated_at).toLocaleString() : "—"}.</span>}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={downloadPdf} disabled={busy} data-testid="snc2-report-download-pdf"
@@ -208,71 +158,128 @@ export default function SpecialNeedsV2Report() {
           </div>
         </div>
 
-        {/* At a glance */}
-        <section className="mt-6 bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm" data-testid="snc2-report-at-a-glance">
-          <h2 className="font-serif text-2xl text-[#1A1330] mb-3">At a glance</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Concerns as described</div>
-              <BulletList items={ag.concerns_by_pathway} testId="snc2-glance-concerns" />
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">30-day priorities</div>
-              <BulletList items={ag.top_priorities} testId="snc2-glance-priorities" />
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Coordination is working</div>
-              <BulletList items={ag.coordination_wins} testId="snc2-glance-wins" />
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Coordination needs work</div>
-              <BulletList items={ag.coordination_gaps} testId="snc2-glance-gaps" />
-            </div>
-          </div>
-        </section>
+        {/* Cover meta */}
+        <div className="mt-4 grid sm:grid-cols-3 gap-3 text-sm">
+          <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Parent</div><div>{cover.parent_name || "—"}</div></div>
+          <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Child</div><div>{cover.child_name || "—"}</div></div>
+          <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Assessment date</div><div>{cover.assessment_date || "—"}</div></div>
+        </div>
 
-        {/* Pathway summaries */}
-        <section className="mt-6 bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm" data-testid="snc2-report-summaries">
-          <h2 className="font-serif text-2xl text-[#1A1330] mb-3">Pathway scores</h2>
+        {/* 2. Family Situation */}
+        <Section id="family" number={2} title={fam.title || "Your Family Situation"}>
+          <div className="text-sm text-[#4B4567] whitespace-pre-wrap">{fam.summary}</div>
+          <div className="grid sm:grid-cols-2 gap-4 mt-4">
+            <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Professionals involved</div>
+              <BulletList items={fam.professionals_involved} testId="snc2-fam-pros" /></div>
+            <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Decisions needed</div>
+              <BulletList items={fam.decisions_needed} testId="snc2-fam-decisions" /></div>
+            <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Agreements</div>
+              <BulletList items={fam.agreements} testId="snc2-fam-agree" /></div>
+            <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Disagreements</div>
+              <BulletList items={fam.disagreements} testId="snc2-fam-disagree" /></div>
+          </div>
+        </Section>
+
+        {/* 3. Areas of Need */}
+        <Section id="areas" number={3} title={areas.title || "Areas of Need"}>
           <div className="space-y-3">
-            {summaries.map((s) => (
-              <div key={s.id} className="p-3 rounded-2xl border border-[#EEE9F7] bg-[#FBF9FE]" data-testid={`snc2-summary-${s.id}`}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-sm font-medium text-[#1A1330]">{s.name}</div>
+            {(areas.blocks || []).map((b) => (
+              <div key={b.id} className="p-4 rounded-2xl border border-[#EEE9F7] bg-[#FBF9FE]" data-testid={`snc2-area-${b.id}`}>
+                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">{b.name}</div>
+                {b.concern && <div className="text-sm text-[#1A1330] mb-2"><strong>Concern:</strong> {b.concern}</div>}
+                <div className="text-xs text-[#4B4567]">
+                  {b.duration && <span>Duration: {b.duration}. </span>}
+                  {b.urgency && <span>Urgency: {b.urgency}.</span>}
                 </div>
-                <div className="mt-2 grid sm:grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.16em] text-[#3D1A78] font-semibold">Reported impact</div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Pill label={s.impact?.classification} />
-                      <span className="text-[#4B4567]">{fmtScore(s.impact?.score)} / 5</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.16em] text-[#3D1A78] font-semibold">Understanding</div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Pill label={s.understanding?.classification} />
-                      <span className="text-[#4B4567]">{fmtScore(s.understanding?.score)} / 5</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.16em] text-[#3D1A78] font-semibold">Coordination</div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Pill label={s.coordination?.classification} />
-                      <span className="text-[#4B4567]">{fmtScore(s.coordination?.score)} / 5</span>
-                    </div>
-                  </div>
-                </div>
+                {(b.current_needs || []).length > 0 && <div className="mt-2">
+                  <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Current needs</div>
+                  <BulletList items={b.current_needs} />
+                </div>}
+                {b.professional_summary && <div className="mt-2">
+                  <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Professional recommendation summary</div>
+                  <div className="text-sm text-[#1A1330]">{b.professional_summary}</div>
+                </div>}
               </div>
             ))}
           </div>
-          <div className="text-[11px] italic text-[#8471B3] mt-3">Scores reflect the reporting parent&apos;s answers and are not findings of fact.</div>
-        </section>
+        </Section>
 
-        {/* 8 step blocks */}
-        {(report.steps || []).map((step) => <StepBlock key={step.id} step={step} />)}
+        {/* 4. Strengths */}
+        <Section id="strengths" number={4} title={strengths.title || "Your Co-Parenting Strengths"}>
+          <BulletList items={strengths.items} testId="snc2-strengths-list" />
+        </Section>
 
-        <div className="mt-8 text-xs text-[#8471B3] italic">{report.disclaimer}</div>
+        {/* 5. Challenges */}
+        <Section id="challenges" number={5} title={challenges.title || "Co-Parenting Challenges"}>
+          {(challenges.items || []).length === 0 ? (
+            <div className="text-sm text-[#8471B3] italic">Your responses do not surface any pathway-level challenges above the concern threshold.</div>
+          ) : (
+            <div className="space-y-4">
+              {challenges.items.map((c, idx) => (
+                <div key={`${c.pathway_id}-${idx}`} className="p-4 rounded-2xl border border-[#EEE9F7] bg-white" data-testid={`snc2-challenge-${idx}`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <div className="font-serif text-lg text-[#1A1330]">{c.pathway_name}: {c.title}</div>
+                    <StatusPill status={c.concern_level} />
+                  </div>
+                  <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">What you reported</div>
+                    <div className="text-sm text-[#1A1330]">{c.reported}</div></div>
+                  <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Why this may matter to your child</div>
+                    <div className="text-sm text-[#1A1330]">{c.why_it_matters}</div></div>
+                  <div><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Options to consider</div>
+                    <BulletList items={c.options} /></div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
+
+        {/* 6. Child Impact */}
+        <Section id="child-impact" number={6} title={childImpact.title || "Child Impact Summary"}>
+          <div className="text-xs text-[#8471B3] italic mb-2">Possible effects of the current pattern — not assigning blame.</div>
+          <BulletList items={childImpact.possible_effects} testId="snc2-child-impact-list" />
+        </Section>
+
+        {/* 7. Detailed Findings */}
+        <Section id="detailed" number={7} title={detailed.title || "Detailed Findings by Category"}>
+          <div className="space-y-3">
+            {(detailed.categories || []).map((row) => (
+              <div key={row.id} className="p-4 rounded-2xl border border-[#EEE9F7] bg-white" data-testid={`snc2-detailed-${row.id}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div className="font-serif text-lg text-[#1A1330]">{row.name}</div>
+                  <StatusPill status={row.status} />
+                </div>
+                <div className="text-sm text-[#1A1330] mb-2">{row.explanation}</div>
+                {(row.strengths || []).length > 0 && <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Existing strengths</div><BulletList items={row.strengths} /></div>}
+                {(row.concerns || []).length > 0 && <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Specific concerns</div><BulletList items={row.concerns} /></div>}
+                {(row.actions || []).length > 0 && <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Recommended parent actions</div><BulletList items={row.actions} /></div>}
+                {(row.resources || []).length > 0 && <div><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Professional resources to consider</div><BulletList items={row.resources} /></div>}
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* 8. Parent Alignment */}
+        <Section id="alignment" number={8} title={alignment.title || "Parent Alignment Summary"}>
+          <BulletList items={alignment.resolved_labels} testId="snc2-alignment-list" />
+          <div className="text-xs text-[#8471B3] italic mt-3">{alignment.note}</div>
+        </Section>
+
+        {/* 9. Recommended Structure */}
+        <Section id="structure" number={9} title={structure.title || "Recommended Co-Parenting Structure"}>
+          <div className="rounded-2xl border-2 border-[#3D1A78]/30 bg-[#F8F5FC] p-4 mb-4" data-testid="snc2-structure-recommendation">
+            <div className="font-serif text-xl text-[#1A1330]">{structure.structure_name}</div>
+            <div className="text-sm text-[#4B4567] mt-2">{structure.rationale}</div>
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Safeguards to consider</div>
+          <BulletList items={structure.safeguards} testId="snc2-structure-safeguards" />
+          <div className="mt-4 rounded-2xl border-2 border-[#F1BDA1] bg-[#FBF2E7] p-3 flex items-start gap-2" data-testid="snc2-structure-safety-notice">
+            <ShieldAlert className="text-[#C2481F] shrink-0 mt-0.5" size={18} />
+            <div className="text-xs text-[#7A4A2E]">{structure.safety_notice}
+              {" "}<Link to="/safety-assessment" className="underline font-semibold">Open the full Safety Assessment</Link>.</div>
+          </div>
+        </Section>
+
+        <div className="mt-8 text-xs text-[#8471B3] italic">{r.disclaimer}</div>
       </div>
     </AppShell>
   );

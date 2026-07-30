@@ -64,29 +64,20 @@ def test_scoring_produces_composite_bands():
     assert med["coordination"]["classification"] == "Coordination opportunity"
 
 
-def test_report_structure_matches_8_step_workflow():
+def test_report_structure_matches_9_section_framework():
     r = build_report(parent_name="P", child_name="K", selected_pathways=["medical"], answers=_seed_answers())
     assert r["assessment_version"] == ASSESSMENT_VERSION
-    assert len(r["steps"]) == 8
-    step_names = [s["name"] for s in r["steps"]]
-    assert step_names == [
-        "Understand the Concern",
-        "Identify the Child's Current Needs",
-        "Review Professional Recommendations",
-        "Each Parent's Understanding",
-        "Coordination Between Homes",
-        "Agreement and Disagreement",
-        "Practical Co-Parenting Options",
-        "Create an Action Plan",
-    ]
-    # Each step has a pathway block with the 5-part pattern
-    for s in r["steps"]:
-        for pw in s["pathways"]:
-            assert "response" in pw
-            assert "finding" in pw
-            assert "child_impact" in pw
-            assert "suggested" in pw
-            assert "action" in pw
+    for key in ("intro", "family_situation", "areas_of_need", "strengths",
+                "challenges", "child_impact", "detailed_findings",
+                "parent_alignment", "recommended_structure"):
+        assert key in r, f"Missing report section {key}"
+    # Detailed findings uses the polished status system
+    statuses = {c["status"] for c in r["detailed_findings"]["categories"]}
+    valid = {"Strength", "Developing", "Needs Attention", "Priority Concern",
+             "Professional Guidance Recommended"}
+    assert statuses.issubset(valid)
+    # Recommended structure is one of the three named options
+    assert r["recommended_structure"]["structure_id"] in ("cooperative", "structured", "parallel_or_supported")
 
 
 def test_report_never_labels_a_parent_correct_or_wrong():
@@ -104,13 +95,16 @@ def test_pdf_is_valid_and_contains_workflow_headers():
     assert len(out) > 5000
     for phrase in (
         b"Special Needs Co-Parenting",
-        b"Individual Parent Report",
-        b"Step 1. Understand the Concern",
-        b"Step 8. Create an Action Plan",
-        b"Pathway scores",
+        b"2. Your Family Situation",
+        b"3. Areas of Need",
+        b"4. Your Co-Parenting Strengths",
+        b"5. Co-Parenting Challenges",
+        b"6. Child Impact Summary",
+        b"7. Detailed Findings by Category",
+        b"8. Parent Alignment Summary",
+        b"9. Recommended Co-Parenting Structure",
     ):
-        assert phrase in out
-    # No winner language
+        assert phrase in out, f"missing: {phrase!r}"
     low = out.lower()
     for bad in (b"correct parent", b"wrong parent", b"winner", b"right parent"):
         assert bad not in low
