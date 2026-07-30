@@ -121,8 +121,8 @@ def _s2_family_situation(
         for pro in _list(_get(answers, "step3", pid, "professionals_seen")):
             professionals.add(pro)
         top = _get(answers, "step8", pid, "top_priority")
-        if top:
-            decisions_needed.append(f"{pname}: {str(top).strip()[:180]}")
+        if isinstance(top, str) and top.strip():
+            decisions_needed.append(f"{pname}: {top.strip()}")
         d = _get(answers, "step6", pid, "disagree_areas")
         if d:
             disagreements.append(f"{pname}: {str(d).strip()[:180]}")
@@ -170,17 +170,20 @@ def _s3_areas_of_need(answers: Dict[str, Any], pathways: List[str]) -> Dict[str,
         concern = _get(answers, "step1", pid, "concern")
         duration = _get(answers, "step1", pid, "duration")
         urgency = _get(answers, "step1", pid, "urgency")
-        recs = _get(answers, "step3", pid, "recommendations_text")
+        rec_categories = _list(_get(answers, "step3", pid, "recommendation_types"))
         needs = _list(_get(answers, "step2", pid, "current_needs"))
-        other_needs = _get(answers, "step2", pid, "other_needs")
+        additional = [
+            a for a in _list(_get(answers, "step2", pid, "additional_areas"))
+            if a and a != "None additional"
+        ]
         blocks.append({
             "id": pid,
             "name": pname,
             "concern": (concern or "").strip(),
             "duration": duration,
             "urgency": urgency,
-            "current_needs": needs + ([other_needs.strip()] if other_needs and other_needs.strip() else []),
-            "professional_summary": (recs or "").strip(),
+            "current_needs": needs + additional,
+            "professional_summary": ", ".join(rec_categories) if rec_categories else "",
         })
     return {"title": "Areas of Need", "blocks": blocks}
 

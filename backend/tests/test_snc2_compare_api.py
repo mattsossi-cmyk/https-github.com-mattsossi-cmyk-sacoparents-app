@@ -33,7 +33,7 @@ SEED_ANSWERS_MEDICAL = {
     "step1_medical_urgency": "Needs attention within weeks",
     "step2_medical_current_needs": ["Chronic medical condition", "Medication schedule"],
     "step3_medical_professionals_seen": ["Paediatrician"],
-    "step3_medical_recommendations_text": "Use inhaler morning + night.",
+    "step3_medical_recommendation_types": ["Daily medication"],
     "step3_medical_recs_written": "Yes",
     "step3_medical_recs_understand": 5,
     "step4_medical_same_info": 4,
@@ -49,9 +49,9 @@ SEED_ANSWERS_MEDICAL = {
     "step6_medical_agree_areas": "Both agree meds are important.",
     "step6_medical_biggest_gap": "Different priorities",
     "step7_medical_practical_selected": ["Shared calendar for medical appointments"],
-    "step8_medical_top_priority": "Fill spacer prescription.",
+    "step8_medical_top_priority": "Refill medication or supplies",
     "step8_medical_next_meeting": "Within 2 weeks",
-    "step8_medical_professional_next": "Follow up with pulmonologist.",
+    "step8_medical_professional_next": "Specialist physician",
 }
 
 

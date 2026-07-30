@@ -12,9 +12,9 @@ def _mk_answers(pathway: str, overrides: dict | None = None) -> dict:
         qid("step1", pathway, "duration"): "1 to 3 years",
         qid("step1", pathway, "urgency"): "Needs attention within weeks",
         qid("step2", pathway, "current_needs"): ["Chronic medical condition", "Medication schedule"],
-        qid("step2", pathway, "other_needs"): "",
+        qid("step2", pathway, "additional_areas"): [],
         qid("step3", pathway, "professionals_seen"): ["Paediatrician"],
-        qid("step3", pathway, "recommendations_text"): "Use inhaler morning + night.",
+        qid("step3", pathway, "recommendation_types"): ["Daily medication"],
         qid("step3", pathway, "recs_written"): "Yes",
         qid("step3", pathway, "recs_understand"): 5,
         qid("step4", pathway, "same_info"): 4,
@@ -31,11 +31,11 @@ def _mk_answers(pathway: str, overrides: dict | None = None) -> dict:
         qid("step6", pathway, "disagree_areas"): "",
         qid("step6", pathway, "biggest_gap"): "Different priorities",
         qid("step7", pathway, "practical_selected"): ["Shared calendar for medical appointments"],
-        qid("step7", pathway, "practical_other"): "",
-        qid("step8", pathway, "top_priority"): "Fill spacer prescription.",
+        qid("step7", pathway, "additional_practical"): [],
+        qid("step8", pathway, "top_priority"): "Refill medication or supplies",
         qid("step8", pathway, "next_meeting"): "Within 2 weeks",
-        qid("step8", pathway, "professional_next"): "Follow up with pulmonologist.",
-        qid("step8", pathway, "concerns_about_plan"): "",
+        qid("step8", pathway, "professional_next"): "Specialist physician",
+        qid("step8", pathway, "concerns_about_plan"): "No concerns",
     }
     if overrides:
         a.update(overrides)

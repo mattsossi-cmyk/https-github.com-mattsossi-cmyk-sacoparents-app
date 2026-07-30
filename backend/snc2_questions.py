@@ -159,6 +159,28 @@ _VOCAB = {
             "Both parents attend key appointments together",
             "Third-party liaison (nurse, care coordinator)",
         ],
+        "recommendation_options": [
+            "Daily medication",
+            "As-needed / rescue medication",
+            "Ongoing therapy sessions",
+            "Diet, feeding, or nutrition plan",
+            "Follow-up testing or imaging",
+            "Referral to a specialist",
+            "Emergency-response plan",
+            "Home-care equipment or supplies",
+            "Lifestyle or activity guidance",
+            "Other",
+        ],
+        "professional_next_options": [
+            "Paediatrician",
+            "Specialist physician",
+            "Allergist or dietitian",
+            "Physical or occupational therapist",
+            "Nurse care coordinator",
+            "Emergency-care doctor",
+            "Other",
+            "No new professional needed",
+        ],
     },
     "educational": {
         "concern_label":     "educational concern",
@@ -191,6 +213,29 @@ _VOCAB = {
             "School-provided planner used consistently in both homes",
             "Both parents review the IEP or 504 plan together",
         ],
+        "recommendation_options": [
+            "Special-education services (IEP)",
+            "Section 504 accommodations",
+            "Classroom accommodations",
+            "Tutoring or academic support",
+            "Behaviour plan at school",
+            "Speech-language therapy",
+            "Occupational therapy at school",
+            "Additional evaluation or testing",
+            "Change of placement or setting",
+            "Other",
+        ],
+        "professional_next_options": [
+            "Classroom teacher",
+            "School counsellor",
+            "IEP or 504 coordinator",
+            "Special-education advocate",
+            "Tutor or academic coach",
+            "Educational psychologist",
+            "Speech or occupational therapist",
+            "Other",
+            "No new professional needed",
+        ],
     },
     "psychological": {
         "concern_label":     "psychological or behavioural concern",
@@ -222,8 +267,77 @@ _VOCAB = {
             "Third-party parent-coach or family therapist",
             "Neutral communication channel for behavioural updates",
         ],
+        "recommendation_options": [
+            "Weekly therapy or counselling",
+            "Medication management",
+            "Behaviour plan at home",
+            "Coping-skills tools",
+            "Additional evaluation or testing",
+            "Sleep or daily-routine changes",
+            "Family or parenting support",
+            "Crisis-response plan",
+            "School-therapist coordination",
+            "Other",
+        ],
+        "professional_next_options": [
+            "Child therapist or counsellor",
+            "Family therapist",
+            "Psychiatrist",
+            "Behaviour specialist",
+            "School psychologist",
+            "Parenting coach",
+            "Other",
+            "No new professional needed",
+        ],
     },
 }
+
+
+# Cross-cutting option lists reused across all pathways for questions that don't
+# vary by need type.
+_ADDITIONAL_AREAS_OPTIONS = [
+    "Sleep or fatigue issues",
+    "Diet or nutrition",
+    "Sensory sensitivities",
+    "Mobility or motor skills",
+    "Social relationships",
+    "Family stress affecting the child",
+    "Financial coordination between homes",
+    "None additional",
+    "Other",
+]
+
+_ADDITIONAL_PRACTICAL_OPTIONS = [
+    "Regular parent-only check-ins",
+    "Written communication log",
+    "Mediation for major decisions",
+    "Third-party parenting coordinator",
+    "Shared parenting app (OurFamilyWizard, TalkingParents, etc.)",
+    "Formal written co-parenting agreement",
+    "None additional",
+    "Other",
+]
+
+_TOP_PRIORITY_OPTIONS = [
+    "Schedule the next professional appointment",
+    "Refill medication or supplies",
+    "Update the shared calendar or plan",
+    "Align on daily routine between homes",
+    "Have a difficult conversation with my co-parent",
+    "Speak with a mediator or family professional",
+    "Communicate with the child's school or provider",
+    "Complete an evaluation or paperwork",
+    "Other",
+]
+
+_PLAN_CONCERN_OPTIONS = [
+    "No concerns",
+    "Concerns about my co-parent following the plan",
+    "Concerns about cost or logistics",
+    "Concerns about how our child feels about the plan",
+    "Concerns about safety or communication",
+    "Something else I want to flag",
+]
 
 
 # 8-step template. Items marked `pathway=True` mean their prompt is
@@ -249,8 +363,9 @@ _TEMPLATE: List[Dict[str, Any]] = [
      "items": [
         {"id": "current_needs", "type": "multi", "pathway_options": True,
          "prompt": "Which of the following describe your child's current needs? Select all that apply."},
-        {"id": "other_needs", "type": "textarea",
-         "prompt": "Anything else about your child's current needs that we should note?"},
+        {"id": "additional_areas", "type": "multi",
+         "prompt": "Are any of these additional areas also involved? Select all that apply, or leave blank.",
+         "options_ref": "additional_areas"},
      ]},
     # ---------- Step 3 ---------------------------------------------------
     {"id": "step3", "number": 3, "name": "Review Professional Recommendations",
@@ -273,8 +388,9 @@ _TEMPLATE: List[Dict[str, Any]] = [
              "Case manager or care coordinator",
              "No one yet",
          ]},
-        {"id": "recommendations_text", "type": "textarea", "pathway": True,
-         "prompt_template": "What is the most recent {recs_label} for your child? Summarise it in your own words."},
+        {"id": "recommendation_types", "type": "multi", "pathway": True,
+         "prompt_template": "What does the most recent {recs_label} include? Select every category that applies.",
+         "options_from_vocab": "recommendation_options"},
         {"id": "recs_written", "type": "single",
          "prompt": "Do you have the recommendation in writing (report, plan, prescription, IEP, etc.)?",
          "options": ["Yes", "Partly", "No", "Unsure"]},
@@ -331,23 +447,35 @@ _TEMPLATE: List[Dict[str, Any]] = [
      "items": [
         {"id": "practical_selected", "type": "multi", "pathway_options": True,
          "prompt": "Select the practical options you would consider trying. You can pick more than one."},
-        {"id": "practical_other", "type": "textarea",
-         "prompt": "Any other practical option you would like to propose?"},
+        {"id": "additional_practical", "type": "multi",
+         "prompt": "Any additional cross-cutting options to consider?",
+         "options_ref": "additional_practical"},
      ]},
     # ---------- Step 8 ---------------------------------------------------
     {"id": "step8", "number": 8, "name": "Create an Action Plan",
      "items": [
-        {"id": "top_priority", "type": "textarea",
-         "prompt": "What is the single most important thing to address in the next 30 days?"},
+        {"id": "top_priority", "type": "single",
+         "prompt": "What is the single most important thing to address in the next 30 days?",
+         "options_ref": "top_priority"},
         {"id": "next_meeting", "type": "single",
          "prompt": "When could you and your co-parent meet (or send a written proposal) to discuss this plan?",
          "options": ["This week", "Within 2 weeks", "Within a month", "Undecided"]},
-        {"id": "professional_next", "type": "textarea", "pathway": True,
-         "prompt_template": "Which {professional} would be most useful to consult next, and about what?"},
-        {"id": "concerns_about_plan", "type": "textarea",
-         "prompt": "Are there any concerns about the plan you would like to raise before finalising it?"},
+        {"id": "professional_next", "type": "single", "pathway": True,
+         "prompt_template": "Which {professional} would be most useful to consult next?",
+         "options_from_vocab": "professional_next_options"},
+        {"id": "concerns_about_plan", "type": "single",
+         "prompt": "Do you have any concerns about the plan you would like to raise before finalising it?",
+         "options_ref": "plan_concern"},
      ]},
 ]
+
+
+_CROSS_CUTTING_OPTIONS = {
+    "additional_areas":     _ADDITIONAL_AREAS_OPTIONS,
+    "additional_practical": _ADDITIONAL_PRACTICAL_OPTIONS,
+    "top_priority":         _TOP_PRIORITY_OPTIONS,
+    "plan_concern":         _PLAN_CONCERN_OPTIONS,
+}
 
 
 def _apply_pathway(item: Dict[str, Any], pathway: str) -> Dict[str, Any]:
@@ -363,6 +491,16 @@ def _apply_pathway(item: Dict[str, Any], pathway: str) -> Dict[str, Any]:
     if item.get("options_common") and item.get("pathway"):
         out["options"] = list(item["options_common"])
         out.pop("options_common", None)
+    # Pathway-specific option list resolved from _VOCAB (e.g. recommendation_options).
+    if item.get("options_from_vocab"):
+        key = item["options_from_vocab"]
+        out["options"] = list(vocab[key])
+        out.pop("options_from_vocab", None)
+    # Cross-cutting shared option list (same for every pathway).
+    if item.get("options_ref"):
+        key = item["options_ref"]
+        out["options"] = list(_CROSS_CUTTING_OPTIONS[key])
+        out.pop("options_ref", None)
     return out
 
 

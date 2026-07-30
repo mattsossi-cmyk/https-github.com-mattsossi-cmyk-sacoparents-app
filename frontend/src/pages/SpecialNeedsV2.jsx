@@ -217,7 +217,7 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         <p className="text-xs text-[#4B4567] mb-4 max-w-2xl">
           See exactly what SA CoParents will build for you before you start. Each sample is a real, branded PDF you can print, share with your mediator, or use as a workbook.
         </p>
-        <div className="grid sm:grid-cols-3 gap-3">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <a href="/downloads/snc-sample-assessment.pdf" target="_blank" rel="noreferrer noopener"
             data-testid="snc2-sample-assessment"
             className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
@@ -225,20 +225,40 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
             <div className="font-semibold text-sm text-[#1A1330]">Sample Assessment</div>
             <div className="text-xs text-[#4B4567] mt-1">A printable version of every question so you can gather your thoughts first.</div>
           </a>
-          <a href="/downloads/snc-sample-individual-report.pdf" target="_blank" rel="noreferrer noopener"
-            data-testid="snc2-sample-report"
-            className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Filled sample</div>
-            <div className="font-semibold text-sm text-[#1A1330]">Individual Report</div>
-            <div className="text-xs text-[#4B4567] mt-1">A synthetic parent&apos;s completed 9-section polished report with action plan.</div>
-          </a>
           <a href="/downloads/snc-sample-comparison-report.pdf" target="_blank" rel="noreferrer noopener"
             data-testid="snc2-sample-comparison"
             className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
             <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Both parents</div>
             <div className="font-semibold text-sm text-[#1A1330]">Co-Parent Comparison</div>
-            <div className="text-xs text-[#4B4567] mt-1">The neutral side-by-side report with alignment pills and shared highlights.</div>
+            <div className="text-xs text-[#4B4567] mt-1">Neutral side-by-side across all three pathways with alignment pills and shared highlights.</div>
           </a>
+        </div>
+
+        <div className="mt-5">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">Individual reports — one per needs area</div>
+          <div className="grid sm:grid-cols-3 gap-3" data-testid="snc2-sample-individual-reports">
+            <a href="/downloads/snc-sample-individual-report-medical.pdf" target="_blank" rel="noreferrer noopener"
+              data-testid="snc2-sample-report-medical"
+              className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Medical</div>
+              <div className="font-semibold text-sm text-[#1A1330]">Individual report — medical needs</div>
+              <div className="text-xs text-[#4B4567] mt-1">Nine-section polished PDF focused on medical needs only.</div>
+            </a>
+            <a href="/downloads/snc-sample-individual-report-educational.pdf" target="_blank" rel="noreferrer noopener"
+              data-testid="snc2-sample-report-educational"
+              className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Educational</div>
+              <div className="font-semibold text-sm text-[#1A1330]">Individual report — educational needs</div>
+              <div className="text-xs text-[#4B4567] mt-1">Nine-section polished PDF focused on educational needs only.</div>
+            </a>
+            <a href="/downloads/snc-sample-individual-report-psychological.pdf" target="_blank" rel="noreferrer noopener"
+              data-testid="snc2-sample-report-psychological"
+              className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Psychological</div>
+              <div className="font-semibold text-sm text-[#1A1330]">Individual report — psychological / behavioural needs</div>
+              <div className="text-xs text-[#4B4567] mt-1">Nine-section polished PDF focused on psychological or behavioural needs.</div>
+            </a>
+          </div>
         </div>
       </div>
     </div>

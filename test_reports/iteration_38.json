@@ -1,0 +1,45 @@
+{
+  "summary": "Iteration 38 verified the SNC v2 refactor (free-text -> option lists, Letter-fit PDFs, pathway-scoped individual samples). Wrote /app/backend/tests/test_snc2_iter38.py with 18 targeted tests (schema conversion, option validation, pathway scoping, PDF Letter fit, static samples, email endpoint, safety override). 17 passed, 1 skipped (safety-override — already covered by iteration-37 test_snc2_enhancements which pass in this run), 1 xfail (option-membership enforcement gap — see backend_issues.minor). Full SNC v2 regression: 61/61 existing tests still pass; combined suite 78 passed + 1 skip + 1 xfail. Frontend /special-needs-v2: snc2-samples-block renders with all 5 sample cards (assessment, comparison, medical, educational, psychological) and correct /downloads/... hrefs.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/snc2/answer",
+        "issue": "validate_answer in /app/backend/snc2_scoring.py only checks value TYPE (isinstance str/list/int), never enforces option-list membership. An invalid single-select like top_priority='banana_not_an_option' returns 200. Spec asked for 400 rejection. Cross-checked live: `{'question_id':'step8_medical_top_priority','value':'banana'} -> 200 {ok:true}`. Fix: in validate_answer, resolve the resolved item's options (options_ref / options_from_vocab / options) and assert value in options (or subset for multi)."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_snc2_iter38.py",
+    "/app/test_reports/pytest/iter38.xml",
+    "/app/test_reports/pytest/snc2_full_iter38.xml"
+  ],
+  "action_items": [
+    "Tighten validate_answer to enforce option membership for single/multi items (see backend_issues.minor) — value should be one of the resolved options; for multi each element must be in options."
+  ],
+  "critical_code_review_comments": [
+    "snc2_scoring.validate_answer is too permissive: single-selects accept any string, multi accepts any list, so the new 'option-based' contract is not actually enforced on the server. Frontend enforces it, but a direct API call bypasses this.",
+    "snc2_report_pdf.py PDF layout is well-tuned: sample individual PDFs now render at 3 pages, in-app single-pathway PDFs at <=5 (verified via /Type/Page and /Type/Pages heuristic on live output). Letter MediaBox (612x792) present.",
+    "snc2_questions.py _apply_pathway correctly resolves options_ref (cross-cutting: additional_areas, additional_practical, top_priority, concerns_about_plan) and options_from_vocab (pathway-scoped: recommendation_types via 'recommendation_options', professional_next via 'professional_next_options'). Medical vocab includes 'Daily medication' and 'Specialist physician' as expected.",
+    "OLD keys (other_needs, recommendations_text, practical_other) confirmed absent from schema for medical/educational/psychological.",
+    "cover.selected_pathways changed shape to [{id,name}, ...] rather than [str, ...]. If any downstream consumer (docs, tests, external integrations) expected strings, this is a light breaking change — worth noting."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_snc2_iter38.py (new)"
+  ],
+  "success_rate": {
+    "backend": "17/18 pass, 1 skipped (safety override — indirectly covered), 1 xfailed documented (option-membership gap). Combined SNC v2 regression 78 passed.",
+    "frontend": "100% for verified surface (samples-block cards & hrefs)."
+  },
+  "test_credentials": "parent1@test.com / TestPass123! (Sam Parent), parent2@test.com / TestPass123! (Riley Parent). Fresh TEST_iter38_<uuid>@test.com used for safety-override attempt.",
+  "seed_data_creation": "Test suite mutates parent1's assessment (selects medical/educational, sends a few answers); consistent with iteration-37 pattern. Iteration-37's parent1/parent2 medical share (snc2_share_a8d0dccb74cc) presumed still active; not re-seeded because compare-suite (test_snc2_compare_api.py) is self-seeding and 18/18 pass.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Answer key format is 'stepN_<pathway>_<item_id>' (e.g. step8_medical_top_priority) — NOT the raw qid. /api/snc2/schema returns steps -> pathways[] -> items[]; use pathways[].items when iterating. cover.selected_pathways is a list of {id,name} dicts, not strings. /api/safety-assessment endpoints: GET /questions (not /schema), POST '' (empty path). Option-membership is NOT enforced server-side; if main-agent fixes validate_answer, remove the xfail on TestOptionValidation.test_option_membership_enforced_for_single in test_snc2_iter38.py.",
+  "rca of the issue": "Option-membership gap RCA: In snc2_scoring.validate_answer, the item lookup falls back to a per-type check that only asserts isinstance for single/multi/textarea. Because _apply_pathway now populates .options via options_ref and options_from_vocab, the validator has enough information to enforce membership but doesn't consult it. Suggested fix (~10 lines): after locating the item, resolve options via the vocab/options_ref map used by _apply_pathway and, when present, assert `value in options` for single or `set(value) <= set(options)` for multi. Reproduction: POST /api/snc2/answer {question_id:'step8_medical_top_priority', value:'banana'} -> 200."
+}
