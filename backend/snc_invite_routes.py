@@ -29,15 +29,18 @@ import re
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr
 
 import email_service
 from auth import UserPublic, get_current_user, get_db
 from snc_comparison import compare_reports
+from snc_comparison_pdf import build_snc_comparison_pdf
 
 
 logger = logging.getLogger(__name__)
@@ -416,3 +419,42 @@ async def regenerate_comparison(
         "generated_at": doc.get("generated_at"),
         "comparison": doc.get("comparison"),
     }
+
+
+def _safe_filename(name: str) -> str:
+    out = "".join(c if c.isalnum() else "_" for c in (name or "report")).strip("_")
+    return out or "report"
+
+
+@router.get("/comparison/{invite_id}/pdf")
+async def download_comparison_pdf(
+    invite_id: str,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Download the neutral side-by-side as a branded PDF.
+
+    Either linked parent may download. The PDF renderer never receives
+    Section 11 (safety) data because the caller strips it before caching —
+    ``snc_comparison.compare_reports`` skips ``s11`` entirely.
+    """
+    invite = await _authorised_invite(db, invite_id, current.user_id)
+    cached = await db[COMPARISONS].find_one({"invite_id": invite_id}, {"_id": 0})
+    parent_a_id = invite["from_user_id"]
+    parent_b_id = invite.get("accepted_by_user_id")
+    report_a = await _load_report(db, parent_a_id) if parent_a_id else None
+    report_b = await _load_report(db, parent_b_id) if parent_b_id else None
+    if not (report_a and report_b):
+        raise HTTPException(status_code=409, detail="Both parents must complete their assessments first.")
+    if not cached or _is_comparison_stale(cached, report_a, report_b):
+        cached = await _build_comparison(db, invite)
+
+    pdf_bytes = build_snc_comparison_pdf(comparison=cached.get("comparison") or {})
+    a_name = ((cached.get("comparison") or {}).get("parents") or {}).get("a", {}).get("name") or "Parent_A"
+    b_name = ((cached.get("comparison") or {}).get("parents") or {}).get("b", {}).get("name") or "Parent_B"
+    filename = f"SNC_Comparison_{_safe_filename(a_name)}_vs_{_safe_filename(b_name)}.pdf"
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

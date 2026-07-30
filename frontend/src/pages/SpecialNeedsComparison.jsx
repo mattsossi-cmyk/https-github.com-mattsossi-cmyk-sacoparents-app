@@ -22,6 +22,7 @@ import {
   HelpCircle,
   Info,
   ShieldOff,
+  Download,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -117,6 +118,26 @@ export default function SpecialNeedsComparison() {
     }
   };
 
+  const downloadPdf = async () => {
+    setBusy(true);
+    try {
+      const res = await api.get(`/snc/comparison/${inviteId}/pdf`, { responseType: "blob" });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Special_Needs_Comparison.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (err) {
+      logError("snc comparison pdf", err);
+      toast.error(err?.response?.data?.detail || "Could not download the comparison PDF.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (state.loading) {
     return (
       <AppShell>
@@ -204,14 +225,24 @@ export default function SpecialNeedsComparison() {
           <div className="text-xs text-[#4B4567]">
             Last generated {generatedAt ? new Date(generatedAt).toLocaleString() : "—"}.
           </div>
-          <button
-            onClick={regenerate}
-            disabled={busy}
-            data-testid="snc-cmp-regenerate"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60"
-          >
-            {busy ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />} Refresh
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadPdf}
+              disabled={busy}
+              data-testid="snc-cmp-download-pdf"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60"
+            >
+              <Download size={13} /> Download PDF
+            </button>
+            <button
+              onClick={regenerate}
+              disabled={busy}
+              data-testid="snc-cmp-regenerate"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60"
+            >
+              {busy ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />} Refresh
+            </button>
+          </div>
         </div>
 
         {/* Safety notice */}

@@ -7,16 +7,18 @@
 
 ### Files added (backend) — SNC Phase P1 (invite + comparison) 2026-07-30
 - `backend/snc_comparison.py` — neutral pair-comparison logic (5 buckets: agreement, different observations, missing information, professional questions, coordination areas). Section 11 (Safety) hard-excluded. Verbatim narratives never copied. No winner language.
-- `backend/snc_invite_routes.py` — `/api/snc/invite/*` and `/api/snc/comparison/*` endpoints (create, list, public token lookup, accept, resend with 5-min cooldown, revoke; comparison ready-state + cache + regenerate).
+- `backend/snc_comparison_pdf.py` — branded SA CoParents PDF renderer for the neutral side-by-side (matches the individual-report aesthetic; sand header band with the shared logo; cover + counts + three buckets + professional questions + coordination areas + disclaimer). Guardrails enforced by unit tests: no s11 anywhere in the byte stream, no verbatim narrative sentinels, no winner language, dedup applied to professional questions.
+- `backend/snc_invite_routes.py` — `/api/snc/invite/*` and `/api/snc/comparison/*` endpoints (create, list, public token lookup, accept, resend with 5-min cooldown, revoke; comparison ready-state + cache + regenerate + **PDF download**).
 - `backend/tests/test_snc_comparison.py` — 8 unit tests (guardrails: s11 never present, no verbatim narrative leak, no winner language, dedup, missing-info bucket).
-- `backend/tests/test_snc_invite_api.py` — 21 API integration tests (added by testing agent) — all pass.
+- `backend/tests/test_snc_comparison_pdf.py` — 6 unit tests for the comparison PDF (signature, size, s11 exclusion, sentinel narrative absent, no winner language, safety notice + bucket titles present, dedup of shared professional questions).
+- `backend/tests/test_snc_invite_api.py` — 21 API integration tests — all pass.
 - `email_service.send_snc_coparent_invite()` — SA CoParents-branded invitation email with the accept URL.
 - `snc_report_content.py` — summary rows now include `id` for structured comparison (backward-compatible; existing 18 report tests still pass).
 
 ### Files added (frontend) — SNC Phase P1 2026-07-30
 - `SpecialNeedsInvite.jsx` — send invite by email, list sent+received invites, copy accept-link, resend (cooldown-aware), cancel, jump into comparison when accepted.
 - `SpecialNeedsInviteAccept.jsx` — public landing page: describes the flow, honours already-accepted state, redirects unauthenticated users to `/login?next=` and preserves the token.
-- `SpecialNeedsComparison.jsx` — neutral comparison view with safety-notice banner, counts strip, three category buckets, professional questions, coordination areas, disclaimer, and regenerate button.
+- `SpecialNeedsComparison.jsx` — neutral comparison view with safety-notice banner, counts strip, three category buckets, professional questions, coordination areas, disclaimer, regenerate button, and **Download PDF** button ([data-testid=snc-cmp-download-pdf]).
 - Route wiring in `App.js` (`/special-needs/invite`, `/special-needs/invite/:token`, `/special-needs/comparison/:inviteId`).
 - `SpecialNeedsReport.jsx` — new "Invite co-parent" button ([data-testid=snc-report-invite-coparent]) in the cache header.
 
