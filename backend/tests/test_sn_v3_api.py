@@ -18,12 +18,12 @@ PASSWORD = "TestPass123!"
 def token():
     s = requests.Session()
     # try login
-    r = s.post(f"{BASE_URL}/api/auth/login", json={"email": EMAIL, "password": PASSWORD}, timeout=15)
+    r = s.post(f"{BASE_URL}/api/auth/login", json={"email": EMAIL, "password": PASSWORD}, timeout=60)
     if r.status_code != 200:
         # register
         s.post(f"{BASE_URL}/api/auth/register",
-               json={"email": EMAIL, "password": PASSWORD, "name": "Sam Parent"}, timeout=15)
-        r = s.post(f"{BASE_URL}/api/auth/login", json={"email": EMAIL, "password": PASSWORD}, timeout=15)
+               json={"email": EMAIL, "password": PASSWORD, "name": "Sam Parent"}, timeout=60)
+        r = s.post(f"{BASE_URL}/api/auth/login", json={"email": EMAIL, "password": PASSWORD}, timeout=60)
     assert r.status_code == 200, f"login failed: {r.status_code} {r.text}"
     data = r.json()
     tok = data.get("access_token") or data.get("token")

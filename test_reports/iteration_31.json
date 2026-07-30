@@ -1,0 +1,62 @@
+{
+  "summary": "Full-stack testing of Special Needs v3 2026 framework. Backend: 9/9 new API tests pass (schema shape d1..d10, intake, bulk answers+meta, complete, report/generate, share-link+public shared JSON, safety-triggered on Domain 10, invite self-accept blocked, comparison waiting->ready with two parents). Frontend: /special-needs-v3 renders results view with new 2026 overall banner ('Safety-Sensitive Review Recommended' when D10 triggered), zero references to old '10 Principles' or old ratings (Excellent/Good/Fair/Needs Improvement), all d1..d10 domain rows render, snv3-safety-alert + snv3-safety-link -> /safety-assessment present when triggered, intake step renders 3 groups / 21 fields, Skip advances to domains, Domain 1 shows 6 questions each with 5-button Likert row using the required labels (Strongly disagree/Disagree/Unsure or insufficient information/Agree/Strongly agree) and 4 meta chips (na/need_info/want_help/safety), Next disabled until every question answered, Domain 10 shows snv3-safety-notice. Invite: snv3-invite-create-btn creates link containing /invites/special-needs/<token>, snv3-invite-copy-btn appears. Public shared viewer /shared/special-needs/<token>: sharedsn-overall + sharedsn-strengths + sharedsn-growth + sharedsn-pdf-btn + sharedsn-sec-d1..d10 all render with '2026 framework · 10 domains' copy. Invite accept page (/invites/special-needs/<token>) renders sn-invite-card with sn-invite-accept-btn and surfaces 'Invite is invalid or expired.' error via sn-invite-error for bad tokens. Dashboard card copy = '10 Domains (2026)' (verified no '10 Principles' string).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/special-needs-v3/invite", "issue": "invite_id is written only to in-progress docs (update_many filter completed:{$ne:true}). If a parent COMPLETES the assessment BEFORE creating an invite, the completed doc never gets invite_id attached, so GET /api/special-needs-v3/comparison returns 404. Users who complete first then decide to invite their co-parent silently get a broken comparison flow."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "SpecialNeedsV3 results view", "issue": "LegalAcknowledgment modal (storage key 'sac_legal_ack_v1') overlays and intercepts all clicks on the results view for first-time users. It doesn't block the /shared/* route but does block /special-needs-v3, meaning users landing on their fresh results after completing the assessment will be forced to acknowledge before they can click Share / PDF / Retake / Invite. Not a defect per se (product intent) but worth noting for the intake flow experience.", "selector": "[data-testid='legal-acknowledgment-modal']", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Complete-first-then-invite comparison", "issue": "If a user completes the assessment BEFORE clicking 'Generate co-parent invite link', the resulting invite is created but the comparison endpoint returns 404 (no doc with invite_id for this user). No waiting state is shown to the user — the check-status button toasts nothing visible. Consider: (a) in POST /invite also attach invite_id to the user's most recent COMPLETED doc when no in-progress doc exists, or (b) surface a friendly UI error so the user isn't confused.", "affected_selectors": ["snv3-invite-create-btn", "snv3-comparison-refresh-btn", "snv3-comparison-waiting"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_sn_v3_2026_api.py",
+    "/app/test_reports/pytest/sn_v3_2026.xml"
+  ],
+  "action_items": [
+    "Fix POST /api/special-needs-v3/invite to also attach invite_id to the user's latest completed sn_v3_assessments doc when there is no in-progress doc, so a completed inviter can start a comparison.",
+    "(Optional) When comparison returns 404 from the UI, surface a friendly toast/inline message so users don't silently sit at 'waiting'.",
+    "(Nit) sn_v3_routes.get_comparison's shared_priorities list-comp is one long line — consider extracting for readability.",
+    "(Nit) Old test file /app/backend/tests/test_sn_v3_api.py still asserts the OLD p1/p2 IDs and schema.sections[0].id == 'p1' and now has 3 failures against the new 2026 schema. Either delete it or update to d1..d10 (superseded by new test_sn_v3_2026_api.py)."
+  ],
+  "critical_code_review_comments": [
+    "sn_v3_routes.create_invite update_many uses {completed:{$ne:True}} which silently no-ops when the user has already completed → downstream comparison 404. Real product bug in the complete-first-then-invite path.",
+    "SpecialNeedsV3.jsx ResultsView: `growth` variable is destructured but the state is passed through report.growth_areas — fine. The 'toolkit' block only renders when report.communication_toolkit has items (server decides based on Domain 6 category) — correct behaviour.",
+    "SharedSpecialNeedsReport.jsx and SpecialNeedsV3.jsx duplicate the CATEGORY_TONE / OVERALL_TONE maps — extract to a shared module to guarantee tone parity if categories change.",
+    "SpecialNeedsInviteAccept.jsx: correctly redirects unauthenticated users to /login?redirect=... but does not preserve query params on the invite URL (fine — invite tokens are the whole path).",
+    "sn_v3_routes.accept_invite: does not verify the invite hasn't already been accepted by a DIFFERENT user. If two co-parents click the same link, the second acceptance silently overwrites the first (accepted_by). Consider blocking re-acceptance by a third party."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_sn_v3_2026_api.py (new)",
+    "/app/backend/tests/test_sn_v3_api.py (bumped timeout=15 → 60 only; assertions still target OLD schema and will fail — recommend main agent delete this file since it's superseded)"
+  ],
+  "success_rate": {"backend": "100% (9/9 new 2026-contract tests)", "frontend": "100% on required flows"},
+  "test_credentials": "parent1@test.com / TestPass123!  +  parent2_snv3_<random>@test.com / TestPass123! auto-created by fixture",
+  "seed_data_creation": "During test run: reset + bulk 60 answers (value=3) + complete + report/generate for parent1 (Safety-Sensitive Review Recommended, safety_triggered=true). Cleaned up in test_cleanup. Frontend UI test ran the same seed via /api/special-needs-v3.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Legal acknowledgment modal blocks interactive clicks on /special-needs-v3. Bypass in Playwright by setting localStorage BEFORE login: localStorage.setItem('sac_legal_ack_v1', JSON.stringify({version:'v1', at:new Date().toISOString()})). Old test_sn_v3_api.py still references p1/p2 IDs — new test file is /app/backend/tests/test_sn_v3_2026_api.py (9 tests, all pass). For comparison tests: create invite ONLY while there is an in-progress doc — completing first will break the pairing (real product bug).",
+  "verified_flows": [
+    "GET /api/special-needs-v3/schema -> total_questions=60, domains[0..9].id==d1..d10, response_scale labels match spec, meta_flags include na/need_info/want_help/safety, intake_profile present, d10.safety_sensitive=true",
+    "POST /api/special-needs-v3/intake -> persists & visible on GET /me",
+    "POST /api/special-needs-v3/answers/bulk (answers+meta+intake) -> persists all three; GET /me reflects",
+    "POST /api/special-needs-v3/complete -> scores.overall_rating in the new 2026 rating set (no old Excellent/Good/Fair/Needs Improvement)",
+    "POST /api/special-needs-v3/report/generate -> report.overall_rating in new set; GET /report returns same report_id",
+    "POST /api/special-needs-v3/report/{id}/share-link -> {token, viewer_path:/shared/special-needs/<t>}; GET /report/shared/{t}?format=json (no auth) returns filtered report with shared_by=Sam Parent",
+    "Domain 10 Agree/Strongly-agree -> scores.safety_triggered=true, overall='Safety-Sensitive Review Recommended', report.safety_triggered=true",
+    "POST /api/special-needs-v3/invite -> {token, viewer_path:/invites/special-needs/<t>}; inviter POST /invite/{t}/accept -> 400 'You created this invite'",
+    "Two-parent flow: p1 in-progress -> invite -> complete; p2 accept-invite -> answer -> complete -> GET /comparison (p1) returns status=ready with 10 domains inviter/acceptor blocks",
+    "Frontend /special-needs-v3 results: banner 'Safety-Sensitive Review Recommended', snv3-safety-alert + snv3-safety-link href='/safety-assessment', snv3-sec-d1..d10 all rendered, snv3-strengths / snv3-priority / snv3-next-steps / snv3-intake-summary-toggle present, snv3-download-pdf-btn / snv3-share-btn / snv3-restart-btn / snv3-invite-block / snv3-invite-create-btn present, no old '10 Principles' anywhere in body",
+    "Frontend intake step: 3 groups / 21 fields, Skip advances to domains",
+    "Frontend domain step: 5 scale buttons with correct labels, 4 meta chips, Next disabled until 6/6 answered then enables, D10 shows snv3-safety-notice",
+    "Frontend /shared/special-needs/<token>: sharedsn-overall + strengths + growth + pdf-btn + sec-d1..d10, includes '2026 framework · 10 domains', no '10 Principles'",
+    "Frontend /invites/special-needs/badtoken: sn-invite-card + sn-invite-accept-btn render; clicking Accept surfaces sn-invite-error='Invite is invalid or expired.'",
+    "Dashboard card 'dashboard-special-needs-v3-card' contains '10 Domains (2026)' and no '10 Principles'"
+  ]
+}
