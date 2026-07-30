@@ -2,7 +2,7 @@
 %éëñ¿
 1 0 obj
 <<
-/Count 10
+/Count 15
 /Kids [3 0 R
 5 0 R
 7 0 R
@@ -12,7 +12,12 @@
 15 0 R
 17 0 R
 19 0 R
-21 0 R]
+21 0 R
+23 0 R
+25 0 R
+27 0 R
+29 0 R
+31 0 R]
 /MediaBox [0 0 612.00 792.00]
 /Type /Pages
 >>
@@ -29,13 +34,13 @@ endobj
 <<
 /Contents 4 0 R
 /Parent 1 0 R
-/Resources 27 0 R
+/Resources 37 0 R
 /Type /Page
 >>
 endobj
 4 0 obj
 <<
-/Length 2591
+/Length 2670
 >>
 stream
 2 J
@@ -57,38 +62,37 @@ BT /F1 20.00 Tf ET
 q BT 45.35 682.54 Td 0.102 0.0745 0.1882 rg (Special Needs Co-Parenting) Tj ET Q
 q BT 45.35 654.19 Td 0.102 0.0745 0.1882 rg (Individual Parent Report) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 628.13 Td 0.1176 0.0941 0.2118 rg (Parent completing assessment) Tj ET Q
+q BT 45.35 630.97 Td 0.1176 0.0941 0.2118 rg (Parent completing assessment) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 612.54 Td 0.1176 0.0941 0.2118 rg (Sam Parent) Tj ET Q
+q BT 45.35 615.38 Td 0.1176 0.0941 0.2118 rg (Sam Parent) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 595.54 Td 0.1176 0.0941 0.2118 rg (Child) Tj ET Q
+q BT 45.35 598.37 Td 0.1176 0.0941 0.2118 rg (Child) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 579.94 Td 0.1176 0.0941 0.2118 rg (K.) Tj ET Q
+q BT 45.35 582.78 Td 0.1176 0.0941 0.2118 rg (K.) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 562.94 Td 0.1176 0.0941 0.2118 rg (Child's age and grade) Tj ET Q
+q BT 45.35 565.77 Td 0.1176 0.0941 0.2118 rg (Assessment date) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 547.35 Td 0.1176 0.0941 0.2118 rg (9 - 4th grade) Tj ET Q
+q BT 45.35 550.18 Td 0.1176 0.0941 0.2118 rg (2026-07-30) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 530.34 Td 0.1176 0.0941 0.2118 rg (Assessment date) Tj ET Q
+q BT 45.35 533.17 Td 0.1176 0.0941 0.2118 rg (Assessment version) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 514.75 Td 0.1176 0.0941 0.2118 rg (2026-07-30) Tj ET Q
+q BT 45.35 517.58 Td 0.1176 0.0941 0.2118 rg (snc2-2026-1) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 497.74 Td 0.1176 0.0941 0.2118 rg (Report type) Tj ET Q
+q BT 45.35 500.57 Td 0.1176 0.0941 0.2118 rg (Needs categories addressed) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 482.15 Td 0.1176 0.0941 0.2118 rg (Individual Parent Report) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 465.14 Td 0.1176 0.0941 0.2118 rg (Assessment version) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 449.55 Td 0.1176 0.0941 0.2118 rg (snc-2026-1) Tj ET Q
+q BT 45.35 485.41 Td 0.1176 0.0941 0.2118 rg (  -  Medical Needs) Tj ET Q
+q BT 45.35 470.67 Td 0.1176 0.0941 0.2118 rg (  -  Educational Needs) Tj ET Q
+q BT 45.35 455.93 Td 0.1176 0.0941 0.2118 rg (  -  Psychological or Behavioural Needs) Tj ET Q
 BT /F1 13.00 Tf ET
-q BT 45.35 418.18 Td 0.2392 0.102 0.4706 rg (Purpose of this report) Tj ET Q
+q BT 45.35 427.82 Td 0.2392 0.102 0.4706 rg (Purpose) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 400.37 Td 0.1176 0.0941 0.2118 rg 4.063 Tw (This report summarizes one parent's understanding of the child's strengths, needs, services, routines, and) Tj ET Q
-q BT 45.35 385.63 Td 0.1176 0.0941 0.2118 rg 2.446 Tw (co-parenting challenges. It is intended to help the parent prepare for discussions with the child's other parent,) Tj ET Q
-q BT 45.35 370.89 Td 0.1176 0.0941 0.2118 rg 0.115 Tw (educators, healthcare providers, therapists, attorneys, or mediator. This report does not diagnose the child, determine) Tj ET Q
-q BT 45.35 356.15 Td 0.1176 0.0941 0.2118 rg (parental fitness, establish that either parent's account is correct, or replace professional or legal advice.) Tj ET Q
+q BT 45.35 410.01 Td 0.1176 0.0941 0.2118 rg 0.219 Tw (This individual parent report walks through the same eight-step workflow you completed - understanding the concern,) Tj ET Q
+q BT 45.35 395.27 Td 0.1176 0.0941 0.2118 rg 6.617 Tw (identifying the child's current needs, reviewing professional recommendations, assessing each parent's) Tj ET Q
+q BT 45.35 380.53 Td 0.1176 0.0941 0.2118 rg 1.104 Tw (understanding, evaluating coordination between homes, surfacing areas of agreement and disagreement, choosing) Tj ET Q
+q BT 45.35 365.79 Td 0.1176 0.0941 0.2118 rg 0.814 Tw (practical co-parenting options, and building an action plan. Every finding below is attributed to your own answers. It) Tj ET Q
+q BT 45.35 351.05 Td 0.1176 0.0941 0.2118 rg (does not describe your co-parent.) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 1 of ) Tj (10) Tj ET Q
+q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 1 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
@@ -96,13 +100,13 @@ endobj
 <<
 /Contents 6 0 R
 /Parent 1 0 R
-/Resources 28 0 R
+/Resources 38 0 R
 /Type /Page
 >>
 endobj
 6 0 obj
 <<
-/Length 4712
+/Length 3815
 >>
 stream
 2 J
@@ -121,77 +125,50 @@ q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 0 G
 0 g
 BT /F1 13.00 Tf ET
-q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (1. Report at a Glance) Tj ET Q
+q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (At a glance) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Child's identified strengths) Tj ET Q
+q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Concerns as described by this parent) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 665.41 Td 0.1176 0.0941 0.2118 rg (  -  Curious.) Tj ET Q
-q BT 45.35 650.67 Td 0.1176 0.0941 0.2118 rg (  -  Kind to animals.) Tj ET Q
-q BT 45.35 635.93 Td 0.1176 0.0941 0.2118 rg (  -  Loves to draw.) Tj ET Q
+q BT 45.35 665.41 Td 0.1176 0.0941 0.2118 rg (  -  Medical Needs: ADHD medication timing needs to be consistent across both homes.) Tj ET Q
+q BT 45.35 650.67 Td 0.1176 0.0941 0.2118 rg (  -  Educational Needs: IEP follow-through is inconsistent between homes.) Tj ET Q
+q BT 45.35 635.93 Td 0.1176 0.0941 0.2118 rg (  -  Psychological or Behavioural Needs: Emotional-regulation strategies work in one home more than the other.) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 619.35 Td 0.2392 0.102 0.4706 rg (Child's primary needs) Tj ET Q
+q BT 45.35 619.35 Td 0.2392 0.102 0.4706 rg (Top 30-day priorities) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 604.18 Td 0.1176 0.0941 0.2118 rg (  -  ADHD or executive functioning) Tj ET Q
-q BT 45.35 589.44 Td 0.1176 0.0941 0.2118 rg (  -  Anxiety or emotional regulation) Tj ET Q
-q BT 45.35 574.70 Td 0.1176 0.0941 0.2118 rg (  -  Sensory processing) Tj ET Q
+q BT 45.35 604.18 Td 0.1176 0.0941 0.2118 rg (  -  Medical Needs: Give the medication at the same time every day, weekends included.) Tj ET Q
+q BT 45.35 589.44 Td 0.1176 0.0941 0.2118 rg (  -  Educational Needs: Get both parents on the school email list.) Tj ET Q
+q BT 45.35 574.70 Td 0.1176 0.0941 0.2118 rg (  -  Psychological or Behavioural Needs: Agree on the same three coping tools in both homes.) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 558.12 Td 0.2392 0.102 0.4706 rg (Parent's highest priorities) Tj ET Q
+q BT 45.35 558.12 Td 0.2392 0.102 0.4706 rg (Pathways where coordination is working) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 542.95 Td 0.1176 0.0941 0.2118 rg (  -  1.) Tj ET Q
-q BT 45.35 528.21 Td 0.1176 0.0941 0.2118 rg (  -  Consistent routine) Tj ET Q
-q BT 45.35 513.47 Td 0.1176 0.0941 0.2118 rg (  -  2.) Tj ET Q
+q BT 45.35 542.95 Td 0.1176 0.0941 0.2118 rg (  -  None recorded.) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 496.89 Td 0.2392 0.102 0.4706 rg (Areas of established strength) Tj ET Q
+q BT 45.35 526.37 Td 0.2392 0.102 0.4706 rg (Pathways where coordination needs work) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 481.72 Td 0.1176 0.0941 0.2118 rg (-) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 465.14 Td 0.2392 0.102 0.4706 rg (Areas needing greater coordination) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 449.98 Td 0.1176 0.0941 0.2118 rg (  -  Medical and Mental Healthcare) Tj ET Q
-q BT 45.35 435.24 Td 0.1176 0.0941 0.2118 rg (  -  Kindergarten and Elementary School) Tj ET Q
-q BT 45.35 420.50 Td 0.1176 0.0941 0.2118 rg (  -  Transitions, Pickup, and Drop-Off) Tj ET Q
-q BT 45.35 405.76 Td 0.1176 0.0941 0.2118 rg (  -  Daily Routines Across Homes) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 389.17 Td 0.2392 0.102 0.4706 rg (Priority concerns) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 374.01 Td 0.1176 0.0941 0.2118 rg (  -  No priority concerns identified) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 357.43 Td 0.2392 0.102 0.4706 rg (Professional questions requiring clarification) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 342.26 Td 0.1176 0.0941 0.2118 rg (  -  Updated therapy summary from OT.) Tj ET Q
+q BT 45.35 511.20 Td 0.1176 0.0941 0.2118 rg (  -  Medical Needs) Tj ET Q
+q BT 45.35 496.46 Td 0.1176 0.0941 0.2118 rg (  -  Educational Needs) Tj ET Q
+q BT 45.35 481.72 Td 0.1176 0.0941 0.2118 rg (  -  Psychological or Behavioural Needs) Tj ET Q
 BT /F1 13.00 Tf ET
-q BT 45.35 322.65 Td 0.2392 0.102 0.4706 rg (2. Category Summary) Tj ET Q
+q BT 45.35 462.12 Td 0.2392 0.102 0.4706 rg (Pathway scores) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 304.42 Td 0.102 0.0745 0.1882 rg (Understanding and Acceptance) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 289.84 Td 0.2392 0.102 0.4706 rg (Score: 3.88   ·   Generally supported) Tj ET Q
-q BT 45.35 275.66 Td 0.1176 0.0941 0.2118 rg (Parent reports a mostly strong understanding with some unresolved questions.) Tj ET Q
+q BT 45.35 443.88 Td 0.2392 0.102 0.4706 rg (Medical Needs) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 428.72 Td 0.1176 0.0941 0.2118 rg 0.306 Tw (Reported impact: Notable reported impact  \(4.00 of 5\).  Understanding across parents: Generally aligned \(3.67 of 5\). ) Tj ET Q
+q BT 45.35 413.98 Td 0.1176 0.0941 0.2118 rg (Coordination between homes: Coordination opportunity \(3.00 of 5\).) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 257.65 Td 0.102 0.0745 0.1882 rg (Medical and Mental Healthcare) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 243.06 Td 0.549 0.3529 0.1725 rg (Score: 3.22   ·   Coordination opportunity) Tj ET Q
-q BT 45.35 228.89 Td 0.1176 0.0941 0.2118 rg (Medical information does not always reach both homes in time.) Tj ET Q
+q BT 45.35 397.39 Td 0.2392 0.102 0.4706 rg (Educational Needs) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 382.23 Td 0.1176 0.0941 0.2118 rg 1.465 Tw (Reported impact: Moderate reported impact  \(3.00 of 5\).  Understanding across parents: Coordination opportunity) Tj ET Q
+q BT 45.35 367.49 Td 0.1176 0.0941 0.2118 rg (\(3.00 of 5\).  Coordination between homes: Coordination opportunity \(2.80 of 5\).) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 210.87 Td 0.102 0.0745 0.1882 rg (Kindergarten and Elementary School) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 196.29 Td 0.549 0.3529 0.1725 rg (Score: 2.90   ·   Coordination opportunity) Tj ET Q
-q BT 45.35 182.12 Td 0.1176 0.0941 0.2118 rg (Classroom coordination is inconsistent.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 164.10 Td 0.102 0.0745 0.1882 rg (Transitions, Pickup, and Drop-Off) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 149.52 Td 0.549 0.3529 0.1725 rg (Score: 3.00   ·   Coordination opportunity) Tj ET Q
-q BT 45.35 135.35 Td 0.1176 0.0941 0.2118 rg (Transitions are a recurring source of stress.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 117.33 Td 0.102 0.0745 0.1882 rg (Daily Routines Across Homes) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 102.75 Td 0.549 0.3529 0.1725 rg (Score: 2.92   ·   Coordination opportunity) Tj ET Q
-q BT 45.35 88.58 Td 0.1176 0.0941 0.2118 rg (Daily-care consistency is uneven.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 70.56 Td 0.102 0.0745 0.1882 rg (Communication and Information Sharing) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 55.98 Td 0.2392 0.102 0.4706 rg (Score: 3.50   ·   Generally supported) Tj ET Q
+q BT 45.35 350.91 Td 0.2392 0.102 0.4706 rg (Psychological or Behavioural Needs) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 335.74 Td 0.1176 0.0941 0.2118 rg 0.181 Tw (Reported impact: Notable reported impact  \(4.00 of 5\).  Understanding across parents: Coordination opportunity \(2.83) Tj ET Q
+q BT 45.35 321.00 Td 0.1176 0.0941 0.2118 rg (of 5\).  Coordination between homes: Coordination opportunity \(2.80 of 5\).) Tj ET Q
+BT /F3 8.50 Tf ET
+q BT 45.35 306.28 Td 0.4314 0.3922 0.5098 rg (Scores reflect the reporting parent's answers and are never findings of fact.) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 2 of ) Tj (10) Tj ET Q
+q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 2 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
@@ -199,13 +176,13 @@ endobj
 <<
 /Contents 8 0 R
 /Parent 1 0 R
-/Resources 29 0 R
+/Resources 39 0 R
 /Type /Page
 >>
 endobj
 8 0 obj
 <<
-/Length 4959
+/Length 5469
 >>
 stream
 2 J
@@ -223,82 +200,81 @@ q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 0.57 w
 0 G
 0 g
-BT /F2 9.00 Tf ET
-q BT 45.35 702.84 Td 0.1176 0.0941 0.2118 rg (Communication is largely reliable with occasional gaps.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 684.83 Td 0.102 0.0745 0.1882 rg (Special School Events) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 670.24 Td 0.2392 0.102 0.4706 rg (Score: 3.62   ·   Generally supported) Tj ET Q
-q BT 45.35 656.07 Td 0.1176 0.0941 0.2118 rg (Events mostly go smoothly.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 638.06 Td 0.102 0.0745 0.1882 rg (Extracurricular Activities) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 623.47 Td 0.2392 0.102 0.4706 rg (Score: 3.60   ·   Generally supported) Tj ET Q
-q BT 45.35 609.30 Td 0.1176 0.0941 0.2118 rg (Activities generally run smoothly with a few gaps.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 591.28 Td 0.102 0.0745 0.1882 rg (Decision-Making and Professional Guidance) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 576.70 Td 0.2392 0.102 0.4706 rg (Score: 3.71   ·   Generally supported) Tj ET Q
-q BT 45.35 562.53 Td 0.1176 0.0941 0.2118 rg (Most decisions get made, though the process is ad-hoc.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 544.51 Td 0.102 0.0745 0.1882 rg (Parent Capacity and Support) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 529.93 Td 0.2392 0.102 0.4706 rg (Score: 4.10   ·   Generally supported) Tj ET Q
-q BT 45.35 515.76 Td 0.1176 0.0941 0.2118 rg (Capacity is generally sufficient with some barriers.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 497.74 Td 0.102 0.0745 0.1882 rg (Safety considerations) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 45.35 483.16 Td 0.4314 0.4314 0.5098 rg (Score: Not scored   ·   Separate review) Tj ET Q
-q BT 45.35 468.99 Td 0.1176 0.0941 0.2118 rg (No safety concerns disclosed.) Tj ET Q
-BT /F3 8.00 Tf ET
-q BT 45.35 452.99 Td 0.4314 0.3922 0.5098 rg (Scores reflect the reporting parent's answers and are not findings of fact.) Tj ET Q
 BT /F1 13.00 Tf ET
-q BT 45.35 432.35 Td 0.2392 0.102 0.4706 rg (3. Child Profile) Tj ET Q
+q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (Step 1. Understand the Concern) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 414.12 Td 0.2392 0.102 0.4706 rg (Age and grade) Tj ET Q
+q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Medical Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 665.56 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 650.82 Td 0.1176 0.0941 0.2118 rg (  concern: ADHD medication timing needs to be consistent across both homes.) Tj ET Q
+q BT 45.35 636.08 Td 0.1176 0.0941 0.2118 rg (  duration: 1 to 3 years) Tj ET Q
+q BT 45.35 621.34 Td 0.1176 0.0941 0.2118 rg (  urgency: Needs attention within weeks) Tj ET Q
+q BT 45.35 606.60 Td 0.1176 0.0941 0.2118 rg (  impact: 4) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 590.44 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 398.95 Td 0.1176 0.0941 0.2118 rg (9 years, 4th grade) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 382.37 Td 0.2392 0.102 0.4706 rg (Diagnosis status) Tj ET Q
+q BT 45.35 575.55 Td 0.1176 0.0941 0.2118 rg 1.339 Tw (For medical needs, the parent describes the concern as: "ADHD medication timing needs to be consistent across) Tj ET Q
+q BT 45.35 560.81 Td 0.1176 0.0941 0.2118 rg 2.237 Tw (both homes.". Duration: 1 to 3 years. The parent reports notable daily impact; the parent expects this to need) Tj ET Q
+q BT 45.35 546.07 Td 0.1176 0.0941 0.2118 rg (attention within weeks.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 530.06 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 367.20 Td 0.1176 0.0941 0.2118 rg (Diagnosis or eligibility determination received) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 350.62 Td 0.2392 0.102 0.4706 rg (Identified areas of need) Tj ET Q
+q BT 45.35 515.17 Td 0.1176 0.0941 0.2118 rg (Child impact is reported at level 4 out of 5, which the parent describes above.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 499.17 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 335.46 Td 0.1176 0.0941 0.2118 rg (  -  ADHD or executive functioning) Tj ET Q
-q BT 45.35 320.72 Td 0.1176 0.0941 0.2118 rg (  -  Anxiety or emotional regulation) Tj ET Q
-q BT 45.35 305.98 Td 0.1176 0.0941 0.2118 rg (  -  Sensory processing) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 289.39 Td 0.2392 0.102 0.4706 rg (Strengths) Tj ET Q
+q BT 45.35 484.28 Td 0.1176 0.0941 0.2118 rg (Start the plan from the parent's stated concern rather than any assumption about what is most important.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 468.27 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 274.23 Td 0.1176 0.0941 0.2118 rg (Curious. Kind to animals. Loves to draw.) Tj ET Q
+q BT 45.35 453.38 Td 0.1176 0.0941 0.2118 rg (Restate the concern in one sentence you and your co-parent can both agree on before moving to solutions.) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 257.65 Td 0.2392 0.102 0.4706 rg (Interests and sources of enjoyment) Tj ET Q
+q BT 45.35 436.80 Td 0.2392 0.102 0.4706 rg (Educational Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 421.78 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 407.04 Td 0.1176 0.0941 0.2118 rg (  concern: IEP follow-through is inconsistent between homes.) Tj ET Q
+q BT 45.35 392.30 Td 0.1176 0.0941 0.2118 rg (  duration: 3 to 12 months) Tj ET Q
+q BT 45.35 377.56 Td 0.1176 0.0941 0.2118 rg (  urgency: Longer-term planning) Tj ET Q
+q BT 45.35 362.82 Td 0.1176 0.0941 0.2118 rg (  impact: 3) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 346.66 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 242.48 Td 0.1176 0.0941 0.2118 rg (Building LEGO, swimming, our family dog.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 225.90 Td 0.2392 0.102 0.4706 rg (Parent's narrative) Tj ET Q
+q BT 45.35 331.77 Td 0.1176 0.0941 0.2118 rg 1.354 Tw (For educational needs, the parent describes the concern as: "IEP follow-through is inconsistent between homes.".) Tj ET Q
+q BT 45.35 317.03 Td 0.1176 0.0941 0.2118 rg (Duration: 3 to 12 months. The parent reports moderate impact; the parent frames this as longer-term planning.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 301.02 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 210.73 Td 0.1176 0.0941 0.2118 rg (ADHD affects focus and mornings; anxiety around transitions.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 194.15 Td 0.2392 0.102 0.4706 rg (Report summary) Tj ET Q
+q BT 45.35 286.13 Td 0.1176 0.0941 0.2118 rg (Child impact is reported at level 3 out of 5, which the parent describes above.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 270.13 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 178.98 Td 0.1176 0.0941 0.2118 rg 0.191 Tw (According to this parent, the child demonstrates strengths in Curious. The parent identifies the child's primary support) Tj ET Q
-q BT 45.35 164.24 Td 0.1176 0.0941 0.2118 rg 1.267 Tw (needs as ADHD or executive functioning, Anxiety or emotional regulation, Sensory processing. The parent reports) Tj ET Q
-q BT 45.35 149.50 Td 0.1176 0.0941 0.2118 rg (that Diagnosis or eligibility determination received.) Tj ET Q
-BT /F1 13.00 Tf ET
-q BT 45.35 129.90 Td 0.2392 0.102 0.4706 rg (4. Understanding and Acceptance) Tj ET Q
-0.2392 0.102 0.4706 rg
-BT /F1 8.00 Tf ET
-q 42.52 122.46 145.95 -14.17 re f BT 51.02 112.97 Td 1 1 1 rg (Generally supported  ·  Score 3.88) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 94.65 Td (Finding) Tj ET
+q BT 45.35 255.24 Td 0.1176 0.0941 0.2118 rg (Start the plan from the parent's stated concern rather than any assumption about what is most important.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 239.23 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 79.49 Td 0.1176 0.0941 0.2118 rg (Parent reports a mostly strong understanding with some unresolved questions.) Tj ET Q
+q BT 45.35 224.34 Td 0.1176 0.0941 0.2118 rg (Restate the concern in one sentence you and your co-parent can both agree on before moving to solutions.) Tj ET Q
 BT /F1 10.00 Tf ET
-BT 45.35 62.91 Td (Child impact) Tj ET
+q BT 45.35 207.76 Td 0.2392 0.102 0.4706 rg (Psychological or Behavioural Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 192.74 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 178.00 Td 0.1176 0.0941 0.2118 rg (  concern: Emotional-regulation strategies work in one home more than the other.) Tj ET Q
+q BT 45.35 163.26 Td 0.1176 0.0941 0.2118 rg (  duration: 3 to 12 months) Tj ET Q
+q BT 45.35 148.52 Td 0.1176 0.0941 0.2118 rg (  urgency: Unstated) Tj ET Q
+q BT 45.35 133.78 Td 0.1176 0.0941 0.2118 rg (  impact: 4) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 117.62 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 102.73 Td 0.1176 0.0941 0.2118 rg 0.101 Tw (For psychological or behavioural needs, the parent describes the concern as: "Emotional-regulation strategies work in) Tj ET Q
+q BT 45.35 87.99 Td 0.1176 0.0941 0.2118 rg (one home more than the other.". Duration: 3 to 12 months. The parent reports notable daily impact.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 71.98 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 57.09 Td 0.1176 0.0941 0.2118 rg (Child impact is reported at level 4 out of 5, which the parent describes above.) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 3 of ) Tj (10) Tj ET Q
+q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 3 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
@@ -306,18 +282,17 @@ endobj
 <<
 /Contents 10 0 R
 /Parent 1 0 R
-/Resources 30 0 R
+/Resources 40 0 R
 /Type /Page
 >>
 endobj
 10 0 obj
 <<
-/Length 4866
+/Length 1056
 >>
 stream
 2 J
 0.57 w
-0.2392 0.102 0.4706 rg
 0.9608 0.9412 0.9098 rg
 0.00 792.00 612.00 -62.36 re f
 q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
@@ -330,90 +305,17 @@ q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 42.52 726.80 m 569.48 726.80 l S
 0.57 w
 0 G
-0.2392 0.102 0.4706 rg
+0 g
+BT /F1 9.50 Tf ET
+q BT 45.35 702.41 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 702.26 Td 0.1176 0.0941 0.2118 rg (Small knowledge gaps can lead to different responses in each home.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 685.68 Td (Suggested option) Tj ET
+q BT 45.35 687.52 Td 0.1176 0.0941 0.2118 rg (Start the plan from the parent's stated concern rather than any assumption about what is most important.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 671.51 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 670.51 Td 0.1176 0.0941 0.2118 rg (Identify the one or two areas you feel least certain about and get them clarified in writing.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 653.93 Td (First action step) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 638.76 Td 0.1176 0.0941 0.2118 rg (Book a 30-minute consult with the diagnosing or treating professional.) Tj ET Q
-BT /F1 13.00 Tf ET
-BT 45.35 619.16 Td (5. Medical and Mental Healthcare) Tj ET
-0.549 0.3529 0.1725 rg
-BT /F1 8.00 Tf ET
-q 42.52 611.72 164.59 -14.17 re f BT 51.02 602.23 Td 1 1 1 rg (Coordination opportunity  ·  Score 3.22) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 583.91 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 568.75 Td 0.1176 0.0941 0.2118 rg (Medical information does not always reach both homes in time.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 552.17 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 537.00 Td 0.1176 0.0941 0.2118 rg (Delayed information can affect medication timing and appointment attendance.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 520.42 Td 0.2392 0.102 0.4706 rg (Suggested option) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 505.25 Td 0.1176 0.0941 0.2118 rg (Establish a written provider contact + appointment sharing procedure.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 488.67 Td 0.2392 0.102 0.4706 rg (First action step) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 473.50 Td 0.1176 0.0941 0.2118 rg (Draft a shared provider contact list this week.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 456.92 Td 0.2392 0.102 0.4706 rg (Additional detail from this parent) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 572.31 442.34 Td 0.2392 0.102 0.4706 rg (Providers:) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 427.58 Td 0.1176 0.0941 0.2118 rg (  -  Pediatrician) Tj ET Q
-q BT 45.35 412.84 Td 0.1176 0.0941 0.2118 rg (  -  Psychologist) Tj ET Q
-q BT 45.35 398.10 Td 0.1176 0.0941 0.2118 rg (  -  Occupational therapist) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 382.53 Td 0.2392 0.102 0.4706 rg (Coordination open:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 368.36 Td 0.1176 0.0941 0.2118 rg (Medication timing across homes; OT carryover.) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 352.76 Td 0.2392 0.102 0.4706 rg (Missed delayed:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 338.59 Td 0.1176 0.0941 0.2118 rg (A dose was missed twice last month.) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 323.00 Td 0.2392 0.102 0.4706 rg (Improve:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 308.83 Td 0.1176 0.0941 0.2118 rg (A shared med log.) Tj ET Q
-BT /F1 13.00 Tf ET
-q BT 45.35 289.20 Td 0.2392 0.102 0.4706 rg (6. Kindergarten and Elementary School) Tj ET Q
-BT /F1 8.00 Tf ET
-q 42.52 281.76 164.59 -14.17 re f BT 51.02 272.28 Td 1 1 1 rg (Coordination opportunity  ·  Score 2.90) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 253.96 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 238.80 Td 0.1176 0.0941 0.2118 rg (Classroom coordination is inconsistent.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 222.21 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 207.05 Td 0.1176 0.0941 0.2118 rg (Academic support in one home may not reach the other.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 190.46 Td 0.2392 0.102 0.4706 rg (Suggested option) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 175.30 Td 0.1176 0.0941 0.2118 rg (Request a joint parent-teacher meeting.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 158.72 Td 0.2392 0.102 0.4706 rg (First action step) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 143.55 Td 0.1176 0.0941 0.2118 rg (Contact the teacher to schedule a joint meeting.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 126.97 Td 0.2392 0.102 0.4706 rg (Additional detail from this parent) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 572.31 112.39 Td 0.2392 0.102 0.4706 rg (School name:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 1099.28 98.21 Td 0.1176 0.0941 0.2118 rg (Sunridge Elementary) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 82.62 Td 0.2392 0.102 0.4706 rg (Supports:) Tj ET Q
-BT /F2 10.00 Tf ET
-q BT 45.35 67.87 Td 0.1176 0.0941 0.2118 rg (  -  Individualized Education Program \(IEP\)) Tj ET Q
+q BT 45.35 656.62 Td 0.1176 0.0941 0.2118 rg (Restate the concern in one sentence you and your co-parent can both agree on before moving to solutions.) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 4 of ) Tj (10) Tj ET Q
+q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 4 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
@@ -421,18 +323,17 @@ endobj
 <<
 /Contents 12 0 R
 /Parent 1 0 R
-/Resources 31 0 R
+/Resources 41 0 R
 /Type /Page
 >>
 endobj
 12 0 obj
 <<
-/Length 4841
+/Length 5191
 >>
 stream
 2 J
 0.57 w
-0.549 0.3529 0.1725 rg
 0.9608 0.9412 0.9098 rg
 0.00 792.00 612.00 -62.36 re f
 q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
@@ -445,93 +346,83 @@ q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 42.52 726.80 m 569.48 726.80 l S
 0.57 w
 0 G
-0.549 0.3529 0.1725 rg
-BT /F2 10.00 Tf ET
-q BT 45.35 702.26 Td 0.1176 0.0941 0.2118 rg (  -  Classroom accommodations) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 686.69 Td 0.2392 0.102 0.4706 rg (Primary concern:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 672.51 Td 0.1176 0.0941 0.2118 rg (Homework goes missing between homes.) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 656.92 Td 0.2392 0.102 0.4706 rg (Most important:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 642.75 Td 0.1176 0.0941 0.2118 rg (Consistent morning routine and IEP follow-through.) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 627.16 Td 0.2392 0.102 0.4706 rg (Changes:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 612.99 Td 0.1176 0.0941 0.2118 rg (Duplicate school communications to both parents.) Tj ET Q
+0 g
 BT /F1 13.00 Tf ET
-q BT 45.35 593.36 Td 0.2392 0.102 0.4706 rg (7. Transitions, Pickup, and Drop-Off) Tj ET Q
-BT /F1 8.00 Tf ET
-q 42.52 585.92 164.59 -14.17 re f BT 51.02 576.43 Td 1 1 1 rg (Coordination opportunity  ·  Score 3.00) Tj ET Q
+q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (Step 2. Identify the Child's Current Needs) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 558.12 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Medical Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 665.56 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 650.82 Td 0.1176 0.0941 0.2118 rg (  selected needs: Medication schedule, Specialist appointments, Emergency-care plan) Tj ET Q
+q BT 45.35 636.08 Td 0.1176 0.0941 0.2118 rg (  other: ) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 619.92 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 542.95 Td 0.1176 0.0941 0.2118 rg (Transitions are a recurring source of stress.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 526.37 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+q BT 45.35 605.03 Td 0.1176 0.0941 0.2118 rg (The parent identified 3 current needs in the medical needs pathway.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 589.02 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 511.20 Td 0.1176 0.0941 0.2118 rg (The child may show dysregulation before or after exchanges.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 494.62 Td 0.2392 0.102 0.4706 rg (Suggested option) Tj ET Q
+q BT 45.35 574.13 Td 0.1176 0.0941 0.2118 rg (A shorter, prioritised list of current needs helps the child receive the right kind of support in both homes.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 558.13 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 479.46 Td 0.1176 0.0941 0.2118 rg (Move exchanges to a neutral or school-based location.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 462.87 Td 0.2392 0.102 0.4706 rg (First action step) Tj ET Q
+q BT 45.35 543.24 Td 0.1176 0.0941 0.2118 rg 0.684 Tw (Confirm this list matches what your treating professionals have identified - that is often where gaps appear between) Tj ET Q
+q BT 45.35 528.50 Td 0.1176 0.0941 0.2118 rg (homes.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 512.49 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 447.71 Td 0.1176 0.0941 0.2118 rg (Propose a neutral exchange location to the other parent.) Tj ET Q
+q BT 45.35 497.60 Td 0.1176 0.0941 0.2118 rg (Circle the top three needs to focus on in the next 30 days; share that short list with your co-parent.) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 431.13 Td 0.2392 0.102 0.4706 rg (Additional detail from this parent) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 572.31 416.54 Td 0.2392 0.102 0.4706 rg (Difficult:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 1099.28 402.37 Td 0.1176 0.0941 0.2118 rg (Sunday evening handoffs.) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 386.78 Td 0.2392 0.102 0.4706 rg (Items:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 372.61 Td 0.1176 0.0941 0.2118 rg (Medication, comfort blanket, homework folder.) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 357.02 Td 0.2392 0.102 0.4706 rg (Checklist wanted:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 342.84 Td 0.1176 0.0941 0.2118 rg (Yes) Tj ET Q
-BT /F1 13.00 Tf ET
-q BT 45.35 323.22 Td 0.2392 0.102 0.4706 rg (8. Daily Routines Across Homes) Tj ET Q
-BT /F1 8.00 Tf ET
-q 42.52 315.78 164.59 -14.17 re f BT 51.02 306.29 Td 1 1 1 rg (Coordination opportunity  ·  Score 2.92) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 287.98 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+q BT 45.35 481.02 Td 0.2392 0.102 0.4706 rg (Educational Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 466.00 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 451.26 Td 0.1176 0.0941 0.2118 rg (  selected needs: IEP or Section 504 services, Classroom accommodations, Communication with teachers) Tj ET Q
+q BT 45.35 436.52 Td 0.1176 0.0941 0.2118 rg (  other: ) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 420.36 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 272.81 Td 0.1176 0.0941 0.2118 rg (Daily-care consistency is uneven.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 256.23 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+q BT 45.35 405.47 Td 0.1176 0.0941 0.2118 rg (The parent identified 3 current needs in the educational needs pathway.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 389.46 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 241.06 Td 0.1176 0.0941 0.2118 rg (Transitions and behaviour may be affected.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 224.48 Td 0.2392 0.102 0.4706 rg (Suggested option) Tj ET Q
+q BT 45.35 374.57 Td 0.1176 0.0941 0.2118 rg (A shorter, prioritised list of current needs helps the child receive the right kind of support in both homes.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 358.57 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 209.31 Td 0.1176 0.0941 0.2118 rg (Post a visible daily rhythm in both homes.) Tj ET Q
-BT /F1 10.00 Tf ET
-q BT 45.35 192.73 Td 0.2392 0.102 0.4706 rg (First action step) Tj ET Q
+q BT 45.35 343.68 Td 0.1176 0.0941 0.2118 rg 0.684 Tw (Confirm this list matches what your treating professionals have identified - that is often where gaps appear between) Tj ET Q
+q BT 45.35 328.94 Td 0.1176 0.0941 0.2118 rg (homes.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 312.93 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 177.57 Td 0.1176 0.0941 0.2118 rg (Print a rhythm sheet by Friday.) Tj ET Q
+q BT 45.35 298.04 Td 0.1176 0.0941 0.2118 rg (Circle the top three needs to focus on in the next 30 days; share that short list with your co-parent.) Tj ET Q
 BT /F1 10.00 Tf ET
-q BT 45.35 160.98 Td 0.2392 0.102 0.4706 rg (Additional detail from this parent) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 572.31 146.40 Td 0.2392 0.102 0.4706 rg (Essential:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 1099.28 132.23 Td 0.1176 0.0941 0.2118 rg (Bedtime and medication timing.) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 116.64 Td 0.2392 0.102 0.4706 rg (Flexibility:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 102.47 Td 0.1176 0.0941 0.2118 rg (Weekend meals.) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 86.87 Td 0.2392 0.102 0.4706 rg (Negative:) Tj ET Q
-BT /F2 9.00 Tf ET
-q BT 572.31 72.70 Td 0.1176 0.0941 0.2118 rg (Different screen-time rules cause meltdowns.) Tj ET Q
-BT /F1 9.00 Tf ET
-q BT 45.35 57.11 Td 0.2392 0.102 0.4706 rg (Routine grid:) Tj ET Q
+q BT 45.35 281.46 Td 0.2392 0.102 0.4706 rg (Psychological or Behavioural Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 266.44 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 251.70 Td 0.1176 0.0941 0.2118 rg (  selected needs: ADHD-related supports, Emotional-regulation strategies, Counselling or psychotherapy) Tj ET Q
+q BT 45.35 236.96 Td 0.1176 0.0941 0.2118 rg (  other: ) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 220.80 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 205.91 Td 0.1176 0.0941 0.2118 rg (The parent identified 3 current needs in the psychological or behavioural needs pathway.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 189.91 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 175.02 Td 0.1176 0.0941 0.2118 rg (A shorter, prioritised list of current needs helps the child receive the right kind of support in both homes.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 159.01 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 144.12 Td 0.1176 0.0941 0.2118 rg 0.684 Tw (Confirm this list matches what your treating professionals have identified - that is often where gaps appear between) Tj ET Q
+q BT 45.35 129.38 Td 0.1176 0.0941 0.2118 rg (homes.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 113.37 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 98.48 Td 0.1176 0.0941 0.2118 rg (Circle the top three needs to focus on in the next 30 days; share that short list with your co-parent.) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 5 of ) Tj (10) Tj ET Q
+q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 5 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
@@ -539,18 +430,17 @@ endobj
 <<
 /Contents 14 0 R
 /Parent 1 0 R
-/Resources 32 0 R
+/Resources 42 0 R
 /Type /Page
 >>
 endobj
 14 0 obj
 <<
-/Length 4753
+/Length 5314
 >>
 stream
 2 J
 0.57 w
-0.549 0.3529 0.1725 rg
 0.9608 0.9412 0.9098 rg
 0.00 792.00 612.00 -62.36 re f
 q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
@@ -563,91 +453,81 @@ q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 42.52 726.80 m 569.48 726.80 l S
 0.57 w
 0 G
-0.549 0.3529 0.1725 rg
-BT /F2 9.00 Tf ET
-q BT 572.31 702.84 Td 0.1176 0.0941 0.2118 rg (Medication) Tj ET Q
-q BT 742.39 702.84 Td 0.1176 0.0941 0.2118 rg (Frequently inconsistent) Tj ET Q
-q BT 1269.35 688.67 Td 0.1176 0.0941 0.2118 rg (Sleep) Tj ET Q
-q BT 1439.43 688.67 Td 0.1176 0.0941 0.2118 rg (Mostly consistent) Tj ET Q
-q BT 1966.39 674.50 Td 0.1176 0.0941 0.2118 rg (Meals and nutrition) Tj ET Q
-q BT 2136.47 674.50 Td 0.1176 0.0941 0.2118 rg (Mostly consistent) Tj ET Q
-q BT 2663.43 660.32 Td 0.1176 0.0941 0.2118 rg (Homework) Tj ET Q
-q BT 2833.51 660.32 Td 0.1176 0.0941 0.2118 rg (Frequently inconsistent) Tj ET Q
-q BT 3360.47 646.15 Td 0.1176 0.0941 0.2118 rg (Screen time) Tj ET Q
-q BT 3530.55 646.15 Td 0.1176 0.0941 0.2118 rg (Frequently inconsistent) Tj ET Q
-q BT 4057.51 631.98 Td 0.1176 0.0941 0.2118 rg (Therapy exercises) Tj ET Q
-q BT 4227.59 631.98 Td 0.1176 0.0941 0.2118 rg (Frequently inconsistent) Tj ET Q
-q BT 4754.55 617.80 Td 0.1176 0.0941 0.2118 rg (Sensory supports) Tj ET Q
-q BT 4924.63 617.80 Td 0.1176 0.0941 0.2118 rg (Sometimes inconsistent) Tj ET Q
-q BT 5451.59 603.63 Td 0.1176 0.0941 0.2118 rg (Emotional regulation) Tj ET Q
-q BT 5621.67 603.63 Td 0.1176 0.0941 0.2118 rg (Sometimes inconsistent) Tj ET Q
+0 g
 BT /F1 13.00 Tf ET
-q BT 45.35 585.42 Td 0.2392 0.102 0.4706 rg (9. Communication and Information Sharing) Tj ET Q
-0.2392 0.102 0.4706 rg
-BT /F1 8.00 Tf ET
-q 42.52 577.98 145.95 -14.17 re f BT 51.02 568.50 Td 1 1 1 rg (Generally supported  ·  Score 3.50) Tj ET Q
+q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (Step 3. Review Professional Recommendations) Tj ET Q
 BT /F1 10.00 Tf ET
-BT 45.35 550.18 Td (Finding) Tj ET
+q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Medical Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 665.56 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 650.82 Td 0.1176 0.0941 0.2118 rg (  professionals: Paediatrician, Psychiatrist) Tj ET Q
+q BT 45.35 636.08 Td 0.1176 0.0941 0.2118 rg (  recommendations summary present: True) Tj ET Q
+q BT 45.35 621.34 Td 0.1176 0.0941 0.2118 rg (  in writing: Yes) Tj ET Q
+q BT 45.35 606.60 Td 0.1176 0.0941 0.2118 rg (  understanding: 4) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 590.44 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 535.02 Td 0.1176 0.0941 0.2118 rg (Communication is largely reliable with occasional gaps.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 518.43 Td (Child impact) Tj ET
+q BT 45.35 575.55 Td 0.1176 0.0941 0.2118 rg 0.312 Tw (The parent has engaged 2 professionals on the medical needs concern. Written documentation of recommendations:) Tj ET Q
+q BT 45.35 560.81 Td 0.1176 0.0941 0.2118 rg (yes. Self-rated understanding of the recommendations: 4 of 5.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 544.80 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 503.27 Td 0.1176 0.0941 0.2118 rg (Occasional gaps still create surprises.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 486.69 Td (Suggested option) Tj ET
+q BT 45.35 529.91 Td 0.1176 0.0941 0.2118 rg (When both parents work from the same written recommendation, the child experiences one plan, not two.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 513.91 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 471.52 Td 0.1176 0.0941 0.2118 rg (Add a weekly 10-minute child-focused check-in.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 454.94 Td (First action step) Tj ET
+q BT 45.35 499.02 Td 0.1176 0.0941 0.2118 rg 0.497 Tw (If the recommendation is not in writing, request a summary letter from the treating professional - it removes room for) Tj ET Q
+q BT 45.35 484.28 Td 0.1176 0.0941 0.2118 rg (interpretation.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 468.27 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 439.77 Td 0.1176 0.0941 0.2118 rg (Propose a fixed day/time to the other parent.) Tj ET Q
+q BT 45.35 453.38 Td 0.1176 0.0941 0.2118 rg (Save the most recent recommendation as a PDF or photo you can share with your co-parent verbatim.) Tj ET Q
 BT /F1 10.00 Tf ET
-BT 45.35 423.19 Td (Additional detail from this parent) Tj ET
-BT /F1 9.00 Tf ET
-BT 572.31 408.61 Td (Preferred methods:) Tj ET
+q BT 45.35 436.80 Td 0.2392 0.102 0.4706 rg (Educational Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 421.78 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 407.04 Td 0.1176 0.0941 0.2118 rg (  professionals: Teacher, IEP or 504 team, School counsellor) Tj ET Q
+q BT 45.35 392.30 Td 0.1176 0.0941 0.2118 rg (  recommendations summary present: True) Tj ET Q
+q BT 45.35 377.56 Td 0.1176 0.0941 0.2118 rg (  in writing: Yes) Tj ET Q
+q BT 45.35 362.82 Td 0.1176 0.0941 0.2118 rg (  understanding: 4) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 346.66 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 393.85 Td 0.1176 0.0941 0.2118 rg (  -  Co-parenting application) Tj ET Q
-q BT 45.35 379.11 Td 0.1176 0.0941 0.2118 rg (  -  Email) Tj ET Q
-BT /F1 13.00 Tf ET
-BT 45.35 359.50 Td (10. School Events) Tj ET
-BT /F1 8.00 Tf ET
-q 42.52 352.06 145.95 -14.17 re f BT 51.02 342.58 Td 1 1 1 rg (Generally supported  ·  Score 3.62) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 324.26 Td (Finding) Tj ET
+q BT 45.35 331.77 Td 0.1176 0.0941 0.2118 rg 5.593 Tw (The parent has engaged 3 professionals on the educational needs concern. Written documentation of) Tj ET Q
+q BT 45.35 317.03 Td 0.1176 0.0941 0.2118 rg (recommendations: yes. Self-rated understanding of the recommendations: 4 of 5.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 301.02 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 309.09 Td 0.1176 0.0941 0.2118 rg (Events mostly go smoothly.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 292.51 Td (Child impact) Tj ET
+q BT 45.35 286.13 Td 0.1176 0.0941 0.2118 rg (When both parents work from the same written recommendation, the child experiences one plan, not two.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 270.13 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 277.35 Td 0.1176 0.0941 0.2118 rg (Occasional friction can spill over onto the child.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 260.76 Td (Suggested option) Tj ET
+q BT 45.35 255.24 Td 0.1176 0.0941 0.2118 rg 0.497 Tw (If the recommendation is not in writing, request a summary letter from the treating professional - it removes room for) Tj ET Q
+q BT 45.35 240.50 Td 0.1176 0.0941 0.2118 rg (interpretation.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 224.49 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 245.60 Td 0.1176 0.0941 0.2118 rg (Keep a shared events calendar.) Tj ET Q
+q BT 45.35 209.60 Td 0.1176 0.0941 0.2118 rg (Save the most recent recommendation as a PDF or photo you can share with your co-parent verbatim.) Tj ET Q
 BT /F1 10.00 Tf ET
-BT 45.35 229.02 Td (First action step) Tj ET
+q BT 45.35 193.02 Td 0.2392 0.102 0.4706 rg (Psychological or Behavioural Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 178.00 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 163.26 Td 0.1176 0.0941 0.2118 rg (  professionals: Psychologist, Therapist or counsellor) Tj ET Q
+q BT 45.35 148.52 Td 0.1176 0.0941 0.2118 rg (  recommendations summary present: True) Tj ET Q
+q BT 45.35 133.78 Td 0.1176 0.0941 0.2118 rg (  in writing: Partly) Tj ET Q
+q BT 45.35 119.04 Td 0.1176 0.0941 0.2118 rg (  understanding: 4) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 102.88 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 213.85 Td 0.1176 0.0941 0.2118 rg (Set up \(or update\) a shared calendar this week.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 197.27 Td (Additional detail from this parent) Tj ET
-BT /F1 9.00 Tf ET
-BT 572.31 182.69 Td (Context list:) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 167.93 Td 0.1176 0.0941 0.2118 rg (  -  Parent-teacher conferences) Tj ET Q
-q BT 45.35 153.19 Td 0.1176 0.0941 0.2118 rg (  -  IEP or Section 504 meetings) Tj ET Q
-BT /F1 13.00 Tf ET
-BT 45.35 133.58 Td (10. Extracurricular Activities) Tj ET
-BT /F1 8.00 Tf ET
-q 42.52 126.14 145.95 -14.17 re f BT 51.02 116.66 Td 1 1 1 rg (Generally supported  ·  Score 3.60) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 98.34 Td (Finding) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 83.17 Td 0.1176 0.0941 0.2118 rg (Activities generally run smoothly with a few gaps.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 66.59 Td (Child impact) Tj ET
+q BT 45.35 87.99 Td 0.1176 0.0941 0.2118 rg 0.629 Tw (The parent has engaged 2 professionals on the psychological or behavioural needs concern. Written documentation) Tj ET Q
+q BT 45.35 73.25 Td 0.1176 0.0941 0.2118 rg (of recommendations: partly. Self-rated understanding of the recommendations: 4 of 5.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 57.24 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 6 of ) Tj (10) Tj ET Q
+q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 6 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
@@ -655,18 +535,17 @@ endobj
 <<
 /Contents 16 0 R
 /Parent 1 0 R
-/Resources 33 0 R
+/Resources 43 0 R
 /Type /Page
 >>
 endobj
 16 0 obj
 <<
-/Length 4378
+/Length 1319
 >>
 stream
 2 J
 0.57 w
-0.2392 0.102 0.4706 rg
 0.9608 0.9412 0.9098 rg
 0.00 792.00 612.00 -62.36 re f
 q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
@@ -679,88 +558,20 @@ q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 42.52 726.80 m 569.48 726.80 l S
 0.57 w
 0 G
-0.2392 0.102 0.4706 rg
+0 g
 BT /F2 10.00 Tf ET
-q BT 45.35 702.26 Td 0.1176 0.0941 0.2118 rg (Small gaps \(uniform, ride\) can leave the child unsupported.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 685.68 Td (Suggested option) Tj ET
+q BT 45.35 702.26 Td 0.1176 0.0941 0.2118 rg (When both parents work from the same written recommendation, the child experiences one plan, not two.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 686.25 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 670.51 Td 0.1176 0.0941 0.2118 rg (Standardise transport + uniform ownership.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 653.93 Td (First action step) Tj ET
+q BT 45.35 671.36 Td 0.1176 0.0941 0.2118 rg 0.497 Tw (If the recommendation is not in writing, request a summary letter from the treating professional - it removes room for) Tj ET Q
+q BT 45.35 656.62 Td 0.1176 0.0941 0.2118 rg (interpretation.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 640.61 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 638.76 Td 0.1176 0.0941 0.2118 rg (Write the who-does-what plan and share it.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 622.18 Td (Additional detail from this parent) Tj ET
-BT /F1 9.00 Tf ET
-BT 572.31 607.60 Td (Activities:) Tj ET
-BT /F2 9.00 Tf ET
-q BT 1099.28 593.43 Td 0.1176 0.0941 0.2118 rg (Swim team, art class.) Tj ET Q
-BT /F1 9.00 Tf ET
-BT 45.35 577.84 Td (Benefit:) Tj ET
-BT /F2 9.00 Tf ET
-q BT 572.31 563.66 Td 0.1176 0.0941 0.2118 rg (Yes - swim helps regulation.) Tj ET Q
-BT /F1 13.00 Tf ET
-BT 45.35 544.04 Td (11. Decision-Making and Professional Guidance) Tj ET
-BT /F1 8.00 Tf ET
-q 42.52 536.60 145.95 -14.17 re f BT 51.02 527.11 Td 1 1 1 rg (Generally supported  ·  Score 3.71) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 508.80 Td (Finding) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 493.63 Td 0.1176 0.0941 0.2118 rg (Most decisions get made, though the process is ad-hoc.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 477.05 Td (Child impact) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 461.88 Td 0.1176 0.0941 0.2118 rg (Occasional stalls delay the child's care.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 445.30 Td (Suggested option) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 430.13 Td 0.1176 0.0941 0.2118 rg (Adopt a written decision ladder \(records ? professional input ? mediation\).) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 413.55 Td (First action step) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 398.39 Td 0.1176 0.0941 0.2118 rg (Draft the ladder and propose it to the other parent.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 381.80 Td (Additional detail from this parent) Tj ET
-BT /F1 9.00 Tf ET
-BT 572.31 367.22 Td (Supports:) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 352.46 Td 0.1176 0.0941 0.2118 rg (  -  Neutral child therapist) Tj ET Q
-q BT 45.35 337.72 Td 0.1176 0.0941 0.2118 rg (  -  Educational meeting with teachers or school specialists) Tj ET Q
-BT /F1 13.00 Tf ET
-BT 45.35 318.12 Td (12. Family Violence and Communication Safety) Tj ET
-BT /F1 10.00 Tf ET
-BT 45.35 299.88 Td (Safety-screen result) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 284.72 Td 0.1176 0.0941 0.2118 rg (No safety concerns disclosed.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 268.13 Td (Reported items) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 252.97 Td 0.1176 0.0941 0.2118 rg (  -  None of these apply.) Tj ET Q
-BT /F3 8.50 Tf ET
-q BT 45.35 235.42 Td 0.4314 0.3922 0.5098 rg (Sensitive safety answers are never included in a report shared with the other parent. This section is only visible in your own report.) Tj ET Q
-BT /F1 13.00 Tf ET
-BT 45.35 217.77 Td (13. Parent Capacity and Support) Tj ET
-BT /F1 8.00 Tf ET
-q 42.52 210.33 145.95 -14.17 re f BT 51.02 200.84 Td 1 1 1 rg (Generally supported  ·  Score 4.10) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 182.53 Td (Finding) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 167.36 Td 0.1176 0.0941 0.2118 rg (Capacity is generally sufficient with some barriers.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 150.78 Td (Child impact) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 135.61 Td 0.1176 0.0941 0.2118 rg (Barriers can affect follow-through on the plan.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 119.03 Td (Suggested option) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 103.87 Td 0.1176 0.0941 0.2118 rg (Identify the single biggest barrier and address it first.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 87.28 Td (First action step) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 72.12 Td 0.1176 0.0941 0.2118 rg (Ask one trusted person to help with that barrier.) Tj ET Q
+q BT 45.35 625.72 Td 0.1176 0.0941 0.2118 rg (Save the most recent recommendation as a PDF or photo you can share with your co-parent verbatim.) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 7 of ) Tj (10) Tj ET Q
+q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 7 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
@@ -768,18 +579,17 @@ endobj
 <<
 /Contents 18 0 R
 /Parent 1 0 R
-/Resources 34 0 R
+/Resources 44 0 R
 /Type /Page
 >>
 endobj
 18 0 obj
 <<
-/Length 4462
+/Length 5284
 >>
 stream
 2 J
 0.57 w
-0.2392 0.102 0.4706 rg
 0.9608 0.9412 0.9098 rg
 0.00 792.00 612.00 -62.36 re f
 q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
@@ -792,82 +602,83 @@ q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 42.52 726.80 m 569.48 726.80 l S
 0.57 w
 0 G
-0.2392 0.102 0.4706 rg
-BT /F1 10.00 Tf ET
-BT 45.35 701.83 Td (Additional detail from this parent) Tj ET
-BT /F1 9.00 Tf ET
-BT 572.31 687.25 Td (Support requested:) Tj ET
-BT /F2 9.00 Tf ET
-q BT 1099.28 673.08 Td 0.1176 0.0941 0.2118 rg (Occasional respite.) Tj ET Q
-BT /F1 9.00 Tf ET
-BT 45.35 657.49 Td (Manage well:) Tj ET
-BT /F2 9.00 Tf ET
-q BT 572.31 643.32 Td 0.1176 0.0941 0.2118 rg (Medication administration.) Tj ET Q
-BT /F1 9.00 Tf ET
-BT 45.35 627.73 Td (Need help:) Tj ET
-BT /F2 9.00 Tf ET
-q BT 572.31 613.55 Td 0.1176 0.0941 0.2118 rg (Coordinating with school.) Tj ET Q
+0 g
 BT /F1 13.00 Tf ET
-BT 45.35 593.93 Td (14. Parent's Goals, Concerns, and Priorities) Tj ET
+q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (Step 4. Each Parent's Understanding) Tj ET Q
 BT /F1 10.00 Tf ET
-BT 45.35 575.69 Td (Three primary goals) Tj ET
+q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Medical Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 665.56 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 650.82 Td 0.1176 0.0941 0.2118 rg (  score: 3.67) Tj ET Q
+q BT 45.35 636.08 Td 0.1176 0.0941 0.2118 rg (  classification: Generally aligned) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 619.92 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 560.53 Td 0.1176 0.0941 0.2118 rg (  -  1.) Tj ET Q
-q BT 45.35 545.79 Td 0.1176 0.0941 0.2118 rg (  -  Consistent routine) Tj ET Q
-q BT 45.35 531.05 Td 0.1176 0.0941 0.2118 rg (  -  2.) Tj ET Q
+q BT 45.35 605.03 Td 0.1176 0.0941 0.2118 rg 1.994 Tw (On the parent's own answers about how both parents share information and understanding of this concern, the) Tj ET Q
+q BT 45.35 590.29 Td 0.1176 0.0941 0.2118 rg (composite is 3.67 of 5 \(generally aligned\).) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 574.28 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 559.39 Td 0.1176 0.0941 0.2118 rg (Aligned understanding between parents reduces mixed messages to the child and to the professionals involved.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 543.39 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 528.50 Td 0.1176 0.0941 0.2118 rg (Schedule a short recurring check-in \(email or app\) where each parent confirms they have the same information.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 512.49 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 497.60 Td 0.1176 0.0941 0.2118 rg (Agree on one shared source of truth for this concern - e.g., a shared folder with the latest reports and instructions.) Tj ET Q
 BT /F1 10.00 Tf ET
-BT 45.35 514.46 Td (Three primary concerns) Tj ET
+q BT 45.35 481.02 Td 0.2392 0.102 0.4706 rg (Educational Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 466.00 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 451.26 Td 0.1176 0.0941 0.2118 rg (  score: 3.0) Tj ET Q
+q BT 45.35 436.52 Td 0.1176 0.0941 0.2118 rg (  classification: Coordination opportunity) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 420.36 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 499.30 Td 0.1176 0.0941 0.2118 rg (  -  1.) Tj ET Q
-q BT 45.35 484.56 Td 0.1176 0.0941 0.2118 rg (  -  Missed medication) Tj ET Q
-q BT 45.35 469.82 Td 0.1176 0.0941 0.2118 rg (  -  2.) Tj ET Q
+q BT 45.35 405.47 Td 0.1176 0.0941 0.2118 rg 1.994 Tw (On the parent's own answers about how both parents share information and understanding of this concern, the) Tj ET Q
+q BT 45.35 390.73 Td 0.1176 0.0941 0.2118 rg (composite is 3.0 of 5 \(coordination opportunity\).) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 374.72 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 359.83 Td 0.1176 0.0941 0.2118 rg (Aligned understanding between parents reduces mixed messages to the child and to the professionals involved.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 343.83 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 328.94 Td 0.1176 0.0941 0.2118 rg (Schedule a short recurring check-in \(email or app\) where each parent confirms they have the same information.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 312.93 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 298.04 Td 0.1176 0.0941 0.2118 rg (Agree on one shared source of truth for this concern - e.g., a shared folder with the latest reports and instructions.) Tj ET Q
 BT /F1 10.00 Tf ET
-BT 45.35 453.24 Td (What the child needs from this parent) Tj ET
+q BT 45.35 281.46 Td 0.2392 0.102 0.4706 rg (Psychological or Behavioural Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 266.44 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 251.70 Td 0.1176 0.0941 0.2118 rg (  score: 2.83) Tj ET Q
+q BT 45.35 236.96 Td 0.1176 0.0941 0.2118 rg (  classification: Coordination opportunity) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 220.80 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 438.07 Td 0.1176 0.0941 0.2118 rg (Predictability and patience.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 421.49 Td (What the child needs from the other parent \(this parent's perspective\)) Tj ET
+q BT 45.35 205.91 Td 0.1176 0.0941 0.2118 rg 1.994 Tw (On the parent's own answers about how both parents share information and understanding of this concern, the) Tj ET Q
+q BT 45.35 191.17 Td 0.1176 0.0941 0.2118 rg (composite is 2.83 of 5 \(coordination opportunity\).) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 175.17 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 406.32 Td 0.1176 0.0941 0.2118 rg (Follow the shared routine and IEP.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 389.74 Td (What the child needs from both parents) Tj ET
+q BT 45.35 160.28 Td 0.1176 0.0941 0.2118 rg (Aligned understanding between parents reduces mixed messages to the child and to the professionals involved.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 144.27 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 374.57 Td 0.1176 0.0941 0.2118 rg (Keep the child out of adult disagreements.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 357.99 Td (Which issue should be addressed first) Tj ET
+q BT 45.35 129.38 Td 0.1176 0.0941 0.2118 rg (Schedule a short recurring check-in \(email or app\) where each parent confirms they have the same information.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 113.37 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 45.35 342.83 Td 0.1176 0.0941 0.2118 rg (A shared medication + school communication process.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 326.24 Td (Professional information still needed) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 311.08 Td 0.1176 0.0941 0.2118 rg (Updated therapy summary from OT.) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 294.50 Td (30-day agreement worth trying) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 279.33 Td 0.1176 0.0941 0.2118 rg (Try a shared parenting app for 30 days.) Tj ET Q
-BT /F1 13.00 Tf ET
-BT 45.35 259.72 Td (15. Recommended Child-Focused Action Plan) Tj ET
-BT /F1 10.00 Tf ET
-BT 45.35 241.49 Td (Priority 1) Tj ET
-BT /F2 10.00 Tf ET
-q BT 572.31 226.61 Td 0.1176 0.0941 0.2118 rg (Action: Request a joint parent-teacher meeting.) Tj ET Q
-q BT 1099.28 212.43 Td 0.1176 0.0941 0.2118 rg (Responsible: Reporting parent, with input from other parent as appropriate) Tj ET Q
-q BT 1626.24 198.26 Td 0.1176 0.0941 0.2118 rg (Professional support: Teacher, school counsellor, or IEP/504 case manager) Tj ET Q
-q BT 2153.20 184.09 Td 0.1176 0.0941 0.2118 rg (Target: Within 30 days) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 166.37 Td (Priority 2) Tj ET
-BT /F2 10.00 Tf ET
-q BT 572.31 151.49 Td 0.1176 0.0941 0.2118 rg (Action: Post a visible daily rhythm in both homes.) Tj ET Q
-q BT 1099.28 137.31 Td 0.1176 0.0941 0.2118 rg (Responsible: Reporting parent, with input from other parent as appropriate) Tj ET Q
-q BT 1626.24 123.14 Td 0.1176 0.0941 0.2118 rg (Professional support: Occupational therapist or family therapist) Tj ET Q
-q BT 2153.20 108.97 Td 0.1176 0.0941 0.2118 rg (Target: Within 30 days) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 91.25 Td (Priority 3) Tj ET
-BT /F2 10.00 Tf ET
-q BT 572.31 76.37 Td 0.1176 0.0941 0.2118 rg (Action: Move exchanges to a neutral or school-based location.) Tj ET Q
-q BT 1099.28 62.20 Td 0.1176 0.0941 0.2118 rg (Responsible: Reporting parent, with input from other parent as appropriate) Tj ET Q
+q BT 45.35 98.48 Td 0.1176 0.0941 0.2118 rg (Agree on one shared source of truth for this concern - e.g., a shared folder with the latest reports and instructions.) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 8 of ) Tj (10) Tj ET Q
+q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 8 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
@@ -875,18 +686,17 @@ endobj
 <<
 /Contents 20 0 R
 /Parent 1 0 R
-/Resources 35 0 R
+/Resources 45 0 R
 /Type /Page
 >>
 endobj
 20 0 obj
 <<
-/Length 5607
+/Length 5221
 >>
 stream
 2 J
 0.57 w
-0.2392 0.102 0.4706 rg
 0.9608 0.9412 0.9098 rg
 0.00 792.00 612.00 -62.36 re f
 q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
@@ -899,66 +709,83 @@ q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 42.52 726.80 m 569.48 726.80 l S
 0.57 w
 0 G
-0.2392 0.102 0.4706 rg
-BT /F2 10.00 Tf ET
-q BT 1626.24 702.54 Td 0.1176 0.0941 0.2118 rg (Professional support: Family therapist or Parenting Facilitator) Tj ET Q
-q BT 2153.20 688.37 Td 0.1176 0.0941 0.2118 rg (Target: Within 30 days) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 670.65 Td (Priority 4) Tj ET
-BT /F2 10.00 Tf ET
-q BT 572.31 655.77 Td 0.1176 0.0941 0.2118 rg (Action: Establish a written provider contact + appointment sharing procedure.) Tj ET Q
-q BT 1099.28 641.60 Td 0.1176 0.0941 0.2118 rg (Responsible: Reporting parent, with input from other parent as appropriate) Tj ET Q
-q BT 1626.24 627.43 Td 0.1176 0.0941 0.2118 rg (Professional support: Pediatrician or treating specialist) Tj ET Q
-q BT 2153.20 613.25 Td 0.1176 0.0941 0.2118 rg (Target: Within 30 days) Tj ET Q
-BT /F1 10.00 Tf ET
-BT 45.35 592.70 Td (Recommended 30-day steps) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 577.54 Td 0.1176 0.0941 0.2118 rg (  -  Draft a shared provider contact list this week.) Tj ET Q
-q BT 45.35 562.80 Td 0.1176 0.0941 0.2118 rg (  -  Contact the teacher to schedule a joint meeting.) Tj ET Q
-q BT 45.35 548.06 Td 0.1176 0.0941 0.2118 rg (  -  Propose a neutral exchange location to the other parent.) Tj ET Q
-q BT 45.35 533.31 Td 0.1176 0.0941 0.2118 rg (  -  Print a rhythm sheet by Friday.) Tj ET Q
+0 g
 BT /F1 13.00 Tf ET
-BT 45.35 513.71 Td (16. Questions for the Other Parent or a Professional) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 495.90 Td 0.1176 0.0941 0.2118 rg (  -  What medication schedule has the provider recommended?) Tj ET Q
-q BT 45.35 481.16 Td 0.1176 0.0941 0.2118 rg (  -  Which routines are essential in both homes?) Tj ET Q
-q BT 45.35 466.42 Td 0.1176 0.0941 0.2118 rg (  -  How will each parent receive school notices?) Tj ET Q
-q BT 45.35 451.68 Td 0.1176 0.0941 0.2118 rg (  -  What items must accompany the child during exchanges?) Tj ET Q
-q BT 45.35 436.94 Td 0.1176 0.0941 0.2118 rg (  -  Who will schedule and attend appointments?) Tj ET Q
-q BT 45.35 422.20 Td 0.1176 0.0941 0.2118 rg (  -  How will appointment summaries be shared?) Tj ET Q
-q BT 45.35 407.46 Td 0.1176 0.0941 0.2118 rg (  -  What should happen when the parents disagree about treatment?) Tj ET Q
-q BT 45.35 392.72 Td 0.1176 0.0941 0.2118 rg (  -  Which professional is best qualified to answer the disputed question?) Tj ET Q
-q BT 45.35 377.98 Td 0.1176 0.0941 0.2118 rg (  -  How could we align on: 'Both parents can access appropriate medical records.') Tj ET Q
-q BT 45.35 363.24 Td 0.1176 0.0941 0.2118 rg (  -  How could we align on: 'Medication changes and side effects are promptly shared.') Tj ET Q
-q BT 45.35 348.50 Td 0.1176 0.0941 0.2118 rg (  -  How could we align on: 'The parents have a workable process for resolving disagreements about treatment.') Tj ET Q
-q BT 45.35 333.76 Td 0.1176 0.0941 0.2118 rg (  -  How could we align on: 'Homework and reading expectations are reasonably consistent between homes.') Tj ET Q
-q BT 45.35 319.02 Td 0.1176 0.0941 0.2118 rg 1.065 Tw (  -  How could we align on: 'School supplies, technology, medication, and assistive devices travel reliably between) Tj ET Q
-q BT 45.35 304.28 Td 0.1176 0.0941 0.2118 rg (homes.') Tj ET Q
-q BT 45.35 289.54 Td 0.1176 0.0941 0.2118 rg (  -  How could we align on: 'Teachers receive consistent and accurate information from the parents.') Tj ET Q
-q BT 45.35 274.80 Td 0.1176 0.0941 0.2118 rg 1.044 Tw (  -  How could we align on: 'Educational disagreements are handled without placing the child or school staff in the) Tj ET Q
-q BT 45.35 260.06 Td 0.1176 0.0941 0.2118 rg (middle.') Tj ET Q
-q BT 45.35 245.31 Td 0.1176 0.0941 0.2118 rg 0.835 Tw (  -  How could we align on: 'Necessary medication, schoolwork, clothing, comfort items, and equipment accompany) Tj ET Q
-q BT 45.35 230.57 Td 0.1176 0.0941 0.2118 rg (the child.') Tj ET Q
-BT /F1 13.00 Tf ET
-BT 45.35 210.97 Td (17. Closing Summary) Tj ET
-BT /F2 10.00 Tf ET
-q BT 45.35 193.16 Td 0.1176 0.0941 0.2118 rg 1.801 Tw (Based on this parent's responses, the child's primary strengths include Curious, and the child's principal support) Tj ET Q
-q BT 45.35 178.42 Td 0.1176 0.0941 0.2118 rg 2.391 Tw (needs involve ADHD or executive functioning, Anxiety or emotional regulation, Sensory processing. The parent) Tj ET Q
-q BT 45.35 163.68 Td 0.1176 0.0941 0.2118 rg 1.316 Tw (reports established strengths in - and identifies a need for greater coordination in Medical and Mental Healthcare,) Tj ET Q
-q BT 45.35 148.94 Td 0.1176 0.0941 0.2118 rg 1.495 Tw (Kindergarten and Elementary School, Transitions, Pickup, and Drop-Off, Daily Routines Across Homes. The most) Tj ET Q
-q BT 45.35 134.20 Td 0.1176 0.0941 0.2118 rg (immediate child-focused priorities are -.) Tj ET Q
+q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (Step 5. Coordination Between Homes) Tj ET Q
 BT /F1 10.00 Tf ET
-BT 45.35 114.78 Td (Parent reflection) Tj ET
+q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Medical Needs) Tj ET Q
 BT /F1 9.50 Tf ET
-BT 572.31 100.05 Td (One thing I can do now:) Tj ET
-BT /F2 10.00 Tf ET
-q BT 1099.28 85.72 Td 0.1176 0.0941 0.2118 rg (-) Tj ET Q
+q BT 45.35 665.56 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 650.82 Td 0.1176 0.0941 0.2118 rg (  score: 3.0) Tj ET Q
+q BT 45.35 636.08 Td 0.1176 0.0941 0.2118 rg (  classification: Coordination opportunity) Tj ET Q
 BT /F1 9.50 Tf ET
-BT 45.35 70.28 Td (One issue that requires cooperation:) Tj ET
+q BT 45.35 619.92 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 572.31 55.96 Td 0.1176 0.0941 0.2118 rg (-) Tj ET Q
+q BT 45.35 605.03 Td 0.1176 0.0941 0.2118 rg (On how consistently the plan is executed across both homes, the composite is 3.0 of 5 \(coordination opportunity\).) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 589.02 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 574.13 Td 0.1176 0.0941 0.2118 rg 2.116 Tw (Consistent routines across homes are the single biggest predictor of a child feeling settled while adults resolve) Tj ET Q
+q BT 45.35 559.39 Td 0.1176 0.0941 0.2118 rg (differences.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 543.39 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 528.50 Td 0.1176 0.0941 0.2118 rg (Focus first on the smallest routine that is easy to align in both homes \(bedtime, morning routine, medication timing\).) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 512.49 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 497.60 Td 0.1176 0.0941 0.2118 rg (Pick one routine to align this week; agree on the exact time, the exact steps, and how to signal when it slips.) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 481.02 Td 0.2392 0.102 0.4706 rg (Educational Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 466.00 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 451.26 Td 0.1176 0.0941 0.2118 rg (  score: 2.8) Tj ET Q
+q BT 45.35 436.52 Td 0.1176 0.0941 0.2118 rg (  classification: Coordination opportunity) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 420.36 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 405.47 Td 0.1176 0.0941 0.2118 rg (On how consistently the plan is executed across both homes, the composite is 2.8 of 5 \(coordination opportunity\).) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 389.46 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 374.57 Td 0.1176 0.0941 0.2118 rg 2.116 Tw (Consistent routines across homes are the single biggest predictor of a child feeling settled while adults resolve) Tj ET Q
+q BT 45.35 359.83 Td 0.1176 0.0941 0.2118 rg (differences.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 343.83 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 328.94 Td 0.1176 0.0941 0.2118 rg (Focus first on the smallest routine that is easy to align in both homes \(bedtime, morning routine, medication timing\).) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 312.93 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 298.04 Td 0.1176 0.0941 0.2118 rg (Pick one routine to align this week; agree on the exact time, the exact steps, and how to signal when it slips.) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 281.46 Td 0.2392 0.102 0.4706 rg (Psychological or Behavioural Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 266.44 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 251.70 Td 0.1176 0.0941 0.2118 rg (  score: 2.8) Tj ET Q
+q BT 45.35 236.96 Td 0.1176 0.0941 0.2118 rg (  classification: Coordination opportunity) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 220.80 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 205.91 Td 0.1176 0.0941 0.2118 rg (On how consistently the plan is executed across both homes, the composite is 2.8 of 5 \(coordination opportunity\).) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 189.91 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 175.02 Td 0.1176 0.0941 0.2118 rg 2.116 Tw (Consistent routines across homes are the single biggest predictor of a child feeling settled while adults resolve) Tj ET Q
+q BT 45.35 160.28 Td 0.1176 0.0941 0.2118 rg (differences.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 144.27 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 129.38 Td 0.1176 0.0941 0.2118 rg (Focus first on the smallest routine that is easy to align in both homes \(bedtime, morning routine, medication timing\).) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 113.37 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 98.48 Td 0.1176 0.0941 0.2118 rg (Pick one routine to align this week; agree on the exact time, the exact steps, and how to signal when it slips.) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 9 of ) Tj (10) Tj ET Q
+q BT 232.18 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 9 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
@@ -966,18 +793,17 @@ endobj
 <<
 /Contents 22 0 R
 /Parent 1 0 R
-/Resources 36 0 R
+/Resources 46 0 R
 /Type /Page
 >>
 endobj
 22 0 obj
 <<
-/Length 1259
+/Length 5309
 >>
 stream
 2 J
 0.57 w
-0.2392 0.102 0.4706 rg
 0.9608 0.9412 0.9098 rg
 0.00 792.00 612.00 -62.36 re f
 q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
@@ -990,21 +816,429 @@ q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 42.52 726.80 m 569.48 726.80 l S
 0.57 w
 0 G
-0.2392 0.102 0.4706 rg
+0 g
+BT /F1 13.00 Tf ET
+q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (Step 6. Agreement and Disagreement) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Medical Needs) Tj ET Q
 BT /F1 9.50 Tf ET
-BT 45.35 702.69 Td (One question that requires professional guidance:) Tj ET
+q BT 45.35 665.56 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 650.82 Td 0.1176 0.0941 0.2118 rg (  agree: Medication matters and needs to be given daily.) Tj ET Q
+q BT 45.35 636.08 Td 0.1176 0.0941 0.2118 rg (  disagree: Weekend timing and whether to skip on holidays.) Tj ET Q
+q BT 45.35 621.34 Td 0.1176 0.0941 0.2118 rg (  gap type: Different priorities) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 605.18 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
 BT /F2 10.00 Tf ET
-q BT 572.31 688.37 Td 0.1176 0.0941 0.2118 rg (-) Tj ET Q
-BT /F3 8.50 Tf ET
-q BT 45.35 668.27 Td 0.4314 0.3922 0.5098 rg 1.377 Tw (This Individual Parent Report is an educational reflection tool from SA CoParents. It does not diagnose the child, determine parental) Tj ET Q
-q BT 45.35 655.51 Td 0.4314 0.3922 0.5098 rg 1.668 Tw (fitness, establish that either parent's account is correct, or replace professional or legal advice. Scores reflect the reporting parent's) Tj ET Q
-q BT 45.35 642.76 Td 0.4314 0.3922 0.5098 rg (answers and are not findings of fact.) Tj ET Q
+q BT 45.35 590.29 Td 0.1176 0.0941 0.2118 rg 1.699 Tw (The parent named specific areas of agreement and disagreement. The gap that best explains the disagreement:) Tj ET Q
+q BT 45.35 575.55 Td 0.1176 0.0941 0.2118 rg (different priorities.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 559.54 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 544.65 Td 0.1176 0.0941 0.2118 rg 1.245 Tw (Naming the type of gap moves the conversation from "you're wrong" to "we have different information / priorities /) Tj ET Q
+q BT 45.35 529.91 Td 0.1176 0.0941 0.2118 rg (styles".) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 513.91 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 499.02 Td 0.1176 0.0941 0.2118 rg 1.026 Tw (When you next raise this with your co-parent, lead with the areas of agreement - it is the honest, low-heat starting) Tj ET Q
+q BT 45.35 484.28 Td 0.1176 0.0941 0.2118 rg (point.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 468.27 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 453.38 Td 0.1176 0.0941 0.2118 rg (In the next conversation, state one thing you agree on before raising the disagreement.) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 436.80 Td 0.2392 0.102 0.4706 rg (Educational Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 421.78 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 407.04 Td 0.1176 0.0941 0.2118 rg (  agree: Our child benefits from the IEP.) Tj ET Q
+q BT 45.35 392.30 Td 0.1176 0.0941 0.2118 rg (  disagree: Homework routine.) Tj ET Q
+q BT 45.35 377.56 Td 0.1176 0.0941 0.2118 rg (  gap type: Different information) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 361.40 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 346.51 Td 0.1176 0.0941 0.2118 rg 1.699 Tw (The parent named specific areas of agreement and disagreement. The gap that best explains the disagreement:) Tj ET Q
+q BT 45.35 331.77 Td 0.1176 0.0941 0.2118 rg (different information.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 315.76 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 300.87 Td 0.1176 0.0941 0.2118 rg 1.245 Tw (Naming the type of gap moves the conversation from "you're wrong" to "we have different information / priorities /) Tj ET Q
+q BT 45.35 286.13 Td 0.1176 0.0941 0.2118 rg (styles".) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 270.13 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 255.24 Td 0.1176 0.0941 0.2118 rg 1.026 Tw (When you next raise this with your co-parent, lead with the areas of agreement - it is the honest, low-heat starting) Tj ET Q
+q BT 45.35 240.50 Td 0.1176 0.0941 0.2118 rg (point.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 224.49 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 209.60 Td 0.1176 0.0941 0.2118 rg (In the next conversation, state one thing you agree on before raising the disagreement.) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 193.02 Td 0.2392 0.102 0.4706 rg (Psychological or Behavioural Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 178.00 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 163.26 Td 0.1176 0.0941 0.2118 rg (  agree: Therapy is helping.) Tj ET Q
+q BT 45.35 148.52 Td 0.1176 0.0941 0.2118 rg (  disagree: Screen-time rules and how to react to meltdowns.) Tj ET Q
+q BT 45.35 133.78 Td 0.1176 0.0941 0.2118 rg (  gap type: Different parenting styles) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 117.62 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 102.73 Td 0.1176 0.0941 0.2118 rg 1.699 Tw (The parent named specific areas of agreement and disagreement. The gap that best explains the disagreement:) Tj ET Q
+q BT 45.35 87.99 Td 0.1176 0.0941 0.2118 rg (different parenting styles.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 71.98 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 57.09 Td 0.1176 0.0941 0.2118 rg 1.245 Tw (Naming the type of gap moves the conversation from "you're wrong" to "we have different information / priorities /) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 229.95 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 10 of ) Tj (10) Tj ET Q
+q BT 229.95 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 10 of ) Tj (15) Tj ET Q
 
 endstream
 endobj
 23 0 obj
+<<
+/Contents 24 0 R
+/Parent 1 0 R
+/Resources 47 0 R
+/Type /Page
+>>
+endobj
+24 0 obj
+<<
+/Length 1206
+>>
+stream
+2 J
+0.57 w
+0.9608 0.9412 0.9098 rg
+0.00 792.00 612.00 -62.36 re f
+q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
+BT /F1 11.00 Tf ET
+q BT 87.87 767.44 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Special Needs Co-Parenting Report) Tj ET Q
+BT /F2 8.50 Tf ET
+q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
+0.8627 0.8392 0.9098 RG
+0.85 w
+42.52 726.80 m 569.48 726.80 l S
+0.57 w
+0 G
+0 g
+BT /F2 10.00 Tf ET
+q BT 45.35 702.26 Td 0.1176 0.0941 0.2118 rg (styles".) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 686.25 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 671.36 Td 0.1176 0.0941 0.2118 rg 1.026 Tw (When you next raise this with your co-parent, lead with the areas of agreement - it is the honest, low-heat starting) Tj ET Q
+q BT 45.35 656.62 Td 0.1176 0.0941 0.2118 rg (point.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 640.61 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 625.72 Td 0.1176 0.0941 0.2118 rg (In the next conversation, state one thing you agree on before raising the disagreement.) Tj ET Q
+BT /F3 8.00 Tf ET
+q BT 229.95 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 11 of ) Tj (15) Tj ET Q
+
+endstream
+endobj
+25 0 obj
+<<
+/Contents 26 0 R
+/Parent 1 0 R
+/Resources 48 0 R
+/Type /Page
+>>
+endobj
+26 0 obj
+<<
+/Length 5399
+>>
+stream
+2 J
+0.57 w
+0.9608 0.9412 0.9098 rg
+0.00 792.00 612.00 -62.36 re f
+q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
+BT /F1 11.00 Tf ET
+q BT 87.87 767.44 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Special Needs Co-Parenting Report) Tj ET Q
+BT /F2 8.50 Tf ET
+q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
+0.8627 0.8392 0.9098 RG
+0.85 w
+42.52 726.80 m 569.48 726.80 l S
+0.57 w
+0 G
+0 g
+BT /F1 13.00 Tf ET
+q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (Step 7. Practical Co-Parenting Options) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Medical Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 665.56 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 650.82 Td 0.1176 0.0941 0.2118 rg 0.058 Tw (  selected options: Shared medication log \(paper or app\), Both parents added to the patient portal, Pillbox or dispenser used) Tj ET Q
+q BT 45.35 636.08 Td 0.1176 0.0941 0.2118 rg (consistently in both homes) Tj ET Q
+q BT 45.35 621.34 Td 0.1176 0.0941 0.2118 rg (  other option: ) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 605.18 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 590.29 Td 0.1176 0.0941 0.2118 rg (The parent is open to trying 3 practical co-parenting options for this concern.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 574.28 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 559.39 Td 0.1176 0.0941 0.2118 rg (A short list of practical, agreed options is more useful to the child than a long list of ideas nobody has committed to.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 543.39 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 528.50 Td 0.1176 0.0941 0.2118 rg 0.497 Tw (Ask your co-parent to select the same options \(or add their own\) and see where the overlap sits before you propose) Tj ET Q
+q BT 45.35 513.76 Td 0.1176 0.0941 0.2118 rg (any of them.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 497.75 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 482.86 Td 0.1176 0.0941 0.2118 rg (Pick the two options you would try first and note the exact start date in your shared calendar.) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 466.28 Td 0.2392 0.102 0.4706 rg (Educational Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 451.26 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 436.52 Td 0.1176 0.0941 0.2118 rg 0.506 Tw (  selected options: Duplicate report cards and school communications sent to each parent, Both parents attend IEP or 504) Tj ET Q
+q BT 45.35 421.78 Td 0.1176 0.0941 0.2118 rg (meetings) Tj ET Q
+q BT 45.35 407.04 Td 0.1176 0.0941 0.2118 rg (  other option: ) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 390.88 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 375.99 Td 0.1176 0.0941 0.2118 rg (The parent is open to trying 2 practical co-parenting options for this concern.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 359.98 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 345.09 Td 0.1176 0.0941 0.2118 rg (A short list of practical, agreed options is more useful to the child than a long list of ideas nobody has committed to.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 329.09 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 314.20 Td 0.1176 0.0941 0.2118 rg 0.497 Tw (Ask your co-parent to select the same options \(or add their own\) and see where the overlap sits before you propose) Tj ET Q
+q BT 45.35 299.46 Td 0.1176 0.0941 0.2118 rg (any of them.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 283.45 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 268.56 Td 0.1176 0.0941 0.2118 rg (Pick the two options you would try first and note the exact start date in your shared calendar.) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 251.98 Td 0.2392 0.102 0.4706 rg (Psychological or Behavioural Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 236.96 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 222.22 Td 0.1176 0.0941 0.2118 rg 0.243 Tw (  selected options: Consistent bedtime and morning routines in both homes, Shared coping-skills toolkit that travels with the) Tj ET Q
+q BT 45.35 207.48 Td 0.1176 0.0941 0.2118 rg (child) Tj ET Q
+q BT 45.35 192.74 Td 0.1176 0.0941 0.2118 rg (  other option: ) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 176.58 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 161.69 Td 0.1176 0.0941 0.2118 rg (The parent is open to trying 2 practical co-parenting options for this concern.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 145.69 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 130.80 Td 0.1176 0.0941 0.2118 rg (A short list of practical, agreed options is more useful to the child than a long list of ideas nobody has committed to.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 114.79 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 99.90 Td 0.1176 0.0941 0.2118 rg 0.497 Tw (Ask your co-parent to select the same options \(or add their own\) and see where the overlap sits before you propose) Tj ET Q
+q BT 45.35 85.16 Td 0.1176 0.0941 0.2118 rg (any of them.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 69.15 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F3 8.00 Tf ET
+q BT 229.95 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 12 of ) Tj (15) Tj ET Q
+
+endstream
+endobj
+27 0 obj
+<<
+/Contents 28 0 R
+/Parent 1 0 R
+/Resources 49 0 R
+/Type /Page
+>>
+endobj
+28 0 obj
+<<
+/Length 703
+>>
+stream
+2 J
+0.57 w
+0.9608 0.9412 0.9098 rg
+0.00 792.00 612.00 -62.36 re f
+q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
+BT /F1 11.00 Tf ET
+q BT 87.87 767.44 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Special Needs Co-Parenting Report) Tj ET Q
+BT /F2 8.50 Tf ET
+q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
+0.8627 0.8392 0.9098 RG
+0.85 w
+42.52 726.80 m 569.48 726.80 l S
+0.57 w
+0 G
+0 g
+BT /F2 10.00 Tf ET
+q BT 45.35 702.26 Td 0.1176 0.0941 0.2118 rg (Pick the two options you would try first and note the exact start date in your shared calendar.) Tj ET Q
+BT /F3 8.00 Tf ET
+q BT 229.95 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 13 of ) Tj (15) Tj ET Q
+
+endstream
+endobj
+29 0 obj
+<<
+/Contents 30 0 R
+/Parent 1 0 R
+/Resources 50 0 R
+/Type /Page
+>>
+endobj
+30 0 obj
+<<
+/Length 5445
+>>
+stream
+2 J
+0.57 w
+0.9608 0.9412 0.9098 rg
+0.00 792.00 612.00 -62.36 re f
+q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
+BT /F1 11.00 Tf ET
+q BT 87.87 767.44 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Special Needs Co-Parenting Report) Tj ET Q
+BT /F2 8.50 Tf ET
+q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
+0.8627 0.8392 0.9098 RG
+0.85 w
+42.52 726.80 m 569.48 726.80 l S
+0.57 w
+0 G
+0 g
+BT /F1 13.00 Tf ET
+q BT 45.35 698.81 Td 0.2392 0.102 0.4706 rg (Step 8. Create an Action Plan) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 680.57 Td 0.2392 0.102 0.4706 rg (Medical Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 665.56 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 650.82 Td 0.1176 0.0941 0.2118 rg (  top priority: Give the medication at the same time every day, weekends included.) Tj ET Q
+q BT 45.35 636.08 Td 0.1176 0.0941 0.2118 rg (  next meeting: Within 2 weeks) Tj ET Q
+q BT 45.35 621.34 Td 0.1176 0.0941 0.2118 rg (  professional next: Paediatrician - confirm target timing.) Tj ET Q
+q BT 45.35 606.60 Td 0.1176 0.0941 0.2118 rg (  concerns about plan: Sunday-to-Monday transitions can slip.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 590.44 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 575.55 Td 0.1176 0.0941 0.2118 rg 1.861 Tw (The parent identified a single 30-day priority and a proposed timeline \(within 2 weeks\) for the next co-parenting) Tj ET Q
+q BT 45.35 560.81 Td 0.1176 0.0941 0.2118 rg (conversation.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 544.80 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 529.91 Td 0.1176 0.0941 0.2118 rg (A visible, dated plan gives the child \(and the professionals supporting the child\) a shared target to move toward.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 513.91 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 499.02 Td 0.1176 0.0941 0.2118 rg 0.103 Tw (Send the plan as a short written proposal rather than asking for a live discussion - it lowers the temperature and gives) Tj ET Q
+q BT 45.35 484.28 Td 0.1176 0.0941 0.2118 rg (both parents time to think.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 468.27 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 453.38 Td 0.1176 0.0941 0.2118 rg 0.817 Tw (Draft a two-paragraph proposal now: the 30-day priority, the practical option you will try first, and when you want to) Tj ET Q
+q BT 45.35 438.64 Td 0.1176 0.0941 0.2118 rg (review it.) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 422.06 Td 0.2392 0.102 0.4706 rg (Educational Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 407.04 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 392.30 Td 0.1176 0.0941 0.2118 rg (  top priority: Get both parents on the school email list.) Tj ET Q
+q BT 45.35 377.56 Td 0.1176 0.0941 0.2118 rg (  next meeting: This week) Tj ET Q
+q BT 45.35 362.82 Td 0.1176 0.0941 0.2118 rg (  professional next: IEP team - confirm both parents get notes.) Tj ET Q
+q BT 45.35 348.08 Td 0.1176 0.0941 0.2118 rg (  concerns about plan: ) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 331.92 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 317.03 Td 0.1176 0.0941 0.2118 rg 3.436 Tw (The parent identified a single 30-day priority and a proposed timeline \(this week\) for the next co-parenting) Tj ET Q
+q BT 45.35 302.29 Td 0.1176 0.0941 0.2118 rg (conversation.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 286.28 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 271.39 Td 0.1176 0.0941 0.2118 rg (A visible, dated plan gives the child \(and the professionals supporting the child\) a shared target to move toward.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 255.39 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 240.50 Td 0.1176 0.0941 0.2118 rg 0.103 Tw (Send the plan as a short written proposal rather than asking for a live discussion - it lowers the temperature and gives) Tj ET Q
+q BT 45.35 225.76 Td 0.1176 0.0941 0.2118 rg (both parents time to think.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 209.75 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 194.86 Td 0.1176 0.0941 0.2118 rg 0.817 Tw (Draft a two-paragraph proposal now: the 30-day priority, the practical option you will try first, and when you want to) Tj ET Q
+q BT 45.35 180.12 Td 0.1176 0.0941 0.2118 rg (review it.) Tj ET Q
+BT /F1 10.00 Tf ET
+q BT 45.35 163.54 Td 0.2392 0.102 0.4706 rg (Psychological or Behavioural Needs) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 148.52 Td 0.2392 0.102 0.4706 rg (Response) Tj ET Q
+BT /F2 9.50 Tf ET
+q BT 45.35 133.78 Td 0.1176 0.0941 0.2118 rg (  top priority: Agree on the same three coping tools in both homes.) Tj ET Q
+q BT 45.35 119.04 Td 0.1176 0.0941 0.2118 rg (  next meeting: Within 2 weeks) Tj ET Q
+q BT 45.35 104.30 Td 0.1176 0.0941 0.2118 rg (  professional next: Therapist - ask for a shared coping-skills handout.) Tj ET Q
+q BT 45.35 89.56 Td 0.1176 0.0941 0.2118 rg (  concerns about plan: ) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 73.40 Td 0.2392 0.102 0.4706 rg (Finding) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 58.51 Td 0.1176 0.0941 0.2118 rg 1.861 Tw (The parent identified a single 30-day priority and a proposed timeline \(within 2 weeks\) for the next co-parenting) Tj ET Q
+BT /F3 8.00 Tf ET
+q BT 229.95 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 14 of ) Tj (15) Tj ET Q
+
+endstream
+endobj
+31 0 obj
+<<
+/Contents 32 0 R
+/Parent 1 0 R
+/Resources 51 0 R
+/Type /Page
+>>
+endobj
+32 0 obj
+<<
+/Length 2007
+>>
+stream
+2 J
+0.57 w
+0.9608 0.9412 0.9098 rg
+0.00 792.00 612.00 -62.36 re f
+q 39.69 0 0 39.69 34.02 740.98 cm /I1 Do Q
+BT /F1 11.00 Tf ET
+q BT 87.87 767.44 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Special Needs Co-Parenting Report) Tj ET Q
+BT /F2 8.50 Tf ET
+q BT 87.87 755.43 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
+0.8627 0.8392 0.9098 RG
+0.85 w
+42.52 726.80 m 569.48 726.80 l S
+0.57 w
+0 G
+0 g
+BT /F2 10.00 Tf ET
+q BT 45.35 702.26 Td 0.1176 0.0941 0.2118 rg (conversation.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 686.25 Td 0.2392 0.102 0.4706 rg (Child impact) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 671.36 Td 0.1176 0.0941 0.2118 rg (A visible, dated plan gives the child \(and the professionals supporting the child\) a shared target to move toward.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 655.35 Td 0.2392 0.102 0.4706 rg (Suggested) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 640.46 Td 0.1176 0.0941 0.2118 rg 0.103 Tw (Send the plan as a short written proposal rather than asking for a live discussion - it lowers the temperature and gives) Tj ET Q
+q BT 45.35 625.72 Td 0.1176 0.0941 0.2118 rg (both parents time to think.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 45.35 609.72 Td 0.2392 0.102 0.4706 rg (Action step) Tj ET Q
+BT /F2 10.00 Tf ET
+q BT 45.35 594.83 Td 0.1176 0.0941 0.2118 rg 0.817 Tw (Draft a two-paragraph proposal now: the 30-day priority, the practical option you will try first, and when you want to) Tj ET Q
+q BT 45.35 580.09 Td 0.1176 0.0941 0.2118 rg (review it.) Tj ET Q
+BT /F3 8.50 Tf ET
+q BT 45.35 559.70 Td 0.4314 0.3922 0.5098 rg 0.099 Tw (This report reflects one parent's own answers to the SA CoParents Special Needs Co-Parenting Assessment. It is an educational planning) Tj ET Q
+q BT 45.35 546.95 Td 0.4314 0.3922 0.5098 rg (tool - not a diagnosis of the child, not a finding of fact, not a measure of parental fitness, and not legal advice.) Tj ET Q
+BT /F3 8.00 Tf ET
+q BT 229.95 31.62 Td 0.5216 0.4941 0.6118 rg (Individual Parent Report  ·  Page 15 of ) Tj (15) Tj ET Q
+
+endstream
+endobj
+33 0 obj
 <<
 /BitsPerComponent 8
 /ColorSpace /DeviceRGB
@@ -4899,7 +5133,7 @@ r“nm åzÊµ?ôÔ3ïC#3>Ô©@ž©íÏ`ìx¦´ÿ¡„~×$‡þC¿KšÚaT:þÐ"7g^¶åÂÃJ>¬’·S¢oJ.%ÈqO1
 ÔÌ&RcI;a[±N-²½ùEš&¾/ßÿÂ`ÆÄœAç	sö$ñAXb ôR	b|  aö‡ðëØÂ«ÿŽ†qù
 endstream
 endobj
-24 0 obj
+34 0 obj
 <<
 /BaseFont /Helvetica-Bold
 /Encoding /WinAnsiEncoding
@@ -4907,7 +5141,7 @@ endobj
 /Type /Font
 >>
 endobj
-25 0 obj
+35 0 obj
 <<
 /BaseFont /Helvetica
 /Encoding /WinAnsiEncoding
@@ -4915,7 +5149,7 @@ endobj
 /Type /Font
 >>
 endobj
-26 0 obj
+36 0 obj
 <<
 /BaseFont /Helvetica-Oblique
 /Encoding /WinAnsiEncoding
@@ -4923,148 +5157,208 @@ endobj
 /Type /Font
 >>
 endobj
-27 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
-28 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
-29 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
-30 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
-31 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
-32 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
-33 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
-34 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
-35 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
-36 0 obj
-<<
-/Font <</F1 24 0 R
-/F2 25 0 R
-/F3 26 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 23 0 R>>
->>
-endobj
 37 0 obj
 <<
-/CreationDate (D:20260730033905Z)
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+38 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+39 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+40 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+41 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+42 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+43 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+44 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+45 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+46 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+47 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+48 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+49 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+50 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+51 0 obj
+<<
+/Font <</F1 34 0 R
+/F2 35 0 R
+/F3 36 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 33 0 R>>
+>>
+endobj
+52 0 obj
+<<
+/CreationDate (D:20260730174303Z)
 >>
 endobj
 xref
-0 38
+0 53
 0000000000 65535 f 
 0000000015 00000 n 
-0000000163 00000 n 
-0000000266 00000 n 
-0000000347 00000 n 
-0000002990 00000 n 
-0000003071 00000 n 
-0000007835 00000 n 
-0000007916 00000 n 
-0000012927 00000 n 
-0000013009 00000 n 
-0000017928 00000 n 
-0000018011 00000 n 
-0000022905 00000 n 
-0000022988 00000 n 
-0000027794 00000 n 
-0000027877 00000 n 
-0000032308 00000 n 
-0000032391 00000 n 
-0000036906 00000 n 
-0000036989 00000 n 
-0000042649 00000 n 
-0000042732 00000 n 
-0000044044 00000 n 
-0001031918 00000 n 
-0001032021 00000 n 
-0001032119 00000 n 
-0001032225 00000 n 
-0001032360 00000 n 
-0001032495 00000 n 
-0001032630 00000 n 
-0001032765 00000 n 
-0001032900 00000 n 
-0001033035 00000 n 
-0001033170 00000 n 
-0001033305 00000 n 
-0001033440 00000 n 
-0001033575 00000 n 
+0000000198 00000 n 
+0000000301 00000 n 
+0000000382 00000 n 
+0000003104 00000 n 
+0000003185 00000 n 
+0000007052 00000 n 
+0000007133 00000 n 
+0000012654 00000 n 
+0000012736 00000 n 
+0000013845 00000 n 
+0000013928 00000 n 
+0000019172 00000 n 
+0000019255 00000 n 
+0000024622 00000 n 
+0000024705 00000 n 
+0000026077 00000 n 
+0000026160 00000 n 
+0000031497 00000 n 
+0000031580 00000 n 
+0000036854 00000 n 
+0000036937 00000 n 
+0000042299 00000 n 
+0000042382 00000 n 
+0000043641 00000 n 
+0000043724 00000 n 
+0000049176 00000 n 
+0000049259 00000 n 
+0000050014 00000 n 
+0000050097 00000 n 
+0000055595 00000 n 
+0000055678 00000 n 
+0000057738 00000 n 
+0001045612 00000 n 
+0001045715 00000 n 
+0001045813 00000 n 
+0001045919 00000 n 
+0001046054 00000 n 
+0001046189 00000 n 
+0001046324 00000 n 
+0001046459 00000 n 
+0001046594 00000 n 
+0001046729 00000 n 
+0001046864 00000 n 
+0001046999 00000 n 
+0001047134 00000 n 
+0001047269 00000 n 
+0001047404 00000 n 
+0001047539 00000 n 
+0001047674 00000 n 
+0001047809 00000 n 
+0001047944 00000 n 
 trailer
 <<
-/Size 38
+/Size 53
 /Root 2 0 R
-/Info 37 0 R
-/ID [<90F2242BCA9A6724C36422DB9C91FEF6><90F2242BCA9A6724C36422DB9C91FEF6>]
+/Info 52 0 R
+/ID [<8A79EFC7BFC27430624268B46AA8EDA6><8A79EFC7BFC27430624268B46AA8EDA6>]
 >>
 startxref
-1033631
+1048000
 %%EOF

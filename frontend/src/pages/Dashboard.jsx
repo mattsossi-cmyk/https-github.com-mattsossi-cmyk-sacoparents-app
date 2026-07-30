@@ -241,9 +241,9 @@ export default function Dashboard() {
     // On native mobile builds only — no-op on web.
     registerPushNotifications(api);
 
-    // Special Needs Co-Parenting — pull cached-report status for the dashboard card.
+    // Special Needs Co-Parenting v2 — pull cached-report status for the dashboard card.
     api
-      .get("/snc/report/status")
+      .get("/snc2/report/status")
       .then((r) => setSncStatus(r.data || null))
       .catch(() => { /* non-blocking */ });
   }, []);
@@ -670,10 +670,10 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Special Needs Co-Parenting */}
+        {/* Special Needs Co-Parenting (v2) */}
         <div className="mt-6">
           <Link
-            to={sncStatus?.has_report ? "/special-needs/report" : "/special-needs"}
+            to={sncStatus?.has_report ? "/special-needs-v2/report" : "/special-needs-v2"}
             data-testid="dashboard-snc-card"
             className="group flex items-center gap-4 rounded-3xl bg-gradient-to-br from-[#1A1330] to-[#3D1A78] text-white border border-[#3D1A78] hover:brightness-110 p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
           >
@@ -685,13 +685,14 @@ export default function Dashboard() {
                 Special Needs Co-Parenting · new
               </div>
               <div className="font-serif text-xl leading-tight mb-1">
-                Build a child-focused plan across both homes.
+                Organise the concern, understand the recommendations, build a plan.
               </div>
               <p className="text-xs sm:text-sm text-[#CFC1EA] leading-relaxed">
-                13-section assessment covering diagnosis, medical, school,
-                transitions, routines, safety and more. Generates an individual
-                parent report you can share with mediators, teachers, and
-                treating professionals.
+                Choose whether the concern is medical, educational,
+                psychological or behavioural, or a mix. The assessment walks
+                you through eight steps and produces a child-focused report you
+                can share with your co-parent, mediator, or treating
+                professionals.
               </p>
               {sncStatus?.has_report && (
                 <div

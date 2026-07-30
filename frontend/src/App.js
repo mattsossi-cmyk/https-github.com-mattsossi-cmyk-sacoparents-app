@@ -51,11 +51,8 @@ import MediatorBadge from "@/pages/MediatorBadge";
 import SafetyAssessment from "@/pages/SafetyAssessment";
 import ProblemSolvingWorksheet from "@/pages/ProblemSolvingWorksheet";
 import SharedCoParentingReport from "@/pages/SharedCoParentingReport";
-import SpecialNeedsCoParenting from "@/pages/SpecialNeedsCoParenting";
-import SpecialNeedsReport from "@/pages/SpecialNeedsReport";
-import SpecialNeedsInvite from "@/pages/SpecialNeedsInvite";
-import SpecialNeedsInviteAccept from "@/pages/SpecialNeedsInviteAccept";
-import SpecialNeedsComparison from "@/pages/SpecialNeedsComparison";
+import SpecialNeedsV2 from "@/pages/SpecialNeedsV2";
+import SpecialNeedsV2Report from "@/pages/SpecialNeedsV2Report";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -187,38 +184,18 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/special-needs"
+          path="/special-needs-v2"
           element={
             <ProtectedRoute>
-              <SpecialNeedsCoParenting />
+              <SpecialNeedsV2 />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/special-needs/report"
+          path="/special-needs-v2/report"
           element={
             <ProtectedRoute>
-              <SpecialNeedsReport />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/special-needs/invite"
-          element={
-            <ProtectedRoute>
-              <SpecialNeedsInvite />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/special-needs/invite/:token"
-          element={<SpecialNeedsInviteAccept />}
-        />
-        <Route
-          path="/special-needs/comparison/:inviteId"
-          element={
-            <ProtectedRoute>
-              <SpecialNeedsComparison />
+              <SpecialNeedsV2Report />
             </ProtectedRoute>
           }
         />

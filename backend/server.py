@@ -25,8 +25,7 @@ from legal_routes import router as legal_router  # noqa: E402
 from safety_assessment_routes import router as safety_assessment_router  # noqa: E402
 from gmail_routes import router as gmail_router  # noqa: E402
 from coparenting_routes import router as coparenting_router  # noqa: E402
-from snc_routes import router as snc_router  # noqa: E402
-from snc_invite_routes import router as snc_invite_router  # noqa: E402
+from snc2_routes import router as snc2_router  # noqa: E402
 from coach_routes import router as coach_router  # noqa: E402
 from next_steps_routes import router as next_steps_router  # noqa: E402
 from insights_routes import (  # noqa: E402
@@ -105,8 +104,7 @@ api_router.include_router(legal_router)
 api_router.include_router(safety_assessment_router)
 api_router.include_router(gmail_router)
 api_router.include_router(coparenting_router)
-api_router.include_router(snc_router)
-api_router.include_router(snc_invite_router)
+api_router.include_router(snc2_router)
 api_router.include_router(insights_router)
 api_router.include_router(coach_router)
 api_router.include_router(next_steps_router)
