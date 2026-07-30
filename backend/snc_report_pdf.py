@@ -16,10 +16,17 @@ building the report, and this renderer respects that.
 """
 from __future__ import annotations
 
+import os
 from io import BytesIO
 from typing import Any, Dict, Iterable, List
 
 from fpdf import FPDF
+
+
+# Shared SA CoParents branded logo used by all product PDFs.
+LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "sa_coparents_logo.png")
+ORG_NAME = "SA CoParents"
+ORG_TAGLINE = "Relational Mediation Prep"
 
 
 _CLASSIFICATION_COLOR = {
@@ -50,20 +57,34 @@ class _SNCReportPDF(FPDF):
     def __init__(self):
         super().__init__(format="Letter")
         self.set_auto_page_break(auto=True, margin=18)
-        self.set_margins(15, 18, 15)
+        self.set_margins(15, 30, 15)
         self.alias_nb_pages()
         # Disable stream compression so test assertions can search the raw
         # PDF bytes for content. Filesize impact is negligible for our tests.
         self.compress = False
 
     def header(self):
-        self.set_font("Helvetica", "B", 10)
+        # Sand band + logo, matching the shared SA CoParents PDF header.
+        self.set_fill_color(245, 240, 232)
+        self.rect(0, 0, self.w, 22, "F")
+        if os.path.exists(LOGO_PATH):
+            try:
+                self.image(LOGO_PATH, x=12, y=4, w=14, h=14)
+            except Exception:  # noqa: BLE001
+                pass
+        self.set_xy(30, 5)
+        self.set_font("Helvetica", "B", 11)
         self.set_text_color(61, 26, 120)
-        self.cell(0, 6, _safe("SA CoParents  ·  Special Needs Co-Parenting Report"), ln=1)
+        self.cell(0, 5, _safe(f"{ORG_NAME}  ·  Special Needs Co-Parenting Report"), ln=1)
+        self.set_x(30)
+        self.set_font("Helvetica", "", 8.5)
+        self.set_text_color(110, 100, 130)
+        self.cell(0, 4, _safe(ORG_TAGLINE), ln=1)
         self.set_draw_color(220, 214, 232)
         self.set_line_width(0.3)
-        self.line(15, self.get_y(), self.w - 15, self.get_y())
-        self.ln(4)
+        self.line(15, 23, self.w - 15, 23)
+        self.set_y(28)
+        self.set_text_color(30, 24, 54)
 
     def footer(self):
         self.set_y(-14)

@@ -51,6 +51,8 @@ import MediatorBadge from "@/pages/MediatorBadge";
 import SafetyAssessment from "@/pages/SafetyAssessment";
 import ProblemSolvingWorksheet from "@/pages/ProblemSolvingWorksheet";
 import SharedCoParentingReport from "@/pages/SharedCoParentingReport";
+import SpecialNeedsCoParenting from "@/pages/SpecialNeedsCoParenting";
+import SpecialNeedsReport from "@/pages/SpecialNeedsReport";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -178,6 +180,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <ChildGoals />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsCoParenting />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs/report"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsReport />
             </ProtectedRoute>
           }
         />

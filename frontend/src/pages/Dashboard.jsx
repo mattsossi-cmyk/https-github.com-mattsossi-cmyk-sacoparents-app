@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
-import { CheckCircle2, ChevronRight, ChevronDown, Shield } from "lucide-react";
+import { CheckCircle2, ChevronRight, ChevronDown, Shield, Sparkles, RefreshCcw } from "lucide-react";
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
 const REPORT_LABEL = {
@@ -191,6 +191,7 @@ export default function Dashboard() {
     hasSafetyAssessment: false,
     hasCertificate: false,
   });
+  const [sncStatus, setSncStatus] = useState(null);
 
   // First-time visitors: send them through the orientation walkthrough.
   useEffect(() => {
@@ -239,6 +240,12 @@ export default function Dashboard() {
 
     // On native mobile builds only — no-op on web.
     registerPushNotifications(api);
+
+    // Special Needs Co-Parenting — pull cached-report status for the dashboard card.
+    api
+      .get("/snc/report/status")
+      .then((r) => setSncStatus(r.data || null))
+      .catch(() => { /* non-blocking */ });
   }, []);
 
   const completed = prep.completed || {};
@@ -662,6 +669,52 @@ export default function Dashboard() {
             <InviteCoparentCard variant="dashboard" />
           </div>
         )}
+
+        {/* Special Needs Co-Parenting */}
+        <div className="mt-6">
+          <Link
+            to={sncStatus?.has_report ? "/special-needs/report" : "/special-needs"}
+            data-testid="dashboard-snc-card"
+            className="group flex items-center gap-4 rounded-3xl bg-gradient-to-br from-[#1A1330] to-[#3D1A78] text-white border border-[#3D1A78] hover:brightness-110 p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+          >
+            <div className="shrink-0 w-12 h-12 rounded-full bg-white/15 grid place-items-center text-white">
+              <Sparkles size={22} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#CFC1EA] mb-0.5">
+                Special Needs Co-Parenting · new
+              </div>
+              <div className="font-serif text-xl leading-tight mb-1">
+                Build a child-focused plan across both homes.
+              </div>
+              <p className="text-xs sm:text-sm text-[#CFC1EA] leading-relaxed">
+                13-section assessment covering diagnosis, medical, school,
+                transitions, routines, safety and more. Generates an individual
+                parent report you can share with mediators, teachers, and
+                treating professionals.
+              </p>
+              {sncStatus?.has_report && (
+                <div
+                  className="mt-2 inline-flex items-center gap-2 text-[11px] text-[#CFC1EA]"
+                  data-testid="dashboard-snc-report-status"
+                >
+                  <span>
+                    {sncStatus.stale
+                      ? "Answers updated since last report"
+                      : "Report ready"}
+                  </span>
+                  {sncStatus.generated_at && (
+                    <span className="opacity-70">
+                      · last generated {new Date(sncStatus.generated_at).toLocaleDateString()}
+                    </span>
+                  )}
+                  {sncStatus.stale && <RefreshCcw size={11} />}
+                </div>
+              )}
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-[#CFC1EA]" />
+          </Link>
+        </div>
 
         {/* Safety Assessment */}
         <div className="mt-6">

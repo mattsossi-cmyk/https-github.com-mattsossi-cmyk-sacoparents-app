@@ -1,0 +1,36 @@
+{
+  "summary": "Full backend + frontend validation of the Special Needs Co-Parenting (SNC) Phase B/C wiring. Wrote 19 pytest API tests in /app/backend/tests/test_snc_api.py covering schema, assessment save/resume, single + bulk answer validation with type coercion, scoring, cached report lifecycle (cached=false -> cached=true -> stale after answer change -> regenerate clears stale), PDF download (application/pdf, >50KB, %PDF signature, 404 before generation), DELETE /me cascade to reports, and Family Report removal regression. All 19 tests pass. Frontend flow validated via Playwright: /special-needs renders snc-assessment-root, snc-progress-bar, 13 nav tabs, Likert click triggers 'Saved' toast, snc-save-later + snc-prev + snc-next present, snc-complete appears on last section. /special-needs/report renders snc-report-root with regenerate + download-pdf + cache-bar and all major report sections. Dashboard shows dashboard-snc-card linking to /special-needs/report when report exists, and dashboard-family-report-card is absent.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_snc_api.py",
+    "/app/test_reports/pytest/snc_api_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "snc_routes.py returns Mongo docs cleanly (_id stripped in _serialize and via projection). Good.",
+    "Report cache uses replace_one with upsert on user_id — idempotent regeneration works correctly.",
+    "Report staleness derived from source_updated_at vs assessment.updated_at OR explicit stale flag. Solid.",
+    "PDF endpoint 404s before generation as designed. No PDF is regenerated on GET — only on POST /generate | /regenerate — good separation of concerns.",
+    "DELETE /api/snc/me deletes both assessment + cached report (verified). Good clean-up.",
+    "Type coercion for numeric-string Likert values in _coerce_value works and is unit-covered.",
+    "Frontend Dashboard card conditionally routes to /special-needs or /special-needs/report based on sncStatus?.has_report — verified in-browser."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_snc_api.py"
+  ],
+  "success_rate": {"backend": "100% (19/19)", "frontend": "100% of covered flows"},
+  "test_credentials": "parent1@test.com / TestPass123! (from /app/memory/test_credentials.md). Also created ephemeral TEST_ui_* and TEST_snc_pdf_* users during runs.",
+  "seed_data_creation": "For UI report render: 1) POST /api/snc/answers/bulk with full 92-item answer set + s11_flags='None of these apply.' 2) POST /api/snc/report/generate. Also stored localStorage['sacoparents.orientation_seen.v1']='true' before login to bypass the /orientation gate that otherwise blocks the dashboard route.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "SNC endpoints live at /api/snc/*. Dashboard requires the orientation flag in localStorage (sacoparents.orientation_seen.v1=true) plus dismissing the LegalAcknowledgment modal via [data-testid=legal-ack-checkbox] + [data-testid=legal-ack-continue-button] to reach /dashboard. The dashboard-snc-card links to /special-needs by default and to /special-needs/report once a cached report exists. Family Report endpoints (/api/family-report/status and /api/insights/family-report-dynamic-sample.pdf) correctly return 404 — do not treat this as a regression.",
+  "rca of the issue": "N/A - no functional issues found."
+}
