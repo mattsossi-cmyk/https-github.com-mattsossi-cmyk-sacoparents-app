@@ -16,6 +16,16 @@ _RATING_COLOR = {
     "Good":              (61, 26, 120),
     "Fair":              (140, 90, 44),
     "Needs Improvement": (194, 72, 31),
+    # 2026 framework categories (per-domain + overall variants)
+    "Existing strength":                 (31, 92, 59),
+    "Existing Strength Overall":         (31, 92, 59),
+    "Developing area":                   (61, 26, 120),
+    "Developing Overall":                (61, 26, 120),
+    "Priority for planning":             (140, 90, 44),
+    "Priority Focus Overall":            (140, 90, 44),
+    "Professional guidance recommended": (140, 90, 44),
+    "Safety-sensitive concern":          (194, 72, 31),
+    "Safety-Sensitive Review Recommended": (194, 72, 31),
 }
 
 
@@ -182,8 +192,9 @@ def build_special_needs_pdf(
     if "communication_toolkit" not in ex and report.get("show_communication_toolkit"):
         pdf.h2("Communication toolkit")
         pdf.body(
-            "Because Principle 3 (Maintain Open, Child-Focused Communication) is "
-            "currently Fair or Needs Improvement, these tools are highlighted for you."
+            "Because Domain 6 (Communication) is currently a Priority for "
+            "planning or Professional guidance recommended, these tools are "
+            "highlighted for you."
         )
         for tip in report.get("communication_toolkit") or []:
             pdf.set_font("Helvetica", "B", 10.5)
@@ -199,9 +210,9 @@ def build_special_needs_pdf(
             pdf.ln(0.5)
 
     if "sections" not in ex:
-        pdf.h2("Principle-by-principle detail")
+        pdf.h2("Domain-by-domain detail")
         for sec in report.get("sections") or []:
-            title = _safe(f"Principle {sec.get('number')}: {sec.get('name')}")
+            title = _safe(f"Domain {sec.get('number')}: {sec.get('name')}")
             pdf.set_font("Helvetica", "B", 11.5)
             pdf.set_text_color(26, 19, 48)
             pdf.set_x(pdf.l_margin)

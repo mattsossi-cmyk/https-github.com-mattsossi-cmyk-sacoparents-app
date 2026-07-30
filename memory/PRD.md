@@ -1,6 +1,25 @@
 # SACOParents — Helping Families Communicate Better
 
 <!-- Changelog latest entry -->
+## 🆕 Special Needs Assessment — 2026 Framework Rebuild — Drop 1 / Backend (Feb 2026)
+
+Full replacement of the previous 10-principle SN v3 with the user-supplied 20-section framework. Old `sn_v3_assessments` / `sn_v3_reports` collections dropped as agreed.
+
+**Backend (all rewritten)**
+- `sn_v3_questions.py` — 10 scored domains × 6 questions (60 total), 5-point Likert (Strongly disagree → Strongly agree), 4 meta-flags per question (N/A, More info, Professional guidance, Safety concern), unscored intake profile in 3 groups (Child, Family, Child's Voice). Safety domain uses reverse-scored items.
+- `sn_v3_scoring.py` — 5 new result categories per framework §17: Existing strength / Developing area / Priority for planning / Professional guidance recommended / Safety-sensitive concern. New overall labels. Safety domain never averaged into strength scoring — any reverse-scored safety item ≥ Agree, or any `safety` meta-flag, triggers `safety_triggered=true` and surfaces as top-priority review. 2+ `want_help` hits in a domain elevate it to Professional guidance recommended.
+- `sn_v3_report_content.py` — matching guidance library per (domain, category), 5-tip Communication Toolkit (triggered when Domain 6 is priority/professional), full disclaimer copy from spec.
+- `sn_v3_report_pdf.py` — new category colours; toolkit + section labels updated to "Domain-by-domain detail".
+- `sn_v3_routes.py` — schema now returns intake, meta_flags, domains, response_scale. Bulk endpoint persists `meta` + `intake`. New `POST /intake`. Complete + generate now pass meta into scoring/content. **New invite/comparison endpoints**: `POST /invite`, `POST /invite/{token}/accept`, `GET /comparison` — pair completed assessments through a signed invite token and return aligned/disagreement domains + safety flag.
+- Tests: `test_sn_v3_scoring.py` (8 tests) + `test_sn_v3_report.py` (3 tests). **29/29 total tests pass** across SN + CP + Family + report_visibility.
+
+**Sample assets** — `/api/insights/special-needs-dynamic-sample.pdf` (and legacy `/special-needs-report.pdf`) now serve the new 2026 layout (3 pages, 6.6 KB, US Letter). PNG + JPG + thumb regenerated.
+
+**End-to-end curl round-trip** (parent1@test.com): schema → 60 questions/10 domains ✅ → bulk answers + meta (want_help + intake) → complete → Domain 3 elevated to "Professional guidance recommended" ✅, overall = "Priority Focus Overall" ✅ → PDF 6.6 KB ✅
+
+**Drop 2 pending**: frontend rebuild (intake page → 10 domain sections with meta options → results view) + invite-a-coparent UI + comparison view. Backend is fully deployed.
+
+<!-- Changelog latest entry -->
 ## 🆕 Special Needs Report Reconciliation (Feb 2026)
 Special Needs v3 now has the exact same dynamic report pipeline as Co-Parenting Phase 2 — same JSON shape, same PDF style, same public shared-viewer page, same visibility & share controls.
 

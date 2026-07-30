@@ -1,273 +1,199 @@
-"""Deterministic Special Needs v3 report content builder.
-
-Mirrors cp_report_content.py so the two dynamic reports produce the exact same
-JSON shape and feel like part of the same product. Guidance library is keyed
-by principle id + rating band, tailored to special-needs co-parenting.
-"""
+"""Deterministic Special Needs report content builder (2026 framework)."""
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from sn_v3_questions import SECTIONS as SN_SECTIONS
-
-
-_PRINCIPLE_GUIDANCE: Dict[str, Dict[str, Dict[str, List[str]]]] = {
-    "p1": {  # Build an Individualized Parenting Plan
-        "Excellent": {
-            "findings": ["Your parenting plan is truly individualized to your child's transition and sensory needs."],
-            "recommendations": ["Revisit the plan every 6 months as your child grows and needs shift."],
-        },
-        "Good": {
-            "findings": ["The plan reflects your child's needs, with a few gaps around exchanges or updates."],
-            "recommendations": ["Add an explicit review cadence (calendar reminder every 6 months)."],
-        },
-        "Fair": {
-            "findings": ["The plan feels like a generic template in places — it doesn't fully reflect your child's regulation patterns."],
-            "recommendations": [
-                "Rewrite one section to name the specific supports your child needs (sensory, transition, medication).",
-                "Ask your child's therapist to help translate clinical needs into schedule language.",
-            ],
-        },
-        "Needs Improvement": {
-            "findings": ["The current plan doesn't yet reflect how your child actually functions day-to-day."],
-            "recommendations": [
-                "Draft a special-needs addendum listing sensory, medical, and therapy accommodations.",
-                "Work with a mediator experienced in special-needs plans to formalize it.",
-            ],
-        },
-    },
-    "p2": {  # Prioritize Consistent Routines & Predictability
-        "Excellent": {"findings": ["Your home offers strong, predictable routines that support your child."], "recommendations": ["Share your successful routines with the other parent when helpful."]},
-        "Good": {"findings": ["Most core routines in your home are consistent."], "recommendations": ["Pick one routine (bedtime, mealtime) to align with the other home."]},
-        "Fair": {"findings": ["Routines vary enough in your home that transitions become harder for your child."], "recommendations": ["Anchor bedtime — it's the highest-impact routine — and keep it identical for two weeks.", "Post the daily rhythm somewhere visible."]},
-        "Needs Improvement": {"findings": ["Lack of predictable routines is likely adding stress and dysregulation."], "recommendations": ["Start with ONE anchor routine and hold it for 30 days.", "Ask your child's therapist for a visual schedule template."]},
-    },
-    "p3": {  # Maintain Open, Child-Focused Communication
-        "Excellent": {"findings": ["Child-focused communication with the other parent is working well."], "recommendations": ["Keep documenting agreements in writing after each conversation."]},
-        "Good": {"findings": ["Communication is largely reliable, with occasional gaps."], "recommendations": ["Add a weekly 10-minute child-focused check-in for continuity of care."]},
-        "Fair": {"findings": ["Timeliness and tone of updates are inconsistent — therapy/medication/school info sometimes reaches the other home late."], "recommendations": ["Move to a shared parenting app for a single source of truth.", "Use the BIFF framework (Brief, Informative, Friendly, Firm) in writing."]},
-        "Needs Improvement": {"findings": ["Conversations escalate before important information is shared, which can put continuity of care at risk."], "recommendations": ["Move all non-emergency communication to a written, timestamped channel.", "Consider a Parenting Facilitator experienced with special-needs coordination."]},
-    },
-    "p4": {  # Align on Core Expectations
-        "Excellent": {"findings": ["Medication, therapy, screen-time, and discipline expectations are well aligned."], "recommendations": ["Continue joint parent-training sessions when new challenges arise."]},
-        "Good": {"findings": ["Most core expectations are aligned between homes."], "recommendations": ["Identify one area (screen-time or bedtime) to fully align."]},
-        "Fair": {"findings": ["Medication schedules or behavioral expectations differ enough to confuse your child."], "recommendations": ["Ask the prescribing provider to give both parents the same written protocol.", "Agree on a shared discipline approach for meltdowns — even a one-page document helps."]},
-        "Needs Improvement": {"findings": ["Cross-home inconsistency in core expectations is likely undermining your child's progress."], "recommendations": ["Book a joint parent-training session with your child's therapist.", "Consider formalizing medical decision-making language with your mediator or attorney."]},
-    },
-    "p5": {  # Understand & Share Your Child's Diagnosis and Needs
-        "Excellent": {"findings": ["You have a strong working knowledge of your child's diagnosis and support needs."], "recommendations": ["Share updated diagnostic reports with all providers and the other parent."]},
-        "Good": {"findings": ["Your understanding of the diagnosis is solid, with some information still to build."], "recommendations": ["Attend one professional-development session or workshop per year."]},
-        "Fair": {"findings": ["There are gaps in shared knowledge between homes about what the diagnosis means day-to-day."], "recommendations": ["Ask the diagnosing provider for a plain-language summary both parents can read.", "Request that IEP/504 and therapy reports go to both parents."]},
-        "Needs Improvement": {"findings": ["Limited shared understanding of the diagnosis is a coordination risk."], "recommendations": ["Request a joint consultation with the diagnosing provider.", "Both parents attend the next IEP/504 meeting."]},
-    },
-    "p6": {  # Coordinate Education & Therapy
-        "Excellent": {"findings": ["Both parents are actively engaged in education and therapy carryover."], "recommendations": ["Keep a shared therapy-carryover log accessible to both parents."]},
-        "Good": {"findings": ["Coordination on education and therapy usually works."], "recommendations": ["Ask the school to add both parents to all official communications."]},
-        "Fair": {"findings": ["Classroom accommodations and therapy homework aren't consistently reinforced across both homes."], "recommendations": ["Ask the therapist for a written home-carryover plan.", "Schedule 10 minutes of therapy practice into the daily rhythm."]},
-        "Needs Improvement": {"findings": ["Educational and therapy coordination is a significant gap — therapeutic gains may be limited."], "recommendations": ["Request a joint parent-training session with the therapist.", "If IEP/504 is in place, request full documentation goes to both parents."]},
-    },
-    "p7": {  # Manage Transitions Smoothly
-        "Excellent": {"findings": ["Exchanges are calm, sensory-friendly, and predictable."], "recommendations": ["Keep exchange location and timing consistent to protect that stability."]},
-        "Good": {"findings": ["Exchanges usually go smoothly."], "recommendations": ["Add a 5-minute buffer for transition time on either side."]},
-        "Fair": {"findings": ["Your child shows anxiety around exchanges more often than you'd like."], "recommendations": ["Move exchanges to a neutral, low-stimulation location.", "Use transition warnings and a visual schedule 24 hours before each exchange."]},
-        "Needs Improvement": {"findings": ["Transitions are a significant source of dysregulation."], "recommendations": ["Consider curbside exchanges to minimize direct contact.", "Ask your child's therapist for a transition-support protocol."]},
-    },
-    "p8": {  # Be Flexible and Adaptable
-        "Excellent": {"findings": ["You adapt well as your child's needs, abilities, and preferences evolve."], "recommendations": ["Keep welcoming input from teachers, therapists, and specialists."]},
-        "Good": {"findings": ["You're generally open to adjusting the plan when things change."], "recommendations": ["Set a formal 6-month plan review to catch drift proactively."]},
-        "Fair": {"findings": ["The plan hasn't been updated recently, even though needs may have shifted."], "recommendations": ["Book a 30-minute plan-review conversation with the other parent.", "Ask one professional (teacher, therapist) for their perspective on what should change."]},
-        "Needs Improvement": {"findings": ["The plan is out of step with where your child is now."], "recommendations": ["Schedule a formal re-review of the plan with a mediator.", "Ask your child's therapist to attend the review to advocate for accommodations."]},
-    },
-    "p9": {  # Build a Support Network
-        "Excellent": {"findings": ["You've built a strong network of therapists, educators, and community support."], "recommendations": ["Keep leaning on your network — you don't have to do this alone."]},
-        "Good": {"findings": ["You have professionals to consult when you're stuck."], "recommendations": ["Consider joining one parent-support group for continuity between visits."]},
-        "Fair": {"findings": ["Support-network engagement is inconsistent."], "recommendations": ["Identify one gap (mediator, respite care, support group) and address it this month.", "Add a 'who to call' list to your phone for after-hours crises."]},
-        "Needs Improvement": {"findings": ["You may be doing too much alone."], "recommendations": ["Book one intake with a special-needs-experienced mediator, attorney, or coach.", "Ask your child's therapist for local community-resource recommendations."]},
-    },
-    "p10": {  # Practice Compassion and Patience
-        "Excellent": {"findings": ["You approach disagreements with empathy and keep your child at the center."], "recommendations": ["Continue modeling self-regulation for your child."]},
-        "Good": {"findings": ["You're generally patient and solution-focused."], "recommendations": ["Add a brief daily reflection: what worked today?"]},
-        "Fair": {"findings": ["Frustration is starting to show up in conversations or self-care is slipping."], "recommendations": ["Add one weekly self-care practice you don't skip.", "Speak with a therapist or coach about co-parenting stress."]},
-        "Needs Improvement": {"findings": ["Ongoing stress is affecting your capacity to co-parent from a compassionate place."], "recommendations": ["Prioritize your own therapy or coaching this quarter.", "Consider a Parenting Facilitator to hold the child-focused frame during hard conversations."]},
-    },
-}
-
-
-COMMUNICATION_TOOLKIT: List[Dict[str, str]] = [
-    {"title": "Use BIFF messages", "detail": "Brief, Informative, Friendly, Firm. Keep each message to 4 sentences or fewer."},
-    {"title": "Move to a written channel", "detail": "Use a shared parenting app or dedicated email thread so therapy, medication, and school updates are timestamped."},
-    {"title": "Weekly child-focused check-in", "detail": "10 minutes, same day/time, fixed agenda: therapy progress, medication, school, one 'what's working'."},
-    {"title": "Delay before responding", "detail": "Wait 4 hours before replying to a charged message. Draft, save, revise, then send."},
-    {"title": "Facts, not feelings, in writing", "detail": "Move emotional processing to a therapist or trusted friend. Keep co-parent communication practical."},
-]
-
-
-DEFAULT_DISCLAIMER = (
-    "This report is an educational reflection tool from SA CoParents. It is not "
-    "a diagnostic evaluation, custody evaluation, or legal advice. Findings are "
-    "based on your own self-assessment answers on a 5-point scale across the "
-    "10-principle special-needs co-parenting framework."
+from sn_v3_questions import DOMAINS
+from sn_v3_scoring import (
+    CAT_STRENGTH, CAT_DEVELOP, CAT_PRIORITY, CAT_PROFESSIONAL, CAT_SAFETY,
+    OVERALL_STRENGTH, OVERALL_DEVELOPING, OVERALL_PRIORITY, OVERALL_SAFETY,
 )
 
 
-def _sec_meta(sid: str) -> Dict[str, Any]:
-    for s in SN_SECTIONS:
-        if s["id"] == sid:
-            return s
+# Domain-level guidance library keyed by (domain_id, category).
+_DOMAIN_GUIDANCE: Dict[str, Dict[str, Dict[str, List[str]]]] = {
+    "d1": {
+        CAT_STRENGTH: {"findings": ["You understand your child's needs and what helps them recover from stress."], "recommendations": ["Keep updating your understanding as new professional information arrives."]},
+        CAT_DEVELOP:  {"findings": ["You know a lot; a few areas of your child's world are still coming into focus."], "recommendations": ["Ask one of your child's professionals for a plain-language summary of current recommendations."]},
+        CAT_PRIORITY: {"findings": ["Gaps in shared knowledge of your child's needs are affecting decisions and consistency."], "recommendations": ["Book a 30-minute consult with the diagnosing / treating professional to align on today's picture."]},
+    },
+    "d2": {
+        CAT_STRENGTH: {"findings": ["Your school participation is strong and information flows both ways."], "recommendations": ["Keep both parents on the school's official contact list."]},
+        CAT_DEVELOP:  {"findings": ["School coordination mostly works with occasional gaps."], "recommendations": ["Ask the school to send communications to both parents; keep a shared school folder for the child."]},
+        CAT_PRIORITY: {"findings": ["Classroom coordination is inconsistent and may affect academic support."], "recommendations": ["Request a joint parent-teacher meeting; if an IEP/504 is in place, request both parents receive full documentation."]},
+    },
+    "d3": {
+        CAT_STRENGTH: {"findings": ["Medical, mental-health, and therapy coordination is solid."], "recommendations": ["Keep a shared medication + appointment log accessible to both parents."]},
+        CAT_DEVELOP:  {"findings": ["Healthcare coordination usually works, with some gaps."], "recommendations": ["Confirm both parents are on file with the pediatrician and specialists; align on a refill responsibility."]},
+        CAT_PRIORITY: {"findings": ["Medical information doesn't always reach both homes on time."], "recommendations": ["Ask providers to send appointment summaries to both parents; keep an emergency-info sheet in the child's bag."]},
+    },
+    "d4": {
+        CAT_STRENGTH: {"findings": ["Your home offers stable, predictable routines that support your child."], "recommendations": ["Continue anchoring bedtime, mealtimes, and screen limits."]},
+        CAT_DEVELOP:  {"findings": ["Most routines in your home are consistent, some drift."], "recommendations": ["Pick one anchor routine (bedtime) and keep it identical for 30 days."]},
+        CAT_PRIORITY: {"findings": ["Daily-care consistency is currently low; transitions and behaviour may be affected."], "recommendations": ["Post a visible daily rhythm; ask your child's therapist for a home-carryover plan."]},
+    },
+    "d5": {
+        CAT_STRENGTH: {"findings": ["Transitions are calm and predictable."], "recommendations": ["Keep exchange location and timing consistent to protect that stability."]},
+        CAT_DEVELOP:  {"findings": ["Exchanges usually go smoothly with occasional friction."], "recommendations": ["Standardise what travels between homes (laminated checklist on the bag)."]},
+        CAT_PRIORITY: {"findings": ["Transitions are a recurring source of stress."], "recommendations": ["Move exchanges to a neutral or school-based location; add visual warnings 24 hours before each exchange."]},
+    },
+    "d6": {
+        CAT_STRENGTH: {"findings": ["Communication is timely, accurate, and child-focused."], "recommendations": ["Keep documenting agreements after each conversation."]},
+        CAT_DEVELOP:  {"findings": ["Communication is largely reliable with occasional gaps."], "recommendations": ["Add a weekly 10-minute child-focused check-in with a fixed agenda."]},
+        CAT_PRIORITY: {"findings": ["Communication frequently escalates or breaks down before important information is shared."], "recommendations": ["Move all non-emergency communication to a written, timestamped channel; adopt BIFF phrasing."]},
+    },
+    "d7": {
+        CAT_STRENGTH: {"findings": ["Decisions get made cleanly using the plan and professionals."], "recommendations": ["Keep exchanging relevant records before major decisions."]},
+        CAT_DEVELOP:  {"findings": ["Most decisions get made but the process is sometimes ad-hoc."], "recommendations": ["Adopt a written decision-resolution ladder (share records → professional input → mediation)."]},
+        CAT_PRIORITY: {"findings": ["Decision-making is a recurring blocker for the child's care."], "recommendations": ["Follow the parenting-plan procedure; consider a Parenting Facilitator for implementation disputes."]},
+    },
+    "d8": {
+        CAT_STRENGTH: {"findings": ["Events are handled child-first, without conflict."], "recommendations": ["Keep the child out of any adult negotiation about attendance."]},
+        CAT_DEVELOP:  {"findings": ["Events mostly go smoothly."], "recommendations": ["Keep a shared events calendar so surprises don't create friction."]},
+        CAT_PRIORITY: {"findings": ["Events are a recurring source of tension or missed information."], "recommendations": ["Share a written calendar; agree on separate attendance where useful; never ask the child to choose."]},
+    },
+    "d9": {
+        CAT_STRENGTH: {"findings": ["Resource coordination flows smoothly."], "recommendations": ["Keep a shared expense record so nothing surprises either home."]},
+        CAT_DEVELOP:  {"findings": ["Resource coordination works but has some sticky points."], "recommendations": ["Adopt a clear reimbursement + prior-consent procedure for shared expenses."]},
+        CAT_PRIORITY: {"findings": ["Financial disagreements are delaying services or evaluations."], "recommendations": ["Separate the money question from the child-need question; consider mediating a written expense agreement."]},
+    },
+    "d10": {  # Safety
+        CAT_STRENGTH: {"findings": ["No safety-sensitive concerns were flagged in your responses."], "recommendations": ["Continue to protect a stable, child-focused communication channel."]},
+        CAT_SAFETY:   {"findings": ["Your responses indicate safety-sensitive concerns. Ordinary co-parenting recommendations may not be appropriate."], "recommendations": [
+            "Consider written-only communication through a parenting app.",
+            "Explore school-based or third-party exchanges to minimise direct contact.",
+            "Speak confidentially with an attorney or a domestic-violence advocate about protective options.",
+            "Do not enter joint sessions or shared decision meetings until safety has been assessed by a qualified professional.",
+        ]},
+    },
+}
+
+_PROFESSIONAL_ADDENDUM = "You explicitly asked for professional guidance on multiple items in this domain — please consider that request an important signal."
+
+COMMUNICATION_TOOLKIT = [
+    {"title": "Use BIFF messages", "detail": "Brief, Informative, Friendly, Firm — keep messages to 4 sentences or fewer."},
+    {"title": "Move to a written channel", "detail": "Timestamped app or dedicated email thread for therapy, medication, and school updates."},
+    {"title": "Weekly child-focused check-in", "detail": "10 minutes, same day/time, with a fixed child-focused agenda."},
+    {"title": "Delay before responding", "detail": "Wait 4 hours before replying to charged messages. Draft, save, revise, then send."},
+    {"title": "Facts, not feelings, in writing", "detail": "Move emotional processing to a therapist or trusted friend."},
+]
+
+DISCLAIMER = (
+    "This report is an educational reflection tool from SA CoParents. It is not a diagnostic evaluation, custody evaluation, or legal advice. "
+    "Findings are based on your self-assessment answers across the 10 special-needs co-parenting domains."
+)
+
+
+def _domain_meta(did: str) -> Dict[str, Any]:
+    for d in DOMAINS:
+        if d["id"] == did:
+            return d
     return {}
 
 
-def _overall_paragraph(overall: str) -> str:
-    if overall == "Excellent Progress":
+def _overall_paragraph(overall: str, safety_triggered: bool) -> str:
+    if safety_triggered:
         return (
-            "Your responses reflect strong, child-focused special-needs co-parenting "
-            "across most of the 10 principles. Keep protecting the systems that are "
-            "working, and use this report to sharpen the one or two areas that could "
-            "still improve."
+            "Your responses flagged one or more safety-sensitive items. Because of this, the "
+            "recommendations in this report intentionally do not include joint meetings or "
+            "direct communication until a qualified professional has assessed the situation "
+            "with you. Please prioritise your safety and your child's safety."
         )
-    if overall == "Building Progress":
-        return (
-            "You have real strengths to build on, alongside a handful of principles "
-            "that would benefit from focused attention. This report highlights the "
-            "highest-leverage next steps for supporting your child across two homes."
-        )
-    if overall == "Early Progress":
-        return (
-            "Several principles need attention. That's a normal starting point — and "
-            "completing this assessment is itself a strong first step. Focus on the "
-            "priority principles one at a time; small, consistent wins compound."
-        )
-    return (
-        "Complete more of the assessment to unlock a full narrative — for now, "
-        "here is what your partial answers already show."
-    )
-
-
-def _pick_answered_prompts(section_id: str, answers: Dict[str, int], *, wanted_low: bool, limit: int = 2) -> List[str]:
-    """Return prompts from a principle, filtered by effective score."""
-    out: List[str] = []
-    for q in _sec_meta(section_id).get("questions", []):
-        qid = q["id"]
-        if qid not in answers:
-            continue
-        raw = answers[qid]
-        effective = (4 - raw) if q.get("reverse") else raw
-        if wanted_low and effective <= 1:
-            out.append(q["prompt"])
-        elif (not wanted_low) and effective >= 3:
-            out.append(q["prompt"])
-        if len(out) >= limit:
-            break
-    return out
+    if overall == OVERALL_STRENGTH:
+        return "Your responses show strong, child-focused co-parenting across most domains. Keep protecting what works; use this report to sharpen the areas that could still improve."
+    if overall == OVERALL_PRIORITY:
+        return "Several domains need focused attention. Completing this assessment is itself a strong first step. Focus on the priority domains one at a time; small, consistent wins compound."
+    if overall == OVERALL_DEVELOPING:
+        return "You have real strengths to build on alongside a handful of domains that would benefit from focused attention. This report highlights the highest-leverage next steps."
+    return "Complete more of the assessment to unlock a full narrative — for now, here is what your answers already show."
 
 
 def build_report(
-    *,
-    scores: Dict[str, Any],
-    answers: Dict[str, int],
+    *, scores: Dict[str, Any], answers: Dict[str, int] | None = None,
+    meta: Dict[str, Dict[str, bool]] | None = None,
+    intake: Dict[str, Any] | None = None,
     parent_name: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Compose the full deterministic Special Needs v3 report from scoring output.
-
-    Returns the same top-level shape as cp_report_content.build_report so the
-    frontend and PDF renderers can be near-identical.
-    """
-    section_scores: List[Dict[str, Any]] = scores.get("sections") or []
+    _ = answers  # currently unused but kept for parity with cp_report
+    _ = meta
+    domain_scores: List[Dict[str, Any]] = scores.get("domains") or []
     overall = scores.get("overall_rating") or "Not enough data"
-    strongest_ids = set(scores.get("strongest_section_ids") or [])
-    weakest_ids = set(scores.get("weakest_section_ids") or [])
-    priority_ids = list(scores.get("priority_focus") or [])
-    show_toolkit = bool(scores.get("show_communication_toolkit"))
+    safety_triggered = bool(scores.get("safety_triggered"))
 
-    sections_out: List[Dict[str, Any]] = []
-    for sec in section_scores:
-        sid = sec["id"]
-        rating = sec.get("rating") or "Needs Improvement"
-        band = _PRINCIPLE_GUIDANCE.get(sid, {}).get(rating) or {}
-        meta = _sec_meta(sid)
-        sections_out.append({
-            "id": sid,
-            "number": sec.get("number"),
-            "name": sec.get("name"),
-            "goal": meta.get("goal"),
-            "rating": sec.get("rating"),
-            "avg": sec.get("avg"),
-            "answered": sec.get("answered", 0),
-            "total": sec.get("total", 0),
-            "findings": list(band.get("findings") or []),
-            "recommendations": list(band.get("recommendations") or []),
-            "example_prompts": _pick_answered_prompts(sid, answers, wanted_low=(rating in ("Fair", "Needs Improvement"))),
+    domains_out: List[Dict[str, Any]] = []
+    for d in domain_scores:
+        did = d["id"]
+        category = d.get("category")
+        band = _DOMAIN_GUIDANCE.get(did, {}).get(category or "", {}) if category else {}
+        findings = list(band.get("findings") or [])
+        recs = list(band.get("recommendations") or [])
+        if category == CAT_PROFESSIONAL:
+            findings.append(_PROFESSIONAL_ADDENDUM)
+        domains_out.append({
+            "id": did,
+            "number": d["number"],
+            "name": d["name"],
+            "goal": _domain_meta(did).get("goal"),
+            "framework_ref": _domain_meta(did).get("framework_ref"),
+            "category": category,
+            # `rating` is a legacy alias kept for the shared PDF renderer +
+            # Family Report + shared viewers which still key off `sec.rating`.
+            "rating": category,
+            "avg": d.get("avg"),
+            "answered": d.get("answered", 0),
+            "total": d.get("total", 0),
+            "want_help_hits": d.get("want_help_hits", 0),
+            "safety_flagged": bool(d.get("safety_hits")),
+            "findings": findings,
+            "recommendations": recs,
         })
 
-    # Strengths — up to 3 Good/Excellent principles
-    strengths: List[Dict[str, str]] = []
-    ranked = sorted(
-        [s for s in section_scores if s.get("avg") is not None and s.get("rating") in ("Excellent", "Good")],
-        key=lambda s: (-(s["avg"] or 0), s["number"]),
-    )
-    for s in ranked[:3]:
-        meta = _sec_meta(s["id"])
-        strengths.append({
-            "section_id": s["id"],
-            "title": s["name"],
-            "detail": (meta.get("goal") or "").strip() or f"Rated {s.get('rating')}.",
-        })
-    if not strengths and section_scores:
-        best = max(
-            (s for s in section_scores if s.get("avg") is not None),
-            key=lambda s: s["avg"],
-            default=None,
-        )
-        if best:
-            meta = _sec_meta(best["id"])
-            strengths.append({
-                "section_id": best["id"],
-                "title": best["name"],
-                "detail": f"Your strongest area so far ({best.get('rating')}).",
+    strengths: List[Dict[str, Any]] = []
+    for did in scores.get("strongest_domain_ids", []):
+        d = next((x for x in domains_out if x["id"] == did), None)
+        if d:
+            strengths.append({"section_id": did, "title": d["name"], "detail": d.get("goal") or ""})
+
+    growth_areas: List[Dict[str, Any]] = []
+    for did in scores.get("priority_focus_ids", []):
+        d = next((x for x in domains_out if x["id"] == did), None)
+        if d:
+            growth_areas.append({
+                "section_id": did,
+                "title": d["name"],
+                "rating": d.get("category"),
+                "why_it_matters": (d.get("findings") or [""])[0],
+                "first_step": (d.get("recommendations") or [""])[0],
             })
 
-    # Growth areas — priority_focus first, then any Fair principles not already listed
-    growth_ids: List[str] = list(priority_ids)
-    for s in section_scores:
-        if s.get("rating") == "Fair" and s["id"] not in growth_ids:
-            growth_ids.append(s["id"])
-    growth_areas: List[Dict[str, Any]] = []
-    for sid in growth_ids[:4]:
-        sec = next((s for s in section_scores if s["id"] == sid), None)
-        if not sec:
-            continue
-        band = _PRINCIPLE_GUIDANCE.get(sid, {}).get(sec.get("rating") or "Needs Improvement", {})
-        growth_areas.append({
-            "section_id": sid,
-            "title": sec.get("name"),
-            "rating": sec.get("rating"),
-            "why_it_matters": (band.get("findings") or [""])[0],
-            "first_step": (band.get("recommendations") or [""])[0],
-        })
-
-    # Next steps
     next_steps: List[str] = []
-    for ga in growth_areas:
-        rec = ga.get("first_step") or ""
-        if rec and rec not in next_steps:
-            next_steps.append(rec)
+    for g in growth_areas:
+        step = g.get("first_step") or ""
+        if step and step not in next_steps:
+            next_steps.append(step)
         if len(next_steps) >= 5:
             break
-    if not next_steps and strengths:
-        next_steps.append("Keep protecting the routines and systems that are already working.")
+    if safety_triggered:
+        next_steps.insert(0, "Prioritise safety planning — see the Safety block below before adopting any joint-meeting recommendations.")
+        next_steps = next_steps[:5]
+
+    toolkit = COMMUNICATION_TOOLKIT if scores.get("show_communication_toolkit") else []
 
     return {
         "prepared_by": (parent_name or "").strip() or None,
-        "framework": "10-principle special-needs co-parenting",
+        "framework": "SA CoParents Special Needs Co-Parenting Assessment (2026)",
+        "intake": intake or {},
         "overall_rating": overall,
-        "overall_summary": _overall_paragraph(overall),
+        "overall_summary": _overall_paragraph(overall, safety_triggered),
+        "safety_triggered": safety_triggered,
         "strengths": strengths,
         "growth_areas": growth_areas,
-        "sections": sections_out,
-        "communication_toolkit": COMMUNICATION_TOOLKIT if show_toolkit else [],
-        "show_communication_toolkit": show_toolkit,
+        "domains": domains_out,
+        # Legacy alias used by cross-report machinery (Family Report) — kept
+        # so existing PDF/JSON consumers keep working.
+        "sections": domains_out,
+        "show_communication_toolkit": bool(scores.get("show_communication_toolkit")),
+        "communication_toolkit": toolkit,
         "next_steps": next_steps,
-        "strongest_section_ids": sorted(strongest_ids),
-        "weakest_section_ids": sorted(weakest_ids),
-        "disclaimer": DEFAULT_DISCLAIMER,
+        "disclaimer": DISCLAIMER,
     }

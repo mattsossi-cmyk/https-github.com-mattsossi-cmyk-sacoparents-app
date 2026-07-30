@@ -1,83 +1,48 @@
-"""Unit tests for the Special Needs v3 report content + PDF builders.
-
-Mirrors test_cp_report.py so the two dynamic pipelines stay in lockstep.
-"""
+"""Tests for the redesigned Special Needs report content + PDF."""
 from __future__ import annotations
 
-from sn_v3_questions import SECTIONS
+from sn_v3_questions import DOMAINS
 from sn_v3_scoring import compute_scores
-import sn_v3_report_content
-import sn_v3_report_pdf
+import sn_v3_report_content as rc
+import sn_v3_report_pdf as rp
 
 
-def _answers_all(value: int) -> dict:
-    return {q["id"]: value for s in SECTIONS for q in s["questions"]}
+def _answers(v: int) -> dict:
+    a = {}
+    for d in DOMAINS:
+        for q in d["questions"]:
+            a[q["id"]] = 0 if q.get("safety_flag") else v
+    return a
 
 
-def test_build_report_all_excellent_shape():
-    answers = _answers_all(4)
-    for s in SECTIONS:
-        for q in s["questions"]:
-            if q.get("reverse"):
-                answers[q["id"]] = 0
-    scores = compute_scores(answers)
-    r = sn_v3_report_content.build_report(scores=scores, answers=answers, parent_name="Sam Parent")
-
-    assert r["overall_rating"] == "Excellent Progress"
+def test_report_shape_all_strong():
+    a = _answers(4)
+    s = compute_scores(a)
+    r = rc.build_report(scores=s, answers=a, parent_name="Sam Parent")
     assert r["prepared_by"] == "Sam Parent"
-    assert r["framework"] == "10-principle special-needs co-parenting"
-    assert len(r["sections"]) == 10
-    assert r["show_communication_toolkit"] is False
-    assert r["communication_toolkit"] == []
-    for sec in r["sections"]:
-        assert sec["rating"] == "Excellent"
-        assert sec["findings"]
-        assert sec["recommendations"]
+    assert r["overall_rating"] == "Existing Strength Overall"
+    assert r["safety_triggered"] is False
+    assert r["framework"].startswith("SA CoParents Special Needs")
+    # All 10 domains represented; safety domain still included
+    assert len(r["domains"]) == 10
+    # Legacy sections alias should mirror domains
+    assert r["sections"] is r["domains"]
 
 
-def test_build_report_needs_improvement_triggers_toolkit_and_priority():
-    answers = _answers_all(0)
-    for s in SECTIONS:
-        for q in s["questions"]:
-            if q.get("reverse"):
-                answers[q["id"]] = 4
-    scores = compute_scores(answers)
-    r = sn_v3_report_content.build_report(scores=scores, answers=answers, parent_name=None)
-
-    assert r["show_communication_toolkit"] is True
-    assert len(r["communication_toolkit"]) == 5
-    assert r["overall_rating"] == "Early Progress"
-    assert len(r["growth_areas"]) >= 3
-    assert len(r["next_steps"]) >= 1
-    assert len(r["next_steps"]) == len({s for s in r["next_steps"]})
+def test_report_safety_triggered_paths():
+    a = _answers(3)
+    a["d10_q1"] = 4
+    s = compute_scores(a)
+    r = rc.build_report(scores=s, answers=a)
+    assert r["safety_triggered"] is True
+    assert r["overall_rating"] == "Safety-Sensitive Review Recommended"
+    assert r["next_steps"] and "safety" in r["next_steps"][0].lower()
 
 
-def test_build_pdf_returns_valid_bytes():
-    answers = _answers_all(2)
-    scores = compute_scores(answers)
-    r = sn_v3_report_content.build_report(scores=scores, answers=answers, parent_name="Test Parent")
-    pdf = sn_v3_report_pdf.build_special_needs_pdf(user_name="Test Parent", report=r)
-    assert isinstance(pdf, (bytes, bytearray))
+def test_report_pdf_renders_bytes():
+    a = _answers(2)
+    s = compute_scores(a)
+    r = rc.build_report(scores=s, answers=a, parent_name="Test Parent")
+    pdf = rp.build_special_needs_pdf(user_name="Test Parent", report=r)
     assert pdf[:4] == b"%PDF"
     assert len(pdf) > 3000
-
-
-def test_filter_sn_v3_report_selective_visibility():
-    answers = _answers_all(2)
-    scores = compute_scores(answers)
-    r = sn_v3_report_content.build_report(scores=scores, answers=answers, parent_name="X")
-    filtered = sn_v3_report_pdf.filter_sn_v3_report(r, ["strengths", "next_steps"])
-    assert filtered["strengths"] == []
-    assert filtered["next_steps"] == []
-    assert filtered["overall_rating"] == r["overall_rating"]
-    assert filtered["sections"] == r["sections"]
-
-
-def test_partial_answers_still_produce_report():
-    answers = {q["id"]: 3 for q in SECTIONS[0]["questions"]}
-    scores = compute_scores(answers)
-    r = sn_v3_report_content.build_report(scores=scores, answers=answers, parent_name=None)
-    assert r["sections"][0]["rating"] in ("Good", "Excellent", "Fair", "Needs Improvement")
-    for sec in r["sections"][1:]:
-        assert sec["rating"] is None
-        assert sec["answered"] == 0
