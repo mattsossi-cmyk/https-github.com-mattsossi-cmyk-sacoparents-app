@@ -16,7 +16,7 @@ import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { toast } from "sonner";
-import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert } from "lucide-react";
+import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert, Users } from "lucide-react";
 import { logError } from "../lib/logger";
 
 const STATUS_COLOR = {
@@ -147,6 +147,10 @@ export default function SpecialNeedsV2Report() {
                    : <span>Last generated {doc.generated_at ? new Date(doc.generated_at).toLocaleString() : "—"}.</span>}
           </div>
           <div className="flex items-center gap-2">
+            <Link to="/special-needs-v2/compare" data-testid="snc2-report-open-compare"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
+              <Users size={13} /> Co-Parent Compare
+            </Link>
             <button onClick={downloadPdf} disabled={busy} data-testid="snc2-report-download-pdf"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
               <Download size={13} /> Download PDF

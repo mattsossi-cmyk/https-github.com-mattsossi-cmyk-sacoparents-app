@@ -53,6 +53,8 @@ import ProblemSolvingWorksheet from "@/pages/ProblemSolvingWorksheet";
 import SharedCoParentingReport from "@/pages/SharedCoParentingReport";
 import SpecialNeedsV2 from "@/pages/SpecialNeedsV2";
 import SpecialNeedsV2Report from "@/pages/SpecialNeedsV2Report";
+import SpecialNeedsV2Compare from "@/pages/SpecialNeedsV2Compare";
+import SpecialNeedsV2CompareView from "@/pages/SpecialNeedsV2CompareView";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -196,6 +198,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <SpecialNeedsV2Report />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/compare"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2Compare />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/compare/:share_id"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2CompareView />
             </ProtectedRoute>
           }
         />

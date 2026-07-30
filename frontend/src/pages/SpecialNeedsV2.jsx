@@ -13,7 +13,7 @@ import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, Save, Loader2, Sparkles,
+  ArrowLeft, ArrowRight, CheckCircle2, Save, Loader2, Sparkles, Users,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -365,10 +365,14 @@ export default function SpecialNeedsV2() {
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10" data-testid="snc2-assessment-root">
-        <div className="mb-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <button type="button" onClick={() => setSchema(null)} data-testid="snc2-change-categories" className="text-xs text-[#3D1A78] underline">
             &larr; Change needs categories
           </button>
+          <Link to="/special-needs-v2/compare" data-testid="snc2-open-compare"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
+            <Users size={13} /> Co-Parent Compare
+          </Link>
         </div>
         <div className="mb-4">
           <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Special Needs Co-Parenting</div>
