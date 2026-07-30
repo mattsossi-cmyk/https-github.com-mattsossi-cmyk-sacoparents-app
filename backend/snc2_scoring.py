@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from snc2_questions import (
-    ASSESSMENT_VERSION, PATHWAYS, _TEMPLATE, qid, resolve_pathways,
+    ASSESSMENT_VERSION, PATHWAYS, _TEMPLATE, _apply_pathway, qid, resolve_pathways,
 )
 
 
@@ -105,18 +105,37 @@ def compute_scores(selected: List[str], answers: Dict[str, Any]) -> Dict[str, An
 
 
 def validate_answer(qkey: str, value: Any) -> bool:
-    """Best-effort validation. Only the Likert items have strict rules."""
+    """Validate an answer value against the resolved schema for its qkey.
+
+    Enforces:
+      * Likert 1-5 or "na".
+      * Single/multi answers must be drawn from the resolved option list.
+      * text/textarea must be strings.
+
+    An unknown `qkey` is rejected to catch typos and stale field references.
+    """
     for step in _TEMPLATE:
         for item in step["items"]:
             for pid in ("medical", "educational", "psychological"):
-                if qkey == qid(step["id"], pid, item["id"]):
-                    if item.get("type") == "likert":
-                        return value == "na" or (isinstance(value, int) and 1 <= value <= 5)
-                    if item.get("type") == "single":
-                        return isinstance(value, str)
-                    if item.get("type") == "multi":
-                        return isinstance(value, list)
-                    if item.get("type") in ("text", "textarea"):
-                        return isinstance(value, str)
-    # Unknown qkey — reject to catch typos.
+                if qkey != qid(step["id"], pid, item["id"]):
+                    continue
+                resolved = _apply_pathway(item, pid)
+                t = resolved.get("type")
+                options = resolved.get("options") or []
+                if t == "likert":
+                    return value == "na" or (isinstance(value, int) and 1 <= value <= 5)
+                if t == "single":
+                    if not isinstance(value, str):
+                        return False
+                    if not options:
+                        return True
+                    return value in options
+                if t == "multi":
+                    if not isinstance(value, list):
+                        return False
+                    if not options:
+                        return all(isinstance(v, str) for v in value)
+                    return all(isinstance(v, str) and v in options for v in value)
+                if t in ("text", "textarea"):
+                    return isinstance(value, str)
     return False
