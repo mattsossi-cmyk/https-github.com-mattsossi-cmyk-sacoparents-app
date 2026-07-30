@@ -60,6 +60,12 @@ Phase A landed on 2026-07-30. The next session picks up with the React assessmen
 - FastAPI routes at `/api/snc` (schema, answers, complete, generate report, etc.).
 - MongoDB collections: `snc_assessments`, `snc_reports`.
 - React assessment page at `/special-needs` (intake → 13 sections → completion → individual report).
+- **Save-and-resume from day one (user-approved 2026-07-30):**
+  - Server-side autosave every time a field changes (debounced, batched by section).
+  - Resumable progress meter that shows overall progress AND per-section progress.
+  - Explicit "Save & come back later" checkpoints at the end of each section (13 checkpoints).
+  - On return, the flow jumps to the first unfinished section (not the beginning).
+  - Optional weekly reminder email if the user hasn't finished within 7 days (opt-in, off by default).
 - Dashboard card + landing/methodology mentions restored (with new naming).
 
 ### Phase C deliverables (later)
