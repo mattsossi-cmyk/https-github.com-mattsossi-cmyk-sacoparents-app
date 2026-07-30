@@ -68,9 +68,17 @@ Phase A landed on 2026-07-30. The next session picks up with the React assessmen
   - Optional weekly reminder email if the user hasn't finished within 7 days (opt-in, off by default).
 - Dashboard card + landing/methodology mentions restored (with new naming).
 
-### Phase C deliverables (later)
-- PDF renderer.
-- Share link + public viewer at `/shared/snc/:token`.
+### Phase C partial — PDF renderer landed
+- `backend/snc_report_pdf.py` — full 17-section Individual Parent Report renderer built on FPDF. Uses `pdf.epw` explicit widths and `set_x(l_margin)` before every multi_cell to stay resilient to prior cursor positions. Sample profile renders to ~41KB / multi-page.
+- Safety redaction verified end-to-end: the same `include_safety` flag threaded through `build_individual_report()` produces PDFs that strictly omit Section 12 flag/safeguard text in the shared view.
+- `backend/tests/test_snc_report_pdf.py` — **6 tests** covering signature/size, empty-answers rendering, safety redaction (both directions), absence of old vocabulary, presence of all 17 report section markers, and no judgemental phrases (`is wrong`, `better parent`, etc.).
+- Sample PDF at `/app/frontend/public/downloads/snc-sample-individual-report.pdf` (accessible via the preview URL) uses a curated mixed profile so every classification tier appears.
+
+### Phase C remaining (share link + public viewer) — next session
+- FastAPI routes under `/api/snc` for share-link generation and shared-report fetch (JSON + PDF).
+- Signed share tokens with visibility exclusion controls (mirror `report_visibility.py` pattern).
+- React public viewer at `/shared/snc/:token`.
+- Register SNC in `report_visibility.py` REPORT_SECTIONS with the correct section keys (`at_a_glance`, `category_summary`, `sections`, `action_plan`, etc.).
 
 ### Phase D deliverables (later)
 - Invite/accept flow at `/invites/snc/:token`.
