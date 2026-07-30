@@ -51,8 +51,6 @@ import MediatorBadge from "@/pages/MediatorBadge";
 import SafetyAssessment from "@/pages/SafetyAssessment";
 import ProblemSolvingWorksheet from "@/pages/ProblemSolvingWorksheet";
 import SharedCoParentingReport from "@/pages/SharedCoParentingReport";
-import FamilyReport from "@/pages/FamilyReport";
-import SharedFamilyReport from "@/pages/SharedFamilyReport";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -90,7 +88,6 @@ function AppRoutes() {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
         <Route path="/shared/coparenting/:token" element={<SharedCoParentingReport />} />
-        <Route path="/shared/family/:token" element={<SharedFamilyReport />} />
         <Route path="/survey/:token" element={<PostEventSurvey />} />
         <Route path="/invite/:token" element={<InviteAccept />} />
         <Route
@@ -173,14 +170,6 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <NextSteps />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/family-report"
-          element={
-            <ProtectedRoute>
-              <FamilyReport />
             </ProtectedRoute>
           }
         />

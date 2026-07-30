@@ -377,33 +377,6 @@ async def download_coparenting_dynamic_sample_thumb():
 
 
 
-@router.get("/family-report-dynamic-sample.pdf")
-async def download_family_report_dynamic_sample():
-    """Public download of a fictional-data Family Report rendered by the live
-    dynamic PDF renderer (family_report_pdf.build_family_pdf). Full detail —
-    embeds the full CP + SN report content plus the Safety pathway summary."""
-    from fastapi.responses import FileResponse
-    path = "/app/frontend/public/downloads/sacoparents-family-report-dynamic-sample.pdf"
-    return FileResponse(path, media_type="application/pdf",
-                        filename="SA-CoParents-Family-Report-Dynamic-Sample.pdf")
-
-
-@router.get("/family-report-dynamic-sample.png")
-async def download_family_report_dynamic_sample_png():
-    from fastapi.responses import FileResponse
-    path = "/app/frontend/public/downloads/sacoparents-family-report-dynamic-sample.png"
-    return FileResponse(path, media_type="image/png",
-                        filename="SA-CoParents-Family-Report-Dynamic-Sample.png")
-
-
-@router.get("/family-report-dynamic-sample-thumb.png")
-async def download_family_report_dynamic_sample_thumb():
-    from fastapi.responses import FileResponse
-    path = "/app/frontend/public/downloads/sacoparents-family-report-dynamic-sample-thumb.png"
-    return FileResponse(path, media_type="image/png",
-                        filename="SA-CoParents-Family-Report-Dynamic-Sample-Thumb.png")
-
-
 @router.post("/admin/weekly/regenerate")
 async def regenerate_weekly_insights(
     request: Request,

@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
-import { CheckCircle2, ChevronRight, ChevronDown, Shield, FileHeart } from "lucide-react";
+import { CheckCircle2, ChevronRight, ChevronDown, Shield } from "lucide-react";
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
 const REPORT_LABEL = {
@@ -663,36 +663,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Family Report — combines Co-Parenting + Safety */}
+        {/* Safety Assessment */}
         <div className="mt-6">
-          <Link
-            to="/family-report"
-            data-testid="dashboard-family-report-card"
-            className="group flex items-center gap-4 rounded-3xl bg-gradient-to-br from-[#1A1330] to-[#3D1A78] text-white border border-[#3D1A78] hover:brightness-110 p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-          >
-            <div className="shrink-0 w-12 h-12 rounded-full bg-white/15 grid place-items-center text-white">
-              <FileHeart size={22} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#CFC1EA] mb-0.5">
-                Family Report · new
-              </div>
-              <div className="font-serif text-xl leading-tight mb-1">
-                Stitch your Co-Parenting, Special Needs &amp; Safety findings into one PDF
-              </div>
-              <p className="text-xs sm:text-sm text-[#CFC1EA] leading-relaxed">
-                One branded document to share with your co-parent, mediator, or
-                attorney. Safety findings are summarised — never question-level.
-              </p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-[#CFC1EA]" />
-          </Link>
-
           <Link
             to="/safety-assessment"
             data-testid="dashboard-safety-assessment-card"
-            className="mt-4 group flex items-center gap-4 rounded-3xl bg-white border border-[#E5E0EE] hover:border-[#C28771] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-          >
+            className="group flex items-center gap-4 rounded-3xl bg-white border border-[#E5E0EE] hover:border-[#C28771] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"          >
             <div className="shrink-0 w-12 h-12 rounded-full bg-[#F8EDE4] grid place-items-center text-[#C28771]">
               <Shield size={22} />
             </div>

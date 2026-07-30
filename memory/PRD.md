@@ -1,8 +1,32 @@
 # SA CoParents — PRD (post-demolition, pre-rebuild of Special Needs)
 
-## Status snapshot (2026-07-30)
+## Status snapshot (2026-07-30 · updated)
 
-The Special Needs Co-Parenting Assessment and Report have been **completely removed** at user request. The Special Needs product is being reworked from scratch against a new 13-section framework the user has now provided.
+The Special Needs Co-Parenting Assessment and Report have been **completely removed** and are being reworked from a new 13-section framework. **Family Report has also been fully removed at user request (2026-07-30)** — the app no longer stitches Co-Parenting + Safety into a combined report.
+
+### Files removed (backend) — Family Report demolition 2026-07-30
+- `backend/family_report_content.py`, `family_report_pdf.py`, `family_report_routes.py`
+- `backend/tests/test_family_report.py`
+- Removed `/api/insights/family-report-dynamic-sample.{pdf,png}` (+ thumb) endpoints
+- Unregistered `family_report_router` from `server.py`
+- MongoDB collection `family_reports` dropped
+
+### Files removed (frontend) — Family Report demolition 2026-07-30
+- `frontend/src/pages/FamilyReport.jsx`, `SharedFamilyReport.jsx`
+- `frontend/src/components/FamilyReportBody.jsx`
+- Removed `/family-report` and `/shared/family/:token` routes from `App.js`
+- Removed the "Family Report" dashboard card + `FileHeart` icon import from `Dashboard.jsx`
+- Removed `public/downloads/sacoparents-family-report-*` samples (PDF, PNG, JPG, thumbs)
+
+### What remains untouched after Family Report removal
+- Co-Parenting Assessment + Report (+ its own share links + dynamic sample)
+- Family Violence & Communication Safety Assessment + Report
+- SNC Phase A + Phase C core (questions, scoring, report content, PDF renderer, sample PDF)
+- Auth, invites, gmail, coach, insights, admin, next-steps
+
+---
+
+## Prior demolition record — Special Needs (retained for history)
 
 ### Files removed (backend)
 - `sn_v3_questions.py`, `sn_v3_scoring.py`, `sn_v3_routes.py`, `sn_v3_report_content.py`, `sn_v3_report_pdf.py`, `sn_report_pdf.py`
@@ -37,8 +61,7 @@ The Special Needs Co-Parenting Assessment and Report have been **completely remo
 ### What remains untouched
 - Co-Parenting Assessment + Report (backend, dynamic report, PDF, share links)
 - Family Violence & Communication Safety Assessment + Report
-- Family Report (now composes only CP + Safety)
-- All auth, invites, gmail, coach, insights, admin, next-steps for the four remaining assessments
+- All auth, invites, gmail, coach, insights, admin, next-steps for the remaining assessments
 
 ### Tests still passing
 - 26/26 relevant backend tests (family_report, cp_report, coparenting_scoring, report_visibility).
