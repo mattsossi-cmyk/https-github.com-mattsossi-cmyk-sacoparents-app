@@ -18,24 +18,71 @@ import {
 import { logError } from "../lib/logger";
 
 
-const CHIP = "px-3 py-2 text-sm rounded-full border transition-all data-[selected=true]:bg-[#3D1A78] data-[selected=true]:text-white data-[selected=true]:border-[#3D1A78] border-[#D6CFE8] bg-white text-[#1A1330] hover:border-[#3D1A78]";
+const CHIP = "min-h-[44px] px-4 py-2 text-sm rounded-full border transition-all active:scale-95 data-[selected=true]:bg-[#3D1A78] data-[selected=true]:text-white data-[selected=true]:border-[#3D1A78] data-[selected=true]:shadow-sm border-[#D6CFE8] bg-white text-[#1A1330] hover:border-[#3D1A78]";
 
 
 function Likert({ id, value, onChange, scale }) {
+  const numeric = (scale || []).filter((o) => typeof o.value === "number");
+  const nonNumeric = (scale || []).filter((o) => typeof o.value !== "number");
   return (
-    <div className="flex flex-wrap gap-2" data-testid={`snc2-likert-${id}`}>
-      {scale.map((opt) => (
-        <button
-          key={String(opt.value)}
-          type="button"
-          data-testid={`snc2-${id}-opt-${opt.value}`}
-          data-selected={value === opt.value}
-          onClick={() => onChange(opt.value)}
-          className={CHIP}
-        >
-          {opt.label}
-        </button>
-      ))}
+    <div className="space-y-2" data-testid={`snc2-likert-${id}`}>
+      {/* Numeric buttons — evenly sized, easy phone tap targets. */}
+      <div className="grid grid-cols-5 gap-2">
+        {numeric.map((opt) => {
+          const selected = value === opt.value;
+          return (
+            <button
+              key={String(opt.value)}
+              type="button"
+              data-testid={`snc2-${id}-opt-${opt.value}`}
+              data-selected={selected}
+              onClick={() => onChange(opt.value)}
+              className={`min-h-[48px] rounded-2xl border px-2 py-2 flex flex-col items-center justify-center transition-all text-[#1A1330] active:scale-95 ${
+                selected
+                  ? "bg-[#3D1A78] text-white border-[#3D1A78] shadow-md"
+                  : "bg-white border-[#D6CFE8] hover:border-[#3D1A78]"
+              }`}
+            >
+              <span className="text-base font-bold leading-none">{opt.value}</span>
+              <span className={`hidden sm:block text-[10px] leading-tight text-center mt-1 ${selected ? "text-white/80" : "text-[#4B4567]"}`}>
+                {opt.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {/* Legend under the numbers — one line on mobile, doubles as the scale key. */}
+      <div className="flex justify-between text-[10px] text-[#8471B3] px-1 sm:hidden">
+        {numeric.map((opt) => (
+          <span key={`legend-${opt.value}`} className="max-w-[52px] text-center leading-tight">
+            {opt.label.replace("Strongly ", "").replace("disagree", "SD").replace("Disagree", "D").replace("Unsure", "?").replace("Agree", "A").replace("SA", "SA")}
+          </span>
+        ))}
+      </div>
+      {/* Non-numeric options (N/A) on their own row. */}
+      {nonNumeric.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {nonNumeric.map((opt) => {
+            const selected = value === opt.value;
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                data-testid={`snc2-${id}-opt-${opt.value}`}
+                data-selected={selected}
+                onClick={() => onChange(opt.value)}
+                className={`min-h-[44px] px-4 rounded-full border text-sm transition-all ${
+                  selected
+                    ? "bg-[#3D1A78] text-white border-[#3D1A78]"
+                    : "bg-white text-[#4B4567] border-[#D6CFE8] hover:border-[#3D1A78]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -120,11 +167,11 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
             onClick={() => toggle(p.id)}
             data-testid={`snc2-picker-${p.id}`}
             data-selected={picked.includes(p.id)}
-            className="text-left rounded-3xl border border-[#E5E0EE] bg-white p-5 shadow-sm transition-all hover:border-[#3D1A78] hover:shadow-md data-[selected=true]:border-[#3D1A78] data-[selected=true]:ring-2 data-[selected=true]:ring-[#3D1A78]/30"
+            className="text-left rounded-3xl border-2 border-[#E5E0EE] bg-white p-4 sm:p-5 shadow-sm transition-all hover:border-[#3D1A78] hover:shadow-md active:scale-[0.99] data-[selected=true]:border-[#3D1A78] data-[selected=true]:bg-[#F8F5FC] data-[selected=true]:ring-2 data-[selected=true]:ring-[#3D1A78]/25"
           >
             <div className="flex items-start gap-3">
-              <div className={`shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 ${picked.includes(p.id) ? "bg-[#3D1A78] border-[#3D1A78]" : "border-[#D6CFE8] bg-white"}`}>
-                {picked.includes(p.id) && <CheckCircle2 size={16} className="text-white" />}
+              <div className={`shrink-0 mt-0.5 w-6 h-6 rounded-full border-2 grid place-items-center ${picked.includes(p.id) ? "bg-[#3D1A78] border-[#3D1A78]" : "border-[#D6CFE8] bg-white"}`}>
+                {picked.includes(p.id) && <CheckCircle2 size={18} className="text-white" strokeWidth={3} />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-serif text-lg text-[#1A1330]">{p.name}</div>
@@ -153,12 +200,12 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         />
       </div>
 
-      <div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-8">
         <button
           data-testid="snc2-picker-continue"
           disabled={disabled}
           onClick={() => onSubmit(picked, childName)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full text-sm font-semibold bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60"
         >
           <Sparkles size={14} /> Start assessment
         </button>
@@ -377,26 +424,26 @@ export default function SpecialNeedsV2() {
         </div>
 
         {/* footer nav */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-6 sticky bottom-0 -mx-4 sm:mx-0 sm:relative bg-white/95 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none border-t border-[#EEE9F7] sm:border-none py-3 sm:py-0 px-4 sm:px-0 flex flex-wrap items-center justify-between gap-3">
           <button data-testid="snc2-prev" onClick={() => flushAndGo(current - 1)} disabled={current === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm border border-[#D6CFE8] text-[#1A1330] bg-white disabled:opacity-40 hover:border-[#3D1A78]">
+            className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm border border-[#D6CFE8] text-[#1A1330] bg-white disabled:opacity-40 hover:border-[#3D1A78]">
             <ArrowLeft size={14} /> Previous
           </button>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button data-testid="snc2-save-later" onClick={async () => { await flushAndGo(current); toast.success("Progress saved."); }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm border border-[#D6CFE8] text-[#3D1A78] bg-white hover:border-[#3D1A78]">
-              <Save size={14} /> Save &amp; come back later
+              className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm border border-[#D6CFE8] text-[#3D1A78] bg-white hover:border-[#3D1A78]">
+              <Save size={14} /> <span className="hidden sm:inline">Save &amp; come back later</span><span className="sm:hidden">Save</span>
             </button>
             {current < totalSteps - 1 ? (
               <button data-testid="snc2-next" onClick={() => flushAndGo(current + 1)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110">
+                className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110">
                 Next <ArrowRight size={14} />
               </button>
             ) : (
               <button data-testid="snc2-complete" onClick={complete} disabled={completing}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
+                className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
                 {completing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                Complete &amp; generate report
+                <span className="hidden sm:inline">Complete &amp; generate report</span><span className="sm:hidden">Complete</span>
               </button>
             )}
           </div>
