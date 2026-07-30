@@ -280,8 +280,8 @@ def build_family_pdf(*, user_name: str, report: Dict[str, Any]) -> bytes:
 
     if report.get("special_needs"):
         _render_full_report(pdf, report["special_needs"],
-                            section_title="Special Needs Assessment",
-                            principle_prefix="Principle")
+                            section_title="Special Needs Co-Parenting Assessment",
+                            principle_prefix="Section")
 
     # Combined next steps at end
     combined = report.get("combined_next_steps") or []

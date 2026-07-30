@@ -55,7 +55,7 @@ async def status(
     completed_count = sum(1 for x in [cp, sn, safety] if x)
     return {
         "cp":     {"completed": bool(cp),     "generated_at": (cp or {}).get("generated_at"),   "label": "Co-Parenting Assessment",  "path": "/coparenting"},
-        "sn":     {"completed": bool(sn),     "generated_at": (sn or {}).get("generated_at"),   "label": "Special Needs Assessment", "path": "/special-needs-v3"},
+        "sn":     {"completed": bool(sn),     "generated_at": (sn or {}).get("generated_at"),   "label": "Special Needs Co-Parenting Assessment", "path": "/special-needs-v3"},
         "safety": {"completed": bool(safety), "generated_at": (safety or {}).get("created_at"), "label": "Family Violence & Safety", "path": "/safety-assessment"},
         "completed_count": completed_count,
         "can_generate": completed_count >= 1,

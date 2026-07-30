@@ -79,7 +79,7 @@ def test_family_report_embeds_full_source_content():
 
 def test_family_report_partial_sources():
     r = fc.build_family_report(parent_name=None, cp_doc=None, sn_doc=SN_DOC, safety_doc=None)
-    assert r["included_sources"] == ["Special Needs Assessment"]
+    assert r["included_sources"] == ["Special Needs Co-Parenting Assessment"]
     assert "Missing from this report" in r["overall_summary"]
     assert r["coparenting"] is None
     assert r["safety"] is None

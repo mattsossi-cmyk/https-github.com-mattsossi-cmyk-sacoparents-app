@@ -50,7 +50,7 @@ def _embed_sn(sn_doc: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     if not sn_doc or not sn_doc.get("report"):
         return None
     return {
-        "framework": "9-section Special Needs Assessment",
+        "framework": "9-section Special Needs Co-Parenting Assessment",
         "generated_at": sn_doc.get("generated_at"),
         "report": sn_doc["report"],
     }
@@ -120,7 +120,7 @@ def _overall_paragraph(cp, sn, safety, missing: List[str]) -> str:
     if sn:
         r = sn["report"]
         parts.append(
-            f"Your Special Needs Assessment (9 sections) currently reflects {r.get('overall_rating')}."
+            f"Your Special Needs Co-Parenting Assessment (9 sections) currently reflects {r.get('overall_rating')}."
         )
     if missing:
         parts.append(
@@ -144,7 +144,7 @@ def build_family_report(
     included: List[str] = []
     missing: List[str] = []
     (included if cp else missing).append("Co-Parenting Assessment")
-    (included if sn else missing).append("Special Needs Assessment")
+    (included if sn else missing).append("Special Needs Co-Parenting Assessment")
     (included if safety else missing).append("Family Violence & Communication Safety")
 
     return {

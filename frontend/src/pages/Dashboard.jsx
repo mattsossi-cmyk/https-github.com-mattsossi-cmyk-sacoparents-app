@@ -704,7 +704,7 @@ export default function Dashboard() {
             <ChevronRight size={16} className="shrink-0 text-[#3D1A78]" />
           </Link>
 
-          {/* Special Needs Assessment v3 — 10-principle single-parent framework */}
+          {/* Special Needs Co-Parenting Assessment v3 — 9-section single-parent framework */}
           <Link
             to="/special-needs-v3"
             data-testid="dashboard-special-needs-v3-card"
@@ -715,7 +715,7 @@ export default function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-0.5">
-                Special Needs · 9 Sections
+                Special Needs Co-Parenting · 9 Sections
               </div>
               <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
                 Rate your co-parenting across 9 special-needs sections

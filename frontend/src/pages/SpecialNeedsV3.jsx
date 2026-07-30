@@ -1013,7 +1013,7 @@ export default function SpecialNeedsV3() {
       </Link>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="eyebrow text-[#3D1A78]">Special Needs Assessment · 9 Sections</div>
+          <div className="eyebrow text-[#3D1A78]">Special Needs Co-Parenting Assessment · 9 Sections</div>
           <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mt-1"
             data-testid="snv3-title">
             Supporting your special-needs child across two homes

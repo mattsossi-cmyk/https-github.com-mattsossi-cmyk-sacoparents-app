@@ -196,7 +196,7 @@ async def _load_source_assessment(db: AsyncIOMotorDatabase, user_id: str) -> Dic
             {"user_id": user_id}, sort=[("updated_at", -1)]
         )
     if not doc:
-        raise HTTPException(status_code=404, detail="No assessment on file - take the Special Needs Assessment first.")
+        raise HTTPException(status_code=404, detail="No assessment on file - take the Special Needs Co-Parenting Assessment first.")
     if not (doc.get("answers") or {}):
         raise HTTPException(status_code=400, detail="Please answer some questions before generating the report.")
     return doc
