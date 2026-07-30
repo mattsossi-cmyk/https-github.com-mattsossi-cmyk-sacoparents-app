@@ -98,29 +98,7 @@ export default function Methodology() {
             sharing.
           </p>
 
-          <H2>3. Special Needs Assessment (7 domains)</H2>
-          <p>
-            <strong>What it measures.</strong> Coordination between homes
-            across seven domains that special-needs coordination research
-            typically identifies as high-friction: <em>Communication,
-            Medical/Therapy, Behavioral, Education/IEP, Sensory & Routine,
-            Emergency Prep, Transitions</em>.
-          </p>
-          <p>
-            <strong>How it's calculated.</strong> Each domain is scored 0–100
-            based on the Likert-style answers you and (optionally) your
-            co-parent give. The composite "consistency between homes" score
-            is computed from paired responses where both parents answered.
-            Rule source: <code>backend/special_needs_scoring.py</code>.
-          </p>
-          <p>
-            <strong>Not a substitute for.</strong> An IEP, a 504 plan, a
-            paediatric neuropsychological evaluation, or a family therapist's
-            care plan. The tool helps you organise information for those
-            professionals — it does not replace them.
-          </p>
-
-          <H2>4. AI Coach responses</H2>
+          <H2>3. AI Coach responses</H2>
           <p>
             The interactive coach uses Anthropic Claude 4.5 via the Emergent
             LLM key. Prompts are constrained by a system instruction that

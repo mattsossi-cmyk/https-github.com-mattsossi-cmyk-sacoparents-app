@@ -41,7 +41,6 @@ const PILLARS = [
     tools: [
       { label: "Co-Parenting Reflection (Communication Style)", to: "/prep/communication", completedKey: "comm_style" },
       { label: "Family Violence & Communication Safety Assessment", to: "/safety-assessment", completedFlag: "hasSafetyAssessment" },
-      { label: "Special Needs Assessment", to: "/neurodivergent", completedFlag: "hasNdAnswers" },
       { label: "Mediation Readiness Check", to: "/prep/readiness", completedKey: "readiness" },
     ],
   },
@@ -55,7 +54,6 @@ const PILLARS = [
     tools: [
       { label: "Child-Centered Goals", to: "/prep/child-goals", completedKey: "child_goals" },
       { label: "Issues & Concerns (School, medical, emotional)", to: "/prep/issues", completedKey: "issues" },
-      { label: "Special Needs Deep-Dive (optional)", to: "/neurodivergent", completedFlag: "hasNdAnswers" },
     ],
   },
   {
@@ -97,7 +95,6 @@ const PILLARS = [
       { label: "Co-Parenting Assessment", to: "/summary", completedFlag: "hasSummary" },
       { label: "Alignment Statement", to: "/summary?tab=agreement", completedFlag: "hasSummary" },
       { label: "Personal Growth Plan", to: "/summary?tab=improve", completedFlag: "hasSummary" },
-      { label: "Special Needs Reports", to: "/neurodivergent/reports", completedFlag: "hasNdReports" },
       { label: "Certificate of Completion", to: "/my-plan#certificate", completedFlag: "hasCertificate" },
       { label: "My Plan (progress snapshot)", to: "/my-plan" },
     ],

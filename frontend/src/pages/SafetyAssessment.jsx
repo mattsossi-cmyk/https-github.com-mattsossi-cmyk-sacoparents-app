@@ -608,10 +608,8 @@ export default function SafetyAssessment() {
                 </div>
               </div>
               <p className="text-xs text-[#4B4567] mt-4">
-                Dimensions 2, 3 &amp; 4 are covered in the{" "}
-                <Link to="/neurodivergent" className="text-[#3D1A78] font-semibold hover:underline" data-testid="four-dim-nd-link">
-                  Special Needs Assessment →
-                </Link>
+                Dimensions 2, 3 &amp; 4 are covered by the broader child &amp;
+                family assessments elsewhere in the app.
               </p>
             </div>
 

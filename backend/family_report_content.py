@@ -1,16 +1,11 @@
 """Deterministic Family Report content builder.
 
-Stitches together whichever of these three sources a parent has completed:
+Stitches together whichever of these sources a parent has completed:
   - Co-Parenting Report (cp_reports)
-  - Special Needs v3 Report (sn_v3_reports)
   - Family Violence & Communication Safety (safety_assessments)
 
-Unlike the earlier slim version, this composer **embeds the full CP and SN
-report structure** (strengths, priority focus, communication toolkit,
-per-section findings & recommendations, next steps) so the resulting
-Family Report matches the visual and structural language of the two
-individual reports exactly. Safety is presented as a tiered pathway block
-alongside them.
+Special Needs Co-Parenting is being reworked and is intentionally not part
+of the Family Report right now.
 """
 from __future__ import annotations
 
@@ -35,33 +30,16 @@ _SAFETY_TONE = {
 
 
 def _embed_cp(cp_doc: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """Return the full CP report content unchanged, plus metadata."""
     if not cp_doc or not cp_doc.get("report"):
         return None
     return {
         "framework": "10-section Co-Parenting Assessment",
         "generated_at": cp_doc.get("generated_at"),
-        "report": cp_doc["report"],  # full: overall, strengths, growth_areas, sections[10], toolkit, next_steps, disclaimer
-    }
-
-
-def _embed_sn(sn_doc: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """Return the full SN v3 report content unchanged, plus metadata."""
-    if not sn_doc or not sn_doc.get("report"):
-        return None
-    return {
-        "framework": "9-section Special Needs Co-Parenting Assessment",
-        "generated_at": sn_doc.get("generated_at"),
-        "report": sn_doc["report"],
+        "report": cp_doc["report"],
     }
 
 
 def _summarise_safety(sa_doc: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """Extract the SHAREABLE summary from a raw safety_assessments doc.
-
-    Deliberately drops question-level identifiers (high_concern_hits,
-    coercive_hits, section counts) so this can be safely shared.
-    """
     if not sa_doc:
         return None
     result = sa_doc.get("result") or sa_doc
@@ -80,7 +58,7 @@ def _summarise_safety(sa_doc: Optional[Dict[str, Any]]) -> Optional[Dict[str, An
     }
 
 
-def _combined_next_steps(cp: Optional[Dict], sn: Optional[Dict], safety: Optional[Dict]) -> List[Dict[str, str]]:
+def _combined_next_steps(cp: Optional[Dict], safety: Optional[Dict]) -> List[Dict[str, str]]:
     """Interleave next-step items across sources, dedup, cap at 7."""
     out: List[Dict[str, str]] = []
     seen = set()
@@ -96,16 +74,12 @@ def _combined_next_steps(cp: Optional[Dict], sn: Optional[Dict], safety: Optiona
         for rec in safety.get("recommendations") or []:
             add("Safety", rec)
     cp_steps = list(((cp or {}).get("report") or {}).get("next_steps") or [])
-    sn_steps = list(((sn or {}).get("report") or {}).get("next_steps") or [])
-    for i in range(max(len(cp_steps), len(sn_steps))):
-        if i < len(cp_steps):
-            add("Co-Parenting", cp_steps[i])
-        if i < len(sn_steps):
-            add("Special Needs", sn_steps[i])
+    for step in cp_steps:
+        add("Co-Parenting", step)
     return out[:7]
 
 
-def _overall_paragraph(cp, sn, safety, missing: List[str]) -> str:
+def _overall_paragraph(cp, safety, missing: List[str]) -> str:
     parts: List[str] = []
     if safety:
         parts.append(
@@ -116,11 +90,6 @@ def _overall_paragraph(cp, sn, safety, missing: List[str]) -> str:
         r = cp["report"]
         parts.append(
             f"Your Co-Parenting Assessment (10 sections) currently reflects {r.get('overall_rating')}."
-        )
-    if sn:
-        r = sn["report"]
-        parts.append(
-            f"Your Special Needs Co-Parenting Assessment (9 sections) currently reflects {r.get('overall_rating')}."
         )
     if missing:
         parts.append(
@@ -134,27 +103,23 @@ def build_family_report(
     *,
     parent_name: Optional[str],
     cp_doc: Optional[Dict[str, Any]] = None,
-    sn_doc: Optional[Dict[str, Any]] = None,
     safety_doc: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     cp = _embed_cp(cp_doc)
-    sn = _embed_sn(sn_doc)
     safety = _summarise_safety(safety_doc)
 
     included: List[str] = []
     missing: List[str] = []
     (included if cp else missing).append("Co-Parenting Assessment")
-    (included if sn else missing).append("Special Needs Co-Parenting Assessment")
     (included if safety else missing).append("Family Violence & Communication Safety")
 
     return {
         "prepared_by": (parent_name or "").strip() or None,
         "included_sources": included,
         "missing_sources": missing,
-        "overall_summary": _overall_paragraph(cp, sn, safety, missing),
+        "overall_summary": _overall_paragraph(cp, safety, missing),
         "coparenting": cp,
-        "special_needs": sn,
         "safety": safety,
-        "combined_next_steps": _combined_next_steps(cp, sn, safety),
+        "combined_next_steps": _combined_next_steps(cp, safety),
         "disclaimer": DEFAULT_DISCLAIMER,
     }

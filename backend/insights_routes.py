@@ -368,61 +368,10 @@ async def download_coparenting_dynamic_sample_thumb():
 
 
 
-@router.get("/special-needs-report.pdf")
-async def download_special_needs_report():
-    """Public download of the 3-page sample Special Needs Co-Parenting
-    Assessment Report (Letter, 8.5x11 in). Fictional example data so
-    parents, mediators, and referring professionals can preview the format
-    before completing the actual Special Needs assessment inside the app."""
-    from fastapi.responses import FileResponse
-    path = "/app/frontend/public/downloads/sacoparents-special-needs-report.pdf"
-    return FileResponse(
-        path,
-        media_type="application/pdf",
-        filename="SA-CoParents-Special-Needs-Report-Sample.pdf",
-    )
 
 
-@router.get("/special-needs-dynamic-sample.pdf")
-async def download_special_needs_dynamic_sample():
-    """Public download of a fictional-data Special Needs Assessment report
-    rendered by the *live* dynamic PDF renderer (sn_v3_report_pdf.build_special_needs_pdf).
-
-    Uses a curated mixed-quality answer profile so it reflects exactly what a
-    real user will download after finishing the assessment — including
-    strengths, priority focus areas, the Communication Toolkit (triggered by
-    Principle 3), principle-by-principle detail, and next steps."""
-    from fastapi.responses import FileResponse
-    path = "/app/frontend/public/downloads/sacoparents-special-needs-dynamic-sample.pdf"
-    return FileResponse(
-        path,
-        media_type="application/pdf",
-        filename="SA-CoParents-Special-Needs-Dynamic-Sample.pdf",
-    )
 
 
-@router.get("/special-needs-dynamic-sample.png")
-async def download_special_needs_dynamic_sample_png():
-    """Full-length stitched PNG preview of the dynamic Special Needs sample."""
-    from fastapi.responses import FileResponse
-    path = "/app/frontend/public/downloads/sacoparents-special-needs-dynamic-sample.png"
-    return FileResponse(
-        path,
-        media_type="image/png",
-        filename="SA-CoParents-Special-Needs-Dynamic-Sample.png",
-    )
-
-
-@router.get("/special-needs-dynamic-sample-thumb.png")
-async def download_special_needs_dynamic_sample_thumb():
-    """Single-page (page 1) thumbnail preview of the dynamic Special Needs sample."""
-    from fastapi.responses import FileResponse
-    path = "/app/frontend/public/downloads/sacoparents-special-needs-dynamic-sample-thumb.png"
-    return FileResponse(
-        path,
-        media_type="image/png",
-        filename="SA-CoParents-Special-Needs-Dynamic-Sample-Thumb.png",
-    )
 
 
 

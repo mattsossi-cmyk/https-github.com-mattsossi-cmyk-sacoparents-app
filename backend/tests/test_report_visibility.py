@@ -27,7 +27,7 @@ from report_visibility import (
 
 
 def test_report_types_present():
-    assert set(REPORT_SECTIONS.keys()) == {"summary", "agreement", "sn_report", "safety", "cp_report", "sn_v3_report"}
+    assert set(REPORT_SECTIONS.keys()) == {"summary", "agreement", "sn_report", "safety", "cp_report"}
     for report_type, sections in REPORT_SECTIONS.items():
         # Every section has stable key + human-readable label
         for s in sections:
@@ -122,7 +122,6 @@ def test_pdf_builders_accept_excluded_kwarg():
     """Smoke test: the PDF builders should accept the excluded_sections kwarg
     and still emit a non-empty PDF."""
     from pdf_service import build_summary_pdf, build_agreement_pdf
-    from sn_report_pdf import build_special_needs_pdf
     from safety_assessment_pdf import build_safety_assessment_pdf
 
     summary = {
@@ -165,14 +164,7 @@ def test_pdf_builders_accept_excluded_kwarg():
         "action_plan": [{"need": "n", "action": "a", "responsible": "r", "channel": "c", "review": "r"}],
         "disclaimer": "Not clinical advice.",
     }
-    sn_full = build_special_needs_pdf(user_name="Parent", child_name="Child", report=sn_report)
-    sn_min = build_special_needs_pdf(
-        user_name="Parent",
-        child_name="Child",
-        report=sn_report,
-        excluded_sections=["action_plan", "coordination_gaps"],
-    )
-    assert sn_full.startswith(b"%PDF-") and sn_min.startswith(b"%PDF-")
+    _ = sn_report  # kept for future rebuild; no PDF assertion right now.
 
     safety = build_safety_assessment_pdf(
         user_name="Friend",

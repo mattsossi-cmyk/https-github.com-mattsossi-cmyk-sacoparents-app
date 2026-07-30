@@ -37,15 +37,6 @@ const FOCUS_META = {
     ring: "ring-[#B85B00]/20",
     chip: "bg-[#FFEDDE]",
   },
-  "special-needs": {
-    label: "Special-needs coordination",
-    icon: <Baby size={14} />,
-    href: "/neurodivergent",
-    ctaLabel: "Continue the Special Needs Assessment",
-    accent: "text-[#0E7A7A]",
-    ring: "ring-[#0E7A7A]/20",
-    chip: "bg-[#E8F7F5]",
-  },
 };
 
 function readFocus() {

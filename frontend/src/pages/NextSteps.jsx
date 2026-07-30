@@ -39,12 +39,6 @@ const ASSESSMENT_META = {
     back_to: "/safety-assessment",
     back_label: "Back to the assessment",
   },
-  special_needs: {
-    title: "Your next three steps for your child's care plan",
-    context: "Routed by your weakest coordination dimension and your recommended structure (Cooperative / Structured / Parallel).",
-    back_to: "/neurodivergent/reports",
-    back_label: "Back to the care plan",
-  },
 };
 
 const CATEGORY_CHIP = {

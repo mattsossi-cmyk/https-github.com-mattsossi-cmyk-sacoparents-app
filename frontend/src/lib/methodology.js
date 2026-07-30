@@ -59,29 +59,6 @@ export const METHODOLOGIES = {
       "Return whenever a specific exchange leaves you activated — the app is designed for repeat use in the moment. There's no ideal cadence.",
   },
 
-  special_needs: {
-    id: "special_needs",
-    name: "Special Needs Coordination Assessment",
-    category: "assessment",
-    purpose:
-      "To help two co-parents move from disagreement about the child to a coordinated plan for the child. It produces seven coordination scores (understanding, information sharing, follow-through, consistency between homes, professional collaboration, decision-making, transition stability) plus a recommended co-parenting structure — cooperative, structured, or parallel.",
-    limitations:
-      "This assessment does not diagnose your child, produce an educational classification, determine services eligibility, or measure parental fitness. It does not replace a formal evaluation by a pediatrician, psychologist, developmental specialist, or IEP team. Its outputs are prep material for mediation and coordination, not clinical findings.",
-    sources: [
-      "AAP Bright Futures framework for developmental surveillance",
-      "AAP Coordinating Care for a Child with Disabilities — organized records, tracking, provider collaboration",
-      "CDC Learn the Signs / Act Early — act on concerns, don't wait and see",
-      "IDEA framework of educational categories (US) — used as vocabulary only, not as an eligibility test",
-      "SAMHSA trauma-informed care principles",
-    ],
-    logic:
-      "The 21 coordination items each map to a fixed weight on a shared 7-point behaviour-based scale (Almost always → Almost never, plus Not applicable / I do not know / Parents disagree). Scores are the mean of the scored items per dimension — deterministic, so the same answers always produce the same numbers. Answers of 'I do not know' or 'Parents disagree' are surfaced as flags to bring to your coach rather than being treated as bad behaviour. AI narratives are layered on top of the numbers.",
-    professionalHelp:
-      "If any pillar surfaces a red flag (developmental regression, sudden mood/behaviour change, self-harm, unsafe access, family violence affecting healthcare decisions, missed medication, refused records) contact your pediatrician or a licensed child psychologist. If a formal diagnosis exists, share it with your mediator so accommodations are baked into the plan.",
-    retake:
-      "Retake at each developmental transition — starting school, puberty, changes in household structure — or annually. Children change; the plan should too.",
-  },
-
   safety: {
     id: "safety",
     name: "Family Violence & Communication Safety Assessment",

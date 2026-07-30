@@ -37,11 +37,10 @@ def _safe_filename(name: str) -> str:
 
 async def _load_sources(db: AsyncIOMotorDatabase, user_id: str) -> Dict[str, Any]:
     cp = await db.cp_reports.find_one({"user_id": user_id}, {"_id": 0})
-    sn = await db.sn_v3_reports.find_one({"user_id": user_id}, {"_id": 0})
     safety = await db.safety_assessments.find_one(
         {"user_id": user_id}, {"_id": 0}, sort=[("created_at", -1)]
     )
-    return {"cp": cp, "sn": sn, "safety": safety}
+    return {"cp": cp, "safety": safety}
 
 
 @router.get("/status")
@@ -50,12 +49,11 @@ async def status(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> Dict[str, Any]:
     srcs = await _load_sources(db, user.user_id)
-    cp, sn, safety = srcs["cp"], srcs["sn"], srcs["safety"]
+    cp, safety = srcs["cp"], srcs["safety"]
     fam = await db[COLLECTION].find_one({"user_id": user.user_id}, {"_id": 1})
-    completed_count = sum(1 for x in [cp, sn, safety] if x)
+    completed_count = sum(1 for x in [cp, safety] if x)
     return {
         "cp":     {"completed": bool(cp),     "generated_at": (cp or {}).get("generated_at"),   "label": "Co-Parenting Assessment",  "path": "/coparenting"},
-        "sn":     {"completed": bool(sn),     "generated_at": (sn or {}).get("generated_at"),   "label": "Special Needs Co-Parenting Assessment", "path": "/special-needs-v3"},
         "safety": {"completed": bool(safety), "generated_at": (safety or {}).get("created_at"), "label": "Family Violence & Safety", "path": "/safety-assessment"},
         "completed_count": completed_count,
         "can_generate": completed_count >= 1,
@@ -69,15 +67,14 @@ async def generate_report(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> Dict[str, Any]:
     srcs = await _load_sources(db, user.user_id)
-    if not any([srcs["cp"], srcs["sn"], srcs["safety"]]):
+    if not any([srcs["cp"], srcs["safety"]]):
         raise HTTPException(
             status_code=400,
-            detail="Complete at least one assessment (Co-Parenting, Special Needs, or Safety) before generating a Family Report.",
+            detail="Complete at least one assessment (Co-Parenting or Safety) before generating a Family Report.",
         )
     report = family_report_content.build_family_report(
         parent_name=user.name,
         cp_doc=srcs["cp"],
-        sn_doc=srcs["sn"],
         safety_doc=srcs["safety"],
     )
     report_id = f"fam_{uuid.uuid4().hex[:12]}"

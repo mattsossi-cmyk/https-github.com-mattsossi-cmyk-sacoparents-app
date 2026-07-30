@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
-import { CheckCircle2, ChevronRight, ChevronDown, Puzzle, Shield, FileHeart } from "lucide-react";
+import { CheckCircle2, ChevronRight, ChevronDown, Shield, FileHeart } from "lucide-react";
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
 const REPORT_LABEL = {
@@ -217,20 +217,6 @@ export default function Dashboard() {
       });
 
     // Enrich pillar completion flags from the other feature endpoints.
-    api
-      .get("/neurodivergent/prep")
-      .then((r) => {
-        const answers = r.data?.answers || {};
-        setPillarFlags((p) => ({ ...p, hasNdAnswers: Object.keys(answers).length > 0 }));
-      })
-      .catch(() => { /* non-blocking */ });
-    api
-      .get("/neurodivergent/reports")
-      .then((r) => {
-        const rs = r.data?.reports || [];
-        setPillarFlags((p) => ({ ...p, hasNdReports: rs.length > 0 }));
-      })
-      .catch(() => { /* non-blocking */ });
     api
       .get("/safety-assessment/me")
       .then((r) => {
@@ -677,64 +663,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Special Needs Assessment optional pathway */}
+        {/* Family Report — combines Co-Parenting + Safety */}
         <div className="mt-6">
-          <Link
-            to="/neurodivergent"
-            data-testid="dashboard-neurodivergent-card"
-            className="group flex items-center gap-4 rounded-3xl bg-white border border-[#E5E0EE] hover:border-[#3D1A78] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-          >
-            <div className="shrink-0 w-12 h-12 rounded-full bg-[#F1EBFA] grid place-items-center text-[#3D1A78]">
-              <Puzzle size={22} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-0.5">
-                Special Needs Assessment
-              </div>
-              <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
-                Does your child need additional support?
-              </div>
-              <p className="text-xs sm:text-sm text-[#4B4567] leading-relaxed">
-                A 6-pillar, evidence-informed pathway for co-parents whose
-                child has neurodivergence, developmental, medical, mental
-                health, behavioural, or trauma-informed needs. Generates three
-                warm reports to share with a co-parent, teacher, or therapist.
-              </p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-[#3D1A78]" />
-          </Link>
-
-          {/* Special Needs Co-Parenting Assessment v3 — 9-section single-parent framework */}
-          <Link
-            to="/special-needs-v3"
-            data-testid="dashboard-special-needs-v3-card"
-            className="mt-4 group flex items-center gap-4 rounded-3xl bg-white border border-[#E5E0EE] hover:border-[#3D1A78] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-          >
-            <div className="shrink-0 w-12 h-12 rounded-full bg-[#F1EBFA] grid place-items-center text-[#3D1A78]">
-              <Puzzle size={22} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-0.5">
-                Special Needs Co-Parenting · 9 Sections
-              </div>
-              <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
-                Rate your co-parenting across 9 special-needs sections
-              </div>
-              <p className="text-xs sm:text-sm text-[#4B4567] leading-relaxed">
-                A single-parent, 5-point self-assessment using the same rating
-                vocabulary and report structure as the Co-Parenting Assessment.
-                Intake profile + 54 questions across 9 sections, meta-options,
-                and an optional side-by-side comparison with your co-parent.
-              </p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-[#3D1A78]" />
-          </Link>
-
-          {/* Family Report — stitches Co-Parenting + Special Needs + Safety */}
           <Link
             to="/family-report"
             data-testid="dashboard-family-report-card"
-            className="mt-4 group flex items-center gap-4 rounded-3xl bg-gradient-to-br from-[#1A1330] to-[#3D1A78] text-white border border-[#3D1A78] hover:brightness-110 p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+            className="group flex items-center gap-4 rounded-3xl bg-gradient-to-br from-[#1A1330] to-[#3D1A78] text-white border border-[#3D1A78] hover:brightness-110 p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
           >
             <div className="shrink-0 w-12 h-12 rounded-full bg-white/15 grid place-items-center text-white">
               <FileHeart size={22} />

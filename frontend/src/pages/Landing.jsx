@@ -340,20 +340,6 @@ const SITUATIONS = [
     },
   },
   {
-    key: "special-needs",
-    label: "Our child has additional or special needs",
-    icon: <Baby />,
-    focus: "special-needs",
-    route: "/dashboard",
-    result: {
-      title: "Start with the Special Needs Assessment.",
-      body: "A 7-domain evaluation with a Consistency-Between-Homes score. You'll get a 7-part care plan you can hand to your pediatrician, school, or mediator — plus a safeguards-and-disagreement pathway if the two homes are out of sync.",
-      cta: "Start the special needs assessment",
-      tone: "cooperative",
-      icon: <Baby size={20} />,
-    },
-  },
-  {
     key: "mediation",
     label: "I am preparing for mediation or court",
     icon: <Scale />,
@@ -581,8 +567,6 @@ function ThreeReportsStrip() {
           title="Prepare a Child Needs Statement for mediation"
           body="A structured, child-focused agenda you can bring straight into your mediation session or attorney meeting."
           accent="#B85B00"
-          sampleHref="/downloads/sacoparents-special-needs-report.pdf"
-          sampleLabel="View sample Special Needs report (PDF)"
         />
       </div>
     </section>
@@ -1109,7 +1093,6 @@ function TrustSignals() {
 ============================================================ */
 const SAMPLE_TABS = [
   { id: "mediation",      label: "Mediation Summary",       icon: <FileText size={16} />,    subtitle: "PDF · 6–8 pages · child-centered agenda for your mediator" },
-  { id: "special-needs",  label: "Special Needs Care Plan", icon: <Baby size={16} />,        subtitle: "PDF · 6-part plan · Consistency-Between-Homes score included" },
   { id: "safety",         label: "Safety Assessment",       icon: <ShieldCheck size={16} />, subtitle: "PDF · pathway recommendation · Texas crisis resources" },
   { id: "progress",       label: "Growth Snapshot",         icon: <BarChart3 size={16} />,   subtitle: "In-app · longitudinal charts · updates every time you check in" },
 ];
@@ -1160,7 +1143,6 @@ function SampleReports() {
             {SAMPLE_TABS.find((x) => x.id === tab)?.subtitle}
           </div>
           {tab === "mediation" && <SampleMediation />}
-          {tab === "special-needs" && <SampleSpecialNeeds />}
           {tab === "safety" && <SampleSafety />}
           {tab === "progress" && <SampleProgress />}
         </div>
@@ -1229,30 +1211,6 @@ function SampleMediation() {
           <li><strong>Communication</strong> — agree on OurFamilyWizard for logistics.</li>
           <li><strong>Health</strong> — decide who books Nina&rsquo;s pediatric follow-ups.</li>
         </ol>
-      </SampleSection>
-    </ReportPageFrame>
-  );
-}
-
-function SampleSpecialNeeds() {
-  return (
-    <ReportPageFrame meta="Special Needs Care Plan · Nina, age 7" title="6-part care plan · updated weekly">
-      <div className="grid sm:grid-cols-3 gap-3 mb-6">
-        <SampleStat label="Consistency" value="64" tone="#0E7A7A" />
-        <SampleStat label="Coordination" value="71" tone="#0E7A7A" />
-        <SampleStat label="Care alignment" value="58" tone="#B85B00" />
-      </div>
-      <SampleSection title="Coordination gaps flagged">
-        <ul className="list-disc pl-5 space-y-1 text-sm text-[#4B4567]">
-          <li><strong>Medication timing</strong> — different pharmacies at each home.</li>
-          <li><strong>Sensory triggers</strong> — dad&rsquo;s house hasn&rsquo;t received the updated list.</li>
-        </ul>
-      </SampleSection>
-      <SampleSection title="Immediate action (this week)">
-        <ul className="list-disc pl-5 space-y-1 text-sm text-[#4B4567]">
-          <li>Share the OT report with dad&rsquo;s household by Friday.</li>
-          <li>Book the paediatric follow-up together — parent A leads.</li>
-        </ul>
       </SampleSection>
     </ReportPageFrame>
   );

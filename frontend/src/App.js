@@ -16,9 +16,6 @@ import MyPlan from "@/pages/MyPlan";
 import Gmail from "@/pages/Gmail";
 import Coach from "@/pages/Coach";
 import NextSteps from "@/pages/NextSteps";
-import Neurodivergent from "@/pages/Neurodivergent";
-import NeurodivergentReports from "@/pages/NeurodivergentReports";
-import SpecialNeedsV3 from "@/pages/SpecialNeedsV3";
 import ChildGoals from "@/pages/ChildGoals";
 import IssuesConcerns from "@/pages/IssuesConcerns";
 import PriorityRanking from "@/pages/PriorityRanking";
@@ -54,8 +51,6 @@ import MediatorBadge from "@/pages/MediatorBadge";
 import SafetyAssessment from "@/pages/SafetyAssessment";
 import ProblemSolvingWorksheet from "@/pages/ProblemSolvingWorksheet";
 import SharedCoParentingReport from "@/pages/SharedCoParentingReport";
-import SharedSpecialNeedsReport from "@/pages/SharedSpecialNeedsReport";
-import SpecialNeedsInviteAccept from "@/pages/SpecialNeedsInviteAccept";
 import FamilyReport from "@/pages/FamilyReport";
 import SharedFamilyReport from "@/pages/SharedFamilyReport";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
@@ -95,15 +90,6 @@ function AppRoutes() {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
         <Route path="/shared/coparenting/:token" element={<SharedCoParentingReport />} />
-        <Route path="/shared/special-needs/:token" element={<SharedSpecialNeedsReport />} />
-        <Route
-          path="/invites/special-needs/:token"
-          element={
-            <ProtectedRoute>
-              <SpecialNeedsInviteAccept />
-            </ProtectedRoute>
-          }
-        />
         <Route path="/shared/family/:token" element={<SharedFamilyReport />} />
         <Route path="/survey/:token" element={<PostEventSurvey />} />
         <Route path="/invite/:token" element={<InviteAccept />} />
@@ -187,30 +173,6 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <NextSteps />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/neurodivergent"
-          element={
-            <ProtectedRoute>
-              <Neurodivergent />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/neurodivergent/reports"
-          element={
-            <ProtectedRoute>
-              <NeurodivergentReports />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/special-needs-v3"
-          element={
-            <ProtectedRoute>
-              <SpecialNeedsV3 />
             </ProtectedRoute>
           }
         />

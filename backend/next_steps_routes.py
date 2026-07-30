@@ -1,7 +1,7 @@
 """Personalised "Your Next Three Steps" — end-of-assessment routing.
 
 After every assessment (Readiness Check · Communication Style · Family
-Violence & Safety · Special Needs Coordination), the parent sees three
+Violence & Safety · Co-Parenting), the parent sees three
 personalised, actionable next steps auto-generated from their answers.
 The steps are rule-based (deterministic) so the same answers always
 produce the same recommendations — the AI never authors these.
@@ -24,7 +24,7 @@ from auth import get_current_user
 
 router = APIRouter(prefix="/next-steps", tags=["next-steps"])
 
-ASSESSMENTS = ("readiness", "comm_style", "safety", "special_needs", "coparenting")
+ASSESSMENTS = ("readiness", "comm_style", "safety", "coparenting")
 
 
 def _now_iso() -> str:
@@ -271,116 +271,15 @@ def _safety_steps(prep: dict) -> List[dict]:
     return steps[:3]
 
 
-def _sn_steps(db_scores: dict) -> List[dict]:
-    """Special Needs — routed by the weakest coordination dimension."""
-    dims = db_scores.get("dimensions") or {}
-    structure = db_scores.get("structure") or {}
-    steps: List[dict] = []
-
-    # 1. Always encourage generating/refreshing the care plan.
-    steps.append(_step(
-        "sn_generate_plan",
-        what="Generate the 6-part care plan for your child",
-        why="Your seven coordination scores are ready. The next step is a "
-            "single downloadable document you can hand to your pediatrician "
-            "or mediator.",
-        how_long="2 minutes",
-        cta_label="Open Reports",
-        cta_path="/neurodivergent/reports",
-        category="review",
-    ))
-
-    # 2. Weakest coordination dimension → matching next surface.
-    weakest = None
-    for key, d in dims.items():
-        if not d or d.get("no_signal") or d.get("score") is None:
-            continue
-        if weakest is None or d["score"] < weakest[1]:
-            weakest = (key, d["score"])
-
-    dim_map = {
-        "information_sharing": ("Open shared records channel with the other parent",
-            "Info-sharing was your lowest coordination score. A single shared "
-            "email thread (or app) resolves most of these gaps."),
-        "consistency": ("Align three consistency items with the other parent",
-            "Pick the three items from your Consistency module that BOTH "
-            "parents flagged as 'child needs consistent' and align on the "
-            "specific routine this week."),
-        "follow_through": ("Assign follow-through owners in your Action Plan",
-            "Follow-through dips when nobody explicitly owns the task. Assign "
-            "one responsible parent per row in the Action Plan worksheet."),
-        "understanding": ("Revisit the Child Profile section with the other parent",
-            "The lowest score is on understanding your child. The Child "
-            "Profile section is short — share it and align on it."),
-        "professional_collaboration": ("Update professional contact info in one place",
-            "Doctors, therapists, and schools need to reach both parents. "
-            "A single shared contact card removes this gap."),
-        "decision_making": ("Set a decision-making rhythm with a deadline",
-            "Decisions stall when neither parent has a channel and a deadline. "
-            "Agree on one now."),
-        "transition_stability": ("Write a handover checklist for your child",
-            "A one-page checklist (meds, comfort item, recovery-time note) "
-            "removes 80% of transition friction."),
-    }
-    if weakest:
-        key = weakest[0]
-        # DIMENSION_LABELS uses snake_case matching keys → map keys align.
-        if key in dim_map:
-            label, why = dim_map[key]
-            steps.append(_step(
-                f"sn_dim_{key}",
-                what=label,
-                why=why,
-                how_long="15 minutes",
-                cta_label="Open the care plan",
-                cta_path="/neurodivergent/reports",
-                category="preparation",
-            ))
-
-    # 3. Structure-specific step.
-    sid = structure.get("id")
-    if sid == "parallel":
-        steps.append(_step(
-            "sn_structure_parallel",
-            what="Move day-to-day coordination to a structured channel",
-            why="Your coordination pattern points to Parallel Coordination — "
-                "a low-contact, structured channel with clear owners protects "
-                "your child from the coordination gap.",
-            how_long="20 minutes",
-            cta_label="Open Safety & Parallel toolkit",
-            cta_path="/safety",
-            category="safety",
-        ))
-    elif sid == "structured":
-        steps.append(_step(
-            "sn_structure_structured",
-            what="Turn one action row into a written 30-day agreement",
-            why="Structured Coordination works when the plan is written down. "
-                "Start with the highest-priority row.",
-            how_long="10 minutes",
-            cta_label="Open the Alignment Statement",
-            cta_path="/summary?tab=agreement",
-            category="preparation",
-        ))
-    else:
-        steps.append(_step(
-            "sn_structure_cooperative",
-            what="Schedule a monthly coordination check-in",
-            why="Cooperative Coordination stays cooperative when there's a "
-                "predictable rhythm. Even 15 minutes monthly holds it.",
-            how_long="5 minutes",
-            cta_label="Open your calendar",
-            cta_path="/my-plan",
-            category="review",
-        ))
-    return steps[:3]
+def _sn_steps(_db_scores: dict) -> List[dict]:
+    """Special Needs — removed. Returns no steps."""
+    return []
 
 
 # ---------------------------------------------------------------------------
-# Deterministic step-builders for the new 10-principle Special Needs (v3)
-# assessment and the new 10-section Co-Parenting assessment.
+# Deterministic step-builders for the 10-section Co-Parenting assessment.
 #
-# Both accept the shared scoring shape from cp_scoring / sn_v3_scoring:
+# Accepts the shared scoring shape from cp_scoring:
 #   { sections: [{id, number, name, rating, avg, ...}],
 #     overall_rating, priority_focus: [section_id, ...],
 #     show_communication_toolkit: bool }
@@ -404,54 +303,6 @@ def _priority_step_from(scores: dict, section_lookup: dict, *, cta_label: str, c
         cta_path=cta_path,
         category="preparation",
     )
-
-
-def _sn_v3_steps(scores: dict) -> List[dict]:
-    """Special Needs v3 (10-principle) — 3 deterministic steps."""
-    from sn_v3_questions import SECTIONS as SN_SECTIONS
-    lookup = {s["id"]: s for s in SN_SECTIONS}
-
-    steps: List[dict] = []
-    steps.append(_step(
-        "snv3_open_report",
-        what="Open your personalised Special Needs report",
-        why="You just finished a 10-principle self-assessment. Your report has "
-            "strengths, priority focus areas, and next steps ready to share with "
-            "your co-parent, mediator, or Parenting Facilitator.",
-        how_long="3 minutes",
-        cta_label="Open my report",
-        cta_path="/special-needs-v3",
-        category="review",
-    ))
-
-    pf = _priority_step_from(scores, lookup, cta_label="Open my report", cta_path="/special-needs-v3")
-    if pf:
-        steps.append(pf)
-
-    if scores.get("show_communication_toolkit"):
-        steps.append(_step(
-            "snv3_toolkit",
-            what="Use the Communication Toolkit for the next 2 weeks",
-            why="Principle 3 (Maintain Open, Child-Focused Communication) needs "
-                "attention. BIFF messages + a shared parenting app will remove most "
-                "of the friction before your next mediation session.",
-            how_long="10 minutes",
-            cta_label="Open my plan",
-            cta_path="/my-plan",
-            category="preparation",
-        ))
-    else:
-        steps.append(_step(
-            "snv3_share",
-            what="Share the report with your co-parent or Parenting Facilitator",
-            why="A shared link keeps everyone aligned on the same 10-principle "
-                "framework — no diagnostic language, just practical coordination.",
-            how_long="2 minutes",
-            cta_label="Open my report",
-            cta_path="/special-needs-v3",
-            category="preparation",
-        ))
-    return steps[:3]
 
 
 def _cp_steps(scores: dict) -> List[dict]:
@@ -524,20 +375,7 @@ async def _generate(db, assessment: str, current) -> List[dict]:
             prep = {**prep, "safety_assessment": sa}
         return _safety_steps(prep)
     if assessment == "special_needs":
-        # Prefer new SN v3 (10-principle); fallback to legacy nd_prep so existing
-        # users' next-steps keep working.
-        v3 = await db.sn_v3_assessments.find_one(
-            {"user_id": current.user_id}, {"_id": 0}, sort=[("updated_at", -1)]
-        )
-        if v3 and (v3.get("scores") or v3.get("answers")):
-            from sn_v3_scoring import compute_scores as sn_v3_compute
-            scores = v3.get("scores") or sn_v3_compute(v3.get("answers") or {})
-            return _sn_v3_steps(scores)
-        import special_needs_scoring as sn_scoring
-        nd = await db.nd_prep.find_one({"user_id": current.user_id}, {"_id": 0}) or {}
-        answers = nd.get("answers_v2") or {}
-        scores = sn_scoring.compute_scores(answers)
-        return _sn_steps(scores)
+        return []
     if assessment == "coparenting":
         cp = await db.cp_assessments.find_one(
             {"user_id": current.user_id}, {"_id": 0}, sort=[("updated_at", -1)]

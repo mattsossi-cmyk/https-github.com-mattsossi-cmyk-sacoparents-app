@@ -78,7 +78,6 @@ const STAGES = [
       "Name what your child actually needs from you — separate from what feels urgent in the conflict.",
     activities: [
       { label: "Child-Centered Goals", path: "/prep/child-goals", requires: "child_goals" },
-      { label: "Special Needs Assessment (optional)", path: "/neurodivergent" },
     ],
     requires: ["child_goals"],
     ctaPath: "/prep/child-goals",
