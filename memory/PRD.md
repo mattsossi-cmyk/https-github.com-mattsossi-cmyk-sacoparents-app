@@ -44,17 +44,21 @@ The Special Needs Co-Parenting Assessment and Report have been **completely remo
 - 26/26 relevant backend tests (family_report, cp_report, coparenting_scoring, report_visibility).
 - Backend running clean, `/api/health` = 200.
 
-## Next step (blocked on user approval)
+## Next step (Phase A of the rebuild)
 
-User provided the full spec for the new **Special Needs Coparenting Assessment** (13 sections, mixed question types, Likert 1–5 + N/A, new rating classification, comparison-not-competition report rules, Section 11 pass-through to Family Violence Assessment). Rebuild scope must be confirmed with user before coding begins.
+User provided the full spec for the new **Special Needs Coparenting Assessment** (13 sections) and the full **Individual Parent Report** structure (17 sections). Both specs are captured verbatim in `/app/memory/SPECIAL_NEEDS_REBUILD_SPEC.md`.
 
-### New spec summary
-- Sections 1, 3, 4, 9, 13 are hybrid intake + scored
-- Sections 2, 5, 7, 8, 10, 12 are pure Likert 1–5
-- Section 6 uses a consistency scale (Consistent → Frequently inconsistent)
-- Section 11 is safety-sensitive and does NOT produce a score; positive answers direct the user to the standalone Family Violence Assessment
-- Rating classification: `4.25–5.00 Established strength · 3.50–4.24 Generally supported · 2.75–3.49 Coordination opportunity · 2.00–2.74 Significant inconsistency · 1.00–1.99 Priority concern`
-- Comparison report never labels a parent correct
+### Confirmed decisions
+1. **Phase A only next session:** backend schema + deterministic scoring + deterministic report content builder + pytest coverage. No frontend, no PDF, no invite/comparison.
+2. **Section 11 (Family Violence):** captured privately, excluded from every general score, included in the parent's own report, redacted by default in any shared/comparison view, positives surface the standalone Family Violence Assessment.
+3. **Scoring rules:** Sections 1 and 13 are context. Section 11 is safety-only. All multi-select / intake fields in Sections 3, 4, 7, 8, 9, 10, 11 are context. **Scored categories = Sections 2, 3, 4, 5, 6, 7, 8, 9, 10, 12** (10 rows). Section 6 consistency scale maps Consistent 5 · Mostly consistent 4 · Sometimes inconsistent 3 · Frequently inconsistent 2 · Unknown/NA excluded.
+4. **Fresh names:** files `snc_questions.py` / `snc_scoring.py` / `snc_report_content.py`; API prefix `/api/snc`; collections `snc_assessments` / `snc_reports` / `snc_invites`; Phase B frontend route `/special-needs`; Phase C shared viewer `/shared/snc/:token`; Phase D invite `/invites/snc/:token`. `snc` = Special Needs Co-parenting.
+
+### Phase A deliverables
+- `backend/snc_questions.py` — full 13-section framework, verbatim question wording, response scales, meta-flags.
+- `backend/snc_scoring.py` — deterministic scoring: 10 category averages 1–5 (N/A excluded); classification map (4.25–5.00 Established strength · 3.50–4.24 Generally supported · 2.75–3.49 Coordination opportunity · 2.00–2.74 Significant inconsistency · 1.00–1.99 Priority concern); Section 6 consistency-scale numeric map; Section 11 safety captured but never scored.
+- `backend/snc_report_content.py` — deterministic Individual Parent Report matching the 17-section blueprint, with each section following the `response → finding → child impact → suggested option → action step` pattern. Must accept `include_safety: bool` (default True for own view, False for shared) and produce a fully populated report.
+- `backend/tests/test_snc_scoring.py` and `backend/tests/test_snc_report.py` — thorough unit coverage.
 
 ### Test credentials
 See `/app/memory/test_credentials.md`.
