@@ -292,6 +292,11 @@ def build_deep_dive_pdf(*, report: Dict[str, Any]) -> bytes:
 
     # ----- At a glance -----
     _section_break(pdf)
+    if report.get("ai_summary"):
+        pdf.h2("Executive summary")
+        pdf.small("AI-generated · neutral · non-diagnostic")
+        pdf.body(report["ai_summary"])
+        _section_break(pdf)
     pdf.h2("At a glance")
     pdf.body(
         f"{summary.get('answered_sections', 0)} sections completed. "

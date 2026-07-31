@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Loader2, RefreshCcw } from "lucide-react";
+import { ArrowLeft, Download, Loader2, RefreshCcw, Sparkles } from "lucide-react";
 import { logError } from "../lib/logger";
 
 
@@ -98,6 +98,17 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
             <div className="mt-3 text-sm text-[#1A1330] whitespace-pre-wrap">{profile.concern_notes}</div>
           )}
         </section>
+
+        {/* Executive summary — AI-generated */}
+        {report.ai_summary && (
+          <section className="mt-6 bg-gradient-to-br from-[#F1EBFA] to-[#FFFFFF] rounded-3xl border border-[#D6CFE8] p-5 sm:p-7 shadow-sm" data-testid="edu-deep-ai-summary">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2 mb-1">
+              <Sparkles size={12} /> AI executive summary
+            </div>
+            <p className="text-[11px] text-[#8471B3] mb-3 italic">Neutral · non-diagnostic · generated from your answers</p>
+            <p className="text-sm text-[#1A1330] whitespace-pre-wrap leading-relaxed">{report.ai_summary}</p>
+          </section>
+        )}
 
         {/* At a glance */}
         <section className="mt-6 bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm" data-testid="edu-deep-summary">

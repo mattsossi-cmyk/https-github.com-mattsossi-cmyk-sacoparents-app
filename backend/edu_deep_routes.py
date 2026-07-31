@@ -28,6 +28,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel
 
 from auth import UserPublic, get_current_user, get_db
+from ai_summary import generate_executive_summary
 from edu_deep_questions import (
     DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION, public_schema, validate_answer,
 )
@@ -193,6 +194,12 @@ async def _build_and_cache(db, user, doc):
         child_name=doc.get("child_name"),
         responses=responses,
     )
+    ai_summary = await generate_executive_summary(
+        product_name="Educational Needs Deep Dive",
+        report=content,
+    )
+    if ai_summary:
+        content["ai_summary"] = ai_summary
     record = {
         "report_id": f"edu_deep_r_{uuid.uuid4().hex[:12]}",
         "user_id": user.user_id,
