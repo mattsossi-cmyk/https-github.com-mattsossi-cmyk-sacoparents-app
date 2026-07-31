@@ -228,6 +228,33 @@ async def generate(user: UserPublic = Depends(get_current_user),
     return {"cached": False, **fresh}
 
 
+@router.post("/report/regen-summary")
+async def regen_summary(user: UserPublic = Depends(get_current_user),
+                        db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    if user.is_guest:
+        raise HTTPException(status_code=403, detail="Please claim an account before generating your report.")
+    cached = await _cached_report(db, user.user_id)
+    if not cached:
+        raise HTTPException(status_code=404, detail="Generate the report first.")
+    report = cached.get("report") or {}
+    new_summary = await generate_executive_summary(
+        product_name="Educational Needs Deep Dive",
+        report=report,
+    )
+    if not new_summary:
+        raise HTTPException(status_code=503, detail="AI summary is unavailable right now. Please try again shortly.")
+    now = _now_iso()
+    report["ai_summary"] = new_summary
+    report["ai_summary_regenerated_at"] = now
+    await db[REPORTS].update_one(
+        {"user_id": user.user_id},
+        {"$set": {"report": report, "ai_summary_regenerated_at": now}},
+    )
+    cached["report"] = report
+    cached["ai_summary_regenerated_at"] = now
+    return {"ok": True, **cached}
+
+
 @router.get("/report/pdf")
 async def report_pdf(user: UserPublic = Depends(get_current_user),
                      db: AsyncIOMotorDatabase = Depends(get_db)):

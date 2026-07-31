@@ -49,6 +49,7 @@ function Eyebrow({ children }) {
 export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [regenBusy, setRegenBusy] = useState(false);
   const [report, setReport] = useState(null);
 
   const load = useCallback(async () => {
@@ -63,6 +64,18 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const regenerateSummary = async () => {
+    setRegenBusy(true);
+    try {
+      const r = await api.post("/med-deep/report/regen-summary");
+      setReport(r.data?.report || null);
+      toast.success("AI summary refreshed.");
+    } catch (err) {
+      logError("med-deep regen summary", err);
+      toast.error(err?.response?.data?.detail || "Could not regenerate the summary.");
+    } finally { setRegenBusy(false); }
+  };
 
   const download = async () => {
     setBusy(true);
@@ -171,11 +184,26 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         {/* AI Executive Summary (existing feature) */}
         {report.ai_summary && (
           <SectionCard testid="med-deep-ai-summary">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2 mb-1">
-              <Sparkles size={12} /> AI executive summary
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2 mb-1">
+                  <Sparkles size={12} /> AI executive summary
+                </div>
+                <p className="text-[11px] text-[#8471B3] italic">Neutral · non-diagnostic · generated from your answers</p>
+              </div>
+              <button onClick={regenerateSummary} disabled={regenBusy}
+                data-testid="med-deep-regen-summary"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-[#D6CFE8] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
+                {regenBusy ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
+                {regenBusy ? "Regenerating…" : "Regenerate"}
+              </button>
             </div>
-            <p className="text-[11px] text-[#8471B3] mb-3 italic">Neutral · non-diagnostic · generated from your answers</p>
-            <p className="text-sm text-[#1A1330] whitespace-pre-wrap leading-relaxed">{report.ai_summary}</p>
+            <p className="text-sm text-[#1A1330] whitespace-pre-wrap leading-relaxed mt-3">{report.ai_summary}</p>
+            {report.ai_summary_regenerated_at && (
+              <p className="text-[10px] text-[#8471B3] italic mt-2" data-testid="med-deep-regen-timestamp">
+                Last regenerated: {new Date(report.ai_summary_regenerated_at).toLocaleString()}
+              </p>
+            )}
           </SectionCard>
         )}
 

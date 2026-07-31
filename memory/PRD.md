@@ -24,6 +24,7 @@
   * Tests: 11 new in `tests/test_snc2_enhancements.py` + 3 new safety-override unit tests in `test_snc2.py` — **61/61 SNC v2 tests passing** with iteration-36's `_latest_safety_level` fix intact.
 - **Email delivery**: Resend `RESEND_FROM_EMAIL` switched to the verified `mattsossi@mattsossi.sacoparentsapp.online` subdomain — outbound email now delivering. Root `sacoparentsapp.online` domain still failed at Resend; add DKIM/SPF/MX records to verify it and switch the FROM back for cleaner branding.
 - **Retained products**: Co-Parenting Assessment + Report (+ share links), Family Violence & Communication Safety Assessment + Report, auth, invites (general co-parent), gmail, coach, insights, admin, next-steps.
+- **Regen AI Summary button (2026-07-31)** — new endpoints `POST /api/{edu,psych,med}-deep/report/regen-summary` re-run the Claude Sonnet 4.5 executive-summary generator against the already-cached deep-dive report, update the cached `ai_summary` and `ai_summary_regenerated_at` timestamp, and return the refreshed report. Frontend adds a "Regenerate" pill inside the AI executive summary card on all three deep-dive report pages (testids `edu-deep-regen-summary`, `psych-deep-regen-summary`, `med-deep-regen-summary`) with a loading spinner and a "Last regenerated" timestamp line. Verified end-to-end via curl against all three pathways as `parent1@test.com`.
 
 ---
 
