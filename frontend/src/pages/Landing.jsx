@@ -341,7 +341,7 @@ const SITUATIONS = [
   },
   {
     key: "special-needs",
-    label: "I have concerns for my child's educational, medical or psychological needs",
+    label: "Our child has unique educational, psychological or medical needs",
     icon: <Baby />,
     focus: "special-needs",
     route: "/special-needs-v2",
