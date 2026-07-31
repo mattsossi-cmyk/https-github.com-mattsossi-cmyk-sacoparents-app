@@ -178,7 +178,7 @@ export default function SpecialNeedsV2PsychologicalDeepDiveReport() {
                   <div className="mt-3">
                     <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Recommendations</div>
                     <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1">
-                      {(s.recommendations || []).map((r, i) => (<li key={i}>{r}</li>))}
+                      {(s.recommendations || []).map((r) => (<li key={r}>{r}</li>))}
                     </ul>
                   </div>
                 )}

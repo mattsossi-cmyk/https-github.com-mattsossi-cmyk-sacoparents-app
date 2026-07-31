@@ -121,7 +121,7 @@ export default function SpecialNeedsV2MedicalDeepDiveReport() {
               These signals surfaced from your answers. They are not diagnoses. Bring them to the prescriber, pharmacist, or school nurse promptly.
             </p>
             <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1 mt-3">
-              {riskSignals.map((r, i) => (<li key={i}>{r}</li>))}
+              {riskSignals.map((r) => (<li key={r}>{r}</li>))}
             </ul>
           </section>
         )}
@@ -199,7 +199,7 @@ export default function SpecialNeedsV2MedicalDeepDiveReport() {
                   <div className="mt-3">
                     <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Recommendations</div>
                     <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1">
-                      {(s.recommendations || []).map((r, i) => (<li key={i}>{r}</li>))}
+                      {(s.recommendations || []).map((r) => (<li key={r}>{r}</li>))}
                     </ul>
                   </div>
                 )}

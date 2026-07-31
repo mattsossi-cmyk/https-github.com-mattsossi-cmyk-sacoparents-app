@@ -9,6 +9,7 @@ from fpdf import FPDF
 
 from edu_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION, DECISION_TOPICS
 from edu_deep_scoring import score_deep_dive
+from edu_deep_journey import build_journey_report
 
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "sa_coparents_logo.png")
@@ -151,14 +152,21 @@ def build_deep_dive_report(
     flagged_names = [s["name"] for s in sections_out if s["is_flagged"]]
     strength_names = [s["name"] for s in sections_out if s["is_strength"]]
 
+    # ---- journey layer (SA CoParents narrative structure) ----
+    journey = build_journey_report(
+        parent_name=parent_name,
+        child_name=child_name,
+        responses=responses,
+    )
+    journey["cover"] = {
+        **journey["cover"],
+        "assessment_date": _now_iso()[:10],
+    }
+
     return {
         "generated_at": _now_iso(),
         "deep_dive_version": DEEP_DIVE_VERSION,
-        "cover": {
-            "parent_name": parent_name or "-",
-            "child_name": child_name or "-",
-            "assessment_date": _now_iso()[:10],
-        },
+        "cover": journey["cover"],
         "profile": {
             "school_setting":  responses.get("s1_school_setting"),
             "grade_level":     responses.get("s1_grade_level"),
@@ -175,11 +183,21 @@ def build_deep_dive_report(
             "strength_names":     strength_names,
         },
         "sections": sections_out,
-        "disclaimer": (
-            "This report reflects one parent's perspective. It does not diagnose, "
-            "determine parental fitness, or provide legal advice. Share it with your "
-            "mediator, IEP team, or family professional for their input."
-        ),
+        # SA CoParents journey layer
+        "overview": journey["overview"],
+        "support_summary": journey["support_summary"],
+        "child_profile": journey["child_profile"],
+        "school_involvement": journey["school_involvement"],
+        "co_parenting_assessment": journey["co_parenting_assessment"],
+        "alignment_areas": journey["alignment_areas"],
+        "attention_areas": journey["attention_areas"],
+        "support_level": journey["support_level"],
+        "practical_options": journey["practical_options"],
+        "action_plan": journey["action_plan"],
+        "foundation_statement": journey["foundation_statement"],
+        "questions_for_school_or_parent": journey["questions_for_school_or_parent"],
+        "final_summary": journey["final_summary"],
+        "disclaimer": journey["disclaimer"],
     }
 
 
@@ -260,77 +278,168 @@ def _section_break(pdf: _PDF):
     pdf.ln(1.5)
 
 
+_RATING_COLORS = {
+    "Strong": (31, 92, 59),
+    "Developing": (170, 116, 40),
+    "Needs Attention": (176, 42, 42),
+    "Not enough info": (110, 100, 130),
+}
+
+
 def build_deep_dive_pdf(*, report: Dict[str, Any]) -> bytes:
+    """Render the SA CoParents journey Educational Deep Dive report as a
+    Letter-sized branded PDF matching the shared report style.
+    """
     pdf = _PDF()
     pdf.add_page()
 
     cover = report.get("cover") or {}
-    profile = report.get("profile") or {}
-    summary = report.get("summary") or {}
+    overview = report.get("overview") or {}
+    support_summary = report.get("support_summary") or {}
+    child_profile = report.get("child_profile") or {}
+    involvement = report.get("school_involvement") or {}
+    coparenting = report.get("co_parenting_assessment") or {}
+    support_level = report.get("support_level") or {}
 
-    # ----- Header -----
-    pdf.h1("Educational Needs — Deep Dive Report")
-    pdf.body(f"For {cover.get('parent_name') or '-'} · About {cover.get('child_name') or '-'} · {cover.get('assessment_date') or ''}")
+    # 1. Report Overview
+    pdf.h1("SA CoParents Educational Needs Assessment Report")
+    header_bits = [f"Parent: {cover.get('parent_name') or '-'}",
+                   f"Child: {cover.get('child_name') or '-'}"]
+    if cover.get("grade_level"): header_bits.append(f"Grade: {cover['grade_level']}")
+    if cover.get("school_state"): header_bits.append(f"State: {cover['school_state']}")
+    if cover.get("assessment_date"): header_bits.append(f"Date: {cover['assessment_date']}")
+    pdf.body(" · ".join(header_bits))
+    _section_break(pdf)
+    pdf.h2("1. Report overview")
+    pdf.h3("Purpose")
+    pdf.bullets(overview.get("purpose_bullets") or [])
     pdf.small(report.get("disclaimer") or "")
 
-    # ----- Profile -----
+    # 2. Educational Support Summary
     _section_break(pdf)
-    pdf.h2("1. Educational Profile")
-    profile_bits = []
-    if profile.get("school_setting"): profile_bits.append(f"Setting: {profile['school_setting']}")
-    if profile.get("grade_level"): profile_bits.append(f"Grade: {profile['grade_level']}")
-    if profile.get("school_state"): profile_bits.append(f"State: {profile['school_state']}")
-    if profile_bits:
-        pdf.body(" · ".join(profile_bits))
-    concerns = profile.get("concerns") or []
-    if concerns:
-        pdf.h3("Educational concerns")
-        pdf.bullets(concerns)
-    if profile.get("concern_notes"):
-        pdf.h3("Additional notes")
-        pdf.body(profile["concern_notes"])
+    pdf.h2("2. Your educational support summary")
+    for area in support_summary.get("ratings") or []:
+        pdf.set_font("Helvetica", "B", 9.7); pdf.set_text_color(30, 24, 54)
+        pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 4.6, _safe(area.get("area") or ""))
+        color = _RATING_COLORS.get(area.get("rating") or "", (61, 26, 120))
+        pdf.pill(f"Rating: {area.get('rating') or '-'}", color=color)
+        if area.get("narrative"):
+            pdf.body(area["narrative"])
+        pdf.ln(0.5)
+    if support_summary.get("overall_narrative"):
+        pdf.h3("Overall")
+        pdf.body(support_summary["overall_narrative"])
 
-    # ----- At a glance -----
-    _section_break(pdf)
+    # AI executive summary (if present)
     if report.get("ai_summary"):
+        _section_break(pdf)
         pdf.h2("Executive summary")
         pdf.small("AI-generated · neutral · non-diagnostic")
         pdf.body(report["ai_summary"])
-        _section_break(pdf)
-    pdf.h2("At a glance")
-    pdf.body(
-        f"{summary.get('answered_sections', 0)} sections completed. "
-        f"{summary.get('flagged_sections', 0)} area(s) flagged for follow-up. "
-        f"{summary.get('strength_sections', 0)} area(s) recognised as strengths."
-    )
-    if summary.get("flagged_names"):
-        pdf.h3("Sections flagged for follow-up")
-        pdf.bullets(summary["flagged_names"])
-    if summary.get("strength_names"):
-        pdf.h3("Areas of current strength")
-        pdf.bullets(summary["strength_names"])
 
-    # ----- Section-by-section (only if flagged OR a strength) -----
-    for s in report.get("sections") or []:
-        if not (s.get("is_flagged") or s.get("is_strength")):
-            continue
-        _section_break(pdf)
-        pdf.h2(f"{s['number']}. {s['name']}")
-        if s.get("is_strength"):
-            pdf.pill("Strength", color=(31, 92, 59))
-            pdf.body(s.get("strength_text") or "")
-            if s.get("strength_reasons"):
-                pdf.small("Signals: " + "; ".join(s["strength_reasons"]))
-        if s.get("is_flagged"):
-            pdf.pill("Area to develop", color=(176, 42, 42))
-            pdf.body(s.get("challenge_text") or "")
-            if s.get("flag_reasons"):
-                pdf.small("Signals: " + "; ".join(s["flag_reasons"]))
-            if s.get("recommendations"):
-                pdf.h3("Recommendations")
-                pdf.bullets(s["recommendations"])
+    # 3. Child's Educational Profile
+    _section_break(pdf)
+    pdf.h2("3. Your child's educational profile")
+    pdf.h3("Strengths identified")
+    pdf.bullets(child_profile.get("strengths") or [])
+    if child_profile.get("concerns"):
+        pdf.h3("Concerns identified")
+        pdf.bullets(child_profile["concerns"])
+    if child_profile.get("primary_concern") or child_profile.get("benefit_from"):
+        pdf.h3("Parent's perspective")
+        pdf.body(
+            f"Your primary educational concern is: {child_profile.get('primary_concern') or '-'}. "
+            f"You believe your child may benefit from: {child_profile.get('benefit_from') or '-'}."
+        )
+    if child_profile.get("notes"):
+        pdf.h3("Additional notes")
+        pdf.body(child_profile["notes"])
 
-    # ----- Disclaimer footer -----
+    # 4. School and Professional Involvement
+    _section_break(pdf)
+    pdf.h2("4. School and professional involvement")
+    if involvement.get("roles"):
+        pdf.h3("Currently involved")
+        pdf.bullets(involvement["roles"])
+    if involvement.get("meetings"):
+        pdf.h3("Upcoming or recommended meetings")
+        for m in involvement["meetings"]:
+            pdf.body(
+                f"{m.get('name')} — status: {m.get('current_status')}. "
+                f"Suggested: {m.get('next_step')}."
+            )
+
+    # 5. Educational Co-Parenting Assessment
+    _section_break(pdf)
+    pdf.h2("5. Educational co-parenting assessment")
+    for label, key in (
+        ("Information sharing", "information_sharing"),
+        ("Consistency between homes", "consistency_between_homes"),
+        ("Educational decision-making", "decision_making"),
+    ):
+        block = coparenting.get(key) or {}
+        color = _RATING_COLORS.get(block.get("rating") or "", (61, 26, 120))
+        pdf.h3(label)
+        pdf.pill(f"Rating: {block.get('rating') or '-'}", color=color)
+        items = block.get("items") or block.get("shared_items") or []
+        if items:
+            pdf.bullets(items)
+        if block.get("gap_items"):
+            pdf.small("Possible gaps: " + ", ".join(block["gap_items"]))
+
+    # 6. Areas of alignment
+    _section_break(pdf)
+    pdf.h2("6. Areas of alignment")
+    pdf.bullets(report.get("alignment_areas") or [])
+
+    # 7. Areas requiring attention
+    _section_break(pdf)
+    pdf.h2("7. Areas requiring attention")
+    pdf.bullets(report.get("attention_areas") or [])
+
+    # 8. Recommended Educational Support Level
+    _section_break(pdf)
+    pdf.h2(f"8. Recommended educational support level")
+    pdf.pill(f"Level {support_level.get('level', '-')} — {support_level.get('name') or ''}",
+             color=_RATING_COLORS.get(
+                 "Strong" if support_level.get("level") == 1
+                 else "Developing" if support_level.get("level") == 2
+                 else "Needs Attention",
+                 (61, 26, 120)))
+    if support_level.get("description"):
+        pdf.body(support_level["description"])
+    if support_level.get("next_steps"):
+        pdf.h3("Suggested next steps")
+        pdf.bullets(support_level["next_steps"])
+
+    # 9. Practical Options & Resources
+    _section_break(pdf)
+    pdf.h2("9. Practical options and resources")
+    pdf.bullets(report.get("practical_options") or [])
+
+    # 10. Educational Action Plan
+    _section_break(pdf)
+    pdf.h2("10. Your educational action plan")
+    for row in report.get("action_plan") or []:
+        pdf.body(
+            f"Priority {row.get('priority')}: {row.get('action')} — "
+            f"{row.get('detail')} · Owner: {row.get('responsible')} · Due: {row.get('target') or '____'}"
+        )
+
+    # 11. Educational Foundation Statement
+    _section_break(pdf)
+    pdf.h2("11. Educational foundation statement")
+    pdf.body(report.get("foundation_statement") or "")
+
+    # 12. Questions
+    _section_break(pdf)
+    pdf.h2("12. Questions for the other parent or school")
+    pdf.bullets(report.get("questions_for_school_or_parent") or [])
+
+    # 13. Final child-focused summary + disclaimer
+    _section_break(pdf)
+    pdf.h2("13. Final child-focused summary")
+    pdf.body(report.get("final_summary") or "")
     _section_break(pdf)
     pdf.small(report.get("disclaimer") or "")
 
