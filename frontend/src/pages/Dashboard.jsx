@@ -193,6 +193,7 @@ export default function Dashboard() {
   });
   const [sncStatus, setSncStatus] = useState(null);
   const [sncHighlights, setSncHighlights] = useState(null);
+  const [deepDives, setDeepDives] = useState(null);
 
   // First-time visitors: send them through the orientation walkthrough.
   useEffect(() => {
@@ -252,6 +253,12 @@ export default function Dashboard() {
     api
       .get("/snc2/compare/dashboard/highlights")
       .then((r) => setSncHighlights(r.data || null))
+      .catch(() => { /* non-blocking */ });
+
+    // Optional deep-dives progress (Educational / Psychological / Medical).
+    api
+      .get("/deep-dives/status")
+      .then((r) => setDeepDives(r.data || null))
       .catch(() => { /* non-blocking */ });
   }, []);
 
@@ -756,6 +763,66 @@ export default function Dashboard() {
                 See the full comparison <ChevronRight size={12} />
               </div>
             </Link>
+          </div>
+        )}
+
+        {/* Optional Deep Dives progress */}
+        {deepDives && (deepDives.deep_dives || []).some((d) => d.has_assessment) && (
+          <div className="mt-4" data-testid="dashboard-deep-dives-card">
+            <div className="rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
+                    <Sparkles size={12} /> Optional deep dives
+                  </div>
+                  <div className="mt-1 font-serif text-lg text-[#1A1330]">
+                    {deepDives.completed} of {deepDives.total} completed
+                  </div>
+                </div>
+                <Link to="/special-needs-v2" data-testid="dashboard-deep-dives-open"
+                  className="inline-flex items-center gap-1 text-xs text-[#3D1A78] font-semibold hover:underline">
+                  View all <ChevronRight size={12} />
+                </Link>
+              </div>
+              <ul className="mt-4 space-y-2">
+                {(deepDives.deep_dives || []).map((d) => {
+                  const statusLabel = d.completed
+                    ? "Completed"
+                    : d.has_assessment
+                    ? `In progress · ${d.answered_count} answered`
+                    : "Not started";
+                  const statusColor = d.completed
+                    ? "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]"
+                    : d.has_assessment
+                    ? "bg-[#FFF6E5] text-[#8A5B00] border-[#F0D9A8]"
+                    : "bg-white text-[#8471B3] border-[#E5E0EE]";
+                  const targetRoute = d.has_report ? d.report_route : d.route;
+                  return (
+                    <li key={d.id} data-testid={`dashboard-deep-dive-${d.id}`}>
+                      <Link to={targetRoute}
+                        className="flex items-center justify-between gap-3 rounded-2xl border border-[#E5E0EE] p-3 hover:border-[#3D1A78] hover:bg-[#FCFBFE] transition-all">
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-[#1A1330] truncate">{d.name}</div>
+                          <div className="text-[11px] text-[#4B4567] mt-0.5">
+                            {d.has_report ? (
+                              <>Report ready {d.report_stale ? "(refresh recommended)" : ""}</>
+                            ) : d.has_assessment ? (
+                              <>Resume where you left off</>
+                            ) : (
+                              <>Optional companion assessment</>
+                            )}
+                          </div>
+                        </div>
+                        <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${statusColor}`}
+                          data-testid={`dashboard-deep-dive-${d.id}-status`}>
+                          {statusLabel}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </div>
         )}
 

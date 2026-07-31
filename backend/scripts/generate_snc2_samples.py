@@ -29,6 +29,10 @@ from snc2_questions import (
 from snc2_report_content import build_report
 from snc2_report_pdf import LOGO_PATH, build_snc2_pdf
 
+from edu_deep_report import build_deep_dive_pdf as build_edu_pdf, build_deep_dive_report as build_edu_report
+from psych_deep_report import build_deep_dive_pdf as build_psych_pdf, build_deep_dive_report as build_psych_report
+from med_deep_report import build_deep_dive_pdf as build_med_pdf, build_deep_dive_report as build_med_report
+
 
 PATHWAY_IDS = ["medical", "educational", "psychological"]
 
@@ -299,6 +303,212 @@ def build_comparison_sample() -> bytes:
 
 
 # ---------------------------------------------------------------------------
+# 4) DEEP DIVE REPORT SAMPLES (Educational / Psychological / Medical)
+# ---------------------------------------------------------------------------
+
+def _edu_deep_sample_responses():
+    return {
+        "s1_diagnoses": ["Dyslexia", "ADHD"],
+        "s2_state": "Texas",
+        "s2_grade": "Grade 3-5",
+        "s2_teacher_communication": "Sometimes",
+        "s2_school_updates_both": "Rarely",
+        "s3_ard_meetings_attended": "One parent attends",
+        "s3_ard_communication": "Sometimes",
+        "s3_ard_understand_plan": 3,
+        "s4_iep_status": "Active IEP",
+        "s4_iep_meetings": "One parent attends",
+        "s4_iep_goals_both_know": "Rarely",
+        "s4_iep_accommodations_used": "Sometimes Consistent",
+        "s5_504_status": "Not applicable",
+        "s6_counsellor_involved": "No",
+        "s7_homework_consistent": "Rarely Consistent",
+        "s7_supplies_between_homes": "Rarely",
+        "s7_who_helps_homework": "Mother",
+        "s8_tutoring": "Yes",
+        "s8_tutoring_communication": "Rarely",
+        "s9_teacher_updates_both": "Rarely",
+        "s10_school_events_both_attend": "Rarely",
+        "s11_educational_decisions_agree": "Sometimes Agree",
+        "s11_change_school_agree": "Rarely Agree",
+        "s12_notes": "",
+    }
+
+
+def _psych_deep_sample_responses():
+    return {
+        "s1_diagnoses": ["Anxiety Disorder", "ADHD"],
+        "s2_provider_types": ["Child Psychologist"],
+        "s2_both_know_provider": "Usually",
+        "s2_attend_appointments": "Sometimes",
+        "s2_both_receive_updates": "Sometimes",
+        "s2_communicate_recs": "Sometimes",
+        "s2_follow_recs_consistent": "Sometimes",
+        "s3_provider_understands": "Confident",
+        "s3_confidence_plan": "Confident",
+        "s3_trust_recommendations": "Confident",
+        "s3_both_confident": "Neutral",
+        "s3_discuss_respectfully": 4,
+        "s4_has_medication": "Yes",
+        "s4_prescriber": "Psychiatrist",
+        "s4_understand_areas": ["Medication purpose", "Dosage", "Administration schedule"],
+        "s4_administered_consistent": 3,
+        "s4_communicate_changes": 3,
+        "s4_refills_coordinated": 3,
+        "s4_side_effects_discussed": 3,
+        "s4_concerns_reported": 3,
+        "s6_attends_therapy": "Yes",
+        "s6_attendance_consistency": "Usually",
+        "s6_who_transports": "Mother",
+        "s6_who_communicates": "Mother",
+        "s6_therapist_homework": "Yes",
+        "s6_homework_completed": 3,
+        "s6_strategies_reinforced": 3,
+        "s7_anxiety": "Sometimes Consistent",
+        "s7_emotional_regulation": "Sometimes Consistent",
+        "s7_meltdowns": "Rarely Consistent",
+        "s7_anger": "Sometimes Consistent",
+        "s7_transitions": "Rarely Consistent",
+        "s7_social_interactions": "Usually Consistent",
+        "s7_school_stress": "Sometimes Consistent",
+        "s7_peer_relationships": "Usually Consistent",
+        "s7_self_esteem": "Usually Consistent",
+        "s8_planned_areas": ["Severe anxiety", "Panic attacks"],
+        "s8_know_emergency_contacts": "Yes",
+        "s8_know_crisis_procedures": "Partial",
+        "s8_plan_in_writing": "Partial",
+        "s9_appointments": "Usually",
+        "s9_medication_changes": "Sometimes",
+        "s9_behaviour_changes": "Usually",
+        "s9_school_concerns": "Sometimes",
+        "s9_treatment_recs": "Sometimes",
+        "s9_therapy_progress": "Sometimes",
+        "s9_new_diagnoses": "Usually",
+        "s9_symptom_changes": "Sometimes",
+        "s10_start_therapy": "Usually Agree",
+        "s10_change_therapist": "Sometimes Agree",
+        "s10_medication": "Usually Agree",
+        "s10_medication_adjustments": "Sometimes Agree",
+        "s10_psych_testing": "Sometimes Agree",
+        "s10_neuropsych_eval": "Sometimes Agree",
+        "s10_behaviour_plans": "Usually Agree",
+        "s10_school_mh_services": "Sometimes Agree",
+        "s10_alternative_treatments": "Sometimes Agree",
+        "s10_family_therapy": "Sometimes Agree",
+        "s11_routines": "Usually Consistent",
+        "s11_emotional_support": "Usually Consistent",
+        "s11_positive_reinforcement": "Usually Consistent",
+        "s11_calm_environment": "Sometimes Consistent",
+        "s11_safe_expression": "Usually Consistent",
+        "s11_consistent_expectations": "Sometimes Consistent",
+        "s11_healthy_coping": "Sometimes Consistent",
+        "s11_stress_reduction": "Sometimes Consistent",
+    }
+
+
+def _med_deep_sample_responses():
+    return {
+        "s1_med_categories": [
+            "Daily maintenance medication",
+            "Rescue / emergency medication (e.g., inhaler, EpiPen, glucagon)",
+            "Controlled substance (e.g., stimulant, benzodiazepine, opioid)",
+        ],
+        "s1_prescriber_types": ["Paediatrician", "Psychiatrist"],
+        "s1_shared_info": [
+            "Medication name(s)", "Dose / strength", "Purpose / condition treated",
+            "Administration schedule (times, with/without food)",
+            "Side effects to watch for",
+        ],
+        "s1_written_med_list": "Partial",
+        "s1_list_updated": "Sometimes",
+        "s1_both_receive_new_rx": "Sometimes",
+        "s1_notes": "Ari uses a daily inhaler plus a stimulant for ADHD.",
+        "s2_who_picks_up": "Mother",
+        "s2_pickup_issues": [
+            "Delay of one or more days after prescription written",
+            "Confusion about who was picking up",
+        ],
+        "s2_pickup_delays": "Sometimes",
+        "s2_clear_assignment": "Sometimes",
+        "s2_confirmation": "Rarely",
+        "s3_supply_each_home": "Sometimes",
+        "s3_backup_supply": "Partial",
+        "s3_refill_coordination": "Sometimes",
+        "s3_runs_out_frequency": "Once",
+        "s3_emergency_med_available": "Only one home",
+        "s3_expired_check": "Sometimes",
+        "s4_who_administers": "Mother",
+        "s4_same_schedule": "Usually Consistent",
+        "s4_missed_doses_freq": "Sometimes",
+        "s4_dose_log": "Partial",
+        "s4_handoff_dose": "Sometimes",
+        "s4_child_involved": "Sometimes",
+        "s5_new_prescriptions": "Sometimes",
+        "s5_dose_changes": "Sometimes",
+        "s5_missed_doses": "Sometimes",
+        "s5_side_effects": "Sometimes",
+        "s5_refill_needs": "Sometimes",
+        "s5_emergency_use": "Sometimes",
+        "s5_stopping_med": "Sometimes",
+        "s5_provider_visits": "Usually",
+        "s6_same_pharmacy": "Usually",
+        "s6_both_authorized": "Yes",
+        "s6_pharmacy_has_contacts": "Partial",
+        "s6_pharmacist_alignment": "Sometimes",
+        "s6_delivery_pickup": "No",
+        "s7_financial_issues": ["Copay is a barrier"],
+        "s7_cost_split_clear": "Partial",
+        "s7_reimbursement": "Usually",
+        "s7_insurance_current": "Yes",
+        "s7_affordability": "Neutral",
+        "s8_has_controlled": "Yes",
+        "s8_controlled_type": "Stimulant (ADHD medication)",
+        "s8_protections": [
+            "Medication stored in a locked location",
+            "Only the parent administers doses (never the child alone)",
+        ],
+        "s8_count_tracking": "Partial",
+        "s8_diversion_concerns": "Mild concerns",
+        "s8_provider_agreement": "Partial",
+        "s9_school_meds": "Yes",
+        "s9_school_items": [
+            "School nurse has the current prescription order",
+            "Emergency plan (e.g., asthma or anaphylaxis) is on file",
+            "PRN (as-needed) medication is authorised and stocked",
+        ],
+        "s9_both_on_paperwork": "Partial",
+        "s9_school_updates": "Sometimes",
+        "s9_field_trip_ready": "Partial",
+        "s10_whether_to_use": "Usually Agree",
+        "s10_which_medication": "Usually Agree",
+        "s10_dosing": "Usually Agree",
+        "s10_side_effects": "Sometimes Agree",
+        "s10_brand_vs_generic": "Sometimes Agree",
+        "s10_stopping_med": "Sometimes Agree",
+        "s10_as_needed_use": "Usually Agree",
+        "s10_controlled_use": "Usually Agree",
+    }
+
+
+def build_edu_deep_sample() -> bytes:
+    r = build_edu_report(parent_name="Alex Rivera", child_name="Ari Rivera",
+                         responses=_edu_deep_sample_responses())
+    return build_edu_pdf(report=r)
+
+
+def build_psych_deep_sample() -> bytes:
+    r = build_psych_report(parent_name="Alex Rivera", child_name="Ari Rivera",
+                           responses=_psych_deep_sample_responses())
+    return build_psych_pdf(report=r)
+
+
+def build_med_deep_sample() -> bytes:
+    r = build_med_report(parent_name="Alex Rivera", child_name="Ari Rivera",
+                         responses=_med_deep_sample_responses())
+    return build_med_pdf(report=r)
+
+
+# ---------------------------------------------------------------------------
 # Entry
 # ---------------------------------------------------------------------------
 
@@ -322,6 +532,17 @@ def main() -> None:
     comparison = build_comparison_sample()
     open(os.path.join(out, "snc-sample-comparison-report.pdf"), "wb").write(comparison)
     print(f"  wrote snc-sample-comparison-report.pdf ({len(comparison):,} bytes)")
+
+    # Deep-dive samples
+    edu = build_edu_deep_sample()
+    open(os.path.join(out, "snc-sample-educational-deep-dive.pdf"), "wb").write(edu)
+    print(f"  wrote snc-sample-educational-deep-dive.pdf ({len(edu):,} bytes)")
+    psych = build_psych_deep_sample()
+    open(os.path.join(out, "snc-sample-psychological-deep-dive.pdf"), "wb").write(psych)
+    print(f"  wrote snc-sample-psychological-deep-dive.pdf ({len(psych):,} bytes)")
+    med = build_med_deep_sample()
+    open(os.path.join(out, "snc-sample-medical-deep-dive.pdf"), "wb").write(med)
+    print(f"  wrote snc-sample-medical-deep-dive.pdf ({len(med):,} bytes)")
 
     print("\nDone. Files are served at /downloads/<filename>.")
 
