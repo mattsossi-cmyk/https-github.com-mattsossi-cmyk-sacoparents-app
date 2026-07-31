@@ -171,6 +171,84 @@ def _render_wb_item(pdf: _Workbook, item):
         _wb_write_lines(pdf, n=3)
 
 
+class _PathwayWorkbook(_Workbook):
+    """Workbook branded to a single pathway (medical / educational / psychological)."""
+
+    def __init__(self, pathway_name: str):
+        self._pathway_name = pathway_name
+        super().__init__()
+
+    def header(self):  # noqa: D401
+        self.set_fill_color(245, 240, 232)
+        self.rect(0, 0, self.w, 18, "F")
+        if os.path.exists(LOGO_PATH):
+            try: self.image(LOGO_PATH, x=11, y=3, w=12, h=12)
+            except Exception: pass
+        self.set_xy(26, 4); self.set_font("Helvetica", "B", 10); self.set_text_color(61, 26, 120)
+        self.cell(0, 4.4, _safe_txt(f"SA CoParents  ·  {self._pathway_name} Needs Assessment"), ln=1)
+        self.set_x(26); self.set_font("Helvetica", "", 8); self.set_text_color(110, 100, 130)
+        self.cell(0, 3.6, _safe_txt("Special Needs Co-Parenting · Blank Workbook"), ln=1)
+        self.set_draw_color(220, 214, 232); self.set_line_width(0.3)
+        self.line(14, 19, self.w - 14, 19)
+        self.set_y(22); self.set_text_color(30, 24, 54)
+
+    def footer(self):  # noqa: D401
+        self.set_y(-11); self.set_font("Helvetica", "I", 7.5); self.set_text_color(133, 126, 156)
+        self.cell(0, 4, _safe_txt(f"{self._pathway_name} Needs Workbook  ·  Page {self.page_no()} of {{nb}}"), align="C")
+
+
+def build_pathway_workbook(pathway_id: str) -> bytes:
+    """Blank assessment workbook filtered to a single pathway.
+
+    Only questions applicable to the chosen pathway are printed. Cross-cutting
+    (non-pathway) questions are printed once. Prompts use the pathway's own
+    wording via _apply_pathway().
+    """
+    pathway = next(p for p in PATHWAYS if p["id"] == pathway_id)
+    pdf = _PathwayWorkbook(pathway_name=pathway["name"])
+    pdf.add_page()
+
+    pdf.set_font("Helvetica", "B", 16); pdf.set_text_color(26, 19, 48)
+    pdf.multi_cell(pdf.epw, 7, _safe_txt(f"{pathway['name']} Needs — Assessment Workbook"))
+    pdf.ln(1)
+    pdf.set_font("Helvetica", "", 9.5); pdf.set_text_color(30, 24, 54)
+    pdf.multi_cell(pdf.epw, 4.6, _safe_txt(
+        f"A printable workbook covering the eight-step Special Needs "
+        f"assessment scoped to {pathway['name'].lower()} needs. Fill it in on "
+        "paper before completing the online assessment. Every question is "
+        "optional and you can leave anything blank."
+    ))
+    pdf.ln(2)
+
+    for step in _TEMPLATE:
+        pdf.set_font("Helvetica", "B", 12); pdf.set_text_color(61, 26, 120)
+        pdf.multi_cell(pdf.epw, 5.8, _safe_txt(f"Step {step['number']}. {step['name']}"))
+        for item in step["items"]:
+            if item.get("pathway") or item.get("pathway_options") or item.get("prompt_template"):
+                # Pathway-specific question — only render for the chosen pathway
+                resolved = _apply_pathway(item, pathway_id)
+                if not resolved:
+                    continue
+            else:
+                # Cross-cutting question — render once
+                resolved = _apply_pathway(item, pathway_id)
+            pdf.ln(1)
+            pdf.set_font("Helvetica", "B", 9.5); pdf.set_text_color(30, 24, 54)
+            pdf.multi_cell(pdf.epw, 4.6, _safe_txt(resolved.get("prompt") or ""))
+            _render_wb_item(pdf, resolved)
+        pdf.ln(2)
+
+    pdf.set_font("Helvetica", "I", 8); pdf.set_text_color(110, 100, 130)
+    pdf.multi_cell(pdf.epw, 4, _safe_txt(
+        "This workbook is for co-parent preparation and mediation. It is not "
+        "legal, medical, or psychological advice, does not determine parental "
+        "fitness, and does not diagnose. Complete the online assessment to "
+        "receive your personalised 9-section polished report."
+    ))
+    out = pdf.output(dest="S")
+    return out.encode("latin-1") if isinstance(out, str) else bytes(out)
+
+
 # ---------------------------------------------------------------------------
 # 2) INDIVIDUAL REPORT SAMPLES (per pathway)
 # ---------------------------------------------------------------------------
@@ -662,6 +740,11 @@ def main() -> None:
     workbook = build_blank_workbook()
     open(os.path.join(out, "snc-sample-assessment.pdf"), "wb").write(workbook)
     print(f"  wrote snc-sample-assessment.pdf ({len(workbook):,} bytes)")
+
+    for pid in PATHWAY_IDS:
+        wb = build_pathway_workbook(pid)
+        open(os.path.join(out, f"snc-sample-assessment-{pid}.pdf"), "wb").write(wb)
+        print(f"  wrote snc-sample-assessment-{pid}.pdf ({len(wb):,} bytes)")
 
     for pid in PATHWAY_IDS:
         pdf = build_individual_sample(pid)

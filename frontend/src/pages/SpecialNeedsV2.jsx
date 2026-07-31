@@ -365,6 +365,33 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         </div>
 
         <div className="mt-5">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">Blank assessments — one per needs area</div>
+          <div className="grid sm:grid-cols-3 gap-3" data-testid="snc2-sample-pathway-assessments">
+            <a href="/downloads/snc-sample-assessment-medical.pdf" target="_blank" rel="noreferrer noopener"
+              data-testid="snc2-sample-assessment-medical"
+              className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Medical</div>
+              <div className="font-semibold text-sm text-[#1A1330]">Blank assessment — medical needs</div>
+              <div className="text-xs text-[#4B4567] mt-1">Printable eight-step workbook scoped to medical needs only.</div>
+            </a>
+            <a href="/downloads/snc-sample-assessment-educational.pdf" target="_blank" rel="noreferrer noopener"
+              data-testid="snc2-sample-assessment-educational"
+              className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Educational</div>
+              <div className="font-semibold text-sm text-[#1A1330]">Blank assessment — educational needs</div>
+              <div className="text-xs text-[#4B4567] mt-1">Printable eight-step workbook scoped to educational needs only.</div>
+            </a>
+            <a href="/downloads/snc-sample-assessment-psychological.pdf" target="_blank" rel="noreferrer noopener"
+              data-testid="snc2-sample-assessment-psychological"
+              className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Psychological</div>
+              <div className="font-semibold text-sm text-[#1A1330]">Blank assessment — psychological / behavioural needs</div>
+              <div className="text-xs text-[#4B4567] mt-1">Printable eight-step workbook scoped to psychological or behavioural needs.</div>
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-5">
           <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">Individual reports — one per needs area</div>
           <div className="grid sm:grid-cols-3 gap-3" data-testid="snc2-sample-individual-reports">
             <a href="/downloads/snc-sample-individual-report-medical.pdf" target="_blank" rel="noreferrer noopener"
