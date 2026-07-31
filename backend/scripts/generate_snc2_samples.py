@@ -33,6 +33,10 @@ from edu_deep_report import build_deep_dive_pdf as build_edu_pdf, build_deep_div
 from psych_deep_report import build_deep_dive_pdf as build_psych_pdf, build_deep_dive_report as build_psych_report
 from med_deep_report import build_deep_dive_pdf as build_med_pdf, build_deep_dive_report as build_med_report
 
+from edu_deep_questions import public_schema as edu_public_schema
+from psych_deep_questions import public_schema as psych_public_schema
+from med_deep_questions import public_schema as med_public_schema
+
 
 PATHWAY_IDS = ["medical", "educational", "psychological"]
 
@@ -509,6 +513,146 @@ def build_med_deep_sample() -> bytes:
 
 
 # ---------------------------------------------------------------------------
+# 5) BLANK DEEP-DIVE ASSESSMENT WORKBOOKS
+# ---------------------------------------------------------------------------
+
+class _DeepDiveWorkbook(_Workbook):
+    """Reuses _Workbook layout but with a deep-dive-specific title in the header footer."""
+
+    def __init__(self, product_name: str, footer_name: str):
+        self._product_name = product_name
+        self._footer_name = footer_name
+        super().__init__()
+
+    def header(self):  # noqa: D401
+        self.set_fill_color(245, 240, 232)
+        self.rect(0, 0, self.w, 18, "F")
+        if os.path.exists(LOGO_PATH):
+            try: self.image(LOGO_PATH, x=11, y=3, w=12, h=12)
+            except Exception: pass
+        self.set_xy(26, 4); self.set_font("Helvetica", "B", 10); self.set_text_color(61, 26, 120)
+        self.cell(0, 4.4, _safe_txt(f"SA CoParents  ·  {self._product_name}"), ln=1)
+        self.set_x(26); self.set_font("Helvetica", "", 8); self.set_text_color(110, 100, 130)
+        self.cell(0, 3.6, _safe_txt("Optional companion assessment · Blank workbook"), ln=1)
+        self.set_draw_color(220, 214, 232); self.set_line_width(0.3)
+        self.line(14, 19, self.w - 14, 19)
+        self.set_y(22); self.set_text_color(30, 24, 54)
+
+    def footer(self):  # noqa: D401
+        self.set_y(-11); self.set_font("Helvetica", "I", 7.5); self.set_text_color(133, 126, 156)
+        self.cell(0, 4, _safe_txt(f"{self._footer_name}  ·  Page {self.page_no()} of {{nb}}"), align="C")
+
+
+def _render_deep_dive_item(pdf, item):
+    t = item.get("type")
+    if t == "likert":
+        _wb_write_likert(pdf)
+    elif t in ("single", "multi"):
+        symbol = "( )" if t == "single" else "[ ]"
+        _wb_write_option_list(pdf, item.get("options") or [], symbol=symbol)
+    else:  # textarea / text
+        _wb_write_lines(pdf, n=3)
+
+
+def _build_deep_dive_workbook(*, product_name: str, footer_name: str,
+                              intro: str, schema: dict, gate_notes: dict | None = None) -> bytes:
+    pdf = _DeepDiveWorkbook(product_name=product_name, footer_name=footer_name)
+    pdf.add_page()
+
+    pdf.set_font("Helvetica", "B", 16); pdf.set_text_color(26, 19, 48)
+    pdf.multi_cell(pdf.epw, 7, _safe_txt(product_name)); pdf.ln(1)
+    pdf.set_font("Helvetica", "", 9.5); pdf.set_text_color(30, 24, 54)
+    pdf.multi_cell(pdf.epw, 4.6, _safe_txt(intro))
+    pdf.ln(2)
+
+    gate_notes = gate_notes or {}
+    for s in schema.get("sections", []):
+        pdf.set_font("Helvetica", "B", 12); pdf.set_text_color(61, 26, 120)
+        pdf.multi_cell(pdf.epw, 5.8, _safe_txt(f"Section {s['number']}. {s['name']}"))
+        if s.get("purpose"):
+            pdf.set_font("Helvetica", "I", 8.5); pdf.set_text_color(110, 100, 130)
+            pdf.multi_cell(pdf.epw, 4, _safe_txt(s["purpose"]))
+        gate = s.get("gate")
+        if gate:
+            note = gate_notes.get(s["id"]) or (
+                f"Only complete this section if you answered "
+                f"'{gate.get('value')}' to the '{gate.get('item')}' question."
+            )
+            pdf.set_font("Helvetica", "I", 8); pdf.set_text_color(176, 42, 42)
+            pdf.multi_cell(pdf.epw, 4, _safe_txt(f"Conditional: {note}"))
+        pdf.set_text_color(30, 24, 54)
+
+        for item in s.get("items", []):
+            pdf.ln(1)
+            pdf.set_font("Helvetica", "B", 9.5); pdf.set_text_color(30, 24, 54)
+            pdf.multi_cell(pdf.epw, 4.6, _safe_txt(item.get("prompt") or ""))
+            _render_deep_dive_item(pdf, item)
+        pdf.ln(2)
+
+    pdf.set_font("Helvetica", "I", 8); pdf.set_text_color(110, 100, 130)
+    pdf.multi_cell(pdf.epw, 4, _safe_txt(
+        "This is an optional printable workbook. It does not diagnose, "
+        "provide legal or medical advice, or determine parental fitness. "
+        "Complete the online deep dive to receive your personalised report."
+    ))
+    out = pdf.output(dest="S")
+    return out.encode("latin-1") if isinstance(out, str) else bytes(out)
+
+
+def build_edu_deep_workbook() -> bytes:
+    return _build_deep_dive_workbook(
+        product_name="Educational Needs — Deep Dive Assessment",
+        footer_name="Educational Deep Dive Workbook",
+        intro=(
+            "A printable version of every question in the twelve-section optional "
+            "Educational Needs deep dive. Complete it on paper first if you like, "
+            "then enter your answers online to receive your personalised report. "
+            "Every question is optional."
+        ),
+        schema=edu_public_schema(),
+        gate_notes={
+            "s3": "Only complete if the child's school is in Texas (ARD questions).",
+        },
+    )
+
+
+def build_psych_deep_workbook() -> bytes:
+    return _build_deep_dive_workbook(
+        product_name="Psychological / Behavioural Needs — Deep Dive Assessment",
+        footer_name="Psychological Deep Dive Workbook",
+        intro=(
+            "A printable version of every question in the eleven-section optional "
+            "Psychological / Behavioural deep dive. Complete it on paper first if "
+            "you like, then enter your answers online to receive your personalised "
+            "report. Every question is optional."
+        ),
+        schema=psych_public_schema(),
+        gate_notes={
+            "s4": "Only complete this section if your child currently takes a psychiatric medication.",
+            "s6": "Only complete this section if your child currently attends therapy.",
+        },
+    )
+
+
+def build_med_deep_workbook() -> bytes:
+    return _build_deep_dive_workbook(
+        product_name="Medical · Prescription & Medication Coordination — Deep Dive Assessment",
+        footer_name="Medical Deep Dive Workbook",
+        intro=(
+            "A printable version of every question in the ten-section optional "
+            "Medical / Prescription Sharing & Medication Coordination deep dive. "
+            "Complete it on paper first if you like, then enter your answers "
+            "online to receive your personalised report. Every question is optional."
+        ),
+        schema=med_public_schema(),
+        gate_notes={
+            "s8": "Only complete this section if your child takes a controlled substance.",
+            "s9": "Only complete this section if your child takes medication at school or before/after care.",
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
 # Entry
 # ---------------------------------------------------------------------------
 
@@ -543,6 +687,17 @@ def main() -> None:
     med = build_med_deep_sample()
     open(os.path.join(out, "snc-sample-medical-deep-dive.pdf"), "wb").write(med)
     print(f"  wrote snc-sample-medical-deep-dive.pdf ({len(med):,} bytes)")
+
+    # Blank deep-dive assessment workbooks (printable question list)
+    edu_wb = build_edu_deep_workbook()
+    open(os.path.join(out, "snc-sample-educational-deep-dive-assessment.pdf"), "wb").write(edu_wb)
+    print(f"  wrote snc-sample-educational-deep-dive-assessment.pdf ({len(edu_wb):,} bytes)")
+    psych_wb = build_psych_deep_workbook()
+    open(os.path.join(out, "snc-sample-psychological-deep-dive-assessment.pdf"), "wb").write(psych_wb)
+    print(f"  wrote snc-sample-psychological-deep-dive-assessment.pdf ({len(psych_wb):,} bytes)")
+    med_wb = build_med_deep_workbook()
+    open(os.path.join(out, "snc-sample-medical-deep-dive-assessment.pdf"), "wb").write(med_wb)
+    print(f"  wrote snc-sample-medical-deep-dive-assessment.pdf ({len(med_wb):,} bytes)")
 
     print("\nDone. Files are served at /downloads/<filename>.")
 

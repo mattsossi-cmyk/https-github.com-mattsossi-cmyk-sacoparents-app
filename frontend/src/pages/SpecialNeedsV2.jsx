@@ -391,6 +391,33 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         </div>
 
         <div className="mt-5">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">Optional deep-dive assessments (blank workbooks)</div>
+          <div className="grid sm:grid-cols-3 gap-3" data-testid="snc2-sample-deep-dive-assessments">
+            <a href="/downloads/snc-sample-educational-deep-dive-assessment.pdf" target="_blank" rel="noreferrer noopener"
+              data-testid="snc2-sample-deep-dive-assessment-educational"
+              className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Educational · Workbook</div>
+              <div className="font-semibold text-sm text-[#1A1330]">12-section Educational assessment</div>
+              <div className="text-xs text-[#4B4567] mt-1">Printable question list covering IEP, 504, ARD (Texas), tutoring, and homework.</div>
+            </a>
+            <a href="/downloads/snc-sample-psychological-deep-dive-assessment.pdf" target="_blank" rel="noreferrer noopener"
+              data-testid="snc2-sample-deep-dive-assessment-psychological"
+              className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Psychological · Workbook</div>
+              <div className="font-semibold text-sm text-[#1A1330]">11-section Psychological / Behavioural assessment</div>
+              <div className="text-xs text-[#4B4567] mt-1">Printable question list covering therapy, medication, crisis planning, and emotional support.</div>
+            </a>
+            <a href="/downloads/snc-sample-medical-deep-dive-assessment.pdf" target="_blank" rel="noreferrer noopener"
+              data-testid="snc2-sample-deep-dive-assessment-medical"
+              className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Medical · Workbook</div>
+              <div className="font-semibold text-sm text-[#1A1330]">10-section Prescription & Medication assessment</div>
+              <div className="text-xs text-[#4B4567] mt-1">Printable question list covering prescriptions, refills, school meds, and controlled medications.</div>
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-5">
           <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">Optional deep-dive reports</div>
           <div className="grid sm:grid-cols-3 gap-3" data-testid="snc2-sample-deep-dives">
             <a href="/downloads/snc-sample-educational-deep-dive.pdf" target="_blank" rel="noreferrer noopener"
