@@ -231,16 +231,17 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
   return (
     <div data-testid="snc2-picker">
       <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
-        Special Needs Co-Parenting · v2
+        Our child has unique needs
       </div>
       <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
-        What type of need are you addressing?
+        Which of your child&apos;s unique needs are we coordinating?
       </h1>
       <p className="text-sm text-[#4B4567] mt-3 max-w-2xl">
-        Children&apos;s needs do not always fit into one category. Select every
-        area that applies. The SA CoParents App will help you organise the
-        concern, understand professional recommendations, identify areas
-        requiring parental coordination, and prepare a child-focused plan.
+        Your child&apos;s educational, psychological or medical needs do not always
+        fit into one category. Select every area that applies. The SA CoParents
+        App will help you organise each need, understand professional
+        recommendations, identify areas requiring parental coordination, and
+        prepare a child-focused plan.
       </p>
 
       <div className="mt-6 grid gap-3">
@@ -621,7 +622,7 @@ export default function SpecialNeedsV2() {
           </Link>
         </div>
         <div className="mb-4">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Special Needs Co-Parenting</div>
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Our child has unique needs</div>
           <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
             Step {step.number}. {step.name}
           </h1>
