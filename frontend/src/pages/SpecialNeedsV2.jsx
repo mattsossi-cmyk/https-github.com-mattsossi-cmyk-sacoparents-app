@@ -13,7 +13,7 @@ import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, Save, Loader2, Sparkles, Users,
+  ArrowLeft, ArrowRight, CheckCircle2, Save, Loader2, Sparkles, Users, X,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -135,6 +135,90 @@ function ItemInput({ item, value, onChange, scale, qid }) {
 }
 
 
+const DEEP_DIVE_DISMISS_KEY = "snc2.deepDiveDismissed";
+
+function readDismissedDeepDives() {
+  try {
+    const raw = localStorage.getItem(DEEP_DIVE_DISMISS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function DeepDiveCard({ id, testid, linkTestid, dismissTestid, title, sections, description, route, cta }) {
+  const [dismissed, setDismissed] = useState(() => !!readDismissedDeepDives()[id]);
+  const setDismiss = (val) => {
+    setDismissed(val);
+    try {
+      const current = readDismissedDeepDives();
+      if (val) current[id] = true;
+      else delete current[id];
+      localStorage.setItem(DEEP_DIVE_DISMISS_KEY, JSON.stringify(current));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  if (dismissed) {
+    return (
+      <div className="rounded-3xl border border-dashed border-[#D6CFE8] bg-[#FCFBFE] p-5 sm:p-6 opacity-90" data-testid={testid}>
+        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#8471B3] mb-1 flex items-center gap-2">
+          Set aside
+        </div>
+        <h3 className="font-serif text-base text-[#4B4567]">{title}</h3>
+        <p className="text-xs text-[#4B4567] mt-1 mb-3 italic">You marked this deep dive as not applicable. You can bring it back any time.</p>
+        <button
+          type="button"
+          onClick={() => setDismiss(false)}
+          data-testid={`${dismissTestid}-restore`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]"
+        >
+          Bring back
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative rounded-3xl border-2 border-[#3D1A78]/30 bg-gradient-to-br from-[#EEE9F7] to-[#F5F0FA] p-5 sm:p-6" data-testid={testid}>
+      <button
+        type="button"
+        onClick={() => setDismiss(true)}
+        aria-label={`Set aside ${title}`}
+        data-testid={dismissTestid}
+        className="absolute top-3 right-3 inline-flex items-center justify-center w-7 h-7 rounded-full text-[#8471B3] hover:bg-white/70 hover:text-[#3D1A78]"
+      >
+        <X size={14} />
+      </button>
+      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 flex items-center gap-2">
+        <Sparkles size={12} /> Optional · {sections}
+      </div>
+      <h3 className="font-serif text-lg text-[#1A1330]">{title}</h3>
+      <p className="text-xs text-[#4B4567] mt-1 mb-4">{description}</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <Link
+          to={route}
+          data-testid={linkTestid}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-[#3D1A78] text-white hover:brightness-110"
+        >
+          <Sparkles size={13} /> {cta}
+        </Link>
+        <button
+          type="button"
+          onClick={() => setDismiss(true)}
+          data-testid={`${dismissTestid}-link`}
+          className="text-xs text-[#8471B3] underline hover:text-[#3D1A78]"
+        >
+          Not applicable to us
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
 function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
   const [picked, setPicked] = useState(initial || []);
   const [childName, setChildName] = useState(initialChildName || "");
@@ -211,45 +295,48 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         </button>
       </div>
 
-      <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="rounded-3xl border-2 border-[#3D1A78]/30 bg-gradient-to-br from-[#EEE9F7] to-[#F5F0FA] p-5 sm:p-6" data-testid="snc2-edu-deep-dive-cta">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 flex items-center gap-2">
-            <Sparkles size={12} /> Optional deep dive
-          </div>
-          <h2 className="font-serif text-lg text-[#1A1330]">Educational Needs — 12-Section Deep Dive</h2>
-          <p className="text-xs text-[#4B4567] mt-1 mb-4">
-            For families coordinating IEP, 504, ARD (Texas), tutoring, or homework across two homes.
-          </p>
-          <Link to="/special-needs-v2/educational-deep-dive" data-testid="snc2-edu-deep-dive-cta-link"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-[#3D1A78] text-white hover:brightness-110">
-            <Sparkles size={13} /> Open Educational Deep Dive
-          </Link>
+      <div className="mt-10 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7" data-testid="snc2-deep-dives-block">
+        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 flex items-center gap-2">
+          <Sparkles size={12} /> Optional companion deep dives
         </div>
-        <div className="rounded-3xl border-2 border-[#3D1A78]/30 bg-gradient-to-br from-[#EEE9F7] to-[#F5F0FA] p-5 sm:p-6" data-testid="snc2-psych-deep-dive-cta">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 flex items-center gap-2">
-            <Sparkles size={12} /> Optional deep dive
-          </div>
-          <h2 className="font-serif text-lg text-[#1A1330]">Psychological / Behavioural — 11-Section Deep Dive</h2>
-          <p className="text-xs text-[#4B4567] mt-1 mb-4">
-            For families coordinating therapy, medication, crisis planning, and emotional support across two homes.
-          </p>
-          <Link to="/special-needs-v2/psychological-deep-dive" data-testid="snc2-psych-deep-dive-cta-link"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-[#3D1A78] text-white hover:brightness-110">
-            <Sparkles size={13} /> Open Psychological Deep Dive
-          </Link>
-        </div>
-        <div className="rounded-3xl border-2 border-[#3D1A78]/30 bg-gradient-to-br from-[#EEE9F7] to-[#F5F0FA] p-5 sm:p-6" data-testid="snc2-med-deep-dive-cta">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 flex items-center gap-2">
-            <Sparkles size={12} /> Optional deep dive
-          </div>
-          <h2 className="font-serif text-lg text-[#1A1330]">Medical · Prescription & Medication — 10-Section Deep Dive</h2>
-          <p className="text-xs text-[#4B4567] mt-1 mb-4">
-            For families coordinating prescriptions, refills, administration, school meds, and controlled medications across two homes.
-          </p>
-          <Link to="/special-needs-v2/medical-deep-dive" data-testid="snc2-med-deep-dive-cta-link"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-[#3D1A78] text-white hover:brightness-110">
-            <Sparkles size={13} /> Open Medical Deep Dive
-          </Link>
+        <h2 className="font-serif text-xl text-[#1A1330]">Only if you want them — pick any, all, or none</h2>
+        <p className="text-xs text-[#4B4567] mt-1 mb-5 max-w-2xl">
+          The main Special Needs assessment above is enough on its own. These three deep dives are entirely optional add-ons for parents who want extra coordination detail in a specific area. Complete any that apply to your child&apos;s situation — or skip them completely.
+        </p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <DeepDiveCard
+            id="edu"
+            testid="snc2-edu-deep-dive-cta"
+            linkTestid="snc2-edu-deep-dive-cta-link"
+            dismissTestid="snc2-edu-deep-dive-dismiss"
+            title="Educational Needs"
+            sections="12 sections · ~10-15 min"
+            description="IEP, 504, ARD (Texas), tutoring, or homework coordination across two homes."
+            route="/special-needs-v2/educational-deep-dive"
+            cta="Open Educational Deep Dive"
+          />
+          <DeepDiveCard
+            id="psych"
+            testid="snc2-psych-deep-dive-cta"
+            linkTestid="snc2-psych-deep-dive-cta-link"
+            dismissTestid="snc2-psych-deep-dive-dismiss"
+            title="Psychological / Behavioural"
+            sections="11 sections · ~10-15 min"
+            description="Therapy, medication, crisis planning, and emotional support across two homes."
+            route="/special-needs-v2/psychological-deep-dive"
+            cta="Open Psychological Deep Dive"
+          />
+          <DeepDiveCard
+            id="med"
+            testid="snc2-med-deep-dive-cta"
+            linkTestid="snc2-med-deep-dive-cta-link"
+            dismissTestid="snc2-med-deep-dive-dismiss"
+            title="Medical · Prescriptions & Medication"
+            sections="10 sections · ~10-15 min"
+            description="Prescription sharing, refills, administration, school meds, and controlled medications."
+            route="/special-needs-v2/medical-deep-dive"
+            cta="Open Medical Deep Dive"
+          />
         </div>
       </div>
 
@@ -468,15 +555,15 @@ export default function SpecialNeedsV2() {
           </Link>
           <Link to="/special-needs-v2/educational-deep-dive" data-testid="snc2-open-edu-deep-dive"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
-            <Sparkles size={13} /> Educational Deep Dive
+            <Sparkles size={13} /> Educational Deep Dive <span className="text-[10px] text-[#8471B3]">(optional)</span>
           </Link>
           <Link to="/special-needs-v2/psychological-deep-dive" data-testid="snc2-open-psych-deep-dive"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
-            <Sparkles size={13} /> Psychological Deep Dive
+            <Sparkles size={13} /> Psychological Deep Dive <span className="text-[10px] text-[#8471B3]">(optional)</span>
           </Link>
           <Link to="/special-needs-v2/medical-deep-dive" data-testid="snc2-open-med-deep-dive"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
-            <Sparkles size={13} /> Medical Deep Dive
+            <Sparkles size={13} /> Medical Deep Dive <span className="text-[10px] text-[#8471B3]">(optional)</span>
           </Link>
         </div>
         <div className="mb-4">
