@@ -7,6 +7,8 @@ from typing import Any, Dict, Optional
 
 import os as _os
 from edu_deep_report import _PDF as _EduPDF, _section_break, _safe, LOGO_PATH as _LOGO
+from journey_pdf import build_journey_pdf
+from psych_deep_journey import build_journey_report as build_psych_journey
 from psych_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION
 from psych_deep_scoring import score_deep_dive
 
@@ -149,14 +151,15 @@ def build_deep_dive_report(*, parent_name: Optional[str], child_name: Optional[s
     flagged_names = [s["name"] for s in sections_out if s["is_flagged"]]
     strength_names = [s["name"] for s in sections_out if s["is_strength"]]
 
+    journey = build_psych_journey(
+        parent_name=parent_name, child_name=child_name, responses=responses,
+    )
+    journey["cover"]["assessment_date"] = _now_iso()[:10]
+
     return {
         "generated_at": _now_iso(),
         "deep_dive_version": DEEP_DIVE_VERSION,
-        "cover": {
-            "parent_name": parent_name or "-",
-            "child_name": child_name or "-",
-            "assessment_date": _now_iso()[:10],
-        },
+        "cover": journey["cover"],
         "profile": {
             "diagnoses": responses.get("s1_diagnoses") or [],
             "provider_types": responses.get("s2_provider_types") or [],
@@ -172,80 +175,27 @@ def build_deep_dive_report(*, parent_name: Optional[str], child_name: Optional[s
             "strength_names": strength_names,
         },
         "sections": sections_out,
-        "disclaimer": (
-            "This report reflects one parent's perspective. It does not diagnose, "
-            "provide clinical advice, or replace a mental health professional. "
-            "Share it with your provider, mediator, or family professional for their input."
-        ),
+        "overview": journey["overview"],
+        "support_summary": journey["support_summary"],
+        "child_profile": journey["child_profile"],
+        "school_involvement": journey["school_involvement"],
+        "co_parenting_assessment": journey["co_parenting_assessment"],
+        "alignment_areas": journey["alignment_areas"],
+        "attention_areas": journey["attention_areas"],
+        "support_level": journey["support_level"],
+        "practical_options": journey["practical_options"],
+        "action_plan": journey["action_plan"],
+        "foundation_statement": journey["foundation_statement"],
+        "questions_for_school_or_parent": journey["questions_for_school_or_parent"],
+        "final_summary": journey["final_summary"],
+        "disclaimer": journey["disclaimer"],
     }
 
 
 def build_deep_dive_pdf(*, report: Dict[str, Any]) -> bytes:
-    pdf = _PsychPDF()
-    pdf.add_page()
-    cover = report.get("cover") or {}
-    profile = report.get("profile") or {}
-    summary = report.get("summary") or {}
-
-    pdf.h1("Psychological / Behavioural Needs — Deep Dive Report")
-    pdf.body(f"For {cover.get('parent_name') or '-'} · About {cover.get('child_name') or '-'} · {cover.get('assessment_date') or ''}")
-    pdf.small(report.get("disclaimer") or "")
-
-    _section_break(pdf)
-    pdf.h2("1. Psychological Profile")
-    if profile.get("diagnoses"):
-        pdf.h3("Reported diagnoses")
-        pdf.bullets(profile["diagnoses"])
-    if profile.get("provider_types"):
-        pdf.h3("Current providers")
-        pdf.bullets(profile["provider_types"])
-    misc = []
-    if profile.get("has_medication"): misc.append(f"Medication: {profile['has_medication']}")
-    if profile.get("attends_therapy"): misc.append(f"Attends therapy: {profile['attends_therapy']}")
-    if misc: pdf.body(" · ".join(misc))
-    if profile.get("notes"):
-        pdf.h3("Additional notes")
-        pdf.body(profile["notes"])
-
-    _section_break(pdf)
-    if report.get("ai_summary"):
-        pdf.h2("Executive summary")
-        pdf.small("AI-generated · neutral · non-diagnostic")
-        pdf.body(report["ai_summary"])
-        _section_break(pdf)
-    pdf.h2("At a glance")
-    pdf.body(
-        f"{summary.get('answered_sections', 0)} sections completed. "
-        f"{summary.get('flagged_sections', 0)} area(s) flagged. "
-        f"{summary.get('strength_sections', 0)} area(s) recognised as strengths."
+    return build_journey_pdf(
+        product_name="Psychological / Behavioural Needs Deep Dive",
+        footer_name="Psychological Deep Dive Report",
+        headline="SA CoParents Psychological & Behavioural Needs Assessment Report",
+        report=report,
     )
-    if summary.get("flagged_names"):
-        pdf.h3("Sections flagged for follow-up")
-        pdf.bullets(summary["flagged_names"])
-    if summary.get("strength_names"):
-        pdf.h3("Areas of current strength")
-        pdf.bullets(summary["strength_names"])
-
-    for s in report.get("sections") or []:
-        if not (s.get("is_flagged") or s.get("is_strength")):
-            continue
-        _section_break(pdf)
-        pdf.h2(f"{s['number']}. {s['name']}")
-        if s.get("is_strength"):
-            pdf.pill("Strength", color=(31, 92, 59))
-            pdf.body(s.get("strength_text") or "")
-            if s.get("strength_reasons"):
-                pdf.small("Signals: " + "; ".join(s["strength_reasons"]))
-        if s.get("is_flagged"):
-            pdf.pill("Area to develop", color=(176, 42, 42))
-            pdf.body(s.get("challenge_text") or "")
-            if s.get("flag_reasons"):
-                pdf.small("Signals: " + "; ".join(s["flag_reasons"]))
-            if s.get("recommendations"):
-                pdf.h3("Recommendations")
-                pdf.bullets(s["recommendations"])
-
-    _section_break(pdf)
-    pdf.small(report.get("disclaimer") or "")
-    out = pdf.output(dest="S")
-    return out.encode("latin-1") if isinstance(out, str) else bytes(out)

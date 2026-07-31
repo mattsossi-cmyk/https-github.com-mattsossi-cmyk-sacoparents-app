@@ -2,9 +2,10 @@
 %éëñ¿
 1 0 obj
 <<
-/Count 2
+/Count 3
 /Kids [3 0 R
-5 0 R]
+5 0 R
+7 0 R]
 /MediaBox [0 0 612.00 792.00]
 /Type /Pages
 >>
@@ -21,13 +22,13 @@ endobj
 <<
 /Contents 4 0 R
 /Parent 1 0 R
-/Resources 11 0 R
+/Resources 13 0 R
 /Type /Page
 >>
 endobj
 4 0 obj
 <<
-/Length 6462
+/Length 6591
 >>
 stream
 2 J
@@ -36,9 +37,9 @@ stream
 0.00 792.00 612.00 -51.02 re f
 q 34.02 0 0 34.02 31.18 749.48 cm /I1 Do Q
 BT /F1 10.00 Tf ET
-q BT 76.54 771.43 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Prescription & Medication Coordination Deep Dive) Tj ET Q
+q BT 76.54 771.43 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Medical · Prescription & Medication Deep Dive) Tj ET Q
 BT /F2 8.00 Tf ET
-q BT 76.54 760.69 Td 0.4314 0.3922 0.5098 rg (Medical Needs · Relational Mediation Prep) Tj ET Q
+q BT 76.54 760.69 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 0.8627 0.8392 0.9098 RG
 0.85 w
 39.69 738.14 m 572.31 738.14 l S
@@ -46,94 +47,98 @@ q BT 76.54 760.69 Td 0.4314 0.3922 0.5098 rg (Medical Needs · Relational Mediati
 0 G
 0 g
 BT /F1 17.00 Tf ET
-q BT 42.52 713.91 Td 0.102 0.0745 0.1882 rg (Prescription & Medication Coordination - Deep Dive Report) Tj ET Q
+q BT 42.52 713.91 Td 0.102 0.0745 0.1882 rg (SA CoParents Medical & Prescription Coordination Report) Tj ET Q
 BT /F2 9.30 Tf ET
-q BT 42.52 697.93 Td 0.1176 0.0941 0.2118 rg (For Alex Rivera · About Ari Rivera · 2026-07-31) Tj ET Q
-BT /F3 8.00 Tf ET
-q BT 42.52 686.14 Td 0.4314 0.3922 0.5098 rg 0.353 Tw (This report reflects one parent's perspective. It does not diagnose, provide medical advice, prescribe, or determine parental fitness. It is intended to) Tj ET Q
-q BT 42.52 675.36 Td 0.4314 0.3922 0.5098 rg 1.240 Tw (support coordination and to prompt conversations with the prescribing provider, pharmacist, school nurse, mediator, or family professional. In a) Tj ET Q
-q BT 42.52 664.59 Td 0.4314 0.3922 0.5098 rg (medical emergency call 911 or the poison control centre.) Tj ET Q
+q BT 42.52 697.93 Td 0.1176 0.0941 0.2118 rg (Parent: Alex Rivera · Child: Ari Rivera · Date: 2026-07-31) Tj ET Q
 0.8627 0.8392 0.9098 RG
 0.57 w
-39.69 656.79 m 572.31 656.79 l S
+39.69 689.67 m 572.31 689.67 l S
 BT /F1 12.00 Tf ET
-q BT 42.52 640.43 Td 0.2392 0.102 0.4706 rg (1. Medication Profile) Tj ET Q
+q BT 42.52 673.31 Td 0.2392 0.102 0.4706 rg (1. Report overview) Tj ET Q
 BT /F1 9.50 Tf ET
-q BT 42.52 625.31 Td 0.2392 0.102 0.4706 rg (Reported medication categories) Tj ET Q
+q BT 42.52 658.19 Td 0.2392 0.102 0.4706 rg (Purpose) Tj ET Q
 BT /F2 9.30 Tf ET
-q BT 42.52 612.33 Td 0.1176 0.0941 0.2118 rg (  -  Daily maintenance medication) Tj ET Q
-q BT 42.52 599.86 Td 0.1176 0.0941 0.2118 rg (  -  Rescue / emergency medication \(e.g., inhaler, EpiPen, glucagon\)) Tj ET Q
-q BT 42.52 587.38 Td 0.1176 0.0941 0.2118 rg (  -  Controlled substance \(e.g., stimulant, benzodiazepine, opioid\)) Tj ET Q
-BT /F1 9.50 Tf ET
-q BT 42.52 573.72 Td 0.2392 0.102 0.4706 rg (Prescribers involved) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 560.74 Td 0.1176 0.0941 0.2118 rg (  -  Paediatrician) Tj ET Q
-q BT 42.52 548.27 Td 0.1176 0.0941 0.2118 rg (  -  Psychiatrist) Tj ET Q
-q BT 42.52 535.23 Td 0.1176 0.0941 0.2118 rg (Controlled substance: Yes · School medication: Yes) Tj ET Q
-BT /F1 9.50 Tf ET
-q BT 42.52 521.56 Td 0.2392 0.102 0.4706 rg (Additional notes) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 508.58 Td 0.1176 0.0941 0.2118 rg (Ari uses a daily inhaler plus a stimulant for ADHD.) Tj ET Q
-39.69 500.31 m 572.31 500.31 l S
-BT /F1 12.00 Tf ET
-q BT 42.52 483.96 Td 0.2392 0.102 0.4706 rg (At a glance) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 469.46 Td 0.1176 0.0941 0.2118 rg (10 sections completed. 5 area\(s\) flagged. 1 area\(s\) recognised as strengths.) Tj ET Q
-BT /F1 9.50 Tf ET
-q BT 42.52 455.80 Td 0.2392 0.102 0.4706 rg (Safety-relevant signals) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 442.82 Td 0.1176 0.0941 0.2118 rg (  -  Medication Supply Between Homes: Rescue / emergency medication is available in only one home.) Tj ET Q
-q BT 42.52 430.34 Td 0.1176 0.0941 0.2118 rg (  -  Controlled Medication Accountability: Only 2 of the controlled-medication safeguards are in place across both homes.) Tj ET Q
-BT /F1 9.50 Tf ET
-q BT 42.52 416.68 Td 0.2392 0.102 0.4706 rg (Sections to follow up on) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 403.70 Td 0.1176 0.0941 0.2118 rg (  -  Prescription Pick-Up) Tj ET Q
-q BT 42.52 391.23 Td 0.1176 0.0941 0.2118 rg (  -  Medication Supply Between Homes) Tj ET Q
-q BT 42.52 378.75 Td 0.1176 0.0941 0.2118 rg (  -  Financial & Insurance Barriers) Tj ET Q
-q BT 42.52 366.28 Td 0.1176 0.0941 0.2118 rg (  -  Controlled Medication Accountability) Tj ET Q
-q BT 42.52 353.81 Td 0.1176 0.0941 0.2118 rg (  -  School Medication Coordination) Tj ET Q
-BT /F1 9.50 Tf ET
-q BT 42.52 340.14 Td 0.2392 0.102 0.4706 rg (Areas of current strength) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 327.16 Td 0.1176 0.0941 0.2118 rg (  -  Medication Decisions & Disagreements) Tj ET Q
-39.69 318.90 m 572.31 318.90 l S
-BT /F1 12.00 Tf ET
-q BT 42.52 302.54 Td 0.2392 0.102 0.4706 rg (2. Prescription Pick-Up) Tj ET Q
-BT /F1 8.50 Tf ET
-q BT 42.52 288.28 Td 0.6902 0.1647 0.1647 rg (Area to develop) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 275.01 Td 0.1176 0.0941 0.2118 rg (Prescription pick-ups cause friction, delays, or missed doses.) Tj ET Q
+q BT 42.52 645.21 Td 0.1176 0.0941 0.2118 rg (  -  Confirm both parents share the same accurate medication picture.) Tj ET Q
+q BT 42.52 632.74 Td 0.1176 0.0941 0.2118 rg (  -  Identify supply, refill, or administration gaps early.) Tj ET Q
+q BT 42.52 620.27 Td 0.1176 0.0941 0.2118 rg (  -  Evaluate how medication information is shared between parents.) Tj ET Q
+q BT 42.52 607.79 Td 0.1176 0.0941 0.2118 rg (  -  Prepare for prescriber visits, pharmacy pickup, and school medication reviews.) Tj ET Q
+q BT 42.52 595.32 Td 0.1176 0.0941 0.2118 rg (  -  Develop practical options centred on your child's safety.) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 42.52 263.21 Td 0.4314 0.3922 0.5098 rg (Signals: Average of 2 responses is 2.5.) Tj ET Q
-BT /F1 9.50 Tf ET
-q BT 42.52 250.00 Td 0.2392 0.102 0.4706 rg (Recommendations) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 237.02 Td 0.1176 0.0941 0.2118 rg (  -  Decide in writing who picks up each recurring prescription and who is the backup.) Tj ET Q
-q BT 42.52 224.55 Td 0.1176 0.0941 0.2118 rg (  -  Send a short pick-up confirmation to the other parent on the day it is filled.) Tj ET Q
-q BT 42.52 212.08 Td 0.1176 0.0941 0.2118 rg (  -  Enable pharmacy auto-refill or delivery to reduce human error.) Tj ET Q
-39.69 203.81 m 572.31 203.81 l S
+q BT 42.52 583.52 Td 0.4314 0.3922 0.5098 rg 0.721 Tw (This report reflects the responses of one parent. It is not a diagnosis, medical advice, prescription, or determination of either parent's legal rights.) Tj ET Q
+q BT 42.52 572.75 Td 0.4314 0.3922 0.5098 rg 0.830 Tw (Consult qualified professionals - the prescriber, pharmacist, school nurse, mediator, or attorney - for decisions that affect your child. In a medical) Tj ET Q
+q BT 42.52 561.98 Td 0.4314 0.3922 0.5098 rg (emergency call 911 or the poison control centre.) Tj ET Q
+39.69 554.17 m 572.31 554.17 l S
 BT /F1 12.00 Tf ET
-q BT 42.52 187.46 Td 0.2392 0.102 0.4706 rg (3. Medication Supply Between Homes) Tj ET Q
+q BT 42.52 537.82 Td 0.2392 0.102 0.4706 rg (2. Your support summary) Tj ET Q
+BT /F1 9.70 Tf ET
+q BT 42.52 522.92 Td 0.1176 0.0941 0.2118 rg (Understanding your child's medical needs) Tj ET Q
 BT /F1 8.50 Tf ET
-q BT 42.52 173.20 Td 0.6902 0.1647 0.1647 rg (Area to develop) Tj ET Q
+q BT 42.52 510.52 Td 0.6667 0.4549 0.1569 rg (Rating: Developing) Tj ET Q
 BT /F2 9.30 Tf ET
-q BT 42.52 159.92 Td 0.1176 0.0941 0.2118 rg (Supply between homes is inconsistent, and the child has risked running out.) Tj ET Q
-BT /F3 8.00 Tf ET
-q BT 42.52 148.12 Td 0.4314 0.3922 0.5098 rg (Safety: Rescue / emergency medication is available in only one home.) Tj ET Q
+q BT 42.52 497.24 Td 0.1176 0.0941 0.2118 rg (You are still building a shared picture of your child's prescriptions.) Tj ET Q
+BT /F1 9.70 Tf ET
+q BT 42.52 482.38 Td 0.1176 0.0941 0.2118 rg (Prescription & supply reliability) Tj ET Q
+BT /F1 8.50 Tf ET
+q BT 42.52 469.99 Td 0.6667 0.4549 0.1569 rg (Rating: Developing) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 456.71 Td 0.1176 0.0941 0.2118 rg (Supply is mostly reliable with some coordination gaps.) Tj ET Q
+BT /F1 9.70 Tf ET
+q BT 42.52 441.85 Td 0.1176 0.0941 0.2118 rg (Information sharing between parents) Tj ET Q
+BT /F1 8.50 Tf ET
+q BT 42.52 429.45 Td 0.6667 0.4549 0.1569 rg (Rating: Developing) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 416.17 Td 0.1176 0.0941 0.2118 rg (Some updates are shared; others fall through the cracks.) Tj ET Q
+BT /F1 9.70 Tf ET
+q BT 42.52 401.31 Td 0.1176 0.0941 0.2118 rg (Medication administration & routines) Tj ET Q
+BT /F1 8.50 Tf ET
+q BT 42.52 388.91 Td 0.6667 0.4549 0.1569 rg (Rating: Developing) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 375.64 Td 0.1176 0.0941 0.2118 rg (Administration is mostly consistent with some handoff gaps.) Tj ET Q
+BT /F1 9.70 Tf ET
+q BT 42.52 360.78 Td 0.1176 0.0941 0.2118 rg (Pharmacy & professional coordination) Tj ET Q
+BT /F1 8.50 Tf ET
+q BT 42.52 348.38 Td 0.6667 0.4549 0.1569 rg (Rating: Developing) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 335.10 Td 0.1176 0.0941 0.2118 rg (Some pharmacy coordination is in place; still room to consolidate.) Tj ET Q
+BT /F1 9.70 Tf ET
+q BT 42.52 320.24 Td 0.1176 0.0941 0.2118 rg (Ability to make medication decisions) Tj ET Q
+BT /F1 8.50 Tf ET
+q BT 42.52 307.84 Td 0.6667 0.4549 0.1569 rg (Rating: Developing) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 294.56 Td 0.1176 0.0941 0.2118 rg (Some decisions are aligned; others are difficult to resolve.) Tj ET Q
 BT /F1 9.50 Tf ET
-q BT 42.52 134.91 Td 0.2392 0.102 0.4706 rg (Recommendations) Tj ET Q
+q BT 42.52 279.48 Td 0.2392 0.102 0.4706 rg (Overall) Tj ET Q
 BT /F2 9.30 Tf ET
-q BT 42.52 121.93 Td 0.1176 0.0941 0.2118 rg (  -  Keep a labelled backup supply of daily medication in each home.) Tj ET Q
-q BT 42.52 109.46 Td 0.1176 0.0941 0.2118 rg (  -  Confirm rescue / emergency medication \(inhaler, EpiPen, glucagon\) is present, unexpired, and accessible in BOTH homes.) Tj ET Q
-q BT 42.52 96.99 Td 0.1176 0.0941 0.2118 rg (  -  Set a shared calendar reminder five days before every refill is due.) Tj ET Q
-q BT 42.52 84.52 Td 0.1176 0.0941 0.2118 rg (  -  Check expiration dates on the first of each month.) Tj ET Q
-39.69 76.25 m 572.31 76.25 l S
+q BT 42.52 266.50 Td 0.1176 0.0941 0.2118 rg 0.761 Tw (Your responses indicate that you are actively coordinating your child's medication. A written medication plan and a consistent) Tj ET Q
+q BT 42.52 254.03 Td 0.1176 0.0941 0.2118 rg (handoff routine can help both parents support the child more effectively.) Tj ET Q
+39.69 245.76 m 572.31 245.76 l S
 BT /F1 12.00 Tf ET
-q BT 42.52 59.90 Td 0.2392 0.102 0.4706 rg (7. Financial & Insurance Barriers) Tj ET Q
-BT /F1 8.50 Tf ET
-q BT 42.52 45.64 Td 0.6902 0.1647 0.1647 rg (Area to develop) Tj ET Q
+q BT 42.52 229.41 Td 0.2392 0.102 0.4706 rg (3. Your child's profile) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 42.52 214.28 Td 0.2392 0.102 0.4706 rg (Strengths identified) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 201.30 Td 0.1176 0.0941 0.2118 rg (  -  Willingness to keep the child's medications on schedule) Tj ET Q
+q BT 42.52 188.83 Td 0.1176 0.0941 0.2118 rg (  -  Openness to talking with the prescriber and pharmacist) Tj ET Q
+q BT 42.52 176.36 Td 0.1176 0.0941 0.2118 rg (  -  Ability to grow when both homes coordinate the same routine) Tj ET Q
+q BT 42.52 163.89 Td 0.1176 0.0941 0.2118 rg (  -  Commitment to keeping rescue / emergency medication accessible) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 42.52 150.22 Td 0.2392 0.102 0.4706 rg (Concerns identified) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 137.24 Td 0.1176 0.0941 0.2118 rg (  -  Daily maintenance medication) Tj ET Q
+q BT 42.52 124.77 Td 0.1176 0.0941 0.2118 rg (  -  Rescue / emergency medication \(e.g., inhaler, EpiPen, glucagon\)) Tj ET Q
+q BT 42.52 112.30 Td 0.1176 0.0941 0.2118 rg (  -  Controlled substance \(e.g., stimulant, benzodiazepine, opioid\)) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 42.52 98.63 Td 0.2392 0.102 0.4706 rg (Parent's perspective) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 85.65 Td 0.1176 0.0941 0.2118 rg 0.437 Tw (Your primary concern is: Daily maintenance medication. You believe your child may benefit from: up-to-date school medication) Tj ET Q
+q BT 42.52 73.18 Td 0.1176 0.0941 0.2118 rg (authorisation and shared MAR.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 42.52 59.51 Td 0.2392 0.102 0.4706 rg (Additional notes) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 46.53 Td 0.1176 0.0941 0.2118 rg (Ari uses a daily inhaler plus a stimulant for ADHD.) Tj ET Q
+39.69 38.27 m 572.31 38.27 l S
 BT /F3 7.50 Tf ET
-q BT 193.65 23.26 Td 0.5216 0.4941 0.6118 rg (Prescription & Medication Coordination Deep Dive  ·  Page 1 of ) Tj (2) Tj ET Q
+q BT 233.25 23.26 Td 0.5216 0.4941 0.6118 rg (Medical Deep Dive Report  ·  Page 1 of ) Tj (3) Tj ET Q
 
 endstream
 endobj
@@ -141,13 +146,13 @@ endobj
 <<
 /Contents 6 0 R
 /Parent 1 0 R
-/Resources 12 0 R
+/Resources 14 0 R
 /Type /Page
 >>
 endobj
 6 0 obj
 <<
-/Length 4924
+/Length 5915
 >>
 stream
 2 J
@@ -157,75 +162,192 @@ stream
 0.00 792.00 612.00 -51.02 re f
 q 34.02 0 0 34.02 31.18 749.48 cm /I1 Do Q
 BT /F1 10.00 Tf ET
-q BT 76.54 771.43 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Prescription & Medication Coordination Deep Dive) Tj ET Q
+q BT 76.54 771.43 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Medical · Prescription & Medication Deep Dive) Tj ET Q
 BT /F2 8.00 Tf ET
-q BT 76.54 760.69 Td 0.4314 0.3922 0.5098 rg (Medical Needs · Relational Mediation Prep) Tj ET Q
+q BT 76.54 760.69 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
 0.85 w
 39.69 738.14 m 572.31 738.14 l S
 0.57 w
 0 g
-BT /F2 9.30 Tf ET
-q BT 42.52 720.61 Td 0.1176 0.0941 0.2118 rg (Financial or insurance issues could interrupt medication.) Tj ET Q
-BT /F3 8.00 Tf ET
-q BT 42.52 708.81 Td 0.4314 0.3922 0.5098 rg (Signals: 1 financial or insurance barrier\(s\) currently affecting medication.) Tj ET Q
-BT /F1 9.50 Tf ET
-q BT 42.52 695.61 Td 0.2392 0.102 0.4706 rg (Recommendations) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 682.63 Td 0.1176 0.0941 0.2118 rg (  -  Document the medication cost-split in the parenting plan or a signed side letter.) Tj ET Q
-q BT 42.52 670.15 Td 0.1176 0.0941 0.2118 rg (  -  Verify insurance formulary coverage before any new prescription.) Tj ET Q
-q BT 42.52 657.68 Td 0.1176 0.0941 0.2118 rg (  -  Ask the prescriber about therapeutic generics or manufacturer discount programs.) Tj ET Q
-q BT 42.52 645.21 Td 0.1176 0.0941 0.2118 rg (  -  For prior authorisations, agree in writing which parent submits and follows up.) Tj ET Q
-39.69 636.94 m 572.31 636.94 l S
 BT /F1 12.00 Tf ET
-q BT 42.52 620.59 Td 0.2392 0.102 0.4706 rg (8. Controlled Medication Accountability) Tj ET Q
-BT /F1 8.50 Tf ET
-q BT 42.52 606.33 Td 0.6902 0.1647 0.1647 rg (Area to develop) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 593.05 Td 0.1176 0.0941 0.2118 rg (Controlled-medication accountability needs strengthening.) Tj ET Q
-BT /F3 8.00 Tf ET
-q BT 42.52 581.25 Td 0.4314 0.3922 0.5098 rg (Safety: Only 2 of the controlled-medication safeguards are in place across both homes.) Tj ET Q
+q BT 42.52 717.53 Td 0.2392 0.102 0.4706 rg (4. Professional involvement) Tj ET Q
 BT /F1 9.50 Tf ET
-q BT 42.52 568.05 Td 0.2392 0.102 0.4706 rg (Recommendations) Tj ET Q
+q BT 42.52 702.41 Td 0.2392 0.102 0.4706 rg (Currently involved) Tj ET Q
 BT /F2 9.30 Tf ET
-q BT 42.52 555.07 Td 0.1176 0.0941 0.2118 rg (  -  Store controlled medication in a locked location in both homes.) Tj ET Q
-q BT 42.52 542.60 Td 0.1176 0.0941 0.2118 rg (  -  Track pill / dose count in writing at every handoff and sign it.) Tj ET Q
-q BT 42.52 530.12 Td 0.1176 0.0941 0.2118 rg (  -  Ask the prescriber for a controlled-substance agreement signed by both parents.) Tj ET Q
-q BT 42.52 517.65 Td 0.1176 0.0941 0.2118 rg (  -  Only the parent should administer doses; the child should never have access to the bottle.) Tj ET Q
-39.69 509.39 m 572.31 509.39 l S
-BT /F1 12.00 Tf ET
-q BT 42.52 493.03 Td 0.2392 0.102 0.4706 rg (9. School Medication Coordination) Tj ET Q
-BT /F1 8.50 Tf ET
-q BT 42.52 478.77 Td 0.6902 0.1647 0.1647 rg (Area to develop) Tj ET Q
-BT /F2 9.30 Tf ET
-q BT 42.52 465.49 Td 0.1176 0.0941 0.2118 rg (School medication process has gaps that could delay a dose.) Tj ET Q
-BT /F3 8.00 Tf ET
-q BT 42.52 453.69 Td 0.4314 0.3922 0.5098 rg (Signals: Only 3 of the school medication elements are in place.) Tj ET Q
+q BT 42.52 689.43 Td 0.1176 0.0941 0.2118 rg (  -  Paediatrician) Tj ET Q
+q BT 42.52 676.96 Td 0.1176 0.0941 0.2118 rg (  -  Psychiatrist) Tj ET Q
 BT /F1 9.50 Tf ET
-q BT 42.52 440.49 Td 0.2392 0.102 0.4706 rg (Recommendations) Tj ET Q
+q BT 42.52 663.29 Td 0.2392 0.102 0.4706 rg (Upcoming or recommended meetings) Tj ET Q
 BT /F2 9.30 Tf ET
-q BT 42.52 427.51 Td 0.1176 0.0941 0.2118 rg (  -  Ensure both parents are named on the school medication authorisation and emergency plan.) Tj ET Q
-q BT 42.52 415.04 Td 0.1176 0.0941 0.2118 rg (  -  Ask the school nurse to send the Medication Administration Record \(MAR\) to both parents each month.) Tj ET Q
-q BT 42.52 402.56 Td 0.1176 0.0941 0.2118 rg (  -  Pre-authorise field-trip and off-campus medication once per school year.) Tj ET Q
-q BT 42.52 390.09 Td 0.1176 0.0941 0.2118 rg (  -  Notify the school within 24 hours of any dose change.) Tj ET Q
-39.69 381.83 m 572.31 381.83 l S
+q BT 42.52 650.31 Td 0.1176 0.0941 0.2118 rg (Prescriber follow-up - status: Active. Suggested: Confirm both parents receive the updated prescription list after each visit..) Tj ET Q
+q BT 42.52 637.27 Td 0.1176 0.0941 0.2118 rg 0.434 Tw (Pharmacy coordination - status: Usually. Suggested: Consolidate to one primary pharmacy and add both parents to authorised) Tj ET Q
+q BT 42.52 624.80 Td 0.1176 0.0941 0.2118 rg (pickup..) Tj ET Q
+q BT 42.52 611.76 Td 0.1176 0.0941 0.2118 rg 0.240 Tw (School medication administration - status: In place. Suggested: Ensure both parents are on the school medication authorisation) Tj ET Q
+q BT 42.52 599.29 Td 0.1176 0.0941 0.2118 rg (and MAR distribution..) Tj ET Q
+q BT 42.52 586.25 Td 0.1176 0.0941 0.2118 rg 0.396 Tw (Controlled medication agreement - status: Not yet. Suggested: Ask the prescriber for a written controlled-substance agreement) Tj ET Q
+q BT 42.52 573.78 Td 0.1176 0.0941 0.2118 rg (if applicable..) Tj ET Q
+q BT 42.52 560.74 Td 0.1176 0.0941 0.2118 rg 1.946 Tw (Emergency medication check - status: Only one home. Suggested: Confirm rescue medication is present, unexpired, and) Tj ET Q
+q BT 42.52 548.27 Td 0.1176 0.0941 0.2118 rg (accessible in BOTH homes..) Tj ET Q
+39.69 540.00 m 572.31 540.00 l S
 BT /F1 12.00 Tf ET
-q BT 42.52 365.47 Td 0.2392 0.102 0.4706 rg (10. Medication Decisions & Disagreements) Tj ET Q
+q BT 42.52 523.64 Td 0.2392 0.102 0.4706 rg (5. Co-parenting assessment) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 42.52 508.52 Td 0.2392 0.102 0.4706 rg (Information sharing) Tj ET Q
 BT /F1 8.50 Tf ET
-q BT 42.52 351.21 Td 0.1216 0.3608 0.2314 rg (Strength) Tj ET Q
+q BT 42.52 495.78 Td 0.6667 0.4549 0.1569 rg (Rating: Developing) Tj ET Q
 BT /F2 9.30 Tf ET
-q BT 42.52 337.93 Td 0.1176 0.0941 0.2118 rg (Most medication decisions consistently see agreement.) Tj ET Q
+q BT 42.52 482.50 Td 0.1176 0.0941 0.2118 rg (  -  New prescriptions) Tj ET Q
+q BT 42.52 470.03 Td 0.1176 0.0941 0.2118 rg (  -  Dose or schedule changes) Tj ET Q
+q BT 42.52 457.56 Td 0.1176 0.0941 0.2118 rg (  -  Missed doses) Tj ET Q
+q BT 42.52 445.08 Td 0.1176 0.0941 0.2118 rg (  -  Side effects observed) Tj ET Q
+q BT 42.52 432.61 Td 0.1176 0.0941 0.2118 rg (  -  Refill needs) Tj ET Q
 BT /F3 8.00 Tf ET
-q BT 42.52 326.14 Td 0.4314 0.3922 0.5098 rg (Signals: 5 of 8 medication decision areas consistently see agreement.) Tj ET Q
-39.69 318.33 m 572.31 318.33 l S
-q BT 42.52 306.29 Td 0.4314 0.3922 0.5098 rg 0.353 Tw (This report reflects one parent's perspective. It does not diagnose, provide medical advice, prescribe, or determine parental fitness. It is intended to) Tj ET Q
-q BT 42.52 295.52 Td 0.4314 0.3922 0.5098 rg 1.240 Tw (support coordination and to prompt conversations with the prescribing provider, pharmacist, school nurse, mediator, or family professional. In a) Tj ET Q
-q BT 42.52 284.75 Td 0.4314 0.3922 0.5098 rg (medical emergency call 911 or the poison control centre.) Tj ET Q
+q BT 42.52 420.81 Td 0.4314 0.3922 0.5098 rg (Possible gaps: Use of rescue / emergency medication, Stopping a medication, Prescriber visits) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 42.52 407.61 Td 0.2392 0.102 0.4706 rg (Consistency between homes) Tj ET Q
+BT /F1 8.50 Tf ET
+q BT 42.52 394.87 Td 0.6667 0.4549 0.1569 rg (Rating: Developing) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 381.59 Td 0.1176 0.0941 0.2118 rg (  -  Same daily schedule) Tj ET Q
+q BT 42.52 369.12 Td 0.1176 0.0941 0.2118 rg (  -  Written dose log) Tj ET Q
+q BT 42.52 356.64 Td 0.1176 0.0941 0.2118 rg (  -  Handoff dose communication) Tj ET Q
+q BT 42.52 344.17 Td 0.1176 0.0941 0.2118 rg (  -  Backup supply) Tj ET Q
+q BT 42.52 331.70 Td 0.1176 0.0941 0.2118 rg (  -  Emergency medication access) Tj ET Q
+q BT 42.52 319.23 Td 0.1176 0.0941 0.2118 rg (  -  Expiration checks) Tj ET Q
+q BT 42.52 306.75 Td 0.1176 0.0941 0.2118 rg (  -  Storage location) Tj ET Q
+q BT 42.52 294.28 Td 0.1176 0.0941 0.2118 rg (  -  Adult-only administration) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 42.52 280.61 Td 0.2392 0.102 0.4706 rg (Decision-making) Tj ET Q
+BT /F1 8.50 Tf ET
+q BT 42.52 267.88 Td 0.6667 0.4549 0.1569 rg (Rating: Developing) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 254.60 Td 0.1176 0.0941 0.2118 rg (  -  Discuss medication concerns without dismissing one another) Tj ET Q
+q BT 42.52 242.12 Td 0.1176 0.0941 0.2118 rg (  -  Review prescriber recommendations before decisions) Tj ET Q
+q BT 42.52 229.65 Td 0.1176 0.0941 0.2118 rg (  -  Communicate directly with the prescriber and pharmacist) Tj ET Q
+q BT 42.52 217.18 Td 0.1176 0.0941 0.2118 rg (  -  Consider the child's tolerability and preference) Tj ET Q
+q BT 42.52 204.71 Td 0.1176 0.0941 0.2118 rg (  -  Consult appropriate professionals) Tj ET Q
+q BT 42.52 192.23 Td 0.1176 0.0941 0.2118 rg (  -  Reach decisions before the next refill is needed) Tj ET Q
+39.69 183.97 m 572.31 183.97 l S
+BT /F1 12.00 Tf ET
+q BT 42.52 167.61 Td 0.2392 0.102 0.4706 rg (6. Areas of alignment) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 153.12 Td 0.1176 0.0941 0.2118 rg (  -  Both parents want the child to receive medication safely and on time.) Tj ET Q
+q BT 42.52 140.64 Td 0.1176 0.0941 0.2118 rg (  -  Both recognise the importance of rescue / emergency medication access.) Tj ET Q
+q BT 42.52 128.17 Td 0.1176 0.0941 0.2118 rg (  -  Both support communication with the prescriber and pharmacist.) Tj ET Q
+q BT 42.52 115.70 Td 0.1176 0.0941 0.2118 rg (  -  Both want the child to feel supported at every handoff.) Tj ET Q
+q BT 42.52 103.23 Td 0.1176 0.0941 0.2118 rg (  -  Both value the child's health and continuity of care.) Tj ET Q
+39.69 94.96 m 572.31 94.96 l S
+BT /F1 12.00 Tf ET
+q BT 42.52 78.60 Td 0.2392 0.102 0.4706 rg (7. Areas requiring attention) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 64.11 Td 0.1176 0.0941 0.2118 rg (  -  The child may be carrying medication information between parents.) Tj ET Q
+39.69 55.84 m 572.31 55.84 l S
 BT /F3 7.50 Tf ET
-q BT 193.65 23.26 Td 0.5216 0.4941 0.6118 rg (Prescription & Medication Coordination Deep Dive  ·  Page 2 of ) Tj (2) Tj ET Q
+q BT 233.25 23.26 Td 0.5216 0.4941 0.6118 rg (Medical Deep Dive Report  ·  Page 2 of ) Tj (3) Tj ET Q
 
 endstream
 endobj
 7 0 obj
+<<
+/Contents 8 0 R
+/Parent 1 0 R
+/Resources 15 0 R
+/Type /Page
+>>
+endobj
+8 0 obj
+<<
+/Length 7204
+>>
+stream
+2 J
+0.57 w
+0.8627 0.8392 0.9098 RG
+0.9608 0.9412 0.9098 rg
+0.00 792.00 612.00 -51.02 re f
+q 34.02 0 0 34.02 31.18 749.48 cm /I1 Do Q
+BT /F1 10.00 Tf ET
+q BT 76.54 771.43 Td 0.2392 0.102 0.4706 rg (SA CoParents  ·  Medical · Prescription & Medication Deep Dive) Tj ET Q
+BT /F2 8.00 Tf ET
+q BT 76.54 760.69 Td 0.4314 0.3922 0.5098 rg (Relational Mediation Prep) Tj ET Q
+0.85 w
+39.69 738.14 m 572.31 738.14 l S
+0.57 w
+0 g
+BT /F1 12.00 Tf ET
+q BT 42.52 717.53 Td 0.2392 0.102 0.4706 rg (8. Recommended support level) Tj ET Q
+BT /F1 8.50 Tf ET
+q BT 42.52 703.28 Td 0.6667 0.4549 0.1569 rg (Level 2 - Develop a Shared Medication Plan) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 690.00 Td 0.1176 0.0941 0.2118 rg (Some differences or communication gaps could interrupt the child's medication.) Tj ET Q
+BT /F1 9.50 Tf ET
+q BT 42.52 676.33 Td 0.2392 0.102 0.4706 rg (Suggested next steps) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 663.35 Td 0.1176 0.0941 0.2118 rg (  -  Create one written medication list shared with both homes.) Tj ET Q
+q BT 42.52 650.88 Td 0.1176 0.0941 0.2118 rg (  -  Consolidate to one primary pharmacy.) Tj ET Q
+q BT 42.52 638.41 Td 0.1176 0.0941 0.2118 rg (  -  Set a handoff routine that includes the last dose given.) Tj ET Q
+q BT 42.52 625.93 Td 0.1176 0.0941 0.2118 rg (  -  Confirm rescue medication is present in BOTH homes.) Tj ET Q
+39.69 617.67 m 572.31 617.67 l S
+BT /F1 12.00 Tf ET
+q BT 42.52 601.31 Td 0.2392 0.102 0.4706 rg (9. Practical options and resources) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 586.82 Td 0.1176 0.0941 0.2118 rg (  -  Give both parents pharmacy authorisation and provider portal access where allowed.) Tj ET Q
+q BT 42.52 574.34 Td 0.1176 0.0941 0.2118 rg (  -  Use one shared medication calendar with dose times and handoff notes.) Tj ET Q
+q BT 42.52 561.87 Td 0.1176 0.0941 0.2118 rg (  -  Upload prescriptions, MAR, and school authorisations to a shared folder.) Tj ET Q
+q BT 42.52 549.40 Td 0.1176 0.0941 0.2118 rg (  -  Set a standard method for notifying the other parent of dose changes.) Tj ET Q
+q BT 42.52 536.93 Td 0.1176 0.0941 0.2118 rg (  -  Attend prescriber visits together, separately, or virtually - whichever is safest and most productive.) Tj ET Q
+q BT 42.52 524.45 Td 0.1176 0.0941 0.2118 rg (  -  Submit questions to the prescriber in writing before every visit.) Tj ET Q
+q BT 42.52 511.98 Td 0.1176 0.0941 0.2118 rg (  -  Confirm rescue / emergency medication is present, unexpired, and accessible in BOTH homes.) Tj ET Q
+q BT 42.52 499.51 Td 0.1176 0.0941 0.2118 rg (  -  Log every dose given so the receiving home sees the last administered time.) Tj ET Q
+q BT 42.52 487.04 Td 0.1176 0.0941 0.2118 rg (  -  Consolidate to one primary pharmacy and add both parents to pickup.) Tj ET Q
+q BT 42.52 474.56 Td 0.1176 0.0941 0.2118 rg (  -  Establish in writing how medication and copays are shared.) Tj ET Q
+q BT 42.52 462.09 Td 0.1176 0.0941 0.2118 rg (  -  Keep the child out of adult disagreements about their medication.) Tj ET Q
+39.69 453.83 m 572.31 453.83 l S
+BT /F1 12.00 Tf ET
+q BT 42.52 437.47 Td 0.2392 0.102 0.4706 rg (10. Your action plan) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 422.97 Td 0.1176 0.0941 0.2118 rg 1.536 Tw (Priority 1: Consolidate medication list - Create one shared list with name, dose, purpose, schedule, prescriber, pharmacy ·) Tj ET Q
+q BT 42.52 410.50 Td 0.1176 0.0941 0.2118 rg (Owner: Parent · Due: ____) Tj ET Q
+q BT 42.52 397.46 Td 0.1176 0.0941 0.2118 rg (Priority 2: Confirm rescue meds - Ensure emergency medication is present in both homes · Owner: Parent · Due: ____) Tj ET Q
+q BT 42.52 384.42 Td 0.1176 0.0941 0.2118 rg 0.159 Tw (Priority 3: Share updates promptly - Send dose changes, missed doses, and side effects within 24 hours · Owner: Parent · Due:) Tj ET Q
+q BT 42.52 371.95 Td 0.1176 0.0941 0.2118 rg (____) Tj ET Q
+q BT 42.52 358.91 Td 0.1176 0.0941 0.2118 rg (Priority 4: Align on handoffs - Communicate last dose given and next dose due at every handoff · Owner: Parents · Due: ____) Tj ET Q
+q BT 42.52 345.87 Td 0.1176 0.0941 0.2118 rg (Priority 5: Review with prescriber - Revisit the plan at the next medication review · Owner: Parents / prescriber · Due: ____) Tj ET Q
+39.69 337.61 m 572.31 337.61 l S
+BT /F1 12.00 Tf ET
+q BT 42.52 321.25 Td 0.2392 0.102 0.4706 rg (11. Foundation statement) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 306.75 Td 0.1176 0.0941 0.2118 rg 2.107 Tw (My child's medication needs include daily maintenance medication, rescue / emergency medication \(e.g., inhaler, epipen,) Tj ET Q
+q BT 42.52 294.28 Td 0.1176 0.0941 0.2118 rg 0.164 Tw (glucagon\), controlled substance \(e.g., stimulant, benzodiazepine, opioid\). I believe my child needs up-to-date school medication) Tj ET Q
+q BT 42.52 281.81 Td 0.1176 0.0941 0.2118 rg 0.331 Tw (authorisation and shared MAR to receive medication safely and on time. I am willing to share prescription information, consider) Tj ET Q
+q BT 42.52 269.34 Td 0.1176 0.0941 0.2118 rg (prescriber recommendations, and participate in a structured decision-making process focused on my child's health.) Tj ET Q
+39.69 261.07 m 572.31 261.07 l S
+BT /F1 12.00 Tf ET
+q BT 42.52 244.71 Td 0.2392 0.102 0.4706 rg (12. Questions for the other parent or professional) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 230.22 Td 0.1176 0.0941 0.2118 rg (  -  Is our current medication list fully shared and accurate in both homes?) Tj ET Q
+q BT 42.52 217.75 Td 0.1176 0.0941 0.2118 rg (  -  Do we both know when a rescue or emergency medication should be used?) Tj ET Q
+q BT 42.52 205.27 Td 0.1176 0.0941 0.2118 rg (  -  Are dose changes and missed doses being communicated within 24 hours?) Tj ET Q
+q BT 42.52 192.80 Td 0.1176 0.0941 0.2118 rg (  -  For 'Daily maintenance medication', what support should we try first?) Tj ET Q
+q BT 42.52 180.33 Td 0.1176 0.0941 0.2118 rg (  -  When will we review whether the plan is helping?) Tj ET Q
+39.69 172.06 m 572.31 172.06 l S
+BT /F1 12.00 Tf ET
+q BT 42.52 155.71 Td 0.2392 0.102 0.4706 rg (13. Final child-focused summary) Tj ET Q
+BT /F2 9.30 Tf ET
+q BT 42.52 141.21 Td 0.1176 0.0941 0.2118 rg 1.258 Tw (Your child benefits when medication coordination is addressed early, prescriptions are shared accurately, and decisions are) Tj ET Q
+q BT 42.52 128.74 Td 0.1176 0.0941 0.2118 rg 1.524 Tw (based on the child's health rather than parental conflict. You do not have to agree on every issue to create a dependable) Tj ET Q
+q BT 42.52 116.27 Td 0.1176 0.0941 0.2118 rg (process for supporting your child.) Tj ET Q
+39.69 108.00 m 572.31 108.00 l S
+BT /F3 8.00 Tf ET
+q BT 42.52 95.96 Td 0.4314 0.3922 0.5098 rg 0.721 Tw (This report reflects the responses of one parent. It is not a diagnosis, medical advice, prescription, or determination of either parent's legal rights.) Tj ET Q
+q BT 42.52 85.19 Td 0.4314 0.3922 0.5098 rg 0.830 Tw (Consult qualified professionals - the prescriber, pharmacist, school nurse, mediator, or attorney - for decisions that affect your child. In a medical) Tj ET Q
+q BT 42.52 74.42 Td 0.4314 0.3922 0.5098 rg (emergency call 911 or the poison control centre.) Tj ET Q
+BT /F3 7.50 Tf ET
+q BT 233.25 23.26 Td 0.5216 0.4941 0.6118 rg (Medical Deep Dive Report  ·  Page 3 of ) Tj (3) Tj ET Q
+
+endstream
+endobj
+9 0 obj
 <<
 /BitsPerComponent 8
 /ColorSpace /DeviceRGB
@@ -4120,7 +4242,7 @@ r“nm åzÊµ?ôÔ3ïC#3>Ô©@ž©íÏ`ìx¦´ÿ¡„~×$‡þC¿KšÚaT:þÐ"7g^¶åÂÃJ>¬’·S¢oJ.%ÈqO1
 ÔÌ&RcI;a[±N-²½ùEš&¾/ßÿÂ`ÆÄœAç	sö$ñAXb ôR	b|  aö‡ðëØÂ«ÿŽ†qù
 endstream
 endobj
-8 0 obj
+10 0 obj
 <<
 /BaseFont /Helvetica-Bold
 /Encoding /WinAnsiEncoding
@@ -4128,7 +4250,7 @@ endobj
 /Type /Font
 >>
 endobj
-9 0 obj
+11 0 obj
 <<
 /BaseFont /Helvetica
 /Encoding /WinAnsiEncoding
@@ -4136,7 +4258,7 @@ endobj
 /Type /Font
 >>
 endobj
-10 0 obj
+12 0 obj
 <<
 /BaseFont /Helvetica-Oblique
 /Encoding /WinAnsiEncoding
@@ -4144,52 +4266,64 @@ endobj
 /Type /Font
 >>
 endobj
-11 0 obj
-<<
-/Font <</F1 8 0 R
-/F2 9 0 R
-/F3 10 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 7 0 R>>
->>
-endobj
-12 0 obj
-<<
-/Font <</F1 8 0 R
-/F2 9 0 R
-/F3 10 0 R>>
-/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
-/XObject <</I1 7 0 R>>
->>
-endobj
 13 0 obj
 <<
-/CreationDate (D:20260731221547Z)
+/Font <</F1 10 0 R
+/F2 11 0 R
+/F3 12 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 9 0 R>>
+>>
+endobj
+14 0 obj
+<<
+/Font <</F1 10 0 R
+/F2 11 0 R
+/F3 12 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 9 0 R>>
+>>
+endobj
+15 0 obj
+<<
+/Font <</F1 10 0 R
+/F2 11 0 R
+/F3 12 0 R>>
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/XObject <</I1 9 0 R>>
+>>
+endobj
+16 0 obj
+<<
+/CreationDate (D:20260731223642Z)
 >>
 endobj
 xref
-0 14
+0 17
 0000000000 65535 f 
 0000000015 00000 n 
-0000000108 00000 n 
-0000000211 00000 n 
-0000000292 00000 n 
-0000006806 00000 n 
-0000006887 00000 n 
-0000011863 00000 n 
-0000999736 00000 n 
-0000999838 00000 n 
-0000999935 00000 n 
-0001000041 00000 n 
-0001000173 00000 n 
-0001000305 00000 n 
+0000000114 00000 n 
+0000000217 00000 n 
+0000000298 00000 n 
+0000006941 00000 n 
+0000007022 00000 n 
+0000012989 00000 n 
+0000013070 00000 n 
+0000020326 00000 n 
+0001008199 00000 n 
+0001008302 00000 n 
+0001008400 00000 n 
+0001008506 00000 n 
+0001008640 00000 n 
+0001008774 00000 n 
+0001008908 00000 n 
 trailer
 <<
-/Size 14
+/Size 17
 /Root 2 0 R
-/Info 13 0 R
-/ID [<47924947233F2E16AD853C1F97A067D9><47924947233F2E16AD853C1F97A067D9>]
+/Info 16 0 R
+/ID [<5A7A11BD83F616B578DE0DC410810EF6><5A7A11BD83F616B578DE0DC410810EF6>]
 >>
 startxref
-1000361
+1008964
 %%EOF
