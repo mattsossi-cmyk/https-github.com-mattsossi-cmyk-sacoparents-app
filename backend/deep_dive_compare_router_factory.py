@@ -287,18 +287,23 @@ def make_deep_dive_compare_router(
                 {"prompt": h.get("prompt", ""), "section_name": h.get("section_name", "")}
                 for h in highlights
             ]
-            await db[SNAPSHOTS].insert_one({
-                "snapshot_id": f"snap_{uuid.uuid4().hex[:12]}",
-                "share_id": share["share_id"],
-                "pathway_id": tag,  # e.g. "edu-deep-compare"
-                "product_label": product_label,
-                "snapshot_key": snapshot_key,
-                "creator_updated_at": creator_ts,
-                "partner_updated_at": partner_ts,
-                "created_at": _now_iso(),
-                "summary": comparison.get("summary") or {},
-                "top_highlights": top_prompts,
-            })
+            try:
+                await db[SNAPSHOTS].insert_one({
+                    "snapshot_id": f"snap_{uuid.uuid4().hex[:12]}",
+                    "share_id": share["share_id"],
+                    "pathway_id": tag,  # e.g. "edu-deep-compare"
+                    "product_label": product_label,
+                    "snapshot_key": snapshot_key,
+                    "creator_updated_at": creator_ts,
+                    "partner_updated_at": partner_ts,
+                    "created_at": _now_iso(),
+                    "summary": comparison.get("summary") or {},
+                    "top_highlights": top_prompts,
+                })
+            except Exception:  # noqa: BLE001
+                # Never let a snapshot-write failure block the view — the
+                # comparison itself is what the parent asked for.
+                logger.exception("Failed to persist compare snapshot for share %s", share["share_id"])
         return comparison
 
     @router.get("/{share_id}")
