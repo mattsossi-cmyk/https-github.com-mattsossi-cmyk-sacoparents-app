@@ -648,7 +648,7 @@ function TheProblem() {
     "Fear that conflict is harming the children",
   ];
   return (
-    <section className="py-24 sm:py-28 bg-white">
+    <section className="py-20 sm:py-24 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-3xl mx-auto fade-up">
           <Eyebrow color="text-[#C28771]">The Problem</Eyebrow>
@@ -656,21 +656,16 @@ function TheProblem() {
             When Parents Fight, Children Feel It
           </h2>
           <p className="text-base text-[#4B4567] mt-6 leading-relaxed">
-            Separation and divorce can create ongoing conflict that impacts
-            every member of the family. Miscommunication, misunderstandings, and
-            unresolved emotions often lead parents into repeated arguments,
-            costly legal disputes, and increased stress for their children.
-          </p>
-          <p className="text-base text-[#4B4567] mt-4 leading-relaxed">
-            Many parents want to do better—they simply need the right tools and
-            guidance.
+            Separation and divorce can create ongoing conflict — miscommunication,
+            costly disputes, and stress that lands on the children. Most parents
+            want to do better; they just need the right tools.
           </p>
         </div>
 
-        <div className="mt-14 grid lg:grid-cols-2 gap-6 lg:gap-10 items-start">
-          <div className="card-soft p-7 sm:p-8">
+        <div className="mt-12 grid lg:grid-cols-3 gap-6 items-start">
+          <div className="card-soft p-7 sm:p-8 lg:col-span-2">
             <Eyebrow color="text-[#C28771]">Common Challenges</Eyebrow>
-            <ul className="space-y-3 mt-2" data-testid="problem-challenges-list">
+            <ul className="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-3" data-testid="problem-challenges-list">
               {challenges.map((c) => (
                 <li
                   key={c}
@@ -685,13 +680,8 @@ function TheProblem() {
 
           <div className="card-soft p-7 sm:p-8 bg-gradient-to-br from-[#EFE9F9] to-[#E4F1F1]">
             <Eyebrow color="text-[#2DB5B5]">The Good News</Eyebrow>
-            <p className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug mt-2">
+            <p className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug mt-2">
               These patterns can change.
-            </p>
-            <p className="text-sm sm:text-base text-[#4B4567] mt-4 leading-relaxed">
-              With the right tools, support, and commitment to your child&apos;s
-              well-being, parents can move from conflict toward cooperation and
-              create healthier outcomes for the entire family.
             </p>
           </div>
         </div>
@@ -773,213 +763,49 @@ function HowItWorks() {
 }
 
 /* ============================================================
-   SECTION 4 — WHY SA COPARENTS IS DIFFERENT
-============================================================ */
-function WhyDifferent() {
-  const supports = [
-    "Emotional well-being",
-    "Educational success",
-    "Healthy parent-child relationships",
-    "Consistent parenting expectations",
-    "Long-term family stability",
-  ];
-  return (
-    <section className="py-24 sm:py-28 bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-3xl mx-auto fade-up">
-          <Eyebrow>Why SA CoParents is Different</Eyebrow>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight">
-            More Than a Co-Parenting App
-          </h2>
-          <p className="text-base text-[#4B4567] mt-6 leading-relaxed">
-            Most co-parenting apps help parents exchange information.
-          </p>
-          <p className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-3 leading-snug">
-            SA CoParents helps parents build a stronger foundation for raising
-            their children together.
-          </p>
-        </div>
-
-        <div className="mt-14 grid lg:grid-cols-2 gap-6 lg:gap-8">
-          <div className="card-soft p-7 sm:p-8">
-            <div className="w-12 h-12 rounded-2xl bg-[#EFE9F9] grid place-items-center text-[#3D1A78] mb-5">
-              <Heart size={20} strokeWidth={2.2} />
-            </div>
-            <h3 className="font-serif text-2xl text-[#1A1330] mb-3">
-              Child-Centered Focus
-            </h3>
-            <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed">
-              Keep your child&apos;s needs at the center of every conversation and
-              decision.
-            </p>
-          </div>
-
-          <div className="card-soft p-7 sm:p-8">
-            <div className="w-12 h-12 rounded-2xl bg-[#E4F1F1] grid place-items-center text-[#2DB5B5] mb-5">
-              <MessageCircle size={20} strokeWidth={2.2} />
-            </div>
-            <h3 className="font-serif text-2xl text-[#1A1330] mb-3">
-              Child-Focused Mediation Preparation
-            </h3>
-            <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed">
-              Learn the communication and problem-solving skills that support
-              successful mediation outcomes.
-            </p>
-          </div>
-        </div>
-
-        {/* Foundation Statement block */}
-        <div className="mt-10 card-soft p-7 sm:p-10 relative overflow-hidden">
-          <div className="absolute -top-16 -right-16 w-72 h-72 rounded-full bg-[#D4C5F0]/30" />
-          <div className="relative grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
-            <div className="lg:col-span-3">
-              <Eyebrow>Foundation Statement</Eyebrow>
-              <h3 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug">
-                Create a Foundation Statement
-              </h3>
-              <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed mt-4">
-                Develop a shared Foundation Statement that identifies your
-                child&#39;s goals, needs, values, and priorities.
-              </p>
-              <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed mt-3">
-                This Foundation Statement serves as a guiding framework for
-                co-parenting decisions and can become the foundation of a
-                comprehensive Co-Parenting Agreement.
-              </p>
-              <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed mt-3">
-                By focusing on shared goals rather than ongoing disagreements,
-                parents create a roadmap that supports:
-              </p>
-            </div>
-            <ul className="lg:col-span-2 space-y-2.5">
-              {supports.map((s) => (
-                <li
-                  key={s}
-                  className="flex items-start gap-2.5 text-sm text-[#1A1330] bg-[#F8F7FC] px-3.5 py-2.5 rounded-xl"
-                >
-                  <CheckCircle2
-                    size={15}
-                    className="text-[#2DB5B5] mt-0.5 shrink-0"
-                  />
-                  <span>{s}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Agreement block */}
-        <div className="mt-10 card-soft p-7 sm:p-10 bg-gradient-to-br from-[#EFE9F9] to-[#E4F1F1]">
-          <Eyebrow>Co-Parenting Agreement</Eyebrow>
-          <h3 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug">
-            Build a Meaningful Co-Parenting Agreement
-          </h3>
-          <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed mt-4">
-            Transform your Foundation Statement into a practical Co-Parenting
-            Agreement that helps parents make decisions aligned with their
-            child&apos;s best interests.
-          </p>
-          <p className="text-sm sm:text-base text-[#1A1330] leading-relaxed mt-3">
-            Rather than focusing on what parents disagree about, the process
-            begins with what they both want for their child.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
    SECTION 5 — CHILD-FOCUSED MEDIATION
 ============================================================ */
 function ChildFocusedMediation() {
   const helps = [
     "Communicate with greater respect and clarity",
     "Respond thoughtfully instead of reacting emotionally",
-    "Focus on their children's needs rather than past disagreements",
-    "Develop healthier co-parenting habits",
+    "Focus on the children's needs rather than past disagreements",
     "Build a foundation for long-term family stability",
-  ];
-  const assessmentBenefits = [
-    "Identify communication patterns that contribute to conflict",
-    "Measure co-parenting strengths and growth opportunities",
-    "Recognize barriers to productive mediation",
-    "Gain insights into child-centered decision-making",
-    "Create a personalized pathway toward healthier co-parenting",
   ];
   return (
     <section
       id="child-focused-mediation"
-      className="relative py-24 sm:py-28 bg-[#F8F7FC] scroll-mt-16"
+      className="relative py-20 sm:py-24 bg-[#F8F7FC] scroll-mt-16"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-3xl mx-auto fade-up">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="text-center fade-up">
           <Eyebrow>Our Foundation</Eyebrow>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight">
             Built on the Principles of
             <br className="hidden sm:block" /> Child-Focused Mediation
           </h2>
-          <p className="text-base text-[#4B4567] mt-6 leading-relaxed">
-            Child-Focused Mediation helps parents move beyond conflict and make
-            decisions based on what is best for their children.
+          <p className="text-base text-[#4B4567] mt-5 leading-relaxed">
+            Decisions rooted in what is best for the children — not in past
+            disagreements between the adults.
           </p>
         </div>
 
-        <div className="mt-14 grid lg:grid-cols-2 gap-6 lg:gap-10">
-          <div className="card-soft p-7 sm:p-8">
-            <Eyebrow>The SA CoParents App helps parents</Eyebrow>
-            <ul className="space-y-3 mt-2" data-testid="cfm-helps-list">
-              {helps.map((h) => (
-                <li
-                  key={h}
-                  className="flex items-start gap-3 text-sm sm:text-base text-[#1A1330]"
-                >
-                  <CheckCircle2
-                    size={16}
-                    className="text-[#3D1A78] mt-1 shrink-0"
-                  />
-                  <span className="leading-relaxed">{h}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <ul className="mt-10 grid sm:grid-cols-2 gap-x-6 gap-y-3 max-w-3xl mx-auto" data-testid="cfm-helps-list">
+          {helps.map((h) => (
+            <li
+              key={h}
+              className="flex items-start gap-3 text-sm sm:text-base text-[#1A1330] bg-white border border-[#EFE9F9] rounded-xl px-4 py-3"
+            >
+              <CheckCircle2
+                size={16}
+                className="text-[#3D1A78] mt-1 shrink-0"
+              />
+              <span className="leading-relaxed">{h}</span>
+            </li>
+          ))}
+        </ul>
 
-          <div className="card-soft p-7 sm:p-8">
-            <Eyebrow>Pre-Mediation Assessment</Eyebrow>
-            <h3 className="font-serif text-2xl text-[#1A1330] leading-snug">
-              Start with a Pre-Mediation Assessment
-            </h3>
-            <p className="text-sm sm:text-base text-[#4B4567] mt-3 leading-relaxed">
-              Before mediation can be successful, parents need a clear
-              understanding of their strengths, challenges, and readiness to
-              work together.
-            </p>
-            <div className="mt-5">
-              <div className="text-xs text-[#4B4567] uppercase tracking-[0.18em] mb-2 font-bold">
-                The assessment helps parents:
-              </div>
-              <ul className="space-y-2.5" data-testid="cfm-assessment-list">
-                {assessmentBenefits.map((b) => (
-                  <li
-                    key={b}
-                    className="flex items-start gap-2.5 text-sm text-[#1A1330]"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#2DB5B5] mt-2.5 shrink-0" />
-                    <span className="leading-relaxed">{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-center text-sm sm:text-base text-[#4B4567] mt-12 max-w-2xl mx-auto leading-relaxed">
-          The assessment provides a starting point for growth, helping parents
-          enter mediation better prepared, more informed, and focused on
-          achieving outcomes that support their children&apos;s well-being.
-        </p>
-
-        <div className="mt-14 card-soft p-8 sm:p-10 text-center bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] text-white relative overflow-hidden">
+        <div className="mt-12 card-soft p-8 sm:p-10 text-center bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] text-white relative overflow-hidden">
           <Quote
             size={48}
             className="absolute top-4 left-6 text-white/15"
@@ -1307,13 +1133,8 @@ function FinalCTA() {
           Every step toward healthier communication creates a stronger
           foundation for your children.
         </p>
-        <p className="text-base text-[#4B4567] mt-3 max-w-2xl mx-auto leading-relaxed">
-          The SA CoParents App provides the tools, assessments, and guidance
-          parents need to reduce conflict, improve communication, and build a
-          child-centered co-parenting relationship.
-        </p>
 
-        <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-12 leading-snug">
+        <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-10 leading-snug">
           Discover Your Co-Parenting Strengths and Growth Opportunities
         </h3>
         <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-xl mx-auto">
@@ -1356,7 +1177,6 @@ export default function Landing() {
         <TheProblem />
         <HowItWorks />
         <SampleReports />
-        <WhyDifferent />
         <TrustSignals />
         <ChildFocusedMediation />
         <FinalCTA />
