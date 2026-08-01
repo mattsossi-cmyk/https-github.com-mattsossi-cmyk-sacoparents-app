@@ -228,8 +228,13 @@ async def generate(user: UserPublic = Depends(get_current_user),
     return {"cached": False, **fresh}
 
 
+class RegenSummaryIn(BaseModel):
+    length: Optional[str] = "standard"
+
+
 @router.post("/report/regen-summary")
-async def regen_summary(user: UserPublic = Depends(get_current_user),
+async def regen_summary(body: RegenSummaryIn = RegenSummaryIn(),
+                        user: UserPublic = Depends(get_current_user),
                         db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     if user.is_guest:
         raise HTTPException(status_code=403, detail="Please claim an account before generating your report.")
@@ -237,18 +242,23 @@ async def regen_summary(user: UserPublic = Depends(get_current_user),
     if not cached:
         raise HTTPException(status_code=404, detail="Generate the report first.")
     report = cached.get("report") or {}
+    length = (body.length or "standard").lower()
+    if length not in ("short", "standard", "long"):
+        length = "standard"
     new_summary = await generate_executive_summary(
         product_name="Educational Needs Deep Dive",
         report=report,
+        length=length,
     )
     if not new_summary:
         raise HTTPException(status_code=503, detail="AI summary is unavailable right now. Please try again shortly.")
     now = _now_iso()
     report["ai_summary"] = new_summary
+    report["ai_summary_length"] = length
     report["ai_summary_regenerated_at"] = now
     await db[REPORTS].update_one(
         {"user_id": user.user_id},
-        {"$set": {"report": report, "ai_summary_regenerated_at": now}},
+        {"$set": {"report": report, "ai_summary_regenerated_at": now, "ai_summary_length": length}},
     )
     cached["report"] = report
     cached["ai_summary_regenerated_at"] = now

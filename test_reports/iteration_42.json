@@ -1,0 +1,45 @@
+{
+  "summary": "Backend + light frontend testing of iteration-42 3-feature batch (Summary Length Toggle, Expiring Share Links, Educational Deep Dive Compare). Created /app/backend/tests/test_iter42_features.py — 20/20 pass after fixing one missing import in safety_assessment_routes.py. Verified: (a) regen-summary endpoints for edu-deep/psych-deep/med-deep accept optional {length} body, remain backwards compatible with empty body, coerce unknown values to standard, 403 for guests, 404 when no report exists; (b) POST /api/safety-assessment/{id}/share-link now returns {token, jti, expires_at}, honours expire_days=1|7|30|None (Never → no expires_at), GET /api/share/mine lists active/past with correct status, POST /api/share/revoke invalidates the token and subsequent GET /api/safety-assessment/shared/{token} correctly returns 404 with 'revoked' language, idempotent revoke returns already_revoked=true, unknown jti → 404; (c) /api/edu-deep/compare/link enforces safety guardrail (level-2 safety → 403 with 'safety' in detail), rejects self-email (400) and unknown partners (404), successfully creates share with proper state (my_consent=true, partner_consent=false, status=awaiting_partner_consent, share_id prefixed edu_deep_share_), /me lists it, revoke transitions status to 'revoked'. Frontend UI verified via Playwright: parent1 login OK; edu-deep-length-{short,standard,long} + edu-deep-report-open-compare present on educational deep-dive report; psych-deep-length-{short,standard,long} present; med-deep length pills only render when med-deep report.ai_summary exists (correct conditional). Regression: 32/34 pre-existing safety_assessment tests still pass; the 2 failing pre-date this iteration (question count changed from 10→18 — unrelated to iteration 42). All SNC v2 Compare API tests still pass.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "safety_assessment_routes.py", "issue": "record_share_token and is_share_token_revoked were referenced but not imported → every POST /api/safety-assessment/{id}/share-link returned 500 NameError. FIXED by testing agent (added `from share_routes import record_share_token, is_share_token_revoked`)."},
+      {"endpoint": "/api/edu-deep/compare/link", "issue": "When an existing non-revoked share exists between the same pair, the endpoint returns the existing share WITHOUT re-checking the current user's safety level. If a share was created while safety was OK and the user's latest safety later drops to level 1-2, /link still returns 200 with the share hydrated. The consent/GET/PDF endpoints DO still block correctly, so no comparison data is leaked — but the /link endpoint could arguably return 403 to be consistent with the problem statement wording. Debatable design vs bug."},
+      {"endpoint": "backend/tests/test_safety_assessment.py", "issue": "Pre-existing unit tests test_high_concern_ids_metadata and test_returns_correct_structure fail because SECTION_1 now has 18 questions (not 10) and HIGH_CONCERN_IDS was expanded. Not introduced by iteration 42 — flagging so main agent can update the assertions."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter42_features.py",
+    "/app/test_reports/pytest/iter42.xml"
+  ],
+  "action_items": [
+    "(FIXED by testing agent) Add missing import in safety_assessment_routes.py — `from share_routes import record_share_token, is_share_token_revoked`.",
+    "Consider re-checking safety level in /api/edu-deep/compare/link even when an existing share is returned (defense in depth).",
+    "Update /app/backend/tests/test_safety_assessment.py::TestScoreAssessment::test_high_concern_ids_metadata and TestQuestionsEndpoint::test_returns_correct_structure to reflect the expanded 18-question section-1 schema (pre-existing, unrelated to iter-42)."
+  ],
+  "critical_code_review_comments": [
+    "share_routes.py cleanly separates persistence (`share_tokens` collection) from the JWT layer; `is_share_token_revoked` gracefully returns False for pre-feature tokens without jti — good backward-compat handling.",
+    "auth.create_share_token correctly validates expire_days against SHARE_TOKEN_WINDOWS = {1,7,30,None}, so an unknown value silently falls back to 7 instead of raising. Consider raising a 400 upstream if a client sends an out-of-range value so bugs surface early.",
+    "edu_deep_comparison_routes.py mirrors SNC v2 compare state machine correctly (creator/partner/consent/revoke) and applies the safety guardrail at link creation, consent, and both GET endpoints — matches the SNC v2 pattern users already know. Good consistency.",
+    "safety_assessment_routes.py had the same code shape as coparenting_routes.py / mediation_routes.py but missed the share_routes import — this class of shipping bug argues for a shared helper (e.g. a `mint_and_record_share_token(...)` in share_routes.py) so callers can't accidentally forget the record_share_token call."
+  ],
+  "updated_files": [
+    "/app/backend/safety_assessment_routes.py",
+    "/app/backend/tests/test_iter42_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (20/20 iter-42 tests + 32/34 pre-existing safety tests — 2 failures pre-date this iteration)",
+    "frontend": "All new iter-42 testids that could be exercised without generating an AI summary are present and rendering: edu-deep-length-{short,standard,long}, edu-deep-report-open-compare, psych-deep-length-{short,standard,long}. med-deep length pills correctly gated on report.ai_summary existence."
+  },
+  "test_credentials": "parent1@test.com / TestPass123! and parent2@test.com / TestPass123! (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "Tests submit fresh level-4 safety assessments for parent1 so the safety guardrail doesn't fire, and one level-2 assessment specifically to prove the guardrail blocks /api/edu-deep/compare/link with 403 and 'safety' in the detail. parent1 leaves behind several safety_assessments docs (there is no DELETE endpoint) and 3 revoked share_tokens rows — these are inert and won't affect future runs. Autouse fixture revokes any leftover edu_deep_shares between parent1/parent2 at module start.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test_iter42_features.py is a reusable regression suite for the length-toggle regen endpoints (edu/psych/med), /api/share/mine + /api/share/revoke, and /api/edu-deep/compare state machine. It uses shared parent1/parent2 accounts. If a previous run left leftover edu_deep_shares between parent1↔parent2, the module-scoped autouse cleanup fixture revokes them before tests execute — important because /link short-circuits to an existing non-revoked share and bypasses the safety block. Safety-assessment share-link endpoint depended on record_share_token/is_share_token_revoked being imported — that import was missing and has been added; if a future refactor moves those helpers, don't forget to keep the import.",
+  "rca_of_the_issue": "safety-assessment share-link 500: safety_assessment_routes.py used record_share_token and is_share_token_revoked without importing them from share_routes. Reproduce: POST /api/safety-assessment/{id}/share-link → 500. Fix: add `from share_routes import record_share_token, is_share_token_revoked` — verified with backend hot reload, endpoint now returns {token, jti, expires_at}. Same helpers were already correctly imported in coparenting_routes.py and mediation_routes.py."
+}

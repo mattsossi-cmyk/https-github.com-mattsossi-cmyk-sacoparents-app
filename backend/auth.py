@@ -164,6 +164,9 @@ async def get_current_user(
 JWT_COOKIE_NAME = "auth_token"
 JWT_COOKIE_MAX_AGE = ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 SHARE_TOKEN_EXPIRE_DAYS = 7
+# Allowed expiry windows for user-selectable share-link durations.
+# None = "never" (still revocable via the revocation list).
+SHARE_TOKEN_WINDOWS = {1, 7, 30, None}
 
 
 def create_share_token(
@@ -171,20 +174,32 @@ def create_share_token(
     doc_id: str,
     user_id: str,
     excluded_sections: Optional[list] = None,
+    expire_days: Optional[int] = SHARE_TOKEN_EXPIRE_DAYS,
 ) -> str:
-    """Issue a short-lived signed token that lets anyone with the link download a PDF.
+    """Issue a signed token that lets anyone with the link download a PDF.
+
+    `expire_days` controls the JWT `exp` claim. None = no expiry (still
+    revocable via `revoked_share_tokens` in Mongo).
 
     `excluded_sections` snapshots the user's section-visibility choice at share
     time so revoking or changing preferences later doesn't retroactively alter
-    already-shared links. Recipients see exactly the view the parent chose."""
+    already-shared links. Recipients see exactly the view the parent chose.
+
+    Each token carries a unique `jti` so it can be revoked individually.
+    """
+    if expire_days not in SHARE_TOKEN_WINDOWS:
+        expire_days = SHARE_TOKEN_EXPIRE_DAYS
+    now = datetime.now(timezone.utc)
     payload = {
         "kind": "share",
-        "doc_type": doc_type,  # "summary" | "agreement" | "sn_report" | "safety"
+        "doc_type": doc_type,  # "cp_report" | "summary" | "agreement" | "safety" | "edu_deep_share"
         "doc_id": doc_id,
         "sub": user_id,
-        "exp": datetime.now(timezone.utc) + timedelta(days=SHARE_TOKEN_EXPIRE_DAYS),
-        "iat": datetime.now(timezone.utc),
+        "jti": uuid.uuid4().hex,
+        "iat": now,
     }
+    if expire_days is not None:
+        payload["exp"] = now + timedelta(days=int(expire_days))
     if excluded_sections:
         # Store as a stable sorted list — keeps the token deterministic for tests.
         payload["ex"] = sorted({str(x) for x in excluded_sections})
@@ -193,7 +208,9 @@ def create_share_token(
 
 def decode_share_token(token: str) -> Optional[dict]:
     try:
-        data = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])
+        # `exp` claim is optional (no-expiry links). PyJWT verifies it when present.
+        data = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO],
+                          options={"require": ["kind"]})
         if data.get("kind") != "share":
             return None
         return data

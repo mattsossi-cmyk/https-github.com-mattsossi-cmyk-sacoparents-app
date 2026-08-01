@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { EyeOff, Eye, Download, Share2, Loader2, Save, Lock } from "lucide-react";
+import { EyeOff, Eye, Download, Share2, Loader2, Save, Lock, Clock, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { api, API } from "../lib/api";
 
@@ -41,6 +41,26 @@ export default function ReportShareControls({
   const [sharing, setSharing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [expireDays, setExpireDays] = useState(7); // 1 | 7 | 30 | null (never)
+  const [existingLinks, setExistingLinks] = useState([]);
+  const [linksLoading, setLinksLoading] = useState(false);
+  const [linksExpanded, setLinksExpanded] = useState(false);
+  const [revokingJti, setRevokingJti] = useState(null);
+
+  const loadExistingLinks = useCallback(async () => {
+    setLinksLoading(true);
+    try {
+      const { data } = await api.get("/share/mine");
+      const active = (data?.active || []).filter((r) => r.doc_type === reportType);
+      setExistingLinks(active);
+    } catch {
+      // silent — non-critical
+    } finally {
+      setLinksLoading(false);
+    }
+  }, [reportType]);
+
+  useEffect(() => { loadExistingLinks(); }, [loadExistingLinks]);
 
   useEffect(() => {
     let alive = true;
@@ -127,20 +147,40 @@ export default function ReportShareControls({
   const copyShareLink = useCallback(async () => {
     setSharing(true);
     try {
-      const { data } = await api.post(shareUrl, { excluded: exList() });
+      const { data } = await api.post(shareUrl, {
+        excluded: exList(),
+        expire_days: expireDays,  // null = never
+      });
       const publicUrl = `${window.location.origin}${data.path}`;
       await navigator.clipboard.writeText(publicUrl);
+      const windowLabel = expireDays === null ? "never expires" :
+        expireDays === 1 ? "24-hour link" :
+        expireDays === 30 ? "30-day link" : "7-day link";
       toast.success(
         totalVisible.hidden > 0
-          ? `Share link copied — ${totalVisible.hidden} section${totalVisible.hidden === 1 ? "" : "s"} hidden.`
-          : "Share link copied — full report."
+          ? `Share link copied — ${windowLabel}, ${totalVisible.hidden} section${totalVisible.hidden === 1 ? "" : "s"} hidden.`
+          : `Share link copied — ${windowLabel}.`
       );
+      loadExistingLinks();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Couldn't create the share link.");
     } finally {
       setSharing(false);
     }
-  }, [shareUrl, excluded, totalVisible]);
+  }, [shareUrl, excluded, expireDays, totalVisible, loadExistingLinks]);
+
+  const revokeLink = useCallback(async (jti) => {
+    setRevokingJti(jti);
+    try {
+      await api.post("/share/revoke", { jti });
+      toast.success("Share link revoked. It can no longer be opened.");
+      loadExistingLinks();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Couldn't revoke the link.");
+    } finally {
+      setRevokingJti(null);
+    }
+  }, [loadExistingLinks]);
 
   if (loading) {
     return (
@@ -228,6 +268,32 @@ export default function ReportShareControls({
         </ul>
       )}
 
+      <div className="mt-5 flex items-center gap-2 flex-wrap" data-testid={`${testIdPrefix}-window-selector`}>
+        <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.14em] font-bold text-[#3D1A78]">
+          <Clock size={12} /> Link expires
+        </span>
+        {[
+          { d: 1, label: "24h" },
+          { d: 7, label: "7 days" },
+          { d: 30, label: "30 days" },
+          { d: null, label: "Never" },
+        ].map((opt) => (
+          <button
+            key={String(opt.d)}
+            type="button"
+            onClick={() => setExpireDays(opt.d)}
+            data-testid={`${testIdPrefix}-window-${opt.d ?? "never"}`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+              expireDays === opt.d
+                ? "bg-[#3D1A78] text-white border-[#3D1A78]"
+                : "bg-white text-[#3D1A78] border-[#D6CFE8] hover:bg-[#F5F1FB]"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <button
           onClick={downloadPdf}
@@ -264,6 +330,51 @@ export default function ReportShareControls({
             : `${totalVisible.hidden} of ${totalVisible.total} section${totalVisible.total === 1 ? "" : "s"} hidden.`}
         </div>
       </div>
+
+      {/* Existing / active share links — with revoke */}
+      {(existingLinks.length > 0 || linksLoading) && (
+        <div className="mt-6 border-t border-[#EFE9F9] pt-5" data-testid={`${testIdPrefix}-existing-links`}>
+          <button
+            type="button"
+            onClick={() => setLinksExpanded((v) => !v)}
+            data-testid={`${testIdPrefix}-existing-toggle`}
+            className="text-sm text-[#3D1A78] hover:underline inline-flex items-center gap-1 font-semibold"
+          >
+            {linksExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            Your active share links ({existingLinks.length})
+          </button>
+          {linksExpanded && (
+            <ul className="mt-3 space-y-2" data-testid={`${testIdPrefix}-existing-list`}>
+              {existingLinks.map((row) => {
+                const created = row.created_at ? new Date(row.created_at).toLocaleString() : "";
+                const expires = row.expires_at ? new Date(row.expires_at).toLocaleString() : "Never expires";
+                return (
+                  <li
+                    key={row.jti}
+                    className="flex items-center gap-3 flex-wrap rounded-xl border border-[#E5E0EE] bg-white px-3 py-2"
+                    data-testid={`${testIdPrefix}-existing-row-${row.jti}`}
+                  >
+                    <div className="text-xs text-[#4B4567] min-w-0 flex-1">
+                      <div className="font-semibold text-[#1A1330]">Created {created}</div>
+                      <div className="text-[11px] text-[#857E9C]">Expires: {expires}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => revokeLink(row.jti)}
+                      disabled={revokingJti === row.jti}
+                      data-testid={`${testIdPrefix}-revoke-${row.jti}`}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B02A2A] border border-[#EFB4B4] hover:bg-[#FBEFEF] rounded-full px-3 py-1.5 disabled:opacity-60"
+                    >
+                      {revokingJti === row.jti ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                      Revoke
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
     </section>
   );
 }

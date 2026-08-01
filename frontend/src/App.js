@@ -57,6 +57,8 @@ import SpecialNeedsV2Compare from "@/pages/SpecialNeedsV2Compare";
 import SpecialNeedsV2CompareView from "@/pages/SpecialNeedsV2CompareView";
 import SpecialNeedsV2EducationalDeepDive from "@/pages/SpecialNeedsV2EducationalDeepDive";
 import SpecialNeedsV2EducationalDeepDiveReport from "@/pages/SpecialNeedsV2EducationalDeepDiveReport";
+import SpecialNeedsV2EducationalDeepDiveCompare from "@/pages/SpecialNeedsV2EducationalDeepDiveCompare";
+import SpecialNeedsV2EducationalDeepDiveCompareView from "@/pages/SpecialNeedsV2EducationalDeepDiveCompareView";
 import SpecialNeedsV2PsychologicalDeepDive from "@/pages/SpecialNeedsV2PsychologicalDeepDive";
 import SpecialNeedsV2PsychologicalDeepDiveReport from "@/pages/SpecialNeedsV2PsychologicalDeepDiveReport";
 import SpecialNeedsV2MedicalDeepDive from "@/pages/SpecialNeedsV2MedicalDeepDive";
@@ -236,6 +238,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <SpecialNeedsV2EducationalDeepDiveReport />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/educational-deep-dive/compare"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2EducationalDeepDiveCompare />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/educational-deep-dive/compare/:share_id"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2EducationalDeepDiveCompareView />
             </ProtectedRoute>
           }
         />

@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from auth import get_current_user, create_share_token, decode_share_token, require_active_user
+from share_routes import record_share_token, is_share_token_revoked
 
 # Daily email cap for demo/guest accounts. Permanent accounts are uncapped.
 # Overridable via env so an admin can dial this without a redeploy.
@@ -503,6 +504,8 @@ async def download_agreement_pdf(
 # ============ Shareable download links (no-auth, signed) ============
 class ShareLinkBody(BaseModel):
     excluded: Optional[List[str]] = None
+    expire_days: Optional[int] = 7  # 1 | 7 | 30 | None ("never")
+    label: Optional[str] = None
 
 
 class VisibilityBody(BaseModel):
@@ -585,13 +588,22 @@ async def create_summary_share_link(
     )
     if not summary:
         raise HTTPException(status_code=404, detail="Summary not found")
-    # Body excluded overrides stored preference (per-request snapshot).
     incoming = (body.excluded if body else None)
     if incoming is None:
         incoming = (summary.get("visibility") or {}).get("excluded") or []
     ex = report_visibility.clean_excluded("summary", incoming)
-    token = create_share_token("summary", summary_id, current.user_id, excluded_sections=ex)
-    return {"token": token, "path": f"/api/mediation/shared/{token}", "excluded": ex}
+    expire_days = body.expire_days if body else 7
+    token = create_share_token("summary", summary_id, current.user_id,
+                               excluded_sections=ex, expire_days=expire_days)
+    payload = decode_share_token(token) or {}
+    expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc) if payload.get("exp") else None
+    await record_share_token(db, jti=payload.get("jti"), user_id=current.user_id,
+                             doc_type="summary", doc_id=summary_id,
+                             expires_at=expires_at,
+                             label=(body.label if body else None))
+    return {"token": token, "jti": payload.get("jti"),
+            "path": f"/api/mediation/shared/{token}", "excluded": ex,
+            "expires_at": expires_at.isoformat() if expires_at else None}
 
 
 @router.post("/agreement/{agreement_id}/share-link")
@@ -611,8 +623,18 @@ async def create_agreement_share_link(
     if incoming is None:
         incoming = (agreement.get("visibility") or {}).get("excluded") or []
     ex = report_visibility.clean_excluded("agreement", incoming)
-    token = create_share_token("agreement", agreement_id, current.user_id, excluded_sections=ex)
-    return {"token": token, "path": f"/api/mediation/shared/{token}", "excluded": ex}
+    expire_days = body.expire_days if body else 7
+    token = create_share_token("agreement", agreement_id, current.user_id,
+                               excluded_sections=ex, expire_days=expire_days)
+    payload = decode_share_token(token) or {}
+    expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc) if payload.get("exp") else None
+    await record_share_token(db, jti=payload.get("jti"), user_id=current.user_id,
+                             doc_type="agreement", doc_id=agreement_id,
+                             expires_at=expires_at,
+                             label=(body.label if body else None))
+    return {"token": token, "jti": payload.get("jti"),
+            "path": f"/api/mediation/shared/{token}", "excluded": ex,
+            "expires_at": expires_at.isoformat() if expires_at else None}
 
 
 @router.get("/shared/{token}")
@@ -625,6 +647,8 @@ async def download_shared_pdf(
     if not payload:
         raise HTTPException(status_code=404, detail="This link has expired or is invalid.")
     db = request.app.state.db
+    if await is_share_token_revoked(db, payload.get("jti")):
+        raise HTTPException(status_code=404, detail="This link has been revoked by the sender.")
     user = await db.users.find_one({"user_id": payload["sub"]}, {"_id": 0})
     if not user:
         raise HTTPException(status_code=404, detail="This link is no longer valid.")

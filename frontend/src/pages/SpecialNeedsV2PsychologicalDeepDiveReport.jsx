@@ -50,6 +50,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [regenBusy, setRegenBusy] = useState(false);
+  const [regenLength, setRegenLength] = useState("standard");
   const [report, setReport] = useState(null);
 
   const load = useCallback(async () => {
@@ -68,7 +69,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const regenerateSummary = async () => {
     setRegenBusy(true);
     try {
-      const r = await api.post("/psych-deep/report/regen-summary");
+      const r = await api.post("/psych-deep/report/regen-summary", { length: regenLength });
       setReport(r.data?.report || null);
       toast.success("AI summary refreshed.");
     } catch (err) {
@@ -191,17 +192,34 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
                 </div>
                 <p className="text-[11px] text-[#8471B3] italic">Neutral · non-diagnostic · generated from your answers</p>
               </div>
-              <button onClick={regenerateSummary} disabled={regenBusy}
-                data-testid="psych-deep-regen-summary"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-[#D6CFE8] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
-                {regenBusy ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
-                {regenBusy ? "Regenerating…" : "Regenerate"}
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="inline-flex rounded-full border border-[#D6CFE8] overflow-hidden text-[10px] font-semibold" data-testid="psych-deep-length-toggle">
+                  {["short", "standard", "long"].map((lvl) => (
+                    <button
+                      key={lvl}
+                      type="button"
+                      onClick={() => setRegenLength(lvl)}
+                      disabled={regenBusy}
+                      data-testid={`psych-deep-length-${lvl}`}
+                      className={`px-3 py-1.5 transition-colors ${regenLength === lvl ? "bg-[#3D1A78] text-white" : "text-[#3D1A78] bg-white hover:bg-[#F5F1FB]"} disabled:opacity-60`}
+                    >
+                      {lvl === "short" ? "Short" : lvl === "standard" ? "Standard" : "Long"}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={regenerateSummary} disabled={regenBusy}
+                  data-testid="psych-deep-regen-summary"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-[#D6CFE8] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
+                  {regenBusy ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
+                  {regenBusy ? "Regenerating…" : "Regenerate"}
+                </button>
+              </div>
             </div>
             <p className="text-sm text-[#1A1330] whitespace-pre-wrap leading-relaxed mt-3">{report.ai_summary}</p>
             {report.ai_summary_regenerated_at && (
               <p className="text-[10px] text-[#8471B3] italic mt-2" data-testid="psych-deep-regen-timestamp">
                 Last regenerated: {new Date(report.ai_summary_regenerated_at).toLocaleString()}
+                {report.ai_summary_length && ` · ${report.ai_summary_length}`}
               </p>
             )}
           </SectionCard>

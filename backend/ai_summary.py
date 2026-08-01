@@ -25,20 +25,31 @@ logger = logging.getLogger(__name__)
 _MODEL_PROVIDER = "anthropic"
 _MODEL_NAME = "claude-sonnet-4-5-20250929"
 
-_SYSTEM = (
-    "You are a neutral co-parenting mediation writer. You produce short "
-    "plain-language executive summaries on top of structured co-parenting "
-    "assessment reports. Rules you must always follow:\n"
-    "  1. Neutral, parent-attributed tone. Never take sides.\n"
-    "  2. Non-diagnostic. Never suggest diagnoses, prognoses, or treatments.\n"
-    "  3. Non-adjudicative. Never suggest one parent is 'right' or a 'better' parent.\n"
-    "  4. No medical, legal, or psychological advice. Suggest talking to qualified professionals when relevant.\n"
-    "  5. Around 180-220 words. Plain language. No jargon.\n"
-    "  6. Structure: (a) one-sentence framing, (b) 2-3 strengths, (c) 2-3 areas to develop, (d) one child-focused closing line.\n"
-    "  7. If the report contains safety signals, name them plainly and suggest speaking with the prescriber, school nurse, or a qualified professional promptly.\n"
-    "  8. Never include the parent's or child's real name unless it is already provided in the report.\n"
-    "  9. Do not fabricate details. Only use what is in the structured report."
-)
+# Word targets for the summary length toggle. `standard` is the default and
+# matches the original ~200 word system prompt.
+_LENGTH_TARGETS = {
+    "short":    {"min": 60,  "max": 100, "structure": "single tight paragraph"},
+    "standard": {"min": 180, "max": 220, "structure": "(a) one-sentence framing, (b) 2-3 strengths, (c) 2-3 areas to develop, (d) one child-focused closing line"},
+    "long":     {"min": 320, "max": 380, "structure": "(a) opening framing paragraph, (b) strengths paragraph, (c) areas to develop paragraph, (d) practical next steps paragraph, (e) child-focused closing paragraph"},
+}
+
+
+def _system_message(length_key: str) -> str:
+    cfg = _LENGTH_TARGETS[length_key]
+    return (
+        "You are a neutral co-parenting mediation writer. You produce short "
+        "plain-language executive summaries on top of structured co-parenting "
+        "assessment reports. Rules you must always follow:\n"
+        "  1. Neutral, parent-attributed tone. Never take sides.\n"
+        "  2. Non-diagnostic. Never suggest diagnoses, prognoses, or treatments.\n"
+        "  3. Non-adjudicative. Never suggest one parent is 'right' or a 'better' parent.\n"
+        "  4. No medical, legal, or psychological advice. Suggest talking to qualified professionals when relevant.\n"
+        f"  5. Around {cfg['min']}-{cfg['max']} words. Plain language. No jargon.\n"
+        f"  6. Structure: {cfg['structure']}.\n"
+        "  7. If the report contains safety signals, name them plainly and suggest speaking with the prescriber, school nurse, or a qualified professional promptly.\n"
+        "  8. Never include the parent's or child's real name unless it is already provided in the report.\n"
+        "  9. Do not fabricate details. Only use what is in the structured report."
+    )
 
 
 def _extract_signals(report: Dict[str, Any]) -> Dict[str, Any]:
@@ -70,12 +81,16 @@ def _extract_signals(report: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def generate_executive_summary(*, product_name: str,
-                                     report: Dict[str, Any]) -> Optional[str]:
+                                     report: Dict[str, Any],
+                                     length: str = "standard") -> Optional[str]:
     """Return a short plain-language narrative, or None on failure.
+
+    length: "short" | "standard" | "long" — controls target word count.
 
     Never raises: the caller falls back to a report-without-narrative if the
     LLM call fails so report generation stays reliable.
     """
+    length_key = length if length in _LENGTH_TARGETS else "standard"
     api_key = os.environ.get("EMERGENT_LLM_KEY")
     if not api_key:
         logger.warning("EMERGENT_LLM_KEY not configured — skipping AI summary")
@@ -91,7 +106,7 @@ async def generate_executive_summary(*, product_name: str,
         chat = LlmChat(
             api_key=api_key,
             session_id=f"exec-summary-{uuid.uuid4().hex[:10]}",
-            system_message=_SYSTEM,
+            system_message=_system_message(length_key),
         ).with_model(_MODEL_PROVIDER, _MODEL_NAME)
         text = await chat.send_message(UserMessage(text=prompt))
         if not isinstance(text, str):
@@ -100,8 +115,9 @@ async def generate_executive_summary(*, product_name: str,
         if not text:
             return None
         # Very defensive length guard so the report layout stays clean.
-        if len(text) > 2400:
-            text = text[:2400].rsplit(" ", 1)[0].rstrip(",.:;") + "…"
+        cap = 1200 if length_key == "short" else (2400 if length_key == "standard" else 4200)
+        if len(text) > cap:
+            text = text[:cap].rsplit(" ", 1)[0].rstrip(",.:;") + "…"
         return text
     except Exception as e:  # noqa: BLE001
         logger.warning("AI summary generation failed: %s", e)

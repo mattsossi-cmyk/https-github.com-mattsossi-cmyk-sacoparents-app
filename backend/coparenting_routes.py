@@ -32,6 +32,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db, create_share_token, decode_share_token
+from share_routes import record_share_token, is_share_token_revoked
 from coparenting_questions import RESPONSE_SCALE, SECTIONS, find_question, total_question_count
 from coparenting_scoring import compute_scores, validate_answers
 import cp_report_content
@@ -219,6 +220,8 @@ class CPVisibilityBody(BaseModel):
 
 class CPShareBody(BaseModel):
     excluded: Optional[List[str]] = None
+    expire_days: Optional[int] = 7  # 1 | 7 | 30 | None ("never")
+    label: Optional[str] = None
 
 
 async def _load_source_assessment(db: AsyncIOMotorDatabase, user_id: str) -> Dict[str, Any]:
@@ -341,12 +344,31 @@ async def create_report_share_link(
     if incoming is None:
         incoming = (doc.get("visibility") or {}).get("excluded") or []
     ex = report_visibility.clean_excluded("cp_report", incoming)
-    token = create_share_token("cp_report", report_id, user.user_id, excluded_sections=ex)
+    expire_days = body.expire_days if body else 7
+    token = create_share_token(
+        "cp_report", report_id, user.user_id,
+        excluded_sections=ex, expire_days=expire_days,
+    )
+    payload = decode_share_token(token) or {}
+    expires_at = None
+    if payload.get("exp"):
+        expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+    await record_share_token(
+        db,
+        jti=payload.get("jti"),
+        user_id=user.user_id,
+        doc_type="cp_report",
+        doc_id=report_id,
+        expires_at=expires_at,
+        label=(body.label if body else None),
+    )
     return {
         "token": token,
+        "jti": payload.get("jti"),
         "path": f"/api/coparenting/report/shared/{token}",
         "viewer_path": f"/shared/coparenting/{token}",
         "excluded": ex,
+        "expires_at": expires_at.isoformat() if expires_at else None,
     }
 
 
@@ -360,6 +382,8 @@ async def shared_report(
     if not payload or payload.get("doc_type") != "cp_report":
         raise HTTPException(status_code=404, detail="This link has expired or is invalid.")
     db = request.app.state.db
+    if await is_share_token_revoked(db, payload.get("jti")):
+        raise HTTPException(status_code=404, detail="This link has been revoked by the sender.")
     owner = await db.users.find_one({"user_id": payload["sub"]}, {"_id": 0})
     if not owner:
         raise HTTPException(status_code=404, detail="This link is no longer valid.")
