@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
-import { CheckCircle2, ChevronRight, ChevronDown, Shield, Sparkles, RefreshCcw } from "lucide-react";
+import { CheckCircle2, ChevronRight, ChevronDown, Shield, Sparkles, RefreshCcw, Users, Eye } from "lucide-react";
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
 const REPORT_LABEL = {
@@ -194,6 +194,7 @@ export default function Dashboard() {
   const [sncStatus, setSncStatus] = useState(null);
   const [sncHighlights, setSncHighlights] = useState(null);
   const [deepDives, setDeepDives] = useState(null);
+  const [compareStatus, setCompareStatus] = useState(null);
 
   // First-time visitors: send them through the orientation walkthrough.
   useEffect(() => {
@@ -259,6 +260,12 @@ export default function Dashboard() {
     api
       .get("/deep-dives/status")
       .then((r) => setDeepDives(r.data || null))
+      .catch(() => { /* non-blocking */ });
+
+    // Compare-with-co-parent widget: per-pathway active-share counts.
+    api
+      .get("/deep-dives/compare-status")
+      .then((r) => setCompareStatus(r.data || null))
       .catch(() => { /* non-blocking */ });
   }, []);
 
@@ -816,6 +823,66 @@ export default function Dashboard() {
                         <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${statusColor}`}
                           data-testid={`dashboard-deep-dive-${d.id}-status`}>
                           {statusLabel}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {/* Co-parent comparisons widget */}
+        {compareStatus && compareStatus.total_active > 0 && (
+          <div className="mt-4" data-testid="dashboard-compare-card">
+            <div className="rounded-3xl border border-[#B5DFC5] bg-[#F1F9F4] p-5 sm:p-6 shadow-sm">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1F5C3B] flex items-center gap-2">
+                    <Users size={12} /> Co-parent comparisons
+                  </div>
+                  <div className="mt-1 font-serif text-lg text-[#1A1330]" data-testid="dashboard-compare-headline">
+                    {compareStatus.total_active === 1 ? "1 active" : `${compareStatus.total_active} active`}
+                    {compareStatus.total_ready_to_view > 0 && (
+                      <span className="text-sm text-[#1F5C3B] font-normal ml-2">
+                        · {compareStatus.total_ready_to_view} ready to view
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <ul className="mt-4 grid sm:grid-cols-3 gap-2">
+                {(compareStatus.pathways || []).map((p) => {
+                  const isReady = p.ready_to_view > 0;
+                  const isActive = p.active > 0;
+                  const stateLabel = isReady
+                    ? `${p.ready_to_view} ready`
+                    : isActive
+                    ? `${p.active} pending`
+                    : "None yet";
+                  const statePillCls = isReady
+                    ? "bg-[#1F5C3B] text-white border-[#1F5C3B]"
+                    : isActive
+                    ? "bg-[#FBEDDA] text-[#8C5A2C] border-[#EDD5B0]"
+                    : "bg-white text-[#8471B3] border-[#E5E0EE]";
+                  return (
+                    <li key={p.id} data-testid={`dashboard-compare-pathway-${p.id}`}>
+                      <Link
+                        to={p.compare_route}
+                        className="group flex items-center justify-between gap-2 rounded-2xl border border-[#CDE7D6] bg-white p-3 hover:border-[#1F5C3B] hover:shadow-sm transition-all"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-[#1A1330] truncate">{p.name}</div>
+                          <div className="text-[11px] text-[#4B4567] mt-0.5 group-hover:text-[#1F5C3B] inline-flex items-center gap-1">
+                            {isReady ? <><Eye size={11} /> View comparison</> : <>Open hub <ChevronRight size={11} /></>}
+                          </div>
+                        </div>
+                        <span
+                          className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${statePillCls}`}
+                          data-testid={`dashboard-compare-pathway-${p.id}-status`}
+                        >
+                          {stateLabel}
                         </span>
                       </Link>
                     </li>
