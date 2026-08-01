@@ -20,6 +20,7 @@ from auth import UserPublic, get_current_user, get_db
 
 
 SAFETY = "safety_assessments"
+SNAPSHOTS = "deep_dive_compare_snapshots"
 BLOCKING_SAFETY_LEVELS = {1, 2}
 logger = logging.getLogger(__name__)
 
@@ -265,12 +266,40 @@ def make_deep_dive_compare_router(
             raise HTTPException(status_code=409, detail="The other parent has not finished their assessment yet.")
         if not partner_a or not partner_a.get("completed"):
             raise HTTPException(status_code=409, detail="The other parent has not finished their assessment yet.")
-        return build_comparison(
+        comparison = build_comparison(
             parent_a_name=share.get("creator_name") or "Parent A",
             parent_b_name=share.get("partner_name") or "Parent B",
             a_answers=creator_a.get("responses") or {},
             b_answers=partner_a.get("responses") or {},
         )
+        # Snapshot for the timeline. Dedupe by (creator_updated_at, partner_updated_at)
+        # so viewing the comparison many times a day doesn't spam rows — a new row
+        # only lands when either parent has re-run their assessment since last time.
+        creator_ts = creator_a.get("updated_at") or creator_a.get("created_at")
+        partner_ts = partner_a.get("updated_at") or partner_a.get("created_at")
+        snapshot_key = f"{creator_ts}|{partner_ts}"
+        existing = await db[SNAPSHOTS].find_one(
+            {"share_id": share["share_id"], "snapshot_key": snapshot_key}, {"_id": 0, "snapshot_id": 1},
+        )
+        if not existing:
+            highlights = (comparison.get("highlights") or [])[:3]
+            top_prompts = [
+                {"prompt": h.get("prompt", ""), "section_name": h.get("section_name", "")}
+                for h in highlights
+            ]
+            await db[SNAPSHOTS].insert_one({
+                "snapshot_id": f"snap_{uuid.uuid4().hex[:12]}",
+                "share_id": share["share_id"],
+                "pathway_id": tag,  # e.g. "edu-deep-compare"
+                "product_label": product_label,
+                "snapshot_key": snapshot_key,
+                "creator_updated_at": creator_ts,
+                "partner_updated_at": partner_ts,
+                "created_at": _now_iso(),
+                "summary": comparison.get("summary") or {},
+                "top_highlights": top_prompts,
+            })
+        return comparison
 
     @router.get("/{share_id}")
     async def get_comparison(share_id: str,
@@ -303,5 +332,41 @@ def make_deep_dive_compare_router(
             media_type="application/pdf",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
+
+    @router.get("/{share_id}/timeline")
+    async def get_timeline(share_id: str,
+                           me: UserPublic = Depends(get_current_user),
+                           db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+        """Return the comparison alignment history for this share.
+
+        Snapshots are inserted on comparison-view (deduped by assessment
+        timestamps) so re-running an assessment naturally produces a new row
+        the next time either parent opens the comparison.
+        """
+        share = await _find_share(db, share_id, me.user_id)
+        cursor = db[SNAPSHOTS].find({"share_id": share_id}, {"_id": 0}).sort("created_at", 1)
+        snapshots = [s async for s in cursor]
+        # Trend series for the sparkline / progress bar.
+        series = [
+            {
+                "created_at": s.get("created_at"),
+                "aligned_pct": (s.get("summary") or {}).get("aligned_pct", 0),
+                "divergent_pct": (s.get("summary") or {}).get("divergent_pct", 0),
+                "total_items": (s.get("summary") or {}).get("total_items", 0),
+            }
+            for s in snapshots
+        ]
+        first_pct = series[0]["aligned_pct"] if series else 0
+        latest_pct = series[-1]["aligned_pct"] if series else 0
+        return {
+            "share_id": share_id,
+            "product_label": product_label,
+            "snapshots": snapshots,
+            "series": series,
+            "count": len(snapshots),
+            "first_aligned_pct": first_pct,
+            "latest_aligned_pct": latest_pct,
+            "delta_aligned_pct": latest_pct - first_pct,
+        }
 
     return router

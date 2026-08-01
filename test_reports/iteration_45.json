@@ -1,0 +1,34 @@
+{
+  "summary": "Iteration 45 Compare Timeline — verified backend snapshot dedupe + timeline endpoint across all 3 deep-dive pathways (edu/psych/med), and confirmed the DeepDiveCompareView UI correctly renders the timeline section (headline, bars, list) when count > 1. All new + regression suites pass (52/52 excluding 1 pre-existing skip).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "DeepDiveCompareView timeline", "issues": ["Sparkline bars are visually small when both snapshots share the same aligned_pct (e.g. 40%); the bars sit at the bottom of the 96px container and the shared '40%' label is duplicated left/right with no x-axis date labels. Consider adding tick labels under each bar or a min-height floor for very short series so parents can distinguish snapshots at a glance."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter45_features.py",
+    "/app/test_reports/pytest/iter45_results.xml"
+  ],
+  "action_items": [
+    "Optional UX polish: add date/tick labels under each sparkline bar in the timeline section and consider a floor height so tiny percentages remain visible."
+  ],
+  "critical_code_review_comments": [
+    "Snapshot dedupe key = f\"{creator_ts}|{partner_ts}\" is correct but relies on `updated_at` always being present; the fallback to `created_at` handles legacy docs. If a client ever POSTs `answers/bulk` twice without a value change, `_upsert` still bumps updated_at, so a duplicate 'view' triggered right after a re-run will still create a new snapshot even when responses didn't actually change. This matches the spec (`re-runs assessment`) but callers should note it.",
+    "`_load_comparison` writes the snapshot inside the same request that serves the comparison — if the Mongo insert transiently fails the view still succeeds silently (no try/except around insert). Consider wrapping in try/except + logger.exception so a snapshot write failure doesn't propagate to the user but is at least observable.",
+    "GET /{share_id}/timeline currently returns the full snapshot documents (including `top_highlights`) — fine for now, but if snapshots accumulate over months this response can grow unbounded. A `?limit=N` query param and a Mongo index on (share_id, created_at) would help."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter45_features.py",
+    "/app/test_reports/iteration_45.json"
+  ],
+  "success_rate": {"backend": "100% (8/8 new + 43/44 regression, 1 pre-existing skip)", "frontend": "100% (timeline section, bars, list all render as spec'd)"},
+  "test_credentials": "parent1@test.com / TestPass123!, parent2@test.com / TestPass123!",
+  "seed_data_creation": "During test runs: edu/psych/med_deep_assessments primed via POST /answers/bulk + /complete for parent1 and parent2. Test-created shares are revoked in autouse teardown; deep_dive_compare_snapshots rows for those shares are deleted in teardown. UI-verification seed data was also cleaned up (share revoked + 4 snapshots deleted).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter45 verified end-to-end. Snapshot rows are created on first GET /compare/{share_id} (or /pdf) and deduped by (creator_updated_at, partner_updated_at). To force a new snapshot in future tests, mutate the assessment's updated_at directly via Mongo (the public API bumps it on every write). Timeline UI hides itself when count <= 1 (single-point 'chart' would be meaningless) — this is intentional per spec.",
+  "rca of the issue": "N/A — no issues found."
+}

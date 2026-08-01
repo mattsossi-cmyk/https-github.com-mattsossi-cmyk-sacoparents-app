@@ -7,7 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import AppShell from "../AppShell";
 import { api } from "../../lib/api";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles, TrendingUp } from "lucide-react";
 import { logError } from "../../lib/logger";
 
 const ALIGN_STYLES = {
@@ -75,6 +75,7 @@ export default function DeepDiveCompareView({ pathway }) {
   const [error, setError] = useState(null);
   const [safetyBlocked, setSafetyBlocked] = useState(false);
   const [data, setData] = useState(null);
+  const [timeline, setTimeline] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const t = pathway.testidPrefix;
 
@@ -85,6 +86,14 @@ export default function DeepDiveCompareView({ pathway }) {
     try {
       const res = await api.get(`${pathway.apiPrefix}/${shareId}`);
       setData(res.data);
+      // Load timeline (non-blocking — the /view request itself created a
+      // snapshot server-side if one was needed).
+      try {
+        const tl = await api.get(`${pathway.apiPrefix}/${shareId}/timeline`);
+        setTimeline(tl.data || null);
+      } catch (tlErr) {
+        logError(`${t} timeline`, tlErr);
+      }
     } catch (err) {
       logError(`${t} view`, err);
       const detail = err?.response?.data?.detail || "Could not load the comparison.";
@@ -167,6 +176,62 @@ export default function DeepDiveCompareView({ pathway }) {
                 {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
               </button>
             </div>
+
+            {timeline && timeline.count > 1 && (
+              <section className="mt-5 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7 shadow-sm" data-testid={`${t}-timeline`}>
+                <div className="flex items-center gap-2 text-[#3D1A78]">
+                  <TrendingUp size={16} />
+                  <span className="text-[10px] uppercase tracking-[0.22em] font-bold">Alignment over time</span>
+                </div>
+                <div className="mt-1 flex flex-wrap items-baseline gap-3">
+                  <h2 className="font-serif text-2xl text-[#1A1330]" data-testid={`${t}-timeline-headline`}>
+                    {timeline.latest_aligned_pct}% aligned today
+                  </h2>
+                  {timeline.delta_aligned_pct !== 0 && (
+                    <span
+                      className={`text-sm font-semibold ${timeline.delta_aligned_pct > 0 ? "text-[#1F5C3B]" : "text-[#B02A2A]"}`}
+                      data-testid={`${t}-timeline-delta`}
+                    >
+                      {timeline.delta_aligned_pct > 0 ? "▲" : "▼"} {Math.abs(timeline.delta_aligned_pct)} pts since {new Date(timeline.snapshots[0].created_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-[#4B4567] italic mt-1 mb-4">
+                  {timeline.count} snapshot{timeline.count === 1 ? "" : "s"} · a new one is captured whenever either parent updates their assessment.
+                </p>
+
+                <div className="flex items-end gap-1.5 h-24" data-testid={`${t}-timeline-bars`}>
+                  {timeline.series.map((s, i) => {
+                    const h = Math.max(6, Math.round((s.aligned_pct || 0) * 0.9));
+                    const isLatest = i === timeline.series.length - 1;
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center justify-end" data-testid={`${t}-timeline-bar-${i}`}>
+                        <div
+                          className={`w-full rounded-t ${isLatest ? "bg-[#3D1A78]" : "bg-[#8471B3]"}`}
+                          style={{ height: `${h}%` }}
+                          title={`${new Date(s.created_at).toLocaleDateString()} — ${s.aligned_pct}% aligned`}
+                        />
+                        <div className="text-[9px] text-[#4B4567] mt-1">{s.aligned_pct}%</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <ol className="mt-5 space-y-2 max-h-52 overflow-y-auto text-xs" data-testid={`${t}-timeline-list`}>
+                  {[...timeline.snapshots].reverse().map((s) => {
+                    const summary = s.summary || {};
+                    return (
+                      <li key={s.snapshot_id} className="flex items-center gap-3 rounded-xl border border-[#EEE9F7] bg-[#FCFBFE] px-3 py-2">
+                        <div className="text-[#4B4567] w-28 shrink-0">{new Date(s.created_at).toLocaleDateString()}</div>
+                        <div className="text-[#1A1330] font-semibold">{summary.aligned_pct || 0}% aligned</div>
+                        <div className="text-[#B02A2A]">{summary.divergent_pct || 0}% different</div>
+                        <div className="text-[#857E9C] ml-auto">{summary.total_items || 0} items</div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </section>
+            )}
 
             {(data.comparison.highlights || []).length > 0 && (
               <section className="mt-5 rounded-3xl border border-[#B5DFC5] bg-[#F1F9F4] p-5 sm:p-7 shadow-sm" data-testid={`${t}-highlights`}>
