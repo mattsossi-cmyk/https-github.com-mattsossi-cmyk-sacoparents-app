@@ -9,6 +9,7 @@ import { api } from "../../lib/api";
 import { toast } from "sonner";
 import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles, TrendingUp } from "lucide-react";
 import { logError } from "../../lib/logger";
+import AlignmentMilestoneCelebration from "./AlignmentMilestoneCelebration";
 
 const ALIGN_STYLES = {
   aligned:        "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -176,6 +177,15 @@ export default function DeepDiveCompareView({ pathway }) {
                 {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
               </button>
             </div>
+
+            {timeline && timeline.latest_milestones && timeline.latest_milestones.length > 0 && (
+              <AlignmentMilestoneCelebration
+                milestone={Math.max(...timeline.latest_milestones)}
+                snapshotId={timeline.latest_snapshot_id}
+                productLabel={timeline.product_label}
+                testidPrefix={t}
+              />
+            )}
 
             {timeline && timeline.count > 1 && (
               <section className="mt-5 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7 shadow-sm" data-testid={`${t}-timeline`}>

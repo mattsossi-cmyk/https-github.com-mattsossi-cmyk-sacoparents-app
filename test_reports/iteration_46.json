@@ -1,0 +1,27 @@
+{
+  "summary": "Iteration 46 — Alignment Milestones. Verified backend milestone-crossing detection on snapshot insert, timeline exposure of latest_snapshot_id + latest_milestones, and the AlignmentMilestoneCelebration UI (highest-milestone rendering, 24 confetti particles, share button, dismiss + localStorage persistence across reload). 17/17 new iter46 backend tests pass; 51/52 regression (iter42-45) still pass (1 pre-existing skip). Frontend flow verified end-to-end at /special-needs-v2/educational-deep-dive/compare/{share_id} with a seeded 98% aligned share that crossed [50,75,90] on the very first snapshot — the UI correctly picks 90 (highest) and shows the gold 9-in-10 copy.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter46_features.py",
+    "/app/test_reports/pytest/iter46_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Milestone-detection reads the PRIOR snapshot with `sort=[('created_at', -1)]` BEFORE inserting the new one — that ordering is correct, but if two comparison views race for the same share in the same millisecond (unlikely but possible on shared servers), both could compute the same prior_pct and both could stamp milestones. Consider a unique index on (share_id, snapshot_key) plus catching DuplicateKeyError to make the insert idempotent. Today the dedupe relies on the app-level find_one which is racy.",
+    "`current_pct = int((comparison.get('summary') or {}).get('aligned_pct') or 0)` will silently coerce a float to int (floor). Fine today because build_comparison rounds already, but if that ever changes a 74.9 would be counted as 74 and miss the 75 threshold. Prefer `float(...)` comparison, or lock in rounding at the source with a doc comment.",
+    "`milestones_crossed` is stored as a plain list on the snapshot row but the model isn't typed — no Pydantic schema pins that shape. A future refactor that renames the key would break the timeline endpoint silently. A tiny TypedDict / Pydantic model for the snapshot doc would prevent this.",
+    "Frontend AlignmentMilestoneCelebration re-reads localStorage in a useEffect right after initial mount — this can cause a brief render of the celebration before it flips to dismissed on next paint. In practice the initial useState already reads localStorage so this is a duplicate check; consider removing the effect to avoid a flash on slow devices."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter46_features.py",
+    "/app/test_reports/iteration_46.json"
+  ],
+  "success_rate": {"backend": "100% (17/17 iter46 + 51/52 regression, 1 pre-existing skip)", "frontend": "100% (celebration renders, highest milestone selected, confetti=24, dismiss + localStorage persistence across reload verified)"},
+  "test_credentials": "parent1@test.com / TestPass123!, parent2@test.com / TestPass123!",
+  "seed_data_creation": "Backend tests seed edu/psych/med_deep_assessments with identical answers for parent1/parent2 (yielding ~96-98% aligned) and rewrite the most recent snapshot's summary.aligned_pct via Mongo to exercise the prior→current milestone-crossing branches. All test-created shares are revoked and deep_dive_compare_snapshots rows are deleted in the module-scope autouse teardown. UI verification: a temporary edu-deep share (edu_deep_share_a195085be2e4) with milestones [50,75,90] was seeded via /tmp/seed_iter46.py and revoked after testing.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter46 verified. The milestone-detection logic uses the PRIOR snapshot's summary.aligned_pct (or 0 for the first snapshot ever). To test specific crossings deterministically, seed identical answers for both parents (yields >=95% aligned), then rewrite the latest snapshot's summary.aligned_pct in Mongo and bump the assessment's updated_at (the API re-stamps it on every write) — the next GET /compare/{share_id} will insert a fresh snapshot with milestones computed against the rewritten prior. The UI picks Math.max(latest_milestones) so a snapshot crossing multiple thresholds only shows the highest tier's copy. Confetti = 24 CSS particles inside {prefix}-confetti; dismissal persists under localStorage key `sacop.milestone_dismissed.{snapshot_id}`.",
+  "rca of the issue": "N/A — no issues found."
+}

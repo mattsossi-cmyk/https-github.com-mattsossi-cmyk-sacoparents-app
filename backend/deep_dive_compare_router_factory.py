@@ -22,6 +22,9 @@ from auth import UserPublic, get_current_user, get_db
 SAFETY = "safety_assessments"
 SNAPSHOTS = "deep_dive_compare_snapshots"
 BLOCKING_SAFETY_LEVELS = {1, 2}
+# Milestone thresholds (aligned_pct). Each has a matching copy block in
+# DeepDiveCompareView so tweak both together.
+MILESTONE_THRESHOLDS = [50, 75, 90]
 logger = logging.getLogger(__name__)
 
 
@@ -287,6 +290,19 @@ def make_deep_dive_compare_router(
                 {"prompt": h.get("prompt", ""), "section_name": h.get("section_name", "")}
                 for h in highlights
             ]
+            # Milestone crossing detection — compares this snapshot's aligned_pct
+            # against the most recent PRIOR snapshot for the same share. For the
+            # first ever snapshot, "prior" is treated as 0% so a very high
+            # first-time alignment still fires a celebration.
+            current_pct = int((comparison.get("summary") or {}).get("aligned_pct") or 0)
+            prev_snap = await db[SNAPSHOTS].find_one(
+                {"share_id": share["share_id"]},
+                {"_id": 0, "summary": 1},
+                sort=[("created_at", -1)],
+            )
+            prev_pct = int((prev_snap or {}).get("summary", {}).get("aligned_pct") or 0)
+            milestones_crossed = [m for m in MILESTONE_THRESHOLDS
+                                  if current_pct >= m > prev_pct]
             try:
                 await db[SNAPSHOTS].insert_one({
                     "snapshot_id": f"snap_{uuid.uuid4().hex[:12]}",
@@ -299,10 +315,9 @@ def make_deep_dive_compare_router(
                     "created_at": _now_iso(),
                     "summary": comparison.get("summary") or {},
                     "top_highlights": top_prompts,
+                    "milestones_crossed": milestones_crossed,
                 })
             except Exception:  # noqa: BLE001
-                # Never let a snapshot-write failure block the view — the
-                # comparison itself is what the parent asked for.
                 logger.exception("Failed to persist compare snapshot for share %s", share["share_id"])
         return comparison
 
@@ -363,6 +378,7 @@ def make_deep_dive_compare_router(
         ]
         first_pct = series[0]["aligned_pct"] if series else 0
         latest_pct = series[-1]["aligned_pct"] if series else 0
+        latest_snap = snapshots[-1] if snapshots else {}
         return {
             "share_id": share_id,
             "product_label": product_label,
@@ -372,6 +388,8 @@ def make_deep_dive_compare_router(
             "first_aligned_pct": first_pct,
             "latest_aligned_pct": latest_pct,
             "delta_aligned_pct": latest_pct - first_pct,
+            "latest_snapshot_id": latest_snap.get("snapshot_id"),
+            "latest_milestones": latest_snap.get("milestones_crossed") or [],
         }
 
     return router
