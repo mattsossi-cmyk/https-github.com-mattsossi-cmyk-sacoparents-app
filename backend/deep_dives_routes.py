@@ -129,9 +129,12 @@ async def _compare_counts(db: AsyncIOMotorDatabase, user_id: str,
             {"share_id": {"$in": share_ids}},
             {"_id": 0, "milestones_crossed": 1},
         )
+        # Whitelist known tiers so a rogue snapshot value can't surface an
+        # untinted pill in the dashboard trophy strip.
+        known = {50, 75, 90}
         async for snap in snap_cursor:
             for m in (snap.get("milestones_crossed") or []):
-                if isinstance(m, int):
+                if isinstance(m, int) and m in known:
                     milestones_set.add(m)
     return {
         "active": active,
