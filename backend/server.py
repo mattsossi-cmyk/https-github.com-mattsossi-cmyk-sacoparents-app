@@ -29,6 +29,8 @@ from snc2_routes import router as snc2_router  # noqa: E402
 from snc2_comparison_routes import router as snc2_compare_router  # noqa: E402
 from edu_deep_routes import router as edu_deep_router  # noqa: E402
 from edu_deep_comparison_routes import router as edu_deep_compare_router  # noqa: E402
+from psych_deep_comparison_routes import router as psych_deep_compare_router  # noqa: E402
+from med_deep_comparison_routes import router as med_deep_compare_router  # noqa: E402
 from psych_deep_routes import router as psych_deep_router  # noqa: E402
 from med_deep_routes import router as med_deep_router  # noqa: E402
 from deep_dives_routes import router as deep_dives_router  # noqa: E402
@@ -115,6 +117,8 @@ api_router.include_router(snc2_router)
 api_router.include_router(snc2_compare_router)
 api_router.include_router(edu_deep_router)
 api_router.include_router(edu_deep_compare_router)
+api_router.include_router(psych_deep_compare_router)
+api_router.include_router(med_deep_compare_router)
 api_router.include_router(psych_deep_router)
 api_router.include_router(med_deep_router)
 api_router.include_router(deep_dives_router)

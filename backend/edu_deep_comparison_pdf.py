@@ -35,12 +35,13 @@ def _safe(t: Any) -> str:
 
 
 class _PDF(FPDF):
-    def __init__(self):
+    def __init__(self, header_subtitle: str = "Educational Deep Dive Co-Parent Comparison"):
         super().__init__(format="Letter")
         self.set_auto_page_break(auto=True, margin=18)
         self.set_margins(15, 30, 15)
         self.alias_nb_pages()
         self.compress = False
+        self._header_subtitle = header_subtitle
 
     def header(self):
         self.set_fill_color(245, 240, 232)
@@ -53,7 +54,7 @@ class _PDF(FPDF):
         self.set_xy(30, 5)
         self.set_font("Helvetica", "B", 11)
         self.set_text_color(61, 26, 120)
-        self.cell(0, 5, _safe(f"{ORG_NAME}  ·  Educational Deep Dive Co-Parent Comparison"), ln=1)
+        self.cell(0, 5, _safe(f"{ORG_NAME}  ·  {self._header_subtitle}"), ln=1)
         self.set_x(30)
         self.set_font("Helvetica", "", 8.5)
         self.set_text_color(110, 100, 130)
@@ -133,19 +134,20 @@ def _render_item(pdf: _PDF, item: Dict[str, Any], labels: Dict[str, str],
     pdf.set_y(max(y_after_a, y_after_b) + 2)
 
 
-def build_comparison_pdf(*, comparison: Dict[str, Any], safety_notice: str) -> bytes:
-    pdf = _PDF()
+def build_comparison_pdf(*, comparison: Dict[str, Any], safety_notice: str,
+                         product_title: str = "Educational Deep Dive Comparison",
+                         header_subtitle: str = "Educational Deep Dive Co-Parent Comparison") -> bytes:
+    pdf = _PDF(header_subtitle=header_subtitle)
     pdf.add_page()
 
     parent_a = comparison.get("parent_a_name") or "Parent A"
     parent_b = comparison.get("parent_b_name") or "Parent B"
     labels = comparison.get("alignment_labels") or {}
 
-    pdf.h1(f"Educational Deep Dive Comparison")
-    pdf.para(f"A neutral side-by-side look at how {parent_a} and {parent_b} answered the "
-             "Educational Deep Dive. This document does not favour either parent. Use it "
-             "as a starting point for a conversation with a mediator, teacher, or "
-             "family professional.")
+    pdf.h1(product_title)
+    pdf.para(f"A neutral side-by-side look at how {parent_a} and {parent_b} answered this "
+             "deep dive. This document does not favour either parent. Use it as a starting "
+             "point for a conversation with a mediator, teacher, or family professional.")
 
     summary = comparison.get("summary") or {}
     pdf.h2("At a glance")

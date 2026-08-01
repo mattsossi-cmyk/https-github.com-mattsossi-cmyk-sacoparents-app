@@ -8,7 +8,7 @@ import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Download, Loader2, RefreshCcw, Sparkles,
+  ArrowLeft, Download, Loader2, RefreshCcw, Sparkles, Users,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -122,6 +122,10 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
             <ArrowLeft size={12} /> Back to Deep Dive
           </Link>
           <div className="flex gap-2">
+            <Link to="/special-needs-v2/psychological-deep-dive/compare" data-testid="psych-deep-report-open-compare"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#1F5C3B] text-white hover:brightness-110">
+              <Users size={13} /> Compare with co-parent
+            </Link>
             <button onClick={download} disabled={busy} data-testid="psych-deep-report-download"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
               {busy ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF

@@ -61,8 +61,12 @@ import SpecialNeedsV2EducationalDeepDiveCompare from "@/pages/SpecialNeedsV2Educ
 import SpecialNeedsV2EducationalDeepDiveCompareView from "@/pages/SpecialNeedsV2EducationalDeepDiveCompareView";
 import SpecialNeedsV2PsychologicalDeepDive from "@/pages/SpecialNeedsV2PsychologicalDeepDive";
 import SpecialNeedsV2PsychologicalDeepDiveReport from "@/pages/SpecialNeedsV2PsychologicalDeepDiveReport";
+import SpecialNeedsV2PsychologicalDeepDiveCompare from "@/pages/SpecialNeedsV2PsychologicalDeepDiveCompare";
+import SpecialNeedsV2PsychologicalDeepDiveCompareView from "@/pages/SpecialNeedsV2PsychologicalDeepDiveCompareView";
 import SpecialNeedsV2MedicalDeepDive from "@/pages/SpecialNeedsV2MedicalDeepDive";
 import SpecialNeedsV2MedicalDeepDiveReport from "@/pages/SpecialNeedsV2MedicalDeepDiveReport";
+import SpecialNeedsV2MedicalDeepDiveCompare from "@/pages/SpecialNeedsV2MedicalDeepDiveCompare";
+import SpecialNeedsV2MedicalDeepDiveCompareView from "@/pages/SpecialNeedsV2MedicalDeepDiveCompareView";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -274,6 +278,22 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/special-needs-v2/psychological-deep-dive/compare"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2PsychologicalDeepDiveCompare />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/psychological-deep-dive/compare/:share_id"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2PsychologicalDeepDiveCompareView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/special-needs-v2/medical-deep-dive"
           element={
             <ProtectedRoute>
@@ -286,6 +306,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <SpecialNeedsV2MedicalDeepDiveReport />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/medical-deep-dive/compare"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2MedicalDeepDiveCompare />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/special-needs-v2/medical-deep-dive/compare/:share_id"
+          element={
+            <ProtectedRoute>
+              <SpecialNeedsV2MedicalDeepDiveCompareView />
             </ProtectedRoute>
           }
         />

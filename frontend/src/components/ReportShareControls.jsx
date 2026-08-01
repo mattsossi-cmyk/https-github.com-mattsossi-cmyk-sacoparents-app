@@ -42,6 +42,7 @@ export default function ReportShareControls({
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [expireDays, setExpireDays] = useState(7); // 1 | 7 | 30 | null (never)
+  const [shareLabel, setShareLabel] = useState("");
   const [existingLinks, setExistingLinks] = useState([]);
   const [linksLoading, setLinksLoading] = useState(false);
   const [linksExpanded, setLinksExpanded] = useState(false);
@@ -150,6 +151,7 @@ export default function ReportShareControls({
       const { data } = await api.post(shareUrl, {
         excluded: exList(),
         expire_days: expireDays,  // null = never
+        label: shareLabel.trim() || null,
       });
       const publicUrl = `${window.location.origin}${data.path}`;
       await navigator.clipboard.writeText(publicUrl);
@@ -161,13 +163,14 @@ export default function ReportShareControls({
           ? `Share link copied — ${windowLabel}, ${totalVisible.hidden} section${totalVisible.hidden === 1 ? "" : "s"} hidden.`
           : `Share link copied — ${windowLabel}.`
       );
+      setShareLabel("");
       loadExistingLinks();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Couldn't create the share link.");
     } finally {
       setSharing(false);
     }
-  }, [shareUrl, excluded, expireDays, totalVisible, loadExistingLinks]);
+  }, [shareUrl, excluded, expireDays, shareLabel, totalVisible, loadExistingLinks]);
 
   const revokeLink = useCallback(async (jti) => {
     setRevokingJti(jti);
@@ -294,6 +297,23 @@ export default function ReportShareControls({
         ))}
       </div>
 
+      <div className="mt-3">
+        <label htmlFor={`${testIdPrefix}-nickname`} className="block text-[10px] uppercase tracking-[0.14em] font-bold text-[#3D1A78] mb-1">
+          Nickname (optional)
+        </label>
+        <input
+          id={`${testIdPrefix}-nickname`}
+          type="text"
+          value={shareLabel}
+          onChange={(e) => setShareLabel(e.target.value.slice(0, 60))}
+          placeholder={'e.g. "Attorney · Aug 2026" or "Teacher"'}
+          maxLength={60}
+          data-testid={`${testIdPrefix}-nickname-input`}
+          className="w-full max-w-md px-3 py-1.5 rounded-full border border-[#D6CFE8] bg-white text-sm text-[#1A1330] placeholder:text-[#B0A9C7] focus:outline-none focus:border-[#3D1A78]"
+        />
+        <p className="text-[10px] text-[#857E9C] mt-1">Shown only to you — helps you find the right link months later.</p>
+      </div>
+
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <button
           onClick={downloadPdf}
@@ -355,7 +375,10 @@ export default function ReportShareControls({
                     data-testid={`${testIdPrefix}-existing-row-${row.jti}`}
                   >
                     <div className="text-xs text-[#4B4567] min-w-0 flex-1">
-                      <div className="font-semibold text-[#1A1330]">Created {created}</div>
+                      <div className="font-semibold text-[#1A1330]" data-testid={`${testIdPrefix}-row-label-${row.jti}`}>
+                        {row.label || <span className="italic text-[#857E9C]">Untitled link</span>}
+                      </div>
+                      <div className="text-[11px] text-[#857E9C]">Created {created}</div>
                       <div className="text-[11px] text-[#857E9C]">Expires: {expires}</div>
                     </div>
                     <button
