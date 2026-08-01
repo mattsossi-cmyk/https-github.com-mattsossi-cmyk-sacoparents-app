@@ -103,10 +103,12 @@ export default function AlignmentMilestoneCelebration({ milestone, snapshotId, p
 
   useEffect(() => {
     if (!storageKey) return;
+    // Same one-time flag check as the initial useState — kept only to react
+    // to snapshot_id changes (parent moves between shares). No console noise
+    // if localStorage is unavailable.
     try {
-      const flag = window.localStorage.getItem(storageKey);
-      if (flag) setDismissed(true);
-    } catch {}
+      if (window.localStorage.getItem(storageKey)) setDismissed(true);
+    } catch { /* ignore */ }
   }, [storageKey]);
 
   const copy = MILESTONE_COPY[milestone];

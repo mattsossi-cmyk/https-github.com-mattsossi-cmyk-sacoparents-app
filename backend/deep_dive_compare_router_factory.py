@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr
+from pymongo.errors import DuplicateKeyError
 
 from auth import UserPublic, get_current_user, get_db
 
@@ -317,6 +318,10 @@ def make_deep_dive_compare_router(
                     "top_highlights": top_prompts,
                     "milestones_crossed": milestones_crossed,
                 })
+            except DuplicateKeyError:
+                # Another concurrent view already recorded this exact snapshot
+                # (unique index on share_id + snapshot_key). Safe to ignore.
+                pass
             except Exception:  # noqa: BLE001
                 logger.exception("Failed to persist compare snapshot for share %s", share["share_id"])
         return comparison

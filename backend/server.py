@@ -160,6 +160,16 @@ else:
 @app.on_event("startup")
 async def startup_log():
     logger.info("SA CoParents backend ready. DB=%s", os.environ.get("DB_NAME"))
+    # Compare-snapshot dedupe: unique per (share_id, snapshot_key). Idempotent
+    # if the index already exists.
+    try:
+        await app.state.db["deep_dive_compare_snapshots"].create_index(
+            [("share_id", 1), ("snapshot_key", 1)],
+            unique=True,
+            name="share_snapshot_key_unique",
+        )
+    except Exception:  # noqa: BLE001
+        logger.exception("Failed to create deep_dive_compare_snapshots unique index")
     # Kick off the post-event survey scheduler. It sleeps internally so it
     # won't run before the DB is warm.
     asyncio.create_task(survey_scheduler_loop(app))
