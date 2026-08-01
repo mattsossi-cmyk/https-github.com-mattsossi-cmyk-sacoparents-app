@@ -1,0 +1,27 @@
+{
+  "summary": "Iteration 47 — Milestone History Ribbon. Verified backend /api/deep-dives/compare-status now surfaces per-pathway `milestones` (sorted, deduped union of milestones_crossed across all snapshots for that pathway's non-revoked shares) and top-level `total_milestones_unlocked` (distinct tiers across ALL pathways). Verified all four required scenarios: (a) fresh user → milestones=[], total=0; (b) edu snapshot with [75] → edu.milestones=[75], total=1; (c) additional psych snapshot with [50,90] → psych.milestones=[50,90], total=3; (d) revoked shares' snapshots are ignored. Frontend UI verified end-to-end: total-milestones gold pill renders with correct copy, per-pathway trophy strips render only when milestones present (medical strip correctly absent), pill testids and tier tints (purple/green/gold for 50/75/90) all match spec. 8/8 new iter47 backend tests pass; iter42+iter43+iter44+iter45+iter46 regression: 68 passed, 1 pre-existing skip (matches iter46 baseline of 51+17 wins).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter47_features.py",
+    "/app/test_reports/pytest/iter47_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "In deep_dives_routes.py `_compare_counts` fires a separate `find` on deep_dive_compare_snapshots for each pathway (3 round-trips per compare-status call). For users with many shares this is fine now, but as pathways grow consider a single aggregate `$match {share_id:{$in: all_ids}}` grouped by pathway. Not blocking for iter47.",
+    "The endpoint returns pathway.milestones as sorted list but there is no upper bound / whitelist filter — if a rogue snapshot ever wrote `milestones_crossed: [42]` it would surface to the UI. The frontend only styles 50/75/90 (unknown tiers would fall through to the purple `else` branch and show `42%`). Cheap belt-and-suspenders: filter to `{50,75,90}` in _compare_counts.",
+    "`total_milestones_unlocked` counts distinct tiers across pathways (max 3). The UI copy `N milestones unlocked` is technically 'tiers unlocked', which reads fine. If product ever wants per-pathway counting, this endpoint would need to change shape.",
+    "Dashboard.jsx: the compare-status fetch only fires once on mount. When a user completes a comparison in another tab, the ribbon does not refresh until reload. Consider a lightweight polling / focus-refresh."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter47_features.py",
+    "/app/test_reports/iteration_47.json"
+  ],
+  "success_rate": {"backend": "100% (8/8 iter47 + 68/69 regression, 1 pre-existing skip)", "frontend": "100% (total pill copy, tier tints purple/green/gold, per-pathway trophy strips render or hide correctly)"},
+  "test_credentials": "parent1@test.com / TestPass123!, parent2@test.com / TestPass123!",
+  "seed_data_creation": "Backend tests seed shares directly into edu_deep_shares/psych_deep_shares/med_deep_shares with `user_pair: [u1,u2]` + consent flags, then insert `deep_dive_compare_snapshots` rows with the desired `milestones_crossed` array. Autouse fixture wipes anything matching `iter47_` before AND after each test. UI verification used /tmp/seed_iter47.py to seed one edu share (milestones=[75]) and one psych share (milestones=[50,90]) for parent1↔parent2, then cleaned up post-run.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter47 verified. Dashboard trophy ribbon only shows if compareStatus.total_milestones_unlocked>0 AND the tile itself only renders if total_active>0. To reproduce the UI: seed rows in edu_deep_shares/psych_deep_shares/med_deep_shares (status:'active', user_pair:[u1,u2], both consent flags true) then insert matching rows in deep_dive_compare_snapshots with milestones_crossed populated. Dashboard fires GET /deep-dives/compare-status once on mount — reload/navigate after seeding. Legal-ack modal dismissal: click `[data-testid=legal-ack-checkbox]` first, then `[data-testid=legal-ack-continue-button]`. After that a 6-step orientation carousel appears on fresh accounts — click text=Skip to reach the Dashboard.",
+  "rca of the issue": "N/A — no issues found."
+}

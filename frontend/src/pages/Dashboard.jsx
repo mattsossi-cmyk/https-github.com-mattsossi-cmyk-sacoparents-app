@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
-import { CheckCircle2, ChevronRight, ChevronDown, Shield, Sparkles, RefreshCcw, Users, Eye } from "lucide-react";
+import { CheckCircle2, ChevronRight, ChevronDown, Shield, Sparkles, RefreshCcw, Users, Eye, Trophy } from "lucide-react";
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
 const REPORT_LABEL = {
@@ -851,6 +851,17 @@ export default function Dashboard() {
                     )}
                   </div>
                 </div>
+                {compareStatus.total_milestones_unlocked > 0 && (
+                  <div
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#FDF4E6] text-[#8C5A2C] border border-[#F1D9A0]"
+                    data-testid="dashboard-compare-milestones-total"
+                  >
+                    <Trophy size={12} />
+                    {compareStatus.total_milestones_unlocked === 1
+                      ? "1 milestone unlocked"
+                      : `${compareStatus.total_milestones_unlocked} milestones unlocked`}
+                  </div>
+                )}
               </div>
               <ul className="mt-4 grid sm:grid-cols-3 gap-2">
                 {(compareStatus.pathways || []).map((p) => {
@@ -866,24 +877,58 @@ export default function Dashboard() {
                     : isActive
                     ? "bg-[#FBEDDA] text-[#8C5A2C] border-[#EDD5B0]"
                     : "bg-white text-[#8471B3] border-[#E5E0EE]";
+                  const trophies = p.milestones || [];
                   return (
                     <li key={p.id} data-testid={`dashboard-compare-pathway-${p.id}`}>
                       <Link
                         to={p.compare_route}
-                        className="group flex items-center justify-between gap-2 rounded-2xl border border-[#CDE7D6] bg-white p-3 hover:border-[#1F5C3B] hover:shadow-sm transition-all"
+                        className="group flex flex-col gap-2 rounded-2xl border border-[#CDE7D6] bg-white p-3 hover:border-[#1F5C3B] hover:shadow-sm transition-all"
                       >
-                        <div className="min-w-0">
-                          <div className="text-sm font-semibold text-[#1A1330] truncate">{p.name}</div>
-                          <div className="text-[11px] text-[#4B4567] mt-0.5 group-hover:text-[#1F5C3B] inline-flex items-center gap-1">
-                            {isReady ? <><Eye size={11} /> View comparison</> : <>Open hub <ChevronRight size={11} /></>}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-[#1A1330] truncate">{p.name}</div>
+                            <div className="text-[11px] text-[#4B4567] mt-0.5 group-hover:text-[#1F5C3B] inline-flex items-center gap-1">
+                              {isReady ? <><Eye size={11} /> View comparison</> : <>Open hub <ChevronRight size={11} /></>}
+                            </div>
                           </div>
+                          <span
+                            className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${statePillCls}`}
+                            data-testid={`dashboard-compare-pathway-${p.id}-status`}
+                          >
+                            {stateLabel}
+                          </span>
                         </div>
-                        <span
-                          className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${statePillCls}`}
-                          data-testid={`dashboard-compare-pathway-${p.id}-status`}
-                        >
-                          {stateLabel}
-                        </span>
+                        {trophies.length > 0 && (
+                          <div
+                            className="flex items-center gap-1 flex-wrap"
+                            data-testid={`dashboard-compare-pathway-${p.id}-trophies`}
+                          >
+                            {trophies.map((m) => {
+                              const styleCls =
+                                m === 90
+                                  ? "bg-[#FDF4E6] text-[#8C5A2C] border-[#F1D9A0]"
+                                  : m === 75
+                                  ? "bg-[#F1F9F4] text-[#1F5C3B] border-[#B5DFC5]"
+                                  : "bg-[#F5F1FB] text-[#3D1A78] border-[#D6CFE8]";
+                              const title =
+                                m === 90
+                                  ? "9-in-10 alignment unlocked"
+                                  : m === 75
+                                  ? "More than 3-in-4 alignment unlocked"
+                                  : "Half of your answers agreed on";
+                              return (
+                                <span
+                                  key={m}
+                                  title={title}
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${styleCls}`}
+                                  data-testid={`dashboard-compare-pathway-${p.id}-trophy-${m}`}
+                                >
+                                  <Trophy size={10} /> {m}%
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
                       </Link>
                     </li>
                   );

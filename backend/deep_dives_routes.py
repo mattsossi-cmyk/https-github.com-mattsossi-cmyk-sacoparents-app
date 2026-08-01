@@ -92,23 +92,26 @@ async def deep_dive_status(user: UserPublic = Depends(get_current_user),
 
 async def _compare_counts(db: AsyncIOMotorDatabase, user_id: str,
                           dd: Dict[str, Any]) -> Dict[str, Any]:
-    """Count active + ready-to-view compare shares in a pathway for the user.
+    """Count active + ready-to-view compare shares in a pathway for the user,
+    plus the union of milestones ever unlocked across those shares.
 
     "active" = any non-revoked share the user participates in (creator OR
     partner). "ready_to_view" = both parents consented AND both assessments
-    completed. Same logic as the compare-router hydrate helper, kept lean
-    here because the Dashboard tile calls this on every mount.
+    completed. "milestones" = sorted union of `milestones_crossed` across
+    every snapshot on any active share (the dashboard ribbon lights up as
+    soon as ANY snapshot for that pathway crosses a tier).
     """
     cursor = db[dd["shares_collection"]].find(
         {"user_pair": user_id, "status": {"$ne": "revoked"}}, {"_id": 0},
     )
     active = 0
     ready = 0
+    share_ids: list[str] = []
     async for share in cursor:
         active += 1
+        share_ids.append(share.get("share_id"))
         if not (share.get("creator_consent") and share.get("partner_consent")):
             continue
-        # Both consented; are both assessments complete?
         me_a = await db[dd["assessment_collection"]].find_one(
             {"user_id": user_id}, {"_id": 0, "completed": 1}
         )
@@ -119,7 +122,22 @@ async def _compare_counts(db: AsyncIOMotorDatabase, user_id: str,
         )
         if (me_a and me_a.get("completed")) and (partner_a and partner_a.get("completed")):
             ready += 1
-    return {"active": active, "ready_to_view": ready}
+
+    milestones_set: set[int] = set()
+    if share_ids:
+        snap_cursor = db["deep_dive_compare_snapshots"].find(
+            {"share_id": {"$in": share_ids}},
+            {"_id": 0, "milestones_crossed": 1},
+        )
+        async for snap in snap_cursor:
+            for m in (snap.get("milestones_crossed") or []):
+                if isinstance(m, int):
+                    milestones_set.add(m)
+    return {
+        "active": active,
+        "ready_to_view": ready,
+        "milestones": sorted(milestones_set),
+    }
 
 
 @router.get("/compare-status")
@@ -129,6 +147,7 @@ async def compare_status(user: UserPublic = Depends(get_current_user),
     per_pathway = []
     total_active = 0
     total_ready = 0
+    all_milestones: set[int] = set()
     for dd in DEEP_DIVES:
         counts = await _compare_counts(db, user.user_id, dd)
         per_pathway.append({
@@ -137,11 +156,14 @@ async def compare_status(user: UserPublic = Depends(get_current_user),
             "compare_route": dd["compare_route"],
             "active": counts["active"],
             "ready_to_view": counts["ready_to_view"],
+            "milestones": counts["milestones"],
         })
         total_active += counts["active"]
         total_ready += counts["ready_to_view"]
+        all_milestones.update(counts["milestones"])
     return {
         "pathways": per_pathway,
         "total_active": total_active,
         "total_ready_to_view": total_ready,
+        "total_milestones_unlocked": len(all_milestones),
     }
