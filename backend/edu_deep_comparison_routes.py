@@ -140,9 +140,10 @@ async def link_partner(
         )
     a, b = sorted([me.user_id, partner["user_id"]])
     existing = await db[SHARES].find_one({"user_pair": [a, b], "status": {"$ne": "revoked"}})
-    if existing:
-        return {"ok": True, "share": await _hydrate(db, existing, me.user_id), "already_existed": True}
 
+    # Safety guardrail applies BEFORE we return any existing share — a parent
+    # whose safety level drops after the share was created shouldn't be able
+    # to re-engage with the flow.
     level = await _latest_safety_level(db, me.user_id)
     if level in BLOCKING_SAFETY_LEVELS:
         raise HTTPException(
@@ -152,6 +153,9 @@ async def link_partner(
                     "co-parent is not appropriate right now. Please review your "
                     "safety options before starting a comparison."),
         )
+
+    if existing:
+        return {"ok": True, "share": await _hydrate(db, existing, me.user_id), "already_existed": True}
 
     now = _now_iso()
     share = {
