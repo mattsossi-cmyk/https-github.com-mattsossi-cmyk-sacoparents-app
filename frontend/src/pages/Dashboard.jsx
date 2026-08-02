@@ -205,6 +205,26 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
+  // Weekly Progress Email — auto-fire on Sunday (UTC) if we haven't sent
+  // one yet this ISO week. Silent no-op every other day. Backend enforces
+  // idempotency, so multiple browser tabs on Sunday are safe.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await api.get("/dashboard/weekly-email/status");
+        const should = s.data?.is_sunday_utc && !s.data?.sent_this_week;
+        if (!should || cancelled) return;
+        await api.post("/dashboard/weekly-email/send", {});
+      } catch {
+        /* Email is best-effort — silent on failure. */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     api
       .get("/mediation/prep")

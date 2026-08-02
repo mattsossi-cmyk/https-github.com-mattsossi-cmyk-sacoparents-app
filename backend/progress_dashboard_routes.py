@@ -15,11 +15,13 @@ Pills:
 """
 from __future__ import annotations
 
+import os
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pydantic import BaseModel
 
 from auth import UserPublic, get_current_user, get_db
 
@@ -236,8 +238,32 @@ async def _read_history_series(db: AsyncIOMotorDatabase, user_id: str,
             "done": last_done,
             "total": last_total,
             "ready": last_done == last_total and last_total > 0,
+            "visited": row is not None,
         })
     return series
+
+
+async def _current_streak_days(db: AsyncIOMotorDatabase, user_id: str) -> int:
+    """Count consecutive days (ending today, UTC) that the parent visited
+    the dashboard. Break resets to 0; today with a row counts as 1."""
+    # Pull the last ~60 days of history so a long streak is representable.
+    end = datetime.now(timezone.utc).date()
+    start = end - timedelta(days=59)
+    cursor = db[_HISTORY_COLLECTION].find(
+        {"user_id": user_id,
+         "date": {"$gte": start.strftime("%Y-%m-%d"),
+                  "$lte": end.strftime("%Y-%m-%d")}},
+        {"_id": 0, "date": 1},
+    )
+    dates = {row["date"] async for row in cursor}
+    streak = 0
+    for i in range(60):
+        d = (end - timedelta(days=i)).strftime("%Y-%m-%d")
+        if d in dates:
+            streak += 1
+        else:
+            break
+    return streak
 
 
 @router.get("/progress")
@@ -263,10 +289,18 @@ async def get_progress(user: UserPublic = Depends(get_current_user),
         history = []
     body["history"] = history
     body["history_days"] = _HISTORY_DAYS
+    # Current consecutive-day streak — fuels the "Consistent Coparent"
+    # badge below and the weekly email summary.
+    try:
+        streak = await _current_streak_days(db, user.user_id)
+    except Exception:  # noqa: BLE001
+        streak = 0
+    body["streak_days"] = int(streak)
     # Public Milestone Wall — safe no-op unless opted in.
     try:
         from wall_routes import (
             maybe_log_foundation_ready, maybe_log_communication_master,
+            maybe_log_week_streak,
         )
         await maybe_log_foundation_ready(db, user.user_id,
                                          bool(body.get("foundation_ready")))
@@ -276,6 +310,142 @@ async def get_progress(user: UserPublic = Depends(get_current_user),
         await maybe_log_communication_master(
             db, user.user_id, len(saved), len(_MEDIATION_PREP_SECTIONS),
         )
+        # 7-day consistent-visit streak.
+        await maybe_log_week_streak(db, user.user_id, streak)
     except Exception:  # noqa: BLE001
         pass
     return body
+
+
+# ---------------------------------------------------------------------------
+# Weekly Progress Email — Sunday summary of milestones + streak.
+# ---------------------------------------------------------------------------
+_WEEKLY_EMAIL_LOG = "weekly_progress_email_log"
+
+
+def _iso_week_key(dt: Optional[datetime] = None) -> str:
+    """Return a stable "YYYY-Wnn" key for the ISO calendar week the given
+    UTC datetime falls into. Used to guarantee at most one weekly email
+    per user per ISO week."""
+    now = dt or datetime.now(timezone.utc)
+    y, w, _ = now.isocalendar()
+    return f"{y:04d}-W{w:02d}"
+
+
+class WeeklyEmailIn(BaseModel):
+    force: Optional[bool] = False
+
+
+@router.post("/weekly-email/send")
+async def send_weekly_email(body: WeeklyEmailIn = WeeklyEmailIn(),
+                            user: UserPublic = Depends(get_current_user),
+                            db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    """Send the parent their Sunday progress snapshot. Idempotent per ISO
+    week — a second call in the same week returns `already_sent: True`
+    unless `force=True`. Auto-fire safe: the frontend can call this every
+    time the dashboard loads on a Sunday without spamming."""
+    if not (user.email or "").strip():
+        raise HTTPException(status_code=400,
+                            detail="Add an email to your profile first.")
+    week_key = _iso_week_key()
+    log = await db[_WEEKLY_EMAIL_LOG].find_one(
+        {"user_id": user.user_id, "week_key": week_key}, {"_id": 0},
+    )
+    if log and not body.force:
+        return {"ok": True, "already_sent": True, "week_key": week_key,
+                "sent_at": log.get("sent_at")}
+
+    # Compute today's progress + streak + this week's milestones.
+    progress = await compute_progress(db, user)
+    try:
+        streak = await _current_streak_days(db, user.user_id)
+    except Exception:  # noqa: BLE001
+        streak = 0
+
+    # Milestones lit this week (Mon 00:00 UTC → now). Pulled from the wall
+    # events collection so labels are consistent with what parents see on
+    # the wall — even for opted-out parents, we log this locally by
+    # detecting badge transitions in the history collection. For now we
+    # source from wall_events keyed by user_id (private field).
+    now = datetime.now(timezone.utc)
+    week_start = (now - timedelta(days=now.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0,
+    )
+    milestones_this_week: List[str] = []
+    try:
+        from wall_routes import _BADGE_LABELS  # noqa: WPS433 (label source of truth)
+        cursor = db["wall_events"].find(
+            {"user_id": user.user_id,
+             "created_at": {"$gte": week_start.isoformat()}},
+            {"_id": 0, "badge_type": 1, "created_at": 1},
+        ).sort("created_at", 1)
+        seen = []
+        async for row in cursor:
+            label = _BADGE_LABELS.get(row["badge_type"], row["badge_type"])
+            # Strip the "lit ..." / "ran ..." verb from the shared label so
+            # the email reads "Foundation Ready · lit all five..." naturally.
+            seen.append(label.rstrip("."))
+        # Dedupe while preserving order.
+        milestones_this_week = list(dict.fromkeys(seen))
+    except Exception:  # noqa: BLE001
+        milestones_this_week = []
+
+    frontend_origin = os.environ.get("FRONTEND_ORIGIN") or "https://sacoparentsapp.online"
+    dashboard_url = f"{frontend_origin.rstrip('/')}/dashboard"
+
+    from email_service import send_weekly_progress_summary
+    try:
+        send_weekly_progress_summary(
+            to_email=user.email,
+            user_name=user.name,
+            completed_count=int(progress.get("completed_count") or 0),
+            total=int(progress.get("total") or 5),
+            streak_days=int(streak),
+            milestones_this_week=milestones_this_week,
+            alignment_pct=progress.get("alignment_pct"),
+            dashboard_url=dashboard_url,
+        )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=503,
+                            detail="Email is temporarily unavailable. Try again shortly.") from e
+
+    sent_at_iso = now.isoformat()
+    await db[_WEEKLY_EMAIL_LOG].update_one(
+        {"user_id": user.user_id, "week_key": week_key},
+        {"$set": {
+            "user_id": user.user_id,
+            "week_key": week_key,
+            "sent_at": sent_at_iso,
+            "completed_count": int(progress.get("completed_count") or 0),
+            "streak_days": int(streak),
+        }},
+        upsert=True,
+    )
+    return {
+        "ok": True,
+        "already_sent": False,
+        "week_key": week_key,
+        "sent_at": sent_at_iso,
+        "milestones_this_week": milestones_this_week,
+        "streak_days": int(streak),
+    }
+
+
+@router.get("/weekly-email/status")
+async def weekly_email_status(user: UserPublic = Depends(get_current_user),
+                              db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    """Frontend uses this to decide whether to auto-fire the Sunday email:
+    returns whether we've already sent for this ISO week + today's UTC
+    weekday (Mon=0, Sun=6)."""
+    week_key = _iso_week_key()
+    log = await db[_WEEKLY_EMAIL_LOG].find_one(
+        {"user_id": user.user_id, "week_key": week_key}, {"_id": 0},
+    )
+    now = datetime.now(timezone.utc)
+    return {
+        "week_key": week_key,
+        "sent_this_week": bool(log),
+        "sent_at": (log or {}).get("sent_at"),
+        "is_sunday_utc": now.weekday() == 6,
+        "weekday_utc": now.weekday(),
+    }

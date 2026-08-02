@@ -1049,3 +1049,89 @@ def send_snc_report_pdf(
         attachments=[(pdf_filename or "Special_Needs_Report.pdf", pdf_bytes)],
         failure_message="Couldn't email your Special Needs report right now. Please try again in a moment.",
     )
+
+
+def send_weekly_progress_summary(
+    *,
+    to_email: str,
+    user_name: Optional[str],
+    completed_count: int,
+    total: int,
+    streak_days: int,
+    milestones_this_week: List[str],
+    alignment_pct: Optional[int],
+    dashboard_url: str,
+) -> None:
+    """Sunday-friendly momentum email. Neutral, encouraging, single CTA."""
+    hello = (user_name or "").strip() or "there"
+    lit = ", ".join(milestones_this_week) if milestones_this_week else ""
+    week_line = (
+        f"This week you lit {lit}." if lit
+        else "No new milestones lit this week — small steps still count."
+    )
+    streak_line = (
+        f"You've shown up {streak_days} day{'s' if streak_days != 1 else ''} in a row. "
+        "Consistency is the quiet superpower of co-parenting."
+        if streak_days > 0
+        else "A brand-new week is a great time to start a streak."
+    )
+    align_line = (
+        f"Latest alignment with your co-parent: {alignment_pct}%."
+        if isinstance(alignment_pct, int)
+        else ""
+    )
+    plain = (
+        f"Hi {hello},\n\n"
+        f"Your Sunday snapshot from SA CoParents.\n\n"
+        f"Progress: {completed_count} of {total} milestones lit.\n"
+        f"{week_line}\n"
+        f"{streak_line}\n"
+        f"{align_line}\n\n"
+        f"Open your dashboard: {dashboard_url}\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    milestone_html = ""
+    if milestones_this_week:
+        milestone_html = (
+            '<ul style="margin:8px 0 14px 0;padding:0 0 0 18px;color:#1A1330;font-size:14px;line-height:1.55;">'
+            + "".join(f"<li>{m}</li>" for m in milestones_this_week)
+            + "</ul>"
+        )
+    align_html = ""
+    if align_line:
+        align_html = (
+            '<div style="font-size:13px;color:#4B4567;margin:6px 0 0 0;">'
+            f'{align_line}</div>'
+        )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"Hi <strong>{hello}</strong>, your Sunday snapshot from SA CoParents.</p>"
+        '<div style="margin:0 0 18px 0;padding:14px 16px;border-radius:14px;'
+        'border:1px solid #D6CFE8;background:#F5F1FB;">'
+        '<div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;'
+        'color:#3D1A78;font-weight:700;margin:0 0 4px 0;">Weekly progress</div>'
+        f'<div style="font-size:22px;line-height:1.2;color:#1A1330;font-weight:800;'
+        f'font-family:Georgia,\'Times New Roman\',serif;">'
+        f'{completed_count} of {total} milestones lit.</div>'
+        f'<div style="font-size:13px;color:#4B4567;margin:6px 0 0 0;">{streak_line}</div>'
+        f'{align_html}'
+        '</div>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 8px 0;">{week_line}</p>'
+        f"{milestone_html}"
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 18px 0;">'
+        "Small, steady work is what mediators love to see.</p>"
+    )
+    html = _branded_html(
+        headline="Your Sunday progress snapshot",
+        body_html=body_html,
+        cta_label="Open my dashboard",
+        cta_url=dashboard_url,
+    )
+    _send(
+        to_email=to_email,
+        subject="Your Sunday co-parenting progress snapshot",
+        html=html,
+        text=plain,
+        failure_message="Couldn't send your weekly summary right now. Please try again in a moment.",
+    )
+

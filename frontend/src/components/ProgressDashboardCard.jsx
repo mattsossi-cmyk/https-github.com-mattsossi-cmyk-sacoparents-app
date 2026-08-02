@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import { CheckCircle2, Circle, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, Loader2, Sparkles, Flame } from "lucide-react";
 import { logError } from "../lib/logger";
 import FoundationReadyCelebration, { FoundationReadyBadge } from "./FoundationReadyCelebration";
 import ProgressSparkline from "./ProgressSparkline";
@@ -69,6 +69,16 @@ export default function ProgressDashboardCard() {
           data-testid="dashboard-progress-count"
         >
           <ProgressSparkline history={data.history} />
+          {typeof data.streak_days === "number" && data.streak_days > 0 && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#FBEDDA] text-[#8C5A2C] border border-[#EDD5B0]"
+              data-testid="dashboard-progress-streak"
+              title={`${data.streak_days}-day dashboard streak`}
+            >
+              <Flame size={11} className="text-[#8C5A2C]" />
+              {data.streak_days}d
+            </span>
+          )}
           <FoundationReadyBadge done={done} total={total} />
           {done}/{total}
         </div>

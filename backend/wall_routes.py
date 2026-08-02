@@ -57,6 +57,7 @@ _BADGE_LABELS = {
     _BADGE_FIRST_COMPARE:        "ran their first co-parent comparison.",
     _BADGE_HIGH_ALIGNMENT_90:    "hit 90%+ alignment with their co-parent.",
     _BADGE_COMMUNICATION_MASTER: "completed every mediation-prep section — Communication Master.",
+    "week_streak_7":             "showed up 7 days in a row — Consistent Coparent.",
 }
 
 # Badges we only ever want to log once per parent (life-time). Others use a
@@ -187,6 +188,72 @@ async def maybe_log_communication_master(db: AsyncIOMotorDatabase,
         pass
 
 
+async def maybe_log_week_streak(db: AsyncIOMotorDatabase, user_id: str,
+                                streak_days: int) -> None:
+    """Log a 7-day streak badge when the parent hits a full week of
+    consecutive dashboard visits. 24-hour de-dupe on the wall event so
+    a parent who breaks the streak and re-earns later still gets a fresh
+    celebration."""
+    if streak_days < 7:
+        return
+    try:
+        await _log_event_once(db, user_id, "week_streak_7")
+    except Exception:  # noqa: BLE001
+        pass
+
+
+async def top_cheered_since(db: AsyncIOMotorDatabase, days: int = 7,
+                            limit: int = 3, viewer_id: Optional[str] = None,
+                            ) -> List[Dict[str, Any]]:
+    """Return the most-cheered events in the last `days` days. Enriches
+    each row with the same anonymised fields the feed uses so the
+    frontend can render a "most-cheered" spotlight above the feed."""
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    since_iso = since.isoformat()
+    # Aggregate cheers per event, then join back to the events collection.
+    pipeline = [
+        {"$match": {"created_at": {"$gte": since_iso}}},
+        {"$group": {"_id": "$event_id", "cheer_count": {"$sum": 1}}},
+        {"$sort": {"cheer_count": -1}},
+        {"$limit": int(limit)},
+    ]
+    cheer_rows = [row async for row in db[_CHEERS_COLLECTION].aggregate(pipeline)]
+    if not cheer_rows:
+        return []
+    event_ids = [r["_id"] for r in cheer_rows]
+    counts_by_id = {r["_id"]: int(r["cheer_count"]) for r in cheer_rows}
+    events_cursor = db[_EVENTS_COLLECTION].find(
+        {"event_id": {"$in": event_ids}},
+        {"_id": 0, "event_id": 1, "user_hash": 1, "badge_type": 1, "created_at": 1},
+    )
+    events_by_id: Dict[str, Dict[str, Any]] = {
+        row["event_id"]: row async for row in events_cursor
+    }
+    i_cheered: set = set()
+    if viewer_id:
+        mine_cursor = db[_CHEERS_COLLECTION].find(
+            {"event_id": {"$in": event_ids}, "user_id": viewer_id},
+            {"_id": 0, "event_id": 1},
+        )
+        i_cheered = {r["event_id"] async for r in mine_cursor}
+    result: List[Dict[str, Any]] = []
+    for row in cheer_rows:  # preserves the sorted-desc order
+        ev = events_by_id.get(row["_id"])
+        if not ev:
+            continue
+        result.append({
+            "event_id":    ev["event_id"],
+            "user_hash":   ev["user_hash"],
+            "badge_type":  ev["badge_type"],
+            "badge_label": _BADGE_LABELS.get(ev["badge_type"], ev["badge_type"]),
+            "created_at":  ev["created_at"],
+            "when_human":  _friendly_delta(ev["created_at"]),
+            "cheer_count": counts_by_id[row["_id"]],
+            "i_cheered":   ev["event_id"] in i_cheered,
+        })
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -305,11 +372,17 @@ async def wall_feed(days: int = Query(30, ge=1, le=90),
     total = await db[_EVENTS_COLLECTION].count_documents({
         "created_at": {"$gte": since.isoformat()},
     })
+    # Small "most-cheered this week" spotlight for the frontend to show
+    # above the main feed. Same anonymised shape as the feed rows.
+    top_cheered = await top_cheered_since(
+        db, days=7, limit=3, viewer_id=user.user_id,
+    )
     return {
         "events": events,
         "total": int(total),
         "days": days,
         "limit": limit,
+        "top_cheered": top_cheered,
     }
 
 

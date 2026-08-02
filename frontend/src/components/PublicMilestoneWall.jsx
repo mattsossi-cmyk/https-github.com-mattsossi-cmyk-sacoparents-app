@@ -197,6 +197,47 @@ export default function PublicMilestoneWall() {
         </button>
       </div>
 
+      {(feed?.top_cheered || []).length > 0 && (
+        <div
+          className="mt-5 rounded-2xl border border-[#F1D9A0] bg-gradient-to-br from-[#FDF4E6] to-[#FBEDDA] p-4"
+          data-testid="wall-top-cheered"
+        >
+          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-bold text-[#8C5A2C]">
+            <Heart size={12} className="fill-[#B23C3C] text-[#B23C3C]" />
+            Most cheered this week
+          </div>
+          <ul className="mt-2 space-y-1.5">
+            {feed.top_cheered.map((ev) => {
+              const meta = BADGE_META[ev.badge_type] || {
+                Icon: Award,
+                iconClass: "text-[#3D1A78]",
+              };
+              const { Icon, iconClass } = meta;
+              return (
+                <li
+                  key={ev.event_id}
+                  className="flex items-center gap-2.5 text-sm text-[#1A1330]"
+                  data-testid={`wall-top-cheered-item-${ev.event_id}`}
+                >
+                  <AnonAvatar userHash={ev.user_hash} />
+                  <span className="flex-1 min-w-0 truncate">
+                    A parent {ev.badge_label}
+                  </span>
+                  <span
+                    className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-[#B23C3C] px-2 py-0.5 rounded-full bg-white border border-[#EDD1D1]"
+                    data-testid={`wall-top-cheered-count-${ev.event_id}`}
+                  >
+                    <Heart size={11} className="fill-[#B23C3C]" />
+                    {ev.cheer_count}
+                  </span>
+                  <Icon size={14} className={iconClass} />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
       {events.length === 0 ? (
         <div
           className="mt-5 rounded-2xl border border-dashed border-[#E5E0EE] bg-[#FCFBFE] p-5 text-sm text-[#4B4567] flex items-start gap-2"
