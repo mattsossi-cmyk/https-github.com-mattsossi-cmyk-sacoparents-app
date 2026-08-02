@@ -497,18 +497,50 @@ def send_compare_invite(
     link_url: str,
     inviter_name: Optional[str] = None,
     product_label: str = "Deep Dive",
+    aligned_pct: Optional[int] = None,
 ) -> None:
     """Notify a co-parent that a compare request is awaiting their consent.
 
     Sent once when the first parent hits POST /compare/link so the invited
     co-parent knows to log in and consent (or decline). Never contains any
     private assessment content — only a call to log in.
+
+    If ``aligned_pct`` is provided (both parents already completed their
+    assessments at invite time), the email gets a neutral one-line teaser
+    of the current alignment percentage so the recipient sees the value
+    before they click through. The number is a summary only — no items or
+    prompts leak before consent.
     """
     inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"
+    # Clamp to a safe integer range in case an upstream caller ever hands us
+    # a float or an out-of-bounds value.
+    preview: Optional[int] = None
+    if isinstance(aligned_pct, (int, float)):
+        preview = max(0, min(100, int(aligned_pct)))
+    preview_plain = ""
+    preview_html = ""
+    if preview is not None:
+        preview_plain = (
+            f"\nBefore you decide: based on both of your answers so far, you "
+            f"already agree on about {preview}% of them.\n"
+        )
+        preview_html = (
+            '<div style="margin:0 0 18px 0;padding:14px 16px;border-radius:14px;'
+            'border:1px solid #B5DFC5;background:#F1F9F4;">'
+            '<div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;'
+            'color:#1F5C3B;font-weight:700;margin:0 0 4px 0;">A quick preview</div>'
+            f'<div style="font-size:22px;line-height:1.2;color:#1A1330;font-weight:800;'
+            f'font-family:Georgia,\'Times New Roman\',serif;">You already agree on '
+            f'about {preview}% of your answers.</div>'
+            '<div style="font-size:12px;color:#4B4567;margin:6px 0 0 0;">'
+            "This is a summary only — no items are shared until you consent."
+            '</div></div>'
+        )
     plain = (
         f"{inviter} would like to compare {product_label} answers with you on "
-        "SA CoParenting App.\n\n"
-        "Nothing is shared automatically. Log in and, if you consent, both parents' "
+        "SA CoParenting App.\n"
+        f"{preview_plain}"
+        "\nNothing is shared automatically. Log in and, if you consent, both parents' "
         "answers will appear neutrally side-by-side — never labelling either of you "
         "'right' or 'wrong'.\n\n"
         f"Review the request here:\n{link_url}\n\n"
@@ -519,6 +551,7 @@ def send_compare_invite(
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
         f"<strong>{inviter}</strong> would like to compare {product_label} answers with "
         f"you on SA CoParenting App.</p>"
+        f"{preview_html}"
         '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
         "Nothing is shared automatically. Log in and, if you consent, both parents' "
         "answers will appear neutrally side-by-side — never labelling either of you "

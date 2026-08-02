@@ -191,11 +191,32 @@ def make_deep_dive_compare_router(
         # Never raise — a Resend hiccup shouldn't block the state machine.
         try:
             frontend_origin = os.environ.get("FRONTEND_ORIGIN") or "https://sacoparentsapp.online"
+            # Preview: if both parents have already completed their assessment
+            # we can teaser the current alignment %. Only computed here (never
+            # persisted or exposed to the partner via the API before consent).
+            preview_pct: Optional[int] = None
+            try:
+                creator_a = await db[assessments_collection].find_one({"user_id": me.user_id})
+                partner_a = await db[assessments_collection].find_one({"user_id": partner["user_id"]})
+                if (creator_a and creator_a.get("completed")
+                        and partner_a and partner_a.get("completed")):
+                    _preview = build_comparison(
+                        parent_a_name=me.name or "Parent A",
+                        parent_b_name=partner.get("name") or "Parent B",
+                        a_answers=creator_a.get("responses") or {},
+                        b_answers=partner_a.get("responses") or {},
+                    )
+                    _pct = (_preview.get("summary") or {}).get("aligned_pct")
+                    if isinstance(_pct, (int, float)):
+                        preview_pct = int(_pct)
+            except Exception:  # noqa: BLE001
+                logger.exception("Failed to compute compare-invite preview_pct for share %s", share["share_id"])
             send_compare_invite(
                 to_email=partner.get("email"),
                 link_url=f"{frontend_origin.rstrip('/')}{frontend_hub_path}",
                 inviter_name=me.name,
                 product_label=product_label,
+                aligned_pct=preview_pct,
             )
         except Exception:  # noqa: BLE001
             logger.exception("Failed to send compare-invite email for share %s", share["share_id"])
