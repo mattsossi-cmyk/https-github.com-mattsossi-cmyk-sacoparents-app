@@ -14,6 +14,7 @@ import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles } from "lucide-reac
 import { logError } from "../lib/logger";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
+import SignDownloadToggle from "../components/SignDownloadToggle";
 
 const ALIGN_STYLES = {
   aligned:        "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -81,6 +82,7 @@ export default function SpecialNeedsV2CompareView() {
   const [data, setData] = useState(null);
   const [category, setCategory] = useState(null); // null = All
   const [downloading, setDownloading] = useState(false);
+  const [signOnDownload, setSignOnDownload] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -105,13 +107,14 @@ export default function SpecialNeedsV2CompareView() {
   const download = async () => {
     setDownloading(true);
     try {
-      const params = category ? { category } : {};
+      const params = { ...(category ? { category } : {}), ...(signOnDownload ? { sign: true } : {}) };
       const res = await api.get(`/snc2/compare/${shareId}/pdf`, { responseType: "blob", params });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement("a");
       a.href = url; a.download = "SNC_Comparison.pdf";
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
+      if (signOnDownload) toast.success("Signed & downloaded.");
     } catch (err) {
       logError("snc2 compare pdf", err);
       toast.error(err?.response?.data?.detail || "Could not download the PDF.");
@@ -175,6 +178,14 @@ export default function SpecialNeedsV2CompareView() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
                 {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
               </button>
+            </div>
+
+            <div className="mt-2 flex justify-end">
+              <SignDownloadToggle
+                checked={signOnDownload}
+                onChange={setSignOnDownload}
+                testid="snc2-compare-sign-toggle"
+              />
             </div>
 
             {(data.comparison.highlights || []).length > 0 && (

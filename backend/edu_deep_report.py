@@ -242,6 +242,8 @@ class _PDF(FPDF):
         self.set_y(22); self.set_text_color(30, 24, 54)
 
     def footer(self):
+        from pdf_watermark import stamp_signature_line
+        stamp_signature_line(self)
         self.set_y(-11); self.set_font("Helvetica", "I", 7.5); self.set_text_color(133, 126, 156)
         self.cell(0, 4, _safe(f"Educational Deep Dive Report  ·  Page {self.page_no()} of {{nb}}"), align="C")
 
@@ -288,11 +290,16 @@ _RATING_COLORS = {
 }
 
 
-def build_deep_dive_pdf(*, report: Dict[str, Any]) -> bytes:
+def build_deep_dive_pdf(*, report: Dict[str, Any],
+                        signed_by: Optional[str] = None,
+                        signed_at: Optional[str] = None) -> bytes:
     """Render the SA CoParents journey Educational Deep Dive report as a
     Letter-sized branded PDF matching the shared report style.
     """
     pdf = _PDF()
+    if signed_by and signed_at:
+        pdf._signed_by = signed_by
+        pdf._signed_at = signed_at
     pdf.add_page()
 
     cover = report.get("cover") or {}

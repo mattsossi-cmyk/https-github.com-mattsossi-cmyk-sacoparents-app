@@ -6,7 +6,7 @@ a `product_name` used in the header/footer.
 """
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from edu_deep_report import _PDF as _BasePDF, _safe, _section_break, LOGO_PATH  # noqa: F401
 import os
@@ -40,6 +40,8 @@ def _pdf_class(product_name: str, footer_name: str):
             self.set_y(22); self.set_text_color(30, 24, 54)
 
         def footer(self):
+            from pdf_watermark import stamp_signature_line
+            stamp_signature_line(self)
             self.set_y(-11); self.set_font("Helvetica", "I", 7.5); self.set_text_color(133, 126, 156)
             self.cell(0, 4, _safe(f"{footer_name}  ·  Page {self.page_no()} of {{nb}}"), align="C")
 
@@ -47,8 +49,13 @@ def _pdf_class(product_name: str, footer_name: str):
 
 
 def build_journey_pdf(*, product_name: str, footer_name: str, headline: str,
-                      report: Dict[str, Any]) -> bytes:
+                      report: Dict[str, Any],
+                      signed_by: Optional[str] = None,
+                      signed_at: Optional[str] = None) -> bytes:
     pdf = _pdf_class(product_name, footer_name)()
+    if signed_by and signed_at:
+        pdf._signed_by = signed_by
+        pdf._signed_at = signed_at
     pdf.add_page()
 
     cover = report.get("cover") or {}

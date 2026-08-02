@@ -12,6 +12,7 @@ import { logError } from "../../lib/logger";
 import AlignmentMilestoneCelebration from "./AlignmentMilestoneCelebration";
 import ReportReviewNotice from "../ReportReviewNotice";
 import ReportProvenanceFooter from "../ReportProvenanceFooter";
+import SignDownloadToggle from "../SignDownloadToggle";
 
 const ALIGN_STYLES = {
   aligned:        "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -108,6 +109,7 @@ export default function DeepDiveCompareView({ pathway }) {
   const [data, setData] = useState(null);
   const [timeline, setTimeline] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [signOnDownload, setSignOnDownload] = useState(false);
   const t = pathway.testidPrefix;
 
   const load = useCallback(async () => {
@@ -140,12 +142,14 @@ export default function DeepDiveCompareView({ pathway }) {
   const download = async () => {
     setDownloading(true);
     try {
-      const res = await api.get(`${pathway.apiPrefix}/${shareId}/pdf`, { responseType: "blob" });
+      const params = signOnDownload ? { sign: true } : {};
+      const res = await api.get(`${pathway.apiPrefix}/${shareId}/pdf`, { responseType: "blob", params });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement("a");
       a.href = url; a.download = pathway.downloadFilename || "DeepDive_Comparison.pdf";
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
+      if (signOnDownload) toast.success("Signed & downloaded.");
     } catch (err) {
       logError(`${t} pdf`, err);
       toast.error(err?.response?.data?.detail || "Could not download the PDF.");
@@ -208,6 +212,14 @@ export default function DeepDiveCompareView({ pathway }) {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
                 {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
               </button>
+            </div>
+
+            <div className="mt-2 flex justify-end">
+              <SignDownloadToggle
+                checked={signOnDownload}
+                onChange={setSignOnDownload}
+                testid={`${t}-sign-toggle`}
+              />
             </div>
 
             {timeline && timeline.latest_milestones && timeline.latest_milestones.length > 0 && (

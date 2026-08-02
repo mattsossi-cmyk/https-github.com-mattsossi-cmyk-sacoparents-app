@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 
 from fpdf import FPDF
 
@@ -62,6 +62,8 @@ class _PDF(FPDF):
         self.set_y(22); self.set_text_color(30, 24, 54)
 
     def footer(self):
+        from pdf_watermark import stamp_signature_line
+        stamp_signature_line(self)
         self.set_y(-11); self.set_font("Helvetica", "I", 7.5); self.set_text_color(133, 126, 156)
         self.cell(0, 4, _safe(f"Individual Parent Report  ·  Page {self.page_no()} of {{nb}}"), align="C")
 
@@ -238,8 +240,13 @@ def _render_recommended_structure(pdf: _PDF, s: Dict[str, Any]) -> None:
     pdf.small(s.get("safety_notice") or "")
 
 
-def build_snc2_pdf(*, report: Dict[str, Any]) -> bytes:
+def build_snc2_pdf(*, report: Dict[str, Any],
+                   signed_by: Optional[str] = None,
+                   signed_at: Optional[str] = None) -> bytes:
     pdf = _PDF()
+    if signed_by and signed_at:
+        pdf._signed_by = signed_by
+        pdf._signed_at = signed_at
     _render_cover(pdf, report)
     _render_family_situation(pdf, report.get("family_situation") or {})
     _render_areas_of_need(pdf, report.get("areas_of_need") or {})

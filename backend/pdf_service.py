@@ -140,6 +140,8 @@ class PrepSummaryPDF(FPDF):
     def footer(self):
         if self._chromeless:
             return
+        from pdf_watermark import stamp_signature_line
+        stamp_signature_line(self)
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(*TEXT_MID)
@@ -258,9 +260,14 @@ def build_summary_pdf(
     child_goals: Dict[str, Any] | None = None,
     mediation_date: str | None = None,
     excluded_sections: set | list | None = None,
+    signed_by: str | None = None,
+    signed_at: str | None = None,
 ) -> bytes:
     ex = set(excluded_sections or [])
     pdf = PrepSummaryPDF(format="A4")
+    if signed_by and signed_at:
+        pdf._signed_by = signed_by
+        pdf._signed_at = signed_at
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_margins(15, 44, 15)
 
@@ -357,6 +364,8 @@ class AgreementPDF(FPDF):
         self.set_y(44)
 
     def footer(self):
+        from pdf_watermark import stamp_signature_line
+        stamp_signature_line(self)
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(*TEXT_MID)
@@ -472,9 +481,14 @@ def build_agreement_pdf(
     agreement: Dict[str, Any],
     mediation_date: str | None = None,
     excluded_sections: set | list | None = None,
+    signed_by: str | None = None,
+    signed_at: str | None = None,
 ) -> bytes:
     ex = set(excluded_sections or [])
     pdf = AgreementPDF(format="A4")
+    if signed_by and signed_at:
+        pdf._signed_by = signed_by
+        pdf._signed_at = signed_at
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_margins(15, 44, 15)
     pdf.add_page()

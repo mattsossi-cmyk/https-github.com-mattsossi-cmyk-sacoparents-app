@@ -2,6 +2,19 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 64 — Signed PDF Downloads (2026-02-02)**:
+  - New opt-in **"Sign & timestamp this download"** checkbox next to every Download PDF button. When toggled, the backend adds a small `Signed by <Parent Name>  |  <UTC timestamp>` line just above the standard page-number footer on every content page — right under the diagonal "REVIEW BEFORE SHARING" watermark so a shared PDF carries clear provenance without a separate cover sheet.
+  - Backend:
+    - `pdf_watermark.stamp_signature_line(pdf)` — new helper. Reads `pdf._signed_by` + `pdf._signed_at`; renders a thin grey rule + centred bold-purple signature line at `y = pdf.h - 6.0`. Latin-1 safe, restores font/colour state.
+    - `pdf_signing.sign_kwargs(sign, name)` — one-liner helper: returns `{"signed_by": name, "signed_at": UTC ISO}` when both `sign=true` and a name are present, `{}` otherwise. Timestamp is captured at download time.
+    - Every builder (`pdf_service.build_summary_pdf`/`build_agreement_pdf`, `snc2_report_pdf.build_snc2_pdf`, `edu_deep_report.build_deep_dive_pdf`, `journey_pdf.build_journey_pdf` — which serves both psych + med, `snc2_comparison_pdf.build_comparison_pdf`, `edu_deep_comparison_pdf.build_comparison_pdf`) now accepts `signed_by` + `signed_at` kwargs and stashes them on the PDF instance before the first `add_page()` so headers/footers pick them up.
+    - Every download endpoint accepts `?sign=true`: `/api/mediation/summary/{id}/pdf`, `/api/mediation/agreement/{id}/pdf`, `/api/snc2/report/pdf`, `/api/edu-deep/report/pdf`, `/api/psych-deep/report/pdf`, `/api/med-deep/report/pdf`, `/api/snc2/compare/{share}/pdf`, and all three deep-dive compare `{share}/pdf` endpoints via the shared router factory.
+  - Frontend:
+    - New shared `SignDownloadToggle.jsx` component — a tiny checkbox with a `PenTool` icon and native `title` tooltip explaining what signing does. Zero API coupling; consumers own the state.
+    - Wired into 8 report/compare surfaces: `SpecialNeedsV2Report`, `SpecialNeedsV2EducationalDeepDiveReport`, `SpecialNeedsV2PsychologicalDeepDiveReport`, `SpecialNeedsV2MedicalDeepDiveReport`, `Summary` (Mediation Summary + Agreement tabs), `SpecialNeedsV2CompareView`, and the shared `DeepDiveCompareView`. Toggle sits below the Download button on each. Test IDs: `<pathway>-sign-toggle`, `<pathway>-sign-toggle-checkbox`.
+    - Every `download*` handler now appends `?sign=true` (or the axios `params: { sign: true }` variant) when the toggle is checked and toasts "Signed & downloaded." on success.
+  - Regression: `test_iter64_signed_pdfs.py` — 11 new tests covering signed+unsigned parity across all 7 PDF surfaces (byte-level and zlib-stream inspection). **All 64/64 backend tests pass** across iter56/57/58/63/64 + SNC v2 suites. Gemini-verified visual: signature line visible on every content page, correct format (`Sam Nkosi | 02 Aug 2026, 16:52 UTC`), does not clash with page number, watermark still renders correctly, cover pages remain clean.
+
 - **Iteration 63 — PDF "REVIEW BEFORE SHARING" Watermark (2026-02-02)**:
   - New `pdf_watermark.py` shared helper `stamp_watermark(pdf)` that draws a subtle diagonal `REVIEW BEFORE SHARING` watermark behind every content page across every PDF the app generates. Rendered via `fpdf2.rotation(angle=30, x=cx, y=cy)` + `pdf.text()` at ~48pt in light grey (RGB 215/210/220) so body text stays fully readable on top.
   - Wired into six FPDF subclasses' `header()`:

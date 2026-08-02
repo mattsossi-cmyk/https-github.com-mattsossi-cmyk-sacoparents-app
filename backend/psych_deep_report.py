@@ -192,10 +192,14 @@ def build_deep_dive_report(*, parent_name: Optional[str], child_name: Optional[s
     }
 
 
-def build_deep_dive_pdf(*, report: Dict[str, Any]) -> bytes:
+def build_deep_dive_pdf(*, report: Dict[str, Any],
+                        signed_by: Optional[str] = None,
+                        signed_at: Optional[str] = None) -> bytes:
     return build_journey_pdf(
         product_name="Psychological / Behavioural Needs Deep Dive",
         footer_name="Psychological Deep Dive Report",
         headline="SA CoParents Psychological & Behavioural Needs Assessment Report",
         report=report,
+        signed_by=signed_by,
+        signed_at=signed_at,
     )

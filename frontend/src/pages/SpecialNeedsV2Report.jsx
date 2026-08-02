@@ -20,6 +20,7 @@ import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert, Users,
 import { logError } from "../lib/logger";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
+import SignDownloadToggle from "../components/SignDownloadToggle";
 
 const STATUS_COLOR = {
   "Strength":                          "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -54,6 +55,7 @@ function Section({ id, number, title, children }) {
 export default function SpecialNeedsV2Report() {
   const [state, setState] = useState({ loading: true, doc: null, status: null });
   const [busy, setBusy] = useState(false);
+  const [signOnDownload, setSignOnDownload] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -82,12 +84,14 @@ export default function SpecialNeedsV2Report() {
   const downloadPdf = async () => {
     setBusy(true);
     try {
-      const res = await api.get("/snc2/report/pdf", { responseType: "blob" });
-      const url = URL.createObjectURL(res.data);
+      const url = signOnDownload ? "/snc2/report/pdf?sign=true" : "/snc2/report/pdf";
+      const res = await api.get(url, { responseType: "blob" });
+      const objUrl = URL.createObjectURL(res.data);
       const a = document.createElement("a");
-      a.href = url; a.download = "Special_Needs_Report.pdf";
+      a.href = objUrl; a.download = "Special_Needs_Report.pdf";
       document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      setTimeout(() => URL.revokeObjectURL(objUrl), 2000);
+      if (signOnDownload) toast.success("Signed & downloaded.");
     } catch (err) { logError("snc2 pdf", err); toast.error(err?.response?.data?.detail || "Could not download the PDF."); }
     finally { setBusy(false); }
   };
@@ -178,6 +182,16 @@ export default function SpecialNeedsV2Report() {
               {busy ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />} Regenerate
             </button>
           </div>
+        </div>
+
+        {/* Sign & timestamp opt-in — appears next to download so parents
+            can add their name + UTC timestamp under the watermark. */}
+        <div className="mt-2 flex justify-end">
+          <SignDownloadToggle
+            checked={signOnDownload}
+            onChange={setSignOnDownload}
+            testid="snc2-report-sign-toggle"
+          />
         </div>
 
         {/* Cover meta */}

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fpdf import FPDF
 
@@ -68,6 +68,8 @@ class _PDF(FPDF):
         self.set_text_color(30, 24, 54)
 
     def footer(self):
+        from pdf_watermark import stamp_signature_line
+        stamp_signature_line(self)
         self.set_y(-14)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(133, 126, 156)
@@ -138,8 +140,13 @@ def _render_item(pdf: _PDF, item: Dict[str, Any], labels: Dict[str, str],
 
 def build_comparison_pdf(*, comparison: Dict[str, Any], safety_notice: str,
                          product_title: str = "Educational Deep Dive Comparison",
-                         header_subtitle: str = "Educational Deep Dive Co-Parent Comparison") -> bytes:
+                         header_subtitle: str = "Educational Deep Dive Co-Parent Comparison",
+                         signed_by: Optional[str] = None,
+                         signed_at: Optional[str] = None) -> bytes:
     pdf = _PDF(header_subtitle=header_subtitle)
+    if signed_by and signed_at:
+        pdf._signed_by = signed_by
+        pdf._signed_at = signed_at
     pdf.add_page()
 
     parent_a = comparison.get("parent_a_name") or "Parent A"

@@ -8,6 +8,7 @@ import AppShell from "../components/AppShell";
 import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachStrip";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
+import SignDownloadToggle from "../components/SignDownloadToggle";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
@@ -55,6 +56,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const [regenBusy, setRegenBusy] = useState(false);
   const [regenLength, setRegenLength] = useState("standard");
   const [report, setReport] = useState(null);
+  const [signOnDownload, setSignOnDownload] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,12 +86,14 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const download = async () => {
     setBusy(true);
     try {
-      const res = await api.get("/med-deep/report/pdf", { responseType: "blob" });
-      const url = URL.createObjectURL(res.data);
+      const url = signOnDownload ? "/med-deep/report/pdf?sign=true" : "/med-deep/report/pdf";
+      const res = await api.get(url, { responseType: "blob" });
+      const objUrl = URL.createObjectURL(res.data);
       const a = document.createElement("a");
-      a.href = url; a.download = "Medical_Assessment_Report.pdf";
+      a.href = objUrl; a.download = "Medical_Assessment_Report.pdf";
       document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      setTimeout(() => URL.revokeObjectURL(objUrl), 2000);
+      if (signOnDownload) toast.success("Signed & downloaded.");
     } catch (err) {
       logError("edu-deep pdf", err);
       toast.error(err?.response?.data?.detail || "Could not download the PDF.");
@@ -138,6 +142,15 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
               <RefreshCcw size={13} /> Refresh
             </button>
           </div>
+        </div>
+
+        {/* Sign & timestamp opt-in */}
+        <div className="flex justify-end mb-4">
+          <SignDownloadToggle
+            checked={signOnDownload}
+            onChange={setSignOnDownload}
+            testid="med-deep-report-sign-toggle"
+          />
         </div>
 
         <Eyebrow>Medical · SA CoParents Report</Eyebrow>

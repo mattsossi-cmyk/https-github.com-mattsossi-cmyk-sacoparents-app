@@ -414,10 +414,12 @@ def make_deep_dive_compare_router(
 
     @router.get("/{share_id}/pdf")
     async def get_comparison_pdf(share_id: str,
+                                 sign: bool = False,
                                  me: UserPublic = Depends(get_current_user),
                                  db: AsyncIOMotorDatabase = Depends(get_db)):
         share = await _find_share(db, share_id, me.user_id)
         comparison = await _load_comparison(db, share, me.user_id)
+        from pdf_signing import sign_kwargs
         pdf_bytes = build_comparison_pdf(
             comparison=comparison,
             safety_notice=(
@@ -427,6 +429,7 @@ def make_deep_dive_compare_router(
             ),
             product_title=pdf_product_title,
             header_subtitle=pdf_header_subtitle,
+            **sign_kwargs(sign, me.name),
         )
         filename = (f"{pdf_filename_stem}_{_safe_filename(share.get('creator_name'))}"
                     f"_and_{_safe_filename(share.get('partner_name'))}.pdf")

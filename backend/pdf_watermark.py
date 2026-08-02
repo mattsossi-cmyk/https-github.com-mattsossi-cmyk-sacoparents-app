@@ -69,3 +69,69 @@ def stamp_watermark(pdf: Any, text: str = _WATERMARK_TEXT) -> None:
     if prev_font_family:
         pdf.set_font(prev_font_family, prev_font_style or "", prev_font_size or 10)
     pdf.set_text_color(0, 0, 0)
+
+
+# ---------------------------------------------------------------------------
+# Signed report footer — parent name + timestamp printed right under the
+# watermark on every content page.
+# ---------------------------------------------------------------------------
+_SIG_TEXT_INK = (75, 69, 103)   # #4B4567
+_SIG_ACCENT = (61, 26, 120)     # #3D1A78
+
+
+def stamp_signature_line(pdf: Any) -> None:
+    """Print a small "Signed by X on YYYY-MM-DD HH:MM UTC" line at the
+    very bottom of the current page.
+
+    Only fires when the caller has set both `pdf._signed_by` (str) and
+    `pdf._signed_at` (ISO-8601 timestamp) on the PDF instance before
+    generation. Safe to call unconditionally from `footer()`; it no-ops
+    when the flags are absent.
+
+    We paint above the existing footer callers wrote so their branding
+    isn't disrupted; a single grey rule sits between the two.
+    """
+    signed_by = getattr(pdf, "_signed_by", None)
+    signed_at = getattr(pdf, "_signed_at", None)
+    if not signed_by or not signed_at:
+        return
+
+    # Snapshot state.
+    prev_font_family = pdf.font_family
+    prev_font_style = pdf.font_style
+    prev_font_size = pdf.font_size_pt
+
+    # Format the timestamp compactly: "02 Feb 2026, 15:37 UTC".
+    from datetime import datetime, timezone
+    try:
+        dt = datetime.fromisoformat(str(signed_at).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.astimezone(timezone.utc)
+        ts = dt.strftime("%d %b %Y, %H:%M UTC")
+    except Exception:  # noqa: BLE001
+        ts = str(signed_at)
+
+    line = f"Signed by {signed_by}  |  {ts}"
+    # Latin-1 safety.
+    for k, v in {"\u2014": "-", "\u2013": "-", "\u2018": "'",
+                 "\u2019": "'", "\u201c": '"', "\u201d": '"',
+                 "\u2026": "...", "\u00a0": " "}.items():
+        line = line.replace(k, v)
+    line = line.encode("latin-1", errors="replace").decode("latin-1")
+
+    # Draw a thin rule + centred signature line just above the footer.
+    y = pdf.h - 6.0
+    pdf.set_draw_color(220, 214, 232)
+    pdf.set_line_width(0.2)
+    pdf.line(pdf.l_margin, y - 2.6, pdf.w - pdf.r_margin, y - 2.6)
+
+    pdf.set_font("Helvetica", "B", 7.5)
+    pdf.set_text_color(*_SIG_ACCENT)
+    pdf.set_xy(pdf.l_margin, y - 1.8)
+    pdf.cell(pdf.epw, 3.6, line, align="C")
+
+    # Restore prior state so downstream footer renderers stay unaffected.
+    if prev_font_family:
+        pdf.set_font(prev_font_family, prev_font_style or "", prev_font_size or 10)
+    pdf.set_text_color(0, 0, 0)

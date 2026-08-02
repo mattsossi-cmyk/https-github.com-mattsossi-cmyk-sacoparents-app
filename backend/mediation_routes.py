@@ -304,6 +304,7 @@ async def download_summary_pdf(
     request: Request,
     current: UserPublic = Depends(get_current_user),
     excluded: Optional[str] = None,
+    sign: bool = False,
 ):
     db = request.app.state.db
     summary = await db.summaries.find_one(
@@ -313,12 +314,14 @@ async def download_summary_pdf(
         raise HTTPException(status_code=404, detail="Summary not found")
     prep = await _load_prep(db, current.user_id)
     ex_list = _resolve_excluded("summary", excluded, summary.get("visibility"))
+    from pdf_signing import sign_kwargs
     pdf_bytes = pdf_service.build_summary_pdf(
         user_name=current.name,
         summary=summary,
         child_goals=prep.get("child_goals"),
         mediation_date=current.mediation_date,
         excluded_sections=ex_list,
+        **sign_kwargs(sign, current.name),
     )
     return StreamingResponse(
         BytesIO(pdf_bytes),
@@ -499,6 +502,7 @@ async def download_agreement_pdf(
     request: Request,
     current: UserPublic = Depends(get_current_user),
     excluded: Optional[str] = None,
+    sign: bool = False,
 ):
     db = request.app.state.db
     agreement = await db.agreements.find_one(
@@ -507,11 +511,13 @@ async def download_agreement_pdf(
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     ex_list = _resolve_excluded("agreement", excluded, agreement.get("visibility"))
+    from pdf_signing import sign_kwargs
     pdf_bytes = pdf_service.build_agreement_pdf(
         user_name=current.name,
         agreement=agreement,
         mediation_date=current.mediation_date,
         excluded_sections=ex_list,
+        **sign_kwargs(sign, current.name),
     )
     return StreamingResponse(
         BytesIO(pdf_bytes),

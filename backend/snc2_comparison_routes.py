@@ -381,11 +381,13 @@ async def get_comparison(
 async def get_comparison_pdf(
     share_id: str,
     category: Optional[str] = Query(default=None),
+    sign: bool = False,
     me: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     share = await _find_share(db, share_id, me.user_id)
     comparison = await _load_comparison(db, share, me.user_id, category)
+    from pdf_signing import sign_kwargs
     pdf_bytes = build_comparison_pdf(
         comparison=comparison,
         safety_notice=(
@@ -393,6 +395,7 @@ async def get_comparison_pdf(
             "revisit the Family Violence & Communication Safety Assessment "
             "before continuing to share detailed information."
         ),
+        **sign_kwargs(sign, me.name),
     )
     filename = f"SNC_Comparison_{_safe_filename(share.get('creator_name'))}_and_{_safe_filename(share.get('partner_name'))}.pdf"
     return StreamingResponse(

@@ -7,6 +7,7 @@ import WatchFirstVideo from "../components/WatchFirstVideo";
 import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
+import SignDownloadToggle from "../components/SignDownloadToggle";
 import { api, API } from "../lib/api";
 import { shareViaText } from "../lib/share";
 import { toast } from "sonner";
@@ -232,6 +233,7 @@ function MediationSummaryTab() {
   const [history, setHistory] = useState([]);
   const [emailOpen, setEmailOpen] = useState(false);
   const [latestAgreementId, setLatestAgreementId] = useState(null);
+  const [signOnDownload, setSignOnDownload] = useState(false);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -281,10 +283,12 @@ function MediationSummaryTab() {
     }
     setDownloading(true);
     try {
+      const qs = signOnDownload ? "?sign=true" : "";
       await downloadBlob(
-        `${API}/mediation/summary/${summary.summary_id}/pdf`,
+        `${API}/mediation/summary/${summary.summary_id}/pdf${qs}`,
         `mediation-summary-${summary.summary_id}.pdf`
       );
+      if (signOnDownload) toast.success("Signed & downloaded.");
     } catch (err) {
       logError("PDF download failed:", err);
       toast.error(`Could not download PDF. ${err?.message || ""}`.trim());
@@ -354,6 +358,14 @@ function MediationSummaryTab() {
           shareTestId="summary-share-button"
           emailTestId="summary-email-button"
         />
+
+        <div className="flex justify-end mt-3">
+          <SignDownloadToggle
+            checked={signOnDownload}
+            onChange={setSignOnDownload}
+            testid="summary-sign-toggle"
+          />
+        </div>
 
         <GuestSaveNudge />
 
@@ -465,6 +477,7 @@ function AgreementDraftTab() {
   const [history, setHistory] = useState([]);
   const [emailOpen, setEmailOpen] = useState(false);
   const [latestSummaryId, setLatestSummaryId] = useState(null);
+  const [signOnDownload, setSignOnDownload] = useState(false);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -512,10 +525,12 @@ function AgreementDraftTab() {
     }
     setDownloading(true);
     try {
+      const qs = signOnDownload ? "?sign=true" : "";
       await downloadBlob(
-        `${API}/mediation/agreement/${agreement.agreement_id}/pdf`,
+        `${API}/mediation/agreement/${agreement.agreement_id}/pdf${qs}`,
         `coparenting-agreement-${agreement.agreement_id}.pdf`
       );
+      if (signOnDownload) toast.success("Signed & downloaded.");
     } catch (err) {
       logError("PDF download failed:", err);
       toast.error(`Could not download PDF. ${err?.message || ""}`.trim());
@@ -575,6 +590,14 @@ function AgreementDraftTab() {
           shareTestId="agreement-share-button"
           emailTestId="agreement-email-button"
         />
+
+        <div className="flex justify-end mt-3">
+          <SignDownloadToggle
+            checked={signOnDownload}
+            onChange={setSignOnDownload}
+            testid="agreement-sign-toggle"
+          />
+        </div>
 
         <ReportShareControls
           reportType="agreement"
