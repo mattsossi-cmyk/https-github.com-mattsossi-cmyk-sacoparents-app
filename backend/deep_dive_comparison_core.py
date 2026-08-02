@@ -199,6 +199,112 @@ def _extract_highlights(sections: List[Dict[str, Any]], limit: int = 5) -> List[
     return highlights
 
 
+def _row(section: Dict[str, Any], item: Dict[str, Any], extras: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "section_id":     section["id"],
+        "section_number": section["number"],
+        "section_name":   section["name"],
+        "item_id":        item["id"],
+        "prompt":         item.get("prompt", ""),
+        "type":           item.get("type"),
+        "alignment":      item.get("alignment"),
+        **extras,
+    }
+
+
+def _extract_alignment_lists(sections: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+    """Turn the raw section-by-section comparison into three mediation-ready lists:
+
+    - shared_priorities: what BOTH parents already flagged as important
+    - discussion_points: close-but-not-identical items that would benefit from a chat
+    - mediation_questions: genuinely divergent items, presented as neutral questions
+      (never labelled 'right' vs 'wrong')
+    """
+    shared: List[Dict[str, Any]] = []
+    discuss: List[Dict[str, Any]] = []
+    mediate: List[Dict[str, Any]] = []
+    for sec in sections:
+        for item in sec.get("items") or []:
+            t = item.get("type")
+            align = item.get("alignment")
+            a = (item.get("parent_a") or {}).get("value")
+            b = (item.get("parent_b") or {}).get("value")
+
+            # --- Shared priorities: both explicitly flagged this as important ---
+            if t == "likert" and isinstance(a, int) and isinstance(b, int) and a >= 4 and b >= 4:
+                shared.append(_row(sec, item, {
+                    "parent_a_value": a,
+                    "parent_b_value": b,
+                    "reason": (
+                        f"Both scored this a {min(a, b)}-{max(a, b)} — clear shared priority."
+                    ),
+                }))
+            elif t == "multi":
+                both = item.get("both") or []
+                if len(both) >= 2:
+                    shared.append(_row(sec, item, {
+                        "both": both,
+                        "reason": "You both selected " + ", ".join(both[:4])
+                                  + (f" (+{len(both) - 4} more)" if len(both) > 4 else "") + ".",
+                    }))
+
+            # --- Points for discussion: near-alignment, worth syncing on ---
+            if align == "close":
+                if t == "likert" and isinstance(a, int) and isinstance(b, int):
+                    discuss.append(_row(sec, item, {
+                        "parent_a_value": a,
+                        "parent_b_value": b,
+                        "gap": item.get("gap"),
+                        "reason": f"Close alignment ({a} vs {b}) — a short conversation likely closes the gap.",
+                    }))
+                elif t == "multi":
+                    discuss.append(_row(sec, item, {
+                        "both": item.get("both") or [],
+                        "only_parent_a": item.get("only_parent_a") or [],
+                        "only_parent_b": item.get("only_parent_b") or [],
+                        "reason": "You picked mostly overlapping options — worth checking why the different picks landed differently.",
+                    }))
+            elif align == "one_only":
+                discuss.append(_row(sec, item, {
+                    "parent_a_value": a,
+                    "parent_b_value": b,
+                    "reason": "Only one parent shared their view — the other's perspective would help complete the picture.",
+                }))
+
+            # --- Questions for mediation: divergent items, neutralized as questions ---
+            if align == "divergent":
+                if t == "likert" and isinstance(a, int) and isinstance(b, int):
+                    q_row = _row(sec, item, {
+                        "parent_a_value": a,
+                        "parent_b_value": b,
+                        "gap": item.get("gap"),
+                        "question": f"How will we align on: {item.get('prompt', '')}",
+                    })
+                elif t == "single":
+                    q_row = _row(sec, item, {
+                        "parent_a_value": a,
+                        "parent_b_value": b,
+                        "question": f"You chose different answers to: {item.get('prompt', '')} How do we reconcile that?",
+                    })
+                elif t == "multi":
+                    q_row = _row(sec, item, {
+                        "only_parent_a": item.get("only_parent_a") or [],
+                        "only_parent_b": item.get("only_parent_b") or [],
+                        "both": item.get("both") or [],
+                        "question": f"Which of these options do we both commit to on: {item.get('prompt', '')}",
+                    })
+                else:
+                    continue
+                mediate.append(q_row)
+
+    # Cap each list at 8 items so the report stays scannable.
+    return {
+        "shared_priorities": shared[:8],
+        "discussion_points": discuss[:8],
+        "mediation_questions": mediate[:8],
+    }
+
+
 def build_comparison_from_spec(
     *,
     sections_spec: List[Dict[str, Any]],
@@ -233,6 +339,8 @@ def build_comparison_from_spec(
             "items": items_out,
         })
 
+    alignment_lists = _extract_alignment_lists(sections_out)
+
     return {
         "assessment_version": assessment_version,
         "product_name": product_name,
@@ -241,5 +349,8 @@ def build_comparison_from_spec(
         "sections": sections_out,
         "summary": _summary(all_alignments),
         "highlights": _extract_highlights(sections_out, limit=5),
+        "shared_priorities":   alignment_lists["shared_priorities"],
+        "discussion_points":   alignment_lists["discussion_points"],
+        "mediation_questions": alignment_lists["mediation_questions"],
         "alignment_labels": ALIGNMENT_LABELS,
     }

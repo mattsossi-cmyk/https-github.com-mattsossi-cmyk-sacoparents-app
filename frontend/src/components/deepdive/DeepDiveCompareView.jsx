@@ -7,7 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import AppShell from "../AppShell";
 import { api } from "../../lib/api";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles, TrendingUp, Star, MessageCircle, HelpCircle } from "lucide-react";
 import { logError } from "../../lib/logger";
 import AlignmentMilestoneCelebration from "./AlignmentMilestoneCelebration";
 
@@ -64,6 +64,34 @@ function MultiBreakdown({ item, parentA, parentB }) {
       )}
       {(item.only_parent_b || []).length > 0 && (
         <div><span className="font-semibold text-[#8C5A2C]">Only {parentB}:</span> {(item.only_parent_b || []).join(", ")}</div>
+      )}
+    </div>
+  );
+}
+
+function AlignmentList({ testid, title, icon, tint, intro, emptyLabel, items, renderRow }) {
+  const count = items?.length || 0;
+  return (
+    <div className={`rounded-3xl border-2 ${tint.border} ${tint.bg} p-5 shadow-sm`} data-testid={testid}>
+      <div className={`text-[10px] uppercase tracking-[0.22em] font-bold ${tint.text} flex items-center gap-2`}>
+        {icon} {title}
+        <span className="ml-auto text-[10px] font-normal opacity-70" data-testid={`${testid}-count`}>{count}</span>
+      </div>
+      <p className="text-xs text-[#4B4567] italic mt-1 mb-3">{intro}</p>
+      {count === 0 ? (
+        <div className="text-xs text-[#857E9C] italic" data-testid={`${testid}-empty`}>{emptyLabel}</div>
+      ) : (
+        <ol className="space-y-2.5" data-testid={`${testid}-list`}>
+          {items.map((r) => (
+            <li
+              key={`${r.section_id}-${r.item_id}`}
+              className="bg-white rounded-xl border border-[#EEE9F7] p-3"
+              data-testid={`${testid}-item-${r.section_id}-${r.item_id}`}
+            >
+              {renderRow(r)}
+            </li>
+          ))}
+        </ol>
       )}
     </div>
   );
@@ -240,6 +268,61 @@ export default function DeepDiveCompareView({ pathway }) {
                     );
                   })}
                 </ol>
+              </section>
+            )}
+
+            {/* Mediation-ready alignment lists (Shared Priorities / Discussion / Questions) */}
+            {(data.comparison.shared_priorities?.length
+              || data.comparison.discussion_points?.length
+              || data.comparison.mediation_questions?.length) > 0 && (
+              <section className="mt-6 grid gap-4 lg:grid-cols-3" data-testid={`${t}-alignment-lists`}>
+                <AlignmentList
+                  testid={`${t}-shared-priorities`}
+                  title="Shared Priorities"
+                  icon={<Star size={14} />}
+                  tint={{ bg: "bg-[#F1F9F4]", border: "border-[#B5DFC5]", text: "text-[#1F5C3B]" }}
+                  emptyLabel="No clear shared priorities yet — a great next step is answering more likert items."
+                  intro="What you both already flagged as important."
+                  items={data.comparison.shared_priorities || []}
+                  renderRow={(r) => (
+                    <>
+                      <div className="text-[10px] uppercase tracking-[0.14em] text-[#4B4567]">Section {r.section_number} · {r.section_name}</div>
+                      <div className="text-sm text-[#1A1330] font-semibold mt-0.5">{r.prompt}</div>
+                      <div className="text-xs text-[#1F5C3B] mt-1">{r.reason}</div>
+                    </>
+                  )}
+                />
+                <AlignmentList
+                  testid={`${t}-discussion-points`}
+                  title="Points for Discussion"
+                  icon={<MessageCircle size={14} />}
+                  tint={{ bg: "bg-[#F5F1FB]", border: "border-[#D6CFE8]", text: "text-[#3D1A78]" }}
+                  emptyLabel="No partial-alignment items — either you're perfectly synced or clearly on different pages."
+                  intro="Close-but-not-identical items to sync on."
+                  items={data.comparison.discussion_points || []}
+                  renderRow={(r) => (
+                    <>
+                      <div className="text-[10px] uppercase tracking-[0.14em] text-[#4B4567]">Section {r.section_number} · {r.section_name}</div>
+                      <div className="text-sm text-[#1A1330] font-semibold mt-0.5">{r.prompt}</div>
+                      <div className="text-xs text-[#3D1A78] mt-1">{r.reason}</div>
+                    </>
+                  )}
+                />
+                <AlignmentList
+                  testid={`${t}-mediation-questions`}
+                  title="Questions for Mediation"
+                  icon={<HelpCircle size={14} />}
+                  tint={{ bg: "bg-[#FBEDDA]", border: "border-[#EDD5B0]", text: "text-[#8C5A2C]" }}
+                  emptyLabel="No divergent items to escalate — nothing needs a mediator's help right now."
+                  intro="Divergent items, neutralized as questions."
+                  items={data.comparison.mediation_questions || []}
+                  renderRow={(r) => (
+                    <>
+                      <div className="text-[10px] uppercase tracking-[0.14em] text-[#4B4567]">Section {r.section_number} · {r.section_name}</div>
+                      <div className="text-sm text-[#1A1330] mt-0.5 italic">"{r.question}"</div>
+                    </>
+                  )}
+                />
               </section>
             )}
 

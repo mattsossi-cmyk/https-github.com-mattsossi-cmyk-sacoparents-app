@@ -1,0 +1,31 @@
+{
+  "summary": "Iteration 48 — Educational Assessment Alignment Report. Verified (1) the new `_extract_alignment_lists` helper produces shared_priorities / discussion_points / mediation_questions correctly across all 8 review cases (a-h), (2) `build_comparison_from_spec` surfaces the three new lists in its return dict, (3) the three lists appear in the live /api/{prefix}/compare/{share_id} payload for all pathways (edu/psych/med) with the 8-item cap honored, (4) Educational PDF filename now starts with `Educational_Assessment_Alignment_Report_...pdf` while psych PDFs stay on `PsychDeep_Comparison_...pdf` and med PDFs stay on `MedDeep_Comparison_...pdf`. Frontend verified end-to-end: (a) Educational Compare hub eyebrow reads 'Educational Assessment Alignment Report', (b) Educational Report page entry link [data-testid=edu-deep-report-open-compare] reads 'Compare Our Educational Priorities', (c) Educational Compare view eyebrow renders as EDUCATIONAL ASSESSMENT ALIGNMENT REPORT, (d) the [prefix]-alignment-lists 3-column grid renders on BOTH edu and psych compare views with shared-priorities (count=8, list state), discussion-points (count=0, empty state), and mediation-questions (count=1, list state), each with count/list/empty testids per spec, (e) psych + med hubs contain no educational-rename leak, (f) 'Where you already agree · 5 things you already agree on' regression strip still renders, (g) milestone celebration banner ('You've reached 9-in-10 alignment') still renders. 16/16 iter48 backend tests pass. Regression: iter42+43+44+45+46+47 → 76 passed, 1 pre-existing skip (matches iter47 baseline).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter48_features.py",
+    "/app/test_reports/pytest/iter48_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "`_extract_alignment_lists` caps each list at 8 with a naive slice — items are appended in section order, so if there are >8 shared items in section 1 the report never surfaces anything from later sections. A small tie-breaker (e.g. reuse `_highlight_score` weighting or interleave by section) would give more balanced coverage as the assessments grow. Not blocking.",
+    "The mediation questions for text-type items are silently dropped (`else: continue`). Text divergence rarely triggers because `_compare_text` never returns 'divergent' — but the guard should still fall through explicitly rather than continue mid-loop, which would skip subsequent handling if more branches were added later.",
+    "`_row` copies `alignment` from item, but for shared_priorities coming from likert-both-≥4 the `alignment` will be 'aligned' or 'close' depending on gap; frontend consumers should not rely on alignment inside shared_priorities rows to decide styling.",
+    "The Educational rename is duplicated across product_label/pdf_filename_stem/pdf_header_subtitle/pdf_product_title. Consider a single `pdf_branding` dict per pathway to reduce future drift.",
+    "Frontend `DeepDiveCompareView.jsx`: the 3-column grid uses `lg:grid-cols-3` — on tablet it collapses to a single column which pushes the Mediation Questions card far below the fold; a `md:grid-cols-2` intermediate would help. Cosmetic only."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter48_features.py",
+    "/app/test_reports/iteration_48.json"
+  ],
+  "success_rate": {
+    "backend": "100% (16/16 iter48 + 76/77 iter42-47 regression, 1 pre-existing skip)",
+    "frontend": "100% (edu rename, three lists render on edu+psych, psych/med hubs unchanged, regression strips + milestone banner still render)"
+  },
+  "test_credentials": "parent1@test.com / TestPass123!, parent2@test.com / TestPass123!",
+  "seed_data_creation": "Unit tests build sections in-memory. API tests use `_fresh_consented_share` (identical answers via /api/{prefix}/answers/bulk + /complete → /compare/link → partner consent) for each of edu-deep/psych-deep/med-deep, then revoke at end. Module-scoped autouse fixture revokes any lingering shares and wipes deep_dive_compare_snapshots rows tied to remaining share_ids both before and after the module runs. Frontend verification also seeded one edu share (identical answers → many shared priorities + 1 mediation) and one psych share (all likert gap=2 → discussion points) via /tmp/seed_share.py.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter48 verified end-to-end. To reproduce the compare view seeds: use /tmp/seed_share.py style — bulk answers + complete for both parents, /compare/link + partner consent, then hit /special-needs-v2/educational-deep-dive/compare/{share_id}. Alignment-lists grid testid is `${prefix}-alignment-lists` (edu-deep-compare / psych-deep-compare / med-deep-compare); card testids are `${prefix}-shared-priorities`, `${prefix}-discussion-points`, `${prefix}-mediation-questions` with `-count`, `-list`, `-empty`, and `-item-{section_id}-{item_id}` child testids. Note: DeepDiveCompareView eyebrow uses CSS `uppercase`, so page.evaluate innerText returns the ALL-CAPS variant; use case-insensitive matching if asserting.",
+  "rca of the issue": "N/A — no issues found."
+}

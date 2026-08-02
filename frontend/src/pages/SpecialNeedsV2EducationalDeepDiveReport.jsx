@@ -124,7 +124,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           <div className="flex gap-2">
             <Link to="/special-needs-v2/educational-deep-dive/compare" data-testid="edu-deep-report-open-compare"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#1F5C3B] text-white hover:brightness-110">
-              <Users size={13} /> Compare with co-parent
+              <Users size={13} /> Compare Our Educational Priorities
             </Link>
             <button onClick={download} disabled={busy} data-testid="edu-deep-report-download"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">

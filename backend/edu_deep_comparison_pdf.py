@@ -175,6 +175,40 @@ def build_comparison_pdf(*, comparison: Dict[str, Any], safety_notice: str,
             pdf.multi_cell(pdf.epw, 4.5, _safe(h.get("summary") or ""))
             pdf.ln(1.5)
 
+    def _mediation_list(title: str, rows: List[Dict[str, Any]], color: tuple,
+                        intro: str, render_extra=None):
+        if not rows:
+            return
+        pdf.ln(2)
+        pdf.h2(title)
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(110, 100, 130)
+        pdf.multi_cell(pdf.epw, 4.5, _safe(intro))
+        pdf.ln(1)
+        for r in rows:
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_text_color(*color)
+            pdf.multi_cell(pdf.epw, 4.5, _safe(f"Section {r.get('section_number')}. {r.get('section_name', '')}"))
+            pdf.set_font("Helvetica", "", 9.5)
+            pdf.set_text_color(30, 24, 54)
+            pdf.multi_cell(pdf.epw, 4.5, _safe(r.get("prompt") or r.get("question") or ""))
+            if render_extra:
+                render_extra(r)
+            pdf.ln(1)
+
+    _mediation_list("Shared Priorities", comparison.get("shared_priorities") or [], (31, 92, 59),
+                    "What both parents already flagged as important.",
+                    render_extra=lambda r: (pdf.set_font("Helvetica", "I", 8.5),
+                                            pdf.set_text_color(31, 92, 59),
+                                            pdf.multi_cell(pdf.epw, 4, _safe(r.get("reason") or ""))))
+    _mediation_list("Points for Discussion", comparison.get("discussion_points") or [], (61, 26, 120),
+                    "Close-but-not-identical items to sync on together.",
+                    render_extra=lambda r: (pdf.set_font("Helvetica", "I", 8.5),
+                                            pdf.set_text_color(61, 26, 120),
+                                            pdf.multi_cell(pdf.epw, 4, _safe(r.get("reason") or ""))))
+    _mediation_list("Questions for Mediation", comparison.get("mediation_questions") or [], (140, 90, 44),
+                    "Divergent items, neutralized as questions. Neither parent is labelled right or wrong.")
+
     for sec in comparison.get("sections") or []:
         pdf.ln(2)
         pdf.h2(f"Section {sec.get('number')}. {sec.get('name', '')}")
