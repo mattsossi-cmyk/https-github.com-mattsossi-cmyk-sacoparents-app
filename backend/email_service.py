@@ -15,7 +15,7 @@ import base64
 import html as _html
 import logging
 import os
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import resend
 
@@ -1063,8 +1063,19 @@ def send_weekly_progress_summary(
     alignment_pct: Optional[int],
     dashboard_url: str,
     personal_note: Optional[str] = None,
+    cheers_received: Optional[List[Dict[str, Any]]] = None,
+    community_pulse: Optional[List[Dict[str, Any]]] = None,
+    wall_opted_in: bool = False,
 ) -> None:
-    """Sunday-friendly momentum email. Neutral, encouraging, single CTA."""
+    """Sunday-friendly momentum email. Neutral, encouraging, single CTA.
+
+    ``cheers_received`` / ``community_pulse`` come from
+    ``wall_utils.build_weekly_cheer_digest`` and render an optional
+    "Community cheers" block below the milestones list. Cheerer identity
+    is never exposed — counts + anonymised badge labels only. If both
+    lists are empty (or the parent isn't opted-in AND the community has
+    no cheer activity yet) the block is silently skipped.
+    """
     hello = (user_name or "").strip() or "there"
     note = (personal_note or "").strip()
     lit = ", ".join(milestones_this_week) if milestones_this_week else ""
@@ -1083,6 +1094,33 @@ def send_weekly_progress_summary(
         if isinstance(alignment_pct, int)
         else ""
     )
+
+    # ------------------------------------------------------------------
+    # Cheer digest — plain-text lines
+    # ------------------------------------------------------------------
+    cheers_received = cheers_received or []
+    community_pulse = community_pulse or []
+    total_cheers_received = sum(int(r.get("cheer_count") or 0) for r in cheers_received)
+    cheer_lines_plain: List[str] = []
+    if cheers_received:
+        cheer_lines_plain.append(
+            f"Community cheers on your milestones this week: {total_cheers_received}"
+        )
+        for r in cheers_received:
+            n = int(r.get("cheer_count") or 0)
+            lbl = str(r.get("badge_label") or r.get("badge_type") or "").rstrip(".")
+            cheer_lines_plain.append(
+                f"  \u2665 {n} cheer{'s' if n != 1 else ''} on: {lbl}"
+            )
+    if community_pulse:
+        top = community_pulse[0]
+        n = int(top.get("cheer_count") or 0)
+        lbl = str(top.get("badge_label") or top.get("badge_type") or "").rstrip(".")
+        cheer_lines_plain.append(
+            f"Most-cheered community moment this week: {lbl} ({n} cheers)."
+        )
+    cheer_block_plain = ("\n" + "\n".join(cheer_lines_plain) + "\n") if cheer_lines_plain else ""
+
     plain = (
         f"Hi {hello},\n\n"
         f"Your Sunday snapshot from SA CoParents.\n\n"
@@ -1090,7 +1128,8 @@ def send_weekly_progress_summary(
         + f"Progress: {completed_count} of {total} milestones lit.\n"
         f"{week_line}\n"
         f"{streak_line}\n"
-        f"{align_line}\n\n"
+        f"{align_line}\n"
+        f"{cheer_block_plain}\n"
         f"Open your dashboard: {dashboard_url}\n\n"
         "\u2014 SA CoParents \u00b7 sacoparentsapp.online\n"
     )
@@ -1121,6 +1160,51 @@ def send_weekly_progress_summary(
             '</div>'
             '</div>'
         )
+
+    # ------------------------------------------------------------------
+    # Cheer digest — HTML block
+    # ------------------------------------------------------------------
+    cheer_block_html = ""
+    if cheers_received or community_pulse:
+        rows_html_parts: List[str] = []
+        if cheers_received:
+            rows_html_parts.append(
+                '<div style="font-size:13px;color:#4B4567;margin:0 0 8px 0;">'
+                f'<strong>{total_cheers_received} cheer{"s" if total_cheers_received != 1 else ""}</strong> '
+                'landed on your milestones this week from other parents on the wall.'
+                '</div>'
+            )
+            for r in cheers_received[:5]:
+                n = int(r.get("cheer_count") or 0)
+                lbl = _html.escape(str(r.get("badge_label") or "").rstrip("."))
+                rows_html_parts.append(
+                    '<div style="font-size:13px;color:#1A1330;margin:0 0 4px 0;">'
+                    f'<span style="color:#B8125A;">&hearts;</span> '
+                    f'<strong>{n}</strong> on: <em style="color:#4B4567;font-style:normal;">{lbl}</em>'
+                    '</div>'
+                )
+        if community_pulse:
+            top = community_pulse[0]
+            n = int(top.get("cheer_count") or 0)
+            lbl = _html.escape(str(top.get("badge_label") or "").rstrip("."))
+            rows_html_parts.append(
+                '<div style="font-size:12px;color:#4B4567;margin:10px 0 0 0;'
+                'padding-top:10px;border-top:1px dashed #D6CFE8;">'
+                'Most-cheered community moment this week: '
+                f'<em style="color:#3D1A78;font-style:normal;">{lbl}</em> '
+                f'\u00b7 <strong>{n} cheers</strong>.'
+                '</div>'
+            )
+        header_label = "Community cheers" if wall_opted_in else "From the community"
+        cheer_block_html = (
+            '<div style="margin:0 0 18px 0;padding:14px 16px;border-radius:14px;'
+            'border:1px solid #F4D0DE;background:#FEF5F8;">'
+            '<div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;'
+            f'color:#B8125A;font-weight:700;margin:0 0 6px 0;">{header_label}</div>'
+            + "".join(rows_html_parts)
+            + '</div>'
+        )
+
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
         f"Hi <strong>{hello}</strong>, your Sunday snapshot from SA CoParents.</p>"
@@ -1137,6 +1221,7 @@ def send_weekly_progress_summary(
         '</div>'
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 8px 0;">{week_line}</p>'
         f"{milestone_html}"
+        f"{cheer_block_html}"
         '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 18px 0;">'
         "Small, steady work is what mediators love to see.</p>"
     )

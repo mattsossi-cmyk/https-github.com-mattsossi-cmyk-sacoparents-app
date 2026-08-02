@@ -1,6 +1,16 @@
 # SA CoParents — PRD
 
 ## Status snapshot (2026-07-30 · v2 shipped)
+
+- **Iteration 66b — Wall Cheer Digest (2026-02-02)**:
+  - Added an anonymised community cheer block to the existing Sunday weekly email (kept as one email per week — no new outbound). Two data streams:
+    * `cheers_received` — for opted-in parents only. Counts hearts landed on their own badges in the last 30 days that got cheered *this week*. Cheerer identity is NEVER exposed.
+    * `community_pulse` — up to three most-cheered anonymous badges earned by *other* parents this week. Shown to opted-in AND opted-out parents so opted-out folks still feel the momentum.
+  - Backend: new `wall_utils.build_weekly_cheer_digest(db, user_id, week_start)` returns `{opted_in, cheers_received, community_pulse, week_start}`. `_build_weekly_email_context` merges the digest into the preview + send payloads (`wall_opted_in`, `cheers_received`, `cheers_received_total`, `community_pulse`). `send_weekly_progress_summary` in `email_service.py` renders a pink "Community cheers" / "From the community" card in both HTML and plain-text — silently omitted when both lists are empty.
+  - Frontend: `WeeklyEmailPreview.jsx` renders the same block below the milestones list. Header switches to "From the community" for opted-out users. Test IDs: `weekly-email-preview-cheers`, `weekly-email-preview-cheers-received`, `weekly-email-preview-community-pulse`.
+  - Regression: `test_iter66_cheer_digest.py` — 11 new tests (5 helper-unit, 2 preview-endpoint, 1 send-endpoint, 3 email-service render). All pass; 50/50 pass across iter54/55/56/57/66 + wall_utils_regression combined.
+
+
 - **Iteration 66 — Code Quality Report fixes (2026-02-02)**:
   - Resolved the circular import between `wall_routes.py` ↔ `progress_dashboard_routes.py`. Extracted anon hashing, log-event-once machinery, `BADGE_LABELS` constants, and the five `maybe_log_*` helpers into a new `wall_utils.py`. `wall_routes` now imports from `wall_utils` and lazy-imports `compute_progress` inside the `/wall/opt-in` endpoint only. `progress_dashboard_routes` and `deep_dive_compare_router_factory` import from `wall_utils` at load time. `wall_routes.__all__` re-exports the helpers for backwards compat.
   - Frontend: removed 9 dead `eslint-disable-next-line react-hooks/exhaustive-deps` / `no-console` directives across `Summary.jsx`, `Reflection.jsx`, `ReadinessCheck.jsx`, `InviteCoparentCard.jsx`, `AdminInsights.jsx`, `PriorityRanking.jsx`, `VerifyEmail.jsx`, `index.js`, `lib/logger.js`. Filled the one empty `catch {}` in `AlignmentMilestoneCelebration.jsx` with an explanatory comment.

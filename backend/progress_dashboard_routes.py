@@ -26,6 +26,7 @@ from pydantic import BaseModel
 from auth import UserPublic, get_current_user, get_db
 from wall_utils import (
     BADGE_LABELS,
+    build_weekly_cheer_digest,
     maybe_log_communication_master,
     maybe_log_foundation_ready,
     maybe_log_week_streak,
@@ -390,6 +391,16 @@ async def _build_weekly_email_context(db: AsyncIOMotorDatabase,
         milestones_this_week = []
     frontend_origin = os.environ.get("FRONTEND_ORIGIN") or "https://sacoparentsapp.online"
     note_doc = await _fetch_weekly_note(db, user.user_id, _iso_week_key(now))
+    # Community cheer digest — anonymised hearts landed on this parent's
+    # badges plus the community's top-cheered moments this week.
+    try:
+        cheer_digest = await build_weekly_cheer_digest(db, user.user_id, week_start)
+    except Exception:  # noqa: BLE001
+        cheer_digest = {"opted_in": False, "cheers_received": [],
+                        "community_pulse": [], "week_start": week_start.isoformat()}
+    total_cheers_received = sum(
+        int(r.get("cheer_count") or 0) for r in cheer_digest["cheers_received"]
+    )
     return {
         "user_name": user.name,
         "user_email": user.email,
@@ -401,6 +412,10 @@ async def _build_weekly_email_context(db: AsyncIOMotorDatabase,
         "dashboard_url": f"{frontend_origin.rstrip('/')}/dashboard",
         "personal_note": note_doc["note"],
         "personal_note_updated_at": note_doc["updated_at"],
+        "wall_opted_in":       cheer_digest["opted_in"],
+        "cheers_received":     cheer_digest["cheers_received"],
+        "cheers_received_total": int(total_cheers_received),
+        "community_pulse":     cheer_digest["community_pulse"],
     }
 
 
@@ -459,6 +474,9 @@ async def send_weekly_email(body: WeeklyEmailIn = WeeklyEmailIn(),
             alignment_pct=ctx["alignment_pct"],
             dashboard_url=ctx["dashboard_url"],
             personal_note=ctx.get("personal_note") or "",
+            cheers_received=ctx.get("cheers_received") or [],
+            community_pulse=ctx.get("community_pulse") or [],
+            wall_opted_in=bool(ctx.get("wall_opted_in")),
         )
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=503,
@@ -490,6 +508,8 @@ async def send_weekly_email(body: WeeklyEmailIn = WeeklyEmailIn(),
         "milestones_this_week": ctx["milestones_this_week"],
         "streak_days": ctx["streak_days"],
         "personal_note_included": bool((ctx.get("personal_note") or "").strip()),
+        "cheers_received_total": int(ctx.get("cheers_received_total") or 0),
+        "community_pulse_count": len(ctx.get("community_pulse") or []),
     }
 
 

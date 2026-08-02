@@ -182,3 +182,98 @@ async def maybe_log_week_streak(db: AsyncIOMotorDatabase, user_id: str,
         await log_event_once(db, user_id, BADGE_WEEK_STREAK_7)
     except Exception:  # noqa: BLE001
         pass
+
+
+async def build_weekly_cheer_digest(db: AsyncIOMotorDatabase, user_id: str,
+                                    week_start: datetime,
+                                    ) -> Dict[str, Any]:
+    """Build the 'community cheers' block for a parent's Sunday weekly
+    email. Returns two lists:
+
+    * ``cheers_received`` — one row per badge the parent has earned in
+      the last 30 days, with the count of cheers landed on that badge
+      SINCE ``week_start``. Only badges that got at least one cheer this
+      week appear. Cheerer identity is NEVER included (respects the
+      wall anonymity model).
+    * ``community_pulse`` — up to three most-cheered PUBLIC badges
+      earned by ANY parent this week (anonymised). Included even if the
+      parent isn't opted-in themselves, so opted-out parents still feel
+      the community momentum.
+
+    Also returns ``opted_in`` so the email/preview can label the block
+    correctly (private users see only community_pulse).
+    """
+    opted_in = await get_opt_in(db, user_id)
+    week_start_iso = week_start.isoformat()
+    thirty_days_ago = (week_start - timedelta(days=23)).isoformat()
+
+    cheers_received: List[Dict[str, Any]] = []
+    if opted_in:
+        events_cursor = db[EVENTS_COLLECTION].find(
+            {"user_id": user_id, "created_at": {"$gte": thirty_days_ago}},
+            {"_id": 0, "event_id": 1, "badge_type": 1, "created_at": 1},
+        )
+        my_events = [row async for row in events_cursor]
+        if my_events:
+            event_ids = [e["event_id"] for e in my_events]
+            pipeline = [
+                {"$match": {
+                    "event_id": {"$in": event_ids},
+                    "created_at": {"$gte": week_start_iso},
+                }},
+                {"$group": {"_id": "$event_id", "n": {"$sum": 1}}},
+            ]
+            counts: Dict[str, int] = {}
+            async for row in db[CHEERS_COLLECTION].aggregate(pipeline):
+                counts[row["_id"]] = int(row["n"])
+            for ev in my_events:
+                n = counts.get(ev["event_id"], 0)
+                if n <= 0:
+                    continue
+                cheers_received.append({
+                    "badge_type":  ev["badge_type"],
+                    "badge_label": BADGE_LABELS.get(ev["badge_type"], ev["badge_type"]),
+                    "cheer_count": n,
+                    "earned_at":   ev["created_at"],
+                })
+            cheers_received.sort(key=lambda r: (-r["cheer_count"], r["earned_at"]))
+
+    community_pulse: List[Dict[str, Any]] = []
+    pulse_pipeline = [
+        {"$match": {"created_at": {"$gte": week_start_iso}}},
+        {"$group": {"_id": "$event_id", "n": {"$sum": 1}}},
+        {"$sort": {"n": -1}},
+        {"$limit": 8},  # narrow, then join in Python for viewer_id filter
+    ]
+    top_rows = [row async for row in db[CHEERS_COLLECTION].aggregate(pulse_pipeline)]
+    if top_rows:
+        top_event_ids = [r["_id"] for r in top_rows]
+        counts_by_id = {r["_id"]: int(r["n"]) for r in top_rows}
+        # Drop events that belong to the viewer — no point telling them
+        # "someone cheered your own badge" twice; we already handled that
+        # in cheers_received.
+        events_cursor = db[EVENTS_COLLECTION].find(
+            {"event_id": {"$in": top_event_ids}},
+            {"_id": 0, "event_id": 1, "badge_type": 1, "user_id": 1, "user_hash": 1},
+        )
+        found = 0
+        async for ev in events_cursor:
+            if ev.get("user_id") == user_id:
+                continue
+            community_pulse.append({
+                "badge_type":  ev["badge_type"],
+                "badge_label": BADGE_LABELS.get(ev["badge_type"], ev["badge_type"]),
+                "cheer_count": counts_by_id.get(ev["event_id"], 0),
+                "user_hash":   ev["user_hash"],
+            })
+            found += 1
+            if found >= 3:
+                break
+        community_pulse.sort(key=lambda r: -r["cheer_count"])
+
+    return {
+        "opted_in":         bool(opted_in),
+        "cheers_received":  cheers_received,
+        "community_pulse":  community_pulse,
+        "week_start":       week_start.isoformat(),
+    }

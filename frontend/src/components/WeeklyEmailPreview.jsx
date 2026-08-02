@@ -319,6 +319,64 @@ export default function WeeklyEmailPreview() {
             </div>
           )}
 
+          {/* Community cheer digest (anonymised) */}
+          {((p.cheers_received?.length || 0) > 0 ||
+            (p.community_pulse?.length || 0) > 0) && (
+            <div
+              className="mt-4 rounded-xl border border-[#F4D0DE] bg-[#FEF5F8] px-3.5 py-3"
+              data-testid="weekly-email-preview-cheers"
+            >
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[#B8125A] font-bold">
+                {p.wall_opted_in ? "Community cheers" : "From the community"}
+              </div>
+              {p.cheers_received?.length > 0 && (
+                <>
+                  <div className="mt-1.5 text-[13px] text-[#4B4567]">
+                    <strong className="text-[#1A1330]">
+                      {p.cheers_received_total ?? 0} cheer
+                      {(p.cheers_received_total ?? 0) === 1 ? "" : "s"}
+                    </strong>{" "}
+                    landed on your milestones this week.
+                  </div>
+                  <ul
+                    className="mt-2 space-y-1"
+                    data-testid="weekly-email-preview-cheers-received"
+                  >
+                    {p.cheers_received.slice(0, 5).map((r) => (
+                      <li
+                        key={`${r.badge_type}-${r.earned_at}`}
+                        className="text-[13px] text-[#1A1330] flex items-baseline gap-1.5"
+                      >
+                        <span className="text-[#B8125A]">♥</span>
+                        <span>
+                          <strong>{r.cheer_count}</strong> on:{" "}
+                          <em className="not-italic text-[#4B4567]">
+                            {String(r.badge_label || "").replace(/\.$/, "")}
+                          </em>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {p.community_pulse?.length > 0 && (
+                <div
+                  className={`text-[12px] text-[#4B4567] ${p.cheers_received?.length ? "mt-2.5 pt-2.5 border-t border-dashed border-[#D6CFE8]" : "mt-1.5"}`}
+                  data-testid="weekly-email-preview-community-pulse"
+                >
+                  Most-cheered community moment this week:{" "}
+                  <em className="not-italic text-[#3D1A78]">
+                    {String(p.community_pulse[0].badge_label || "").replace(
+                      /\.$/,
+                      "",
+                    )}
+                  </em>{" "}
+                  · <strong>{p.community_pulse[0].cheer_count} cheers</strong>.
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="mt-4 text-[11px] text-[#857E9C] italic">
             Small, steady work is what mediators love to see.
           </div>
