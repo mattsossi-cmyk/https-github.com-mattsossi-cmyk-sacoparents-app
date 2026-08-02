@@ -15,6 +15,7 @@ Pills:
 """
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends
@@ -35,6 +36,8 @@ _DEEP_DIVE_ASSESSMENTS = ("edu_deep_assessments", "psych_deep_assessments",
 _DEEP_DIVE_SHARES = ("edu_deep_shares", "psych_deep_shares", "med_deep_shares")
 
 _ALIGNMENT_THRESHOLD = 60
+_HISTORY_COLLECTION = "progress_daily_history"
+_HISTORY_DAYS = 30
 
 
 async def _has_completed_safety(db: AsyncIOMotorDatabase, user_id: str) -> bool:
@@ -96,10 +99,11 @@ async def _latest_alignment_pct(db: AsyncIOMotorDatabase, user_id: str) -> Dict[
     return {"aligned_pct": pct, "pathway": share_id_to_pathway.get(snap.get("share_id"))}
 
 
-@router.get("/progress")
-async def get_progress(user: UserPublic = Depends(get_current_user),
-                       db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
-    """Return the five progress pills for the /dashboard visual."""
+async def compute_progress(db: AsyncIOMotorDatabase, user: UserPublic) -> Dict[str, Any]:
+    """Compute the five progress pills for a single user. Pure — no DB
+    writes — so it can be reused by /progress AND certificate rendering.
+
+    Return payload matches the /progress endpoint (minus history)."""
     prep = await db["prep_data"].find_one({"user_id": user.user_id}, {"_id": 0}) or {}
 
     has_safety = await _has_completed_safety(db, user.user_id)
@@ -172,11 +176,89 @@ async def get_progress(user: UserPublic = Depends(get_current_user),
         },
     ]
     completed_count = sum(1 for p in pills if p["done"])
+    total = len(pills)
     return {
         "pills": pills,
         "completed_count": completed_count,
-        "total": len(pills),
+        "total": total,
+        "foundation_ready": completed_count == total,
         "alignment_pct": alignment["aligned_pct"],
         "alignment_pathway": alignment["pathway"],
         "alignment_threshold": _ALIGNMENT_THRESHOLD,
     }
+
+
+async def _upsert_today_history(db: AsyncIOMotorDatabase, user_id: str,
+                                completed_count: int, total: int) -> None:
+    """Persist today's completed_count so we can render a sparkline of
+    momentum over time. Idempotent — one row per user per UTC date, updated
+    whenever the user hits the /progress endpoint."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    await db[_HISTORY_COLLECTION].update_one(
+        {"user_id": user_id, "date": today},
+        {"$set": {
+            "user_id": user_id,
+            "date": today,
+            "completed_count": int(completed_count),
+            "total": int(total),
+            "ready": completed_count == total,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }},
+        upsert=True,
+    )
+
+
+async def _read_history_series(db: AsyncIOMotorDatabase, user_id: str,
+                               days: int = _HISTORY_DAYS) -> List[Dict[str, Any]]:
+    """Return the last `days` days of history as a dense list — one entry
+    per date from (today - days + 1) to today. Missing days are backfilled
+    with the last known value so the sparkline stays continuous."""
+    end = datetime.now(timezone.utc).date()
+    start = end - timedelta(days=days - 1)
+    cursor = db[_HISTORY_COLLECTION].find(
+        {"user_id": user_id,
+         "date": {"$gte": start.strftime("%Y-%m-%d"),
+                  "$lte": end.strftime("%Y-%m-%d")}},
+        {"_id": 0, "date": 1, "completed_count": 1, "total": 1, "ready": 1},
+    ).sort("date", 1)
+    by_date = {row["date"]: row async for row in cursor}
+    series: List[Dict[str, Any]] = []
+    last_done = 0
+    last_total = 5
+    for i in range(days):
+        d = (start + timedelta(days=i)).strftime("%Y-%m-%d")
+        row = by_date.get(d)
+        if row:
+            last_done = int(row.get("completed_count") or 0)
+            last_total = int(row.get("total") or 5)
+        series.append({
+            "date": d,
+            "done": last_done,
+            "total": last_total,
+            "ready": last_done == last_total and last_total > 0,
+        })
+    return series
+
+
+@router.get("/progress")
+async def get_progress(user: UserPublic = Depends(get_current_user),
+                       db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    """Return the five progress pills for the /dashboard visual, plus a
+    30-day sparkline of momentum. Upserts today's snapshot as a side effect
+    so the history stays fresh without a separate cron job."""
+    body = await compute_progress(db, user)
+    # Persist today's snapshot for the sparkline. Fire-and-forget for
+    # resilience: a Mongo hiccup on the history collection must never
+    # break the dashboard.
+    try:
+        await _upsert_today_history(db, user.user_id,
+                                    body["completed_count"], body["total"])
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        history = await _read_history_series(db, user.user_id, days=_HISTORY_DAYS)
+    except Exception:  # noqa: BLE001
+        history = []
+    body["history"] = history
+    body["history_days"] = _HISTORY_DAYS
+    return body

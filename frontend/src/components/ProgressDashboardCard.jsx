@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import { CheckCircle2, Circle, Loader2, Sparkles } from "lucide-react";
 import { logError } from "../lib/logger";
 import FoundationReadyCelebration, { FoundationReadyBadge } from "./FoundationReadyCelebration";
+import ProgressSparkline from "./ProgressSparkline";
 
 /**
  * ProgressDashboardCard — five ✓ pills showing the parent's real progress
@@ -64,9 +65,10 @@ export default function ProgressDashboardCard() {
           </h2>
         </div>
         <div
-          className="text-sm font-semibold text-[#3D1A78] shrink-0 flex items-center gap-2"
+          className="text-sm font-semibold text-[#3D1A78] shrink-0 flex items-center gap-2 flex-wrap justify-end"
           data-testid="dashboard-progress-count"
         >
+          <ProgressSparkline history={data.history} />
           <FoundationReadyBadge done={done} total={total} />
           {done}/{total}
         </div>

@@ -28,6 +28,7 @@ from models import (
 import ai_service
 import pdf_service
 import certificate_service
+from progress_dashboard_routes import compute_progress
 import email_service
 import journal_routes
 import report_visibility
@@ -370,11 +371,23 @@ async def preview_certificate(
 ):
     """Return the composed certificate as an inline PNG for on-screen preview."""
     display = (name or current.name or "").strip()
-    png = certificate_service.build_certificate_png(display)
+    # Foundation Ready ribbon is stamped when the parent has all 5 progress
+    # milestones lit at generation time. Best-effort — never fail the
+    # preview over a progress-lookup hiccup.
+    foundation_ready = False
+    try:
+        progress = await compute_progress(request.app.state.db, current)
+        foundation_ready = bool(progress.get("foundation_ready"))
+    except Exception:  # noqa: BLE001
+        pass
+    png = certificate_service.build_certificate_png(
+        display, foundation_ready=foundation_ready,
+    )
     return StreamingResponse(
         BytesIO(png),
         media_type="image/png",
-        headers={"Cache-Control": "no-store"},
+        headers={"Cache-Control": "no-store",
+                 "X-Foundation-Ready": "1" if foundation_ready else "0"},
     )
 
 
@@ -390,7 +403,15 @@ async def download_certificate(
     display = (body.name or current.name or "").strip()
     if not display:
         display = "Committed Co-Parent"
-    pdf_bytes = certificate_service.build_certificate_pdf(display)
+    foundation_ready = False
+    try:
+        progress = await compute_progress(request.app.state.db, current)
+        foundation_ready = bool(progress.get("foundation_ready"))
+    except Exception:  # noqa: BLE001
+        pass
+    pdf_bytes = certificate_service.build_certificate_pdf(
+        display, foundation_ready=foundation_ready,
+    )
 
     # Best-effort audit trail — never fail the download over logging.
     try:

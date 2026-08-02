@@ -59,6 +59,18 @@ _DATE_CENTER_X = 460
 _DATE_BASELINE_Y = 935
 _DATE_FONT_SIZE = 32
 
+# Foundation Ready ribbon — small gold-bordered pill in the top-right of
+# the certificate. Only rendered when the parent has all 5 progress pills
+# lit at certificate-generation time.
+_RIBBON_TEXT = "FOUNDATION READY"
+_RIBBON_FONT_SIZE = 26
+_RIBBON_PAD_X = 26
+_RIBBON_PAD_Y = 12
+_RIBBON_MARGIN = 44                  # distance from the top/right edge
+_RIBBON_FILL = (30, 60, 34)          # deep green
+_RIBBON_BORDER = (198, 156, 66)      # gold
+_RIBBON_TEXT_COLOR = (253, 245, 220) # cream text on green
+
 
 def _load_font(path: str, size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.truetype(path, size)
@@ -102,7 +114,8 @@ def _format_date(date_str: Optional[str]) -> str:
     return datetime.now(timezone.utc).strftime("%B %-d, %Y")
 
 
-def _render(name: str, date_str: Optional[str]) -> Image.Image:
+def _render(name: str, date_str: Optional[str],
+            foundation_ready: bool = False) -> Image.Image:
     if not os.path.exists(_TEMPLATE_PATH):
         raise FileNotFoundError(f"Certificate template missing at {_TEMPLATE_PATH}")
 
@@ -125,18 +138,46 @@ def _render(name: str, date_str: Optional[str]) -> Image.Image:
     date_top = _DATE_BASELINE_Y - int(_DATE_FONT_SIZE * 1.1)
     _draw_centered(draw, display_date, _DATE_CENTER_X, date_top, date_font, _NAVY)
 
+    if foundation_ready:
+        _draw_foundation_ready_ribbon(img, draw)
+
     return img
 
 
-def build_certificate_png(name: str, date_str: Optional[str] = None) -> bytes:
-    img = _render(name, date_str)
+def _draw_foundation_ready_ribbon(img: Image.Image, draw: ImageDraw.ImageDraw) -> None:
+    """Paint a small gold-bordered green pill in the top-right corner of
+    the certificate — used only when the parent has all 5 progress
+    milestones lit at generation time."""
+    font = _load_font(_SERIF_FONT, _RIBBON_FONT_SIZE)
+    text_w = draw.textlength(_RIBBON_TEXT, font=font)
+    text_h = _RIBBON_FONT_SIZE
+    box_w = int(text_w + _RIBBON_PAD_X * 2)
+    box_h = int(text_h + _RIBBON_PAD_Y * 2)
+    x1 = img.width - box_w - _RIBBON_MARGIN
+    y1 = _RIBBON_MARGIN
+    x2 = x1 + box_w
+    y2 = y1 + box_h
+    radius = box_h // 2
+    # Rounded rectangle fill + border.
+    draw.rounded_rectangle([x1, y1, x2, y2], radius=radius,
+                           fill=_RIBBON_FILL, outline=_RIBBON_BORDER, width=3)
+    # Center the text vertically inside the pill.
+    text_x = x1 + _RIBBON_PAD_X
+    text_y = y1 + (box_h - text_h) // 2 - 4  # slight optical lift
+    draw.text((text_x, text_y), _RIBBON_TEXT, font=font, fill=_RIBBON_TEXT_COLOR)
+
+
+def build_certificate_png(name: str, date_str: Optional[str] = None,
+                          foundation_ready: bool = False) -> bytes:
+    img = _render(name, date_str, foundation_ready=foundation_ready)
     buf = BytesIO()
     img.save(buf, format="PNG", optimize=True)
     return buf.getvalue()
 
 
-def build_certificate_pdf(name: str, date_str: Optional[str] = None) -> bytes:
-    img = _render(name, date_str)
+def build_certificate_pdf(name: str, date_str: Optional[str] = None,
+                          foundation_ready: bool = False) -> bytes:
+    img = _render(name, date_str, foundation_ready=foundation_ready)
     buf = BytesIO()
     # Landscape US Letter feel — save the composed image directly as PDF.
     img.save(buf, format="PDF", resolution=150.0)
