@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachStrip";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
@@ -412,6 +413,11 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           <h2 className="font-serif text-xl text-[#1A1330]">13. Final child-focused summary</h2>
           <p className="text-sm text-[#1A1330] mt-3">{report.final_summary}</p>
         </SectionCard>
+
+        <ReportSectionCoachStrip
+          apiPrefix="/med-deep"
+          testidBase="med-deep"
+        />
 
         <p className="text-[11px] text-[#4B4567] mt-8 italic">{report.disclaimer}</p>
       </div>

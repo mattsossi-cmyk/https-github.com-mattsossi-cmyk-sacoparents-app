@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { CheckCircle2, Circle, Loader2, Sparkles } from "lucide-react";
 import { logError } from "../lib/logger";
+import FoundationReadyCelebration, { FoundationReadyBadge } from "./FoundationReadyCelebration";
 
 /**
  * ProgressDashboardCard — five ✓ pills showing the parent's real progress
@@ -63,12 +64,15 @@ export default function ProgressDashboardCard() {
           </h2>
         </div>
         <div
-          className="text-sm font-semibold text-[#3D1A78] shrink-0"
+          className="text-sm font-semibold text-[#3D1A78] shrink-0 flex items-center gap-2"
           data-testid="dashboard-progress-count"
         >
+          <FoundationReadyBadge done={done} total={total} />
           {done}/{total}
         </div>
       </div>
+
+      <FoundationReadyCelebration done={done} total={total} />
 
       {/* Progress bar */}
       <div
