@@ -13,6 +13,7 @@ import MeetTheProgramCard from "../components/MeetTheProgramCard";
 import GrowthWidget from "../components/GrowthWidget";
 import ProgressDashboardCard from "../components/ProgressDashboardCard";
 import PublicMilestoneWall from "../components/PublicMilestoneWall";
+import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -362,6 +363,12 @@ export default function Dashboard() {
             this month, so first-timers feel momentum from the community. */}
         <div className="mt-6">
           <PublicMilestoneWall />
+        </div>
+
+        {/* Inline preview of the parent's upcoming Sunday email so they see
+            exactly what will land in their inbox and can force a send. */}
+        <div className="mt-6">
+          <WeeklyEmailPreview />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-10 mt-6">

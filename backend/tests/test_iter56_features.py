@@ -242,3 +242,42 @@ class TestWeeklyEmailIdempotency:
         assert r2.status_code == 200
         b2 = r2.json()
         assert b2["already_sent"] is False, "force=True must re-send"
+
+
+class TestWeeklyEmailPreviewEndpoint:
+    """Inline dashboard preview mirrors the exact payload the email uses."""
+
+    def test_preview_shape(self, p1_client):
+        r = p1_client.get(
+            f"{BASE_URL}/api/dashboard/weekly-email/preview", timeout=20,
+        )
+        assert r.status_code == 200, r.text
+        body = r.json()
+        for k in ("week_key", "sent_this_week", "sent_at",
+                  "is_sunday_utc", "weekday_utc", "preview"):
+            assert k in body, f"preview payload missing {k}"
+        p = body["preview"]
+        # The exact fields the frontend renders.
+        for k in ("user_name", "user_email", "completed_count", "total",
+                  "streak_days", "milestones_this_week", "alignment_pct",
+                  "dashboard_url"):
+            assert k in p, f"preview.{k} missing"
+        assert isinstance(p["completed_count"], int)
+        assert isinstance(p["total"], int)
+        assert isinstance(p["streak_days"], int)
+        assert isinstance(p["milestones_this_week"], list)
+        assert p["dashboard_url"].startswith("http")
+
+    def test_preview_matches_send_payload(self, p1_client):
+        """Preview + a force-send must produce the same numbers so the
+        inline card doesn't lie about what will land in the inbox."""
+        preview = p1_client.get(
+            f"{BASE_URL}/api/dashboard/weekly-email/preview", timeout=20,
+        ).json()["preview"]
+        sent = p1_client.post(
+            f"{BASE_URL}/api/dashboard/weekly-email/send",
+            json={"force": True}, timeout=60,
+        ).json()
+        assert sent["streak_days"] == preview["streak_days"]
+        # Milestones (dedup + order preserved) must match exactly.
+        assert sent["milestones_this_week"] == preview["milestones_this_week"]
