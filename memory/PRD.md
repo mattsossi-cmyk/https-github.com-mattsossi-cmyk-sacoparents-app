@@ -2,6 +2,19 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 63 — PDF "REVIEW BEFORE SHARING" Watermark (2026-02-02)**:
+  - New `pdf_watermark.py` shared helper `stamp_watermark(pdf)` that draws a subtle diagonal `REVIEW BEFORE SHARING` watermark behind every content page across every PDF the app generates. Rendered via `fpdf2.rotation(angle=30, x=cx, y=cy)` + `pdf.text()` at ~48pt in light grey (RGB 215/210/220) so body text stays fully readable on top.
+  - Wired into six FPDF subclasses' `header()`:
+    * `PrepSummaryPDF` (mediation summary) — respects the existing `_chromeless` flag so poster cover pages remain watermark-free
+    * `AgreementPDF` (neutral draft agreement)
+    * `_PDF` in `snc2_report_pdf.py` (Special Needs report)
+    * `_PDF` in `edu_deep_report.py` (Educational deep dive)
+    * `_JourneyPDF` in `journey_pdf.py` (Psychological + Medical deep dives — one wire-in serves both)
+    * `_PDF` in `snc2_comparison_pdf.py` (SNC compare)
+    * `_PDF` in `edu_deep_comparison_pdf.py` (all three deep-dive compares)
+  - Header state is snapshotted + restored (font family/style/size, XY, text color) so no downstream layout ever shifts.
+  - Regression: `test_iter63_pdf_watermark.py` — 7 watermark presence tests (one per PDF surface) + 1 sanity check that iter62's provenance footer still renders after the watermark was layered under it. Detection uses raw PDF byte-search for uncompressed streams and `/FlateDecode` decompression + substring search for compressed ones. **53/53 backend tests pass** (previous 45 + new 8). Gemini-verified visual: watermark clearly visible but subtle, correct diagonal orientation, body text fully readable, NOT rendered on poster cover pages, no rendering glitches.
+
 - **Iteration 62 — PDF Provenance (2026-02-02)**:
   - Mirrored the on-screen `ReportProvenanceFooter` inside every downloadable PDF so recipients (mediators, therapists, attorneys) see the same "How this report was built" breakdown.
   - New shared `pdf_provenance.py` with `render_provenance_footer(pdf, variant=…)` — accepts any FPDF-compatible subclass, latin-1 safe, four variants (`mediation` | `snc` | `deepdive` | `comparison`), colour-coded pills (green **RULE-BASED**, gold **GENERATIVE**), with the same explainer paragraph as the React footer.

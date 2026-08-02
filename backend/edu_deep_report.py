@@ -227,6 +227,8 @@ class _PDF(FPDF):
         self.compress = False
 
     def header(self):
+        from pdf_watermark import stamp_watermark
+        stamp_watermark(self)
         self.set_fill_color(245, 240, 232); self.rect(0, 0, self.w, 18, "F")
         if os.path.exists(LOGO_PATH):
             try: self.image(LOGO_PATH, x=11, y=3, w=12, h=12)

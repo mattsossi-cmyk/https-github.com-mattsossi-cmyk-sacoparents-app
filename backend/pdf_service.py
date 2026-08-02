@@ -109,6 +109,9 @@ class PrepSummaryPDF(FPDF):
     def header(self):
         if self._chromeless:
             return
+        # Subtle diagonal "REVIEW BEFORE SHARING" watermark behind content.
+        from pdf_watermark import stamp_watermark
+        stamp_watermark(self)
         # Soft sand band
         self.set_fill_color(*SAND)
         self.rect(0, 0, 210, 38, "F")
@@ -328,6 +331,9 @@ class AgreementPDF(FPDF):
         return super().multi_cell(w, h, _safe(txt), *args, **kwargs)
 
     def header(self):
+        # Subtle diagonal "REVIEW BEFORE SHARING" watermark behind content.
+        from pdf_watermark import stamp_watermark
+        stamp_watermark(self)
         self.set_fill_color(*SAND)
         self.rect(0, 0, 210, 38, "F")
         if os.path.exists(LOGO_PATH):
