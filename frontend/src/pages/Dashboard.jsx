@@ -12,6 +12,7 @@ import BadgeShelf from "../components/BadgeShelf";
 import MeetTheProgramCard from "../components/MeetTheProgramCard";
 import GrowthWidget from "../components/GrowthWidget";
 import ProgressDashboardCard from "../components/ProgressDashboardCard";
+import PublicMilestoneWall from "../components/PublicMilestoneWall";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -335,6 +336,12 @@ export default function Dashboard() {
             Mediation prep, and Conflict-reduced criteria. */}
         <div className="mt-6">
           <ProgressDashboardCard />
+        </div>
+
+        {/* Opt-in community wall — anonymised badges other parents earned
+            this month, so first-timers feel momentum from the community. */}
+        <div className="mt-6">
+          <PublicMilestoneWall />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-10 mt-6">

@@ -245,7 +245,9 @@ async def get_progress(user: UserPublic = Depends(get_current_user),
                        db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     """Return the five progress pills for the /dashboard visual, plus a
     30-day sparkline of momentum. Upserts today's snapshot as a side effect
-    so the history stays fresh without a separate cron job."""
+    so the history stays fresh without a separate cron job. Also logs a
+    Public Milestone Wall event when a Foundation-Ready parent has opted
+    in — silently, no-op for anyone who hasn't opted in."""
     body = await compute_progress(db, user)
     # Persist today's snapshot for the sparkline. Fire-and-forget for
     # resilience: a Mongo hiccup on the history collection must never
@@ -261,4 +263,11 @@ async def get_progress(user: UserPublic = Depends(get_current_user),
         history = []
     body["history"] = history
     body["history_days"] = _HISTORY_DAYS
+    # Public Milestone Wall — safe no-op unless opted in.
+    try:
+        from wall_routes import maybe_log_foundation_ready
+        await maybe_log_foundation_ready(db, user.user_id,
+                                         bool(body.get("foundation_ready")))
+    except Exception:  # noqa: BLE001
+        pass
     return body

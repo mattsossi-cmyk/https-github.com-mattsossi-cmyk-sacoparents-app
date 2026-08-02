@@ -1,0 +1,220 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { api } from "../lib/api";
+import { ShieldCheck, Users, EyeOff, Loader2, Sparkles, Info } from "lucide-react";
+import { toast } from "sonner";
+import { logError } from "../lib/logger";
+
+/**
+ * PublicMilestoneWall — a small, opt-in feed of anonymised badges other
+ * parents have earned in the last 30 days. First-timers see momentum and
+ * feel the community cheering them on.
+ *
+ * Privacy contract (mirrored server-side):
+ *   • Wall is completely off unless the parent flips the opt-in toggle.
+ *   • The feed only ever shows a stable user_hash + badge type + relative
+ *     time. No names, no emails, no city, no numeric stats.
+ *   • Opting out later stops future events; existing events remain until
+ *     the admin runs a scheduled purge.
+ */
+const CARD_ACCENT = {
+  foundation_ready: {
+    bg: "bg-[#F1F9F4]",
+    border: "border-[#B5DFC5]",
+    text: "text-[#1F5C3B]",
+  },
+};
+
+function AnonAvatar({ userHash }) {
+  // Deterministic two-tone circle so parents can spot repeat events from
+  // the same anon parent without knowing who they are.
+  const hue = parseInt((userHash || "0").slice(0, 4), 16) % 360;
+  return (
+    <span
+      className="shrink-0 h-8 w-8 rounded-full border border-white shadow-sm flex items-center justify-center text-white font-semibold text-[11px]"
+      style={{
+        background: `linear-gradient(135deg, hsl(${hue}, 45%, 45%), hsl(${(hue + 40) % 360}, 45%, 60%))`,
+      }}
+      aria-hidden
+    >
+      {(userHash || "").slice(0, 2).toUpperCase()}
+    </span>
+  );
+}
+
+export default function PublicMilestoneWall() {
+  const [status, setStatus] = useState(null);   // {opt_in, my_events_this_month}
+  const [feed, setFeed] = useState(null);       // {events, total, days}
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    try {
+      const [s, f] = await Promise.all([
+        api.get("/wall/status"),
+        api.get("/wall/feed?days=30&limit=25"),
+      ]);
+      setStatus(s.data || null);
+      setFeed(f.data || null);
+    } catch (err) {
+      logError("wall load failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function toggle() {
+    if (!status) return;
+    setBusy(true);
+    try {
+      const r = await api.post("/wall/opt-in", { opt_in: !status.opt_in });
+      const nowOptedIn = !!r.data?.opt_in;
+      setStatus((s) => ({ ...(s || {}), opt_in: nowOptedIn }));
+      if (nowOptedIn) {
+        toast.success(
+          r.data?.backfilled_event
+            ? "You're on the wall — your Foundation Ready badge is up now."
+            : "You're on the wall — your next badge will appear here.",
+        );
+      } else {
+        toast("Off the wall — new badges won't be shared.");
+      }
+      // Refresh feed after opt-in so a backfilled event shows up.
+      const f = await api.get("/wall/feed?days=30&limit=25");
+      setFeed(f.data || null);
+    } catch (err) {
+      logError("wall toggle failed:", err);
+      toast.error("Couldn't update your wall preference. Try again shortly.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <section
+        className="rounded-3xl border border-[#E5E0EE] bg-white p-5 shadow-sm flex items-center gap-2 text-sm text-[#4B4567]"
+        data-testid="wall-loading"
+      >
+        <Loader2 size={14} className="animate-spin" />
+        Loading the community wall…
+      </section>
+    );
+  }
+
+  const events = feed?.events || [];
+  const optIn = !!status?.opt_in;
+
+  return (
+    <section
+      className="rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-6 shadow-sm"
+      data-testid="wall"
+    >
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold flex items-center gap-1.5">
+            <Users size={12} /> Community wall
+          </div>
+          <h2
+            className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-snug"
+            data-testid="wall-headline"
+          >
+            {events.length === 0
+              ? "Be the first parent on the wall this month."
+              : `${feed.total} parent${feed.total === 1 ? "" : "s"} lit a milestone in the last ${feed.days} days.`}
+          </h2>
+          <p className="text-xs text-[#4B4567] mt-1 max-w-xl">
+            Anonymised — names, emails, and stats are never shared.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={toggle}
+          disabled={busy}
+          data-testid="wall-toggle"
+          data-opted-in={optIn ? "1" : "0"}
+          className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold transition-all ${
+            optIn
+              ? "bg-[#1F5C3B] text-white hover:brightness-110"
+              : "border border-[#3D1A78] text-[#3D1A78] bg-white hover:bg-[#F5F1FB]"
+          } ${busy ? "opacity-60 cursor-progress" : ""}`}
+        >
+          {busy ? (
+            <Loader2 size={12} className="animate-spin" />
+          ) : optIn ? (
+            <ShieldCheck size={12} />
+          ) : (
+            <Sparkles size={12} />
+          )}
+          {optIn ? "On the wall — tap to opt out" : "Add my anonymous badge"}
+        </button>
+      </div>
+
+      {events.length === 0 ? (
+        <div
+          className="mt-5 rounded-2xl border border-dashed border-[#E5E0EE] bg-[#FCFBFE] p-5 text-sm text-[#4B4567] flex items-start gap-2"
+          data-testid="wall-empty"
+        >
+          <Info size={14} className="shrink-0 mt-0.5 text-[#3D1A78]" />
+          <span>
+            Nothing here yet. Light your five milestones + opt in and your
+            anonymous badge will appear on this wall for other parents to
+            cheer on.
+          </span>
+        </div>
+      ) : (
+        <ul
+          className="mt-5 space-y-2.5 max-h-96 overflow-y-auto pr-1"
+          data-testid="wall-feed"
+        >
+          {events.map((ev) => {
+            const accent = CARD_ACCENT[ev.badge_type] || {
+              bg: "bg-[#FCFBFE]",
+              border: "border-[#EEE9F7]",
+              text: "text-[#3D1A78]",
+            };
+            return (
+              <li
+                key={ev.event_id}
+                className={`flex items-start gap-3 rounded-2xl border ${accent.border} ${accent.bg} p-3.5`}
+                data-testid={`wall-event-${ev.event_id}`}
+              >
+                <AnonAvatar userHash={ev.user_hash} />
+                <div className="min-w-0 flex-1">
+                  <div
+                    className={`text-sm font-semibold leading-snug ${accent.text}`}
+                  >
+                    A parent {ev.badge_label}
+                  </div>
+                  <div className="text-xs text-[#4B4567] mt-0.5">
+                    {ev.when_human}
+                  </div>
+                </div>
+                <ShieldCheck
+                  size={16}
+                  className="shrink-0 mt-0.5 text-[#1F5C3B]"
+                />
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {!optIn && (
+        <div
+          className="mt-4 flex items-start gap-2 text-[11px] text-[#4B4567]"
+          data-testid="wall-privacy-note"
+        >
+          <EyeOff size={12} className="shrink-0 mt-0.5" />
+          <span>
+            You're currently invisible to the wall. Nothing about you is
+            recorded until you tap the button above.
+          </span>
+        </div>
+      )}
+    </section>
+  );
+}

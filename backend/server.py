@@ -35,6 +35,7 @@ from psych_deep_routes import router as psych_deep_router  # noqa: E402
 from med_deep_routes import router as med_deep_router  # noqa: E402
 from deep_dives_routes import router as deep_dives_router  # noqa: E402
 from progress_dashboard_routes import router as progress_dashboard_router  # noqa: E402
+from wall_routes import router as wall_router  # noqa: E402
 from share_routes import router as share_router  # noqa: E402
 from coach_routes import router as coach_router  # noqa: E402
 from next_steps_routes import router as next_steps_router  # noqa: E402
@@ -124,6 +125,7 @@ api_router.include_router(psych_deep_router)
 api_router.include_router(med_deep_router)
 api_router.include_router(deep_dives_router)
 api_router.include_router(progress_dashboard_router)
+api_router.include_router(wall_router)
 api_router.include_router(share_router)
 api_router.include_router(insights_router)
 api_router.include_router(coach_router)
