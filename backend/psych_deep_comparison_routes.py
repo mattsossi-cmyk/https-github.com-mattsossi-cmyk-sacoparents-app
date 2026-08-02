@@ -21,4 +21,5 @@ router = make_deep_dive_compare_router(
     build_comparison_pdf=build_comparison_pdf,
     pdf_header_subtitle="Psychological Deep Dive Co-Parent Comparison",
     pdf_product_title="Psychological / Behavioural Deep Dive Comparison",
+    frontend_hub_path="/special-needs-v2/psychological-deep-dive/compare",
 )

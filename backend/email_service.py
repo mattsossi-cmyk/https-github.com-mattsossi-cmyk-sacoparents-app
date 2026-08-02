@@ -491,6 +491,57 @@ def send_admin_weekly_briefing(
     )
 
 
+def send_compare_invite(
+    *,
+    to_email: str,
+    link_url: str,
+    inviter_name: Optional[str] = None,
+    product_label: str = "Deep Dive",
+) -> None:
+    """Notify a co-parent that a compare request is awaiting their consent.
+
+    Sent once when the first parent hits POST /compare/link so the invited
+    co-parent knows to log in and consent (or decline). Never contains any
+    private assessment content — only a call to log in.
+    """
+    inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"
+    plain = (
+        f"{inviter} would like to compare {product_label} answers with you on "
+        "SA CoParenting App.\n\n"
+        "Nothing is shared automatically. Log in and, if you consent, both parents' "
+        "answers will appear neutrally side-by-side — never labelling either of you "
+        "'right' or 'wrong'.\n\n"
+        f"Review the request here:\n{link_url}\n\n"
+        "If you'd rather not, ignore this email and no comparison will ever be created.\n\n"
+        "— SA CoParenting App · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"<strong>{inviter}</strong> would like to compare {product_label} answers with "
+        f"you on SA CoParenting App.</p>"
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        "Nothing is shared automatically. Log in and, if you consent, both parents' "
+        "answers will appear neutrally side-by-side — never labelling either of you "
+        "<em>right</em> or <em>wrong</em>.</p>"
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">'
+        "If you'd rather not, ignore this email — no comparison will ever be created.</p>"
+    )
+    html = _branded_html(
+        headline=f"{inviter} invited you to compare notes",
+        body_html=body_html,
+        cta_label="Review the request",
+        cta_url=link_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=f"{inviter} invited you to compare {product_label} answers on SA CoParenting App",
+        html=html,
+        text=plain,
+        failure_message="Could not send the compare-request email right now.",
+    )
+
+
+
 def send_coparent_invite(*, to_email: str, link_url: str, inviter_name: Optional[str] = None) -> None:
     """Invite a co-parent to prep for mediation in their own private account."""
     inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"

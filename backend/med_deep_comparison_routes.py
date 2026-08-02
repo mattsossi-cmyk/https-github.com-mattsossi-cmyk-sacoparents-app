@@ -21,4 +21,5 @@ router = make_deep_dive_compare_router(
     build_comparison_pdf=build_comparison_pdf,
     pdf_header_subtitle="Medical Deep Dive Co-Parent Comparison",
     pdf_product_title="Medical · Prescription Deep Dive Comparison",
+    frontend_hub_path="/special-needs-v2/medical-deep-dive/compare",
 )

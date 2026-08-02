@@ -6,11 +6,11 @@ export default function SpecialNeedsV2EducationalDeepDiveCompareView() {
     <DeepDiveCompareView
       pathway={{
         testidPrefix: "edu-deep-compare",
-        eyebrow: "Educational Assessment Alignment Report",
+        eyebrow: "Coparenting Education Check In Summary",
         apiPrefix: "/edu-deep/compare",
         hubRoute: "/special-needs-v2/educational-deep-dive/compare",
-        hubLabel: "Back to alignment reports",
-        downloadFilename: "Educational_Assessment_Alignment_Report.pdf",
+        hubLabel: "Back to check-in summaries",
+        downloadFilename: "Coparenting_Education_CheckIn_Summary.pdf",
       }}
     />
   );

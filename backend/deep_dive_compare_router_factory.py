@@ -6,6 +6,7 @@ safety guardrail, so we build them from one place.
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from datetime import datetime, timezone
 from io import BytesIO
@@ -18,6 +19,7 @@ from pydantic import BaseModel, EmailStr
 from pymongo.errors import DuplicateKeyError
 
 from auth import UserPublic, get_current_user, get_db
+from email_service import send_compare_invite
 
 
 SAFETY = "safety_assessments"
@@ -77,6 +79,7 @@ def make_deep_dive_compare_router(
     build_comparison_pdf: Callable[..., bytes],
     pdf_header_subtitle: str,   # e.g. "Educational Deep Dive Co-Parent Comparison"
     pdf_product_title: str,     # e.g. "Educational Deep Dive Comparison"
+    frontend_hub_path: str,     # e.g. "/special-needs-v2/educational-deep-dive/compare"
 ) -> APIRouter:
     router = APIRouter(prefix=prefix, tags=[tag])
 
@@ -184,6 +187,18 @@ def make_deep_dive_compare_router(
             "updated_at": now,
         }
         await db[shares_collection].insert_one(share.copy())
+        # Fire-and-forget email so the co-parent knows to log in and consent.
+        # Never raise — a Resend hiccup shouldn't block the state machine.
+        try:
+            frontend_origin = os.environ.get("FRONTEND_ORIGIN") or "https://sacoparentsapp.online"
+            send_compare_invite(
+                to_email=partner.get("email"),
+                link_url=f"{frontend_origin.rstrip('/')}{frontend_hub_path}",
+                inviter_name=me.name,
+                product_label=product_label,
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("Failed to send compare-invite email for share %s", share["share_id"])
         return {"ok": True, "share": await _hydrate(db, share, me.user_id), "already_existed": False}
 
     @router.get("/me")
