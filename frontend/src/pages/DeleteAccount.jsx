@@ -75,7 +75,7 @@ export default function DeleteAccount() {
           </h2>
           <ul className="text-[14px] text-[#4B4567] space-y-2 list-disc pl-5">
             <li>Your account profile (name, email, password, picture)</li>
-            <li>All five preparation modules (Child-Centered Goals, Issues &amp; Concerns, Priority Ranking, Communication Style, Readiness Check)</li>
+            <li>All five preparation modules (Child-Focused Goals, Issues &amp; Concerns, Priority Ranking, Communication Style, Readiness Check)</li>
             <li>Every AI-generated Mediation Summary, Agreement Draft and Improvement Plan</li>
             <li>Every email-to-mediator record you've created</li>
             <li>All active sessions and any registered push-notification device tokens</li>

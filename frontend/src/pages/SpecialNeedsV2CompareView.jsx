@@ -12,6 +12,7 @@ import { api } from "../lib/api";
 import { toast } from "sonner";
 import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles } from "lucide-react";
 import { logError } from "../lib/logger";
+import ReportReviewNotice from "../components/ReportReviewNotice";
 
 const ALIGN_STYLES = {
   aligned:        "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -134,6 +135,8 @@ export default function SpecialNeedsV2CompareView() {
         <p className="text-sm text-[#4B4567] mt-2 max-w-3xl italic">
           A neutral side-by-side view. Neither parent is labeled correct or wrong.
         </p>
+
+        <ReportReviewNotice variant="comparison" className="mt-5" />
 
         {safetyBlocked && (
           <div className="mt-5 rounded-2xl border-2 border-[#B02A2A]/40 bg-[#F8D7D7]/40 p-4 sm:p-5" data-testid="snc2-compare-view-safety-block">

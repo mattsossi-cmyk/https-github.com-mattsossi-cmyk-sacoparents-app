@@ -53,7 +53,7 @@ export default function Methodology() {
           <H2>1. Mediation Readiness (0–100)</H2>
           <p><strong>What it measures.</strong> Your preparation across four dimensions:</p>
           <ul>
-            <li><strong>Child-centered focus</strong> — the specificity + child-directed framing of the goals you named.</li>
+            <li><strong>Child-focused focus</strong> — the specificity + child-directed framing of the goals you named.</li>
             <li><strong>Priorities clarity</strong> — whether you've ranked and rationalised your top mediation topics.</li>
             <li><strong>Communication readiness</strong> — your self-assessed patterns around requests, listening, and de-escalation.</li>
             <li><strong>Emotional regulation</strong> — the presence of concrete plans for reacting to triggers.</li>
@@ -68,7 +68,7 @@ export default function Methodology() {
           <p>
             <strong>What it does NOT measure.</strong> The score cannot see
             emotional labor, real-world power dynamics, or coercion. A high
-            score means you've written a lot of child-centered content — it
+            score means you've written a lot of child-focused content — it
             does not mean mediation will be safe or successful for your
             specific family.
           </p>

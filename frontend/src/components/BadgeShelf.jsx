@@ -38,7 +38,7 @@ const BADGE_DEFS = [
     accent: "#DCEEDF",
     icon: Heart,
     condition: (p) => p?.completed?.includes("child_goals"),
-    unlock_hint: "Complete Child-Centered Goals to unlock.",
+    unlock_hint: "Complete Child-Focused Goals to unlock.",
   },
   {
     id: "communication-builder",

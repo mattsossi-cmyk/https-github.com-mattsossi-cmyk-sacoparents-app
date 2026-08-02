@@ -41,7 +41,7 @@ export default function Privacy() {
 
           <H2>What we collect</H2>
           <p><strong>Account information</strong> — Your name and email when you sign up. If you sign in with Google, we receive your name and email from Google (nothing more).</p>
-          <p><strong>Your preparation content</strong> — Everything you enter in the wizard: child-centered goals, issues and concerns, priority topics, communication self-assessment, readiness ratings, and any free-text notes. This is the heart of the product.</p>
+          <p><strong>Your preparation content</strong> — Everything you enter in the wizard: child-focused goals, issues and concerns, priority topics, communication self-assessment, readiness ratings, and any free-text notes. This is the heart of the product.</p>
           <p><strong>AI-generated outputs</strong> — Your Mediation Summary, Co-Parenting Agreement Draft, and Things I Can Improve On plan, plus the historical snapshots used to compare versions over time.</p>
           <p><strong>Technical signals</strong> — Browser type, device type, IP address (for security), and a session token cookie so you stay signed in. We do not use third-party advertising trackers.</p>
           <p><strong>What we do NOT collect</strong> — We do not access your location, contacts, photos, microphone, camera, or any other device data unless you grant a specific in-app permission (e.g., Face ID / Touch ID, which is processed entirely on-device).</p>
@@ -57,7 +57,7 @@ export default function Privacy() {
 
           <H2>How AI fits in</H2>
           <p>
-            We use <strong>Anthropic Claude</strong> (via the Emergent universal LLM key) to synthesize your prep into your summary documents and growth plan. When you tap "Generate", your prep data is sent to Claude with strict instructions to produce a child-centered, non-judgmental document.
+            We use <strong>Anthropic Claude</strong> (via the Emergent universal LLM key) to synthesize your prep into your summary documents and growth plan. When you tap "Generate", your prep data is sent to Claude with strict instructions to produce a child-focused, non-judgmental document.
           </p>
           <p>
             Per Anthropic's commercial terms, your data is <strong>not used to train their models</strong>. The data is processed transiently to generate your response and then discarded by Anthropic.

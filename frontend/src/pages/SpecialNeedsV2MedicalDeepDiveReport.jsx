@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachStrip";
+import ReportReviewNotice from "../components/ReportReviewNotice";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
@@ -140,6 +141,8 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
 
         <Eyebrow>Medical · SA CoParents Report</Eyebrow>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330]">Medical &middot; Prescription Assessment Report</h1>
+
+        <ReportReviewNotice variant="individual" className="mt-5" />
 
         {/* 1. Report Overview */}
         <SectionCard testid="med-report-overview">

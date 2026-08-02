@@ -52,7 +52,7 @@ const PILLARS = [
     Icon: Heart,
     color: "#B84EBB",
     tools: [
-      { label: "Child-Centered Goals", to: "/prep/child-goals", completedKey: "child_goals" },
+      { label: "Child-Focused Goals", to: "/prep/child-goals", completedKey: "child_goals" },
       { label: "Issues & Concerns (School, medical, emotional)", to: "/prep/issues", completedKey: "issues" },
     ],
   },
@@ -205,7 +205,7 @@ export default function FivePillarJourney({ completed = {}, flags = {} }) {
       <div className="mb-6">
         <div className="eyebrow text-[#3D1A78]">Your journey</div>
         <h2 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mt-1">
-          Five pillars, one child-centred path.
+          Five pillars, one child-focused path.
         </h2>
         <p className="text-[#4B4567] mt-2 max-w-2xl">
           Start anywhere. Come back anytime. Every pillar builds toward one

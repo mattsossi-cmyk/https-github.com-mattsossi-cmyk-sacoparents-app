@@ -162,7 +162,7 @@ export default function MediatorBadge() {
               Give your families a calmer way to prepare.
             </h1>
             <p className="text-[#4B4567] mt-4 leading-relaxed">
-              SA CoParents helps parents arrive at mediation child-centered,
+              SA CoParents helps parents arrive at mediation child-focused,
               regulated, and ready to talk. If you recommend it, embed this badge
               on your practice site — your clients land directly in the app, and
               your name shows up on their screen as the mediator who pointed them

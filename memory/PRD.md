@@ -2,6 +2,19 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 60 — Copy + Trust Polish (2026-02-02)**:
+  - **Homepage "Three Reports" strip** (`Landing.jsx`) rewritten as "Three core reports — plus specialized reports based on your family's needs" with an explanatory sub-paragraph, so the homepage no longer contradicts the Special Needs pathway's additional reports.
+  - **Deep-dives optional banner** — a prominent green-bordered notice added above the deep-dive CTAs on `/special-needs-v2` picker (`snc2-deep-dives-optional-banner`): "Your core Special Needs Assessment is enough on its own… the three deep dives are OPTIONAL."
+  - **AI language sanitised**. "AI-synthesized, mediator-ready, downloadable PDF" and "Three AI-synthesized views" on the Dashboard/Summary swapped for the safer, professionally-worded "structured, child-focused report with technology-assisted drafting… You remain responsible for reviewing…"
+  - **`ReportReviewNotice` component** shipped as a shared warm-gold callout with two variants:
+    - `individual`: *"Review this report carefully before sharing it. It reflects one parent's responses and has not been independently verified."*
+    - `comparison`: *"This report organizes both parents' reported perspectives side-by-side. It does not determine which account is correct."*
+    Wired into: `Summary.jsx`, `SpecialNeedsV2Report.jsx`, `SpecialNeedsV2EducationalDeepDiveReport.jsx`, `SpecialNeedsV2PsychologicalDeepDiveReport.jsx`, `SpecialNeedsV2MedicalDeepDiveReport.jsx` (individual), plus `SpecialNeedsV2CompareView.jsx` and the shared `DeepDiveCompareView.jsx` (comparison). Test IDs: `report-review-notice-individual` / `report-review-notice-comparison`.
+  - **"Child-focused" brand sweep** across all `.jsx`/`.js` (~35 replacements): child-centered / child-centred / Child-Centered / etc. globally standardised to child-focused / Child-Focused. Includes module labels ("Child-Focused Goals"), section headings ("Section B — Child-Focus" in Readiness Check), copy across Landing, Dashboard, Summary, Methodology, Terms, Privacy, Delete Account, Learning Center, Watch, Orientation, Progress, InviteAccept, MediatorBadge, ProblemSolvingWorksheet, ReadinessCheck, FivePillarJourney, NextStepJourney, BadgeShelf, SharedCoParentingReport, and every Special-Needs deep-dive report.
+  - **Production build hardening**: `GENERATE_SOURCEMAP=false` added to `frontend/.env` so React source maps are no longer publicly exposed on production once redeployed.
+  - **Structured data correction**: `public/index.html` schema.org `WebApplication.operatingSystem` changed from misleading "Web, iOS, Android" to "Web (progressive web app installable on supported iOS and Android devices)".
+  - Regression: 24/24 tests still pass across iter56 + iter57 + iter58; no backend behaviour touched. Frontend lint clean on all new/modified files.
+
 - **Iteration 59 — Learning Center (2026-02-02)**:
   - New `/learning` route + full library of 15 hand-authored short reads (~2-3 min each) grouped into three hubs matching the assessment structure: **Child-centred communication**, **Healthy boundaries**, and **Mediation prep** (5 articles per hub). Every article has: hero summary, 300-500 word body, 3 "things to try this week" takeaways.
   - Backend: new module `learning_content.py` holds the static seed (swap-out later to Mongo without touching routes), and `learning_routes.py` exposes:

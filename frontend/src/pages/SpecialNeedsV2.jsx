@@ -297,12 +297,32 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
       </div>
 
       <div className="mt-10 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7" data-testid="snc2-deep-dives-block">
+        <div
+          className="mb-5 rounded-2xl border-2 border-[#B5DFC5] bg-[#F1F9F4] p-4 sm:p-5 flex items-start gap-3"
+          data-testid="snc2-deep-dives-optional-banner"
+        >
+          <div className="shrink-0 h-8 w-8 rounded-full bg-white flex items-center justify-center text-[#1F5C3B] mt-0.5">
+            <Sparkles size={14} />
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1F5C3B]">
+              Your core Special Needs Assessment is enough on its own
+            </div>
+            <p className="text-sm sm:text-[15px] text-[#0F3B25] mt-1 leading-relaxed">
+              Once you finish the assessment above, you have a complete
+              Special Needs Care Plan. The three deep dives below are{" "}
+              <strong>optional</strong> and should only be completed when
+              additional coordination detail in that specific area would help
+              your family. Skip any that don&apos;t apply.
+            </p>
+          </div>
+        </div>
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 flex items-center gap-2">
           <Sparkles size={12} /> Optional companion deep dives
         </div>
-        <h2 className="font-serif text-xl text-[#1A1330]">Only if you want them — pick any, all, or none</h2>
+        <h2 className="font-serif text-xl text-[#1A1330]">Pick any, all, or none</h2>
         <p className="text-xs text-[#4B4567] mt-1 mb-5 max-w-2xl">
-          The main Special Needs assessment above is enough on its own. These three deep dives are entirely optional add-ons for parents who want extra coordination detail in a specific area. Complete any that apply to your child&apos;s situation — or skip them completely.
+          These three deep dives are entirely optional add-ons for parents who want extra coordination detail in a specific area. Complete any that apply to your child&apos;s situation — or skip them completely.
         </p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <DeepDiveCard

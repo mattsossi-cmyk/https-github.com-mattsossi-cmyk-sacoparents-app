@@ -5,6 +5,7 @@ import DemoModeBanner from "../components/DemoModeBanner";
 import InviteCoparentCard from "../components/InviteCoparentCard";
 import WatchFirstVideo from "../components/WatchFirstVideo";
 import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
+import ReportReviewNotice from "../components/ReportReviewNotice";
 import { api, API } from "../lib/api";
 import { shareViaText } from "../lib/share";
 import { toast } from "sonner";
@@ -316,7 +317,7 @@ function MediationSummaryTab() {
       <EmptyState
         icon={<Sparkles size={20} />}
         title="Generate your mediation summary"
-        body="We'll synthesize your goals, concerns, priority agenda, communication style, and readiness into a single mediator-ready document."
+        body="We'll organize your goals, concerns, priority agenda, communication style, and readiness into a single, structured child-focused document. You remain responsible for reviewing it before sharing."
         cta={loading ? "Synthesizing…" : "Generate summary"}
         onCta={generate}
         loading={loading}
@@ -376,7 +377,7 @@ function MediationSummaryTab() {
         )}
 
         {summary.child_goals_summary && !summary.executive_summary && (
-          <Section title="Child-centered goals">
+          <Section title="Child-focused goals">
             <p className="text-[#1A1330] leading-relaxed">
               {summary.child_goals_summary}
             </p>
@@ -547,7 +548,7 @@ function AgreementDraftTab() {
       <EmptyState
         icon={<Handshake size={20} />}
         title="Draft your co-parenting agreement"
-        body="A neutral, child-centered draft based on your captured goals, concerns, and priorities. Bring it to your co-parent or mediator as a starting point — not a legal document."
+        body="A neutral, child-focused draft based on your captured goals, concerns, and priorities. Bring it to your co-parent or mediator as a starting point — not a legal document."
         cta={loading ? "Drafting…" : "Generate draft"}
         onCta={generate}
         loading={loading}
@@ -1248,11 +1249,15 @@ export default function Summary() {
           Your prepared documents.
         </h1>
         <p className="text-[#4B4567] mb-8 max-w-2xl">
-          Three AI-synthesized views of your preparation: a focused summary for your
-          mediator, a neutral draft agreement to start the conversation with your
-          co-parent, and a personal growth plan compiled from your communication and
-          readiness reflections.
+          Three structured, child-focused views of your preparation, assembled
+          with technology-assisted drafting: a focused summary for your
+          mediator, a neutral draft agreement to start the conversation with
+          your co-parent, and a personal growth plan compiled from your
+          communication and readiness reflections. You remain responsible for
+          reviewing each before sharing.
         </p>
+
+        <ReportReviewNotice variant="individual" className="mb-6" />
 
         <DemoModeBanner />
 

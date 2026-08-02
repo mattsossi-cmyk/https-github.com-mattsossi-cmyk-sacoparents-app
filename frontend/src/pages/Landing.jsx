@@ -289,7 +289,7 @@ const SITUATIONS = [
     route: "/dashboard",
     result: {
       title: "Start with the Mediation Readiness Assessment.",
-      body: "You have a foundation to build on. This assessment turns your existing goodwill into a concrete, child-centered agenda you can bring to any co-parenting conversation.",
+      body: "You have a foundation to build on. This assessment turns your existing goodwill into a concrete, child-focused agenda you can bring to any co-parenting conversation.",
       cta: "Start the readiness assessment",
       tone: "cooperative",
       icon: <Scale size={20} />,
@@ -361,7 +361,7 @@ const SITUATIONS = [
     route: "/dashboard",
     result: {
       title: "Start with the Mediation Readiness Assessment.",
-      body: "You'll build a child-centered agenda, name your priorities and flexibility areas, and download a Mediation Summary PDF ready to hand to your mediator.",
+      body: "You'll build a child-focused agenda, name your priorities and flexibility areas, and download a Mediation Summary PDF ready to hand to your mediator.",
       cta: "Start the readiness assessment",
       tone: "cooperative",
       icon: <Scale size={20} />,
@@ -520,7 +520,7 @@ function Hero() {
         {/* Trust indicators */}
         <ul className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl mx-auto">
           {[
-            "Child-Centered Approach",
+            "Child-Focused Approach",
             "Child-Focused Mediation Preparation",
             "Practical Communication Tools",
             "Developed by Family Mediation Professionals",
@@ -551,10 +551,15 @@ function ThreeReportsStrip() {
   return (
     <section id="three-reports" className="relative py-14 sm:py-16 bg-white border-y border-[#EFE9F9]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <Eyebrow>Three reports you can receive</Eyebrow>
+        <Eyebrow>Three core reports — plus specialized reports based on your family's needs</Eyebrow>
         <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-2">
           Real deliverables you can hand to a mediator, therapist, or attorney.
         </h2>
+        <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-3xl mx-auto">
+          Every parent produces the three core reports below. Families using the
+          Special Needs pathway also receive additional individual, deep-dive,
+          and side-by-side comparison reports tailored to their situation.
+        </p>
       </div>
       <div className="mt-8 grid md:grid-cols-3 gap-4 max-w-6xl mx-auto px-4 sm:px-6">
         <ThreeReportsCover
@@ -570,7 +575,7 @@ function ThreeReportsStrip() {
           testid="three-reports-foundation"
           number="2"
           title="Create your Foundation Statement"
-          body="A one-page statement of your child-centered goals — the anchor you can return to whenever things get emotionally hot."
+          body="A one-page statement of your child-focused goals — the anchor you can return to whenever things get emotionally hot."
           accent="#2DB5B5"
           sampleHref="/downloads/sacoparents-foundation-statement.pdf"
           sampleLabel="View sample Foundation Statement (PDF)"
@@ -853,7 +858,7 @@ function TrustSignals() {
                 Built in San Antonio, Texas — because too many parents were
                 walking into mediation reactive, unprepared, and afraid.
                 Our mission is to move families from emotionally reactive
-                to child-centered, one conversation at a time.
+                to child-focused, one conversation at a time.
               </p>
               <div className="text-xs text-[#857E9C] mt-3">
                 <a href="mailto:mattsossi@bsossi.com" className="text-[#3D1A78] hover:underline">mattsossi@bsossi.com</a>
@@ -932,7 +937,7 @@ function TrustSignals() {
    SAMPLE REPORTS — Preview of what parents receive
 ============================================================ */
 const SAMPLE_TABS = [
-  { id: "mediation",      label: "Mediation Summary",       icon: <FileText size={16} />,    subtitle: "PDF · 6–8 pages · child-centered agenda for your mediator" },
+  { id: "mediation",      label: "Mediation Summary",       icon: <FileText size={16} />,    subtitle: "PDF · 6–8 pages · child-focused agenda for your mediator" },
   { id: "safety",         label: "Safety Assessment",       icon: <ShieldCheck size={16} />, subtitle: "PDF · pathway recommendation · Texas crisis resources" },
   { id: "progress",       label: "Growth Snapshot",         icon: <BarChart3 size={16} />,   subtitle: "In-app · longitudinal charts · updates every time you check in" },
 ];
@@ -1034,11 +1039,11 @@ function SampleMediation() {
     <ReportPageFrame meta="Mediation Summary · Prepared for Alex Rivera" title="Ready for your Feb 24 session">
       <div className="grid sm:grid-cols-4 gap-3 mb-6">
         <SampleStat label="Readiness" value="78" tone="#3D1A78" />
-        <SampleStat label="Child-centered" value="82" tone="#2DB5B5" />
+        <SampleStat label="Child-focused" value="82" tone="#2DB5B5" />
         <SampleStat label="Priorities" value="74" tone="#3D1A78" />
         <SampleStat label="Emotional reg." value="76" tone="#2DB5B5" />
       </div>
-      <SampleSection title="Child-centered goals">
+      <SampleSection title="Child-focused goals">
         <ul className="list-disc pl-5 space-y-1 text-sm text-[#4B4567]">
           <li>Predictable weeknight bedtimes across both homes.</li>
           <li>A shared calendar Nina can read by herself (age 7).</li>

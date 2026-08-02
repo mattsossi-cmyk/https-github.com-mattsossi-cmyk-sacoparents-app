@@ -41,7 +41,7 @@ export default function LearningCenter() {
             Short reads for the long haul.
           </h1>
           <p className="text-[#4B4567] text-base sm:text-lg mt-3 max-w-2xl">
-            A small library on child-centred communication, healthy boundaries
+            A small library on child-focused communication, healthy boundaries
             between two homes, and how to walk into mediation prepared. Each
             piece takes 2-3 minutes. Skim what draws you in.
           </p>

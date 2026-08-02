@@ -31,7 +31,7 @@ const FREQ_SCALE = [
 const SECTIONS = [
   {
     id: "child_centered",
-    title: "Section B — Child-Centeredness",
+    title: "Section B — Child-Focusedness",
     description: "Where your child sits in the picture.",
     scale: AGREE_SCALE,
     questions: [

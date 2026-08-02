@@ -43,7 +43,7 @@ const SLIDES = [
     eyebrow: "Welcome",
     title: "Mediation, prepared with care.",
     body:
-      "Separation and co-parenting mediation can feel overwhelming. This app exists to help you arrive prepared — child-centered, emotionally regulated, and clear about what you want to say.",
+      "Separation and co-parenting mediation can feel overwhelming. This app exists to help you arrive prepared — child-focused, emotionally regulated, and clear about what you want to say.",
     icon: Heart,
     accent: "rose",
   },
@@ -59,7 +59,7 @@ const SLIDES = [
     eyebrow: "How this app helps",
     title: "Five guided steps. Then AI does the synthesis.",
     bullets: [
-      "Child-Centered Goals — what you want your child to experience",
+      "Child-Focused Goals — what you want your child to experience",
       "Issues & Concerns — what you'd like to raise, factually",
       "Priority Ranking — the eleven legal custody categories, sorted",
       "Communication Style — your patterns, gently reframed",

@@ -137,7 +137,7 @@ export default function InviteAccept() {
             <br className="hidden sm:block" /> with you
           </h1>
           <p className="text-sm text-[#4B4567] mt-4 max-w-md mx-auto leading-relaxed">
-            SA CoParenting App is a guided, child-centered workspace that helps both
+            SA CoParenting App is a guided, child-focused workspace that helps both
             parents arrive at mediation prepared and calm.{" "}
             <strong className="text-[#1A1330]">
               Your answers are completely private — your co-parent will never see them.

@@ -31,7 +31,7 @@ export default function Terms() {
 
           <H2>1. What this app is — and isn't</H2>
           <p>
-            SA CoParents is a <strong>preparation tool</strong> for parents heading into a co-parenting mediation session. It helps you organize your thoughts, identify priorities, and arrive at mediation calm and child-centered.
+            SA CoParents is a <strong>preparation tool</strong> for parents heading into a co-parenting mediation session. It helps you organize your thoughts, identify priorities, and arrive at mediation calm and child-focused.
           </p>
           <p>
             SA CoParents is <strong>NOT</strong>:

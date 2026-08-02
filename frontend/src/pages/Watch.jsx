@@ -291,7 +291,7 @@ export default function Watch() {
           </h1>
           <p className="text-base sm:text-lg text-[#4B4567] leading-relaxed">
             SA CoParents is a private, guided prep tool that helps parents move
-            from emotionally reactive to child-centered before they ever sit at
+            from emotionally reactive to child-focused before they ever sit at
             the mediation table. Take a minute to see how it works — then start
             free when you’re ready.
           </p>

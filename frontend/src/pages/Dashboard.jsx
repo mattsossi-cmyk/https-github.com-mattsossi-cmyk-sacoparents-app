@@ -48,7 +48,7 @@ const REPORT_LABEL = {
 const STEPS = [
   {
     key: "child_goals",
-    label: "Child-Centered Goals",
+    label: "Child-Focused Goals",
     path: "/prep/child-goals",
     icon: Target,
     blurb: "What do you want your child to experience?",
@@ -708,7 +708,7 @@ export default function Dashboard() {
             </div>
             <div className="font-serif text-xl text-[#1A1330] mb-1">Mediation Summary</div>
             <p className="text-sm text-[#4B4567]">
-              AI-synthesized, mediator-ready, downloadable PDF.
+              A structured, child-focused report with technology-assisted drafting. Review before sharing.
             </p>
           </Link>
 

@@ -18,6 +18,7 @@ import { api } from "../lib/api";
 import { toast } from "sonner";
 import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert, Users, Mail } from "lucide-react";
 import { logError } from "../lib/logger";
+import ReportReviewNotice from "../components/ReportReviewNotice";
 
 const STATUS_COLOR = {
   "Strength":                          "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -149,6 +150,8 @@ export default function SpecialNeedsV2Report() {
           {intro.title || "Your Special Needs Co-Parenting Report"}
         </h1>
         <p className="text-sm text-[#4B4567] mt-3 whitespace-pre-wrap max-w-3xl">{intro.body}</p>
+
+        <ReportReviewNotice variant="individual" className="mt-5" />
 
         {/* Cache header */}
         <div className="mt-6 rounded-3xl border border-[#E5E0EE] p-4 sm:p-5 bg-white flex flex-wrap items-center justify-between gap-3 shadow-sm" data-testid="snc2-report-cache-bar">

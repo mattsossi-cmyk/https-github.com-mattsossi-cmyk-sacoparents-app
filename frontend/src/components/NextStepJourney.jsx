@@ -18,7 +18,7 @@ import {
  *
  * Journey (in order):
  *   1. Assess               — Readiness Check + Communication Style
- *   2. Understand Your Child — Child-centered goals + Special Needs
+ *   2. Understand Your Child — Child-focused goals + Special Needs
  *   3. Set Priorities        — Priority & Agenda ranking
  *   4. Build Your Foundation — Reflection / Foundation Statement
  *   5. Prepare for Mediation — Issues, Alignment Statement, Summary
@@ -77,7 +77,7 @@ const STAGES = [
     blurb:
       "Name what your child actually needs from you — separate from what feels urgent in the conflict.",
     activities: [
-      { label: "Child-Centered Goals", path: "/prep/child-goals", requires: "child_goals" },
+      { label: "Child-Focused Goals", path: "/prep/child-goals", requires: "child_goals" },
     ],
     requires: ["child_goals"],
     ctaPath: "/prep/child-goals",
