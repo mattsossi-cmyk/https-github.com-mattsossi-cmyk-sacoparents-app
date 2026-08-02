@@ -118,7 +118,10 @@ export default function AlignmentMilestoneCelebration({ milestone, snapshotId, p
     setDismissed(true);
     try {
       if (storageKey) window.localStorage.setItem(storageKey, "1");
-    } catch {}
+    } catch {
+      // Storage is best-effort — a missing localStorage (private mode,
+      // disabled cookies) shouldn't block the dismiss.
+    }
   };
 
   const share = async () => {

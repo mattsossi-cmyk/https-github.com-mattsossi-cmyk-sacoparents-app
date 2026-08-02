@@ -5,14 +5,12 @@ const IS_DEV = process.env.NODE_ENV !== "production";
 
 export function logError(...args) {
   if (IS_DEV) {
-    // eslint-disable-next-line no-console
     console.error(...args);
   }
 }
 
 export function logWarn(...args) {
   if (IS_DEV) {
-    // eslint-disable-next-line no-console
     console.warn(...args);
   }
 }

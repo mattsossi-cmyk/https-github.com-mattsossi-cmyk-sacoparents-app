@@ -49,7 +49,6 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSend = async () => {

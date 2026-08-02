@@ -298,7 +298,7 @@ def make_deep_dive_compare_router(
         # earned it before. Safe no-op unless the participant is opted-in.
         if updates.get("status") == "active":
             try:
-                from wall_routes import maybe_log_first_compare
+                from wall_utils import maybe_log_first_compare
                 await maybe_log_first_compare(
                     db, share.get("user_pair") or [],
                 )
@@ -396,7 +396,7 @@ def make_deep_dive_compare_router(
             # in; 24-hour de-dupe prevents repeated views from spamming.
             if current_pct >= 90:
                 try:
-                    from wall_routes import maybe_log_high_alignment
+                    from wall_utils import maybe_log_high_alignment
                     await maybe_log_high_alignment(
                         db, share.get("user_pair") or [], current_pct,
                     )

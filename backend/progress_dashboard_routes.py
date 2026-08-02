@@ -24,6 +24,12 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel
 
 from auth import UserPublic, get_current_user, get_db
+from wall_utils import (
+    BADGE_LABELS,
+    maybe_log_communication_master,
+    maybe_log_foundation_ready,
+    maybe_log_week_streak,
+)
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -298,10 +304,6 @@ async def get_progress(user: UserPublic = Depends(get_current_user),
     body["streak_days"] = int(streak)
     # Public Milestone Wall — safe no-op unless opted in.
     try:
-        from wall_routes import (
-            maybe_log_foundation_ready, maybe_log_communication_master,
-            maybe_log_week_streak,
-        )
         await maybe_log_foundation_ready(db, user.user_id,
                                          bool(body.get("foundation_ready")))
         # Communication Master badge: all 6 mediation-prep sections saved.
@@ -374,7 +376,6 @@ async def _build_weekly_email_context(db: AsyncIOMotorDatabase,
     )
     milestones_this_week: List[str] = []
     try:
-        from wall_routes import _BADGE_LABELS  # noqa: WPS433
         cursor = db["wall_events"].find(
             {"user_id": user.user_id,
              "created_at": {"$gte": week_start.isoformat()}},
@@ -382,7 +383,7 @@ async def _build_weekly_email_context(db: AsyncIOMotorDatabase,
         ).sort("created_at", 1)
         seen = []
         async for row in cursor:
-            label = _BADGE_LABELS.get(row["badge_type"], row["badge_type"])
+            label = BADGE_LABELS.get(row["badge_type"], row["badge_type"])
             seen.append(label.rstrip("."))
         milestones_this_week = list(dict.fromkeys(seen))
     except Exception:  # noqa: BLE001

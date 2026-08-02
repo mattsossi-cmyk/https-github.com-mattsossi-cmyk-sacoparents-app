@@ -45,7 +45,6 @@ export default function VerifyEmail() {
     // Intentional: this effect must run exactly once on mount to consume
     // the token. `api`, setters, and logError are stable; adding them would
     // either no-op or risk double-consuming the token.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params, checkAuth]);
 
   return (

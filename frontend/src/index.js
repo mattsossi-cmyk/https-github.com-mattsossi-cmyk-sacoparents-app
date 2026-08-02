@@ -22,7 +22,6 @@ if (
       .register("/service-worker.js")
       .catch((err) => {
         // Silent — offline support is a progressive enhancement
-        // eslint-disable-next-line no-console
         console.warn("SW registration failed:", err);
       });
   });
