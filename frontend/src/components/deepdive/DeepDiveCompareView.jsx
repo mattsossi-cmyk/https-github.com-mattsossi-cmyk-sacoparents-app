@@ -11,6 +11,7 @@ import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles, TrendingUp, Star, 
 import { logError } from "../../lib/logger";
 import AlignmentMilestoneCelebration from "./AlignmentMilestoneCelebration";
 import ReportReviewNotice from "../ReportReviewNotice";
+import ReportProvenanceFooter from "../ReportProvenanceFooter";
 
 const ALIGN_STYLES = {
   aligned:        "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -393,6 +394,8 @@ export default function DeepDiveCompareView({ pathway }) {
                 </div>
               </section>
             ))}
+
+            <ReportProvenanceFooter variant="comparison" className="mt-8" />
 
             <p className="text-[11px] text-[#4B4567] mt-8 italic max-w-3xl">
               This comparison is neutral and does not determine parental fitness, provide legal advice,

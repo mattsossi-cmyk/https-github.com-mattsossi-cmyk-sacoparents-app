@@ -15,6 +15,7 @@ import ProgressDashboardCard from "../components/ProgressDashboardCard";
 import PublicMilestoneWall from "../components/PublicMilestoneWall";
 import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
 import LearningCenterCard from "../components/LearningCenterCard";
+import YourReportsCard from "../components/YourReportsCard";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -360,21 +361,48 @@ export default function Dashboard() {
           <ProgressDashboardCard />
         </div>
 
+        {/* Your Reports — compact launcher showing which reports are ready
+            vs in progress vs not started. Third above-the-fold block. */}
+        <div className="mt-6">
+          <YourReportsCard
+            summariesCount={summariesCount}
+            sncStatus={sncStatus}
+            deepDives={deepDives}
+            compareStatus={compareStatus}
+          />
+        </div>
+
+        {/* Everything else lives inside "Explore more tools" — kept, not
+            removed, so a stressed parent's first fold stays focused on
+            Do This Next / Your Progress / Your Reports. */}
+        <details
+          className="mt-8 group"
+          data-testid="dashboard-explore-more-tools"
+        >
+          <summary
+            className="cursor-pointer list-none rounded-full border border-[#E5E0EE] bg-white px-5 py-3 inline-flex items-center gap-2 text-sm font-semibold text-[#3D1A78] hover:border-[#3D1A78] hover:shadow-md transition-all"
+            data-testid="dashboard-explore-more-toggle"
+          >
+            <ChevronDown size={14} className="group-open:rotate-180 transition-transform" />
+            Explore more tools — community, weekly email, learning center, and more
+          </summary>
+          <div className="mt-6 space-y-6">
+
         {/* Opt-in community wall — anonymised badges other parents earned
             this month, so first-timers feel momentum from the community. */}
-        <div className="mt-6">
+        <div>
           <PublicMilestoneWall />
         </div>
 
         {/* Inline preview of the parent's upcoming Sunday email so they see
             exactly what will land in their inbox and can force a send. */}
-        <div className="mt-6">
+        <div>
           <WeeklyEmailPreview />
         </div>
 
         {/* Learning Center entry — short reads on communication, boundaries,
             and mediation prep. Deliberately separate from the milestone system. */}
-        <div className="mt-6">
+        <div>
           <LearningCenterCard />
         </div>
 
@@ -1068,6 +1096,8 @@ export default function Dashboard() {
         </div>
 
         </DashboardMoreResources>
+          </div>
+        </details>
       </div>
     </AppShell>
   );

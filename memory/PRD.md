@@ -2,6 +2,17 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 61 — Dashboard IA Restructure + Report Provenance (2026-02-02)**:
+  - **New three-block above-the-fold Dashboard** per user's audit item #1: `Do This Next` (NextStepJourney) → `Your Progress` (ProgressDashboardCard with 5 milestones + streak) → `Your Reports` (new). Everything else lives inside a single collapsible "Explore more tools — community, weekly email, learning center, and more" pill toggle (`dashboard-explore-more-tools`) — kept, not removed, so a stressed parent's first fold stays focused.
+  - **`YourReportsCard.jsx`** — new compact launcher (`your-reports-card` testid) with one row per report:
+    * Mediation Summary (always visible; Ready / Not started)
+    * Special Needs Report (only when SNC assessment exists; Ready / In progress)
+    * Educational / Psychological / Medical deep-dive reports (each surfaces only when the corresponding deep dive has been started; Ready / In progress with `N answered` count)
+    * Co-Parent Comparison (only when a share is active or ready-to-view)
+    Each row has a state pill (Ready/In progress/Not started), colour-coded, plus `Open/Continue/Start` CTA. Wired to the actual live data shapes from `/snc2/report/status`, `/deep-dives/status`, `/deep-dives/compare-status`.
+  - **`ReportProvenanceFooter.jsx`** — new "How this report was built" collapsed footer added to every report page (Mediation Summary, SNC Report, Educational/Psychological/Medical Deep-Dive Reports, SNC Compare View, and the shared DeepDiveCompareView). Four variants (`mediation` / `snc` / `deepdive` / `comparison`) each list which sections are Rule-based (deterministic, colour-coded green) vs Generative (technology-assisted via Claude, colour-coded gold), with a friendly explanation that parents remain responsible for reviewing every part. Test IDs: `report-provenance-footer`, `report-provenance-toggle`, `report-provenance-body`, `report-provenance-row-rule`, `report-provenance-row-generative`.
+  - Regression: 24/24 backend tests still green; frontend lint clean; verified live via preview screenshots of the new dashboard first-fold + the expanded "Explore more tools" section + the Educational Deep Dive report provenance footer (rule-based + generative rows rendering with correct colour pills).
+
 - **Iteration 60 — Copy + Trust Polish (2026-02-02)**:
   - **Homepage "Three Reports" strip** (`Landing.jsx`) rewritten as "Three core reports — plus specialized reports based on your family's needs" with an explanatory sub-paragraph, so the homepage no longer contradicts the Special Needs pathway's additional reports.
   - **Deep-dives optional banner** — a prominent green-bordered notice added above the deep-dive CTAs on `/special-needs-v2` picker (`snc2-deep-dives-optional-banner`): "Your core Special Needs Assessment is enough on its own… the three deep dives are OPTIONAL."

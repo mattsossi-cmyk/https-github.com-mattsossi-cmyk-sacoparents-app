@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles } from "lucide-react";
 import { logError } from "../lib/logger";
 import ReportReviewNotice from "../components/ReportReviewNotice";
+import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 
 const ALIGN_STYLES = {
   aligned:        "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -276,6 +277,8 @@ export default function SpecialNeedsV2CompareView() {
                 </section>
               );
             })}
+
+            <ReportProvenanceFooter variant="comparison" className="mt-8" />
 
             <p className="text-[11px] text-[#4B4567] mt-8 italic max-w-3xl">
               This comparison is neutral and does not determine parental fitness, provide legal advice,

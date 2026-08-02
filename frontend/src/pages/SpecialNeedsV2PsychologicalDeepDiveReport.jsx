@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachStrip";
 import ReportReviewNotice from "../components/ReportReviewNotice";
+import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
@@ -421,6 +422,8 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           apiPrefix="/psych-deep"
           testidBase="psych-deep"
         />
+
+        <ReportProvenanceFooter variant="deepdive" className="mt-8" />
 
         <p className="text-[11px] text-[#4B4567] mt-8 italic">{report.disclaimer}</p>
       </div>

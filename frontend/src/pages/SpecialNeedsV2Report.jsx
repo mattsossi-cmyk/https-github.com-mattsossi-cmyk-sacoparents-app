@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert, Users, Mail } from "lucide-react";
 import { logError } from "../lib/logger";
 import ReportReviewNotice from "../components/ReportReviewNotice";
+import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 
 const STATUS_COLOR = {
   "Strength":                          "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -299,6 +300,8 @@ export default function SpecialNeedsV2Report() {
               {" "}<Link to="/safety-assessment" className="underline font-semibold">Open the full Safety Assessment</Link>.</div>
           </div>
         </Section>
+
+        <ReportProvenanceFooter variant="snc" className="mt-8" />
 
         <div className="mt-8 text-xs text-[#8471B3] italic">{r.disclaimer}</div>
       </div>
