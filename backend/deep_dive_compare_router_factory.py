@@ -293,6 +293,17 @@ def make_deep_dive_compare_router(
 
         await db[shares_collection].update_one({"share_id": share_id}, {"$set": updates})
         share.update(updates)
+        # Wall: when the share flips to fully-active (both consented), log
+        # a `first_compare` badge for each participant that has never
+        # earned it before. Safe no-op unless the participant is opted-in.
+        if updates.get("status") == "active":
+            try:
+                from wall_routes import maybe_log_first_compare
+                await maybe_log_first_compare(
+                    db, share.get("user_pair") or [],
+                )
+            except Exception:  # noqa: BLE001
+                logger.exception("Wall: first_compare hook failed for %s", share_id)
         return {"ok": True, "share": await _hydrate(db, share, me.user_id)}
 
     @router.post("/{share_id}/revoke")
@@ -380,6 +391,17 @@ def make_deep_dive_compare_router(
                 pass
             except Exception:  # noqa: BLE001
                 logger.exception("Failed to persist compare snapshot for share %s", share["share_id"])
+            # Wall: if this snapshot crossed the 90% mark, log a high-
+            # alignment badge for each participant. Safe no-op unless opted
+            # in; 24-hour de-dupe prevents repeated views from spamming.
+            if current_pct >= 90:
+                try:
+                    from wall_routes import maybe_log_high_alignment
+                    await maybe_log_high_alignment(
+                        db, share.get("user_pair") or [], current_pct,
+                    )
+                except Exception:  # noqa: BLE001
+                    logger.exception("Wall: high_alignment hook failed for %s", share["share_id"])
         return comparison
 
     @router.get("/{share_id}")

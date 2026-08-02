@@ -265,9 +265,17 @@ async def get_progress(user: UserPublic = Depends(get_current_user),
     body["history_days"] = _HISTORY_DAYS
     # Public Milestone Wall — safe no-op unless opted in.
     try:
-        from wall_routes import maybe_log_foundation_ready
+        from wall_routes import (
+            maybe_log_foundation_ready, maybe_log_communication_master,
+        )
         await maybe_log_foundation_ready(db, user.user_id,
                                          bool(body.get("foundation_ready")))
+        # Communication Master badge: all 6 mediation-prep sections saved.
+        prep = await db["prep_data"].find_one({"user_id": user.user_id}, {"_id": 0}) or {}
+        saved = _saved_prep_sections(prep)
+        await maybe_log_communication_master(
+            db, user.user_id, len(saved), len(_MEDIATION_PREP_SECTIONS),
+        )
     except Exception:  # noqa: BLE001
         pass
     return body

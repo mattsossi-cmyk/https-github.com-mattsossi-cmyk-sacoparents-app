@@ -43,14 +43,26 @@ router = APIRouter(prefix="/wall", tags=["wall"])
 
 _OPT_IN_COLLECTION = "wall_opt_in"
 _EVENTS_COLLECTION = "wall_events"
+_CHEERS_COLLECTION = "wall_cheers"
 _BADGE_FOUNDATION_READY = "foundation_ready"
+_BADGE_FIRST_COMPARE = "first_compare"
+_BADGE_HIGH_ALIGNMENT_90 = "high_alignment_90"
+_BADGE_COMMUNICATION_MASTER = "communication_master"
 
 _ANON_SALT_ENV = "WALL_ANON_SALT"
 
 # Human labels for badge types shown on the feed.
 _BADGE_LABELS = {
-    _BADGE_FOUNDATION_READY: "lit all five milestones — Foundation Ready.",
+    _BADGE_FOUNDATION_READY:     "lit all five milestones — Foundation Ready.",
+    _BADGE_FIRST_COMPARE:        "ran their first co-parent comparison.",
+    _BADGE_HIGH_ALIGNMENT_90:    "hit 90%+ alignment with their co-parent.",
+    _BADGE_COMMUNICATION_MASTER: "completed every mediation-prep section — Communication Master.",
 }
+
+# Badges we only ever want to log once per parent (life-time). Others use a
+# 24-hour de-dupe so a flicker back-and-forth doesn't spam the wall but a
+# re-earn a week later still shows up.
+_LIFETIME_BADGES = frozenset({_BADGE_FIRST_COMPARE, _BADGE_COMMUNICATION_MASTER})
 
 
 def _anon_hash(user_id: str) -> str:
@@ -82,18 +94,27 @@ async def _set_opt_in(db: AsyncIOMotorDatabase, user_id: str, opt_in: bool) -> N
 async def _log_event_once(db: AsyncIOMotorDatabase, user_id: str,
                           badge_type: str) -> Optional[Dict[str, Any]]:
     """Log a badge event iff (1) the user is opted-in AND (2) they haven't
-    logged this badge in the last 24h (so a flicker at 4/5 → 5/5 → 4/5 →
-    5/5 doesn't spam the wall)."""
+    logged this badge in the dedupe window. Lifetime badges (first_compare,
+    communication_master) never re-log; other badges use a 24-hour window so
+    a flicker at 4/5 → 5/5 → 4/5 → 5/5 doesn't spam the wall."""
     if not await _get_opt_in(db, user_id):
         return None
-    twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(hours=24)
-    recent = await db[_EVENTS_COLLECTION].find_one({
-        "user_id": user_id,
-        "badge_type": badge_type,
-        "created_at": {"$gte": twenty_four_hours_ago.isoformat()},
-    }, {"_id": 1})
-    if recent:
-        return None
+    if badge_type in _LIFETIME_BADGES:
+        # Any prior event of this type for this user blocks logging.
+        prior = await db[_EVENTS_COLLECTION].find_one(
+            {"user_id": user_id, "badge_type": badge_type}, {"_id": 1},
+        )
+        if prior:
+            return None
+    else:
+        twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(hours=24)
+        recent = await db[_EVENTS_COLLECTION].find_one({
+            "user_id": user_id,
+            "badge_type": badge_type,
+            "created_at": {"$gte": twenty_four_hours_ago.isoformat()},
+        }, {"_id": 1})
+        if recent:
+            return None
     now = datetime.now(timezone.utc)
     doc = {
         "event_id": f"wall_{uuid.uuid4().hex[:12]}",
@@ -107,8 +128,8 @@ async def _log_event_once(db: AsyncIOMotorDatabase, user_id: str,
 
 
 # ---------------------------------------------------------------------------
-# Public helper — called from progress_dashboard_routes on every /progress
-# request. Keeps the wall in-sync without introducing a cron job.
+# Public helpers — called from other routes on every relevant transition.
+# Each one is a safe no-op unless the user is opted-in.
 # ---------------------------------------------------------------------------
 async def maybe_log_foundation_ready(db: AsyncIOMotorDatabase, user_id: str,
                                      foundation_ready: bool) -> None:
@@ -119,6 +140,50 @@ async def maybe_log_foundation_ready(db: AsyncIOMotorDatabase, user_id: str,
         await _log_event_once(db, user_id, _BADGE_FOUNDATION_READY)
     except Exception:  # noqa: BLE001
         # Never let a wall-side failure break the dashboard.
+        pass
+
+
+async def maybe_log_first_compare(db: AsyncIOMotorDatabase,
+                                  user_ids: List[str]) -> None:
+    """Log a first_compare badge for each participant that has never
+    earned it before. Called when a compare share transitions to
+    both-consented ("active")."""
+    for uid in user_ids or []:
+        if not uid:
+            continue
+        try:
+            await _log_event_once(db, uid, _BADGE_FIRST_COMPARE)
+        except Exception:  # noqa: BLE001
+            pass
+
+
+async def maybe_log_high_alignment(db: AsyncIOMotorDatabase,
+                                   user_ids: List[str],
+                                   aligned_pct: Optional[int]) -> None:
+    """Log a 90%+ alignment badge for each participant. Called when a
+    compare snapshot is persisted."""
+    if aligned_pct is None or aligned_pct < 90:
+        return
+    for uid in user_ids or []:
+        if not uid:
+            continue
+        try:
+            await _log_event_once(db, uid, _BADGE_HIGH_ALIGNMENT_90)
+        except Exception:  # noqa: BLE001
+            pass
+
+
+async def maybe_log_communication_master(db: AsyncIOMotorDatabase,
+                                         user_id: str,
+                                         saved_prep_sections: int,
+                                         total_prep_sections: int) -> None:
+    """Log a Communication Master badge once when a parent has saved every
+    mediation-prep section."""
+    if total_prep_sections <= 0 or saved_prep_sections < total_prep_sections:
+        return
+    try:
+        await _log_event_once(db, user_id, _BADGE_COMMUNICATION_MASTER)
+    except Exception:  # noqa: BLE001
         pass
 
 
@@ -198,9 +263,11 @@ def _friendly_delta(created_at_iso: str) -> str:
 @router.get("/feed")
 async def wall_feed(days: int = Query(30, ge=1, le=90),
                     limit: int = Query(50, ge=1, le=200),
-                    _user: UserPublic = Depends(get_current_user),
+                    user: UserPublic = Depends(get_current_user),
                     db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
-    """Public, anonymised feed of badges earned in the last `days` days."""
+    """Public, anonymised feed of badges earned in the last `days` days,
+    enriched with cheer counts and whether the caller has cheered each
+    event."""
     since = datetime.now(timezone.utc) - timedelta(days=days)
     cursor = db[_EVENTS_COLLECTION].find(
         {"created_at": {"$gte": since.isoformat()}},
@@ -216,6 +283,25 @@ async def wall_feed(days: int = Query(30, ge=1, le=90),
             "created_at": row["created_at"],
             "when_human": _friendly_delta(row["created_at"]),
         })
+    if events:
+        event_ids = [e["event_id"] for e in events]
+        # Aggregate cheer counts in one pass.
+        counts: Dict[str, int] = {eid: 0 for eid in event_ids}
+        pipeline = [
+            {"$match": {"event_id": {"$in": event_ids}}},
+            {"$group": {"_id": "$event_id", "n": {"$sum": 1}}},
+        ]
+        async for row in db[_CHEERS_COLLECTION].aggregate(pipeline):
+            counts[row["_id"]] = int(row["n"])
+        # Which events has the caller cheered?
+        mine_cursor = db[_CHEERS_COLLECTION].find(
+            {"event_id": {"$in": event_ids}, "user_id": user.user_id},
+            {"_id": 0, "event_id": 1},
+        )
+        i_cheered = {r["event_id"] async for r in mine_cursor}
+        for ev in events:
+            ev["cheer_count"] = counts.get(ev["event_id"], 0)
+            ev["i_cheered"] = ev["event_id"] in i_cheered
     total = await db[_EVENTS_COLLECTION].count_documents({
         "created_at": {"$gte": since.isoformat()},
     })
@@ -225,3 +311,51 @@ async def wall_feed(days: int = Query(30, ge=1, le=90),
         "days": days,
         "limit": limit,
     }
+
+
+@router.post("/cheer/{event_id}")
+async def wall_cheer(event_id: str,
+                     user: UserPublic = Depends(get_current_user),
+                     db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    """Toggle a one-tap heart on another parent's badge. Requires the
+    caller to be opted-in to the wall (mutual consent to be part of the
+    community). Cheerer's identity is never exposed on the feed."""
+    # Ensure the event exists.
+    ev = await db[_EVENTS_COLLECTION].find_one(
+        {"event_id": event_id}, {"_id": 0, "event_id": 1, "user_id": 1},
+    )
+    if not ev:
+        raise HTTPException(status_code=404, detail="Milestone not found.")
+    # Cheering yourself is disallowed — it'd inflate counts silently.
+    if ev.get("user_id") == user.user_id:
+        raise HTTPException(
+            status_code=400,
+            detail="You can't cheer your own milestone. Nice one though.",
+        )
+    # Must be opted-in to cheer. Symmetric contract — only wall citizens
+    # can interact with the wall.
+    if not await _get_opt_in(db, user.user_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Opt in to the community wall before cheering another parent.",
+        )
+    # Toggle: if the row exists, remove it; otherwise insert it.
+    existing = await db[_CHEERS_COLLECTION].find_one(
+        {"event_id": event_id, "user_id": user.user_id}, {"_id": 1},
+    )
+    if existing:
+        await db[_CHEERS_COLLECTION].delete_one(
+            {"event_id": event_id, "user_id": user.user_id},
+        )
+        cheered = False
+    else:
+        await db[_CHEERS_COLLECTION].insert_one({
+            "event_id": event_id,
+            "user_id": user.user_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        cheered = True
+    cheer_count = await db[_CHEERS_COLLECTION].count_documents(
+        {"event_id": event_id},
+    )
+    return {"ok": True, "cheered": cheered, "cheer_count": int(cheer_count)}

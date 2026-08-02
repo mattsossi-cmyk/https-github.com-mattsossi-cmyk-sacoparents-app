@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { api } from "../lib/api";
-import { ShieldCheck, Users, EyeOff, Loader2, Sparkles, Info } from "lucide-react";
+import {
+  ShieldCheck, Users, EyeOff, Loader2, Sparkles, Info, Heart,
+  MessageCircle, TrendingUp, Award,
+} from "lucide-react";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
 
@@ -16,11 +19,26 @@ import { logError } from "../lib/logger";
  *   • Opting out later stops future events; existing events remain until
  *     the admin runs a scheduled purge.
  */
-const CARD_ACCENT = {
+const BADGE_META = {
   foundation_ready: {
-    bg: "bg-[#F1F9F4]",
-    border: "border-[#B5DFC5]",
-    text: "text-[#1F5C3B]",
+    accent: { bg: "bg-[#F1F9F4]", border: "border-[#B5DFC5]", text: "text-[#1F5C3B]" },
+    Icon: ShieldCheck,
+    iconClass: "text-[#1F5C3B]",
+  },
+  first_compare: {
+    accent: { bg: "bg-[#F5F1FB]", border: "border-[#D6CFE8]", text: "text-[#3D1A78]" },
+    Icon: Sparkles,
+    iconClass: "text-[#3D1A78]",
+  },
+  high_alignment_90: {
+    accent: { bg: "bg-[#FBEDDA]", border: "border-[#EDD5B0]", text: "text-[#8C5A2C]" },
+    Icon: TrendingUp,
+    iconClass: "text-[#8C5A2C]",
+  },
+  communication_master: {
+    accent: { bg: "bg-[#EEF3FB]", border: "border-[#C7D6EB]", text: "text-[#233B6C]" },
+    Icon: MessageCircle,
+    iconClass: "text-[#233B6C]",
   },
 };
 
@@ -90,6 +108,32 @@ export default function PublicMilestoneWall() {
       toast.error("Couldn't update your wall preference. Try again shortly.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function toggleCheer(eventId) {
+    try {
+      const r = await api.post(`/wall/cheer/${eventId}`);
+      const cheered = !!r.data?.cheered;
+      const count = Number(r.data?.cheer_count ?? 0);
+      setFeed((f) => {
+        if (!f) return f;
+        return {
+          ...f,
+          events: (f.events || []).map((ev) =>
+            ev.event_id === eventId
+              ? { ...ev, i_cheered: cheered, cheer_count: count }
+              : ev,
+          ),
+        };
+      });
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      toast.error(
+        typeof detail === "string"
+          ? detail
+          : "Couldn't send a cheer. Try again shortly.",
+      );
     }
   }
 
@@ -171,11 +215,18 @@ export default function PublicMilestoneWall() {
           data-testid="wall-feed"
         >
           {events.map((ev) => {
-            const accent = CARD_ACCENT[ev.badge_type] || {
-              bg: "bg-[#FCFBFE]",
-              border: "border-[#EEE9F7]",
-              text: "text-[#3D1A78]",
+            const meta = BADGE_META[ev.badge_type] || {
+              accent: {
+                bg: "bg-[#FCFBFE]",
+                border: "border-[#EEE9F7]",
+                text: "text-[#3D1A78]",
+              },
+              Icon: Award,
+              iconClass: "text-[#3D1A78]",
             };
+            const { accent, Icon, iconClass } = meta;
+            const cheered = !!ev.i_cheered;
+            const count = Number(ev.cheer_count || 0);
             return (
               <li
                 key={ev.event_id}
@@ -193,10 +244,34 @@ export default function PublicMilestoneWall() {
                     {ev.when_human}
                   </div>
                 </div>
-                <ShieldCheck
-                  size={16}
-                  className="shrink-0 mt-0.5 text-[#1F5C3B]"
-                />
+                <div className="shrink-0 flex items-center gap-2 mt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => toggleCheer(ev.event_id)}
+                    disabled={!optIn}
+                    title={
+                      optIn
+                        ? cheered ? "Take back your cheer" : "Send a one-tap cheer"
+                        : "Opt in to the wall to cheer other parents"
+                    }
+                    data-testid={`wall-cheer-${ev.event_id}`}
+                    data-cheered={cheered ? "1" : "0"}
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+                      cheered
+                        ? "bg-[#FBEDED] border-[#EDD1D1] text-[#B23C3C]"
+                        : "bg-white border-[#E5E0EE] text-[#3D1A78] hover:bg-[#F5F1FB]"
+                    } ${!optIn ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
+                  >
+                    <Heart
+                      size={12}
+                      className={cheered ? "fill-[#B23C3C]" : ""}
+                    />
+                    <span data-testid={`wall-cheer-${ev.event_id}-count`}>
+                      {count}
+                    </span>
+                  </button>
+                  <Icon size={16} className={iconClass} />
+                </div>
               </li>
             );
           })}
@@ -210,7 +285,7 @@ export default function PublicMilestoneWall() {
         >
           <EyeOff size={12} className="shrink-0 mt-0.5" />
           <span>
-            You're currently invisible to the wall. Nothing about you is
+            You&apos;re currently invisible to the wall. Nothing about you is
             recorded until you tap the button above.
           </span>
         </div>
