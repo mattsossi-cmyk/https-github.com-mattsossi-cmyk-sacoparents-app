@@ -6,7 +6,7 @@ export default function SpecialNeedsV2MedicalDeepDiveCompare() {
     <DeepDiveCompareHub
       pathway={{
         testidPrefix: "med-deep-compare",
-        eyebrow: "Medical Deep Dive · Co-Parent Comparison",
+        eyebrow: "Checkin - Medical Needs Report",
         hero: "See where you and your co-parent already agree on your child's medication.",
         description:
           "When both parents complete the Medical / Prescription & Medication Coordination Deep Dive " +

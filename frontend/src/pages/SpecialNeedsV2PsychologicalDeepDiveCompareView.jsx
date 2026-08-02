@@ -6,11 +6,11 @@ export default function SpecialNeedsV2PsychologicalDeepDiveCompareView() {
     <DeepDiveCompareView
       pathway={{
         testidPrefix: "psych-deep-compare",
-        eyebrow: "Psychological Deep Dive · Co-Parent Comparison",
+        eyebrow: "Checkin - Psychological Needs Report",
         apiPrefix: "/psych-deep/compare",
         hubRoute: "/special-needs-v2/psychological-deep-dive/compare",
         hubLabel: "Back to comparisons",
-        downloadFilename: "PsychDeep_Comparison.pdf",
+        downloadFilename: "Checkin_Psychological_Needs_Report.pdf",
       }}
     />
   );

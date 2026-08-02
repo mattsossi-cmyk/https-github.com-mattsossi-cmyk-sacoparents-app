@@ -438,14 +438,12 @@ class TestComparisonPayloadHasLists:
 
 
 class TestEducationalPDFRename:
-    """Educational PDF filename must start with
-    `Educational_Assessment_Alignment_Report_...pdf`. Psych/med PDFs must
-    NOT change (still MedDeep_Comparison / PsychDeep_Comparison)."""
+    """PDF filename prefixes for all three Check-In Reports."""
 
     EXPECTED_PREFIX = {
-        "edu-deep":   "Educational_Assessment_Alignment_Report_",
-        "psych-deep": "PsychDeep_Comparison_",
-        "med-deep":   "MedDeep_Comparison_",
+        "edu-deep":   "Coparenting_Education_CheckIn_Summary_",
+        "psych-deep": "Checkin_Psychological_Needs_Report_",
+        "med-deep":   "Checkin_Medical_Needs_Report_",
     }
 
     @pytest.mark.parametrize("prefix,_sp,_ac,_sc", PATHWAYS_ALL)

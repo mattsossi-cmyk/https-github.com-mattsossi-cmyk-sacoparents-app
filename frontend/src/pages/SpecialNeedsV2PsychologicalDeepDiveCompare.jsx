@@ -6,7 +6,7 @@ export default function SpecialNeedsV2PsychologicalDeepDiveCompare() {
     <DeepDiveCompareHub
       pathway={{
         testidPrefix: "psych-deep-compare",
-        eyebrow: "Psychological Deep Dive · Co-Parent Comparison",
+        eyebrow: "Checkin - Psychological Needs Report",
         hero: "See where you and your co-parent already agree on emotional and behavioural care.",
         description:
           "When both parents complete the Psychological / Behavioural Deep Dive and each of you " +
