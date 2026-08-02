@@ -1,6 +1,13 @@
 # SA CoParents — PRD
 
 ## Status snapshot (2026-07-30 · v2 shipped)
+- **Iteration 66 — Code Quality Report fixes (2026-02-02)**:
+  - Resolved the circular import between `wall_routes.py` ↔ `progress_dashboard_routes.py`. Extracted anon hashing, log-event-once machinery, `BADGE_LABELS` constants, and the five `maybe_log_*` helpers into a new `wall_utils.py`. `wall_routes` now imports from `wall_utils` and lazy-imports `compute_progress` inside the `/wall/opt-in` endpoint only. `progress_dashboard_routes` and `deep_dive_compare_router_factory` import from `wall_utils` at load time. `wall_routes.__all__` re-exports the helpers for backwards compat.
+  - Frontend: removed 9 dead `eslint-disable-next-line react-hooks/exhaustive-deps` / `no-console` directives across `Summary.jsx`, `Reflection.jsx`, `ReadinessCheck.jsx`, `InviteCoparentCard.jsx`, `AdminInsights.jsx`, `PriorityRanking.jsx`, `VerifyEmail.jsx`, `index.js`, `lib/logger.js`. Filled the one empty `catch {}` in `AlignmentMilestoneCelebration.jsx` with an explanatory comment.
+  - Verified via `testing_agent_v3_fork` (iteration_49.json): 12 new regression tests in `test_wall_utils_regression.py` all pass, iter54/55/56 (20 tests) still pass, `/dashboard` renders the three-block layout cleanly (dashboard-greeting, progress-bar, continue-button etc.), zero console/pageerrors, all wall/progress/weekly-email endpoints return 200.
+  - Noted as false positives in the report and skipped (not real issues): `is None` in `wall_routes.py:166,311` is correct Python idiom; `TestPass123!` in `tests/*.py` is a fixture, not a leaked secret; `personal_analytics` and the `ai_service.py` prompt builders are readable single-responsibility functions where a "complexity refactor" would just move code into helpers that are called once — violates DRY-vs-YAGNI.
+
+
 
 - **Iteration 65 — Sign With Notes (2026-02-02)**:
   - Extended the "Sign & timestamp this download" flow so parents can also add a **one-line signing note** (e.g. *"Prepared for our 12 Feb mediation session"*) that prints in italics just above the bold signature line on every content page of the PDF.
