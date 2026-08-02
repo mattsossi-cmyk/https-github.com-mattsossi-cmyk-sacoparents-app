@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { api } from "../lib/api";
 import {
   Mail, Loader2, ChevronDown, ChevronUp, Send, ShieldCheck,
-  Sparkles, RefreshCw, CheckCircle2,
+  Sparkles, RefreshCw, CheckCircle2, Feather, Save, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
@@ -29,11 +29,24 @@ export default function WeeklyEmailPreview() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [noteSaved, setNoteSaved] = useState("");
+  const [noteMax, setNoteMax] = useState(280);
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteJustSaved, setNoteJustSaved] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const r = await api.get("/dashboard/weekly-email/preview");
-      setData(r.data || null);
+      const [previewR, noteR] = await Promise.all([
+        api.get("/dashboard/weekly-email/preview"),
+        api.get("/dashboard/weekly-email/note"),
+      ]);
+      setData(previewR.data || null);
+      const n = noteR?.data || {};
+      const savedText = (n.note || "").toString();
+      setNoteSaved(savedText);
+      setNoteDraft(savedText);
+      if (typeof n.max_chars === "number") setNoteMax(n.max_chars);
     } catch (err) {
       logError("weekly email preview failed:", err);
     } finally {
@@ -64,6 +77,30 @@ export default function WeeklyEmailPreview() {
       );
     } finally {
       setSending(false);
+    }
+  }
+
+  async function saveNote() {
+    setNoteSaving(true);
+    try {
+      const r = await api.post("/dashboard/weekly-email/note", {
+        note: noteDraft,
+      });
+      const saved = (r?.data?.note || "").toString();
+      setNoteSaved(saved);
+      setNoteDraft(saved);
+      setNoteJustSaved(true);
+      window.setTimeout(() => setNoteJustSaved(false), 1800);
+      toast.success(
+        saved
+          ? "Note saved — it'll ride along on Sunday."
+          : "Note cleared.",
+      );
+    } catch (err) {
+      logError("save weekly note failed:", err);
+      toast.error("Couldn't save your note. Try again in a moment.");
+    } finally {
+      setNoteSaving(false);
     }
   }
 
@@ -161,6 +198,93 @@ export default function WeeklyEmailPreview() {
               </div>
             )}
           </div>
+
+          {/* Handwritten personal note — parents can add a short line
+              that rides along on Sunday's email. Auto-clears after send. */}
+          {(() => {
+            const remaining = Math.max(0, noteMax - noteDraft.length);
+            const dirty = noteDraft !== noteSaved;
+            const overLimit = noteDraft.length > noteMax;
+            const showSavedPreview = noteSaved && !dirty && !data.sent_this_week;
+            return (
+              <div
+                className="mt-4 rounded-2xl border border-[#E4D8B8] bg-[#FFF9EB] p-4"
+                data-testid="weekly-email-note-composer"
+              >
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-[#8A6B12] font-bold">
+                  <Feather size={12} /> Add a note (goes in Sunday&apos;s email)
+                </div>
+                <p className="text-[11px] text-[#6E5910] mt-1">
+                  Optional handwritten line — think of it as a Post-it to your future self.
+                  {data.sent_this_week
+                    ? " This week's email already went out — save a note now and it'll appear on next Sunday's send."
+                    : " Clears automatically once the Sunday email fires."}
+                </p>
+                <textarea
+                  value={noteDraft}
+                  onChange={(e) => setNoteDraft(e.target.value.slice(0, noteMax))}
+                  maxLength={noteMax}
+                  rows={3}
+                  placeholder="e.g. Proud of us for showing up this week. Onwards."
+                  className="mt-3 w-full rounded-xl border border-[#E4D8B8] bg-white p-3 text-sm text-[#3B2A05] focus:outline-none focus:border-[#8A6B12] focus:ring-2 focus:ring-[#F0DFA9] transition"
+                  data-testid="weekly-email-note-textarea"
+                  style={{ fontFamily: "'Caveat', 'Bradley Hand', cursive", fontSize: "18px", lineHeight: "1.4" }}
+                />
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                  <span
+                    className={`text-[11px] font-semibold ${overLimit ? "text-[#B4223B]" : "text-[#8A6B12]"}`}
+                    data-testid="weekly-email-note-counter"
+                  >
+                    {remaining} chars left
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {noteJustSaved && (
+                      <span
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1F5C3B]"
+                        data-testid="weekly-email-note-saved-flash"
+                      >
+                        <Check size={12} /> Saved
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={saveNote}
+                      disabled={noteSaving || (!dirty)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                        (!dirty || noteSaving)
+                          ? "bg-[#F0E4C4] text-[#8A6B12] cursor-not-allowed"
+                          : "bg-[#8A6B12] text-white hover:brightness-110"
+                      }`}
+                      data-testid="weekly-email-note-save"
+                    >
+                      {noteSaving ? (
+                        <Loader2 size={11} className="animate-spin" />
+                      ) : (
+                        <Save size={11} />
+                      )}
+                      {noteDraft.trim() === "" && noteSaved ? "Clear note" : "Save note"}
+                    </button>
+                  </div>
+                </div>
+                {showSavedPreview && (
+                  <div
+                    className="mt-3 rounded-xl border border-dashed border-[#E4D8B8] bg-white/70 px-3 py-2"
+                    data-testid="weekly-email-note-preview"
+                  >
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-[#8A6B12] font-bold mb-1">
+                      Preview in the email
+                    </div>
+                    <div
+                      className="text-[#3B2A05]"
+                      style={{ fontFamily: "'Caveat', 'Bradley Hand', cursive", fontSize: "18px", lineHeight: "1.45" }}
+                    >
+                      &ldquo;{noteSaved}&rdquo;
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Milestone list */}
           {p.milestones_this_week?.length > 0 ? (

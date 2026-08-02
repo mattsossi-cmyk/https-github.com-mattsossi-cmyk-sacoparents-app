@@ -12,6 +12,7 @@ All emails are sent through the Resend HTTP API via the `resend` SDK.
 Templates remain HTML + plain-text fallback.
 """
 import base64
+import html as _html
 import logging
 import os
 from typing import List, Optional, Tuple
@@ -1061,9 +1062,11 @@ def send_weekly_progress_summary(
     milestones_this_week: List[str],
     alignment_pct: Optional[int],
     dashboard_url: str,
+    personal_note: Optional[str] = None,
 ) -> None:
     """Sunday-friendly momentum email. Neutral, encouraging, single CTA."""
     hello = (user_name or "").strip() or "there"
+    note = (personal_note or "").strip()
     lit = ", ".join(milestones_this_week) if milestones_this_week else ""
     week_line = (
         f"This week you lit {lit}." if lit
@@ -1083,12 +1086,13 @@ def send_weekly_progress_summary(
     plain = (
         f"Hi {hello},\n\n"
         f"Your Sunday snapshot from SA CoParents.\n\n"
-        f"Progress: {completed_count} of {total} milestones lit.\n"
+        + (f"A quick note from you:\n\u201C{note}\u201D\n\n" if note else "")
+        + f"Progress: {completed_count} of {total} milestones lit.\n"
         f"{week_line}\n"
         f"{streak_line}\n"
         f"{align_line}\n\n"
         f"Open your dashboard: {dashboard_url}\n\n"
-        "— SA CoParents · sacoparentsapp.online\n"
+        "\u2014 SA CoParents \u00b7 sacoparentsapp.online\n"
     )
     milestone_html = ""
     if milestones_this_week:
@@ -1103,9 +1107,24 @@ def send_weekly_progress_summary(
             '<div style="font-size:13px;color:#4B4567;margin:6px 0 0 0;">'
             f'{align_line}</div>'
         )
+    note_html = ""
+    if note:
+        safe_note = _html.escape(note).replace("\n", "<br/>")
+        note_html = (
+            '<div style="margin:0 0 18px 0;padding:16px 18px;border-radius:14px;'
+            'border:1px solid #E4D8B8;background:#FFF9EB;position:relative;">'
+            '<div style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;'
+            'color:#8A6B12;font-weight:700;margin:0 0 6px 0;">A note from you</div>'
+            '<div style="font-family:\'Caveat\',\'Bradley Hand\',cursive;'
+            'font-size:20px;line-height:1.45;color:#3B2A05;">'
+            f'\u201C{safe_note}\u201D'
+            '</div>'
+            '</div>'
+        )
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
         f"Hi <strong>{hello}</strong>, your Sunday snapshot from SA CoParents.</p>"
+        f'{note_html}'
         '<div style="margin:0 0 18px 0;padding:14px 16px;border-radius:14px;'
         'border:1px solid #D6CFE8;background:#F5F1FB;">'
         '<div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;'

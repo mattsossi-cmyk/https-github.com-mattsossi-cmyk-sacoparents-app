@@ -2,6 +2,15 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 58 — Preview Custom Message / Handwritten Weekly Note (2026-02-02)**:
+  - Parents can now attach a short handwritten note (max 280 chars, tweet-sized) to the upcoming Sunday weekly email. Note is ISO-week scoped and auto-clears once the Sunday email fires, so each week starts fresh.
+  - New backend endpoints on `progress_dashboard_routes.py`: `GET /api/dashboard/weekly-email/note` returns `{note, updated_at, week_key, max_chars}`; `POST /api/dashboard/weekly-email/note {note}` saves/clears (empty or whitespace clears; oversize silently truncated). New Mongo collection `weekly_progress_email_notes` (composite key: `user_id + week_key`).
+  - Weekly email context now carries `personal_note` + `personal_note_updated_at`; `_build_weekly_email_context` reuses `_fetch_weekly_note` so preview + send stay in sync.
+  - `email_service.send_weekly_progress_summary` accepts `personal_note`, escapes it, and renders it in a warm cream/gold "A note from you" card using a cursive stack (Caveat / Bradley Hand) above the milestone block. Plain-text alternate wraps the note in curly quotes for parity.
+  - After a successful send, the note doc for that week is deleted (auto-reset). Send response now includes `personal_note_included: bool`.
+  - Frontend `WeeklyEmailPreview.jsx`: new Post-it style composer inside the expanded preview card — cursive textarea (280 char cap with live counter, "N chars left" turns red over limit), disabled `Save note` button until dirty, "Saved" flash + toast on save, dashed-border preview line rendering the saved note in the same cursive as the email. Clears cleanly with an empty submit.
+  - Tests: new `test_iter57_weekly_note.py` (7 cases: empty default, save/read round-trip, whitespace-clears, oversize truncation, preview surfaces note, send includes + clears note, send-without-note flag). All 7 pass. Regression `test_iter56_features.py` remains 9/9 green.
+
 - **Family Report:** fully removed at user request.
 - **Special Needs Co-Parenting v1** (13-section flat product): fully deleted per user's "replace it" directive. Backend routes `/api/snc/*`, frontend `/special-needs*` pages, comparison + invite endpoints, associated tests, sample PDFs, and MongoDB collections `snc_assessments`, `snc_reports`, `snc_invites`, `snc_comparisons` all removed.
 - **Special Needs Co-Parenting v2** shipped at `/special-needs-v2`. Category-gated (Medical / Educational / Psychological or Behavioural / Multiple) 8-step assessment. **Report reshaped (2026-07-30) to the 9-section polished framework**: Report Introduction · Family Situation · Areas of Need · Co-Parenting Strengths · Co-Parenting Challenges (4-part cards) · Child Impact Summary · Detailed Findings by Category (Strength / Developing / Needs Attention / Priority Concern / Professional Guidance Recommended status system) · Parent Alignment Summary · Recommended Co-Parenting Structure (Cooperative / Structured / Parallel or Professionally Supported — safety-aware).

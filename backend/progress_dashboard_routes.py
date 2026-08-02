@@ -321,6 +321,8 @@ async def get_progress(user: UserPublic = Depends(get_current_user),
 # Weekly Progress Email — Sunday summary of milestones + streak.
 # ---------------------------------------------------------------------------
 _WEEKLY_EMAIL_LOG = "weekly_progress_email_log"
+_WEEKLY_EMAIL_NOTES = "weekly_progress_email_notes"
+_WEEKLY_NOTE_MAX_CHARS = 280
 
 
 def _iso_week_key(dt: Optional[datetime] = None) -> str:
@@ -334,6 +336,25 @@ def _iso_week_key(dt: Optional[datetime] = None) -> str:
 
 class WeeklyEmailIn(BaseModel):
     force: Optional[bool] = False
+
+
+class WeeklyNoteIn(BaseModel):
+    note: str = ""
+
+
+async def _fetch_weekly_note(db: AsyncIOMotorDatabase, user_id: str,
+                             week_key: str) -> Dict[str, Any]:
+    """Return the parent's saved handwritten note for the given ISO week
+    (or an empty stub if nothing's been saved yet)."""
+    doc = await db[_WEEKLY_EMAIL_NOTES].find_one(
+        {"user_id": user_id, "week_key": week_key}, {"_id": 0},
+    )
+    return {
+        "note": (doc or {}).get("note", "") or "",
+        "updated_at": (doc or {}).get("updated_at"),
+        "week_key": week_key,
+        "max_chars": _WEEKLY_NOTE_MAX_CHARS,
+    }
 
 
 async def _build_weekly_email_context(db: AsyncIOMotorDatabase,
@@ -367,6 +388,7 @@ async def _build_weekly_email_context(db: AsyncIOMotorDatabase,
     except Exception:  # noqa: BLE001
         milestones_this_week = []
     frontend_origin = os.environ.get("FRONTEND_ORIGIN") or "https://sacoparentsapp.online"
+    note_doc = await _fetch_weekly_note(db, user.user_id, _iso_week_key(now))
     return {
         "user_name": user.name,
         "user_email": user.email,
@@ -376,6 +398,8 @@ async def _build_weekly_email_context(db: AsyncIOMotorDatabase,
         "milestones_this_week": milestones_this_week,
         "alignment_pct": progress.get("alignment_pct"),
         "dashboard_url": f"{frontend_origin.rstrip('/')}/dashboard",
+        "personal_note": note_doc["note"],
+        "personal_note_updated_at": note_doc["updated_at"],
     }
 
 
@@ -433,6 +457,7 @@ async def send_weekly_email(body: WeeklyEmailIn = WeeklyEmailIn(),
             milestones_this_week=ctx["milestones_this_week"],
             alignment_pct=ctx["alignment_pct"],
             dashboard_url=ctx["dashboard_url"],
+            personal_note=ctx.get("personal_note") or "",
         )
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=503,
@@ -447,8 +472,14 @@ async def send_weekly_email(body: WeeklyEmailIn = WeeklyEmailIn(),
             "sent_at": sent_at_iso,
             "completed_count": ctx["completed_count"],
             "streak_days": ctx["streak_days"],
+            "had_personal_note": bool((ctx.get("personal_note") or "").strip()),
         }},
         upsert=True,
+    )
+    # Auto-clear the handwritten note for this week once the email fires
+    # so next week starts from a blank slate (user preference: fresh weekly).
+    await db[_WEEKLY_EMAIL_NOTES].delete_one(
+        {"user_id": user.user_id, "week_key": week_key},
     )
     return {
         "ok": True,
@@ -457,6 +488,7 @@ async def send_weekly_email(body: WeeklyEmailIn = WeeklyEmailIn(),
         "sent_at": sent_at_iso,
         "milestones_this_week": ctx["milestones_this_week"],
         "streak_days": ctx["streak_days"],
+        "personal_note_included": bool((ctx.get("personal_note") or "").strip()),
     }
 
 
@@ -477,4 +509,59 @@ async def weekly_email_status(user: UserPublic = Depends(get_current_user),
         "sent_at": (log or {}).get("sent_at"),
         "is_sunday_utc": now.weekday() == 6,
         "weekday_utc": now.weekday(),
+    }
+
+
+
+# ---------------------------------------------------------------------------
+# Weekly Email — handwritten personal note (per ISO week, auto-clears on send).
+# ---------------------------------------------------------------------------
+@router.get("/weekly-email/note")
+async def get_weekly_email_note(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Return the parent's saved handwritten note for the current ISO week.
+    The note is week-scoped and auto-clears once the Sunday email fires."""
+    return await _fetch_weekly_note(db, user.user_id, _iso_week_key())
+
+
+@router.post("/weekly-email/note")
+async def save_weekly_email_note(
+    body: WeeklyNoteIn,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Save (or clear) the parent's handwritten note for the current ISO
+    week. Silently trims to `_WEEKLY_NOTE_MAX_CHARS` — the frontend also
+    enforces this but we clamp defensively for API callers."""
+    week_key = _iso_week_key()
+    text = (body.note or "").strip()
+    if len(text) > _WEEKLY_NOTE_MAX_CHARS:
+        text = text[:_WEEKLY_NOTE_MAX_CHARS].rstrip()
+    if not text:
+        await db[_WEEKLY_EMAIL_NOTES].delete_one(
+            {"user_id": user.user_id, "week_key": week_key},
+        )
+        return {
+            "note": "", "updated_at": None, "week_key": week_key,
+            "max_chars": _WEEKLY_NOTE_MAX_CHARS, "cleared": True,
+        }
+    updated_at = datetime.now(timezone.utc).isoformat()
+    await db[_WEEKLY_EMAIL_NOTES].update_one(
+        {"user_id": user.user_id, "week_key": week_key},
+        {"$set": {
+            "user_id": user.user_id,
+            "week_key": week_key,
+            "note": text,
+            "updated_at": updated_at,
+        }},
+        upsert=True,
+    )
+    return {
+        "note": text,
+        "updated_at": updated_at,
+        "week_key": week_key,
+        "max_chars": _WEEKLY_NOTE_MAX_CHARS,
+        "cleared": False,
     }
