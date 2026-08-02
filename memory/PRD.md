@@ -2,6 +2,20 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 62 — PDF Provenance (2026-02-02)**:
+  - Mirrored the on-screen `ReportProvenanceFooter` inside every downloadable PDF so recipients (mediators, therapists, attorneys) see the same "How this report was built" breakdown.
+  - New shared `pdf_provenance.py` with `render_provenance_footer(pdf, variant=…)` — accepts any FPDF-compatible subclass, latin-1 safe, four variants (`mediation` | `snc` | `deepdive` | `comparison`), colour-coded pills (green **RULE-BASED**, gold **GENERATIVE**), with the same explainer paragraph as the React footer.
+  - Wired into six PDF surfaces:
+    * `pdf_service.build_summary_pdf` (Mediation Summary — added on its own page before the closing poster)
+    * `pdf_service.build_agreement_pdf` (Neutral Draft Agreement)
+    * `snc2_report_pdf.build_snc2_pdf` (Special Needs Report)
+    * `edu_deep_report.build_deep_dive_pdf` (Educational Deep Dive)
+    * `journey_pdf.build_journey_pdf` (Psychological + Medical Deep Dives — one wire-in serves both)
+    * `snc2_comparison_pdf.build_comparison_pdf` (SNC v2 co-parent compare)
+    * `edu_deep_comparison_pdf.build_comparison_pdf` (all three deep-dive compare PDFs)
+  - Verified via unit builds of all 6 generators (each produces valid `%PDF` bytes) + a Gemini-based content check of the SNC v2 sample: eyebrow present, 3+3 counts correct, all 6 rows show the right colour pill and text, explainer paragraph verbatim.
+  - Regression: **45/45 backend tests pass** across iter56/57/58 + the entire SNC v2 + comparison suite (the SNC PDF regression touches the new code path and still passes).
+
 - **Iteration 61 — Dashboard IA Restructure + Report Provenance (2026-02-02)**:
   - **New three-block above-the-fold Dashboard** per user's audit item #1: `Do This Next` (NextStepJourney) → `Your Progress` (ProgressDashboardCard with 5 milestones + streak) → `Your Reports` (new). Everything else lives inside a single collapsible "Explore more tools — community, weekly email, learning center, and more" pill toggle (`dashboard-explore-more-tools`) — kept, not removed, so a stressed parent's first fold stays focused.
   - **`YourReportsCard.jsx`** — new compact launcher (`your-reports-card` testid) with one row per report:

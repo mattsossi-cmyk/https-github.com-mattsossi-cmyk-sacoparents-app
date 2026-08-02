@@ -256,4 +256,8 @@ def build_comparison_pdf(*, comparison: Dict[str, Any], safety_notice: str = "")
                         parent_b, _value_text(item, "parent_b"),
                     )
 
+    # "How this report was built" — provenance for the recipient.
+    from pdf_provenance import render_provenance_footer
+    render_provenance_footer(pdf, variant="comparison")
+
     return bytes(pdf.output(dest="S"))

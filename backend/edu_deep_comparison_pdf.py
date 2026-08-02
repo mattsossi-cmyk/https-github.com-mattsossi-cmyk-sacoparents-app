@@ -225,6 +225,10 @@ def build_comparison_pdf(*, comparison: Dict[str, Any], safety_notice: str,
     pdf.set_text_color(110, 100, 130)
     pdf.multi_cell(pdf.epw, 4, _safe(safety_notice))
 
+    # "How this report was built" — provenance for the recipient.
+    from pdf_provenance import render_provenance_footer
+    render_provenance_footer(pdf, variant="comparison")
+
     out = pdf.output(dest="S")
     if isinstance(out, str):
         out = out.encode("latin-1", errors="replace")

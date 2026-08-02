@@ -441,6 +441,10 @@ def build_deep_dive_pdf(*, report: Dict[str, Any]) -> bytes:
     pdf.h2("13. Final child-focused summary")
     pdf.body(report.get("final_summary") or "")
     _section_break(pdf)
+    # "How this report was built" — provenance for the recipient.
+    from pdf_provenance import render_provenance_footer
+    render_provenance_footer(pdf, variant="deepdive")
+    _section_break(pdf)
     pdf.small(report.get("disclaimer") or "")
 
     out = pdf.output(dest="S")

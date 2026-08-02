@@ -246,6 +246,9 @@ def build_snc2_pdf(*, report: Dict[str, Any]) -> bytes:
     _render_detailed_findings(pdf, report.get("detailed_findings") or {})
     _render_parent_alignment(pdf, report.get("parent_alignment") or {})
     _render_recommended_structure(pdf, report.get("recommended_structure") or {})
+    # "How this report was built" — provenance for the recipient.
+    from pdf_provenance import render_provenance_footer
+    render_provenance_footer(pdf, variant="snc")
     pdf.ln(2); pdf.small(report.get("disclaimer") or "")
     out = pdf.output(dest="S")
     if isinstance(out, str):

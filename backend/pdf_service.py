@@ -305,6 +305,11 @@ def build_summary_pdf(
         pdf.section_title("Notes for the Mediator")
         pdf.body_text(summary.get("notes_for_mediator", ""))
 
+    # "How this report was built" — provenance for the recipient.
+    pdf.add_page()
+    from pdf_provenance import render_provenance_footer
+    render_provenance_footer(pdf, variant="mediation")
+
     # Closing cover — #7 "Better Co-Parenting, Better Outcomes" poster.
     pdf.poster_cover("better")
 
@@ -498,6 +503,11 @@ def build_agreement_pdf(
         pdf.multi_cell(0, 6, agreement["closing_note"])
 
     _agreement_signature_lines(pdf)
+
+    # "How this report was built" — provenance for the recipient.
+    pdf.add_page()
+    from pdf_provenance import render_provenance_footer
+    render_provenance_footer(pdf, variant="mediation")
 
     out = pdf.output(dest="S")
     if isinstance(out, str):
