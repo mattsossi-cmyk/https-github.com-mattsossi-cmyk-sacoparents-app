@@ -382,6 +382,7 @@ async def get_comparison_pdf(
     share_id: str,
     category: Optional[str] = Query(default=None),
     sign: bool = False,
+    note: str = "",
     me: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
@@ -395,7 +396,7 @@ async def get_comparison_pdf(
             "revisit the Family Violence & Communication Safety Assessment "
             "before continuing to share detailed information."
         ),
-        **sign_kwargs(sign, me.name),
+        **sign_kwargs(sign, me.name, note),
     )
     filename = f"SNC_Comparison_{_safe_filename(share.get('creator_name'))}_and_{_safe_filename(share.get('partner_name'))}.pdf"
     return StreamingResponse(

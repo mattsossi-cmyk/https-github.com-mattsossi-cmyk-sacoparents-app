@@ -230,7 +230,7 @@ async def regen_summary(body: RegenSummaryIn = RegenSummaryIn(),
 
 
 @router.get("/report/pdf")
-async def report_pdf(sign: bool = False,
+async def report_pdf(sign: bool = False, note: str = "",
                      user: UserPublic = Depends(get_current_user),
                      db: AsyncIOMotorDatabase = Depends(get_db)):
     cached = await _cached(db, user.user_id)
@@ -238,7 +238,7 @@ async def report_pdf(sign: bool = False,
         raise HTTPException(status_code=404, detail="Generate the report first.")
     from pdf_signing import sign_kwargs
     pdf_bytes = build_deep_dive_pdf(
-        report=cached.get("report") or {}, **sign_kwargs(sign, user.name),
+        report=cached.get("report") or {}, **sign_kwargs(sign, user.name, note),
     )
     fn = f"Medication_Coordination_Deep_Dive_{_safe_filename(user.name or 'me')}.pdf"
     return StreamingResponse(BytesIO(pdf_bytes), media_type="application/pdf",

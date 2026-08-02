@@ -51,11 +51,14 @@ def _pdf_class(product_name: str, footer_name: str):
 def build_journey_pdf(*, product_name: str, footer_name: str, headline: str,
                       report: Dict[str, Any],
                       signed_by: Optional[str] = None,
-                      signed_at: Optional[str] = None) -> bytes:
+                      signed_at: Optional[str] = None,
+                      signed_note: Optional[str] = None) -> bytes:
     pdf = _pdf_class(product_name, footer_name)()
     if signed_by and signed_at:
         pdf._signed_by = signed_by
         pdf._signed_at = signed_at
+        if signed_note:
+            pdf._signed_note = signed_note
     pdf.add_page()
 
     cover = report.get("cover") or {}

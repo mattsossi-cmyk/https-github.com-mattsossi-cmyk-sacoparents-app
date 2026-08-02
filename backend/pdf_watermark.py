@@ -88,11 +88,15 @@ def stamp_signature_line(pdf: Any) -> None:
     generation. Safe to call unconditionally from `footer()`; it no-ops
     when the flags are absent.
 
-    We paint above the existing footer callers wrote so their branding
-    isn't disrupted; a single grey rule sits between the two.
+    If `pdf._signed_note` is also set, a small italic sub-line renders
+    just above the signature (e.g. "Prepared for our 12 Feb mediation
+    session"). We paint above the existing footer callers wrote so
+    their branding isn't disrupted; a single grey rule sits between
+    the two.
     """
     signed_by = getattr(pdf, "_signed_by", None)
     signed_at = getattr(pdf, "_signed_at", None)
+    signed_note = getattr(pdf, "_signed_note", None)
     if not signed_by or not signed_at:
         return
 
@@ -112,24 +116,42 @@ def stamp_signature_line(pdf: Any) -> None:
     except Exception:  # noqa: BLE001
         ts = str(signed_at)
 
-    line = f"Signed by {signed_by}  |  {ts}"
-    # Latin-1 safety.
-    for k, v in {"\u2014": "-", "\u2013": "-", "\u2018": "'",
-                 "\u2019": "'", "\u201c": '"', "\u201d": '"',
-                 "\u2026": "...", "\u00a0": " "}.items():
-        line = line.replace(k, v)
-    line = line.encode("latin-1", errors="replace").decode("latin-1")
+    def _latin(s: str) -> str:
+        for k, v in {"\u2014": "-", "\u2013": "-", "\u2018": "'",
+                     "\u2019": "'", "\u201c": '"', "\u201d": '"',
+                     "\u2026": "...", "\u00a0": " "}.items():
+            s = s.replace(k, v)
+        return s.encode("latin-1", errors="replace").decode("latin-1")
 
-    # Draw a thin rule + centred signature line just above the footer.
-    y = pdf.h - 6.0
-    pdf.set_draw_color(220, 214, 232)
-    pdf.set_line_width(0.2)
-    pdf.line(pdf.l_margin, y - 2.6, pdf.w - pdf.r_margin, y - 2.6)
+    line = _latin(f"Signed by {signed_by}  |  {ts}")
+    note = _latin((signed_note or "").strip())
 
-    pdf.set_font("Helvetica", "B", 7.5)
-    pdf.set_text_color(*_SIG_ACCENT)
-    pdf.set_xy(pdf.l_margin, y - 1.8)
-    pdf.cell(pdf.epw, 3.6, line, align="C")
+    # Draw a thin rule + centred signature line above the standard footer.
+    # If there's a note, we push the whole block up ~3.4mm so the note
+    # sits above the signature (both above the page-number footer).
+    base_y = pdf.h - 6.0
+    if note:
+        note_y = base_y - 3.6
+        pdf.set_draw_color(220, 214, 232)
+        pdf.set_line_width(0.2)
+        pdf.line(pdf.l_margin, note_y - 2.6, pdf.w - pdf.r_margin, note_y - 2.6)
+        pdf.set_font("Helvetica", "I", 7.0)
+        pdf.set_text_color(*_SIG_TEXT_INK)
+        pdf.set_xy(pdf.l_margin, note_y - 1.8)
+        pdf.cell(pdf.epw, 3.4, note, align="C")
+        # Signature line beneath — no additional rule (avoid double lines).
+        pdf.set_font("Helvetica", "B", 7.5)
+        pdf.set_text_color(*_SIG_ACCENT)
+        pdf.set_xy(pdf.l_margin, base_y - 1.8)
+        pdf.cell(pdf.epw, 3.6, line, align="C")
+    else:
+        pdf.set_draw_color(220, 214, 232)
+        pdf.set_line_width(0.2)
+        pdf.line(pdf.l_margin, base_y - 2.6, pdf.w - pdf.r_margin, base_y - 2.6)
+        pdf.set_font("Helvetica", "B", 7.5)
+        pdf.set_text_color(*_SIG_ACCENT)
+        pdf.set_xy(pdf.l_margin, base_y - 1.8)
+        pdf.cell(pdf.epw, 3.6, line, align="C")
 
     # Restore prior state so downstream footer renderers stay unaffected.
     if prev_font_family:

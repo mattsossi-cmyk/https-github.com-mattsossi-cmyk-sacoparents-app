@@ -2,6 +2,12 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 65 — Sign With Notes (2026-02-02)**:
+  - Extended the "Sign & timestamp this download" flow so parents can also add a **one-line signing note** (e.g. *"Prepared for our 12 Feb mediation session"*) that prints in italics just above the bold signature line on every content page of the PDF.
+  - Frontend: `SignDownloadToggle.jsx` now renders an inline text input the moment the sign checkbox is ticked, capped at 120 chars with a live "N chars left · appears above your signature on every page" counter. Backwards-compatible: callers passing only `{ checked, onChange }` keep old behaviour; new `note` + `onNoteChange` unlock the note field. Wired into all 8 report/compare surfaces (SNC, 3 deep-dives, Mediation Summary, Agreement, SNC Compare, Deep-Dive Compares).
+  - Backend: `pdf_signing.sign_kwargs(sign, name, note)` now returns `signed_note` when the note is non-empty; silently trims + clamps to 120 chars. `pdf_watermark.stamp_signature_line(pdf)` reads `pdf._signed_note` and renders an italic note line above the signature, with its own thin grey rule; layout uses a two-line stack when a note is present and stays single-line otherwise. Every builder (`build_summary_pdf`, `build_agreement_pdf`, `build_snc2_pdf`, `edu/psych/med build_deep_dive_pdf`, `build_journey_pdf`, both `build_comparison_pdf`) now accepts the `signed_note` kwarg. Every download endpoint now accepts `?sign=true&note=...`.
+  - Regression: `test_iter65_signing_notes.py` — 14 new tests covering `sign_kwargs` semantics (whitespace-only rejection, 500-char clamp to 120, no-sign zero-out, note-alone absence), plus note-in-PDF end-to-end for all 8 builders. **78/78 backend tests pass** across iter56/57/58/63/64/65 + SNC v2 suites. Gemini-verified visual: both italic note + bold signature lines render, correctly stacked, no collision with page number, watermark still visible.
+
 - **Iteration 64 — Signed PDF Downloads (2026-02-02)**:
   - New opt-in **"Sign & timestamp this download"** checkbox next to every Download PDF button. When toggled, the backend adds a small `Signed by <Parent Name>  |  <UTC timestamp>` line just above the standard page-number footer on every content page — right under the diagonal "REVIEW BEFORE SHARING" watermark so a shared PDF carries clear provenance without a separate cover sheet.
   - Backend:

@@ -292,7 +292,8 @@ _RATING_COLORS = {
 
 def build_deep_dive_pdf(*, report: Dict[str, Any],
                         signed_by: Optional[str] = None,
-                        signed_at: Optional[str] = None) -> bytes:
+                        signed_at: Optional[str] = None,
+                        signed_note: Optional[str] = None) -> bytes:
     """Render the SA CoParents journey Educational Deep Dive report as a
     Letter-sized branded PDF matching the shared report style.
     """
@@ -300,6 +301,8 @@ def build_deep_dive_pdf(*, report: Dict[str, Any],
     if signed_by and signed_at:
         pdf._signed_by = signed_by
         pdf._signed_at = signed_at
+        if signed_note:
+            pdf._signed_note = signed_note
     pdf.add_page()
 
     cover = report.get("cover") or {}

@@ -242,11 +242,14 @@ def _render_recommended_structure(pdf: _PDF, s: Dict[str, Any]) -> None:
 
 def build_snc2_pdf(*, report: Dict[str, Any],
                    signed_by: Optional[str] = None,
-                   signed_at: Optional[str] = None) -> bytes:
+                   signed_at: Optional[str] = None,
+                   signed_note: Optional[str] = None) -> bytes:
     pdf = _PDF()
     if signed_by and signed_at:
         pdf._signed_by = signed_by
         pdf._signed_at = signed_at
+        if signed_note:
+            pdf._signed_note = signed_note
     _render_cover(pdf, report)
     _render_family_situation(pdf, report.get("family_situation") or {})
     _render_areas_of_need(pdf, report.get("areas_of_need") or {})

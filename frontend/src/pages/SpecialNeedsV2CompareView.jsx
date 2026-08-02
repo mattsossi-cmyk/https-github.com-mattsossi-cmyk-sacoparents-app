@@ -83,6 +83,7 @@ export default function SpecialNeedsV2CompareView() {
   const [category, setCategory] = useState(null); // null = All
   const [downloading, setDownloading] = useState(false);
   const [signOnDownload, setSignOnDownload] = useState(false);
+  const [signNote, setSignNote] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -107,7 +108,7 @@ export default function SpecialNeedsV2CompareView() {
   const download = async () => {
     setDownloading(true);
     try {
-      const params = { ...(category ? { category } : {}), ...(signOnDownload ? { sign: true } : {}) };
+      const params = { ...(category ? { category } : {}), ...(signOnDownload ? { sign: true, ...(signNote.trim() ? { note: signNote.trim() } : {}) } : {}) };
       const res = await api.get(`/snc2/compare/${shareId}/pdf`, { responseType: "blob", params });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement("a");
@@ -184,6 +185,8 @@ export default function SpecialNeedsV2CompareView() {
               <SignDownloadToggle
                 checked={signOnDownload}
                 onChange={setSignOnDownload}
+                note={signNote}
+                onNoteChange={setSignNote}
                 testid="snc2-compare-sign-toggle"
               />
             </div>

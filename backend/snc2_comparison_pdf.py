@@ -165,11 +165,14 @@ def _value_text(item: Dict[str, Any], side: str) -> str:
 
 def build_comparison_pdf(*, comparison: Dict[str, Any], safety_notice: str = "",
                          signed_by: Optional[str] = None,
-                         signed_at: Optional[str] = None) -> bytes:
+                         signed_at: Optional[str] = None,
+                         signed_note: Optional[str] = None) -> bytes:
     pdf = _PDF()
     if signed_by and signed_at:
         pdf._signed_by = signed_by
         pdf._signed_at = signed_at
+        if signed_note:
+            pdf._signed_note = signed_note
     pdf.add_page()
 
     parent_a = comparison.get("parent_a_name") or "Parent A"

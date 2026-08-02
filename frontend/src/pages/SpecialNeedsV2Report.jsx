@@ -56,6 +56,7 @@ export default function SpecialNeedsV2Report() {
   const [state, setState] = useState({ loading: true, doc: null, status: null });
   const [busy, setBusy] = useState(false);
   const [signOnDownload, setSignOnDownload] = useState(false);
+  const [signNote, setSignNote] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -84,8 +85,10 @@ export default function SpecialNeedsV2Report() {
   const downloadPdf = async () => {
     setBusy(true);
     try {
-      const url = signOnDownload ? "/snc2/report/pdf?sign=true" : "/snc2/report/pdf";
-      const res = await api.get(url, { responseType: "blob" });
+      const params = signOnDownload
+        ? { sign: true, ...(signNote.trim() ? { note: signNote.trim() } : {}) }
+        : {};
+      const res = await api.get("/snc2/report/pdf", { responseType: "blob", params });
       const objUrl = URL.createObjectURL(res.data);
       const a = document.createElement("a");
       a.href = objUrl; a.download = "Special_Needs_Report.pdf";
@@ -190,6 +193,8 @@ export default function SpecialNeedsV2Report() {
           <SignDownloadToggle
             checked={signOnDownload}
             onChange={setSignOnDownload}
+            note={signNote}
+            onNoteChange={setSignNote}
             testid="snc2-report-sign-toggle"
           />
         </div>

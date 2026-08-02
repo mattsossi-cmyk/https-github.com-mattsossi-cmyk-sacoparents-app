@@ -198,7 +198,8 @@ def build_deep_dive_report(*, parent_name: Optional[str], child_name: Optional[s
 
 def build_deep_dive_pdf(*, report: Dict[str, Any],
                         signed_by: Optional[str] = None,
-                        signed_at: Optional[str] = None) -> bytes:
+                        signed_at: Optional[str] = None,
+                        signed_note: Optional[str] = None) -> bytes:
     return build_journey_pdf(
         product_name="Medical · Prescription & Medication Deep Dive",
         footer_name="Medical Deep Dive Report",
@@ -206,4 +207,5 @@ def build_deep_dive_pdf(*, report: Dict[str, Any],
         report=report,
         signed_by=signed_by,
         signed_at=signed_at,
+        signed_note=signed_note,
     )

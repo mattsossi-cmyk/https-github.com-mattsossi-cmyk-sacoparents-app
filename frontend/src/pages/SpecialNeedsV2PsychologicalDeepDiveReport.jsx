@@ -57,6 +57,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const [regenLength, setRegenLength] = useState("standard");
   const [report, setReport] = useState(null);
   const [signOnDownload, setSignOnDownload] = useState(false);
+  const [signNote, setSignNote] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,8 +87,10 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const download = async () => {
     setBusy(true);
     try {
-      const url = signOnDownload ? "/psych-deep/report/pdf?sign=true" : "/psych-deep/report/pdf";
-      const res = await api.get(url, { responseType: "blob" });
+      const params = signOnDownload
+        ? { sign: true, ...(signNote.trim() ? { note: signNote.trim() } : {}) }
+        : {};
+      const res = await api.get("/psych-deep/report/pdf", { responseType: "blob", params });
       const objUrl = URL.createObjectURL(res.data);
       const a = document.createElement("a");
       a.href = objUrl; a.download = "Psychological_Assessment_Report.pdf";
@@ -149,6 +152,8 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           <SignDownloadToggle
             checked={signOnDownload}
             onChange={setSignOnDownload}
+            note={signNote}
+            onNoteChange={setSignNote}
             testid="psych-deep-report-sign-toggle"
           />
         </div>

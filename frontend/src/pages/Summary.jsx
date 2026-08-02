@@ -234,6 +234,7 @@ function MediationSummaryTab() {
   const [emailOpen, setEmailOpen] = useState(false);
   const [latestAgreementId, setLatestAgreementId] = useState(null);
   const [signOnDownload, setSignOnDownload] = useState(false);
+  const [signNote, setSignNote] = useState("");
 
   const loadHistory = useCallback(async () => {
     try {
@@ -283,7 +284,9 @@ function MediationSummaryTab() {
     }
     setDownloading(true);
     try {
-      const qs = signOnDownload ? "?sign=true" : "";
+      const qs = signOnDownload
+        ? `?sign=true${signNote.trim() ? `&note=${encodeURIComponent(signNote.trim())}` : ""}`
+        : "";
       await downloadBlob(
         `${API}/mediation/summary/${summary.summary_id}/pdf${qs}`,
         `mediation-summary-${summary.summary_id}.pdf`
@@ -363,6 +366,8 @@ function MediationSummaryTab() {
           <SignDownloadToggle
             checked={signOnDownload}
             onChange={setSignOnDownload}
+            note={signNote}
+            onNoteChange={setSignNote}
             testid="summary-sign-toggle"
           />
         </div>
@@ -478,6 +483,7 @@ function AgreementDraftTab() {
   const [emailOpen, setEmailOpen] = useState(false);
   const [latestSummaryId, setLatestSummaryId] = useState(null);
   const [signOnDownload, setSignOnDownload] = useState(false);
+  const [signNote, setSignNote] = useState("");
 
   const loadHistory = useCallback(async () => {
     try {
@@ -525,7 +531,9 @@ function AgreementDraftTab() {
     }
     setDownloading(true);
     try {
-      const qs = signOnDownload ? "?sign=true" : "";
+      const qs = signOnDownload
+        ? `?sign=true${signNote.trim() ? `&note=${encodeURIComponent(signNote.trim())}` : ""}`
+        : "";
       await downloadBlob(
         `${API}/mediation/agreement/${agreement.agreement_id}/pdf${qs}`,
         `coparenting-agreement-${agreement.agreement_id}.pdf`
@@ -595,6 +603,8 @@ function AgreementDraftTab() {
           <SignDownloadToggle
             checked={signOnDownload}
             onChange={setSignOnDownload}
+            note={signNote}
+            onNoteChange={setSignNote}
             testid="agreement-sign-toggle"
           />
         </div>

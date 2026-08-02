@@ -352,7 +352,7 @@ async def get_report(user: UserPublic = Depends(get_current_user),
 
 
 @router.get("/report/pdf")
-async def report_pdf(sign: bool = False,
+async def report_pdf(sign: bool = False, note: str = "",
                      user: UserPublic = Depends(get_current_user),
                      db: AsyncIOMotorDatabase = Depends(get_db)):
     r = await _cached(db, user.user_id)
@@ -360,7 +360,7 @@ async def report_pdf(sign: bool = False,
         raise HTTPException(status_code=404, detail="Generate the report first.")
     from pdf_signing import sign_kwargs
     pdf_bytes = build_snc2_pdf(
-        report=r.get("report") or {}, **sign_kwargs(sign, user.name),
+        report=r.get("report") or {}, **sign_kwargs(sign, user.name, note),
     )
     filename = f"Special_Needs_Report_{_safe_filename(user.name or 'me')}.pdf"
     return StreamingResponse(BytesIO(pdf_bytes), media_type="application/pdf",

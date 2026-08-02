@@ -262,12 +262,15 @@ def build_summary_pdf(
     excluded_sections: set | list | None = None,
     signed_by: str | None = None,
     signed_at: str | None = None,
+    signed_note: str | None = None,
 ) -> bytes:
     ex = set(excluded_sections or [])
     pdf = PrepSummaryPDF(format="A4")
     if signed_by and signed_at:
         pdf._signed_by = signed_by
         pdf._signed_at = signed_at
+        if signed_note:
+            pdf._signed_note = signed_note
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_margins(15, 44, 15)
 
@@ -483,12 +486,15 @@ def build_agreement_pdf(
     excluded_sections: set | list | None = None,
     signed_by: str | None = None,
     signed_at: str | None = None,
+    signed_note: str | None = None,
 ) -> bytes:
     ex = set(excluded_sections or [])
     pdf = AgreementPDF(format="A4")
     if signed_by and signed_at:
         pdf._signed_by = signed_by
         pdf._signed_at = signed_at
+        if signed_note:
+            pdf._signed_note = signed_note
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_margins(15, 44, 15)
     pdf.add_page()

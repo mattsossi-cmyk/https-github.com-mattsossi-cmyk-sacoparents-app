@@ -305,6 +305,7 @@ async def download_summary_pdf(
     current: UserPublic = Depends(get_current_user),
     excluded: Optional[str] = None,
     sign: bool = False,
+    note: str = "",
 ):
     db = request.app.state.db
     summary = await db.summaries.find_one(
@@ -321,7 +322,7 @@ async def download_summary_pdf(
         child_goals=prep.get("child_goals"),
         mediation_date=current.mediation_date,
         excluded_sections=ex_list,
-        **sign_kwargs(sign, current.name),
+        **sign_kwargs(sign, current.name, note),
     )
     return StreamingResponse(
         BytesIO(pdf_bytes),
@@ -503,6 +504,7 @@ async def download_agreement_pdf(
     current: UserPublic = Depends(get_current_user),
     excluded: Optional[str] = None,
     sign: bool = False,
+    note: str = "",
 ):
     db = request.app.state.db
     agreement = await db.agreements.find_one(
@@ -517,7 +519,7 @@ async def download_agreement_pdf(
         agreement=agreement,
         mediation_date=current.mediation_date,
         excluded_sections=ex_list,
-        **sign_kwargs(sign, current.name),
+        **sign_kwargs(sign, current.name, note),
     )
     return StreamingResponse(
         BytesIO(pdf_bytes),

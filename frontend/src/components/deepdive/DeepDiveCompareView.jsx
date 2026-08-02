@@ -110,6 +110,7 @@ export default function DeepDiveCompareView({ pathway }) {
   const [timeline, setTimeline] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [signOnDownload, setSignOnDownload] = useState(false);
+  const [signNote, setSignNote] = useState("");
   const t = pathway.testidPrefix;
 
   const load = useCallback(async () => {
@@ -142,7 +143,9 @@ export default function DeepDiveCompareView({ pathway }) {
   const download = async () => {
     setDownloading(true);
     try {
-      const params = signOnDownload ? { sign: true } : {};
+      const params = signOnDownload
+        ? { sign: true, ...(signNote.trim() ? { note: signNote.trim() } : {}) }
+        : {};
       const res = await api.get(`${pathway.apiPrefix}/${shareId}/pdf`, { responseType: "blob", params });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement("a");
@@ -218,6 +221,8 @@ export default function DeepDiveCompareView({ pathway }) {
               <SignDownloadToggle
                 checked={signOnDownload}
                 onChange={setSignOnDownload}
+                note={signNote}
+                onNoteChange={setSignNote}
                 testid={`${t}-sign-toggle`}
               />
             </div>
