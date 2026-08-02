@@ -195,6 +195,7 @@ def make_deep_dive_compare_router(
             # we can teaser the current alignment %. Only computed here (never
             # persisted or exposed to the partner via the API before consent).
             preview_pct: Optional[int] = None
+            previous_pct: Optional[int] = None
             try:
                 creator_a = await db[assessments_collection].find_one({"user_id": me.user_id})
                 partner_a = await db[assessments_collection].find_one({"user_id": partner["user_id"]})
@@ -209,6 +210,24 @@ def make_deep_dive_compare_router(
                     _pct = (_preview.get("summary") or {}).get("aligned_pct")
                     if isinstance(_pct, (int, float)):
                         preview_pct = int(_pct)
+                    # Trend line: look up the most recent snapshot for this
+                    # user pair on this pathway (across any prior share, even
+                    # revoked ones). The freshly-inserted share has no
+                    # snapshots yet so it can't accidentally match itself.
+                    prior_share_ids = [
+                        s["share_id"] async for s in db[shares_collection].find(
+                            {"user_pair": [a, b]}, {"_id": 0, "share_id": 1},
+                        )
+                    ]
+                    if prior_share_ids:
+                        prev = await db[SNAPSHOTS].find_one(
+                            {"share_id": {"$in": prior_share_ids}},
+                            {"_id": 0, "summary": 1},
+                            sort=[("created_at", -1)],
+                        )
+                        _prev = (prev or {}).get("summary", {}).get("aligned_pct")
+                        if isinstance(_prev, (int, float)):
+                            previous_pct = int(_prev)
             except Exception:  # noqa: BLE001
                 logger.exception("Failed to compute compare-invite preview_pct for share %s", share["share_id"])
             send_compare_invite(
@@ -217,6 +236,7 @@ def make_deep_dive_compare_router(
                 inviter_name=me.name,
                 product_label=product_label,
                 aligned_pct=preview_pct,
+                previous_aligned_pct=previous_pct,
             )
         except Exception:  # noqa: BLE001
             logger.exception("Failed to send compare-invite email for share %s", share["share_id"])

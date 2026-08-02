@@ -498,6 +498,7 @@ def send_compare_invite(
     inviter_name: Optional[str] = None,
     product_label: str = "Deep Dive",
     aligned_pct: Optional[int] = None,
+    previous_aligned_pct: Optional[int] = None,
 ) -> None:
     """Notify a co-parent that a compare request is awaiting their consent.
 
@@ -510,19 +511,51 @@ def send_compare_invite(
     of the current alignment percentage so the recipient sees the value
     before they click through. The number is a summary only — no items or
     prompts leak before consent.
+
+    If ``previous_aligned_pct`` is also provided (the user pair has at
+    least one earlier compare snapshot for this pathway), a small trend
+    line — "↑ +7% since your last check-in" — is rendered next to the
+    current percentage so co-parents see progress at a glance.
     """
     inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"
     # Clamp to a safe integer range in case an upstream caller ever hands us
     # a float or an out-of-bounds value.
-    preview: Optional[int] = None
-    if isinstance(aligned_pct, (int, float)):
-        preview = max(0, min(100, int(aligned_pct)))
+    def _clamp(v):
+        if isinstance(v, (int, float)):
+            return max(0, min(100, int(v)))
+        return None
+    preview = _clamp(aligned_pct)
+    previous = _clamp(previous_aligned_pct)
+    delta = None if (preview is None or previous is None) else preview - previous
+    # Trend copy pieces
+    trend_plain = ""
+    trend_html = ""
+    if delta is not None:
+        if delta > 0:
+            arrow = "↑"
+            trend_word = f"up {delta} points since your last check-in"
+            trend_color = "#1F5C3B"
+        elif delta < 0:
+            arrow = "↓"
+            trend_word = f"down {abs(delta)} points since your last check-in"
+            trend_color = "#8C3A3A"
+        else:
+            arrow = "→"
+            trend_word = "no change since your last check-in"
+            trend_color = "#4B4567"
+        trend_plain = f" {arrow} {trend_word} (was {previous}%)."
+        trend_html = (
+            f'<div style="font-size:12px;color:{trend_color};margin:8px 0 0 0;'
+            f'font-weight:600;">{arrow} {trend_word} '
+            f'<span style="color:#857E9C;font-weight:400;">(was {previous}%)</span>'
+            f'</div>'
+        )
     preview_plain = ""
     preview_html = ""
     if preview is not None:
         preview_plain = (
             f"\nBefore you decide: based on both of your answers so far, you "
-            f"already agree on about {preview}% of them.\n"
+            f"already agree on about {preview}% of them.{trend_plain}\n"
         )
         preview_html = (
             '<div style="margin:0 0 18px 0;padding:14px 16px;border-radius:14px;'
@@ -532,6 +565,7 @@ def send_compare_invite(
             f'<div style="font-size:22px;line-height:1.2;color:#1A1330;font-weight:800;'
             f'font-family:Georgia,\'Times New Roman\',serif;">You already agree on '
             f'about {preview}% of your answers.</div>'
+            f'{trend_html}'
             '<div style="font-size:12px;color:#4B4567;margin:6px 0 0 0;">'
             "This is a summary only — no items are shared until you consent."
             '</div></div>'
