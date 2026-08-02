@@ -14,7 +14,8 @@ from pydantic import BaseModel
 
 from auth import UserPublic, get_current_user, get_db
 from ai_summary import generate_executive_summary
-from psych_deep_questions import DEEP_DIVE_VERSION, public_schema, validate_answer
+from deep_dive_section_coach import load_or_generate_section_coach
+from psych_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION, public_schema, validate_answer
 from psych_deep_report import build_deep_dive_pdf, build_deep_dive_report
 from psych_deep_scoring import score_deep_dive
 
@@ -234,3 +235,36 @@ async def report_pdf(user: UserPublic = Depends(get_current_user),
     fn = f"Psychological_Deep_Dive_{_safe_filename(user.name or 'me')}.pdf"
     return StreamingResponse(BytesIO(pdf_bytes), media_type="application/pdf",
                              headers={"Content-Disposition": f'attachment; filename="{fn}"'})
+
+
+class SectionCoachIn(BaseModel):
+    force: Optional[bool] = False
+
+
+@router.post("/section/{section_id}/coach")
+async def section_coach(section_id: str,
+                        body: SectionCoachIn = SectionCoachIn(),
+                        user: UserPublic = Depends(get_current_user),
+                        db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    """AI Personal Coach for a single Psychological Deep Dive section."""
+    doc = await _load(db, user.user_id) or {}
+    responses = dict(doc.get("responses") or {})
+    try:
+        result = await load_or_generate_section_coach(
+            db=db,
+            user_id=user.user_id,
+            sections_spec=DEEP_DIVE_SECTIONS,
+            product_label="Psychological / Behavioural Needs Deep Dive",
+            pathway_id="psych-deep",
+            section_id=section_id,
+            responses=responses,
+            force=bool(body.force),
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve)) from ve
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=503,
+            detail="Your AI coach is resting right now. Please try again in a moment.",
+        )
+    return result

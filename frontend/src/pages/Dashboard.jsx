@@ -11,6 +11,7 @@ import InviteCoparentCard from "../components/InviteCoparentCard";
 import BadgeShelf from "../components/BadgeShelf";
 import MeetTheProgramCard from "../components/MeetTheProgramCard";
 import GrowthWidget from "../components/GrowthWidget";
+import ProgressDashboardCard from "../components/ProgressDashboardCard";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -328,6 +329,13 @@ export default function Dashboard() {
           summariesCount={summariesCount}
           hasCertificate={pillarFlags.hasCertificate}
         />
+
+        {/* Five-milestone visual progress — small, high-signal ✓ pills that
+            light up as parents complete Foundation, Child needs, Comms,
+            Mediation prep, and Conflict-reduced criteria. */}
+        <div className="mt-6">
+          <ProgressDashboardCard />
+        </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-10 mt-6">
           <div className="card-soft p-8 lg:col-span-2 relative overflow-hidden">

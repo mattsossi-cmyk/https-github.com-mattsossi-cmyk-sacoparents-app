@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import SectionCoachCard from "../components/deepdive/SectionCoachCard";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
@@ -350,6 +351,13 @@ export default function SpecialNeedsV2MedicalDeepDive() {
             />
           ))}
         </div>
+
+        <SectionCoachCard
+          apiPrefix="/med-deep"
+          testidBase="med-deep"
+          sectionId={section.id}
+          sectionName={section.name}
+        />
 
         <div className="mt-6 sticky bottom-4 bg-white/85 backdrop-blur border border-[#E5E0EE] rounded-full p-2 flex items-center justify-between gap-2" data-testid="med-deep-nav">
           <button
