@@ -67,6 +67,8 @@ import SpecialNeedsV2MedicalDeepDive from "@/pages/SpecialNeedsV2MedicalDeepDive
 import SpecialNeedsV2MedicalDeepDiveReport from "@/pages/SpecialNeedsV2MedicalDeepDiveReport";
 import SpecialNeedsV2MedicalDeepDiveCompare from "@/pages/SpecialNeedsV2MedicalDeepDiveCompare";
 import SpecialNeedsV2MedicalDeepDiveCompareView from "@/pages/SpecialNeedsV2MedicalDeepDiveCompareView";
+import LearningCenter from "@/pages/LearningCenter";
+import LearningArticle from "@/pages/LearningArticle";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
 
 const TOAST_OPTIONS = {
@@ -178,6 +180,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Coach />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/learning"
+          element={
+            <ProtectedRoute>
+              <LearningCenter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/learning/:hubSlug/:articleSlug"
+          element={
+            <ProtectedRoute>
+              <LearningArticle />
             </ProtectedRoute>
           }
         />

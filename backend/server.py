@@ -39,6 +39,7 @@ from wall_routes import router as wall_router  # noqa: E402
 from share_routes import router as share_router  # noqa: E402
 from coach_routes import router as coach_router  # noqa: E402
 from next_steps_routes import router as next_steps_router  # noqa: E402
+from learning_routes import router as learning_router  # noqa: E402
 from insights_routes import (  # noqa: E402
     router as insights_router,
     admin_briefing_scheduler_loop,
@@ -130,6 +131,7 @@ api_router.include_router(share_router)
 api_router.include_router(insights_router)
 api_router.include_router(coach_router)
 api_router.include_router(next_steps_router)
+api_router.include_router(learning_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.

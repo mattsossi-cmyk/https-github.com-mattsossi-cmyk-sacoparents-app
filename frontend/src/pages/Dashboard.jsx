@@ -14,6 +14,7 @@ import GrowthWidget from "../components/GrowthWidget";
 import ProgressDashboardCard from "../components/ProgressDashboardCard";
 import PublicMilestoneWall from "../components/PublicMilestoneWall";
 import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
+import LearningCenterCard from "../components/LearningCenterCard";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -369,6 +370,12 @@ export default function Dashboard() {
             exactly what will land in their inbox and can force a send. */}
         <div className="mt-6">
           <WeeklyEmailPreview />
+        </div>
+
+        {/* Learning Center entry — short reads on communication, boundaries,
+            and mediation prep. Deliberately separate from the milestone system. */}
+        <div className="mt-6">
+          <LearningCenterCard />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-10 mt-6">

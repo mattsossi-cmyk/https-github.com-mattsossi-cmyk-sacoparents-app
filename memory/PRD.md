@@ -2,6 +2,23 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 59 — Learning Center (2026-02-02)**:
+  - New `/learning` route + full library of 15 hand-authored short reads (~2-3 min each) grouped into three hubs matching the assessment structure: **Child-centred communication**, **Healthy boundaries**, and **Mediation prep** (5 articles per hub). Every article has: hero summary, 300-500 word body, 3 "things to try this week" takeaways.
+  - Backend: new module `learning_content.py` holds the static seed (swap-out later to Mongo without touching routes), and `learning_routes.py` exposes:
+    * `GET /api/learning/hubs` — full index + per-user read state
+    * `GET /api/learning/hub/{hub}/article/{slug}` — full body + per-user read + cached AI expansion state
+    * `POST /api/learning/hub/.../read` and `DELETE .../read` — mark/undo with idempotent hub progress in the response
+    * `GET /api/learning/progress` — compact per-hub summary for the dashboard entry card
+    * `GET /api/learning/search?q=...` — keyword match across titles/summaries/bodies
+    * `POST /api/learning/hub/.../coach {force}` — **AI depth expansion via Claude Sonnet 4.5** (uses the Emergent LLM key). Returns exactly three paragraphs (example / common pitfall / one weekly practice). Cached per user per article forever unless `force=true` since seed content is static; failure returns 503 with a friendly toast so the article still stands on its own.
+  - Frontend:
+    * `LearningCenterCard.jsx` mounted on `/dashboard` under the Weekly Email Preview — book-icon eyebrow, per-hub 3-column mini-grid with accent dots, running "N/15 read" progress bar, Explore/Continue CTA (`data-testid="learning-card"`).
+    * `LearningCenter.jsx` at `/learning` — three hub sections with tagline pills, per-article rows (Circle/CheckCircle read state + 2-min clock + hover-to-arrow).
+    * `LearningArticle.jsx` at `/learning/:hubSlug/:articleSlug` — clean prose layout, "Mark as read" toggle with toast, purple "3 things to try this week" panel, gold "Ask the coach for more depth" panel with Ask/Loading/Error/Body/Regenerate states, Back links top + bottom.
+  - Milestone-neutral by design (per user choice) — no dashboard pill impact, no wall badges, no confetti. Learning Center is its own space.
+  - New Mongo collections: `learning_reads`, `learning_ai_expansions`.
+  - Tests: `test_iter58_learning_center.py` — 8/8 pass (hubs index shape, per-user progress, article fetch + 404s, mark/unmark round-trip + idempotency, cross-hub aggregation, keyword search, empty search). AI expansion smoke-tested via curl (returns 3 Claude-authored paragraphs, cached on second call). All 16 iter56 + iter57 regressions remain green.
+
 - **Iteration 58 — Preview Custom Message / Handwritten Weekly Note (2026-02-02)**:
   - Parents can now attach a short handwritten note (max 280 chars, tweet-sized) to the upcoming Sunday weekly email. Note is ISO-week scoped and auto-clears once the Sunday email fires, so each week starts fresh.
   - New backend endpoints on `progress_dashboard_routes.py`: `GET /api/dashboard/weekly-email/note` returns `{note, updated_at, week_key, max_chars}`; `POST /api/dashboard/weekly-email/note {note}` saves/clears (empty or whitespace clears; oversize silently truncated). New Mongo collection `weekly_progress_email_notes` (composite key: `user_id + week_key`).
