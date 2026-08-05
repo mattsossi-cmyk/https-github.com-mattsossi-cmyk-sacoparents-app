@@ -1,6 +1,13 @@
 # SA CoParents — PRD
 
 
+- **Iteration 76 — Gmail Unread Badge (2026-02-06)**:
+  - New backend endpoint `GET /api/gmail/unread-count` — O(1) via the Gmail Labels API (INBOX label's `messagesUnread` / `threadsUnread`). Returns `{connected, unread_messages, unread_threads}`; gracefully degrades to `connected:false` on any Gmail/token error so the dashboard never sees a 5xx.
+  - Frontend `GmailMiniInbox.jsx` fetches messages + unread count in parallel and renders a small red pill next to the "Recent messages" heading (`data-testid="gmail-mini-unread-badge"`, caps at "99+"). Hidden when count is 0.
+  - 2/2 backend regression tests pass (`test_iter76_gmail_unread.py`).
+
+
+
 - **Iteration 75 — Gmail Mini Inbox (2026-02-06)**:
   - New dashboard card `GmailMiniInbox.jsx` slotted right below the Situation Picker. Shows the 5 most-recent Gmail inbox messages when connected, or a compact "Connect Gmail" CTA when not. Tapping a row expands the full body inline (calls `GET /api/gmail/messages/{msg_id}`); tapping Reply opens the shared composer with the Coach-drafted reply flow available and pre-quotes the original message.
   - Refactor: extracted the modal composer from `pages/Gmail.jsx` into a shared `components/gmail/GmailComposer.jsx` so both the full page and the mini inbox reuse it.

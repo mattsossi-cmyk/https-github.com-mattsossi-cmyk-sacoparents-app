@@ -316,6 +316,47 @@ async def gmail_disconnect(
     return {"ok": True}
 
 
+@router.get("/gmail/unread-count")
+async def gmail_unread_count(
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return the true INBOX unread count for the connected account.
+
+    Uses the Gmail Labels API (O(1), no message list fetch) which
+    exposes `messagesUnread` and `threadsUnread` on the INBOX label.
+    Callers use this to display a small red badge on the dashboard
+    mini-inbox card without having to page through the full inbox.
+
+    Contract: `{ connected, unread_messages, unread_threads }`. When
+    the user isn't connected — or when Gmail returns a token/scope
+    error — we return `connected: false` (never 5xx) so the dashboard
+    can quietly fall back to the connect CTA.
+    """
+    doc = await db.gmail_tokens.find_one(
+        {"user_id": current.user_id}, {"_id": 1},
+    )
+    if not doc:
+        return {"connected": False, "unread_messages": 0, "unread_threads": 0}
+    try:
+        creds = await _load_credentials(db, current.user_id)
+        service = build("gmail", "v1", credentials=creds, cache_discovery=False)
+        label = service.users().labels().get(userId="me", id="INBOX").execute()
+    except HttpError as e:
+        logger.warning("Gmail unread-count failed for user=%s: %s",
+                       current.user_id, e)
+        return {"connected": False, "unread_messages": 0, "unread_threads": 0}
+    except Exception:  # noqa: BLE001
+        logger.exception("Gmail unread-count crashed for user=%s",
+                         current.user_id)
+        return {"connected": False, "unread_messages": 0, "unread_threads": 0}
+    return {
+        "connected":        True,
+        "unread_messages":  int(label.get("messagesUnread") or 0),
+        "unread_threads":   int(label.get("threadsUnread") or 0),
+    }
+
+
 # ---- Inbox / search / read -------------------------------------------------
 
 def _header(headers: list, name: str) -> str:

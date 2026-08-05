@@ -72,7 +72,7 @@ function ConnectPrompt() {
             Mini Inbox
           </div>
           <div className="font-serif text-lg text-[#1A1330] mt-0.5">
-            Read your co-parent's replies without leaving the app
+            Read your co-parent&apos;s replies without leaving the app
           </div>
           <p className="mt-1 text-xs text-[#4B4567]">
             Connect your Gmail once and the last five messages will
@@ -95,6 +95,7 @@ function ConnectPrompt() {
 export default function GmailMiniInbox() {
   const [status, setStatus] = useState(null);   // {connected, google_email}
   const [messages, setMessages] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
@@ -105,10 +106,15 @@ export default function GmailMiniInbox() {
   const loadInbox = useCallback(async () => {
     setRefreshing(true);
     try {
-      const { data } = await api.get("/gmail/messages", {
-        params: { max_results: MAX_MESSAGES },
-      });
-      setMessages(Array.isArray(data?.messages) ? data.messages : []);
+      // Fetch messages + inbox-wide unread count in parallel. The
+      // count endpoint is O(1) (INBOX label) so it doesn't slow
+      // the panel down.
+      const [msgs, unread] = await Promise.all([
+        api.get("/gmail/messages", { params: { max_results: MAX_MESSAGES } }),
+        api.get("/gmail/unread-count").catch(() => ({ data: null })),
+      ]);
+      setMessages(Array.isArray(msgs.data?.messages) ? msgs.data.messages : []);
+      setUnreadCount(Number(unread?.data?.unread_messages) || 0);
     } catch (err) {
       // Token expired or gmail scope revoked — surface once, then let
       // the user retry via the refresh button.
@@ -213,9 +219,19 @@ export default function GmailMiniInbox() {
           <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Mini Inbox
           </div>
-          <div className="font-serif text-lg text-[#1A1330] mt-0.5 flex items-center gap-2">
+          <div className="font-serif text-lg text-[#1A1330] mt-0.5 flex items-center gap-2 flex-wrap">
             <Inbox size={16} className="text-[#3D1A78]" />
             Recent messages
+            {unreadCount > 0 && (
+              <span
+                className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-[#C13030] text-white text-[10px] font-bold tabular-nums"
+                title={`${unreadCount} unread message${unreadCount === 1 ? "" : "s"} in your inbox`}
+                aria-label={`${unreadCount} unread`}
+                data-testid="gmail-mini-unread-badge"
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
             {status?.google_email && (
               <span className="text-[10px] font-normal text-[#8471B3] font-sans truncate max-w-[180px] sm:max-w-none">
                 {status.google_email}
