@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 75 — Gmail Mini Inbox (2026-02-06)**:
+  - New dashboard card `GmailMiniInbox.jsx` slotted right below the Situation Picker. Shows the 5 most-recent Gmail inbox messages when connected, or a compact "Connect Gmail" CTA when not. Tapping a row expands the full body inline (calls `GET /api/gmail/messages/{msg_id}`); tapping Reply opens the shared composer with the Coach-drafted reply flow available and pre-quotes the original message.
+  - Refactor: extracted the modal composer from `pages/Gmail.jsx` into a shared `components/gmail/GmailComposer.jsx` so both the full page and the mini inbox reuse it.
+  - 30-second auto-refresh + manual refresh button. Handles token-revoked (401) gracefully by flipping back to the connect prompt.
+  - No backend changes — existing Gmail routes (`/api/gmail/status`, `/api/gmail/messages`, `/api/gmail/send`, `/api/gmail/draft-reply`) power the flow.
+  - Smoke-tested logged-in as parent1 (disconnected state — CTA + href verified).
+
+
+
 - **Iteration 74 — Milestone Confetti (2026-02-06)**:
   - **Milestone Confetti (P0)**: Fired a two-burst confetti + celebration toast the first time a parent's dashboard streak reaches **30** or **100** consecutive days. Uses `canvas-confetti@1.9.4` (yarn add), imported lazily so the bundle only pays the cost when the celebration actually fires. Respects `prefers-reduced-motion` via `disableForReducedMotion: true`. Once-per-device via `localStorage['sacop_celebrated_streaks_v1']` so the same threshold never celebrates twice. Wired into `ProgressDashboardCard` (which already fetches `/api/dashboard/progress` including `streak_days`).
   - New hook: `/app/frontend/src/hooks/useStreakCelebration.js` + 6 unit tests (`useStreakCelebration.test.js` — all pass).

@@ -16,6 +16,7 @@ import PublicMilestoneWall from "../components/PublicMilestoneWall";
 import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
 import LearningCenterCard from "../components/LearningCenterCard";
 import YourReportsCard from "../components/YourReportsCard";
+import GmailMiniInbox from "../components/GmailMiniInbox";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -521,6 +522,13 @@ export default function Dashboard() {
               </div>
             </>
           )}
+        </div>
+
+        {/* Gmail mini inbox — dashboard peek at the 5 most-recent
+            messages so parents can read + reply to a co-parent without
+            leaving. When not connected, shows a compact CTA. */}
+        <div className="mt-6" data-testid="dashboard-gmail-mini-slot">
+          <GmailMiniInbox />
         </div>
 
         {/* Primary "Do this next" home — auto-detects the parent's current
