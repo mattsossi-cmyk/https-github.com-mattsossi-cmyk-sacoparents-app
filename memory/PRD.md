@@ -1,6 +1,14 @@
 # SA CoParents — PRD
 
 
+- **Iteration 78 — Code Review Fixes v2 (2026-02-06)**:
+  - **Circular import — fully broken** (real fix, not lazy-import workaround): New leaf module `pdf_base.py` holds `_safe`, `_section_break`, `LOGO_PATH`. `deep_dive_narrative`, `edu_deep_report`, and `journey_pdf` now all import from `pdf_base` at module top-level. `edu_deep_report` also imports `render_parts_narrative` from `deep_dive_narrative` (one-way). Verified via a clean-modules test: loading `deep_dive_narrative` only pulls in `pdf_base` — no back-reference to `edu_deep_report`.
+  - **Array index keys** in 6 more files (this round's list): `SpecialNeedsV2CompareView.jsx:55` (list bullets), `LearningArticle.jsx:163/182/264` (paragraphs, takeaways, coach paragraphs), `Dashboard.jsx:1095` (snc highlights — now keyed by `section_id-item_id` when available), `SectionCoachCard.jsx:243` (bullet lines), `GrowthTracker.jsx:163` (insights — keyed by `ins.kind` when available).
+  - **False positives skipped (documented rationale)**: `is None` (PEP 8 idiom), 149-count hook-deps blitz (lint-clean under `exhaustive-deps` on the flagged specific files including new `VerifySignature.jsx`), test-only creds, situation/celebration localStorage keys (non-sensitive), complexity/large-component refactors (categorised as future sprint).
+  - 129/129 backend regression tests pass; all touched frontend files lint clean.
+
+
+
 - **Iteration 77 — Code Review Fixes (2026-02-06)**:
   - **Circular import resolved**: Moved `render_parts_narrative` from `journey_pdf.py` to `deep_dive_narrative.py`. `edu_deep_report.py` and `journey_pdf.py` now both import it from a single downstream module — no more `edu_deep_report ↔ journey_pdf` back-reference. Verified with fresh module load; 96/96 regression tests pass.
   - **Empty catch blocks**: Added `logError` calls in `SpecialNeedsV2.jsx` (deep-dive dismiss read/write) and `Orientation.jsx` (orientation-seen flag) so storage failures show up in debug logs instead of failing silently.

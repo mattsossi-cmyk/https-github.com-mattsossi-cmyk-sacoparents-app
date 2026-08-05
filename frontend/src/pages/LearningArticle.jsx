@@ -160,7 +160,7 @@ export default function LearningArticle() {
         >
           {paragraphs.map((p, i) => (
             <p
-              key={i}
+              key={`para-${i}-${(p || "").slice(0, 30)}`}
               className="text-[#1A1330] text-[17px] leading-[1.75] mb-5"
             >
               {p}
@@ -179,7 +179,7 @@ export default function LearningArticle() {
             <ul className="mt-3 space-y-2.5">
               {article.takeaways.map((t, i) => (
                 <li
-                  key={i}
+                  key={`takeaway-${i}-${(t || "").slice(0, 30)}`}
                   className="flex items-start gap-2.5 text-[15px] text-[#1A1330] leading-snug"
                 >
                   <CheckCircle2
@@ -261,7 +261,7 @@ export default function LearningArticle() {
             <div className="mt-4 space-y-4" data-testid="learning-coach-body">
               {coach.paragraphs?.map((p, i) => (
                 <p
-                  key={i}
+                  key={`coach-p-${i}-${(p || "").slice(0, 30)}`}
                   className="text-[15px] leading-[1.7] text-[#3B2A05]"
                 >
                   {p}

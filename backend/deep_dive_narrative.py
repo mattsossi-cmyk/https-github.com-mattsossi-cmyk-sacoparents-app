@@ -19,6 +19,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from pdf_base import _safe, _section_break
+
 
 _BAND_COLORS = {
     "high":     (31, 92, 59),
@@ -34,24 +36,17 @@ def render_parts_narrative(pdf, report: Dict[str, Any]) -> None:
     part (strengths + growth items + child reflection), and the closing
     story. No-op when the report doesn't carry the fields (older tests).
 
-    This function lives here — beside the narrative *builder* helpers —
-    so both PDF renderers (`edu_deep_report.build_deep_dive_pdf` and
-    `journey_pdf.build_journey_pdf`) can call it without either module
-    importing the other. It uses only public FPDF methods on the `pdf`
-    argument, plus two low-level helpers imported lazily below to keep
-    the import graph strictly one-directional at module load."""
+    Lives here — beside the narrative *builder* helpers — so that both
+    PDF renderers (`edu_deep_report.build_deep_dive_pdf` and
+    `journey_pdf.build_journey_pdf`) can call it via a strictly
+    one-way import graph: both depend on `deep_dive_narrative`, which
+    depends only on `pdf_base` (a leaf module). No cycles."""
     parts = report.get("parts_narrative") or []
     opening = report.get("opening_story") or ""
     closing = report.get("closing_story") or ""
 
     if not (parts or opening or closing):
         return
-
-    # Lazy import: `edu_deep_report` owns the base PDF class + helpers
-    # (`_safe`, `_section_break`). Importing them at module load would
-    # form a circular import chain since `edu_deep_report` also calls
-    # into this module for `build_part_narratives`.
-    from edu_deep_report import _safe, _section_break
 
     _section_break(pdf)
     pdf.h2("Your story, part by part")

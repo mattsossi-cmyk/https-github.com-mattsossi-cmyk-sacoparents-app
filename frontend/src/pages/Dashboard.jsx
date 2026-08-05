@@ -1092,7 +1092,11 @@ export default function Dashboard() {
               </p>
               <ol className="space-y-2">
                 {(sncHighlights.highlights || []).slice(0, 3).map((h, i) => (
-                  <li key={i} className="flex items-start gap-3" data-testid={`dashboard-highlight-${i}`}>
+                  <li
+                    key={h.section_id && h.item_id ? `${h.section_id}-${h.item_id}` : `dh-${i}-${(h.prompt || "").slice(0, 30)}`}
+                    className="flex items-start gap-3"
+                    data-testid={`dashboard-highlight-${i}`}
+                  >
                     <div className="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-[#1F5C3B] text-white text-[11px] font-bold flex items-center justify-center">{i + 1}</div>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm text-[#1A1330] font-semibold leading-snug truncate">{h.prompt}</div>

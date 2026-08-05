@@ -10,9 +10,8 @@ from fpdf import FPDF
 from edu_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION
 from edu_deep_scoring import score_deep_dive
 from edu_deep_journey import build_journey_report
-
-
-LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "sa_coparents_logo.png")
+from deep_dive_narrative import render_parts_narrative
+from pdf_base import LOGO_PATH, _safe, _section_break
 
 
 # ---------------------------------------------------------------------------
@@ -207,19 +206,6 @@ def build_deep_dive_report(
 # PDF rendering — tight Letter layout, matching the SNC v2 brand palette.
 # ---------------------------------------------------------------------------
 
-def _safe(t: Any) -> str:
-    if t is None:
-        return ""
-    s = str(t)
-    for k, v in {
-        "\u2014": "-", "\u2013": "-", "\u2212": "-",
-        "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
-        "\u2026": "...", "\u2022": "-", "\u00a0": " ",
-    }.items():
-        s = s.replace(k, v)
-    return s.encode("latin-1", errors="replace").decode("latin-1")
-
-
 class _PDF(FPDF):
     def __init__(self):
         super().__init__(format="Letter")
@@ -275,13 +261,6 @@ class _PDF(FPDF):
         self.set_font("Helvetica", "B", 8.5); self.set_text_color(*color)
         self.set_x(self.l_margin); self.multi_cell(self.epw, 4.4, _safe(text))
         self.set_text_color(30, 24, 54); self.ln(0.2)
-
-
-def _section_break(pdf: _PDF):
-    pdf.ln(1.5)
-    pdf.set_draw_color(220, 214, 232); pdf.set_line_width(0.2)
-    pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
-    pdf.ln(1.5)
 
 
 _RATING_COLORS = {
@@ -345,9 +324,6 @@ def build_deep_dive_pdf(*, report: Dict[str, Any],
         pdf.body(support_summary["overall_narrative"])
 
     # Rich per-part storytelling (opening, one card per part, closing).
-    # `render_parts_narrative` lives in deep_dive_narrative to avoid a
-    # circular import with journey_pdf.
-    from deep_dive_narrative import render_parts_narrative
     render_parts_narrative(pdf, report)
 
     # AI executive summary (if present)

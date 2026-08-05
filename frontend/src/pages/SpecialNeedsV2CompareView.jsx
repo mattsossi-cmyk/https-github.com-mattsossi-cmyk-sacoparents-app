@@ -52,7 +52,7 @@ function ValueCell({ item, side }) {
   if (type === "multi") {
     const arr = sideObj.value || [];
     if (!arr.length) return <span className="text-[#8471B3] italic">—</span>;
-    return <ul className="list-disc pl-5">{arr.map((v, i) => <li key={i}>{v}</li>)}</ul>;
+    return <ul className="list-disc pl-5">{arr.map((v, i) => <li key={`${i}-${String(v).slice(0, 30)}`}>{v}</li>)}</ul>;
   }
   const v = sideObj.value || "";
   return v ? <span className="whitespace-pre-wrap">{v}</span> : <span className="text-[#8471B3] italic">—</span>;

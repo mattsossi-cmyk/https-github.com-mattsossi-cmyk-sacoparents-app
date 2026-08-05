@@ -160,7 +160,7 @@ function InsightsPanel({ insights }) {
       <ul className="space-y-1.5">
         {insights.map((ins, i) => (
           <li
-            key={i}
+            key={ins.kind ? `${ins.kind}-${i}` : `insight-${i}-${(ins.message || "").slice(0, 30)}`}
             className="text-sm text-[#1A1330] leading-relaxed"
             data-testid={`growth-insight-${ins.kind}`}
           >

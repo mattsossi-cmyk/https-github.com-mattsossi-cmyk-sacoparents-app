@@ -240,7 +240,7 @@ export default function SectionCoachCard({
                         <ul className="mt-2 space-y-1.5">
                           {items.map((line, i) => (
                             <li
-                              key={i}
+                              key={`${key}-${i}-${String(line).slice(0, 30)}`}
                               className="flex gap-2 text-[13px] text-[#1A1330] leading-snug"
                             >
                               <span
