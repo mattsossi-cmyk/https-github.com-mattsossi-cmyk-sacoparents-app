@@ -87,15 +87,18 @@ function clearSituation() {
   catch { /* best-effort */ }
 }
 
-// Maps a situation key to the prep-module key that best matches it.  Used
-// to highlight the recommended module in the Preparation Modules card.
-const SITUATION_TO_RECOMMENDED_MODULE = {
-  "cooperate":     "mediation-summary",
-  "difficult":     "mediation-summary",
-  "high-conflict": "safety-assessment",
-  "safety":        "safety-assessment",
-  "special-needs": "educational-assessment",
-  "mediation":     "mediation-summary",
+// Maps a situation key to the prep-module keys that best match it.  Used
+// to highlight the recommended module(s) in the Preparation Modules card.
+// "special-needs" highlights BOTH the Educational and Psychological
+// modules because a child with unique needs almost always benefits from
+// both alignment checks (learning support + emotional regulation).
+const SITUATION_TO_RECOMMENDED_MODULES = {
+  "cooperate":     ["mediation-summary"],
+  "difficult":     ["mediation-summary"],
+  "high-conflict": ["safety-assessment"],
+  "safety":        ["safety-assessment"],
+  "special-needs": ["educational-assessment", "psychological-assessment"],
+  "mediation":     ["mediation-summary"],
 };
 
 // The six preparation modules the app builds a PDF for. Rendered as a
@@ -288,9 +291,9 @@ export default function Dashboard() {
   // we can highlight the matching prep module + show a "you chose X"
   // reset chip instead of re-asking the same question every login.
   const [situationChoice, setSituationChoice] = useState(readSituation);
-  const recommendedModule = situationChoice
-    ? SITUATION_TO_RECOMMENDED_MODULE[situationChoice] || null
-    : null;
+  const recommendedModules = situationChoice
+    ? SITUATION_TO_RECOMMENDED_MODULES[situationChoice] || []
+    : [];
   const rememberSituation = (key) => {
     saveSituation(key);
     setSituationChoice(key);
@@ -554,7 +557,7 @@ export default function Dashboard() {
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {PREP_MODULES.map((m) => {
-              const isRec = recommendedModule === m.key;
+              const isRec = recommendedModules.includes(m.key);
               return (
                 <Link
                   key={m.key}

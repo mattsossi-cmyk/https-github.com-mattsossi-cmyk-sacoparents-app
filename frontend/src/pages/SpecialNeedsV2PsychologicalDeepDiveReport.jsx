@@ -12,7 +12,7 @@ import SignDownloadToggle from "../components/SignDownloadToggle";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Download, Loader2, RefreshCcw, Sparkles, Users,
+  ArrowLeft, Download, Loader2, RefreshCcw, Sparkles, Users, FileText,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -162,6 +162,36 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330]">Psychological &amp; Behavioural Assessment Report</h1>
 
         <ReportReviewNotice variant="individual" className="mt-5" />
+
+        {/* Alignment Framework PDF — the printable fillable form that
+            underpins the 25-question Psychological Deep Dive. Surfaced
+            here so parents can share/print the full framework alongside
+            the interactive assessment. */}
+        <a
+          href="/downloads/coparenting_psychological_alignment_framework.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 flex items-start gap-3 rounded-3xl border-2 border-[#3D1A78]/25 bg-[#F5F1FB] p-4 sm:p-5 hover:bg-[#EEE9F7] transition-colors"
+          data-testid="psych-report-framework-pdf-link"
+        >
+          <div className="shrink-0 w-10 h-10 rounded-full bg-[#3D1A78] text-white flex items-center justify-center">
+            <FileText size={18} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              Companion PDF
+            </div>
+            <div className="text-sm sm:text-base font-serif text-[#1A1330] mt-0.5">
+              Co-Parenting Psychological Alignment Framework
+            </div>
+            <div className="text-xs text-[#4B4567] mt-1">
+              The fillable, printable version of this 25-question framework. Bring it to therapy, mediation, or any co-parenting conversation.
+            </div>
+          </div>
+          <div className="shrink-0 text-[#3D1A78] self-center">
+            <Download size={16} />
+          </div>
+        </a>
 
         {/* v2 alignment score card - total, band, per-part breakdown */}
         {report.score_card && (

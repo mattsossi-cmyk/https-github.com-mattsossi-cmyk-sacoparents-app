@@ -7,7 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import AppShell from "../AppShell";
 import { api } from "../../lib/api";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles, TrendingUp, Star, MessageCircle, HelpCircle } from "lucide-react";
+import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles, TrendingUp, Star, MessageCircle, HelpCircle, Grid3x3 } from "lucide-react";
 import { logError } from "../../lib/logger";
 import AlignmentMilestoneCelebration from "./AlignmentMilestoneCelebration";
 import ReportReviewNotice from "../ReportReviewNotice";
@@ -69,6 +69,123 @@ function MultiBreakdown({ item, parentA, parentB }) {
         <div><span className="font-semibold text-[#8C5A2C]">Only {parentB}:</span> {(item.only_parent_b || []).join(", ")}</div>
       )}
     </div>
+  );
+}
+
+// Compact 25-question side-by-side matrix used on the v2 (0-4 alignment)
+// Educational and Psychological Deep Dive compare views. Skips items
+// whose type isn't a numeric scale — the "gap" concept only makes sense
+// for likert/alignment answers. When both parents' answers are missing
+// the row is dropped entirely.
+function GapCell({ gap }) {
+  if (gap === null || gap === undefined) {
+    return <span className="text-[10px] text-[#8471B3] italic">—</span>;
+  }
+  const cls =
+    gap <= 1
+      ? "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]"
+      : gap === 2
+      ? "bg-[#EEE9F7] text-[#3D1A78] border-[#D6CFE8]"
+      : "bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]";
+  return (
+    <span className={`inline-flex items-center justify-center min-w-[26px] px-1.5 py-0.5 rounded-full text-[11px] font-bold border ${cls}`}>
+      {gap}
+    </span>
+  );
+}
+
+function AlignmentMatrix({ sections, parentA, parentB, testidPrefix }) {
+  // Flatten and count only numeric rows.
+  const numericSections = (sections || [])
+    .map((sec) => ({
+      ...sec,
+      items: (sec.items || []).filter(
+        (it) => it.type === "alignment" || it.type === "likert"
+      ),
+    }))
+    .filter((sec) => sec.items.length > 0);
+
+  const totalRows = numericSections.reduce((n, s) => n + s.items.length, 0);
+  if (totalRows === 0) return null;
+
+  return (
+    <section
+      className="mt-6 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7 shadow-sm"
+      data-testid={`${testidPrefix}-matrix`}
+    >
+      <div className="flex items-center gap-2 text-[#3D1A78]">
+        <Grid3x3 size={16} />
+        <span className="text-[10px] uppercase tracking-[0.22em] font-bold">
+          Side-by-side matrix
+        </span>
+      </div>
+      <div className="mt-1 flex flex-wrap items-baseline gap-3">
+        <h2 className="font-serif text-2xl text-[#1A1330]">
+          All {totalRows} questions at a glance
+        </h2>
+        <span className="text-xs text-[#4B4567] italic">
+          Score each question 0 (not at all) to 4 (completely). Gap = the
+          difference between the two answers.
+        </span>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-3 flex flex-wrap gap-2 text-[10px]" data-testid={`${testidPrefix}-matrix-legend`}>
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#E6F4EC] text-[#1F5C3B] border border-[#B5DFC5] font-semibold">Gap 0-1 · aligned</span>
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8] font-semibold">Gap 2 · close</span>
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#F8D7D7] text-[#B02A2A] border border-[#EFB4B4] font-semibold">Gap 3-4 · different</span>
+      </div>
+
+      <div className="mt-4 space-y-5">
+        {numericSections.map((sec) => (
+          <div key={sec.id} data-testid={`${testidPrefix}-matrix-section-${sec.id}`}>
+            <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
+              Part {sec.number} · {sec.name}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#8471B3] border-b border-[#E5E0EE]">
+                    <th className="py-2 pr-2 w-8">#</th>
+                    <th className="py-2 pr-3">Question</th>
+                    <th className="py-2 px-2 text-center w-20">{parentA}</th>
+                    <th className="py-2 px-2 text-center w-20">{parentB}</th>
+                    <th className="py-2 pl-2 text-center w-14">Gap</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sec.items.map((item, idx) => {
+                    const a = (item.parent_a || {}).value;
+                    const b = (item.parent_b || {}).value;
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-b border-[#F1EEF7] align-top"
+                        data-testid={`${testidPrefix}-matrix-row-${sec.id}-${item.id}`}
+                      >
+                        <td className="py-2 pr-2 text-[#8471B3] font-bold tabular-nums">
+                          {idx + 1}
+                        </td>
+                        <td className="py-2 pr-3 text-[#1A1330]">{item.prompt}</td>
+                        <td className="py-2 px-2 text-center text-[#1A1330] font-semibold tabular-nums" data-testid={`${testidPrefix}-matrix-a-${sec.id}-${item.id}`}>
+                          {typeof a === "number" ? a : <span className="text-[#8471B3] italic font-normal">—</span>}
+                        </td>
+                        <td className="py-2 px-2 text-center text-[#1A1330] font-semibold tabular-nums" data-testid={`${testidPrefix}-matrix-b-${sec.id}-${item.id}`}>
+                          {typeof b === "number" ? b : <span className="text-[#8471B3] italic font-normal">—</span>}
+                        </td>
+                        <td className="py-2 pl-2 text-center" data-testid={`${testidPrefix}-matrix-gap-${sec.id}-${item.id}`}>
+                          <GapCell gap={item.gap} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -380,6 +497,15 @@ export default function DeepDiveCompareView({ pathway }) {
                   ))}
                 </ol>
               </section>
+            )}
+
+            {pathway.showMatrix && (
+              <AlignmentMatrix
+                sections={data.comparison.sections || []}
+                parentA={parentA}
+                parentB={parentB}
+                testidPrefix={t}
+              />
             )}
 
             {(data.comparison.sections || []).map((sec) => (

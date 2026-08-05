@@ -11,6 +11,7 @@ export default function SpecialNeedsV2EducationalDeepDiveCompareView() {
         hubRoute: "/special-needs-v2/educational-deep-dive/compare",
         hubLabel: "Back to check-in summaries",
         downloadFilename: "Coparenting_Education_CheckIn_Summary.pdf",
+        showMatrix: true,
       }}
     />
   );

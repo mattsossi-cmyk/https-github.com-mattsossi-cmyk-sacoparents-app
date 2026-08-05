@@ -1,0 +1,29 @@
+{
+  "summary": "Frontend-only iteration 50 verified. (1) Dashboard SITUATION_TO_RECOMMENDED_MODULES dual highlight for 'special-needs' works: setting sacoparents_situation_choice_v1='special-needs' shows BOTH dashboard-prep-module-educational-assessment-recommended AND dashboard-prep-module-psychological-assessment-recommended and NO other module badges. Verified other keys retain single highlight: 'cooperate' -> mediation-summary only, 'high-conflict' -> safety-assessment only. (2) Framework PDF file exists at /downloads/coparenting_psychological_alignment_framework.pdf and HEAD returns 200. Source review of SpecialNeedsV2PsychologicalDeepDiveReport.jsx (lines 170-194) confirms the callout has data-testid='psych-report-framework-pdf-link', href exactly '/downloads/coparenting_psychological_alignment_framework.pdf', target='_blank' rel='noopener noreferrer', and text 'Co-Parenting Psychological Alignment Framework'. Runtime testid not observed in the preview env because parent1@test.com has no completed psych assessment yet (report page renders early-return 'No report available yet.' at line 110). Link is placed unconditionally inside the report-render block above the score card. (3) Compare matrix opt-in: source review confirms Educational + Psychological compare view pages pass showMatrix: true to DeepDiveCompareView; the Medical compare view page does NOT set showMatrix. AlignmentMatrix component in DeepDiveCompareView.jsx renders only when pathway.showMatrix is true AND has numeric (alignment/likert) rows, emits data-testid `{prefix}-matrix`, `-matrix-legend`, `-matrix-section-<id>`, `-matrix-a/b/gap-<section>-<item>`, and a 3-band gap pill (0-1 green, 2 purple, 3-4 red). Live compare-view runtime check with a bogus share id on all three pathways confirmed the pages render (with 'Comparison request not found.' error card) with ZERO JS errors and correctly no matrix element rendered (as data is absent). Cannot end-to-end validate matrix DOM without a real 25-item completed share pair (skipped per task guidance).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/special-needs-v2/psychological-deep-dive/report", "issues": ["Framework PDF callout (data-testid psych-report-framework-pdf-link) is inside the `if (!report) return early` guard — a parent who visits the report route BEFORE completing the 25-item assessment sees only 'No report available yet.' with no access to the companion framework PDF. Consider surfacing the callout on the empty state as well so the printable framework is always reachable from the deep-dive route."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional UX: render the psych-report-framework-pdf-link callout on the 'No report available yet.' empty state of SpecialNeedsV2PsychologicalDeepDiveReport.jsx so parents can always print/share the companion framework, not only after completing the assessment.",
+    "Optional E2E validation: seed a completed 25-item Psychological + Educational deep dive with a shared compare between parent1@test.com and parent2@test.com so the matrix DOM (edu/psych-deep-compare-matrix, legend, per-item a/b/gap cells) can be asserted at runtime in a future iteration."
+  ],
+  "critical_code_review_comments": [
+    "SITUATION_TO_RECOMMENDED_MODULES is now correctly an array-of-strings map; the Dashboard render uses recommendedModules.includes(m.key) so any future situation can also multi-highlight without further code changes.",
+    "AlignmentMatrix in DeepDiveCompareView.jsx correctly filters items by type==='alignment'||'likert' and drops empty sections, so pathways with mixed-type schemas won't render empty tables. GapCell color bands match the spec (0-1 green / 2 purple / 3-4 red).",
+    "pathway.showMatrix opt-in is a clean feature-flag pattern; Medical compare view intentionally omits the flag and thus correctly does not render `psych/edu-deep-compare-matrix` testids."
+  ],
+  "updated_files": ["/app/test_reports/iteration_50.json"],
+  "success_rate": {"backend": "n/a (frontend-only iteration)", "frontend": "100% of runtime-verifiable checks: 3/3 situation-highlight variants + PDF HEAD 200 + 3/3 compare pages render without JS errors. Compare-matrix DOM verification skipped per task instructions (no seeded share)."},
+  "test_credentials": "parent1@test.com / TestPass123!",
+  "seed_data_creation": "None. Compare-matrix runtime DOM was not asserted because the environment has no seeded compare share for parent1/parent2 psych/edu deep dives.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "To validate the compare matrix DOM end-to-end: (1) sign in as parent1 and complete 25 numeric answers on /special-needs-v2/educational-deep-dive AND /special-needs-v2/psychological-deep-dive, (2) generate a compare share, (3) sign in as parent2, submit their 25 answers, then open the compare-view URL. Testids to assert: edu-deep-compare-matrix / psych-deep-compare-matrix, edu/psych-deep-compare-matrix-legend, edu/psych-deep-compare-matrix-a/b/gap-<section>-<item>. Confirm psych-deep-compare-matrix DOES render and edu-deep-compare-matrix DOES render, but neither is present on /special-needs-v2/medical-deep-dive/compare/<share_id>. Also worth confirming: after completing the psych assessment, /special-needs-v2/psychological-deep-dive/report actually mounts the report body and the psych-report-framework-pdf-link callout becomes visible (source shows it will).",
+  "rca of the issue": "N/A — no functional regressions detected. Only one minor UX observation (framework PDF link gated behind report existence)."
+}
