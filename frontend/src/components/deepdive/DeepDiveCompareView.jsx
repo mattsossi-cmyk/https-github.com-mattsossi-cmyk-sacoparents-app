@@ -381,7 +381,11 @@ export default function DeepDiveCompareView({ pathway }) {
                     const h = Math.max(6, Math.round((s.aligned_pct || 0) * 0.9));
                     const isLatest = i === timeline.series.length - 1;
                     return (
-                      <div key={i} className="flex-1 flex flex-col items-center justify-end" data-testid={`${t}-timeline-bar-${i}`}>
+                      <div
+                        key={s.created_at || `t-${i}-${s.aligned_pct}`}
+                        className="flex-1 flex flex-col items-center justify-end"
+                        data-testid={`${t}-timeline-bar-${i}`}
+                      >
                         <div
                           className={`w-full rounded-t ${isLatest ? "bg-[#3D1A78]" : "bg-[#8471B3]"}`}
                           style={{ height: `${h}%` }}

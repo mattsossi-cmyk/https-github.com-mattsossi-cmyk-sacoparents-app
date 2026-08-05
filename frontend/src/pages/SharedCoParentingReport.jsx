@@ -218,7 +218,7 @@ function SharedCoParentingReport() {
             </div>
             <ul className="space-y-2.5">
               {report.communication_toolkit.map((tip, i) => (
-                <li key={i} className="text-[#1A1330]" data-testid={`sharedcp-tip-${i}`}>
+                <li key={`tip-${i}-${(tip || "").slice(0, 30)}`} className="text-[#1A1330]" data-testid={`sharedcp-tip-${i}`}>
                   <div className="font-semibold">{tip.title}</div>
                   {tip.detail && <div className="text-sm text-[#4B4567]">{tip.detail}</div>}
                 </li>
@@ -261,7 +261,7 @@ function SharedCoParentingReport() {
                       <div className="mt-3">
                         <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">Findings</div>
                         <ul className="text-sm text-[#1A1330] list-disc pl-4 space-y-0.5">
-                          {sec.findings.map((f, i) => <li key={i}>{f}</li>)}
+                          {sec.findings.map((f, i) => <li key={`f-${i}-${(f || "").slice(0, 30)}`}>{f}</li>)}
                         </ul>
                       </div>
                     )}
@@ -269,7 +269,7 @@ function SharedCoParentingReport() {
                       <div className="mt-3">
                         <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">Recommendations</div>
                         <ul className="text-sm text-[#1A1330] list-disc pl-4 space-y-0.5">
-                          {sec.recommendations.map((f, i) => <li key={i}>{f}</li>)}
+                          {sec.recommendations.map((f, i) => <li key={`r-${i}-${(f || "").slice(0, 30)}`}>{f}</li>)}
                         </ul>
                       </div>
                     )}
@@ -286,7 +286,7 @@ function SharedCoParentingReport() {
             <h2 className="font-serif text-xl text-[#1A1330] mb-3">Recommended next steps</h2>
             <ol className="list-decimal pl-5 space-y-1.5 text-[#1A1330]">
               {report.next_steps.map((s, i) => (
-                <li key={i} data-testid={`sharedcp-step-${i}`}>{s}</li>
+                <li key={`step-${i}-${(s || "").slice(0, 30)}`} data-testid={`sharedcp-step-${i}`}>{s}</li>
               ))}
             </ol>
           </div>

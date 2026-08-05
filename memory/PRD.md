@@ -1,6 +1,14 @@
 # SA CoParents — PRD
 
 
+- **Iteration 77 — Code Review Fixes (2026-02-06)**:
+  - **Circular import resolved**: Moved `render_parts_narrative` from `journey_pdf.py` to `deep_dive_narrative.py`. `edu_deep_report.py` and `journey_pdf.py` now both import it from a single downstream module — no more `edu_deep_report ↔ journey_pdf` back-reference. Verified with fresh module load; 96/96 regression tests pass.
+  - **Empty catch blocks**: Added `logError` calls in `SpecialNeedsV2.jsx` (deep-dive dismiss read/write) and `Orientation.jsx` (orientation-seen flag) so storage failures show up in debug logs instead of failing silently.
+  - **Array index keys**: Replaced `key={i}` with stable content-composite keys in 5 spots: `SharedCoParentingReport.jsx` (toolkit tips, findings, recommendations, next-steps), `SafetyAssessment.jsx` (recommendations list), `DeepDiveCompareView.jsx` (timeline bars), `GmailComposer.jsx` (tone notes).
+  - **False positives noted**: `is None` in `wall_utils.py:188` / `wall_routes.py:181` is idiomatic Python (PEP 8) — skipped. `AuthContext.jsx:91` + `ReportShareControls.jsx:148` hook-deps already lint clean under `exhaustive-deps` — skipped. Hardcoded `TestPass123!` in test files is shared test-only cred — skipped per user approval (option `a`).
+
+
+
 - **Iteration 76 — Gmail Unread Badge (2026-02-06)**:
   - New backend endpoint `GET /api/gmail/unread-count` — O(1) via the Gmail Labels API (INBOX label's `messagesUnread` / `threadsUnread`). Returns `{connected, unread_messages, unread_threads}`; gracefully degrades to `connected:false` on any Gmail/token error so the dashboard never sees a 5xx.
   - Frontend `GmailMiniInbox.jsx` fetches messages + unread count in parallel and renders a small red pill next to the "Recent messages" heading (`data-testid="gmail-mini-unread-badge"`, caps at "99+"). Hidden when count is 0.

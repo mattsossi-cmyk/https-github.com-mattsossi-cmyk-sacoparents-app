@@ -137,7 +137,7 @@ export default function GmailComposer({ prefill, sourceMessage, onClose, onSent 
             </div>
             <ul className="text-xs text-[#4B4567] space-y-1">
               {toneNotes.map((n, i) => (
-                <li key={i} className="flex gap-2">
+                <li key={`tn-${i}-${(n || "").slice(0, 30)}`} className="flex gap-2">
                   <span className="text-[#3D1A78]">•</span>
                   <span>{n}</span>
                 </li>

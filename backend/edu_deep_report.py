@@ -345,7 +345,9 @@ def build_deep_dive_pdf(*, report: Dict[str, Any],
         pdf.body(support_summary["overall_narrative"])
 
     # Rich per-part storytelling (opening, one card per part, closing).
-    from journey_pdf import render_parts_narrative
+    # `render_parts_narrative` lives in deep_dive_narrative to avoid a
+    # circular import with journey_pdf.
+    from deep_dive_narrative import render_parts_narrative
     render_parts_narrative(pdf, report)
 
     # AI executive summary (if present)

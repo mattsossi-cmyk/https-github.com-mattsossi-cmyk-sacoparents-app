@@ -141,7 +141,10 @@ function readDismissedDeepDives() {
   try {
     const raw = localStorage.getItem(DEEP_DIVE_DISMISS_KEY);
     return raw ? JSON.parse(raw) : {};
-  } catch {
+  } catch (err) {
+    // localStorage disabled/private mode/parse error — safe to treat as
+    // "nothing dismissed yet". Warn so a debug session sees it.
+    logError("SpecialNeedsV2: could not read deep-dive dismiss state", err);
     return {};
   }
 }
@@ -155,8 +158,10 @@ function DeepDiveCard({ id, testid, linkTestid, dismissTestid, title, sections, 
       if (val) current[id] = true;
       else delete current[id];
       localStorage.setItem(DEEP_DIVE_DISMISS_KEY, JSON.stringify(current));
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // Storage full or private mode — the dismiss will simply not
+      // persist across reloads. Non-fatal, but worth surfacing.
+      logError("SpecialNeedsV2: could not persist deep-dive dismiss", err);
     }
   };
 

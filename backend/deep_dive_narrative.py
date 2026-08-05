@@ -20,6 +20,79 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 
+_BAND_COLORS = {
+    "high":     (31, 92, 59),
+    "moderate": (170, 116, 40),
+    "low":      (176, 42, 42),
+    "unrated":  (110, 100, 130),
+}
+
+
+def render_parts_narrative(pdf, report: Dict[str, Any]) -> None:
+    """Render the per-part storytelling block used by both Edu and Psych
+    v2 report PDFs. Emits the opening story, one story card per scored
+    part (strengths + growth items + child reflection), and the closing
+    story. No-op when the report doesn't carry the fields (older tests).
+
+    This function lives here — beside the narrative *builder* helpers —
+    so both PDF renderers (`edu_deep_report.build_deep_dive_pdf` and
+    `journey_pdf.build_journey_pdf`) can call it without either module
+    importing the other. It uses only public FPDF methods on the `pdf`
+    argument, plus two low-level helpers imported lazily below to keep
+    the import graph strictly one-directional at module load."""
+    parts = report.get("parts_narrative") or []
+    opening = report.get("opening_story") or ""
+    closing = report.get("closing_story") or ""
+
+    if not (parts or opening or closing):
+        return
+
+    # Lazy import: `edu_deep_report` owns the base PDF class + helpers
+    # (`_safe`, `_section_break`). Importing them at module load would
+    # form a circular import chain since `edu_deep_report` also calls
+    # into this module for `build_part_narratives`.
+    from edu_deep_report import _safe, _section_break
+
+    _section_break(pdf)
+    pdf.h2("Your story, part by part")
+    if opening:
+        pdf.body(opening)
+        pdf.ln(0.5)
+
+    for part in parts:
+        pdf.h3(f"Part {part.get('number')}. {part.get('name')}")
+        color = _BAND_COLORS.get(part.get("band"), (61, 26, 120))
+        percent = part.get("percent", 0)
+        if part.get("answered"):
+            pdf.pill(
+                f"{part.get('band_headline', '')} · {percent}%",
+                color=color,
+            )
+        else:
+            pdf.pill(part.get("band_headline") or "Not yet scored", color=color)
+        if part.get("narrative"):
+            pdf.body(part["narrative"])
+        strengths = part.get("strengths") or []
+        growth = part.get("growth") or []
+        if strengths:
+            pdf.set_font("Helvetica", "B", 8.8); pdf.set_text_color(31, 92, 59)
+            pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 4.2, _safe("Strengths in this part"))
+            pdf.set_text_color(30, 24, 54)
+            pdf.bullets([f"{s['prompt']} (you scored {s['value']}/4)" for s in strengths])
+        if growth:
+            pdf.set_font("Helvetica", "B", 8.8); pdf.set_text_color(176, 42, 42)
+            pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 4.2, _safe("Where to grow"))
+            pdf.set_text_color(30, 24, 54)
+            pdf.bullets([f"{g['prompt']} (you scored {g['value']}/4)" for g in growth])
+        if part.get("child_reflection"):
+            pdf.small(part["child_reflection"])
+        pdf.ln(1)
+
+    if closing:
+        pdf.h3("A note to close")
+        pdf.body(closing)
+
+
 def _pick_items(section: Dict[str, Any], responses: Dict[str, Any],
                 predicate) -> List[Dict[str, Any]]:
     """Return item dicts (id, prompt, value) for numeric answers matching

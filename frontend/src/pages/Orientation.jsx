@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   X,
 } from "lucide-react";
+import { logError } from "../lib/logger";
 
 /**
  * App Orientation — a one-time onboarding walkthrough that teaches parents
@@ -25,7 +26,10 @@ const ORIENTATION_KEY = "sacoparents.orientation_seen.v1";
 export function hasSeenOrientation() {
   try {
     return localStorage.getItem(ORIENTATION_KEY) === "true";
-  } catch (_e) {
+  } catch (err) {
+    // localStorage disabled — treat as "not seen" so orientation shows.
+    // Log so debug sessions can see the storage failure.
+    logError("Orientation: could not read seen flag", err);
     return false;
   }
 }
@@ -33,8 +37,10 @@ export function hasSeenOrientation() {
 export function markOrientationSeen() {
   try {
     localStorage.setItem(ORIENTATION_KEY, "true");
-  } catch (_e) {
-    // Private-browsing mode — ignore silently
+  } catch (err) {
+    // Private-browsing mode / storage full — orientation will show
+    // again next visit. Not fatal, but worth surfacing.
+    logError("Orientation: could not persist seen flag", err);
   }
 }
 
