@@ -232,25 +232,90 @@ export default function Gmail() {
         {loadingStatus ? (
           <div className="mt-10 text-[#857E9C]" data-testid="gmail-loading">Checking your Gmail connection…</div>
         ) : !status.connected ? (
-          <section className="card-soft p-8 mt-8 text-center" data-testid="gmail-connect-card">
-            <Mail size={40} className="mx-auto text-[#3D1A78]" />
-            <h2 className="font-serif text-2xl text-[#1A1330] mt-4">Connect your Google account</h2>
-            <p className="text-[#4B4567] mt-2 max-w-xl mx-auto">
-              You&apos;ll be redirected to Google to grant permission to read your
-              inbox and send email on your behalf. You can revoke access
-              anytime from your Google Account settings, or from this page.
-            </p>
-            <button
-              onClick={connect}
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#3D1A78] text-white font-medium hover:bg-[#2A1256]"
-              data-testid="gmail-connect-btn"
+          <section className="card-soft p-8 mt-8" data-testid="gmail-connect-card">
+            <div className="text-center">
+              <Mail size={40} className="mx-auto text-[#3D1A78]" />
+              <h2 className="font-serif text-2xl text-[#1A1330] mt-4">
+                Connect your Google account
+              </h2>
+              <p className="text-[#4B4567] mt-2 max-w-xl mx-auto">
+                Gmail is an <strong>optional advanced tool</strong> — you don&apos;t
+                need it to complete an assessment, generate a report, or share
+                anything with a mediator. Connect it only if you want to read
+                and reply to a co-parent&apos;s messages without leaving the app.
+              </p>
+            </div>
+
+            {/* Plain-language disclosure of what we read / store / retain.
+                Placed BEFORE the connect button so a hesitant parent can
+                answer the trust question before they click through to
+                Google's consent screen. */}
+            <div
+              className="mt-6 mx-auto max-w-2xl rounded-2xl border border-[#E5E0EE] bg-[#FCFBFE] p-5 text-left text-sm text-[#1A1330]"
+              data-testid="gmail-disclosure"
             >
-              <Mail size={16} /> Connect Gmail
-            </button>
-            <p className="text-xs text-[#857E9C] mt-4">
-              We store an encrypted refresh token so you don&apos;t need to sign in
-              every time. No message content is stored on our servers.
-            </p>
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+                What we read, store, and retain
+              </div>
+              <ul className="space-y-2.5 text-[13px] leading-relaxed">
+                <li className="flex gap-2">
+                  <span className="text-[#3D1A78] font-bold shrink-0">Read:</span>
+                  <span>
+                    Only messages in your inbox that you actively open, plus the
+                    unread-count on the INBOX label. We never search, index, or
+                    train on your mail.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-[#3D1A78] font-bold shrink-0">Store:</span>
+                  <span>
+                    An encrypted OAuth refresh token — that&apos;s it. Message
+                    bodies, subjects, and attachments are streamed to your
+                    browser on demand and never written to our database.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-[#3D1A78] font-bold shrink-0">Retain:</span>
+                  <span>
+                    Your refresh token stays only until you click{" "}
+                    <em>Disconnect</em> on this page (or revoke access in your{" "}
+                    <a
+                      href="https://myaccount.google.com/permissions"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline text-[#3D1A78] font-semibold"
+                    >
+                      Google Account
+                    </a>
+                    ). Deleting your SA CoParents account wipes the token
+                    immediately.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-[#3D1A78] font-bold shrink-0">Send:</span>
+                  <span>
+                    We only send an email when you explicitly click{" "}
+                    <em>Send</em> on a message you&apos;ve reviewed. Nothing
+                    is sent automatically or in the background.
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="text-center">
+              <button
+                onClick={connect}
+                className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#3D1A78] text-white font-medium hover:bg-[#2A1256]"
+                data-testid="gmail-connect-btn"
+              >
+                <Mail size={16} /> Connect Gmail
+              </button>
+              <p className="text-xs text-[#857E9C] mt-4">
+                You&apos;ll be redirected to Google to grant permission. You
+                can revoke access anytime from this page or from your Google
+                Account settings.
+              </p>
+            </div>
           </section>
         ) : selected ? (
           <div className="mt-8">

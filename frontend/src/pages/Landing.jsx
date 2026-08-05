@@ -9,7 +9,6 @@ import {
   Sparkles,
   ClipboardList,
   BookOpen,
-  CheckCircle2,
   Users,
   Compass,
   Lock,
@@ -139,20 +138,6 @@ function PrimaryCTA({ children, testid }) {
     >
       {children}
       <ArrowRight size={16} />
-    </button>
-  );
-}
-
-function TertiaryCTA({ children, onClick, testid, loading }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={loading}
-      data-testid={testid}
-      className="text-sm font-semibold text-[#4B4567] hover:text-[#3D1A78] hover:underline underline-offset-2 disabled:opacity-60"
-    >
-      {loading ? "Opening…" : children}
     </button>
   );
 }
@@ -480,60 +465,53 @@ function Hero() {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center fade-up">
         <Eyebrow>The SA CoParents App</Eyebrow>
         <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#1A1330] leading-[1.05] tracking-tight">
-          Start with your situation.
+          Prepare for better
           <br />
-          <span className="text-[#3D1A78]">Focus on your child.</span>
-          <br />
-          Leave ready to meet your child&rsquo;s&nbsp;needs.
+          <span className="text-[#3D1A78]">co-parenting conversations.</span>
         </h1>
-        <p className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-6 leading-relaxed">
-          Personalized assessments and practical reports to move forward with
-          greater clarity, confidence, and purpose.
+        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] mt-6 leading-relaxed">
+          Choose what your family is facing and receive a personalized
+          starting point, practical communication tools, and reports you
+          can bring to mediation or professional support.
         </p>
 
-        {/* Hero-level situation picker */}
+        {/* Primary action — the situation picker IS the CTA. Everything
+            else on this page derives from what the parent selects here. */}
         <div className="mt-10">
           <SituationPicker />
         </div>
 
-        {/* Rewired CTAs */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <SecondaryCTA
-            testid="hero-watch-cta"
-            onClick={watchIntro}
-          >
-            Watch How It Works
-          </SecondaryCTA>
-          <TertiaryCTA
-            testid="hero-guest-cta"
-            onClick={enterGuest}
-            loading={guestLoading}
-          >
-            Or explore as a guest &rarr;
-          </TertiaryCTA>
-        </div>
+        {/* Supporting reassurance — one concise strip, no visual noise. */}
+        <p
+          className="mt-6 text-xs sm:text-sm text-[#4B4567] max-w-2xl mx-auto"
+          data-testid="hero-reassurance"
+        >
+          Private guest access · No payment required to begin · About 10 minutes
+        </p>
 
-        {/* Trust indicators */}
-        <ul className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl mx-auto">
-          {[
-            "Child-Focused Approach",
-            "Child-Focused Mediation Preparation",
-            "Practical Communication Tools",
-            "Developed by Family Mediation Professionals",
-          ].map((label) => (
-            <li
-              key={label}
-              className="flex items-start gap-2 text-left text-xs sm:text-sm text-[#1A1330] bg-white/70 backdrop-blur-sm border border-white px-3.5 py-2.5 rounded-xl shadow-sm"
-              data-testid={`hero-trust-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-            >
-              <CheckCircle2
-                size={16}
-                className="text-[#2DB5B5] mt-0.5 shrink-0"
-              />
-              <span className="leading-snug">{label}</span>
-            </li>
-          ))}
-        </ul>
+        {/* Secondary paths — kept but demoted to text links so the one
+            primary action ("Choose your situation" above) stays the
+            visual centre of gravity. */}
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5 text-sm">
+          <button
+            type="button"
+            onClick={watchIntro}
+            data-testid="hero-watch-cta"
+            className="text-[#3D1A78] hover:underline font-medium"
+          >
+            Watch how it works
+          </button>
+          <span className="hidden sm:inline text-[#D6CFE8]">·</span>
+          <button
+            type="button"
+            onClick={enterGuest}
+            disabled={guestLoading}
+            data-testid="hero-guest-cta"
+            className="text-[#4B4567] hover:text-[#3D1A78] hover:underline disabled:opacity-60"
+          >
+            {guestLoading ? "Opening…" : "Or explore as a guest →"}
+          </button>
+        </div>
       </div>
     </section>
   );

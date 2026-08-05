@@ -1,6 +1,14 @@
 # SA CoParents — PRD
 
 
+- **Iteration 81 — Hero copy + Gmail prominence (2026-02-06)**:
+  - **Hero copy rewritten** per user brief: H1 "Prepare for better co-parenting conversations." · Sub-head "Choose what your family is facing and receive a personalized starting point, practical communication tools, and reports you can bring to mediation or professional support." · Supporting reassurance: "Private guest access · No payment required to begin · About 10 minutes". The situation picker is now the single primary action; "Watch how it works" and "Or explore as a guest →" demoted to inline text links; the old 4-item trust-indicator grid removed (its ideas already live in TrustSignals further down).
+  - **Gmail Mini Inbox removed from Dashboard**: connecting an inbox is a major trust request and was appearing directly beneath the Situation Picker. It now lives only on the dedicated `/gmail` page, reached through app-shell navigation.
+  - **Plain-language disclosure block** added to the `/gmail` connect state (`data-testid="gmail-disclosure"`) with a 4-row Read / Store / Retain / Send breakdown, plus a direct deep-link to Google Account permissions for revoking access. Framed explicitly as an "optional advanced tool".
+  - Removed unused `TertiaryCTA` helper and `CheckCircle2` import. Landing.jsx lints clean; live smoke-test confirms H1, sub-head, and reassurance strings render exactly as brief.
+
+
+
 - **Iteration 80 — Homepage tightened per user brief (2026-02-06)**:
   - **Length**: `Landing.jsx` went from 1192 → 897 lines (**~25% shorter**, right in the requested 20–30% range).
   - **New section order**: (1) Promise + situation picker (Hero — picker embeds the recommended pathway inline once a parent selects a situation), (2) What you receive (ThreeReportsStrip — each card still carries a "See sample" link), (3) How it works, (4) Trust, privacy, professional boundaries, (5) Final CTA.
