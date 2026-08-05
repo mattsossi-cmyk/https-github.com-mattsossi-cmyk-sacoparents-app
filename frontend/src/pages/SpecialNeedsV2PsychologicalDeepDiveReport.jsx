@@ -107,7 +107,41 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
     return <AppShell><div className="p-10 text-sm text-[#4B4567]"><Loader2 className="animate-spin inline" size={14} /> Loading...</div></AppShell>;
   }
   if (!report) {
-    return <AppShell><div className="p-10 text-sm text-[#4B4567]">No report available yet.</div></AppShell>;
+    return (
+      <AppShell>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10" data-testid="psych-deep-report-empty">
+          <p className="text-sm text-[#4B4567]">
+            No report available yet. Complete the 25-question Psychological
+            Deep Dive to generate your alignment report.
+          </p>
+          <a
+            href="/downloads/coparenting_psychological_alignment_framework.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex items-start gap-3 rounded-3xl border-2 border-[#3D1A78]/25 bg-[#F5F1FB] p-4 sm:p-5 hover:bg-[#EEE9F7] transition-colors max-w-xl"
+            data-testid="psych-report-framework-pdf-link"
+          >
+            <div className="shrink-0 w-10 h-10 rounded-full bg-[#3D1A78] text-white flex items-center justify-center">
+              <FileText size={18} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                Companion PDF
+              </div>
+              <div className="text-sm sm:text-base font-serif text-[#1A1330] mt-0.5">
+                Co-Parenting Psychological Alignment Framework
+              </div>
+              <div className="text-xs text-[#4B4567] mt-1">
+                Grab the fillable, printable framework now — no assessment required.
+              </div>
+            </div>
+            <div className="shrink-0 text-[#3D1A78] self-center">
+              <Download size={16} />
+            </div>
+          </a>
+        </div>
+      </AppShell>
+    );
   }
 
   const cover = report.cover || {};

@@ -1,5 +1,14 @@
 # SA CoParents — PRD
 
+
+- **Iteration 71 — Compare Matrix, Framework PDF link, Situation dual highlight (2026-02-06)**:
+  - **Compare Matrix (P0)**: Added a compact 25-question side-by-side matrix on the Educational + Psychological Deep Dive compare views (opt-in via `pathway.showMatrix`). Rendered above the per-section detail cards, grouped by the 5 parts, with columns: #, Question, Parent A score, Parent B score, Gap pill (0-1 green / 2 purple / 3-4 red) and a legend. Only numeric (`alignment`/`likert`) items render; sections without numeric items are skipped. Medical compare intentionally opts out.
+  - Component lives inline in `/app/frontend/src/components/deepdive/DeepDiveCompareView.jsx` (`AlignmentMatrix` + `GapCell`). Testids: `edu-deep-compare-matrix`, `psych-deep-compare-matrix`, `-matrix-legend`, `-matrix-section-<id>`, `-matrix-row/-a/-b/-gap-<section>-<item>`.
+  - **Framework PDF Link (P0)**: Added a highlighted callout on `/special-needs-v2/psychological-deep-dive/report` linking directly to `/downloads/coparenting_psychological_alignment_framework.pdf` (target `_blank`). Rendered both on the report body AND the "No report available yet." empty state, so parents can always print/share the framework. Testid `psych-report-framework-pdf-link`.
+  - **Situation → Psych Mapping (P0)**: `SITUATION_TO_RECOMMENDED_MODULE` renamed to `SITUATION_TO_RECOMMENDED_MODULES` (array-of-strings map). Selecting "special-needs" on the Dashboard Step 1 hero now highlights BOTH the Educational Assessment AND Psychological Assessment prep-module tiles (previously only Educational). Other situations keep single-module highlight. Dashboard render uses `recommendedModules.includes(m.key)` so adding future multi-highlights is a one-line schema change.
+  - Frontend-only iteration. Testing agent iteration 50 verified all three items (dual-highlight badges via localStorage, PDF HEAD 200, compare pages render without JS errors + Medical opts out).
+
+
 ## Status snapshot (2026-07-30 · v2 shipped)
 
 - **Iteration 70 — Psychological Deep Dive rebuilt as Co-Parenting Psychological Alignment Framework (2026-02-05)**:
