@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 80 — Homepage tightened per user brief (2026-02-06)**:
+  - **Length**: `Landing.jsx` went from 1192 → 897 lines (**~25% shorter**, right in the requested 20–30% range).
+  - **New section order**: (1) Promise + situation picker (Hero — picker embeds the recommended pathway inline once a parent selects a situation), (2) What you receive (ThreeReportsStrip — each card still carries a "See sample" link), (3) How it works, (4) Trust, privacy, professional boundaries, (5) Final CTA.
+  - **Removed as duplicative** (their key ideas already live inside Hero + Situation Picker + ThreeReports): `TheProblem` (~55 lines), `ChildFocusedMediation` (~55 lines), `SampleReports` + `SampleMediation/Safety/Progress` + `ReportPageFrame/SampleStat/SampleSection` (~185 lines). No external links reference the retired anchor IDs (`#sample-reports`, `#child-focused-mediation`) — nav/footer clean.
+  - Removed 4 now-unused lucide-react imports (`Quote`, `ChevronRight`, `BarChart3`, `Award`). Landing.jsx lints clean.
+  - Smoke-tested against preview URL — hero + picker + reports strip render correctly, all three deleted section titles verified absent.
+
+
+
 - **Iteration 79 — Code Review Fixes v3 (2026-02-06)**:
   - **Reviewer's circular-import claim confirmed stale**: Verified via fresh module load that `deep_dive_narrative` imports only `pdf_base` (no back-reference to `edu_deep_report`). Cycle was broken in iteration 78 via the new `pdf_base.py` leaf module.
   - **Array index keys**: Fixed the one new file the reviewer flagged this round — `WeeklyEmailPreview.jsx:301` (milestones-this-week list) now uses a stable content-composite key.

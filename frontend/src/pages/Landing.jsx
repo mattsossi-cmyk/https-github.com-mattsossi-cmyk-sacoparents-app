@@ -12,14 +12,10 @@ import {
   CheckCircle2,
   Users,
   Compass,
-  Quote,
-  ChevronRight,
   Lock,
   FlaskConical,
   LifeBuoy,
   FileText,
-  BarChart3,
-  Award,
   Baby,
   AlertTriangle,
   Scale,
@@ -551,7 +547,7 @@ function ThreeReportsStrip() {
   return (
     <section id="three-reports" className="relative py-14 sm:py-16 bg-white border-y border-[#EFE9F9]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <Eyebrow>Three core reports — plus specialized reports based on your family's needs</Eyebrow>
+        <Eyebrow>Three core reports — plus specialized reports based on your family&rsquo;s needs</Eyebrow>
         <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-2">
           Real deliverables you can hand to a mediator, therapist, or attorney.
         </h2>
@@ -641,62 +637,7 @@ function ThreeReportsCover({ testid, number, title, body, accent, sampleHref, sa
 }
 
 /* ============================================================
-   SECTION 2 — THE PROBLEM
-============================================================ */
-function TheProblem() {
-  const challenges = [
-    "Frequent arguments about parenting decisions",
-    "Difficult text and email exchanges",
-    "Children caught in the middle",
-    "Repeated trips to court",
-    "Lack of trust and cooperation",
-    "Fear that conflict is harming the children",
-  ];
-  return (
-    <section className="py-20 sm:py-24 bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-3xl mx-auto fade-up">
-          <Eyebrow color="text-[#C28771]">The Problem</Eyebrow>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight">
-            When Parents Fight, Children Feel It
-          </h2>
-          <p className="text-base text-[#4B4567] mt-6 leading-relaxed">
-            Separation and divorce can create ongoing conflict — miscommunication,
-            costly disputes, and stress that lands on the children. Most parents
-            want to do better; they just need the right tools.
-          </p>
-        </div>
-
-        <div className="mt-12 grid lg:grid-cols-3 gap-6 items-start">
-          <div className="card-soft p-7 sm:p-8 lg:col-span-2">
-            <Eyebrow color="text-[#C28771]">Common Challenges</Eyebrow>
-            <ul className="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-3" data-testid="problem-challenges-list">
-              {challenges.map((c) => (
-                <li
-                  key={c}
-                  className="flex items-start gap-3 text-[#1A1330] text-sm sm:text-base"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#C28771] mt-2.5 shrink-0" />
-                  <span className="leading-relaxed">{c}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="card-soft p-7 sm:p-8 bg-gradient-to-br from-[#EFE9F9] to-[#E4F1F1]">
-            <Eyebrow color="text-[#2DB5B5]">The Good News</Eyebrow>
-            <p className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug mt-2">
-              These patterns can change.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
-   SECTION 3 — HOW IT WORKS
+   SECTION — HOW IT WORKS
 ============================================================ */
 function HowItWorks() {
   const steps = [
@@ -762,65 +703,6 @@ function HowItWorks() {
           Every step is designed to help parents create a healthier environment
           for their children.
         </p>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
-   SECTION 5 — CHILD-FOCUSED MEDIATION
-============================================================ */
-function ChildFocusedMediation() {
-  const helps = [
-    "Communicate with greater respect and clarity",
-    "Respond thoughtfully instead of reacting emotionally",
-    "Focus on the children's needs rather than past disagreements",
-    "Build a foundation for long-term family stability",
-  ];
-  return (
-    <section
-      id="child-focused-mediation"
-      className="relative py-20 sm:py-24 bg-[#F8F7FC] scroll-mt-16"
-    >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="text-center fade-up">
-          <Eyebrow>Our Foundation</Eyebrow>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight">
-            Built on the Principles of
-            <br className="hidden sm:block" /> Child-Focused Mediation
-          </h2>
-          <p className="text-base text-[#4B4567] mt-5 leading-relaxed">
-            Decisions rooted in what is best for the children — not in past
-            disagreements between the adults.
-          </p>
-        </div>
-
-        <ul className="mt-10 grid sm:grid-cols-2 gap-x-6 gap-y-3 max-w-3xl mx-auto" data-testid="cfm-helps-list">
-          {helps.map((h) => (
-            <li
-              key={h}
-              className="flex items-start gap-3 text-sm sm:text-base text-[#1A1330] bg-white border border-[#EFE9F9] rounded-xl px-4 py-3"
-            >
-              <CheckCircle2
-                size={16}
-                className="text-[#3D1A78] mt-1 shrink-0"
-              />
-              <span className="leading-relaxed">{h}</span>
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-12 card-soft p-8 sm:p-10 text-center bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] text-white relative overflow-hidden">
-          <Quote
-            size={48}
-            className="absolute top-4 left-6 text-white/15"
-            strokeWidth={1.5}
-          />
-          <p className="font-serif text-2xl sm:text-3xl leading-snug relative">
-            Children thrive when parents learn to work together,
-            <br className="hidden sm:block" /> even when they live apart.
-          </p>
-        </div>
       </div>
     </section>
   );
@@ -934,193 +816,7 @@ function TrustSignals() {
 }
 
 /* ============================================================
-   SAMPLE REPORTS — Preview of what parents receive
-============================================================ */
-const SAMPLE_TABS = [
-  { id: "mediation",      label: "Mediation Summary",       icon: <FileText size={16} />,    subtitle: "PDF · 6–8 pages · child-focused agenda for your mediator" },
-  { id: "safety",         label: "Safety Assessment",       icon: <ShieldCheck size={16} />, subtitle: "PDF · pathway recommendation · Texas crisis resources" },
-  { id: "progress",       label: "Growth Snapshot",         icon: <BarChart3 size={16} />,   subtitle: "In-app · longitudinal charts · updates every time you check in" },
-];
-
-function SampleReports() {
-  const [tab, setTab] = useState("mediation");
-  return (
-    <section id="sample-reports" className="relative py-20 sm:py-24 bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-10">
-          <Eyebrow>See what you&rsquo;ll receive</Eyebrow>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight mt-3">
-            Real reports. Real usefulness.
-          </h2>
-          <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-2xl mx-auto">
-            Every assessment ends in something you can actually use — download,
-            share, and hand to the people who need to see it. Here&rsquo;s a
-            peek at each format.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap justify-center gap-2 mb-8" role="tablist" data-testid="sample-reports-tabs">
-          {SAMPLE_TABS.map((t) => {
-            const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(t.id)}
-                data-testid={`sample-tab-${t.id}`}
-                className={
-                  "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors " +
-                  (active
-                    ? "bg-[#3D1A78] text-white border-[#3D1A78]"
-                    : "bg-white text-[#4B4567] border-[#E5E0EE] hover:border-[#3D1A78] hover:text-[#3D1A78]")
-                }
-              >
-                {t.icon}
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center text-[13px] text-[#857E9C] mb-5">
-            {SAMPLE_TABS.find((x) => x.id === tab)?.subtitle}
-          </div>
-          {tab === "mediation" && <SampleMediation />}
-          {tab === "safety" && <SampleSafety />}
-          {tab === "progress" && <SampleProgress />}
-        </div>
-
-        <p className="text-center text-xs text-[#857E9C] mt-8 max-w-lg mx-auto">
-          These previews use anonymized sample data. Your report is generated
-          from your own answers and is never used to train AI.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function ReportPageFrame({ title, meta, children }) {
-  return (
-    <div className="mx-auto rounded-2xl shadow-xl border border-[#E5E0EE] bg-white overflow-hidden">
-      <div className="bg-[#3D1A78] text-white px-6 py-4 flex items-center justify-between">
-        <div>
-          <div className="text-[11px] uppercase tracking-[0.14em] opacity-80">{meta}</div>
-          <div className="font-serif text-lg">{title}</div>
-        </div>
-        <FileText size={18} className="opacity-70" />
-      </div>
-      <div className="p-6 sm:p-8 text-[#1A1330]">{children}</div>
-    </div>
-  );
-}
-
-function SampleStat({ label, value, tone }) {
-  return (
-    <div className="rounded-xl border border-[#E5E0EE] bg-[#FAFAFC] p-3 text-center">
-      <div className="text-[10px] uppercase tracking-[0.12em] text-[#857E9C]">{label}</div>
-      <div className="font-serif text-2xl mt-1" style={{ color: tone }}>{value}</div>
-    </div>
-  );
-}
-
-function SampleSection({ title, children }) {
-  return (
-    <div className="mb-4">
-      <div className="text-xs uppercase tracking-[0.14em] font-bold text-[#3D1A78] mb-2">{title}</div>
-      {children}
-    </div>
-  );
-}
-
-function SampleMediation() {
-  return (
-    <ReportPageFrame meta="Mediation Summary · Prepared for Alex Rivera" title="Ready for your Feb 24 session">
-      <div className="grid sm:grid-cols-4 gap-3 mb-6">
-        <SampleStat label="Readiness" value="78" tone="#3D1A78" />
-        <SampleStat label="Child-focused" value="82" tone="#2DB5B5" />
-        <SampleStat label="Priorities" value="74" tone="#3D1A78" />
-        <SampleStat label="Emotional reg." value="76" tone="#2DB5B5" />
-      </div>
-      <SampleSection title="Child-focused goals">
-        <ul className="list-disc pl-5 space-y-1 text-sm text-[#4B4567]">
-          <li>Predictable weeknight bedtimes across both homes.</li>
-          <li>A shared calendar Nina can read by herself (age 7).</li>
-          <li>One family therapy session per month, together.</li>
-        </ul>
-      </SampleSection>
-      <SampleSection title="Priority agenda">
-        <ol className="list-decimal pl-5 space-y-1 text-sm text-[#4B4567]">
-          <li><strong>Schedule</strong> — align on school-week vs weekend rotation.</li>
-          <li><strong>Communication</strong> — agree on OurFamilyWizard for logistics.</li>
-          <li><strong>Health</strong> — decide who books Nina&rsquo;s pediatric follow-ups.</li>
-        </ol>
-      </SampleSection>
-    </ReportPageFrame>
-  );
-}
-
-function SampleSafety() {
-  return (
-    <ReportPageFrame meta="Family Violence & Communication Safety" title="Recommended pathway: Structured written">
-      <div className="rounded-2xl border border-[#B85B00]/30 bg-[#FFF8F0] p-4 mb-6">
-        <div className="flex items-start gap-3">
-          <AlertTriangle size={18} className="text-[#B85B00] mt-0.5" />
-          <div>
-            <div className="font-semibold text-[#1A1330]">Structured written communication</div>
-            <p className="text-sm text-[#4B4567] mt-1">
-              Based on your answers, we recommend using a monitored written
-              channel (e.g. OurFamilyWizard). Live phone / in-person
-              exchanges are discouraged for the next 90 days.
-            </p>
-          </div>
-        </div>
-      </div>
-      <SampleSection title="Texas crisis resources (always in every share)">
-        <ul className="text-sm text-[#4B4567] space-y-1">
-          <li><strong>Family Violence Prevention Services (Bexar):</strong> 210-733-8810</li>
-          <li><strong>National DV Hotline:</strong> 1-800-799-SAFE</li>
-          <li><strong>988</strong> — Suicide & Crisis Lifeline</li>
-        </ul>
-      </SampleSection>
-    </ReportPageFrame>
-  );
-}
-
-function SampleProgress() {
-  const bars = [
-    { label: "Nov", v: 42 },
-    { label: "Dec", v: 55 },
-    { label: "Jan", v: 63 },
-    { label: "Feb", v: 78 },
-  ];
-  return (
-    <ReportPageFrame meta="Growth Snapshot · Last 4 months" title="You&rsquo;re trending up.">
-      <div className="flex items-end gap-4 h-40 mb-6">
-        {bars.map((b) => (
-          <div key={b.label} className="flex-1 flex flex-col items-center gap-2">
-            <div className="flex-1 w-full flex items-end">
-              <div className="w-full rounded-t-lg bg-gradient-to-t from-[#3D1A78] to-[#2DB5B5]" style={{ height: `${b.v}%` }} />
-            </div>
-            <div className="text-xs text-[#4B4567]">{b.label}</div>
-            <div className="text-[11px] font-semibold text-[#1A1330]">{b.v}</div>
-          </div>
-        ))}
-      </div>
-      <SampleSection title="What changed this month">
-        <ul className="list-disc pl-5 space-y-1 text-sm text-[#4B4567]">
-          <li>You added 3 concrete priorities to your mediation agenda.</li>
-          <li>Communication clarity moved from 61 &rarr; 78.</li>
-          <li>You completed the Family Violence assessment for the first time.</li>
-        </ul>
-      </SampleSection>
-    </ReportPageFrame>
-  );
-}
-
-/* ============================================================
-   SECTION 6 — FINAL CTA
+   SECTION — FINAL CTA
 ============================================================ */
 function FinalCTA() {
   return (
@@ -1177,13 +873,21 @@ export default function Landing() {
     <EnterAppProvider>
       <div className="min-h-screen bg-[#F8F7FC]">
         <MarketingHeader />
+        {/* Iteration 80 — homepage tightened per user brief:
+            1. Promise + situation picker  (Hero — picker embeds the
+               recommended pathway inline once the parent selects).
+            2. What you receive             (ThreeReportsStrip — each
+               card carries a "See sample" link to the sample PDFs).
+            3. How it works                 (HowItWorks).
+            4. Trust, privacy, boundaries   (TrustSignals).
+            5. Final call to action         (FinalCTA).
+            TheProblem, ChildFocusedMediation, and SampleReports have
+            been retired — their key ideas already live inside the
+            situation picker, three-reports strip, and hero copy. */}
         <Hero />
         <ThreeReportsStrip />
-        <TheProblem />
         <HowItWorks />
-        <SampleReports />
         <TrustSignals />
-        <ChildFocusedMediation />
         <FinalCTA />
         <MarketingFooter />
       </div>
