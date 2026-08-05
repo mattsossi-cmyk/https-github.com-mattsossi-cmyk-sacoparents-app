@@ -40,7 +40,30 @@ const BADGE_META = {
     Icon: MessageCircle,
     iconClass: "text-[#233B6C]",
   },
+  week_streak_7: {
+    accent: { bg: "bg-[#F5F1FB]", border: "border-[#D6CFE8]", text: "text-[#3D1A78]" },
+    Icon: Award,
+    iconClass: "text-[#3D1A78]",
+  },
+  month_streak_30: {
+    accent: { bg: "bg-[#F1F9F4]", border: "border-[#B5DFC5]", text: "text-[#1F5C3B]" },
+    Icon: Award,
+    iconClass: "text-[#1F5C3B]",
+  },
+  hundred_day_streak: {
+    accent: { bg: "bg-[#FBEDDA]", border: "border-[#EDD5B0]", text: "text-[#8C5A2C]" },
+    Icon: Award,
+    iconClass: "text-[#8C5A2C]",
+  },
 };
+
+const CATEGORY_CHIPS = [
+  { key: "all",         label: "All" },
+  { key: "milestones",  label: "Streaks & badges" },
+  { key: "streaks",     label: "Streaks" },
+  { key: "foundations", label: "Foundations" },
+  { key: "alignment",   label: "Alignment" },
+];
 
 function AnonAvatar({ userHash }) {
   // Deterministic two-tone circle so parents can spot repeat events from
@@ -61,15 +84,16 @@ function AnonAvatar({ userHash }) {
 
 export default function PublicMilestoneWall() {
   const [status, setStatus] = useState(null);   // {opt_in, my_events_this_month}
-  const [feed, setFeed] = useState(null);       // {events, total, days}
+  const [feed, setFeed] = useState(null);       // {events, total, days, category, category_counts}
+  const [category, setCategory] = useState("all");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (cat) => {
     try {
       const [s, f] = await Promise.all([
         api.get("/wall/status"),
-        api.get("/wall/feed?days=30&limit=25"),
+        api.get("/wall/feed", { params: { days: 30, limit: 25, category: cat } }),
       ]);
       setStatus(s.data || null);
       setFeed(f.data || null);
@@ -81,8 +105,8 @@ export default function PublicMilestoneWall() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    load(category);
+  }, [load, category]);
 
   async function toggle() {
     if (!status) return;
@@ -101,7 +125,9 @@ export default function PublicMilestoneWall() {
         toast("Off the wall — new badges won't be shared.");
       }
       // Refresh feed after opt-in so a backfilled event shows up.
-      const f = await api.get("/wall/feed?days=30&limit=25");
+      const f = await api.get("/wall/feed", {
+        params: { days: 30, limit: 25, category },
+      });
       setFeed(f.data || null);
     } catch (err) {
       logError("wall toggle failed:", err);
@@ -197,6 +223,51 @@ export default function PublicMilestoneWall() {
         </button>
       </div>
 
+      {/* Category filter chips — parents can zoom the feed to just
+          streak-and-badge stories or a specific badge track. Renders
+          only when there's at least one event across the whole feed
+          (i.e. the all-count is non-zero). */}
+      {(feed?.category_counts?.all || 0) > 0 && (
+        <div
+          className="mt-4 flex flex-wrap gap-1.5"
+          data-testid="wall-category-chips"
+          role="tablist"
+          aria-label="Filter the wall feed"
+        >
+          {CATEGORY_CHIPS.map((c) => {
+            const active = category === c.key;
+            const count = feed?.category_counts?.[c.key] ?? 0;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setCategory(c.key)}
+                data-testid={`wall-category-chip-${c.key}`}
+                data-active={active ? "1" : "0"}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
+                  active
+                    ? "bg-[#3D1A78] text-white border-[#3D1A78]"
+                    : "bg-white text-[#3D1A78] border-[#D6CFE8] hover:bg-[#F5F1FB]"
+                }`}
+              >
+                {c.label}
+                <span
+                  className={`inline-flex items-center justify-center min-w-[18px] px-1 rounded-full text-[10px] tabular-nums ${
+                    active
+                      ? "bg-white/25 text-white"
+                      : "bg-[#F1EEF7] text-[#4B4567]"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {(feed?.top_cheered || []).length > 0 && (
         <div
           className="mt-5 rounded-2xl border border-[#F1D9A0] bg-gradient-to-br from-[#FDF4E6] to-[#FBEDDA] p-4"
@@ -245,9 +316,26 @@ export default function PublicMilestoneWall() {
         >
           <Info size={14} className="shrink-0 mt-0.5 text-[#3D1A78]" />
           <span>
-            Nothing here yet. Light your five milestones + opt in and your
-            anonymous badge will appear on this wall for other parents to
-            cheer on.
+            {category !== "all" ? (
+              <>
+                No {CATEGORY_CHIPS.find((c) => c.key === category)?.label.toLowerCase()} stories yet in the last 30 days.{" "}
+                <button
+                  type="button"
+                  onClick={() => setCategory("all")}
+                  className="underline text-[#3D1A78] font-semibold"
+                  data-testid="wall-empty-clear-filter"
+                >
+                  Show everything
+                </button>
+                .
+              </>
+            ) : (
+              <>
+                Nothing here yet. Light your five milestones + opt in and your
+                anonymous badge will appear on this wall for other parents to
+                cheer on.
+              </>
+            )}
           </span>
         </div>
       ) : (

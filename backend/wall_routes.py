@@ -39,6 +39,7 @@ from auth import UserPublic, get_current_user, get_db
 from wall_utils import (
     BADGE_FOUNDATION_READY,
     BADGE_LABELS,
+    CATEGORY_BADGES,
     CHEERS_COLLECTION,
     EVENTS_COLLECTION,
     get_opt_in,
@@ -199,14 +200,31 @@ def _friendly_delta(created_at_iso: str) -> str:
 @router.get("/feed")
 async def wall_feed(days: int = Query(30, ge=1, le=90),
                     limit: int = Query(50, ge=1, le=200),
+                    category: Optional[str] = Query(
+                        None,
+                        description="One of: all, milestones, streaks, foundations, alignment. Absent = all.",
+                    ),
                     user: UserPublic = Depends(get_current_user),
                     db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     """Public, anonymised feed of badges earned in the last `days` days,
     enriched with cheer counts and whether the caller has cheered each
-    event."""
+    event. Optional `category` filter narrows the feed to a subset of
+    badge types (see CATEGORY_BADGES). Also returns per-category counts
+    so the frontend chip row can show a live count next to each label."""
     since = datetime.now(timezone.utc) - timedelta(days=days)
+    base_query: Dict[str, Any] = {"created_at": {"$gte": since.isoformat()}}
+
+    # Resolve the category filter. Unknown/blank/"all" values simply
+    # return the unfiltered feed so a stale bookmarked url doesn't 404.
+    cat = (category or "all").strip().lower()
+    query = dict(base_query)
+    if cat in CATEGORY_BADGES:
+        query["badge_type"] = {"$in": CATEGORY_BADGES[cat]}
+    elif cat != "all":
+        cat = "all"  # normalise for the response echo
+
     cursor = db[EVENTS_COLLECTION].find(
-        {"created_at": {"$gte": since.isoformat()}},
+        query,
         {"_id": 0, "user_hash": 1, "badge_type": 1, "created_at": 1, "event_id": 1},
     ).sort("created_at", -1).limit(limit)
     events: List[Dict[str, Any]] = []
@@ -236,9 +254,17 @@ async def wall_feed(days: int = Query(30, ge=1, le=90),
         for ev in events:
             ev["cheer_count"] = counts.get(ev["event_id"], 0)
             ev["i_cheered"] = ev["event_id"] in i_cheered
-    total = await db[EVENTS_COLLECTION].count_documents({
-        "created_at": {"$gte": since.isoformat()},
-    })
+    total = await db[EVENTS_COLLECTION].count_documents(query)
+
+    # Per-category counts so the chip row can render live counters.
+    # Small O(cats) aggregation — no impact on hot paths.
+    category_counts: Dict[str, int] = {"all": await db[EVENTS_COLLECTION].count_documents(base_query)}
+    for k, badges in CATEGORY_BADGES.items():
+        category_counts[k] = await db[EVENTS_COLLECTION].count_documents({
+            **base_query,
+            "badge_type": {"$in": badges},
+        })
+
     top_cheered = await top_cheered_since(
         db, days=7, limit=3, viewer_id=user.user_id,
     )
@@ -247,6 +273,8 @@ async def wall_feed(days: int = Query(30, ge=1, le=90),
         "total": int(total),
         "days": days,
         "limit": limit,
+        "category": cat,
+        "category_counts": category_counts,
         "top_cheered": top_cheered,
     }
 

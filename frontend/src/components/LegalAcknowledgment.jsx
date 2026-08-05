@@ -83,6 +83,17 @@ export default function LegalAcknowledgment() {
       }
       return;
     }
+    // Public signature-verify pages (reached via QR codes on signed PDFs)
+    // are cross-audience — co-parents, mediators, lawyers, judges — many
+    // of whom may not be signed up. The verify card already carries its
+    // own disclaimer footer, so skip the global ack modal here.
+    if (location.pathname.startsWith("/verify/")) {
+      if (open) {
+        setOpen(false);
+        document.body.style.overflow = "";
+      }
+      return;
+    }
     if (!hasAcknowledgedLegal()) {
       setOpen(true);
       // Lock body scroll while the modal is open.

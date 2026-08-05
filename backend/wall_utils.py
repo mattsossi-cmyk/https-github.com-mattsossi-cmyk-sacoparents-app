@@ -61,6 +61,34 @@ LIFETIME_BADGES = frozenset({
 })
 
 
+# Category filter groupings for the wall feed. Keys are the query-param
+# values the frontend chip row sends; values are the list of badge_type
+# strings that belong to that chip. Sub-groups are DISJOINT so per-
+# category counts don't double-count a single event. `milestones` is
+# the union of the three sub-groups — the "just the streak-and-badge
+# stories" chip parents can tap to zoom past casual noise.
+CATEGORY_BADGES: Dict[str, list] = {
+    "streaks": [
+        BADGE_WEEK_STREAK_7,
+        BADGE_MONTH_STREAK_30,
+        BADGE_HUNDRED_DAY_STREAK,
+    ],
+    "foundations": [
+        BADGE_FOUNDATION_READY,
+        BADGE_FIRST_COMPARE,
+        BADGE_COMMUNICATION_MASTER,
+    ],
+    "alignment": [
+        BADGE_HIGH_ALIGNMENT_90,
+    ],
+}
+CATEGORY_BADGES["milestones"] = (
+    CATEGORY_BADGES["streaks"]
+    + CATEGORY_BADGES["foundations"]
+    + CATEGORY_BADGES["alignment"]
+)
+
+
 def anon_hash(user_id: str) -> str:
     """Stable, non-reversible hash of the user_id. Combined with a salt
     from the environment so a stolen DB copy can't be joined back to
