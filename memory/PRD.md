@@ -1,6 +1,13 @@
 # SA CoParents — PRD
 
 
+- **Iteration 73 — Wall Milestones Feed filter + Verify page polish (2026-02-06)**:
+  - **Wall Milestones Feed (P0)**: Added category filter chip row on the Community Wall (`PublicMilestoneWall.jsx`). Chips: All, Streaks & badges (union), Streaks (week/month/hundred_day), Foundations (foundation_ready/first_compare/communication_master), Alignment (high_alignment_90). Each chip shows a live count. Backend `GET /api/wall/feed` accepts `?category=` and echoes the resolved category + `category_counts` dict. Unknown values fall back to "all". `CATEGORY_BADGES` lives in `wall_utils.py` as the single source of truth. Post-opt-in the frontend force-resets the filter to "all" so backfilled badges never hide under a stale chip. Cheer button (existing) confirmed to work under a filtered view.
+  - **Verify Landing Polish (P0)**: Added `/verify/` to the LegalAcknowledgment exempt paths so QR scanners land directly on the Untampered ✓ card. Modal is already skipped on `/shared/` for the same reason — verify page carries its own disclaimer footer.
+  - Regression tests: `/app/backend/tests/test_iter73_wall_filter.py` (6 tests) + `/app/backend/tests/test_iter73_wall_filter_live.py` (7 live tests via testing agent). Iteration 52 testing report: 100% pass rate, no critical or minor issues.
+
+
+
 - **Iteration 72 — Narrative Rebuild, Long-Streak Badges, Signature QR (2026-02-06)**:
   - **Narrative Rebuild (P0)**: Both v2 Educational and Psychological Deep Dive reports now return `parts_narrative` (5 items — one per part), `opening_story`, and `closing_story`. Each per-part item includes score/band/band_headline, band-driven prose, up to 2 concrete strengths (items scored 3-4), up to 2 growth items (items scored 0-1), and a child-focused reflection line. Shared helper: `deep_dive_narrative.py`. PDF export via `journey_pdf.render_parts_narrative`. Frontend component: `DeepDivePartsNarrative.jsx` — the retired v2 "coming next iteration" banners are gone on both report pages.
   - **Long-Streak Badges (P0)**: Added `month_streak_30` (30-day) and `hundred_day_streak` (100-day) wall badges — both lifetime-deduped. Wired into `progress_dashboard_routes.mark_visit` alongside the existing `week_streak_7`. Shown in the wall feed and included in the weekly Cheer Digest via `BADGE_LABELS`. Helpers: `maybe_log_month_streak`, `maybe_log_hundred_day_streak` in `wall_utils.py`.

@@ -125,8 +125,11 @@ export default function PublicMilestoneWall() {
         toast("Off the wall — new badges won't be shared.");
       }
       // Refresh feed after opt-in so a backfilled event shows up.
+      // Reset filter to "all" — the backfilled badge may belong to a
+      // sub-category the user hasn't selected, which would hide it.
+      setCategory("all");
       const f = await api.get("/wall/feed", {
-        params: { days: 30, limit: 25, category },
+        params: { days: 30, limit: 25, category: "all" },
       });
       setFeed(f.data || null);
     } catch (err) {
