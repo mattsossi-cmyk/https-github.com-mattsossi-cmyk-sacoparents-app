@@ -16,10 +16,16 @@ import {
 import { logError } from "../lib/logger";
 
 
-function LikertRow({ value, onChange, testid }) {
-  const opts = [1, 2, 3, 4, 5];
+function LikertRow({ value, onChange, testid, scale }) {
+  // v2 uses 0-4 alignment scale; v1 (retired) used 1-5. Default preserves
+  // 1-5 for any lingering callers, but the new schema serves scale=[0..4].
+  const opts = Array.isArray(scale) && scale.length ? scale : [1, 2, 3, 4, 5];
   return (
-    <div className="mt-2 grid grid-cols-6 gap-1.5" data-testid={testid}>
+    <div
+      className="mt-2 grid gap-1.5"
+      style={{ gridTemplateColumns: `repeat(${opts.length + 1}, minmax(0, 1fr))` }}
+      data-testid={testid}
+    >
       {opts.map((v) => (
         <button
           key={v}
@@ -111,8 +117,13 @@ function Item({ item, sectionId, value, onChange }) {
   return (
     <div className="mt-4">
       <div className="text-sm font-semibold text-[#1A1330]">{item.prompt}</div>
-      {item.type === "likert" && (
-        <LikertRow value={value} onChange={onChange} testid={`psych-deep-${key}`} />
+      {(item.type === "likert" || item.type === "alignment") && (
+        <LikertRow
+          value={value}
+          onChange={onChange}
+          testid={`psych-deep-${key}`}
+          scale={item.scale}
+        />
       )}
       {item.type === "single" && (
         <SingleRow options={item.options || []} value={value} onChange={onChange}
@@ -284,6 +295,27 @@ export default function SpecialNeedsV2PsychologicalDeepDive() {
         </h1>
         {section.purpose && (
           <p className="text-sm text-[#4B4567] mt-2 italic">{section.purpose}</p>
+        )}
+
+        {/* v2 alignment scale legend — only shown when this section uses
+            the new 0-4 alignment items */}
+        {(section.items || []).some((it) => it.type === "alignment") && (
+          <div
+            className="mt-3 rounded-2xl border border-[#E4D8B8] bg-[#FFF9EB] px-3.5 py-2.5"
+            data-testid="psych-deep-scale-legend"
+          >
+            <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#8A6B12]">
+              Alignment scale
+            </div>
+            <div className="mt-1 text-[12px] text-[#3B2A05] leading-snug">
+              <strong>4</strong> Always / Very Consistent &nbsp;·&nbsp;
+              <strong>3</strong> Often &nbsp;·&nbsp;
+              <strong>2</strong> Sometimes &nbsp;·&nbsp;
+              <strong>1</strong> Seldom &nbsp;·&nbsp;
+              <strong>0</strong> Never / High Conflict &nbsp;·&nbsp;
+              <strong>N/A</strong> Doesn't apply to us
+            </div>
+          </div>
         )}
 
         {/* Meta row: section counter + section answered badge + save state */}

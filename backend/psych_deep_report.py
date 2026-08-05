@@ -133,19 +133,25 @@ def _now_iso() -> str:
 
 def build_deep_dive_report(*, parent_name: Optional[str], child_name: Optional[str],
                            responses: Dict[str, Any]) -> Dict[str, Any]:
+    """v2 report builder — score-card driven, same shape as edu v2."""
     scored = score_deep_dive(responses)
+
     sections_out = []
-    for st in scored["sections"]:
-        if not st["is_visible"] or not st["answered"]:
+    for state in scored["sections"]:
+        if state["answered"] == 0:
             continue
-        entry = {k: st[k] for k in ("id", "name", "number", "is_flagged",
-                                    "flag_reasons", "is_strength", "strength_reasons")}
-        tpl = SECTION_TEMPLATES.get(st["id"], {})
-        if st["is_strength"] and tpl.get("strength"):
-            entry["strength_text"] = tpl["strength"]
-        if st["is_flagged"] and tpl.get("challenge"):
-            entry["challenge_text"] = tpl["challenge"]
-            entry["recommendations"] = tpl.get("recommendations") or []
+        is_flag = state["band"] == "low"
+        is_strong = state["band"] == "high"
+        entry: Dict[str, Any] = {
+            "id":               state["id"],
+            "name":             state["name"],
+            "number":           state["number"],
+            "is_flagged":       is_flag,
+            "flag_reasons":     [f"Alignment {state['percent']}% - below the moderate band."] if is_flag else [],
+            "is_strength":      is_strong,
+            "strength_reasons": [f"Alignment {state['percent']}% - both homes are holding this consistently."] if is_strong else [],
+            "percent":          state["percent"],
+        }
         sections_out.append(entry)
 
     flagged_names = [s["name"] for s in sections_out if s["is_flagged"]]
@@ -161,34 +167,35 @@ def build_deep_dive_report(*, parent_name: Optional[str], child_name: Optional[s
         "deep_dive_version": DEEP_DIVE_VERSION,
         "cover": journey["cover"],
         "profile": {
-            "diagnoses": responses.get("s1_diagnoses") or [],
-            "provider_types": responses.get("s2_provider_types") or [],
-            "has_medication": responses.get("s4_has_medication"),
-            "attends_therapy": responses.get("s6_attends_therapy"),
-            "notes": (responses.get("s1_profile_notes") or "").strip(),
+            "diagnoses": [],
+            "provider_types": [],
+            "has_medication": None,
+            "attends_therapy": None,
+            "notes": "",
         },
         "summary": {
-            "answered_sections": scored["totals"]["answered"],
-            "flagged_sections": scored["totals"]["flagged"],
-            "strength_sections": scored["totals"]["strengths"],
-            "flagged_names": flagged_names,
-            "strength_names": strength_names,
+            "answered_sections":  scored["totals"]["answered"],
+            "flagged_sections":   scored["totals"]["flagged"],
+            "strength_sections":  scored["totals"]["strengths"],
+            "flagged_names":      flagged_names,
+            "strength_names":     strength_names,
         },
-        "sections": sections_out,
-        "overview": journey["overview"],
-        "support_summary": journey["support_summary"],
-        "child_profile": journey["child_profile"],
+        "sections":          sections_out,
+        "score_card":        journey["score_card"],
+        "overview":          journey["overview"],
+        "support_summary":   journey["support_summary"],
+        "child_profile":     journey["child_profile"],
         "school_involvement": journey["school_involvement"],
         "co_parenting_assessment": journey["co_parenting_assessment"],
-        "alignment_areas": journey["alignment_areas"],
-        "attention_areas": journey["attention_areas"],
-        "support_level": journey["support_level"],
+        "alignment_areas":   journey["alignment_areas"],
+        "attention_areas":   journey["attention_areas"],
+        "support_level":     journey["support_level"],
         "practical_options": journey["practical_options"],
-        "action_plan": journey["action_plan"],
+        "action_plan":       journey["action_plan"],
         "foundation_statement": journey["foundation_statement"],
         "questions_for_school_or_parent": journey["questions_for_school_or_parent"],
-        "final_summary": journey["final_summary"],
-        "disclaimer": journey["disclaimer"],
+        "final_summary":     journey["final_summary"],
+        "disclaimer":        journey["disclaimer"],
     }
 
 

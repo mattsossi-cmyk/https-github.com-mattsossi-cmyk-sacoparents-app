@@ -163,6 +163,115 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
 
         <ReportReviewNotice variant="individual" className="mt-5" />
 
+        {/* v2 alignment score card - total, band, per-part breakdown */}
+        {report.score_card && (
+          <SectionCard testid="psych-report-score-card">
+            <div className="flex items-start gap-4 flex-wrap justify-between">
+              <div className="min-w-0">
+                <Eyebrow>Alignment score</Eyebrow>
+                <div className="flex items-baseline gap-2">
+                  <div
+                    className="font-serif text-5xl leading-none text-[#3D1A78]"
+                    data-testid="psych-report-score-total"
+                  >
+                    {report.score_card.percent}
+                  </div>
+                  <div className="text-sm text-[#4B4567]">/ 100</div>
+                </div>
+                <div className="mt-2 text-xs text-[#4B4567]">
+                  {report.score_card.answered} of 25 answered
+                  {report.score_card.na ? ` · ${report.score_card.na} N/A` : ""}
+                </div>
+              </div>
+              <div className="flex-1 min-w-[220px]">
+                <div
+                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${
+                    report.score_card.band === "high"
+                      ? "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]"
+                      : report.score_card.band === "moderate"
+                      ? "bg-[#FFF6E5] text-[#8A5B00] border-[#F0D9A8]"
+                      : report.score_card.band === "low"
+                      ? "bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]"
+                      : "bg-[#F1EEF7] text-[#4B4567] border-[#E5E0EE]"
+                  }`}
+                  data-testid="psych-report-score-band"
+                >
+                  {report.score_card.band_label}
+                </div>
+                <p className="mt-2 text-sm text-[#1A1330]">
+                  {report.score_card.band_summary}
+                </p>
+              </div>
+            </div>
+
+            {(report.score_card.sections || []).length > 0 && (
+              <div className="mt-5 space-y-2" data-testid="psych-report-score-parts">
+                {report.score_card.sections.map((s) => (
+                  <div
+                    key={s.id}
+                    className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-[#E5E0EE] px-3 py-2"
+                    data-testid={`psych-report-score-part-${s.id}`}
+                  >
+                    <div className="text-xs font-bold text-[#3D1A78]">
+                      Part {s.number}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-[#1A1330] truncate">
+                        {s.name}
+                      </div>
+                      <div className="mt-1 h-1.5 rounded-full bg-[#EEE9F7] overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            s.band === "high"
+                              ? "bg-[#1F5C3B]"
+                              : s.band === "moderate"
+                              ? "bg-[#8A5B00]"
+                              : s.band === "low"
+                              ? "bg-[#B02A2A]"
+                              : "bg-[#D6CFE8]"
+                          }`}
+                          style={{ width: `${s.percent}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="text-sm font-bold text-[#1A1330] tabular-nums">
+                      {s.answered ? `${s.percent}%` : "—"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {(report.score_card.next_steps || []).length > 0 && (
+              <div
+                className="mt-5 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] px-4 py-3"
+                data-testid="psych-report-next-steps"
+              >
+                <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+                  Next steps
+                </div>
+                <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1">
+                  {report.score_card.next_steps.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div
+              className="mt-4 rounded-2xl border border-[#F0D9A8] bg-[#FFF9EB] px-4 py-3 text-xs text-[#8A5B00]"
+              data-testid="psych-report-v2-banner"
+            >
+              <strong>New format.</strong> The Psychological Deep Dive is
+              now a 25-question emotional-alignment assessment covering the
+              five parts of the Co-Parenting Psychological Alignment
+              Framework. The rich narrative journey (provider directory,
+              attachment risk map, therapist suggestions) is being rebuilt
+              to match and will return in the next release.
+            </div>
+          </SectionCard>
+        )}
+
         {/* 1. Report Overview */}
         <SectionCard testid="psych-report-overview">
           <h2 className="font-serif text-xl text-[#1A1330]">1. Report overview</h2>

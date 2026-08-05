@@ -1,245 +1,150 @@
-"""Psychological Deep Dive — rule-based concern & strength detection."""
+"""Psychological Deep Dive — v2 alignment scoring.
+
+Identical scoring shape to the Educational Deep Dive v2. See
+:mod:`edu_deep_scoring` for the full contract. Only the band summaries
+and next-step language are psych-specific.
+"""
 from __future__ import annotations
 
-from statistics import mean
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from psych_deep_questions import (
-    COMM_TOPICS, CRISIS_AREAS, DECISION_TOPICS, DEEP_DIVE_SECTIONS,
-    SUPPORT_AREAS, HOME_SUPPORT_AREAS,
+    DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION,
+    POINTS_PER_ITEM_MAX,
 )
 
 
-LOW = 3
-HIGH = 4
-
-FREQ_MAP = {"Always": 5, "Usually": 4, "Sometimes": 3, "Rarely": 2, "Never": 1}
-CONFIDENCE_MAP = {"Very Confident": 5, "Confident": 4, "Neutral": 3,
-                  "Somewhat Confident": 2, "Not Confident": 1}
-CONSIST_MAP = {"Always Consistent": 5, "Usually Consistent": 4, "Sometimes Consistent": 3,
-               "Rarely Consistent": 2, "Never Consistent": 1}
-AGREE_MAP = {"Always Agree": 5, "Usually Agree": 4, "Sometimes Agree": 3,
-             "Rarely Agree": 2, "Never Agree": 1}
+HIGH_BAND_MIN = 81
+MODERATE_BAND_MIN = 51
 
 
-def _int(v):
-    return v if isinstance(v, int) and 1 <= v <= 5 else None
-
-
-def _map_or_int(v, mapping):
-    if v in mapping: return mapping[v]
-    return _int(v)
-
-
-def _flag_avg(xs: List[int], threshold: float = LOW) -> Optional[str]:
-    if not xs: return None
-    a = mean(xs)
-    return f"Average of {len(xs)} responses is {a:.1f}." if a < threshold else None
-
-
-def _strength_avg(xs: List[int], threshold: float = HIGH) -> Optional[str]:
-    if not xs: return None
-    a = mean(xs)
-    return f"Average of {len(xs)} responses is {a:.1f}." if a >= threshold else None
-
-
-def _state(section, responses):
-    sid = section["id"]
-    is_visible = True
-    gate = section.get("gate")
-    if gate:
-        if responses.get(f"{sid}_{gate['item']}") != gate["value"]:
-            is_visible = False
-    answers = {iid: responses.get(f"{sid}_{iid}") for iid in section["items"].keys()}
-    answered = any(v not in (None, "", []) for v in answers.values())
+def _band(percent: int) -> Dict[str, Any]:
+    if percent >= HIGH_BAND_MIN:
+        return {
+            "band": "high",
+            "band_label": "High Alignment",
+            "band_summary": (
+                "The emotional climate you're building around your child is "
+                "steady and coherent. Both homes are modelling regulated "
+                "adults, protecting attachment, and reinforcing therapy."
+            ),
+            "next_steps": [
+                "Keep doing what you're doing.",
+                "Check in with the therapist or counsellor before any big transition (school year, custody change, medication shift).",
+                "Schedule a light quarterly emotional-climate review with your co-parent so consistency doesn't drift.",
+            ],
+        }
+    if percent >= MODERATE_BAND_MIN:
+        return {
+            "band": "moderate",
+            "band_label": "Moderate Alignment",
+            "band_summary": (
+                "You care about your child's emotional health, but "
+                "inconsistencies between homes or unresolved conflict "
+                "between parents are showing up in the child's mood, sleep, "
+                "or behaviour. Small, targeted repairs will make a big "
+                "difference."
+            ),
+            "next_steps": [
+                "Look specifically at Parts 1 and 2 - regulated adults and a safe emotional climate come first.",
+                "Ask the child's therapist for THREE cross-home rules you can both hold identically for the next 30 days.",
+                "Agree that ONE topic (e.g. bedtime, screen time, reunion routine) will be identical in both homes for 30 days.",
+                "Set a 30-day review to check whether the child's sleep, mood, or behaviour has softened.",
+            ],
+        }
     return {
-        "id": sid, "name": section["name"], "number": section["number"],
-        "is_visible": is_visible, "answered": answered,
-        "answers": answers, "is_flagged": False, "flag_reasons": [],
-        "is_strength": False, "strength_reasons": [],
+        "band": "low",
+        "band_label": "Low Alignment",
+        "band_summary": (
+            "The emotional environment across the two homes is measurably "
+            "hurting your child. Conflict, criticism, or unpredictability "
+            "may be showing up as anxiety, withdrawal, regression, or "
+            "acting out - not because the child is 'the problem', but "
+            "because the adults' emotional patterns are the input."
+        ),
+        "next_steps": [
+            "Consider a co-parenting therapist or parent coordinator - a neutral third adult who reduces the emotional load between you.",
+            "Ensure the child has a stable therapist / counsellor of their own.",
+            "Move all non-emergency co-parenting communication to writing so it's calmer and dated.",
+            "Focus on ONE small win in Part 1 (your own regulation) first - the child's climate follows the adults'.",
+        ],
     }
 
 
-# --- per-section scorers ---
-def _s1(state, resp):
-    dxs = state["answers"].get("diagnoses") or []
-    # any active diagnosis (excluding meta options) is a signal
-    active = [d for d in dxs if d not in
-              ("No diagnosis", "Diagnosis pending", "Prefer not to answer")]
-    if len(active) >= 3:
-        state["is_flagged"] = True
-        state["flag_reasons"].append(f"{len(active)} active diagnoses reported — coordination is important.")
-
-
-def _s2(state, resp):
-    freq_ids = ("both_know_provider", "attend_appointments", "both_receive_updates",
-                "communicate_recs", "follow_recs_consistent")
-    xs = [FREQ_MAP[state["answers"][k]] for k in freq_ids
-          if state["answers"].get(k) in FREQ_MAP]
-    lo = _flag_avg(xs)
-    if lo:
-        state["is_flagged"] = True; state["flag_reasons"].append(lo)
-    hi = _strength_avg(xs)
-    if hi:
-        state["is_strength"] = True
-        state["strength_reasons"].append("Both parents consistently coordinate around the provider.")
-
-
-def _s3(state, resp):
-    conf_ids = ("provider_understands", "confidence_plan", "trust_recommendations", "both_confident")
-    xs = [CONFIDENCE_MAP[state["answers"][k]] for k in conf_ids
-          if state["answers"].get(k) in CONFIDENCE_MAP]
-    if state["answers"].get("discuss_respectfully") is not None:
-        v = _int(state["answers"]["discuss_respectfully"])
-        if v is not None:
-            xs.append(v)
-    lo = _flag_avg(xs)
-    if lo:
-        state["is_flagged"] = True; state["flag_reasons"].append(lo)
-    hi = _strength_avg(xs)
-    if hi:
-        state["is_strength"] = True
-        state["strength_reasons"].append("Both parents express confidence in the provider.")
-
-
-def _s4(state, resp):
-    if not state["is_visible"]:
-        return
-    xs = [_int(state["answers"][k]) for k in
-          ("administered_consistent", "communicate_changes", "refills_coordinated",
-           "side_effects_discussed", "concerns_reported")
-          if _int(state["answers"].get(k)) is not None]
-    lo = _flag_avg(xs)
-    if lo:
-        state["is_flagged"] = True; state["flag_reasons"].append(lo)
-    ua = state["answers"].get("understand_areas") or []
-    if isinstance(ua, list) and len(ua) < 3:
-        state["is_flagged"] = True
-        state["flag_reasons"].append("Both parents understand fewer than 3 medication essentials.")
-
-
-def _s5(state, resp):
-    xs = [_int(state["answers"][k]) for k in
-          ("both_support", "implemented_consistently", "child_participates", "outcomes_reviewed")
-          if _int(state["answers"].get(k)) is not None]
-    lo = _flag_avg(xs)
-    if lo:
-        state["is_flagged"] = True; state["flag_reasons"].append(lo)
-    hi = _strength_avg(xs)
-    if hi:
-        state["is_strength"] = True
-        state["strength_reasons"].append("Non-medication interventions are supported in both homes.")
-
-
-def _s6(state, resp):
-    if not state["is_visible"]:
-        return
-    xs = [_int(state["answers"][k]) for k in ("homework_completed", "strategies_reinforced")
-          if _int(state["answers"].get(k)) is not None]
-    if state["answers"].get("attendance_consistency") in FREQ_MAP:
-        xs.append(FREQ_MAP[state["answers"]["attendance_consistency"]])
-    lo = _flag_avg(xs)
-    if lo:
-        state["is_flagged"] = True; state["flag_reasons"].append(lo)
-    hi = _strength_avg(xs)
-    if hi:
-        state["is_strength"] = True
-        state["strength_reasons"].append("Therapy participation and follow-through are strong.")
-
-
-def _s7(state, resp):
-    xs = [CONSIST_MAP[state["answers"][k]] for k in SUPPORT_AREAS_IDS()
-          if state["answers"].get(k) in CONSIST_MAP]
-    lo = _flag_avg(xs)
-    if lo:
-        state["is_flagged"] = True; state["flag_reasons"].append(lo)
-    hi = _strength_avg(xs)
-    if hi:
-        state["is_strength"] = True
-        state["strength_reasons"].append("Parenting strategies are consistent across most behavioural areas.")
-
-
-def SUPPORT_AREAS_IDS():
-    return ["anxiety", "emotional_regulation", "meltdowns", "anger", "transitions",
-            "social_interactions", "school_stress", "peer_relationships", "self_esteem"]
-
-
-def _s8(state, resp):
-    planned = state["answers"].get("planned_areas") or []
-    if isinstance(planned, list) and len(planned) < 3:
-        state["is_flagged"] = True
-        state["flag_reasons"].append("Fewer than 3 crisis areas have a shared plan.")
-    if state["answers"].get("know_emergency_contacts") == "No":
-        state["is_flagged"] = True
-        state["flag_reasons"].append("At least one parent does not know the emergency contacts.")
-    if state["answers"].get("know_crisis_procedures") == "No":
-        state["is_flagged"] = True
-        state["flag_reasons"].append("At least one parent does not know the crisis procedures.")
-    if state["answers"].get("plan_in_writing") == "Yes" and len(planned) >= 5:
-        state["is_strength"] = True
-        state["strength_reasons"].append("A written crisis plan covers most critical areas.")
-
-
-def _s9(state, resp):
-    xs = [FREQ_MAP[state["answers"][tid]] for (tid, _l) in COMM_TOPICS
-          if state["answers"].get(tid) in FREQ_MAP]
-    lo = _flag_avg(xs)
-    if lo:
-        state["is_flagged"] = True; state["flag_reasons"].append(lo)
-    hi = _strength_avg(xs)
-    if hi:
-        state["is_strength"] = True
-        state["strength_reasons"].append("Parents talk about most treatment topics regularly.")
-
-
-def _s10(state, resp):
-    disagree = sum(1 for (tid, _l) in DECISION_TOPICS
-                   if state["answers"].get(tid) in ("Rarely Agree", "Never Agree"))
-    if disagree >= 3:
-        state["is_flagged"] = True
-        state["flag_reasons"].append(f"{disagree} decision areas rarely or never see agreement.")
-    strong = sum(1 for (tid, _l) in DECISION_TOPICS
-                 if state["answers"].get(tid) in ("Always Agree", "Usually Agree"))
-    if strong >= 6:
-        state["is_strength"] = True
-        state["strength_reasons"].append(f"{strong} decision areas consistently see agreement.")
-
-
-def _s11(state, resp):
-    xs = [CONSIST_MAP[state["answers"][k]] for k in HOME_SUPPORT_AREA_IDS()
-          if state["answers"].get(k) in CONSIST_MAP]
-    lo = _flag_avg(xs)
-    if lo:
-        state["is_flagged"] = True; state["flag_reasons"].append(lo)
-    hi = _strength_avg(xs)
-    if hi:
-        state["is_strength"] = True
-        state["strength_reasons"].append("Both homes provide a consistent emotional foundation.")
-
-
-def HOME_SUPPORT_AREA_IDS():
-    return ["routines", "emotional_support", "positive_reinforcement", "calm_environment",
-            "safe_expression", "consistent_expectations", "healthy_coping", "stress_reduction"]
-
-
-SCORERS = {
-    "s1": _s1, "s2": _s2, "s3": _s3, "s4": _s4, "s5": _s5,
-    "s6": _s6, "s7": _s7, "s8": _s8, "s9": _s9, "s10": _s10, "s11": _s11,
-}
+def _section_score(section: Dict[str, Any],
+                   responses: Dict[str, Any]) -> Dict[str, Any]:
+    items = section["items"]
+    total_items = len(items)
+    total = 0
+    answered = 0
+    na = 0
+    for iid in items.keys():
+        key = f"{section['id']}_{iid}"
+        v = responses.get(key)
+        if v == "na":
+            na += 1
+        elif isinstance(v, bool):
+            continue
+        elif isinstance(v, int) and 0 <= v <= POINTS_PER_ITEM_MAX:
+            total += v
+            answered += 1
+    possible = answered * POINTS_PER_ITEM_MAX
+    percent = round((total / possible) * 100) if possible else 0
+    band_key = _band(percent)["band"] if answered else "unrated"
+    return {
+        "id":       section["id"],
+        "number":   section["number"],
+        "name":     section["name"],
+        "answered": answered,
+        "na":       na,
+        "unanswered": total_items - answered - na,
+        "total":    total,
+        "possible": possible,
+        "percent":  percent,
+        "band":     band_key,
+    }
 
 
 def score_deep_dive(responses: Dict[str, Any]) -> Dict[str, Any]:
-    per_section = []
-    a = f = s = 0
-    for section in DEEP_DIVE_SECTIONS:
-        st = _state(section, responses)
-        if st["is_visible"] and st["answered"]:
-            SCORERS[section["id"]](st, responses)
-            a += 1
-            if st["is_flagged"]: f += 1
-            if st["is_strength"]: s += 1
-        per_section.append(st)
+    sections: List[Dict[str, Any]] = []
+    total = 0
+    answered = 0
+    na = 0
+    unanswered = 0
+    for s in DEEP_DIVE_SECTIONS:
+        row = _section_score(s, responses or {})
+        total += row["total"]
+        answered += row["answered"]
+        na += row["na"]
+        unanswered += row["unanswered"]
+        sections.append(row)
+    possible = answered * POINTS_PER_ITEM_MAX
+    percent = round((total / possible) * 100) if possible else 0
+    band_info = _band(percent) if answered else {
+        "band": "unrated",
+        "band_label": "Not yet scored",
+        "band_summary": "Answer at least one item to see your alignment score.",
+        "next_steps": [],
+    }
     return {
-        "sections": per_section,
-        "totals": {"answered": a, "flagged": f, "strengths": s},
+        "version":       DEEP_DIVE_VERSION,
+        "total":         int(total),
+        "possible":      int(possible),
+        "answered":      int(answered),
+        "na":            int(na),
+        "unanswered":    int(unanswered),
+        "percent":       int(percent),
+        "band":          band_info["band"],
+        "band_label":    band_info["band_label"],
+        "band_summary":  band_info["band_summary"],
+        "next_steps":    band_info["next_steps"],
+        "sections":      sections,
+        "totals": {
+            "answered":  int(answered),
+            "flagged":   sum(1 for s in sections
+                             if s["answered"] > 0 and s["band"] == "low"),
+            "strengths": sum(1 for s in sections
+                             if s["answered"] > 0 and s["band"] == "high"),
+        },
+        "is_texas": False,
     }

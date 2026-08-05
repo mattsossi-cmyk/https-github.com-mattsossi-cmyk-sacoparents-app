@@ -2,6 +2,17 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 70 — Psychological Deep Dive rebuilt as Co-Parenting Psychological Alignment Framework (2026-02-05)**:
+  - Retired v1 11-section 60-item schema. New `psych-deep-2.0.0` schema: 5 parts × 5 items × 0-4 alignment likert with N/A pro-rating. Total /100 + three bands (High 81-100, Moderate 51-80, Low 0-50). Parts: (1) Emotional Regulation Between Parents, (2) The Child's Emotional Environment, (3) Therapy & Mental-Health Coordination, (4) Trauma, Grief & Attachment, (5) Modelling Emotional Health for the Child.
+  - Backend rewritten: `psych_deep_questions.py` (v2 schema + `is_v2_key`), `psych_deep_scoring.py` (score card with band summary + next-steps), `psych_deep_journey.py` (score-card journey with rating areas + action plan + foundation statement), `psych_deep_report.py::build_deep_dive_report` returns v2 shape.
+  - `psych_deep_routes.py::/me` silently strips legacy v1 keys and marks `completed=false` on first load.
+  - Frontend `SpecialNeedsV2PsychologicalDeepDive.jsx` supports the 0-4 scale from `item.scale` with the same yellow scale-legend callout as the Educational v2 page. `SpecialNeedsV2PsychologicalDeepDiveReport.jsx` shows a first-fold Score Card (total /100, band pill, per-part progress bars, next-steps + v2 rollout banner).
+  - Standalone fillable PDF at `/downloads/coparenting_psychological_alignment_framework.pdf` (8 pages, 193 real AcroForm widgets — 40 text + 153 checkboxes covering the 25 items, results table, band selector, and signatures). Built by `/app/scripts/build_psychological_alignment_framework.py`.
+  - Retired `test_psych_deep.py` + `test_psych_deep_api.py` with a pointer to the new suite. `test_iter70_psych_v2.py` adds 27 dedicated tests (schema, validate, banding boundaries, N/A pro-rating, backwards-compat shape, legacy wipe, journey shape).
+  - 264 passed / 7 skipped across iter42-70 + psych/edu/wall/analytics. Frontend smoke test on `/special-needs-v2/psychological-deep-dive` confirmed the new page renders with the scale legend, 0-4 buttons, N/A, and 5-part navigation.
+
+
+
 - **Iteration 69 — Situation Memory + ADHD Addendum PDF (2026-02-05)**:
   - **Situation Memory**: The Step 1 hero on `/dashboard` now remembers the parent's picked situation in `localStorage['sacoparents_situation_choice_v1']`. On return visits the hero collapses into a "You chose: {label}" chip + a "Change my answer" reset button instead of re-showing the six-choice grid. The matching prep module in the Preparation Modules card is highlighted with a bold purple border + a "Recommended for you" badge (mapping: cooperate/difficult/mediation → Mediation Summary · high-conflict/safety → Family Violence & Safety · special-needs → Educational Assessment).
   - **ADHD Addendum PDF**: New standalone fillable PDF (`/downloads/coparent-adhd-addendum.pdf`) at `/app/scripts/build_adhd_addendum_template.py`. 7 pages, 85 real interactive AcroForm widgets (41 text fields + 44 checkboxes). Six sections: IEP & ARD Management, Accommodations Held in Both Homes, ADHD Medication Coordination, Transitions & Executive-Function Support, Communication Between Us, Review & Signatures. AI-rated 10/10 per page for print + fillability. Reuses the layout primitives from the Commitment Agreement template.
