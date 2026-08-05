@@ -1,6 +1,13 @@
 # SA CoParents — PRD
 
 
+- **Iteration 74 — Milestone Confetti (2026-02-06)**:
+  - **Milestone Confetti (P0)**: Fired a two-burst confetti + celebration toast the first time a parent's dashboard streak reaches **30** or **100** consecutive days. Uses `canvas-confetti@1.9.4` (yarn add), imported lazily so the bundle only pays the cost when the celebration actually fires. Respects `prefers-reduced-motion` via `disableForReducedMotion: true`. Once-per-device via `localStorage['sacop_celebrated_streaks_v1']` so the same threshold never celebrates twice. Wired into `ProgressDashboardCard` (which already fetches `/api/dashboard/progress` including `streak_days`).
+  - New hook: `/app/frontend/src/hooks/useStreakCelebration.js` + 6 unit tests (`useStreakCelebration.test.js` — all pass).
+  - No backend changes.
+
+
+
 - **Iteration 73 — Wall Milestones Feed filter + Verify page polish (2026-02-06)**:
   - **Wall Milestones Feed (P0)**: Added category filter chip row on the Community Wall (`PublicMilestoneWall.jsx`). Chips: All, Streaks & badges (union), Streaks (week/month/hundred_day), Foundations (foundation_ready/first_compare/communication_master), Alignment (high_alignment_90). Each chip shows a live count. Backend `GET /api/wall/feed` accepts `?category=` and echoes the resolved category + `category_counts` dict. Unknown values fall back to "all". `CATEGORY_BADGES` lives in `wall_utils.py` as the single source of truth. Post-opt-in the frontend force-resets the filter to "all" so backfilled badges never hide under a stale chip. Cheer button (existing) confirmed to work under a filtered view.
   - **Verify Landing Polish (P0)**: Added `/verify/` to the LegalAcknowledgment exempt paths so QR scanners land directly on the Untampered ✓ card. Modal is already skipped on `/shared/` for the same reason — verify page carries its own disclaimer footer.

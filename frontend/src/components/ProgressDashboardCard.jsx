@@ -4,6 +4,7 @@ import { CheckCircle2, Circle, Loader2, Sparkles, Flame } from "lucide-react";
 import { logError } from "../lib/logger";
 import FoundationReadyCelebration, { FoundationReadyBadge } from "./FoundationReadyCelebration";
 import ProgressSparkline from "./ProgressSparkline";
+import useStreakCelebration from "../hooks/useStreakCelebration";
 
 /**
  * ProgressDashboardCard — five ✓ pills showing the parent's real progress
@@ -21,6 +22,12 @@ export default function ProgressDashboardCard() {
       .catch((err) => logError("Failed to load progress:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  // Fire a small confetti burst the first time this parent reaches
+  // 30 or 100 consecutive days on the dashboard. Idempotent per
+  // threshold via localStorage — will never fire twice on the same
+  // device.
+  useStreakCelebration(data?.streak_days);
 
   if (loading) {
     return (
