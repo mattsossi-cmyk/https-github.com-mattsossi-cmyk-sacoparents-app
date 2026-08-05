@@ -298,7 +298,7 @@ export default function WeeklyEmailPreview() {
               >
                 {p.milestones_this_week.map((m, i) => (
                   <li
-                    key={i}
+                    key={`mile-${i}-${String(m).slice(0, 30)}`}
                     className="flex items-start gap-2 text-sm text-[#1A1330]"
                   >
                     <CheckCircle2
