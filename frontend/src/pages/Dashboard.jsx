@@ -105,23 +105,46 @@ const SITUATION_TO_RECOMMENDED_MODULES = {
 // jump-menu below the situation picker so parents can dive straight in.
 const PREP_MODULES = [
   { key: "declaration",   label: "Declaration Statement",
+    category: "foundation",
     hint: "A one-page statement of your child-focused position.",
     icon: <FileText size={16} />,        route: "/summary" },
   { key: "mediation-summary", label: "Mediation Summary",
+    category: "coparenting",
     hint: "Your polished, printable brief for the mediator.",
     icon: <Scale size={16} />,           route: "/summary" },
   { key: "safety-assessment", label: "Family Violence & Safety Assessment",
+    category: "safety",
     hint: "Private safety screen; recommends a communication pathway.",
     icon: <ShieldCheck size={16} />,     route: "/safety-assessment" },
   { key: "educational-assessment", label: "Educational Assessment",
+    category: "special-needs",
     hint: "25-item Special-Ed & ADHD alignment scorer.",
     icon: <BookOpen size={16} />,        route: "/special-needs-v2/educational-deep-dive" },
   { key: "medical-assessment", label: "Medical Assessment",
+    category: "special-needs",
     hint: "Medical-decision alignment deep dive.",
     icon: <Stethoscope size={16} />,     route: "/special-needs-v2/medical-deep-dive" },
   { key: "psychological-assessment", label: "Psychological Assessment",
+    category: "special-needs",
     hint: "Emotional / therapy-decision alignment deep dive.",
     icon: <Brain size={16} />,           route: "/special-needs-v2/psychological-deep-dive" },
+];
+
+// Category headings shown in the Preparation Modules card — restored
+// per the parent's request for the four-group menu they saw earlier
+// this morning (co-parenting / foundation / family violence / special
+// needs). The order is intentional: parents typically start with a
+// foundation statement, then move to co-parenting prep, only branch
+// into safety or special-needs if their situation calls for it.
+const PREP_MODULE_CATEGORIES = [
+  { key: "coparenting",   label: "Co-Parenting Assessments",
+    hint: "Prepare for a mediator or professional conversation." },
+  { key: "foundation",    label: "Foundation Statements",
+    hint: "A short, printable position on what your child needs." },
+  { key: "safety",        label: "Family Violence Assessments",
+    hint: "Private safety screen with a Texas crisis resource footer." },
+  { key: "special-needs", label: "Special Needs Assessments",
+    hint: "Medical, Educational, and Psychological deep dives." },
 ];
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
@@ -542,9 +565,11 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Preparation modules jump-menu — six documents the app can
-            generate a downloadable PDF for. Deep-links let a returning
-            parent skip straight to the module they came here for. */}
+        {/* Preparation modules jump-menu — the parent's four-group
+            "co-parenting / foundation / family violence / special
+            needs" menu, restored per iter83 request. Each group is
+            titled with its own header row so parents can find the
+            right assessment at a glance. */}
         <div
           className="mt-6 rounded-3xl border border-[#E5E0EE] bg-[#FAF8FD] p-5 sm:p-6"
           data-testid="dashboard-prep-modules"
@@ -555,54 +580,76 @@ export default function Dashboard() {
                 Preparation modules
               </div>
               <div className="font-serif text-lg text-[#1A1330] mt-1">
-                Six documents the app can build for you
+                Pick the assessment that fits your family
               </div>
             </div>
             <div className="text-xs text-[#4B4567]">
               Each one generates a downloadable PDF.
             </div>
           </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {PREP_MODULES.map((m) => {
-              const isRec = recommendedModules.includes(m.key);
+
+          <div className="mt-5 space-y-6">
+            {PREP_MODULE_CATEGORIES.map((cat) => {
+              const items = PREP_MODULES.filter((m) => m.category === cat.key);
+              if (items.length === 0) return null;
               return (
-                <Link
-                  key={m.key}
-                  to={m.route}
-                  className={`group text-left rounded-2xl px-4 py-3 transition-colors flex items-start gap-3 ${
-                    isRec
-                      ? "border-2 border-[#3D1A78] bg-white shadow-sm hover:bg-[#F7F4FC]"
-                      : "border border-[#E5E0EE] bg-white hover:border-[#3D1A78] hover:bg-[#F7F4FC]"
-                  }`}
-                  data-testid={`dashboard-prep-module-${m.key}`}
-                  data-recommended={isRec ? "true" : undefined}
+                <div
+                  key={cat.key}
+                  data-testid={`dashboard-prep-category-${cat.key}`}
                 >
-                  <div
-                    className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                      isRec
-                        ? "bg-[#3D1A78] text-white"
-                        : "bg-[#EFE9F9] text-[#3D1A78] group-hover:bg-[#3D1A78] group-hover:text-white"
-                    }`}
-                  >
-                    {m.icon}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <div className="text-sm font-semibold text-[#1A1330] truncate">
-                        {m.label}
-                      </div>
-                      {isRec && (
-                        <span
-                          className="text-[9px] uppercase tracking-[0.16em] font-bold text-white bg-[#3D1A78] rounded-full px-2 py-0.5"
-                          data-testid={`dashboard-prep-module-${m.key}-recommended`}
-                        >
-                          Recommended for you
-                        </span>
-                      )}
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                      {cat.label}
                     </div>
-                    <div className="text-xs text-[#4B4567] mt-0.5">{m.hint}</div>
+                    <div className="text-[11px] text-[#8471B3] italic">
+                      {cat.hint}
+                    </div>
                   </div>
-                </Link>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {items.map((m) => {
+                      const isRec = recommendedModules.includes(m.key);
+                      return (
+                        <Link
+                          key={m.key}
+                          to={m.route}
+                          className={`group text-left rounded-2xl px-4 py-3 transition-colors flex items-start gap-3 ${
+                            isRec
+                              ? "border-2 border-[#3D1A78] bg-white shadow-sm hover:bg-[#F7F4FC]"
+                              : "border border-[#E5E0EE] bg-white hover:border-[#3D1A78] hover:bg-[#F7F4FC]"
+                          }`}
+                          data-testid={`dashboard-prep-module-${m.key}`}
+                          data-recommended={isRec ? "true" : undefined}
+                        >
+                          <div
+                            className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                              isRec
+                                ? "bg-[#3D1A78] text-white"
+                                : "bg-[#EFE9F9] text-[#3D1A78] group-hover:bg-[#3D1A78] group-hover:text-white"
+                            }`}
+                          >
+                            {m.icon}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="text-sm font-semibold text-[#1A1330] truncate">
+                                {m.label}
+                              </div>
+                              {isRec && (
+                                <span
+                                  className="text-[9px] uppercase tracking-[0.16em] font-bold text-white bg-[#3D1A78] rounded-full px-2 py-0.5"
+                                  data-testid={`dashboard-prep-module-${m.key}-recommended`}
+                                >
+                                  Recommended for you
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-[#4B4567] mt-0.5">{m.hint}</div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>

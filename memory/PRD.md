@@ -1,6 +1,13 @@
 # SA CoParents — PRD
 
 
+- **Iteration 83 — Preparation Modules regrouped into 4 named categories (2026-02-06)**:
+  - Restored the parent's four-group menu on the Dashboard: **Co-Parenting Assessments**, **Foundation Statements**, **Family Violence Assessments**, **Special Needs Assessments** (medical + educational + psychological). Each group has its own header row with a one-line hint.
+  - Added `category` field to `PREP_MODULES` + new `PREP_MODULE_CATEGORIES` list defining the four groups with intentional ordering (foundation → co-parenting → safety → special-needs). Grouped rendering with `dashboard-prep-category-{coparenting|foundation|safety|special-needs}` testids; existing per-module + recommended-badge testids preserved.
+  - Live-tested logged in as parent1 — all four category headers render with the correct child modules in each.
+
+
+
 - **Iteration 82 — Homepage FAQ + broken-link cleanup (2026-02-06)**:
   - **HomepageFAQ** — compact 4-question strip inserted between TrustSignals and FinalCTA, using native `<details>`/`<summary>` (no JS state) with a rotating `+` icon on open. Questions target the last trust doubts hesitant parents carry: solo-usable, privacy, professional boundaries, and safety. Testids: `homepage-faq`, `homepage-faq-{solo,privacy,professional,safety}` + `-summary` and `-answer`.
   - **Broken link removed**: FinalCTA's secondary "Learn More About Child-Focused Mediation" button scrolled to `#child-focused-mediation` — a section retired in iter80. Removed the secondary CTA entirely so FinalCTA now has a single primary action (matches iter81's "one recommendation, one next action" principle). Retired the now-unused `SecondaryCTA` helper.
