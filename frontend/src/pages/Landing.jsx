@@ -142,19 +142,6 @@ function PrimaryCTA({ children, testid }) {
   );
 }
 
-function SecondaryCTA({ children, onClick, testid }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      data-testid={testid}
-      className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#3D1A78] font-semibold text-sm border border-[#3D1A78]/20 hover:border-[#3D1A78] hover:-translate-y-0.5 transition-all"
-    >
-      {children}
-    </button>
-  );
-}
-
 function scrollToId(id) {
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -794,6 +781,109 @@ function TrustSignals() {
 }
 
 /* ============================================================
+   HOMEPAGE FAQ — compact 4-question strip that surfaces the last
+   trust doubts a hesitant parent still carries just before the
+   final CTA. Uses native <details>/<summary> so there's no JS
+   state to manage and each question is independently expandable.
+============================================================ */
+const HOMEPAGE_FAQ = [
+  {
+    id: "solo",
+    q: "Do I need my co-parent to participate?",
+    a: (
+      <>
+        No. You can complete every assessment, generate every report, and
+        follow every pathway on your own. The comparison views become
+        available if and when your co-parent chooses to join — never before.
+      </>
+    ),
+  },
+  {
+    id: "privacy",
+    q: "Will my co-parent see what I write?",
+    a: (
+      <>
+        Your answers are private to you until you explicitly hit{" "}
+        <strong>Share</strong> on a specific report. Even then, only the
+        report content is shared — not your raw answers. You can revoke
+        any share link at any time.
+      </>
+    ),
+  },
+  {
+    id: "professional",
+    q: "Is this a substitute for a mediator, therapist, or attorney?",
+    a: (
+      <>
+        No — and it&rsquo;s not meant to be. SA CoParents helps you arrive
+        at those conversations <em>prepared</em>, with a clear agenda and
+        the right questions. It is preparation and communication support,
+        not legal or clinical advice.
+      </>
+    ),
+  },
+  {
+    id: "safety",
+    q: "What if my situation involves conflict or safety concerns?",
+    a: (
+      <>
+        Pick the situation that fits — the app will route you to a
+        structured-written pathway and Texas crisis resources instead of
+        a joint-mediation pathway. Safety comes before every other
+        recommendation, always.
+      </>
+    ),
+  },
+];
+
+function HomepageFAQ() {
+  return (
+    <section
+      id="homepage-faq"
+      className="relative py-20 sm:py-24 bg-white border-t border-[#EFE9F9]"
+      data-testid="homepage-faq"
+    >
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="text-center">
+          <Eyebrow>Still deciding?</Eyebrow>
+          <h2 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mt-3">
+            Answers to the last four questions parents ask.
+          </h2>
+        </div>
+        <ul className="mt-10 space-y-3">
+          {HOMEPAGE_FAQ.map((item) => (
+            <li key={item.id}>
+              <details
+                className="group rounded-2xl border border-[#E5E0EE] bg-[#FCFBFE] px-5 py-4 open:bg-white open:shadow-sm transition-colors"
+                data-testid={`homepage-faq-${item.id}`}
+              >
+                <summary
+                  className="cursor-pointer list-none flex items-start justify-between gap-3 text-left"
+                  data-testid={`homepage-faq-${item.id}-summary`}
+                >
+                  <span className="font-serif text-lg text-[#1A1330] leading-snug">
+                    {item.q}
+                  </span>
+                  <span className="shrink-0 mt-1 w-6 h-6 rounded-full border border-[#D6CFE8] text-[#3D1A78] grid place-items-center text-lg font-light group-open:rotate-45 transition-transform">
+                    +
+                  </span>
+                </summary>
+                <p
+                  className="mt-3 text-sm sm:text-base text-[#4B4567] leading-relaxed"
+                  data-testid={`homepage-faq-${item.id}-answer`}
+                >
+                  {item.a}
+                </p>
+              </details>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
    SECTION — FINAL CTA
 ============================================================ */
 function FinalCTA() {
@@ -821,14 +911,12 @@ function FinalCTA() {
           cooperation, and better outcomes for your children.
         </p>
 
-        <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
+        {/* Single primary action — one recommendation, one next action.
+            The prior secondary "Learn more" scrolled to a section that
+            no longer exists post-iter80; the new FAQ above this CTA
+            covers that job. */}
+        <div className="mt-9 flex items-center justify-center">
           <PrimaryCTA testid="final-primary-cta">Start Your Assessment</PrimaryCTA>
-          <SecondaryCTA
-            testid="final-secondary-cta"
-            onClick={() => scrollToId("child-focused-mediation")}
-          >
-            Learn More About Child-Focused Mediation
-          </SecondaryCTA>
         </div>
 
         <div className="mt-16 inline-flex items-center gap-2 text-xs text-[#3D1A78] font-medium tracking-wide">
@@ -866,6 +954,7 @@ export default function Landing() {
         <ThreeReportsStrip />
         <HowItWorks />
         <TrustSignals />
+        <HomepageFAQ />
         <FinalCTA />
         <MarketingFooter />
       </div>

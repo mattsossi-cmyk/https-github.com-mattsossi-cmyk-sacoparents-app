@@ -1,6 +1,13 @@
 # SA CoParents — PRD
 
 
+- **Iteration 82 — Homepage FAQ + broken-link cleanup (2026-02-06)**:
+  - **HomepageFAQ** — compact 4-question strip inserted between TrustSignals and FinalCTA, using native `<details>`/`<summary>` (no JS state) with a rotating `+` icon on open. Questions target the last trust doubts hesitant parents carry: solo-usable, privacy, professional boundaries, and safety. Testids: `homepage-faq`, `homepage-faq-{solo,privacy,professional,safety}` + `-summary` and `-answer`.
+  - **Broken link removed**: FinalCTA's secondary "Learn More About Child-Focused Mediation" button scrolled to `#child-focused-mediation` — a section retired in iter80. Removed the secondary CTA entirely so FinalCTA now has a single primary action (matches iter81's "one recommendation, one next action" principle). Retired the now-unused `SecondaryCTA` helper.
+  - Landing.jsx lints clean; live smoke-test confirms FAQ renders and expands.
+
+
+
 - **Iteration 81 — Hero copy + Gmail prominence (2026-02-06)**:
   - **Hero copy rewritten** per user brief: H1 "Prepare for better co-parenting conversations." · Sub-head "Choose what your family is facing and receive a personalized starting point, practical communication tools, and reports you can bring to mediation or professional support." · Supporting reassurance: "Private guest access · No payment required to begin · About 10 minutes". The situation picker is now the single primary action; "Watch how it works" and "Or explore as a guest →" demoted to inline text links; the old 4-item trust-indicator grid removed (its ideas already live in TrustSignals further down).
   - **Gmail Mini Inbox removed from Dashboard**: connecting an inbox is a major trust request and was appearing directly beneath the Situation Picker. It now lives only on the dedicated `/gmail` page, reached through app-shell navigation.
