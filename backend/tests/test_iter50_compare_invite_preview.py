@@ -194,8 +194,9 @@ class TestPreviewPctSource:
                 if not item_id:
                     continue
                 key = f"{s['id']}_{item_id}"
-                if item.get("type") == "likert":
-                    a[key] = 5
+                if item.get("type") in ("likert", "alignment"):
+                    scale = item.get("scale") or [1, 2, 3, 4, 5]
+                    a[key] = max(scale) if scale else 5
                 elif item.get("type") == "single":
                     opts = item.get("options") or []
                     if opts:

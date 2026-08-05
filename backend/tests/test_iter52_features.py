@@ -83,25 +83,28 @@ class TestReportSectionCoachStripSource:
         """Because the report strip renders one SectionCoachCard per
         section, cached coach cards must be served without re-hitting the
         LLM. Fire twice and confirm cached=True on second call."""
-        # Answer a couple of s1 items so the coach has content.
+        # Answer a couple of p1 items so the coach has content.
         r = p1_client.get(f"{BASE_URL}/api/edu-deep/schema", timeout=20)
         sections = r.json()["sections"]
-        s1 = next(s for s in sections if s["id"] == "s1")
+        target_section = sections[0]           # first section, whatever it is
+        sid = target_section["id"]
         answers = {}
-        for it in s1["items"]:
-            key = f"s1_{it['id']}"
+        for it in target_section["items"]:
+            key = f"{sid}_{it['id']}"
             t = it.get("type")
-            if t == "likert": answers[key] = 5
+            if t in ("likert", "alignment"):
+                scale = it.get("scale") or [1, 2, 3, 4, 5]
+                answers[key] = max(scale) if scale else 5
             elif t == "single" and it.get("options"): answers[key] = it["options"][0]
             elif t == "multi" and it.get("options"): answers[key] = [it["options"][0]]
             elif t == "text": answers[key] = "Working on it."
         p1_client.post(f"{BASE_URL}/api/edu-deep/answers/bulk",
                        json={"answers": answers}, timeout=20)
         # First call generates, second should be cached.
-        r1 = p1_client.post(f"{BASE_URL}/api/edu-deep/section/s1/coach",
+        r1 = p1_client.post(f"{BASE_URL}/api/edu-deep/section/{sid}/coach",
                             json={}, timeout=120)
         assert r1.status_code == 200
-        r2 = p1_client.post(f"{BASE_URL}/api/edu-deep/section/s1/coach",
+        r2 = p1_client.post(f"{BASE_URL}/api/edu-deep/section/{sid}/coach",
                             json={}, timeout=30)
         assert r2.status_code == 200
         assert r2.json().get("cached") is True

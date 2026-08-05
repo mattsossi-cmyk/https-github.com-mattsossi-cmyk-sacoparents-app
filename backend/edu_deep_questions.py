@@ -1,255 +1,180 @@
 """Educational Needs — Deep Dive schema.
 
-A twelve-section optional companion assessment to the lighter SNC v2
-educational pathway. Lives at /special-needs-v2/educational-deep-dive.
+Iteration 67 (2026-02-05) — the Educational Deep Dive is now the
+**Co-Parenting Alignment Assessment: Special Education & ADHD Edition**:
+25 items in 5 parts, each scored on a 0-4 alignment scale with an
+optional N/A.
 
-Design notes:
-  * Questions are option-based wherever possible (single / multi / likert /
-    yes-no) so parents rarely have to type. Free-text is reserved for open
-    "anything else you want to note" fields.
-  * The report only surfaces sections where the parent's answers indicate a
-    concern (`is_flagged` in scoring). Every section still has a strength
-    template applied when the answers indicate a strength.
-  * Section 3 (ARD) is only shown when Section 1 school_state == "TX".
+* Emotional Well-being & Child Support         (5 items)
+* Communication & Conflict Management          (5 items)
+* IEP & ARD Special-Education Management       (5 items)
+* ADHD Routines, Structure, & Accommodations   (5 items)
+* Logistics, Reliability, & Flexibility        (5 items)
+
+Total 100 points possible; three interpretation bands (81-100 High,
+51-80 Moderate, 0-50 Low). See ``edu_deep_scoring.score_deep_dive``.
+
+The old 12-section 60-item schema (edu-deep-1.x) has been retired.
+Answers saved against that schema are silently ignored at load time and
+overwritten by the new schema.
 """
 from __future__ import annotations
 
 from typing import Any, Dict, List
 
 
-DEEP_DIVE_VERSION = "edu-deep-1.0.0"
+DEEP_DIVE_VERSION = "edu-deep-2.0.0"
+
+# ---------------------------------------------------------------------------
+# The 0-4 alignment likert. Presented in the UI as a 5-button row.
+# ---------------------------------------------------------------------------
+ALIGNMENT_SCALE = [0, 1, 2, 3, 4]
+ALIGNMENT_LABELS = {
+    0: "Never / High Conflict",
+    1: "Seldom / Rarely",
+    2: "Sometimes / Inconsistent",
+    3: "Often / Mostly Consistent",
+    4: "Always / Very Consistent",
+}
+
+# Points possible per item (max score for a fully-answered assessment is 100).
+POINTS_PER_ITEM_MAX = 4
+TOTAL_ITEMS = 25
 
 
-# ---- shared option sets ----
-FREQUENCY_5 = ["Always", "Usually", "Sometimes", "Rarely", "Never"]
-FREQUENCY_4 = ["Always", "Usually", "Sometimes", "Never"]
-AGREEMENT_5 = ["Always Agree", "Usually Agree", "Sometimes Agree", "Rarely Agree", "Never Agree"]
-ROLE_4 = ["Mother", "Father", "Both", "Neither"]
-CAREGIVER_4 = ["Mother", "Father", "Both", "Other caregiver"]
-YES_NO = ["Yes", "No"]
-YES_NO_UNSURE = ["Yes", "No", "Unsure"]
-
-US_STATES = [
-    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-    "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-    "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-    "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-    "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
-    "DC", "Other / Not US",
-]
-
-GRADE_LEVELS = [
-    "PreK", "Kindergarten", "1st", "2nd", "3rd", "4th", "5th",
-    "6th", "7th", "8th", "9th", "10th", "11th", "12th",
-    "Post-secondary transition", "Not currently enrolled",
-]
-
-SCHOOL_SETTINGS = [
-    "Public School", "Private School", "Charter School", "Homeschool",
-    "Online / Virtual School", "Preschool / Early Learning Centre",
-]
-
-EDU_CONCERNS = [
-    "Reading", "Writing", "Math", "Attention", "Executive Functioning",
-    "Speech", "Language", "Social Skills", "Behaviour", "Emotional Regulation",
-    "Gifted", "Dyslexia", "Dysgraphia", "Dyscalculia", "Autism",
-    "ADHD", "Intellectual Disability", "Developmental Delay",
-    "Learning Disability", "Other",
-]
-
-IEP_AREAS = [
-    "Academic Goals", "Behaviour Goals", "Speech Goals",
-    "Occupational Therapy Goals", "Social Goals", "Transition Goals",
-    "Assistive Technology", "Transportation", "Testing Accommodations",
-]
-
-COUNSELOR_FREQ = ["Weekly", "Bi-weekly", "Monthly", "As-needed", "Rarely", "Never"]
-
-TUTORING_TYPES = [
-    "Private tutor", "Reading specialist", "Math specialist",
-    "Speech support", "Academic coaching", "Learning pod", "Other",
-]
-
-SCHOOL_ROLES = [
-    "Teacher", "Principal", "Assistant Principal", "Special Education Teacher",
-    "School Counsellor", "Speech Therapist", "Occupational Therapist",
-    "Behaviour Specialist", "Reading Specialist", "Math Specialist",
-    "School Psychologist",
-]
-
-DECISION_TOPICS = [
-    ("school_choice", "School choice"),
-    ("special_ed_placement", "Special education placement"),
-    ("testing", "Testing"),
-    ("tutoring", "Tutoring"),
-    ("summer_school", "Summer school"),
-    ("extracurricular", "Extracurricular participation"),
-    ("retention", "Grade retention"),
-    ("advanced_classes", "Advanced classes"),
-    ("behavior_plans", "Behaviour plans"),
-    ("testing_accommodations", "Testing accommodations"),
-    ("transportation", "Transportation"),
-]
-
-PLANNING_AREAS = ["Semester goals", "Reading goals", "Math goals", "Attendance", "Behaviour"]
+def _alignment_item(prompt: str) -> Dict[str, Any]:
+    """Convenience factory for a 0-4 alignment likert question."""
+    return {
+        "type": "alignment",
+        "scale": ALIGNMENT_SCALE,
+        "labels": ALIGNMENT_LABELS,
+        "prompt": prompt,
+        "allow_na": True,
+        "scored": True,
+    }
 
 
-def _lk(prompt: str, scored: bool = True) -> Dict[str, Any]:
-    return {"type": "likert", "prompt": prompt, "scored": scored}
-
-
-def _sg(prompt: str, options: List[str]) -> Dict[str, Any]:
-    return {"type": "single", "prompt": prompt, "options": options}
-
-
-def _ml(prompt: str, options: List[str]) -> Dict[str, Any]:
-    return {"type": "multi", "prompt": prompt, "options": options}
-
-
-def _tx(prompt: str) -> Dict[str, Any]:
-    return {"type": "textarea", "prompt": prompt}
-
-
-# ---- Section schema ----
-# Each section has: id, number, name, purpose, items[], scoring policy
+# Section schema. Each section has: id, number, name, purpose, items.
 DEEP_DIVE_SECTIONS: List[Dict[str, Any]] = [
-    # 1. Educational Profile ------------------------------------------------
-    {"id": "s1", "number": 1, "name": "Educational Profile",
-     "purpose": "Set the child's current schooling context.",
+    # 1 -----------------------------------------------------------------
+    {"id": "p1", "number": 1, "name": "Emotional Well-being & Child Support",
+     "purpose": "How consistently both parents protect the child from adult conflict "
+                "and safeguard the child's bond with the other parent.",
      "items": {
-        "school_setting": _sg("What is your child's current school setting?", SCHOOL_SETTINGS),
-        "grade_level":    _sg("What is your child's current grade level?", GRADE_LEVELS),
-        "school_state":   _sg("Which state is the child's school located in?", US_STATES),
-        "concerns":       _ml("Which educational areas are you concerned about? Select all that apply.", EDU_CONCERNS),
-        "concern_notes":  _tx("Anything specific you want the report to note (optional)?"),
+        "q1": _alignment_item(
+            "We explicitly give our children permission to love, bond with, "
+            "and enjoy time with the other parent."),
+        "q2": _alignment_item(
+            "We speak respectfully about (or do not criticise) the other parent "
+            "when the children are within earshot."),
+        "q3": _alignment_item(
+            "We shield the children from hearing or seeing any adult arguments, "
+            "legal matters, or financial disputes."),
+        "q4": _alignment_item(
+            "We encourage our children to express their feelings about the "
+            "separation without making them feel guilty."),
+        "q5": _alignment_item(
+            "We avoid using the children as messengers, informants, or spies to "
+            "get information about the other household."),
      }},
-    # 2. Parent-Teacher Communication --------------------------------------
-    {"id": "s2", "number": 2, "name": "Parent-Teacher Communication",
-     "purpose": "Assess how consistently both parents engage with the classroom teacher.",
+    # 2 -----------------------------------------------------------------
+    {"id": "p2", "number": 2, "name": "Communication & Conflict Management",
+     "purpose": "How adults exchange information about the child and resolve "
+                "disagreements.",
      "items": {
-        "how_often_attend":   _sg("How often do you attend parent-teacher conferences?", FREQUENCY_5),
-        "both_can_attend":    _sg("Can both parents attend?", FREQUENCY_5),
-        "communicate_after":  _sg("Do the parents communicate after the meetings?", FREQUENCY_4),
-        "discuss_goals":      _lk("Educational goals are discussed before the meeting."),
-        "both_receive_updates": _sg("Do both parents receive school updates?", YES_NO),
+        "q6": _alignment_item(
+            "We communicate directly with each other regarding the children, "
+            "rather than making the children pass messages."),
+        "q7": _alignment_item(
+            "Our written and verbal communications remain brief, informative, "
+            "friendly, and focused strictly on the kids."),
+        "q8": _alignment_item(
+            "We respond to non-emergency messages about the children within a "
+            "reasonable, agreed-upon timeframe (e.g. 24 hours)."),
+        "q9": _alignment_item(
+            "When disagreements happen, we focus on finding solutions for the "
+            "child rather than winning the argument."),
+        "q10": _alignment_item(
+            "We actively use a shared calendar or specialised co-parenting app "
+            "to log schedules, appointments, and expenses."),
      }},
-    # 3. ARD Meetings (Texas only) -----------------------------------------
-    {"id": "s3", "number": 3, "name": "ARD Meetings (Texas)",
-     "purpose": "Assess ARD (Admission, Review, and Dismissal) participation. Shown only when the school state is Texas.",
-     "texas_only": True,
+    # 3 -----------------------------------------------------------------
+    {"id": "p3", "number": 3, "name": "IEP & ARD Special-Education Management",
+     "purpose": "How the household coordinates the child's Individualised "
+                "Education Program and ARD meetings.",
      "items": {
-        "attendees":            _ml("Who attends ARD meetings?", CAREGIVER_4),
-        "review_plan_before":   _lk("Both parents review the proposed educational plan beforehand."),
-        "comfort_participating": _lk("I am comfortable participating during ARD meetings."),
-        "conflict_interferes":  _lk("Conflict between parents interferes with decision making."),
-        "prepare_questions":    _lk("Parents prepare questions beforehand."),
-        "decisions_focus_child": _lk("Decisions are focused on the child's needs."),
+        "q11": _alignment_item(
+            "We attend ARD/IEP meetings together cooperatively, or we coordinate "
+            "ahead of time to present a unified front to the school."),
+        "q12": _alignment_item(
+            "We share all school diagnostic reports, IEP progress updates, and "
+            "teacher communications immediately with each other."),
+        "q13": _alignment_item(
+            "We enforce the same classroom accommodations (extra time, sensory "
+            "breaks) during homework time in both houses."),
+        "q14": _alignment_item(
+            "We collaborate on educational goals rather than using ARD meetings "
+            "to argue or blame the other parent for school delays."),
+        "q15": _alignment_item(
+            "We maintain a single, shared digital folder for all legal IEP "
+            "documentation, psychological evaluations, and school paperwork."),
      }},
-    # 4. IEP ---------------------------------------------------------------
-    {"id": "s4", "number": 4, "name": "Individualized Education Program (IEP)",
-     "purpose": "Understand how well both homes engage with the IEP.",
-     "gate": {"item": "has_iep", "value": "Yes"},
+    # 4 -----------------------------------------------------------------
+    {"id": "p4", "number": 4, "name": "ADHD Routines, Structure, & Accommodations",
+     "purpose": "How consistently both homes hold the routines, medication, "
+                "and expectations that support ADHD.",
      "items": {
-        "has_iep":                _sg("Does your child currently have an IEP?", YES_NO),
-        "who_reviews":            _sg("Who reviews the IEP?", ["Mother", "Father", "Both", "School only"]),
-        "familiar_with_goals":    _lk("I am familiar with my child's IEP goals."),
-        "both_homes_support":     _lk("Both homes support the IEP."),
-        "monitor_progress":       _lk("Parents monitor progress against the IEP."),
-        "accommodations_consistent": _lk("Accommodations are implemented consistently in both homes."),
-        "iep_areas":              _ml("Which IEP areas apply to your child?", IEP_AREAS),
+        "q16": _alignment_item(
+            "We use matching visual schedules, checklists, or token systems in "
+            "both homes to support our child's executive functioning."),
+        "q17": _alignment_item(
+            "We strictly coordinate ADHD medication doses, timings, and pharmacy "
+            "refills so the child's routine never lapses between houses."),
+        "q18": _alignment_item(
+            "We report side effects, behavioural changes, or medication efficacy "
+            "to each other before reporting them to the doctor."),
+        "q19": _alignment_item(
+            "Our two households maintain highly similar, predictable expectations "
+            "for bedtimes, wake-up times, and electronics limits."),
+        "q20": _alignment_item(
+            "We handle transitions and drop-offs peacefully, knowing abrupt "
+            "changes can trigger ADHD dysregulation or meltdowns."),
      }},
-    # 5. Section 504 Plan --------------------------------------------------
-    {"id": "s5", "number": 5, "name": "Section 504 Plan",
-     "purpose": "Understand engagement with the child's 504 Plan.",
-     "gate": {"item": "has_504", "value": "Yes"},
+    # 5 -----------------------------------------------------------------
+    {"id": "p5", "number": 5, "name": "Logistics, Reliability, & Flexibility",
+     "purpose": "The day-to-day reliability that makes a special-needs plan "
+                "actually work.",
      "items": {
-        "has_504":                    _sg("Does your child have a 504 Plan?", YES_NO),
-        "understanding_accommodations": _lk("I understand the accommodations in the 504 Plan."),
-        "consistency_across_homes":   _lk("Accommodations are applied consistently across both homes."),
-        "school_communication":       _lk("Communication with the school about the 504 Plan is timely."),
-        "implementation":             _lk("Accommodations are actually implemented at school."),
-        "annual_reviews":             _lk("Annual reviews are completed on time."),
-     }},
-    # 6. School Counselor --------------------------------------------------
-    {"id": "s6", "number": 6, "name": "School Counsellor",
-     "purpose": "Understand the child's engagement with the school counsellor.",
-     "gate": {"item": "meets_counselor", "value": "Yes"},
-     "items": {
-        "meets_counselor":       _sg("Does your child meet with a school counsellor?", YES_NO),
-        "frequency":             _sg("How often?", COUNSELOR_FREQ),
-        "parents_communicate":   _lk("Both parents communicate with the counsellor."),
-        "counselor_provides_recs": _sg("Does the counsellor provide recommendations?", YES_NO),
-        "recs_followed":         _lk("Recommendations from the counsellor are followed at home."),
-        "support_emotional_home": _lk("Emotional-regulation strategies are supported at home."),
-     }},
-    # 7. Academic Support Services ----------------------------------------
-    {"id": "s7", "number": 7, "name": "Academic Support Services",
-     "purpose": "Assess consistency of tutoring, Kumon, Sylvan, or other academic supports.",
-     "items": {
-        "supports_enrolled":     _ml("Which academic support services is the child currently enrolled in? Select all that apply.",
-                                     ["Kumon", "Sylvan Learning"] + TUTORING_TYPES + ["None"]),
-        "who_transports":        _sg("Who typically transports the child to these services?", CAREGIVER_4 + ["Not applicable"]),
-        "who_supervises":        _sg("Who supervises homework related to these services?", CAREGIVER_4 + ["Not applicable"]),
-        "attendance_consistency": _lk("Attendance at these services is consistent."),
-        "parent_communication":  _lk("Parents communicate with each other about attendance and progress."),
-        "progress_monitoring":   _lk("Both parents monitor the child's progress in these services."),
-        "commitment":            _lk("Both parents are committed to continuing these services."),
-     }},
-    # 8. Homework & Home Learning ----------------------------------------
-    {"id": "s8", "number": 8, "name": "Homework & Home Learning",
-     "purpose": "Assess how consistently the child's home learning environment is supported.",
-     "items": {
-        "homework_consistent":       _lk("Homework expectations are consistent between homes."),
-        "quiet_study_spaces":        _lk("Both homes have a quiet study space."),
-        "assignments_completed":     _lk("Assignments are completed on time."),
-        "communicate_missing_work":  _lk("Parents communicate about missing work."),
-        "child_encouraged":          _lk("The child receives encouragement about school work in both homes."),
-        "technology_available":      _lk("Technology needed for school is available in both homes."),
-     }},
-    # 9. Communication with School ----------------------------------------
-    {"id": "s9", "number": 9, "name": "Communication with School",
-     "purpose": "Assess general communication with school staff across both homes.",
-     "items": {
-        "roles_involved":         _ml("Which school staff are involved with your child? Select all that apply.", SCHOOL_ROLES),
-        "who_communicates":       _sg("Who typically communicates with the school?", ROLE_4),
-        "communication_respectful": _lk("Communication with the school is respectful."),
-        "information_shared":     _lk("School information is shared between parents."),
-        "same_information":       _sg("Do both parents receive the same information from the school?", FREQUENCY_5),
-     }},
-    # 10. Educational Decision Making -------------------------------------
-    {"id": "s10", "number": 10, "name": "Educational Decision Making",
-     "purpose": "Assess whether parents can agree on major educational decisions.",
-     "items": {
-        topic_id: _sg(prompt, AGREEMENT_5) for (topic_id, prompt) in DECISION_TOPICS
-     }},
-    # 11. Educational Advocacy --------------------------------------------
-    {"id": "s11", "number": 11, "name": "Educational Advocacy",
-     "purpose": "Assess how well parents advocate together for their child.",
-     "items": {
-        "know_rights":         _lk("Parents know their educational rights."),
-        "prepare_meetings":    _lk("Parents prepare for school meetings."),
-        "ask_questions":       _lk("Parents ask questions during school meetings."),
-        "advocate_respectfully": _lk("Parents advocate respectfully with school staff."),
-        "focus_long_term":     _lk("Parents focus on the child's long-term success."),
-        "understand_reports":  _lk("Parents understand educational reports and test results."),
-     }},
-    # 12. Educational Planning --------------------------------------------
-    {"id": "s12", "number": 12, "name": "Educational Planning",
-     "purpose": "Capture the parent's short-term planning priorities.",
-     "items": {
-        "planning_areas":       _ml("Which areas are you actively planning for over the next semester? Select all that apply.", PLANNING_AREAS),
-        "priority_area":        _sg("Which planning area is highest priority right now?",
-                                    PLANNING_AREAS + ["Other / Not sure"]),
-        "biggest_barrier":      _sg("What is the biggest barrier to consistent planning?",
-                                    ["Time", "Cost", "Communication with co-parent",
-                                     "Communication with school", "Child engagement", "Other / Not sure"]),
+        "q21": _alignment_item(
+            "We consistently arrive on time for custody exchanges and pick-ups, "
+            "respecting each other's time and the child's need for routine."),
+        "q22": _alignment_item(
+            "We provide ample advance notice (48 hours or more) if a schedule "
+            "change or adjustment is needed."),
+        "q23": _alignment_item(
+            "We respect the other parent's designated custody time and do not "
+            "interrupt it with unnecessary calls or texts to the child."),
+        "q24": _alignment_item(
+            "We ensure all specialised gear (fidgets, noise-cancelling "
+            "headphones, school binders) travels smoothly between houses."),
+        "q25": _alignment_item(
+            "We accommodate reasonable, occasional schedule adjustments when "
+            "special events, holidays, or unexpected conflicts arise."),
      }},
 ]
 
 
-# ---- helper for the frontend ----
+# Kept for downstream code that still imports it (e.g. the legacy narrative
+# builder). The list is intentionally empty in v2 so nothing accidentally
+# references an old key.
+DECISION_TOPICS: List[tuple] = []
+
+
+# ---------------------------------------------------------------------------
+# Public helpers
+# ---------------------------------------------------------------------------
 def public_schema() -> Dict[str, Any]:
-    """Serialisable schema used by the React page."""
+    """Serialisable schema used by the React assessment page."""
     return {
         "version": DEEP_DIVE_VERSION,
         "sections": [
@@ -258,8 +183,11 @@ def public_schema() -> Dict[str, Any]:
                 "number": s["number"],
                 "name": s["name"],
                 "purpose": s.get("purpose"),
-                "texas_only": bool(s.get("texas_only")),
-                "gate": s.get("gate"),
+                # Sections in v2 never conditionally hide, but we retain
+                # `texas_only` and `gate` in the payload as `None` for
+                # frontend backwards-compat.
+                "texas_only": False,
+                "gate": None,
                 "items": [
                     {"id": iid, **spec} for iid, spec in s["items"].items()
                 ],
@@ -287,20 +215,18 @@ def item_by_key(key: str) -> Dict[str, Any] | None:
 
 
 def validate_answer(key: str, value: Any) -> bool:
-    spec = item_by_key(key)
-    if not spec:
+    """A response is valid iff the value is either the string "na" (skip
+    marker) or an int in 0..4."""
+    if item_by_key(key) is None:
         return False
-    t = spec["type"]
-    if t == "likert":
-        return value == "na" or (isinstance(value, int) and 1 <= value <= 5)
-    if t == "single":
-        opts = spec.get("options") or []
-        return isinstance(value, str) and (not opts or value in opts)
-    if t == "multi":
-        opts = spec.get("options") or []
-        return isinstance(value, list) and all(
-            isinstance(v, str) and (not opts or v in opts) for v in value
-        )
-    if t in ("text", "textarea"):
-        return isinstance(value, str)
-    return False
+    if value == "na":
+        return True
+    if isinstance(value, bool):  # bool is a subclass of int — reject
+        return False
+    return isinstance(value, int) and 0 <= value <= 4
+
+
+def is_v2_key(key: str) -> bool:
+    """True iff `key` matches the new p*_q* pattern (used to filter out
+    legacy answers persisted against the retired v1 schema)."""
+    return key.startswith(("p1_", "p2_", "p3_", "p4_", "p5_"))

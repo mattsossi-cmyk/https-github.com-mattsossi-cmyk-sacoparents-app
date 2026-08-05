@@ -2,6 +2,18 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 67 — Educational Deep Dive rebuilt as Special-Ed / ADHD Alignment Assessment (2026-02-05)**:
+  - Retired the v1 12-section 60-item diagnostic. Replaced with a 5-part 25-item 0-4 likert alignment scorer, total /100 with three bands (High 81-100, Moderate 51-80, Low 0-50). Focus areas: Emotional Well-being, Communication, IEP/ARD, ADHD Routines, Logistics.
+  - Backend files rewritten: `edu_deep_questions.py` (schema `edu-deep-2.0.0` + `is_v2_key`/`validate_answer`), `edu_deep_scoring.py` (`score_deep_dive` returns total/percent/band/next_steps/sections + backwards-compat `totals`/`is_texas`), `edu_deep_journey.py` (v2 score-card journey with rating areas, action plan, foundation statement), `edu_deep_report.py::build_deep_dive_report` now consumes v2 shape.
+  - `edu_deep_routes.py::/me` silently strips legacy v1 answers and marks `completed=false` on first load so nothing crashes.
+  - `deep_dive_comparison_core.py` treats the new `alignment` item type as numeric (equivalent to v1 `likert`) via `_is_numeric_type` helper — so compare / snapshot / preview / milestones all keep working.
+  - Frontend `SpecialNeedsV2EducationalDeepDive.jsx` renders a 0-4 alignment scale (from `item.scale`) with a soft yellow scale-legend callout. `SpecialNeedsV2EducationalDeepDiveReport.jsx` adds a first-fold Score Card (total, band pill, per-part progress bars, next-steps card + a "new format, full narrative coming next iteration" banner).
+  - Retired tests: `test_edu_deep.py`, `test_edu_deep_live.py` skip with a pointer to the new suite. `test_iter67_edu_v2.py` adds 34 new tests (schema, validate_answer, banding boundaries, N/A pro-rating, backwards-compat shape, legacy wipe, journey shape). Test fixtures in iter45/46/48/50/52 patched to accept both `likert` and `alignment` item types with `max(scale)`.
+  - Verified via `python -m pytest`: 288 passed, 7 skipped across iter42-67 + growth/analytics/shared-cp/snc2-compare/wall_utils. Frontend smoke test on `/special-needs-v2/educational-deep-dive` confirmed the new page renders with the scale legend, 0-4 buttons, N/A, and 5-part navigation.
+  - Backlog for next iteration: rebuild the rich narrative journey to fit the 25-item shape; add the compare-view 25-question matrix; add the "Special Education & ADHD Addendum" companion PDF.
+
+
+
 - **Iteration 66b — Wall Cheer Digest (2026-02-02)**:
   - Added an anonymised community cheer block to the existing Sunday weekly email (kept as one email per week — no new outbound). Two data streams:
     * `cheers_received` — for opted-in parents only. Counts hearts landed on their own badges in the last 30 days that got cheered *this week*. Cheerer identity is NEVER exposed.

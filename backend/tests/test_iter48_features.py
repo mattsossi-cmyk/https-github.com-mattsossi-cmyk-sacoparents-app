@@ -321,9 +321,12 @@ def _all_schema_keys(client, prefix):
         sid = s.get("id")
         for item in s.get("items", []):
             key = f"{sid}_{item['id']}"
-            if item.get("type") == "likert":
-                answers_a[key] = 5
-                answers_b[key] = 5   # identical → shared priorities everywhere
+            if item.get("type") in ("likert", "alignment"):
+                # Use the item's declared scale max; fall back to 5 for v1.
+                scale = item.get("scale") or [1, 2, 3, 4, 5]
+                top = max(scale) if scale else 5
+                answers_a[key] = top
+                answers_b[key] = top   # identical → shared priorities everywhere
             elif item.get("type") == "single":
                 opts = item.get("options") or []
                 if opts:

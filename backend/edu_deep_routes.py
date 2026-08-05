@@ -102,7 +102,21 @@ async def schema(_user: UserPublic = Depends(get_current_user)) -> Dict[str, Any
 async def me(user: UserPublic = Depends(get_current_user),
              db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     doc = await _load(db, user.user_id)
-    return {"has_assessment": bool(doc), "assessment": doc or None}
+    if not doc:
+        return {"has_assessment": False, "assessment": None}
+    # v2 schema drop — silently discard any legacy v1 answer keys so the
+    # frontend never repopulates a question that no longer exists in the
+    # new schema.
+    from edu_deep_questions import is_v2_key
+    raw = dict(doc.get("responses") or {})
+    filtered = {k: v for k, v in raw.items() if is_v2_key(k)}
+    dropped = len(raw) - len(filtered)
+    if dropped:
+        await _upsert(db, user.user_id,
+                     {"responses": filtered, "completed": False})
+        doc["responses"] = filtered
+        doc["completed"] = False
+    return {"has_assessment": bool(doc), "assessment": doc}
 
 
 @router.post("/profile")

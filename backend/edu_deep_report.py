@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from fpdf import FPDF
 
-from edu_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION, DECISION_TOPICS
+from edu_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION
 from edu_deep_scoring import score_deep_dive
 from edu_deep_journey import build_journey_report
 
@@ -122,37 +122,36 @@ def build_deep_dive_report(
     *, parent_name: Optional[str], child_name: Optional[str],
     responses: Dict[str, Any],
 ) -> Dict[str, Any]:
+    """v2 report builder — pulls score-card + score-card-driven sections
+    (one per part) into the same top-level shape the frontend and PDF
+    renderer already know."""
     scored = score_deep_dive(responses)
-    concerns_selected = responses.get("s1_concerns") or []
-    concern_notes = (responses.get("s1_concern_notes") or "").strip()
 
-    # ---- assemble section entries only for visible/answered sections ----
+    # Per-section entries. In v2 every visible section corresponds to a
+    # scored part; we surface it as "flagged" (low) or "strength" (high)
+    # so the existing report chrome still lights up.
     sections_out: List[Dict[str, Any]] = []
     for state in scored["sections"]:
-        if not state["is_visible"] or not state["answered"]:
+        if state["answered"] == 0:
             continue
+        is_flag = state["band"] == "low"
+        is_strong = state["band"] == "high"
         entry: Dict[str, Any] = {
-            "id": state["id"],
-            "name": state["name"],
-            "number": state["number"],
-            "is_flagged": state["is_flagged"],
-            "flag_reasons": state["flag_reasons"],
-            "is_strength": state["is_strength"],
-            "strength_reasons": state["strength_reasons"],
+            "id":               state["id"],
+            "name":             state["name"],
+            "number":           state["number"],
+            "is_flagged":       is_flag,
+            "flag_reasons":     [f"Alignment {state['percent']}% - below the moderate band."] if is_flag else [],
+            "is_strength":      is_strong,
+            "strength_reasons": [f"Alignment {state['percent']}% - both homes are holding this consistently."] if is_strong else [],
+            "percent":          state["percent"],
         }
-        tpl = _SECTION_TEMPLATES.get(state["id"], {})
-        if state["is_strength"] and tpl.get("strength"):
-            entry["strength_text"] = tpl["strength"]
-        if state["is_flagged"] and tpl.get("challenge"):
-            entry["challenge_text"] = tpl["challenge"]
-            entry["recommendations"] = tpl.get("recommendations") or []
         sections_out.append(entry)
 
-    # ---- summary counters ----
     flagged_names = [s["name"] for s in sections_out if s["is_flagged"]]
     strength_names = [s["name"] for s in sections_out if s["is_strength"]]
 
-    # ---- journey layer (SA CoParents narrative structure) ----
+    # v2 journey (score-card style)
     journey = build_journey_report(
         parent_name=parent_name,
         child_name=child_name,
@@ -164,16 +163,16 @@ def build_deep_dive_report(
     }
 
     return {
-        "generated_at": _now_iso(),
+        "generated_at":      _now_iso(),
         "deep_dive_version": DEEP_DIVE_VERSION,
-        "cover": journey["cover"],
+        "cover":             journey["cover"],
         "profile": {
-            "school_setting":  responses.get("s1_school_setting"),
-            "grade_level":     responses.get("s1_grade_level"),
-            "school_state":    responses.get("s1_school_state"),
-            "is_texas":        scored["is_texas"],
-            "concerns":        concerns_selected,
-            "concern_notes":   concern_notes,
+            "school_setting":  "",  # retired in v2 but kept in payload
+            "grade_level":     "",
+            "school_state":    "",
+            "is_texas":        False,
+            "concerns":        [],
+            "concern_notes":   "",
         },
         "summary": {
             "answered_sections":  scored["totals"]["answered"],
@@ -182,22 +181,22 @@ def build_deep_dive_report(
             "flagged_names":      flagged_names,
             "strength_names":     strength_names,
         },
-        "sections": sections_out,
-        # SA CoParents journey layer
-        "overview": journey["overview"],
-        "support_summary": journey["support_summary"],
-        "child_profile": journey["child_profile"],
+        "sections":          sections_out,
+        "score_card":        journey["score_card"],
+        "overview":          journey["overview"],
+        "support_summary":   journey["support_summary"],
+        "child_profile":     journey["child_profile"],
         "school_involvement": journey["school_involvement"],
         "co_parenting_assessment": journey["co_parenting_assessment"],
-        "alignment_areas": journey["alignment_areas"],
-        "attention_areas": journey["attention_areas"],
-        "support_level": journey["support_level"],
+        "alignment_areas":   journey["alignment_areas"],
+        "attention_areas":   journey["attention_areas"],
+        "support_level":     journey["support_level"],
         "practical_options": journey["practical_options"],
-        "action_plan": journey["action_plan"],
+        "action_plan":       journey["action_plan"],
         "foundation_statement": journey["foundation_statement"],
         "questions_for_school_or_parent": journey["questions_for_school_or_parent"],
-        "final_summary": journey["final_summary"],
-        "disclaimer": journey["disclaimer"],
+        "final_summary":     journey["final_summary"],
+        "disclaimer":        journey["disclaimer"],
     }
 
 

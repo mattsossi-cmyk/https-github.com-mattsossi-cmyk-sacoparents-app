@@ -95,9 +95,15 @@ def _compare_text(a: Any, b: Any) -> Dict[str, Any]:
     return out
 
 
+def _is_numeric_type(t: Any) -> bool:
+    """v1 used "likert" (1-5); v2 uses "alignment" (0-4). Both are numeric
+    scales and share the same compare semantics."""
+    return t in ("likert", "alignment")
+
+
 def _compare_item(spec: Dict[str, Any], iid: str, a_val: Any, b_val: Any) -> Dict[str, Any]:
     t = spec.get("type")
-    if t == "likert":
+    if _is_numeric_type(t):
         cmp = _compare_likert(a_val, b_val)
     elif t == "single":
         cmp = _compare_single(a_val, b_val)
@@ -129,7 +135,7 @@ def _highlight_score(section_num: int, item: Dict[str, Any]) -> Optional[float]:
     if align in {"divergent", "insufficient", "one_only"}:
         return None
     weight = 1.0 + section_num * 0.05
-    if t == "likert":
+    if _is_numeric_type(t):
         a = (item.get("parent_a") or {}).get("value")
         b = (item.get("parent_b") or {}).get("value")
         if not (isinstance(a, int) and isinstance(b, int)):
@@ -175,7 +181,7 @@ def _extract_highlights(sections: List[Dict[str, Any]], limit: int = 5) -> List[
             "type":           item.get("type"),
         }
         t = item.get("type")
-        if t == "likert":
+        if _is_numeric_type(t):
             a = (item.get("parent_a") or {}).get("value")
             b = (item.get("parent_b") or {}).get("value")
             h["parent_a_value"] = a
@@ -231,7 +237,7 @@ def _extract_alignment_lists(sections: List[Dict[str, Any]]) -> Dict[str, List[D
             b = (item.get("parent_b") or {}).get("value")
 
             # --- Shared priorities: both explicitly flagged this as important ---
-            if t == "likert" and isinstance(a, int) and isinstance(b, int) and a >= 4 and b >= 4:
+            if _is_numeric_type(t) and isinstance(a, int) and isinstance(b, int) and a >= 4 and b >= 4:
                 shared.append(_row(sec, item, {
                     "parent_a_value": a,
                     "parent_b_value": b,
@@ -250,7 +256,7 @@ def _extract_alignment_lists(sections: List[Dict[str, Any]]) -> Dict[str, List[D
 
             # --- Points for discussion: near-alignment, worth syncing on ---
             if align == "close":
-                if t == "likert" and isinstance(a, int) and isinstance(b, int):
+                if _is_numeric_type(t) and isinstance(a, int) and isinstance(b, int):
                     discuss.append(_row(sec, item, {
                         "parent_a_value": a,
                         "parent_b_value": b,
@@ -273,7 +279,7 @@ def _extract_alignment_lists(sections: List[Dict[str, Any]]) -> Dict[str, List[D
 
             # --- Questions for mediation: divergent items, neutralized as questions ---
             if align == "divergent":
-                if t == "likert" and isinstance(a, int) and isinstance(b, int):
+                if _is_numeric_type(t) and isinstance(a, int) and isinstance(b, int):
                     q_row = _row(sec, item, {
                         "parent_a_value": a,
                         "parent_b_value": b,

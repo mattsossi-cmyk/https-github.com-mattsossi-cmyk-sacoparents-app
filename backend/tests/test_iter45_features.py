@@ -98,8 +98,10 @@ def _get_schema_keys(client, prefix):
             continue
         sec_id = s.get("id")
         for item in s.get("items", []):
-            if item.get("type") == "likert":
-                keys.append((f"{sec_id}_{item['id']}", 4))
+            if item.get("type") in ("likert", "alignment"):
+                scale = item.get("scale") or [1, 2, 3, 4, 5]
+                top = max(scale) if scale else 5
+                keys.append((f"{sec_id}_{item['id']}", top))
             elif item.get("type") == "single":
                 opts = item.get("options") or []
                 if opts:
