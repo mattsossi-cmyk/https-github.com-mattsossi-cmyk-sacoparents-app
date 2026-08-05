@@ -1,6 +1,14 @@
 # SA CoParents — PRD
 
 
+- **Iteration 72 — Narrative Rebuild, Long-Streak Badges, Signature QR (2026-02-06)**:
+  - **Narrative Rebuild (P0)**: Both v2 Educational and Psychological Deep Dive reports now return `parts_narrative` (5 items — one per part), `opening_story`, and `closing_story`. Each per-part item includes score/band/band_headline, band-driven prose, up to 2 concrete strengths (items scored 3-4), up to 2 growth items (items scored 0-1), and a child-focused reflection line. Shared helper: `deep_dive_narrative.py`. PDF export via `journey_pdf.render_parts_narrative`. Frontend component: `DeepDivePartsNarrative.jsx` — the retired v2 "coming next iteration" banners are gone on both report pages.
+  - **Long-Streak Badges (P0)**: Added `month_streak_30` (30-day) and `hundred_day_streak` (100-day) wall badges — both lifetime-deduped. Wired into `progress_dashboard_routes.mark_visit` alongside the existing `week_streak_7`. Shown in the wall feed and included in the weekly Cheer Digest via `BADGE_LABELS`. Helpers: `maybe_log_month_streak`, `maybe_log_hundred_day_streak` in `wall_utils.py`.
+  - **Signature QR (P0)**: Every signed PDF now stamps a 12x12mm QR (with "Scan to verify" micro-label) beside the signature line. The QR resolves to `/verify/{sig_id}?n=<name>&t=<ts>&note=<note>` where `sig_id = sha256("SIGNATURE_VERIFY_SECRET|name|ts|note")[:16]`. Any tampering with the URL params breaks the hash. New `GET /api/verify/{sig_id}` endpoint (in `signature_verify_routes.py`) re-hashes and returns `{untampered: bool, signed_by, signed_at, signed_note}`. New public React page `/verify/:sig_id` displays a green "Untampered ✓" card or a red "Could not verify" card. QR generation via `qrcode[pil]==8.2` — added to `requirements.txt`.
+  - Regression suite `/app/backend/tests/test_iter72_narrative_streak_qr.py` — 16 tests, all pass. Testing agent iteration 51 also passed 23/23 live-API + full frontend flow.
+
+
+
 - **Iteration 71 — Compare Matrix, Framework PDF link, Situation dual highlight (2026-02-06)**:
   - **Compare Matrix (P0)**: Added a compact 25-question side-by-side matrix on the Educational + Psychological Deep Dive compare views (opt-in via `pathway.showMatrix`). Rendered above the per-section detail cards, grouped by the 5 parts, with columns: #, Question, Parent A score, Parent B score, Gap pill (0-1 green / 2 purple / 3-4 red) and a legend. Only numeric (`alignment`/`likert`) items render; sections without numeric items are skipped. Medical compare intentionally opts out.
   - Component lives inline in `/app/frontend/src/components/deepdive/DeepDiveCompareView.jsx` (`AlignmentMatrix` + `GapCell`). Testids: `edu-deep-compare-matrix`, `psych-deep-compare-matrix`, `-matrix-legend`, `-matrix-section-<id>`, `-matrix-row/-a/-b/-gap-<section>-<item>`.
