@@ -31,6 +31,8 @@ BADGE_FIRST_COMPARE = "first_compare"
 BADGE_HIGH_ALIGNMENT_90 = "high_alignment_90"
 BADGE_COMMUNICATION_MASTER = "communication_master"
 BADGE_WEEK_STREAK_7 = "week_streak_7"
+BADGE_MONTH_STREAK_30 = "month_streak_30"
+BADGE_HUNDRED_DAY_STREAK = "hundred_day_streak"
 
 _ANON_SALT_ENV = "WALL_ANON_SALT"
 
@@ -41,12 +43,22 @@ BADGE_LABELS: Dict[str, str] = {
     BADGE_HIGH_ALIGNMENT_90:    "hit 90%+ alignment with their co-parent.",
     BADGE_COMMUNICATION_MASTER: "completed every mediation-prep section — Communication Master.",
     BADGE_WEEK_STREAK_7:        "showed up 7 days in a row — Consistent Coparent.",
+    BADGE_MONTH_STREAK_30:      "showed up 30 days in a row — Month of Steadiness.",
+    BADGE_HUNDRED_DAY_STREAK:   "showed up 100 days in a row — Century of Care.",
 }
 
 # Badges we only ever want to log once per parent (life-time). Others use a
 # 24-hour de-dupe so a flicker back-and-forth doesn't spam the wall but a
-# re-earn a week later still shows up.
-LIFETIME_BADGES = frozenset({BADGE_FIRST_COMPARE, BADGE_COMMUNICATION_MASTER})
+# re-earn a week later still shows up. The 30- and 100-day streaks are so
+# rare (and represent so much sustained work) that we treat them as
+# lifetime — even if the streak breaks and is rebuilt, the *first* time a
+# parent hit it is the achievement worth celebrating.
+LIFETIME_BADGES = frozenset({
+    BADGE_FIRST_COMPARE,
+    BADGE_COMMUNICATION_MASTER,
+    BADGE_MONTH_STREAK_30,
+    BADGE_HUNDRED_DAY_STREAK,
+})
 
 
 def anon_hash(user_id: str) -> str:
@@ -180,6 +192,31 @@ async def maybe_log_week_streak(db: AsyncIOMotorDatabase, user_id: str,
         return
     try:
         await log_event_once(db, user_id, BADGE_WEEK_STREAK_7)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+async def maybe_log_month_streak(db: AsyncIOMotorDatabase, user_id: str,
+                                 streak_days: int) -> None:
+    """Log the 30-day streak badge when the parent first hits a full
+    month of consecutive dashboard visits. Lifetime — never re-logs."""
+    if streak_days < 30:
+        return
+    try:
+        await log_event_once(db, user_id, BADGE_MONTH_STREAK_30)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+async def maybe_log_hundred_day_streak(db: AsyncIOMotorDatabase, user_id: str,
+                                       streak_days: int) -> None:
+    """Log the 100-day streak badge when the parent first hits a full
+    hundred consecutive days of dashboard visits. Lifetime — never
+    re-logs. This one is rare and worth marking permanently."""
+    if streak_days < 100:
+        return
+    try:
+        await log_event_once(db, user_id, BADGE_HUNDRED_DAY_STREAK)
     except Exception:  # noqa: BLE001
         pass
 

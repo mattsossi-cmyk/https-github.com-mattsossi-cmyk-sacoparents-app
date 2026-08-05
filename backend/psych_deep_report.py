@@ -195,6 +195,9 @@ def build_deep_dive_report(*, parent_name: Optional[str], child_name: Optional[s
         "foundation_statement": journey["foundation_statement"],
         "questions_for_school_or_parent": journey["questions_for_school_or_parent"],
         "final_summary":     journey["final_summary"],
+        "parts_narrative":   journey.get("parts_narrative") or [],
+        "opening_story":     journey.get("opening_story") or "",
+        "closing_story":     journey.get("closing_story") or "",
         "disclaimer":        journey["disclaimer"],
     }
 

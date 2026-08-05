@@ -22,7 +22,62 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from edu_deep_questions import DEEP_DIVE_SECTIONS
 from edu_deep_scoring import score_deep_dive
+from deep_dive_narrative import (
+    build_part_narratives,
+    build_opening_story,
+    build_closing_story,
+)
+
+
+# Band-driven per-part narrative copy. `body` is a format string with a
+# `{name}` placeholder for the part's display name.
+_EDU_BAND_NARRATIVES: Dict[str, Dict[str, str]] = {
+    "high": {
+        "headline": "Steady — keep protecting this",
+        "body": (
+            "'{name}' is a genuine strength. Both homes appear to hold "
+            "this consistently, which is exactly the kind of predictability "
+            "that lets a child with special needs settle into learning."
+        ),
+    },
+    "moderate": {
+        "headline": "Developing — one small sync away",
+        "body": (
+            "'{name}' is developing. Some items are held identically "
+            "between homes; others are slipping. Pick the single item "
+            "you scored lowest and target it for the next 30 days — "
+            "small syncs cascade."
+        ),
+    },
+    "low": {
+        "headline": "Needs attention — start here",
+        "body": (
+            "'{name}' is where the child is most likely to feel whiplash "
+            "between the two homes. It shows up as anxiety before school, "
+            "harder homework nights, or slipping accommodations. Even one "
+            "small alignment here creates a visibly calmer child."
+        ),
+    },
+    "unrated": {
+        "headline": "Not yet scored",
+        "body": (
+            "'{name}' isn't scored yet — return to the assessment and "
+            "answer the five items in this part to unlock its story."
+        ),
+    },
+}
+
+# Child-focused reflection sentences that tie each part to what the
+# child actually experiences at home / school.
+_EDU_CHILD_REFLECTION = {
+    "p1": "For your child, this shows up as whether they can love both homes without guilt.",
+    "p2": "For your child, this shows up as how safe they feel telling both parents the same thing.",
+    "p3": "For your child, this shows up as whether their IEP travels with them or gets rewritten each week.",
+    "p4": "For your child, this shows up as whether their brain gets to relax into a predictable routine.",
+    "p5": "For your child, this shows up as whether daily life feels boring in the best way — reliable.",
+}
 
 
 DISCLAIMER = (
@@ -82,6 +137,21 @@ def build_journey_report(*, parent_name: Optional[str], child_name: Optional[str
         alignment_areas = ["You have started measuring alignment — that itself is progress."]
 
     support_level = _support_level(scored)
+
+    parts_narrative = build_part_narratives(
+        sections_spec=DEEP_DIVE_SECTIONS,
+        scored_sections=scored["sections"],
+        responses=responses or {},
+        band_narratives=_EDU_BAND_NARRATIVES,
+        child_reflection_by_part=_EDU_CHILD_REFLECTION,
+    )
+    opening_story = build_opening_story(
+        parent_name=parent_name, child_name=child_name,
+        scored=scored, pathway_label="Educational Alignment Assessment",
+    )
+    closing_story = build_closing_story(
+        scored=scored, pathway_label="Educational Alignment Assessment",
+    )
 
     return {
         "cover": {
@@ -144,6 +214,9 @@ def build_journey_report(*, parent_name: Optional[str], child_name: Optional[str
             "When will we review whether alignment improved?",
         ],
         "final_summary": FINAL_SUMMARY,
+        "parts_narrative": parts_narrative,
+        "opening_story":   opening_story,
+        "closing_story":   closing_story,
         "disclaimer":    DISCLAIMER,
     }
 

@@ -1,0 +1,24 @@
+{
+  "summary": "Iteration 72 (Narrative Rebuild + Long-Streak Badges + Signature QR) fully validated. Backend: 16/16 iter72 unit tests pass + 7/7 live-API tests (narrative fields present, verify OK/tampered/missing paths correct, signed edu+psych PDFs render). Frontend: verify page renders OK card for valid sig and tampered card for altered name; both v2 report pages render parts_narrative + 5 per-part cards (p1..p5) + opening + closing, and v2 banners are gone (psych framework PDF link still present).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter72_narrative_streak_qr.py",
+    "/app/backend/tests/test_iter72_live_api.py",
+    "/app/test_reports/pytest/iter72_results.xml",
+    "/app/test_reports/pytest/iter72_live_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "signature_id is intentionally truncated to 16 chars in pdf_signing.py (_SIG_ID_LEN=16) — review request hint suggested full sha256; that mismatch is a doc issue, not a bug. Documented in test_iter72_live_api.py.",
+    "Route naming discrepancy: review request references /api/edu-deep/me/report and POST /report/pdf, but actual server exposes /api/edu-deep/report/generate (POST) and /api/edu-deep/report/pdf (GET). Not a functional bug — just outdated route notes.",
+    "sign_kwargs signature: only accepts (sign, name, note) — no separate signed_by/signed_note POST params on the PDF endpoint (as review claimed). Signed_by is derived server-side from the authenticated user (user.name). Consistent across edu + psych."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter72_live_api.py"],
+  "success_rate": {"backend": "100% (23/23)", "frontend": "100% (verify OK + tampered, edu+psych narrative all testids present, no v2 banners)"},
+  "test_credentials": "parent1@test.com / TestPass123! (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "test_iter72_live_api.py seeds all 25 p*_q* answers (value=3) for parent1@test.com in both edu-deep and psych-deep, generates reports, then verifies narrative + signed PDF.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "For sig_id: use compute_signature_id() → SHA256(secret|name|ts|note)[:16] (16-char truncated). Fallback secret when SIGNATURE_VERIFY_SECRET env unset: 'sacop-signature-verify-secret-dev-only'. Route facts: reports via POST /api/{edu|psych}-deep/report/generate; PDF via GET /api/{edu|psych}-deep/report/pdf?sign=true&note=... (signed_by taken from auth). Verify endpoint: GET /api/verify/{sig_id}?n=&t=&note=. Legal-ack modal overlays the /verify page but DOM testids still resolve — use query_selector, not visual checks."
+}

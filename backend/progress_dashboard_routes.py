@@ -29,6 +29,8 @@ from wall_utils import (
     build_weekly_cheer_digest,
     maybe_log_communication_master,
     maybe_log_foundation_ready,
+    maybe_log_hundred_day_streak,
+    maybe_log_month_streak,
     maybe_log_week_streak,
 )
 
@@ -315,6 +317,9 @@ async def get_progress(user: UserPublic = Depends(get_current_user),
         )
         # 7-day consistent-visit streak.
         await maybe_log_week_streak(db, user.user_id, streak)
+        # 30-day and 100-day long-haul streaks — lifetime badges.
+        await maybe_log_month_streak(db, user.user_id, streak)
+        await maybe_log_hundred_day_streak(db, user.user_id, streak)
     except Exception:  # noqa: BLE001
         pass
     return body

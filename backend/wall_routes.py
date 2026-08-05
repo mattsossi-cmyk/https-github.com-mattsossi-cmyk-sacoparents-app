@@ -47,6 +47,8 @@ from wall_utils import (
     maybe_log_first_compare,
     maybe_log_foundation_ready,
     maybe_log_high_alignment,
+    maybe_log_hundred_day_streak,
+    maybe_log_month_streak,
     maybe_log_week_streak,
     set_opt_in,
 )
@@ -59,6 +61,8 @@ __all__ = [
     "maybe_log_high_alignment",
     "maybe_log_communication_master",
     "maybe_log_week_streak",
+    "maybe_log_month_streak",
+    "maybe_log_hundred_day_streak",
 ]
 
 

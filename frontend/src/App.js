@@ -46,6 +46,7 @@ import InviteAccept from "@/pages/InviteAccept";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
+import VerifySignature from "@/pages/VerifySignature";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
 import SafetyAssessment from "@/pages/SafetyAssessment";
@@ -103,6 +104,7 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/verify/:sig_id" element={<VerifySignature />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
         <Route path="/shared/coparenting/:token" element={<SharedCoParentingReport />} />

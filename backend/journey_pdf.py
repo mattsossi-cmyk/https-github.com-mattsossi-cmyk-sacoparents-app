@@ -20,6 +20,66 @@ _RATING_COLORS = {
 }
 
 
+_BAND_COLORS = {
+    "high":     (31, 92, 59),
+    "moderate": (170, 116, 40),
+    "low":      (176, 42, 42),
+    "unrated":  (110, 100, 130),
+}
+
+
+def render_parts_narrative(pdf, report: Dict[str, Any]) -> None:
+    """Render the per-part storytelling block used by both Edu and Psych
+    v2 report PDFs. Emits the opening story, one story card per scored
+    part (strengths + growth items + child reflection), and the closing
+    story. No-op when the report doesn't carry the fields (older tests)."""
+    parts = report.get("parts_narrative") or []
+    opening = report.get("opening_story") or ""
+    closing = report.get("closing_story") or ""
+
+    if not (parts or opening or closing):
+        return
+
+    _section_break(pdf)
+    pdf.h2("Your story, part by part")
+    if opening:
+        pdf.body(opening)
+        pdf.ln(0.5)
+
+    for part in parts:
+        pdf.h3(f"Part {part.get('number')}. {part.get('name')}")
+        color = _BAND_COLORS.get(part.get("band"), (61, 26, 120))
+        percent = part.get("percent", 0)
+        if part.get("answered"):
+            pdf.pill(
+                f"{part.get('band_headline', '')} · {percent}%",
+                color=color,
+            )
+        else:
+            pdf.pill(part.get("band_headline") or "Not yet scored", color=color)
+        if part.get("narrative"):
+            pdf.body(part["narrative"])
+        strengths = part.get("strengths") or []
+        growth = part.get("growth") or []
+        if strengths:
+            pdf.set_font("Helvetica", "B", 8.8); pdf.set_text_color(31, 92, 59)
+            pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 4.2, _safe("Strengths in this part"))
+            pdf.set_text_color(30, 24, 54)
+            pdf.bullets([f"{s['prompt']} (you scored {s['value']}/4)" for s in strengths])
+        if growth:
+            pdf.set_font("Helvetica", "B", 8.8); pdf.set_text_color(176, 42, 42)
+            pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 4.2, _safe("Where to grow"))
+            pdf.set_text_color(30, 24, 54)
+            pdf.bullets([f"{g['prompt']} (you scored {g['value']}/4)" for g in growth])
+        if part.get("child_reflection"):
+            pdf.small(part["child_reflection"])
+        pdf.ln(1)
+
+    if closing:
+        pdf.h3("A note to close")
+        pdf.body(closing)
+
+
 def _pdf_class(product_name: str, footer_name: str):
     """Build a header/footer-branded subclass for a product."""
 
@@ -97,6 +157,9 @@ def build_journey_pdf(*, product_name: str, footer_name: str, headline: str,
         pdf.ln(0.5)
     if support.get("overall_narrative"):
         pdf.h3("Overall"); pdf.body(support["overall_narrative"])
+
+    # Rich per-part storytelling (opening, one card per part, closing).
+    render_parts_narrative(pdf, report)
 
     if report.get("ai_summary"):
         _section_break(pdf)

@@ -93,6 +93,12 @@ def stamp_signature_line(pdf: Any) -> None:
     session"). We paint above the existing footer callers wrote so
     their branding isn't disrupted; a single grey rule sits between
     the two.
+
+    Iteration 72: when the signature tuple is present, a tiny 14x14mm
+    QR code is stamped on the right-hand side of the signature line.
+    The QR resolves to a public verify page whose id is a
+    tamper-evident hash of `(signed_by, signed_at, signed_note)`. See
+    `pdf_signing.compute_signature_id`.
     """
     signed_by = getattr(pdf, "_signed_by", None)
     signed_at = getattr(pdf, "_signed_at", None)
@@ -154,6 +160,59 @@ def stamp_signature_line(pdf: Any) -> None:
         pdf.cell(pdf.epw, 3.6, line, align="C")
 
     # Restore prior state so downstream footer renderers stay unaffected.
+    if prev_font_family:
+        pdf.set_font(prev_font_family, prev_font_style or "", prev_font_size or 10)
+    pdf.set_text_color(0, 0, 0)
+
+    # Tamper-evident verify QR — drawn once per page, top-right of the
+    # signature block. Non-fatal: any failure (missing pillow, PDF
+    # engine hiccup) is swallowed so the report still renders.
+    try:
+        _stamp_signature_qr(pdf, signed_by, signed_at, signed_note, base_y)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _stamp_signature_qr(pdf: Any, signed_by: str, signed_at: str,
+                        signed_note: Any, base_y: float) -> None:
+    """Draw a small QR code linking to the public verify URL for this
+    signed PDF. The QR is a tamper-evident marker: the target page
+    re-hashes the tuple and only shows 'Untampered' when the hash
+    matches."""
+    from pdf_signing import compute_signature_id, _build_verify_url
+
+    note = (signed_note or "").strip() if isinstance(signed_note, str) else None
+    sig_id = compute_signature_id(signed_by, signed_at, note)
+    verify_url = _build_verify_url(sig_id, signed_by, signed_at, note)
+
+    # Late imports to keep the base module import lightweight.
+    import io
+    import qrcode
+
+    img = qrcode.make(verify_url, box_size=8, border=1)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    # 12x12mm QR anchored inside the right margin, aligned with the
+    # signature baseline. Small enough to feel like a stamp, big enough
+    # for a phone camera to resolve at close range.
+    qr_size = 12.0
+    qr_x = pdf.w - pdf.r_margin - qr_size
+    qr_y = base_y - qr_size - 1.5
+
+    prev_font_family = pdf.font_family
+    prev_font_style = pdf.font_style
+    prev_font_size = pdf.font_size_pt
+
+    pdf.image(buf, x=qr_x, y=qr_y, w=qr_size, h=qr_size)
+    # Micro-label under the QR so the scanner knows what they're
+    # looking at without needing to actually scan it.
+    pdf.set_font("Helvetica", "", 5.6)
+    pdf.set_text_color(133, 126, 156)
+    pdf.set_xy(qr_x - 6, qr_y + qr_size + 0.2)
+    pdf.cell(qr_size + 12, 2.6, "Scan to verify", align="C")
+
     if prev_font_family:
         pdf.set_font(prev_font_family, prev_font_style or "", prev_font_size or 10)
     pdf.set_text_color(0, 0, 0)

@@ -196,6 +196,9 @@ def build_deep_dive_report(
         "foundation_statement": journey["foundation_statement"],
         "questions_for_school_or_parent": journey["questions_for_school_or_parent"],
         "final_summary":     journey["final_summary"],
+        "parts_narrative":   journey.get("parts_narrative") or [],
+        "opening_story":     journey.get("opening_story") or "",
+        "closing_story":     journey.get("closing_story") or "",
         "disclaimer":        journey["disclaimer"],
     }
 
@@ -340,6 +343,10 @@ def build_deep_dive_pdf(*, report: Dict[str, Any],
     if support_summary.get("overall_narrative"):
         pdf.h3("Overall")
         pdf.body(support_summary["overall_narrative"])
+
+    # Rich per-part storytelling (opening, one card per part, closing).
+    from journey_pdf import render_parts_narrative
+    render_parts_narrative(pdf, report)
 
     # AI executive summary (if present)
     if report.get("ai_summary"):

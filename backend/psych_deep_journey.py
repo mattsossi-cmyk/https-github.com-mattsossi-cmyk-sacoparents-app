@@ -12,7 +12,59 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from psych_deep_questions import DEEP_DIVE_SECTIONS
 from psych_deep_scoring import score_deep_dive
+from deep_dive_narrative import (
+    build_part_narratives,
+    build_opening_story,
+    build_closing_story,
+)
+
+
+_PSYCH_BAND_NARRATIVES: Dict[str, Dict[str, str]] = {
+    "high": {
+        "headline": "Steady — the climate is holding",
+        "body": (
+            "'{name}' is a strength. Both homes are giving the child a "
+            "coherent emotional climate here, and that climate is the "
+            "single biggest predictor of long-term well-being after a "
+            "separation."
+        ),
+    },
+    "moderate": {
+        "headline": "Developing — the child is starting to feel it",
+        "body": (
+            "'{name}' is developing. There's care in both homes, but "
+            "inconsistencies are quietly reaching the child. Pick the "
+            "single item you scored lowest and treat it as a 30-day "
+            "project — regulated adults produce a regulated child."
+        ),
+    },
+    "low": {
+        "headline": "Needs attention — this is showing up in the child",
+        "body": (
+            "'{name}' is where the child is most likely absorbing the "
+            "adults' stress. It often appears as anxiety, sleep changes, "
+            "withdrawal, or acting out — not because the child is the "
+            "problem, but because the emotional input is inconsistent."
+        ),
+    },
+    "unrated": {
+        "headline": "Not yet scored",
+        "body": (
+            "'{name}' isn't scored yet — return to the assessment and "
+            "answer the five items in this part to unlock its story."
+        ),
+    },
+}
+
+_PSYCH_CHILD_REFLECTION = {
+    "p1": "For your child, this shows up as whether they can predict how the adults will react.",
+    "p2": "For your child, this shows up as whether their home feels emotionally safe or emotionally loud.",
+    "p3": "For your child, this shows up as whether therapy is a shared project or a battleground.",
+    "p4": "For your child, this shows up as whether their attachment feels protected during transitions.",
+    "p5": "For your child, this shows up as which emotional patterns they'll carry into their own adult life.",
+}
 
 
 DISCLAIMER = (
@@ -62,6 +114,21 @@ def build_journey_report(*, parent_name: Optional[str], child_name: Optional[str
     attention_areas = [a["area"] for a in rating_areas if a["rating"] == "Needs Attention"]
     if not alignment_areas and not attention_areas:
         alignment_areas = ["You've started measuring emotional alignment — that itself is progress."]
+
+    parts_narrative = build_part_narratives(
+        sections_spec=DEEP_DIVE_SECTIONS,
+        scored_sections=scored["sections"],
+        responses=responses or {},
+        band_narratives=_PSYCH_BAND_NARRATIVES,
+        child_reflection_by_part=_PSYCH_CHILD_REFLECTION,
+    )
+    opening_story = build_opening_story(
+        parent_name=parent_name, child_name=child_name,
+        scored=scored, pathway_label="Psychological Alignment Assessment",
+    )
+    closing_story = build_closing_story(
+        scored=scored, pathway_label="Psychological Alignment Assessment",
+    )
 
     return {
         "cover": {
@@ -124,6 +191,9 @@ def build_journey_report(*, parent_name: Optional[str], child_name: Optional[str
             "When will we check in on whether the child's mood, sleep, or behaviour improved?",
         ],
         "final_summary":   FINAL_SUMMARY,
+        "parts_narrative": parts_narrative,
+        "opening_story":   opening_story,
+        "closing_story":   closing_story,
         "disclaimer":      DISCLAIMER,
     }
 

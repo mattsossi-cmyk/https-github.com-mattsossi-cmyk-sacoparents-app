@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachStrip";
+import DeepDivePartsNarrative from "../components/deepdive/DeepDivePartsNarrative";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 import SignDownloadToggle from "../components/SignDownloadToggle";
@@ -260,19 +261,17 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
               </div>
             )}
 
-            {/* Format-change banner (v2 rollout) */}
-            <div
-              className="mt-4 rounded-2xl border border-[#F0D9A8] bg-[#FFF9EB] px-4 py-3 text-xs text-[#8A5B00]"
-              data-testid="edu-report-v2-banner"
-            >
-              <strong>New format.</strong> The Educational Deep Dive is now a
-              25-question Special-Education &amp; ADHD alignment assessment.
-              The full narrative journey (child profile, school involvement,
-              rich recommendations) is being rebuilt to match — it will return
-              in the next release.
-            </div>
+            {/* Format-change banner retired — v2 rich narrative below. */}
           </SectionCard>
         )}
+
+        {/* Rich per-part storytelling (opening + 5 parts + closing). */}
+        <DeepDivePartsNarrative
+          parts={report.parts_narrative || []}
+          opening={report.opening_story || ""}
+          closing={report.closing_story || ""}
+          testidPrefix="edu-report"
+        />
 
         {/* 1. Report Overview */}
         <SectionCard testid="edu-report-overview">
