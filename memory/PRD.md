@@ -2,6 +2,15 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 68 — Dashboard "Step 1" situation opener + Preparation Modules jump-menu (2026-02-05)**:
+  - Replaced the generic time-of-day greeting ("Good morning demo") with a dedicated hero card labelled **Step 1** — "What best describes your situation, {name}?" — surfaced as the first thing above the fold on `/dashboard`. Mirrors the Landing-page opener exactly (six choices: We generally cooperate · Communication is difficult · Ongoing high conflict · Safety/family-violence concerns · Special-needs child · Preparing for mediation).
+  - Three of the six choices navigate directly (`/safety-assessment`, `/special-needs-v2`); the other three route to `#next-step` (the NextStepJourney anchor lower on the same page).
+  - Added a new **Preparation Modules** jump-menu card below NextStepJourney listing the six documents the app can build a PDF for — Declaration Statement, Mediation Summary, Family Violence & Safety Assessment, Educational Assessment, Medical Assessment, Psychological Assessment — each a one-tap deep link.
+  - The old "Your space" hero card (day-of-prep chip + progress bar + step checklist) stays inside the "Explore more tools" collapsible with the plain time-of-day greeting restored (test-id `dashboard-greeting-secondary`).
+  - No backend changes; 54/6 pytest across iter51-67 still green.
+
+
+
 - **Iteration 67 — Educational Deep Dive rebuilt as Special-Ed / ADHD Alignment Assessment (2026-02-05)**:
   - Retired the v1 12-section 60-item diagnostic. Replaced with a 5-part 25-item 0-4 likert alignment scorer, total /100 with three bands (High 81-100, Moderate 51-80, Low 0-50). Focus areas: Emotional Well-being, Communication, IEP/ARD, ADHD Routines, Logistics.
   - Backend files rewritten: `edu_deep_questions.py` (schema `edu-deep-2.0.0` + `is_v2_key`/`validate_answer`), `edu_deep_scoring.py` (`score_deep_dive` returns total/percent/band/next_steps/sections + backwards-compat `totals`/`is_texas`), `edu_deep_journey.py` (v2 score-card journey with rating areas, action plan, foundation statement), `edu_deep_report.py::build_deep_dive_report` now consumes v2 shape.

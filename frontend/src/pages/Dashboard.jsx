@@ -32,10 +32,59 @@ import {
   ArrowRight,
   Sprout,
   ExternalLink,
+  Handshake,
+  AlertTriangle,
+  ShieldCheck,
+  Baby,
+  Scale,
+  BookOpen,
+  Stethoscope,
+  Brain,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
 import { CheckCircle2, ChevronRight, ChevronDown, Shield, Sparkles, RefreshCcw, Users, Eye, Trophy } from "lucide-react";
+
+// Six situations that route the visitor to the safest / most relevant
+// next step. Mirrors the language and order used on the Landing page so
+// pre- and post-signup experiences feel identical.
+const INLINE_SITUATIONS = [
+  { key: "cooperate",     label: "We generally cooperate",
+    icon: <Handshake size={18} />,       route: "#next-step" },
+  { key: "difficult",     label: "Communication is difficult",
+    icon: <MessageCircle size={18} />,   route: "#next-step" },
+  { key: "high-conflict", label: "We experience ongoing high conflict",
+    icon: <AlertTriangle size={18} />,   route: "/safety-assessment" },
+  { key: "safety",        label: "I have safety or family-violence concerns",
+    icon: <ShieldCheck size={18} />,     route: "/safety-assessment" },
+  { key: "special-needs", label: "Our child has unique educational, psychological or medical needs",
+    icon: <Baby size={18} />,            route: "/special-needs-v2" },
+  { key: "mediation",     label: "I am preparing for mediation or court",
+    icon: <Scale size={18} />,           route: "#next-step" },
+];
+
+// The six preparation modules the app builds a PDF for. Rendered as a
+// jump-menu below the situation picker so parents can dive straight in.
+const PREP_MODULES = [
+  { key: "declaration",   label: "Declaration Statement",
+    hint: "A one-page statement of your child-focused position.",
+    icon: <FileText size={16} />,        route: "/summary" },
+  { key: "mediation-summary", label: "Mediation Summary",
+    hint: "Your polished, printable brief for the mediator.",
+    icon: <Scale size={16} />,           route: "/summary" },
+  { key: "safety-assessment", label: "Family Violence & Safety Assessment",
+    hint: "Private safety screen; recommends a communication pathway.",
+    icon: <ShieldCheck size={16} />,     route: "/safety-assessment" },
+  { key: "educational-assessment", label: "Educational Assessment",
+    hint: "25-item Special-Ed & ADHD alignment scorer.",
+    icon: <BookOpen size={16} />,        route: "/special-needs-v2/educational-deep-dive" },
+  { key: "medical-assessment", label: "Medical Assessment",
+    hint: "Medical-decision alignment deep dive.",
+    icon: <Stethoscope size={16} />,     route: "/special-needs-v2/medical-deep-dive" },
+  { key: "psychological-assessment", label: "Psychological Assessment",
+    hint: "Emotional / therapy-decision alignment deep dive.",
+    icon: <Brain size={16} />,           route: "/special-needs-v2/psychological-deep-dive" },
+];
 
 // Human-friendly labels for the compact Progress Report preview on the Dashboard.
 const REPORT_LABEL = {
@@ -345,14 +394,103 @@ export default function Dashboard() {
             picker. Renders only when localStorage has a chosen focus. */}
         <PickerChoicePill />
 
+        {/* Step 1 — "What best describes your situation?" opener.
+            Deliberately the FIRST thing above the fold so the greeting a
+            parent sees isn't a generic time-of-day but a targeted "let's
+            route you to the safest next step" prompt.  */}
+        <div
+          className="mt-4 rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8 shadow-sm"
+          data-testid="dashboard-step1-hero"
+        >
+          <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">
+            Step 1
+          </div>
+          <h1
+            className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight"
+            data-testid="dashboard-greeting"
+          >
+            What best describes your situation
+            {user?.name ? `, ${user.name.split(" ")[0]}?` : "?"}
+          </h1>
+          <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-2xl">
+            There are no wrong answers. Your choice routes you straight
+            to the safest and most relevant next step for your family.
+          </p>
+          <div
+            className="mt-5 grid sm:grid-cols-2 gap-2.5"
+            data-testid="dashboard-situation-inline-picker"
+          >
+            {INLINE_SITUATIONS.map((s) => (
+              <Link
+                key={s.key}
+                to={s.route}
+                className="group text-left rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-center gap-3"
+                data-testid={`dashboard-situation-${s.key}`}
+              >
+                <div className="shrink-0 w-9 h-9 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center group-hover:bg-[#3D1A78] group-hover:text-white transition-colors">
+                  {s.icon}
+                </div>
+                <span className="text-sm sm:text-[15px] text-[#1A1330] leading-snug">
+                  {s.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Primary "Do this next" home — auto-detects the parent's current
             stage on the 6-step linear journey and surfaces one big action.
-            Everything else on this page is a supporting reference. */}
-        <NextStepJourney
-          completed={completed}
-          summariesCount={summariesCount}
-          hasCertificate={pillarFlags.hasCertificate}
-        />
+            #next-step anchor is targeted by the situation picker above so
+            "cooperate / difficult / mediation" all scroll here. */}
+        <div id="next-step" className="mt-6">
+          <NextStepJourney
+            completed={completed}
+            summariesCount={summariesCount}
+            hasCertificate={pillarFlags.hasCertificate}
+          />
+        </div>
+
+        {/* Preparation modules jump-menu — six documents the app can
+            generate a downloadable PDF for. Deep-links let a returning
+            parent skip straight to the module they came here for. */}
+        <div
+          className="mt-6 rounded-3xl border border-[#E5E0EE] bg-[#FAF8FD] p-5 sm:p-6"
+          data-testid="dashboard-prep-modules"
+        >
+          <div className="flex items-baseline justify-between flex-wrap gap-2">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                Preparation modules
+              </div>
+              <div className="font-serif text-lg text-[#1A1330] mt-1">
+                Six documents the app can build for you
+              </div>
+            </div>
+            <div className="text-xs text-[#4B4567]">
+              Each one generates a downloadable PDF.
+            </div>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {PREP_MODULES.map((m) => (
+              <Link
+                key={m.key}
+                to={m.route}
+                className="group text-left rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-start gap-3"
+                data-testid={`dashboard-prep-module-${m.key}`}
+              >
+                <div className="shrink-0 w-8 h-8 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center group-hover:bg-[#3D1A78] group-hover:text-white transition-colors">
+                  {m.icon}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-[#1A1330] truncate">
+                    {m.label}
+                  </div>
+                  <div className="text-xs text-[#4B4567] mt-0.5">{m.hint}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
 
         {/* Five-milestone visual progress — small, high-signal ✓ pills that
             light up as parents complete Foundation, Child needs, Comms,
@@ -424,7 +562,10 @@ export default function Dashboard() {
                   </span>
                 )}
               </div>
-              <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] leading-tight" data-testid="dashboard-greeting">
+              <h1
+                className="font-serif text-4xl sm:text-5xl text-[#1A1330] leading-tight"
+                data-testid="dashboard-greeting-secondary"
+              >
                 {timeGreeting()}, {user?.name?.split(" ")[0] || "friend"}.
               </h1>
               <p className="text-[#4B4567] mt-3 max-w-lg leading-relaxed">
