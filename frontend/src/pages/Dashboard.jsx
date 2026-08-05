@@ -63,6 +63,41 @@ const INLINE_SITUATIONS = [
     icon: <Scale size={18} />,           route: "#next-step" },
 ];
 
+// Situation-memory storage.  We remember the parent's latest pick so
+// return visits can highlight the matching prep module in the jump-menu
+// and offer a one-tap "you chose X - change my answer" reset instead of
+// re-asking the question every login.  Persisted in localStorage so it
+// survives page refresh but never crosses devices (that's the correct
+// scope — a returning parent on the same browser).
+const SITUATION_KEY = "sacoparents_situation_choice_v1";
+
+function readSituation() {
+  try {
+    return window.localStorage.getItem(SITUATION_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+function saveSituation(key) {
+  try { window.localStorage.setItem(SITUATION_KEY, key); }
+  catch { /* private-mode / disabled storage — non-critical */ }
+}
+function clearSituation() {
+  try { window.localStorage.removeItem(SITUATION_KEY); }
+  catch { /* best-effort */ }
+}
+
+// Maps a situation key to the prep-module key that best matches it.  Used
+// to highlight the recommended module in the Preparation Modules card.
+const SITUATION_TO_RECOMMENDED_MODULE = {
+  "cooperate":     "mediation-summary",
+  "difficult":     "mediation-summary",
+  "high-conflict": "safety-assessment",
+  "safety":        "safety-assessment",
+  "special-needs": "educational-assessment",
+  "mediation":     "mediation-summary",
+};
+
 // The six preparation modules the app builds a PDF for. Rendered as a
 // jump-menu below the situation picker so parents can dive straight in.
 const PREP_MODULES = [
@@ -249,6 +284,21 @@ export default function Dashboard() {
   const [sncHighlights, setSncHighlights] = useState(null);
   const [deepDives, setDeepDives] = useState(null);
   const [compareStatus, setCompareStatus] = useState(null);
+  // Situation memory — reads the last situation the parent picked so
+  // we can highlight the matching prep module + show a "you chose X"
+  // reset chip instead of re-asking the same question every login.
+  const [situationChoice, setSituationChoice] = useState(readSituation);
+  const recommendedModule = situationChoice
+    ? SITUATION_TO_RECOMMENDED_MODULE[situationChoice] || null
+    : null;
+  const rememberSituation = (key) => {
+    saveSituation(key);
+    setSituationChoice(key);
+  };
+  const forgetSituation = () => {
+    clearSituation();
+    setSituationChoice(null);
+  };
 
   // First-time visitors: send them through the orientation walkthrough.
   useEffect(() => {
@@ -397,7 +447,9 @@ export default function Dashboard() {
         {/* Step 1 — "What best describes your situation?" opener.
             Deliberately the FIRST thing above the fold so the greeting a
             parent sees isn't a generic time-of-day but a targeted "let's
-            route you to the safest next step" prompt.  */}
+            route you to the safest next step" prompt.  Remembers the last
+            answer in localStorage so a returning parent gets a soft
+            "you chose X - change my answer" instead of the full grid. */}
         <div
           className="mt-4 rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8 shadow-sm"
           data-testid="dashboard-step1-hero"
@@ -412,30 +464,60 @@ export default function Dashboard() {
             What best describes your situation
             {user?.name ? `, ${user.name.split(" ")[0]}?` : "?"}
           </h1>
-          <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-2xl">
-            There are no wrong answers. Your choice routes you straight
-            to the safest and most relevant next step for your family.
-          </p>
-          <div
-            className="mt-5 grid sm:grid-cols-2 gap-2.5"
-            data-testid="dashboard-situation-inline-picker"
-          >
-            {INLINE_SITUATIONS.map((s) => (
-              <Link
-                key={s.key}
-                to={s.route}
-                className="group text-left rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-center gap-3"
-                data-testid={`dashboard-situation-${s.key}`}
+          {situationChoice ? (
+            <div
+              className="mt-4 flex items-center gap-3 flex-wrap"
+              data-testid="dashboard-situation-remembered"
+            >
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#EFE9F9] text-[#3D1A78] px-3 py-1.5 text-xs font-semibold">
+                {(() => {
+                  const meta = INLINE_SITUATIONS.find((s) => s.key === situationChoice);
+                  return meta ? (
+                    <>
+                      {meta.icon}
+                      <span>You chose: {meta.label}</span>
+                    </>
+                  ) : <span>Situation remembered</span>;
+                })()}
+              </div>
+              <button
+                type="button"
+                onClick={forgetSituation}
+                className="text-xs text-[#4B4567] hover:text-[#3D1A78] hover:underline"
+                data-testid="dashboard-situation-reset"
               >
-                <div className="shrink-0 w-9 h-9 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center group-hover:bg-[#3D1A78] group-hover:text-white transition-colors">
-                  {s.icon}
-                </div>
-                <span className="text-sm sm:text-[15px] text-[#1A1330] leading-snug">
-                  {s.label}
-                </span>
-              </Link>
-            ))}
-          </div>
+                Change my answer
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-2xl">
+                There are no wrong answers. Your choice routes you straight
+                to the safest and most relevant next step for your family.
+              </p>
+              <div
+                className="mt-5 grid sm:grid-cols-2 gap-2.5"
+                data-testid="dashboard-situation-inline-picker"
+              >
+                {INLINE_SITUATIONS.map((s) => (
+                  <Link
+                    key={s.key}
+                    to={s.route}
+                    onClick={() => rememberSituation(s.key)}
+                    className="group text-left rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-center gap-3"
+                    data-testid={`dashboard-situation-${s.key}`}
+                  >
+                    <div className="shrink-0 w-9 h-9 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center group-hover:bg-[#3D1A78] group-hover:text-white transition-colors">
+                      {s.icon}
+                    </div>
+                    <span className="text-sm sm:text-[15px] text-[#1A1330] leading-snug">
+                      {s.label}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Primary "Do this next" home — auto-detects the parent's current
@@ -471,24 +553,48 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {PREP_MODULES.map((m) => (
-              <Link
-                key={m.key}
-                to={m.route}
-                className="group text-left rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-start gap-3"
-                data-testid={`dashboard-prep-module-${m.key}`}
-              >
-                <div className="shrink-0 w-8 h-8 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center group-hover:bg-[#3D1A78] group-hover:text-white transition-colors">
-                  {m.icon}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-[#1A1330] truncate">
-                    {m.label}
+            {PREP_MODULES.map((m) => {
+              const isRec = recommendedModule === m.key;
+              return (
+                <Link
+                  key={m.key}
+                  to={m.route}
+                  className={`group text-left rounded-2xl px-4 py-3 transition-colors flex items-start gap-3 ${
+                    isRec
+                      ? "border-2 border-[#3D1A78] bg-white shadow-sm hover:bg-[#F7F4FC]"
+                      : "border border-[#E5E0EE] bg-white hover:border-[#3D1A78] hover:bg-[#F7F4FC]"
+                  }`}
+                  data-testid={`dashboard-prep-module-${m.key}`}
+                  data-recommended={isRec ? "true" : undefined}
+                >
+                  <div
+                    className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                      isRec
+                        ? "bg-[#3D1A78] text-white"
+                        : "bg-[#EFE9F9] text-[#3D1A78] group-hover:bg-[#3D1A78] group-hover:text-white"
+                    }`}
+                  >
+                    {m.icon}
                   </div>
-                  <div className="text-xs text-[#4B4567] mt-0.5">{m.hint}</div>
-                </div>
-              </Link>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="text-sm font-semibold text-[#1A1330] truncate">
+                        {m.label}
+                      </div>
+                      {isRec && (
+                        <span
+                          className="text-[9px] uppercase tracking-[0.16em] font-bold text-white bg-[#3D1A78] rounded-full px-2 py-0.5"
+                          data-testid={`dashboard-prep-module-${m.key}-recommended`}
+                        >
+                          Recommended for you
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-[#4B4567] mt-0.5">{m.hint}</div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 

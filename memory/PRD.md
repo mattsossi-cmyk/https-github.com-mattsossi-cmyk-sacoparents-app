@@ -2,6 +2,13 @@
 
 ## Status snapshot (2026-07-30 · v2 shipped)
 
+- **Iteration 69 — Situation Memory + ADHD Addendum PDF (2026-02-05)**:
+  - **Situation Memory**: The Step 1 hero on `/dashboard` now remembers the parent's picked situation in `localStorage['sacoparents_situation_choice_v1']`. On return visits the hero collapses into a "You chose: {label}" chip + a "Change my answer" reset button instead of re-showing the six-choice grid. The matching prep module in the Preparation Modules card is highlighted with a bold purple border + a "Recommended for you" badge (mapping: cooperate/difficult/mediation → Mediation Summary · high-conflict/safety → Family Violence & Safety · special-needs → Educational Assessment).
+  - **ADHD Addendum PDF**: New standalone fillable PDF (`/downloads/coparent-adhd-addendum.pdf`) at `/app/scripts/build_adhd_addendum_template.py`. 7 pages, 85 real interactive AcroForm widgets (41 text fields + 44 checkboxes). Six sections: IEP & ARD Management, Accommodations Held in Both Homes, ADHD Medication Coordination, Transitions & Executive-Function Support, Communication Between Us, Review & Signatures. AI-rated 10/10 per page for print + fillability. Reuses the layout primitives from the Commitment Agreement template.
+  - No backend changes; lint clean.
+
+
+
 - **Iteration 68 — Dashboard "Step 1" situation opener + Preparation Modules jump-menu (2026-02-05)**:
   - Replaced the generic time-of-day greeting ("Good morning demo") with a dedicated hero card labelled **Step 1** — "What best describes your situation, {name}?" — surfaced as the first thing above the fold on `/dashboard`. Mirrors the Landing-page opener exactly (six choices: We generally cooperate · Communication is difficult · Ongoing high conflict · Safety/family-violence concerns · Special-needs child · Preparing for mediation).
   - Three of the six choices navigate directly (`/safety-assessment`, `/special-needs-v2`); the other three route to `#next-step` (the NextStepJourney anchor lower on the same page).
