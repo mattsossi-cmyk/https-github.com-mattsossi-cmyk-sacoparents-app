@@ -7,7 +7,8 @@ Interventions come from three sources on the app:
     * Dimension Companion     -> per-dimension `interventions`
 
 At request time we aggregate the parent's LATEST assessment from each
-source and mint a stable `intervention_key` = md5(source|text)[:16].
+source and mint a stable `intervention_key` = md5(source|text)[:16]
+(non-security dedupe id — see `_key`).
 The parent then ticks off each item per calendar week (Mon 00:00 UTC).
 
 Storage:
@@ -55,8 +56,17 @@ def _week_start(dt: Optional[datetime] = None) -> str:
 
 def _key(source: str, text: str) -> str:
     """Stable intervention key across re-assessments — as long as the
-    source + wording stay the same, the parent's tick persists."""
-    return hashlib.md5(f"{source}|{text.strip()}".encode()).hexdigest()[:16]
+    source + wording stay the same, the parent's tick persists.
+
+    Uses MD5 with ``usedforsecurity=False`` because this is a persisted
+    dedupe id in ``intervention_compliance_logs.item_key`` — collisions
+    here have no security implication, and switching algorithms would
+    invalidate every existing user's tick history without a migration.
+    """
+    return hashlib.md5(  # noqa: S324 — non-security dedupe key (see docstring)
+        f"{source}|{text.strip()}".encode(),
+        usedforsecurity=False,
+    ).hexdigest()[:16]
 
 
 # ---------------------------------------------------------------------------
