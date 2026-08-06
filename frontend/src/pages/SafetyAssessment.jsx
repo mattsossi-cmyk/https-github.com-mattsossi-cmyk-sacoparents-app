@@ -850,13 +850,45 @@ export default function SafetyAssessment() {
                   Because your safety screen cleared, they can now be scored
                   together in a single ~7-minute companion assessment.
                 </p>
-                <Link
-                  to="/companion-assessment"
-                  data-testid="safety-companion-cta-link"
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-6 py-3 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all"
-                >
-                  Start companion assessment <ArrowRight size={14} />
-                </Link>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    to="/companion-assessment"
+                    data-testid="safety-companion-cta-link"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-6 py-3 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                  >
+                    Start companion assessment <ArrowRight size={14} />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const res = await api.get("/dimension-companion/four-dimension-briefing/pdf", {
+                          params: { sign: true },
+                          responseType: "blob",
+                        });
+                        const blob = new Blob([res.data], { type: "application/pdf" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "four-dimension-briefing.pdf";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch (err) {
+                        logError("Briefing download failed", err);
+                        toast.error("Couldn't download the briefing.");
+                      }
+                    }}
+                    data-testid="safety-briefing-pdf-button"
+                    className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#3D1A78] text-[#3D1A78] px-5 py-3 text-sm font-semibold hover:bg-[#F1EBFA]"
+                  >
+                    <Download size={14} /> Download 4-Dimension Briefing PDF
+                  </button>
+                </div>
+                <p className="text-[11px] text-[#8471B3] mt-3 italic">
+                  Briefing includes Safety + whichever companion dimensions you've
+                  completed — designed for a mediator, parent facilitator ad litem,
+                  or trial court.
+                </p>
               </div>
             )}
 

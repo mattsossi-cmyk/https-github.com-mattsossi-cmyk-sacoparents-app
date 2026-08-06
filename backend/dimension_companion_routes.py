@@ -27,7 +27,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field, conint
 
@@ -300,3 +300,61 @@ async def get_by_id(
     if not doc:
         raise HTTPException(404, "Assessment not found")
     return doc
+
+
+# ---------------------------------------------------------------------------
+# Combined 4-Dimension Briefing PDF — Safety + Companion in one document.
+# Lives on this router (rather than a new one) because it depends on the
+# Companion collection and this router is already registered under the
+# authenticated /api namespace.
+# ---------------------------------------------------------------------------
+
+@router.get("/four-dimension-briefing/pdf")
+async def download_four_dimension_briefing(
+    audience: str = Query(
+        "Mediator / Parent Facilitator Ad Litem / Trial Court",
+        max_length=120,
+        description="Free-form audience line printed on the cover page.",
+    ),
+    sign: bool = Query(False, description="Include signature line + verify QR."),
+    signed_note: Optional[str] = Query(None, max_length=120),
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    from datetime import datetime, timezone
+    from fastapi.responses import Response
+    from four_dimension_briefing_pdf import build_four_dimension_briefing_pdf
+    from pdf_signing import sign_kwargs
+
+    safety_doc = await db.safety_assessments.find_one(
+        {"user_id": user.user_id}, {"_id": 0},
+        sort=[("created_at", -1)],
+    )
+    companion_doc = await db[COLLECTION].find_one(
+        {"user_id": user.user_id}, {"_id": 0},
+        sort=[("created_at", -1)],
+    )
+    if not safety_doc and not companion_doc:
+        raise HTTPException(
+            404,
+            "No Safety or Companion assessment on file yet. Complete at least "
+            "one before generating the four-dimension briefing.",
+        )
+
+    kwargs = sign_kwargs(sign, user.name, signed_note)
+    pdf_bytes = build_four_dimension_briefing_pdf(
+        parent_name=user.name or "Parent",
+        audience=audience,
+        safety_doc=safety_doc,
+        companion_doc=companion_doc,
+        generated_at=datetime.now(timezone.utc).isoformat(),
+        **kwargs,
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+                'attachment; filename="four-dimension-briefing.pdf"',
+        },
+    )

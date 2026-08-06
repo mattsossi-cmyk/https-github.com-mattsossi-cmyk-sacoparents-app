@@ -13,7 +13,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Download, Loader2, ShieldCheck } from "lucide-react";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -161,6 +161,29 @@ export default function DimensionCompanion() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [downloadingBriefing, setDownloadingBriefing] = useState(false);
+
+  const downloadBriefing = async () => {
+    setDownloadingBriefing(true);
+    try {
+      const res = await api.get("/dimension-companion/four-dimension-briefing/pdf", {
+        params: { sign: true },
+        responseType: "blob",
+      });
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "four-dimension-briefing.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      logError("Briefing download failed", err);
+      toast.error("Couldn't download the briefing. Please try again.");
+    } finally {
+      setDownloadingBriefing(false);
+    }
+  };
 
   useEffect(() => {
     api
@@ -354,6 +377,16 @@ export default function DimensionCompanion() {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
+              <button
+                type="button"
+                onClick={downloadBriefing}
+                disabled={downloadingBriefing}
+                data-testid="companion-briefing-pdf-button"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-6 py-3 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-60"
+              >
+                {downloadingBriefing ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                {downloadingBriefing ? "Preparing PDF…" : "Download 4-Dimension Briefing (court-ready PDF)"}
+              </button>
               <button
                 type="button"
                 onClick={() => navigate("/dashboard")}

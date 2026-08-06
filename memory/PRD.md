@@ -451,6 +451,13 @@
 - Tiers: Strong / Steady / Stretched / Strained. Overall pathway derived from worst dimension (conservative).
 - Storage: `dimension_companion_assessments` Mongo collection.
 
+### Combined 4-Dimension Briefing PDF (Feb 2026)
+- New endpoint `GET /api/dimension-companion/four-dimension-briefing/pdf` — assembles the caller's most recent Safety + Companion records into a single 4-page court-ready PDF (cover + executive summary → Dim 1 detail → Dim 2/3/4 detail → advisory).
+- Accepts `audience` query param (e.g. "Mediator / Parent Facilitator Ad Litem / Trial Court") and optional `sign=true` for the tamper-evident signature line + QR.
+- Gracefully renders "Not yet completed" blocks when either the Safety or Companion doc is absent — the parent can hand in an interim briefing at any completeness level.
+- Frontend: download button on both the Companion result page (`companion-briefing-pdf-button`) and the Safety Assessment result page when level ≥ 3 (`safety-briefing-pdf-button`).
+- Pytest coverage: `/app/backend/tests/test_iter85_four_dim_briefing.py` (6 tests: scoring + PDF magic bytes + live HTTP round-trip).
+
 ---
 
 
