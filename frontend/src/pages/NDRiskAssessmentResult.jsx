@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { ArrowLeft, Download, Loader2, CheckSquare, Square } from "lucide-react";
 import AppShell from "../components/AppShell";
+import NDRiskTimeline from "../components/NDRiskTimeline";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -205,6 +206,16 @@ export default function NDRiskAssessmentResult() {
               ))}
             </ul>
           </div>
+        </section>
+
+        <section className="mt-8" data-testid="nd-risk-timeline-section" id="timeline">
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            Assessment timeline
+          </div>
+          <div className="font-serif text-2xl text-[#1A1330] mt-1 mb-4">
+            How your tier has changed over time
+          </div>
+          <NDRiskTimeline highlightId={assessment.assessment_id} />
         </section>
 
         <p className="mt-8 text-[11px] text-[#8471B3] italic">

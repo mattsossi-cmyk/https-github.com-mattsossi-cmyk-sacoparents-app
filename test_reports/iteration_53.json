@@ -1,0 +1,33 @@
+{
+  "summary": "Tested ND Risk Assessment Timeline feature (Recharts chart on Result page + stepped card on Dashboard). Backend GET /api/nd-risk/assessments/me returns items newest-first with all required fields (assessment_id, created_at, scoring.tier/total_score/threat_score/vulnerability_score). Dashboard card renders for parent1 (has assessments) and self-hides for parent2 (0 assessments) — all required data-testids present (nd-risk-timeline-card, nd-risk-timeline-card-latest-tier, nd-risk-timeline-card-trend, nd-risk-timeline-step-0/1/2, capped at 3 rows). Card link includes #timeline anchor. Result page timeline section renders with header stat grid (nd-timeline-latest-tier=Medium, nd-timeline-lifetime-delta, nd-timeline-reassess-cta→/nd-risk-assessment), Recharts LineChart with 4 tier-band ReferenceAreas, 6 line dots for 6 assessments, and 5 delta cards (n-1). Feature is production-ready.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Result page for a nonexistent/invalid assessment_id",
+        "issue": "Result page renders page-level 'Assessment not found' error and short-circuits before mounting <NDRiskTimeline/>. The NDRiskTimeline component's nd-timeline-empty prompt (with 'Take your first assessment' CTA) is therefore unreachable via /nd-risk-assessment/result/:aid — even though the review request expected it to show for users with 0 assessments navigating there. Not blocking (parent2 flow never reaches this route via the UI because dashboard card is hidden), but the empty-prompt code path is effectively dead code on this page. Consider mounting NDRiskTimeline in a fallback block when the aid fetch 404s, or route zero-assessment users to /nd-risk-assessment instead.",
+        "affected_selectors": ["[data-testid=nd-timeline-empty]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_iter84_nd_risk.py"],
+  "action_items": [
+    "OPTIONAL: Update the review-request expectation numbers OR trim the parent1 seed. The seeded ND Risk assessments for parent1@test.com is 6, not 3 as stated in the request. Result page now shows lifetime delta of -10 pts (16→6) and 5 delta cards. All timeline math is internally consistent — the 3-assessment/-3-pts/2-delta-card expectation in the brief is stale.",
+    "OPTIONAL: Ensure the NDRiskTimeline empty-state (nd-timeline-empty) is reachable — currently the Result page's parent bails on 404 before it mounts, so the empty prompt only renders in the (unreachable) case where the assessment loads but items[] is empty."
+  ],
+  "critical_code_review_comments": [
+    "NDRiskTimeline.jsx / NDRiskTimelineCard.jsx both re-declare TIER_META locally — extract into /lib/ndRiskTiers.js to keep tier colors/labels in one place (DRY).",
+    "NDRiskTimelineCard hides itself while loading (items===null) which is fine for first-time visitors but hides a valid card for a brief moment on every dashboard load. A tiny skeleton (e.g., 40px placeholder) would prevent layout shift.",
+    "The hash anchor #timeline does not visibly scroll on direct load in Playwright (scrollY stayed 0). Recharts inside a still-mounting ResponsiveContainer can cause the target section to move after the initial scroll. Consider a useEffect on the Result page that scrollIntoView()s the #timeline element once data is loaded."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "100%", "frontend": "95%" },
+  "test_credentials": "parent1@test.com / TestPass123! (6 seeded ND Risk assessments, not 3), parent2@test.com / TestPass123! (0 assessments)",
+  "seed_data_creation": "None. Used existing seeds.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "parent1 currently has 6 ND Risk assessments seeded (not 3). Timeline works end-to-end. To bypass the legal-acknowledgment modal in Playwright: localStorage.setItem('sac_legal_ack_v1', JSON.stringify({version:'v1', at:new Date().toISOString()})) BEFORE login. Also click the orientation 'Skip' button after landing on /dashboard. Card data-testid selectors all working as specified.",
+  "rca of the issue": "N/A — no bugs blocking. Two minor deviations from the brief: (1) stale seed count (6 vs 3), (2) NDRiskTimeline empty-state path is unreachable via the Result page because the outer page 404s on unknown aid before mounting the timeline component."
+}

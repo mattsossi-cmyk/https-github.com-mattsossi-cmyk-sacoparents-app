@@ -11,6 +11,7 @@ import InviteCoparentCard from "../components/InviteCoparentCard";
 import BadgeShelf from "../components/BadgeShelf";
 import MeetTheProgramCard from "../components/MeetTheProgramCard";
 import GrowthWidget from "../components/GrowthWidget";
+import NDRiskTimelineCard from "../components/NDRiskTimelineCard";
 import ProgressDashboardCard from "../components/ProgressDashboardCard";
 import PublicMilestoneWall from "../components/PublicMilestoneWall";
 import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
@@ -946,6 +947,12 @@ export default function Dashboard() {
             no summary snapshots yet. Deep-links to the full growth tracker
             on /my-plan. */}
         <GrowthWidget />
+
+        {/* ND Risk progression — self-hides for parents who have not yet
+            taken the assessment. Deep-links to the full timeline chart. */}
+        <div className="mt-6 mb-6">
+          <NDRiskTimelineCard />
+        </div>
 
         {/* Achievement badge shelf */}
         <div className="mb-10">
