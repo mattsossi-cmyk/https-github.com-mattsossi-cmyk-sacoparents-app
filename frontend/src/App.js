@@ -47,6 +47,8 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
 import VerifySignature from "@/pages/VerifySignature";
+import NDRiskAssessment from "@/pages/NDRiskAssessment";
+import NDRiskAssessmentResult from "@/pages/NDRiskAssessmentResult";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
 import SafetyAssessment from "@/pages/SafetyAssessment";
@@ -133,6 +135,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <SafetyAssessment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nd-risk-assessment"
+          element={
+            <ProtectedRoute>
+              <NDRiskAssessment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nd-risk-assessment/result/:aid"
+          element={
+            <ProtectedRoute>
+              <NDRiskAssessmentResult />
             </ProtectedRoute>
           }
         />

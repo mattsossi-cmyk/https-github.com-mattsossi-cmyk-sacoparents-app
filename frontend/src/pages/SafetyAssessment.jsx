@@ -167,12 +167,37 @@ function ResultsCard({ assessment, onDownload, onEmail, onEmailMediator, sending
           </ul>
         </div>
 
+        {/* Cross-link to the ND Risk Assessment — iter84. Sits above
+            the co-parent note so a target parent finishing this
+            assessment sees it as the recommended next action. */}
+        <a
+          href="/nd-risk-assessment"
+          className="mb-6 flex items-start gap-3 rounded-2xl border-2 border-[#3D1A78]/25 bg-[#F5F1FB] p-4 sm:p-5 hover:bg-[#EEE9F7] transition-colors"
+          data-testid="safety-recommend-nd-risk"
+        >
+          <div className="shrink-0 w-10 h-10 rounded-full bg-[#3D1A78] text-white flex items-center justify-center">
+            <CheckCircle2 size={18} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              Recommended next
+            </div>
+            <div className="text-sm sm:text-base font-serif text-[#1A1330] mt-0.5">
+              Neurodivergent Coparenting Risk Assessment
+            </div>
+            <div className="text-xs text-[#4B4567] mt-1">
+              A shorter, matrix-based assessment that filters coparenting risk
+              through an ADHD / autism vulnerability lens. Produces a
+              court-ready PDF with a tier + required interventions plan.
+            </div>
+          </div>
+        </a>
+
         <div className="rounded-2xl bg-[#F8F7FC] border border-[#E5E0EE] p-4 sm:p-5 mb-6">
           <div className="flex items-center gap-2 text-[#3D1A78] mb-2">
             <Lightbulb size={14} />
             <div className="text-[11px] uppercase tracking-[0.18em] font-bold">Note about your co-parent</div>
-          </div>
-          <p className="text-sm text-[#4B4567] leading-relaxed">
+          </div>          <p className="text-sm text-[#4B4567] leading-relaxed">
             This assessment reflects only your responses. The other parent should
             complete this assessment separately so each of you has your own private
             result. Forcing or pressuring the other parent to take it is not

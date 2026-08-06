@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 84 — Neurodivergent Coparenting Risk Assessment (2026-02-06)**:
+  - **Backend**: New `nd_risk_routes.py` — profile CRUD, POST assessment (auto-scores + tiers to Low / Medium / High / Critical using `threat × vulnerability`, each axis = max of 3 sub-dimensions for safety-conservative scoring), coordinator summary with per-user 4×4 heatmap + tier counts, admin-gated multi-case view. New `nd_risk_pdf.py` — court-ready PDF with formal cover, methodology brief, score card, marked 4×4 heatmap, interventions checklist, disclaimer footer, and existing tamper-evident signature QR from iter72.
+  - **Frontend**: `/nd-risk-assessment` intake (2 axes × 3 items, 1-4 rating) + `/nd-risk-assessment/result/:aid` result view (tier pill, marked 4×4 grid, interventions checklist, one-click court-ready PDF download).
+  - **Dashboard tile** added under the existing "Family Violence Assessments" category (iter83). **Cross-link** ("Recommended next: Neurodivergent Risk Assessment") added on the Safety Assessment result page.
+  - Coordinator dashboard is admin-only per iter84 design decision — regular parents see their own case on a clean personal result page instead of a fake multi-case grid.
+  - 11/11 pytest module `test_iter84_nd_risk.py` pass (scoring boundary tests + full API round-trip + PDF response shape + access-control 404 + coordinator response shape). Live smoke-test confirmed: 3+3 → tier High, cell (3,3) marked, 5 interventions populated.
+
+
+
 - **Iteration 83 — Preparation Modules regrouped into 4 named categories (2026-02-06)**:
   - Restored the parent's four-group menu on the Dashboard: **Co-Parenting Assessments**, **Foundation Statements**, **Family Violence Assessments**, **Special Needs Assessments** (medical + educational + psychological). Each group has its own header row with a one-line hint.
   - Added `category` field to `PREP_MODULES` + new `PREP_MODULE_CATEGORIES` list defining the four groups with intentional ordering (foundation → co-parenting → safety → special-needs). Grouped rendering with `dashboard-prep-category-{coparenting|foundation|safety|special-needs}` testids; existing per-module + recommended-badge testids preserved.

@@ -26,12 +26,15 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field, conint
 
 from auth import UserPublic, get_current_user
-from db import get_db
+
+
+def get_db(request: Request) -> AsyncIOMotorDatabase:
+    return request.app.state.db
 
 
 router = APIRouter(prefix="/nd-risk", tags=["nd-risk"])
@@ -277,6 +280,41 @@ async def list_my_assessments(
     ).sort("created_at", -1).limit(limit)
     items = [row async for row in cursor]
     return {"items": items, "total": len(items)}
+
+
+@router.get("/assessment/{aid}/pdf")
+async def download_assessment_pdf(
+    aid: str,
+    sign: bool = Query(False, description="Include signature line + verify QR"),
+    signed_note: Optional[str] = Query(None, max_length=120),
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Court-ready PDF for a single ND Risk assessment. Same access
+    rules as `/assessment/{aid}`: parents can download their own;
+    admins can download any. When `sign=true` we stamp the tamper-
+    evident signature line + QR (see iter72)."""
+    from fastapi.responses import Response
+    from pdf_signing import sign_kwargs
+
+    q: Dict[str, Any] = {"assessment_id": aid}
+    if getattr(user, "role", None) != "admin":
+        q["target_user_id"] = user.user_id
+    doc = await db[ASSESSMENTS_COLLECTION].find_one(q, {"_id": 0})
+    if not doc:
+        raise HTTPException(404, "Assessment not found")
+
+    from nd_risk_pdf import build_nd_risk_pdf
+    kwargs = sign_kwargs(sign, user.name, signed_note)
+    pdf_bytes = build_nd_risk_pdf(assessment=doc, **kwargs)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+                f'attachment; filename="nd-risk-assessment-{aid[:8]}.pdf"',
+        },
+    )
 
 
 @router.get("/coordinator")
