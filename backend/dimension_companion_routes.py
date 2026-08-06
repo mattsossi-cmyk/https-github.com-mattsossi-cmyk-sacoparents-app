@@ -287,6 +287,122 @@ async def latest_for_me(
     return {"latest": doc}
 
 
+class BriefingEmailBody(BaseModel):
+    recipient_email: str = Field(..., max_length=200)
+    recipient_name:  Optional[str] = Field(None, max_length=120)
+    recipient_role:  Optional[Literal["mediator", "parent_facilitator_ad_litem", "trial_court", "attorney", "therapist", "other"]] = None
+    audience_label:  Optional[str] = Field(None, max_length=120,
+        description="Free-form audience line stamped on the PDF cover. Defaults from role.")
+    parent_message:  Optional[str] = Field(None, max_length=1200)
+
+
+ROLE_TO_AUDIENCE = {
+    "mediator":                    "Mediator",
+    "parent_facilitator_ad_litem": "Parent Facilitator Ad Litem",
+    "trial_court":                 "Trial Court",
+    "attorney":                    "Family Law Attorney",
+    "therapist":                   "Therapist / Counsellor",
+    "other":                       "Mediator / Parent Facilitator Ad Litem / Trial Court",
+}
+
+
+@router.post("/four-dimension-briefing/email")
+async def email_four_dimension_briefing(
+    body: BriefingEmailBody,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Generate the parent's 4-Dimension Briefing and email it directly
+    to their mediator, PFAL, trial court, attorney, or therapist. The
+    parent's real email is used as reply-to so the recipient can respond
+    without an intermediary.
+    """
+    from datetime import datetime, timezone
+    from fastapi import HTTPException
+    from four_dimension_briefing_pdf import build_four_dimension_briefing_pdf
+    from email_service import (
+        EmailNotConfigured,
+        EmailSendError,
+        send_four_dimension_briefing,
+    )
+
+    # ---- Validate inputs ----------------------------------------------------
+    to_email = (body.recipient_email or "").strip().lower()
+    if "@" not in to_email or "." not in to_email.split("@")[-1]:
+        raise HTTPException(400, "That doesn't look like a valid email address.")
+    if to_email.endswith("@demo.local"):
+        raise HTTPException(400, "Please use your recipient's real email address.")
+
+    parent_email = (user.email or "").strip().lower()
+    if not parent_email or parent_email.endswith("@demo.local"):
+        raise HTTPException(
+            400,
+            "Save your work first — add a real email to your account so the "
+            "recipient can reply to you.",
+        )
+
+    # ---- Load latest Safety + Companion ------------------------------------
+    safety_doc = await db.safety_assessments.find_one(
+        {"user_id": user.user_id}, {"_id": 0},
+        sort=[("created_at", -1)],
+    )
+    companion_doc = await db[COLLECTION].find_one(
+        {"user_id": user.user_id}, {"_id": 0},
+        sort=[("created_at", -1)],
+    )
+    if not safety_doc and not companion_doc:
+        raise HTTPException(
+            404,
+            "No Safety or Companion assessment on file yet. Complete at "
+            "least one before emailing the briefing.",
+        )
+
+    audience = body.audience_label or ROLE_TO_AUDIENCE.get(body.recipient_role or "other", ROLE_TO_AUDIENCE["other"])
+
+    pdf_bytes = build_four_dimension_briefing_pdf(
+        parent_name=user.name or "Parent",
+        audience=audience,
+        safety_doc=safety_doc,
+        companion_doc=companion_doc,
+        generated_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+    # ---- Send --------------------------------------------------------------
+    try:
+        send_four_dimension_briefing(
+            to_email=to_email,
+            recipient_name=(body.recipient_name or "").strip(),
+            recipient_role=audience,
+            parent_name=user.name or "",
+            parent_email=parent_email,
+            parent_message=(body.parent_message or "").strip(),
+            pdf_bytes=pdf_bytes,
+        )
+    except EmailNotConfigured as e:
+        raise HTTPException(
+            503,
+            "Email isn't configured on this environment. Download the PDF "
+            "and share it directly.",
+        ) from e
+    except EmailSendError as e:
+        raise HTTPException(
+            503,
+            "Couldn't send the briefing right now. Please try again in a moment.",
+        ) from e
+
+    # ---- Audit log ---------------------------------------------------------
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await db.four_dimension_briefing_emails.insert_one({
+        "user_id":       user.user_id,
+        "to_email":      to_email,
+        "recipient_name": (body.recipient_name or "").strip(),
+        "recipient_role": body.recipient_role,
+        "audience":      audience,
+        "sent_at":       now_iso,
+    })
+    return {"ok": True, "emailed_to": to_email, "audience": audience}
+
+
 @router.get("/{aid}")
 async def get_by_id(
     aid: str,

@@ -1003,6 +1003,98 @@ def send_mediator_safety_assessment(
     )
 
 
+def send_four_dimension_briefing(
+    *,
+    to_email: str,
+    recipient_name: str,
+    recipient_role: str,
+    parent_name: str,
+    parent_email: str,
+    parent_message: str,
+    pdf_bytes: bytes,
+    pdf_filename: str = "four-dimension-briefing.pdf",
+) -> None:
+    """Send the combined 4-Dimension Briefing (Safety + Companion) to a
+    mediator, parent facilitator ad litem, or trial court. Reply-to is
+    the parent's email so the recipient can respond directly."""
+    greeting = f"Hi {recipient_name}," if recipient_name else "Hi,"
+    who = parent_name or parent_email or "This parent"
+    role_line = f" ({recipient_role})" if recipient_role else ""
+    escaped_role = _html.escape(recipient_role or "")
+    optional_note_html = (
+        f'<p style="font-size:14px;line-height:1.6;color:#1A1330;margin:0 0 16px 0;'
+        f'background:#F8F7FC;border-radius:14px;padding:14px 16px;border:1px solid #E5E0EE;">'
+        f'<span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;">'
+        f'Note from {_html.escape(who)}</span><br/>{_html.escape(parent_message)}</p>'
+        if parent_message
+        else ""
+    )
+    optional_note_plain = (
+        f"\nNote from {who}:\n{parent_message}\n"
+        if parent_message
+        else ""
+    )
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'{_html.escape(greeting)}</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'<strong>{_html.escape(who)}</strong> is preparing for their next co-parenting '
+        f'session through SA CoParents and asked me to send you their <strong>4-Dimension '
+        f'Co-Parenting Briefing</strong>{" " + escaped_role if escaped_role else ""}.'
+        f'</p>'
+        f'<div style="background:#F8F7FC;border-radius:16px;padding:18px 20px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
+        f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:6px;">'
+        f'What is inside</div>'
+        f'<ul style="margin:0;padding-left:18px;color:#1A1330;font-size:14px;line-height:1.55;">'
+        f'<li><strong>Dimension 1 · Safety</strong> — family violence &amp; coercive-control screen.</li>'
+        f'<li><strong>Dimension 2 · Communication</strong> — tone, cadence, clarity.</li>'
+        f'<li><strong>Dimension 3 · Emotional regulation</strong> — stress &amp; conflict response.</li>'
+        f'<li><strong>Dimension 4 · Executive function</strong> — planning &amp; follow-through.</li>'
+        f'</ul>'
+        f'</div>'
+        f'{optional_note_html}'
+        f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 12px 0;">'
+        f'The briefing is attached as a PDF. You can reply directly to this email to reach {_html.escape(who)}.'
+        f'</p>'
+        f'<p style="font-size:12px;line-height:1.55;color:#857E9C;margin:0;">'
+        f'This briefing is informational preparation support only. It is not legal advice, medical '
+        f'diagnosis, or a substitute for a licensed professional.</p>'
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"{who} is preparing for their next co-parenting session through SA CoParents "
+        f"and asked me to send you their 4-Dimension Co-Parenting Briefing{role_line}.\n\n"
+        f"The briefing consolidates:\n"
+        f"  - Dimension 1 · Safety\n"
+        f"  - Dimension 2 · Communication\n"
+        f"  - Dimension 3 · Emotional regulation\n"
+        f"  - Dimension 4 · Executive function\n"
+        f"{optional_note_plain}"
+        f"\nThe full briefing is attached as a PDF. You can reply directly to reach "
+        f"{who} ({parent_email}).\n\n"
+        f"This briefing is informational preparation support only. Not legal advice, "
+        f"medical diagnosis, or a substitute for a licensed professional.\n"
+    )
+    html = _branded_html(
+        headline=f"4-Dimension Briefing from {_html.escape(who)}",
+        body_html=body_html,
+        cta_label="",
+    )
+    subject = f"4-Dimension Co-Parenting Briefing from {who}"
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=html,
+        text=plain,
+        reply_to=parent_email or None,
+        attachments=[(pdf_filename or "four-dimension-briefing.pdf", pdf_bytes)],
+        failure_message="Couldn't send the briefing right now. Please try again in a moment.",
+    )
+
+
+
+
 
 def send_snc_report_pdf(
     *,

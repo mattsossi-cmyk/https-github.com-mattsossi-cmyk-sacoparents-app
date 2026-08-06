@@ -458,6 +458,16 @@
 - Frontend: download button on both the Companion result page (`companion-briefing-pdf-button`) and the Safety Assessment result page when level ≥ 3 (`safety-briefing-pdf-button`).
 - Pytest coverage: `/app/backend/tests/test_iter85_four_dim_briefing.py` (6 tests: scoring + PDF magic bytes + live HTTP round-trip).
 
+### Email the Briefing (Feb 2026)
+- New endpoint `POST /api/dimension-companion/four-dimension-briefing/email` — generates the 4-Dim briefing PDF and emails it via Resend directly to the parent's mediator, parent facilitator ad litem, trial court, attorney, or therapist.
+- Reply-to is set to the parent's email so the recipient can respond directly.
+- Body accepts `recipient_email` (required), optional `recipient_name`, `recipient_role` (one of `mediator` / `parent_facilitator_ad_litem` / `trial_court` / `attorney` / `therapist` / `other`), and `parent_message`.
+- Rejects invalid or `@demo.local` addresses with a 400; missing Resend keys return 503 with a friendly toast.
+- Audit log stored in `four_dimension_briefing_emails` Mongo collection (user_id, to_email, recipient_role, audience, sent_at).
+- Email helper `send_four_dimension_briefing()` in `email_service.py` with branded HTML template.
+- Frontend: new reusable `BriefingEmailDialog.jsx` (email + name + role radio-chips + short message). Mounted on both the Companion result page (`companion-briefing-email-button`) and the Safety Assessment result page (`safety-briefing-email-button`).
+- Pytest coverage extended in `test_iter85_four_dim_briefing.py` (7 tests total) — includes rejection of invalid emails/demo.local and a successful send to Resend's sandbox address.
+
 ---
 
 

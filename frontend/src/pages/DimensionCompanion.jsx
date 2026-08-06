@@ -13,8 +13,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, CheckCircle2, Download, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Download, Loader2, Mail, ShieldCheck } from "lucide-react";
 import AppShell from "../components/AppShell";
+import BriefingEmailDialog from "../components/BriefingEmailDialog";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -162,6 +163,30 @@ export default function DimensionCompanion() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [downloadingBriefing, setDownloadingBriefing] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+
+  const sendBriefingEmail = async (payload) => {
+    setEmailSending(true);
+    try {
+      const r = await api.post("/dimension-companion/four-dimension-briefing/email", payload);
+      toast.success(`Briefing sent to ${r.data.emailed_to}.`);
+      setEmailDialogOpen(false);
+    } catch (err) {
+      logError("Briefing email failed", err);
+      const detail = err?.response?.data?.detail;
+      const status = err?.response?.status;
+      if (status === 400 && /save your work|real email/i.test(detail || "")) {
+        toast.error(detail || "Save your work first — add a real email to your account.");
+      } else if (status === 503) {
+        toast.error(detail || "Email service isn't available right now.");
+      } else {
+        toast.error(detail || "Couldn't send the briefing. Please try again.");
+      }
+    } finally {
+      setEmailSending(false);
+    }
+  };
 
   const downloadBriefing = async () => {
     setDownloadingBriefing(true);
@@ -379,13 +404,21 @@ export default function DimensionCompanion() {
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
               <button
                 type="button"
+                onClick={() => setEmailDialogOpen(true)}
+                data-testid="companion-briefing-email-button"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-6 py-3 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              >
+                <Mail size={14} /> Email 4-Dimension Briefing
+              </button>
+              <button
+                type="button"
                 onClick={downloadBriefing}
                 disabled={downloadingBriefing}
                 data-testid="companion-briefing-pdf-button"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-6 py-3 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#3D1A78] text-[#3D1A78] px-5 py-3 text-sm font-semibold hover:bg-[#F1EBFA] disabled:opacity-60"
               >
                 {downloadingBriefing ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-                {downloadingBriefing ? "Preparing PDF…" : "Download 4-Dimension Briefing (court-ready PDF)"}
+                {downloadingBriefing ? "Preparing PDF…" : "Download PDF"}
               </button>
               <button
                 type="button"
@@ -399,6 +432,13 @@ export default function DimensionCompanion() {
           </div>
         )}
       </div>
+
+      <BriefingEmailDialog
+        open={emailDialogOpen}
+        onClose={() => { if (!emailSending) setEmailDialogOpen(false); }}
+        onSend={sendBriefingEmail}
+        sending={emailSending}
+      />
     </AppShell>
   );
 }

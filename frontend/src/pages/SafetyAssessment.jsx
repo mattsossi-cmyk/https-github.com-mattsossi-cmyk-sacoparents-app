@@ -25,6 +25,7 @@ import WatchFirstVideo from "../components/WatchFirstVideo";
 import SectionCoaching from "../components/SectionCoaching";
 import MethodologyCard from "../components/MethodologyCard";
 import ReportShareControls, { pdfAbs } from "../components/ReportShareControls";
+import BriefingEmailDialog from "../components/BriefingEmailDialog";
 
 const TONE_STYLES = {
   danger: {
@@ -387,6 +388,8 @@ export default function SafetyAssessment() {
   const [emailing, setEmailing] = useState(false);
   const [mediatorDialogOpen, setMediatorDialogOpen] = useState(false);
   const [mediatorSending, setMediatorSending] = useState(false);
+  const [briefingEmailOpen, setBriefingEmailOpen] = useState(false);
+  const [briefingSending, setBriefingSending] = useState(false);
   const flashedRef = useRef(new Set());
 
   useEffect(() => {
@@ -860,6 +863,14 @@ export default function SafetyAssessment() {
                   </Link>
                   <button
                     type="button"
+                    onClick={() => setBriefingEmailOpen(true)}
+                    data-testid="safety-briefing-email-button"
+                    className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#3D1A78] text-[#3D1A78] px-5 py-3 text-sm font-semibold hover:bg-[#F1EBFA]"
+                  >
+                    <Mail size={14} /> Email Briefing
+                  </button>
+                  <button
+                    type="button"
                     onClick={async () => {
                       try {
                         const res = await api.get("/dimension-companion/four-dimension-briefing/pdf", {
@@ -881,7 +892,7 @@ export default function SafetyAssessment() {
                     data-testid="safety-briefing-pdf-button"
                     className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#3D1A78] text-[#3D1A78] px-5 py-3 text-sm font-semibold hover:bg-[#F1EBFA]"
                   >
-                    <Download size={14} /> Download 4-Dimension Briefing PDF
+                    <Download size={14} /> Download PDF
                   </button>
                 </div>
                 <p className="text-[11px] text-[#8471B3] mt-3 italic">
@@ -1024,6 +1035,35 @@ export default function SafetyAssessment() {
         }}
         onSend={sendToMediator}
         sending={mediatorSending}
+      />
+
+      <BriefingEmailDialog
+        open={briefingEmailOpen}
+        onClose={() => { if (!briefingSending) setBriefingEmailOpen(false); }}
+        onSend={async (payload) => {
+          setBriefingSending(true);
+          try {
+            const r = await api.post("/dimension-companion/four-dimension-briefing/email", payload);
+            toast.success(`Briefing sent to ${r.data.emailed_to}.`);
+            setBriefingEmailOpen(false);
+          } catch (err) {
+            logError("Briefing email failed", err);
+            const detail = err?.response?.data?.detail;
+            const status = err?.response?.status;
+            if (status === 400 && /save your work|real email/i.test(detail || "")) {
+              toast.error(detail, {
+                action: { label: "Save my work", onClick: () => navigate("/claim") },
+              });
+            } else if (status === 503) {
+              toast.error(detail || "Email service isn't available right now.");
+            } else {
+              toast.error(detail || "Couldn't send the briefing. Please try again.");
+            }
+          } finally {
+            setBriefingSending(false);
+          }
+        }}
+        sending={briefingSending}
       />
     </div>
   );

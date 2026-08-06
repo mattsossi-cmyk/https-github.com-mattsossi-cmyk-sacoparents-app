@@ -179,3 +179,57 @@ def test_briefing_endpoint_live():
     assert resp.headers.get("content-type", "").startswith("application/pdf")
     assert resp.content.startswith(b"%PDF-")
     assert len(resp.content) > 5000
+
+
+@pytest.mark.skipif(not API, reason="No backend URL available")
+def test_briefing_email_endpoint_live():
+    """Full round-trip: generate + email through Resend (sandbox address)."""
+    r = requests.post(
+        f"{API}/auth/login",
+        json={"email": TEST_EMAIL, "password": TEST_PASSWORD},
+        timeout=10,
+    )
+    if r.status_code != 200:
+        pytest.skip(f"parent1 login not available: {r.status_code}")
+    tok = r.json().get("access_token") or r.json().get("token")
+    headers = {"Authorization": f"Bearer {tok}"}
+
+    # Reject obviously invalid emails
+    bad = requests.post(
+        f"{API}/dimension-companion/four-dimension-briefing/email",
+        headers=headers,
+        json={"recipient_email": "not-an-email"},
+        timeout=10,
+    )
+    assert bad.status_code == 400
+    assert "valid email" in (bad.json().get("detail") or "").lower()
+
+    # Reject demo.local addresses
+    demo = requests.post(
+        f"{API}/dimension-companion/four-dimension-briefing/email",
+        headers=headers,
+        json={"recipient_email": "mediator@demo.local"},
+        timeout=10,
+    )
+    assert demo.status_code == 400
+
+    # Happy path — Resend's sandbox delivery address
+    resp = requests.post(
+        f"{API}/dimension-companion/four-dimension-briefing/email",
+        headers=headers,
+        json={
+            "recipient_email": "delivered@resend.dev",
+            "recipient_name":  "Sandbox Recipient",
+            "recipient_role":  "parent_facilitator_ad_litem",
+            "parent_message":  "Auto-test message.",
+        },
+        timeout=30,
+    )
+    # Allow 503 if this environment doesn't have Resend keys — but if 200,
+    # verify the response shape.
+    assert resp.status_code in (200, 503), resp.text[:200]
+    if resp.status_code == 200:
+        body = resp.json()
+        assert body.get("ok") is True
+        assert body.get("emailed_to") == "delivered@resend.dev"
+        assert body.get("audience") == "Parent Facilitator Ad Litem"
