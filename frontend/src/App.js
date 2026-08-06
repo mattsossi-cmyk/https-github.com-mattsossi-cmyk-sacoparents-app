@@ -47,6 +47,7 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
 import VerifySignature from "@/pages/VerifySignature";
+import VerifyBriefing from "@/pages/VerifyBriefing";
 import NDRiskAssessment from "@/pages/NDRiskAssessment";
 import NDRiskAssessmentResult from "@/pages/NDRiskAssessmentResult";
 import DimensionCompanion from "@/pages/DimensionCompanion";
@@ -108,6 +109,7 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/verify/briefing/:sig_id" element={<VerifyBriefing />} />
         <Route path="/verify/:sig_id" element={<VerifySignature />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />

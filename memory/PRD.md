@@ -1,6 +1,17 @@
 # SA CoParents — PRD
 
 
+- **Iteration 87 — Signed Briefing Verify (QR-scan issuance check) (2026-02-27)**:
+  - **Backend**: New `briefing_verify_routes.py` with helper `record_briefing_signature(db, user_id, parent_name, audience, snapshot) -> {sig_id, verify_url}` (uuid4 hex[:16] id, writes `briefing_signatures` row with `issued_on` UTC calendar date + internal-only snapshot of scores) and public endpoint `GET /api/verify/briefing/{sig_id}` returning `{issued, issued_on, sig_id}` only — no snapshot ever leaks.
+  - **PDF builder**: `four_dimension_briefing_pdf.py` accepts new kwargs `briefing_sig_id` / `briefing_verify_url`; footer of every page stamps a 12×12mm QR at bottom-LEFT (out of the way of the optional signature QR at bottom-right) via new `_stamp_briefing_verify_qr`; cover shows a "Briefing ID" line for at-a-glance eyeballing.
+  - **Wiring**: Both briefing-generation endpoints (`GET /dimension-companion/four-dimension-briefing/pdf` and `POST /dimension-companion/four-dimension-briefing/email`) now call `record_briefing_signature` before building the PDF; new helper `_briefing_snapshot` extracts internal-audit fields (safety level + pathway_title, per-dim tier+score, follow-through %).
+  - **Frontend**: New page `/verify/briefing/:sig_id` (`VerifyBriefing.jsx`) with minimal privacy-first UI — green "Yes — issued by SA CoParents on {UTC date}" or red "Not recognised". No scores, tiers, names, or audience shown per product decision. Route ordered above generic `/verify/:sig_id` in `App.js`. Testids: `verify-briefing-{root,ok,not-issued,error,loading,date,id,back}`.
+  - **Privacy**: Public verify response intentionally minimal — protects survivors if QR image escapes and avoids mutualising abuse via score exposure. Snapshot stored server-side for operator-only reconstruction of disputed briefings.
+  - **Revocation**: Not implemented — each generation stands on its own (per product decision).
+  - **Testing**: `test_iter87_briefing_verify.py` — 5 tests pass: PDF-with-sig is larger than without, `record_briefing_signature` shape + row insertion, unknown id returns issued=false, malformed id returns issued=false (no 500), full download → DB row → verify round-trip. All 16 pre-existing briefing/compliance tests still pass (no regressions). Live screenshots taken of both `issued=true` (August 6, 2026) and `Not recognised` states.
+
+
+
 - **Iteration 84 — Neurodivergent Coparenting Risk Assessment (2026-02-06)**:
   - **Backend**: New `nd_risk_routes.py` — profile CRUD, POST assessment (auto-scores + tiers to Low / Medium / High / Critical using `threat × vulnerability`, each axis = max of 3 sub-dimensions for safety-conservative scoring), coordinator summary with per-user 4×4 heatmap + tier counts, admin-gated multi-case view. New `nd_risk_pdf.py` — court-ready PDF with formal cover, methodology brief, score card, marked 4×4 heatmap, interventions checklist, disclaimer footer, and existing tamper-evident signature QR from iter72.
   - **Frontend**: `/nd-risk-assessment` intake (2 axes × 3 items, 1-4 rating) + `/nd-risk-assessment/result/:aid` result view (tier pill, marked 4×4 grid, interventions checklist, one-click court-ready PDF download).

@@ -306,6 +306,36 @@ ROLE_TO_AUDIENCE = {
 }
 
 
+def _briefing_snapshot(
+    safety_doc: Optional[Dict[str, Any]],
+    companion_doc: Optional[Dict[str, Any]],
+    compliance: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Small internal-only summary of what a given briefing PDF asserted.
+
+    Recorded on the `briefing_signatures` row so operators can reconstruct
+    a disputed briefing without re-running the PDF builder. NEVER exposed
+    to the public verify endpoint (privacy decision — the public page
+    only confirms issued/not-issued + issue date).
+    """
+    snap: Dict[str, Any] = {}
+    if safety_doc:
+        r = (safety_doc.get("result") or {})
+        snap["safety"] = {
+            "level":          r.get("level"),
+            "pathway_title":  r.get("pathway_title"),
+        }
+    if companion_doc:
+        dims = ((companion_doc.get("scoring") or {}).get("dimensions") or {})
+        snap["dimensions"] = {
+            k: {"tier": (v or {}).get("tier"), "score": (v or {}).get("score")}
+            for k, v in dims.items()
+        }
+    if compliance:
+        snap["follow_through_pct"] = compliance.get("percent")
+    return snap
+
+
 @router.post("/four-dimension-briefing/email")
 async def email_four_dimension_briefing(
     body: BriefingEmailBody,
@@ -366,6 +396,19 @@ async def email_four_dimension_briefing(
     except Exception:
         compliance = None
 
+    # Record a briefing signature BEFORE building the PDF so the QR
+    # stamped in the footer resolves to a public "issued by SA CoParents"
+    # verify page.
+    from briefing_verify_routes import record_briefing_signature
+    sig_snapshot = _briefing_snapshot(safety_doc, companion_doc, compliance)
+    sig = await record_briefing_signature(
+        db,
+        user_id=user.user_id,
+        parent_name=user.name or "",
+        audience=audience,
+        snapshot=sig_snapshot,
+    )
+
     pdf_bytes = build_four_dimension_briefing_pdf(
         parent_name=user.name or "Parent",
         audience=audience,
@@ -373,6 +416,8 @@ async def email_four_dimension_briefing(
         companion_doc=companion_doc,
         compliance=compliance,
         generated_at=datetime.now(timezone.utc).isoformat(),
+        briefing_sig_id=sig["sig_id"],
+        briefing_verify_url=sig["verify_url"],
     )
 
     # ---- Send --------------------------------------------------------------
@@ -475,6 +520,18 @@ async def download_four_dimension_briefing(
     except Exception:
         compliance = None
 
+    # Record a briefing signature BEFORE building the PDF so the footer
+    # QR resolves to the public "issued by SA CoParents" verify page.
+    from briefing_verify_routes import record_briefing_signature
+    sig_snapshot = _briefing_snapshot(safety_doc, companion_doc, compliance)
+    sig = await record_briefing_signature(
+        db,
+        user_id=user.user_id,
+        parent_name=user.name or "",
+        audience=audience,
+        snapshot=sig_snapshot,
+    )
+
     pdf_bytes = build_four_dimension_briefing_pdf(
         parent_name=user.name or "Parent",
         audience=audience,
@@ -482,6 +539,8 @@ async def download_four_dimension_briefing(
         companion_doc=companion_doc,
         compliance=compliance,
         generated_at=datetime.now(timezone.utc).isoformat(),
+        briefing_sig_id=sig["sig_id"],
+        briefing_verify_url=sig["verify_url"],
         **kwargs,
     )
     return Response(

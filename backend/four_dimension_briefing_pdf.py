@@ -15,6 +15,53 @@ from pdf_base import LOGO_PATH, _safe, _section_break
 from pdf_watermark import stamp_watermark, stamp_signature_line
 
 
+# ---------------------------------------------------------------------------
+# Briefing-level verify QR — stamped in the footer of every page, bottom-left.
+# Distinct from the signature-line QR (bottom-right) so both can coexist on
+# a signed briefing. Points to a public "Was this briefing issued by SA
+# CoParents?" verify page.
+# ---------------------------------------------------------------------------
+
+def _stamp_briefing_verify_qr(pdf: Any) -> None:
+    sig_id = getattr(pdf, "_briefing_sig_id", None)
+    verify_url = getattr(pdf, "_briefing_verify_url", None)
+    if not sig_id or not verify_url:
+        return
+
+    prev_font_family = pdf.font_family
+    prev_font_style = pdf.font_style
+    prev_font_size = pdf.font_size_pt
+
+    try:
+        import io
+        import qrcode
+
+        img = qrcode.make(verify_url, box_size=8, border=1)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+
+        # 12x12mm QR anchored inside the LEFT margin, aligned with the
+        # signature baseline. Micro-label underneath tells the reader
+        # this is the "issued by" stamp rather than the signature QR.
+        qr_size = 12.0
+        qr_x = pdf.l_margin
+        qr_y = (pdf.h - 6.0) - qr_size - 1.5
+
+        pdf.image(buf, x=qr_x, y=qr_y, w=qr_size, h=qr_size)
+        pdf.set_font("Helvetica", "", 5.6)
+        pdf.set_text_color(133, 126, 156)
+        pdf.set_xy(qr_x - 6, qr_y + qr_size + 0.2)
+        pdf.cell(qr_size + 12, 2.6, _safe("Scan to verify"), align="C")
+    except Exception:  # noqa: BLE001
+        # Non-fatal — QR is a nice-to-have, PDF must still render.
+        pass
+    finally:
+        if prev_font_family:
+            pdf.set_font(prev_font_family, prev_font_style or "", prev_font_size or 10)
+        pdf.set_text_color(0, 0, 0)
+
+
 # -----------------------------------------------------------------------------
 # Colour palette shared by all four dimensions.
 # -----------------------------------------------------------------------------
@@ -62,6 +109,7 @@ class _BriefingPDF(FPDF):
             align="C",
         )
         stamp_watermark(self)
+        _stamp_briefing_verify_qr(self)
         stamp_signature_line(self)
 
 
@@ -140,12 +188,16 @@ def build_four_dimension_briefing_pdf(
     signed_by: Optional[str] = None,
     signed_at: Optional[str] = None,
     signed_note: Optional[str] = None,
+    briefing_sig_id: Optional[str] = None,
+    briefing_verify_url: Optional[str] = None,
 ) -> bytes:
     pdf = _BriefingPDF(orientation="P", unit="mm", format="Letter")
     pdf._first_page = True
     if signed_by:   pdf._signed_by = signed_by
     if signed_at:   pdf._signed_at = signed_at
     if signed_note: pdf._signed_note = signed_note
+    if briefing_sig_id:      pdf._briefing_sig_id = briefing_sig_id
+    if briefing_verify_url:  pdf._briefing_verify_url = briefing_verify_url
 
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_margins(left=18, top=20, right=18)
@@ -175,6 +227,8 @@ def build_four_dimension_briefing_pdf(
     _kv(pdf, "Prepared for",  audience or "Mediator / Facilitator / Court")
     _kv(pdf, "Parent",        parent_name or "-")
     _kv(pdf, "Generated on",  generated_at[:19].replace("T", " "))
+    if briefing_sig_id:
+        _kv(pdf, "Briefing ID", briefing_sig_id)
 
     _section_break(pdf)
 
