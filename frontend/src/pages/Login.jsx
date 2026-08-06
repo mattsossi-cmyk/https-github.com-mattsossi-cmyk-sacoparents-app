@@ -4,6 +4,14 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 
+/**
+ * Login — Demo-first entry point.
+ *
+ * The primary action is "Enter demo mode" so any visitor can try the app
+ * with no account. A collapsed section still exposes email + password
+ * sign-in (used by the admin account and returning users who prefer it),
+ * but it's intentionally out of the way.
+ */
 export default function Login() {
   const navigate = useNavigate();
   const { login, startGuest } = useAuth();
@@ -13,6 +21,7 @@ export default function Login() {
   const [demoLoading, setDemoLoading] = useState(false);
   const [magicLoading, setMagicLoading] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
 
   const startDemo = async () => {
     setDemoLoading(true);
@@ -62,7 +71,7 @@ export default function Login() {
       const detail = err?.response?.data?.detail;
       if (status === 503) {
         toast.error(
-          detail || "Email-based sign-in isn't available right now. Use your password instead."
+          detail || "Email-based sign-in isn't available right now."
         );
       } else if (status === 429) {
         toast.error(detail || "Too many requests. Please try again later.");
@@ -103,106 +112,117 @@ export default function Login() {
         </Link>
 
         <div className="card-soft p-8 sm:p-10">
-          <div className="eyebrow text-[#3D1A78] mb-3">Welcome back</div>
-          <h1 className="font-sans font-extrabold text-4xl text-[#1A1330] mb-2 tracking-tight">Sign in</h1>
+          <div className="eyebrow text-[#3D1A78] mb-3">Welcome</div>
+          <h1 className="font-sans font-extrabold text-4xl text-[#1A1330] mb-2 tracking-tight">
+            Enter demo mode
+          </h1>
           <p className="text-[#4B4567] mb-6">
-            Continue your preparation, exactly where you left it.
+            Try the full app instantly — no account, no email, no password.
+            Your work stays in this browser session so you can explore freely.
           </p>
 
           <button
             type="button"
             onClick={startDemo}
             disabled={demoLoading}
-            className="btn-soft w-full flex items-center justify-center gap-3 mb-5 border-2 border-dashed border-[#3D1A78] text-[#3D1A78] font-semibold hover:bg-[#F1EBFA] disabled:opacity-60"
+            className="btn-gradient w-full flex items-center justify-center gap-3 disabled:opacity-60"
             data-testid="login-demo-mode-button"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.9 6.5 19.5l1-6.3L3 8.9 9 8z" />
             </svg>
-            {demoLoading ? "Starting demo…" : "Try the demo — no account needed"}
+            {demoLoading ? "Starting demo…" : "Enter demo mode"}
           </button>
 
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 divider-line" />
-            <span className="text-xs text-[#857E9C]">or sign in with email</span>
-            <div className="flex-1 divider-line" />
-          </div>
+          <p className="text-[11px] text-[#857E9C] mt-3 text-center">
+            No account needed · Free to use · Takes 2 seconds
+          </p>
 
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div>
-              <label className="eyebrow block mb-2">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-soft"
-                placeholder="you@example.com"
-                data-testid="login-email-input"
-              />
+          {/* Advanced: email + password sign-in (collapsed). Kept for the
+              admin account and returning users with saved credentials. */}
+          <div className="mt-8 pt-6 border-t border-[#EFECF6]">
+            {!showEmail ? (
               <button
                 type="button"
-                onClick={sendMagicLink}
-                disabled={magicLoading || magicSent}
-                className="mt-2 text-xs text-[#3D1A78] font-semibold hover:underline disabled:opacity-60"
-                data-testid="login-magic-link-button"
+                onClick={() => setShowEmail(true)}
+                className="w-full text-xs text-[#857E9C] hover:text-[#3D1A78]"
+                data-testid="login-show-email-toggle"
               >
-                {magicSent
-                  ? "✓ Check your inbox"
-                  : magicLoading
-                  ? "Sending…"
-                  : "Email me a link to sign in or set up an account"}
+                Have an existing account? <span className="font-semibold underline">Sign in with email</span>
               </button>
-            </div>
-            <div>
-              <label className="eyebrow block mb-2">Password</label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-soft"
-                placeholder="••••••••"
-                data-testid="login-password-input"
-              />
-              <div className="mt-2 text-right">
-                <Link
-                  to="/forgot-password"
-                  className="text-xs text-[#3D1A78] font-semibold hover:underline"
-                  data-testid="login-forgot-password-link"
+            ) : (
+              <div>
+                <div className="text-xs text-[#857E9C] mb-4">
+                  Existing account sign-in
+                </div>
+                <form onSubmit={onSubmit} className="space-y-4">
+                  <div>
+                    <label className="eyebrow block mb-2">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="input-soft"
+                      placeholder="you@example.com"
+                      data-testid="login-email-input"
+                    />
+                    <button
+                      type="button"
+                      onClick={sendMagicLink}
+                      disabled={magicLoading || magicSent}
+                      className="mt-2 text-xs text-[#3D1A78] font-semibold hover:underline disabled:opacity-60"
+                      data-testid="login-magic-link-button"
+                    >
+                      {magicSent
+                        ? "✓ Check your inbox"
+                        : magicLoading
+                        ? "Sending…"
+                        : "Email me a sign-in link instead"}
+                    </button>
+                  </div>
+                  <div>
+                    <label className="eyebrow block mb-2">Password</label>
+                    <input
+                      type="password"
+                      required
+                      minLength={8}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="input-soft"
+                      placeholder="••••••••"
+                      data-testid="login-password-input"
+                    />
+                    <div className="mt-2 text-right">
+                      <Link
+                        to="/forgot-password"
+                        className="text-xs text-[#3D1A78] font-semibold hover:underline"
+                        data-testid="login-forgot-password-link"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-soft w-full font-semibold"
+                    data-testid="login-submit-button"
+                  >
+                    {loading ? "Signing in…" : "Sign in"}
+                  </button>
+                </form>
+                <button
+                  type="button"
+                  onClick={() => setShowEmail(false)}
+                  className="mt-4 w-full text-[11px] text-[#857E9C] hover:text-[#3D1A78]"
+                  data-testid="login-hide-email-toggle"
                 >
-                  Forgot password?
-                </Link>
+                  ← Back to demo mode
+                </button>
               </div>
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-gradient w-full"
-              data-testid="login-submit-button"
-            >
-              {loading ? "Signing in…" : "Sign in"}
-            </button>
-          </form>
-
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 divider-line" />
-            <span className="text-xs text-[#857E9C]">new here?</span>
-            <div className="flex-1 divider-line" />
+            )}
           </div>
-
-          <Link
-            to="/register"
-            className="btn-soft w-full flex items-center justify-center gap-2 font-semibold"
-            data-testid="login-create-account-button"
-          >
-            Create a new account
-          </Link>
-
-          <p className="text-xs text-[#857E9C] mt-4 text-center">
-            Free to use. Takes about 30 seconds.
-          </p>
         </div>
       </div>
     </div>
