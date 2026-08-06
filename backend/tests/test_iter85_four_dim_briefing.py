@@ -125,6 +125,64 @@ def test_briefing_pdf_bytes_start_with_pdf_magic():
     assert len(b) > 5000
 
 
+def test_briefing_pdf_with_compliance_snapshot():
+    """When compliance is supplied, the follow-through section renders."""
+    safety_doc = {
+        "assessment_id": "sa-c",
+        "created_at":    "2026-08-06T12:00:00Z",
+        "result": {"level": 4, "pathway_title": "Cooperative",
+                   "pathway_headline": "OK.", "pathway_summary": "OK.",
+                   "recommendations": ["Written only."]},
+    }
+    companion_doc = {
+        "assessment_id": "co-c",
+        "created_at":    "2026-08-06T13:00:00Z",
+        "scoring":       score_companion(CompanionSubmit(answers=DimensionAnswers(**_answers(3, 3, 3)))),
+    }
+    compliance = {
+        "current_week": {
+            "week_start":     "2026-08-03",
+            "total":          5,
+            "followed":       5,
+            "compliance_pct": 100.0,
+        },
+        "streak": {
+            "threshold_pct":  80.0,
+            "current_streak": 5,
+            "longest_streak": 5,
+            "badges": [
+                {"key": "compliance_streak_4",  "weeks": 4,  "label": "4-Week Champion",  "description": "4 weeks.", "earned": True},
+                {"key": "compliance_streak_8",  "weeks": 8,  "label": "8-Week Anchor",    "description": "8 weeks.", "earned": False},
+                {"key": "compliance_streak_12", "weeks": 12, "label": "Quarter-Year",     "description": "12 weeks.", "earned": False},
+            ],
+            "next_badge": {
+                "key": "compliance_streak_8", "label": "8-Week Anchor",
+                "weeks": 8, "weeks_to_go": 3, "progress_pct": 62.5,
+            },
+        },
+    }
+    b = build_four_dimension_briefing_pdf(
+        parent_name="Sam Parent",
+        audience="Trial Court",
+        safety_doc=safety_doc,
+        companion_doc=companion_doc,
+        compliance=compliance,
+        generated_at="2026-08-06T14:00:00Z",
+    )
+    assert b.startswith(b"%PDF-")
+    # The PDF should be bigger than the no-compliance variant because the
+    # follow-through page adds content.
+    b_no_comp = build_four_dimension_briefing_pdf(
+        parent_name="Sam Parent",
+        audience="Trial Court",
+        safety_doc=safety_doc,
+        companion_doc=companion_doc,
+        compliance=None,
+        generated_at="2026-08-06T14:00:00Z",
+    )
+    assert len(b) > len(b_no_comp)
+
+
 def test_briefing_pdf_handles_missing_companion():
     """Empty companion should render a "not yet completed" section, not crash."""
     safety_doc = {

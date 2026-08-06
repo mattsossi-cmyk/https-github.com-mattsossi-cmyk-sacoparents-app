@@ -488,6 +488,12 @@
 - Dashboard card enhanced to show streak chip + earned-badge count + next-badge line.
 - Pytest coverage extended (8 tests total) — includes streak boundary math (80% cutoff), null-week break semantics, and live endpoint shape checks.
 
+### Follow-Through in the 4-Dim Briefing PDF (Feb 2026)
+- The 4-Dimension Briefing PDF now includes a dedicated "How this parent is following through" page (5 total pages) showing: current-week compliance %, count followed / total, current streak + longest streak, earned badges list, and next-badge progress.
+- Executive summary on the cover page gained a "Follow-through" row with the tier-style badge (on track / partial / lagging).
+- New helper `build_compliance_snapshot(db, user_id)` in `intervention_compliance_routes.py` returns the compact `{current_week, streak}` shape reused by both PDF and email endpoints.
+- Extended `test_iter85_four_dim_briefing.py` with `test_briefing_pdf_with_compliance_snapshot` asserting the compliance-enriched PDF is strictly bigger than the no-compliance variant. All 16 tests across iter85 + iter86 pass.
+
 ---
 
 

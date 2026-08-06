@@ -320,6 +320,78 @@ def _compute_streak(weekly_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {"current_streak": current, "longest_streak": longest}
 
 
+async def build_compliance_snapshot(
+    db: AsyncIOMotorDatabase, user_id: str
+) -> Dict[str, Any]:
+    """Return a compact {current_week, streak} snapshot for a user, safe to
+    embed in a PDF or email. Uses the same 80% threshold + badge ladder as
+    the API endpoints. Public so other modules (PDF, email) can reuse."""
+    from datetime import datetime, timedelta, timezone as _tz
+
+    now = datetime.now(_tz.utc)
+    weeks_window = 26
+    cutoff_date = now - timedelta(days=weeks_window * 7)
+    cursor = db[COLLECTION].find(
+        {"user_id": user_id, "week_start": {"$gte": _week_start(cutoff_date)}},
+        {"_id": 0, "week_start": 1, "followed": 1},
+    )
+    by_week: Dict[str, Dict[str, int]] = {}
+    async for row in cursor:
+        b = by_week.setdefault(row["week_start"], {"total": 0, "followed": 0})
+        b["total"] += 1
+        if row.get("followed"):
+            b["followed"] += 1
+
+    weekly_rows: List[Dict[str, Any]] = []
+    for i in range(weeks_window - 1, -1, -1):
+        d = now - timedelta(days=i * 7)
+        wk = _week_start(d)
+        b = by_week.get(wk)
+        pct = round((b["followed"] / b["total"]) * 100, 1) if b and b["total"] else None
+        weekly_rows.append({"week_start": wk, "compliance_pct": pct})
+
+    streak = _compute_streak(weekly_rows)
+
+    # Same badge ladder as /streak.
+    badges_out: List[Dict[str, Any]] = []
+    next_badge: Optional[Dict[str, Any]] = None
+    for b in BADGES:
+        earned = streak["longest_streak"] >= b["weeks"]
+        badges_out.append({**b, "earned": earned})
+        if not earned and next_badge is None:
+            next_badge = {
+                "key":          b["key"],
+                "label":        b["label"],
+                "weeks":        b["weeks"],
+                "weeks_to_go":  b["weeks"] - streak["current_streak"],
+                "progress_pct": round((streak["current_streak"] / b["weeks"]) * 100, 1),
+            }
+
+    # Current week aggregates
+    this_wk = _week_start(now)
+    this_bucket = by_week.get(this_wk, {"total": 0, "followed": 0})
+    if this_bucket["total"]:
+        pct = round((this_bucket["followed"] / this_bucket["total"]) * 100, 1)
+    else:
+        pct = None
+
+    return {
+        "current_week": {
+            "week_start":     this_wk,
+            "total":          this_bucket["total"],
+            "followed":       this_bucket["followed"],
+            "compliance_pct": pct,
+        },
+        "streak": {
+            "threshold_pct":  STREAK_THRESHOLD_PCT,
+            "current_streak": streak["current_streak"],
+            "longest_streak": streak["longest_streak"],
+            "badges":         badges_out,
+            "next_badge":     next_badge,
+        },
+    }
+
+
 @router.get("/streak")
 async def get_streak_and_badges(
     user: UserPublic = Depends(get_current_user),

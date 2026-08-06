@@ -135,6 +135,7 @@ def build_four_dimension_briefing_pdf(
     audience: str,
     safety_doc: Optional[Dict[str, Any]],
     companion_doc: Optional[Dict[str, Any]],
+    compliance: Optional[Dict[str, Any]] = None,
     generated_at: str,
     signed_by: Optional[str] = None,
     signed_at: Optional[str] = None,
@@ -222,6 +223,37 @@ def build_four_dimension_briefing_pdf(
             _executive_summary_row(pdf, lbl, "Not yet completed",
                                    (133, 126, 156),
                                    "Complete the Companion Assessment to populate this section.")
+
+    # Follow-through row (compliance summary at a glance)
+    if compliance and (compliance.get("current_week") or compliance.get("streak")):
+        cw = compliance.get("current_week") or {}
+        st = compliance.get("streak") or {}
+        pct = cw.get("compliance_pct")
+        total = cw.get("total") or 0
+        followed = cw.get("followed") or 0
+        cur = st.get("current_streak") or 0
+        if pct is None:
+            tier_label = "No data this week"
+            row_color = (133, 126, 156)
+        elif pct >= 80:
+            tier_label = f"{pct:.0f}% - on track"
+            row_color = (31, 92, 59)
+        elif pct >= 50:
+            tier_label = f"{pct:.0f}% - partial"
+            row_color = (170, 116, 40)
+        else:
+            tier_label = f"{pct:.0f}% - lagging"
+            row_color = (176, 42, 42)
+        note = (
+            f"{followed} of {total} interventions followed this week"
+            + (f" - {cur} week streak" if cur else "")
+        )
+        _executive_summary_row(
+            pdf, "Follow-through",
+            tier_label,
+            row_color,
+            note[:110],
+        )
 
     _section_break(pdf)
 
@@ -340,6 +372,99 @@ def build_four_dimension_briefing_pdf(
         pdf.cell(0, 4, _safe(
             f"Companion Assessment ID: {companion_doc.get('assessment_id', '-')} - assessed on {assessed}"
         ), ln=1)
+
+    # ---------------- Follow-Through (Compliance) ----------------
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 14); pdf.set_text_color(61, 26, 120)
+    pdf.cell(0, 7, _safe("How this parent is following through"), ln=1)
+    pdf.set_font("Helvetica", "", 9.5); pdf.set_text_color(75, 69, 103)
+    pdf.multi_cell(0, 5, _safe(
+        "Tier scores show where a parent stands. This section shows what they are "
+        "actually doing about it: which enforced interventions they have ticked off "
+        "this week, and whether they have sustained a compliance streak over time."
+    ))
+    pdf.ln(2)
+
+    if not compliance or (not compliance.get("current_week") and not compliance.get("streak")):
+        pdf.set_font("Helvetica", "I", 10); pdf.set_text_color(133, 126, 156)
+        pdf.multi_cell(0, 5, _safe(
+            "The parent has not yet logged any interventions this week. Follow-through "
+            "cannot be evaluated from this briefing alone."
+        ))
+    else:
+        cw = compliance.get("current_week") or {}
+        st = compliance.get("streak") or {}
+
+        # This week
+        pdf.set_font("Helvetica", "B", 12); pdf.set_text_color(61, 26, 120)
+        pdf.cell(0, 6, _safe("This week"), ln=1)
+        pct = cw.get("compliance_pct")
+        total = cw.get("total") or 0
+        followed = cw.get("followed") or 0
+        wk = cw.get("week_start") or ""
+        if pct is None:
+            tone = (133, 126, 156)
+            headline = "No log entries this week yet"
+        elif pct >= 80:
+            tone = (31, 92, 59);   headline = f"{pct:.0f}% - on track"
+        elif pct >= 50:
+            tone = (170, 116, 40); headline = f"{pct:.0f}% - partial follow-through"
+        else:
+            tone = (176, 42, 42);  headline = f"{pct:.0f}% - lagging follow-through"
+        _pill(pdf, headline, tone)
+        pdf.ln(1)
+        pdf.set_font("Helvetica", "", 9.5); pdf.set_text_color(30, 24, 54)
+        pdf.multi_cell(0, 5, _safe(
+            f"Week of {wk} (Mon-Sun, UTC): {followed} of {total} enforced interventions ticked."
+        ))
+        pdf.ln(1)
+
+        # Streak + longest
+        _section_break(pdf)
+        pdf.set_font("Helvetica", "B", 12); pdf.set_text_color(61, 26, 120)
+        pdf.cell(0, 6, _safe("Compliance streak"), ln=1)
+        cur = st.get("current_streak") or 0
+        longest = st.get("longest_streak") or 0
+        threshold = st.get("threshold_pct") or 80
+        pdf.set_font("Helvetica", "", 9.5); pdf.set_text_color(30, 24, 54)
+        pdf.multi_cell(0, 5, _safe(
+            f"Current streak: {cur} week(s) at >= {threshold:.0f}% compliance.  "
+            f"Longest streak: {longest} week(s).  "
+            "A streak is broken by any week below threshold or a silent week (no ticks)."
+        ))
+        pdf.ln(1)
+
+        # Badges earned
+        badges = st.get("badges") or []
+        earned = [b for b in badges if b.get("earned")]
+        if earned:
+            pdf.set_font("Helvetica", "B", 10.5); pdf.set_text_color(30, 24, 54)
+            pdf.cell(0, 5, _safe("Badges earned"), ln=1)
+            pdf.set_font("Helvetica", "", 9.5); pdf.set_text_color(30, 24, 54)
+            for b in earned:
+                pdf.set_x(pdf.l_margin)
+                pdf.cell(5, 4.5, _safe("*"))
+                pdf.multi_cell(0, 4.5, _safe(
+                    f"{b.get('label', '-')}: {b.get('description', '')}"
+                ))
+                pdf.ln(0.3)
+        else:
+            pdf.set_font("Helvetica", "I", 9.5); pdf.set_text_color(133, 126, 156)
+            pdf.multi_cell(0, 5, _safe(
+                "No streak badges earned yet - the first badge unlocks at 4 consecutive weeks of >= 80% compliance."
+            ))
+            pdf.ln(1)
+
+        # Next-badge progress
+        nb = st.get("next_badge")
+        if nb:
+            pdf.set_font("Helvetica", "B", 10.5); pdf.set_text_color(30, 24, 54)
+            pdf.cell(0, 5, _safe("Working toward"), ln=1)
+            pdf.set_font("Helvetica", "", 9.5); pdf.set_text_color(75, 69, 103)
+            pdf.multi_cell(0, 5, _safe(
+                f"{nb.get('label', '-')} - {nb.get('weeks_to_go', '?')} week(s) to go "
+                f"({nb.get('progress_pct', 0):.0f}% of the way there)."
+            ))
 
     # ---------------- Advisory ----------------
     pdf.add_page()

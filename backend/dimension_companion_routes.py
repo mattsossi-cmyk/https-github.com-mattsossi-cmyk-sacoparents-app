@@ -359,11 +359,19 @@ async def email_four_dimension_briefing(
 
     audience = body.audience_label or ROLE_TO_AUDIENCE.get(body.recipient_role or "other", ROLE_TO_AUDIENCE["other"])
 
+    # Follow-through snapshot for the email PDF too.
+    from intervention_compliance_routes import build_compliance_snapshot
+    try:
+        compliance = await build_compliance_snapshot(db, user.user_id)
+    except Exception:
+        compliance = None
+
     pdf_bytes = build_four_dimension_briefing_pdf(
         parent_name=user.name or "Parent",
         audience=audience,
         safety_doc=safety_doc,
         companion_doc=companion_doc,
+        compliance=compliance,
         generated_at=datetime.now(timezone.utc).isoformat(),
     )
 
@@ -458,11 +466,21 @@ async def download_four_dimension_briefing(
         )
 
     kwargs = sign_kwargs(sign, user.name, signed_note)
+
+    # Include follow-through snapshot so the mediator sees compliance
+    # alongside tier data.
+    from intervention_compliance_routes import build_compliance_snapshot
+    try:
+        compliance = await build_compliance_snapshot(db, user.user_id)
+    except Exception:
+        compliance = None
+
     pdf_bytes = build_four_dimension_briefing_pdf(
         parent_name=user.name or "Parent",
         audience=audience,
         safety_doc=safety_doc,
         companion_doc=companion_doc,
+        compliance=compliance,
         generated_at=datetime.now(timezone.utc).isoformat(),
         **kwargs,
     )
