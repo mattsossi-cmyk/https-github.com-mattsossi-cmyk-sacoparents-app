@@ -24,7 +24,7 @@ function Confetti() {
       const delay = Math.random() * 160;
       const size = 6 + Math.random() * 7;
       const color = BURST_COLORS[i % BURST_COLORS.length];
-      return { dx, dy, rot, delay, size, color };
+      return { id: `fp${i}`, dx, dy, rot, delay, size, color };
     });
   }, []);
   return (
@@ -33,9 +33,9 @@ function Confetti() {
       aria-hidden
       data-testid="foundation-ready-confetti"
     >
-      {particles.map((p, i) => (
+      {particles.map((p) => (
         <span
-          key={i}
+          key={p.id}
           className="absolute left-1/2 top-1/2 rounded-[2px] block"
           style={{
             width: `${p.size}px`,

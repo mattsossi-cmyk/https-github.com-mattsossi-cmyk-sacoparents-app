@@ -43,7 +43,8 @@ const MILESTONE_COPY = {
 };
 
 function Confetti({ colors, testidPrefix }) {
-  // 24 tiny CSS particles that fan out from a central point.
+  // 24 tiny CSS particles that fan out from a central point. Each gets a
+  // stable id so React never has to reconcile by index.
   const particles = useMemo(() => {
     return Array.from({ length: 24 }).map((_, i) => {
       const angle = (Math.PI * 2 * i) / 24 + Math.random() * 0.4;
@@ -54,14 +55,14 @@ function Confetti({ colors, testidPrefix }) {
       const delay = Math.random() * 120;
       const size = 6 + Math.random() * 6;
       const color = colors[i % colors.length];
-      return { dx, dy, rot, delay, size, color };
+      return { id: `p${i}`, dx, dy, rot, delay, size, color };
     });
   }, [colors]);
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden data-testid={`${testidPrefix}-confetti`}>
-      {particles.map((p, i) => (
+      {particles.map((p) => (
         <span
-          key={i}
+          key={p.id}
           className="absolute left-1/2 top-1/2 rounded-[2px] block"
           style={{
             width: `${p.size}px`,

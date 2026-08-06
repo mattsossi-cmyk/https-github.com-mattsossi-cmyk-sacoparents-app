@@ -95,9 +95,9 @@ export default function ReportProvenanceFooter({
         <div className="px-4 sm:px-5 pb-5" data-testid="report-provenance-body">
           <div className="rounded-xl border border-[#E5E0EE] bg-[#FCFBFE] p-4">
             <ul className="space-y-2.5">
-              {rows.map((r, i) => (
+              {rows.map((r) => (
                 <li
-                  key={i}
+                  key={`${r.origin}::${r.section}`}
                   className="flex items-start gap-2.5 text-sm"
                   data-testid={`report-provenance-row-${r.origin}`}
                 >

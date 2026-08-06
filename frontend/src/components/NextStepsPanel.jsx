@@ -82,7 +82,7 @@ export default function NextStepsPanel({ nextSteps, title = "Your next three ste
               </div>
               <ul className="space-y-2.5">
                 {items.map((item, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-[#1A1330] leading-snug">
+                  <li key={`${meta.key}-${i}-${String(item).slice(0, 32)}`} className="flex gap-2 text-sm text-[#1A1330] leading-snug">
                     <span className="mt-0.5 shrink-0" style={{ color }}>✓</span>
                     <span>{item}</span>
                   </li>
