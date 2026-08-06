@@ -1535,3 +1535,134 @@ def send_coordinator_nd_alert(
         text=plain,
         failure_message="Couldn't dispatch the coordinator alert email right now.",
     )
+
+
+
+def send_weekly_compliance_reminder(
+    *,
+    to_email: str,
+    user_name: str,
+    pending_items: List[Dict[str, Any]],
+    pending_total: int,
+    current_streak: int,
+    compliance_pct: float,
+    week_start: str,
+    cta_url: str,
+) -> None:
+    """Warm Monday nudge protecting the follow-through streak.
+
+    Copy stays short and specific: "You have N unticked things this week,
+    your K-week streak is still alive — here are the top few." No guilt
+    trip, no dark patterns.
+    """
+    greeting = (
+        f"Hi {user_name.split()[0] if user_name else 'there'},"
+    )
+
+    if current_streak >= 4:
+        streak_line = (
+            f"You're on a <strong>{current_streak}-week streak</strong> of 80%+ "
+            f"follow-through. Nice work — keep the momentum this week."
+        )
+        streak_plain = (
+            f"You're on a {current_streak}-week streak of 80%+ follow-through. "
+            f"Nice work — keep the momentum this week."
+        )
+    elif current_streak >= 1:
+        streak_line = (
+            f"Your current streak is <strong>{current_streak} week"
+            f"{'' if current_streak == 1 else 's'}</strong>. "
+            f"One steady week keeps it alive."
+        )
+        streak_plain = (
+            f"Your current streak is {current_streak} week"
+            f"{'' if current_streak == 1 else 's'}. One steady week keeps it alive."
+        )
+    else:
+        streak_line = (
+            "Every kept promise this week is the first brick of a new streak."
+        )
+        streak_plain = streak_line
+
+    items_html = ""
+    items_plain = ""
+    if pending_items:
+        rows_html = "".join([
+            f'<li style="padding:8px 0;border-bottom:1px solid #EFEBF6;'
+            f'font-size:14px;color:#1A1330;line-height:1.5;">'
+            f'{_html.escape(str(it.get("text") or ""))}'
+            f'</li>'
+            for it in pending_items
+        ])
+        items_html = (
+            f'<div style="background:#FCFBFE;border-radius:16px;padding:14px 18px;'
+            f'border:1px solid #E5E0EE;margin:14px 0 20px 0;">'
+            f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;'
+            f'color:#3D1A78;font-weight:800;margin-bottom:6px;">'
+            f"Top of the list this week</div>"
+            f'<ul style="margin:0;padding:0 0 0 18px;">{rows_html}</ul>'
+            f"</div>"
+        )
+        overflow = pending_total - len(pending_items)
+        if overflow > 0:
+            items_html += (
+                f'<p style="font-size:12px;color:#857E9C;margin:-8px 0 16px 0;'
+                f'font-style:italic;">'
+                f"+ {overflow} more waiting for you in the app.</p>"
+            )
+        items_plain = (
+            "Top of the list this week:\n"
+            + "\n".join([f"  · {it.get('text','')}" for it in pending_items])
+            + (f"\n  · (+ {overflow} more in the app)\n" if overflow > 0 else "\n")
+        )
+
+    pct_line = ""
+    if compliance_pct > 0:
+        pct_line = (
+            f'<p style="font-size:13px;color:#857E9C;margin:0 0 14px 0;">'
+            f"You're at <strong style=\"color:#3D1A78;\">{compliance_pct:.0f}%</strong> "
+            f"for the week of {_html.escape(week_start)}.</p>"
+        )
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 12px 0;">'
+        f"{_html.escape(greeting)}</p>"
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"You have <strong>{pending_total} intervention"
+        f"{'' if pending_total == 1 else 's'}</strong> still un-ticked for this week. "
+        f"{streak_line}</p>"
+        f"{pct_line}"
+        f"{items_html}"
+        f'<p style="font-size:13px;color:#857E9C;margin:16px 0 0 0;">'
+        f"Prefer not to get this Monday email? "
+        f"<a href=\"{_html.escape(cta_url)}\" style=\"color:#3D1A78;\">"
+        f"Turn it off in your compliance settings</a>.</p>"
+    )
+
+    plain = (
+        f"{greeting}\n\n"
+        f"You have {pending_total} intervention"
+        f"{'' if pending_total == 1 else 's'} still un-ticked for this week. "
+        f"{streak_plain}\n\n"
+        + (f"You're at {compliance_pct:.0f}% for the week of {week_start}.\n\n"
+           if compliance_pct > 0 else "")
+        + items_plain
+        + f"\nTick them off: {cta_url}\n\n"
+        + "Prefer not to get this Monday email? Turn it off in your compliance settings.\n"
+    )
+
+    html = _branded_html(
+        headline=f"Monday check-in · {pending_total} to tick",
+        body_html=body_html,
+        cta_label="Open my compliance log",
+        cta_url=cta_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Monday check-in · {pending_total} intervention"
+        + ("" if pending_total == 1 else "s")
+        + " still open",
+        html=html,
+        text=plain,
+        failure_message="Couldn't send the weekly compliance reminder right now.",
+    )

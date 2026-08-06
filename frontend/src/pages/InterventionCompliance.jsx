@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
+  Bell,
   CheckCircle2,
   Circle,
   Loader2,
@@ -313,6 +314,8 @@ export default function InterventionCompliance() {
           <ComplianceStreakPanel />
         </div>
 
+        <ReminderPreferencesCard />
+
         {log.items.length === 0 ? (
           <div
             className="rounded-3xl border border-dashed border-[#E5E0EE] bg-[#FAF8FE] p-8 text-center"
@@ -353,3 +356,98 @@ export default function InterventionCompliance() {
     </AppShell>
   );
 }
+
+
+/**
+ * ReminderPreferencesCard — one-toggle opt-in/out for the Monday weekly
+ * reminder email. Default is opt-in (server treats a missing row as True).
+ * Positioned between the streak panel and the intervention checklist so
+ * parents notice it after seeing their streak — the whole point of the
+ * email is to protect that streak.
+ */
+function ReminderPreferencesCard() {
+  const [state, setState] = useState({ loading: true, opted_in: true });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get("/interventions/reminder-preferences");
+        if (!cancelled) {
+          setState({ loading: false, opted_in: !!res.data?.opted_in });
+        }
+      } catch (err) {
+        logError("reminder pref load", err);
+        if (!cancelled) setState({ loading: false, opted_in: true });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const toggle = async () => {
+    const next = !state.opted_in;
+    setSaving(true);
+    try {
+      const res = await api.put("/interventions/reminder-preferences", { opted_in: next });
+      setState({ loading: false, opted_in: !!res.data?.opted_in });
+      toast.success(
+        next
+          ? "Monday reminder emails on."
+          : "Monday reminder emails off — you can turn them back on anytime.",
+      );
+    } catch (err) {
+      logError("reminder pref save", err);
+      toast.error("Couldn't update your reminder preference right now.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="mb-6 rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5 flex items-start justify-between gap-4 flex-wrap"
+      data-testid="reminder-preferences-card"
+    >
+      <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className="shrink-0 h-8 w-8 rounded-full bg-[#F5F1FB] flex items-center justify-center text-[#3D1A78]">
+          <Bell size={14} />
+        </div>
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            Weekly reminder
+          </div>
+          <div className="font-serif text-lg text-[#1A1330] leading-snug">
+            Send me a Monday nudge
+          </div>
+          <p className="text-xs text-[#4B4567] mt-1 max-w-md">
+            A short email early each Monday listing the interventions you
+            haven&apos;t ticked yet, so your streak stays alive without you having
+            to remember to check back in.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={state.loading || saving}
+        aria-pressed={state.opted_in}
+        aria-label={state.opted_in ? "Turn Monday reminders off" : "Turn Monday reminders on"}
+        data-testid="reminder-preferences-toggle"
+        className={
+          "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors " +
+          (state.opted_in ? "bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5]" : "bg-[#D6CFE8]") +
+          " disabled:opacity-50"
+        }
+      >
+        <span
+          className={
+            "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform " +
+            (state.opted_in ? "translate-x-6" : "translate-x-1")
+          }
+        />
+      </button>
+    </div>
+  );
+}
+

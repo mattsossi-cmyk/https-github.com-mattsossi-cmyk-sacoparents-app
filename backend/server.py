@@ -193,6 +193,8 @@ async def startup_log():
     asyncio.create_task(survey_scheduler_loop(app))
     asyncio.create_task(checkin_scheduler_loop(app))
     asyncio.create_task(admin_briefing_scheduler_loop(app))
+    from weekly_compliance_reminder import weekly_compliance_reminder_loop
+    asyncio.create_task(weekly_compliance_reminder_loop(app))
 
 
 @app.on_event("shutdown")

@@ -460,3 +460,101 @@ async def get_streak_and_badges(
         "badges":         badges_out,
         "next_badge":     next_badge,
     }
+
+
+
+# ---------------------------------------------------------------------------
+# WEEKLY REMINDER PREFERENCES + OPERATOR PREVIEW
+# ---------------------------------------------------------------------------
+
+class ReminderPrefUpdate(BaseModel):
+    opted_in: bool
+
+
+@router.get("/reminder-preferences")
+async def get_reminder_preferences(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return whether this parent wants the weekly Monday reminder email.
+
+    Default is opted-in (implicit — if no row exists we treat it as True).
+    """
+    from weekly_compliance_reminder import get_reminder_pref
+    return await get_reminder_pref(db, user.user_id)
+
+
+@router.put("/reminder-preferences")
+async def update_reminder_preferences(
+    body: ReminderPrefUpdate,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Toggle the weekly Monday reminder email on/off for this parent."""
+    from weekly_compliance_reminder import set_reminder_pref
+    return await set_reminder_pref(db, user.user_id, body.opted_in)
+
+
+@router.post("/weekly-reminder/admin/send-me-preview")
+async def admin_send_me_weekly_reminder_preview(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Fire a real weekly-reminder email to the operator's inbox using
+    their real compliance data. Operator-only. Lets the operator sanity-
+    check formatting without waiting for Monday."""
+    import os as _os
+    from weekly_compliance_reminder import (
+        _current_streak, _current_week_summary, _reminder_link,
+    )
+    from email_service import send_weekly_compliance_reminder
+
+    operator_email = (_os.environ.get("OPERATOR_EMAIL") or "").strip().lower()
+    if not operator_email or (user.email or "").strip().lower() != operator_email:
+        raise HTTPException(403, "Operator only.")
+
+    summary = await _current_week_summary(db, user.user_id)
+    streak = await _current_streak(db, user.user_id)
+
+    send_weekly_compliance_reminder(
+        to_email=user.email,
+        user_name=user.name or "",
+        pending_items=[
+            {"text": p["text"], "source": p.get("source"), "group": p.get("group")}
+            for p in (summary.get("pending_items") or [])[:5]
+        ],
+        pending_total=len(summary.get("pending_items") or []),
+        current_streak=streak,
+        compliance_pct=summary.get("compliance_pct") or 0.0,
+        week_start=summary.get("week_start") or "",
+        cta_url=_reminder_link(),
+    )
+    return {
+        "ok":             True,
+        "sent_to":        user.email,
+        "pending_count":  len(summary.get("pending_items") or []),
+        "current_streak": streak,
+        "week_start":     summary.get("week_start"),
+    }
+
+
+@router.post("/weekly-reminder/admin/sweep")
+async def admin_run_weekly_reminder_sweep(
+    dry_run: bool = Query(True),
+    force_window: bool = Query(False),
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Operator-only: run one sweep pass on demand. Defaults to `dry_run=True`
+    so the operator can see who WOULD get the reminder without actually
+    dispatching. Pass `dry_run=false&force_window=true` to fire real emails
+    off-schedule (use with care)."""
+    import os as _os
+    from weekly_compliance_reminder import send_weekly_compliance_reminders
+
+    operator_email = (_os.environ.get("OPERATOR_EMAIL") or "").strip().lower()
+    if not operator_email or (user.email or "").strip().lower() != operator_email:
+        raise HTTPException(403, "Operator only.")
+    return await send_weekly_compliance_reminders(
+        db, dry_run=dry_run, force_window=force_window,
+    )

@@ -1,6 +1,19 @@
 # SA CoParents — PRD
 
 
+- **Iteration 90 — Weekly Compliance Reminder (Monday nudge email) (2026-02-27)**:
+  - **Backend**: new `weekly_compliance_reminder.py` — `send_weekly_compliance_reminders(db, dry_run, now, force_window)` pure sweeper + `weekly_compliance_reminder_loop(app)` background task (registered in `server.py` alongside the other schedulers). Sweep runs only during Monday 08:00-22:00 UTC (env-configurable `WEEKLY_COMPLIANCE_REMINDER_START_HOUR_UTC` / `_END_HOUR_UTC`). Loop is gated behind `WEEKLY_COMPLIANCE_REMINDER_ENABLED=1` — off by default; operator flips the env var + restarts backend when ready to go live.
+  - **Suppression matrix**: opt-out row, no email, `@demo.local`, `>60 days` inactive on compliance, `≥80%` already ticked this week (STREAK_THRESHOLD_PCT), or already sent to this user this ISO week. Sends collection `weekly_compliance_reminder_sends` records every send + failure (mirrors the coordinator alerts audit pattern — a broken Resend never causes a re-attempt storm).
+  - **Email**: new `email_service.send_weekly_compliance_reminder` — warm, streak-aware copy (`"You're on a K-week streak. Nice work — keep the momentum this week."`), top-5 pending items list with "+ N more" overflow, current-week percentage, CTA button back to `/compliance`, footer "Turn it off" link. Subject: `Monday check-in · N intervention(s) still open`.
+  - **Endpoints on `intervention_compliance_routes.py`**:
+    - `GET/PUT /interventions/reminder-preferences` — parent-facing opt-in/out (default opt-in = True when no row exists)
+    - `POST /interventions/weekly-reminder/admin/send-me-preview` — operator-only, fires a real email to the operator's inbox using their real data
+    - `POST /interventions/weekly-reminder/admin/sweep?dry_run=true&force_window=true` — operator-only manual trigger; dry-run defaults true so operator can see who WOULD get a reminder before flipping any switches
+  - **Frontend**: `ReminderPreferencesCard` component on `InterventionCompliance.jsx` between the streak panel and the checklist — clean toggle switch, hint copy "A short email early each Monday listing the interventions you haven't ticked yet, so your streak stays alive". Testids: `reminder-preferences-card`, `reminder-preferences-toggle`.
+  - **Testing**: `test_iter90_weekly_reminder.py` — **15/15 pass** covering: (1) Monday send-window bounds, (2) Tuesday short-circuit, (3) opted-in default, (4) opt-out persistence, (5) happy-path dispatch + audit row, (6) dry-run never sends, (7) opted-out suppression, (8) inactive-user suppression, (9) high-enough-pct suppression, (10) same-week dedupe, (11) demo-email skip, (12) email-provider failure still writes audit row. Live curl E2E: operator preferences round-trip, dry-run sweep found parent1 with 21 pending items, non-operator got 403, real preview email fired to operator inbox (Resend 200). Fixed one bug during E2E — `distinct()` in Motor is a coroutine, not an async cursor; production code updated.
+
+
+
 - **Iteration 89 — Coordinator Alerts for High / Critical ND Risk Assessments (2026-02-27)**:
   - **Backend**: new `nd_coordinator_alerts.py` with `maybe_fire_coordinator_alert()` — writes to `nd_coordinator_alerts` collection and dispatches an operator email via new `email_service.send_coordinator_nd_alert`. Dedupe rules: (1) `low`/`medium` never alert; (2) first-time `high`/`critical` → alert reason `hit`; (3) same tier within 24h → suppressed; (4) same tier after 24h → alert reason `re_hit`; (5) tier escalation (e.g. `high` → `critical`) always fires immediately with reason `escalated`; (6) rows are recorded even on email-provider failure so a downed Resend doesn't cause every submit to re-attempt a broken send.
   - **Hook site**: `nd_risk_routes.submit_assessment` fires the alert AFTER Mongo insert, wrapped in try/except so a broken email never blocks the parent's submission.
