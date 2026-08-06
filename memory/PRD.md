@@ -1,6 +1,14 @@
 # SA CoParents — PRD
 
 
+- **Iteration 89 — Coordinator Alerts for High / Critical ND Risk Assessments (2026-02-27)**:
+  - **Backend**: new `nd_coordinator_alerts.py` with `maybe_fire_coordinator_alert()` — writes to `nd_coordinator_alerts` collection and dispatches an operator email via new `email_service.send_coordinator_nd_alert`. Dedupe rules: (1) `low`/`medium` never alert; (2) first-time `high`/`critical` → alert reason `hit`; (3) same tier within 24h → suppressed; (4) same tier after 24h → alert reason `re_hit`; (5) tier escalation (e.g. `high` → `critical`) always fires immediately with reason `escalated`; (6) rows are recorded even on email-provider failure so a downed Resend doesn't cause every submit to re-attempt a broken send.
+  - **Hook site**: `nd_risk_routes.submit_assessment` fires the alert AFTER Mongo insert, wrapped in try/except so a broken email never blocks the parent's submission.
+  - **Email payload**: goes to `OPERATOR_EMAIL` — headline like "ND Risk hit Critical", tier + score/16, target parent name, coparent name, assessment_id, submitted-at (UTC), curl-ready `GET /api/nd-risk/assessment/{id}` hint. Copy is deliberately terse for phone lock-screen legibility.
+  - **Testing**: `test_iter89_nd_coordinator_alerts.py` — 15 tests pass covering all six dedupe branches + email-provider-down persistence guarantee + full happy-path monkeypatch capture. Live end-to-end curl against preview: parent1 submitted a critical-tier assessment → Resend returned 200 → audit row shows `email_ok: true`, `score: 16`, `reason: hit`. Second submit inside 24h correctly suppressed (count stayed at 1). Total score bug (`scored["total"]` → `scored["total_score"]`) caught + fixed in the same session.
+
+
+
 - **Iteration 88 — Reviewer Admin Page (operator-only CRUD for reviewer_panel.json) (2026-02-27)**:
   - **Backend** (`reviewer_panel_routes.py`): added `_save()` helper (atomic tmp-file + rename, auto-bumps `last_updated` on every write); `_load()` back-fills stable `id` (uuid4 hex[:12]) on any legacy entries. New operator-gated endpoints — `POST /reviewer-panel/reviewers`, `PATCH /reviewer-panel/reviewers/{id}`, `DELETE /reviewer-panel/reviewers/{id}`. Public helper `GET /reviewer-panel/reviewers/roles` for the admin form's role dropdown. Server-side validation: role must be one of the 5 known keys, `review_date` must parse as `YYYY-MM-DD`, name min 2 chars.
   - **Frontend**: new `AdminReviewers.jsx` at `/admin/reviewers` — inline form (name, role dropdown, org, review_date native picker, review_scope, attestation) with Add / Edit / Cancel / Save + Remove buttons; empty-state card when no reviewers; non-operator gate shows "Operator only" placeholder with a link back to public methodology. Testids: `admin-reviewers-{root,not-operator,loading,empty,list,add-btn}` + `admin-reviewers-form-{name,role,date,org,scope,attestation,save,cancel}` + `admin-reviewer-{item,edit,delete}-{id}`.

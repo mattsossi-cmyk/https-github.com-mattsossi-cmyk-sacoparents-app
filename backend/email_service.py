@@ -1450,3 +1450,88 @@ def send_reviewer_packet(
         attachments=[(pdf_filename, pdf_bytes)],
         failure_message="Couldn't send the reviewer packet right now. Please try again in a moment.",
     )
+
+
+
+def send_coordinator_nd_alert(
+    *,
+    to_email: str,
+    tier: str,
+    tier_label: str,
+    total_score: int,
+    target_name: Optional[str],
+    coparent_name: Optional[str],
+    assessment_id: str,
+    submitted_at: str,
+    reason: str = "hit",
+) -> None:
+    """Fire a low-noise ops email to the operator when a parent's ND Risk
+    Assessment lands on ``high`` or ``critical``.
+
+    - Kept intentionally terse so it reads well from a phone lock-screen.
+    - Includes the assessment id (the operator has admin role and can
+      hit ``GET /api/nd-risk/assessment/{id}`` to pull the full record).
+    - `reason` distinguishes fresh alerts from tier escalations.
+    """
+    submitted_display = submitted_at[:19].replace("T", " ") + " UTC"
+    target_display   = target_name  or "(no name)"
+    coparent_display = coparent_name or "(no coparent named)"
+    tier_color = "#B02A2A" if tier == "critical" else "#B26A00"
+
+    reason_headline = {
+        "hit":       f"ND Risk hit {tier_label}",
+        "escalated": f"ND Risk ESCALATED to {tier_label}",
+        "re_hit":    f"ND Risk still at {tier_label}",
+    }.get(reason, f"ND Risk at {tier_label}")
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"A parent's Neurodivergent Risk Assessment just resolved to a tier "
+        f"that warrants a same-day human touch-point.</p>"
+        f'<div style="background:#FCEDEB;border-left:4px solid {tier_color};border-radius:12px;padding:14px 16px;margin:0 0 18px 0;">'
+        f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:{tier_color};font-weight:800;">{_html.escape(reason.replace("_", " ").title())}</div>'
+        f'<div style="font-size:20px;font-weight:800;color:#1A1330;margin-top:4px;">Tier: {_html.escape(tier_label)}'
+        f' <span style="font-size:14px;font-weight:600;color:#4B4567;">(score {total_score}/16)</span></div>'
+        f"</div>"
+        f'<table role="presentation" style="border-collapse:collapse;width:100%;font-size:14px;color:#1A1330;margin:0 0 18px 0;">'
+        f'<tr><td style="padding:6px 0;color:#4B4567;width:40%;">Target parent</td>'
+        f'<td style="padding:6px 0;font-weight:600;">{_html.escape(target_display)}</td></tr>'
+        f'<tr><td style="padding:6px 0;color:#4B4567;">Coparent named</td>'
+        f'<td style="padding:6px 0;font-weight:600;">{_html.escape(coparent_display)}</td></tr>'
+        f'<tr><td style="padding:6px 0;color:#4B4567;">Submitted</td>'
+        f'<td style="padding:6px 0;font-weight:600;">{_html.escape(submitted_display)}</td></tr>'
+        f'<tr><td style="padding:6px 0;color:#4B4567;">Assessment ID</td>'
+        f'<td style="padding:6px 0;font-family:monospace;font-size:12px;">{_html.escape(assessment_id)}</td></tr>'
+        f"</table>"
+        f'<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 8px 0;">'
+        f"Pull the full record: "
+        f'<code style="background:#F1EEF7;padding:2px 6px;border-radius:6px;">'
+        f"GET /api/nd-risk/assessment/{_html.escape(assessment_id)}"
+        f"</code></p>"
+        f'<p style="font-size:12px;color:#857E9C;line-height:1.55;margin:12px 0 0 0;font-style:italic;">'
+        f"This alert re-fires at most once per 24 hours per parent per tier; "
+        f"an escalation to a higher tier always re-fires immediately.</p>"
+    )
+    plain = (
+        f"{reason_headline}\n"
+        f"Score {total_score}/16 · Tier {tier_label}\n\n"
+        f"Target parent : {target_display}\n"
+        f"Coparent named: {coparent_display}\n"
+        f"Submitted     : {submitted_display}\n"
+        f"Assessment ID : {assessment_id}\n\n"
+        f"Pull the full record: GET /api/nd-risk/assessment/{assessment_id}\n"
+        f"(This alert re-fires at most once per 24h per parent per tier; "
+        f"an escalation to a higher tier always re-fires immediately.)\n"
+    )
+    html = _branded_html(
+        headline=reason_headline,
+        body_html=body_html,
+        cta_label="",
+    )
+    _send(
+        to_email=to_email,
+        subject=f"[SA CoParents · Coordinator] {reason_headline} · {target_display}",
+        html=html,
+        text=plain,
+        failure_message="Couldn't dispatch the coordinator alert email right now.",
+    )

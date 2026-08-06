@@ -248,6 +248,26 @@ async def submit_assessment(
     }
     await db[ASSESSMENTS_COLLECTION].insert_one(doc)
     doc.pop("_id", None)
+
+    # Fire a coordinator alert for high / critical tiers. Non-blocking —
+    # a broken email provider must never break the parent's submission.
+    if scored["tier"] in ("high", "critical"):
+        try:
+            from nd_coordinator_alerts import maybe_fire_coordinator_alert
+            await maybe_fire_coordinator_alert(
+                db,
+                user_id=user.user_id,
+                assessment_id=aid,
+                tier=scored["tier"],
+                tier_label=scored["tier_label"],
+                total_score=int(scored.get("total_score", 0)),
+                target_name=doc.get("target_name"),
+                coparent_name=doc.get("coparent_name"),
+                submitted_at=now,
+            )
+        except Exception:  # noqa: BLE001
+            pass
+
     return doc
 
 
