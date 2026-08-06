@@ -28,6 +28,7 @@ import ReportShareControls, { pdfAbs } from "../components/ReportShareControls";
 import BriefingEmailDialog from "../components/BriefingEmailDialog";
 import DeviceSafetyBanner from "../components/DeviceSafetyBanner";
 import ScreenGuardrailPanel from "../components/ScreenGuardrailPanel";
+import ReviewerStatusChip from "../components/ReviewerStatusChip";
 
 const TONE_STYLES = {
   danger: {
@@ -556,6 +557,9 @@ export default function SafetyAssessment() {
             <h1 className="font-bold text-3xl sm:text-4xl text-[#1A1330] tracking-tight mb-3">
               Family Violence and Communication Safety Screen
             </h1>
+            <div className="mb-4">
+              <ReviewerStatusChip />
+            </div>
 
             <MethodologyCard id="safety" defaultOpen={false} />
 

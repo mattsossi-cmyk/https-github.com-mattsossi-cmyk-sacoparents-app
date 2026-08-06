@@ -40,6 +40,7 @@ from signature_verify_routes import router as signature_verify_router  # noqa: E
 from nd_risk_routes import router as nd_risk_router  # noqa: E402
 from dimension_companion_routes import router as dimension_companion_router  # noqa: E402
 from intervention_compliance_routes import router as intervention_compliance_router  # noqa: E402
+from reviewer_panel_routes import router as reviewer_panel_router  # noqa: E402
 from share_routes import router as share_router  # noqa: E402
 from coach_routes import router as coach_router  # noqa: E402
 from next_steps_routes import router as next_steps_router  # noqa: E402
@@ -140,6 +141,7 @@ api_router.include_router(signature_verify_router)
 api_router.include_router(nd_risk_router)
 api_router.include_router(dimension_companion_router)
 api_router.include_router(intervention_compliance_router)
+api_router.include_router(reviewer_panel_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.

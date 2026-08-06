@@ -512,6 +512,14 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Domains currently flagged as **Gap** for reviewer input: strangulation, weapons in the home, sexual coercion, digital surveillance, financial control, substance abuse during incidents, mental-health safety concerns.
 - Explicit "does NOT claim equivalence to MASIC-S" note; rows only move to Covered after reviewer panel approval with names + review date printed on the page.
 
+### Expert Reviewer Panel Scaffolding (Feb 2026)
+- New backend module `reviewer_panel_routes.py` + editable JSON file `reviewer_panel.json`:
+  - `GET  /api/reviewer-panel` — returns the current list of reviewers, review scope, and status (`reviewed` / `pending`). Empty list initially.
+  - `GET  /api/reviewer-panel/packet` — generates a 6-page PDF reviewer packet: cover, how the screen works, Section 1 questions (with high-concern flags), Section 2 questions, review checklist, MASIC-S gaps to address, and a sign-off page for the reviewer's name / credentials / role / attestation.
+- New frontend `ReviewerPanelCard.jsx` on the Methodology page — lists each reviewer's name, credentials, role, org, review date, scope, and public attestation. Shows a transparent "Independent expert review is pending" empty state when no reviewers are present.
+- New frontend `ReviewerStatusChip.jsx` mounted on the Safety Screen intro — small pill users see at a glance: "Independent expert review pending" or "Reviewed by N independent experts", linking to the methodology page.
+- The operator adds reviewer entries by appending to `reviewer_panel.json` after a reviewer signs the packet and agrees to be listed publicly.
+
 ---
 
 

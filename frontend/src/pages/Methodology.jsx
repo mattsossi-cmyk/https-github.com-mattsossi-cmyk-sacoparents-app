@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, FlaskConical, TriangleAlert, Info } from "lucide-react";
 import MasicComparison from "../components/MasicComparison";
+import ReviewerPanelCard from "../components/ReviewerPanelCard";
 
 const LAST_UPDATED = "February 26, 2026";
 
@@ -120,6 +121,8 @@ export default function Methodology() {
           </p>
 
           <MasicComparison />
+
+          <ReviewerPanelCard />
 
           <H2>3. AI Coach responses</H2>
           <p>
