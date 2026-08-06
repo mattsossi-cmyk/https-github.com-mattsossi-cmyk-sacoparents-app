@@ -50,6 +50,7 @@ import VerifySignature from "@/pages/VerifySignature";
 import NDRiskAssessment from "@/pages/NDRiskAssessment";
 import NDRiskAssessmentResult from "@/pages/NDRiskAssessmentResult";
 import DimensionCompanion from "@/pages/DimensionCompanion";
+import InterventionCompliance from "@/pages/InterventionCompliance";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
 import SafetyAssessment from "@/pages/SafetyAssessment";
@@ -160,6 +161,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <DimensionCompanion />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interventions"
+          element={
+            <ProtectedRoute>
+              <InterventionCompliance />
             </ProtectedRoute>
           }
         />

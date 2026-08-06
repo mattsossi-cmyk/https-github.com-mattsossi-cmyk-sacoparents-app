@@ -12,6 +12,7 @@ import BadgeShelf from "../components/BadgeShelf";
 import MeetTheProgramCard from "../components/MeetTheProgramCard";
 import GrowthWidget from "../components/GrowthWidget";
 import NDRiskTimelineCard from "../components/NDRiskTimelineCard";
+import InterventionComplianceCard from "../components/InterventionComplianceCard";
 import ProgressDashboardCard from "../components/ProgressDashboardCard";
 import PublicMilestoneWall from "../components/PublicMilestoneWall";
 import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
@@ -952,6 +953,13 @@ export default function Dashboard() {
             taken the assessment. Deep-links to the full timeline chart. */}
         <div className="mt-6 mb-6">
           <NDRiskTimelineCard />
+        </div>
+
+        {/* Intervention compliance — self-hides for parents with no
+            enforced interventions on file yet. Deep-links to the full
+            weekly log. */}
+        <div className="mb-6">
+          <InterventionComplianceCard />
         </div>
 
         {/* Achievement badge shelf */}

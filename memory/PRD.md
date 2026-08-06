@@ -468,6 +468,17 @@
 - Frontend: new reusable `BriefingEmailDialog.jsx` (email + name + role radio-chips + short message). Mounted on both the Companion result page (`companion-briefing-email-button`) and the Safety Assessment result page (`safety-briefing-email-button`).
 - Pytest coverage extended in `test_iter85_four_dim_briefing.py` (7 tests total) — includes rejection of invalid emails/demo.local and a successful send to Resend's sandbox address.
 
+### Intervention Compliance Log (Feb 2026)
+- New backend router `intervention_compliance_routes.py`:
+  - `GET  /api/interventions/log` — aggregates enforced interventions from the parent's LATEST Safety + ND Risk + Companion assessments, merged with this week's tick state and per-item notes. Returns summary (`total`, `followed`, `compliance_pct`).
+  - `POST /api/interventions/log` — idempotent upsert of a single item (intervention_key, followed, notes).
+  - `GET  /api/interventions/log/history?weeks=N` — weekly compliance % for the last N weeks (chronological, gaps filled with `null` for empty weeks).
+- Storage: `intervention_compliance` Mongo collection, one document per (user_id, week_start, intervention_key). Week starts Monday UTC.
+- Stable intervention key = `md5(source|text)[:16]` so ticks persist across re-assessments as long as wording stays the same.
+- New frontend page `/interventions` (`InterventionCompliance.jsx`) — weekly compliance gauge, 8-week history bar strip, grouped-by-source checklist with tick toggles + optional per-item notes.
+- New Dashboard card `InterventionComplianceCard.jsx` — self-hides for parents with 0 interventions on file; shows current week's % and follow count with a gradient progress bar.
+- Pytest: `/app/backend/tests/test_iter86_intervention_compliance.py` (4 tests: week-start math, intervention-key stability, HTTP tick lifecycle, history endpoint shape).
+
 ---
 
 
