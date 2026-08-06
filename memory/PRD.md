@@ -1,6 +1,14 @@
 # SA CoParents — PRD
 
 
+- **Iteration 88 — Reviewer Admin Page (operator-only CRUD for reviewer_panel.json) (2026-02-27)**:
+  - **Backend** (`reviewer_panel_routes.py`): added `_save()` helper (atomic tmp-file + rename, auto-bumps `last_updated` on every write); `_load()` back-fills stable `id` (uuid4 hex[:12]) on any legacy entries. New operator-gated endpoints — `POST /reviewer-panel/reviewers`, `PATCH /reviewer-panel/reviewers/{id}`, `DELETE /reviewer-panel/reviewers/{id}`. Public helper `GET /reviewer-panel/reviewers/roles` for the admin form's role dropdown. Server-side validation: role must be one of the 5 known keys, `review_date` must parse as `YYYY-MM-DD`, name min 2 chars.
+  - **Frontend**: new `AdminReviewers.jsx` at `/admin/reviewers` — inline form (name, role dropdown, org, review_date native picker, review_scope, attestation) with Add / Edit / Cancel / Save + Remove buttons; empty-state card when no reviewers; non-operator gate shows "Operator only" placeholder with a link back to public methodology. Testids: `admin-reviewers-{root,not-operator,loading,empty,list,add-btn}` + `admin-reviewers-form-{name,role,date,org,scope,attestation,save,cancel}` + `admin-reviewer-{item,edit,delete}-{id}`.
+  - **Discoverability**: `ReviewerPanelCard.jsx` now shows a "Manage reviewers" link (testid `reviewer-panel-manage-link`) next to the "Send packet" button — visible only to the operator.
+  - **Testing**: `test_iter88_reviewer_admin.py` — 4 tests pass: public roles endpoint, non-operator 403 on add, full add→PATCH→DELETE round-trip (with 404 on second delete + 400 on bad role/date via PATCH), add rejects bad role/date via POST. Cleanup fixture keeps `reviewer_panel.json` clean across runs. Frontend smoke-tested against preview URL — operator sees full form with the sample entry filled in, parent1 sees the "Operator only" gate.
+
+
+
 - **Iteration 87 — Signed Briefing Verify (QR-scan issuance check) (2026-02-27)**:
   - **Backend**: New `briefing_verify_routes.py` with helper `record_briefing_signature(db, user_id, parent_name, audience, snapshot) -> {sig_id, verify_url}` (uuid4 hex[:16] id, writes `briefing_signatures` row with `issued_on` UTC calendar date + internal-only snapshot of scores) and public endpoint `GET /api/verify/briefing/{sig_id}` returning `{issued, issued_on, sig_id}` only — no snapshot ever leaks.
   - **PDF builder**: `four_dimension_briefing_pdf.py` accepts new kwargs `briefing_sig_id` / `briefing_verify_url`; footer of every page stamps a 12×12mm QR at bottom-LEFT (out of the way of the optional signature QR at bottom-right) via new `_stamp_briefing_verify_qr`; cover shows a "Briefing ID" line for at-a-glance eyeballing.

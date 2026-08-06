@@ -8,7 +8,8 @@
  * to hand to a candidate reviewer.
  */
 import { useEffect, useState } from "react";
-import { Users, Download, Loader2, ShieldCheck, Clock, Send } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Users, Download, Loader2, ShieldCheck, Clock, Send, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { api, API } from "../lib/api";
 import ReviewerSendDialog from "./ReviewerSendDialog";
@@ -208,6 +209,15 @@ export default function ReviewerPanelCard() {
           >
             <Download size={12} /> Download reviewer packet (PDF)
           </a>
+          {isOperator && (
+            <Link
+              to="/admin/reviewers"
+              data-testid="reviewer-panel-manage-link"
+              className="inline-flex items-center gap-1.5 text-xs text-[#3D1A78] font-semibold hover:underline"
+            >
+              <Settings size={12} /> Manage reviewers
+            </Link>
+          )}
           {isOperator && (
             <button
               type="button"
