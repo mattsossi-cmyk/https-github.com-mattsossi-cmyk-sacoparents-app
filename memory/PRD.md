@@ -506,6 +506,12 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - **Methodology page transparency** — added explicit statement that this screen is not the Danger Assessment, MASIC-S, or HITS, and has not been independently validated in custody or mediation populations; scoring is heuristic; it recommends a communication *structure*, not clinical or legal outcomes.
 - Survivor-visibility hardening confirmed: the Deep-Dive Compare and SNC v2 compare routers already gate on Safety Screen level and never join safety-screen answers into a shared payload.
 
+### MASIC-S Coverage Transparency Sidebar (Feb 2026)
+- New `MasicComparison.jsx` component mounted on the Methodology page (`/methodology`) — publishes an honest side-by-side of MASIC-S domains vs. this screen's actual coverage.
+- Each of the 18 MASIC-S domains is tagged Covered / Partial / Gap / Reviewer pending with a short note. Legend + counts shown above the table.
+- Domains currently flagged as **Gap** for reviewer input: strangulation, weapons in the home, sexual coercion, digital surveillance, financial control, substance abuse during incidents, mental-health safety concerns.
+- Explicit "does NOT claim equivalence to MASIC-S" note; rows only move to Covered after reviewer panel approval with names + review date printed on the page.
+
 ---
 
 

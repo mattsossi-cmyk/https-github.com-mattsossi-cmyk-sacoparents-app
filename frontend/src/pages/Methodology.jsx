@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, FlaskConical, TriangleAlert, Info } from "lucide-react";
+import MasicComparison from "../components/MasicComparison";
 
 const LAST_UPDATED = "February 26, 2026";
 
@@ -117,6 +118,8 @@ export default function Methodology() {
             communicate "better" with a coercive co-parent shifts
             responsibility onto the person experiencing harm.
           </p>
+
+          <MasicComparison />
 
           <H2>3. AI Coach responses</H2>
           <p>
