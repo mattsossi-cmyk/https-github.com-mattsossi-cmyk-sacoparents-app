@@ -427,7 +427,33 @@
 
 ---
 
-## Existing (retained) products & endpoints
+## Recent additions (Feb 2026)
+
+### ND Risk Assessment Timeline (Feb 2026)
+- Added Timeline component on `/nd-risk-assessment/result/:aid` — Recharts line chart with tier bands (Low/Medium/High/Critical), header stats (latest tier, lifetime delta, re-assess CTA), and delta cards between consecutive assessments.
+- Added compact `NDRiskTimelineCard` on Dashboard — self-hides for parents with 0 assessments; shows a stepped list of last 3 assessments with tier chips and a trend badge.
+- Reuses existing `GET /api/nd-risk/assessments/me` endpoint (no backend changes).
+- Files: `/app/frontend/src/components/NDRiskTimeline.jsx`, `NDRiskTimelineCard.jsx`, updates to `Dashboard.jsx` and `NDRiskAssessmentResult.jsx`.
+
+### Contemporaneous wording (Feb 2026)
+- Updated High-tier intervention copy in `nd_risk_routes.py`: "Asynchronous / synchronous" → "Non-Contemporaneous / contemporaneous". Backfilled 2 existing High-tier assessments in Mongo.
+
+### Login → Demo-first (Feb 2026)
+- Simplified `Login.jsx` — primary CTA is now "Enter demo mode" (gradient button); email/password sign-in is collapsed behind a small toggle link for admin/returning users.
+
+### Dimension Companion Assessment — Dim 2/3/4 (Feb 2026)
+- New backend router `dimension_companion_routes.py`:
+  - `GET  /api/dimension-companion/questions` — 15 Likert questions (5 per dimension)
+  - `POST /api/dimension-companion` — submits + scores, returns per-dimension tier + interventions + worst-dimension focus note
+  - `GET  /api/dimension-companion/me` — latest for the caller
+- New frontend page `/companion-assessment` (`DimensionCompanion.jsx`) — 4-step flow (intro → Dim 2 → Dim 3 → Dim 4 → combined result).
+- CTA added on Safety Assessment result page: appears ONLY when safety level ≥ 3 (cleared). Levels 1 & 2 do NOT see the companion CTA to preserve the safety firewall.
+- Tiers: Strong / Steady / Stretched / Strained. Overall pathway derived from worst dimension (conservative).
+- Storage: `dimension_companion_assessments` Mongo collection.
+
+---
+
+
 
 - **Auth**: `/api/auth/*` (JWT + Emergent Google Auth)
 - **Co-Parenting**: `/api/coparenting/*`

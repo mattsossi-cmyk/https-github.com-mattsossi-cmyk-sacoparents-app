@@ -633,8 +633,8 @@ export default function SafetyAssessment() {
                 </div>
               </div>
               <p className="text-xs text-[#4B4567] mt-4">
-                Dimensions 2, 3 &amp; 4 are covered by the broader child &amp;
-                family assessments elsewhere in the app.
+                Dimensions 2, 3 &amp; 4 can be scored together in a single
+                companion assessment once your safety screen clears.
               </p>
             </div>
 
@@ -826,6 +826,39 @@ export default function SafetyAssessment() {
                 See your Next Three Steps <ArrowRight size={14} />
               </Link>
             </div>
+
+            {/* Companion 4-dimension CTA — only offered when Safety cleared
+                (level 3 or 4). We do not surface this for levels 1/2 so
+                parents can prioritise safety planning without being pulled
+                into communication/regulation questions that may be
+                misinterpreted under coercion. */}
+            {result?.result?.level >= 3 && (
+              <div
+                className="mt-6 rounded-3xl border-2 border-[#3D1A78] bg-gradient-to-br from-[#F8F5FF] to-white p-6 sm:p-8"
+                data-testid="safety-companion-cta"
+              >
+                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+                  Complete the picture · Dimensions 2, 3 &amp; 4
+                </div>
+                <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mb-2">
+                  Your safety result cleared — want to run the other three
+                  dimensions in one sitting?
+                </h3>
+                <p className="text-sm text-[#4B4567] leading-relaxed mb-4">
+                  Communication, Emotional Regulation, and Executive Function
+                  are the three remaining lenses in the four-dimension model.
+                  Because your safety screen cleared, they can now be scored
+                  together in a single ~7-minute companion assessment.
+                </p>
+                <Link
+                  to="/companion-assessment"
+                  data-testid="safety-companion-cta-link"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-6 py-3 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                >
+                  Start companion assessment <ArrowRight size={14} />
+                </Link>
+              </div>
+            )}
 
             {/* Important Advisory — legally-worded post-assessment disclaimer */}
             <div

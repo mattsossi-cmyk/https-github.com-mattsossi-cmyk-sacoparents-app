@@ -49,6 +49,7 @@ import VerifyEmail from "@/pages/VerifyEmail";
 import VerifySignature from "@/pages/VerifySignature";
 import NDRiskAssessment from "@/pages/NDRiskAssessment";
 import NDRiskAssessmentResult from "@/pages/NDRiskAssessmentResult";
+import DimensionCompanion from "@/pages/DimensionCompanion";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
 import SafetyAssessment from "@/pages/SafetyAssessment";
@@ -151,6 +152,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <NDRiskAssessmentResult />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/companion-assessment"
+          element={
+            <ProtectedRoute>
+              <DimensionCompanion />
             </ProtectedRoute>
           }
         />
