@@ -479,6 +479,15 @@
 - New Dashboard card `InterventionComplianceCard.jsx` — self-hides for parents with 0 interventions on file; shows current week's % and follow count with a gradient progress bar.
 - Pytest: `/app/backend/tests/test_iter86_intervention_compliance.py` (4 tests: week-start math, intervention-key stability, HTTP tick lifecycle, history endpoint shape).
 
+### Streak Rewards for Compliance (Feb 2026)
+- New endpoint `GET /api/interventions/streak` returning `current_streak`, `longest_streak`, `badges[]` (with `earned` bool), and `next_badge` with weeks-to-go + progress %.
+- Three tiered badges: 4-Week Compliance Champion, 8-Week Consistency Anchor, Quarter-Year Habit.
+- Streak rule: consecutive weeks with `compliance_pct >= 80%`. Silence weeks (no ticks) break the streak — this mirrors the UX language "silence isn't credit".
+- New frontend component `ComplianceStreakPanel.jsx` mounted on the compliance page — shows current streak flame, longest streak, next-badge progress bar, and an "Earned" pill shelf.
+- One-shot confetti + toast celebration when a new badge is detected on the device (keyed by badge key in localStorage so it never repeats).
+- Dashboard card enhanced to show streak chip + earned-badge count + next-badge line.
+- Pytest coverage extended (8 tests total) — includes streak boundary math (80% cutoff), null-week break semantics, and live endpoint shape checks.
+
 ---
 
 

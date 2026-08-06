@@ -6,19 +6,24 @@
  */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import { CheckCircle2, ArrowRight, Loader2, Flame, Award } from "lucide-react";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
 export default function InterventionComplianceCard() {
   const [log, setLog] = useState(null);
+  const [streak, setStreak] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await api.get("/interventions/log");
-        setLog(data);
+        const [logRes, streakRes] = await Promise.all([
+          api.get("/interventions/log"),
+          api.get("/interventions/streak"),
+        ]);
+        setLog(logRes.data);
+        setStreak(streakRes.data);
       } catch (err) {
         logError("Compliance card load failed", err);
         setLog(null);
@@ -38,6 +43,9 @@ export default function InterventionComplianceCard() {
   if (!log || log.summary.total === 0) return null;
 
   const pct = log.summary.compliance_pct;
+  const current = streak?.current_streak || 0;
+  const earnedCount = (streak?.badges || []).filter((b) => b.earned).length;
+
   return (
     <Link
       to="/interventions"
@@ -72,6 +80,39 @@ export default function InterventionComplianceCard() {
           style={{ width: `${Math.max(1, pct)}%` }}
         />
       </div>
+
+      {/* Streak + badges row */}
+      {streak && (
+        <div
+          className="mt-3 flex items-center gap-3 flex-wrap"
+          data-testid="compliance-card-streak"
+        >
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${
+              current > 0
+                ? "bg-[#FFF5DA] text-[#8A5B00]"
+                : "bg-[#F0EEF8] text-[#4B4567]"
+            }`}
+          >
+            <Flame size={12} className={current > 0 ? "text-[#E8A628]" : "text-[#B7AECC]"} />
+            {current} wk streak
+          </span>
+          {earnedCount > 0 && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#F0EEF8] text-[#3D1A78]"
+              data-testid="compliance-card-badges"
+            >
+              <Award size={12} className="text-[#E8A628]" />
+              {earnedCount} badge{earnedCount === 1 ? "" : "s"}
+            </span>
+          )}
+          {streak.next_badge && (
+            <span className="text-[11px] text-[#4B4567]">
+              Next: {streak.next_badge.label} ({current}/{streak.next_badge.weeks})
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="mt-3 flex items-center justify-between gap-2 text-xs text-[#4B4567]">
         <span>

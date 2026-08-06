@@ -28,7 +28,7 @@ except FileNotFoundError:
 
 from datetime import datetime, timezone  # noqa: E402
 
-from intervention_compliance_routes import _key, _week_start  # noqa: E402
+from intervention_compliance_routes import _key, _week_start, _compute_streak  # noqa: E402
 
 
 BACKEND = os.environ.get("REACT_APP_BACKEND_URL")
@@ -160,3 +160,61 @@ def test_history_endpoint_shape():
     assert len(hist["weeks"]) == 4
     for w in hist["weeks"]:
         assert set(w.keys()) >= {"week_start", "total", "followed", "compliance_pct"}
+
+
+# ---- Streak logic (pure) ----
+
+def test_compute_streak_basic():
+    """80% is the boundary — 79.9 breaks, 80.0 counts."""
+    rows = [
+        {"week_start": "w1", "compliance_pct": 90.0},
+        {"week_start": "w2", "compliance_pct": 80.0},
+        {"week_start": "w3", "compliance_pct": 79.9},  # breaks streak
+        {"week_start": "w4", "compliance_pct": 100.0},
+        {"week_start": "w5", "compliance_pct": 85.0},
+    ]
+    out = _compute_streak(rows)
+    assert out["current_streak"] == 2
+    assert out["longest_streak"] == 2
+
+
+def test_compute_streak_null_weeks_break():
+    """A week with `null` compliance is a silence-break, not credit."""
+    rows = [
+        {"week_start": "w1", "compliance_pct": 100.0},
+        {"week_start": "w2", "compliance_pct": None},
+        {"week_start": "w3", "compliance_pct": 100.0},
+    ]
+    out = _compute_streak(rows)
+    assert out["current_streak"] == 1
+    assert out["longest_streak"] == 1
+
+
+def test_compute_streak_zero_when_empty():
+    assert _compute_streak([]) == {"current_streak": 0, "longest_streak": 0}
+
+
+@pytest.mark.skipif(not API, reason="No backend URL available")
+def test_streak_endpoint_live():
+    r = requests.post(
+        f"{API}/auth/login",
+        json={"email": TEST_EMAIL, "password": TEST_PASSWORD},
+        timeout=10,
+    )
+    if r.status_code != 200:
+        pytest.skip("login unavailable")
+    tok = r.json().get("access_token") or r.json().get("token")
+    headers = {"Authorization": f"Bearer {tok}"}
+
+    resp = requests.get(f"{API}/interventions/streak", headers=headers, timeout=10)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["threshold_pct"] == 80.0
+    assert isinstance(body["current_streak"], int)
+    assert isinstance(body["longest_streak"], int)
+    assert len(body["badges"]) == 3
+    assert body["badges"][0]["key"] == "compliance_streak_4"
+    # next_badge is None only if every badge earned; otherwise dict.
+    if body["longest_streak"] < 12:
+        assert body["next_badge"] is not None
+        assert set(body["next_badge"].keys()) >= {"key", "label", "weeks", "weeks_to_go", "progress_pct"}

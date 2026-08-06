@@ -280,3 +280,101 @@ async def get_history(
                 "compliance_pct": round((b["followed"] / b["total"]) * 100, 1) if b["total"] else None,
             })
     return {"weeks": out}
+
+
+# ---------------------------------------------------------------------------
+# STREAK REWARDS
+# ---------------------------------------------------------------------------
+
+STREAK_THRESHOLD_PCT = 80.0  # weekly compliance % that counts toward the streak
+
+BADGES: List[Dict[str, Any]] = [
+    {"key": "compliance_streak_4",  "weeks": 4,
+     "label": "4-Week Compliance Champion",
+     "description": "Followed your enforced interventions at ≥80% for four weeks in a row."},
+    {"key": "compliance_streak_8",  "weeks": 8,
+     "label": "8-Week Consistency Anchor",
+     "description": "Eight consecutive weeks at ≥80% compliance."},
+    {"key": "compliance_streak_12", "weeks": 12,
+     "label": "Quarter-Year Habit",
+     "description": "A full quarter of ≥80% weekly compliance."},
+]
+
+
+def _compute_streak(weekly_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Given weeks oldest→newest, return current + longest streak lengths.
+
+    A week counts toward a streak when `compliance_pct >= STREAK_THRESHOLD_PCT`.
+    Weeks with `null` compliance (no ticks recorded) BREAK the streak — silence
+    is not credit. This mirrors the badge language the parent sees.
+    """
+    current = 0
+    longest = 0
+    for row in weekly_rows:
+        pct = row.get("compliance_pct")
+        if pct is not None and pct >= STREAK_THRESHOLD_PCT:
+            current += 1
+            longest = max(longest, current)
+        else:
+            current = 0
+    return {"current_streak": current, "longest_streak": longest}
+
+
+@router.get("/streak")
+async def get_streak_and_badges(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return the parent's current + longest ≥80% streak, badges earned,
+    and progress toward the next badge. The window looks back 26 weeks
+    which is enough for the longest badge (12 weeks) plus buffer.
+    """
+    today = datetime.now(timezone.utc)
+    weeks_window = 26
+    cutoff_date = today - timedelta(days=weeks_window * 7)
+    cursor = db[COLLECTION].find(
+        {"user_id": user.user_id, "week_start": {"$gte": _week_start(cutoff_date)}},
+        {"_id": 0, "week_start": 1, "followed": 1},
+    )
+    by_week: Dict[str, Dict[str, int]] = {}
+    async for row in cursor:
+        b = by_week.setdefault(row["week_start"], {"total": 0, "followed": 0})
+        b["total"] += 1
+        if row.get("followed"):
+            b["followed"] += 1
+
+    weekly_rows: List[Dict[str, Any]] = []
+    for i in range(weeks_window - 1, -1, -1):
+        d = today - timedelta(days=i * 7)
+        wk = _week_start(d)
+        b = by_week.get(wk)
+        if b and b["total"]:
+            pct = round((b["followed"] / b["total"]) * 100, 1)
+        else:
+            pct = None
+        weekly_rows.append({"week_start": wk, "compliance_pct": pct})
+
+    streak = _compute_streak(weekly_rows)
+
+    # Badges — award based on longest streak (once earned, they stay).
+    badges_out: List[Dict[str, Any]] = []
+    next_badge: Optional[Dict[str, Any]] = None
+    for b in BADGES:
+        earned = streak["longest_streak"] >= b["weeks"]
+        badges_out.append({**b, "earned": earned})
+        if not earned and next_badge is None:
+            next_badge = {
+                "key":            b["key"],
+                "label":          b["label"],
+                "weeks":          b["weeks"],
+                "weeks_to_go":    b["weeks"] - streak["current_streak"],
+                "progress_pct":   round((streak["current_streak"] / b["weeks"]) * 100, 1),
+            }
+
+    return {
+        "threshold_pct":  STREAK_THRESHOLD_PCT,
+        "current_streak": streak["current_streak"],
+        "longest_streak": streak["longest_streak"],
+        "badges":         badges_out,
+        "next_badge":     next_badge,
+    }

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
+import ComplianceStreakPanel from "../components/ComplianceStreakPanel";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -306,6 +307,10 @@ export default function InterventionCompliance() {
             followed={log.summary.followed}
           />
           <HistoryStrip weeks={history || []} />
+        </div>
+
+        <div className="mb-6">
+          <ComplianceStreakPanel />
         </div>
 
         {log.items.length === 0 ? (
