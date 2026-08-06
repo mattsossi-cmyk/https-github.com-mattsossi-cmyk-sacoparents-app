@@ -8,8 +8,10 @@
  * to hand to a candidate reviewer.
  */
 import { useEffect, useState } from "react";
-import { Users, Download, Loader2, ShieldCheck, Clock } from "lucide-react";
+import { Users, Download, Loader2, ShieldCheck, Clock, Send } from "lucide-react";
+import { toast } from "sonner";
 import { api, API } from "../lib/api";
+import ReviewerSendDialog from "./ReviewerSendDialog";
 
 const ROLE_LABEL = {
   dv_advocate:            "Domestic-violence advocate",
@@ -43,12 +45,28 @@ function StatusPill({ status }) {
 export default function ReviewerPanelCard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isOperator, setIsOperator] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sends, setSends] = useState([]);
+
+  const loadSends = async () => {
+    try {
+      const r = await api.get("/reviewer-panel/sends");
+      setSends(r.data.sends || []);
+    } catch { /* not operator or 403 */ }
+  };
 
   useEffect(() => {
     (async () => {
       try {
-        const r = await api.get("/reviewer-panel");
+        const [r, op] = await Promise.all([
+          api.get("/reviewer-panel"),
+          api.get("/reviewer-panel/is-operator").catch(() => ({ data: { is_operator: false } })),
+        ]);
         setData(r.data);
+        setIsOperator(Boolean(op.data?.is_operator));
+        if (op.data?.is_operator) await loadSends();
       } catch {
         setData({ status: "pending", reviewers: [] });
       } finally {
@@ -56,6 +74,28 @@ export default function ReviewerPanelCard() {
       }
     })();
   }, []);
+
+  const sendPacket = async (payload) => {
+    setSending(true);
+    try {
+      const r = await api.post("/reviewer-panel/send", payload);
+      toast.success(`Reviewer packet sent to ${r.data.emailed_to}.`);
+      setDialogOpen(false);
+      await loadSends();
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      const status = err?.response?.status;
+      if (status === 403) {
+        toast.error(detail || "Only the site operator can send.");
+      } else if (status === 503) {
+        toast.error(detail || "Email service isn't available right now.");
+      } else {
+        toast.error(detail || "Couldn't send. Please try again.");
+      }
+    } finally {
+      setSending(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -160,14 +200,61 @@ export default function ReviewerPanelCard() {
         <div className="text-[11px] text-[#8471B3]">
           Screen version: <strong>{data?.review_scope_version || "v1.0"}</strong>
         </div>
-        <a
-          href={packetUrl}
-          data-testid="reviewer-panel-download-packet"
-          className="inline-flex items-center gap-1.5 text-xs text-[#3D1A78] font-semibold hover:underline"
-        >
-          <Download size={12} /> Download reviewer packet (PDF)
-        </a>
+        <div className="flex items-center gap-3 flex-wrap">
+          <a
+            href={packetUrl}
+            data-testid="reviewer-panel-download-packet"
+            className="inline-flex items-center gap-1.5 text-xs text-[#3D1A78] font-semibold hover:underline"
+          >
+            <Download size={12} /> Download reviewer packet (PDF)
+          </a>
+          {isOperator && (
+            <button
+              type="button"
+              onClick={() => setDialogOpen(true)}
+              data-testid="reviewer-panel-open-send"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-3 py-1.5 text-xs font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            >
+              <Send size={12} /> Send packet to a reviewer
+            </button>
+          )}
+        </div>
       </div>
+
+      {isOperator && sends.length > 0 && (
+        <div
+          className="mt-4 rounded-2xl border border-[#E5E0EE] bg-[#FAF8FE] p-3"
+          data-testid="reviewer-panel-sends-log"
+        >
+          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-2">
+            Operator only · Recently sent to
+          </div>
+          <ul className="space-y-1.5 text-[12px]">
+            {sends.slice(0, 5).map((s, i) => (
+              <li
+                key={`${s.recipient_email}-${s.sent_at}-${i}`}
+                className="flex items-center justify-between gap-2 flex-wrap"
+                data-testid={`reviewer-send-log-${i}`}
+              >
+                <span className="text-[#1A1330]">
+                  <strong>{s.recipient_name || s.recipient_email}</strong>
+                  <span className="text-[#4B4567]"> · {s.recipient_email} · {s.recipient_role}</span>
+                </span>
+                <span className="text-[#8471B3]">
+                  {s.sent_at ? new Date(s.sent_at).toLocaleString() : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <ReviewerSendDialog
+        open={dialogOpen}
+        onClose={() => { if (!sending) setDialogOpen(false); }}
+        onSend={sendPacket}
+        sending={sending}
+      />
     </aside>
   );
 }

@@ -1331,3 +1331,122 @@ def send_weekly_progress_summary(
         failure_message="Couldn't send your weekly summary right now. Please try again in a moment.",
     )
 
+
+
+def send_reviewer_packet(
+    *,
+    to_email: str,
+    recipient_name: str,
+    recipient_role_label: str,
+    operator_name: str,
+    operator_email: str,
+    personal_note: str,
+    pdf_bytes: bytes,
+    pdf_filename: str = "sa-coparents-safety-screen-reviewer-packet.pdf",
+) -> None:
+    """Email the Safety Screen Reviewer Packet to a candidate reviewer.
+
+    The email is a professional invitation to review the SA CoParents
+    Family Violence and Communication Safety Screen. Reply-to is the
+    operator's real email so the reviewer can respond directly.
+    """
+    greeting = f"Dear {recipient_name}," if recipient_name else "Dear reviewer,"
+    role_esc = _html.escape(recipient_role_label or "")
+    optional_note_html = (
+        f'<div style="background:#F8F7FC;border-radius:14px;padding:14px 16px;'
+        f'border:1px solid #E5E0EE;margin:0 0 16px 0;">'
+        f'<div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;'
+        f'color:#3D1A78;font-weight:700;margin-bottom:4px;">Personal note</div>'
+        f'<div style="font-size:14px;line-height:1.6;color:#1A1330;">{_html.escape(personal_note)}</div>'
+        f'</div>'
+        if personal_note
+        else ""
+    )
+    optional_note_plain = f"\nPersonal note:\n{personal_note}\n" if personal_note else ""
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 14px 0;">'
+        f'{_html.escape(greeting)}</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 14px 0;">'
+        f"I&rsquo;m {_html.escape(operator_name) or 'the operator'} of "
+        f'<strong>SA CoParents</strong>, a preparation tool for separating '
+        f'parents. I&rsquo;m writing to invite your professional review of our '
+        f'<strong>Family Violence and Communication Safety Screen</strong>'
+        f'{" as " + role_esc if role_esc else ""}.'
+        f'</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 14px 0;">'
+        f'The screen is a self-administered educational tool. It is not '
+        f'presented to users as a validated clinical instrument, and our '
+        f'methodology page is candid about that. That said, users may still '
+        f'assign more authority to a polished score than the disclaimer '
+        f'intends, and I want expert eyes on every question, rule, and '
+        f'report before we tell parents to rely on it.'
+        f'</p>'
+        f'<div style="background:#F8F7FC;border-radius:14px;padding:16px 18px;'
+        f'margin:0 0 14px 0;border:1px solid #E5E0EE;">'
+        f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;'
+        f'color:#3D1A78;font-weight:700;margin-bottom:6px;">The attached packet contains</div>'
+        f'<ul style="margin:0;padding-left:18px;color:#1A1330;font-size:14px;line-height:1.55;">'
+        f'<li>How the screen currently works (Sections 1 &amp; 2, pathway logic).</li>'
+        f'<li>Every current question, with high-concern triggers flagged.</li>'
+        f'<li>A reviewer checklist tailored to this instrument.</li>'
+        f'<li>The MASIC-S coverage gaps I&rsquo;d like you to draft items for.</li>'
+        f'<li>A sign-off page with your name, credentials, role, review date, and a public attestation.</li>'
+        f'</ul></div>'
+        f'{optional_note_html}'
+        f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 14px 0;">'
+        f'If you agree, your name, credentials, role, and review date will be '
+        f'published on our public methodology page — this is a transparency '
+        f'commitment to users. Your review does not constitute a clinical, '
+        f'legal, or evidentiary endorsement of the tool for any specific case.'
+        f'</p>'
+        f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 14px 0;">'
+        f'Please reply directly to this email with any questions, timeline, '
+        f'or fee expectations. Thank you for considering.'
+        f'</p>'
+        f'<p style="font-size:14px;line-height:1.6;color:#1A1330;margin:0;">'
+        f'Warmly,<br/><strong>{_html.escape(operator_name or "SA CoParents")}</strong><br/>'
+        f'<span style="color:#4B4567;">{_html.escape(operator_email)}</span></p>'
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"I'm {operator_name or 'the operator'} of SA CoParents, a preparation "
+        f"tool for separating parents. I'm writing to invite your professional "
+        f"review of our Family Violence and Communication Safety Screen"
+        f"{' as ' + (recipient_role_label or '') if recipient_role_label else ''}.\n\n"
+        f"The screen is a self-administered educational tool. It is not presented "
+        f"to users as a validated clinical instrument, and our methodology page "
+        f"is candid about that. That said, users may still assign more authority "
+        f"to a polished score than the disclaimer intends, and I want expert "
+        f"eyes on every question, rule, and report before we tell parents to "
+        f"rely on it.\n\n"
+        f"The attached packet contains:\n"
+        f"  - How the screen currently works\n"
+        f"  - Every current question, with high-concern triggers flagged\n"
+        f"  - A reviewer checklist tailored to this instrument\n"
+        f"  - MASIC-S coverage gaps to draft items for\n"
+        f"  - A sign-off page for name, credentials, role, review date, and public attestation\n"
+        f"{optional_note_plain}\n"
+        f"If you agree, your name, credentials, role, and review date will be "
+        f"published on our public methodology page — a transparency commitment "
+        f"to users. Your review does not constitute a clinical, legal, or "
+        f"evidentiary endorsement for any specific case.\n\n"
+        f"Please reply directly to this email with any questions, timeline, or "
+        f"fee expectations.\n\n"
+        f"Warmly,\n{operator_name or 'SA CoParents'}\n{operator_email}\n"
+    )
+    html = _branded_html(
+        headline="Reviewer invitation · Family Violence and Communication Safety Screen",
+        body_html=body_html,
+        cta_label="",
+    )
+    subject = "SA CoParents · Invitation to review our Safety Screen"
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=html,
+        text=plain,
+        reply_to=operator_email or None,
+        attachments=[(pdf_filename, pdf_bytes)],
+        failure_message="Couldn't send the reviewer packet right now. Please try again in a moment.",
+    )
