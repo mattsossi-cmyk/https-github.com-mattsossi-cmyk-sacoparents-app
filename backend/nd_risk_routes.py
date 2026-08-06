@@ -118,7 +118,7 @@ INTERVENTIONS: Dict[Tier, List[str]] = {
         "Turn on a 30-minute cool-down between rapid replies.",
     ],
     "high": [
-        "Enforce Asynchronous Hand-Offs — no synchronous back-and-forth allowed.",
+        "Enforce Non-Contemporaneous Hand-Offs — no contemporaneous back-and-forth allowed.",
         "Block direct messaging between coparents on the platform.",
         "Mandate strict text-only templates for logistics (pickup, drop-off, medical).",
         "24-hour maximum response window; anything faster is optional.",
