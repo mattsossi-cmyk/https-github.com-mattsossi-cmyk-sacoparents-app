@@ -159,7 +159,7 @@ def build_four_dimension_briefing_pdf(
     pdf.set_y(pdf.get_y() + 24)
 
     pdf.set_font("Helvetica", "", 8.5); pdf.set_text_color(133, 126, 156)
-    pdf.cell(0, 3.6, _safe("SA COPARENTS APP - COURT-READY BRIEFING"), ln=1)
+    pdf.cell(0, 3.6, _safe("SA COPARENTS APP - PROFESSIONAL INFORMATIONAL BRIEFING"), ln=1)
     pdf.set_font("Helvetica", "B", 22); pdf.set_text_color(30, 24, 54)
     pdf.multi_cell(0, 10, _safe("Four-Dimension Co-Parenting Briefing"))
     pdf.ln(2)

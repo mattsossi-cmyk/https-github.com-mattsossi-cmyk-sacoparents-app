@@ -62,7 +62,7 @@ export default function Accessibility() {
           <H2>PDF reports</H2>
           <p>
             Every generated PDF (Mediation Summary, Co-Parenting Agreement,
-            Special Needs Care Plan, Safety Assessment) is produced with
+            Special Needs Care Plan, Safety Screen) is produced with
             structured headings, real text (not scanned images), and a linear
             reading order so screen readers can parse them. Fonts are embedded.
           </p>

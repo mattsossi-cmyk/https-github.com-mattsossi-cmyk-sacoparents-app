@@ -128,7 +128,7 @@ def build_nd_risk_pdf(
     pdf.set_y(pdf.get_y() + 24)
 
     pdf.set_font("Helvetica", "", 8.5); pdf.set_text_color(133, 126, 156)
-    pdf.cell(0, 3.6, _safe("SA COPARENTS APP · COURT-READY REPORT"), ln=1)
+    pdf.cell(0, 3.6, _safe("SA COPARENTS APP · PROFESSIONAL INFORMATIONAL REPORT"), ln=1)
     pdf.set_font("Helvetica", "B", 22); pdf.set_text_color(30, 24, 54)
     pdf.multi_cell(0, 10, _safe("Neurodivergent Coparenting Risk Assessment"))
     pdf.ln(2)

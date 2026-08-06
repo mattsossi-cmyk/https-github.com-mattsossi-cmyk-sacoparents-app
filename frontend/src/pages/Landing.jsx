@@ -245,7 +245,7 @@ function MarketingFooter() {
 /* ============================================================
    SITUATION-FIRST OPENING
    6 situation choices → routed to the safest & most relevant next step.
-   Coercive-control / safety pickers go DIRECTLY to the Safety Assessment
+   Coercive-control / safety pickers go DIRECTLY to the Safety Screen
    with NO cooperation messaging shown first.
 ============================================================ */
 const SITUATIONS = [
@@ -284,9 +284,9 @@ const SITUATIONS = [
     focus: "safety",
     route: "/safety-assessment",
     result: {
-      title: "Start with the Family Violence & Communication Safety Assessment.",
+      title: "Start with the Family Violence and Communication Safety Screen.",
       body: "Ongoing high conflict deserves a private safety screen BEFORE any cooperation work. We'll help you identify the safest communication pathway — from structured written to assisted — and surface Texas crisis resources.",
-      cta: "Start the safety assessment",
+      cta: "Start the safety screen",
       tone: "urgent",
       icon: <ShieldCheck size={20} />,
       safetyBanner: "If you are in immediate danger, call 911. Suicide & Crisis Lifeline: 988. National Domestic Violence Hotline: 1-800-799-SAFE.",
@@ -299,9 +299,9 @@ const SITUATIONS = [
     focus: "safety",
     route: "/safety-assessment",
     result: {
-      title: "Start with the Family Violence & Communication Safety Assessment.",
+      title: "Start with the Family Violence and Communication Safety Screen.",
       body: "Your safety and your child's safety come first. This is a private screen that never asks you to cooperate with the other parent. It recommends the safest communication pathway (including no-direct-contact) and includes Texas crisis hotlines.",
-      cta: "Start the safety assessment",
+      cta: "Start the safety screen",
       tone: "urgent",
       icon: <ShieldCheck size={20} />,
       safetyBanner: "If you are in immediate danger, call 911. Suicide & Crisis Lifeline: 988. National Domestic Violence Hotline: 1-800-799-SAFE.",

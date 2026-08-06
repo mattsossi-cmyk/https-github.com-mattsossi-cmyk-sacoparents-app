@@ -54,14 +54,14 @@ export const METHODOLOGIES = {
     logic:
       "Your written responses feed a Claude Sonnet 4.5 prompt that returns targeted BIFF suggestions and identifies 1–2 patterns to work on. The AI does not score you — it coaches you. Your responses are stored so subsequent sessions can build on earlier reflections.",
     professionalHelp:
-      "If you notice a pattern of intimidation, coercion, or fear in the exchanges you describe, stop the reflection and take the Family Violence & Communication Safety Assessment instead. Persistent high-conflict dynamics are best worked with a therapist alongside this app.",
+      "If you notice a pattern of intimidation, coercion, or fear in the exchanges you describe, stop the reflection and take the Family Violence and Communication Safety Screen instead. Persistent high-conflict dynamics are best worked with a therapist alongside this app.",
     retake:
       "Return whenever a specific exchange leaves you activated — the app is designed for repeat use in the moment. There's no ideal cadence.",
   },
 
   safety: {
     id: "safety",
-    name: "Family Violence & Communication Safety Assessment",
+    name: "Family Violence and Communication Safety Screen",
     category: "safety",
     purpose:
       "A brief self-screen for four evidence-informed dimensions of intimate partner conflict: coercive control, isolation, verbal aggression, and threats of harm. Its job is to flag when mediation, self-representation, or unmoderated communication may be unsafe.",

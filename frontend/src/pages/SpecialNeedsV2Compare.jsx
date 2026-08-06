@@ -5,7 +5,7 @@
  * start a new one by entering their co-parent's email. Both parents must
  * (a) already have an account, (b) both consent, and (c) both have completed
  * their own SNC v2 assessment. Safety guardrail blocks the flow entirely if
- * the current parent's Safety Assessment recommends a limited-contact
+ * the current parent's Safety Screen recommends a limited-contact
  * pathway.
  */
 import React, { useCallback, useEffect, useState } from "react";
@@ -143,13 +143,13 @@ export default function SpecialNeedsV2Compare() {
               <div>
                 <div className="font-semibold text-[#B02A2A]">Comparison is paused for your safety.</div>
                 <p className="text-sm text-[#4B4567] mt-2">
-                  Your latest Safety Assessment recommends a limited-contact communication pathway. Sharing
+                  Your latest Safety Screen recommends a limited-contact communication pathway. Sharing
                   detailed information directly with your co-parent may not be appropriate right now.
                   Please review your safety options before continuing.
                 </p>
                 <div className="mt-3">
                   <Link to="/safety-assessment" data-testid="snc2-compare-safety-link" className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#B02A2A] text-white hover:brightness-110">
-                    Review Safety Assessment
+                    Review Safety Screen
                   </Link>
                 </div>
               </div>
@@ -266,7 +266,7 @@ export default function SpecialNeedsV2Compare() {
         </div>
 
         <p className="text-[11px] text-[#4B4567] mt-8 italic max-w-3xl">
-          This tool is neutral: neither parent is labeled as correct. Safety Assessment data is never
+          This tool is neutral: neither parent is labeled as correct. Safety Screen data is never
           shared automatically. Either parent can revoke at any time.
         </p>
       </div>

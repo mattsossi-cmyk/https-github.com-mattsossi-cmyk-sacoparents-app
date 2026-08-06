@@ -137,13 +137,13 @@ export default function DeepDiveCompareHub({ pathway }) {
               <div>
                 <div className="font-semibold text-[#B02A2A]">Comparison is paused for your safety.</div>
                 <p className="text-sm text-[#4B4567] mt-2">
-                  Your latest Safety Assessment recommends a limited-contact communication pathway.
+                  Your latest Safety Screen recommends a limited-contact communication pathway.
                   Sharing detailed {pathway.safetyNoun} directly with your co-parent may not be
                   appropriate right now. Please review your safety options before continuing.
                 </p>
                 <div className="mt-3">
                   <Link to="/safety-assessment" data-testid={`${t}-safety-link`} className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#B02A2A] text-white hover:brightness-110">
-                    Review Safety Assessment
+                    Review Safety Screen
                   </Link>
                 </div>
               </div>
@@ -255,7 +255,7 @@ export default function DeepDiveCompareHub({ pathway }) {
         </div>
 
         <p className="text-[11px] text-[#4B4567] mt-8 italic max-w-3xl">
-          This tool is neutral: neither parent is labeled as correct. Safety Assessment data is never
+          This tool is neutral: neither parent is labeled as correct. Safety Screen data is never
           shared automatically. Either parent can revoke at any time.
         </p>
       </div>

@@ -1,7 +1,7 @@
 /**
  * NDRiskAssessmentResult — post-submission view showing the score
  * breakdown, tier + required interventions, a marked 4×4 heatmap, and
- * a court-ready PDF download.
+ * a professionally formatted PDF download.
  */
 import { useEffect, useState } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
@@ -151,7 +151,7 @@ export default function NDRiskAssessmentResult() {
             data-testid="nd-risk-download-pdf"
           >
             {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-            {downloading ? "Preparing…" : "Court-ready PDF"}
+            {downloading ? "Preparing…" : "Download PDF report"}
           </button>
         </header>
 
@@ -221,7 +221,7 @@ export default function NDRiskAssessmentResult() {
         <p className="mt-8 text-[11px] text-[#8471B3] italic">
           This report is informational preparation support only. It is not legal
           advice, medical diagnosis, or a substitute for a licensed professional.
-          The court-ready PDF is designed to be brought to your mediator,
+          The PDF is designed to be brought to your mediator,
           attorney, or clinician — not to replace them.
         </p>
       </div>

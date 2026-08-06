@@ -6,7 +6,7 @@ import { api, API } from "../lib/api";
 /**
  * ReportShareControls — reusable "customize what to share" panel used on every
  * report page (Mediation Summary, Co-Parenting Agreement, Special Needs Care
- * Plan, and Family Violence & Communication Safety Assessment).
+ * Plan, and Family Violence and Communication Safety Screen).
  *
  * The parent chooses per-section visibility once. That preference is:
  *   1. Persisted on the report via a PATCH (optional — via `visibilityUrl`)

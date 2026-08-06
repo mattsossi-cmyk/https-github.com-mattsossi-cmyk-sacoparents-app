@@ -114,13 +114,13 @@ const PREP_MODULES = [
     category: "coparenting",
     hint: "Your polished, printable brief for the mediator.",
     icon: <Scale size={16} />,           route: "/summary" },
-  { key: "safety-assessment", label: "Family Violence & Safety Assessment",
+  { key: "safety-assessment", label: "Family Violence and Communication Safety Screen",
     category: "safety",
     hint: "Private safety screen; recommends a communication pathway.",
     icon: <ShieldCheck size={16} />,     route: "/safety-assessment" },
   { key: "nd-risk-assessment", label: "Neurodivergent Risk Assessment",
     category: "safety",
-    hint: "Court-ready 4×4 risk matrix + tier interventions (ADHD / Autism lens).",
+    hint: "Professionally formatted 4×4 risk matrix + tier interventions (ADHD / Autism lens).",
     icon: <ShieldCheck size={16} />,     route: "/nd-risk-assessment" },
   { key: "educational-assessment", label: "Educational Assessment",
     category: "special-needs",
@@ -1342,7 +1342,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Safety Assessment */}
+        {/* Safety Screen */}
         <div className="mt-6">
           <Link
             to="/safety-assessment"
@@ -1353,7 +1353,7 @@ export default function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#C28771] mb-0.5">
-                Safety Assessment
+                Safety Screen
               </div>
               <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
                 Is it safe to co-parent through direct communication?

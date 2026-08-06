@@ -34,7 +34,7 @@ const ASSESSMENT_META = {
     back_label: "Back to Communication Style",
   },
   safety: {
-    title: "Your next three steps from the Safety Assessment",
+    title: "Your next three steps from the Safety Screen",
     context: "Routed by your current safety level. High-concern responses always route to hotlines and parallel-parenting resources first.",
     back_to: "/safety-assessment",
     back_label: "Back to the assessment",

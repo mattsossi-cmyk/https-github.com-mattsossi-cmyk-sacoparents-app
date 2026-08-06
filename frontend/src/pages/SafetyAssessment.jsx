@@ -26,6 +26,8 @@ import SectionCoaching from "../components/SectionCoaching";
 import MethodologyCard from "../components/MethodologyCard";
 import ReportShareControls, { pdfAbs } from "../components/ReportShareControls";
 import BriefingEmailDialog from "../components/BriefingEmailDialog";
+import DeviceSafetyBanner from "../components/DeviceSafetyBanner";
+import ScreenGuardrailPanel from "../components/ScreenGuardrailPanel";
 
 const TONE_STYLES = {
   danger: {
@@ -187,9 +189,10 @@ function ResultsCard({ assessment, onDownload, onEmail, onEmailMediator, sending
               Neurodivergent Coparenting Risk Assessment
             </div>
             <div className="text-xs text-[#4B4567] mt-1">
-              A shorter, matrix-based assessment that filters coparenting risk
+              A shorter, matrix-based screen that filters coparenting risk
               through an ADHD / autism vulnerability lens. Produces a
-              court-ready PDF with a tier + required interventions plan.
+              professionally formatted informational summary PDF with a
+              tier + suggested interventions plan.
             </div>
           </div>
         </a>
@@ -199,8 +202,8 @@ function ResultsCard({ assessment, onDownload, onEmail, onEmailMediator, sending
             <Lightbulb size={14} />
             <div className="text-[11px] uppercase tracking-[0.18em] font-bold">Note about your co-parent</div>
           </div>          <p className="text-sm text-[#4B4567] leading-relaxed">
-            This assessment reflects only your responses. The other parent should
-            complete this assessment separately so each of you has your own private
+            This screen reflects only your responses. The other parent should
+            complete this screen separately so each of you has your own private
             result. Forcing or pressuring the other parent to take it is not
             recommended.
           </p>
@@ -540,6 +543,8 @@ export default function SafetyAssessment() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {step === 0 && (
           <div className="card-soft p-6 sm:p-10 fade-up" data-testid="assessment-intro">
+            <DeviceSafetyBanner />
+
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-[#C28771]/15 text-[#C28771] grid place-items-center">
                 <ShieldAlert size={18} />
@@ -549,20 +554,23 @@ export default function SafetyAssessment() {
               </div>
             </div>
             <h1 className="font-bold text-3xl sm:text-4xl text-[#1A1330] tracking-tight mb-3">
-              Family Violence &amp; Communication Safety Assessment
+              Family Violence and Communication Safety Screen
             </h1>
 
             <MethodologyCard id="safety" defaultOpen={false} />
 
             <p className="text-[#4B4567] leading-relaxed mb-4">
-              This is a <strong className="text-[#1A1330]">reflection guide</strong> — not
+              This is a <strong className="text-[#1A1330]">reflection screen</strong> — not
               a clinical assessment — to help you notice patterns of family
               violence, coercive control, intimidation, stalking, or safety
               concerns before deciding how (or whether) to communicate with
               your co-parent. Several items are informed by the Danger
-              Assessment (Campbell) domains most predictive of severe harm.
-              A trained professional should be involved in any high-risk
-              situation.
+              Assessment (Campbell) domains most predictive of severe harm,
+              but this tool is <strong className="text-[#1A1330]">not the
+              Danger Assessment, MASIC-S, or HITS</strong>, and it has not
+              been independently validated in custody or mediation
+              populations. A trained professional should be involved in any
+              high-risk situation.
             </p>
 
             <div className="rounded-2xl bg-[#FCE3DC] border border-[#9A3A23]/25 text-[#9A3A23] p-4 sm:p-5 mb-6">
@@ -573,11 +581,13 @@ export default function SafetyAssessment() {
                 </div>
               </div>
               <p className="text-sm leading-relaxed">
-                This assessment is not a diagnosis, legal advice, or a substitute
-                for a family violence evaluation. If there is immediate danger,
-                call <a href="tel:911" className="underline font-bold">911</a>.
-                If communication with the other parent creates fear, danger, or
-                retaliation, direct communication may not be appropriate.
+                This screen is not a diagnosis, legal advice, or a substitute
+                for a family-violence evaluation. It does not decide
+                mediation, visitation, custody, or protective orders.
+                If there is immediate danger, call{" "}
+                <a href="tel:911" className="underline font-bold">911</a>.
+                If communication with the other parent creates fear, danger,
+                or retaliation, direct communication may not be appropriate.
               </p>
               <a
                 href="tel:18007997233"
@@ -660,7 +670,7 @@ export default function SafetyAssessment() {
               <WatchFirstVideo
                 videoSrc="/videos/ipv-assessment-intro.mp4"
                 posterSrc="/images/ipv-assessment-poster.png"
-                label="Watch First · Family Violence &amp; Communication Safety Assessment for Co-Parents"
+                label="Watch First · Family Violence and Communication Safety Screen for Co-Parents"
                 subtitle="Safety First. Informed Choices. Better Outcomes for Your Children."
                 testid="safety-assessment-watch"
               />
@@ -806,19 +816,30 @@ export default function SafetyAssessment() {
               </div>
             )}
 
-            <div className="mt-6">
-              <SectionCoaching
-                section="safety"
-                ready={Boolean(result?.result)}
-                data={{
-                  level: result?.result?.level,
-                  pathway_tone: result?.result?.pathway_tone,
-                  pathway_title: result?.result?.pathway_title,
-                  pathway_summary: result?.result?.pathway_summary,
-                  recommendations: result?.result?.recommendations || [],
-                }}
-              />
-            </div>
+            {/* Post-result guardrail — makes explicit what this screen
+                does NOT decide, plus an anti-mutualization block for
+                Level 1/2 (highest concern) results. */}
+            <ScreenGuardrailPanel level={result?.result?.level} />
+
+            {/* AI communication coaching is SUPPRESSED for Level 1 & 2 to
+                avoid mutualizing abuse — coaching a survivor to
+                communicate "better" with a coercive co-parent shifts
+                responsibility onto the person experiencing harm. */}
+            {result?.result?.level >= 3 && (
+              <div className="mt-6">
+                <SectionCoaching
+                  section="safety"
+                  ready={Boolean(result?.result)}
+                  data={{
+                    level: result?.result?.level,
+                    pathway_tone: result?.result?.pathway_tone,
+                    pathway_title: result?.result?.pathway_title,
+                    pathway_summary: result?.result?.pathway_summary,
+                    recommendations: result?.result?.recommendations || [],
+                  }}
+                />
+              </div>
+            )}
 
             <div className="mt-6 flex justify-center">
               <Link
@@ -912,8 +933,8 @@ export default function SafetyAssessment() {
                 <Shield size={13} /> Important Advisory
               </div>
               <p className="leading-relaxed mb-3">
-                The SA CoParents Family Violence &amp; Communication Safety
-                Assessment is designed to help you reflect on your parenting
+                The SA CoParents Family Violence and Communication Safety
+                Screen is designed to help you reflect on your parenting
                 and communication situation. It is <strong>not intended to
                 diagnose domestic violence, determine legal rights, predict
                 future behavior, or replace professional advice</strong>.

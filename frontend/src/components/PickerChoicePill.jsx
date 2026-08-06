@@ -32,7 +32,7 @@ const FOCUS_META = {
     label: "Safety-first path",
     icon: <ShieldCheck size={14} />,
     href: "/safety-assessment",
-    ctaLabel: "Continue the Safety Assessment",
+    ctaLabel: "Continue the Safety Screen",
     accent: "text-[#B85B00]",
     ring: "ring-[#B85B00]/20",
     chip: "bg-[#FFEDDE]",

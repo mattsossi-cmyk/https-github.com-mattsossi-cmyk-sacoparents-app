@@ -40,7 +40,7 @@ const PILLARS = [
     color: "#3D1A78",
     tools: [
       { label: "Co-Parenting Reflection (Communication Style)", to: "/prep/communication", completedKey: "comm_style" },
-      { label: "Family Violence & Communication Safety Assessment", to: "/safety-assessment", completedFlag: "hasSafetyAssessment" },
+      { label: "Family Violence and Communication Safety Screen", to: "/safety-assessment", completedFlag: "hasSafetyAssessment" },
       { label: "Mediation Readiness Check", to: "/prep/readiness", completedKey: "readiness" },
     ],
   },

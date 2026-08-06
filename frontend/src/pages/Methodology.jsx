@@ -73,7 +73,7 @@ export default function Methodology() {
             specific family.
           </p>
 
-          <H2>2. Family Violence & Communication Safety Assessment</H2>
+          <H2>2. Family Violence and Communication Safety Screen</H2>
           <p>
             <strong>Source instruments.</strong> The Section-1 immediate-safety
             screen is adapted from the widely-used <em>Danger Assessment</em>{" "}
@@ -90,12 +90,32 @@ export default function Methodology() {
           </p>
           <p>
             <strong>Important limits.</strong> This is a{" "}
-            <strong>screening tool, not a risk assessment</strong>. It should
-            not be used in court proceedings without accompanying
-            professional evaluation. Texas crisis hotlines are surfaced in
-            every result regardless of level, and the "pathway" and "Texas
-            resources" sections of the PDF cannot be hidden by the user when
-            sharing.
+            <strong>screening tool, not a validated clinical assessment</strong>.
+            It is <strong>not</strong> the Danger Assessment, MASIC-S, or
+            HITS. The Danger Assessment estimates lethal / near-lethal
+            risk in abusive intimate relationships and its scoring is tied
+            to specialized training; HITS was validated in family-practice
+            settings, not in divorce, custody, or mediation populations.
+            This screen has <strong>not been independently validated</strong>{" "}
+            in custody or mediation populations, and its scoring is
+            heuristic. It should not be used in court proceedings without
+            accompanying professional evaluation. Texas crisis hotlines are
+            surfaced in every result regardless of level, and the "pathway"
+            and "Texas resources" sections of the PDF cannot be hidden by
+            the user when sharing.
+          </p>
+          <p>
+            <strong>What this screen decides — and what it does not.</strong>{" "}
+            The screen recommends a <em>communication structure</em> for the
+            parent to consider. It does <strong>not</strong> decide
+            mediation suitability, visitation, custody, protective orders,
+            or any other legal or clinical outcome. Decisions of that
+            weight require a qualified human assessment (family-law
+            attorney, licensed clinician or forensic evaluator, DV
+            advocate). For Level 1 &amp; 2 results the app suppresses AI
+            communication coaching, because coaching a survivor to
+            communicate "better" with a coercive co-parent shifts
+            responsibility onto the person experiencing harm.
           </p>
 
           <H2>3. AI Coach responses</H2>
@@ -104,7 +124,7 @@ export default function Methodology() {
             LLM key. Prompts are constrained by a system instruction that
             forbids diagnosis, dosage advice, legal advice, or crisis triage.
             When triggered by risk keywords, the coach immediately surfaces
-            local hotlines and offers to switch to the Safety Assessment.
+            local hotlines and offers to switch to the Safety Screen.
             AI responses are <strong>not stored on Anthropic's servers</strong>{" "}
             for training. See our <Link to="/privacy" className="text-[#2A0F5F] underline">Privacy Policy</Link> for details.
           </p>

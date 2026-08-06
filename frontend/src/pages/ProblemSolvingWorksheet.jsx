@@ -237,7 +237,7 @@ export default function ProblemSolvingWorksheet() {
             className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E0EE] text-[#4B4567] px-5 py-2.5 text-sm font-semibold hover:bg-[#F8F7FC]"
             data-testid="worksheet-to-assessment-link"
           >
-            <ArrowLeft size={14} /> Open Safety Assessment
+            <ArrowLeft size={14} /> Open Safety Screen
           </Link>
           <button
             type="button"

@@ -132,7 +132,7 @@ def make_deep_dive_compare_router(
 
     def _safety_message() -> str:
         return (
-            "Your Safety Assessment recommends a limited-contact pathway. "
+            "Your Safety Screen recommends a limited-contact pathway. "
             f"Sharing detailed {product_label} answers directly with your "
             "co-parent is not appropriate right now. Please review your "
             "safety options before starting a comparison."
@@ -266,7 +266,7 @@ def make_deep_dive_compare_router(
             level = await _latest_safety_level(db, me.user_id)
             if level in BLOCKING_SAFETY_LEVELS:
                 raise HTTPException(status_code=403, detail=(
-                    "Your Safety Assessment recommends a limited-contact pathway. "
+                    "Your Safety Screen recommends a limited-contact pathway. "
                     f"Please review your safety options before consenting to a "
                     f"{product_label} comparison."))
 
@@ -329,7 +329,7 @@ def make_deep_dive_compare_router(
         my_level = await _latest_safety_level(db, me_id)
         if my_level in BLOCKING_SAFETY_LEVELS:
             raise HTTPException(status_code=403, detail=(
-                "Your Safety Assessment recommends a limited-contact pathway. "
+                "Your Safety Screen recommends a limited-contact pathway. "
                 "Access to co-parent comparison is paused. Please review your safety options."))
         creator_a = await db[assessments_collection].find_one({"user_id": share["creator_user_id"]})
         partner_a = await db[assessments_collection].find_one({"user_id": share["partner_user_id"]})
@@ -425,7 +425,7 @@ def make_deep_dive_compare_router(
             comparison=comparison,
             safety_notice=(
                 "Safety notice: If either parent's circumstances change, please "
-                "revisit the Family Violence & Communication Safety Assessment "
+                "revisit the Family Violence and Communication Safety Screen "
                 "before continuing to share detailed information."
             ),
             product_title=pdf_product_title,

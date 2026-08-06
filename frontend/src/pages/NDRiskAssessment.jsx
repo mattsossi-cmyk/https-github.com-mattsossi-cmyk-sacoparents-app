@@ -98,7 +98,8 @@ export default function NDRiskAssessment() {
           </h1>
           <p className="mt-3 text-sm text-[#4B4567] leading-relaxed">
             This assessment filters coparenting risk through a neurodivergent
-            vulnerability lens. Six honest 1-4 ratings produce a court-ready
+            vulnerability lens. Six honest 1-4 ratings produce a
+            professionally formatted informational summary
             tier + required interventions plan. All answers are private to you.
           </p>
         </header>

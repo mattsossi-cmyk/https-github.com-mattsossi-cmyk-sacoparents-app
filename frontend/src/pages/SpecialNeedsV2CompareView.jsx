@@ -148,9 +148,9 @@ export default function SpecialNeedsV2CompareView() {
             <div className="flex items-start gap-3">
               <ShieldAlert className="text-[#B02A2A] shrink-0 mt-0.5" size={18} />
               <div className="text-sm text-[#4B4567]">
-                Your Safety Assessment recommends a limited-contact pathway. Access to the comparison is paused.
+                Your Safety Screen recommends a limited-contact pathway. Access to the comparison is paused.
                 <div className="mt-2">
-                  <Link to="/safety-assessment" className="underline text-[#B02A2A] font-semibold">Review Safety Assessment</Link>
+                  <Link to="/safety-assessment" className="underline text-[#B02A2A] font-semibold">Review Safety Screen</Link>
                 </div>
               </div>
             </div>

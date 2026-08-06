@@ -494,6 +494,18 @@
 - New helper `build_compliance_snapshot(db, user_id)` in `intervention_compliance_routes.py` returns the compact `{current_week, streak}` shape reused by both PDF and email endpoints.
 - Extended `test_iter85_four_dim_briefing.py` with `test_briefing_pdf_with_compliance_snapshot` asserting the compliance-enriched PDF is strictly bigger than the no-compliance variant. All 16 tests across iter85 + iter86 pass.
 
+### Safety-Screen Guardrails & Terminology Reform (Feb 2026)
+Applied in response to a professional review of the Safety Assessment (Danger Assessment, HITS, and MASIC-S limitations).
+- **Renamed** "Family Violence & Communication Safety Assessment" → "**Family Violence and Communication Safety Screen**" across frontend pages (Landing, Dashboard, Safety, Methodology, SafetyAssessment, DimensionCompanion, InterventionCompliance, ProblemSolvingWorksheet, SpecialNeedsV2*, DeepDiveCompare*, PickerChoicePill, FivePillarJourney, PersonalizedRecommendations, methodology.js) and backend surfaces (email_service.py, safety_assessment_pdf.py cover, deep_dive_compare_router_factory.py). All `data-testid`s and route/API paths preserved.
+- **Removed "court-ready"** from every user-visible surface. PDFs headers now read "Professional Informational Report" / "Professional Informational Briefing". Button labels changed to "Download PDF report".
+- **New `DeviceSafetyBanner` component** (dismissible) shown at the top of the Safety Screen intro — warns about device monitoring, shared accounts, browser history, and unsafe PDF storage. Includes a **Quick Exit** button that `location.replace()` to `weather.com` and `history.replaceState` so the current page is removed from history.
+- **New `ScreenGuardrailPanel` component** rendered on every safety result page:
+  - Always shows a "What this screen decides — and what it does not" block naming the human roles required (family-law attorney, licensed clinician / forensic evaluator, DV advocate).
+  - For Level 1 & 2 (highest-concern) results, an additional **anti-mutualization** block explains why communication coaching is not the right first step and points to the National DV Hotline.
+- **AI communication coaching (`SectionCoaching`) is suppressed for Level 1 & 2** results so a survivor is never coached to communicate "better" with a coercive co-parent.
+- **Methodology page transparency** — added explicit statement that this screen is not the Danger Assessment, MASIC-S, or HITS, and has not been independently validated in custody or mediation populations; scoring is heuristic; it recommends a communication *structure*, not clinical or legal outcomes.
+- Survivor-visibility hardening confirmed: the Deep-Dive Compare and SNC v2 compare routers already gate on Safety Screen level and never join safety-screen answers into a shared payload.
+
 ---
 
 

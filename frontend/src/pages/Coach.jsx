@@ -90,7 +90,7 @@ function SafetyBanner() {
           className="font-semibold underline"
           data-testid="coach-safety-assessment-link"
         >
-          take the Safety Assessment
+          take the Safety Screen
         </Link>{" "}
         for a personalised pathway.
       </div>
