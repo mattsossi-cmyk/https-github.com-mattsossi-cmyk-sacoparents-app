@@ -224,18 +224,29 @@ def _hard_locked_result(
 # Signal helpers.
 # ---------------------------------------------------------------------------
 
-_TIER_STRAINED = "strained"
-_TIER_STRETCH = "stretch"
-_TIER_ALIGNED = "aligned"
+_TIER_STRAINED  = "strained"
+_TIER_STRETCHED = "stretched"
+_TIER_STEADY    = "steady"
+_TIER_STRONG    = "strong"
 
 
 def _tier_score(tier: Optional[str]) -> int:
-    """Ordinal for companion tiers (aligned=2, stretch=1, strained=0,
-    None=1 — treat unknown as neutral)."""
-    if tier == _TIER_ALIGNED:
-        return 2
-    if tier == _TIER_STRAINED:
-        return 0
+    """Ordinal for Dimension Companion tiers (4-tier scale from
+    `dimension_companion_routes.py`):
+
+        strong    → 3   (best — aligned enough for direct negotiation)
+        steady    → 2   (workable)
+        stretched → 1   (mild strain — needs scaffolding)
+        strained  → 0   (severe strain — voluntary process likely fragile)
+        None      → 1   (unknown → conservative default = mild strain)
+
+    Comparisons downstream use `>= 2` to mean "steady or better" and
+    `<= 1` to mean "some strain present".
+    """
+    if tier == _TIER_STRONG:    return 3
+    if tier == _TIER_STEADY:    return 2
+    if tier == _TIER_STRETCHED: return 1
+    if tier == _TIER_STRAINED:  return 0
     return 1
 
 
@@ -299,17 +310,18 @@ def _classify_suitability(
     align = compare_alignment if compare_alignment is not None else 60.0
 
     # ---- Mediation: needs BOTH sides mostly aligned + safe.
+    # `>= 3` = "strong" only. `>= 2` = "steady or better".
     if (
-        worst_comm >= 2
-        and worst_er >= 2
+        worst_comm >= 3
+        and worst_er >= 3
         and worst_safety >= 4
         and not any_nd_high
         and align >= 75.0
     ):
         mediation = "high"
     elif (
-        worst_comm >= 1
-        and worst_er >= 1
+        worst_comm >= 2
+        and worst_er >= 2
         and worst_safety >= 3
         and not any_nd_high
         and align >= 60.0
@@ -321,6 +333,7 @@ def _classify_suitability(
         mediation = "not_indicated"
 
     # ---- Child-Centered Mediation: strain but participatory.
+    # `<= 1` = "stretched or worse".
     if worst_safety >= 3 and not any_nd_critical and (
         worst_er <= 1 or worst_comm <= 1 or align < 65.0
     ):

@@ -1,6 +1,17 @@
 # SA CoParents — PRD
 
 
+- **Iteration 94 — Code Review Fixes: Pathway Report Data Layer + Alert Dedupe (2026-02-27)**:
+  - **HIGH #1 fixed** (`pathway_report_routes.py`): `_load_party_context` was reading `dimension_companion` (empty legacy collection, 0 rows) instead of `dimension_companion_assessments` (real collection, 9 rows) — companion dimension signals were silently dropped from every recommendation. Also updated tier vocabulary in `pathway_report.py::_tier_score` — the real vocab is `strong/steady/stretched/strained` (4 tiers), not `aligned/stretch/strained` (3 tiers I invented). New scale: `strong=3, steady=2, stretched=1, strained=0`. Classification thresholds shifted from `>=2/>=1` to `>=3/>=2` on the strict paths (`worst_comm >= 3` now requires "strong" for mediation-high) to preserve semantic meaning.
+  - **HIGH #2 fixed** (`pathway_report_routes.py::_find_active_share`): was querying snapshot tables (`deep_dive_compare_snapshots`, `compare_shares`, `snc2_compare_shares`) which don't carry `status`/`user_pair`. Real shares live in `edu_deep_shares` (475 rows), `med_deep_shares` (211), `psych_deep_shares` (214), `snc2_shares` (124) — the entire two-parent Pathway Report was unreachable for every real share before this fix.
+  - **LOW #1 fixed** (`nd_coordinator_alerts._should_fire`): when a parent's tier oscillates (e.g. `critical → high → critical`), a downgrade previously returned `"hit"` bypassing the 24h dedupe window and generating repeat operator emails. Downgrades now respect the same-tier window.
+  - **LOW #2 fixed** (`reviewer_panel_routes._load`): backfilled ids on legacy entries are now persisted immediately (self-healing migration on first load). Previously each GET generated fresh random ids, so PATCH/DELETE using a previously-returned id would 404. Not reachable today (file has 0 legacy entries) but latent.
+  - **Test coverage gap closed**: `test_iter91_pathway_report.py` now includes 3 route-integration tests that go through real Mongo shape — one seeds a live share in `edu_deep_shares` and asserts the dual endpoint returns 200 with proper envelope, one asserts 409 on pending share, one asserts preview reads the real companion collection. These would have caught both HIGH defects.
+  - **Testing**: 18/18 iter91 tests pass (up from 15). 57/57 tests pass across iter 87-91. Live end-to-end proves: preview now reports `dimension_companion: True`, dual endpoint returns 200 + `is_dual_party: True` against a seeded real share row.
+  - **Review outcome**: all HIGH findings addressed with regression tests. All LOW findings fixed. Coverage gap flagged by reviewer (missing route-integration tests) closed.
+
+
+
 - **Iteration 93 — Pathway Report Unlock Hint on Compare Empty State (2026-02-27)**:
   - **New component** `PathwayReportUnlockHint.jsx` — dashed-border card shown at the TOP of a Compare hub, before the "Start a new comparison" form. Copy names the concrete downstream reward: "Both of you also unlock the two-parent Dispute Resolution Pathway Report", enumerates the four pathway options, and reiterates the safety-trigger guardrail so it doesn't oversell mediation.
   - **Auto-hide logic**: `anyActive = shares.some(s => s.ready_to_view || s.status === "active")`. If true, hint returns null — at that point the compare *view* page's CTA card (iter 92) is the right surface, not the hub.

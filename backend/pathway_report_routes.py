@@ -79,7 +79,10 @@ async def _load_party_context(
     safety = await db.safety_assessments.find_one(
         {"user_id": user_id}, sort=[("created_at", -1)],
     )
-    companion = await db.dimension_companion.find_one(
+    # NOTE: the Dimension Companion assessment persists to
+    # `dimension_companion_assessments` (see dimension_companion_routes.py
+    # `COLLECTION`). The old `dimension_companion` name is unused legacy.
+    companion = await db.dimension_companion_assessments.find_one(
         {"user_id": user_id}, sort=[("created_at", -1)],
     )
     nd = await db.nd_assessments.find_one(
@@ -124,12 +127,21 @@ async def _load_party_context(
 async def _find_active_share(
     db: AsyncIOMotorDatabase, share_id: str, user_id: str,
 ) -> Dict[str, Any]:
-    """Find an active Compare share the caller is a participant in. Any of
-    the deep_dive_compare_snapshots collections carry the same shape."""
+    """Find an active Compare share the caller is a participant in.
+
+    The Compare feature is realised by several parallel share collections
+    — one per deep-dive pathway plus the SNC2 flow. Each carries the
+    same shape: `{share_id, user_pair: [u1, u2], status, aligned_pct?}`.
+    We iterate through them in order and return the first hit.
+    """
     for collection_name in (
-        "deep_dive_compare_snapshots",
+        "edu_deep_shares",
+        "med_deep_shares",
+        "psych_deep_shares",
+        "snc2_shares",
+        # Legacy fallback names — safe to include in case future flows
+        # reuse them; no-ops if the collection is absent.
         "compare_shares",
-        "snc2_compare_shares",
     ):
         row = await db[collection_name].find_one(
             {"share_id": share_id}, {"_id": 0},

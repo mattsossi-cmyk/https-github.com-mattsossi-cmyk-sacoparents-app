@@ -58,12 +58,25 @@ def _load() -> Dict[str, Any]:
         return {"review_scope": "", "review_scope_version": "", "reviewers": []}
     reviewers = list(data.get("reviewers") or [])
     # Back-fill an `id` on any legacy entries so PATCH/DELETE can address
-    # them stably (in-memory only — persisted on next write).
+    # them stably. If we had to back-fill anything, persist immediately —
+    # otherwise the next _load() would generate different random ids and
+    # any PATCH/DELETE using the previously-returned id would 404
+    # (LOW finding from the iter 87-93 code review).
+    backfilled = False
     for r in reviewers:
         if not r.get("id"):
             r["id"] = uuid.uuid4().hex[:12]
+            backfilled = True
     reviewers.sort(key=lambda r: r.get("review_date") or "", reverse=True)
     data["reviewers"] = reviewers
+    if backfilled:
+        try:
+            _save(data)
+        except Exception:  # noqa: BLE001
+            # Non-fatal — worst case the next read regenerates. Public
+            # GET must still succeed even if the disk is momentarily
+            # read-only.
+            pass
     return data
 
 

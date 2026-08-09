@@ -65,11 +65,11 @@ def _should_fire(prior: Optional[Dict[str, Any]], now_tier: str) -> Optional[str
     now_rank = TIER_ORDER.get(now_tier, -1)
     if now_rank > prior_rank:
         return "escalated"
-    if now_rank < prior_rank:
-        # Parent improved since last alert but is still at high/critical
-        # (unlikely — this branch mostly guards against tier reshuffles).
-        return "hit"
-    # Same tier → 24-hour window.
+    # Same tier OR strictly-lower tier (e.g. critical→high oscillation) →
+    # respect the 24-hour dedupe window so a fluctuating case doesn't
+    # generate repeat operator emails. Previously a downgrade fell
+    # through to "hit" which bypassed the window entirely (LOW finding
+    # from the iter 87-93 code review).
     try:
         last_sent = datetime.fromisoformat(prior["sent_at"])
     except (KeyError, TypeError, ValueError):
