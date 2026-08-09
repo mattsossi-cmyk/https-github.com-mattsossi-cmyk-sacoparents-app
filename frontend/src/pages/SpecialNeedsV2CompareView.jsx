@@ -15,6 +15,7 @@ import { logError } from "../lib/logger";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 import SignDownloadToggle from "../components/SignDownloadToggle";
+import PathwayReportPrompt from "../components/PathwayReportPrompt";
 
 const ALIGN_STYLES = {
   aligned:        "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -190,6 +191,8 @@ export default function SpecialNeedsV2CompareView() {
                 testid="snc2-compare-sign-toggle"
               />
             </div>
+
+            <PathwayReportPrompt shareId={shareId} testidPrefix="snc2-compare" />
 
             {(data.comparison.highlights || []).length > 0 && (
               <section className="mt-5 rounded-3xl border border-[#B5DFC5] bg-[#F1F9F4] p-5 sm:p-7 shadow-sm" data-testid="snc2-compare-highlights">

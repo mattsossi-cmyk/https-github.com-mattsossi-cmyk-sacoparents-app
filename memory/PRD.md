@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 92 — Pathway Report Deep Link on Compare Views (2026-02-27)**:
+  - **New component** `PathwayReportPrompt.jsx` — compact CTA card ("Both parents have consented — generate the two-parent pathway report") that deep-links to `/pathway-report?share={shareId}`. Copy stays inside the same language guardrails ("for professional consideration", never "your recommended pathway").
+  - **Wired on**: (1) `DeepDiveCompareView.jsx` — the reusable component behind every deep-dive compare pathway (mediation, educational, psychological, medical). (2) `SpecialNeedsV2CompareView.jsx` — the SNC2 compare page. Card sits just below the alignment summary bar and the milestone celebration, above the highlights section.
+  - **Gating** stays server-side (from iter 91): `/api/pathway-report/dual/{share_id}` returns 409 if the share isn't fully consented, 403 if the caller isn't a participant, 404 if the share doesn't exist. So the CTA is safe to render anywhere a compare view successfully loaded.
+  - **Testids**: `{prefix}-pathway-report-prompt` and `{prefix}-pathway-report-open`, where `{prefix}` is either the deep-dive pathway prefix or `snc2-compare`.
+  - **No new backend code**. Frontend lint clean.
+
+
+
 - **Iteration 91 — Dispute Resolution Pathway Report (2026-02-27)**:
   - **Backend scoring engine** (`pathway_report.py`): deterministic rules that fuse 5 inputs (Safety Screen, ND Risk, Dimension Companion, Compare alignment %, Compliance streak) into one of four pathways — Mediation / Child-Centered Relational Mediation / Collaborative Family Law / Litigation. Includes per-pathway suitability rating (High / Moderate / Low / Not indicated). No LLM — every branch is transparent and comment-explained.
   - **Safety hard-lock (ethical anchor)**: if EITHER parent's Safety Screen shows level 1 (court-required pathway), a coercive-control trigger, OR a physical-safety trigger, the algorithm forces Litigation as the ONLY primary — mediation → `not_indicated`, other consensual paths → `low`. Reasoning is surfaced under `hard_locked_by`. Never mutualises abuse.

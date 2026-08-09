@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles, TrendingUp, Star, MessageCircle, HelpCircle, Grid3x3 } from "lucide-react";
 import { logError } from "../../lib/logger";
 import AlignmentMilestoneCelebration from "./AlignmentMilestoneCelebration";
+import PathwayReportPrompt from "../PathwayReportPrompt";
 import ReportReviewNotice from "../ReportReviewNotice";
 import ReportProvenanceFooter from "../ReportProvenanceFooter";
 import SignDownloadToggle from "../SignDownloadToggle";
@@ -352,6 +353,8 @@ export default function DeepDiveCompareView({ pathway }) {
                 testidPrefix={t}
               />
             )}
+
+            <PathwayReportPrompt shareId={shareId} testidPrefix={t} />
 
             {timeline && timeline.count > 1 && (
               <section className="mt-5 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7 shadow-sm" data-testid={`${t}-timeline`}>
