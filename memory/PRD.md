@@ -639,6 +639,13 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Frontend `AdminNDCoordinator.jsx` handles 401/403 gracefully with an "admin-only" placeholder — never crashes.
 - Tests: `/app/backend/tests/test_iter93_admin_nd_coordinator.py` — 6/6 green (tier-boundary corners, 4×4 heatmap counting with garbage-input tolerance, tier summariser, auth requirement, non-admin refusal, admin shape validation with live endpoint).
 
+### Admin ND Coordinator Case Drilldown (Feb 2026 · iter94)
+- Every active-case row on the coordinator dashboard is now a keyboard-accessible button that opens a right-side drawer without leaving the page.
+- New backend endpoint `GET /api/admin/nd-risk-coordinator/case/{target_user_id}` returns the parent's full assessment history newest-first (`assessment_id`, `created_at`, `status`, `coparent_name`, `tier` / `tier_label`, `threat_score` / `vulnerability_score` / `total_score`, `sub_scores`, `notes`) plus the coordinator email-alert audit trail for that parent. Raw matrix answers are NOT included in the row payload — only derived scoring — so the panel is safe to leave open on a shared operator screen.
+- Missing target returns `404` (clean "no history" signal) rather than empty rows; the panel surfaces the same friendly copy.
+- Drawer UI (`CaseDrilldown` component inside `AdminNDCoordinator.jsx`) shows: parent name header + assessment/alert counters, coordinator alert audit list with delivered / failed indicators, and the full assessment stack. The most recent assessment is highlighted with its tier tint and a "Latest" badge; each row surfaces threat + vulnerability sub-scores side-by-side and any free-text notes the parent recorded. `Escape` closes the drawer; clicking the backdrop closes too.
+- Tests: `/app/backend/tests/test_iter94_admin_nd_case_drilldown.py` — 4/4 green (unauthenticated → 401, non-admin parent → 403, unknown target → 404, admin-ok shape + newest-first ordering + no-matrix-leak).
+
 ---
 
 

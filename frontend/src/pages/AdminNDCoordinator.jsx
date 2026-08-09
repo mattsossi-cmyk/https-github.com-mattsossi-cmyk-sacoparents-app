@@ -12,7 +12,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Loader2, ShieldAlert, Users, AlertTriangle, ArrowLeft, Mail,
+  Loader2, ShieldAlert, Users, AlertTriangle, ArrowLeft, Mail, X,
+  ChevronRight, Clock, MailCheck, MailX,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -39,6 +40,7 @@ const formatWhen = (iso) => {
 
 export default function AdminNDCoordinator() {
   const [state, setState] = useState({ loading: true, data: null, error: null, forbidden: false });
+  const [drilldown, setDrilldown] = useState({ open: false, targetId: null, targetName: "" });
 
   useEffect(() => {
     let cancelled = false;
@@ -266,31 +268,43 @@ export default function AdminNDCoordinator() {
                   return (
                     <li
                       key={c.assessment_id}
-                      className="border-t border-[#F0EBF7] first:border-t-0 px-4 sm:px-5 py-3 flex flex-wrap items-center gap-3"
-                      data-testid={`admin-nd-case-${c.assessment_id}`}
+                      className="border-t border-[#F0EBF7] first:border-t-0"
                     >
-                      <span
-                        className="text-[10px] uppercase tracking-[0.16em] font-bold px-2 py-1 rounded-full"
-                        style={{
-                          background: meta.bg,
-                          color: meta.ink,
-                          border: `1px solid ${meta.border}`,
-                        }}
+                      <button
+                        type="button"
+                        onClick={() => setDrilldown({
+                          open: true,
+                          targetId: c.target_user_id,
+                          targetName: c.target_name,
+                        })}
+                        data-testid={`admin-nd-case-${c.assessment_id}`}
+                        data-target-id={c.target_user_id}
+                        className="w-full text-left px-4 sm:px-5 py-3 flex flex-wrap items-center gap-3 hover:bg-[#F8F7FC] transition-colors focus:outline-none focus:bg-[#F5F1FB]"
                       >
-                        {meta.label}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-[#1A1330] truncate">
-                          {c.target_name}
+                        <span
+                          className="text-[10px] uppercase tracking-[0.16em] font-bold px-2 py-1 rounded-full"
+                          style={{
+                            background: meta.bg,
+                            color: meta.ink,
+                            border: `1px solid ${meta.border}`,
+                          }}
+                        >
+                          {meta.label}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-[#1A1330] truncate">
+                            {c.target_name}
+                          </div>
+                          <div className="text-[11px] text-[#4B4567] truncate">
+                            Co-parent: {c.coparent_name || "—"}
+                            {" · "}
+                            Score {c.total_score} (T{c.threat_score}·V{c.vulnerability_score})
+                            {" · "}
+                            {formatWhen(c.created_at)}
+                          </div>
                         </div>
-                        <div className="text-[11px] text-[#4B4567] truncate">
-                          Co-parent: {c.coparent_name || "—"}
-                          {" · "}
-                          Score {c.total_score} (T{c.threat_score}·V{c.vulnerability_score})
-                          {" · "}
-                          {formatWhen(c.created_at)}
-                        </div>
-                      </div>
+                        <ChevronRight size={16} className="text-[#857E9C]" />
+                      </button>
                     </li>
                   );
                 })}
@@ -305,6 +319,13 @@ export default function AdminNDCoordinator() {
           per-parent and remain accessible via each parent&rsquo;s account.
         </p>
       </div>
+
+      <CaseDrilldown
+        open={drilldown.open}
+        targetUserId={drilldown.targetId}
+        fallbackName={drilldown.targetName}
+        onClose={() => setDrilldown({ open: false, targetId: null, targetName: "" })}
+      />
     </div>
   );
 }
@@ -326,6 +347,248 @@ function Kpi({ testid, icon, label, value, tone = "neutral" }) {
       <div className="text-2xl font-bold tabular-nums mt-1 leading-tight">
         {value}
       </div>
+    </div>
+  );
+}
+
+
+function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
+  const [state, setState] = useState({ loading: false, data: null, error: null });
+
+  useEffect(() => {
+    if (!open || !targetUserId) return undefined;
+    let cancelled = false;
+    setState({ loading: true, data: null, error: null });
+    (async () => {
+      try {
+        const res = await api.get(
+          `/admin/nd-risk-coordinator/case/${encodeURIComponent(targetUserId)}`
+        );
+        if (!cancelled) setState({ loading: false, data: res.data, error: null });
+      } catch (err) {
+        logError("admin nd case drilldown", err);
+        if (!cancelled) {
+          setState({
+            loading: false,
+            data: null,
+            error: err?.response?.data?.detail
+              || "Couldn't load this parent's case history.",
+          });
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open, targetUserId]);
+
+  // Close on Escape key while the panel is open.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const d = state.data;
+  const name = d?.target_name || fallbackName || "Parent";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex justify-end"
+      data-testid="admin-nd-drilldown-root"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Case history"
+    >
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+        data-testid="admin-nd-drilldown-overlay"
+      />
+      <aside
+        className="relative bg-white h-full w-full sm:max-w-xl shadow-2xl border-l border-[#E5E0EE] overflow-y-auto"
+        data-testid="admin-nd-drilldown-panel"
+      >
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-[#F0EBF7] px-5 py-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              Case history
+            </div>
+            <h2 className="font-serif text-xl text-[#1A1330] leading-snug truncate mt-0.5"
+              data-testid="admin-nd-drilldown-name">
+              {name}
+            </h2>
+            {d?.assessment_count > 0 && (
+              <p className="text-[11px] text-[#4B4567] mt-0.5"
+                data-testid="admin-nd-drilldown-count">
+                {d.assessment_count} assessment{d.assessment_count === 1 ? "" : "s"} on file
+                {d.alerts?.length > 0 && (
+                  <> · {d.alerts.length} coordinator alert{d.alerts.length === 1 ? "" : "s"}</>
+                )}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close case history"
+            data-testid="admin-nd-drilldown-close"
+            className="shrink-0 w-9 h-9 rounded-full grid place-items-center bg-[#F8F7FC] hover:bg-[#EFE9F9] text-[#4B4567]"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="px-5 py-5">
+          {state.loading && (
+            <div className="inline-flex items-center gap-2 text-sm text-[#4B4567]"
+              data-testid="admin-nd-drilldown-loading">
+              <Loader2 size={14} className="animate-spin" /> Loading case history…
+            </div>
+          )}
+
+          {state.error && (
+            <div className="rounded-2xl border border-[#EFB4B4] bg-[#FCEDEB] p-3 text-sm text-[#B02A2A]"
+              data-testid="admin-nd-drilldown-error">
+              {state.error}
+            </div>
+          )}
+
+          {d && (
+            <>
+              {d.alerts?.length > 0 && (
+                <section className="mb-6" data-testid="admin-nd-drilldown-alerts">
+                  <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+                    Coordinator alert audit
+                  </div>
+                  <ul className="space-y-1.5">
+                    {d.alerts.map((a) => {
+                      const meta = TIER_META[a.tier] || TIER_META.low;
+                      return (
+                        <li key={a.assessment_id + a.created_at}
+                          className="flex items-center gap-3 text-xs text-[#4B4567]">
+                          {a.email_ok
+                            ? <MailCheck size={14} className="text-[#1F5C3B]" />
+                            : <MailX size={14} className="text-[#B02A2A]" />}
+                          <span
+                            className="text-[9px] uppercase tracking-[0.16em] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{
+                              background: meta.bg,
+                              color: meta.ink,
+                              border: `1px solid ${meta.border}`,
+                            }}
+                          >
+                            {meta.label}
+                          </span>
+                          <span>
+                            {a.email_ok ? "Delivered" : "Send failed"}
+                            {" · "}
+                            {formatWhen(a.created_at)}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              )}
+
+              <section data-testid="admin-nd-drilldown-history">
+                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+                  Assessments · newest first
+                </div>
+                <ol className="space-y-3">
+                  {d.history.map((h, idx) => {
+                    const meta = TIER_META[h.tier] || TIER_META.low;
+                    const isLatest = idx === 0;
+                    return (
+                      <li
+                        key={h.assessment_id}
+                        data-testid={`admin-nd-drilldown-row-${h.assessment_id}`}
+                        className="rounded-2xl border p-4"
+                        style={{
+                          background: isLatest ? meta.bg : "#FFFFFF",
+                          borderColor: isLatest ? meta.border : "#E5E0EE",
+                        }}
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className="text-[10px] uppercase tracking-[0.16em] font-bold px-2 py-1 rounded-full"
+                            style={{
+                              background: "#fff",
+                              color: meta.ink,
+                              border: `1px solid ${meta.border}`,
+                            }}
+                          >
+                            {meta.label}
+                          </span>
+                          {isLatest && (
+                            <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                              Latest
+                            </span>
+                          )}
+                          <span className="text-[11px] text-[#4B4567] inline-flex items-center gap-1 ml-auto">
+                            <Clock size={11} /> {formatWhen(h.created_at)}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-sm text-[#1A1330]">
+                          <span className="font-semibold">Score {h.total_score}</span>
+                          {" · "}
+                          Threat {h.threat_score} · Vulnerability {h.vulnerability_score}
+                        </div>
+                        {h.coparent_name && (
+                          <div className="text-[11px] text-[#4B4567] mt-0.5">
+                            Co-parent: {h.coparent_name}
+                          </div>
+                        )}
+                        {h.sub_scores && (h.sub_scores.threat || h.sub_scores.vulnerability) && (
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-[#4B4567]">
+                            {h.sub_scores.threat && (
+                              <div>
+                                <div className="uppercase tracking-[0.16em] text-[9px] font-bold text-[#3D1A78] mb-1">
+                                  Threat sub-scores
+                                </div>
+                                {Object.entries(h.sub_scores.threat).map(([k, v]) => (
+                                  <div key={k} className="flex justify-between">
+                                    <span className="truncate mr-2">
+                                      {k.replace(/^threat_/, "").replaceAll("_", " ")}
+                                    </span>
+                                    <span className="tabular-nums font-semibold text-[#1A1330]">{v}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {h.sub_scores.vulnerability && (
+                              <div>
+                                <div className="uppercase tracking-[0.16em] text-[9px] font-bold text-[#3D1A78] mb-1">
+                                  Vulnerability sub-scores
+                                </div>
+                                {Object.entries(h.sub_scores.vulnerability).map(([k, v]) => (
+                                  <div key={k} className="flex justify-between">
+                                    <span className="truncate mr-2">
+                                      {k.replace(/^vuln_/, "").replaceAll("_", " ")}
+                                    </span>
+                                    <span className="tabular-nums font-semibold text-[#1A1330]">{v}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {h.notes && (
+                          <div className="mt-3 rounded-xl bg-white/70 border border-[#E5E0EE] p-2 text-[11px] text-[#4B4567] italic">
+                            &ldquo;{h.notes}&rdquo;
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </section>
+            </>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }

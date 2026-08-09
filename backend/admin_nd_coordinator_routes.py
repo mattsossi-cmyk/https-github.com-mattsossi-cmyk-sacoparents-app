@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from auth import UserPublic
@@ -165,4 +165,74 @@ async def admin_coordinator_dashboard(
             "total":   int(alerts_total),
             "emailed": int(alerts_recent),
         },
+    }
+
+
+@router.get("/case/{target_user_id}")
+async def admin_case_history(
+    target_user_id: str,
+    _admin: UserPublic = Depends(require_admin),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return every ND Risk Assessment for a single parent, newest first,
+    plus every coordinator email alert on record for them. Powers the
+    admin-only case drilldown side panel on the coordinator dashboard.
+
+    Refuses if the target parent has never completed an assessment (404)
+    so the admin gets a clean signal rather than an empty panel.
+    """
+    cursor = db[ASSESSMENTS_COLLECTION].find(
+        {"target_user_id": target_user_id}, {"_id": 0},
+    ).sort("created_at", -1)
+    history: List[Dict[str, Any]] = [row async for row in cursor]
+    if not history:
+        raise HTTPException(404, "No ND Risk assessments on file for this parent.")
+
+    # Freeze the parent-facing name at the newest assessment; if that
+    # row lacks it, fall back through history rather than showing "Parent".
+    target_name = ""
+    for row in history:
+        if row.get("target_name"):
+            target_name = row["target_name"]
+            break
+
+    # Coordinator alert audit trail for this parent — helps the admin
+    # see whether an alert was actually delivered.
+    alerts_cursor = db[ALERTS_COLLECTION].find(
+        {"user_id": target_user_id}, {"_id": 0},
+    ).sort("created_at", -1)
+    alerts = [row async for row in alerts_cursor]
+
+    # Compact history rows for the panel — never leak the raw matrix
+    # unless the admin drills into a specific assessment.
+    def _row(c: Dict[str, Any]) -> Dict[str, Any]:
+        sc = c.get("scoring") or {}
+        return {
+            "assessment_id":       c.get("assessment_id"),
+            "created_at":          c.get("created_at"),
+            "status":              c.get("status"),
+            "coparent_name":       c.get("coparent_name") or "",
+            "tier":                sc.get("tier"),
+            "tier_label":          sc.get("tier_label"),
+            "threat_score":        sc.get("threat_score"),
+            "vulnerability_score": sc.get("vulnerability_score"),
+            "total_score":         sc.get("total_score"),
+            "sub_scores":          sc.get("sub_scores") or {},
+            "notes":               c.get("notes") or "",
+        }
+
+    return {
+        "target_user_id":  target_user_id,
+        "target_name":     target_name or "Parent",
+        "assessment_count": len(history),
+        "history":         [_row(c) for c in history],
+        "alerts":          [
+            {
+                "assessment_id": a.get("assessment_id"),
+                "tier":          a.get("tier"),
+                "email_ok":      bool(a.get("email_ok")),
+                "created_at":    a.get("created_at"),
+            }
+            for a in alerts
+        ],
     }
