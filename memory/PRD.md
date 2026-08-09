@@ -621,6 +621,16 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Verified: non-operator/anon users see the download link but NOT the send button; backend correctly returns 403 for non-operator send attempts.
 - The operator adds reviewer entries by appending to `reviewer_panel.json` after a reviewer signs the packet and agrees to be listed publicly.
 
+### Pathway Report Email + QR Verify (Feb 2026 · iter92)
+- Parents can now email the Dispute Resolution Pathway Report PDF directly to a mediator, PFAL, attorney, court, or therapist — mirrors the 4-Dim Briefing email pattern.
+- New backend endpoint `POST /api/pathway-report/email` accepts `{recipient_email, recipient_name?, recipient_role, parent_message?, share_id?}`. When `share_id` is set the endpoint re-enforces the Compare-share consent gate before sending the two-parent version. Otherwise it sends the single-parent preview.
+- New backend router `pathway_verify_routes.py` — writes `pathway_signatures` rows and exposes `GET /api/verify/pathway/{sig_id}`. Same minimal-response privacy stance as the briefing verify (issued yes/no + date + single/dual scope, never the recommendation or hard-lock reasons).
+- Pathway PDF footer now stamps a 12x12mm QR pointing at `/verify/pathway/{sig_id}` alongside the existing "Not legal advice" line.
+- New frontend `PathwayEmailDialog.jsx` (mirrors `BriefingEmailDialog`) + new public `VerifyPathway.jsx` page. `PathwayReport.jsx` gains an "Email to mediator" button that opens the dialog and forwards the current `share` query param so a dual-party report can be emailed directly from the same view.
+- New email template `send_pathway_report()` in `email_service.py` — surfaces the primary pathway label + scope + a red "safety trigger applied" callout in the covering email when the algorithm hard-locked.
+- Signature is recorded BEFORE the PDF is built for all three entrypoints (preview PDF, dual PDF, email) so the QR is guaranteed to resolve.
+- Tests: `/app/backend/tests/test_iter92_pathway_email_verify.py` — 9/9 green (PDF-with-QR-larger, signature shape, unknown/malformed id, live round-trip, auth challenge, bad-email/@demo.local rejection, bogus-share-id consent gate).
+
 ---
 
 

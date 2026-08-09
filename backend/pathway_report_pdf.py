@@ -57,6 +57,49 @@ _LEVEL_LABEL = {
 }
 
 
+def _stamp_pathway_verify_qr(pdf: Any) -> None:
+    """Stamp a small verify QR in the footer left margin.
+
+    Mirrors `_stamp_briefing_verify_qr` in four_dimension_briefing_pdf.py.
+    Points at the public /verify/pathway/{sig_id} page. Non-fatal — the
+    PDF must still render if qrcode isn't installed for any reason.
+    """
+    sig_id = getattr(pdf, "_pathway_sig_id", None)
+    verify_url = getattr(pdf, "_pathway_verify_url", None)
+    if not sig_id or not verify_url:
+        return
+
+    prev_font_family = pdf.font_family
+    prev_font_style = pdf.font_style
+    prev_font_size = pdf.font_size_pt
+
+    try:
+        import io
+        import qrcode
+
+        img = qrcode.make(verify_url, box_size=8, border=1)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+
+        qr_size = 12.0
+        qr_x = pdf.l_margin
+        qr_y = (pdf.h - 6.0) - qr_size - 1.5
+
+        pdf.image(buf, x=qr_x, y=qr_y, w=qr_size, h=qr_size)
+        pdf.set_font("Helvetica", "", 5.6)
+        pdf.set_text_color(*SOFT_INK)
+        pdf.set_xy(qr_x - 6, qr_y + qr_size + 0.2)
+        pdf.cell(qr_size + 12, 2.6, _safe("Scan to verify"), align="C")
+    except Exception:  # noqa: BLE001
+        # Non-fatal — QR is a nice-to-have, PDF must still render.
+        pass
+    finally:
+        if prev_font_family:
+            pdf.set_font(prev_font_family, prev_font_style or "", prev_font_size or 10)
+        pdf.set_text_color(0, 0, 0)
+
+
 class _PathwayPDF(FPDF):
     def header(self):
         if getattr(self, "_first_page", True):
@@ -82,6 +125,7 @@ class _PathwayPDF(FPDF):
             _safe(f"SA CoParents App - sacoparentsapp.online - Page {self.page_no()}"),
             align="C",
         )
+        _stamp_pathway_verify_qr(self)
 
 
 # ---- Reusable low-level widgets ----------------------------------------------
@@ -233,11 +277,15 @@ def build_pathway_report_pdf(
     caller_display_name: str = "",
     data_inputs_present: Optional[Dict[str, bool]] = None,
     share_id: Optional[str] = None,
+    pathway_sig_id: Optional[str] = None,
+    pathway_verify_url: Optional[str] = None,
 ) -> bytes:
     """Return PDF bytes for a pathway result payload — the same shape the
     JSON endpoints return via `PathwayResult.to_public_dict()`."""
     pdf = _PathwayPDF(orientation="P", unit="mm", format="Letter")
     pdf._first_page = True
+    if pathway_sig_id:     pdf._pathway_sig_id = pathway_sig_id
+    if pathway_verify_url: pdf._pathway_verify_url = pathway_verify_url
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.set_margins(left=18, top=18, right=18)
     pdf.add_page()

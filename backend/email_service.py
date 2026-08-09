@@ -1093,6 +1093,135 @@ def send_four_dimension_briefing(
     )
 
 
+def send_pathway_report(
+    *,
+    to_email: str,
+    recipient_name: str,
+    recipient_role: str,
+    parent_name: str,
+    parent_email: str,
+    parent_message: str,
+    is_dual_party: bool,
+    primary_pathway_label: str,
+    hard_locked: bool,
+    pdf_bytes: bytes,
+    pdf_filename: str = "pathway-report.pdf",
+) -> None:
+    """Send the Dispute Resolution Pathway Report PDF to a mediator,
+    attorney, court, or therapist. Reply-to is the parent's email so the
+    recipient can respond directly.
+
+    Same tone as `send_four_dimension_briefing`: informational, non-
+    directive, explicitly not legal advice. When the algorithm hard-
+    locked to a non-mediation pathway (safety trigger) we flag that in
+    the covering email body so the recipient knows to read the PDF's
+    safety section carefully.
+    """
+    greeting = f"Hi {recipient_name}," if recipient_name else "Hi,"
+    who = parent_name or parent_email or "This parent"
+    role_line = f" ({recipient_role})" if recipient_role else ""
+    escaped_role = _html.escape(recipient_role or "")
+    escaped_pathway = _html.escape(primary_pathway_label or "Pathway recommendation")
+    scope_label = (
+        "Two-parent report (both parents consented via the Compare share)"
+        if is_dual_party else
+        "Single-parent preview (co-parent has not yet consented)"
+    )
+    optional_note_html = (
+        f'<p style="font-size:14px;line-height:1.6;color:#1A1330;margin:0 0 16px 0;'
+        f'background:#F8F7FC;border-radius:14px;padding:14px 16px;border:1px solid #E5E0EE;">'
+        f'<span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;">'
+        f'Note from {_html.escape(who)}</span><br/>{_html.escape(parent_message)}</p>'
+        if parent_message
+        else ""
+    )
+    optional_note_plain = (
+        f"\nNote from {who}:\n{parent_message}\n"
+        if parent_message
+        else ""
+    )
+    hard_lock_html = (
+        f'<div style="background:#FCEDEB;border-radius:14px;padding:14px 16px;margin:0 0 16px 0;'
+        f'border:1px solid #EFB4B4;color:#B02A2A;font-size:14px;line-height:1.55;">'
+        f'<strong>Safety trigger applied.</strong> The rule engine did not '
+        f'recommend a consensual process because safety indicators were '
+        f'present in the assessment data. Please read the safety section '
+        f'of the attached PDF carefully.'
+        f'</div>'
+        if hard_locked else ""
+    )
+    hard_lock_plain = (
+        "\nSAFETY TRIGGER APPLIED. The rule engine did not recommend a "
+        "consensual process because safety indicators were present. "
+        "Please read the safety section of the PDF carefully.\n"
+        if hard_locked else ""
+    )
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'{_html.escape(greeting)}</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'<strong>{_html.escape(who)}</strong> is preparing for their next '
+        f'co-parenting session through SA CoParents and asked me to send you '
+        f'their <strong>Dispute Resolution Pathway Report</strong>'
+        f'{" " + escaped_role if escaped_role else ""}.'
+        f'</p>'
+        f'<div style="background:#F8F7FC;border-radius:16px;padding:18px 20px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
+        f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:6px;">'
+        f'Primary pathway</div>'
+        f'<div style="font-size:16px;color:#1A1330;font-weight:700;line-height:1.35;">'
+        f'{escaped_pathway}</div>'
+        f'<div style="font-size:12px;color:#857E9C;margin-top:6px;">'
+        f'{_html.escape(scope_label)}</div>'
+        f'</div>'
+        f'{hard_lock_html}'
+        f'{optional_note_html}'
+        f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 12px 0;">'
+        f'The full report is attached as a PDF. It includes suitability '
+        f'ratings across mediation, collaborative practice, arbitration, '
+        f'and litigated processes, plus considerations and goals. You can '
+        f'reply directly to this email to reach {_html.escape(who)}.'
+        f'</p>'
+        f'<p style="font-size:12px;line-height:1.55;color:#857E9C;margin:0;">'
+        f'This report is generated from a deterministic rule engine over '
+        f'self-reported assessment data — not by an AI model, and not by a '
+        f'licensed clinician. It is informational only. Not legal advice, '
+        f'a psychological determination, or a substitute for the '
+        f'recipient\u2019s own professional screening.</p>'
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"{who} is preparing for their next co-parenting session through "
+        f"SA CoParents and asked me to send you their Dispute Resolution "
+        f"Pathway Report{role_line}.\n\n"
+        f"Primary pathway: {primary_pathway_label}\n"
+        f"Scope: {scope_label}\n"
+        f"{hard_lock_plain}"
+        f"{optional_note_plain}"
+        f"\nThe full report is attached as a PDF. You can reply directly "
+        f"to reach {who} ({parent_email}).\n\n"
+        f"This report is generated from a deterministic rule engine over "
+        f"self-reported assessment data. It is informational only. Not "
+        f"legal advice, a psychological determination, or a substitute "
+        f"for the recipient's own professional screening.\n"
+    )
+    html = _branded_html(
+        headline=f"Pathway Report from {_html.escape(who)}",
+        body_html=body_html,
+        cta_label="",
+    )
+    subject = f"Dispute Resolution Pathway Report from {who}"
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=html,
+        text=plain,
+        reply_to=parent_email or None,
+        attachments=[(pdf_filename or "pathway-report.pdf", pdf_bytes)],
+        failure_message="Couldn't send the pathway report right now. Please try again in a moment.",
+    )
+
+
 
 
 

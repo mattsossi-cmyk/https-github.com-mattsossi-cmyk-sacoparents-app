@@ -14,9 +14,10 @@
  */
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Loader2, Scale, ShieldAlert, ArrowLeft, FileText, Download } from "lucide-react";
+import { Loader2, Scale, ShieldAlert, ArrowLeft, FileText, Download, Mail } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
+import PathwayEmailDialog from "../components/PathwayEmailDialog";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -32,6 +33,8 @@ export default function PathwayReport() {
   const shareId = params.get("share");
   const [state, setState] = useState({ loading: true, data: null, error: null });
   const [downloading, setDownloading] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,6 +105,22 @@ export default function PathwayReport() {
     }
   };
 
+  const sendPathwayEmail = async (payload) => {
+    setEmailSending(true);
+    try {
+      const body = { ...payload };
+      if (shareId) body.share_id = shareId;
+      const res = await api.post("/pathway-report/email", body);
+      toast.success(`Pathway report emailed to ${res.data?.emailed_to || "recipient"}.`);
+      setEmailOpen(false);
+    } catch (err) {
+      logError("pathway report email", err);
+      toast.error(err?.response?.data?.detail || "Couldn't send the pathway report right now.");
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10"
@@ -111,18 +130,29 @@ export default function PathwayReport() {
             className="inline-flex items-center gap-1.5 text-xs text-[#4B4567] hover:text-[#3D1A78]">
             <ArrowLeft size={12} /> Back to dashboard
           </Link>
-          <button
-            type="button"
-            onClick={downloadPdf}
-            disabled={downloading}
-            data-testid="pathway-report-download-pdf"
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-60"
-          >
-            {downloading
-              ? <Loader2 size={14} className="animate-spin" />
-              : <Download size={14} />}
-            Download PDF
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setEmailOpen(true)}
+              data-testid="pathway-report-email-open"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
+            >
+              <Mail size={14} />
+              Email to mediator
+            </button>
+            <button
+              type="button"
+              onClick={downloadPdf}
+              disabled={downloading}
+              data-testid="pathway-report-download-pdf"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-60"
+            >
+              {downloading
+                ? <Loader2 size={14} className="animate-spin" />
+                : <Download size={14} />}
+              Download PDF
+            </button>
+          </div>
         </div>
 
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
@@ -258,6 +288,14 @@ export default function PathwayReport() {
           </div>
         </div>
       </div>
+      <PathwayEmailDialog
+        open={emailOpen}
+        onClose={() => setEmailOpen(false)}
+        onSend={sendPathwayEmail}
+        sending={emailSending}
+        isDual={!!(state.data && state.data.is_dual_party)}
+        pathwayLabel={state.data?.primary_pathway_label || ""}
+      />
     </AppShell>
   );
 }

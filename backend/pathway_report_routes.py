@@ -18,11 +18,12 @@ of both parents' data.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user
 from pathway_report import (
@@ -240,6 +241,20 @@ def _pdf_response(pdf_bytes: bytes, filename: str) -> Response:
     )
 
 
+def _pathway_snapshot(result: Dict[str, Any]) -> Dict[str, Any]:
+    """Small internal-only summary of what a given pathway PDF asserted.
+
+    Recorded on `pathway_signatures` so operators can reconstruct a
+    disputed report. Never exposed to the public verify endpoint.
+    """
+    return {
+        "primary_key":      result.get("primary_pathway_key"),
+        "primary_label":    result.get("primary_pathway_label"),
+        "hard_locked":      bool(result.get("hard_locked_by")),
+        "is_dual_party":    bool(result.get("is_dual_party")),
+    }
+
+
 @router.get("/preview/pdf")
 async def preview_pathway_report_pdf(
     user: UserPublic = Depends(get_current_user),
@@ -247,10 +262,22 @@ async def preview_pathway_report_pdf(
 ):
     """Single-parent preview as a downloadable PDF."""
     from pathway_report_pdf import build_pathway_report_pdf
+    from pathway_verify_routes import record_pathway_signature
 
     ctx = await _load_party_context(db, user.user_id)
     result = score_pathway_single(ctx)
     out = result.to_public_dict()
+
+    # Record verify signature BEFORE building the PDF so the QR resolves
+    # to the public "issued by SA CoParents" verify page.
+    sig = await record_pathway_signature(
+        db,
+        user_id=user.user_id,
+        is_dual_party=False,
+        share_id=None,
+        snapshot=_pathway_snapshot(out),
+    )
+
     pdf_bytes = build_pathway_report_pdf(
         result=out,
         caller_display_name=ctx.display_name or "",
@@ -264,6 +291,8 @@ async def preview_pathway_report_pdf(
             "nd_risk":             ctx.nd_risk_tier is not None,
             "compliance":          ctx.compliance_streak_weeks > 0,
         },
+        pathway_sig_id=sig["sig_id"],
+        pathway_verify_url=sig["verify_url"],
     )
     return _pdf_response(pdf_bytes, "pathway-report-preview.pdf")
 
@@ -277,6 +306,7 @@ async def dual_pathway_report_pdf(
     """Full two-parent report as a downloadable PDF — same consent gate
     as the JSON endpoint (`_find_active_share`)."""
     from pathway_report_pdf import build_pathway_report_pdf
+    from pathway_verify_routes import record_pathway_signature
 
     share = await _find_active_share(db, share_id, user.user_id)
     pair: List[str] = list(share.get("user_pair") or [])
@@ -297,6 +327,15 @@ async def dual_pathway_report_pdf(
     result = score_pathway_dual(ctx)
     out = result.to_public_dict()
     out["share_id"] = share_id
+
+    sig = await record_pathway_signature(
+        db,
+        user_id=user.user_id,
+        is_dual_party=True,
+        share_id=share_id,
+        snapshot=_pathway_snapshot(out),
+    )
+
     pdf_bytes = build_pathway_report_pdf(
         result=out,
         caller_display_name=ctx_a.display_name or "",
@@ -313,6 +352,197 @@ async def dual_pathway_report_pdf(
             "compliance":          ctx_a.compliance_streak_weeks > 0,
         },
         share_id=share_id,
+        pathway_sig_id=sig["sig_id"],
+        pathway_verify_url=sig["verify_url"],
     )
     return _pdf_response(pdf_bytes, f"pathway-report-{share_id}.pdf")
+
+
+# ---------------------------------------------------------------------------
+# Email export — send the pathway PDF directly to a mediator, attorney,
+# etc. Mirrors the 4-Dimension Briefing email pattern in
+# `dimension_companion_routes.email_four_dimension_briefing`.
+# ---------------------------------------------------------------------------
+
+_ROLE_TO_AUDIENCE = {
+    "mediator":                    "Mediator",
+    "parent_facilitator_ad_litem": "Parent Facilitator Ad Litem",
+    "trial_court":                 "Trial Court",
+    "attorney":                    "Family Law Attorney",
+    "therapist":                   "Therapist / Counsellor",
+    "other":                       "Mediator / Attorney / Trial Court",
+}
+
+
+class PathwayEmailBody(BaseModel):
+    recipient_email: str = Field(..., max_length=200)
+    recipient_name:  Optional[str] = Field(None, max_length=120)
+    recipient_role:  Optional[Literal[
+        "mediator", "parent_facilitator_ad_litem", "trial_court",
+        "attorney", "therapist", "other",
+    ]] = None
+    audience_label:  Optional[str] = Field(None, max_length=120)
+    parent_message:  Optional[str] = Field(None, max_length=1200)
+    share_id:        Optional[str] = Field(
+        None, max_length=64,
+        description="If set, emails the two-parent report gated by this "
+                    "active Compare share. Otherwise sends the single-"
+                    "parent preview.",
+    )
+
+
+@router.post("/email")
+async def email_pathway_report(
+    body: PathwayEmailBody,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Generate the caller's Pathway Report PDF and email it directly to
+    their mediator / attorney / court / therapist. Reply-to is the
+    parent's email so the recipient can respond without an intermediary.
+
+    Same consent gate as `/dual/{share_id}` — if a share_id is passed the
+    endpoint refuses unless the Compare share is `active`.
+    """
+    from datetime import datetime, timezone
+    from pathway_report_pdf import build_pathway_report_pdf
+    from pathway_verify_routes import record_pathway_signature
+    from email_service import (
+        EmailNotConfigured,
+        EmailSendError,
+        send_pathway_report,
+    )
+
+    # ---- Validate inputs ---------------------------------------------------
+    to_email = (body.recipient_email or "").strip().lower()
+    if "@" not in to_email or "." not in to_email.split("@")[-1]:
+        raise HTTPException(400, "That doesn't look like a valid email address.")
+    if to_email.endswith("@demo.local"):
+        raise HTTPException(400, "Please use your recipient's real email address.")
+
+    parent_email = (user.email or "").strip().lower()
+    if not parent_email or parent_email.endswith("@demo.local"):
+        raise HTTPException(
+            400,
+            "Save your work first — add a real email to your account so the "
+            "recipient can reply to you.",
+        )
+
+    audience = body.audience_label or _ROLE_TO_AUDIENCE.get(
+        body.recipient_role or "other", _ROLE_TO_AUDIENCE["other"]
+    )
+
+    # ---- Score the pathway (preview vs dual) -------------------------------
+    ctx_a = await _load_party_context(db, user.user_id)
+    if body.share_id:
+        share = await _find_active_share(db, body.share_id, user.user_id)
+        pair: List[str] = list(share.get("user_pair") or [])
+        if len(pair) != 2:
+            raise HTTPException(500, "Share pair is malformed; cannot resolve both parents.")
+        other = [uid for uid in pair if uid != user.user_id][0]
+        ctx_b = await _load_party_context(db, other)
+        align_pct = share.get("aligned_pct")
+        if align_pct is None:
+            align_pct = (share.get("scoring") or {}).get("aligned_pct")
+        ctx = DualPartyContext(
+            parent_a=ctx_a, parent_b=ctx_b,
+            compare_alignment_pct=(float(align_pct) if align_pct is not None else None),
+            child_centered_alignment=None,
+        )
+        result = score_pathway_dual(ctx)
+        out = result.to_public_dict()
+        out["share_id"] = body.share_id
+        is_dual = True
+    else:
+        # Refuse the preview if the parent has literally nothing on file —
+        # otherwise we'd email a mediator a report saying "nothing on
+        # file" which looks like the app is broken.
+        if (ctx_a.safety_level is None
+                and not any([ctx_a.dim2_communication_tier,
+                             ctx_a.dim3_emotional_reg_tier,
+                             ctx_a.dim4_executive_fn_tier])
+                and ctx_a.nd_risk_tier is None):
+            raise HTTPException(
+                404,
+                "You have no assessment data on file yet. Complete at least "
+                "the Safety Screen or Dimension Companion first.",
+            )
+        result = score_pathway_single(ctx_a)
+        out = result.to_public_dict()
+        is_dual = False
+
+    # ---- Record signature + build PDF --------------------------------------
+    sig = await record_pathway_signature(
+        db,
+        user_id=user.user_id,
+        is_dual_party=is_dual,
+        share_id=body.share_id,
+        snapshot=_pathway_snapshot(out),
+    )
+
+    pdf_bytes = build_pathway_report_pdf(
+        result=out,
+        caller_display_name=ctx_a.display_name or "",
+        data_inputs_present={
+            "safety_screen":       ctx_a.safety_level is not None,
+            "dimension_companion": any([
+                ctx_a.dim2_communication_tier,
+                ctx_a.dim3_emotional_reg_tier,
+                ctx_a.dim4_executive_fn_tier,
+            ]),
+            "nd_risk":             ctx_a.nd_risk_tier is not None,
+            "compliance":          ctx_a.compliance_streak_weeks > 0,
+        },
+        share_id=body.share_id,
+        pathway_sig_id=sig["sig_id"],
+        pathway_verify_url=sig["verify_url"],
+    )
+
+    # ---- Send --------------------------------------------------------------
+    try:
+        send_pathway_report(
+            to_email=to_email,
+            recipient_name=(body.recipient_name or "").strip(),
+            recipient_role=audience,
+            parent_name=user.name or "",
+            parent_email=parent_email,
+            parent_message=(body.parent_message or "").strip(),
+            is_dual_party=is_dual,
+            primary_pathway_label=out.get("primary_pathway_label", ""),
+            hard_locked=bool(out.get("hard_locked_by")),
+            pdf_bytes=pdf_bytes,
+        )
+    except EmailNotConfigured as e:
+        raise HTTPException(
+            503,
+            "Email isn't configured on this environment. Download the PDF "
+            "and share it directly.",
+        ) from e
+    except EmailSendError as e:
+        raise HTTPException(
+            503,
+            "Couldn't send the pathway report right now. Please try again "
+            "in a moment.",
+        ) from e
+
+    # ---- Audit log ---------------------------------------------------------
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await db.pathway_report_emails.insert_one({
+        "user_id":        user.user_id,
+        "to_email":       to_email,
+        "recipient_name": (body.recipient_name or "").strip(),
+        "recipient_role": body.recipient_role,
+        "audience":       audience,
+        "share_id":       body.share_id or "",
+        "is_dual_party":  is_dual,
+        "sig_id":         sig["sig_id"],
+        "sent_at":        now_iso,
+    })
+    return {
+        "ok": True,
+        "emailed_to": to_email,
+        "audience": audience,
+        "sig_id": sig["sig_id"],
+        "is_dual_party": is_dual,
+    }
 
