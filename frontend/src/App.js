@@ -49,6 +49,7 @@ import VerifyEmail from "@/pages/VerifyEmail";
 import VerifySignature from "@/pages/VerifySignature";
 import VerifyBriefing from "@/pages/VerifyBriefing";
 import AdminReviewers from "@/pages/AdminReviewers";
+import PathwayReport from "@/pages/PathwayReport";
 import NDRiskAssessment from "@/pages/NDRiskAssessment";
 import NDRiskAssessmentResult from "@/pages/NDRiskAssessmentResult";
 import DimensionCompanion from "@/pages/DimensionCompanion";
@@ -113,6 +114,7 @@ function AppRoutes() {
         <Route path="/verify/briefing/:sig_id" element={<VerifyBriefing />} />
         <Route path="/verify/:sig_id" element={<VerifySignature />} />
         <Route path="/admin/reviewers" element={<AdminReviewers />} />
+        <Route path="/pathway-report" element={<PathwayReport />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
         <Route path="/shared/coparenting/:token" element={<SharedCoParentingReport />} />

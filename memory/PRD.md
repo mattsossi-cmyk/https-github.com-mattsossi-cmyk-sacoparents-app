@@ -1,6 +1,19 @@
 # SA CoParents — PRD
 
 
+- **Iteration 91 — Dispute Resolution Pathway Report (2026-02-27)**:
+  - **Backend scoring engine** (`pathway_report.py`): deterministic rules that fuse 5 inputs (Safety Screen, ND Risk, Dimension Companion, Compare alignment %, Compliance streak) into one of four pathways — Mediation / Child-Centered Relational Mediation / Collaborative Family Law / Litigation. Includes per-pathway suitability rating (High / Moderate / Low / Not indicated). No LLM — every branch is transparent and comment-explained.
+  - **Safety hard-lock (ethical anchor)**: if EITHER parent's Safety Screen shows level 1 (court-required pathway), a coercive-control trigger, OR a physical-safety trigger, the algorithm forces Litigation as the ONLY primary — mediation → `not_indicated`, other consensual paths → `low`. Reasoning is surfaced under `hard_locked_by`. Never mutualises abuse.
+  - **Language guardrails**: never says "you should"; always "the combined assessment data indicates". Every pathway comes with `factors_supporting_primary`, `considerations`, `goals_before_or_during`. Tie-breaker always picks the LEAST adversarial option.
+  - **API** (`pathway_report_routes.py`):
+    - `GET /pathway-report/preview` — single-parent preview (caller's own data). Result flags itself as a preview + nudges parent to invite co-parent.
+    - `GET /pathway-report/dual/{share_id}` — full 2-parent report. Gated behind an ACTIVE `deep_dive_compare` share (reuses the existing mutual-consent flow — no new consent UI needed). Reads both parents' Safety + Companion + ND Risk + Compliance from Mongo using the share's user_pair. Returns 409 if the share isn't fully consented and 403 if the caller isn't a participant.
+  - **Frontend**: new page `/pathway-report` (`PathwayReport.jsx`). Renders primary pathway card, hard-lock trigger panel (red) when applicable, factors list, goals list, suitability profile with per-pathway coloured chips, considerations block, "not legal advice" footer. Testids: `pathway-report-{root,loading,error,primary,primary-label,hard-lock,factors,goals,suitability,considerations,preview-banner}` + `pathway-suitability-{key}`.
+  - **Testing**: `test_iter91_pathway_report.py` — 15/15 pass. Priority tests are the ethical anchors: coercive-control from EITHER side hard-locks to litigation, physical-safety trigger hard-locks, safety level 1 hard-locks, and the "no prescriptive language" sweep test that scans every string field for banned phrases like "you should". Also covers happy paths for all four pathways, tie-break policy (least adversarial wins), and no-data no-crash behaviour. Live curl E2E: parent1 with critical ND-risk correctly routed to Litigation as a *soft signal* (not hard-locked) with full suitability profile shown.
+  - **Deferred**: professional PDF export + mediator email (planned as iter 92 — reuses the 4-Dim Briefing PDF + QR-verify pattern).
+
+
+
 - **Iteration 90 — Weekly Compliance Reminder (Monday nudge email) (2026-02-27)**:
   - **Backend**: new `weekly_compliance_reminder.py` — `send_weekly_compliance_reminders(db, dry_run, now, force_window)` pure sweeper + `weekly_compliance_reminder_loop(app)` background task (registered in `server.py` alongside the other schedulers). Sweep runs only during Monday 08:00-22:00 UTC (env-configurable `WEEKLY_COMPLIANCE_REMINDER_START_HOUR_UTC` / `_END_HOUR_UTC`). Loop is gated behind `WEEKLY_COMPLIANCE_REMINDER_ENABLED=1` — off by default; operator flips the env var + restarts backend when ready to go live.
   - **Suppression matrix**: opt-out row, no email, `@demo.local`, `>60 days` inactive on compliance, `≥80%` already ticked this week (STREAK_THRESHOLD_PCT), or already sent to this user this ISO week. Sends collection `weekly_compliance_reminder_sends` records every send + failure (mirrors the coordinator alerts audit pattern — a broken Resend never causes a re-attempt storm).

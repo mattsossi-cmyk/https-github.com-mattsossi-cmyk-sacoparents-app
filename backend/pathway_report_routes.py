@@ -1,0 +1,213 @@
+"""API surface for the Dispute Resolution Pathway Report.
+
+Two endpoints:
+  * GET /pathway-report/preview           — single-parent preview using
+    the caller's own data. Always available, always caveated.
+  * GET /pathway-report/dual/{share_id}   — full 2-parent report. Only
+    resolves when an existing `deep_dive_compare` share for this caller
+    is status="active" (i.e. both parents have already consented in the
+    Compare flow). Reads both parents' Safety + Companion + ND Risk +
+    Compliance from Mongo directly using the share's user_pair.
+
+Rationale for the consent gate: forcing a brand-new consent flow just
+for this feature would ship a big UX + a lot of new state. The Compare
+share flow already carries mutual, explicit, revocable consent between
+two co-parents — which is exactly the trust surface this report needs.
+An active Compare share IS the mutual consent for a pathway analysis
+of both parents' data.
+"""
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from motor.motor_asyncio import AsyncIOMotorDatabase
+
+from auth import UserPublic, get_current_user
+from pathway_report import (
+    DualPartyContext, SinglePartyContext,
+    score_pathway_dual, score_pathway_single,
+)
+
+
+router = APIRouter(prefix="/pathway-report", tags=["pathway-report"])
+
+
+def get_db(request: Request) -> AsyncIOMotorDatabase:
+    return request.app.state.db
+
+
+# ---------------------------------------------------------------------------
+# Data collection helpers.
+# ---------------------------------------------------------------------------
+
+_COERCIVE_TRIGGER_KEYS = {
+    "coercive_control", "isolation", "financial_control", "monitoring",
+    "gaslighting_pattern", "threats_pattern",
+}
+_PHYSICAL_TRIGGER_KEYS = {
+    "physical_safety", "recent_incident", "recent_physical",
+    "weapon_present", "child_endangerment",
+}
+
+
+def _has_trigger(safety_doc: Optional[Dict[str, Any]], trigger_set: set) -> bool:
+    """Look for named triggers inside a safety_doc's `result.triggers` list
+    OR the `result.flags` list. Kept forgiving because the safety-screen
+    scoring engine has evolved its output shape over time."""
+    if not safety_doc:
+        return False
+    result = safety_doc.get("result") or {}
+    for k in ("triggers", "flags", "high_concern"):
+        for t in (result.get(k) or []):
+            if isinstance(t, str) and t.lower() in trigger_set:
+                return True
+            if isinstance(t, dict):
+                name = str(t.get("key") or t.get("name") or "").lower()
+                if name in trigger_set:
+                    return True
+    return False
+
+
+async def _load_party_context(
+    db: AsyncIOMotorDatabase, user_id: str
+) -> SinglePartyContext:
+    """Aggregate one parent's inputs from Mongo."""
+    profile = await db.users.find_one(
+        {"user_id": user_id}, {"_id": 0, "name": 1},
+    ) or {}
+    safety = await db.safety_assessments.find_one(
+        {"user_id": user_id}, sort=[("created_at", -1)],
+    )
+    companion = await db.dimension_companion.find_one(
+        {"user_id": user_id}, sort=[("created_at", -1)],
+    )
+    nd = await db.nd_assessments.find_one(
+        {"target_user_id": user_id}, sort=[("created_at", -1)],
+    )
+
+    # Companion tiers.
+    dim_tiers: Dict[str, Optional[str]] = {"communication": None, "emotional_regulation": None, "executive_function": None}
+    if companion:
+        dims = (((companion.get("scoring") or {}).get("dimensions")) or {})
+        for k in dim_tiers:
+            dim_tiers[k] = ((dims.get(k) or {}).get("tier"))
+
+    # Compliance streak.
+    streak = 0
+    current_pct: Optional[float] = None
+    try:
+        from intervention_compliance_routes import build_compliance_snapshot
+        snap = await build_compliance_snapshot(db, user_id)
+        streak = int(((snap or {}).get("streak") or {}).get("current_streak") or 0)
+        current_pct = ((snap or {}).get("current_week") or {}).get("compliance_pct")
+    except Exception:  # noqa: BLE001
+        pass
+
+    safety_result = (safety or {}).get("result") or {}
+    return SinglePartyContext(
+        safety_level=safety_result.get("level"),
+        safety_pathway_title=safety_result.get("pathway_title"),
+        safety_coercive_trigger=_has_trigger(safety, _COERCIVE_TRIGGER_KEYS),
+        safety_physical_trigger=_has_trigger(safety, _PHYSICAL_TRIGGER_KEYS),
+        dim2_communication_tier=dim_tiers["communication"],
+        dim3_emotional_reg_tier=dim_tiers["emotional_regulation"],
+        dim4_executive_fn_tier=dim_tiers["executive_function"],
+        nd_risk_tier=((nd or {}).get("scoring") or {}).get("tier"),
+        nd_risk_score=((nd or {}).get("scoring") or {}).get("total_score"),
+        compliance_streak_weeks=streak,
+        compliance_current_pct=current_pct,
+        display_name=profile.get("name") or "",
+    )
+
+
+async def _find_active_share(
+    db: AsyncIOMotorDatabase, share_id: str, user_id: str,
+) -> Dict[str, Any]:
+    """Find an active Compare share the caller is a participant in. Any of
+    the deep_dive_compare_snapshots collections carry the same shape."""
+    for collection_name in (
+        "deep_dive_compare_snapshots",
+        "compare_shares",
+        "snc2_compare_shares",
+    ):
+        row = await db[collection_name].find_one(
+            {"share_id": share_id}, {"_id": 0},
+        )
+        if row:
+            break
+    else:
+        raise HTTPException(404, "Compare share not found.")
+
+    if row.get("status") != "active":
+        raise HTTPException(
+            409,
+            "This Compare share is not yet fully consented — the pathway "
+            "report needs both parents' explicit consent through the "
+            "Compare flow before it can be generated.",
+        )
+    if user_id not in (row.get("user_pair") or []):
+        raise HTTPException(403, "You are not a participant in this share.")
+    return row
+
+
+# ---------------------------------------------------------------------------
+# Routes.
+# ---------------------------------------------------------------------------
+
+@router.get("/preview")
+async def preview_pathway_report(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """One-parent preview using only the caller's data. Always caveated."""
+    ctx = await _load_party_context(db, user.user_id)
+    result = score_pathway_single(ctx)
+    out = result.to_public_dict()
+    out["caller_display_name"] = ctx.display_name or ""
+    out["data_inputs_present"] = {
+        "safety_screen":     ctx.safety_level is not None,
+        "dimension_companion": any([
+            ctx.dim2_communication_tier,
+            ctx.dim3_emotional_reg_tier,
+            ctx.dim4_executive_fn_tier,
+        ]),
+        "nd_risk":           ctx.nd_risk_tier is not None,
+        "compliance":        ctx.compliance_streak_weeks > 0,
+    }
+    return out
+
+
+@router.get("/dual/{share_id}")
+async def dual_pathway_report(
+    share_id: str,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Full 2-parent report — gated behind an active Compare share."""
+    share = await _find_active_share(db, share_id, user.user_id)
+    pair: List[str] = list(share.get("user_pair") or [])
+    if len(pair) != 2:
+        raise HTTPException(500, "Share pair is malformed; cannot resolve both parents.")
+
+    # Order pair so caller is always parent_a for label consistency.
+    other = [uid for uid in pair if uid != user.user_id][0]
+    ctx_a = await _load_party_context(db, user.user_id)
+    ctx_b = await _load_party_context(db, other)
+
+    # Compare-alignment: read the share's own snapshot if available.
+    align_pct = share.get("aligned_pct")
+    if align_pct is None:
+        align_pct = (share.get("scoring") or {}).get("aligned_pct")
+
+    ctx = DualPartyContext(
+        parent_a=ctx_a, parent_b=ctx_b,
+        compare_alignment_pct=(float(align_pct) if align_pct is not None else None),
+        child_centered_alignment=None,
+    )
+    result = score_pathway_dual(ctx)
+    out = result.to_public_dict()
+    out["share_id"] = share_id
+    # Never leak the co-parent's raw safety data — surface only that a
+    # hard-lock fired without saying which parent tripped it.
+    return out
