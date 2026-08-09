@@ -631,6 +631,14 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Signature is recorded BEFORE the PDF is built for all three entrypoints (preview PDF, dual PDF, email) so the QR is guaranteed to resolve.
 - Tests: `/app/backend/tests/test_iter92_pathway_email_verify.py` — 9/9 green (PDF-with-QR-larger, signature shape, unknown/malformed id, live round-trip, auth challenge, bad-email/@demo.local rejection, bogus-share-id consent gate).
 
+### Admin ND Risk Coordinator Dashboard (Feb 2026 · iter93)
+- New admin-only page at `/admin/nd-coordinator` shows every parent's latest ND Risk Assessment as a 4×4 threat×vulnerability heat map with per-cell counts, plus an "active cases" list of high/critical parents ordered by severity.
+- Backend router `admin_nd_coordinator_routes.py` exposes `GET /api/admin/nd-risk-coordinator` gated by `analytics_routes.require_admin`. Response includes: `total_parents`, `tier_counts`, `active_case_count`, `heatmap` (4×4 grid with `{threat, vulnerability, tier, count, total_score}` per cell), `active_cases`, and `coordinator_alerts` audit counters (total, emailed).
+- Reducer takes the newest assessment per `target_user_id` so a parent who re-assessed doesn't double-count.
+- KPI strip (parents assessed / active / critical / coordinator emails), tier legend with per-tier totals, and case rows include target name, co-parent name, tier chip, scores, and date.
+- Frontend `AdminNDCoordinator.jsx` handles 401/403 gracefully with an "admin-only" placeholder — never crashes.
+- Tests: `/app/backend/tests/test_iter93_admin_nd_coordinator.py` — 6/6 green (tier-boundary corners, 4×4 heatmap counting with garbage-input tolerance, tier summariser, auth requirement, non-admin refusal, admin shape validation with live endpoint).
+
 ---
 
 

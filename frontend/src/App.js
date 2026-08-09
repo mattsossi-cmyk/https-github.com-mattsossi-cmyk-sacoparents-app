@@ -50,6 +50,7 @@ import VerifySignature from "@/pages/VerifySignature";
 import VerifyBriefing from "@/pages/VerifyBriefing";
 import VerifyPathway from "@/pages/VerifyPathway";
 import AdminReviewers from "@/pages/AdminReviewers";
+import AdminNDCoordinator from "@/pages/AdminNDCoordinator";
 import PathwayReport from "@/pages/PathwayReport";
 import NDRiskAssessment from "@/pages/NDRiskAssessment";
 import NDRiskAssessmentResult from "@/pages/NDRiskAssessmentResult";
@@ -116,6 +117,7 @@ function AppRoutes() {
         <Route path="/verify/pathway/:sig_id" element={<VerifyPathway />} />
         <Route path="/verify/:sig_id" element={<VerifySignature />} />
         <Route path="/admin/reviewers" element={<AdminReviewers />} />
+        <Route path="/admin/nd-coordinator" element={<AdminNDCoordinator />} />
         <Route path="/pathway-report" element={<PathwayReport />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
