@@ -37,6 +37,17 @@ from typing import Any, Dict, List, Optional
 
 
 PATHWAYS = {
+    "direct_negotiation": {
+        "key":   "direct_negotiation",
+        "label": "Direct negotiation",
+        "one_liner": (
+            "Parents work out parenting decisions between themselves, "
+            "without a mediator or lawyer in the room. This is the least "
+            "structured option and depends entirely on both parents being "
+            "able to communicate calmly and reach child-focused agreements "
+            "on their own."
+        ),
+    },
     "mediation": {
         "key":   "mediation",
         "label": "Mediation",
@@ -77,7 +88,13 @@ PATHWAYS = {
 }
 
 # Ordered from least-to-most-adversarial. Used for stable rendering.
+# Direct negotiation is included as a professional-facing baseline
+# option — it is intentionally never the primary recommendation the
+# algorithm nudges toward (see `_pick_primary` which excludes it from
+# the primary tie-break: the least adversarial option we recommend is
+# Mediation with a mediator in the room).
 PATHWAY_ORDER = [
+    "direct_negotiation",
     "mediation",
     "child_centered_mediation",
     "collaborative_law",
@@ -192,6 +209,7 @@ def _hard_locked_result(
         primary_key="litigation",
         primary_label=PATHWAYS["litigation"]["label"],
         suitability={
+            "direct_negotiation":       "not_indicated",
             "mediation":                "not_indicated",
             "child_centered_mediation": "low",
             "collaborative_law":        "low",
@@ -306,7 +324,11 @@ def _classify_suitability(
         (s["nd_tier"] or "").lower() == "critical" for s in signals
     )
 
-    # Compare alignment — treat missing as neutral (60).
+    # Compare alignment — only relevant for dual-party analysis. For
+    # single-party previews we pass through `None` (unknown), which
+    # we treat as neutral by leaving `align_missing=True` so downstream
+    # branches only fire on alignment for dual-party data.
+    align_missing = compare_alignment is None
     align = compare_alignment if compare_alignment is not None else 60.0
 
     # ---- Mediation: needs BOTH sides mostly aligned + safe.
@@ -316,7 +338,7 @@ def _classify_suitability(
         and worst_er >= 3
         and worst_safety >= 4
         and not any_nd_high
-        and align >= 75.0
+        and (align_missing or align >= 75.0)
     ):
         mediation = "high"
     elif (
@@ -324,7 +346,7 @@ def _classify_suitability(
         and worst_er >= 2
         and worst_safety >= 3
         and not any_nd_high
-        and align >= 60.0
+        and (align_missing or align >= 60.0)
     ):
         mediation = "moderate"
     elif worst_safety >= 3 and not any_nd_critical:
@@ -333,9 +355,13 @@ def _classify_suitability(
         mediation = "not_indicated"
 
     # ---- Child-Centered Mediation: strain but participatory.
-    # `<= 1` = "stretched or worse".
+    # `<= 1` = "stretched or worse". Align-based boost only counts for
+    # dual-party analyses — a missing single-parent value must not
+    # elevate CCRM.
     if worst_safety >= 3 and not any_nd_critical and (
-        worst_er <= 1 or worst_comm <= 1 or align < 65.0
+        worst_er <= 1
+        or worst_comm <= 1
+        or ((not align_missing) and align < 65.0)
     ):
         ccrm = "high"
     elif worst_safety >= 3 and not any_nd_critical:
@@ -371,7 +397,21 @@ def _classify_suitability(
     else:
         litigation = "low"
 
+    # ---- Direct negotiation: strictly one notch below Mediation.
+    # Direct negotiation asks parents to reach agreements with NO
+    # mediator in the room, so it is always a more fragile option than
+    # supported Mediation. We derive it by demoting the Mediation rating
+    # by one level, floored at "not_indicated".
+    _DEMOTE = {
+        "high":          "moderate",
+        "moderate":      "low",
+        "low":           "not_indicated",
+        "not_indicated": "not_indicated",
+    }
+    direct_negotiation = _DEMOTE[mediation]
+
     return {
+        "direct_negotiation":       direct_negotiation,
         "mediation":                mediation,
         "child_centered_mediation": ccrm,
         "collaborative_law":        collab,
@@ -382,13 +422,30 @@ def _classify_suitability(
 _LEVEL_RANK = {"high": 3, "moderate": 2, "low": 1, "not_indicated": 0}
 
 
+# Primary-pathway candidates. `direct_negotiation` is deliberately
+# EXCLUDED: it is shown in the professional suitability profile for
+# comparison but the app never nudges a family toward negotiating with
+# no professional present — the recommended-primary space starts at
+# Mediation.
+_PRIMARY_CANDIDATES = [
+    "mediation",
+    "child_centered_mediation",
+    "collaborative_law",
+    "litigation",
+]
+
+
 def _pick_primary(suitability: Dict[str, SuitabilityLevel]) -> str:
     """Highest-rated pathway wins. Ties break toward the LEAST adversarial
     option — a policy choice the product committed to: never nudge a
-    family toward more-adversarial than the data supports."""
+    family toward more-adversarial than the data supports.
+
+    `direct_negotiation` is not eligible as the primary recommendation
+    (see `_PRIMARY_CANDIDATES` above).
+    """
     best_key = "mediation"
     best_rank = -1
-    for k in PATHWAY_ORDER:
+    for k in _PRIMARY_CANDIDATES:
         r = _LEVEL_RANK[suitability[k]]
         if r > best_rank:
             best_rank, best_key = r, k
@@ -405,37 +462,133 @@ def _factors_for(
     compare_alignment: Optional[float],
     is_dual: bool,
 ) -> List[str]:
+    """Assemble the "Factors supporting this pathway" bullet list.
+
+    Language is intentionally clinical and observational — never
+    prescriptive. Each bullet is derived from a specific signal in the
+    assessment data so a mediator or family-law attorney reading the
+    report can trace each claim back to its origin.
+    """
     out: List[str] = []
     if is_dual:
-        out.append("Both parents have completed the underlying assessments and consented to compare their data.")
+        out.append(
+            "Both parents have completed the underlying assessments and "
+            "consented to share their combined data through the Compare flow."
+        )
     else:
-        out.append("This preview reflects one parent's data only — the professional report requires the co-parent's data to be added.")
+        out.append(
+            "This preview reflects one parent's data only — the full "
+            "professional report requires the co-parent's assessment data "
+            "to be added."
+        )
+
+    # Signal helpers reused across pathway branches.
+    worst_comm = min(s["communication"]  for s in signals)
+    worst_er   = min(s["emotional_reg"]  for s in signals)
+    worst_ef   = min(s["executive_fn"]   for s in signals)
+    any_nd_high     = any((s["nd_tier"] or "").lower() in {"high", "critical"} for s in signals)
+    any_nd_critical = any((s["nd_tier"] or "").lower() == "critical" for s in signals)
+
+    def _comm_line() -> Optional[str]:
+        if worst_comm <= 0:
+            return "Significant communication breakdown is present between the parents."
+        if worst_comm <= 1:
+            return "Communication between the parents is strained and unlikely to hold under conflict without support."
+        return None
+
+    def _er_line() -> Optional[str]:
+        if worst_er <= 0:
+            return "Emotional reactivity appears severe enough to interfere with any real-time negotiation."
+        if worst_er <= 1:
+            return "Emotional reactivity appears to interfere with negotiation."
+        return None
+
+    def _ef_line() -> Optional[str]:
+        if worst_ef <= 1:
+            return "Executive-function strain is likely to affect follow-through on complex parenting logistics."
+        return None
+
+    def _align_line() -> Optional[str]:
+        if compare_alignment is None:
+            return None
+        if compare_alignment < 40.0:
+            return (
+                f"Compare alignment on child-focused items is low "
+                f"({compare_alignment:.0f}%) — the parents disagree substantially "
+                f"about the child's needs."
+            )
+        if compare_alignment < 65.0:
+            return (
+                f"Compare alignment on child-focused items is moderate "
+                f"({compare_alignment:.0f}%) — there is meaningful disagreement "
+                f"about the child's needs."
+            )
+        return (
+            f"Compare alignment on child-focused items sits at "
+            f"{compare_alignment:.0f}%."
+        )
 
     if primary == "mediation":
         out.append("Communication and emotional-regulation dimensions are in a workable range on both sides.")
-        if compare_alignment is not None:
-            out.append(f"Compare alignment sits at {compare_alignment:.0f}% on child-focused items.")
-        out.append("No safety or coercive-control indicators are present.")
+        line = _align_line()
+        if line:
+            out.append(line)
+        out.append("No safety or coercive-control indicators are present in the underlying Safety Screen.")
+        out.append("Both parents demonstrate willingness to remain involved in the child's life.")
+
     elif primary == "child_centered_mediation":
-        strains: List[str] = []
-        for s in signals:
-            if s["communication"] <= 1:
-                strains.append("communication")
-            if s["emotional_reg"] <= 1:
-                strains.append("emotional reactivity")
-        if strains:
+        for line in (_comm_line(), _er_line(), _align_line()):
+            if line:
+                out.append(line)
+        if any_nd_high:
             out.append(
-                "Assessment data indicates strain in "
-                f"{', '.join(sorted(set(strains)))} — a more structured, child-focused process is warranted."
+                "A neurodivergent-coparenting risk signal is present — a "
+                "child-focused, structured process better accommodates the "
+                "cognitive load involved."
             )
-        out.append("Both parents demonstrate willingness to remain engaged with the child.")
-        out.append("Neither parent's assessment presently indicates a barrier requiring immediate court-only intervention.")
+        out.append("Both parents demonstrate willingness to remain involved in the child's life.")
+        out.append(
+            "Neither parent's assessment presently indicates a barrier "
+            "requiring immediate court-only intervention."
+        )
+
     elif primary == "collaborative_law":
-        out.append("Elevated complexity — executive-function strain, ND-risk signal, or reduced Compare alignment — suggests a professional interdisciplinary team.")
+        for line in (_comm_line(), _er_line(), _ef_line(), _align_line()):
+            if line:
+                out.append(line)
+        if any_nd_high and not any_nd_critical:
+            out.append(
+                "An elevated ND-risk tier is present — a collaborative team "
+                "including a mental-health coach and a child specialist is "
+                "well-suited to the cognitive and emotional complexity."
+            )
         out.append("Both parents remain committed to avoiding court where possible.")
+        out.append(
+            "The complexity of legal, financial, and parenting issues warrants "
+            "an interdisciplinary team rather than a single mediator."
+        )
+
     elif primary == "litigation":
-        out.append("A concrete safety indicator or a critical ND-risk tier is present in the assessment data.")
-        out.append("Voluntary processes may not provide the protections or enforceability the situation warrants.")
+        # Note: hard-lock reasons are surfaced separately (`hard_locked_by`);
+        # this branch handles the soft-signal path where litigation wins
+        # without a Safety Screen trigger firing.
+        if any_nd_critical:
+            out.append(
+                "A critical ND-risk tier is present in the assessment data — "
+                "consensual processes are unlikely to provide the structural "
+                "protections the situation appears to require."
+            )
+        er_line = _er_line()
+        if er_line:
+            out.append(er_line)
+        comm_line = _comm_line()
+        if comm_line:
+            out.append(comm_line)
+        out.append(
+            "Voluntary processes may not provide the enforceability or "
+            "third-party oversight the situation warrants."
+        )
+
     return out
 
 

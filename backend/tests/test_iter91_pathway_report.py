@@ -237,7 +237,7 @@ def test_no_data_at_all_still_returns_valid_result():
     d = r.to_public_dict()
     assert d["primary_pathway_key"] in PATHWAY_ORDER
     assert d["primary_pathway_label"]
-    assert len(d["suitability_profile"]) == 4
+    assert len(d["suitability_profile"]) == 5
 
 
 # ---------------------------------------------------------------------------

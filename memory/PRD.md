@@ -659,6 +659,14 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Language matches the report page itself: never says "you should", always frames as "the assessment data indicates". The single-parent-preview state includes a friendly nudge to invite the co-parent via Compare Share.
 - Tests: `/app/backend/tests/test_iter96_dashboard_pathway_card.py` — 2/2 green (auth-required, full response contract locked so `data_inputs_present` cannot silently drop the four keys the card's self-hide logic checks). Backend `data_inputs_present` shape confirmed live for the seeded parent1 account (safety_screen + dimension_companion + nd_risk all True, primary_label = "Litigation / Court Intervention").
 
+### Pathway Report — Direct Negotiation Row + Enriched Factor Language (Feb 2026 · iter97)
+- The suitability profile now includes a fifth row for **"Direct negotiation"** (no mediator in the room). Its rating is derived by demoting the Mediation rating by exactly one notch (`high → moderate → low → not_indicated`), so a professional reading the report sees at a glance that unsupported negotiation is always more fragile than supported mediation.
+- Direct negotiation is deliberately **excluded from the primary-pick pool** — the app never recommends a family negotiate with no professional present. Locked with a test.
+- **Enriched factor bullets** now use the clinical language from the product brief — e.g. *"Significant communication breakdown is present between the parents"*, *"Emotional reactivity appears to interfere with negotiation"*, *"disagree substantially about the child's needs"*, *"an interdisciplinary team rather than a single mediator"*.
+- **Bug fix (found by iter97 test suite)**: the classifier previously defaulted single-parent Compare alignment to 60% which was inadvertently boosting CCRM into "high" for perfectly aligned single parents. Now the classifier tracks `align_missing` and only applies alignment-based branches when we actually have dual-party data.
+- Downstream propagation: frontend `PathwayReport.jsx`, PDF export (`pathway_report_pdf.py`), mediator email (`send_pathway_report`), QR verify snapshot, and the Dashboard card all iterate `suitability_profile` and `factors_supporting_primary` as lists — they picked up the new row + copy without any UI changes.
+- Tests: `/app/backend/tests/test_iter97_pathway_expanded.py` — 9/9 green (PATHWAY_ORDER, 5-row profile, direct-negotiation-one-below-mediation invariant across 3 scenarios, direct-negotiation never becomes primary, hard-lock marks it not_indicated, CCRM enriched phrasing, mediation safety-screen + child-involvement lines, collaborative interdisciplinary-team line, hard-lock branch does not leak soft-signal copy). All prior pathway tests (iter91/92/96) still green — 42/42 total.
+
 ---
 
 
