@@ -1,6 +1,16 @@
 # SA CoParents — PRD
 
 
+- **Iteration 93 — Pathway Report Unlock Hint on Compare Empty State (2026-02-27)**:
+  - **New component** `PathwayReportUnlockHint.jsx` — dashed-border card shown at the TOP of a Compare hub, before the "Start a new comparison" form. Copy names the concrete downstream reward: "Both of you also unlock the two-parent Dispute Resolution Pathway Report", enumerates the four pathway options, and reiterates the safety-trigger guardrail so it doesn't oversell mediation.
+  - **Auto-hide logic**: `anyActive = shares.some(s => s.ready_to_view || s.status === "active")`. If true, hint returns null — at that point the compare *view* page's CTA card (iter 92) is the right surface, not the hub.
+  - **Wired on**: `DeepDiveCompareHub.jsx` (covers all 4 deep-dive compare pathways) + `SpecialNeedsV2Compare.jsx`.
+  - **Solo-preview link**: hint includes a small "See a solo preview against your own data →" link to `/pathway-report` so curious parents can view the single-parent preview before inviting.
+  - **Testids**: `{prefix}-pathway-unlock-hint`, `{prefix}-pathway-unlock-preview`.
+  - **Testing**: 5-case visibility probe passed (empty / only-revoked / pending-consent / one-ready-to-view / one-active). Live smoke-tested against parent1's account: they already had a ready-to-view share, hint correctly auto-hid (confirming the anyActive branch works in production). Zero backend changes needed.
+
+
+
 - **Iteration 92 — Pathway Report Deep Link on Compare Views (2026-02-27)**:
   - **New component** `PathwayReportPrompt.jsx` — compact CTA card ("Both parents have consented — generate the two-parent pathway report") that deep-links to `/pathway-report?share={shareId}`. Copy stays inside the same language guardrails ("for professional consideration", never "your recommended pathway").
   - **Wired on**: (1) `DeepDiveCompareView.jsx` — the reusable component behind every deep-dive compare pathway (mediation, educational, psychological, medical). (2) `SpecialNeedsV2CompareView.jsx` — the SNC2 compare page. Card sits just below the alignment summary bar and the milestone celebration, above the highlights section.

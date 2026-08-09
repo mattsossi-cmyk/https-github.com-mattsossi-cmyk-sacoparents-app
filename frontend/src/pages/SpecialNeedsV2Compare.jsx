@@ -17,6 +17,7 @@ import {
   ArrowLeft, Loader2, Mail, ShieldAlert, Check, X, Eye, RotateCcw, Users,
 } from "lucide-react";
 import { logError } from "../lib/logger";
+import PathwayReportUnlockHint from "../components/PathwayReportUnlockHint";
 
 function StatusBadge({ share }) {
   if (share.status === "revoked") {
@@ -156,6 +157,8 @@ export default function SpecialNeedsV2Compare() {
             </div>
           </div>
         )}
+
+        <PathwayReportUnlockHint shares={shares} testidPrefix="snc2-compare" />
 
         {/* Start a new comparison */}
         <div className="mt-6 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7 shadow-sm">

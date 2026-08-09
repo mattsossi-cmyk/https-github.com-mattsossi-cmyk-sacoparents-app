@@ -12,6 +12,7 @@ import {
   ArrowLeft, Loader2, Mail, ShieldAlert, Check, X, Eye, RotateCcw, Users,
 } from "lucide-react";
 import { logError } from "../../lib/logger";
+import PathwayReportUnlockHint from "../PathwayReportUnlockHint";
 
 function StatusBadge({ share, testidPrefix }) {
   const base = "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border";
@@ -150,6 +151,8 @@ export default function DeepDiveCompareHub({ pathway }) {
             </div>
           </div>
         )}
+
+        <PathwayReportUnlockHint shares={shares} testidPrefix={t} />
 
         <div className="mt-6 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7 shadow-sm">
           <div className="flex items-center gap-2 text-[#3D1A78] mb-1"><Users size={16} /><span className="font-semibold text-sm">Start a new comparison</span></div>
