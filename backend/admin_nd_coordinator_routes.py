@@ -16,12 +16,19 @@ Only accessible to ADMIN_EMAILS members (delegates to
 The route is intentionally read-only. No PII beyond target_name /
 coparent_name is exposed and target_user_id is passed through so the
 admin can jump to individual case history.
+
+The dashboard endpoint accepts an optional ``window_days`` query
+parameter (30 / 60 / 90 / 180 / null) that clips both the assessments
+feed AND the coordinator-alert audit counters to that trailing window.
+This lets an operator hide stale risk that has since resolved without
+losing the historical audit rows on disk.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from auth import UserPublic
@@ -38,6 +45,10 @@ def get_db(request: Request) -> AsyncIOMotorDatabase:
 ASSESSMENTS_COLLECTION = "nd_assessments"
 ALERTS_COLLECTION = "nd_coordinator_alerts"
 
+# Allowed windows for the dashboard filter chip. `None` = all history.
+# Values are days; we materialise a cutoff via `_cutoff_for_window`.
+ALLOWED_WINDOWS = (30, 60, 90, 180)
+
 # Same tier boundaries as `nd_risk_routes._tier`. Duplicated here as a
 # constant table because we bucket a 4x4 grid at load time — importing
 # the function would work but the values are stable enough to inline
@@ -53,16 +64,28 @@ def _cell_tier(threat: int, vuln: int) -> str:
 TIER_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
 
-async def _latest_per_parent(db: AsyncIOMotorDatabase) -> List[Dict[str, Any]]:
+async def _latest_per_parent(
+    db: AsyncIOMotorDatabase,
+    cutoff_iso: Optional[str] = None,
+) -> List[Dict[str, Any]]:
     """Return the newest ND assessment per target_user_id.
 
     We deliberately fetch every doc and reduce in memory rather than run
     a $group aggregation — the dataset for this platform is small (one
     assessment per parent every few weeks at most) and this keeps the
     tier-scoring logic identical to what the individual endpoint uses.
+
+    When ``cutoff_iso`` is provided, only assessments with
+    ``created_at >= cutoff_iso`` are considered. Because ``created_at``
+    values are stored as ISO-8601 UTC strings, a lexicographic string
+    comparison is a correct chronological comparison (the format is
+    fixed-width up to the timezone marker).
     """
+    query: Dict[str, Any] = {}
+    if cutoff_iso:
+        query["created_at"] = {"$gte": cutoff_iso}
     cursor = db[ASSESSMENTS_COLLECTION].find(
-        {}, {"_id": 0},
+        query, {"_id": 0},
         sort=[("created_at", -1)],
     )
     seen: Dict[str, Dict[str, Any]] = {}
@@ -112,13 +135,43 @@ def _summarise(cases: List[Dict[str, Any]]) -> Dict[str, int]:
     return counts
 
 
+def _cutoff_for_window(window_days: Optional[int]) -> Optional[str]:
+    """Return the ISO-8601 UTC cutoff for a given trailing-days window.
+
+    ``None`` when the caller passed no filter — this preserves the
+    original "all history" behaviour of the endpoint.
+    """
+    if not window_days:
+        return None
+    if window_days not in ALLOWED_WINDOWS:
+        raise HTTPException(
+            400,
+            f"window_days must be one of {sorted(ALLOWED_WINDOWS)} or omitted.",
+        )
+    return (
+        datetime.now(timezone.utc) - timedelta(days=window_days)
+    ).isoformat()
+
+
 @router.get("")
 async def admin_coordinator_dashboard(
     _admin: UserPublic = Depends(require_admin),
     db: AsyncIOMotorDatabase = Depends(get_db),
+    window_days: Optional[int] = Query(
+        None,
+        description=(
+            "Trailing-days window for cases + alerts. Allowed: "
+            "30, 60, 90, 180. Omit for all history."
+        ),
+    ),
 ):
-    """Return the coordinator's global heatmap + active-cases feed."""
-    cases = await _latest_per_parent(db)
+    """Return the coordinator's global heatmap + active-cases feed.
+
+    Supports an optional ``window_days`` trailing-window filter so
+    admins can hide stale risk without archiving historical data.
+    """
+    cutoff = _cutoff_for_window(window_days)
+    cases = await _latest_per_parent(db, cutoff)
     heatmap = _build_heatmap(cases)
     summary = _summarise(cases)
 
@@ -152,8 +205,15 @@ async def admin_coordinator_dashboard(
     ]
 
     # Total number of coordinator email alerts on record (audit trail).
-    alerts_total = await db[ALERTS_COLLECTION].count_documents({})
-    alerts_recent = await db[ALERTS_COLLECTION].count_documents({"email_ok": True})
+    # Clip to the same trailing-days window as the assessments feed so
+    # the KPI strip is internally consistent.
+    alerts_query: Dict[str, Any] = {}
+    alerts_query_emailed: Dict[str, Any] = {"email_ok": True}
+    if cutoff:
+        alerts_query["created_at"] = {"$gte": cutoff}
+        alerts_query_emailed["created_at"] = {"$gte": cutoff}
+    alerts_total = await db[ALERTS_COLLECTION].count_documents(alerts_query)
+    alerts_recent = await db[ALERTS_COLLECTION].count_documents(alerts_query_emailed)
 
     return {
         "total_parents":         len(cases),
@@ -165,6 +225,7 @@ async def admin_coordinator_dashboard(
             "total":   int(alerts_total),
             "emailed": int(alerts_recent),
         },
+        "window_days":           window_days,
     }
 
 

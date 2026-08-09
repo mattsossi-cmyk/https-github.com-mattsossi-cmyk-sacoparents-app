@@ -646,6 +646,13 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Drawer UI (`CaseDrilldown` component inside `AdminNDCoordinator.jsx`) shows: parent name header + assessment/alert counters, coordinator alert audit list with delivered / failed indicators, and the full assessment stack. The most recent assessment is highlighted with its tier tint and a "Latest" badge; each row surfaces threat + vulnerability sub-scores side-by-side and any free-text notes the parent recorded. `Escape` closes the drawer; clicking the backdrop closes too.
 - Tests: `/app/backend/tests/test_iter94_admin_nd_case_drilldown.py` — 4/4 green (unauthenticated → 401, non-admin parent → 403, unknown target → 404, admin-ok shape + newest-first ordering + no-matrix-leak).
 
+### Heatmap Time Window Filter (Feb 2026 · iter95)
+- The coordinator dashboard now accepts a `window_days` query param (allowed: 30, 60, 90, 180; omit for full history). Both the parent/case aggregation AND the coordinator-alert audit counters are clipped to the trailing window so the KPI strip stays internally consistent.
+- Invalid values return `400` with a helpful message listing the allowed set — no silent fallbacks.
+- Response now echoes `window_days` back so the UI can confirm what it's showing.
+- Frontend: new pill-chip strip (All history / 30 / 60 / 90 / 180 days) with `data-testid="admin-nd-window-{value}"`. Chips are disabled during refetch and show an inline spinner in the section eyebrow. Empty-state copy is contextual ("No parents in the last 30 days" vs. "No parents have completed an ND Risk Assessment yet"). Initial full-page loader only shows on the first fetch — subsequent filter changes update in place.
+- Tests: `/app/backend/tests/test_iter95_admin_nd_window_filter.py` — 7/7 green (cutoff helper accepts/rejects, endpoint gating, invalid-value 400, echoes window, filter shrinks counters, every allowed value returns 200).
+
 ---
 
 

@@ -41,12 +41,17 @@ const formatWhen = (iso) => {
 export default function AdminNDCoordinator() {
   const [state, setState] = useState({ loading: true, data: null, error: null, forbidden: false });
   const [drilldown, setDrilldown] = useState({ open: false, targetId: null, targetName: "" });
+  const [windowDays, setWindowDays] = useState(null);  // null = "All history"
 
   useEffect(() => {
     let cancelled = false;
+    setState((s) => ({ ...s, loading: true }));
     (async () => {
       try {
-        const res = await api.get("/admin/nd-risk-coordinator");
+        const path = windowDays
+          ? `/admin/nd-risk-coordinator?window_days=${windowDays}`
+          : "/admin/nd-risk-coordinator";
+        const res = await api.get(path);
         if (!cancelled) setState({ loading: false, data: res.data, error: null, forbidden: false });
       } catch (err) {
         logError("admin nd coordinator", err);
@@ -64,9 +69,9 @@ export default function AdminNDCoordinator() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [windowDays]);
 
-  if (state.loading) {
+  if (state.loading && !state.data) {
     return (
       <div className="min-h-screen bg-[#FCFBFE] px-4 py-12"
         data-testid="admin-nd-coordinator-loading">
@@ -148,6 +153,45 @@ export default function AdminNDCoordinator() {
           below the map for immediate follow-up.
         </p>
 
+        {/* Trailing-days filter — hides stale risk without archiving data */}
+        <div className="mt-5" data-testid="admin-nd-coordinator-window-filter">
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2 inline-flex items-center gap-1.5">
+            <Clock size={12} />
+            Time window
+            {state.loading && (
+              <Loader2 size={11} className="animate-spin ml-1" />
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { key: null, label: "All history" },
+              { key: 30,   label: "Last 30 days" },
+              { key: 60,   label: "Last 60 days" },
+              { key: 90,   label: "Last 90 days" },
+              { key: 180,  label: "Last 6 months" },
+            ].map((opt) => {
+              const active = windowDays === opt.key;
+              return (
+                <button
+                  key={String(opt.key)}
+                  type="button"
+                  onClick={() => setWindowDays(opt.key)}
+                  disabled={state.loading}
+                  data-testid={`admin-nd-window-${opt.key ?? "all"}`}
+                  aria-pressed={active}
+                  className={`text-[12px] px-3 py-1.5 rounded-full border transition ${
+                    active
+                      ? "bg-[#3D1A78] text-white border-[#3D1A78] font-semibold shadow-sm"
+                      : "bg-white text-[#4B4567] border-[#E5E0EE] hover:border-[#3D1A78] hover:text-[#3D1A78]"
+                  } disabled:opacity-60`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* KPI strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6"
           data-testid="admin-nd-coordinator-kpis">
@@ -175,8 +219,9 @@ export default function AdminNDCoordinator() {
           {totalParents === 0 ? (
             <div className="rounded-2xl border border-[#E5E0EE] bg-white p-6 text-sm text-[#4B4567]"
               data-testid="admin-nd-coordinator-empty">
-              No parents have completed an ND Risk Assessment yet. When
-              they do, their latest assessment will appear here.
+              {windowDays
+                ? `No parents completed an ND Risk Assessment in the last ${windowDays} days. Widen the time window or clear the filter to see older data.`
+                : "No parents have completed an ND Risk Assessment yet. When they do, their latest assessment will appear here."}
             </div>
           ) : (
             <div className="rounded-3xl border border-[#E5E0EE] bg-white p-4 sm:p-6 overflow-x-auto">
@@ -258,7 +303,9 @@ export default function AdminNDCoordinator() {
           {active.length === 0 ? (
             <div className="rounded-2xl border border-[#B5DFC5] bg-[#F1F9F4] p-4 text-sm text-[#1F5C3B]"
               data-testid="admin-nd-coordinator-no-active">
-              No high or critical cases right now.
+              {windowDays
+                ? `No high or critical cases in the last ${windowDays} days.`
+                : "No high or critical cases right now."}
             </div>
           ) : (
             <div className="rounded-3xl border border-[#E5E0EE] bg-white overflow-hidden">
