@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import Response
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from auth import UserPublic, get_current_user
@@ -223,3 +224,95 @@ async def dual_pathway_report(
     # Never leak the co-parent's raw safety data — surface only that a
     # hard-lock fired without saying which parent tripped it.
     return out
+
+
+# ---------------------------------------------------------------------------
+# PDF export — same JSON payload as above, but rendered via
+# `pathway_report_pdf.build_pathway_report_pdf` for handoff to a mediator
+# or family-law attorney.
+# ---------------------------------------------------------------------------
+
+def _pdf_response(pdf_bytes: bytes, filename: str) -> Response:
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/preview/pdf")
+async def preview_pathway_report_pdf(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Single-parent preview as a downloadable PDF."""
+    from pathway_report_pdf import build_pathway_report_pdf
+
+    ctx = await _load_party_context(db, user.user_id)
+    result = score_pathway_single(ctx)
+    out = result.to_public_dict()
+    pdf_bytes = build_pathway_report_pdf(
+        result=out,
+        caller_display_name=ctx.display_name or "",
+        data_inputs_present={
+            "safety_screen":       ctx.safety_level is not None,
+            "dimension_companion": any([
+                ctx.dim2_communication_tier,
+                ctx.dim3_emotional_reg_tier,
+                ctx.dim4_executive_fn_tier,
+            ]),
+            "nd_risk":             ctx.nd_risk_tier is not None,
+            "compliance":          ctx.compliance_streak_weeks > 0,
+        },
+    )
+    return _pdf_response(pdf_bytes, "pathway-report-preview.pdf")
+
+
+@router.get("/dual/{share_id}/pdf")
+async def dual_pathway_report_pdf(
+    share_id: str,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Full two-parent report as a downloadable PDF — same consent gate
+    as the JSON endpoint (`_find_active_share`)."""
+    from pathway_report_pdf import build_pathway_report_pdf
+
+    share = await _find_active_share(db, share_id, user.user_id)
+    pair: List[str] = list(share.get("user_pair") or [])
+    if len(pair) != 2:
+        raise HTTPException(500, "Share pair is malformed; cannot resolve both parents.")
+    other = [uid for uid in pair if uid != user.user_id][0]
+    ctx_a = await _load_party_context(db, user.user_id)
+    ctx_b = await _load_party_context(db, other)
+    align_pct = share.get("aligned_pct")
+    if align_pct is None:
+        align_pct = (share.get("scoring") or {}).get("aligned_pct")
+
+    ctx = DualPartyContext(
+        parent_a=ctx_a, parent_b=ctx_b,
+        compare_alignment_pct=(float(align_pct) if align_pct is not None else None),
+        child_centered_alignment=None,
+    )
+    result = score_pathway_dual(ctx)
+    out = result.to_public_dict()
+    out["share_id"] = share_id
+    pdf_bytes = build_pathway_report_pdf(
+        result=out,
+        caller_display_name=ctx_a.display_name or "",
+        # Never leak per-input state for the other parent — surface only
+        # the caller's own presence flags in the "data inputs used" block.
+        data_inputs_present={
+            "safety_screen":       ctx_a.safety_level is not None,
+            "dimension_companion": any([
+                ctx_a.dim2_communication_tier,
+                ctx_a.dim3_emotional_reg_tier,
+                ctx_a.dim4_executive_fn_tier,
+            ]),
+            "nd_risk":             ctx_a.nd_risk_tier is not None,
+            "compliance":          ctx_a.compliance_streak_weeks > 0,
+        },
+        share_id=share_id,
+    )
+    return _pdf_response(pdf_bytes, f"pathway-report-{share_id}.pdf")
+

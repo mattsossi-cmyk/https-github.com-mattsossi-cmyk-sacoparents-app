@@ -388,3 +388,79 @@ def test_route_dual_returns_409_when_share_not_yet_consented():
             client.close()
 
     _asyncio.get_event_loop().run_until_complete(_seed_and_verify())
+
+
+# ---------------------------------------------------------------------------
+# 6. PDF export (iter 92)
+# ---------------------------------------------------------------------------
+
+def test_pdf_builder_renders_valid_pdf_for_neutral_case():
+    from pathway_report_pdf import build_pathway_report_pdf
+    result = score_pathway_single(_neutral_party()).to_public_dict()
+    pdf = build_pathway_report_pdf(
+        result=result,
+        caller_display_name="Sam Parent",
+        data_inputs_present={"safety_screen": True, "dimension_companion": True,
+                             "nd_risk": False, "compliance": False},
+    )
+    assert pdf.startswith(b"%PDF-"), "PDF magic header missing"
+    assert len(pdf) > 1000
+
+
+def test_pdf_builder_stamps_hard_lock_when_present():
+    """When a safety hard-lock fires, the resulting result payload must
+    reflect it (primary=litigation, hard_locked_by non-empty) AND the
+    PDF must still render cleanly."""
+    from pathway_report_pdf import build_pathway_report_pdf
+    plain_result = score_pathway_single(_neutral_party()).to_public_dict()
+    locked_result = score_pathway_single(_neutral_party(safety_coercive_trigger=True)).to_public_dict()
+    assert plain_result["primary_pathway_key"] != "litigation"
+    assert locked_result["primary_pathway_key"] == "litigation"
+    assert len(locked_result["hard_locked_by"]) > 0
+    plain = build_pathway_report_pdf(result=plain_result)
+    locked = build_pathway_report_pdf(result=locked_result)
+    assert plain.startswith(b"%PDF-") and locked.startswith(b"%PDF-")
+    assert len(locked) > 1000
+
+
+@pytest.mark.skipif(not _API, reason="No backend URL available")
+def test_route_preview_pdf_returns_pdf():
+    sess = _login("parent1@test.com", "TestPass123!")
+    if not sess:
+        pytest.skip("parent1 login unavailable")
+    r = sess.get(f"{_API}/pathway-report/preview/pdf", timeout=15)
+    assert r.status_code == 200
+    assert r.content.startswith(b"%PDF-")
+    assert r.headers.get("content-type", "").startswith("application/pdf")
+    assert "attachment" in r.headers.get("content-disposition", "")
+
+
+@pytest.mark.skipif(not _API, reason="No backend URL available")
+def test_route_dual_pdf_returns_pdf_for_active_share():
+    sess = _login("parent1@test.com", "TestPass123!")
+    if not sess:
+        pytest.skip("parent1 login unavailable")
+
+    async def _seed_and_verify():
+        client = _Mc(_os.environ["MONGO_URL"].strip('"').strip("'"))
+        db = client[_os.environ.get("DB_NAME", "test_database").strip('"').strip("'")]
+        me = sess.get(f"{_API}/auth/me", timeout=10).json()
+        my_uid = me.get("user_id") or me.get("id")
+        share_id = "pytest-pdf-" + _uuid.uuid4().hex[:8]
+        await db["edu_deep_shares"].insert_one({
+            "share_id":   share_id,
+            "user_pair":  [my_uid, "user_other_pytest"],
+            "status":     "active",
+            "aligned_pct": 68.0,
+            "created_at": _dt.now(_tz.utc).isoformat(),
+        })
+        try:
+            r = sess.get(f"{_API}/pathway-report/dual/{share_id}/pdf", timeout=15)
+            assert r.status_code == 200
+            assert r.content.startswith(b"%PDF-")
+            assert share_id in r.headers.get("content-disposition", "")
+        finally:
+            await db["edu_deep_shares"].delete_one({"share_id": share_id})
+            client.close()
+
+    _asyncio.get_event_loop().run_until_complete(_seed_and_verify())

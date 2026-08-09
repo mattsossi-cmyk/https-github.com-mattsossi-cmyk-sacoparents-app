@@ -1,6 +1,17 @@
 # SA CoParents — PRD
 
 
+- **Iteration 92 — Pathway Report PDF Export (2026-02-27)**:
+  - **New PDF builder** `pathway_report_pdf.py` — professional layout mirroring the 4-Dim Briefing visual system (brand purple/teal, `_safe` sanitiser, `_section_break`). Cover with generation metadata, primary pathway card (red-bordered when safety hard-lock fires + prominent "Safety trigger applied" panel), factors, goals, per-pathway suitability table with coloured chips, considerations, data-inputs-used table, legal disclaimer footer.
+  - **Two new endpoints**: `GET /pathway-report/preview/pdf` (single-parent) + `GET /pathway-report/dual/{share_id}/pdf` (dual, same consent gate via `_find_active_share`). Both return `Content-Disposition: attachment` with sensible filenames (`pathway-report-preview.pdf`, `pathway-report-{share_id}.pdf`).
+  - **Language guardrails preserved**: PDF never says "you should"; hard-lock panel copy explicitly disrecommends mediation with survivor-safe language.
+  - **Privacy**: dual PDF never leaks per-input state for the OTHER parent — the "Data inputs used" block only lists the caller's own presence flags.
+  - **Frontend**: `PathwayReport.jsx` gains a top-right "Download PDF" button with a spinner while streaming (testid `pathway-report-download-pdf`). Works from both preview and dual views.
+  - **Testing**: 4 new pytests — `test_pdf_builder_renders_valid_pdf_for_neutral_case` (renders + PDF magic header), `test_pdf_builder_stamps_hard_lock_when_present` (semantic assertion — locked payload has `hard_locked_by` + primary = litigation; PDF still renders), `test_route_preview_pdf_returns_pdf` (live route + content-type + disposition header), `test_route_dual_pdf_returns_pdf_for_active_share` (seeds real `edu_deep_shares` row, calls dual endpoint, asserts PDF + filename echoes share_id). **22/22 iter91 tests pass** (up from 18), **61/61 across iter 87-91**. Live curl E2E: preview PDF 4041 bytes with `%PDF-1.3` header; dual PDF 3299 bytes against real seeded share. Live screenshot confirms the button renders correctly on the page.
+  - **Deferred**: mediator email + QR-verify (iter 93 add-on) — same follow-up pattern as the 4-Dim Briefing.
+
+
+
 - **Iteration 94 — Code Review Fixes: Pathway Report Data Layer + Alert Dedupe (2026-02-27)**:
   - **HIGH #1 fixed** (`pathway_report_routes.py`): `_load_party_context` was reading `dimension_companion` (empty legacy collection, 0 rows) instead of `dimension_companion_assessments` (real collection, 9 rows) — companion dimension signals were silently dropped from every recommendation. Also updated tier vocabulary in `pathway_report.py::_tier_score` — the real vocab is `strong/steady/stretched/strained` (4 tiers), not `aligned/stretch/strained` (3 tiers I invented). New scale: `strong=3, steady=2, stretched=1, strained=0`. Classification thresholds shifted from `>=2/>=1` to `>=3/>=2` on the strict paths (`worst_comm >= 3` now requires "strong" for mediation-high) to preserve semantic meaning.
   - **HIGH #2 fixed** (`pathway_report_routes.py::_find_active_share`): was querying snapshot tables (`deep_dive_compare_snapshots`, `compare_shares`, `snc2_compare_shares`) which don't carry `status`/`user_pair`. Real shares live in `edu_deep_shares` (475 rows), `med_deep_shares` (211), `psych_deep_shares` (214), `snc2_shares` (124) — the entire two-parent Pathway Report was unreachable for every real share before this fix.
