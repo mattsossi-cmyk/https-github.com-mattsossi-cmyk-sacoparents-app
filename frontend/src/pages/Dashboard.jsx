@@ -13,6 +13,7 @@ import MeetTheProgramCard from "../components/MeetTheProgramCard";
 import GrowthWidget from "../components/GrowthWidget";
 import NDRiskTimelineCard from "../components/NDRiskTimelineCard";
 import InterventionComplianceCard from "../components/InterventionComplianceCard";
+import PathwayReportCard from "../components/PathwayReportCard";
 import ProgressDashboardCard from "../components/ProgressDashboardCard";
 import PublicMilestoneWall from "../components/PublicMilestoneWall";
 import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
@@ -960,6 +961,14 @@ export default function Dashboard() {
             weekly log. */}
         <div className="mb-6">
           <InterventionComplianceCard />
+        </div>
+
+        {/* Dispute Resolution Pathway preview — self-hides until the
+            parent has at least one input (Safety / Companion / ND Risk
+            / Compliance) on file. Surfaces the primary pathway label
+            + safety-lock indicator + CTA to the full report. */}
+        <div className="mb-6">
+          <PathwayReportCard />
         </div>
 
         {/* Achievement badge shelf */}

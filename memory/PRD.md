@@ -653,6 +653,12 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Frontend: new pill-chip strip (All history / 30 / 60 / 90 / 180 days) with `data-testid="admin-nd-window-{value}"`. Chips are disabled during refetch and show an inline spinner in the section eyebrow. Empty-state copy is contextual ("No parents in the last 30 days" vs. "No parents have completed an ND Risk Assessment yet"). Initial full-page loader only shows on the first fetch — subsequent filter changes update in place.
 - Tests: `/app/backend/tests/test_iter95_admin_nd_window_filter.py` — 7/7 green (cutoff helper accepts/rejects, endpoint gating, invalid-value 400, echoes window, filter shrinks counters, every allowed value returns 200).
 
+### Dashboard Pathway Card (Feb 2026 · iter96)
+- New `PathwayReportCard.jsx` mounts on the Dashboard right after the Intervention Compliance card. Reads `/pathway-report/preview` and self-hides for parents who have no Safety / Companion / ND Risk / Compliance data on file yet — so the dashboard is not cluttered for first-time visitors.
+- Card surfaces: primary pathway label (from the deterministic rule engine), a "Preview" vs "Two-parent" scope chip, the primary summary (2-line clamp), a red "Safety trigger applied" pill when the algorithm hard-locked, and a "View full report →" CTA that deep-links to `/pathway-report`. When hard-locked, the whole card switches to the danger palette so parents cannot miss it.
+- Language matches the report page itself: never says "you should", always frames as "the assessment data indicates". The single-parent-preview state includes a friendly nudge to invite the co-parent via Compare Share.
+- Tests: `/app/backend/tests/test_iter96_dashboard_pathway_card.py` — 2/2 green (auth-required, full response contract locked so `data_inputs_present` cannot silently drop the four keys the card's self-hide logic checks). Backend `data_inputs_present` shape confirmed live for the seeded parent1 account (safety_screen + dimension_companion + nd_risk all True, primary_label = "Litigation / Court Intervention").
+
 ---
 
 
