@@ -229,43 +229,30 @@ async def admin_coordinator_dashboard(
     }
 
 
-@router.get("/case/{target_user_id}")
-async def admin_case_history(
-    target_user_id: str,
-    _admin: UserPublic = Depends(require_admin),
-    db: AsyncIOMotorDatabase = Depends(get_db),
-):
-    """Return every ND Risk Assessment for a single parent, newest first,
-    plus every coordinator email alert on record for them. Powers the
-    admin-only case drilldown side panel on the coordinator dashboard.
-
-    Refuses if the target parent has never completed an assessment (404)
-    so the admin gets a clean signal rather than an empty panel.
-    """
+async def _build_case_payload(
+    db: AsyncIOMotorDatabase, target_user_id: str,
+) -> Optional[Dict[str, Any]]:
+    """Shared helper — returns the drilldown payload for a single parent,
+    or ``None`` if they have no assessments on file. Reused by the JSON
+    endpoint and the PDF endpoint so both stay in lockstep."""
     cursor = db[ASSESSMENTS_COLLECTION].find(
         {"target_user_id": target_user_id}, {"_id": 0},
     ).sort("created_at", -1)
     history: List[Dict[str, Any]] = [row async for row in cursor]
     if not history:
-        raise HTTPException(404, "No ND Risk assessments on file for this parent.")
+        return None
 
-    # Freeze the parent-facing name at the newest assessment; if that
-    # row lacks it, fall back through history rather than showing "Parent".
     target_name = ""
     for row in history:
         if row.get("target_name"):
             target_name = row["target_name"]
             break
 
-    # Coordinator alert audit trail for this parent — helps the admin
-    # see whether an alert was actually delivered.
     alerts_cursor = db[ALERTS_COLLECTION].find(
         {"user_id": target_user_id}, {"_id": 0},
     ).sort("created_at", -1)
     alerts = [row async for row in alerts_cursor]
 
-    # Compact history rows for the panel — never leak the raw matrix
-    # unless the admin drills into a specific assessment.
     def _row(c: Dict[str, Any]) -> Dict[str, Any]:
         sc = c.get("scoring") or {}
         return {
@@ -283,11 +270,11 @@ async def admin_case_history(
         }
 
     return {
-        "target_user_id":  target_user_id,
-        "target_name":     target_name or "Parent",
+        "target_user_id":   target_user_id,
+        "target_name":      target_name or "Parent",
         "assessment_count": len(history),
-        "history":         [_row(c) for c in history],
-        "alerts":          [
+        "history":          [_row(c) for c in history],
+        "alerts": [
             {
                 "assessment_id": a.get("assessment_id"),
                 "tier":          a.get("tier"),
@@ -297,3 +284,55 @@ async def admin_case_history(
             for a in alerts
         ],
     }
+
+
+@router.get("/case/{target_user_id}")
+async def admin_case_history(
+    target_user_id: str,
+    _admin: UserPublic = Depends(require_admin),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return every ND Risk Assessment for a single parent, newest first,
+    plus every coordinator email alert on record for them. Powers the
+    admin-only case drilldown side panel on the coordinator dashboard.
+
+    Refuses if the target parent has never completed an assessment (404)
+    so the admin gets a clean signal rather than an empty panel.
+    """
+    payload = await _build_case_payload(db, target_user_id)
+    if payload is None:
+        raise HTTPException(404, "No ND Risk assessments on file for this parent.")
+    return payload
+
+
+@router.get("/case/{target_user_id}/pdf")
+async def admin_case_history_pdf(
+    target_user_id: str,
+    admin: UserPublic = Depends(require_admin),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Court-ready PDF export of a parent's full ND Risk case history.
+
+    Same payload as the JSON endpoint, rendered via
+    `admin_nd_case_pdf.build_admin_case_history_pdf`. Admin-only.
+    """
+    from fastapi.responses import Response
+    from admin_nd_case_pdf import build_admin_case_history_pdf
+
+    payload = await _build_case_payload(db, target_user_id)
+    if payload is None:
+        raise HTTPException(404, "No ND Risk assessments on file for this parent.")
+
+    pdf_bytes = build_admin_case_history_pdf(
+        case=payload,
+        admin_display_name=(admin.name or admin.email or ""),
+    )
+    filename = (
+        f"nd-case-history-{target_user_id}.pdf"
+        if target_user_id else "nd-case-history.pdf"
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

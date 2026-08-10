@@ -679,6 +679,14 @@ Applied in response to a professional review of the Safety Assessment (Danger As
   - New `PathwayReviewerCommentsCard.jsx` mounts on the Dashboard right after `PathwayReportCard`. Self-hides when no comments exist; otherwise shows up to 3 newest comments inline with reviewer name / role / org / date + a `X new` chip + a CTA to the full pathway report. Older comments accessible from the report page.
 - Tests: `/app/backend/tests/test_iter98_pathway_reviewer_comments.py` — 6/6 green (user-isolation with real Mongo insert + cleanup, unknown-sig-id 404, body validation 422, unknown-sig-id public GET returns empty list, authed feed requires auth, full end-to-end loop: preview PDF → public POST → public GET → parent-authed feed all show the same row and never leak `ip_hash`). 80/80 tests across iter90–iter98 still green — zero regressions.
 
+### Admin Drilldown PDF Export — court-ready case history (Feb 2026 · iter99)
+- Admins can now download a full ND Risk case history as a court-ready PDF straight from the drilldown drawer they use to inspect an active case. Mirrors the visual system of the existing per-assessment `nd_risk_pdf.py` (same tier colours, cover, informational-only disclaimer) but iterates every assessment newest-first plus the coordinator alert audit trail.
+- New backend endpoint `GET /api/admin/nd-risk-coordinator/case/{target_user_id}/pdf` — admin-gated via `require_admin`, 404 on unknown target, returns a proper `application/pdf` blob with `Content-Disposition: attachment; filename="nd-case-history-{id}.pdf"`.
+- Refactored `admin_case_history` to share `_build_case_payload()` with the new PDF endpoint so JSON and PDF stay in lockstep — a change to the drilldown payload can never silently drift the PDF.
+- PDF sections: cover page (parent name, id, assessment count, latest date, generated-by admin), case summary strip (most-recent tier pill + tier distribution), coordinator alert audit trail (delivered / failed rows), assessment history newest-first with "LATEST" badge + tier pill + sub-scores (two-column threat vs vulnerability) + free-text notes. Never leaks raw matrix answers, IP hashes, or account metadata — only derived scoring already exposed via the drilldown JSON.
+- Frontend: `CaseDrilldown` drawer header gains a "Court-ready PDF" gradient button next to the close button, only shown when the case has ≥1 assessment on file. Downloads as a Blob with the parent's target_user_id in the filename. Toast confirms success; spinner state while building.
+- Tests: `/app/backend/tests/test_iter99_admin_drilldown_pdf.py` — 6/6 green (builder handles empty-history + full-multi-row scenarios producing valid `%PDF-` bytes, endpoint requires auth 401, refuses non-admin parent 403, 404 on unknown target, admin gets `application/pdf` blob with `Content-Disposition: attachment` and target_id embedded in filename and multi-KB payload). 23/23 across every admin ND suite (iter93–99) still green.
+
 ---
 
 

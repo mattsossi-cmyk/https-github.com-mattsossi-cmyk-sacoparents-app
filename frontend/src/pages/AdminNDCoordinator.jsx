@@ -13,8 +13,9 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Loader2, ShieldAlert, Users, AlertTriangle, ArrowLeft, Mail, X,
-  ChevronRight, Clock, MailCheck, MailX,
+  ChevronRight, Clock, MailCheck, MailX, Download,
 } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -401,6 +402,33 @@ function Kpi({ testid, icon, label, value, tone = "neutral" }) {
 
 function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
   const [state, setState] = useState({ loading: false, data: null, error: null });
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  const downloadPdf = async () => {
+    if (!targetUserId || pdfBusy) return;
+    setPdfBusy(true);
+    try {
+      const res = await api.get(
+        `/admin/nd-risk-coordinator/case/${encodeURIComponent(targetUserId)}/pdf`,
+        { responseType: "blob" },
+      );
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nd-case-history-${targetUserId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Case history PDF downloaded.");
+    } catch (err) {
+      logError("admin nd case pdf", err);
+      toast.error(err?.response?.data?.detail || "Couldn't build the case PDF right now.");
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!open || !targetUserId) return undefined;
@@ -476,15 +504,34 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
               </p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close case history"
-            data-testid="admin-nd-drilldown-close"
-            className="shrink-0 w-9 h-9 rounded-full grid place-items-center bg-[#F8F7FC] hover:bg-[#EFE9F9] text-[#4B4567]"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {d && d.assessment_count > 0 && (
+              <button
+                type="button"
+                onClick={downloadPdf}
+                disabled={pdfBusy}
+                data-testid="admin-nd-drilldown-pdf"
+                aria-label="Download case history PDF"
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-xs font-semibold disabled:opacity-60"
+              >
+                {pdfBusy
+                  ? <Loader2 size={12} className="animate-spin" />
+                  : <Download size={12} />}
+                <span className="hidden sm:inline">
+                  {pdfBusy ? "Building…" : "Court-ready PDF"}
+                </span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close case history"
+              data-testid="admin-nd-drilldown-close"
+              className="shrink-0 w-9 h-9 rounded-full grid place-items-center bg-[#F8F7FC] hover:bg-[#EFE9F9] text-[#4B4567]"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="px-5 py-5">
