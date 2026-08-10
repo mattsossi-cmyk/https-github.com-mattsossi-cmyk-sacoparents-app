@@ -609,6 +609,88 @@ def send_compare_invite(
     )
 
 
+def send_compare_invite_nudge(
+    *,
+    to_email: str,
+    creator_name: str,
+    partner_name: str,
+    partner_email: str,
+    kind_label: str,
+    created_at_iso: str,
+) -> None:
+    """Nudge the CREATOR of a Compare Share request whose partner has
+    not consented within 7 days. Warm, no-blame framing — parents in
+    conflict are already fragile and a dunning-toned reminder would be
+    counterproductive. Sends once per share_id per dedupe window.
+    """
+    who = (creator_name or "").strip()
+    partner_who = (partner_name or "").strip() or (partner_email or "your co-parent")
+    when_days = ""
+    try:
+        if created_at_iso:
+            from datetime import datetime, timezone
+            d = datetime.fromisoformat(created_at_iso.replace("Z", "+00:00"))
+            days = (datetime.now(timezone.utc) - d).days
+            if days > 0:
+                when_days = f" (sent about {days} day{'s' if days != 1 else ''} ago)"
+    except Exception:  # noqa: BLE001
+        when_days = ""
+
+    greeting = f"Hi {who}," if who else "Hi,"
+    escaped_partner = _html.escape(partner_who)
+    escaped_kind = _html.escape(kind_label)
+    escaped_when = _html.escape(when_days)
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'{_html.escape(greeting)}</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'A quick friendly note — your <strong>{escaped_kind}</strong> Compare '
+        f'Share request to <strong>{escaped_partner}</strong> is still waiting on their '
+        f'consent{escaped_when}. That&rsquo;s normal — sometimes life just gets in the way.'
+        f'</p>'
+        f'<div style="background:#F8F7FC;border-radius:14px;padding:14px 16px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
+        f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:6px;">'
+        f'A few options</div>'
+        f'<ul style="margin:0;padding-left:18px;color:#1A1330;font-size:14px;line-height:1.55;">'
+        f'<li>Message {escaped_partner} outside the app to let them know you\u2019ve sent something to their inbox.</li>'
+        f'<li>Log in and view the Compare Hub — you can send the invite again or cancel it if you\u2019ve changed your mind.</li>'
+        f'<li>Do nothing. The request will remain pending until either of you acts on it.</li>'
+        f'</ul>'
+        f'</div>'
+        f'<p style="font-size:13px;line-height:1.6;color:#857E9C;margin:0 0 12px 0;font-style:italic;">'
+        f'No pressure. SA CoParents will only send this reminder once every '
+        f'seven days per pending request.'
+        f'</p>'
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"A quick friendly note — your {kind_label} Compare Share request to "
+        f"{partner_who} is still waiting on their consent{when_days}. "
+        f"That's normal, life gets in the way.\n\n"
+        f"A few options:\n"
+        f"  • Message {partner_who} outside the app to let them know you've sent something.\n"
+        f"  • Log in and view the Compare Hub — you can resend or cancel.\n"
+        f"  • Do nothing. The request stays pending until either of you acts.\n\n"
+        f"No pressure. SA CoParents only sends this reminder once every seven days "
+        f"per pending request.\n"
+    )
+    html = _branded_html(
+        headline=f"Your {kind_label} request is still pending",
+        body_html=body_html,
+        cta_label="Open Compare Hub",
+        cta_url=(os.environ.get("PUBLIC_APP_URL") or "").rstrip("/") + "/compare",
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Your {kind_label} Compare Share is still pending",
+        html=html,
+        text=plain,
+        failure_message="Could not send the invite nudge right now.",
+    )
+
+
+
+
 
 def send_coparent_invite(*, to_email: str, link_url: str, inviter_name: Optional[str] = None) -> None:
     """Invite a co-parent to prep for mediation in their own private account."""

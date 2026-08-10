@@ -687,6 +687,14 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Frontend: `CaseDrilldown` drawer header gains a "Court-ready PDF" gradient button next to the close button, only shown when the case has ≥1 assessment on file. Downloads as a Blob with the parent's target_user_id in the filename. Toast confirms success; spinner state while building.
 - Tests: `/app/backend/tests/test_iter99_admin_drilldown_pdf.py` — 6/6 green (builder handles empty-history + full-multi-row scenarios producing valid `%PDF-` bytes, endpoint requires auth 401, refuses non-admin parent 403, 404 on unknown target, admin gets `application/pdf` blob with `Content-Disposition: attachment` and target_id embedded in filename and multi-KB payload). 23/23 across every admin ND suite (iter93–99) still green.
 
+### Compare Invite Nudge Reminder — weekly cron (Feb 2026 · iter100)
+- Parents who send a Compare Share request that stays in `awaiting_partner_consent` for more than 7 days now receive a warm, no-blame reminder email once every 7 days. Drives Compare adoption which unlocks the two-parent Pathway Report for actual mediator hand-off.
+- New backend module `compare_invite_nudge.py` — sweeps every share collection (`edu_deep_shares`, `psych_deep_shares`, `med_deep_shares`, `snc2_shares`), filters to stale awaiting-consent rows, and dispatches via a new email template. Dedupe collection `compare_invite_nudge_sends` prevents double-sends within a rolling 7-day window per share_id.
+- Suppression rules locked with tests: fresh share (<7d) skipped, already-consented share skipped, `@demo.local` / `@guest.local` / missing creator email skipped, outside Monday 08–22 UTC send window short-circuits (unless `force_window=True` for operator preview), feature flag `COMPARE_INVITE_NUDGE_ENABLED` defaults off to prevent accidental prod send on rollout.
+- New email template `send_compare_invite_nudge()` in `email_service.py` — warm framing ("A quick friendly note — your request is still waiting"), three-option list (message the co-parent outside the app / resend or cancel in Compare Hub / do nothing), computes and shows the request age in days, "no pressure" copy prevents dunning tone.
+- Long-running loop `compare_invite_nudge_loop(app)` registered in `server.py`; hourly sweep window Mon 08-22 UTC same as compliance reminder (staggered 30s so both don't hit DB simultaneously). Backend boot confirmed clean — loop currently idle awaiting the ops flag flip.
+- Tests: `/app/backend/tests/test_iter100_compare_invite_nudge.py` — 9/9 green (real-email guard, Monday 08-22 UTC window, feature flag defaults off, outside-window short-circuit, stale-share dispatch + dedupe on 2nd sweep, fresh-share skip, already-consented skip, `@demo.local` skip with clean dedupe collection, all 4 share collections iterated on the same sweep).
+
 ---
 
 
