@@ -14,6 +14,7 @@ import GrowthWidget from "../components/GrowthWidget";
 import NDRiskTimelineCard from "../components/NDRiskTimelineCard";
 import InterventionComplianceCard from "../components/InterventionComplianceCard";
 import PathwayReportCard from "../components/PathwayReportCard";
+import PathwayReviewerCommentsCard from "../components/PathwayReviewerCommentsCard";
 import ProgressDashboardCard from "../components/ProgressDashboardCard";
 import PublicMilestoneWall from "../components/PublicMilestoneWall";
 import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
@@ -969,6 +970,13 @@ export default function Dashboard() {
             + safety-lock indicator + CTA to the full report. */}
         <div className="mb-6">
           <PathwayReportCard />
+        </div>
+
+        {/* Reviewer comments left on any Pathway Report the parent has
+            issued — self-hides when there are no comments. Closes the
+            loop between the emailed mediator and the parent. */}
+        <div className="mb-6">
+          <PathwayReviewerCommentsCard />
         </div>
 
         {/* Achievement badge shelf */}

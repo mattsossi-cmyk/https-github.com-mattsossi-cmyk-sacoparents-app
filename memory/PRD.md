@@ -667,6 +667,18 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Downstream propagation: frontend `PathwayReport.jsx`, PDF export (`pathway_report_pdf.py`), mediator email (`send_pathway_report`), QR verify snapshot, and the Dashboard card all iterate `suitability_profile` and `factors_supporting_primary` as lists — they picked up the new row + copy without any UI changes.
 - Tests: `/app/backend/tests/test_iter97_pathway_expanded.py` — 9/9 green (PATHWAY_ORDER, 5-row profile, direct-negotiation-one-below-mediation invariant across 3 scenarios, direct-negotiation never becomes primary, hard-lock marks it not_indicated, CCRM enriched phrasing, mediation safety-screen + child-involvement lines, collaborative interdisciplinary-team line, hard-lock branch does not leak soft-signal copy). All prior pathway tests (iter91/92/96) still green — 42/42 total.
 
+### Pathway Report Reviewer Comments — closed-loop feedback (Feb 2026 · iter98)
+- A mediator, PFAL, attorney, court, or therapist who scans the QR from an emailed pathway PDF now lands on `/verify/pathway/{sig_id}` and can **leave a signed comment** for the parent. Comments show back on the parent's dashboard on next login. Closes the loop between the SA CoParents tool and the professional who received the report.
+- New public endpoints (no login required — the QR IS the ticket):
+  - `POST /api/verify/pathway/{sig_id}/comments` — validates body via Pydantic (name required, comment text ≥ 4 chars), rate-limits by salted IP hash (max 30 comments per hash per sig_id per 24h), 404s on unknown sig_id.
+  - `GET /api/verify/pathway/{sig_id}/comments` — public list of comments on this signature, newest-first. Never leaks `ip_hash` or `parent_user_id`.
+- New authed endpoint `GET /api/pathway-report/comments/mine` — returns comments left on any pathway report the caller has issued, capped at 50 rows. Isolation locked with a two-parent Mongo test proving Parent A never sees B's row.
+- New comments collection `pathway_report_comments` fields: `comment_id`, `sig_id`, `parent_user_id`, `reviewer_name`, `reviewer_role`, `reviewer_org?`, `comment_text`, `ip_hash` (internal only), `created_at`. Comments are immutable — the audit trail is court-defensible.
+- Frontend:
+  - `VerifyPathway.jsx` now shows a "Reviewer comments" section under a successful verification. Existing comments appear as a card list; a collapsed "Add a professional comment" form opens on click and collects role (pill selector), name, optional organisation, and comment text (4000 char max). Immutable-warning copy included.
+  - New `PathwayReviewerCommentsCard.jsx` mounts on the Dashboard right after `PathwayReportCard`. Self-hides when no comments exist; otherwise shows up to 3 newest comments inline with reviewer name / role / org / date + a `X new` chip + a CTA to the full pathway report. Older comments accessible from the report page.
+- Tests: `/app/backend/tests/test_iter98_pathway_reviewer_comments.py` — 6/6 green (user-isolation with real Mongo insert + cleanup, unknown-sig-id 404, body validation 422, unknown-sig-id public GET returns empty list, authed feed requires auth, full end-to-end loop: preview PDF → public POST → public GET → parent-authed feed all show the same row and never leak `ip_hash`). 80/80 tests across iter90–iter98 still green — zero regressions.
+
 ---
 
 

@@ -546,3 +546,25 @@ async def email_pathway_report(
         "is_dual_party": is_dual,
     }
 
+
+# ---------------------------------------------------------------------------
+# Reviewer comments — parent-facing feed.
+#
+# Every comment a professional leaves via the public verify page lives
+# in the `pathway_report_comments` collection. This endpoint pulls the
+# newest comments left across ANY pathway report the caller has issued
+# (single-parent preview OR dual). Used by the Dashboard card to close
+# the loop between the emailed report and the parent's next login.
+# ---------------------------------------------------------------------------
+
+@router.get("/comments/mine")
+async def my_pathway_comments(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return every reviewer comment left on any pathway report issued
+    to the caller. Newest-first, capped at 50 rows."""
+    from pathway_verify_routes import list_comments_for_user
+    rows = await list_comments_for_user(db, user.user_id, limit=50)
+    return {"total": len(rows), "comments": rows}
+
