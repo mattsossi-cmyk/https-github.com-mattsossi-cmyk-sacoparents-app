@@ -587,6 +587,10 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
                 </section>
               )}
 
+              {d.history.length >= 2 && (
+                <TierSparkline history={d.history} />
+              )}
+
               <section data-testid="admin-nd-drilldown-history">
                 <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
                   Assessments · newest first
@@ -684,5 +688,154 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
         </div>
       </aside>
     </div>
+  );
+}
+
+
+
+/**
+ * TierSparkline — inline SVG showing total_score (0..16) over time for
+ * every assessment in the parent's history. Renders chronologically
+ * (oldest → newest) even though the API returns newest-first. Points
+ * are coloured by tier; the connecting line uses the app's neutral
+ * indigo so a viewer instinctively focuses on the coloured dots. Only
+ * rendered when the parent has ≥2 assessments — a single point on a
+ * chart says nothing about escalation.
+ *
+ * Deliberately pure SVG (no chart lib) — the drawer must stay light so
+ * an admin scanning through active cases doesn't wait on chart bundle
+ * chunks between clicks.
+ */
+function TierSparkline({ history }) {
+  const rows = [...history].reverse();
+  const total = rows.length;
+  const w = 320;
+  const h = 90;
+  const padX = 8;
+  const padY = 10;
+  const maxScore = 16;
+
+  const xs = rows.map((_, i) =>
+    total > 1
+      ? padX + ((w - 2 * padX) * i) / (total - 1)
+      : w / 2,
+  );
+  const ys = rows.map((r) => {
+    const s = Number(r.total_score ?? 0);
+    const clamped = Math.max(0, Math.min(maxScore, s));
+    return padY + (h - 2 * padY) * (1 - clamped / maxScore);
+  });
+  const linePath = xs
+    .map((x, i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${ys[i].toFixed(1)}`)
+    .join(" ");
+
+  const latest = rows[rows.length - 1] || {};
+  const first  = rows[0] || {};
+  const scoreDelta = (Number(latest.total_score ?? 0)) - (Number(first.total_score ?? 0));
+  const deltaTone =
+    scoreDelta > 0 ? { arrow: "\u2191", color: "#B02A2A", verb: "up" } :
+    scoreDelta < 0 ? { arrow: "\u2193", color: "#1F5C3B", verb: "down" } :
+                     { arrow: "\u2192", color: "#4B4567", verb: "unchanged" };
+
+  return (
+    <section
+      className="mb-6 rounded-2xl border border-[#E5E0EE] bg-white p-4"
+      data-testid="admin-nd-drilldown-sparkline"
+    >
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            Escalation arc
+          </div>
+          <div className="text-[11px] text-[#4B4567] mt-0.5">
+            Total score (0-16) across {total} assessment{total === 1 ? "" : "s"}
+            {total > 1 && (
+              <>
+                {" · "}
+                <span
+                  className="font-semibold"
+                  style={{ color: deltaTone.color }}
+                  data-testid="admin-nd-drilldown-sparkline-delta"
+                >
+                  {deltaTone.arrow}
+                  {" "}
+                  {deltaTone.verb === "unchanged"
+                    ? "no change"
+                    : `${deltaTone.verb} ${Math.abs(scoreDelta)}`}
+                  {" since first"}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        role="img"
+        aria-label="Assessment score history"
+        className="w-full h-auto"
+        data-testid="admin-nd-drilldown-sparkline-svg"
+      >
+        {[
+          { key: "critical", min: 13, color: TIER_META.critical.bg },
+          { key: "high",     min: 9,  color: TIER_META.high.bg },
+          { key: "medium",   min: 4,  color: TIER_META.medium.bg },
+          { key: "low",      min: 0,  color: TIER_META.low.bg },
+        ].map((band, i, arr) => {
+          const topY   = padY + (h - 2 * padY) * (1 - band.min / maxScore);
+          const nextMax = i === 0 ? maxScore : arr[i - 1].min;
+          const bottomY = padY + (h - 2 * padY) * (1 - nextMax / maxScore);
+          return (
+            <rect
+              key={band.key}
+              x={0}
+              y={Math.min(topY, bottomY)}
+              width={w}
+              height={Math.abs(bottomY - topY)}
+              fill={band.color}
+              opacity="0.35"
+            />
+          );
+        })}
+
+        <path
+          d={linePath}
+          fill="none"
+          stroke="#3D1A78"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {rows.map((r, i) => {
+          const meta = TIER_META[r.tier] || TIER_META.low;
+          return (
+            <g key={r.assessment_id || i}>
+              <circle
+                cx={xs[i]}
+                cy={ys[i]}
+                r={3.5}
+                fill={meta.ink}
+                stroke="#FFFFFF"
+                strokeWidth="1.5"
+              />
+              <title>
+                {`${r.tier_label || r.tier || "?"} · Score ${r.total_score ?? "\u2014"} · ${r.created_at || ""}`.trim()}
+              </title>
+            </g>
+          );
+        })}
+      </svg>
+
+      <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.14em] text-[#4B4567] mt-1">
+        <span data-testid="admin-nd-drilldown-sparkline-first">
+          {(first.created_at || "").slice(0, 10) || "oldest"}
+        </span>
+        <span data-testid="admin-nd-drilldown-sparkline-latest">
+          {(latest.created_at || "").slice(0, 10) || "newest"}
+        </span>
+      </div>
+    </section>
   );
 }

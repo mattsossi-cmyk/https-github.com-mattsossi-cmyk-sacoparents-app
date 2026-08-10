@@ -695,6 +695,14 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Long-running loop `compare_invite_nudge_loop(app)` registered in `server.py`; hourly sweep window Mon 08-22 UTC same as compliance reminder (staggered 30s so both don't hit DB simultaneously). Backend boot confirmed clean — loop currently idle awaiting the ops flag flip.
 - Tests: `/app/backend/tests/test_iter100_compare_invite_nudge.py` — 9/9 green (real-email guard, Monday 08-22 UTC window, feature flag defaults off, outside-window short-circuit, stale-share dispatch + dedupe on 2nd sweep, fresh-share skip, already-consented skip, `@demo.local` skip with clean dedupe collection, all 4 share collections iterated on the same sweep).
 
+### Trend Sparkline — coordinator escalation arc (Feb 2026 · iter101)
+- The admin drilldown drawer now shows a pure-SVG sparkline of the parent's `total_score` (0-16) across every assessment on file, above the assessment list. Points are coloured by tier, connecting line is neutral indigo, and shaded tier bands sit behind so the reader instinctively reads "how deep did they get into the critical zone".
+- Renders only when the parent has ≥2 assessments — a single point on a chart says nothing about escalation.
+- Header shows the score delta with tone-coded arrow: red ↑ for worsened, green ↓ for improved, grey → for unchanged. Delta is computed vs the OLDEST assessment on file, not vs the second-newest, so the coordinator sees the full arc.
+- Hover title on each dot shows tier label, score, and `created_at` — legible without a chart library and works with browser accessibility tools out of the box.
+- Deliberately no chart library — keeps the drilldown drawer light so an admin scanning through active cases doesn't wait on chart bundle chunks between clicks.
+- No new backend endpoint needed — reuses the existing drilldown JSON payload's `history` field which already returns `total_score`, `tier`, `tier_label`, and `created_at` per row. All 32 tests across admin ND suites (iter93-100) still green — zero backend regressions.
+
 ---
 
 
