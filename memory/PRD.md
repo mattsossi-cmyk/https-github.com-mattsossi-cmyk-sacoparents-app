@@ -1,6 +1,14 @@
 # SA CoParents — PRD
 
 
+- **Iteration 103 — Regenerate AI Summaries button (Family Violence Report, 2026-08-11)**:
+  - **New endpoint** `POST /api/safety-assessment/{assessment_id}/regenerate-summaries` clears the cached `ai_summaries` on the assessment doc and re-invokes Claude Sonnet 4.5 for all four narrative components (`overall`, `pathway`, `section_1`, `section_2`). Returns the fresh summaries + a `ai_summaries_generated_at` ISO timestamp.
+  - **Access**: assessment owner OR ADMIN_EMAILS operator. Admin can regenerate any parent's assessment (returns `forced_by_admin: true` when the caller isn't the owner).
+  - **Cooldown**: 1 regen per `SAFETY_SUMMARY_REGEN_COOLDOWN_SEC` (default 600s = 10 minutes) per assessment, enforced from the doc's `ai_summaries_generated_at`. Admins bypass the cooldown so ops can force-refresh support cases without waiting.
+  - **Frontend**: new "Regenerate AI summaries" button in `SafetyAssessment.jsx`'s `ResultsCard`, sitting alongside Download / Email / Email Mediator / Problem-Solving actions. Shows a spinning `RefreshCw` icon while regenerating. Admins see the button re-labelled "Regenerate AI summaries (admin)" with a tooltip flagging the no-cooldown bypass. On 429, the button shows the exact "wait Xm Ys" copy from the backend so parents know when they can retry.
+  - **Testing**: `test_iter103_safety_regenerate_summaries.py` — 4 live-server pytests: (a) 401 without auth, (b) 404 for unknown assessment_id, (c) happy-path parent regen + immediate 429 on second call inside cooldown, (d) admin bypass of cooldown on another parent's assessment. All 4 tests pass against real Claude Sonnet 4.5 (72s run — includes actual LLM latency).
+
+
 - **Iteration 92 — Pathway Report PDF Export (2026-02-27)**:
   - **New PDF builder** `pathway_report_pdf.py` — professional layout mirroring the 4-Dim Briefing visual system (brand purple/teal, `_safe` sanitiser, `_section_break`). Cover with generation metadata, primary pathway card (red-bordered when safety hard-lock fires + prominent "Safety trigger applied" panel), factors, goals, per-pathway suitability table with coloured chips, considerations, data-inputs-used table, legal disclaimer footer.
   - **Two new endpoints**: `GET /pathway-report/preview/pdf` (single-parent) + `GET /pathway-report/dual/{share_id}/pdf` (dual, same consent gate via `_find_active_share`). Both return `Content-Disposition: attachment` with sensible filenames (`pathway-report-preview.pdf`, `pathway-report-{share_id}.pdf`).

@@ -27,6 +27,7 @@ from auth import UserPublic, get_current_user, get_db, create_share_token, decod
 from email_service import EmailNotConfigured, EmailSendError, send_mediator_safety_assessment, send_safety_assessment_report
 from safety_assessment_pdf import build_safety_assessment_pdf
 from share_routes import record_share_token, is_share_token_revoked
+from analytics_routes import ADMIN_EMAILS
 import report_visibility
 
 
@@ -535,6 +536,90 @@ async def download_pdf(
             "Cache-Control": "no-store",
         },
     )
+
+
+# Minimum seconds between AI-summary regenerations per assessment. Keeps
+# Claude cost + latency bounded when parents (or admins) hammer the
+# regenerate button. Override via env for tests / operator debugging.
+REGENERATE_SUMMARIES_COOLDOWN_SEC = int(
+    __import__("os").environ.get("SAFETY_SUMMARY_REGEN_COOLDOWN_SEC", "600")
+)
+
+
+@router.post("/{assessment_id}/regenerate-summaries")
+async def regenerate_safety_summaries(
+    assessment_id: str,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Force-regenerate the four Claude Sonnet 4.5 AI summaries for a
+    Family Violence & Communication Safety Assessment.
+
+    Access: the assessment **owner** OR an ADMIN_EMAILS operator.
+
+    Cooldown: one regeneration per ``REGENERATE_SUMMARIES_COOLDOWN_SEC``
+    (default 10 minutes) per assessment, enforced from the doc's
+    ``ai_summaries_generated_at`` timestamp. Admins bypass the cooldown
+    so ops can force-refresh support cases.
+    """
+    if current.is_guest:
+        raise HTTPException(status_code=403, detail="Sign in to regenerate summaries.")
+    is_admin = current.email.lower() in ADMIN_EMAILS
+    # Load doc — owner path first, else admin fallback.
+    doc = await db.safety_assessments.find_one(
+        {"assessment_id": assessment_id, "user_id": current.user_id}, {"_id": 0}
+    )
+    if not doc:
+        if not is_admin:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+        doc = await db.safety_assessments.find_one(
+            {"assessment_id": assessment_id}, {"_id": 0}
+        )
+        if not doc:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+
+    # Cooldown enforcement — admin bypass so operators can force-refresh.
+    if not is_admin:
+        last_iso = doc.get("ai_summaries_generated_at")
+        if last_iso:
+            try:
+                last_dt = datetime.fromisoformat(str(last_iso).replace("Z", "+00:00"))
+                delta = (datetime.now(timezone.utc) - last_dt).total_seconds()
+                if delta < REGENERATE_SUMMARIES_COOLDOWN_SEC:
+                    retry_in = int(REGENERATE_SUMMARIES_COOLDOWN_SEC - delta)
+                    raise HTTPException(
+                        status_code=429,
+                        detail=(
+                            f"Please wait {retry_in // 60}m {retry_in % 60}s "
+                            "before regenerating the AI summaries again."
+                        ),
+                    )
+            except HTTPException:
+                raise
+            except Exception:  # noqa: BLE001
+                # Bad timestamp shouldn't wedge the button forever.
+                pass
+
+    # Clear cache then regenerate.
+    await db.safety_assessments.update_one(
+        {"assessment_id": assessment_id, "user_id": doc.get("user_id")},
+        {"$unset": {"ai_summaries": "", "ai_summaries_generated_at": ""}},
+    )
+    fresh_doc = {**doc}
+    fresh_doc.pop("ai_summaries", None)
+    fresh_doc.pop("ai_summaries_generated_at", None)
+    summaries = await _fetch_or_generate_ai_summaries(db, fresh_doc)
+    if not any(summaries.get(k) for k in ("overall", "pathway", "section_1", "section_2")):
+        raise HTTPException(
+            status_code=503,
+            detail="AI summary service is temporarily unavailable. Please try again shortly.",
+        )
+    return {
+        "assessment_id": assessment_id,
+        "ai_summaries": summaries,
+        "ai_summaries_generated_at": datetime.now(timezone.utc).isoformat(),
+        "forced_by_admin": bool(is_admin and doc.get("user_id") != current.user_id),
+    }
 
 
 class SafetyVisibilityBody(BaseModel):

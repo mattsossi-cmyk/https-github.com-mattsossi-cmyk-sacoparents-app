@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Lightbulb,
   Send,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -138,7 +139,7 @@ function QuestionRow({ idx, question, value, onChange, highConcern }) {
 }
 
 
-function ResultsCard({ assessment, onDownload, onEmail, onEmailMediator, sending }) {
+function ResultsCard({ assessment, onDownload, onEmail, onEmailMediator, onRegenerate, regenerating, isAdmin, sending }) {
   const result = assessment?.result || {};
   const tone = TONE_STYLES[result.pathway_tone] || TONE_STYLES.info;
   const level = result.level || 4;
@@ -247,6 +248,25 @@ function ResultsCard({ assessment, onDownload, onEmail, onEmailMediator, sending
             <FileText size={14} />
             Open the Problem-Solving Worksheet
           </Link>
+          <button
+            type="button"
+            onClick={onRegenerate}
+            disabled={regenerating}
+            data-testid="results-regenerate-summaries"
+            title={
+              isAdmin
+                ? "Force-regenerate the four AI summaries (admin — no cooldown)"
+                : "Regenerate the four AI summaries if the copy no longer fits your situation. Limited to once every 10 minutes."
+            }
+            className="inline-flex items-center gap-2 rounded-full bg-white border border-[#3D1A78]/30 text-[#3D1A78] px-5 py-2.5 text-sm font-semibold hover:bg-[#F5F1FB] disabled:opacity-60"
+          >
+            <RefreshCw size={14} className={regenerating ? "animate-spin" : ""} />
+            {regenerating
+              ? "Regenerating…"
+              : isAdmin
+              ? "Regenerate AI summaries (admin)"
+              : "Regenerate AI summaries"}
+          </button>
         </div>
       </div>
     </div>
@@ -394,7 +414,12 @@ export default function SafetyAssessment() {
   const [mediatorSending, setMediatorSending] = useState(false);
   const [briefingEmailOpen, setBriefingEmailOpen] = useState(false);
   const [briefingSending, setBriefingSending] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const flashedRef = useRef(new Set());
+
+  const isAdmin = Boolean(
+    user?.email && user.email.toLowerCase() === "mattsossi@bsossi.com"
+  );
 
   useEffect(() => {
     api
@@ -495,6 +520,35 @@ export default function SafetyAssessment() {
       }
     } finally {
       setMediatorSending(false);
+    }
+  };
+
+  const regenerateSummaries = async () => {
+    if (!result?.assessment_id) return;
+    setRegenerating(true);
+    try {
+      await api.post(
+        `/safety-assessment/${result.assessment_id}/regenerate-summaries`,
+      );
+      toast.success(
+        "AI summaries regenerated. Your next PDF download will include the fresh copy.",
+      );
+    } catch (err) {
+      logError("Regenerate summaries failed:", err);
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+      if (status === 429) {
+        toast.error(detail || "Please wait a bit before regenerating again.");
+      } else if (status === 503) {
+        toast.error(
+          detail ||
+            "AI summary service is temporarily unavailable. Please try again shortly.",
+        );
+      } else {
+        toast.error(detail || "Couldn't regenerate the summaries right now.");
+      }
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -803,6 +857,9 @@ export default function SafetyAssessment() {
               onDownload={downloadPdf}
               onEmail={emailMe}
               onEmailMediator={openMediatorDialog}
+              onRegenerate={regenerateSummaries}
+              regenerating={regenerating}
+              isAdmin={isAdmin}
               sending={emailing}
             />
 
