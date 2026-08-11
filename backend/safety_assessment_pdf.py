@@ -129,6 +129,25 @@ class SafetyAssessmentPDF(FPDF):
         self.ln(1)
 
 
+def _render_ai_summary(pdf: SafetyAssessmentPDF, text: str, heading: str = "AI summary") -> None:
+    """Compact italic summary block used above each section. Renders
+    nothing when `text` is empty so the layout stays clean if the LLM
+    call failed or wasn't run."""
+    text = (text or "").strip()
+    if not text:
+        return
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_text_color(*INFO)
+    pdf.set_x(15)
+    pdf.cell(0, 5, _safe(heading.upper()), ln=1)
+    pdf.set_font("Helvetica", "I", 10)
+    pdf.set_text_color(*TEXT_MID)
+    pdf.set_x(15)
+    pdf.multi_cell(180, 5.2, _safe(text))
+    pdf.set_text_color(*TEXT_DARK)
+    pdf.ln(1.5)
+
+
 def _render_meta(pdf: SafetyAssessmentPDF, user_name: str, generated_at: str) -> None:
     pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(*TEXT_MID)
@@ -153,7 +172,7 @@ def _render_disclaimer(pdf: SafetyAssessmentPDF) -> None:
     )
 
 
-def _render_pathway(pdf: SafetyAssessmentPDF, result: Dict[str, Any]) -> None:
+def _render_pathway(pdf: SafetyAssessmentPDF, result: Dict[str, Any], pathway_ai: str = "") -> None:
     level = int(result.get("level") or 4)
     tone = str(result.get("pathway_tone") or "info")
     color = _TONE_COLORS.get(tone, INFO)
@@ -168,6 +187,7 @@ def _render_pathway(pdf: SafetyAssessmentPDF, result: Dict[str, Any]) -> None:
     pdf.set_font("Helvetica", "", 11)
     pdf.multi_cell(0, 6, str(result.get("pathway_summary") or ""))
     pdf.ln(2)
+    _render_ai_summary(pdf, pathway_ai, heading="Why this pathway · AI summary")
     recs = result.get("recommendations") or []
     if recs:
         pdf.set_font("Helvetica", "B", 11)
@@ -217,18 +237,42 @@ def build_safety_assessment_pdf(
     section_2_rows: List[Dict[str, str]],
     texas_resource_block: str,
     excluded_sections: set | list | None = None,
+    ai_summaries: Dict[str, str] | None = None,
 ) -> bytes:
+    """Render the Family Violence & Communication Safety Assessment PDF.
+
+    `ai_summaries` is optional. When present, four keys are honoured:
+
+        * ``overall``    — one-paragraph executive summary shown at the
+                           very top of the report, above the disclaimer.
+        * ``pathway``    — 2-3 sentence framing shown inside the
+                           "Recommended pathway" block.
+        * ``section_1``  — narrative above Section 1's answer list.
+        * ``section_2``  — narrative above Section 2's answer list.
+
+    Missing / empty keys render nothing (graceful fallback when the
+    LLM was unavailable). This means the PDF still produces a valid
+    document if the Emergent LLM key is not configured.
+    """
     ex = set(excluded_sections or [])
+    ai = ai_summaries or {}
     pdf = SafetyAssessmentPDF()
     pdf.set_auto_page_break(auto=True, margin=18)
     pdf.add_page()
     _render_meta(pdf, user_name, generated_at)
+    # Executive summary sits above the disclaimer so a mediator opening
+    # the file immediately sees the plain-language framing.
+    if ai.get("overall"):
+        pdf.section_title("Executive summary")
+        _render_ai_summary(pdf, ai.get("overall") or "", heading="AI summary")
     _render_disclaimer(pdf)
     # Pathway and Texas resources are locked-on for safety reasons.
-    _render_pathway(pdf, result)
+    _render_pathway(pdf, result, pathway_ai=ai.get("pathway") or "")
     if "section_1" not in ex:
+        _render_ai_summary(pdf, ai.get("section_1") or "", heading="Section 1 · AI summary")
         _render_answers(pdf, "Section 1 - Immediate safety screen (past 12 months)", section_1_rows)
     if "section_2" not in ex:
+        _render_ai_summary(pdf, ai.get("section_2") or "", heading="Section 2 · AI summary")
         _render_answers(pdf, "Section 2 - Communication readiness", section_2_rows)
     _render_texas_block(pdf, texas_resource_block)
 

@@ -703,6 +703,18 @@ Applied in response to a professional review of the Safety Assessment (Danger As
 - Deliberately no chart library — keeps the drilldown drawer light so an admin scanning through active cases doesn't wait on chart bundle chunks between clicks.
 - No new backend endpoint needed — reuses the existing drilldown JSON payload's `history` field which already returns `total_score`, `tier`, `tier_label`, and `created_at` per row. All 32 tests across admin ND suites (iter93-100) still green — zero backend regressions.
 
+### Safety Assessment · Four AI-Summary Components (Feb 2026 · iter102)
+- The Family Violence & Communication Safety Assessment PDF now includes **four AI-generated narratives** on top of the existing structured content, produced from the parent's actual answers by Claude Sonnet 4.5 via the Emergent LLM key:
+  1. **Executive summary** at the top of the report (~180 words, mediator/professional audience) — one-sentence framing, safety signals at a glance, communication readiness at a glance, whether the recommended pathway is a fit, one child-focused closing line.
+  2. **Pathway summary** (2-3 sentences) inside the Recommended pathway block explaining WHY that specific level's pathway is a fit given the answers.
+  3. **Section 1 · Immediate safety screen summary** (~90 words) — plain-language narrative of the safety indicators the parent surfaced.
+  4. **Section 2 · Communication readiness summary** (~90 words) — strengths and areas that would need structured support before consensual co-parent communication is likely to hold.
+- New module `safety_ai_summary.py` — mirrors `ai_summary.py` (deep-dive executive summary) but produces the four-key dict shape. Same strict guardrails: neutral parent-attributed tone, non-diagnostic, non-adjudicative, no legal/medical advice, NEVER minimise a concrete safety indicator, no jargon, no fabrication.
+- Summaries are cached on the assessment doc under `ai_summaries` after first successful generation so subsequent PDF downloads are instant. Failed / partial generation is retried on next download rather than locked in (prevents "sad empty state" from an intermittent LLM outage).
+- Renderer is fully graceful — a missing `EMERGENT_LLM_KEY` or a partial `ai_summaries` dict still produces a valid PDF with the AI blocks silently omitted.
+- Live curl verified: parent1's 995 KB PDF renders end-to-end via `GET /api/safety-assessment/{id}/pdf` with `%PDF-1.3` header intact.
+- Tests: `/app/backend/tests/test_iter102_safety_ai_summaries.py` — 6/6 green (builder accepts new kwarg + renders valid PDF; builder still works without kwarg; partial/empty keys handled cleanly; long AI copy materially increases PDF size — proving the copy actually lands on the page; generator returns the four-key dict shape even without an LLM key; empty sections short-circuit without wasting an LLM call).
+
 ---
 
 

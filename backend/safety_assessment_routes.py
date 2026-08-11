@@ -436,7 +436,11 @@ async def _load_for_user(
     return doc
 
 
-def _build_pdf_bytes(doc: Dict[str, Any], excluded_sections: list | None = None) -> bytes:
+def _build_pdf_bytes(
+    doc: Dict[str, Any],
+    excluded_sections: list | None = None,
+    ai_summaries: Dict[str, Any] | None = None,
+) -> bytes:
     section_1_rows = [
         {"text": _question_lookup(q["id"]), "answer": doc.get("section_1", {}).get(q["id"], "") or "—"}
         for q in SECTION_1_QUESTIONS
@@ -453,7 +457,59 @@ def _build_pdf_bytes(doc: Dict[str, Any], excluded_sections: list | None = None)
         section_2_rows=section_2_rows,
         texas_resource_block=TEXAS_RESOURCE_BLOCK,
         excluded_sections=excluded_sections or [],
+        ai_summaries=ai_summaries or {},
     )
+
+
+async def _fetch_or_generate_ai_summaries(
+    db: AsyncIOMotorDatabase, doc: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Return the four AI narratives (overall / pathway / section_1 /
+    section_2) for this Safety Assessment. Cached on the assessment doc
+    itself under ``ai_summaries`` after the first successful generation
+    so subsequent PDF downloads are instant.
+
+    Never raises — a failure returns ``{}`` and the PDF renders without
+    the AI blocks (the layout has graceful empty-state handling).
+    """
+    cached = doc.get("ai_summaries")
+    if isinstance(cached, dict) and any(cached.get(k) for k in ("overall", "pathway", "section_1", "section_2")):
+        return cached
+    try:
+        from safety_ai_summary import generate_safety_summaries
+        section_1_rows = [
+            {"text": _question_lookup(q["id"]),
+             "answer": doc.get("section_1", {}).get(q["id"], "") or "—"}
+            for q in SECTION_1_QUESTIONS
+        ]
+        section_2_rows = [
+            {"text": _question_lookup(q["id"]),
+             "answer": doc.get("section_2", {}).get(q["id"], "") or "—"}
+            for q in SECTION_2_QUESTIONS
+        ]
+        summaries = await generate_safety_summaries(
+            doc=doc,
+            section_1_rows=section_1_rows,
+            section_2_rows=section_2_rows,
+        )
+    except Exception:  # noqa: BLE001
+        return {}
+    # Only cache when at least one field was populated — a completely
+    # empty result usually means the LLM key was missing at request
+    # time; we want to retry next download rather than lock the empty
+    # state in perpetuity.
+    if any((summaries or {}).get(k) for k in ("overall", "pathway", "section_1", "section_2")):
+        try:
+            await db.safety_assessments.update_one(
+                {"assessment_id": doc.get("assessment_id"), "user_id": doc.get("user_id")},
+                {"$set": {
+                    "ai_summaries":              summaries,
+                    "ai_summaries_generated_at": datetime.now(timezone.utc).isoformat(),
+                }},
+            )
+        except Exception:  # noqa: BLE001
+            pass
+    return summaries or {}
 
 
 @router.get("/{assessment_id}/pdf")
@@ -469,7 +525,8 @@ async def download_pdf(
     else:
         raw = list(((doc.get("visibility") or {}).get("excluded") or []))
     ex_list = report_visibility.clean_excluded("safety", raw)
-    pdf_bytes = _build_pdf_bytes(doc, excluded_sections=ex_list)
+    ai = await _fetch_or_generate_ai_summaries(db, doc)
+    pdf_bytes = _build_pdf_bytes(doc, excluded_sections=ex_list, ai_summaries=ai)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
