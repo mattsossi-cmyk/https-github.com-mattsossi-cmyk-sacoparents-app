@@ -95,7 +95,15 @@ def _seed_medical(sess: requests.Session):
 
 
 def _submit_safety(sess: requests.Session, section_1: dict, section_2: dict | None = None) -> tuple[str, int]:
-    payload = {"section_1": section_1, "section_2": section_2 or {}}
+    # Autofill defaults so the server-side "all questions answered" guard
+    # (iter 104) passes — callers only need override the items that drive
+    # the target level.
+    full_s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    full_s1.update(section_1 or {})
+    full_s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
+    full_s2["s2_q8"] = "no"
+    full_s2.update(section_2 or {})
+    payload = {"section_1": full_s1, "section_2": full_s2}
     r = sess.post(f"{BASE_URL}/api/safety-assessment", json=payload)
     assert r.status_code == 200, r.text
     body = r.json()

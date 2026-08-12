@@ -69,8 +69,8 @@ def _submit_stub_assessment(headers: dict) -> str | None:
     None if the submit surface is unavailable in this environment."""
     payload = {
         "name": "Regen Test",
-        "section_1": {f"s1_q{i}": ("Yes" if i == 2 else "No") for i in range(1, 11)},
-        "section_2": {f"s2_q{i}": "Yes" for i in range(1, 11)},
+        "section_1": {f"s1_q{i}": ("Yes" if i == 2 else "No") for i in range(1, 19)},
+        "section_2": {f"s2_q{i}": "Yes" for i in range(1, 9)},
     }
     r = requests.post(
         f"{API}/safety-assessment", json=payload, headers=headers, timeout=20,

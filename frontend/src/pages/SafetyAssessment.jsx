@@ -105,11 +105,16 @@ function YNUButton({ value, current, label, onClick, testid }) {
 }
 
 
-function QuestionRow({ idx, question, value, onChange, highConcern }) {
+function QuestionRow({ idx, question, value, onChange, highConcern, missing }) {
   return (
     <div
-      className="rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5"
+      className={`rounded-2xl border ${
+        missing
+          ? "border-[#9A3A23] ring-2 ring-[#9A3A23]/25 bg-[#FDF3F0]"
+          : "border-[#E5E0EE] bg-white"
+      } p-4 sm:p-5`}
       data-testid={`question-${question.id}`}
+      data-missing={missing ? "true" : undefined}
     >
       <div className="flex items-start gap-3 mb-3">
         <div
@@ -127,12 +132,51 @@ function QuestionRow({ idx, question, value, onChange, highConcern }) {
               High safety concern
             </div>
           )}
+          {missing && (
+            <div
+              className="mt-1.5 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-[#9A3A23] font-bold"
+              data-testid={`missing-flag-${question.id}`}
+            >
+              <AlertTriangle size={11} />
+              Please answer this one
+            </div>
+          )}
         </div>
       </div>
       <div className="flex items-stretch gap-2">
         <YNUButton value="yes" current={value} label="Yes" onClick={onChange} testid={`${question.id}-yes`} />
         <YNUButton value="no" current={value} label="No" onClick={onChange} testid={`${question.id}-no`} />
         <YNUButton value="unsure" current={value} label="Unsure" onClick={onChange} testid={`${question.id}-unsure`} />
+      </div>
+    </div>
+  );
+}
+
+
+function ProgressStrip({ answered, total, testid }) {
+  const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
+  const complete = answered === total;
+  return (
+    <div
+      className="mb-5 rounded-full border border-[#E5E0EE] bg-white/70 px-4 py-2 flex items-center gap-3"
+      data-testid={testid}
+    >
+      <div className="flex-1 h-2 rounded-full bg-[#EFE9F9] overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all ${
+            complete
+              ? "bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5]"
+              : "bg-[#3D1A78]/70"
+          }`}
+          style={{ width: `${pct}%` }}
+          data-testid={`${testid}-fill`}
+        />
+      </div>
+      <div
+        className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#4B4567] shrink-0"
+        data-testid={`${testid}-count`}
+      >
+        {answered} / {total} answered
       </div>
     </div>
   );
@@ -415,6 +459,7 @@ export default function SafetyAssessment() {
   const [briefingEmailOpen, setBriefingEmailOpen] = useState(false);
   const [briefingSending, setBriefingSending] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [missingIds, setMissingIds] = useState({ section_1: [], section_2: [] });
   const flashedRef = useRef(new Set());
 
   const isAdmin = Boolean(
@@ -438,6 +483,11 @@ export default function SafetyAssessment() {
 
   const onS1Change = (qid) => (value) => {
     setAnswersS1((prev) => ({ ...prev, [qid]: value }));
+    setMissingIds((prev) =>
+      prev.section_1.includes(qid)
+        ? { ...prev, section_1: prev.section_1.filter((id) => id !== qid) }
+        : prev
+    );
     if (value === "yes" && highConcernIds.has(qid) && !flashedRef.current.has(qid)) {
       flashedRef.current.add(qid);
       setPendingHighId(qid);
@@ -446,6 +496,11 @@ export default function SafetyAssessment() {
   };
   const onS2Change = (qid) => (value) => {
     setAnswersS2((prev) => ({ ...prev, [qid]: value }));
+    setMissingIds((prev) =>
+      prev.section_2.includes(qid)
+        ? { ...prev, section_2: prev.section_2.filter((id) => id !== qid) }
+        : prev
+    );
   };
 
   const submit = async () => {
@@ -456,11 +511,40 @@ export default function SafetyAssessment() {
         section_2: answersS2,
       });
       setResult(r.data);
+      setMissingIds({ section_1: [], section_2: [] });
       setStep(3);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       logError("Submit failed:", err);
-      toast.error("Couldn’t submit your assessment. Please try again.");
+      const detail = err?.response?.data?.detail;
+      // Server-side "all-answered" guard responds with a structured
+      // { message, missing: { section_1, section_2 } } payload — flag
+      // the missing rows in the UI and jump to the section that has
+      // the earliest unanswered item.
+      if (
+        err?.response?.status === 400 &&
+        detail &&
+        typeof detail === "object" &&
+        detail.missing
+      ) {
+        const miss = {
+          section_1: detail.missing.section_1 || [],
+          section_2: detail.missing.section_2 || [],
+        };
+        setMissingIds(miss);
+        if (miss.section_1.length > 0) {
+          setStep(1);
+        } else if (miss.section_2.length > 0) {
+          setStep(2);
+        }
+        toast.error(
+          detail.message ||
+            "Please answer every question before submitting.",
+        );
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        toast.error("Couldn’t submit your assessment. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -560,6 +644,22 @@ export default function SafetyAssessment() {
     if (!questions) return false;
     return questions.section_2.every((q) => answersS2[q.id]);
   }, [answersS2, questions]);
+  const answeredCountS1 = useMemo(() => {
+    if (!questions) return 0;
+    return questions.section_1.filter((q) => answersS1[q.id]).length;
+  }, [answersS1, questions]);
+  const answeredCountS2 = useMemo(() => {
+    if (!questions) return 0;
+    return questions.section_2.filter((q) => answersS2[q.id]).length;
+  }, [answersS2, questions]);
+  const missingS1Set = useMemo(
+    () => new Set(missingIds.section_1 || []),
+    [missingIds]
+  );
+  const missingS2Set = useMemo(
+    () => new Set(missingIds.section_2 || []),
+    [missingIds]
+  );
 
   if (!questions) {
     return (
@@ -763,6 +863,11 @@ export default function SafetyAssessment() {
               title="Section 1 · Immediate Safety Screen"
               subtitle="In the past 12 months, has the other parent…"
             />
+            <ProgressStrip
+              answered={answeredCountS1}
+              total={questions.section_1.length}
+              testid="s1-progress"
+            />
             <div className="space-y-3 mb-8">
               {questions.section_1.map((q, idx) => (
                 <QuestionRow
@@ -772,6 +877,7 @@ export default function SafetyAssessment() {
                   value={answersS1[q.id]}
                   onChange={onS1Change(q.id)}
                   highConcern={highConcernIds.has(q.id)}
+                  missing={missingS1Set.has(q.id)}
                 />
               ))}
             </div>
@@ -809,6 +915,11 @@ export default function SafetyAssessment() {
               title="Section 2 · Communication Readiness"
               subtitle="These reflect your own readiness right now. The other parent should complete this separately to get their own private result."
             />
+            <ProgressStrip
+              answered={answeredCountS2}
+              total={questions.section_2.length}
+              testid="s2-progress"
+            />
             <div className="space-y-3 mb-8">
               {questions.section_2.map((q, idx) => (
                 <QuestionRow
@@ -818,6 +929,7 @@ export default function SafetyAssessment() {
                   value={answersS2[q.id]}
                   onChange={onS2Change(q.id)}
                   highConcern={false}
+                  missing={missingS2Set.has(q.id)}
                 />
               ))}
             </div>

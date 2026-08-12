@@ -89,14 +89,11 @@ def _seed_assessment(sess: requests.Session, pathways=("medical",)):
 
 def _submit_safety_level_1(sess: requests.Session) -> str:
     """Submit a Safety Assessment that scores level 1 for the session user."""
-    payload = {
-        "section_1": {
-            "s1_q1": "yes", "s1_q2": "no", "s1_q3": "no", "s1_q4": "no",
-            "s1_q5": "no", "s1_q6": "no", "s1_q7": "no", "s1_q8": "no",
-            "s1_q9": "no", "s1_q10": "no",
-        },
-        "section_2": {},
-    }
+    section_1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    section_1["s1_q1"] = "yes"  # high-concern hit → level 1
+    section_2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
+    section_2["s2_q8"] = "no"
+    payload = {"section_1": section_1, "section_2": section_2}
     r = sess.post(f"{BASE_URL}/api/safety-assessment", json=payload)
     assert r.status_code == 200, r.text
     body = r.json()

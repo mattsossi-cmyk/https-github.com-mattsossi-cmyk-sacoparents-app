@@ -54,15 +54,19 @@ def p2_token():
 
 
 def _post_safety(client, level=4):
+    s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
+    s2["s2_q8"] = "no"
     if level == 4:
-        payload = {"section_1": {}, "section_2": {"s2_q%d" % i: "yes" for i in range(1, 12)}}
-        payload["section_2"]["s2_q8"] = "no"
+        payload = {"section_1": s1, "section_2": s2}
     elif level == 2:
-        payload = {"section_1": {"s1_q3": "yes"}, "section_2": {}}
+        s1["s1_q3"] = "yes"
+        payload = {"section_1": s1, "section_2": s2}
     elif level == 1:
-        payload = {"section_1": {"s1_q1": "yes"}, "section_2": {}}
+        s1["s1_q1"] = "yes"
+        payload = {"section_1": s1, "section_2": s2}
     else:
-        payload = {"section_1": {}, "section_2": {}}
+        payload = {"section_1": s1, "section_2": s2}
     r = client.post(f"{BASE_URL}/api/safety-assessment", json=payload, timeout=30)
     assert r.status_code == 200, r.text
     return r.json()

@@ -1,6 +1,12 @@
 # SA CoParents — PRD
 
 
+- **Iteration 104 — "Answer every question" guard on Family Violence submission (2026-08-12)**:
+  - **Backend**: New `_validate_all_answered()` helper rejects `POST /api/safety-assessment` submissions that don't cover every s1_q1..s1_q18 and s2_q1..s2_q8. Returns HTTP 400 with a machine-readable payload `{ "message": "…", "missing": { "section_1": [...], "section_2": [...] } }` so the UI can highlight the exact rows to answer. Accepted answers are Yes/No/Unsure (case-insensitive) — anything else (empty, "maybe", etc.) is treated as missing.
+  - **Frontend**: New `ProgressStrip` component sits above each section showing "X / Y answered" with a filled progress bar that transitions to a purple→teal gradient on completion. `QuestionRow` renders a red ring + "Please answer this one" badge for any row that came back in the server's `missing` payload. The submit handler parses the 400 response, jumps the wizard back to the earliest section with missing items, and clears the flag on each row as the parent answers it. A scripted client can no longer slip an incomplete assessment past.
+  - **Testing**: `test_iter104_safety_all_answered_guard.py` — 5 live-server pytests: (a) empty submission → 400 with all ids missing, (b) partial submission → 400 flagging only the unanswered ids, (c) unknown values ("maybe", "") treated as missing, (d) fully-answered submission → 200 with real result payload, (e) mixed-case answers accepted. Updated helpers in `test_safety_assessment.py`, `test_iter42-48`, `test_snc2_compare_api`, `test_snc2_enhancements`, `test_safety_assessment_mediator_email` to send complete section 1 (18 items) + section 2 (8 items) payloads with a `_CLEAN_S2` / autofill baseline so callers only need to override items driving the target level. All 143 impacted tests pass.
+
+
 - **Iteration 103 — Regenerate AI Summaries button (Family Violence Report, 2026-08-11)**:
   - **New endpoint** `POST /api/safety-assessment/{assessment_id}/regenerate-summaries` clears the cached `ai_summaries` on the assessment doc and re-invokes Claude Sonnet 4.5 for all four narrative components (`overall`, `pathway`, `section_1`, `section_2`). Returns the fresh summaries + a `ai_summaries_generated_at` ISO timestamp.
   - **Access**: assessment owner OR ADMIN_EMAILS operator. Admin can regenerate any parent's assessment (returns `forced_by_admin: true` when the caller isn't the owner).

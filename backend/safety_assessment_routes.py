@@ -360,6 +360,38 @@ def _question_lookup(question_id: str) -> str:
     return question_id
 
 
+# Accepted answer values for every question in both sections. Kept lower-cased
+# so callers submitting "Yes"/"YES"/"yes" all pass. The frontend Yes/No/Unsure
+# radios emit lowercase already.
+_VALID_ANSWERS = {"yes", "no", "unsure"}
+
+
+def _validate_all_answered(body: "AssessmentSubmit") -> None:
+    """Reject the submission when the parent hasn't answered every
+    question in both sections. Mirrors the frontend's Continue gate so
+    a scripted client can't slip an incomplete assessment past.
+
+    Raises 400 with a machine-readable `missing` payload the UI can
+    highlight ({"section_1": ["s1_q7"], "section_2": []}).
+    """
+    s1 = {k: (str(v or "").strip().lower()) for k, v in (body.section_1 or {}).items()}
+    s2 = {k: (str(v or "").strip().lower()) for k, v in (body.section_2 or {}).items()}
+    missing_s1 = [q["id"] for q in SECTION_1_QUESTIONS if s1.get(q["id"]) not in _VALID_ANSWERS]
+    missing_s2 = [q["id"] for q in SECTION_2_QUESTIONS if s2.get(q["id"]) not in _VALID_ANSWERS]
+    if missing_s1 or missing_s2:
+        total_missing = len(missing_s1) + len(missing_s2)
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": (
+                    f"Please answer every question before submitting "
+                    f"({total_missing} left to answer)."
+                ),
+                "missing": {"section_1": missing_s1, "section_2": missing_s2},
+            },
+        )
+
+
 # ============================================================
 # Routes
 # ============================================================
@@ -382,6 +414,7 @@ async def submit_assessment(
     current: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
+    _validate_all_answered(body)
     result = score_assessment(body)
     assessment_id = f"sa_{uuid.uuid4().hex[:12]}"
     doc = {

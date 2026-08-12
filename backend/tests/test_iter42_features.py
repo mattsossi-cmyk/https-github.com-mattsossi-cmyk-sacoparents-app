@@ -135,17 +135,26 @@ class TestRegenSummaryLengthToggle:
 # 2) Expiring share links + revocation
 # ============================================================
 def _post_safety(client, level=4):
-    """Submit a safety assessment. Level-4 = no concerns (all section 2 yes)."""
+    """Submit a safety assessment. Level-4 = no concerns (all section 2 yes).
+
+    Server-side "all answered" guard (iter 104) requires every s1_q1..s1_q18
+    and s2_q1..s2_q8 to have a valid Yes/No/Unsure value, so we fill both
+    sections with a neutral baseline and only override the items that
+    drive the target level.
+    """
+    s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
+    s2["s2_q8"] = "no"  # s2_q8 is inverted — "no" is the safe answer
     if level == 4:
-        payload = {"section_1": {}, "section_2": {"s2_q%d" % i: "yes" for i in range(1, 12)}}
-        payload["section_2"]["s2_q8"] = "no"  # inverted
+        payload = {"section_1": s1, "section_2": s2}
     elif level == 2:
-        # coercive-control hit → level 2
-        payload = {"section_1": {"s1_q3": "yes"}, "section_2": {}}
+        s1["s1_q3"] = "yes"  # coercive-control hit → level 2
+        payload = {"section_1": s1, "section_2": s2}
     elif level == 1:
-        payload = {"section_1": {"s1_q1": "yes"}, "section_2": {}}
+        s1["s1_q1"] = "yes"
+        payload = {"section_1": s1, "section_2": s2}
     else:
-        payload = {"section_1": {}, "section_2": {}}
+        payload = {"section_1": s1, "section_2": s2}
     r = client.post(f"{BASE_URL}/api/safety-assessment", json=payload, timeout=30)
     assert r.status_code == 200, r.text
     return r.json()

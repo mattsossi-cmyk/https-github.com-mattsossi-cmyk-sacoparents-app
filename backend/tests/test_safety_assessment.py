@@ -49,6 +49,14 @@ if "REACT_APP_BACKEND_URL" not in os.environ:
 BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/")
 
 
+# A section_2 payload that answers every question with a "no-concern"
+# value so the server-side "all questions answered" guard (iter 104)
+# accepts the submission without shifting the scoring level. Used by
+# submit / PDF / email tests where the test intent is about section_1
+# behaviour, not section_2 counting.
+_CLEAN_S2 = {q["id"]: ("no" if q["id"] == "s2_q8" else "yes") for q in SECTION_2_QUESTIONS}
+
+
 # =======================================================
 # Fixtures
 # =======================================================
@@ -159,7 +167,7 @@ class TestSubmitEndpoint:
         s, _ = guest_session
         payload = {
             "section_1": {q["id"]: "no" for q in SECTION_1_QUESTIONS},
-            "section_2": {},
+            "section_2": dict(_CLEAN_S2),
         }
         payload["section_1"]["s1_q1"] = "yes"
         r = s.post(f"{BASE_URL}/api/safety-assessment", json=payload)
@@ -175,7 +183,7 @@ class TestSubmitEndpoint:
         s1 = {q["id"]: "no" for q in SECTION_1_QUESTIONS}
         s1.update({"s1_q3": "yes", "s1_q6": "yes", "s1_q7": "yes", "s1_q8": "yes"})
         r = s.post(f"{BASE_URL}/api/safety-assessment",
-                   json={"section_1": s1, "section_2": {}})
+                   json={"section_1": s1, "section_2": dict(_CLEAN_S2)})
         assert r.status_code == 200
         assert r.json()["result"]["level"] == 2
 
@@ -196,7 +204,7 @@ class TestSubmitEndpoint:
         # one submit
         s1 = {q["id"]: "no" for q in SECTION_1_QUESTIONS}
         r = s.post(f"{BASE_URL}/api/safety-assessment",
-                   json={"section_1": s1, "section_2": {}})
+                   json={"section_1": s1, "section_2": dict(_CLEAN_S2)})
         assert r.status_code == 200
         latest_id = r.json()["assessment_id"]
         me = s.get(f"{BASE_URL}/api/safety-assessment/me")
@@ -212,7 +220,7 @@ class TestPdfEndpoint:
         s, _ = guest_session
         payload = {
             "section_1": {q["id"]: "no" for q in SECTION_1_QUESTIONS},
-            "section_2": {},
+            "section_2": dict(_CLEAN_S2),
         }
         payload["section_1"]["s1_q1"] = "yes"  # level 1
         sub = s.post(f"{BASE_URL}/api/safety-assessment", json=payload).json()
@@ -238,7 +246,7 @@ class TestEmailEndpoint:
         s, _ = guest_session
         payload = {
             "section_1": {q["id"]: "no" for q in SECTION_1_QUESTIONS},
-            "section_2": {},
+            "section_2": dict(_CLEAN_S2),
         }
         sub = s.post(f"{BASE_URL}/api/safety-assessment", json=payload).json()
         aid = sub["assessment_id"]
@@ -254,7 +262,7 @@ class TestEmailEndpoint:
         s, _user, _email = real_user
         payload = {
             "section_1": {q["id"]: "no" for q in SECTION_1_QUESTIONS},
-            "section_2": {},
+            "section_2": dict(_CLEAN_S2),
         }
         sub = s.post(f"{BASE_URL}/api/safety-assessment", json=payload).json()
         aid = sub["assessment_id"]
