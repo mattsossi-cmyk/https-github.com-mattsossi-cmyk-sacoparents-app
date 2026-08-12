@@ -26,6 +26,8 @@ from pydantic import BaseModel, Field
 from auth import UserPublic, get_current_user, get_db, create_share_token, decode_share_token
 from email_service import EmailNotConfigured, EmailSendError, send_mediator_safety_assessment, send_safety_assessment_report
 from safety_assessment_pdf import build_safety_assessment_pdf
+from safety_court_report_pdf import build_court_report_pdf
+from trauma_lens import PROCEDURAL_SAFEGUARDS
 from share_routes import record_share_token, is_share_token_revoked
 from analytics_routes import ADMIN_EMAILS
 import report_visibility
@@ -336,7 +338,7 @@ def score_assessment(payload: AssessmentSubmit) -> Dict[str, Any]:
         level = 4
 
     pathway = PATHWAYS[level]
-    return {
+    result = {
         "level": level,
         "pathway_title": pathway["title"],
         "pathway_headline": pathway["headline"],
@@ -348,6 +350,16 @@ def score_assessment(payload: AssessmentSubmit) -> Dict[str, Any]:
         "section_1_yes_count": section_1_yes,
         "section_2_concern_count": section_2_concerns,
     }
+    # Trauma-Informed Safety and Functioning Lens (TISFL) — attach the
+    # three-findings interpretive layer to every score. Kept in a
+    # separate `lens` field so legacy callers reading `level`/`pathway_*`
+    # continue to work unchanged.
+    try:
+        from trauma_lens import build_findings
+        result["lens"] = build_findings(result)
+    except Exception:  # noqa: BLE001 - defensive: never fail scoring on lens issues
+        pass
+    return result
 
 
 def _question_lookup(question_id: str) -> str:
@@ -566,6 +578,55 @@ async def download_pdf(
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'inline; filename="sacoparents-safety-assessment-{assessment_id}.pdf"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@router.get("/{assessment_id}/court-report")
+async def download_court_report(
+    assessment_id: str,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    reviewer_name: str = "",
+):
+    """Court-facing PDF using the Trauma-Informed Safety and Functioning
+    Lens. Excludes raw Section-1 behavioural answers by default, puts
+    the two interpretation rules on page 1, one finding per page, adds
+    a limits-of-use statement, procedural safeguards, and a signature
+    block for the parent + optional qualified reviewer co-signature.
+    """
+    doc = await _load_for_user(db, assessment_id, current.user_id)
+    if doc.get("is_guest"):
+        raise HTTPException(
+            status_code=400,
+            detail="Save your work before downloading the court report.",
+        )
+    result = doc.get("result") or {}
+    # If the doc was created before the lens layer existed, attach it
+    # now so old assessments still produce a valid court report.
+    if not result.get("lens"):
+        try:
+            from trauma_lens import build_findings
+            result = dict(result)
+            result["lens"] = build_findings(result)
+        except Exception:  # noqa: BLE001
+            pass
+    pdf_bytes = build_court_report_pdf(
+        user_name=doc.get("name") or current.name or "",
+        generated_at=doc.get("created_at") or datetime.now(timezone.utc).isoformat(),
+        assessment_id=assessment_id,
+        result=result,
+        safeguards=PROCEDURAL_SAFEGUARDS,
+        reviewer_name=(reviewer_name or "").strip(),
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'inline; filename="tisfl-court-report-{assessment_id}.pdf"'
+            ),
             "Cache-Control": "no-store",
         },
     )

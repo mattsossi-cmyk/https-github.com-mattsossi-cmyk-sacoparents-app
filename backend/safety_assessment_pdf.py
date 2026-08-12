@@ -71,15 +71,17 @@ class SafetyAssessmentPDF(FPDF):
             except Exception:
                 pass
         self.set_text_color(*TEXT_DARK)
-        self.set_font("Helvetica", "B", 16)
+        self.set_font("Helvetica", "B", 15)
         self.set_xy(42, 9)
-        self.cell(0, 8, "Family Violence and Communication Safety Screen", ln=1)
-        self.set_font("Helvetica", "", 10)
+        self.cell(0, 7, "Trauma-Informed Safety and Functioning Lens", ln=1)
+        self.set_font("Helvetica", "", 9)
         self.set_text_color(*TEXT_MID)
         self.set_x(42)
-        self.cell(0, 5, f"{ORG_NAME} - {ORG_TAGLINE}", ln=1)
+        self.cell(0, 4, "Family Violence and Communication Safety Screen (TISFL)", ln=1)
         self.set_x(42)
-        self.cell(0, 5, f"{ORG_PHONE} - {ORG_EMAIL}", ln=1)
+        self.cell(0, 4, f"{ORG_NAME} - {ORG_TAGLINE}", ln=1)
+        self.set_x(42)
+        self.cell(0, 4, f"{ORG_PHONE} - {ORG_EMAIL}", ln=1)
         self.set_text_color(*TEXT_DARK)
         self.set_y(44)
 
@@ -228,6 +230,74 @@ def _render_texas_block(pdf: SafetyAssessmentPDF, block: str) -> None:
     pdf.body_text(block)
 
 
+def _render_interpretation_rules(pdf: SafetyAssessmentPDF, rules: List[str]) -> None:
+    """Print the two lens interpretation rules in a bordered box. These
+    must be surfaced wherever the lens's output is rendered."""
+    if not rules:
+        return
+    pdf.section_title("Two interpretation rules")
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_text_color(*INFO)
+    pdf.set_x(15)
+    pdf.cell(0, 5, "How to read this report", ln=1)
+    pdf.set_text_color(*TEXT_DARK)
+    pdf.set_font("Helvetica", "", 10)
+    for i, rule in enumerate(rules, start=1):
+        pdf.set_x(18)
+        pdf.cell(6, 6, f"{i}.")
+        pdf.multi_cell(0, 6, str(rule))
+    pdf.ln(1)
+
+
+def _render_three_findings(pdf: SafetyAssessmentPDF, lens: Dict[str, Any]) -> None:
+    """Render the three separate findings (Pattern, Trauma, Plan). Kept
+    intentionally separate so they aren't collapsed into a single
+    coparenting score."""
+    if not lens:
+        return
+    findings = lens.get("findings") or {}
+    order = ("family_violence_pattern", "trauma_impact", "parenting_plan_implications")
+    labels = {
+        "family_violence_pattern": ("Finding 1 - Family-Violence Pattern", DANGER),
+        "trauma_impact": ("Finding 2 - Trauma Impact (behavioural signals only)", WARN),
+        "parenting_plan_implications": ("Finding 3 - Parenting-Plan Implications", INFO),
+    }
+    pdf.section_title("Three findings")
+    for key in order:
+        block = findings.get(key)
+        if not block:
+            continue
+        title, colour = labels[key]
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.set_text_color(*colour)
+        pdf.set_x(15)
+        pdf.cell(0, 6, title, ln=1)
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(*TEXT_MID)
+        pdf.set_x(15)
+        pdf.multi_cell(0, 5, f"Core question: {block.get('core_question','')}")
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*TEXT_DARK)
+        pdf.set_x(15)
+        pdf.multi_cell(0, 5.5, str(block.get("headline") or ""))
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_x(15)
+        pdf.multi_cell(0, 5.2, str(block.get("summary") or ""))
+        if block.get("non_diagnostic_note"):
+            pdf.set_font("Helvetica", "I", 9)
+            pdf.set_text_color(*TEXT_MID)
+            pdf.set_x(15)
+            pdf.multi_cell(0, 4.8, str(block.get("non_diagnostic_note")))
+            pdf.set_text_color(*TEXT_DARK)
+        if block.get("arrangement_spectrum"):
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_text_color(*INFO)
+            pdf.set_x(15)
+            pdf.cell(0, 5, f"Recommended structure: {block.get('arrangement_spectrum')}", ln=1)
+            pdf.set_text_color(*TEXT_DARK)
+        pdf.ln(2)
+
+
 def build_safety_assessment_pdf(
     *,
     user_name: str,
@@ -256,6 +326,7 @@ def build_safety_assessment_pdf(
     """
     ex = set(excluded_sections or [])
     ai = ai_summaries or {}
+    lens = (result or {}).get("lens") or {}
     pdf = SafetyAssessmentPDF()
     pdf.set_auto_page_break(auto=True, margin=18)
     pdf.add_page()
@@ -266,6 +337,9 @@ def build_safety_assessment_pdf(
         pdf.section_title("Executive summary")
         _render_ai_summary(pdf, ai.get("overall") or "", heading="AI summary")
     _render_disclaimer(pdf)
+    # Trauma-Informed Safety and Functioning Lens layer.
+    _render_interpretation_rules(pdf, list(lens.get("interpretation_rules") or []))
+    _render_three_findings(pdf, lens)
     # Pathway and Texas resources are locked-on for safety reasons.
     _render_pathway(pdf, result, pathway_ai=ai.get("pathway") or "")
     if "section_1" not in ex:

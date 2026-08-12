@@ -15,6 +15,7 @@ import {
   Lightbulb,
   Send,
   RefreshCw,
+  Scale,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -183,10 +184,13 @@ function ProgressStrip({ answered, total, testid }) {
 }
 
 
-function ResultsCard({ assessment, onDownload, onEmail, onEmailMediator, onRegenerate, regenerating, isAdmin, sending }) {
+function ResultsCard({ assessment, onDownload, onDownloadCourt, onEmail, onEmailMediator, onRegenerate, regenerating, downloadingCourt, isAdmin, sending }) {
   const result = assessment?.result || {};
   const tone = TONE_STYLES[result.pathway_tone] || TONE_STYLES.info;
   const level = result.level || 4;
+  const lens = result.lens || null;
+  const findings = lens?.findings || null;
+  const rules = lens?.interpretation_rules || [];
   return (
     <div
       className={`rounded-3xl border-2 ${tone.card} bg-white shadow-sm overflow-hidden`}
@@ -197,10 +201,69 @@ function ResultsCard({ assessment, onDownload, onEmail, onEmailMediator, onRegen
         <div className="text-[11px] uppercase tracking-[0.18em] opacity-90">{result.pathway_tone}</div>
       </div>
       <div className="p-6 sm:p-8">
+        <div className="text-[10px] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-1.5">
+          Trauma-Informed Safety and Functioning Lens · TISFL
+        </div>
         <h2 className="font-bold text-2xl sm:text-3xl text-[#1A1330] mb-3" data-testid="results-pathway-title">
           {result.pathway_title}
         </h2>
         <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed mb-6">{result.pathway_summary}</p>
+
+        {rules.length > 0 && (
+          <div
+            className="mb-6 rounded-2xl border border-[#3D1A78]/20 bg-[#F5F1FB] p-4 sm:p-5"
+            data-testid="results-interpretation-rules"
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+              Two interpretation rules
+            </div>
+            <ol className="list-decimal list-inside text-sm text-[#1A1330] space-y-1.5">
+              {rules.map((r, i) => (
+                <li key={`lens-rule-${i}`}>{r}</li>
+              ))}
+            </ol>
+          </div>
+        )}
+
+        {findings && (
+          <div className="mb-6 space-y-3" data-testid="results-three-findings">
+            <div className="text-[11px] uppercase tracking-[0.22em] text-[#857E9C] font-bold">
+              Three findings
+            </div>
+            {[
+              { key: "family_violence_pattern", accent: "border-l-[#9A3A23]", label: "text-[#9A3A23]" },
+              { key: "trauma_impact", accent: "border-l-[#B7791F]", label: "text-[#B7791F]" },
+              { key: "parenting_plan_implications", accent: "border-l-[#3D1A78]", label: "text-[#3D1A78]" },
+            ].map(({ key, accent, label }) => {
+              const f = findings[key];
+              if (!f) return null;
+              return (
+                <div
+                  key={key}
+                  className={`rounded-2xl bg-white border border-[#E5E0EE] border-l-4 ${accent} p-4 sm:p-5`}
+                  data-testid={`finding-${key.replace(/_/g, "-")}`}
+                >
+                  <div className={`text-[10px] uppercase tracking-[0.22em] font-bold ${label} mb-1`}>
+                    {f.title}
+                  </div>
+                  <div className="text-xs italic text-[#857E9C] mb-2">
+                    {f.core_question}
+                  </div>
+                  <div className="text-sm font-semibold text-[#1A1330] mb-1.5">{f.headline}</div>
+                  <p className="text-sm text-[#4B4567] leading-relaxed">{f.summary}</p>
+                  {f.non_diagnostic_note && (
+                    <p className="mt-2 text-xs italic text-[#857E9C]">{f.non_diagnostic_note}</p>
+                  )}
+                  {f.arrangement_spectrum && (
+                    <div className="mt-2 text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+                      Recommended structure: <span className="normal-case">{f.arrangement_spectrum}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="mb-6">
           <div className="text-[11px] uppercase tracking-[0.2em] text-[#857E9C] font-bold mb-3">
@@ -264,6 +327,17 @@ function ResultsCard({ assessment, onDownload, onEmail, onEmailMediator, onRegen
           >
             <Download size={14} />
             Download PDF
+          </button>
+          <button
+            type="button"
+            onClick={onDownloadCourt}
+            disabled={downloadingCourt}
+            data-testid="results-download-court-report"
+            title="TISFL Court Report — one finding per page, interpretation rules on page 1, signature block, safe to file. Does not include your raw Section 1 answers."
+            className="inline-flex items-center gap-2 rounded-full bg-[#1A1330] text-white px-5 py-2.5 text-sm font-semibold shadow-md hover:bg-[#3D1A78] transition-colors disabled:opacity-60"
+          >
+            <Scale size={14} />
+            {downloadingCourt ? "Preparing…" : "Download court report"}
           </button>
           <button
             type="button"
@@ -556,6 +630,21 @@ export default function SafetyAssessment() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  const [downloadingCourt, setDownloadingCourt] = useState(false);
+  const downloadCourtReport = () => {
+    if (!result) return;
+    setDownloadingCourt(true);
+    const url = `${API}/safety-assessment/${result.assessment_id}/court-report`;
+    // window.open is fine because auth is cookie-based (withCredentials).
+    // We toggle the button spinner briefly for feedback — no network wait
+    // is observable since the tab opens synchronously.
+    try {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } finally {
+      setTimeout(() => setDownloadingCourt(false), 1200);
+    }
+  };
+
   const emailMe = async () => {
     if (!result) return;
     setEmailing(true);
@@ -708,9 +797,13 @@ export default function SafetyAssessment() {
                 SA CoParents
               </div>
             </div>
-            <h1 className="font-bold text-3xl sm:text-4xl text-[#1A1330] tracking-tight mb-3">
-              Family Violence and Communication Safety Screen
+            <h1 className="font-bold text-3xl sm:text-4xl text-[#1A1330] tracking-tight mb-1">
+              Trauma-Informed Safety and Functioning Lens
             </h1>
+            <p className="text-sm text-[#4B4567] mb-3">
+              Family Violence and Communication Safety Screen
+              <span className="text-[#3D1A78] font-semibold"> · TISFL</span>
+            </p>
             <div className="mb-4">
               <ReviewerStatusChip />
             </div>
@@ -755,6 +848,46 @@ export default function SafetyAssessment() {
                 <Phone size={12} />
                 Call 800-799-7233 · National DV Hotline
               </a>
+            </div>
+
+            {/* Trauma-Informed Safety and Functioning Lens — procedural safeguards */}
+            <div
+              className="rounded-2xl border border-[#3D1A78]/20 bg-[#F5F1FB] p-5 sm:p-6 mb-6"
+              data-testid="tisfl-safeguards"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <ShieldAlert size={14} className="text-[#3D1A78]" />
+                <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                  Procedural safeguards · Trauma-Informed Lens
+                </div>
+              </div>
+              <ul className="text-sm text-[#1A1330] space-y-2">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-[#3D1A78]" />
+                  <span>You complete this <strong>separately</strong> from your co-parent. Your answers are private and are never shared with them unless you choose to.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-[#3D1A78]" />
+                  <span>You can <strong>pause any time</strong>. If a question raises a strong reaction, step away, breathe, and return when you&rsquo;re ready.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-[#3D1A78]" />
+                  <span>This tool <strong>does not diagnose</strong> and does not label either parent. It reflects behaviour and safety signals — not personality or worth.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-[#3D1A78]" />
+                  <span>Safety information stays walled off from the Compare view. Your co-parent only sees the parenting-plan implications, never your pattern or trauma details.</span>
+                </li>
+              </ul>
+              <div className="mt-4 rounded-xl border border-[#3D1A78]/20 bg-white p-3 text-xs text-[#4B4567] leading-relaxed">
+                <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1.5">
+                  Two interpretation rules
+                </div>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Trauma symptoms are not evidence that a parent is unreliable, unfit, or responsible for the violence.</li>
+                  <li>A history of trauma does not excuse coercion, intimidation, child maltreatment, or other harmful parenting behavior.</li>
+                </ol>
+              </div>
             </div>
 
             {/* 4-dimension clinical model — Safety is one of four separate lenses */}
@@ -967,6 +1100,8 @@ export default function SafetyAssessment() {
             <ResultsCard
               assessment={result}
               onDownload={downloadPdf}
+              onDownloadCourt={downloadCourtReport}
+              downloadingCourt={downloadingCourt}
               onEmail={emailMe}
               onEmailMediator={openMediatorDialog}
               onRegenerate={regenerateSummaries}
