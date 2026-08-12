@@ -321,7 +321,39 @@ function ResultsCard({ assessment, onDownload, onDownloadCourt, onEmail, onEmail
                   {f.non_diagnostic_note && (
                     <p className="mt-2 text-xs italic text-[#857E9C]">{f.non_diagnostic_note}</p>
                   )}
-                  {f.arrangement_spectrum && (
+                  {f.feasibility_tier && (
+                    <div
+                      className="mt-3 rounded-xl bg-white border border-[#3D1A78]/25 p-3"
+                      data-testid={`finding-feasibility-tier-${f.feasibility_tier.tier}`}
+                    >
+                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1">
+                        Coparenting Feasibility Spectrum · Tier {f.feasibility_tier.order} of 6
+                      </div>
+                      <div className="text-sm font-semibold text-[#1A1330]">
+                        {f.feasibility_tier.label}
+                      </div>
+                      <p className="text-xs text-[#4B4567] leading-relaxed mt-1">
+                        {f.feasibility_tier.narrative}
+                      </p>
+                      <div className="mt-2 text-[11px] uppercase tracking-[0.14em] text-[#857E9C]">
+                        Review point in {f.feasibility_tier.review_point_days} days
+                      </div>
+                      {Array.isArray(f.feasibility_tier.triggers) && f.feasibility_tier.triggers.length > 0 && (
+                        <div className="mt-2 text-[11px] text-[#4B4567]">
+                          <span className="font-bold uppercase tracking-[0.12em] text-[#9A3A23]">
+                            Escalated by:
+                          </span>{" "}
+                          {f.feasibility_tier.triggers.join(", ")}
+                        </div>
+                      )}
+                      {Array.isArray(f.feasibility_tier.caveats) && f.feasibility_tier.caveats.map((c, i) => (
+                        <p key={`tier-cav-${i}`} className="mt-2 text-xs italic text-[#4B4567]">
+                          {c}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  {f.arrangement_spectrum && !f.feasibility_tier && (
                     <div className="mt-2 text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
                       Recommended structure: <span className="normal-case">{f.arrangement_spectrum}</span>
                     </div>

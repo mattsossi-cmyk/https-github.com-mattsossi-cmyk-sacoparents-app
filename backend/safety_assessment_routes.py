@@ -483,9 +483,16 @@ def score_assessment(payload: AssessmentSubmit) -> Dict[str, Any]:
             "pattern_context": classify_pattern(pattern_ctx),
             "trauma_impact": analyse_trauma_impact(trauma_imp),
             "child_experience": analyse_child_experience(child_exp),
+            # Raw answers threaded through so the feasibility tier can
+            # inspect specific items (e.g. ce_q1 direct victimisation).
+            "child_experience_raw": child_exp,
         }
         result["extension_analysis"] = extensions
-        result["lens"] = build_findings(result, extensions=extensions)
+        result["lens"] = build_findings(
+            result,
+            extensions=extensions,
+            section_1_answers=payload.section_1 or {},
+        )
     except Exception:  # noqa: BLE001 - defensive: never fail scoring on lens issues
         pass
     return result

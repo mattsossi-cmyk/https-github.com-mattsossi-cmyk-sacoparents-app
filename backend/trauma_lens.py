@@ -200,7 +200,7 @@ _PLAN_BY_LEVEL: Dict[int, Dict[str, Any]] = {
 }
 
 
-def build_findings(result: Dict[str, Any], extensions: Dict[str, Any] | None = None) -> Dict[str, Any]:
+def build_findings(result: Dict[str, Any], extensions: Dict[str, Any] | None = None, section_1_answers: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """Attach the three-findings structure to a scoring result.
 
     Non-destructive — always returns a fresh dict with the extra
@@ -253,6 +253,29 @@ def build_findings(result: Dict[str, Any], extensions: Dict[str, Any] | None = N
             "confidential": False,
         },
     }
+
+    # ---- Phase 2: Coparenting Feasibility Spectrum on Finding 3 ----
+    # Derive the tier from level + section-1 gap items + Phase-3
+    # typology + Phase-5 child-experience. Attach to Finding 3 so the
+    # co-parent's Compare view (which sees Finding 3) gets the tier
+    # too — it's the ONE thing they need to know from this report.
+    try:
+        from feasibility_spectrum import recommend_tier
+        pat_ctx = (ext.get("pattern_context") or {}) if ext else {}
+        child_raw = (ext.get("child_experience_raw") or {}) if ext else {}
+        tier = recommend_tier(
+            level=level,
+            section_1=section_1_answers or {},
+            child_experience=child_raw,
+            pattern_typology=pat_ctx.get("type"),
+        )
+        findings["parenting_plan_implications"]["feasibility_tier"] = tier
+        # Override the arrangement_spectrum label with the tier's
+        # richer descriptor so callers reading the legacy field still
+        # get the improved language.
+        findings["parenting_plan_implications"]["arrangement_spectrum"] = tier["label"]
+    except Exception:  # noqa: BLE001
+        pass
 
     # ---- Phase 3: Pattern & Context enrichment for Finding 1 ----
     pattern_ctx = ext.get("pattern_context") or {}

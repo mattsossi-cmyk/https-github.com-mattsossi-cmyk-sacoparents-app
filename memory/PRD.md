@@ -1,6 +1,21 @@
 # SA CoParents — PRD
 
 
+- **Iteration 110 — Coparenting Feasibility Spectrum (Phase 2) (2026-08-12)**:
+  - New module `/app/backend/feasibility_spectrum.py` exposes `recommend_tier()` — a deterministic 6-tier ladder wired to Finding 3 of the Trauma-Informed Safety and Functioning Lens.
+  - **Tiers (most restrictive → least)**: `suspended_contact` → `supervised_contact` → `supervised_exchanges` → `parallel_parenting` → `structured_coparenting` → `cooperative_coparenting`. Each tier carries its own narrative, `structure_words`, order (1-6), and review-point cadence (30 / 60 / 90 / 180 / 180 / 365 days).
+  - **Explicit thresholds**:
+    * *Suspended contact* triggers: `ce_q1` (child directly harmed), `s1_q25` (distinct homicide threat), `s1_q13` (any strangulation).
+    * *Supervised contact* triggers: `s1_q19` (strangulation pattern), `s1_q14` (forced sexual activity), `s1_q2` (physical restraint/harm), `ce_q2` (children exposed).
+    * *Supervised exchanges* triggers: `s1_q4` (stalking), `s1_q22` (digital surveillance), `s1_q20` (firearms access), `s1_q26` (suicide threat), `s1_q11` (violence escalating).
+    * *Pattern-typology floors*: `coercive_controlling` → at least parallel; `violent_resistance` → at least parallel (shaped by the underlying coercive pattern the answering parent is being protected FROM, not by their defensive conduct — this is explicitly explained in the tier's caveat); `situational` / `separation_instigated` → structured; `unclear` → cooperative.
+    * Base-level baseline: level 4 → cooperative; level 3 → structured; level 2 → parallel; level 1 → supervised_contact.
+  - Wired into `trauma_lens.build_findings(section_1_answers=…)` so the submit endpoint threads Section-1 raw answers + typology + child_experience_raw into `recommend_tier()`, and the resulting `feasibility_tier` block is attached to Finding 3 (which is the ONE finding the co-parent's Compare view can see).
+  - Court-report PDF renders the tier under Finding 3 with the tier label, structure words, review-point days, and caveats (violent-resistance note included when applicable).
+  - Frontend results card gets a new `data-testid="finding-feasibility-tier-{tier}"` card under Finding 3 with the tier label, "Tier N of 6" designation, narrative, escalation-triggers list, and caveats.
+  - Locked with 18 tests: `test_iter110_feasibility_spectrum.py` (13 pure-function tests) + `test_iter110b_feasibility_http.py` (5 HTTP integration tests).
+
+
 - **Iteration 109 — Universal self-reflection disclaimer (2026-08-12)**:
   - Added a shared constant `trauma_lens.SELF_REFLECTION_DISCLAIMER` with the exact language: *"This assessment is a guided self-reflection and preparation resource. It is not a clinical, forensic, legal, or professional evaluation. Its results are intended to help you identify concerns, organize your thinking, and prepare questions for an appropriate professional."*
   - Surfaced this disclaimer prominently on: (a) the Safety Assessment intake page as a purple call-out above the safety notice, (b) the top of the results card via `data-testid="results-self-reflection-disclaimer"`, (c) the standard Safety Assessment PDF's "Important — read this first" section, (d) the Court Report cover's "Limits of use" (now leads with this framing), (e) the Mediation-Readiness disclaimer.

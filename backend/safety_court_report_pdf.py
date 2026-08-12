@@ -155,23 +155,28 @@ def _render_finding_page(
     _title(pdf, title, colour=colour)
     pdf.set_font("Helvetica", "I", 10)
     pdf.set_text_color(*TEXT_MID)
-    pdf.multi_cell(0, 5.5, f"Core question: {core_question}")
+    pdf.set_x(15)
+    pdf.multi_cell(180, 5.5, f"Core question: {core_question}")
     pdf.set_text_color(*TEXT_DARK)
     pdf.ln(1)
     pdf.set_font("Helvetica", "B", 12)
-    pdf.multi_cell(0, 6, headline)
+    pdf.set_x(15)
+    pdf.multi_cell(180, 6, headline)
     pdf.ln(1)
     pdf.set_font("Helvetica", "", 11)
-    pdf.multi_cell(0, 6, summary)
+    pdf.set_x(15)
+    pdf.multi_cell(180, 6, summary)
     pdf.ln(1)
     for line in extra_lines or []:
         pdf.set_font("Helvetica", "I", 10)
         pdf.set_text_color(*TEXT_MID)
-        pdf.multi_cell(0, 5.5, line)
+        pdf.set_x(15)
+        pdf.multi_cell(180, 5.5, line)
         pdf.set_text_color(*TEXT_DARK)
     pdf.ln(3)
     pdf.set_font("Helvetica", "B", 10)
     pdf.set_text_color(*TEXT_MID)
+    pdf.set_x(15)
     pdf.cell(0, 6, f"Finding {number} of 3.", ln=1)
     pdf.set_text_color(*TEXT_DARK)
 
@@ -296,6 +301,18 @@ def build_court_report_pdf(
                 extras.append(
                     "A safe, consistent protective adult was reported — a resilience factor to build on in the parenting plan."
                 )
+        # Phase 2 feasibility tier on Finding 3.
+        tier = block.get("feasibility_tier")
+        if tier:
+            extras.append(
+                f"Coparenting Feasibility Spectrum tier: {tier.get('label')} "
+                f"({tier.get('structure_words')})."
+            )
+            extras.append(
+                f"Suggested review point: {tier.get('review_point_days')} days."
+            )
+            for cav in (tier.get("caveats") or []):
+                extras.append(cav)
         if block.get("non_diagnostic_note"):
             extras.append(block["non_diagnostic_note"])
         if block.get("arrangement_spectrum"):
