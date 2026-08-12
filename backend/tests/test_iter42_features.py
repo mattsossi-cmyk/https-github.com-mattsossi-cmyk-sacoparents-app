@@ -142,7 +142,7 @@ def _post_safety(client, level=4):
     sections with a neutral baseline and only override the items that
     drive the target level.
     """
-    s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
     s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
     s2["s2_q8"] = "no"  # s2_q8 is inverted — "no" is the safe answer
     if level == 4:

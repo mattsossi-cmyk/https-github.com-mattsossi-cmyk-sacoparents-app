@@ -165,10 +165,11 @@ def _render_meta(pdf: SafetyAssessmentPDF, user_name: str, generated_at: str) ->
 
 
 def _render_disclaimer(pdf: SafetyAssessmentPDF) -> None:
-    pdf.section_title("Important safety notice")
+    from trauma_lens import SELF_REFLECTION_DISCLAIMER
+    pdf.section_title("Important — read this first")
+    pdf.small_muted(SELF_REFLECTION_DISCLAIMER)
     pdf.small_muted(
-        "This assessment is not a diagnosis, legal advice, or a substitute for a family "
-        "violence evaluation. If there is immediate danger, call 911. If communication with "
+        "In addition: if there is immediate danger, call 911. If communication with "
         "the other parent creates fear, danger, or retaliation, direct communication may not "
         "be appropriate."
     )

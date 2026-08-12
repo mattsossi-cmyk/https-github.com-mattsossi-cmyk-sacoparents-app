@@ -207,6 +207,19 @@ function ResultsCard({ assessment, onDownload, onDownloadCourt, onEmail, onEmail
         <h2 className="font-bold text-2xl sm:text-3xl text-[#1A1330] mb-3" data-testid="results-pathway-title">
           {result.pathway_title}
         </h2>
+        <div
+          className="rounded-2xl bg-[#F5F1FB] border border-[#3D1A78]/20 p-3.5 mb-4 text-xs text-[#1A1330] leading-relaxed"
+          data-testid="results-self-reflection-disclaimer"
+        >
+          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mr-1">
+            Read this first ·
+          </span>
+          This assessment is a guided self-reflection and preparation
+          resource. It is not a clinical, forensic, legal, or professional
+          evaluation. Its results are intended to help you identify
+          concerns, organize your thinking, and prepare questions for an
+          appropriate professional.
+        </div>
         <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed mb-6">{result.pathway_summary}</p>
 
         {rules.length > 0 && (
@@ -234,6 +247,7 @@ function ResultsCard({ assessment, onDownload, onDownloadCourt, onEmail, onEmail
               { key: "family_violence_pattern", accent: "border-l-[#9A3A23]", label: "text-[#9A3A23]" },
               { key: "trauma_impact", accent: "border-l-[#B7791F]", label: "text-[#B7791F]" },
               { key: "parenting_plan_implications", accent: "border-l-[#3D1A78]", label: "text-[#3D1A78]" },
+              { key: "child_experience", accent: "border-l-[#9A3A23]", label: "text-[#9A3A23]" },
             ].map(({ key, accent, label }) => {
               const f = findings[key];
               if (!f) return null;
@@ -251,6 +265,59 @@ function ResultsCard({ assessment, onDownload, onDownloadCourt, onEmail, onEmail
                   </div>
                   <div className="text-sm font-semibold text-[#1A1330] mb-1.5">{f.headline}</div>
                   <p className="text-sm text-[#4B4567] leading-relaxed">{f.summary}</p>
+                  {f.pattern_typology && (
+                    <div className="mt-3 rounded-xl bg-[#FDF3F0] border border-[#9A3A23]/20 p-3">
+                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#9A3A23] mb-1">
+                        Pattern typology · {f.pattern_typology.label}
+                      </div>
+                      <p className="text-xs text-[#1A1330] leading-relaxed">{f.pattern_typology.framing}</p>
+                    </div>
+                  )}
+                  {f.domain_signals && (
+                    <div className="mt-3 rounded-xl bg-[#FEF5EA] border border-[#B7791F]/20 p-3">
+                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#B7791F] mb-2">
+                        Behavioural signals · overall {f.domain_signals.overall_intensity}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        {Object.entries(f.domain_signals.domains || {}).map(([k, d]) => (
+                          <div key={k} className="flex items-center justify-between text-xs">
+                            <span className="text-[#4B4567]">{d.label}</span>
+                            <span
+                              className={`text-[10px] uppercase tracking-[0.14em] font-bold px-2 py-0.5 rounded-full ${
+                                d.intensity === "high"
+                                  ? "bg-[#9A3A23]/15 text-[#9A3A23]"
+                                  : d.intensity === "moderate"
+                                  ? "bg-[#B7791F]/15 text-[#B7791F]"
+                                  : "bg-[#EFE9F9] text-[#4B4567]"
+                              }`}
+                            >
+                              {d.intensity}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {f.concern_domains && f.concern_domains.length > 0 && (
+                    <div className="mt-3 rounded-xl bg-[#FDF3F0] border border-[#9A3A23]/20 p-3">
+                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#9A3A23] mb-1">
+                        Reported concern areas
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {f.concern_domains.map((d) => (
+                          <span key={d} className="text-[11px] font-semibold text-[#9A3A23] bg-white border border-[#9A3A23]/20 rounded-full px-2 py-0.5">
+                            {d}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {f.protective_relationship_present && (
+                    <div className="mt-3 rounded-xl bg-[#E9F5EE] border border-[#2E7D5E]/25 p-3 text-xs text-[#1F5540]">
+                      <span className="font-bold uppercase tracking-[0.16em]">Resilience · </span>
+                      A safe, consistent protective adult was reported. Build this into the parenting plan.
+                    </div>
+                  )}
                   {f.non_diagnostic_note && (
                     <p className="mt-2 text-xs italic text-[#857E9C]">{f.non_diagnostic_note}</p>
                   )}
@@ -516,6 +583,85 @@ function MediatorEmailDialog({ open, onClose, onSend, sending }) {
 }
 
 
+function ExtensionStep({
+  testid,
+  title,
+  subtitle,
+  leadNote,
+  questions,
+  answers,
+  setAnswers,
+  onBack,
+  onContinue,
+  onContinueLabel = "Continue",
+  onSkip,
+  submitting = false,
+}) {
+  const total = (questions || []).length;
+  const answered = (questions || []).filter((q) => !!answers[q.id]).length;
+  return (
+    <div className="fade-up" data-testid={testid}>
+      <div className="mb-4">
+        <div className="text-[10px] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-1">
+          Optional depth · Trauma-Informed Lens
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#1A1330] mb-1">{title}</h2>
+        <p className="text-sm text-[#4B4567] leading-relaxed">{subtitle}</p>
+      </div>
+      <div className="mb-5 rounded-2xl border border-[#3D1A78]/20 bg-[#F5F1FB] p-3.5 text-xs text-[#3D1A78]">
+        <span className="font-semibold uppercase tracking-[0.16em]">Note · </span>
+        {leadNote}
+      </div>
+      <ProgressStrip answered={answered} total={total} testid={`${testid}-progress`} />
+      <div className="space-y-3 mb-8">
+        {(questions || []).map((q, idx) => (
+          <QuestionRow
+            key={q.id}
+            idx={idx}
+            question={q}
+            value={answers[q.id]}
+            onChange={(v) => setAnswers((prev) => ({ ...prev, [q.id]: v }))}
+            highConcern={false}
+            missing={false}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-3 justify-between">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E0EE] text-[#4B4567] px-5 py-2.5 text-sm font-semibold hover:bg-[#F8F7FC]"
+          data-testid={`${testid}-back`}
+        >
+          <ArrowLeft size={14} /> Back
+        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={onSkip}
+            disabled={submitting}
+            className="inline-flex items-center gap-2 rounded-full bg-white border border-[#3D1A78]/30 text-[#3D1A78] px-5 py-2.5 text-sm font-semibold hover:bg-[#F5F1FB] disabled:opacity-50"
+            data-testid={`${testid}-skip`}
+          >
+            Skip this section
+          </button>
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={submitting}
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-6 py-2.5 text-sm font-semibold shadow-md disabled:opacity-50"
+            data-testid={`${testid}-continue`}
+          >
+            {submitting ? "Scoring…" : onContinueLabel}
+            <ArrowRight size={14} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 export default function SafetyAssessment() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -523,6 +669,14 @@ export default function SafetyAssessment() {
   const [step, setStep] = useState(0); // 0 intro, 1 section 1, 2 section 2, 3 results
   const [answersS1, setAnswersS1] = useState({});
   const [answersS2, setAnswersS2] = useState({});
+  const [answersPattern, setAnswersPattern] = useState({});
+  const [answersTrauma, setAnswersTrauma] = useState({});
+  const [answersChild, setAnswersChild] = useState({});
+  const [skippedExt, setSkippedExt] = useState({
+    pattern_context: false,
+    trauma_impact: false,
+    child_experience: false,
+  });
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [showHighConcern, setShowHighConcern] = useState(false);
@@ -583,10 +737,13 @@ export default function SafetyAssessment() {
       const r = await api.post("/safety-assessment", {
         section_1: answersS1,
         section_2: answersS2,
+        pattern_context: skippedExt.pattern_context ? {} : answersPattern,
+        trauma_impact: skippedExt.trauma_impact ? {} : answersTrauma,
+        child_experience: skippedExt.child_experience ? {} : answersChild,
       });
       setResult(r.data);
       setMissingIds({ section_1: [], section_2: [] });
-      setStep(3);
+      setStep(6);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       logError("Submit failed:", err);
@@ -824,6 +981,26 @@ export default function SafetyAssessment() {
               high-risk situation.
             </p>
 
+            <div
+              className="rounded-2xl bg-[#F5F1FB] border border-[#3D1A78]/25 text-[#1A1330] p-4 sm:p-5 mb-4"
+              data-testid="self-reflection-disclaimer"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <FileText size={14} className="text-[#3D1A78]" />
+                <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+                  What this assessment is (and is not)
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed">
+                This assessment is a <strong>guided self-reflection and
+                preparation resource</strong>. It is <strong>not a clinical,
+                forensic, legal, or professional evaluation</strong>. Its
+                results are intended to help you identify concerns, organize
+                your thinking, and prepare questions for an appropriate
+                professional.
+              </p>
+            </div>
+
             <div className="rounded-2xl bg-[#FCE3DC] border border-[#9A3A23]/25 text-[#9A3A23] p-4 sm:p-5 mb-6">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle size={14} />
@@ -832,10 +1009,8 @@ export default function SafetyAssessment() {
                 </div>
               </div>
               <p className="text-sm leading-relaxed">
-                This screen is not a diagnosis, legal advice, or a substitute
-                for a family-violence evaluation. It does not decide
-                mediation, visitation, custody, or protective orders.
-                If there is immediate danger, call{" "}
+                In addition to the disclaimer above: if there is immediate
+                danger, call{" "}
                 <a href="tel:911" className="underline font-bold">911</a>.
                 If communication with the other parent creates fear, danger,
                 or retaliation, direct communication may not be appropriate.
@@ -1078,21 +1253,100 @@ export default function SafetyAssessment() {
               >
                 <ArrowLeft size={14} /> Back
               </button>
-              <button
-                type="button"
-                onClick={submit}
-                disabled={!allAnsweredS2 || submitting}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-6 py-2.5 text-sm font-semibold shadow-md disabled:opacity-50"
-                data-testid="s2-submit-button"
-              >
-                {submitting ? "Scoring…" : "See my pathway"}
-                <ArrowRight size={14} />
-              </button>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSkippedExt({
+                      pattern_context: true,
+                      trauma_impact: true,
+                      child_experience: true,
+                    });
+                    submit();
+                  }}
+                  disabled={!allAnsweredS2 || submitting}
+                  className="inline-flex items-center gap-2 rounded-full bg-white border border-[#3D1A78]/30 text-[#3D1A78] px-5 py-2.5 text-sm font-semibold hover:bg-[#F5F1FB] disabled:opacity-50"
+                  data-testid="s2-skip-depth-button"
+                >
+                  See my pathway now (skip optional depth)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep(3);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  disabled={!allAnsweredS2}
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-6 py-2.5 text-sm font-semibold shadow-md disabled:opacity-50"
+                  data-testid="s2-continue-button"
+                >
+                  {submitting ? "Scoring…" : "Continue to optional depth"}
+                  <ArrowRight size={14} />
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {step === 3 && result && (
+        {step === 3 && (
+          <ExtensionStep
+            testid="assessment-section-pattern"
+            title="Pattern & Context (optional)"
+            subtitle="These items help distinguish coercive-control from situational or separation-instigated conflict. This is optional — skip freely if any question is too much."
+            leadNote="Trauma-informed pacing: skip any question or the whole section. Nothing is required here."
+            questions={questions.pattern_context || []}
+            answers={answersPattern}
+            setAnswers={setAnswersPattern}
+            onBack={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            onContinue={() => { setStep(4); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            onSkip={() => {
+              setSkippedExt((p) => ({ ...p, pattern_context: true }));
+              setStep(4);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        )}
+
+        {step === 4 && (
+          <ExtensionStep
+            testid="assessment-section-trauma"
+            title="Trauma Impact (optional, non-diagnostic)"
+            subtitle="These items describe common behavioural responses to danger and stress. They do not diagnose anything. They help Finding 2 reflect your reality rather than assume it."
+            leadNote="If any question triggers a strong response, step away, breathe, and come back — or skip the whole section."
+            questions={questions.trauma_impact || []}
+            answers={answersTrauma}
+            setAnswers={setAnswersTrauma}
+            onBack={() => { setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            onContinue={() => { setStep(5); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            onSkip={() => {
+              setSkippedExt((p) => ({ ...p, trauma_impact: true }));
+              setStep(5);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        )}
+
+        {step === 5 && (
+          <ExtensionStep
+            testid="assessment-section-child"
+            title="Child Experience — your account (optional)"
+            subtitle="Your account of how the children are experiencing all of this. This tool never asks the child directly. A qualified child specialist should conduct any direct assessment of the child."
+            leadNote="Skip freely. You know your child better than any form. This section produces Finding 4 when completed."
+            questions={questions.child_experience || []}
+            answers={answersChild}
+            setAnswers={setAnswersChild}
+            onBack={() => { setStep(4); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            onContinue={submit}
+            onContinueLabel="See my pathway"
+            onSkip={() => {
+              setSkippedExt((p) => ({ ...p, child_experience: true }));
+              submit();
+            }}
+            submitting={submitting}
+          />
+        )}
+
+        {step === 6 && result && (
           <div className="fade-up" data-testid="assessment-results">
             <div className="mb-5 text-xs uppercase tracking-[0.2em] text-[#857E9C]">
               Your result · {new Date(result.created_at).toLocaleDateString()}
@@ -1322,6 +1576,14 @@ export default function SafetyAssessment() {
                 onClick={() => {
                   setAnswersS1({});
                   setAnswersS2({});
+                  setAnswersPattern({});
+                  setAnswersTrauma({});
+                  setAnswersChild({});
+                  setSkippedExt({
+                    pattern_context: false,
+                    trauma_impact: false,
+                    child_experience: false,
+                  });
                   setResult(null);
                   flashedRef.current = new Set();
                   setStep(0);

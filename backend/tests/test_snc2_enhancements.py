@@ -98,7 +98,7 @@ def _submit_safety(sess: requests.Session, section_1: dict, section_2: dict | No
     # Autofill defaults so the server-side "all questions answered" guard
     # (iter 104) passes — callers only need override the items that drive
     # the target level.
-    full_s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    full_s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
     full_s1.update(section_1 or {})
     full_s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
     full_s2["s2_q8"] = "no"
@@ -122,7 +122,7 @@ def _safety_level_2(sess):
 
 def _safety_level_4(sess):
     # All no + section 2 safe answers -> level 4
-    s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
     s2 = {f"s2_q{i}": "yes" for i in range(1, 8)}
     s2["s2_q8"] = "no"
     return _submit_safety(sess, s1, s2)

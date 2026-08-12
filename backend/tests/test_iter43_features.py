@@ -54,7 +54,7 @@ def p2_token():
 
 
 def _post_safety(client, level=4):
-    s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
     s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
     s2["s2_q8"] = "no"
     if level == 4:

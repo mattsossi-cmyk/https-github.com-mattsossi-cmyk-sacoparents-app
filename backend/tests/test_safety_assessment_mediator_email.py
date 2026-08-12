@@ -71,7 +71,7 @@ def guest_session():
 def _submit_level4(session):
     """Submit a Level-4 assessment (all safe) and return the assessment_id."""
     payload = {
-        "section_1": {f"s1_q{i}": "no" for i in range(1, 19)},
+        "section_1": {f"s1_q{i}": "no" for i in range(1, 29)},
         "section_2": {
             "s2_q1": "yes", "s2_q2": "yes", "s2_q3": "yes",
             "s2_q4": "yes", "s2_q5": "yes", "s2_q6": "yes",
@@ -107,7 +107,7 @@ class TestScoringRegressions:
     reaches the wire."""
     def test_single_coercive_s1_q3_yes_is_level_2(self, guest_session):
         s, _ = guest_session
-        s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+        s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
         s1["s1_q3"] = "yes"
         s2 = {
             "s2_q1": "yes", "s2_q2": "yes", "s2_q3": "yes",
@@ -123,7 +123,7 @@ class TestScoringRegressions:
 
     def test_single_coercive_s1_q7_yes_is_level_2(self, guest_session):
         s, _ = guest_session
-        s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+        s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
         s1["s1_q7"] = "yes"
         s2 = {
             "s2_q1": "yes", "s2_q2": "yes", "s2_q3": "yes",
@@ -139,7 +139,7 @@ class TestScoringRegressions:
 
     def test_high_concern_still_level_1(self, guest_session):
         s, _ = guest_session
-        s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+        s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
         s1["s1_q1"] = "yes"
         s2 = {
             "s2_q1": "yes", "s2_q2": "yes", "s2_q3": "yes",
@@ -154,7 +154,7 @@ class TestScoringRegressions:
     def test_all_safe_is_level_4(self, guest_session):
         s, _ = guest_session
         r = s.post(f"{BASE_URL}/api/safety-assessment", json={
-            "section_1": {f"s1_q{i}": "no" for i in range(1, 19)},
+            "section_1": {f"s1_q{i}": "no" for i in range(1, 29)},
             "section_2": {
                 "s2_q1": "yes", "s2_q2": "yes", "s2_q3": "yes",
                 "s2_q4": "yes", "s2_q5": "yes", "s2_q6": "yes",
@@ -171,7 +171,7 @@ class TestScoringRegressions:
               "s2_q4": "yes", "s2_q5": "yes", "s2_q6": "yes",
               "s2_q7": "yes", "s2_q8": "no"}
         r = s.post(f"{BASE_URL}/api/safety-assessment", json={
-            "section_1": {f"s1_q{i}": "no" for i in range(1, 19)},
+            "section_1": {f"s1_q{i}": "no" for i in range(1, 29)},
             "section_2": s2,
         })
         assert r.status_code == 200

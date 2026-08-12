@@ -143,6 +143,115 @@ SECTION_1_QUESTIONS = [
         "high_concern": True,
         "da_domain": True,
     },
+    # ---- Structured gap-closure items (added iter 106) ----
+    # These items address gaps identified in the safety screen:
+    # strangulation pattern, firearms access (specific), sexual coercion
+    # (non-force), digital surveillance, financial abuse, substance use
+    # during incidents, distinct homicide/suicide threats, and
+    # protective-order status. Wording is clinical, structured, and
+    # designed to be filed with a court where relevant.
+    {
+        "id": "s1_q19",
+        "text": (
+            "Has the other parent choked, strangled, or restricted your "
+            "breathing on more than one occasion — even briefly? "
+            "(Any strangulation is a well-established predictor of severe harm.)"
+        ),
+        "high_concern": True,
+        "da_domain": True,
+        "gap_domain": "strangulation",
+    },
+    {
+        "id": "s1_q20",
+        "text": (
+            "Does the other parent own, keep at home, or have easy access "
+            "to firearms — regardless of whether they have threatened you with one?"
+        ),
+        "high_concern": True,
+        "da_domain": True,
+        "gap_domain": "firearms",
+    },
+    {
+        "id": "s1_q21",
+        "text": (
+            "Have you been pressured, manipulated, or coerced into sexual "
+            "activity you did not want, without physical force being used?"
+        ),
+        "high_concern": True,
+        "da_domain": True,
+        "gap_domain": "sexual_coercion",
+    },
+    {
+        "id": "s1_q22",
+        "text": (
+            "Have you found (or reasonably suspect) tracking apps, spyware, "
+            "hidden cameras, GPS trackers, or account impersonation used to "
+            "monitor your movements or communications?"
+        ),
+        "high_concern": True,
+        "gap_domain": "digital_surveillance",
+    },
+    {
+        "id": "s1_q23",
+        "text": (
+            "Has the other parent deliberately sabotaged your income, run up "
+            "debt in your name, hidden marital assets, or interfered with your "
+            "employment, education, or benefits access?"
+        ),
+        "high_concern": True,
+        "gap_domain": "financial_abuse",
+    },
+    {
+        "id": "s1_q24",
+        "text": (
+            "Has the other parent been under the influence of alcohol or drugs "
+            "during any of the violent, threatening, or coercive incidents "
+            "you have experienced?"
+        ),
+        "high_concern": True,
+        "da_domain": True,
+        "gap_domain": "substance_during_incidents",
+    },
+    {
+        "id": "s1_q25",
+        "text": (
+            "Has the other parent specifically threatened to kill you, the "
+            "children, or someone else — separate from any other threats they may have made?"
+        ),
+        "high_concern": True,
+        "da_domain": True,
+        "gap_domain": "homicide_threat",
+    },
+    {
+        "id": "s1_q26",
+        "text": (
+            "Has the other parent specifically threatened to kill themselves "
+            "— particularly in connection with you leaving, ending the "
+            "relationship, or the children being separated from them?"
+        ),
+        "high_concern": True,
+        "da_domain": True,
+        "gap_domain": "suicide_threat",
+    },
+    {
+        "id": "s1_q27",
+        "text": (
+            "Is there currently a protective order, restraining order, or "
+            "intervention order in force involving you and the other parent?"
+        ),
+        "high_concern": False,
+        "gap_domain": "protective_order_current",
+    },
+    {
+        "id": "s1_q28",
+        "text": (
+            "Have you ever been advised by police, a domestic-violence service, "
+            "a lawyer, or a court to seek a protective order — whether or not "
+            "you followed through?"
+        ),
+        "high_concern": False,
+        "gap_domain": "protective_order_advised",
+    },
 ]
 
 SECTION_2_QUESTIONS = [
@@ -271,6 +380,12 @@ AnswerYNU = str  # "yes" | "no" | "unsure" — validated in scoring
 class AssessmentSubmit(BaseModel):
     section_1: Dict[str, AnswerYNU] = Field(default_factory=dict)
     section_2: Dict[str, AnswerYNU] = Field(default_factory=dict)
+    # Phase 3/4/5 optional sections. All three may be omitted or
+    # partially filled — the classifier treats missing as low-signal
+    # rather than reporting.
+    pattern_context: Dict[str, str] = Field(default_factory=dict)
+    trauma_impact: Dict[str, str] = Field(default_factory=dict)
+    child_experience: Dict[str, str] = Field(default_factory=dict)
 
 
 class MediatorEmailBody(BaseModel):
@@ -356,7 +471,21 @@ def score_assessment(payload: AssessmentSubmit) -> Dict[str, Any]:
     # continue to work unchanged.
     try:
         from trauma_lens import build_findings
-        result["lens"] = build_findings(result)
+        from lens_extensions import (
+            classify_pattern,
+            analyse_trauma_impact,
+            analyse_child_experience,
+        )
+        pattern_ctx = getattr(payload, "pattern_context", None) or {}
+        trauma_imp = getattr(payload, "trauma_impact", None) or {}
+        child_exp = getattr(payload, "child_experience", None) or {}
+        extensions = {
+            "pattern_context": classify_pattern(pattern_ctx),
+            "trauma_impact": analyse_trauma_impact(trauma_imp),
+            "child_experience": analyse_child_experience(child_exp),
+        }
+        result["extension_analysis"] = extensions
+        result["lens"] = build_findings(result, extensions=extensions)
     except Exception:  # noqa: BLE001 - defensive: never fail scoring on lens issues
         pass
     return result
@@ -410,12 +539,18 @@ def _validate_all_answered(body: "AssessmentSubmit") -> None:
 @router.get("/questions")
 async def get_questions():
     """Public — used by the frontend to render the wizard."""
+    from lens_extensions import all_extension_sections
+    ext = all_extension_sections()
     return {
         "section_1": SECTION_1_QUESTIONS,
         "section_2": SECTION_2_QUESTIONS,
         "high_concern_ids": sorted(HIGH_CONCERN_IDS),
         "texas_resource_block": TEXAS_RESOURCE_BLOCK,
         "pathways": PATHWAYS,
+        # Phase 3/4/5 optional sections.
+        "pattern_context": ext["pattern_context"],
+        "trauma_impact": ext["trauma_impact"],
+        "child_experience": ext["child_experience"],
     }
 
 
@@ -437,6 +572,9 @@ async def submit_assessment(
         "is_guest": bool(getattr(current, "is_guest", False)),
         "section_1": body.section_1 or {},
         "section_2": body.section_2 or {},
+        "pattern_context": body.pattern_context or {},
+        "trauma_impact": body.trauma_impact or {},
+        "child_experience": body.child_experience or {},
         "result": result,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }

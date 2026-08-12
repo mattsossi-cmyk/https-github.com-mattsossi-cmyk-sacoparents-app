@@ -89,7 +89,7 @@ def _seed_assessment(sess: requests.Session, pathways=("medical",)):
 
 def _submit_safety_level_1(sess: requests.Session) -> str:
     """Submit a Safety Assessment that scores level 1 for the session user."""
-    section_1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    section_1 = {f"s1_q{i}": "no" for i in range(1, 29)}
     section_1["s1_q1"] = "yes"  # high-concern hit → level 1
     section_2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
     section_2["s2_q8"] = "no"

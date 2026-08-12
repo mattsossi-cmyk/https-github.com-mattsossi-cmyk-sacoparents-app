@@ -67,7 +67,7 @@ def _login() -> str | None:
 
 
 def _submit(headers: dict, s1_overrides: dict | None = None) -> dict:
-    s1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+    s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
     if s1_overrides:
         s1.update(s1_overrides)
     s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}

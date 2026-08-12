@@ -1,6 +1,34 @@
 # SA CoParents — PRD
 
 
+- **Iteration 109 — Universal self-reflection disclaimer (2026-08-12)**:
+  - Added a shared constant `trauma_lens.SELF_REFLECTION_DISCLAIMER` with the exact language: *"This assessment is a guided self-reflection and preparation resource. It is not a clinical, forensic, legal, or professional evaluation. Its results are intended to help you identify concerns, organize your thinking, and prepare questions for an appropriate professional."*
+  - Surfaced this disclaimer prominently on: (a) the Safety Assessment intake page as a purple call-out above the safety notice, (b) the top of the results card via `data-testid="results-self-reflection-disclaimer"`, (c) the standard Safety Assessment PDF's "Important — read this first" section, (d) the Court Report cover's "Limits of use" (now leads with this framing), (e) the Mediation-Readiness disclaimer.
+  - Locked with `test_iter109_universal_disclaimer.py` — 6 tests keep the language identical across every surface.
+
+
+- **Iteration 108 — Mediation-Readiness profile-first output (2026-08-12)**:
+  - Refactored `readiness_scoring.compute_readiness()` to lead with a per-domain **profile** (level `emerging`/`developing`/`solid` + headline + narrative + strengths + growth-areas + specific preparation recommendations) rather than a single overall number. Legacy `overall`/`label`/`dimensions` fields preserved unchanged for backwards compatibility.
+  - Added `readiness_disclaimer` at the top of the payload naming the *completeness vs readiness* distinction, and `caveats` that fire when the profile could mislead (safety concerns present, or polished-communication + high-conflict combo — the exact failure mode the user flagged).
+  - Trust-domain recommendations at the `emerging` level explicitly route the parent to Finding 3 of the Trauma-Informed Safety and Functioning Lens rather than joint mediation.
+  - `ReadinessDashboard.jsx` rebuilt to lead with the four-domain descriptive profile (level pill + strengths + growth areas + numbered preparation recommendations); the overall number is now a secondary indicator card below the profile.
+  - Locked with `test_iter108_readiness_profile.py` — 6 tests including the polished-communication-plus-high-conflict-load case.
+
+
+- **Iteration 107 — Phase 3/4/5 lens extensions HTTP integration (2026-08-12)**:
+  - `POST /api/safety-assessment` accepts optional `pattern_context`, `trauma_impact`, `child_experience` sections. When >=3 items are answered in a section: Finding 1 gets `pattern_typology` (coercive_controlling / violent_resistance / situational / separation_instigated / unclear), Finding 2 gets per-domain `domain_signals` (hypervigilance / avoidance / dissociation / sleep / fear_communication), and a NEW Finding 4 (`child_experience`) appears with concern-domains and a protective-relationships resilience flag.
+  - `GET /api/safety-assessment/questions` exposes all three extension banks.
+  - Locked with `test_iter107_lens_extensions_http.py` — 7 tests covering empty-is-valid, coercive typology, violent-resistance typology, trauma domain aggregation, Finding 4 emergence with high-concern flag, and the below-threshold no-Finding-4 case.
+
+
+- **Iteration 106 — Safety-screen gap closure (2026-08-12)**:
+  - Added 10 structured items to Section 1 (`s1_q19` through `s1_q28`) closing gaps the user identified: strangulation pattern (`s1_q19`), firearms access (`s1_q20`), sexual coercion — non-force (`s1_q21`), digital surveillance / spyware / GPS trackers (`s1_q22`), financial abuse — sabotage / debt in name / employment interference (`s1_q23`), substance use *during* incidents (`s1_q24`), distinct homicide threat (`s1_q25`), distinct suicide threat (`s1_q26`), currently-in-force protective order (`s1_q27`), and history of being advised to seek a protective order (`s1_q28`).
+  - The 8 high-severity items carry `high_concern=True` and `da_domain=True` where appropriate — a yes on any of them escalates the score to level ≤ 2 (never soft-pedalled). The 2 protective-order items are informational (do NOT shift the level by themselves so declining to pursue an order isn't punished by the score).
+  - Each new item carries a `gap_domain` tag for court-report audit trails.
+  - Locked with `test_iter106_safety_gap_closure.py` — 3 tests covering exposure via /questions, high-concern escalation for all 8 high-severity items, and informational-only behaviour of the protective-order items.
+  - Ported all downstream test helpers (`test_iter42-48`, `test_snc2_*`, `test_iter103`, `test_iter105`, `test_safety_assessment_mediator_email`) from `range(1, 19)` to `range(1, 29)`.
+
+
 - **Iteration 105 — Trauma-Informed Safety and Functioning Lens (TISFL) — Phase 1 (2026-08-12)**:
   - **Framework module** `/app/backend/trauma_lens.py` — defines `LENS_NAME`, two `INTERPRETATION_RULES`, five `PROCEDURAL_SAFEGUARDS`, and `build_findings(result)` which derives three separate findings from any scored assessment (level 1-4 aware). Never mutualises abuse. Never diagnoses. Level-1 pattern language uses serious-danger framing; level-2 uses coercive-control framing; level-4 explicitly says no pattern indicated at this time.
   - **Three findings** (rendered separately in the UI and PDFs so they aren't collapsed into one score): (1) Family-Violence Pattern — *confidential*, (2) Trauma Impact — *confidential*, non-diagnostic, (3) Parenting-Plan Implications — *shareable*, includes an arrangement spectrum (cooperative → structured → parallel → supervised). `redact_for_compare()` helper strips findings 1 & 2 so the co-parent's Compare view only ever sees Finding 3.

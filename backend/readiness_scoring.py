@@ -177,10 +177,19 @@ def _score_conflict(prep: Dict[str, Any]) -> Tuple[float, List[str]]:
 
 
 def compute_readiness(prep: Dict[str, Any]) -> Dict[str, Any]:
-    """Public entry point. Returns dimension scores + weighted overall.
+    """Public entry point. Returns a **profile-first** readiness view.
+
+    Historically this returned a single overall number. That risks
+    confusing *completeness* with *readiness* — a parent with polished
+    answers may score highly while lacking emotional regulation, or
+    while participating in a coercive relationship. The new shape leads
+    with a per-domain descriptive profile + concrete preparation
+    recommendations. The numerical score is preserved for backwards
+    compatibility but presented as a secondary indicator.
 
     Shape:
       {
+        # Legacy fields (unchanged for backwards compatibility) --------
         "overall": 72,
         "label": "Prepared for Mediation" | "Moderately Ready" | "Needs Support",
         "dimensions": {
@@ -189,7 +198,26 @@ def compute_readiness(prep: Dict[str, Any]) -> Dict[str, Any]:
           "child_alignment": {"score": 82, "reasons": [...]},
           "conflict":        {"score": 60, "reasons": [...]}
         },
-        "weights": {...}
+        "weights": {...},
+
+        # New profile-first fields ------------------------------------
+        "profile": {
+          "communication":   {level, headline, narrative,
+                              strengths[], growth_areas[],
+                              preparation_recommendations[]},
+          "trust":           { ... },
+          "child_alignment": { ... },
+          "conflict":        { ... }
+        },
+        "caveats": [str, ...],
+        "readiness_disclaimer": str,
+        "secondary_score": {
+          "overall": 72,
+          "label": "...",
+          "note": "The numerical score reflects completeness of "
+                  "your preparation. It is NOT a measure of emotional "
+                  "readiness or of whether mediation is safe."
+        }
       }
     """
     dims: Dict[str, Dict[str, Any]] = {}
@@ -212,9 +240,284 @@ def compute_readiness(prep: Dict[str, Any]) -> Dict[str, Any]:
     else:
         label = "Needs Support"
 
+    # Build the profile-first payload.
+    profile = _build_profile(prep, dims)
+    caveats = _build_caveats(prep, dims)
+
     return {
+        # Legacy fields for existing UI consumers.
         "overall": overall_rounded,
         "label": label,
         "dimensions": dims,
         "weights": _WEIGHTS,
+        # Profile-first fields — new consumers should read these.
+        "profile": profile,
+        "caveats": caveats,
+        "readiness_disclaimer": (
+            "This assessment is a guided self-reflection and preparation "
+            "resource. It is not a clinical, forensic, legal, or "
+            "professional evaluation. Its results are intended to help "
+            "you identify concerns, organize your thinking, and prepare "
+            "questions for an appropriate professional. In particular: "
+            "this score reflects the completeness of your preparation, "
+            "not your emotional readiness for mediation and not whether "
+            "mediation is safe for you. Read the four-domain profile "
+            "below alongside your safety-screen findings. If a coercive "
+            "pattern is present, highly structured or parallel "
+            "arrangements — not mediation — are typically indicated "
+            "regardless of how high this score is."
+        ),
+        "secondary_score": {
+            "overall": overall_rounded,
+            "label": label,
+            "note": (
+                "Numerical scores in this tool reflect completeness of "
+                "preparation, not readiness. Use them as a secondary "
+                "indicator only — the per-domain profile is the primary output."
+            ),
+        },
     }
+
+
+# ---------- Profile-first builders ----------
+
+def _level_from_score(score: float) -> str:
+    if score >= 75:
+        return "solid"
+    if score >= 55:
+        return "developing"
+    return "emerging"
+
+
+_DOMAIN_METADATA: Dict[str, Dict[str, Any]] = {
+    "communication": {
+        "label": "Communication",
+        "core_question": "How healthy and regulated is your communication self-assessment?",
+        "solid": {
+            "headline": "Your communication self-assessment is strong",
+            "narrative": (
+                "You've rated yourself well across tone, listening, boundaries, and "
+                "repair. That doesn't mean every conversation with the other parent "
+                "will feel easy — it means you have language and habits to lean on."
+            ),
+            "recs": [
+                "Bring one specific 'repair' phrase you already use into the mediation itself.",
+                "Rehearse a difficult moment out loud once before the session — even the best communication needs pacing under stress.",
+            ],
+        },
+        "developing": {
+            "headline": "Communication is mixed — solid in places, thinner in others",
+            "narrative": (
+                "Some communication habits are working; others feel harder. That's "
+                "typical mid-conflict. The goal isn't perfect communication — it's "
+                "predictable communication the other parent can rely on."
+            ),
+            "recs": [
+                "Pick the ONE facet you rated lowest and rehearse a script for it (e.g. saying 'no' without over-explaining).",
+                "Draft your messages before sending — a 20-minute pause reduces reactive replies.",
+                "Consider a 3-session communication coach before mediation if the pattern is entrenched.",
+            ],
+        },
+        "emerging": {
+            "headline": "Communication capacity is emerging — go slowly",
+            "narrative": (
+                "Your self-assessment shows communication is under real strain. This "
+                "is not a character verdict — it's information. Mediation asks a lot "
+                "of communication capacity in a short window, so extra scaffolding "
+                "before the session will help far more than a polished write-up."
+            ),
+            "recs": [
+                "Complete the Communication Style self-assessment if you haven't yet — that gives us your baseline.",
+                "Work with a communication coach or therapist for 4-6 weeks before mediation, if resources allow.",
+                "Ask the mediator for written pre-session prompts so you can prepare responses instead of improvising.",
+                "Bring a support person to help you regulate between rounds.",
+            ],
+        },
+    },
+    "trust": {
+        "label": "Trust in the co-parenting process",
+        "core_question": "How much of a foundation exists to build a plan on?",
+        "solid": {
+            "headline": "There is enough foundational trust to build a plan on",
+            "narrative": (
+                "Your ratings around cooperation and hope for agreement are solid, "
+                "and no serious safety concerns were flagged. That means the "
+                "conversation can be about the plan itself, not about basic safety."
+            ),
+            "recs": [
+                "Bring one small win from the last month into the session — recent, concrete evidence anchors the conversation.",
+                "Draft the two or three plan elements you'd offer as a first move.",
+            ],
+        },
+        "developing": {
+            "headline": "Trust is uneven — build guardrails, not shortcuts",
+            "narrative": (
+                "Trust is partial. That's workable, but the plan should be "
+                "written, specific, and short-cycle — the kind that doesn't "
+                "require good will to survive a bad week."
+            ),
+            "recs": [
+                "Propose written-only communication for a set trial period (e.g. 60 days).",
+                "Ask the mediator for a formal review point in the plan.",
+                "Come prepared with the boundaries you need in writing, not the ones you'd accept verbally.",
+            ],
+        },
+        "emerging": {
+            "headline": "Foundational trust is not yet there",
+            "narrative": (
+                "The picture around trust and safety is thin, or safety concerns "
+                "have reduced it. Mediation without a structural safety layer is "
+                "unlikely to hold. This does not close the door — it just means "
+                "the structure has to do the work trust isn't yet doing."
+            ),
+            "recs": [
+                "Do the Trauma-Informed Safety and Functioning Lens screen first — Finding 3 will tell you whether mediation is even the right forum.",
+                "If mediation is still appropriate, insist on shuttle mediation (separate rooms) or written-only exchanges.",
+                "Bring a lawyer, DV advocate, or support person; do not do this alone.",
+            ],
+        },
+    },
+    "child_alignment": {
+        "label": "Child alignment",
+        "core_question": "How child-centred are your stated goals and priorities?",
+        "solid": {
+            "headline": "Your framing is clearly child-centred",
+            "narrative": (
+                "Your goals and ranked priorities put the children's experience "
+                "at the middle of the picture. That's the single strongest "
+                "predictor of a durable parenting plan."
+            ),
+            "recs": [
+                "In the session, use the children's names — moving from abstract to specific makes shared decisions easier.",
+                "Keep one of your priorities as a 'compromise' item — you'll need one to trade for something you need.",
+            ],
+        },
+        "developing": {
+            "headline": "Child-centred framing is partially there",
+            "narrative": (
+                "Some goals are child-centred; others are still about the "
+                "grown-ups. That's normal. Sharpening this before the session "
+                "gives you a stronger anchor when the conversation drifts."
+            ),
+            "recs": [
+                "For each priority, add a sentence naming how it affects each child specifically.",
+                "Add at least one goal for a child in each developmental area — school, friendships, sleep, feelings.",
+            ],
+        },
+        "emerging": {
+            "headline": "The children's specific experience isn't yet at the centre",
+            "narrative": (
+                "Your goals and priorities are mostly about you, the other "
+                "parent, or the arrangement itself. That's a common starting "
+                "point but it makes agreement harder because everything is "
+                "read as a win/lose between the adults."
+            ),
+            "recs": [
+                "Complete the Priority Ranking module and add at least 3 child-focused goals.",
+                "Ask each child (age-appropriately) what would help — then bring their words into your notes.",
+                "Reread your notes and cross out any priority that doesn't name a child benefit.",
+            ],
+        },
+    },
+    "conflict": {
+        "label": "Conflict load",
+        "core_question": "How much unresolved conflict is loaded into the room?",
+        "solid": {
+            "headline": "Conflict load feels manageable in the current picture",
+            "narrative": (
+                "The number of active issues and urgent priorities is contained, "
+                "and your emotional-preparation self-rating is steady."
+            ),
+            "recs": [
+                "Batch the smallest 2-3 issues into a single agenda item — quick wins early lower the temperature.",
+            ],
+        },
+        "developing": {
+            "headline": "Multiple issues are live at once",
+            "narrative": (
+                "You have several categories of active concern. That doesn't "
+                "mean mediation won't work — it means the agenda needs pacing."
+            ),
+            "recs": [
+                "Rank issues into 'now', 'next session', and 'later'.",
+                "Ask the mediator for a two-session structure rather than trying to resolve everything in one meeting.",
+                "Do one grounding technique the morning of the session (breathwork, walk, prayer, whatever works for you).",
+            ],
+        },
+        "emerging": {
+            "headline": "The conflict load in the room will be heavy",
+            "narrative": (
+                "Many categories of concern are live, and urgent priorities "
+                "outnumber the emotional-preparation resources you've reported. "
+                "This is not a moral judgement — it's a bandwidth read."
+            ),
+            "recs": [
+                "Consider whether now is the right timing at all — a 30-day delay to consolidate the picture is often a net gain.",
+                "Bring only ONE agenda item to the first session. Save the rest for structured follow-ups.",
+                "Line up emotional support for the day OF and the day AFTER the session, not just before.",
+                "If safety concerns are present, mediation may not be the right forum — see Finding 3 of the Trauma-Informed Lens.",
+            ],
+        },
+    },
+}
+
+
+def _build_profile(prep: Dict[str, Any], dims: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    profile: Dict[str, Any] = {}
+    for key, meta in _DOMAIN_METADATA.items():
+        score = float(dims[key]["score"])
+        reasons = list(dims[key]["reasons"])
+        level = _level_from_score(score)
+        band = meta[level]
+        profile[key] = {
+            "label": meta["label"],
+            "core_question": meta["core_question"],
+            "level": level,
+            "headline": band["headline"],
+            "narrative": band["narrative"],
+            # Strengths / growth-areas are lifted directly from the
+            # deterministic reasons so the profile stays evidence-linked.
+            "strengths": [r for r in reasons if _looks_positive(r)],
+            "growth_areas": [r for r in reasons if not _looks_positive(r)],
+            "preparation_recommendations": list(band["recs"]),
+            # The number is intentionally deprioritised — present but
+            # after the descriptive content.
+            "secondary_score": score,
+        }
+    return profile
+
+
+_POSITIVE_MARKERS = ("strong", "clear", "solid", "steady", "manageable", "foundation")
+
+
+def _looks_positive(reason: str) -> bool:
+    s = (reason or "").lower()
+    return any(m in s for m in _POSITIVE_MARKERS)
+
+
+def _build_caveats(prep: Dict[str, Any], dims: Dict[str, Dict[str, Any]]) -> List[str]:
+    caveats: List[str] = []
+    safety = prep.get("safety_assessment") or {}
+    if safety.get("high_risk") or safety.get("moderate_concern"):
+        caveats.append(
+            "Safety concerns are present in the Trauma-Informed Safety and "
+            "Functioning Lens screen. Do NOT let a high readiness score "
+            "advance you toward joint mediation without reading Finding 3 "
+            "and consulting a family-violence practitioner. A coercive "
+            "pattern makes ordinary mediation unsafe regardless of how "
+            "prepared either parent appears on paper."
+        )
+    if dims["conflict"]["score"] < 40 and dims["communication"]["score"] >= 70:
+        caveats.append(
+            "Your communication score is strong but the conflict load is "
+            "high. Polished communication can mask emotional flooding under "
+            "pressure — build in pacing and support even though the numbers "
+            "look positive."
+        )
+    if all(d["score"] >= 70 for d in dims.values()) and not (prep.get("comm_style") or {}).get("scores"):
+        caveats.append(
+            "Every dimension scored highly, but the Communication Style "
+            "self-assessment has not been completed. Consider finishing "
+            "that module before relying on the overall number."
+        )
+    return caveats

@@ -159,7 +159,7 @@ class TestSafetyAssessment:
 
     def test_submit_yes_on_da_item_is_not_green_pathway(self, auth_headers):
         # Answer "no" everywhere except s1_q11 (strangulation, high_concern)
-        section_1 = {f"s1_q{i}": "no" for i in range(1, 19)}
+        section_1 = {f"s1_q{i}": "no" for i in range(1, 29)}
         section_1["s1_q11"] = "yes"
         section_2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
         section_2["s2_q8"] = "no"  # inverted

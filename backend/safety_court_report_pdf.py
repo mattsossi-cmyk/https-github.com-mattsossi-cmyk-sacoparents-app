@@ -266,12 +266,36 @@ def build_court_report_pdf(
             OK,
             [],
         ),
+        ("child_experience", 4, DANGER, []),
     ]
     for key, num, colour, extras_seed in finding_meta:
         block = findings.get(key)
         if not block:
             continue
         extras = list(extras_seed)
+        # Phase 3 typology narrative inside Finding 1.
+        typ = block.get("pattern_typology")
+        if typ:
+            extras.append(f"Pattern typology: {typ.get('label')}.")
+            extras.append(str(typ.get("framing") or ""))
+        # Phase 4 domain signals inside Finding 2.
+        ds = block.get("domain_signals")
+        if ds:
+            highs = ds.get("high_domains") or []
+            if highs:
+                extras.append(
+                    "High-intensity behavioural signals reported in: " + ", ".join(highs) + "."
+                )
+            extras.append(f"Overall trauma-impact intensity: {ds.get('overall_intensity')}.")
+        # Phase 5 concern domains for Finding 4.
+        if key == "child_experience":
+            cd = block.get("concern_domains") or []
+            if cd:
+                extras.append("Reported concern areas: " + ", ".join(cd) + ".")
+            if block.get("protective_relationship_present"):
+                extras.append(
+                    "A safe, consistent protective adult was reported — a resilience factor to build on in the parenting plan."
+                )
         if block.get("non_diagnostic_note"):
             extras.append(block["non_diagnostic_note"])
         if block.get("arrangement_spectrum"):

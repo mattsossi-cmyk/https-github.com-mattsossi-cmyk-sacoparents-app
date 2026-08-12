@@ -43,6 +43,18 @@ from typing import Any, Dict, List
 LENS_NAME = "Trauma-Informed Safety and Functioning Lens"
 LENS_SHORT = "TISFL"
 
+# Universal disclaimer that must appear prominently on every screen,
+# PDF, and email that surfaces results from any assessment in this app.
+# The wording deliberately positions this tool as a preparation aid, not
+# an evaluation — so it is neither weaponised in litigation nor mistaken
+# for a clinical or forensic finding.
+SELF_REFLECTION_DISCLAIMER = (
+    "This assessment is a guided self-reflection and preparation resource. "
+    "It is not a clinical, forensic, legal, or professional evaluation. "
+    "Its results are intended to help you identify concerns, organize your "
+    "thinking, and prepare questions for an appropriate professional."
+)
+
 INTERPRETATION_RULES: List[str] = [
     "Trauma symptoms are not evidence that a parent is unreliable, unfit, or responsible for the violence.",
     "A history of trauma does not excuse coercion, intimidation, child maltreatment, or other harmful parenting behavior.",
@@ -188,59 +200,116 @@ _PLAN_BY_LEVEL: Dict[int, Dict[str, Any]] = {
 }
 
 
-def build_findings(result: Dict[str, Any]) -> Dict[str, Any]:
+def build_findings(result: Dict[str, Any], extensions: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """Attach the three-findings structure to a scoring result.
 
     Non-destructive — always returns a fresh dict with the extra
     `findings` key so callers can render the lens without changing the
     underlying score.
+
+    ``extensions`` is an optional dict produced from the Phase 3/4/5
+    optional sections. When provided, it enriches the findings:
+
+        * ``extensions["pattern_context"]``   -> reshapes Finding 1
+          headline/summary with the typology label + framing produced
+          by ``lens_extensions.classify_pattern``.
+        * ``extensions["trauma_impact"]``     -> attaches per-domain
+          intensity to Finding 2 (produced by
+          ``lens_extensions.analyse_trauma_impact``).
+        * ``extensions["child_experience"]``  -> produces a NEW
+          Finding 4 (produced by ``lens_extensions.analyse_child_experience``).
     """
     level = int(result.get("level") or 4)
     level = max(1, min(4, level))
     pattern = _PATTERN_BY_LEVEL[level]
     trauma = _TRAUMA_BY_LEVEL[level]
     plan = _PLAN_BY_LEVEL[level]
+    ext = extensions or {}
+    findings: Dict[str, Any] = {
+        "family_violence_pattern": {
+            "title": "Finding 1 — Family-Violence Pattern",
+            "core_question": "What conduct occurred, in what context, and with what pattern of power and control?",
+            "headline": pattern["headline"],
+            "summary": pattern["summary"],
+            "confidential": True,
+        },
+        "trauma_impact": {
+            "title": "Finding 2 — Trauma Impact",
+            "core_question": "How has the conduct affected each parent and child?",
+            "headline": trauma["headline"],
+            "summary": trauma["summary"],
+            "confidential": True,
+            "non_diagnostic_note": (
+                "This finding does not diagnose PTSD or any other condition. "
+                "It reflects behavioural and functional signals only."
+            ),
+        },
+        "parenting_plan_implications": {
+            "title": "Finding 3 — Parenting-Plan Implications",
+            "core_question": "What structure and protections are presently necessary?",
+            "headline": plan["headline"],
+            "summary": plan["summary"],
+            "arrangement_spectrum": plan["arrangement_spectrum"],
+            "confidential": False,
+        },
+    }
+
+    # ---- Phase 3: Pattern & Context enrichment for Finding 1 ----
+    pattern_ctx = ext.get("pattern_context") or {}
+    if pattern_ctx.get("type") and pattern_ctx.get("answered", 0) >= 3:
+        findings["family_violence_pattern"]["pattern_typology"] = {
+            "type": pattern_ctx["type"],
+            "label": pattern_ctx.get("label"),
+            "framing": pattern_ctx.get("framing"),
+        }
+
+    # ---- Phase 4: Trauma Impact enrichment for Finding 2 ----
+    trauma_impact = ext.get("trauma_impact") or {}
+    if trauma_impact.get("answered", 0) >= 3:
+        findings["trauma_impact"]["domain_signals"] = {
+            "overall_intensity": trauma_impact.get("overall_intensity"),
+            "domains": trauma_impact.get("domains") or {},
+            "high_domains": trauma_impact.get("high_domains") or [],
+        }
+
+    # ---- Phase 5: Child Experience -> Finding 4 ----
+    child_exp = ext.get("child_experience") or {}
+    if child_exp.get("answered", 0) >= 3:
+        findings["child_experience"] = {
+            "title": "Finding 4 — Child Experience (parent's account)",
+            "core_question": "What has the child(ren) experienced, and what protective resources exist?",
+            "headline": child_exp.get("headline") or "",
+            "summary": (
+                "This finding reflects the parent's account of the children's "
+                "experience — it is not an interview of the child. A qualified "
+                "child specialist should conduct any direct assessment of the "
+                "child using developmentally-appropriate methods."
+            ),
+            "overall": child_exp.get("overall"),
+            "concern_domains": child_exp.get("concern_domains") or [],
+            "protective_relationship_present": bool(child_exp.get("protective_relationship_present")),
+            "high_concern": bool(child_exp.get("high_concern_ids")),
+            "confidential": True,
+        }
+
     return {
         "lens_name": LENS_NAME,
         "lens_short": LENS_SHORT,
         "interpretation_rules": list(INTERPRETATION_RULES),
-        "findings": {
-            "family_violence_pattern": {
-                "title": "Finding 1 — Family-Violence Pattern",
-                "core_question": "What conduct occurred, in what context, and with what pattern of power and control?",
-                "headline": pattern["headline"],
-                "summary": pattern["summary"],
-                "confidential": True,
-            },
-            "trauma_impact": {
-                "title": "Finding 2 — Trauma Impact",
-                "core_question": "How has the conduct affected each parent and child?",
-                "headline": trauma["headline"],
-                "summary": trauma["summary"],
-                "confidential": True,
-                "non_diagnostic_note": (
-                    "This finding does not diagnose PTSD or any other condition. "
-                    "It reflects behavioural and functional signals only."
-                ),
-            },
-            "parenting_plan_implications": {
-                "title": "Finding 3 — Parenting-Plan Implications",
-                "core_question": "What structure and protections are presently necessary?",
-                "headline": plan["headline"],
-                "summary": plan["summary"],
-                "arrangement_spectrum": plan["arrangement_spectrum"],
-                "confidential": False,  # This is the one the co-parent may see.
-            },
-        },
+        "findings": findings,
     }
 
 
 # ---------- Court-report helpers ----------
 
 COURT_REPORT_LIMITS_STATEMENT = (
-    "Limits of use. This report is generated from a structured self-report screen "
-    "completed by one parent. It is not a forensic family-violence evaluation, a "
-    "psychological assessment, or a substitute for expert testimony. It is "
+    "This assessment is a guided self-reflection and preparation resource. "
+    "It is not a clinical, forensic, legal, or professional evaluation. "
+    "Its results are intended to help you identify concerns, organize your "
+    "thinking, and prepare questions for an appropriate professional.\n\n"
+    "This report is generated from a structured self-report screen "
+    "completed by one parent. It is not a forensic family-violence evaluation, "
+    "a psychological assessment, or a substitute for expert testimony. It is "
     "intended to help the court and practitioners frame safety and parenting-plan "
     "structure using the Trauma-Informed Safety and Functioning Lens (TISFL). "
     "Findings should be corroborated with other evidence before being relied on."
