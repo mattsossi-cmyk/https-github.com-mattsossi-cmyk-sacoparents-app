@@ -184,7 +184,7 @@ function ProgressStrip({ answered, total, testid }) {
 }
 
 
-function ResultsCard({ assessment, onDownload, onDownloadCourt, onEmail, onEmailMediator, onRegenerate, regenerating, downloadingCourt, isAdmin, sending }) {
+function ResultsCard({ assessment, onDownload, onDownloadCourt, onDownloadOnePager, onEmail, onEmailMediator, onRegenerate, regenerating, downloadingCourt, isAdmin, sending }) {
   const result = assessment?.result || {};
   const tone = TONE_STYLES[result.pathway_tone] || TONE_STYLES.info;
   const level = result.level || 4;
@@ -437,6 +437,16 @@ function ResultsCard({ assessment, onDownload, onDownloadCourt, onEmail, onEmail
           >
             <Scale size={14} />
             {downloadingCourt ? "Preparing…" : "Download court report"}
+          </button>
+          <button
+            type="button"
+            onClick={onDownloadOnePager}
+            data-testid="results-download-one-pager"
+            title="A one-page handoff you can give to your lawyer, DV advocate, or family counsellor. Says what this tool is/is-not and lists the questions they should explore with you."
+            className="inline-flex items-center gap-2 rounded-full bg-white border border-[#1A1330]/30 text-[#1A1330] px-5 py-2.5 text-sm font-semibold hover:bg-[#F8F7FC]"
+          >
+            <FileText size={14} />
+            For your professional (1 page)
           </button>
           <button
             type="button"
@@ -824,14 +834,17 @@ export default function SafetyAssessment() {
     if (!result) return;
     setDownloadingCourt(true);
     const url = `${API}/safety-assessment/${result.assessment_id}/court-report`;
-    // window.open is fine because auth is cookie-based (withCredentials).
-    // We toggle the button spinner briefly for feedback — no network wait
-    // is observable since the tab opens synchronously.
     try {
       window.open(url, "_blank", "noopener,noreferrer");
     } finally {
       setTimeout(() => setDownloadingCourt(false), 1200);
     }
+  };
+
+  const downloadOnePager = () => {
+    if (!result) return;
+    const url = `${API}/safety-assessment/${result.assessment_id}/one-pager`;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const emailMe = async () => {
@@ -1387,6 +1400,7 @@ export default function SafetyAssessment() {
               assessment={result}
               onDownload={downloadPdf}
               onDownloadCourt={downloadCourtReport}
+              onDownloadOnePager={downloadOnePager}
               downloadingCourt={downloadingCourt}
               onEmail={emailMe}
               onEmailMediator={openMediatorDialog}

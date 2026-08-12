@@ -259,6 +259,16 @@ async def _dispatch_one(
 
     try:
         from email_service import send_weekly_compliance_reminder
+        # Wall Cheer Digest — cheers received in the last 7 days on this
+        # parent's Wall events. Excludes self-cheers.
+        wall_cheer_digest = None
+        try:
+            from wall_utils import get_weekly_cheer_digest
+            since_iso = (_now_utc() - timedelta(days=7)).isoformat()
+            wall_cheer_digest = await get_weekly_cheer_digest(db, user_id, since_iso)
+        except Exception as exc:  # noqa: BLE001
+            log.info("weekly cheer digest lookup failed for %s: %s", user_id, exc)
+            wall_cheer_digest = None
         send_weekly_compliance_reminder(
             to_email=email,
             user_name=prof.get("name") or "",
@@ -271,6 +281,7 @@ async def _dispatch_one(
             compliance_pct=summary["compliance_pct"],
             week_start=wk,
             cta_url=_reminder_link(),
+            wall_cheer_digest=wall_cheer_digest,
         )
         send_ok, send_err = True, None
     except Exception as exc:  # noqa: BLE001

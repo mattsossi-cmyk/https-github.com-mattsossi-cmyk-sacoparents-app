@@ -342,3 +342,74 @@ async def build_weekly_cheer_digest(db: AsyncIOMotorDatabase, user_id: str,
         "community_pulse":  community_pulse,
         "week_start":       week_start.isoformat(),
     }
+
+
+async def get_weekly_cheer_digest(
+    db: AsyncIOMotorDatabase,
+    user_id: str,
+    since_iso: str,
+) -> Dict[str, Any]:
+    """Return a compact summary of Wall cheers received on a parent's
+    events since ``since_iso`` (ISO-8601 UTC). Excludes self-cheers.
+
+    Used by the Weekly Compliance Reminder email to roll a short
+    "Cheers you got this week" ribbon into the Monday nudge.
+    Returns::
+
+        {
+          "cheer_count":  <int>,   # total cheers across all my events
+          "unique_events": <int>,  # how many of my events were cheered
+          "top_badges":   [        # up to 3 most-cheered badges (labels)
+            {"badge_type": "week_streak_7", "label": "7-day streak", "cheer_count": 4},
+            ...
+          ],
+          "period_start": since_iso,
+        }
+    """
+    if not user_id or not since_iso:
+        return {"cheer_count": 0, "unique_events": 0, "top_badges": [], "period_start": since_iso}
+    # 1. All of THIS parent's events (any age) — cheers can land on old events too.
+    events_cursor = db[EVENTS_COLLECTION].find({"user_id": user_id}, {"_id": 0, "event_id": 1, "badge_type": 1})
+    events = [e async for e in events_cursor]
+    if not events:
+        return {"cheer_count": 0, "unique_events": 0, "top_badges": [], "period_start": since_iso}
+    badge_by_event = {e["event_id"]: e.get("badge_type") for e in events}
+    event_ids = list(badge_by_event.keys())
+
+    # 2. Aggregate cheers on those events since since_iso — exclude self-cheers.
+    pipeline = [
+        {"$match": {
+            "event_id": {"$in": event_ids},
+            "created_at": {"$gte": since_iso},
+            "user_id": {"$ne": user_id},
+        }},
+        {"$group": {"_id": "$event_id", "cheer_count": {"$sum": 1}}},
+        {"$sort": {"cheer_count": -1}},
+    ]
+    rows = [r async for r in db[CHEERS_COLLECTION].aggregate(pipeline)]
+    if not rows:
+        return {"cheer_count": 0, "unique_events": 0, "top_badges": [], "period_start": since_iso}
+
+    total = sum(int(r["cheer_count"]) for r in rows)
+
+    # 3. Roll up per badge type — a parent may have multiple events of
+    # the same badge (though log_event_once dedupes most). Aggregate
+    # cheers across all of a parent's events of the same badge.
+    per_badge: Dict[str, int] = {}
+    for r in rows:
+        btype = badge_by_event.get(r["_id"]) or "unknown"
+        per_badge[btype] = per_badge.get(btype, 0) + int(r["cheer_count"])
+    top_badges = [
+        {
+            "badge_type": bt,
+            "label":      BADGE_LABELS.get(bt, bt.replace("_", " ").title()),
+            "cheer_count": count,
+        }
+        for bt, count in sorted(per_badge.items(), key=lambda kv: -kv[1])[:3]
+    ]
+    return {
+        "cheer_count":  total,
+        "unique_events": len(rows),
+        "top_badges":   top_badges,
+        "period_start": since_iso,
+    }

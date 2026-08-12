@@ -1759,6 +1759,7 @@ def send_weekly_compliance_reminder(
     compliance_pct: float,
     week_start: str,
     cta_url: str,
+    wall_cheer_digest: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Warm Monday nudge protecting the follow-through streak.
 
@@ -1835,6 +1836,46 @@ def send_weekly_compliance_reminder(
             f"for the week of {_html.escape(week_start)}.</p>"
         )
 
+    # Wall Cheer Digest — roll the week's cheers into the Monday email
+    # so parents feel the community response alongside the reminder.
+    cheers_html = ""
+    cheers_plain = ""
+    if wall_cheer_digest and int(wall_cheer_digest.get("cheer_count") or 0) > 0:
+        n = int(wall_cheer_digest["cheer_count"])
+        badges = wall_cheer_digest.get("top_badges") or []
+        badge_rows_html = "".join([
+            f'<li style="padding:6px 0;font-size:13px;color:#1A1330;line-height:1.5;">'
+            f'<strong style="color:#3D1A78;">{int(b.get("cheer_count") or 0)} '
+            f"cheer{'' if int(b.get('cheer_count') or 0) == 1 else 's'}</strong> "
+            f'on your <em>{_html.escape(str(b.get("label") or ""))}</em>'
+            f"</li>"
+            for b in badges
+        ])
+        cheers_html = (
+            f'<div style="background:linear-gradient(135deg,#F5F1FB 0%,#E0F7F5 100%);'
+            f"border-radius:16px;padding:14px 18px;border:1px solid #C6BEE0;"
+            f'margin:14px 0 20px 0;">'
+            f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;'
+            f'color:#3D1A78;font-weight:800;margin-bottom:6px;">'
+            f"Cheers you got this week</div>"
+            f'<p style="font-size:14px;color:#1A1330;margin:0 0 6px 0;">'
+            f"You received <strong>{n} cheer{'' if n == 1 else 's'}</strong> "
+            f"from other parents on the Wall this week — proof someone else "
+            f"is watching you show up.</p>"
+            + (f'<ul style="margin:6px 0 0 0;padding:0 0 0 18px;">{badge_rows_html}</ul>'
+               if badge_rows_html else "")
+            + "</div>"
+        )
+        badge_plain = "\n".join([
+            f"  · {int(b.get('cheer_count') or 0)} cheer(s) on your "
+            f"{b.get('label') or ''}"
+            for b in badges
+        ])
+        cheers_plain = (
+            f"\nCheers you got this week: {n} from other parents.\n"
+            + (badge_plain + "\n" if badge_plain else "")
+        )
+
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 12px 0;">'
         f"{_html.escape(greeting)}</p>"
@@ -1843,6 +1884,7 @@ def send_weekly_compliance_reminder(
         f"{'' if pending_total == 1 else 's'}</strong> still un-ticked for this week. "
         f"{streak_line}</p>"
         f"{pct_line}"
+        f"{cheers_html}"
         f"{items_html}"
         f'<p style="font-size:13px;color:#857E9C;margin:16px 0 0 0;">'
         f"Prefer not to get this Monday email? "
@@ -1857,6 +1899,7 @@ def send_weekly_compliance_reminder(
         f"{streak_plain}\n\n"
         + (f"You're at {compliance_pct:.0f}% for the week of {week_start}.\n\n"
            if compliance_pct > 0 else "")
+        + cheers_plain
         + items_plain
         + f"\nTick them off: {cta_url}\n\n"
         + "Prefer not to get this Monday email? Turn it off in your compliance settings.\n"

@@ -27,6 +27,7 @@ from auth import UserPublic, get_current_user, get_db, create_share_token, decod
 from email_service import EmailNotConfigured, EmailSendError, send_mediator_safety_assessment, send_safety_assessment_report
 from safety_assessment_pdf import build_safety_assessment_pdf
 from safety_court_report_pdf import build_court_report_pdf
+from safety_one_pager_pdf import build_one_pager_pdf
 from trauma_lens import PROCEDURAL_SAFEGUARDS
 from share_routes import record_share_token, is_share_token_revoked
 from analytics_routes import ADMIN_EMAILS
@@ -771,6 +772,48 @@ async def download_court_report(
         headers={
             "Content-Disposition": (
                 f'inline; filename="tisfl-court-report-{assessment_id}.pdf"'
+            ),
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@router.get("/{assessment_id}/one-pager")
+async def download_one_pager(
+    assessment_id: str,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """"For your professional" one-page handoff PDF. Very short — names
+    what this tool is/is-not, summarises the findings at a glance
+    (headlines only, no raw behavioural language), and lists targeted
+    questions the professional should now explore with the parent."""
+    doc = await _load_for_user(db, assessment_id, current.user_id)
+    if doc.get("is_guest"):
+        raise HTTPException(
+            status_code=400,
+            detail="Save your work before downloading the one-pager.",
+        )
+    result = doc.get("result") or {}
+    if not result.get("lens"):
+        try:
+            from trauma_lens import build_findings
+            result = dict(result)
+            result["lens"] = build_findings(result)
+        except Exception:  # noqa: BLE001
+            pass
+    pdf_bytes = build_one_pager_pdf(
+        user_name=doc.get("name") or current.name or "",
+        generated_at=doc.get("created_at") or datetime.now(timezone.utc).isoformat(),
+        assessment_id=assessment_id,
+        result=result,
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'inline; filename="sacoparents-for-your-professional-{assessment_id}.pdf"'
             ),
             "Cache-Control": "no-store",
         },
