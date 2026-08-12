@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import DemoModeBanner from "../components/DemoModeBanner";
 import InviteCoparentCard from "../components/InviteCoparentCard";
@@ -1268,7 +1268,14 @@ const TABS = [
 ];
 
 export default function Summary() {
-  const [tab, setTab] = useState("summary");
+  const [params] = useSearchParams();
+  // Allow deep-links like /summary?tab=agreement (from the Dashboard's
+  // "Co-Parenting Agreement" shortcut) to open directly on the right tab.
+  const initialTab = (() => {
+    const t = params.get("tab");
+    return TABS.some((x) => x.key === t) ? t : "summary";
+  })();
+  const [tab, setTab] = useState(initialTab);
 
   return (
     <AppShell>

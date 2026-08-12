@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 113 — Foundation Statement + Co-Parenting Agreement shortcuts (2026-08-12)**:
+  - **Dashboard shortcuts**: Added two dedicated buttons in the "Next up" card of `/app/frontend/src/pages/Dashboard.jsx` — `dashboard-foundation-statement-button` (→ `/reflection`) and `dashboard-coparenting-agreement-button` (→ `/summary?tab=agreement`).
+  - **PREP_MODULES fix**: The "Declaration Statement" tile was mislabeled and mis-routed to `/summary`. Renamed to **Foundation Statement** and re-routed to `/reflection` to match the rest of the app (Landing, MyPlan, PersonalizedRecommendations, NextStepJourney all use "Foundation Statement" → `/reflection`).
+  - **Summary deep-link support**: `/app/frontend/src/pages/Summary.jsx` now honours `?tab=summary|agreement|improve` via `useSearchParams`, so shortcuts open directly on the requested tab.
+  - **PathwayReport shared entry point**: Added `data-testid="pathway-report-draft-agreement"` button (link to `/summary?tab=agreement`) in the header of `/app/frontend/src/pages/PathwayReport.jsx`, giving parents a one-tap way to jump from their dispute-resolution pathway into drafting the Co-Parenting Agreement.
+  - **Bug fix (defensive)**: `/app/frontend/src/pages/Reflection.jsx` crashed with `(v || "").trim is not a function` when the persisted reflection dict included a boolean flag (e.g. `private: true`). Now filters to string values only in both `hasContent` and `safetyLevel` computations.
+
+
+
 - **Iteration 112 — Reviewer Co-Sign Portal for the Court Report (2026-08-12)**:
   - **New backend module** `/app/backend/court_report_verify_routes.py` — mirrors the pathway-verify pattern. Owner-side endpoint `POST /api/safety-assessment/{assessment_id}/prepare-cosign` writes a `court_report_signatures` row keyed by `sig_id` (16-char uuid4 hex) and returns `{sig_id, verify_url, qr_png_data_url}` (base64 PNG QR). Public endpoints under `/api/verify/court-report/{sig_id}` — `GET` returns issued flag + parent name + issue date + `findings_headlines` (headlines only, never raw behavioural language); `POST /cosign` records reviewer name + role + optional notes with a 409 on second-attempt to prevent anonymous overwrites; `GET /pdf` re-downloads the court report with the reviewer's printed name + role baked into the signature block (via `build_court_report_pdf(reviewer_name=...)`), no regeneration required.
   - **New frontend page** `/app/frontend/src/pages/VerifyCourtReport.jsx` (route `/verify/court-report/:sig_id`) — public reviewer-facing page with (a) the universal self-reflection disclaimer at top ("co-signing acknowledges you have discussed the findings with the parent, not that you endorse them as an evaluation"), (b) parent name + issued date, (c) findings headlines, (d) a co-sign form (printed name, role, notes) OR a "co-signed" panel showing who signed and when, (e) a download-the-(co-signed)-court-report button.

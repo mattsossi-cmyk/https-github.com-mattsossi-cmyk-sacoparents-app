@@ -100,13 +100,18 @@ export default function Reflection() {
     setEntries((prev) => ({ ...prev, [id]: val }));
 
   const safetyLevel = useMemo(() => {
-    const combined = Object.values(entries || {}).filter(Boolean).join(" \n ");
+    // Only concat string values — the persisted reflection dict may also
+    // carry non-string flags (e.g., `private: true`) that must not be
+    // coerced into "true" text or fed into `.trim()` downstream.
+    const combined = Object.values(entries || {})
+      .filter((v) => typeof v === "string" && v)
+      .join(" \n ");
     return detectSafetyConcern(combined);
   }, [entries]);
   const [safetyDismissed, setSafetyDismissed] = useState(false);
 
   const hasContent = Object.values(entries || {}).some(
-    (v) => (v || "").trim().length > 0,
+    (v) => typeof v === "string" && v.trim().length > 0,
   );
 
   const handleSave = async () => {

@@ -14,7 +14,7 @@
  */
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Loader2, Scale, ShieldAlert, ArrowLeft, FileText, Download, Mail } from "lucide-react";
+import { Loader2, Scale, ShieldAlert, ArrowLeft, FileText, Download, Mail, Handshake } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import PathwayEmailDialog from "../components/PathwayEmailDialog";
@@ -131,6 +131,15 @@ export default function PathwayReport() {
             <ArrowLeft size={12} /> Back to dashboard
           </Link>
           <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              to="/summary?tab=agreement"
+              data-testid="pathway-report-draft-agreement"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#2DB5B5] text-[#2DB5B5] px-4 py-2 text-sm font-semibold hover:bg-[#EAF7F7] transition-colors"
+              title="Start a Co-Parenting Agreement Draft you can share with the other parent."
+            >
+              <Handshake size={14} />
+              Draft Co-Parenting Agreement
+            </Link>
             <button
               type="button"
               onClick={() => setEmailOpen(true)}

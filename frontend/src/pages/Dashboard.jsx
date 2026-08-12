@@ -108,10 +108,10 @@ const SITUATION_TO_RECOMMENDED_MODULES = {
 // The six preparation modules the app builds a PDF for. Rendered as a
 // jump-menu below the situation picker so parents can dive straight in.
 const PREP_MODULES = [
-  { key: "declaration",   label: "Declaration Statement",
+  { key: "declaration",   label: "Foundation Statement",
     category: "foundation",
-    hint: "A one-page statement of your child-focused position.",
-    icon: <FileText size={16} />,        route: "/summary" },
+    hint: "A private, child-focused position you can anchor to when things get emotionally hot.",
+    icon: <FileText size={16} />,        route: "/reflection" },
   { key: "mediation-summary", label: "Mediation Summary",
     category: "coparenting",
     hint: "Your polished, printable brief for the mediator.",
@@ -859,6 +859,29 @@ export default function Dashboard() {
             >
               {allDone ? "Generate summary" : "Continue"} <ArrowRight size={16} />
             </Link>
+
+            {/* Two dedicated shortcuts so parents can jump straight into their
+                Foundation Statement (private reflection) or start a
+                Co-Parenting Agreement Draft without hunting through tabs. */}
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <Link
+                to="/reflection"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#3D1A78] text-[#3D1A78] px-3 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
+                data-testid="dashboard-foundation-statement-button"
+                title="Create your private Foundation Statement — a one-page, child-focused anchor."
+              >
+                <Heart size={14} /> Foundation Statement
+              </Link>
+              <Link
+                to="/summary?tab=agreement"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#2DB5B5] text-[#2DB5B5] px-3 py-2 text-sm font-semibold hover:bg-[#EAF7F7] transition-colors"
+                data-testid="dashboard-coparenting-agreement-button"
+                title="Draft a Co-Parenting Agreement you can share with the other parent."
+              >
+                <Handshake size={14} /> Co-Parenting Agreement
+              </Link>
+            </div>
+
             {!allDone && (
               <p className="text-[11px] text-[#857E9C] mt-3 text-center leading-relaxed">
                 Tip: even 10 minutes of prep moves the needle.
