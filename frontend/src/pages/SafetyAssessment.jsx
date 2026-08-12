@@ -184,7 +184,7 @@ function ProgressStrip({ answered, total, testid }) {
 }
 
 
-function ResultsCard({ assessment, onDownload, onDownloadCourt, onDownloadOnePager, onEmail, onEmailMediator, onRegenerate, regenerating, downloadingCourt, isAdmin, sending }) {
+function ResultsCard({ assessment, onDownload, onDownloadCourt, onDownloadOnePager, onPrepareCoSign, onEmail, onEmailMediator, onRegenerate, regenerating, downloadingCourt, isAdmin, sending }) {
   const result = assessment?.result || {};
   const tone = TONE_STYLES[result.pathway_tone] || TONE_STYLES.info;
   const level = result.level || 4;
@@ -447,6 +447,16 @@ function ResultsCard({ assessment, onDownload, onDownloadCourt, onDownloadOnePag
           >
             <FileText size={14} />
             For your professional (1 page)
+          </button>
+          <button
+            type="button"
+            onClick={onPrepareCoSign}
+            data-testid="results-prepare-cosign"
+            title="Generate a QR link a mediator or DV practitioner can scan to co-sign your court report. They add their name, role, and notes without you having to regenerate the file."
+            className="inline-flex items-center gap-2 rounded-full bg-white border border-[#3D1A78]/30 text-[#3D1A78] px-5 py-2.5 text-sm font-semibold hover:bg-[#F5F1FB]"
+          >
+            <RefreshCw size={14} />
+            Get reviewer co-sign QR
           </button>
           <button
             type="button"
@@ -845,6 +855,29 @@ export default function SafetyAssessment() {
     if (!result) return;
     const url = `${API}/safety-assessment/${result.assessment_id}/one-pager`;
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const [cosignModal, setCosignModal] = useState(null);
+  const prepareCoSign = async () => {
+    if (!result?.assessment_id) return;
+    try {
+      const r = await api.post(
+        `/safety-assessment/${result.assessment_id}/prepare-cosign`,
+      );
+      setCosignModal(r.data);
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      toast.error(detail || "Couldn't prepare the co-sign QR right now.");
+    }
+  };
+  const copyCoSignLink = async () => {
+    if (!cosignModal?.verify_url) return;
+    try {
+      await navigator.clipboard.writeText(cosignModal.verify_url);
+      toast.success("Link copied to clipboard.");
+    } catch {
+      toast.error("Copy failed — long-press the link to copy manually.");
+    }
   };
 
   const emailMe = async () => {
@@ -1391,6 +1424,60 @@ export default function SafetyAssessment() {
           />
         )}
 
+        {cosignModal && (
+          <div
+            className="fixed inset-0 bg-black/60 grid place-items-center z-50 p-4"
+            data-testid="cosign-modal"
+            onClick={() => setCosignModal(null)}
+          >
+            <div
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-bold mb-2">
+                Reviewer co-sign QR
+              </div>
+              <h3 className="text-xl font-bold text-[#1A1330] mb-3">
+                Give this to your professional
+              </h3>
+              <p className="text-sm text-[#4B4567] leading-relaxed mb-4">
+                Your mediator, DV advocate, or family counsellor scans this QR (or clicks the link) to add their printed name, role, and optional notes to your court report — no regeneration required on your side.
+              </p>
+              <div className="grid place-items-center bg-[#FAF9FD] rounded-2xl border border-[#E5E0EE] p-4 mb-4">
+                <img
+                  src={cosignModal.qr_png_data_url}
+                  alt="Reviewer co-sign QR code"
+                  className="w-56 h-56"
+                  data-testid="cosign-modal-qr"
+                />
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[#857E9C] font-bold mb-1">Link</div>
+              <div className="text-xs break-all text-[#4B4567] mb-3" data-testid="cosign-modal-url">
+                {cosignModal.verify_url}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={copyCoSignLink}
+                  data-testid="cosign-modal-copy"
+                  className="rounded-full bg-[#3D1A78] text-white px-4 py-2 text-xs font-semibold hover:bg-[#2a1155]"
+                >
+                  Copy link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCosignModal(null)}
+                  data-testid="cosign-modal-close"
+                  className="rounded-full bg-white border border-[#E5E0EE] text-[#4B4567] px-4 py-2 text-xs font-semibold hover:bg-[#F8F7FC]"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
         {step === 6 && result && (
           <div className="fade-up" data-testid="assessment-results">
             <div className="mb-5 text-xs uppercase tracking-[0.2em] text-[#857E9C]">
@@ -1401,6 +1488,7 @@ export default function SafetyAssessment() {
               onDownload={downloadPdf}
               onDownloadCourt={downloadCourtReport}
               onDownloadOnePager={downloadOnePager}
+              onPrepareCoSign={prepareCoSign}
               downloadingCourt={downloadingCourt}
               onEmail={emailMe}
               onEmailMediator={openMediatorDialog}

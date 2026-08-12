@@ -49,6 +49,7 @@ import VerifyEmail from "@/pages/VerifyEmail";
 import VerifySignature from "@/pages/VerifySignature";
 import VerifyBriefing from "@/pages/VerifyBriefing";
 import VerifyPathway from "@/pages/VerifyPathway";
+import VerifyCourtReport from "@/pages/VerifyCourtReport";
 import AdminReviewers from "@/pages/AdminReviewers";
 import AdminNDCoordinator from "@/pages/AdminNDCoordinator";
 import PathwayReport from "@/pages/PathwayReport";
@@ -115,6 +116,7 @@ function AppRoutes() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/verify/briefing/:sig_id" element={<VerifyBriefing />} />
         <Route path="/verify/pathway/:sig_id" element={<VerifyPathway />} />
+        <Route path="/verify/court-report/:sig_id" element={<VerifyCourtReport />} />
         <Route path="/verify/:sig_id" element={<VerifySignature />} />
         <Route path="/admin/reviewers" element={<AdminReviewers />} />
         <Route path="/admin/nd-coordinator" element={<AdminNDCoordinator />} />

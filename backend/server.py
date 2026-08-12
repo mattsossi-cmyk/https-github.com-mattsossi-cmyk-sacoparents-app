@@ -39,6 +39,7 @@ from wall_routes import router as wall_router  # noqa: E402
 from signature_verify_routes import router as signature_verify_router  # noqa: E402
 from briefing_verify_routes import router as briefing_verify_router  # noqa: E402
 from pathway_verify_routes import router as pathway_verify_router  # noqa: E402
+from court_report_verify_routes import router as court_report_verify_router  # noqa: E402
 from pathway_report_routes import router as pathway_report_router  # noqa: E402
 from admin_nd_coordinator_routes import router as admin_nd_coordinator_router  # noqa: E402
 from nd_risk_routes import router as nd_risk_router  # noqa: E402
@@ -144,6 +145,7 @@ api_router.include_router(learning_router)
 api_router.include_router(signature_verify_router)
 api_router.include_router(briefing_verify_router)
 api_router.include_router(pathway_verify_router)
+api_router.include_router(court_report_verify_router)
 api_router.include_router(pathway_report_router)
 api_router.include_router(admin_nd_coordinator_router)
 api_router.include_router(nd_risk_router)

@@ -778,6 +778,31 @@ async def download_court_report(
     )
 
 
+@router.post("/{assessment_id}/prepare-cosign")
+async def prepare_cosign(
+    assessment_id: str,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Owner prepares a Reviewer Co-Sign QR for their Court Report.
+    Returns ``{sig_id, verify_url, qr_png_data_url}`` — the frontend
+    renders the QR in a modal so a mediator or DV practitioner can
+    scan and land on the public verify page."""
+    doc = await _load_for_user(db, assessment_id, current.user_id)
+    if doc.get("is_guest"):
+        raise HTTPException(
+            status_code=400,
+            detail="Save your work before creating a co-sign QR.",
+        )
+    from court_report_verify_routes import create_court_report_signature
+    return await create_court_report_signature(
+        db,
+        assessment_id=assessment_id,
+        user_id=current.user_id,
+        parent_name=doc.get("name") or current.name or "",
+    )
+
+
 @router.get("/{assessment_id}/one-pager")
 async def download_one_pager(
     assessment_id: str,
