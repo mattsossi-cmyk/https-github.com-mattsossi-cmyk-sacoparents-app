@@ -14,7 +14,7 @@
  */
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Loader2, Scale, ShieldAlert, ArrowLeft, FileText, Download, Mail, Handshake } from "lucide-react";
+import { Loader2, Scale, ShieldAlert, ArrowLeft, FileText, Download, Mail, Handshake, ScrollText } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import PathwayEmailDialog from "../components/PathwayEmailDialog";
@@ -131,6 +131,17 @@ export default function PathwayReport() {
             <ArrowLeft size={12} /> Back to dashboard
           </Link>
           <div className="flex items-center gap-2 flex-wrap">
+            {shareId && (
+              <Link
+                to={`/joint-professional-report?share=${encodeURIComponent(shareId)}`}
+                data-testid="pathway-report-joint-report"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
+                title="Open the Joint Co-Parenting Summary for Professional Review — the professional-facing side-by-side."
+              >
+                <ScrollText size={14} />
+                Joint Professional Report
+              </Link>
+            )}
             <Link
               to="/summary?tab=agreement"
               data-testid="pathway-report-draft-agreement"

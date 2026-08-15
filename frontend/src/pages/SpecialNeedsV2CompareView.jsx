@@ -176,10 +176,20 @@ export default function SpecialNeedsV2CompareView() {
                 <span className="mx-2">·</span>
                 <span className="text-[#B02A2A] font-semibold">{data.comparison.summary?.divergent_pct || 0}% different views</span>
               </div>
-              <button onClick={download} disabled={downloading} data-testid="snc2-compare-download-pdf"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
-                {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Link
+                  to={`/joint-professional-report?share=${encodeURIComponent(shareId)}`}
+                  data-testid="snc2-compare-joint-professional-report"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-white border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] transition-colors"
+                  title="Open the professional-facing Joint Co-Parenting Summary for Professional Review."
+                >
+                  Joint Professional Report
+                </Link>
+                <button onClick={download} disabled={downloading} data-testid="snc2-compare-download-pdf"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
+                  {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
+                </button>
+              </div>
             </div>
 
             <div className="mt-2 flex justify-end">

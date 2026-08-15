@@ -1,6 +1,20 @@
 # SA CoParents — PRD
 
 
+- **Iteration 114 — Joint Co-Parenting Summary for Professional Review (2026-08-15)**:
+  - **New backend module** `/app/backend/joint_professional_report.py` — pure aggregator that turns both parents' SNC v2 comparison + mediation prep + Dimension Companion tiers + TISFL Finding 3 (safe to share) into 9 neutral sections: Shared child-centered priorities, Medical needs, Educational / IEP / 504, Psychological & emotional, Consistency between households, Communication & decision-making concerns, Areas of agreement, Areas where perceptions differ, Issues for professional discussion. Every row carries `topic / parent_a / parent_b / alignment / childs_need / issue_for_discussion` and rows are sorted divergent-first inside each section.
+  - **New route** `/app/backend/joint_professional_report_routes.py` — `GET /api/joint-professional-report/{share_id}` (JSON) + `/pdf`. Consent gate reuses the Compare-share model — an active share (SNC v2 or Compare-family) IS mutual consent. Non-participants get 403, unknown share 404, un-consented share 409. Loads Finding 3 via `trauma_lens.redact_for_compare` so Findings 1 & 2 never leak. Registered in `server.py`.
+  - **New PDF** `/app/backend/joint_professional_report_pdf.py` — branded cover page with a red "This is not a custody evaluation" banner, per-section pages with two-column Parent A / Parent B strips + alignment pills + Child's-need + For-discussion callouts. Every page footer marks it as a "Preparation resource - Not a custody evaluation, diagnosis, or recommendation to any court".
+  - **New frontend page** `/app/frontend/src/pages/JointProfessionalReport.jsx` at route `/joint-professional-report?share=<id>` — professional-facing side-by-side layout with prominent NOT-A-CUSTODY-EVALUATION disclaimer, neutral-language + safety-privacy caveat cards, 9 sections rendered as row cards, Download PDF action.
+  - **Access points wired on all three surfaces** (per user's ask):
+     * Dashboard "Where you already agree" card gets a new `data-testid="dashboard-joint-professional-report-link"` secondary CTA. Nested-`<Link>` violation avoided by splitting the outer clickable card.
+     * `PathwayReport.jsx` header gets `data-testid="pathway-report-joint-report"` (only when a `?share=` param is present so single-parent previews don't offer it).
+     * `SpecialNeedsV2CompareView.jsx` action bar gets `data-testid="snc2-compare-joint-professional-report"`.
+  - **Neutral-language guardrail**: `test_iter113_joint_professional_report.py::TestPayloadShape::test_neutral_phrasing_in_issues` scans every `issue_for_discussion` / summary / childs_need string for banned adjudicative language (`mother is correct`, `should have custody`, `primary custody`, `sole custody`, `possession`, `access schedule`, etc.). Any regression re-introducing that language will fail the test.
+  - **Testing**: `test_iter113_joint_professional_report.py` — 10 pytests: auth required, unknown share 404, non-participant 403, all 9 sections present, disclaimer / neutral-language / safety-privacy fields, medical section rows exist after seeding, banned-language regex sweep, PDF returns valid bytes, PDF still enforces consent gate. All 10 pass.
+
+
+
 - **Iteration 113 — Foundation Statement + Co-Parenting Agreement shortcuts (2026-08-12)**:
   - **Dashboard shortcuts**: Added two dedicated buttons in the "Next up" card of `/app/frontend/src/pages/Dashboard.jsx` — `dashboard-foundation-statement-button` (→ `/reflection`) and `dashboard-coparenting-agreement-button` (→ `/summary?tab=agreement`).
   - **PREP_MODULES fix**: The "Declaration Statement" tile was mislabeled and mis-routed to `/summary`. Renamed to **Foundation Statement** and re-routed to `/reflection` to match the rest of the app (Landing, MyPlan, PersonalizedRecommendations, NextStepJourney all use "Foundation Statement" → `/reflection`).
