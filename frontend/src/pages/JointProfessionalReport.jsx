@@ -20,10 +20,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft, Download, Loader2, ShieldAlert, ScrollText, Users, Info,
+  ArrowLeft, Download, Loader2, ShieldAlert, ScrollText, Users, Info, Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
+import JointReportEmailDialog from "../components/JointReportEmailDialog";
 import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -181,6 +182,8 @@ export default function JointProfessionalReport() {
   const shareId = params.get("share");
   const [state, setState] = useState({ loading: true, data: null, error: null });
   const [downloading, setDownloading] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
 
   useEffect(() => {
     if (!shareId) {
@@ -231,6 +234,27 @@ export default function JointProfessionalReport() {
       toast.error("Could not download PDF. Please try again.");
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const sendEmail = async (payload) => {
+    if (!shareId) return;
+    setEmailSending(true);
+    try {
+      const res = await api.post(
+        `/joint-professional-report/${encodeURIComponent(shareId)}/email`,
+        payload,
+      );
+      const emailed = res.data?.emailed_to || payload.recipient_email;
+      toast.success(`Joint report emailed to ${emailed}.`);
+      setEmailOpen(false);
+    } catch (err) {
+      logError("joint report email", err);
+      const msg = err?.response?.data?.detail
+        || "Could not send the joint report right now. Please try again in a moment.";
+      toast.error(msg);
+    } finally {
+      setEmailSending(false);
     }
   };
 
@@ -306,16 +330,27 @@ export default function JointProfessionalReport() {
           >
             <ArrowLeft size={12} /> Back to dashboard
           </Link>
-          <button
-            type="button"
-            onClick={downloadPdf}
-            disabled={downloading}
-            data-testid="joint-report-download-pdf"
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-60"
-          >
-            {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-            Download PDF
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setEmailOpen(true)}
+              data-testid="joint-report-email-open"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
+              title="Email this Joint Report to a mediator, attorney, court, or therapist."
+            >
+              <Mail size={14} /> Email to professional
+            </button>
+            <button
+              type="button"
+              onClick={downloadPdf}
+              disabled={downloading}
+              data-testid="joint-report-download-pdf"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-60"
+            >
+              {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              Download PDF
+            </button>
+          </div>
         </div>
 
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
@@ -391,6 +426,15 @@ export default function JointProfessionalReport() {
           Preparation resource · Not a custody evaluation, diagnosis, or
           recommendation to any court. Share ID {d.share_id}.
         </div>
+
+        <JointReportEmailDialog
+          open={emailOpen}
+          onClose={() => setEmailOpen(false)}
+          onSend={sendEmail}
+          sending={emailSending}
+          parentAName={parentA}
+          parentBName={parentB}
+        />
       </div>
     </AppShell>
   );

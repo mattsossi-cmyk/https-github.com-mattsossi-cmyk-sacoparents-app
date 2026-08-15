@@ -1307,6 +1307,149 @@ def send_pathway_report(
 
 
 
+def send_joint_professional_report(
+    *,
+    to_email: str,
+    recipient_name: str,
+    recipient_role: str,
+    parent_a_name: str,
+    parent_b_name: str,
+    parent_email: str,
+    parent_message: str,
+    summary_counts: Dict[str, int],
+    pdf_bytes: bytes,
+    pdf_filename: str = "joint-professional-report.pdf",
+) -> None:
+    """Email the Joint Co-Parenting Summary for Professional Review to a
+    mediator, attorney, court, or therapist. Reply-to is the sending
+    parent's email so the recipient can respond directly.
+
+    Language is deliberately neutral and mirrors the report itself: the
+    PDF is a preparation resource, NOT a custody evaluation, forensic
+    assessment, clinical diagnosis, expert opinion, or recommendation to
+    any court. Both parents' names appear in the covering copy so the
+    recipient understands it aggregates both perspectives (a share
+    already carries mutual consent).
+    """
+    greeting = f"Hi {recipient_name}," if recipient_name else "Hi,"
+    sender = parent_a_name or parent_email or "This parent"
+    escaped_role = _html.escape(recipient_role or "")
+    scope = (
+        f"{_html.escape(parent_a_name or 'Parent A')} and "
+        f"{_html.escape(parent_b_name or 'Parent B')}"
+    )
+    diff_count = int(summary_counts.get("areas_where_perceptions_differ") or 0)
+    agree_count = int(summary_counts.get("areas_of_agreement") or 0)
+    issues_count = int(summary_counts.get("issues_for_professional_discussion") or 0)
+
+    optional_note_html = (
+        f'<p style="font-size:14px;line-height:1.6;color:#1A1330;margin:0 0 16px 0;'
+        f'background:#F8F7FC;border-radius:14px;padding:14px 16px;border:1px solid #E5E0EE;">'
+        f'<span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;">'
+        f'Note from {_html.escape(sender)}</span><br/>{_html.escape(parent_message)}</p>'
+        if parent_message
+        else ""
+    )
+    optional_note_plain = (
+        f"\nNote from {sender}:\n{parent_message}\n"
+        if parent_message
+        else ""
+    )
+    disclaimer_html = (
+        '<div style="background:#FCEDEB;border-radius:14px;padding:14px 16px;margin:0 0 16px 0;'
+        'border:1px solid #EFB4B4;color:#B02A2A;font-size:13px;line-height:1.55;">'
+        '<strong>This is not a custody evaluation.</strong> The attached '
+        'Joint Report is a preparation and communication resource compiled '
+        "from both parents' self-reported answers. It is not a forensic "
+        "assessment, clinical diagnosis, expert opinion, or recommendation "
+        "to any court."
+        '</div>'
+    )
+    disclaimer_plain = (
+        "\nTHIS IS NOT A CUSTODY EVALUATION. The attached Joint Report is a "
+        "preparation and communication resource compiled from both parents' "
+        "self-reported answers. It is not a forensic assessment, clinical "
+        "diagnosis, expert opinion, or recommendation to any court.\n"
+    )
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'{_html.escape(greeting)}</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'<strong>{_html.escape(sender)}</strong> is preparing for co-parenting '
+        f'discussions through SA CoParents and asked me to send you the '
+        f'<strong>Joint Co-Parenting Summary for Professional Review</strong> '
+        f'covering {scope}'
+        f'{" (" + escaped_role + ")" if escaped_role else ""}.'
+        f'</p>'
+        f'<div style="background:#F8F7FC;border-radius:16px;padding:16px 18px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
+        f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:8px;">'
+        f'At a glance</div>'
+        f'<ul style="font-size:14px;color:#1A1330;line-height:1.55;margin:0;padding-left:18px;">'
+        f'<li>{agree_count} items where both parents\u2019 responses aligned</li>'
+        f'<li>{diff_count} items where their perceptions differ</li>'
+        f'<li>{issues_count} topics flagged for professional discussion</li>'
+        f'</ul>'
+        f'</div>'
+        f'{disclaimer_html}'
+        f'{optional_note_html}'
+        f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 12px 0;">'
+        f'The full report is attached as a PDF. Every row is phrased in '
+        f'neutral, non-adjudicative language and reflects what the parents '
+        f'said, not what SA CoParents or any professional has concluded. '
+        f'You can reply directly to this email to reach {_html.escape(sender)}.'
+        f'</p>'
+        f'<p style="font-size:12px;line-height:1.55;color:#857E9C;margin:0;">'
+        f'Only Finding 3 (Parenting-Plan Implications) of the Trauma-'
+        f'Informed Safety and Functioning Lens is included. The underlying '
+        f'family-violence and trauma findings remain private to the parent '
+        f'who completed that screen.'
+        f'</p>'
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"{sender} is preparing for co-parenting discussions through "
+        f"SA CoParents and asked me to send you the Joint Co-Parenting "
+        f"Summary for Professional Review covering "
+        f"{parent_a_name or 'Parent A'} and {parent_b_name or 'Parent B'}"
+        f"{' (' + (recipient_role or '') + ')' if recipient_role else ''}.\n\n"
+        f"At a glance:\n"
+        f"  * {agree_count} items where both parents' responses aligned\n"
+        f"  * {diff_count} items where their perceptions differ\n"
+        f"  * {issues_count} topics flagged for professional discussion\n"
+        f"{disclaimer_plain}"
+        f"{optional_note_plain}"
+        f"\nThe full report is attached as a PDF. Every row is phrased in "
+        f"neutral, non-adjudicative language and reflects what the parents "
+        f"said, not what SA CoParents or any professional has concluded. "
+        f"You can reply directly to this email to reach {sender} "
+        f"({parent_email}).\n\n"
+        f"Only Finding 3 (Parenting-Plan Implications) of the Trauma-"
+        f"Informed Safety and Functioning Lens is included. The underlying "
+        f"family-violence and trauma findings remain private to the parent "
+        f"who completed that screen.\n"
+    )
+    html = _branded_html(
+        headline=f"Joint Co-Parenting Summary from {_html.escape(sender)}",
+        body_html=body_html,
+        cta_label="",
+    )
+    subject = (
+        f"Joint Co-Parenting Summary for Professional Review \u2014 "
+        f"{parent_a_name or 'Parent A'} & {parent_b_name or 'Parent B'}"
+    )
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=html,
+        text=plain,
+        reply_to=parent_email or None,
+        attachments=[(pdf_filename or "joint-professional-report.pdf", pdf_bytes)],
+        failure_message="Couldn't send the joint report right now. Please try again in a moment.",
+    )
+
+
+
 def send_snc_report_pdf(
     *,
     to_email: str,

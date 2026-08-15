@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 115 — Joint Report Email (2026-08-15)**:
+  - **New backend route** `POST /api/joint-professional-report/{share_id}/email` — assembles the Joint Report PDF and sends it directly to a mediator, attorney, court, therapist, or parent facilitator ad litem. Same consent gate as the JSON/PDF endpoints (active Compare share required). Reply-to is set to the sending parent's email so the recipient can respond directly. Audit log written to `joint_report_emails`.
+  - **New email helper** `email_service.send_joint_professional_report(...)` — branded HTML + plain-text covering letter with an at-a-glance count (aligned items / different views / issues for discussion), a red NOT-A-CUSTODY-EVALUATION strip, and the Finding-3-only safety-privacy note. PDF attaches as `joint-professional-report-<share>.pdf`.
+  - **New frontend dialog** `/app/frontend/src/components/JointReportEmailDialog.jsx` — mirrors PathwayEmailDialog UX with role chips (mediator / parent facilitator ad litem / trial court / attorney / therapist / other), recipient email + name, and an optional 1200-char parent note. Prominent "This is not a custody evaluation" strip inside the dialog itself.
+  - **Wired into JointProfessionalReport page** — new `Email to professional` button (`data-testid="joint-report-email-open"`) sits beside `Download PDF`. Handles both success (toast: "Joint report emailed to …") and the "email not configured" 503 case (toast surfaces the backend's message unchanged).
+  - **Testing**: `test_iter113_joint_professional_report.py::TestEmailEndpoint` — 5 new tests: auth required, non-participant 403, invalid-email rejection, demo-email rejection, happy-path OR 503-when-mail-transport-disabled. All 15 tests pass.
+
+
+
 - **Iteration 114 — Joint Co-Parenting Summary for Professional Review (2026-08-15)**:
   - **New backend module** `/app/backend/joint_professional_report.py` — pure aggregator that turns both parents' SNC v2 comparison + mediation prep + Dimension Companion tiers + TISFL Finding 3 (safe to share) into 9 neutral sections: Shared child-centered priorities, Medical needs, Educational / IEP / 504, Psychological & emotional, Consistency between households, Communication & decision-making concerns, Areas of agreement, Areas where perceptions differ, Issues for professional discussion. Every row carries `topic / parent_a / parent_b / alignment / childs_need / issue_for_discussion` and rows are sorted divergent-first inside each section.
   - **New route** `/app/backend/joint_professional_report_routes.py` — `GET /api/joint-professional-report/{share_id}` (JSON) + `/pdf`. Consent gate reuses the Compare-share model — an active share (SNC v2 or Compare-family) IS mutual consent. Non-participants get 403, unknown share 404, un-consented share 409. Loads Finding 3 via `trauma_lens.redact_for_compare` so Findings 1 & 2 never leak. Registered in `server.py`.
