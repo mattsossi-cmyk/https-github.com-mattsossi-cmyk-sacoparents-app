@@ -54,6 +54,7 @@ import AdminReviewers from "@/pages/AdminReviewers";
 import AdminNDCoordinator from "@/pages/AdminNDCoordinator";
 import PathwayReport from "@/pages/PathwayReport";
 import JointProfessionalReport from "@/pages/JointProfessionalReport";
+import JointAgreement from "@/pages/JointAgreement";
 import NDRiskAssessment from "@/pages/NDRiskAssessment";
 import NDRiskAssessmentResult from "@/pages/NDRiskAssessmentResult";
 import DimensionCompanion from "@/pages/DimensionCompanion";
@@ -123,6 +124,7 @@ function AppRoutes() {
         <Route path="/admin/nd-coordinator" element={<AdminNDCoordinator />} />
         <Route path="/pathway-report" element={<PathwayReport />} />
         <Route path="/joint-professional-report" element={<JointProfessionalReport />} />
+        <Route path="/joint-agreement" element={<JointAgreement />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
         <Route path="/shared/coparenting/:token" element={<SharedCoParentingReport />} />

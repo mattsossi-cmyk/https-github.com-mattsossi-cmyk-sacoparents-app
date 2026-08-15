@@ -331,6 +331,14 @@ export default function JointProfessionalReport() {
             <ArrowLeft size={12} /> Back to dashboard
           </Link>
           <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              to={`/joint-agreement?share=${encodeURIComponent(shareId)}`}
+              data-testid="joint-report-open-agreement"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#2DB5B5] text-[#2DB5B5] px-4 py-2 text-sm font-semibold hover:bg-[#EAF7F7] transition-colors"
+              title="Open the merged Joint Co-Parenting Agreement Draft built from both parents' individual drafts."
+            >
+              <ScrollText size={14} /> Joint Agreement Draft
+            </Link>
             <button
               type="button"
               onClick={() => setEmailOpen(true)}

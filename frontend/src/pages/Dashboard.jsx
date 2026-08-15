@@ -1227,6 +1227,14 @@ export default function Dashboard() {
                 >
                   Open Joint Professional Report →
                 </Link>
+                <Link
+                  to={`/joint-agreement?share=${encodeURIComponent(sncHighlights.share_id)}`}
+                  className="text-[11px] font-semibold text-[#2DB5B5] underline underline-offset-2 hover:text-[#1F8F8F]"
+                  data-testid="dashboard-joint-agreement-link"
+                  title="Open the Joint Co-Parenting Agreement Draft — merged from both parents' individual drafts."
+                >
+                  Open Joint Agreement Draft →
+                </Link>
               </div>
             </div>
           </div>

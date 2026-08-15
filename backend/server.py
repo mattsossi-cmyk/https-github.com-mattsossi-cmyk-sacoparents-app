@@ -42,6 +42,7 @@ from pathway_verify_routes import router as pathway_verify_router  # noqa: E402
 from court_report_verify_routes import router as court_report_verify_router  # noqa: E402
 from pathway_report_routes import router as pathway_report_router  # noqa: E402
 from joint_professional_report_routes import router as joint_professional_report_router  # noqa: E402
+from joint_agreement_routes import router as joint_agreement_router  # noqa: E402
 from admin_nd_coordinator_routes import router as admin_nd_coordinator_router  # noqa: E402
 from nd_risk_routes import router as nd_risk_router  # noqa: E402
 from dimension_companion_routes import router as dimension_companion_router  # noqa: E402
@@ -149,6 +150,7 @@ api_router.include_router(pathway_verify_router)
 api_router.include_router(court_report_verify_router)
 api_router.include_router(pathway_report_router)
 api_router.include_router(joint_professional_report_router)
+api_router.include_router(joint_agreement_router)
 api_router.include_router(admin_nd_coordinator_router)
 api_router.include_router(nd_risk_router)
 api_router.include_router(dimension_companion_router)

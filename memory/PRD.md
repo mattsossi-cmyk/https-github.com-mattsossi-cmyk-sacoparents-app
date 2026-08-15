@@ -1,6 +1,19 @@
 # SA CoParents — PRD
 
 
+- **Iteration 116 — Joint Co-Parenting Agreement Draft (merged from both parents) (2026-08-15)**:
+  - **New backend module** `/app/backend/joint_agreement.py` — deterministic merger (no LLM). Reads both parents' latest documents from `agreements`, matches clauses using `difflib.SequenceMatcher` at a 0.60 similarity threshold, and buckets each clause into `both_proposed` / `parent_a_only` / `parent_b_only`. Sections merged: shared_goals, communication, child_needs, household_rules, priority_items, open_for_discussion. Also computes a convergence % for the summary strip.
+  - **New route** `/app/backend/joint_agreement_routes.py` — `GET /api/joint-agreement/{share_id}` (JSON) + `/pdf`. Reuses `_find_active_share` + `_load_user_display_name` from `joint_professional_report_routes` so the consent gate is identical (active Compare share = mutual consent). Returns 409 when either parent hasn't generated their individual agreement yet — with a clear instruction pointing to Summary → Co-Parenting Agreement Draft.
+  - **New PDF** `/app/backend/joint_agreement_pdf.py` — branded cover with a yellow "This is a draft for discussion" banner + convergence stats, then each of the 6 sections with three colour-coded buckets (green Both / purple Parent A only / warm Parent B only). Footer marks every page as *"Draft for discussion - Not a signed agreement or court order"*.
+  - **New frontend page** `/app/frontend/src/pages/JointAgreement.jsx` at route `/joint-agreement?share=<id>` — three colour-coded buckets per section, side-by-side Parent A / Parent B strips in the Both bucket, at-a-glance convergence percentage, closing-notes side-by-side card, next-step callout, PDF download.
+  - **Access points wired** on all three surfaces per the earlier pattern:
+     * Dashboard "Where you already agree" card gets a second inline CTA `dashboard-joint-agreement-link` alongside the Joint Report link.
+     * `JointProfessionalReport.jsx` header gets `joint-report-open-agreement` button so professionals reading the summary can jump straight to the joint draft.
+     * (Not repeated on the SNC2 compare page — user hits it via the dashboard / joint report entry points.)
+  - **Testing**: `test_iter116_joint_agreement.py` — 9 pytests: auth required, unknown share 404, non-participant 403, expected 6 section keys, bucketing correctness with real overlap seeds, disclaimer language, convergence math, missing-agreement 409, PDF is a valid non-trivial PDF. All 9 pass; regression run with iter113 shows 24/24 pass overall.
+
+
+
 - **Iteration 115 — Joint Report Email (2026-08-15)**:
   - **New backend route** `POST /api/joint-professional-report/{share_id}/email` — assembles the Joint Report PDF and sends it directly to a mediator, attorney, court, therapist, or parent facilitator ad litem. Same consent gate as the JSON/PDF endpoints (active Compare share required). Reply-to is set to the sending parent's email so the recipient can respond directly. Audit log written to `joint_report_emails`.
   - **New email helper** `email_service.send_joint_professional_report(...)` — branded HTML + plain-text covering letter with an at-a-glance count (aligned items / different views / issues for discussion), a red NOT-A-CUSTODY-EVALUATION strip, and the Finding-3-only safety-privacy note. PDF attaches as `joint-professional-report-<share>.pdf`.
