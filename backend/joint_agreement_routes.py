@@ -22,6 +22,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pydantic import BaseModel, Field
+from typing import Literal
 
 from auth import UserPublic, get_current_user, get_db
 from joint_agreement import build_joint_agreement
@@ -110,3 +112,120 @@ async def get_joint_agreement_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ---------------------------------------------------------------------------
+# Email export — send the Joint Agreement Draft PDF straight to a
+# mediator, attorney, court, or therapist. Mirrors the Joint Report
+# email endpoint so parents get the same one-tap experience for either
+# artefact.
+# ---------------------------------------------------------------------------
+
+_ROLE_TO_AUDIENCE = {
+    "mediator":                    "Mediator",
+    "parent_facilitator_ad_litem": "Parent Facilitator Ad Litem",
+    "trial_court":                 "Trial Court",
+    "attorney":                    "Family Law Attorney",
+    "therapist":                   "Therapist / Counsellor",
+    "other":                       "Mediator / Attorney / Trial Court",
+}
+
+
+class JointAgreementEmailBody(BaseModel):
+    recipient_email: str = Field(..., max_length=200)
+    recipient_name:  Optional[str] = Field(None, max_length=120)
+    recipient_role:  Optional[Literal[
+        "mediator", "parent_facilitator_ad_litem", "trial_court",
+        "attorney", "therapist", "other",
+    ]] = None
+    audience_label:  Optional[str] = Field(None, max_length=120)
+    parent_message:  Optional[str] = Field(None, max_length=1200)
+
+
+@router.post("/{share_id}/email")
+async def email_joint_agreement(
+    share_id: str,
+    body: JointAgreementEmailBody,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Generate the joint agreement PDF and email it directly to a
+    professional. Reply-to is the sending parent's email.
+
+    Consent gate is identical to `/api/joint-agreement/{share_id}`.
+    """
+    from datetime import datetime, timezone
+    from email_service import (
+        EmailNotConfigured,
+        EmailSendError,
+        send_joint_agreement_draft,
+    )
+    from joint_agreement_pdf import build_joint_agreement_pdf
+
+    to_email = (body.recipient_email or "").strip().lower()
+    if "@" not in to_email or "." not in to_email.split("@")[-1]:
+        raise HTTPException(400, "That doesn't look like a valid email address.")
+    if to_email.endswith("@demo.local"):
+        raise HTTPException(400, "Please use your recipient's real email address.")
+
+    parent_email = (user.email or "").strip().lower()
+    if not parent_email or parent_email.endswith("@demo.local"):
+        raise HTTPException(
+            400,
+            "Save your work first — add a real email to your account so the "
+            "recipient can reply to you.",
+        )
+
+    share = await _find_active_share(db, share_id, user.user_id)
+    payload = await _assemble_joint_agreement(db, share, user.user_id, share_id)
+    audience = body.audience_label or _ROLE_TO_AUDIENCE.get(
+        body.recipient_role or "other", _ROLE_TO_AUDIENCE["other"],
+    )
+
+    try:
+        pdf_bytes = build_joint_agreement_pdf(payload)
+    except Exception as e:  # pragma: no cover - defensive
+        raise HTTPException(500, "Could not assemble the joint agreement PDF.") from e
+
+    try:
+        send_joint_agreement_draft(
+            to_email=to_email,
+            recipient_name=(body.recipient_name or "").strip(),
+            recipient_role=audience,
+            parent_a_name=payload.get("parent_a_name") or "",
+            parent_b_name=payload.get("parent_b_name") or "",
+            parent_email=parent_email,
+            parent_message=(body.parent_message or "").strip(),
+            summary=payload.get("summary") or {},
+            pdf_bytes=pdf_bytes,
+            pdf_filename=f"joint-coparenting-agreement-{share_id[:10]}.pdf",
+        )
+    except EmailNotConfigured as e:
+        raise HTTPException(
+            503,
+            "Email isn't configured on this environment. Download the PDF "
+            "and share it directly.",
+        ) from e
+    except EmailSendError as e:
+        raise HTTPException(
+            503,
+            "Couldn't send the joint agreement right now. Please try again "
+            "in a moment.",
+        ) from e
+
+    await db.joint_agreement_emails.insert_one({
+        "user_id":        user.user_id,
+        "share_id":       share_id,
+        "to_email":       to_email,
+        "recipient_name": (body.recipient_name or "").strip(),
+        "recipient_role": body.recipient_role,
+        "audience":       audience,
+        "sent_at":        datetime.now(timezone.utc).isoformat(),
+    })
+    return {
+        "ok": True,
+        "emailed_to": to_email,
+        "audience": audience,
+        "share_id": share_id,
+    }
+

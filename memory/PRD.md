@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 117 — Email Joint Agreement Draft (2026-08-15)**:
+  - **New backend route** `POST /api/joint-agreement/{share_id}/email` — assembles the Joint Agreement PDF and sends it directly to a mediator, attorney, court, therapist, or PFAL. Same consent gate as the Joint Agreement JSON/PDF endpoints. Reply-to is set to the sending parent so the recipient can respond directly. Audit log written to `joint_agreement_emails`.
+  - **New email helper** `email_service.send_joint_agreement_draft(...)` — mirrors `send_joint_professional_report`'s structure but reframed as a DRAFT for discussion (yellow strip, never a signed agreement / never a custody recommendation). At-a-glance strip shows both-proposed / one-only counts + convergence %.
+  - **Dialog generalisation, not duplication**: `/app/frontend/src/components/JointReportEmailDialog.jsx` now accepts a `variant` prop (`"report"` or `"agreement"`) and a `testIdPrefix`. Two internal `VARIANTS` objects swap the eyebrow, disclaimer tone (red vs yellow), scope card blurb, intro text, message-placeholder, italic-hint, and Send-button label. Defaults keep the existing test-ids intact so iter113 tests still pass.
+  - **Wired into JointAgreement page** — new `Email to professional` button (`data-testid="joint-agreement-email-open"`) sits beside `Download PDF`. Handles both 200 (success toast) and 503 (mail-not-configured toast) paths cleanly.
+  - **Testing**: `test_iter116_joint_agreement.py::TestEmailEndpoint` — 5 new pytests (auth, non-participant, invalid email, demo email, happy-or-503). 29/29 pass across iter113+iter116 combined; no regressions from the dialog refactor.
+
+
+
 - **Iteration 116 — Joint Co-Parenting Agreement Draft (merged from both parents) (2026-08-15)**:
   - **New backend module** `/app/backend/joint_agreement.py` — deterministic merger (no LLM). Reads both parents' latest documents from `agreements`, matches clauses using `difflib.SequenceMatcher` at a 0.60 similarity threshold, and buckets each clause into `both_proposed` / `parent_a_only` / `parent_b_only`. Sections merged: shared_goals, communication, child_needs, household_rules, priority_items, open_for_discussion. Also computes a convergence % for the summary strip.
   - **New route** `/app/backend/joint_agreement_routes.py` — `GET /api/joint-agreement/{share_id}` (JSON) + `/pdf`. Reuses `_find_active_share` + `_load_user_display_name` from `joint_professional_report_routes` so the consent gate is identical (active Compare share = mutual consent). Returns 409 when either parent hasn't generated their individual agreement yet — with a clear instruction pointing to Summary → Co-Parenting Agreement Draft.

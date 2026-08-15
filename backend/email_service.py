@@ -1449,6 +1449,139 @@ def send_joint_professional_report(
     )
 
 
+def send_joint_agreement_draft(
+    *,
+    to_email: str,
+    recipient_name: str,
+    recipient_role: str,
+    parent_a_name: str,
+    parent_b_name: str,
+    parent_email: str,
+    parent_message: str,
+    summary: Dict[str, Any],
+    pdf_bytes: bytes,
+    pdf_filename: str = "joint-coparenting-agreement.pdf",
+) -> None:
+    """Email the Joint Co-Parenting Agreement Draft PDF directly to a
+    mediator, attorney, court, or therapist.
+
+    Covering text is deliberately framed as a DRAFT FOR DISCUSSION — never
+    a signed agreement, court order, or custody recommendation. Both
+    parents' consent is implicit in the active Compare share the draft
+    was generated from. Reply-to is the sending parent so the recipient
+    can respond directly.
+    """
+    greeting = f"Hi {recipient_name}," if recipient_name else "Hi,"
+    sender = parent_a_name or parent_email or "This parent"
+    scope = (
+        f"{_html.escape(parent_a_name or 'Parent A')} and "
+        f"{_html.escape(parent_b_name or 'Parent B')}"
+    )
+    both_ct = int((summary or {}).get("both_proposed") or 0)
+    a_only  = int((summary or {}).get("parent_a_only") or 0)
+    b_only  = int((summary or {}).get("parent_b_only") or 0)
+    conv_pct = int((summary or {}).get("converged_pct") or 0)
+
+    optional_note_html = (
+        f'<p style="font-size:14px;line-height:1.6;color:#1A1330;margin:0 0 16px 0;'
+        f'background:#F8F7FC;border-radius:14px;padding:14px 16px;border:1px solid #E5E0EE;">'
+        f'<span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;">'
+        f'Note from {_html.escape(sender)}</span><br/>{_html.escape(parent_message)}</p>'
+        if parent_message else ""
+    )
+    optional_note_plain = (
+        f"\nNote from {sender}:\n{parent_message}\n"
+        if parent_message else ""
+    )
+    disclaimer_html = (
+        '<div style="background:#FFF6D8;border-radius:14px;padding:14px 16px;margin:0 0 16px 0;'
+        'border:1px solid #E4D8B8;color:#8A6B12;font-size:13px;line-height:1.55;">'
+        '<strong>This is a draft for discussion.</strong> The attached '
+        'document is a merged draft compiled from both parents\u2019 '
+        'individual agreement drafts. It is not a signed agreement, a '
+        'court order, a legal document, or a custody recommendation. Both '
+        'parents remain responsible for reviewing each clause with their '
+        'own professionals before adopting anything.'
+        '</div>'
+    )
+    disclaimer_plain = (
+        "\nTHIS IS A DRAFT FOR DISCUSSION. The attached document is a "
+        "merged draft compiled from both parents' individual agreement "
+        "drafts. It is not a signed agreement, a court order, a legal "
+        "document, or a custody recommendation.\n"
+    )
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'{_html.escape(greeting)}</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'<strong>{_html.escape(sender)}</strong> is preparing for '
+        f'co-parenting discussions through SA CoParents and asked me to '
+        f'send you the <strong>Joint Co-Parenting Agreement Draft</strong> '
+        f'covering {scope}'
+        f'{" (" + _html.escape(recipient_role) + ")" if recipient_role else ""}.'
+        f'</p>'
+        f'<div style="background:#F8F7FC;border-radius:16px;padding:16px 18px;margin:0 0 16px 0;border:1px solid #E5E0EE;">'
+        f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:8px;">'
+        f'At a glance</div>'
+        f'<ul style="font-size:14px;color:#1A1330;line-height:1.55;margin:0;padding-left:18px;">'
+        f'<li>{both_ct} clauses proposed by <strong>both</strong> parents</li>'
+        f'<li>{a_only} clauses proposed by {_html.escape(parent_a_name or "Parent A")} only</li>'
+        f'<li>{b_only} clauses proposed by {_html.escape(parent_b_name or "Parent B")} only</li>'
+        f'<li>Convergence: <strong>{conv_pct}%</strong></li>'
+        f'</ul>'
+        f'</div>'
+        f'{disclaimer_html}'
+        f'{optional_note_html}'
+        f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 12px 0;">'
+        f'The full draft is attached as a PDF. Every clause is shown '
+        f'verbatim under the parent who proposed it \u2014 the merger '
+        f'only classifies clauses into buckets, it does not rewrite them. '
+        f'You can reply directly to this email to reach {_html.escape(sender)}.'
+        f'</p>'
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"{sender} is preparing for co-parenting discussions through "
+        f"SA CoParents and asked me to send you the Joint Co-Parenting "
+        f"Agreement Draft covering "
+        f"{parent_a_name or 'Parent A'} and {parent_b_name or 'Parent B'}"
+        f"{' (' + (recipient_role or '') + ')' if recipient_role else ''}.\n\n"
+        f"At a glance:\n"
+        f"  * {both_ct} clauses proposed by both parents\n"
+        f"  * {a_only} clauses proposed by "
+        f"{parent_a_name or 'Parent A'} only\n"
+        f"  * {b_only} clauses proposed by "
+        f"{parent_b_name or 'Parent B'} only\n"
+        f"  * Convergence: {conv_pct}%\n"
+        f"{disclaimer_plain}"
+        f"{optional_note_plain}"
+        f"\nThe full draft is attached as a PDF. Every clause is shown "
+        f"verbatim under the parent who proposed it \u2014 the merger "
+        f"only classifies clauses into buckets, it does not rewrite them. "
+        f"You can reply directly to this email to reach {sender} "
+        f"({parent_email}).\n"
+    )
+    html = _branded_html(
+        headline=f"Joint Agreement Draft from {_html.escape(sender)}",
+        body_html=body_html,
+        cta_label="",
+    )
+    subject = (
+        f"Joint Co-Parenting Agreement Draft \u2014 "
+        f"{parent_a_name or 'Parent A'} & {parent_b_name or 'Parent B'}"
+    )
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=html,
+        text=plain,
+        reply_to=parent_email or None,
+        attachments=[(pdf_filename or "joint-coparenting-agreement.pdf", pdf_bytes)],
+        failure_message="Couldn't send the joint agreement right now. Please try again in a moment.",
+    )
+
+
 
 def send_snc_report_pdf(
     *,

@@ -287,3 +287,61 @@ class TestPdf:
         assert r.headers["content-type"].startswith("application/pdf")
         assert r.content.startswith(b"%PDF-")
         assert len(r.content) > 3000
+
+
+class TestEmailEndpoint:
+    """Mirrors the iter113 Joint Report email tests. Locks consent gate,
+    validation, and either a 200 or a 503 (mail-not-configured) — both
+    acceptable in preview."""
+
+    def test_auth_required(self, active_share):
+        r = requests.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/email",
+            json={"recipient_email": "test@example.com"}, timeout=30,
+        )
+        assert r.status_code in {401, 403}
+
+    def test_non_participant_403(self, active_share, seeded_agreements):
+        stranger = _register(
+            f"TEST_agr_email_stranger_{uuid.uuid4().hex[:8]}@test.com",
+            "Agr Email Stranger",
+        )
+        r = stranger.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/email",
+            json={"recipient_email": "someone@example.com"},
+        )
+        assert r.status_code == 403
+
+    def test_invalid_email_rejected(self, parent1, active_share, seeded_agreements):
+        r = parent1.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/email",
+            json={"recipient_email": "not-an-email"},
+        )
+        assert r.status_code == 400
+
+    def test_demo_email_rejected(self, parent1, active_share, seeded_agreements):
+        r = parent1.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/email",
+            json={"recipient_email": "someone@demo.local"},
+        )
+        assert r.status_code == 400
+
+    def test_happy_path_or_email_not_configured(
+        self, parent1, active_share, seeded_agreements,
+    ):
+        r = parent1.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/email",
+            json={
+                "recipient_email": f"mediator+{uuid.uuid4().hex[:6]}@example.com",
+                "recipient_name":  "Test Mediator",
+                "recipient_role":  "mediator",
+                "parent_message":  "For our next joint session.",
+            },
+        )
+        assert r.status_code in {200, 503}, r.text[:300]
+        if r.status_code == 200:
+            body = r.json()
+            assert body["ok"] is True
+            assert body["audience"] == "Mediator"
+            assert body["share_id"] == active_share
+
