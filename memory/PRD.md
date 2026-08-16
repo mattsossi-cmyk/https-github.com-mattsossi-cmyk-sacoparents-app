@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 118 — Regenerate My Draft From Joint (2026-08-16)**:
+  - **New backend endpoint** `POST /api/joint-agreement/{share_id}/regenerate-mine` — deterministic (no LLM). Loads the caller's latest individual agreement + the current joint payload, promotes any clause matching the joint's `both_proposed` bucket (via the same `SequenceMatcher` similarity gate the merger uses) to the top of each section, sets `anchored: true/false` on dict-shaped clauses, and inserts a NEW agreement doc — the prior draft is preserved untouched.
+  - **New helper** `joint_agreement.regenerate_individual_from_joint(...)` — pure function so tests can lock the anchor-promotion + `regenerated_from_joint` audit stanza (share_id, prior_agreement_id, anchor_counts_per_section, total_anchors, regenerated_at, co-parent name).
+  - **Refreshed overview line** — when at least one clause is anchored, the new doc's `overview` is rewritten as *"Refreshed draft — anchored around the {N} clause(s) that {co-parent first name} and I have both proposed. Those clauses appear at the top of each section and are marked as anchored."*
+  - **Frontend button** on `JointAgreement.jsx` header (`joint-agreement-regenerate-mine-open`) — only shown when `summary.both_proposed > 0`. Opens a green-branded confirm dialog explaining the promotion + preservation semantics, then hits the endpoint and shows a toast with the anchor count. Prior draft stays in the parent's Summary → Agreement history.
+  - **Testing**: `test_iter116_joint_agreement.py::TestRegenerateMine` — 5 new pytests: auth required, non-participant 403, happy path inserts a new doc + preserves the prior id, anchored clauses promoted to the top with correct `anchored` flag, prior agreement doc untouched. 19/19 pass; iter113 suite still 15/15 (no regressions).
+
+
+
 - **Iteration 117 — Email Joint Agreement Draft (2026-08-15)**:
   - **New backend route** `POST /api/joint-agreement/{share_id}/email` — assembles the Joint Agreement PDF and sends it directly to a mediator, attorney, court, therapist, or PFAL. Same consent gate as the Joint Agreement JSON/PDF endpoints. Reply-to is set to the sending parent so the recipient can respond directly. Audit log written to `joint_agreement_emails`.
   - **New email helper** `email_service.send_joint_agreement_draft(...)` — mirrors `send_joint_professional_report`'s structure but reframed as a DRAFT for discussion (yellow strip, never a signed agreement / never a custody recommendation). At-a-glance strip shows both-proposed / one-only counts + convergence %.

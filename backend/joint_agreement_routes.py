@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 
 from auth import UserPublic, get_current_user, get_db
-from joint_agreement import build_joint_agreement
+from joint_agreement import build_joint_agreement, regenerate_individual_from_joint
 from joint_professional_report_routes import (
     _find_active_share, _load_user_display_name,
 )
@@ -227,5 +227,70 @@ async def email_joint_agreement(
         "emailed_to": to_email,
         "audience": audience,
         "share_id": share_id,
+    }
+
+
+
+# ---------------------------------------------------------------------------
+# Regenerate the caller's individual draft using the joint's
+# `both_proposed` clauses as anchors. Deterministic — the parent's
+# voice is preserved verbatim; anchor clauses are promoted to the top
+# of each section and flagged.
+# ---------------------------------------------------------------------------
+
+@router.post("/{share_id}/regenerate-mine")
+async def regenerate_my_agreement_from_joint(
+    share_id: str,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Refresh the caller's individual Co-Parenting Agreement Draft so
+    that clauses both parents have already proposed appear at the top
+    of each section (marked `anchored: true`).
+
+    Non-destructive: the caller's prior agreement doc stays in the
+    `agreements` collection so history is preserved. A fresh doc is
+    inserted with a `regenerated_from_joint` audit stanza pointing back
+    to the joint share.
+
+    Consent gate is identical to the other joint-agreement endpoints —
+    the caller must be a participant in an active Compare share and
+    both parents must have generated their individual drafts.
+    """
+    from datetime import datetime, timezone
+
+    share = await _find_active_share(db, share_id, user.user_id)
+    payload = await _assemble_joint_agreement(db, share, user.user_id, share_id)
+
+    # The joint payload treats the caller as parent A. Their individual
+    # draft is the source we regenerate from.
+    caller_agreement = await _load_latest_agreement(db, user.user_id)
+    if not caller_agreement:  # pragma: no cover - _assemble already 409s
+        raise HTTPException(
+            409,
+            "You haven't generated your individual Co-Parenting Agreement "
+            "Draft yet. Open Summary -> Co-Parenting Agreement Draft and "
+            "generate yours first, then come back.",
+        )
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    new_doc, anchor_counts = regenerate_individual_from_joint(
+        caller_agreement=caller_agreement,
+        joint_payload=payload,
+        now_iso=now_iso,
+        co_parent_name=payload.get("parent_b_name") or "your co-parent",
+    )
+    # Persist. We keep the prior agreement doc untouched so parents can
+    # revert or reference their earlier drafts if needed.
+    new_doc["user_id"] = user.user_id
+    await db.agreements.insert_one(new_doc.copy())
+
+    return {
+        "ok":                  True,
+        "new_agreement_id":    new_doc["agreement_id"],
+        "prior_agreement_id":  new_doc["regenerated_from_joint"]["prior_agreement_id"],
+        "total_anchors":       new_doc["regenerated_from_joint"]["total_anchors"],
+        "anchor_counts":       anchor_counts,
+        "share_id":            share_id,
     }
 

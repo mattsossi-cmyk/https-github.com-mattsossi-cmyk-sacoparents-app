@@ -345,3 +345,127 @@ class TestEmailEndpoint:
             assert body["audience"] == "Mediator"
             assert body["share_id"] == active_share
 
+
+
+class TestRegenerateMine:
+    """Locks the 'Regenerate my draft from joint' behaviour:
+      * Consent gate identical to the joint agreement itself.
+      * A NEW agreement doc is inserted; prior one is preserved.
+      * Both-proposed clauses appear at the TOP of each section in the
+        new doc and carry `anchored: true`.
+      * Solo clauses stay in the doc but come after anchored ones and
+        carry `anchored: false`.
+      * `regenerated_from_joint` audit stanza points back to the share
+        and the prior agreement id.
+    """
+
+    def test_auth_required(self, active_share):
+        r = requests.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/regenerate-mine",
+            timeout=30,
+        )
+        assert r.status_code in {401, 403}
+
+    def test_non_participant_403(self, active_share, seeded_agreements):
+        stranger = _register(
+            f"TEST_regen_stranger_{uuid.uuid4().hex[:8]}@test.com", "Stranger",
+        )
+        r = stranger.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/regenerate-mine",
+        )
+        assert r.status_code == 403
+
+    def test_happy_path_inserts_new_doc(
+        self, parent1, active_share, seeded_agreements,
+    ):
+        db = _mongo()
+        user_id = _get_user_id(parent1)
+        pre_count = db.agreements.count_documents({"user_id": user_id})
+        pre_latest = list(db.agreements.find(
+            {"user_id": user_id},
+        ).sort("generated_at", -1).limit(1))
+        assert pre_latest, "seed missing"
+        pre_id = pre_latest[0]["agreement_id"]
+
+        r = parent1.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/regenerate-mine",
+        )
+        assert r.status_code == 200, r.text[:300]
+        body = r.json()
+        assert body["ok"] is True
+        assert body["prior_agreement_id"] == pre_id
+        assert body["new_agreement_id"] != pre_id
+        assert body["total_anchors"] >= 1
+        assert body["share_id"] == active_share
+
+        post_count = db.agreements.count_documents({"user_id": user_id})
+        assert post_count == pre_count + 1, "new doc not inserted"
+
+        # Latest doc should be the regenerated one and carry the stanza.
+        latest = db.agreements.find_one(
+            {"user_id": user_id, "agreement_id": body["new_agreement_id"]},
+        )
+        assert latest is not None
+        stanza = latest.get("regenerated_from_joint")
+        assert stanza and stanza["share_id"] == active_share
+        assert stanza["prior_agreement_id"] == pre_id
+        assert stanza["total_anchors"] >= 1
+
+    def test_anchored_clauses_promoted_and_flagged(
+        self, parent1, active_share, seeded_agreements,
+    ):
+        db = _mongo()
+        user_id = _get_user_id(parent1)
+        r = parent1.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/regenerate-mine",
+        )
+        assert r.status_code == 200
+        new_id = r.json()["new_agreement_id"]
+        latest = db.agreements.find_one(
+            {"user_id": user_id, "agreement_id": new_id},
+        )
+        # For dict-shaped sections, anchored=True must come before False,
+        # and every dict must have the `anchored` flag set.
+        for key in ("communication", "child_needs"):
+            items = latest.get(key) or []
+            assert items, f"{key} unexpectedly empty"
+            seen_false = False
+            for it in items:
+                assert isinstance(it, dict)
+                assert "anchored" in it
+                if not it["anchored"]:
+                    seen_false = True
+                elif seen_false:
+                    raise AssertionError(
+                        f"{key}: anchored True after False — promotion broken"
+                    )
+            # At least one anchor should exist (medication / texting overlap).
+            assert any(it.get("anchored") for it in items), (
+                f"{key}: expected at least one anchored clause"
+            )
+
+    def test_prior_agreement_untouched(
+        self, parent1, active_share, seeded_agreements,
+    ):
+        db = _mongo()
+        user_id = _get_user_id(parent1)
+        pre_latest = db.agreements.find_one(
+            {"user_id": user_id}, sort=[("generated_at", -1)],
+        )
+        pre_snapshot = {
+            "communication": pre_latest.get("communication"),
+            "child_needs":   pre_latest.get("child_needs"),
+            "shared_goals":  pre_latest.get("shared_goals"),
+        }
+        r = parent1.post(
+            f"{BASE_URL}/api/joint-agreement/{active_share}/regenerate-mine",
+        )
+        assert r.status_code == 200
+        # Original doc must not have been mutated.
+        after = db.agreements.find_one(
+            {"user_id": user_id, "agreement_id": pre_latest["agreement_id"]},
+        )
+        assert after["communication"] == pre_snapshot["communication"]
+        assert after["child_needs"] == pre_snapshot["child_needs"]
+        assert after["shared_goals"] == pre_snapshot["shared_goals"]
+

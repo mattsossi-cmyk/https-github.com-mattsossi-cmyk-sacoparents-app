@@ -295,3 +295,129 @@ def build_joint_agreement(
             "will pay off most."
         ),
     }
+
+
+
+# ---------------------------------------------------------------------------
+# Regenerator — refresh the caller's individual agreement draft using the
+# joint's `both_proposed` clauses as anchors.
+#
+# Pure function. Given the caller's own agreement + the caller's own view
+# of the joint (the caller is always Parent A in the joint payload — we
+# guarantee this by generating the joint from their perspective), we
+# produce a NEW individual agreement doc where each section's clauses
+# are re-ordered so the ones both parents already proposed appear first
+# and carry an `anchored=True` flag.
+#
+# Deliberately deterministic (no LLM) — the parent's voice is preserved
+# verbatim; we do not rewrite their clauses. The regenerator's job is
+# to _highlight_ shared ground inside their own draft.
+# ---------------------------------------------------------------------------
+
+# Fields we regenerate — same list the merger uses. Every section that
+# carries dict-shaped clauses gets the anchor promotion + `anchored`
+# flag. `shared_goals` / `open_for_discussion` are bare-string lists so
+# they get the same promotion but no flag mutation.
+_REGEN_SECTIONS = (
+    "shared_goals",
+    "communication",
+    "child_needs",
+    "household_rules",
+    "priority_items",
+    "open_for_discussion",
+)
+
+
+def _clause_matches_joint_both(
+    caller_text: str, joint_both_rows: List[Dict[str, Any]],
+) -> bool:
+    """True when the caller's own clause matched into the joint's
+    `both_proposed` bucket (i.e., the co-parent proposed a similar
+    clause). We compare against `parent_a_text` because the joint is
+    generated from the caller's perspective (they are Parent A)."""
+    if not caller_text:
+        return False
+    for row in joint_both_rows or []:
+        if _similar(caller_text, row.get("parent_a_text") or "") >= _SIMILARITY_MATCH:
+            return True
+    return False
+
+
+def _promote_and_flag(
+    original_items: List[Any], joint_both_rows: List[Dict[str, Any]],
+) -> Tuple[List[Any], int]:
+    """Sort the caller's clauses so anchors come first, and add an
+    `anchored` boolean to dict-shaped clauses (bare strings stay strings).
+
+    Returns (new_list, anchor_count).
+    """
+    anchors: List[Any] = []
+    rest: List[Any] = []
+    for item in original_items or []:
+        text = _clause_text(item)
+        matched = _clause_matches_joint_both(text, joint_both_rows)
+        if isinstance(item, dict):
+            new_item = dict(item)
+            new_item["anchored"] = bool(matched)
+            (anchors if matched else rest).append(new_item)
+        elif isinstance(item, str):
+            (anchors if matched else rest).append(item)
+        else:
+            rest.append(item)
+    return (anchors + rest), len(anchors)
+
+
+def regenerate_individual_from_joint(
+    *,
+    caller_agreement: Dict[str, Any],
+    joint_payload: Dict[str, Any],
+    now_iso: str,
+    co_parent_name: str,
+) -> Tuple[Dict[str, Any], Dict[str, int]]:
+    """Return (new_agreement_doc, anchor_counts_per_section).
+
+    The new doc is a shallow copy of `caller_agreement` with:
+      * each `_REGEN_SECTIONS` list re-ordered + flagged.
+      * fresh `agreement_id` and `generated_at`.
+      * a `regenerated_from_joint` audit stanza pointing to the joint
+        share + prior agreement id.
+      * a refreshed `overview` line that names the co-parent.
+
+    `overview`, `closing_note`, and any other fields not in
+    `_REGEN_SECTIONS` are preserved as-is.
+    """
+    # Build a joint-section lookup keyed by section name.
+    joint_by_key: Dict[str, List[Dict[str, Any]]] = {}
+    for section in joint_payload.get("sections") or []:
+        joint_by_key[section.get("key")] = section.get("both_proposed") or []
+
+    new_doc = dict(caller_agreement)
+    anchor_counts: Dict[str, int] = {}
+    for key in _REGEN_SECTIONS:
+        both = joint_by_key.get(key) or []
+        promoted, count = _promote_and_flag(new_doc.get(key) or [], both)
+        new_doc[key] = promoted
+        anchor_counts[key] = count
+
+    prior_agreement_id = caller_agreement.get("agreement_id")
+    new_doc["agreement_id"]           = f"agr_regen_{now_iso.replace(':', '').replace('-', '').replace('.', '')[:20]}"
+    new_doc["generated_at"]           = now_iso
+    new_doc["regenerated_from_joint"] = {
+        "share_id":              joint_payload.get("share_id"),
+        "co_parent_name":        co_parent_name,
+        "prior_agreement_id":    prior_agreement_id,
+        "regenerated_at":        now_iso,
+        "anchor_counts":         anchor_counts,
+        "total_anchors":         sum(anchor_counts.values()),
+    }
+
+    total_anchors = sum(anchor_counts.values())
+    if total_anchors:
+        first = co_parent_name.split(" ")[0] if co_parent_name else "your co-parent"
+        new_doc["overview"] = (
+            f"Refreshed draft — anchored around the {total_anchors} clause"
+            f"{'s' if total_anchors != 1 else ''} that {first} and I have "
+            f"both proposed. Those clauses appear at the top of each "
+            f"section and are marked as anchored."
+        )
+    return new_doc, anchor_counts
