@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 119 — 3-Minute Professional Introduction PDF (2026-08-17)**:
+  - **New backend module** `/app/backend/professional_intro_transcript.py` — single source of truth for the ~450-word transcript. Copy stored as data (heading + body tuples) so the PDF and any future HTML/audio surface iterate consistently. Explicitly names the three joint artefacts (Shared Special Needs Report, Joint Co-Parenting Summary for Professional Review, Joint Co-Parenting Agreement Draft) and preserves the Finding-3-only safety-privacy caveat.
+  - **New public endpoint** `GET /api/joint-professional-report/professional-intro.pdf` — no consent gate (carries no user data). Registered BEFORE the `/{share_id}` catch-all so FastAPI's fixed-path match wins. Cache-Control set to `public, max-age=3600` since the PDF is stable across requests.
+  - **Bundled into both email flows** — `send_joint_professional_report` and `send_joint_agreement_draft` now automatically build + attach the intro PDF as a second attachment. Intro-build failures are swallowed so they can never block the primary send. Both covering-email HTML/plain bodies now explicitly mention the intro so recipients understand what the second file is.
+  - **Frontend entry points** — new `data-testid="joint-report-download-intro"` on Joint Professional Report header + `data-testid="joint-agreement-download-intro"` on Joint Agreement header. Both open the same public PDF in a new tab (`target="_blank"`, `rel="noopener noreferrer"`).
+  - **Testing**: 2 new pytests in `test_iter113_joint_professional_report.py::TestProfessionalIntroPdf` — public endpoint returns a valid non-trivial PDF, and the fixed-path route doesn't collide with the `{share_id}` catch-all. 17/17 iter113 + 19/19 iter116 = 36/36 pass overall.
+
+
+
 - **Iteration 118 — Regenerate My Draft From Joint (2026-08-16)**:
   - **New backend endpoint** `POST /api/joint-agreement/{share_id}/regenerate-mine` — deterministic (no LLM). Loads the caller's latest individual agreement + the current joint payload, promotes any clause matching the joint's `both_proposed` bucket (via the same `SequenceMatcher` similarity gate the merger uses) to the top of each section, sets `anchored: true/false` on dict-shaped clauses, and inserts a NEW agreement doc — the prior draft is preserved untouched.
   - **New helper** `joint_agreement.regenerate_individual_from_joint(...)` — pure function so tests can lock the anchor-promotion + `regenerated_from_joint` audit stanza (share_id, prior_agreement_id, anchor_counts_per_section, total_anchors, regenerated_at, co-parent name).

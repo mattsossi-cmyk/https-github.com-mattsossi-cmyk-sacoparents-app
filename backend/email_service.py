@@ -1394,10 +1394,13 @@ def send_joint_professional_report(
         f'{disclaimer_html}'
         f'{optional_note_html}'
         f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 12px 0;">'
-        f'The full report is attached as a PDF. Every row is phrased in '
-        f'neutral, non-adjudicative language and reflects what the parents '
-        f'said, not what SA CoParents or any professional has concluded. '
-        f'You can reply directly to this email to reach {_html.escape(sender)}.'
+        f'The full report is attached as a PDF, alongside a short '
+        f'<em>3-minute Introduction to SA CoParents</em> so you have '
+        f'context about the platform. Every row of the joint report is '
+        f'phrased in neutral, non-adjudicative language and reflects '
+        f'what the parents said, not what SA CoParents or any '
+        f'professional has concluded. You can reply directly to this '
+        f'email to reach {_html.escape(sender)}.'
         f'</p>'
         f'<p style="font-size:12px;line-height:1.55;color:#857E9C;margin:0;">'
         f'Only Finding 3 (Parenting-Plan Implications) of the Trauma-'
@@ -1438,13 +1441,28 @@ def send_joint_professional_report(
         f"Joint Co-Parenting Summary for Professional Review \u2014 "
         f"{parent_a_name or 'Parent A'} & {parent_b_name or 'Parent B'}"
     )
+    # Bundle the 3-minute Professional Intro as a companion attachment so
+    # the recipient has context about the platform without the parent
+    # having to attach it separately. Failures generating the intro must
+    # never block the main send.
+    try:
+        from professional_intro_transcript import (
+            PROFESSIONAL_INTRO_FILENAME, build_professional_intro_pdf,
+        )
+        intro_attachment = [
+            (PROFESSIONAL_INTRO_FILENAME, build_professional_intro_pdf()),
+        ]
+    except Exception:  # pragma: no cover - defensive
+        intro_attachment = []
     _send(
         to_email=to_email,
         subject=subject,
         html=html,
         text=plain,
         reply_to=parent_email or None,
-        attachments=[(pdf_filename or "joint-professional-report.pdf", pdf_bytes)],
+        attachments=[
+            (pdf_filename or "joint-professional-report.pdf", pdf_bytes),
+        ] + intro_attachment,
         failure_message="Couldn't send the joint report right now. Please try again in a moment.",
     )
 
@@ -1534,9 +1552,11 @@ def send_joint_agreement_draft(
         f'{disclaimer_html}'
         f'{optional_note_html}'
         f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 12px 0;">'
-        f'The full draft is attached as a PDF. Every clause is shown '
-        f'verbatim under the parent who proposed it \u2014 the merger '
-        f'only classifies clauses into buckets, it does not rewrite them. '
+        f'The full draft is attached as a PDF, alongside a short '
+        f'<em>3-minute Introduction to SA CoParents</em> so you have '
+        f'context about the platform. Every clause is shown verbatim '
+        f'under the parent who proposed it \u2014 the merger only '
+        f'classifies clauses into buckets, it does not rewrite them. '
         f'You can reply directly to this email to reach {_html.escape(sender)}.'
         f'</p>'
     )
@@ -1571,13 +1591,27 @@ def send_joint_agreement_draft(
         f"Joint Co-Parenting Agreement Draft \u2014 "
         f"{parent_a_name or 'Parent A'} & {parent_b_name or 'Parent B'}"
     )
+    # Bundle the 3-minute Professional Intro alongside the draft so the
+    # recipient has platform context regardless of whether they've also
+    # received the Joint Report. Intro-build failures never block the send.
+    try:
+        from professional_intro_transcript import (
+            PROFESSIONAL_INTRO_FILENAME, build_professional_intro_pdf,
+        )
+        intro_attachment = [
+            (PROFESSIONAL_INTRO_FILENAME, build_professional_intro_pdf()),
+        ]
+    except Exception:  # pragma: no cover - defensive
+        intro_attachment = []
     _send(
         to_email=to_email,
         subject=subject,
         html=html,
         text=plain,
         reply_to=parent_email or None,
-        attachments=[(pdf_filename or "joint-coparenting-agreement.pdf", pdf_bytes)],
+        attachments=[
+            (pdf_filename or "joint-coparenting-agreement.pdf", pdf_bytes),
+        ] + intro_attachment,
         failure_message="Couldn't send the joint agreement right now. Please try again in a moment.",
     )
 

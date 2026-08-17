@@ -210,6 +210,30 @@ async def _assemble_report(
 # Routes.
 # ---------------------------------------------------------------------------
 
+@router.get("/professional-intro.pdf")
+async def get_professional_intro_pdf():
+    """3-minute intro to SA CoParents rendered as a branded PDF.
+
+    Public — no consent gate. The document carries no user data; it is
+    a generic explainer parents can hand to a professional alongside
+    (or before) any joint artefact. Declared BEFORE the `{share_id}`
+    route so FastAPI's fixed-path match wins.
+    """
+    from professional_intro_transcript import (
+        PROFESSIONAL_INTRO_FILENAME, build_professional_intro_pdf,
+    )
+    pdf_bytes = build_professional_intro_pdf()
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+                f'attachment; filename="{PROFESSIONAL_INTRO_FILENAME}"',
+            "Cache-Control": "public, max-age=3600",
+        },
+    )
+
+
 @router.get("/{share_id}")
 async def get_joint_report(
     share_id: str,

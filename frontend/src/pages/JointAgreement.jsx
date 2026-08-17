@@ -305,6 +305,16 @@ export default function JointAgreement() {
             <ArrowLeft size={12} /> Back to dashboard
           </Link>
           <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href={`${API}/joint-professional-report/professional-intro.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="joint-agreement-download-intro"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#857E9C] text-[#4B4567] px-4 py-2 text-sm font-semibold hover:bg-[#F8F7FC] transition-colors"
+              title="Download the 3-minute Introduction to SA CoParents for professionals."
+            >
+              <Info size={14} /> 3-min professional intro
+            </a>
             {(summary.both_proposed || 0) > 0 && (
               <button
                 type="button"

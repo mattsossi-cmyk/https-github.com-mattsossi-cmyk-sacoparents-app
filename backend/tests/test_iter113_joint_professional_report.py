@@ -297,3 +297,33 @@ class TestEmailEndpoint:
             assert body["ok"] is True
             assert body["audience"] == "Mediator"
             assert body["share_id"] == active_share
+
+
+class TestProfessionalIntroPdf:
+    """The 3-minute Introduction is a static explainer that any parent
+    (or professional) can download without an active share."""
+
+    def test_intro_pdf_public_and_valid(self):
+        r = requests.get(
+            f"{BASE_URL}/api/joint-professional-report/professional-intro.pdf",
+            timeout=30,
+        )
+        assert r.status_code == 200, r.text[:200]
+        assert r.headers["content-type"].startswith("application/pdf")
+        assert r.content.startswith(b"%PDF-")
+        assert len(r.content) > 3000, f"pdf too small: {len(r.content)}"
+
+    def test_intro_pdf_not_confused_with_share_route(self, parent1, active_share):
+        """The fixed-path intro route must win over `{share_id}` catch-all."""
+        r = requests.get(
+            f"{BASE_URL}/api/joint-professional-report/professional-intro.pdf",
+            timeout=30,
+        )
+        # Public — no auth, no 403 collision with the share route.
+        assert r.status_code == 200
+        # And the share route still works for participants.
+        r2 = parent1.get(
+            f"{BASE_URL}/api/joint-professional-report/{active_share}",
+        )
+        assert r2.status_code == 200
+
