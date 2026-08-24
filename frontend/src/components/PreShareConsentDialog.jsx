@@ -39,12 +39,12 @@ export function requestPreShareConsent(shareLabel = "this report") {
 }
 
 const BULLETS = [
-  "Your underlying assessment answers remain private unless specifically included in this report.",
-  "Only the report you selected will be shared.",
-  "Sharing this report does not automatically share your other assessments, journal entries, AI conversations, or raw answers.",
-  "Anyone receiving a report may save, print, or forward it.",
-  "Revoking a link prevents future access through that link, but cannot retrieve copies already downloaded.",
-  "SA CoParents cannot guarantee that information voluntarily shared with an attorney, mediator, therapist, co-parent, or other person will remain legally confidential or privileged.",
+  { id: "answers-stay-private",   text: "Your underlying assessment answers remain private unless specifically included in this report." },
+  { id: "only-selected-report",   text: "Only the report you selected will be shared." },
+  { id: "no-account-wide-access", text: "Sharing this report does not automatically share your other assessments, journal entries, AI conversations, or raw answers." },
+  { id: "recipient-controls",     text: "Anyone receiving a report may save, print, or forward it." },
+  { id: "revoke-limit",           text: "Revoking a link prevents future access through that link, but cannot retrieve copies already downloaded." },
+  { id: "no-privilege-guarantee", text: "SA CoParents cannot guarantee that information voluntarily shared with an attorney, mediator, therapist, co-parent, or other person will remain legally confidential or privileged." },
 ];
 
 export function PreShareConsentHost() {
@@ -75,7 +75,6 @@ export function PreShareConsentHost() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.open]);
 
   if (!state.open) return null;
@@ -121,8 +120,8 @@ export function PreShareConsentHost() {
             className="space-y-2.5 text-[13.5px] text-[#1A1330] leading-relaxed list-disc pl-5 marker:text-[#B02A2A]"
             data-testid="preshare-consent-bullets"
           >
-            {BULLETS.map((b, i) => (
-              <li key={i}>{b}</li>
+            {BULLETS.map((b) => (
+              <li key={b.id}>{b.text}</li>
             ))}
           </ul>
 
