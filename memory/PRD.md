@@ -1,6 +1,16 @@
 # SA CoParents — PRD
 
 
+- **Iteration 124 — Virtru Hosted Gateway (Pattern A) SMTP relay wired (2026-02-21)**:
+  - **New module** `/app/backend/virtru_mailer.py` — synchronous SMTP submitter matching the rest of `email_service.py`. Per-message `X-Virtru-Auth` MIME header (NOT SMTP AUTH — that's the Virtru documented pattern), optional `X-Virtru-Encrypt: 1` header, optional `#secure#` subject marker, 100 MB raw attachment cap, PDF-only content-type guard, redacted error logging (auth header NEVER appears in any log line, even on SMTP failure).
+  - **email_service.`_send()` provider switch** — auto-routes through Virtru when `VIRTRU_ENABLED=true` + `VIRTRU_AUTH_HEADER` + `VIRTRU_FROM_EMAIL` are populated, then falls back to Resend cleanly on `VirtruNotConfigured`. **Fail-closed** for HIPAA-scoped sends: `require_encrypted=True` + `VIRTRU_FORCE_ENCRYPT_REQUIRED=true` refuses Resend fallback entirely so no PHI email ever escapes unencrypted once the operator flips the flag.
+  - **Wired into**: `send_joint_professional_report` + `send_joint_agreement_draft` marked `require_encrypted=True`. Other PDF flows (Special Needs report, safety assessment, pathway report) intentionally NOT marked in this iteration — will be re-scoped after production burn-in of the joint flows.
+  - **`.env` pre-declared** with defaults OFF: `VIRTRU_ENABLED=false`, `VIRTRU_FORCE_ENCRYPT=false`, `VIRTRU_FORCE_ENCRYPT_REQUIRED=false`, plus `VIRTRU_SMTP_HOST=smtp.virtrugateway.com`, `VIRTRU_SMTP_PORT=587`, `VIRTRU_SMTP_STARTTLS=true`, `VIRTRU_SMTP_TIMEOUT_SECONDS=30`, plus empty placeholders for `VIRTRU_AUTH_HEADER` + `VIRTRU_FROM_EMAIL` awaiting Virtru provisioning.
+  - **Operator cutover checklist** `/app/memory/VIRTRU_CUTOVER_CHECKLIST.md` — provisioning prerequisites (BAA, tenant, X-Virtru-Auth code, DNS-verified sender, outbound Security Rule), the 12-var flip table, staged cutover (openssl STARTTLS test → dry-run → fail-closed drill → full production), ongoing operational rules (secret rotation, no-DB storage, DSN monitoring), rollback (single env flip).
+  - **Testing**: 6/6 (`test_iter122_virtru_mailer.py`) pass — env-var gating, MIME headers + attachments, port 587 + STARTTLS + no SMTP AUTH, auth header never logged on failure, non-PDF rejection, fail-closed refuses fallback. 11/11 combined with iter121 HB 300 suite. Existing Resend path unchanged with defaults.
+
+
+
 - **Iteration 123 — Texas HB 300 (Medical Records Privacy Act) compliance (2026-02-21)**:
   - **New legal page** `/legal/hb300` — dedicated Texas HB 300 (Tex. Health & Safety Code Ch. 181) notice covering §181.154 electronic-disclosure notice, §181.153 no-sale attestation, §181.152 marketing opt-in, §181.102 15-business-day right of access, breach notification timers (60-day user, ≥250 TX residents → AG), workforce training §181.101, reasonable safeguards, Texas-specific rights, AG + OCR complaint routes. Linked from HIPAA Notice + Privacy Practices "See also".
   - **New backend module** `/app/backend/hb300_routes.py` with 5 endpoints:

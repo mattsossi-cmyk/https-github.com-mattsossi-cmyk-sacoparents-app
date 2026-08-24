@@ -61,8 +61,62 @@ def _send(
     reply_to: Optional[str] = None,
     attachments: Optional[List[Tuple[str, bytes]]] = None,
     failure_message: str,
+    require_encrypted: bool = False,
 ) -> None:
-    """Internal: send via Resend with consistent error handling."""
+    """Internal: send via Virtru (if enabled) then Resend as fallback.
+
+    `require_encrypted=True` — refuse to submit through any non-Virtru
+    provider. Used for HIPAA-scoped joint reports / agreements once
+    the tenant is provisioned (`VIRTRU_FORCE_ENCRYPT_REQUIRED=true`).
+    """
+    # Late imports so a missing virtru_mailer module never breaks
+    # the rest of the email service.
+    try:
+        from virtru_mailer import (  # noqa: WPS433 — deliberate late import
+            VirtruNotConfigured,
+            VirtruSendError,
+            send_via_virtru,
+            virtru_force_encrypt_required,
+            virtru_is_ready,
+        )
+        _virtru_available = True
+    except Exception:  # pragma: no cover - defensive
+        _virtru_available = False
+        virtru_is_ready = lambda: False  # noqa: E731
+        virtru_force_encrypt_required = lambda: False  # noqa: E731
+
+    # Fail-closed: HIPAA-scoped sends must NOT silently fall back to
+    # the standard Resend provider if the operator has said Virtru is
+    # mandatory. Better a visible failure than an unencrypted PHI email.
+    if require_encrypted and virtru_force_encrypt_required() and not virtru_is_ready():
+        raise EmailSendError(
+            "Encrypted delivery is required but the secure gateway is not configured."
+        )
+
+    if _virtru_available and virtru_is_ready():
+        try:
+            send_via_virtru(
+                to_email=to_email,
+                subject=subject,
+                html=html,
+                text=text,
+                reply_to=reply_to,
+                attachments=attachments,
+            )
+            return
+        except VirtruNotConfigured:
+            # Fall through to Resend — provisioning is incomplete.
+            logger.info("Virtru not configured; routing via Resend for %s", subject)
+        except VirtruSendError:
+            if require_encrypted and virtru_force_encrypt_required():
+                # We already logged in send_via_virtru; surface a
+                # friendly failure to the caller so we never re-route
+                # PHI through a non-encrypted provider.
+                raise EmailSendError(failure_message)
+            logger.warning(
+                "Virtru submission failed; falling back to Resend for %s", subject,
+            )
+
     if not is_configured():
         raise EmailNotConfigured(
             "Email sending is not configured. Set RESEND_API_KEY and try again."
@@ -1464,6 +1518,7 @@ def send_joint_professional_report(
             (pdf_filename or "joint-professional-report.pdf", pdf_bytes),
         ] + intro_attachment,
         failure_message="Couldn't send the joint report right now. Please try again in a moment.",
+        require_encrypted=True,
     )
 
 
@@ -1613,6 +1668,7 @@ def send_joint_agreement_draft(
             (pdf_filename or "joint-coparenting-agreement.pdf", pdf_bytes),
         ] + intro_attachment,
         failure_message="Couldn't send the joint agreement right now. Please try again in a moment.",
+        require_encrypted=True,
     )
 
 
