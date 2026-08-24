@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 128 — In-app policy-refresh banner for returning users (2026-02-21)**:
+  - **New component** `/app/frontend/src/components/PolicyRefreshBanner.jsx` — one-time soft banner announcing the 2026-02-21 canonical Privacy Policy rewrite. Renders with the "Private by Default. Shared by Choice." tagline and a "Read the policy" CTA linking to `/privacy`. Version-keyed dismissal (`sa_policy_refresh_v_2026-02-21` in localStorage) so future policy revisions reappear the banner without wiping older dismissals.
+  - **Gated to returning users only** — hidden when: (a) user is unauthenticated, (b) user is a guest sandbox, (c) user was created ON or AFTER 2026-02-21 (fresh signups already agreed to the new text at registration), (d) user is already on `/privacy` or any `/legal/*` route (redundant), (e) user has previously dismissed this version.
+  - **Mounted** inside `AppRoutes` above `<Routes>` in `App.js` so it appears on every authenticated page (Dashboard, Summary, Safety, Coach) but doesn't ship with the LegalAcknowledgment first-visit modal.
+  - **Testing**: lint clean. Authenticated Playwright smoke against preview with a Mongo-backdated returning user proved: banner visible on `/dashboard`, suppressed on `/privacy` and `/legal/hb300`, Read/Dismiss buttons rendered with correct test-ids. Dismissal + localStorage persistence follow the existing `IntroTourModal`/`VerificationBanner` pattern.
+  - **Files touched**: `App.js` (import + mount), `PolicyRefreshBanner.jsx` (new). Setup helper `/app/scripts/policy_banner_smoke_setup.py` kept in-repo for future policy-version drills.
+
+
+
 - **Iteration 127 — Full 32-section canonical Privacy, Confidentiality & Data Protection Policy (2026-02-21)**:
   - **Wholesale rewrite of `/app/frontend/src/pages/Privacy.jsx`** to a 32-section, ~5,000-word canonical policy anchored on the tagline "**Private by Default. Shared by Choice.**" Supersedes the ad-hoc sections we added in iter 126 (Information About Children, Sensitive Information, AI + PHI) — every one is now baked into the numbered structure.
   - **All `[Insert …]` placeholders filled with canonical codebase values** — no draft brackets in production: Effective + Last Updated 2026-02-21, Privacy Officer Matt Sossi, mattsossi@bsossi.com, 210-224-1667, 16607 Blanco #703 San Antonio TX 78232, sacoparentsapp.online, AI providers named (Anthropic Sonnet 4.5 via Emergent Universal LLM Key with the retention + no-training + no-BAA-yet framing), service providers listed (Emergent, Anthropic, MongoDB Atlas, Resend, Virtru pending BAA, Google optional), retention schedule defers to `/data-retention` as canonical single source of truth.
