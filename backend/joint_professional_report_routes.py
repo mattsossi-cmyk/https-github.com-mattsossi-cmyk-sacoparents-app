@@ -40,12 +40,22 @@ router = APIRouter(prefix="/joint-professional-report", tags=["joint-professiona
 # ---------------------------------------------------------------------------
 # Consent gate — reuses the Compare-share pattern from pathway_report_routes.
 # ---------------------------------------------------------------------------
+#
+# Post-audit (SEC-003): the joint artefacts aggregate the FULL SNC2
+# comparison + mediation prep + dimension companion + Finding 3 of the
+# safety lens. That aggregation is broader than a single deep-dive
+# share represents. So we only accept the two share types that
+# represent full-scope mutual consent between the two parents:
+#
+#   * snc2_shares    — the full Special-Needs comparison share
+#   * compare_shares — the legacy top-level Compare share
+#
+# Narrow domain-specific deep-dive shares (edu/med/psych) still gate
+# their own comparison endpoints; they no longer unlock the broader
+# joint report / joint agreement aggregators.
 
 _SHARE_COLLECTIONS = (
     "snc2_shares",
-    "edu_deep_shares",
-    "med_deep_shares",
-    "psych_deep_shares",
     "compare_shares",  # legacy fallback
 )
 
@@ -277,9 +287,12 @@ async def get_joint_report_pdf(
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store, no-cache, must-revalidate, private",
+            "Pragma": "no-cache",
+        },
     )
-
 
 
 # ---------------------------------------------------------------------------

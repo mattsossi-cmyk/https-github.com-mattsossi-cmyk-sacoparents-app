@@ -50,6 +50,24 @@ _PHI_COLLECTIONS = (
     "psych_deep_shares",
     "joint_report_emails",
     "joint_agreement_emails",
+    # Added post-audit (SEC-004): every remaining user_id-keyed
+    # collection that carries PHI-adjacent or clinical-conversation data.
+    "nd_assessments",
+    "journal_entries",
+    "journal_recaps",
+    "summaries",
+    "improvement_plans",
+    "coach_messages",
+    "coach_sessions",
+    "next_steps",
+    "problem_solving_worksheets",
+    "cp_assessments",
+    "post_summary_checkins",
+    "mediator_emails",
+    "pathway_report_comments",
+    "devices",
+    "legal_acknowledgments",
+    "user_sessions",
 )
 
 

@@ -1,6 +1,23 @@
 # SA CoParents — PRD
 
 
+- **Iteration 121 — Security audit fixes + HIPAA legal pages + PHI hardening (2026-08-24)**:
+  - **SEC-001 CORS lockdown (CRITICAL)**: `server.py` no longer reflects any origin with `allow_credentials=True`. Explicit allowlist required via `CORS_ORIGINS` env var — default is production + www + preview. `.env` updated to explicit list. Prevents cross-site PHI theft from any site a signed-in parent visits.
+  - **SEC-002 password-reset link redaction (MEDIUM)**: `auth.py` no longer logs the reset URL or raw token. Logs the event only with `user_id`; the token is retrievable from the `magic_links` collection in dev.
+  - **SEC-003 consent scope narrowing (MEDIUM)**: `joint_professional_report_routes.py::_SHARE_COLLECTIONS` now only accepts `snc2_shares` + `compare_shares`. Narrow deep-dive shares (edu/med/psych) no longer unlock the full joint aggregators. This was a design-scope tightening — narrow deep-dive shares still gate their own comparison endpoints.
+  - **SEC-004 delete completeness (MEDIUM)**: `_PHI_COLLECTIONS` in `phi_access_routes.py` extended with 16 additional user_id-keyed collections (`nd_assessments`, `journal_entries`, `journal_recaps`, `summaries`, `improvement_plans`, `coach_messages`, `coach_sessions`, `next_steps`, `problem_solving_worksheets`, `cp_assessments`, `post_summary_checkins`, `mediator_emails`, `pathway_report_comments`, `devices`, `legal_acknowledgments`, `user_sessions`) so `DELETE /api/me` actually removes all PHI-adjacent data.
+  - **P3 no-store PDF headers**: joint report + joint agreement PDF endpoints now emit `Cache-Control: no-store, no-cache, must-revalidate, private` + `Pragma: no-cache` so PHI PDFs are not cached by browsers or intermediaries.
+  - **HIPAA Notice + Notice of Privacy Practices** pages published at `/legal/hipaa` and `/legal/privacy-practices`. Linked from the existing Privacy Policy "See also" block. Copy is plain-English-first, lawyerly-second, mirroring the existing legal-page voice.
+  - **PHI access log + right-to-export + right-to-delete + accounting-of-disclosures** shipped as `/api/me/export`, `DELETE /api/me`, `/api/me/access-log`. Every joint-report/agreement read, download, or email disclosure now writes an audit row. Deletion de-identifies the audit log rather than wiping it (legal-hold + accounting-of-disclosures protection).
+  - **Regression testing**: 42/42 (`iter113` + `iter116` + `iter120`) pass after all fixes. New `test_iter120_phi_access_export_delete.py` locks the audit-log wiring, export contents, and deletion completeness.
+
+- **Iteration 122 — Virtru integration playbook received (pending BAA/credentials) (2026-08-24)**:
+  - **Pattern A — Virtru Secure Email (SMTP)**: implementable now. Requires customer to obtain from Virtru Sales: **(1)** Hosted Gateway entitlement, **(2)** `smtp.virtrugateway.com` credentials + org-specific `X-Virtru-Auth` header code, **(3)** signed BAA (1–2 wk lead), **(4)** DNS-verified sending domain. Once received, scaffold with `aiosmtplib` + FastAPI wrapper around existing joint email flows.
+  - **Pattern B — Virtru TDF (PDF-at-rest)**: BLOCKED. The legacy `virtru-sdk` Python package (v3.0.0) only exposes file-path / string encryption APIs — no bytes/streams — which contradicts our in-memory `fpdf2` architecture. Current Virtru Developer Experience emphasizes Go/Java/JS SDKs. Customer must confirm with Virtru Sales that a supported Python byte-stream API or approved OpenTDF-capable path exists before we can wrap PDFs as `.tdf`.
+  - **Not yet coded**: Virtru integration requires credentials + BAA before scaffolding. Full playbook stored in this conversation's integration_playbook_expert_v2 response.
+
+
+
 - **Iteration 119 — 3-Minute Professional Introduction PDF (2026-08-17)**:
   - **New backend module** `/app/backend/professional_intro_transcript.py` — single source of truth for the ~450-word transcript. Copy stored as data (heading + body tuples) so the PDF and any future HTML/audio surface iterate consistently. Explicitly names the three joint artefacts (Shared Special Needs Report, Joint Co-Parenting Summary for Professional Review, Joint Co-Parenting Agreement Draft) and preserves the Finding-3-only safety-privacy caveat.
   - **New public endpoint** `GET /api/joint-professional-report/professional-intro.pdf` — no consent gate (carries no user data). Registered BEFORE the `/{share_id}` catch-all so FastAPI's fixed-path match wins. Cache-Control set to `public, max-age=3600` since the PDF is stable across requests.

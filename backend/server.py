@@ -163,30 +163,30 @@ app.include_router(api_router)
 # CORS — allow credentials for cookie-based auth.
 #
 # Browsers (per CORS spec) reject `Access-Control-Allow-Origin: *` when the
-# request has credentials. To support cookie-based auth across BOTH same-origin
-# production deploys AND cross-origin preview/mobile clients, we use
-# `allow_origin_regex` whenever CORS_ORIGINS is "*". The regex reflects the
-# request's Origin header back as ACAO, which IS allowed with credentials.
-cors_origins_raw = os.environ.get("CORS_ORIGINS", "*")
-cors_origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()]
-if "*" in cors_origins:
-    # Permissive: any origin, credentials enabled (Origin reflected per-request).
-    app.add_middleware(
-        CORSMiddleware,
-        allow_credentials=True,
-        allow_origin_regex=".*",
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    # Explicit whitelist.
-    app.add_middleware(
-        CORSMiddleware,
-        allow_credentials=True,
-        allow_origins=cors_origins,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# request has credentials. Pairing a reflected/wildcard origin with
+# `allow_credentials=True` also enables cross-site PHI theft — any site
+# a signed-in parent visits could `fetch(..., {credentials:'include'})` our
+# API and read the response. So: NEVER reflect wildcard origins alongside
+# credentials. Require an explicit allowlist via CORS_ORIGINS.
+cors_origins_raw = os.environ.get("CORS_ORIGINS", "")
+cors_origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip() and o.strip() != "*"]
+if not cors_origins:
+    # Safe default — the production origin plus the current preview origin.
+    # Adjust CORS_ORIGINS in the environment for additional trusted origins.
+    cors_origins = [
+        "https://sacoparentsapp.online",
+        "https://www.sacoparentsapp.online",
+    ]
+    preview_origin = os.environ.get("REACT_APP_BACKEND_URL")
+    if preview_origin and preview_origin not in cors_origins:
+        cors_origins.append(preview_origin)
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")

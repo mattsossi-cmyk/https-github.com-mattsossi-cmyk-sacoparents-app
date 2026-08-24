@@ -836,22 +836,20 @@ async def request_password_reset(
 
     try:
         send_password_reset_link(to_email=email, link_url=link_url, user_name=user.get("name"))
-        # Also log the link so ops + automated tests can find it. Logs are not
-        # user-facing and Resend webhooks make the token revocable anyway.
+        # Log the EVENT ONLY — never the token or link. Anyone with log
+        # access could otherwise take over the account within 15 minutes.
         import logging as _logging
         _logging.getLogger(__name__).info(
-            "Password reset requested but SMTP not configured. Link for %s: %s",
-            email,
-            link_url,
+            "Password reset link sent for user_id=%s", user.get("user_id"),
         )
     except EmailNotConfigured:
-        # Don't leak existence — log the link for ops/preview and return the
-        # same shape as the not-found path.
+        # Same non-leaky log line. Preview/dev environments should
+        # retrieve the token from the DB `magic_links` collection, not
+        # from application logs.
         import logging as _logging
         _logging.getLogger(__name__).warning(
-            "Password reset requested but SMTP not configured. Link for %s: %s",
-            email,
-            link_url,
+            "Password reset requested but SMTP not configured for user_id=%s "
+            "(token stored in magic_links)", user.get("user_id"),
         )
     except EmailSendError as e:
         import logging as _logging
