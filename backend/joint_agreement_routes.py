@@ -85,12 +85,21 @@ async def _assemble_joint_agreement(
 @router.get("/{share_id}")
 async def get_joint_agreement(
     share_id: str,
+    request: Request,
     user: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> Dict[str, Any]:
     """Deterministic side-by-side merger of both parents' agreement drafts."""
+    from phi_access_routes import record_phi_access
+
     share = await _find_active_share(db, share_id, user.user_id)
-    return await _assemble_joint_agreement(db, share, user.user_id, share_id)
+    payload = await _assemble_joint_agreement(db, share, user.user_id, share_id)
+    await record_phi_access(
+        db, user_id=user.user_id, action="read",
+        resource_type="joint_agreement",
+        share_id=share_id, request=request,
+    )
+    return payload
 
 
 @router.get("/{share_id}/pdf")
@@ -102,11 +111,17 @@ async def get_joint_agreement_pdf(
 ):
     """Branded PDF of the joint draft — attorney/mediator-ready."""
     from joint_agreement_pdf import build_joint_agreement_pdf
+    from phi_access_routes import record_phi_access
 
     share = await _find_active_share(db, share_id, user.user_id)
     payload = await _assemble_joint_agreement(db, share, user.user_id, share_id)
     pdf_bytes = build_joint_agreement_pdf(payload)
     filename = f"joint-coparenting-agreement-{share_id[:10]}.pdf"
+    await record_phi_access(
+        db, user_id=user.user_id, action="download",
+        resource_type="joint_agreement_pdf",
+        share_id=share_id, request=request,
+    )
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -222,6 +237,12 @@ async def email_joint_agreement(
         "audience":       audience,
         "sent_at":        datetime.now(timezone.utc).isoformat(),
     })
+    from phi_access_routes import record_phi_access
+    await record_phi_access(
+        db, user_id=user.user_id, action="email_disclosure",
+        resource_type="joint_agreement_pdf",
+        share_id=share_id,
+    )
     return {
         "ok": True,
         "emailed_to": to_email,

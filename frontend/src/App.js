@@ -25,6 +25,8 @@ import Summary from "@/pages/Summary";
 import Safety from "@/pages/Safety";
 import Watch from "@/pages/Watch";
 import Privacy from "@/pages/Privacy";
+import HipaaNotice from "@/pages/HipaaNotice";
+import PrivacyPractices from "@/pages/PrivacyPractices";
 import Terms from "@/pages/Terms";
 import Accessibility from "@/pages/Accessibility";
 import Methodology from "@/pages/Methodology";
@@ -139,6 +141,8 @@ function AppRoutes() {
           }
         />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/legal/hipaa" element={<HipaaNotice />} />
+        <Route path="/legal/privacy-practices" element={<PrivacyPractices />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/methodology" element={<Methodology />} />

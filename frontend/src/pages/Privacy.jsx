@@ -109,6 +109,8 @@ export default function Privacy() {
 
           <H2>See also</H2>
           <ul>
+            <li><Link to="/legal/hipaa" className="text-[#2A0F5F] underline">HIPAA Notice</Link> — how we treat health-adjacent data.</li>
+            <li><Link to="/legal/privacy-practices" className="text-[#2A0F5F] underline">Notice of Privacy Practices</Link> — the formal HIPAA-styled notice.</li>
             <li><Link to="/data-retention" className="text-[#2A0F5F] underline">Data retention policy</Link> — how long we keep each data type, and how to delete or export.</li>
             <li><Link to="/methodology" className="text-[#2A0F5F] underline">Methodology &amp; assessment validation</Link> — how our scoring works and its limits.</li>
             <li><Link to="/accessibility" className="text-[#2A0F5F] underline">Accessibility statement</Link> — WCAG 2.2 AA commitments.</li>
