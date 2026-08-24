@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 127 — Full 32-section canonical Privacy, Confidentiality & Data Protection Policy (2026-02-21)**:
+  - **Wholesale rewrite of `/app/frontend/src/pages/Privacy.jsx`** to a 32-section, ~5,000-word canonical policy anchored on the tagline "**Private by Default. Shared by Choice.**" Supersedes the ad-hoc sections we added in iter 126 (Information About Children, Sensitive Information, AI + PHI) — every one is now baked into the numbered structure.
+  - **All `[Insert …]` placeholders filled with canonical codebase values** — no draft brackets in production: Effective + Last Updated 2026-02-21, Privacy Officer Matt Sossi, mattsossi@bsossi.com, 210-224-1667, 16607 Blanco #703 San Antonio TX 78232, sacoparentsapp.online, AI providers named (Anthropic Sonnet 4.5 via Emergent Universal LLM Key with the retention + no-training + no-BAA-yet framing), service providers listed (Emergent, Anthropic, MongoDB Atlas, Resend, Virtru pending BAA, Google optional), retention schedule defers to `/data-retention` as canonical single source of truth.
+  - **Section-level cross-links** to `/legal/hipaa`, `/legal/privacy-practices`, `/legal/hb300`, `/data-retention`, `/methodology`, `/accessibility`, `/terms`, and `/delete-account` so the policy is the hub for every downstream legal artefact.
+  - **New Prose helpers** — reusable `H2`, `H3`, `Callout`, `Prose` components inside the file. Callout used for the guiding-principle hero and the closing commitment.
+  - **Testing**: lint clean, all 32 sections render, 12/12 content checks pass ("Private by Default" tagline, Privacy Officer named, full contact block, AI providers named, service providers listed, retention defers, no `[Insert]` residue, HB 300 cross-link, closing tagline "Starting With Alignment, Ending With Agreement"), no runtime errors.
+
+
+
 - **Iteration 126 — Privacy-review pass: 4 factual reconciliations + 3 new sections + HIPAA softening + pre-share consent gate (2026-02-21)**:
   - **4 consistency fixes** across `Privacy.jsx` + `DataRetention.jsx` + `HipaaNotice.jsx` + `PrivacyPractices.jsx`:
     - Share links: default 7 days, user-selectable {1, 7, 30, never}, revocable anytime (was "30 days from creation" on one page vs "signed 7-day link" on another).
