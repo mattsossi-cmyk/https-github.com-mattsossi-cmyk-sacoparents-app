@@ -116,6 +116,19 @@ export function PreShareConsentHost() {
         </div>
 
         <div className="px-6 sm:px-7 py-5 space-y-4">
+          <div
+            className="rounded-2xl border border-[#E5E0EE] bg-gradient-to-br from-[#F1EAFF] to-[#F8F7FC] p-4 space-y-3"
+            data-testid="preshare-consent-headline"
+          >
+            <p className="text-[13px] leading-relaxed text-[#1A1330] !m-0">
+              <strong>Your information is private by default.</strong>{" "}
+              SA CoParents does not share your assessment or reports with your co-parent or a professional unless you choose to share them, except where disclosure is required by law.
+            </p>
+            <p className="text-[13px] leading-relaxed text-[#1A1330] !m-0">
+              <strong>Use of SA CoParents does not by itself create an attorney-client, therapist-patient, mediator-client, or other privileged relationship.</strong>
+            </p>
+          </div>
+
           <ul
             className="space-y-2.5 text-[13.5px] text-[#1A1330] leading-relaxed list-disc pl-5 marker:text-[#B02A2A]"
             data-testid="preshare-consent-bullets"

@@ -120,7 +120,9 @@ DISCLAIMER = (
     "SA CoParents is not a custody evaluation service, forensic "
     "assessment, clinical diagnosis, expert opinion, or recommendation "
     "to any court. The joint artefacts summarise the parents' own "
-    "self-reported answers and are provided as preparation material only."
+    "self-reported answers and are provided as preparation material only. "
+    "Use of SA CoParents does not by itself create an attorney-client, "
+    "therapist-patient, mediator-client, or other privileged relationship."
 )
 
 
@@ -214,7 +216,7 @@ def build_professional_intro_pdf() -> bytes:
     pdf.set_draw_color(*DANGER)
     pdf.set_line_width(0.4)
     banner_y = pdf.get_y()
-    pdf.rect(LEFT_M, banner_y, CONTENT_W, 30, "DF")
+    pdf.rect(LEFT_M, banner_y, CONTENT_W, 38, "DF")
     pdf.set_xy(LEFT_M + 4, banner_y + 3)
     pdf.set_font("Helvetica", "B", 10)
     pdf.set_text_color(*DANGER)

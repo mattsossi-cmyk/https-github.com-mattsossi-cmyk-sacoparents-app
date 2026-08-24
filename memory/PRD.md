@@ -1,6 +1,17 @@
 # SA CoParents — PRD
 
 
+- **Iteration 129 — Prominent "Private by Default" + "no-privilege" callouts (2026-02-21)**:
+  - Added two user-supplied crisper sentences in three high-visibility surfaces (a + b + d from ask-human):
+    - **Sentence 1** *"Your information is private by default. SA CoParents does not share your assessment or reports with your co-parent or a professional unless you choose to share them, except where disclosure is required by law."*
+    - **Sentence 2** *"Use of SA CoParents does not by itself create an attorney-client, therapist-patient, mediator-client, or other privileged relationship."*
+  - **Privacy.jsx** — Sentence 1 now sits in a purple `Callout` at the very top of Section 7 ("Your individual assessment answers are private by default"). Sentence 2 in a matching `Callout` at the top of Section 10 (the privilege carve-out). Both sit above the original section bodies — no wording deleted, both callouts render before the skimmable ul-block.
+  - **PreShareConsentDialog.jsx** — added a highlighted purple gradient block **above** the six "YOU CONTROL THIS REPORT" bullets so parents read both sentences at the exact moment of share. New testid `preshare-consent-headline`.
+  - **PDF disclaimers** — Sentence 2 appended to all three artefact disclaimers that leave the platform: `joint_professional_report.py::DISCLAIMER`, `joint_agreement.py::DISCLAIMER`, `professional_intro_transcript.py::DISCLAIMER`. Bumped `professional_intro_transcript` banner rect from 30 → 38 units to accommodate the extra line without truncation.
+  - **Testing**: 12/12 HB 300 + Virtru tests still pass; all three PDF builders emit valid `%PDF-` files (~991 kB each); Playwright smoke on `/privacy` shows both callouts + original bodies + zero runtime errors. Lint clean on both frontend files.
+
+
+
 - **Iteration 128 — In-app policy-refresh banner for returning users (2026-02-21)**:
   - **New component** `/app/frontend/src/components/PolicyRefreshBanner.jsx` — one-time soft banner announcing the 2026-02-21 canonical Privacy Policy rewrite. Renders with the "Private by Default. Shared by Choice." tagline and a "Read the policy" CTA linking to `/privacy`. Version-keyed dismissal (`sa_policy_refresh_v_2026-02-21` in localStorage) so future policy revisions reappear the banner without wiping older dismissals.
   - **Gated to returning users only** — hidden when: (a) user is unauthenticated, (b) user is a guest sandbox, (c) user was created ON or AFTER 2026-02-21 (fresh signups already agreed to the new text at registration), (d) user is already on `/privacy` or any `/legal/*` route (redundant), (e) user has previously dismissed this version.

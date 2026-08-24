@@ -271,6 +271,12 @@ export default function Privacy() {
           <p>We do not use sensitive family information to determine which parent should receive custody or possession of a child.</p>
 
           <H2>7. Your individual assessment answers are private by default</H2>
+          <Callout>
+            <p className="!m-0">
+              <strong>Your information is private by default.</strong>{" "}
+              SA CoParents does not share your assessment or reports with your co-parent or a professional unless you choose to share them, except where disclosure is required by law.
+            </p>
+          </Callout>
           <p>Completing an SA CoParents assessment does not automatically provide your answers to your co-parent. Unless a particular feature clearly tells you otherwise before you submit information:</p>
           <ul>
             <li>Your individual responses remain associated with your account and are not automatically disclosed to the other parent.</li>
@@ -307,6 +313,11 @@ export default function Privacy() {
           <p>Revoking an SA CoParents sharing link may prevent future access through that link, but cannot retrieve or delete copies that a recipient previously downloaded, printed, photographed, forwarded, or otherwise retained. Parents should therefore carefully consider what information they choose to share.</p>
 
           <H2>10. Privacy does not automatically mean legal confidentiality or privilege</H2>
+          <Callout>
+            <p className="!m-0">
+              <strong>Use of SA CoParents does not by itself create an attorney-client, therapist-patient, mediator-client, or other privileged relationship.</strong>
+            </p>
+          </Callout>
           <p>This distinction is particularly important in family-law matters. SA CoParents works to keep information private as described in this Policy. However, use of SA CoParents does not itself create a legally privileged relationship. Using SA CoParents does not automatically create:</p>
           <ul>
             <li>Attorney-client privilege;</li>

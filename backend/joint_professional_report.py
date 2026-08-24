@@ -42,7 +42,9 @@ DISCLAIMER = (
     "Its purpose is to help attorneys, mediators, and other professionals "
     "understand where the parents' perceptions of their child's needs "
     "align, where they differ, and which topics may benefit from further "
-    "professional discussion."
+    "professional discussion. Use of SA CoParents does not by itself "
+    "create an attorney-client, therapist-patient, mediator-client, or "
+    "other privileged relationship."
 )
 
 NEUTRAL_LANGUAGE_NOTE = (

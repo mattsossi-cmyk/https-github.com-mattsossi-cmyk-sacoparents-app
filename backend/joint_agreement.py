@@ -43,7 +43,9 @@ DISCLAIMER = (
     "clause with their own professionals before adopting anything. The "
     "purpose of this document is to make it easy to see where the parents "
     "already converge, and where a mediator or attorney could help bridge "
-    "the remaining gaps."
+    "the remaining gaps. Use of SA CoParents does not by itself create an "
+    "attorney-client, therapist-patient, mediator-client, or other "
+    "privileged relationship."
 )
 
 NEUTRAL_LANGUAGE_NOTE = (
