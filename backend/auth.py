@@ -254,6 +254,13 @@ async def register(
         "mediation_date": body.mediation_date,
         "picture": None,
         "email_verified": False,
+        # HB 300 §181.154 acknowledgement — captured at signup by
+        # accepting the Privacy Practices + HB 300 Notice referenced
+        # on the sign-up page. Marketing communications default OFF
+        # per §181.152 (affirmative opt-in required).
+        "hb300_ack_version": "2026-02-21",
+        "hb300_ack_at":      datetime.now(timezone.utc).isoformat(),
+        "marketing_opt_in":  False,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.users.insert_one(doc)
@@ -852,9 +859,14 @@ async def request_password_reset(
             "(token stored in magic_links)", user.get("user_id"),
         )
     except EmailSendError as e:
+        # Never log the reset link or token — anyone with log access could
+        # take over the account within the 15-minute window. Log user_id +
+        # outcome only. Token is retrievable from the magic_links collection.
         import logging as _logging
         _logging.getLogger(__name__).warning(
-            "Password reset email send failed for %s: %s. Link: %s", email, e, link_url
+            "Password reset email send failed for user_id=%s (error_type=%s)",
+            user.get("user_id"),
+            type(e).__name__,
         )
 
     return {
@@ -975,17 +987,21 @@ async def _issue_verification_link(
         send_verification_link(to_email=email, link_url=link_url, user_name=name)
         return True, None
     except EmailNotConfigured:
+        # Log user_id + outcome only. Token is available in magic_links
+        # collection for dev/preview retrieval — never log the link itself.
         import logging as _logging
         _logging.getLogger(__name__).warning(
-            "Verification link generated but SMTP not configured. Link for %s: %s",
-            email,
-            link_url,
+            "Verification link generated but SMTP not configured for user_id=%s "
+            "(token stored in magic_links)",
+            user_id,
         )
         return False, link_url
     except EmailSendError as e:
         import logging as _logging
         _logging.getLogger(__name__).warning(
-            "Verification email send failed for %s: %s. Link: %s", email, e, link_url
+            "Verification email send failed for user_id=%s (error_type=%s)",
+            user_id,
+            type(e).__name__,
         )
         return False, link_url
 

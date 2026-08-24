@@ -1,6 +1,21 @@
 # SA CoParents — PRD
 
 
+- **Iteration 123 — Texas HB 300 (Medical Records Privacy Act) compliance (2026-02-21)**:
+  - **New legal page** `/legal/hb300` — dedicated Texas HB 300 (Tex. Health & Safety Code Ch. 181) notice covering §181.154 electronic-disclosure notice, §181.153 no-sale attestation, §181.152 marketing opt-in, §181.102 15-business-day right of access, breach notification timers (60-day user, ≥250 TX residents → AG), workforce training §181.101, reasonable safeguards, Texas-specific rights, AG + OCR complaint routes. Linked from HIPAA Notice + Privacy Practices "See also".
+  - **New backend module** `/app/backend/hb300_routes.py` with 5 endpoints:
+    - `POST /api/me/hb300/acknowledge` — captures dated ack (versioned) in `hb300_acknowledgements` + mirror on user doc.
+    - `POST /api/me/hb300/marketing` — opt-in / opt-out (default OFF per §181.152).
+    - `POST /api/me/hb300/access-request` — formal 15-business-day request; row in `hb300_access_requests`; response includes SLA deadline + self-serve `/api/me/export` link.
+    - `GET  /api/me/hb300/status` — current posture (ack version + timestamp, marketing opt-in, pending access requests).
+    - `POST /api/admin/breach-report` — admin-only draft (403 for non-admins), stored in `hb300_breach_reports`, best-effort email to `OPERATOR_EMAIL`, flags Texas AG threshold (≥ 250) crossed.
+  - **Signup captures HB 300 ack** — `/api/auth/register` now writes `hb300_ack_version="2026-02-21"`, `hb300_ack_at`, and `marketing_opt_in=False` at signup so every new account starts with a compliant baseline.
+  - **Internal runbook** `/app/memory/HB300_BREACH_RUNBOOK.md` — 60-minute containment, 24-hour assessment, notification timers matrix (user 60d / TX AG 60d ≥ 250 / OCR 60d ≥ 500), notification-content elements, TX AG filing details, post-incident retention 6yr.
+  - **Security audit fix (this session, SEC-001)** — `auth.py` `EmailSendError` handlers for password reset + verification tokens no longer log the reset/verification URL or raw token; log `user_id + error_type` only. Prevents account takeover via log access.
+  - **Testing**: 5/5 (`test_iter121_hb300.py`) pass — signup ack, idempotent ack, marketing toggle round-trip, 15-biz-day SLA math, 403 for non-admin breach-report.
+
+
+
 - **Iteration 121 — Security audit fixes + HIPAA legal pages + PHI hardening (2026-08-24)**:
   - **SEC-001 CORS lockdown (CRITICAL)**: `server.py` no longer reflects any origin with `allow_credentials=True`. Explicit allowlist required via `CORS_ORIGINS` env var — default is production + www + preview. `.env` updated to explicit list. Prevents cross-site PHI theft from any site a signed-in parent visits.
   - **SEC-002 password-reset link redaction (MEDIUM)**: `auth.py` no longer logs the reset URL or raw token. Logs the event only with `user_id`; the token is retrievable from the `magic_links` collection in dev.

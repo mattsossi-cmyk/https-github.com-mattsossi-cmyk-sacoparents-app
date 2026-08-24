@@ -90,7 +90,12 @@ export default function HipaaNotice() {
             HIPAA-style protections more broadly than federal HIPAA
             itself. If you reside in Texas, your data enjoys the more
             protective of the two standards. We do not weaken any
-            protection based on where you live.
+            protection based on where you live. See our full{" "}
+            <Link to="/legal/hb300" className="text-[#2A0F5F] underline">
+              Texas HB 300 Notice
+            </Link>{" "}
+            for the 15-business-day access SLA, the no-sale
+            attestation, and the breach-notification timers.
           </p>
 
           <H2>What to do if something feels wrong</H2>
@@ -120,6 +125,7 @@ export default function HipaaNotice() {
           <H2>See also</H2>
           <ul>
             <li><Link to="/legal/privacy-practices" className="text-[#2A0F5F] underline">Notice of Privacy Practices</Link> — the formal, HIPAA-styled notice.</li>
+            <li><Link to="/legal/hb300" className="text-[#2A0F5F] underline">Texas HB 300 Notice</Link> — the Texas-specific addendum.</li>
             <li><Link to="/privacy" className="text-[#2A0F5F] underline">Privacy Policy</Link> — plain-English cover of everything we collect.</li>
             <li><Link to="/data-retention" className="text-[#2A0F5F] underline">Data retention policy</Link>.</li>
           </ul>

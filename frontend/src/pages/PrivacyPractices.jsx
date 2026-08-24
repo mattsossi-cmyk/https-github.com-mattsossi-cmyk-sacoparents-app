@@ -157,6 +157,7 @@ export default function PrivacyPractices() {
           <H2>See also</H2>
           <ul>
             <li><Link to="/legal/hipaa" className="text-[#2A0F5F] underline">HIPAA Notice</Link> — plain-English summary.</li>
+            <li><Link to="/legal/hb300" className="text-[#2A0F5F] underline">Texas HB 300 Notice</Link> — Texas Medical Records Privacy Act addendum.</li>
             <li><Link to="/privacy" className="text-[#2A0F5F] underline">Privacy Policy</Link>.</li>
             <li><Link to="/data-retention" className="text-[#2A0F5F] underline">Data retention policy</Link>.</li>
           </ul>
