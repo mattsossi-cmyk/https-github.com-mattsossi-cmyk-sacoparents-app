@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { EyeOff, Eye, Download, Share2, Loader2, Save, Lock, Clock, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { api, API } from "../lib/api";
+import { requestPreShareConsent } from "@/components/PreShareConsentDialog";
 
 /**
  * ReportShareControls — reusable "customize what to share" panel used on every
@@ -146,6 +147,19 @@ export default function ReportShareControls({
   }, [pdfUrl, excluded, filename, reportType, totalVisible]);
 
   const copyShareLink = useCallback(async () => {
+    // HB 300 + Privacy Policy pre-share consent gate. Show the six
+    // "YOU CONTROL THIS REPORT" bullets before the share link is minted.
+    // Fail closed on cancel — no link is created and no toast fires.
+    const consentLabels = {
+      summary:    "the Mediation Prep Summary",
+      agreement:  "the Co-Parenting Agreement",
+      sn_report:  "the Special Needs Care Plan",
+      safety:     "the Family Violence & Communication Safety Screen",
+    };
+    const consentLabel = consentLabels[reportType] || "this report";
+    const consented = await requestPreShareConsent(consentLabel);
+    if (!consented) return;
+
     setSharing(true);
     try {
       const { data } = await api.post(shareUrl, {
@@ -170,7 +184,7 @@ export default function ReportShareControls({
     } finally {
       setSharing(false);
     }
-  }, [shareUrl, excluded, expireDays, shareLabel, totalVisible, loadExistingLinks]);
+  }, [shareUrl, expireDays, shareLabel, totalVisible, loadExistingLinks, reportType]);
 
   const revokeLink = useCallback(async (jti) => {
     setRevokingJti(jti);

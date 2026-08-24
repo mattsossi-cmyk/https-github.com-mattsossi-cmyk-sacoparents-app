@@ -13,6 +13,7 @@
  */
 import { useState } from "react";
 import { X, Send, Loader2, ShieldAlert, ShieldCheck } from "lucide-react";
+import { requestPreShareConsent } from "@/components/PreShareConsentDialog";
 
 const ROLES = [
   { key: "mediator",                    label: "Mediator" },
@@ -74,8 +75,15 @@ export default function JointReportEmailDialog({
   const v = VARIANTS[variant] || VARIANTS.report;
   const isWarn = v.disclaimerTone === "warn";
   const emailOk = /\S+@\S+\.\S+/.test(email.trim());
-  const submit = () => {
+  const submit = async () => {
     if (!emailOk || sending) return;
+    // HB 300 + Privacy Policy consent gate — the six "YOU CONTROL THIS
+    // REPORT" bullets. Skip if the parent cancels.
+    const label = variant === "agreement"
+      ? "the Joint Co-Parenting Agreement draft"
+      : "the Joint Co-Parenting Summary for Professional Review";
+    const ok = await requestPreShareConsent(label);
+    if (!ok) return;
     onSend({
       recipient_email: email.trim(),
       recipient_name:  name.trim() || null,

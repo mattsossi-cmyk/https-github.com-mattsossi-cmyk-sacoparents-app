@@ -28,6 +28,7 @@ import SectionCoaching from "../components/SectionCoaching";
 import MethodologyCard from "../components/MethodologyCard";
 import ReportShareControls, { pdfAbs } from "../components/ReportShareControls";
 import BriefingEmailDialog from "../components/BriefingEmailDialog";
+import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import DeviceSafetyBanner from "../components/DeviceSafetyBanner";
 import ScreenGuardrailPanel from "../components/ScreenGuardrailPanel";
 import ReviewerStatusChip from "../components/ReviewerStatusChip";
@@ -860,6 +861,13 @@ export default function SafetyAssessment() {
   const [cosignModal, setCosignModal] = useState(null);
   const prepareCoSign = async () => {
     if (!result?.assessment_id) return;
+    // HB 300 + Privacy Policy pre-share gate — the QR link exposes the
+    // court report to whoever scans it, so the six "YOU CONTROL THIS
+    // REPORT" bullets must be shown before the token is minted.
+    const consented = await requestPreShareConsent(
+      "the reviewer Co-Sign QR link for your Family Violence & Communication Safety Screen"
+    );
+    if (!consented) return;
     try {
       const r = await api.post(
         `/safety-assessment/${result.assessment_id}/prepare-cosign`,

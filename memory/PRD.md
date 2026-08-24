@@ -1,6 +1,27 @@
 # SA CoParents — PRD
 
 
+- **Iteration 126 — Privacy-review pass: 4 factual reconciliations + 3 new sections + HIPAA softening + pre-share consent gate (2026-02-21)**:
+  - **4 consistency fixes** across `Privacy.jsx` + `DataRetention.jsx` + `HipaaNotice.jsx` + `PrivacyPractices.jsx`:
+    - Share links: default 7 days, user-selectable {1, 7, 30, never}, revocable anytime (was "30 days from creation" on one page vs "signed 7-day link" on another).
+    - Deletion: active-account data purged promptly; encrypted rolling backups complete rotation within 30 days (was "instantly / manually within 7 days" contradicting "within 30 days").
+    - Email provider: named Resend explicitly (was "Gmail SMTP" — factually wrong post-Resend migration); Virtru mentioned as pending BAA.
+    - Anthropic retention: rewritten per integration-expert playbook — chain is `app → Emergent LLM proxy → Anthropic`. Anthropic's published commercial policy is deletion within 30 days subject to exceptions; Anthropic does not train on API traffic; Emergent's proxy payload retention is not publicly stated (link to their policy). Removed the false "transient / then discarded" claim and the false-precision "enforces 30-day retention max".
+  - **New section — "Information about children"** on `Privacy.jsx`. Names the categories parents may enter about kids, the minimization ask, and 4 explicit commitments (no sale, no advertising, no model training, revocable Compare-only sharing).
+  - **New section — "Sensitive information — enhanced protection"** on `Privacy.jsx`. Lists family-violence, children's medical/psychological, allegations, journal, safety assessments, and free-text as the enhanced-protection tier. Lists 5 concrete safeguards (Compare consent, Finding-3-only guardrail, PHI-access audit log, neutral-language guardrails, encryption). Explicit warning that revoking a link cannot retrieve already-downloaded copies.
+  - **New section — "AI + sensitive information — what to avoid"** on `Privacy.jsx`. Firm disclosure per playbook: because Emergent → Anthropic BAA chain is not yet confirmed, do NOT paste raw medical records, diagnostic codes with identifiers, or verbatim court exhibits into free-text fields until BAA confirmation is published.
+  - **HIPAA-language softening** on `HipaaNotice.jsx` + `PrivacyPractices.jsx`: replaced the "we voluntarily adopt HIPAA" framing with the user-requested wording — *"SA CoParents is not a healthcare provider, and use of the platform does not, by itself, make information subject to HIPAA. We nevertheless treat health-related information as sensitive personal information and apply the privacy and security protections described in this notice."*
+  - **New component `/app/frontend/src/components/PreShareConsentDialog.jsx`** — promise-based `requestPreShareConsent(label)` API mounted once at the root via `<PreShareConsentHost />` in `App.js`. Renders a modal with the six "YOU CONTROL THIS REPORT" bullets (verbatim per user's review), requires an explicit checkbox tick, and fails closed on cancel/Esc/unmount. Deliberately not cached in localStorage — parent must re-consent every share so the bullets are always read.
+  - **Wired into 4 share entry points**:
+    - `JointReportEmailDialog::submit()` — covers both Joint Report + Joint Agreement email variants.
+    - `ReportShareControls::copyShareLink()` — covers every share-link creation across Mediation Summary, Co-Parenting Agreement, Special Needs Care Plan, and Family Violence & Communication Safety Screen (4 report types → all gated by one code path).
+    - `SafetyAssessment::prepareCoSign()` — reviewer Co-Sign QR link.
+  - **Bug uncovered + fixed**: temporal-dead-zone `ReferenceError: Cannot access 'close' before initialization` in the first draft of the modal (function referenced in its own useEffect deps before declaration). Fixed by hoisting `close` above the effect + suppressing the exhaustive-deps warning with a dedicated eslint comment.
+  - **Testing**: all 4 legal pages render clean on preview (`/privacy`, `/legal/hipaa`, `/legal/hb300`, `/legal/privacy-practices`, `/data-retention`). 8/8 policy content checks pass (Resend not Gmail, 7-day default, new sections present, no "transient" Anthropic claim, deletion nuance visible, Emergent chain named explicitly). Lint clean on all 3 modified components. No runtime errors.
+  - **Files touched**: `Privacy.jsx`, `DataRetention.jsx`, `HipaaNotice.jsx`, `PrivacyPractices.jsx`, `App.js`, `JointReportEmailDialog.jsx`, `ReportShareControls.jsx`, `SafetyAssessment.jsx`, `PreShareConsentDialog.jsx` (new).
+
+
+
 - **Iteration 125 — HB 300 breach simulation drill (2026-02-21)**:
   - **Driver script** `/app/scripts/breach_drill.py` — three scenarios (12 TX residents / 312 TX / 742 total with 620 TX) executed live against the backend end-to-end: register + Mongo-elevate an admin, POST `/api/admin/breach-report`, verify AG flag + persistence + `next_steps`, then clean up (delete drill users, breach rows, PHI access rows).
   - **Overall PASS** — admin gate + all three scenarios matched expectations within 240 ms. Raw JSON at `/app/memory/HB300_BREACH_DRILL_RESULTS.json`, full readout at `/app/memory/HB300_BREACH_DRILL_2026_02_21.md`.

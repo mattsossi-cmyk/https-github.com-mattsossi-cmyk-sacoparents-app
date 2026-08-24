@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import BiometricGate from "@/components/BiometricGate";
+import { PreShareConsentHost } from "@/components/PreShareConsentDialog";
 
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
@@ -514,6 +515,7 @@ function App() {
         <AuthProvider>
           <LegalAcknowledgment />
           <AppRoutes />
+          <PreShareConsentHost />
           <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
         </AuthProvider>
       </BrowserRouter>

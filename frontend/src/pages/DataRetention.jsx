@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, HardDrive, Trash2, Download, Clock } from "lucide-react";
 
-const LAST_UPDATED = "February 26, 2026";
+const LAST_UPDATED = "February 21, 2026";
 
 /**
  * Data Retention Policy — companion to Privacy.
@@ -78,9 +78,9 @@ export default function DataRetention() {
                   reason="So you can revisit past coaching threads."
                 />
                 <Row
-                  type="Shareable PDF links (JWT tokens)"
-                  duration="30 days from creation."
-                  reason="Time-boxed so revoked preferences take effect naturally."
+                  type="Shareable PDF links (signed tokens)"
+                  duration="Default 7 days from creation. Parents can pick 1, 7, or 30 days at share time, or 'no expiry' for links they'll revoke manually. Every link is revocable from the dashboard at any moment."
+                  reason="Time-boxed so a stale link cannot outlive its usefulness."
                 />
                 <Row
                   type="Journal entries"
@@ -109,8 +109,7 @@ export default function DataRetention() {
           <H2>Deleting your account</H2>
           <p>
             You can delete your account and all associated content at any time.
-            We commit to full deletion (including rolling backups) within{" "}
-            <strong>30 days</strong> of your request.
+            <strong> Active-account data is purged from our primary database promptly</strong> — usually within seconds of tapping Delete. <strong>Encrypted rolling backups complete rotation within 30 days</strong>, at which point the deletion is total.
           </p>
           <div className="rounded-2xl border border-[#E5E0EE] bg-white p-4 not-prose flex gap-3 items-start my-4">
             <Trash2 size={18} className="text-[#3D1A78] mt-0.5 shrink-0" />
@@ -163,12 +162,16 @@ export default function DataRetention() {
 
           <H2>Third-party processors</H2>
           <ul>
-            <li><strong>Anthropic (Claude 4.5)</strong> — processes your prep content to generate reports. Anthropic does not use API traffic for model training and enforces 30-day retention max on its side.</li>
+            <li><strong>Emergent Labs</strong> — application hosting <em>and</em> LLM proxy that fronts Anthropic Claude for report generation. The chain is <code>app → Emergent proxy → Anthropic</code>. Emergent's payload retention is not publicly stated; see <a href="https://app.emergent.sh/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#2A0F5F] underline">Emergent's Privacy Policy</a>.</li>
+            <li><strong>Anthropic (Claude Sonnet 4.5)</strong> — generates your report content. Anthropic's published commercial API policy is deletion of inputs and outputs within 30 days, subject to exceptions (legal holds, safety/Usage-Policy investigations, feature-specific retention). Anthropic states commercial API traffic is not used to train models unless the customer expressly permits it — we do not permit it.</li>
             <li><strong>MongoDB Atlas</strong> — primary database, US-East region, encryption at rest.</li>
-            <li><strong>Emergent hosting</strong> — application server infrastructure.</li>
-            <li><strong>Resend</strong> — transactional email delivery (magic links, PDF-to-mediator sends).</li>
+            <li><strong>Resend</strong> — transactional email delivery (magic links, standard PDF-to-professional sends).</li>
+            <li><strong>Virtru Hosted Gateway</strong> — HIPAA-scoped joint report + agreement emails, enabled once our BAA and tenant provisioning complete. Currently OFF; standard emails route through Resend in the meantime.</li>
             <li><strong>Google (optional)</strong> — only if you sign in with Google. We receive your name + email, nothing more.</li>
           </ul>
+          <p className="text-sm text-[#857E9C] italic">
+            We have not represented Emergent's proxy as covered by a HIPAA Business Associate Agreement, because that chain is not yet contractually confirmed. Please avoid pasting raw clinical records into free-text fields until we publish BAA confirmation.
+          </p>
 
           <H2>Contact</H2>
           <p>

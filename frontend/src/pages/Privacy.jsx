@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-const LAST_UPDATED = "February 13, 2026";
+const LAST_UPDATED = "February 21, 2026";
 
 export default function Privacy() {
   return (
@@ -34,8 +34,8 @@ export default function Privacy() {
           <ul>
             <li>We collect <strong>only what's needed</strong> for you to use the app: your account info and the prep answers you type.</li>
             <li>We <strong>never</strong> sell your data. We never share it with advertisers. Period.</li>
-            <li>Your prep answers go through Anthropic's Claude AI to generate your summary, agreement, and growth plan — and Anthropic does not use your data to train models.</li>
-            <li>You can delete your account and all your data at any time by emailing us.</li>
+            <li>Your prep content is sent through Emergent Labs' LLM proxy to Anthropic's Claude API to generate your summaries, drafts, and growth plans. <strong>Anthropic does not train on API traffic.</strong> Retention along that chain is described in "How AI fits in" below.</li>
+            <li>You can delete your account and all your active-account data at any time — instantly from inside the app. Encrypted rolling backups complete rotation within 30 days.</li>
             <li>If you're a domestic violence survivor, the app has a Quick Exit button and links to confidential national hotlines. Use them whenever you need.</li>
           </ul>
 
@@ -57,10 +57,74 @@ export default function Privacy() {
 
           <H2>How AI fits in</H2>
           <p>
-            We use <strong>Anthropic Claude</strong> (via the Emergent universal LLM key) to synthesize your prep into your summary documents and growth plan. When you tap "Generate", your prep data is sent to Claude with strict instructions to produce a child-focused, non-judgmental document.
+            When you tap "Generate", your prep content is transmitted from our backend to <strong>Emergent Labs' LLM proxy</strong> using our Universal LLM Key, and Emergent routes the request to <strong>Anthropic's Claude API</strong> for processing. Emergent and Anthropic may process associated technical, security, billing, and abuse-prevention information.
           </p>
           <p>
-            Per Anthropic's commercial terms, your data is <strong>not used to train their models</strong>. The data is processed transiently to generate your response and then discarded by Anthropic.
+            <strong>Retention</strong> — Anthropic's published commercial API policy states that inputs and outputs are deleted from Anthropic's backend within 30 days, subject to exceptions including legal holds and safety/Usage-Policy investigations. Anthropic states that commercial API inputs and outputs are <strong>not used to train generative models</strong> unless the customer expressly permits it (we do not permit it). Emergent's proxy payload retention is not publicly stated — see{" "}
+            <a href="https://app.emergent.sh/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#2A0F5F] underline">Emergent's Privacy Policy</a>{" "}
+            for their commitments.
+          </p>
+          <p className="text-sm text-[#857E9C] italic">
+            We have not represented Emergent's proxy as zero-retention or as covered by a HIPAA Business Associate Agreement, because that chain is not yet contractually confirmed. See the <strong>AI + sensitive information</strong> notice below before pasting clinical records into free-text fields.
+          </p>
+
+          <H2>AI + sensitive information — what to avoid</H2>
+          <p>
+            Because the Emergent → Anthropic BAA chain is <strong>not yet confirmed</strong> for SA CoParents, do <strong>not</strong> paste the following into free-text fields that feed the AI coach until we publish BAA confirmation on this page:
+          </p>
+          <ul>
+            <li>Raw medical records, lab results, or full clinical notes.</li>
+            <li>Explicit diagnostic codes or medication dosages tied to identifiers.</li>
+            <li>Court exhibits containing verbatim safety/violence allegations.</li>
+          </ul>
+          <p>
+            The structured fields in the Special Needs and Safety-Lens assessments are designed to minimise this exposure — they collect the categories and scores we need, not verbatim clinical detail. Keep free-text notes at that same level.
+          </p>
+
+          <H2>Information about children</H2>
+          <p>
+            SA CoParents is designed for parents. We do not knowingly collect information directly from anyone under 13. But parents <strong>do</strong> enter information <em>about</em> their children — that's the point of a co-parenting prep tool — and we treat that information with the same standard as any other sensitive personal information.
+          </p>
+          <p><strong>Categories a parent may enter about a child</strong>:</p>
+          <ul>
+            <li>First name, age, and education setting (school, grade).</li>
+            <li>Special-needs categories: neurodevelopmental (ADHD, autism spectrum), medical (chronic conditions, allergies), psychological (anxiety, depression), sensory, communication, and learning differences — plus severity ratings and any therapies/medications the parent wants included in the co-parenting plan.</li>
+            <li>Safety and family-violence observations relevant to the parenting arrangement — captured through the Safety-Lens instrument, never as free-text court exhibits.</li>
+            <li>Free-text notes the parent chooses to include in a Journal entry or an agreement clause.</li>
+          </ul>
+          <p>
+            <strong>Please only enter what's reasonably necessary</strong> for the assessment or agreement you're preparing. Skip fields you don't need.
+          </p>
+          <p><strong>Our commitments regarding children's information</strong>:</p>
+          <ul>
+            <li>Never sold, licensed, or shared with advertisers.</li>
+            <li>Never used to train AI models (Anthropic API traffic is contractually excluded from training).</li>
+            <li>Only ever shared with your co-parent through an explicit, revocable Compare consent — and even then only the fields the artefact requires.</li>
+            <li>Deletion of the child's data follows the account-deletion path — instantly on the primary database, backups rotate out within 30 days. You may also email us to remove a specific child's record without deleting the whole account; we honour that request within 15 business days per Texas HB 300.</li>
+          </ul>
+
+          <H2>Sensitive information — enhanced protection</H2>
+          <p>
+            Some of what parents enter is <strong>more sensitive</strong> than the rest. We apply extra safeguards to this category. It includes:
+          </p>
+          <ul>
+            <li>Family-violence and coercive-control observations captured through the Safety-Lens instrument.</li>
+            <li>Children's medical, psychological, and neurodevelopmental information.</li>
+            <li>Allegations involving either parent.</li>
+            <li>Journal entries.</li>
+            <li>Safety assessments and their findings.</li>
+            <li>Free-text narratives you type anywhere in the app.</li>
+          </ul>
+          <p><strong>The extra safeguards</strong>:</p>
+          <ul>
+            <li><strong>Consent-gated Compare share</strong> — the co-parent never sees any of this without your explicit acceptance of a Compare share, and only the fields the shared artefact requires.</li>
+            <li><strong>Finding-3-only guardrail</strong> — Findings 1 (family-violence pattern) and 2 (trauma impact) of the Safety Lens are <strong>never</strong> included in any joint artefact under any circumstance. Only Finding 3 (parenting-plan implications) is shareable.</li>
+            <li><strong>PHI access audit log</strong> — every read of a Safety-Lens finding, Special Needs assessment, or joint report is timestamped and retained for six years. You can pull your own copy from your account.</li>
+            <li><strong>Neutral-language guardrails</strong> — every joint artefact leaving the platform passes automated tests that block "correct/at-fault/should have custody" language.</li>
+            <li><strong>Encryption at rest and in transit</strong> — TLS on every request; MongoDB Atlas encryption at rest.</li>
+          </ul>
+          <p>
+            <strong>An important limit on sharing that you should understand:</strong> revoking a share link prevents future access <em>through that link</em>, but it cannot retrieve a PDF that another person has already downloaded, printed, forwarded, or saved. Once you tap "Send", assume that copy exists outside our systems.
           </p>
 
           <H2>How we store your data</H2>
@@ -70,9 +134,9 @@ export default function Privacy() {
 
           <H2>Who we share with</H2>
           <ul>
-            <li><strong>Service providers</strong> we contract with to run the app (currently: Emergent Labs for hosting, MongoDB Atlas for database, Anthropic for AI, Google for optional sign-in, Gmail SMTP for the optional "Email to mediator" feature). Each is bound by their own privacy commitments.</li>
-            <li><strong>Your mediator</strong> — but only when you explicitly tap "Email to mediator" and enter their email address. We do not share with mediators automatically.</li>
-            <li><strong>People you choose</strong> — when you tap "Share via text", we generate a signed 7-day download link that anyone with the URL can use to view the PDF. The link expires automatically after 7 days.</li>
+            <li><strong>Service providers</strong> we contract with to run the app (currently: Emergent Labs for hosting <em>and</em> for the LLM proxy that fronts Anthropic Claude, MongoDB Atlas for the database, Google for optional sign-in, <strong>Resend</strong> for standard transactional email, and <strong>Virtru Hosted Gateway</strong> which will be enabled for HIPAA-scoped emails once our BAA and tenant provisioning complete). Each is bound by their own privacy commitments.</li>
+            <li><strong>Your mediator, attorney, therapist, or court</strong> — but only when you explicitly initiate the send from inside the app and confirm the recipient email. We do not share with professionals automatically.</li>
+            <li><strong>People you choose</strong> — when you tap "Share via link", we generate a signed download link. The default lifetime is <strong>7 days</strong>; you can choose 1, 7, or 30 days at share time, or "no expiry" for links you'll revoke manually. Every link is revocable from your dashboard at any moment.</li>
             <li><strong>Legal compliance</strong> — if compelled by a valid legal process. We will notify you unless legally prohibited.</li>
           </ul>
           <p>We do not sell your data to anyone, ever.</p>
@@ -81,13 +145,13 @@ export default function Privacy() {
           <ul>
             <li><strong>Access</strong> — email us and we'll send you a copy of everything we have about you.</li>
             <li><strong>Correction</strong> — most fields are editable directly in the app. For others, email us.</li>
-            <li><strong>Deletion</strong> &mdash; you can <Link to="/delete-account" className="text-[#2A0F5F] underline">delete your account and all associated data instantly</Link> from inside the app or from that public page. Alternatively, email us and we'll handle it manually within 7 days. PDFs already shared via expired links can no longer be retrieved.</li>
+            <li><strong>Deletion</strong> &mdash; you can <Link to="/delete-account" className="text-[#2A0F5F] underline">delete your account and all associated data</Link> from inside the app or from that public page. <strong>Active-account data is purged from our primary database promptly</strong> — usually within seconds. <strong>Encrypted rolling backups complete rotation within 30 days</strong>, at which point the deletion is total. PDFs already shared via links can no longer be retrieved by us, but a person who downloaded one before revocation may still have their copy.</li>
             <li><strong>Portability</strong> — we can export your prep + generated documents as JSON on request.</li>
           </ul>
 
-          <H2>Children</H2>
+          <H2>Children (direct collection)</H2>
           <p>
-            SA CoParents is intended for parents and is not directed at children under 13. We do not knowingly collect information from anyone under 13. If you believe we have done so inadvertently, email us and we will delete it.
+            SA CoParents is intended for parents and is not directed at children under 13. We do not knowingly collect information <em>directly</em> from anyone under 13. (For information a parent may enter <em>about</em> their children, see the "Information about children" section above.) If you believe we have inadvertently collected information directly from a child, email us and we will delete it.
           </p>
 
           <H2>Safety note for survivors of domestic violence</H2>
@@ -109,8 +173,9 @@ export default function Privacy() {
 
           <H2>See also</H2>
           <ul>
-            <li><Link to="/legal/hipaa" className="text-[#2A0F5F] underline">HIPAA Notice</Link> — how we treat health-adjacent data.</li>
+            <li><Link to="/legal/hipaa" className="text-[#2A0F5F] underline">HIPAA Notice</Link> — how we treat health-adjacent data (and why HIPAA does not automatically apply to us).</li>
             <li><Link to="/legal/privacy-practices" className="text-[#2A0F5F] underline">Notice of Privacy Practices</Link> — the formal HIPAA-styled notice.</li>
+            <li><Link to="/legal/hb300" className="text-[#2A0F5F] underline">Texas HB 300 Notice</Link> — Texas-specific medical-records privacy addendum.</li>
             <li><Link to="/data-retention" className="text-[#2A0F5F] underline">Data retention policy</Link> — how long we keep each data type, and how to delete or export.</li>
             <li><Link to="/methodology" className="text-[#2A0F5F] underline">Methodology &amp; assessment validation</Link> — how our scoring works and its limits.</li>
             <li><Link to="/accessibility" className="text-[#2A0F5F] underline">Accessibility statement</Link> — WCAG 2.2 AA commitments.</li>

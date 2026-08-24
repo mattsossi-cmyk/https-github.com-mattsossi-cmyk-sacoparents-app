@@ -8,7 +8,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-const EFFECTIVE_DATE = "February 17, 2026";
+const EFFECTIVE_DATE = "February 21, 2026";
 
 export default function PrivacyPractices() {
   return (
@@ -35,12 +35,7 @@ export default function PrivacyPractices() {
             access to this information. Please review it carefully.</strong>
           </p>
           <p>
-            SA CoParents is a preparation platform. We are not a
-            HIPAA Covered Entity. We adopt this Notice of Privacy
-            Practices voluntarily because much of the information you
-            share with the platform would be considered Protected
-            Health Information (PHI) in a clinical setting, and we
-            want the same standard of care to apply here.
+            SA CoParents is a preparation platform. <strong>We are not a healthcare provider, and use of the platform does not, by itself, make information subject to HIPAA.</strong> We nevertheless treat health-related information as sensitive personal information and apply the privacy and security protections described in this Notice, because much of what parents share with the platform would be considered Protected Health Information (PHI) in a clinical setting and we want the same standard of care to apply here.
           </p>
 
           <H2>1. Our commitment</H2>
