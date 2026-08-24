@@ -252,14 +252,25 @@ async def submit_breach_report(
     * Flags whether the Texas AG threshold (≥ 250 Texas residents)
       has been crossed so the operator sees it immediately.
     """
-    # Admin gate — the app currently uses `role`, `is_admin`, or the
-    # `OPERATOR_EMAIL` as the trust boundary. Accept any of them.
+    # Admin gate — the app's admin-scope collections mark elevated
+    # accounts with `role="admin"` or `is_admin=True` on the user
+    # document (NOT the UserPublic wire shape, which intentionally
+    # strips those fields). We look up the Mongo row directly so the
+    # gate can never be bypassed by whatever fields `UserPublic`
+    # happens to expose. The `OPERATOR_EMAIL` fallback lets the
+    # single-owner deployment work out-of-the-box.
     operator_email = (os.environ.get("OPERATOR_EMAIL") or "").strip().lower()
-    is_admin = (
-        getattr(user, "role", None) == "admin"
-        or bool(getattr(user, "is_admin", False))
-        or (operator_email and (user.email or "").lower() == operator_email)
-    )
+    is_operator = operator_email and (user.email or "").lower() == operator_email
+    is_admin = bool(is_operator)
+    if not is_admin:
+        user_doc = await db.users.find_one(
+            {"user_id": user.user_id},
+            {"_id": 0, "role": 1, "is_admin": 1},
+        ) or {}
+        is_admin = (
+            user_doc.get("role") == "admin"
+            or bool(user_doc.get("is_admin", False))
+        )
     if not is_admin:
         raise HTTPException(status_code=403, detail="Admin only.")
 

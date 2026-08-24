@@ -1,6 +1,15 @@
 # SA CoParents — PRD
 
 
+- **Iteration 125 — HB 300 breach simulation drill (2026-02-21)**:
+  - **Driver script** `/app/scripts/breach_drill.py` — three scenarios (12 TX residents / 312 TX / 742 total with 620 TX) executed live against the backend end-to-end: register + Mongo-elevate an admin, POST `/api/admin/breach-report`, verify AG flag + persistence + `next_steps`, then clean up (delete drill users, breach rows, PHI access rows).
+  - **Overall PASS** — admin gate + all three scenarios matched expectations within 240 ms. Raw JSON at `/app/memory/HB300_BREACH_DRILL_RESULTS.json`, full readout at `/app/memory/HB300_BREACH_DRILL_2026_02_21.md`.
+  - **Bug found + fixed in-flight (admin gate silently unreachable)**: `hb300_routes.py::submit_breach_report` was checking `getattr(user, "role", None)` and `is_admin` on `UserPublic`, which deliberately strips those fields. Only the `OPERATOR_EMAIL` fallback could ever succeed — future workforce members would 403 silently. Fixed by querying `role`/`is_admin` from Mongo directly, with `OPERATOR_EMAIL` retained as the single-owner shortcut.
+  - **Regression locked** — new `test_iter121_hb300.py::test_breach_report_accepts_mongo_elevated_admin` elevates a test user via Mongo, hits the endpoint, asserts `200`, then reverts. 12/12 pass (was 11/11 before).
+  - **Follow-ups queued (non-blocking)**: (1) add `total_individuals_affected` + `ocr_threshold_crossed` to `BreachReportPayload` for multi-state OCR breaches, (2) implement `send_operator_notification` in `email_service.py` so drafts email the operator live (currently best-effort import that no-ops), (3) automate Texas-media-notice check for ≥ 500 residents in one region.
+
+
+
 - **Iteration 124 — Virtru Hosted Gateway (Pattern A) SMTP relay wired (2026-02-21)**:
   - **New module** `/app/backend/virtru_mailer.py` — synchronous SMTP submitter matching the rest of `email_service.py`. Per-message `X-Virtru-Auth` MIME header (NOT SMTP AUTH — that's the Virtru documented pattern), optional `X-Virtru-Encrypt: 1` header, optional `#secure#` subject marker, 100 MB raw attachment cap, PDF-only content-type guard, redacted error logging (auth header NEVER appears in any log line, even on SMTP failure).
   - **email_service.`_send()` provider switch** — auto-routes through Virtru when `VIRTRU_ENABLED=true` + `VIRTRU_AUTH_HEADER` + `VIRTRU_FROM_EMAIL` are populated, then falls back to Resend cleanly on `VirtruNotConfigured`. **Fail-closed** for HIPAA-scoped sends: `require_encrypted=True` + `VIRTRU_FORCE_ENCRYPT_REQUIRED=true` refuses Resend fallback entirely so no PHI email ever escapes unencrypted once the operator flips the flag.

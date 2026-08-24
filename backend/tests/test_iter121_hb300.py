@@ -95,3 +95,62 @@ def test_breach_report_forbidden_for_non_admin(base_url, auth_client):
     )
     assert r.status_code == 403
     assert r.json()["detail"] == "Admin only."
+
+
+def test_breach_report_accepts_mongo_elevated_admin(base_url, test_user):
+    """Regression: the admin gate must query Mongo directly for
+    role/is_admin because UserPublic strips those fields. Fixed
+    during the 2026-02-21 breach simulation drill.
+    """
+    import asyncio
+    import os
+    import requests
+    from motor.motor_asyncio import AsyncIOMotorClient
+
+    mongo_url = os.environ.get("MONGO_URL")
+    db_name = os.environ.get("DB_NAME")
+    if not mongo_url or not db_name:
+        for line in open("/app/backend/.env"):
+            if line.startswith("MONGO_URL="):
+                mongo_url = mongo_url or line.split("=", 1)[1].strip().strip('"')
+            if line.startswith("DB_NAME="):
+                db_name = db_name or line.split("=", 1)[1].strip().strip('"')
+
+    async def elevate():
+        client = AsyncIOMotorClient(mongo_url)
+        await client[db_name].users.update_one(
+            {"user_id": test_user["user"]["user_id"]}, {"$set": {"role": "admin"}}
+        )
+        client.close()
+
+    async def revert():
+        client = AsyncIOMotorClient(mongo_url)
+        await client[db_name].users.update_one(
+            {"user_id": test_user["user"]["user_id"]}, {"$unset": {"role": ""}}
+        )
+        client.close()
+
+    asyncio.run(elevate())
+    try:
+        r = requests.post(
+            f"{base_url}/api/admin/breach-report",
+            json={
+                "summary":                  "Drill regression test — admin gate.",
+                "discovered_at":            datetime.now(timezone.utc).isoformat(),
+                "texas_residents_affected": 42,
+                "phi_categories":           "safety_lens",
+                "remediation":              "None — regression test only.",
+            },
+            headers={
+                "Authorization": f"Bearer {test_user['token']}",
+                "Content-Type":  "application/json",
+            },
+            timeout=30,
+        )
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["ok"] is True
+        assert body["ag_threshold_crossed"] is False  # 42 < 250
+        assert body["breach_id"]
+    finally:
+        asyncio.run(revert())

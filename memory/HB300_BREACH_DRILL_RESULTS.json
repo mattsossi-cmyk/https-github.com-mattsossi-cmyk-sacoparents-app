@@ -1,0 +1,62 @@
+{
+  "started": "2026-08-24T15:30:07.439342+00:00",
+  "finished": "2026-08-24T15:30:11.202400+00:00",
+  "duration_s": 3.763058,
+  "backend": "https://prepared-parents.preview.emergentagent.com",
+  "findings": [
+    {
+      "check": "admin_gate",
+      "pass": true,
+      "status": 403,
+      "body": {
+        "detail": "Admin only."
+      }
+    },
+    {
+      "scenario": "A",
+      "label": "Small internal exposure (12 TX residents)",
+      "http_status": 200,
+      "elapsed_ms": 240,
+      "breach_id": "6a8c63829bc13832d1285747",
+      "ag_threshold_crossed": false,
+      "ag_threshold_expected": false,
+      "user_notice_deadline": "2026-10-23T13:30:07.439089+00:00",
+      "ocr_route": "annual_log",
+      "next_steps_len": 5,
+      "persisted_status": "draft",
+      "persisted_tx_affected": 12,
+      "pass": true
+    },
+    {
+      "scenario": "B",
+      "label": "TX AG threshold crossed (312 TX residents)",
+      "http_status": 200,
+      "elapsed_ms": 222,
+      "breach_id": "6a8c63829bc13832d1285748",
+      "ag_threshold_crossed": true,
+      "ag_threshold_expected": true,
+      "user_notice_deadline": "2026-10-22T15:30:07.439104+00:00",
+      "ocr_route": "annual_log",
+      "next_steps_len": 5,
+      "persisted_status": "draft",
+      "persisted_tx_affected": 312,
+      "pass": true
+    },
+    {
+      "scenario": "C",
+      "label": "OCR-scale breach (742 total, 620 TX)",
+      "http_status": 200,
+      "elapsed_ms": 197,
+      "breach_id": "6a8c63839bc13832d1285749",
+      "ag_threshold_crossed": true,
+      "ag_threshold_expected": true,
+      "user_notice_deadline": "2026-10-23T09:30:07.439108+00:00",
+      "ocr_route": "immediate_60_day",
+      "next_steps_len": 5,
+      "persisted_status": "draft",
+      "persisted_tx_affected": 620,
+      "pass": true
+    }
+  ],
+  "overall": "PASS"
+}
