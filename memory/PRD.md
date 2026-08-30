@@ -1,6 +1,16 @@
 # SA CoParents — PRD
 
 
+- **Iteration 130 — Fixed "PDF generates code not print" bug + new Co-Parenting Agreement sample (2026-02-21)**:
+  - **Root cause of parent complaints**: Landing page + Special-Needs marketing pages linked directly to `/downloads/<name>.pdf` — a static-asset path served by the React build. On some hosting configurations the SPA fallback caught those requests and returned `index.html` with the JS bundle. Browsers rendered that as raw HTML source → parents saw "code" instead of a PDF.
+  - **Fix**: New whitelist-gated backend endpoint `GET /api/insights/samples/{filename}` in `insights_routes.py` that serves the same files through FastAPI with proper `application/pdf` content-type + 1-hour Cache-Control. The SPA fallback can never intercept an `/api/*` path. Allowlist blocks directory traversal (`../` returns 404) and unlisted files (404).
+  - **Every frontend PDF link migrated** from `/downloads/*.pdf` to `/api/insights/samples/*.pdf` — 17 links across `Landing.jsx`, `SpecialNeedsV2.jsx`, and `SpecialNeedsV2PsychologicalDeepDiveReport.jsx`. Grep for `/downloads/.*\.pdf` now returns zero hits.
+  - **New sample generator** `/app/backend/scripts/generate_agreement_sample.py` — uses the live `pdf_service.build_agreement_pdf` renderer with realistic fictional data (Alex Rivera, two kids Maya + Jonas, full communication + child-needs + household-rules + priority-items clauses). Output at `/app/frontend/public/downloads/sacoparents-sample-coparenting-agreement.pdf` (993 kB, valid `%PDF-1.3`). Served via the new allowlist endpoint.
+  - **Also fixed a pre-existing F821 lint blocker** in `joint_professional_report_routes.py:414` — `email_joint_report` handler referenced `request` in its `record_phi_access` call without accepting it as a param. Added `request: Request` to the signature. This was blocking pre-completion checks.
+  - **Testing**: 12/12 HB 300 + Virtru tests still pass. 5 sample-PDF endpoints all return `200 application/pdf` on preview. Directory traversal and unlisted-file requests both return 404. Zero remaining `/downloads/*.pdf` frontend links.
+
+
+
 - **Iteration 129 — Prominent "Private by Default" + "no-privilege" callouts (2026-02-21)**:
   - Added two user-supplied crisper sentences in three high-visibility surfaces (a + b + d from ask-human):
     - **Sentence 1** *"Your information is private by default. SA CoParents does not share your assessment or reports with your co-parent or a professional unless you choose to share them, except where disclosure is required by law."*

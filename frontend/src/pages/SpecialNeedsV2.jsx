@@ -373,14 +373,14 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
           See exactly what SA CoParents will build for you before you start. Each sample is a real, branded PDF you can print, share with your mediator, or use as a workbook.
         </p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <a href="/downloads/snc-sample-assessment.pdf" target="_blank" rel="noreferrer noopener"
+          <a href="/api/insights/samples/snc-sample-assessment.pdf" target="_blank" rel="noreferrer noopener"
             data-testid="snc2-sample-assessment"
             className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
             <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Blank workbook</div>
             <div className="font-semibold text-sm text-[#1A1330]">Sample Assessment</div>
             <div className="text-xs text-[#4B4567] mt-1">A printable version of every question so you can gather your thoughts first.</div>
           </a>
-          <a href="/downloads/snc-sample-comparison-report.pdf" target="_blank" rel="noreferrer noopener"
+          <a href="/api/insights/samples/snc-sample-comparison-report.pdf" target="_blank" rel="noreferrer noopener"
             data-testid="snc2-sample-comparison"
             className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
             <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Both parents</div>
@@ -392,21 +392,21 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         <div className="mt-5">
           <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">Blank assessments — one per needs area</div>
           <div className="grid sm:grid-cols-3 gap-3" data-testid="snc2-sample-pathway-assessments">
-            <a href="/downloads/snc-sample-assessment-medical.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-assessment-medical.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-assessment-medical"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Medical</div>
               <div className="font-semibold text-sm text-[#1A1330]">Blank assessment — medical needs</div>
               <div className="text-xs text-[#4B4567] mt-1">Printable eight-step workbook scoped to medical needs only.</div>
             </a>
-            <a href="/downloads/snc-sample-assessment-educational.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-assessment-educational.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-assessment-educational"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Educational</div>
               <div className="font-semibold text-sm text-[#1A1330]">Blank assessment — educational needs</div>
               <div className="text-xs text-[#4B4567] mt-1">Printable eight-step workbook scoped to educational needs only.</div>
             </a>
-            <a href="/downloads/snc-sample-assessment-psychological.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-assessment-psychological.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-assessment-psychological"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Psychological</div>
@@ -419,21 +419,21 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         <div className="mt-5">
           <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">Individual reports — one per needs area</div>
           <div className="grid sm:grid-cols-3 gap-3" data-testid="snc2-sample-individual-reports">
-            <a href="/downloads/snc-sample-individual-report-medical.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-individual-report-medical.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-report-medical"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Medical</div>
               <div className="font-semibold text-sm text-[#1A1330]">Individual report — medical needs</div>
               <div className="text-xs text-[#4B4567] mt-1">Nine-section polished PDF focused on medical needs only.</div>
             </a>
-            <a href="/downloads/snc-sample-individual-report-educational.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-individual-report-educational.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-report-educational"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Educational</div>
               <div className="font-semibold text-sm text-[#1A1330]">Individual report — educational needs</div>
               <div className="text-xs text-[#4B4567] mt-1">Nine-section polished PDF focused on educational needs only.</div>
             </a>
-            <a href="/downloads/snc-sample-individual-report-psychological.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-individual-report-psychological.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-report-psychological"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Psychological</div>
@@ -446,21 +446,21 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         <div className="mt-5">
           <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">Optional deep-dive assessments (blank workbooks)</div>
           <div className="grid sm:grid-cols-3 gap-3" data-testid="snc2-sample-deep-dive-assessments">
-            <a href="/downloads/snc-sample-educational-deep-dive-assessment.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-educational-deep-dive-assessment.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-deep-dive-assessment-educational"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Educational · Workbook</div>
               <div className="font-semibold text-sm text-[#1A1330]">12-section Educational assessment</div>
               <div className="text-xs text-[#4B4567] mt-1">Printable question list covering IEP, 504, ARD (Texas), tutoring, and homework.</div>
             </a>
-            <a href="/downloads/snc-sample-psychological-deep-dive-assessment.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-psychological-deep-dive-assessment.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-deep-dive-assessment-psychological"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Psychological · Workbook</div>
               <div className="font-semibold text-sm text-[#1A1330]">11-section Psychological / Behavioural assessment</div>
               <div className="text-xs text-[#4B4567] mt-1">Printable question list covering therapy, medication, crisis planning, and emotional support.</div>
             </a>
-            <a href="/downloads/snc-sample-medical-deep-dive-assessment.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-medical-deep-dive-assessment.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-deep-dive-assessment-medical"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Medical · Workbook</div>
@@ -473,21 +473,21 @@ function CategoryPicker({ catalog, initial, initialChildName, onSubmit }) {
         <div className="mt-5">
           <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">Optional deep-dive reports</div>
           <div className="grid sm:grid-cols-3 gap-3" data-testid="snc2-sample-deep-dives">
-            <a href="/downloads/snc-sample-educational-deep-dive.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-educational-deep-dive.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-deep-dive-educational"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Educational · Deep Dive</div>
               <div className="font-semibold text-sm text-[#1A1330]">12-section Educational Deep Dive</div>
               <div className="text-xs text-[#4B4567] mt-1">Sample report covering IEP, ARD (Texas), 504, tutoring, and homework coordination.</div>
             </a>
-            <a href="/downloads/snc-sample-psychological-deep-dive.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-psychological-deep-dive.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-deep-dive-psychological"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Psychological · Deep Dive</div>
               <div className="font-semibold text-sm text-[#1A1330]">11-section Psychological / Behavioural Deep Dive</div>
               <div className="text-xs text-[#4B4567] mt-1">Sample report covering therapy, medication, crisis planning, and emotional support.</div>
             </a>
-            <a href="/downloads/snc-sample-medical-deep-dive.pdf" target="_blank" rel="noreferrer noopener"
+            <a href="/api/insights/samples/snc-sample-medical-deep-dive.pdf" target="_blank" rel="noreferrer noopener"
               data-testid="snc2-sample-deep-dive-medical"
               className="rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition-all">
               <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">Medical · Deep Dive</div>

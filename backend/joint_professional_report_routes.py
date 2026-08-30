@@ -326,6 +326,7 @@ class JointReportEmailBody(BaseModel):
 async def email_joint_report(
     share_id: str,
     body: JointReportEmailBody,
+    request: Request,
     user: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):

@@ -116,7 +116,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
             Deep Dive to generate your alignment report.
           </p>
           <a
-            href="/downloads/coparenting_psychological_alignment_framework.pdf"
+            href="/api/insights/samples/coparenting_psychological_alignment_framework.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-5 inline-flex items-start gap-3 rounded-3xl border-2 border-[#3D1A78]/25 bg-[#F5F1FB] p-4 sm:p-5 hover:bg-[#EEE9F7] transition-colors max-w-xl"
@@ -203,7 +203,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
             here so parents can share/print the full framework alongside
             the interactive assessment. */}
         <a
-          href="/downloads/coparenting_psychological_alignment_framework.pdf"
+          href="/api/insights/samples/coparenting_psychological_alignment_framework.pdf"
           target="_blank"
           rel="noopener noreferrer"
           className="mt-5 flex items-start gap-3 rounded-3xl border-2 border-[#3D1A78]/25 bg-[#F5F1FB] p-4 sm:p-5 hover:bg-[#EEE9F7] transition-colors"

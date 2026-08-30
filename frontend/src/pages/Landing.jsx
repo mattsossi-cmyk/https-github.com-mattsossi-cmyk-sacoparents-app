@@ -529,7 +529,7 @@ function ThreeReportsStrip() {
           title="Understand your co-parenting situation"
           body="A private snapshot of how you and the other parent are actually communicating today — with concrete next steps."
           accent="#3D1A78"
-          sampleHref="/downloads/sacoparents-coparenting-report.pdf"
+          sampleHref="/api/insights/samples/sacoparents-coparenting-report.pdf"
           sampleLabel="View sample Co-Parenting report (PDF)"
         />
         <ThreeReportsCover
@@ -538,7 +538,7 @@ function ThreeReportsStrip() {
           title="Create your Foundation Statement"
           body="A one-page statement of your child-focused goals — the anchor you can return to whenever things get emotionally hot."
           accent="#2DB5B5"
-          sampleHref="/downloads/sacoparents-foundation-statement.pdf"
+          sampleHref="/api/insights/samples/sacoparents-foundation-statement.pdf"
           sampleLabel="View sample Foundation Statement (PDF)"
         />
         <ThreeReportsCover
