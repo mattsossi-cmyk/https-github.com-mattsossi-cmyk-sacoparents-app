@@ -25,11 +25,15 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from auth import UserPublic, get_current_user, get_db
+from auth import (
+    UserPublic, get_current_user, get_db,
+    create_share_token, decode_share_token,
+)
 from joint_agreement import build_joint_agreement, regenerate_individual_from_joint
 from joint_professional_report_routes import (
     _find_active_share, _load_user_display_name,
 )
+from share_routes import record_share_token, is_share_token_revoked
 
 
 router = APIRouter(prefix="/joint-agreement", tags=["joint-agreement"])
@@ -319,3 +323,160 @@ async def regenerate_my_agreement_from_joint(
         "share_id":            share_id,
     }
 
+
+
+# ---------------------------------------------------------------------------
+# Public shareable HTML/PDF link — so a mediator or attorney can open the
+# joint draft in-browser without logging in. The sending parent explicitly
+# mints the token from the authenticated view; the underlying data is
+# re-assembled on every read so revoking either parent's Compare consent
+# stops the link from resolving (defence in depth on top of jti-revoke).
+# ---------------------------------------------------------------------------
+
+
+_SHARE_LINK_EXPIRE_CHOICES = {1, 7, 14, 30}
+
+
+class JointAgreementShareLinkBody(BaseModel):
+    consent_acknowledged: bool = Field(
+        ...,
+        description=(
+            "Must be true. Confirms the sending parent has read the "
+            "pre-share consent bullets before the link is minted."
+        ),
+    )
+    expire_days: Optional[int] = 7
+    label: Optional[str] = Field(None, max_length=120)
+
+
+@router.post("/{share_id}/share-link")
+async def create_joint_agreement_share_link(
+    share_id: str,
+    body: JointAgreementShareLinkBody,
+    request: Request,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Mint a signed, revocable, time-limited link a mediator/attorney can
+    open in-browser to view (and optionally download) the joint draft."""
+    from datetime import datetime, timezone
+    from phi_access_routes import record_phi_access
+
+    if not body.consent_acknowledged:
+        raise HTTPException(
+            400,
+            "Explicit consent is required before a shareable link can be created.",
+        )
+    expire_days = body.expire_days if body.expire_days in _SHARE_LINK_EXPIRE_CHOICES else 7
+
+    share = await _find_active_share(db, share_id, user.user_id)
+    # Re-assemble to guarantee both drafts exist before we hand out a link.
+    # Raises 409 with a friendly message if either parent's individual
+    # draft is missing — same UX as the authenticated view.
+    await _assemble_joint_agreement(db, share, user.user_id, share_id)
+
+    token = create_share_token(
+        doc_type="joint_agreement",
+        doc_id=share_id,
+        user_id=user.user_id,
+        expire_days=expire_days,
+    )
+    payload = decode_share_token(token) or {}
+    expires_at = (
+        datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+        if payload.get("exp") else None
+    )
+    await record_share_token(
+        db,
+        jti=payload.get("jti"),
+        user_id=user.user_id,
+        doc_type="joint_agreement",
+        doc_id=share_id,
+        expires_at=expires_at,
+        label=(body.label or None),
+    )
+    await record_phi_access(
+        db, user_id=user.user_id, action="share_link_created",
+        resource_type="joint_agreement",
+        share_id=share_id, request=request,
+    )
+    return {
+        "token": token,
+        "jti": payload.get("jti"),
+        "path": f"/joint-agreement/shared/{token}",
+        "api_path": f"/api/joint-agreement/shared/{token}",
+        "expires_at": expires_at.isoformat() if expires_at else None,
+        "expire_days": expire_days,
+    }
+
+
+async def _load_shared_joint(
+    token: str, db: AsyncIOMotorDatabase,
+) -> Dict[str, Any]:
+    """Decode the token, verify revocation, and rebuild the joint payload.
+
+    The sending parent (token `sub`) is treated as the caller when
+    re-assembling — this is safe because the token can only have been
+    minted by a share participant, and `_find_active_share` re-checks
+    that the underlying Compare share is still consented.
+    """
+    payload = decode_share_token(token)
+    if not payload or payload.get("doc_type") != "joint_agreement":
+        raise HTTPException(404, "This link has expired or is invalid.")
+    if await is_share_token_revoked(db, payload.get("jti")):
+        raise HTTPException(404, "This link has been revoked by the sender.")
+    share_id = payload["doc_id"]
+    sender_id = payload["sub"]
+    share = await _find_active_share(db, share_id, sender_id)
+    joint = await _assemble_joint_agreement(db, share, sender_id, share_id)
+    joint["shared_by_name"] = joint.get("parent_a_name") or ""
+    return joint
+
+
+@router.get("/shared/{token}")
+async def get_shared_joint_agreement(token: str, request: Request):
+    """Public — no auth. Renders the JSON payload of the joint draft for
+    an unauthenticated mediator/attorney using the signed link."""
+    from phi_access_routes import record_phi_access
+
+    db: AsyncIOMotorDatabase = request.app.state.db
+    payload = await _load_shared_joint(token, db)
+    # Log the external view against the sender's PHI access history so
+    # they can see who's opening their link.
+    decoded = decode_share_token(token) or {}
+    await record_phi_access(
+        db, user_id=decoded.get("sub") or "unknown",
+        action="external_read_via_share_link",
+        resource_type="joint_agreement",
+        share_id=decoded.get("doc_id"), request=request,
+    )
+    return payload
+
+
+@router.get("/shared/{token}/pdf")
+async def get_shared_joint_agreement_pdf(token: str, request: Request):
+    """Public — no auth. Renders the PDF using the signed link."""
+    from joint_agreement_pdf import build_joint_agreement_pdf
+    from phi_access_routes import record_phi_access
+
+    db: AsyncIOMotorDatabase = request.app.state.db
+    payload = await _load_shared_joint(token, db)
+    pdf_bytes = build_joint_agreement_pdf(payload)
+    decoded = decode_share_token(token) or {}
+    share_id = decoded.get("doc_id") or "unknown"
+    await record_phi_access(
+        db, user_id=decoded.get("sub") or "unknown",
+        action="external_download_via_share_link",
+        resource_type="joint_agreement_pdf",
+        share_id=decoded.get("doc_id"), request=request,
+    )
+    filename = f"joint-coparenting-agreement-{share_id[:10]}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "no-store, no-cache, must-revalidate, private",
+            "Pragma": "no-cache",
+        },
+    )

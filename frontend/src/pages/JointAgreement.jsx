@@ -13,130 +13,16 @@ import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Download, Loader2, ShieldCheck, Users, Info, Mail, RefreshCw,
+  Link2, Copy, Check, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import JointReportEmailDialog from "../components/JointReportEmailDialog";
+import { Section } from "../components/joint/JointAgreementSections";
+import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";
 
-
-function Bucket({ label, colour, items, mode, parentAName, parentBName }) {
-  return (
-    <div
-      className="rounded-2xl border p-4 sm:p-5"
-      style={{ backgroundColor: `${colour}0F`, borderColor: `${colour}55` }}
-      data-testid={`joint-agreement-bucket-${mode}`}
-    >
-      <div
-        className="text-[11px] uppercase tracking-[0.22em] font-bold mb-3"
-        style={{ color: colour }}
-      >
-        {label}{" "}
-        <span className="text-[#857E9C] font-semibold">· {items.length}</span>
-      </div>
-      {items.length === 0 ? (
-        <div className="text-sm text-[#857E9C] italic">(none)</div>
-      ) : (
-        <ul className="space-y-3">
-          {items.map((it, i) => {
-            if (mode === "both") {
-              // Stable content-derived key — the merger guarantees at
-              // least one of parent_a_text / parent_b_text is populated.
-              const rowKey = `${it.area || ""}::${it.parent_a_text || ""}::${it.parent_b_text || ""}::${i}`;
-              return (
-                <li key={rowKey} className="rounded-xl bg-white p-3 border border-white/60">
-                  {it.area && (
-                    <div className="text-[10px] uppercase tracking-wider text-[#857E9C] font-semibold mb-1">
-                      {it.area}
-                    </div>
-                  )}
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div className="rounded-lg bg-[#F7F4FC] p-2.5">
-                      <div className="text-[10px] uppercase tracking-wider text-[#3D1A78] font-semibold mb-1">
-                        {parentAName}
-                      </div>
-                      <div className="text-sm text-[#1A1330]">{it.parent_a_text}</div>
-                    </div>
-                    <div className="rounded-lg bg-[#EAF7F7] p-2.5">
-                      <div className="text-[10px] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-1">
-                        {parentBName}
-                      </div>
-                      <div className="text-sm text-[#1A1330]">{it.parent_b_text}</div>
-                    </div>
-                  </div>
-                </li>
-              );
-            }
-            const rowKey = `${it.area || ""}::${it.text || ""}::${i}`;
-            return (
-              <li
-                key={rowKey}
-                className="rounded-xl bg-white p-3 border border-white/60"
-              >
-                {it.area && (
-                  <div className="text-[10px] uppercase tracking-wider text-[#857E9C] font-semibold mb-1">
-                    {it.area}
-                  </div>
-                )}
-                <div className="text-sm text-[#1A1330]">{it.text}</div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function Section({ section, parentAName, parentBName }) {
-  return (
-    <section
-      className="mt-8"
-      data-testid={`joint-agreement-section-${section.key}`}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        <h2 className="font-serif text-2xl text-[#1A1330]">{section.title}</h2>
-        <span className="text-xs text-[#857E9C]">
-          {section.counts.both_proposed} both ·{" "}
-          {section.counts.parent_a_only} {parentAName} ·{" "}
-          {section.counts.parent_b_only} {parentBName}
-        </span>
-      </div>
-      {section.description && (
-        <p className="text-sm text-[#4B4567] mb-4 leading-relaxed max-w-3xl">
-          {section.description}
-        </p>
-      )}
-      <div className="grid gap-3">
-        <Bucket
-          label="Both proposed"
-          colour="#1F5C3B"
-          items={section.both_proposed || []}
-          mode="both"
-          parentAName={parentAName}
-          parentBName={parentBName}
-        />
-        <Bucket
-          label={`${parentAName} only`}
-          colour="#3D1A78"
-          items={section.parent_a_only || []}
-          mode="a"
-          parentAName={parentAName}
-          parentBName={parentBName}
-        />
-        <Bucket
-          label={`${parentBName} only`}
-          colour="#8A6B12"
-          items={section.parent_b_only || []}
-          mode="b"
-          parentAName={parentAName}
-          parentBName={parentBName}
-        />
-      </div>
-    </section>
-  );
-}
 
 export default function JointAgreement() {
   const [params] = useSearchParams();
@@ -147,6 +33,12 @@ export default function JointAgreement() {
   const [emailSending, setEmailSending] = useState(false);
   const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [shareLinkOpen, setShareLinkOpen] = useState(false);
+  const [shareLinkExpireDays, setShareLinkExpireDays] = useState(7);
+  const [shareLinkMinting, setShareLinkMinting] = useState(false);
+  const [shareLinkResult, setShareLinkResult] = useState(null);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [shareLinkRevoking, setShareLinkRevoking] = useState(false);
 
   useEffect(() => {
     if (!shareId) {
@@ -244,6 +136,65 @@ export default function JointAgreement() {
     }
   };
 
+  const openShareLink = async () => {
+    // Every time we open, ask for consent — matches the "read the six
+    // bullets every share" policy already used by the Joint Report.
+    const ok = await requestPreShareConsent("Joint Agreement Draft link");
+    if (!ok) return;
+    setShareLinkResult(null);
+    setShareLinkCopied(false);
+    setShareLinkExpireDays(7);
+    setShareLinkOpen(true);
+  };
+
+  const mintShareLink = async () => {
+    if (!shareId) return;
+    setShareLinkMinting(true);
+    try {
+      const res = await api.post(
+        `/joint-agreement/${encodeURIComponent(shareId)}/share-link`,
+        { consent_acknowledged: true, expire_days: shareLinkExpireDays },
+      );
+      setShareLinkResult(res.data || null);
+      toast.success("Shareable link created. Copy it below.");
+    } catch (err) {
+      logError("joint agreement share-link mint", err);
+      const msg = err?.response?.data?.detail
+        || "Could not create a shareable link right now. Please try again in a moment.";
+      toast.error(msg);
+    } finally {
+      setShareLinkMinting(false);
+    }
+  };
+
+  const copyShareLink = async () => {
+    if (!shareLinkResult) return;
+    const fullUrl = `${window.location.origin}${shareLinkResult.path}`;
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      setShareLinkCopied(true);
+      window.setTimeout(() => setShareLinkCopied(false), 2200);
+    } catch {
+      // Older browsers / permission blocked — fall back to prompt.
+      window.prompt("Copy this link", fullUrl);
+    }
+  };
+
+  const revokeShareLink = async () => {
+    if (!shareLinkResult?.jti) return;
+    setShareLinkRevoking(true);
+    try {
+      await api.post(`/share/revoke`, { jti: shareLinkResult.jti });
+      toast.success("Link revoked. Anyone with the old link will now see an expired message.");
+      setShareLinkResult(null);
+    } catch (err) {
+      logError("joint agreement share-link revoke", err);
+      toast.error("Could not revoke the link right now. Please try again in a moment.");
+    } finally {
+      setShareLinkRevoking(false);
+    }
+  };
+
   if (state.loading) {
     return (
       <AppShell>
@@ -326,6 +277,15 @@ export default function JointAgreement() {
                 <RefreshCw size={14} /> Refresh my draft
               </button>
             )}
+            <button
+              type="button"
+              onClick={openShareLink}
+              data-testid="joint-agreement-share-link-open"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
+              title="Create a link a mediator or attorney can open in-browser to view this joint agreement — no login required."
+            >
+              <Link2 size={14} /> Get shareable link
+            </button>
             <button
               type="button"
               onClick={() => setEmailOpen(true)}
@@ -536,6 +496,145 @@ export default function JointAgreement() {
                   {regenerating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                   {regenerating ? "Refreshing…" : "Refresh my draft"}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {shareLinkOpen && (
+          <div
+            className="fixed inset-0 z-50 grid place-items-center bg-black/45 backdrop-blur-sm px-4"
+            data-testid="joint-agreement-share-link-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="joint-agreement-share-link-title"
+            onClick={() => !shareLinkMinting && !shareLinkRevoking && setShareLinkOpen(false)}
+          >
+            <div
+              className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-[#E5E0EE] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 pt-6">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+                  Shareable link
+                </div>
+                <h3
+                  id="joint-agreement-share-link-title"
+                  className="font-bold text-xl text-[#1A1330] leading-tight"
+                >
+                  Give your mediator or attorney direct access
+                </h3>
+              </div>
+
+              {!shareLinkResult && (
+                <div className="px-6 py-5 space-y-4">
+                  <p className="text-sm text-[#4B4567] leading-relaxed">
+                    We&rsquo;ll generate a signed link they can open in
+                    any browser — no login required. The link renders the
+                    same joint draft you see here and lets them download
+                    the PDF. You can revoke it at any time.
+                  </p>
+                  <div>
+                    <label
+                      htmlFor="joint-agreement-share-link-expiry"
+                      className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
+                    >
+                      Link expires in
+                    </label>
+                    <select
+                      id="joint-agreement-share-link-expiry"
+                      value={shareLinkExpireDays}
+                      onChange={(e) => setShareLinkExpireDays(parseInt(e.target.value, 10))}
+                      disabled={shareLinkMinting}
+                      data-testid="joint-agreement-share-link-expiry-select"
+                      className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2.5 text-sm text-[#1A1330] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60"
+                    >
+                      <option value={1}>1 day</option>
+                      <option value={7}>7 days</option>
+                      <option value={14}>14 days</option>
+                      <option value={30}>30 days</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {shareLinkResult && (
+                <div className="px-6 py-5 space-y-4">
+                  <p className="text-sm text-[#4B4567] leading-relaxed">
+                    Copy the link below and send it however you like —
+                    email, secure message, or paste it into your case
+                    system. Anyone with the link can view and download
+                    until you revoke it or it expires.
+                  </p>
+                  <div className="rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] p-3">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}${shareLinkResult.path}`}
+                      onFocus={(e) => e.target.select()}
+                      data-testid="joint-agreement-share-link-url"
+                      className="w-full bg-transparent text-sm text-[#1A1330] font-mono outline-none"
+                    />
+                  </div>
+                  {shareLinkResult.expires_at && (
+                    <div
+                      className="text-xs text-[#4B4567]"
+                      data-testid="joint-agreement-share-link-expiry-info"
+                    >
+                      Expires{" "}
+                      {new Date(shareLinkResult.expires_at).toLocaleString(undefined, {
+                        year: "numeric", month: "short", day: "numeric",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between gap-2 px-6 pb-6 pt-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setShareLinkOpen(false)}
+                  disabled={shareLinkMinting || shareLinkRevoking}
+                  data-testid="joint-agreement-share-link-close"
+                  className="rounded-full bg-white border border-[#E5E0EE] text-[#1A1330] px-4 py-2.5 text-sm font-semibold hover:bg-[#F8F7FC] disabled:opacity-60"
+                >
+                  {shareLinkResult ? "Done" : "Cancel"}
+                </button>
+                {!shareLinkResult ? (
+                  <button
+                    type="button"
+                    onClick={mintShareLink}
+                    disabled={shareLinkMinting}
+                    data-testid="joint-agreement-share-link-create-btn"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+                  >
+                    {shareLinkMinting ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
+                    {shareLinkMinting ? "Creating…" : "Create link"}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={revokeShareLink}
+                      disabled={shareLinkRevoking}
+                      data-testid="joint-agreement-share-link-revoke-btn"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#B02A2A] text-[#B02A2A] px-4 py-2.5 text-sm font-semibold hover:bg-[#FBEBEB] disabled:opacity-60"
+                    >
+                      {shareLinkRevoking ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      Revoke
+                    </button>
+                    <button
+                      type="button"
+                      onClick={copyShareLink}
+                      data-testid="joint-agreement-share-link-copy-btn"
+                      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-5 py-2.5 text-sm font-semibold"
+                    >
+                      {shareLinkCopied ? <Check size={14} /> : <Copy size={14} />}
+                      {shareLinkCopied ? "Copied" : "Copy link"}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

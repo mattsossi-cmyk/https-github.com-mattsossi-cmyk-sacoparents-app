@@ -53,6 +53,28 @@ Auth: Custom JWT (`auth.py`)
   circular-import "fixes", MD5 swap, localStorage swap — all documented
   as regressions in previous sessions.
 
+### 2026-02-22 — Public shareable link for the Joint Agreement Draft
+- New backend endpoints in `joint_agreement_routes.py`:
+  - `POST /api/joint-agreement/{share_id}/share-link` — mints JWT
+    (revocable + time-limited, defaults 7 days, 1/7/14/30 choices).
+  - `GET /api/joint-agreement/shared/{token}` — public JSON view.
+  - `GET /api/joint-agreement/shared/{token}/pdf` — public PDF.
+  Consent-gated at mint; every read records a PHI-access log entry
+  against the sending parent (`external_read_via_share_link` /
+  `external_download_via_share_link`).
+- New frontend page `pages/JointAgreementShared.jsx` at
+  `/joint-agreement/shared/:token` — no login, provenance banner
+  ("Shared by <parent>"), full side-by-side content, PDF button.
+- Extracted `Bucket` + `Section` render into
+  `components/joint/JointAgreementSections.jsx` so authenticated and
+  public views share layout without duplication.
+- "Get shareable link" button + dialog added to `JointAgreement.jsx`
+  next to "Email to professional". Uses `requestPreShareConsent()`
+  gate, offers expire-days selector, copy button, and revoke.
+- Coverage: `tests/test_iter123_joint_agreement_share_link.py` — 4
+  tests cover mint → view → PDF → revoke, wrong-doc-type rejection,
+  and invalid-token rejection. All pass.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming
