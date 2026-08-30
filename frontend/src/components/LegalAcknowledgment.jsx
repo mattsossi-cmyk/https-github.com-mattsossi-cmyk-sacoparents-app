@@ -76,7 +76,10 @@ export default function LegalAcknowledgment() {
     // Public shared-report links (sent to co-parents, mediators, attorneys)
     // must also be viewable without the disclaimer modal — the report itself
     // carries the required disclaimer footer.
-    if (location.pathname.startsWith("/shared/")) {
+    if (
+      location.pathname.startsWith("/shared/") ||
+      location.pathname.startsWith("/joint-agreement/shared/")
+    ) {
       if (open) {
         setOpen(false);
         document.body.style.overflow = "";
