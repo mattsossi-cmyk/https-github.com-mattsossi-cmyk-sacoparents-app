@@ -9,7 +9,7 @@
  * Query params:
  *   ?share=<share_id>   Required. Active Compare share.
  */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Download, Loader2, ShieldCheck, Users, Info, Mail, RefreshCw,
@@ -39,6 +39,21 @@ export default function JointAgreement() {
   const [shareLinkResult, setShareLinkResult] = useState(null);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [shareLinkRevoking, setShareLinkRevoking] = useState(false);
+  const shareLinkInputRef = useRef(null);
+
+  // Auto-select the freshly-minted URL so tapping ⌘/Ctrl-C right after
+  // creation "just works" — no manual highlight needed.
+  useEffect(() => {
+    if (shareLinkResult && shareLinkInputRef.current) {
+      const el = shareLinkInputRef.current;
+      // Slight delay so it wins the dialog's own focus race.
+      const t = window.setTimeout(() => {
+        try { el.focus(); el.select(); } catch (_e) { /* ignore */ }
+      }, 60);
+      return () => window.clearTimeout(t);
+    }
+    return undefined;
+  }, [shareLinkResult]);
 
   useEffect(() => {
     if (!shareId) {
@@ -173,10 +188,16 @@ export default function JointAgreement() {
     try {
       await navigator.clipboard.writeText(fullUrl);
       setShareLinkCopied(true);
+      toast.success("Link copied to clipboard.");
       window.setTimeout(() => setShareLinkCopied(false), 2200);
     } catch {
-      // Older browsers / permission blocked — fall back to prompt.
-      window.prompt("Copy this link", fullUrl);
+      // Older browsers / clipboard permission blocked. Select the input
+      // and tell the parent to press ⌘/Ctrl-C — beats a jarring prompt.
+      try {
+        shareLinkInputRef.current?.focus();
+        shareLinkInputRef.current?.select();
+      } catch (_e) { /* ignore */ }
+      toast.info("Press ⌘/Ctrl-C to copy — the link is already selected.");
     }
   };
 
@@ -568,6 +589,7 @@ export default function JointAgreement() {
                   </p>
                   <div className="rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] p-3">
                     <input
+                      ref={shareLinkInputRef}
                       type="text"
                       readOnly
                       value={`${window.location.origin}${shareLinkResult.path}`}
