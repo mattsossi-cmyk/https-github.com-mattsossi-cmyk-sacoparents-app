@@ -15,6 +15,7 @@ Scoring is fully server-side so the recommended pathway can never be tampered wi
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -849,7 +850,7 @@ async def download_one_pager(
 # Claude cost + latency bounded when parents (or admins) hammer the
 # regenerate button. Override via env for tests / operator debugging.
 REGENERATE_SUMMARIES_COOLDOWN_SEC = int(
-    __import__("os").environ.get("SAFETY_SUMMARY_REGEN_COOLDOWN_SEC", "600")
+    os.environ.get("SAFETY_SUMMARY_REGEN_COOLDOWN_SEC", "600")
 )
 
 

@@ -16,6 +16,7 @@ import {
   ArrowLeft, Download, Loader2, RefreshCcw, Sparkles, Users,
 } from "lucide-react";
 import { logError } from "../lib/logger";
+import { bandPillClass, bandBarClass } from "../lib/scoreBandStyles";
 
 
 const RATING_STYLES = {
@@ -186,15 +187,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
               </div>
               <div className="flex-1 min-w-[220px]">
                 <div
-                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${
-                    report.score_card.band === "high"
-                      ? "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]"
-                      : report.score_card.band === "moderate"
-                      ? "bg-[#FFF6E5] text-[#8A5B00] border-[#F0D9A8]"
-                      : report.score_card.band === "low"
-                      ? "bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]"
-                      : "bg-[#F1EEF7] text-[#4B4567] border-[#E5E0EE]"
-                  }`}
+                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border ${bandPillClass(report.score_card.band)}`}
                   data-testid="edu-report-score-band"
                 >
                   {report.score_card.band_label}
@@ -223,15 +216,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
                       </div>
                       <div className="mt-1 h-1.5 rounded-full bg-[#EEE9F7] overflow-hidden">
                         <div
-                          className={`h-full transition-all ${
-                            s.band === "high"
-                              ? "bg-[#1F5C3B]"
-                              : s.band === "moderate"
-                              ? "bg-[#8A5B00]"
-                              : s.band === "low"
-                              ? "bg-[#B02A2A]"
-                              : "bg-[#D6CFE8]"
-                          }`}
+                          className={`h-full transition-all ${bandBarClass(s.band)}`}
                           style={{ width: `${s.percent}%` }}
                         />
                       </div>

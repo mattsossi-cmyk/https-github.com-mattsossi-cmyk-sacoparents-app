@@ -886,32 +886,53 @@ _COACH_SYSTEM_PROMPT = (
 )
 
 
+def _extract_goal_labels(goals: Any) -> List[str]:
+    """Pull up to 6 child-centered goal labels from the prep snapshot."""
+    if not isinstance(goals, dict):
+        return []
+    selected = goals.get("selected_goals") or goals.get("goals") or []
+    labels = [
+        g if isinstance(g, str) else (g.get("label") or g.get("id") or "")
+        for g in selected
+    ]
+    return [str(l).strip() for l in labels if str(l).strip()][:6]
+
+
+def _extract_priority_topics(priority: Any) -> List[str]:
+    """Pull up to 3 top mediation-priority topic labels from the prep snapshot."""
+    if not isinstance(priority, dict):
+        return []
+    top = priority.get("top_items") or priority.get("ranked") or []
+    labels = [
+        t if isinstance(t, str) else (t.get("label") or t.get("id") or "")
+        for t in top[:3]
+    ]
+    return [str(t).strip() for t in labels if str(t).strip()]
+
+
 def _coach_context_block(prep_context: Optional[Dict[str, Any]]) -> str:
     """Fold the parent's saved prep into a short context header the coach
     can reference. Skipped entirely when the parent hasn't started prep."""
     if not prep_context:
         return ""
     parts: List[str] = []
-    goals = prep_context.get("child_goals")
-    if isinstance(goals, dict):
-        selected = goals.get("selected_goals") or goals.get("goals") or []
-        labels = [g if isinstance(g, str) else (g.get("label") or g.get("id") or "") for g in selected]
-        labels = [str(l).strip() for l in labels if str(l).strip()][:6]
-        if labels:
-            parts.append("Child-centered goals this parent has committed to: " + "; ".join(labels))
+
+    goal_labels = _extract_goal_labels(prep_context.get("child_goals"))
+    if goal_labels:
+        parts.append("Child-centered goals this parent has committed to: " + "; ".join(goal_labels))
+
     foundation = (prep_context.get("reflection") or {}).get("text")
     if isinstance(foundation, str) and foundation.strip():
         parts.append("Their Foundation Statement (excerpt): \"" + foundation.strip()[:280] + "\"")
-    priority = prep_context.get("priority")
-    if isinstance(priority, dict):
-        top = priority.get("top_items") or priority.get("ranked") or []
-        top = [t if isinstance(t, str) else (t.get("label") or t.get("id") or "") for t in top][:3]
-        top = [str(t).strip() for t in top if str(t).strip()]
-        if top:
-            parts.append("Their top mediation priorities: " + "; ".join(top))
+
+    priority_topics = _extract_priority_topics(prep_context.get("priority"))
+    if priority_topics:
+        parts.append("Their top mediation priorities: " + "; ".join(priority_topics))
+
     child_name = prep_context.get("child_name")
     if isinstance(child_name, str) and child_name.strip():
         parts.append(f"The parent refers to their child as \"{child_name.strip()[:40]}\".")
+
     if not parts:
         return ""
     return "\n\nPARENT CONTEXT (use lightly, do not recite verbatim):\n- " + "\n- ".join(parts)
