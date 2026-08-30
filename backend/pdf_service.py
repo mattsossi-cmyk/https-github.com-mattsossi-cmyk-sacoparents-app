@@ -439,6 +439,49 @@ def _agreement_meta(
     pdf.set_text_color(*TEXT_DARK)
 
 
+def _agreement_disclaimer_banner(pdf: AgreementPDF) -> None:
+    """Draft-for-discussion + privacy + privilege carve-out banner.
+
+    Mirrors the equivalent banners on the joint-report and joint-agreement
+    PDFs so a mediator receiving any SA CoParents artefact sees the same
+    three promises: (1) it's a draft, not a legal document; (2) it was
+    private by default and only reaches them because the parent chose to
+    share it; (3) sharing it does not create a privileged relationship.
+    """
+    pdf.ln(4)
+    pdf.set_fill_color(*SAND)
+    pdf.set_draw_color(*SAGE)
+    pdf.set_line_width(0.5)
+    banner_y = pdf.get_y()
+    # 62 units is enough for four short lines of 9pt text at h=4.4.
+    pdf.rect(15, banner_y, 180, 62, "DF")
+    pdf.set_xy(19, banner_y + 3)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(*SAGE)
+    pdf.cell(0, 5, "Draft for discussion - read before signing or sharing.", ln=1)
+    pdf.set_xy(19, banner_y + 10)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(*TEXT_DARK)
+    pdf.multi_cell(172, 4.4,
+        "This document is a draft compiled from one parent's own answers. It is not "
+        "a signed agreement, a court order, a legal document, or a custody "
+        "recommendation. Both parents remain responsible for reviewing each clause "
+        "with their own professionals before adopting anything.")
+    pdf.ln(1)
+    pdf.set_x(19)
+    pdf.set_font("Helvetica", "I", 8.5)
+    pdf.set_text_color(*TEXT_MID)
+    pdf.multi_cell(172, 4.2,
+        "Your information is private by default. SA CoParents does not share your "
+        "assessment or reports with your co-parent or a professional unless you "
+        "choose to share them, except where disclosure is required by law. Use of "
+        "SA CoParents does not by itself create an attorney-client, "
+        "therapist-patient, mediator-client, or other privileged relationship.")
+    pdf.set_text_color(*TEXT_DARK)
+    # Move cursor below the banner so subsequent content isn't overlapped.
+    pdf.set_y(banner_y + 62 + 2)
+
+
 def _agreement_overview(pdf: AgreementPDF, overview: str | None) -> None:
     if not overview:
         return
@@ -500,6 +543,7 @@ def build_agreement_pdf(
     pdf.add_page()
 
     _agreement_meta(pdf, user_name, mediation_date)
+    _agreement_disclaimer_banner(pdf)
     _agreement_overview(pdf, agreement.get("overview"))
 
     if "changes_since_last" not in ex and agreement.get("changes_since_last"):

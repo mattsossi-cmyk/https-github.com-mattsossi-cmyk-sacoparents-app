@@ -1,6 +1,14 @@
 # SA CoParents — PRD
 
 
+- **Iteration 131 — Co-Parenting Agreement PDF matches the joint artefacts (2026-02-21)**:
+  - **New helper `_agreement_disclaimer_banner`** in `pdf_service.py` — sage/sand palette banner (matching the CP Agreement's existing aesthetic, not the joint report's red) rendered on page 1 between meta and overview. Three-part message: (1) "Draft for discussion — read before signing or sharing" heading; (2) not a signed agreement / court order / legal document / custody recommendation; (3) "Your information is private by default…" (Sentence 1) + "Use of SA CoParents does not by itself create an attorney-client, therapist-patient, mediator-client, or other privileged relationship." (Sentence 2). Wired into `build_agreement_pdf` right after `_agreement_meta`.
+  - **Sample regenerated** at `/app/frontend/public/downloads/sacoparents-sample-coparenting-agreement.pdf` (995 kB, valid `%PDF-1.3`) via `scripts/generate_agreement_sample.py` — same code path parents use, so the sample now shows exactly what a real parent's download would look like.
+  - **Downstream coverage**: any endpoint that calls `pdf_service.build_agreement_pdf` (individual agreement download, shared token download, agreement email attachment) now ships with the banner. Zero code changes needed at the route layer.
+  - **Testing**: sample builds valid `%PDF-1.3` bytes, `/api/insights/samples/sacoparents-sample-coparenting-agreement.pdf` returns 200 + `application/pdf`. 12/12 HB 300 + Virtru tests remain green.
+
+
+
 - **Iteration 130 — Fixed "PDF generates code not print" bug + new Co-Parenting Agreement sample (2026-02-21)**:
   - **Root cause of parent complaints**: Landing page + Special-Needs marketing pages linked directly to `/downloads/<name>.pdf` — a static-asset path served by the React build. On some hosting configurations the SPA fallback caught those requests and returned `index.html` with the JS bundle. Browsers rendered that as raw HTML source → parents saw "code" instead of a PDF.
   - **Fix**: New whitelist-gated backend endpoint `GET /api/insights/samples/{filename}` in `insights_routes.py` that serves the same files through FastAPI with proper `application/pdf` content-type + 1-hour Cache-Control. The SPA fallback can never intercept an `/api/*` path. Allowlist blocks directory traversal (`../` returns 404) and unlisted files (404).
