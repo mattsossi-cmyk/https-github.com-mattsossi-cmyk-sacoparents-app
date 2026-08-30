@@ -145,6 +145,7 @@ def test_share_link_full_roundtrip(app_and_state):
     assert res.status_code == 200, res.text
     body = res.json()
     assert body["path"].startswith("/joint-agreement/shared/")
+    assert body["preview_path"].startswith("/api/joint-agreement/preview/")
     assert body["api_path"].startswith("/api/joint-agreement/shared/")
     assert body["expire_days"] == 7
     assert body["jti"] in tokens
@@ -175,11 +176,84 @@ def test_share_link_full_roundtrip(app_and_state):
     res5 = client.get(f"/api/joint-agreement/shared/{token}/pdf")
     assert res5.status_code == 404
 
-    # 5. PHI access log captured both a create + external read entries
+    # 5. PHI access log captured create + external read + external download
     kinds = [entry["action"] for entry in phi]
     assert "share_link_created" in kinds
     assert "external_read_via_share_link" in kinds
     assert "external_download_via_share_link" in kinds
+
+
+def test_preview_endpoint_serves_og_html_to_bots(app_and_state):
+    from fastapi.testclient import TestClient
+    app, _tokens, _phi = app_and_state
+    client = TestClient(app)
+
+    # First mint a real token.
+    mint = client.post(
+        "/api/joint-agreement/sh_test/share-link",
+        json={"consent_acknowledged": True, "expire_days": 7},
+    ).json()
+    token = mint["token"]
+
+    # Slackbot-style UA → should get HTML with OG tags + personalised
+    # title, no redirect.
+    res = client.get(
+        f"/api/joint-agreement/preview/{token}",
+        headers={"User-Agent": "Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)"},
+        follow_redirects=False,
+    )
+    assert res.status_code == 200, res.text
+    assert res.headers["content-type"].startswith("text/html")
+    html = res.text
+    assert 'property="og:title"' in html
+    assert 'property="og:image"' in html
+    assert 'property="og:url"' in html
+    assert 'name="twitter:card"' in html
+    # Sender name was resolved from the token and used in the title.
+    assert "Alex Parent" in html
+    # The canonical URL points at the SPA page, not the preview endpoint.
+    assert "/joint-agreement/shared/" in html
+
+
+def test_preview_endpoint_redirects_real_browsers(app_and_state):
+    from fastapi.testclient import TestClient
+    app, _tokens, _phi = app_and_state
+    client = TestClient(app)
+
+    mint = client.post(
+        "/api/joint-agreement/sh_test/share-link",
+        json={"consent_acknowledged": True, "expire_days": 7},
+    ).json()
+    token = mint["token"]
+
+    res = client.get(
+        f"/api/joint-agreement/preview/{token}",
+        headers={"User-Agent": "Mozilla/5.0 (Macintosh) AppleWebKit/605.1.15 Safari/605.1"},
+        follow_redirects=False,
+    )
+    assert res.status_code == 302
+    assert res.headers["location"].endswith(f"/joint-agreement/shared/{token}")
+
+
+def test_preview_endpoint_serves_generic_card_for_invalid_token(app_and_state):
+    from fastapi.testclient import TestClient
+    app, _tokens, _phi = app_and_state
+    client = TestClient(app)
+
+    # Bots must never see a "revoked/invalid" leak — a generic branded
+    # OG card is served instead, and only humans get the SPA's error
+    # state after the 302.
+    res = client.get(
+        "/api/joint-agreement/preview/not-a-real-token",
+        headers={"User-Agent": "facebookexternalhit/1.1"},
+        follow_redirects=False,
+    )
+    assert res.status_code == 200
+    html = res.text
+    assert "SA CoParents" in html
+    assert 'property="og:image"' in html
+    # No personalisation leaked when we couldn't resolve the sender.
+    assert "shared by" not in html
 
 
 def test_shared_endpoint_rejects_wrong_doc_type(app_and_state):

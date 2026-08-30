@@ -184,7 +184,12 @@ export default function JointAgreement() {
 
   const copyShareLink = async () => {
     if (!shareLinkResult) return;
-    const fullUrl = `${window.location.origin}${shareLinkResult.path}`;
+    // Prefer the OG-preview endpoint so pastes into email / Slack /
+    // iMessage render a branded card. Fall back to the direct SPA
+    // route if the backend didn't return the preview path (older
+    // backend or tests).
+    const relative = shareLinkResult.preview_path || shareLinkResult.path;
+    const fullUrl = `${window.location.origin}${relative}`;
     try {
       await navigator.clipboard.writeText(fullUrl);
       setShareLinkCopied(true);
@@ -592,7 +597,7 @@ export default function JointAgreement() {
                       ref={shareLinkInputRef}
                       type="text"
                       readOnly
-                      value={`${window.location.origin}${shareLinkResult.path}`}
+                      value={`${window.location.origin}${shareLinkResult.preview_path || shareLinkResult.path}`}
                       onFocus={(e) => e.target.select()}
                       data-testid="joint-agreement-share-link-url"
                       className="w-full bg-transparent text-sm text-[#1A1330] font-mono outline-none"

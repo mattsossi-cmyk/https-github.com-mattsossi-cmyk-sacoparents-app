@@ -404,6 +404,7 @@ async def create_joint_agreement_share_link(
         "token": token,
         "jti": payload.get("jti"),
         "path": f"/joint-agreement/shared/{token}",
+        "preview_path": f"/api/joint-agreement/preview/{token}",
         "api_path": f"/api/joint-agreement/shared/{token}",
         "expires_at": expires_at.isoformat() if expires_at else None,
         "expire_days": expire_days,
@@ -451,6 +452,141 @@ async def get_shared_joint_agreement(token: str, request: Request):
         share_id=decoded.get("doc_id"), request=request,
     )
     return payload
+
+
+# ---------------------------------------------------------------------------
+# Bot-aware preview endpoint — the URL parents actually paste into email
+# or messaging apps. When Slackbot / Twitterbot / etc. hits this route
+# it gets a minimal HTML page carrying proper Open Graph / Twitter meta
+# tags so the pasted URL renders as a branded card. Real browsers get a
+# 302 to the SPA route (`/joint-agreement/shared/{token}`) so the UX
+# doesn't change for humans.
+#
+# Never reveals PHI in the preview — the title only names the sending
+# parent (already public in any Compare-share invite email they sent)
+# and the description is the neutral draft-for-discussion disclaimer.
+# ---------------------------------------------------------------------------
+
+
+_BOT_UA_SIGNALS = (
+    "slackbot", "twitterbot", "facebookexternalhit", "facebot",
+    "linkedinbot", "whatsapp", "discordbot", "telegrambot",
+    "bingbot", "googlebot", "duckduckbot", "pinterest",
+    "redditbot", "applebot", "skypeuripreview", "vkshare",
+    "outbrain", "quora link preview", "showyoubot", "developers.google.com/+/web/snippet",
+    "cfnetwork", "imessage",  # iMessage previews
+    "embedly", "iframely", "opengraph",
+)
+
+
+def _is_link_preview_bot(user_agent: str) -> bool:
+    ua = (user_agent or "").lower()
+    return any(sig in ua for sig in _BOT_UA_SIGNALS)
+
+
+def _absolute_origin(request: Request) -> str:
+    """Derive the public origin for absolute OG URLs. Trusts the standard
+    reverse-proxy headers the ingress sets."""
+    proto = (
+        request.headers.get("x-forwarded-proto")
+        or request.url.scheme
+        or "https"
+    ).split(",")[0].strip()
+    host = (
+        request.headers.get("x-forwarded-host")
+        or request.headers.get("host")
+        or request.url.hostname
+        or "sacoparentsapp.online"
+    ).split(",")[0].strip()
+    return f"{proto}://{host}"
+
+
+def _html_escape(s: str) -> str:
+    import html as _html
+    return _html.escape(str(s or ""), quote=True)
+
+
+@router.get("/preview/{token}")
+async def joint_agreement_link_preview(token: str, request: Request):
+    """Serve OG-tagged HTML to social-preview crawlers; 302 real
+    browsers to the SPA-rendered shared page."""
+    from fastapi.responses import HTMLResponse, RedirectResponse
+
+    origin = _absolute_origin(request)
+    spa_url = f"{origin}/joint-agreement/shared/{token}"
+    user_agent = request.headers.get("user-agent", "")
+
+    # Humans get straight to the app. We don't hit the DB in that path
+    # so the redirect is cheap and preserves referrer behaviour.
+    if not _is_link_preview_bot(user_agent):
+        return RedirectResponse(url=spa_url, status_code=302)
+
+    # Bot path — try to personalise the title with the sender's name.
+    # Failure is soft: an invalid or revoked token still gets a generic
+    # branded card so the URL never looks broken in a paste preview.
+    db: AsyncIOMotorDatabase = request.app.state.db
+    sender = ""
+    try:
+        payload = await _load_shared_joint(token, db)
+        sender = (payload or {}).get("shared_by_name") or ""
+    except HTTPException:
+        sender = ""
+    except Exception:  # pragma: no cover - never fail a preview render
+        sender = ""
+
+    if sender:
+        title = f"Joint Co-Parenting Agreement Draft · shared by {sender}"
+    else:
+        title = "Joint Co-Parenting Agreement Draft · SA CoParents"
+
+    description = (
+        "A neutral, side-by-side draft of both parents' co-parenting "
+        "clauses — for discussion with a mediator or attorney. Not a "
+        "signed agreement, court order, or legal document."
+    )
+    og_image = f"{origin}/og-image.png"
+
+    body = f"""<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>{_html_escape(title)}</title>
+    <meta name="description" content="{_html_escape(description)}" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SA CoParents" />
+    <meta property="og:url" content="{_html_escape(spa_url)}" />
+    <meta property="og:title" content="{_html_escape(title)}" />
+    <meta property="og:description" content="{_html_escape(description)}" />
+    <meta property="og:image" content="{_html_escape(og_image)}" />
+    <meta property="og:image:secure_url" content="{_html_escape(og_image)}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="SA CoParents · Joint Co-Parenting Agreement Draft" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{_html_escape(title)}" />
+    <meta name="twitter:description" content="{_html_escape(description)}" />
+    <meta name="twitter:image" content="{_html_escape(og_image)}" />
+    <meta name="twitter:image:alt" content="SA CoParents · Joint Co-Parenting Agreement Draft" />
+
+    <!-- Fallback for the rare bot that also follows the meta refresh. -->
+    <meta http-equiv="refresh" content="0; url={_html_escape(spa_url)}" />
+    <link rel="canonical" href="{_html_escape(spa_url)}" />
+</head>
+<body>
+    <p>{_html_escape(title)}</p>
+    <p><a href="{_html_escape(spa_url)}">Open the shared agreement</a></p>
+</body>
+</html>"""
+    return HTMLResponse(
+        content=body,
+        headers={
+            # Public + short cache so bots re-fetch after revocation.
+            "Cache-Control": "public, max-age=300",
+        },
+    )
 
 
 @router.get("/shared/{token}/pdf")
