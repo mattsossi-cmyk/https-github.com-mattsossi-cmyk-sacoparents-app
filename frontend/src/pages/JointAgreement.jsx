@@ -48,7 +48,8 @@ export default function JointAgreement() {
       const el = shareLinkInputRef.current;
       // Slight delay so it wins the dialog's own focus race.
       const t = window.setTimeout(() => {
-        try { el.focus(); el.select(); } catch (_e) { /* ignore */ }
+        try { el.focus(); el.select(); }
+        catch (e) { logError("share-link input focus failed", e); }
       }, 60);
       return () => window.clearTimeout(t);
     }
@@ -201,7 +202,7 @@ export default function JointAgreement() {
       try {
         shareLinkInputRef.current?.focus();
         shareLinkInputRef.current?.select();
-      } catch (_e) { /* ignore */ }
+      } catch (e) { logError("share-link clipboard fallback failed", e); }
       toast.info("Press ⌘/Ctrl-C to copy — the link is already selected.");
     }
   };

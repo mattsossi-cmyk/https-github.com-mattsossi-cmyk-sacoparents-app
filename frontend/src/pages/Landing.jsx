@@ -84,7 +84,8 @@ function EnterAppProvider({ children }) {
     setLoading(true);
     try {
       if (focus) {
-        try { localStorage.setItem(FOCUS_STORAGE_KEY, focus); } catch { /* ignore */ }
+        try { localStorage.setItem(FOCUS_STORAGE_KEY, focus); }
+        catch (e) { logError("focus localStorage set failed", e); }
       }
       await startGuest();
       markOrientationSeen();
