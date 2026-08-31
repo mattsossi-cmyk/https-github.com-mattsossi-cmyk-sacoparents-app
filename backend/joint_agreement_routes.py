@@ -169,6 +169,7 @@ class JointAgreementEmailBody(BaseModel):
 async def email_joint_agreement(
     share_id: str,
     body: JointAgreementEmailBody,
+    request: Request,
     user: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
@@ -210,6 +211,46 @@ async def email_joint_agreement(
     except Exception as e:  # pragma: no cover - defensive
         raise HTTPException(500, "Could not assemble the joint agreement PDF.") from e
 
+    # Mint a shareable preview link so the recipient can click through
+    # to the in-browser view straight from their inbox. 14 days is long
+    # enough to survive the typical email follow-up window; the parent
+    # can revoke it early from their share-management UI at any time.
+    preview_url = None
+    preview_jti = None
+    try:
+        preview_token = create_share_token(
+            doc_type="joint_agreement",
+            doc_id=share_id,
+            user_id=user.user_id,
+            expire_days=14,
+        )
+        decoded_preview = decode_share_token(preview_token) or {}
+        preview_expires = (
+            datetime.fromtimestamp(decoded_preview["exp"], tz=timezone.utc)
+            if decoded_preview.get("exp") else None
+        )
+        preview_jti = decoded_preview.get("jti")
+        await record_share_token(
+            db,
+            jti=preview_jti,
+            user_id=user.user_id,
+            doc_type="joint_agreement",
+            doc_id=share_id,
+            expires_at=preview_expires,
+            label=f"Emailed to {to_email}",
+        )
+        preview_url = f"{_absolute_origin(request)}/api/joint-agreement/preview/{preview_token}"
+        from phi_access_routes import record_phi_access
+        await record_phi_access(
+            db, user_id=user.user_id, action="share_link_created",
+            resource_type="joint_agreement",
+            share_id=share_id, request=request,
+        )
+    except Exception:  # noqa: BLE001 - preview link is best-effort
+        # If minting fails for any reason the email still goes out
+        # with just the PDF attachment — never block the send.
+        preview_url = None
+
     try:
         send_joint_agreement_draft(
             to_email=to_email,
@@ -222,6 +263,7 @@ async def email_joint_agreement(
             summary=payload.get("summary") or {},
             pdf_bytes=pdf_bytes,
             pdf_filename=f"joint-coparenting-agreement-{share_id[:10]}.pdf",
+            preview_url=preview_url,
         )
     except EmailNotConfigured as e:
         raise HTTPException(
@@ -243,6 +285,7 @@ async def email_joint_agreement(
         "recipient_name": (body.recipient_name or "").strip(),
         "recipient_role": body.recipient_role,
         "audience":       audience,
+        "preview_jti":    preview_jti,
         "sent_at":        datetime.now(timezone.utc).isoformat(),
     })
     from phi_access_routes import record_phi_access
@@ -256,6 +299,8 @@ async def email_joint_agreement(
         "emailed_to": to_email,
         "audience": audience,
         "share_id": share_id,
+        "preview_included": bool(preview_url),
+        "preview_jti": preview_jti,
     }
 
 

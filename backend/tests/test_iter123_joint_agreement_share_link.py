@@ -111,8 +111,9 @@ def app_and_state(monkeypatch):
         pass
 
     from auth import get_db
-    app.dependency_overrides[get_db] = lambda: _FakeDB()
-    app.state.db = _FakeDB()
+    _shared_db = _FakeDB()
+    app.dependency_overrides[get_db] = lambda: _shared_db
+    app.state.db = _shared_db
 
     yield app, tokens_store, phi_log
 
@@ -276,3 +277,97 @@ def test_shared_endpoint_rejects_invalid_token(app_and_state):
     client = TestClient(app)
     res = client.get("/api/joint-agreement/shared/not-a-real-jwt")
     assert res.status_code == 404
+
+
+
+def test_email_endpoint_includes_preview_link_in_body(app_and_state, monkeypatch):
+    """Emailing the joint agreement mints a preview link, records the
+    token, injects the absolute URL into the outgoing email body, and
+    surfaces `preview_included`/`preview_jti` in the response."""
+    from fastapi.testclient import TestClient
+    import joint_agreement_routes as jar
+    import email_service
+
+    app, tokens, phi = app_and_state
+    client = TestClient(app)
+
+    sent = {}
+
+    def _capture_send(**kwargs):
+        sent.update(kwargs)
+
+    # The route imports send_joint_agreement_draft lazily from
+    # email_service inside the handler, so we patch the module attribute
+    # directly rather than trying to reach into joint_agreement_routes.
+    monkeypatch.setattr(email_service, "send_joint_agreement_draft", _capture_send)
+
+    class _FakeInsertColl:
+        async def insert_one(self, doc):
+            return None
+
+    fake_db = app.state.db
+    fake_db.joint_agreement_emails = _FakeInsertColl()  # type: ignore[attr-defined]
+
+    res = client.post(
+        "/api/joint-agreement/sh_test/email",
+        json={
+            "recipient_email": "mediator@example.com",
+            "recipient_name": "Sam Neutral",
+            "recipient_role": "mediator",
+            "parent_message": "Thanks for looking at this.",
+        },
+    )
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["preview_included"] is True
+    assert body["preview_jti"]
+    # A share_tokens row was created with the emailed_to label.
+    row = tokens[body["preview_jti"]]
+    assert row["doc_type"] == "joint_agreement"
+    assert row["doc_id"] == "sh_test"
+    assert "mediator@example.com" in (row.get("label") or "")
+    # And the mailer received an absolute preview_url pointing at the
+    # OG-aware /api/joint-agreement/preview/{token} endpoint.
+    preview_url = sent.get("preview_url")
+    assert preview_url and preview_url.startswith("http")
+    assert "/api/joint-agreement/preview/" in preview_url
+    # PHI access log recorded the share_link_created audit.
+    kinds = [entry["action"] for entry in phi]
+    assert "share_link_created" in kinds
+    assert "email_disclosure" in kinds
+
+
+def test_email_template_renders_preview_button(monkeypatch):
+    """Unit-level: `send_joint_agreement_draft` injects the preview
+    button + URL into both html and text bodies when preview_url is
+    provided, and omits the block cleanly when it isn't."""
+    import email_service
+
+    captured = {}
+    def _fake_low_send(**kwargs):
+        captured.update(kwargs)
+    monkeypatch.setattr(email_service, "_send", _fake_low_send)
+
+    email_service.send_joint_agreement_draft(
+        to_email="m@x.com", recipient_name="Sam", recipient_role="Mediator",
+        parent_a_name="Alex", parent_b_name="Blake",
+        parent_email="alex@x.com", parent_message="",
+        summary={"both_proposed": 1, "parent_a_only": 0, "parent_b_only": 0, "converged_pct": 100},
+        pdf_bytes=b"%PDF-1.4",
+        preview_url="https://example.test/api/joint-agreement/preview/tok123",
+    )
+    assert "Open the joint draft online" in captured["html"]
+    assert "https://example.test/api/joint-agreement/preview/tok123" in captured["html"]
+    assert "https://example.test/api/joint-agreement/preview/tok123" in captured["text"]
+
+    # No preview_url → CTA block is absent (backward compat).
+    captured.clear()
+    email_service.send_joint_agreement_draft(
+        to_email="m@x.com", recipient_name="Sam", recipient_role="Mediator",
+        parent_a_name="Alex", parent_b_name="Blake",
+        parent_email="alex@x.com", parent_message="",
+        summary={"both_proposed": 1, "parent_a_only": 0, "parent_b_only": 0, "converged_pct": 100},
+        pdf_bytes=b"%PDF-1.4",
+    )
+    assert "Open the joint draft online" not in captured["html"]
+    assert "Prefer to view in your browser" not in captured["text"]

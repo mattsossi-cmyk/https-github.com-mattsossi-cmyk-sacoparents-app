@@ -1534,6 +1534,7 @@ def send_joint_agreement_draft(
     summary: Dict[str, Any],
     pdf_bytes: bytes,
     pdf_filename: str = "joint-coparenting-agreement.pdf",
+    preview_url: Optional[str] = None,
 ) -> None:
     """Email the Joint Co-Parenting Agreement Draft PDF directly to a
     mediator, attorney, court, or therapist.
@@ -1584,6 +1585,31 @@ def send_joint_agreement_draft(
         "document, or a custody recommendation.\n"
     )
 
+    # Optional in-browser view link — same signed token the interactive
+    # "Get shareable link" flow mints, so the recipient can click through
+    # from their inbox instead of downloading the PDF first.
+    view_link_html = ""
+    view_link_plain = ""
+    if preview_url:
+        safe_url = _html.escape(preview_url)
+        view_link_html = (
+            '<div style="background:#EFE9F9;border-radius:14px;padding:14px 16px;'
+            'margin:0 0 16px 0;border:1px solid #CFC1EA;">'
+            '<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;'
+            'color:#3D1A78;font-weight:700;margin-bottom:8px;">Prefer to view in your browser?</div>'
+            f'<a href="{safe_url}" style="display:inline-block;background:#3D1A78;color:#FFFFFF;'
+            'text-decoration:none;font-weight:600;font-size:14px;padding:10px 16px;'
+            f'border-radius:999px;">Open the joint draft online</a>'
+            '<div style="font-size:12px;color:#4B4567;margin-top:8px;line-height:1.5;">'
+            'The link opens the same draft that\u2019s attached here \u2014 no login required. '
+            f'Sender can revoke access at any time.</div>'
+            '</div>'
+        )
+        view_link_plain = (
+            f"\nPrefer to view in your browser? Open the joint draft online:\n{preview_url}\n"
+            "(Same content as the attached PDF. No login required. Sender can revoke access at any time.)\n"
+        )
+
     body_html = (
         f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
         f'{_html.escape(greeting)}</p>'
@@ -1605,6 +1631,7 @@ def send_joint_agreement_draft(
         f'</ul>'
         f'</div>'
         f'{disclaimer_html}'
+        f'{view_link_html}'
         f'{optional_note_html}'
         f'<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 12px 0;">'
         f'The full draft is attached as a PDF, alongside a short '
@@ -1630,6 +1657,7 @@ def send_joint_agreement_draft(
         f"{parent_b_name or 'Parent B'} only\n"
         f"  * Convergence: {conv_pct}%\n"
         f"{disclaimer_plain}"
+        f"{view_link_plain}"
         f"{optional_note_plain}"
         f"\nThe full draft is attached as a PDF. Every clause is shown "
         f"verbatim under the parent who proposed it \u2014 the merger "
