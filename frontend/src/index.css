@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 45 22% 97%;
+        --foreground: 20 6% 15%;
+        --card: 0 0% 100%;
+        --card-foreground: 20 6% 15%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 20 6% 15%;
+        --primary: 158 20% 25%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 43 30% 88%;
+        --secondary-foreground: 20 6% 15%;
+        --muted: 45 25% 94%;
+        --muted-foreground: 25 8% 42%;
+        --accent: 28 47% 64%;
+        --accent-foreground: 20 6% 15%;
+        --destructive: 0 60% 45%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 44 20% 87%;
+        --input: 44 20% 80%;
+        --ring: 158 20% 25%;
+        --radius: 0.5rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground font-sans;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    h1, h2, h3, h4 {
+        @apply font-display tracking-tight;
+    }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+        border-left-style: inherit;
+        border-right-style: inherit;
+        border-top-style: inherit;
+        border-bottom-style: inherit;
+        border-left-color: inherit;
+        border-right-color: inherit;
+        border-top-color: inherit;
+        border-bottom-color: inherit;
+    }
+}
+
+.report-paper {
+    background: #ffffff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+    border: 1px solid #E5E1D8;
+}
+
+.report-page-enter {
+    animation: pageFade 0.25s ease;
+}
+
+@keyframes pageFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.worksheet-line {
+    border-bottom: 1px solid #D9D4C7;
+    min-height: 1.75rem;
+}
+
+.print-only {
+    display: none;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    .print-only {
+        display: block !important;
+    }
+    body {
+        background: #ffffff !important;
+    }
+    .report-paper {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        page-break-after: always;
+        break-after: page;
+    }
+    @page {
+        margin: 14mm;
+    }
+}

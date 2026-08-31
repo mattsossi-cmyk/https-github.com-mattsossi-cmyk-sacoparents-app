@@ -1,0 +1,77 @@
+{
+  "theme": "light",
+  "typography": {
+    "headings": "Cormorant Garamond",
+    "body": "Work Sans",
+    "instructions": "Use Cormorant Garamond for all H1-H4 headings with tracking-tight. This font gives an authoritative, serious, yet warm and human feel appropriate for a formal report. Use Work Sans for all body text, labels, and UI elements. Do NOT use Inter for headings."
+  },
+  "colors": {
+    "background": "#FAF9F6",
+    "foreground": "#292524",
+    "primary": "#344E41",
+    "primary_foreground": "#FFFFFF",
+    "secondary": "#EAE6D7",
+    "secondary_foreground": "#292524",
+    "accent": "#D4A373",
+    "muted": "#F3F1EB",
+    "border": "#E5E1D8",
+    "alignment_status": {
+      "green": "#668B69",
+      "yellow": "#D4B46A",
+      "blue": "#6096BA",
+      "purple": "#9A8C98"
+    },
+    "instructions": "Follow the 'Organic & Earthy' archetype. Avoid harsh digital colors. The alignment status colors map to 🟢 (strong alignment), 🟡 (moderate), 🔵 (different perspective), 🟣 (need more info). These must be used strictly for data visualization in the Joint Alignment Snapshot and throughout the 10-page report."
+  },
+  "visual_enhancers": {
+    "surfaces": "Use Solid Backgrounds for the application shell. DO NOT use glassmorphism, as it feels too cold for a family wellness app. Use flat, warm solid backgrounds.",
+    "report_paper": "The 10-page report viewer MUST feel like a physical document. The 'page' container should be pure white (#FFFFFF) with a soft diffuse shadow (e.g., shadow-[0_8px_32px_rgba(0,0,0,0.04)]) to contrast against the #FAF9F6 background.",
+    "borders": "1px solid #E5E1D8 (subtle earthy border). Do not use thick or high-contrast dark borders unless for specific form accessibility."
+  },
+  "layouts": {
+    "landing_page": "Use generous spacing (p-12 to p-24). Employ a Bento grid with asymmetrical image and text blocks. Keep it calm and focused on the child.",
+    "assessment_forms": "Centralized, max-w-2xl forms with clear progress indicators. Use Shadcn components for forms.",
+    "report_viewer": "Dashboard layout. Sidebar or top pagination to navigate the 10 pages. The main view contains a centered column max-w-4xl representing the 'Paper' (page). Ensure it is scrollable and responsive.",
+    "print_styles": "CRITICAL: The report viewer must be print-friendly. Add CSS print media queries (@media print) to hide navigation, sidebars, and buttons, ensuring only the report content prints cleanly on A4/Letter size."
+  },
+  "motion": {
+    "transitions": "Smooth fade-ins (opacity 0.2s ease) when navigating between report pages.",
+    "hover": "Subtle -translate-y-0.5 and shadow increase on cards and primary buttons."
+  },
+  "components": {
+    "forms": "Use Shadcn Form, Input, and Checkbox. Make inputs slightly taller (h-12) for accessibility and ease of use.",
+    "report_snapshot": "For the 'Joint Alignment Snapshot' visual, use Shadcn Charts or Recharts to build a clean Donut chart or Stacked Bar showing the counts of aligned/different/need info areas. Label clearly: 'These numbers are not scores. They are a roadmap for conversation.'",
+    "action_plan": "Page 9 (Parent Action Plan) should look like a printable worksheet with empty lined spaces or prominent text areas.",
+    "file_type_instruction": "Ensure all React components are created as .js or .jsx files, NOT .tsx files."
+  },
+  "media": {
+    "image_urls": {
+      "landing_hero_child": {
+        "url": "https://images.unsplash.com/photo-1519226135464-df5a9dbcd2a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHw0fHxjaGlsZCUyMHBsYXlpbmclMjBwZWFjZWZ1bCUyMG5hdHVyZXxlbnwwfHx8fDE3ODgyMDE0Mzd8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Child playing peacefully, to be used in the hero or 'Child at the Center' section of the landing page."
+      },
+      "landing_zen_stones": {
+        "url": "https://images.unsplash.com/photo-1532009877282-3340270e0529?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzZ8MHwxfHNlYXJjaHwzfHxiYWxhbmNlZCUyMHN0b25lcyUyMHplbnxlbnwwfHx8fDE3ODgyMDE0MzZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Stacked zen stones representing alignment, balance, and structured co-parenting."
+      },
+      "landing_parents": {
+        "url": "https://images.unsplash.com/photo-1659352790997-ed72835e07df?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxNzV8MHwxfHNlYXJjaHw0fHxwYXJlbnRzJTIwdGFsa2luZyUyMGNhbG1seXxlbnwwfHx8fDE3ODgyMDE0MzZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Parents standing together, representing a functional co-parenting system."
+      }
+    }
+  },
+  "universal_guidelines_for_main_agent": [
+    "You have .js files not .tsx file, so write code for .js files not for .tsx files.",
+    "Do not use generic centered layouts or simplistic gradients.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Do NOT apply universal transition (transition: all). Add transitions for specific interactive elements only.",
+    "Do NOT center align the main App container (.App { text-align: center; } is strictly forbidden).",
+    "All interactive and key informational elements MUST include a data-testid attribute.",
+    "Use sonner for toast notifications.",
+    "Never use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯 for icons.",
+    "DO NOT use complete transparent backgrounds in headers, overlays, or any surface that has content under it.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "Ensure the report page strictly follows the 10-page structure outlined in the problem statement.",
+    "Include a 'Demo/Simulator' mode with pre-filled sample data so the report viewer can be easily tested."
+  ]
+}
