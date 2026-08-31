@@ -371,7 +371,7 @@ function Page10({ r }) {
       </div>
 
       <div className="text-center border-t border-border pt-10">
-        <h3 className="font-display text-3xl font-semibold text-primary" data-testid="philosophy-heading">{r.philosophy_heading}</h3>
+        <h3 className="font-display text-4xl sm:text-5xl font-bold text-align-purple" data-testid="philosophy-heading">{r.philosophy_heading}</h3>
         <p className="mt-3 text-muted-foreground max-w-xl mx-auto" data-testid="philosophy-note">{r.philosophy_note}</p>
         <p className="mt-6 text-sm italic text-muted-foreground max-w-xl mx-auto" data-testid="philosophy-line">
           "{r.philosophy}"
