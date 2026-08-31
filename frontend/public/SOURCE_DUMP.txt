@@ -1,0 +1,3396 @@
+=== START FILE: /app/backend/server.py ===
+from dotenv import load_dotenv
+
+load_dotenv()
+
+import os
+import uuid
+import logging
+from datetime import datetime, timezone, timedelta
+
+import bcrypt
+import jwt
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
+from starlette.middleware.cors import CORSMiddleware
+from motor.motor_asyncio import AsyncIOMotorClient
+from pydantic import BaseModel, EmailStr
+
+from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
+from report_engine import generate_report
+
+mongo_url = os.environ["MONGO_URL"]
+client = AsyncIOMotorClient(mongo_url)
+db = client[os.environ["DB_NAME"]]
+
+app = FastAPI()
+api = APIRouter(prefix="/api")
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+JWT_ALGORITHM = "HS256"
+
+
+def jwt_secret():
+    return os.environ["JWT_SECRET"]
+
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+
+
+def create_access_token(user_id: str, email: str) -> str:
+    payload = {
+        "sub": user_id,
+        "email": email,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
+        "type": "access",
+    }
+    return jwt.encode(payload, jwt_secret(), algorithm=JWT_ALGORITHM)
+
+
+def create_refresh_token(user_id: str) -> str:
+    payload = {
+        "sub": user_id,
+        "exp": datetime.now(timezone.utc) + timedelta(days=7),
+        "type": "refresh",
+    }
+    return jwt.encode(payload, jwt_secret(), algorithm=JWT_ALGORITHM)
+
+
+def set_auth_cookies(response: Response, user_id: str, email: str):
+    response.set_cookie(
+        key="access_token", value=create_access_token(user_id, email),
+        httponly=True, secure=True, samesite="none", max_age=1800, path="/",
+    )
+    response.set_cookie(
+        key="refresh_token", value=create_refresh_token(user_id),
+        httponly=True, secure=True, samesite="none", max_age=604800, path="/",
+    )
+
+
+def public_user(u: dict) -> dict:
+    return {
+        "id": str(u["_id"]),
+        "email": u["email"],
+        "name": u.get("name", ""),
+        "role": u.get("role", "parent"),
+    }
+
+
+async def get_current_user(request: Request) -> dict:
+    token = request.cookies.get("access_token")
+    if not token:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, jwt_secret(), algorithms=[JWT_ALGORITHM])
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    user = await db.users.find_one({"_id": payload["sub"]})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
+
+
+class RegisterIn(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    role: str = "parent"
+
+
+class LoginIn(BaseModel):
+    email: EmailStr
+    password: str
+
+
+@api.post("/auth/register")
+async def register(body: RegisterIn, response: Response):
+    email = body.email.lower()
+    if await db.users.find_one({"email": email}):
+        raise HTTPException(status_code=400, detail="An account with this email already exists")
+    if len(body.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    uid = str(uuid.uuid4())
+    user = {
+        "_id": uid,
+        "email": email,
+        "name": body.name.strip(),
+        "role": body.role if body.role in ("parent", "professional") else "parent",
+        "password_hash": hash_password(body.password),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.insert_one(user)
+    set_auth_cookies(response, uid, email)
+    return public_user(user)
+
+
+@api.post("/auth/login")
+async def login(body: LoginIn, request: Request, response: Response):
+    email = body.email.lower()
+    identifier = f"{request.client.host if request.client else 'unknown'}:{email}"
+    attempt = await db.login_attempts.find_one({"identifier": identifier})
+    if attempt and attempt.get("count", 0) >= 5:
+        locked_until = attempt.get("locked_until")
+        if locked_until and datetime.fromisoformat(locked_until) > datetime.now(timezone.utc):
+            raise HTTPException(status_code=429, detail="Too many failed attempts. Try again in 15 minutes.")
+    user = await db.users.find_one({"email": email})
+    if not user or not verify_password(body.password, user["password_hash"]):
+        await db.login_attempts.update_one(
+            {"identifier": identifier},
+            {
+                "$inc": {"count": 1},
+                "$set": {"locked_until": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()},
+            },
+            upsert=True,
+        )
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    await db.login_attempts.delete_one({"identifier": identifier})
+    set_auth_cookies(response, user["_id"], email)
+    return public_user(user)
+
+
+@api.post("/auth/logout")
+async def logout(response: Response):
+    response.delete_cookie("access_token", path="/")
+    response.delete_cookie("refresh_token", path="/")
+    return {"ok": True}
+
+
+@api.get("/auth/me")
+async def me(user=Depends(get_current_user)):
+    return public_user(user)
+
+
+@api.post("/auth/refresh")
+async def refresh(request: Request, response: Response):
+    token = request.cookies.get("refresh_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="No refresh token")
+    try:
+        payload = jwt.decode(token, jwt_secret(), algorithms=[JWT_ALGORITHM])
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    user = await db.users.find_one({"_id": payload["sub"]})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    response.set_cookie(
+        key="access_token", value=create_access_token(user["_id"], user["email"]),
+        httponly=True, secure=True, samesite="none", max_age=1800, path="/",
+    )
+    return {"ok": True}
+
+
+@api.get("/assessment-types")
+async def list_types():
+    return [
+        {
+            "key": k,
+            "title": ASSESSMENT_TYPES[k]["title"],
+            "description": ASSESSMENT_TYPES[k]["description"],
+            "topic_count": len(ASSESSMENT_TYPES[k]["topics"]),
+        }
+        for k in ORDERED_TYPE_KEYS
+    ]
+
+
+@api.get("/assessment-types/{key}")
+async def get_type(key: str):
+    cfg = ASSESSMENT_TYPES.get(key)
+    if not cfg:
+        raise HTTPException(status_code=404, detail="Unknown assessment type")
+    return {
+        "key": cfg["key"],
+        "title": cfg["title"],
+        "description": cfg["description"],
+        "central_question": cfg["central_question"],
+        "scale": SCALE,
+        "shared_goal_options": cfg["shared_goal_options"],
+        "topics": [{"key": t["key"], "label": t["label"], "question": t["question"]} for t in cfg["topics"]],
+    }
+
+
+def case_public(c: dict) -> dict:
+    return {
+        "id": c["id"],
+        "type": c["type"],
+        "type_title": ASSESSMENT_TYPES[c["type"]]["title"],
+        "child_name": c.get("child_name", ""),
+        "parent_a_name": c.get("parent_a_name", "Parent A"),
+        "parent_b_name": c.get("parent_b_name", "Parent B"),
+        "has_a": bool(c.get("responses", {}).get("a")),
+        "has_b": bool(c.get("responses", {}).get("b")),
+        "is_demo": c.get("is_demo", False),
+        "created_at": c["created_at"],
+    }
+
+
+class CaseIn(BaseModel):
+    type: str
+    child_name: str = ""
+    parent_a_name: str = "Parent A"
+    parent_b_name: str = "Parent B"
+
+
+class ResponsesIn(BaseModel):
+    answers: dict
+    primary_concern: str = ""
+    goals: list[str] = []
+
+
+@api.post("/cases")
+async def create_case(body: CaseIn, user=Depends(get_current_user)):
+    if body.type not in ASSESSMENT_TYPES:
+        raise HTTPException(status_code=400, detail="Unknown assessment type")
+    cid = str(uuid.uuid4())
+    doc = {
+        "id": cid,
+        "user_id": user["_id"],
+        "type": body.type,
+        "child_name": body.child_name.strip(),
+        "parent_a_name": body.parent_a_name.strip() or "Parent A",
+        "parent_b_name": body.parent_b_name.strip() or "Parent B",
+        "responses": {},
+        "is_demo": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.cases.insert_one(doc)
+    return case_public(doc)
+
+
+@api.get("/cases")
+async def list_cases(user=Depends(get_current_user)):
+    cases = await db.cases.find({"user_id": user["_id"]}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return [case_public(c) for c in cases]
+
+
+async def get_owned_case(case_id: str, user: dict) -> dict:
+    c = await db.cases.find_one({"id": case_id, "user_id": user["_id"]}, {"_id": 0})
+    if not c:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    return c
+
+
+@api.get("/cases/{case_id}")
+async def get_case(case_id: str, user=Depends(get_current_user)):
+    return case_public(await get_owned_case(case_id, user))
+
+
+@api.put("/cases/{case_id}/responses/{parent}")
+async def save_responses(case_id: str, parent: str, body: ResponsesIn, user=Depends(get_current_user)):
+    if parent not in ("a", "b"):
+        raise HTTPException(status_code=400, detail="Parent must be 'a' or 'b'")
+    c = await get_owned_case(case_id, user)
+    cfg = ASSESSMENT_TYPES[c["type"]]
+    valid_keys = {t["key"] for t in cfg["topics"]}
+    answers = {k: v for k, v in body.answers.items() if k in valid_keys and v in SCALE}
+    if set(answers.keys()) != valid_keys:
+        raise HTTPException(status_code=400, detail="All questions must be answered")
+    payload = {
+        "answers": answers,
+        "primary_concern": body.primary_concern.strip(),
+        "goals": body.goals,
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.cases.update_one({"id": case_id}, {"$set": {f"responses.{parent}": payload, "is_demo": False}})
+    c = await get_owned_case(case_id, user)
+    return case_public(c)
+
+
+@api.post("/cases/{case_id}/demo")
+async def fill_demo(case_id: str, user=Depends(get_current_user)):
+    c = await get_owned_case(case_id, user)
+    demo = demo_payload(c["type"])
+    await db.cases.update_one(
+        {"id": case_id},
+        {
+            "$set": {
+                "responses.a": {**demo["a"], "completed_at": datetime.now(timezone.utc).isoformat()},
+                "responses.b": {**demo["b"], "completed_at": datetime.now(timezone.utc).isoformat()},
+                "child_name": c.get("child_name") or demo["child_name"],
+                "is_demo": True,
+            }
+        },
+    )
+    return case_public(await get_owned_case(case_id, user))
+
+
+@api.get("/cases/{case_id}/report")
+async def get_report(case_id: str, user=Depends(get_current_user)):
+    c = await get_owned_case(case_id, user)
+    if not (c.get("responses", {}).get("a") and c.get("responses", {}).get("b")):
+        raise HTTPException(status_code=400, detail="Both parents must complete the assessment before the report can be generated")
+    return generate_report(c)
+
+
+@api.delete("/cases/{case_id}")
+async def delete_case(case_id: str, user=Depends(get_current_user)):
+    result = await db.cases.delete_one({"id": case_id, "user_id": user["_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    return {"ok": True}
+
+
+async def seed_admin():
+    admin_email = os.environ.get("ADMIN_EMAIL")
+    admin_password = os.environ.get("ADMIN_PASSWORD")
+    if not admin_email or not admin_password:
+        return
+    existing = await db.users.find_one({"email": admin_email.lower()})
+    if existing is None:
+        await db.users.insert_one({
+            "_id": str(uuid.uuid4()),
+            "email": admin_email.lower(),
+            "name": "Admin",
+            "role": "admin",
+            "password_hash": hash_password(admin_password),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+    elif not verify_password(admin_password, existing["password_hash"]):
+        await db.users.update_one(
+            {"email": admin_email.lower()},
+            {"$set": {"password_hash": hash_password(admin_password)}},
+        )
+
+
+@app.on_event("startup")
+async def startup():
+    await db.users.create_index("email", unique=True)
+    await db.login_attempts.create_index("identifier")
+    await db.cases.create_index("user_id")
+    await seed_admin()
+
+
+app.include_router(api)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    client.close()
+
+=== END FILE ===
+
+=== START FILE: /app/backend/assessment_data.py ===
+UNSURE = "Unsure / need more information"
+
+SCALE = ["No concern", "Minimal concern", "Moderate concern", "Significant concern", UNSURE]
+
+PHILOSOPHY = "We value the parenting system by how well it supports the child, not by how friendly the adults appear."
+
+STANDARD_DISCLAIMER = (
+    "This report is not designed to determine which parent is right or wrong. "
+    "Different perspectives provide information that can help parents and professionals "
+    "better understand the child's needs."
+)
+
+IPV_DISCLAIMER = (
+    "Agreement between parents is not the measure of success where safety is a concern. "
+    "The goal is a parenting structure that appropriately addresses safety, power imbalances, "
+    "and the child's needs."
+)
+
+DIFFERENCES_NOTE = (
+    "Different perspectives do not necessarily mean that either parent is wrong. "
+    "Parents may observe their child at different times, in different environments, "
+    "and under different circumstances."
+)
+
+PURPOSE_ITEMS = [
+    "Areas of alignment",
+    "Differences in perspective",
+    "Child needs and priorities",
+    "Issues needing further discussion",
+    "Options and resources",
+    "Questions for mediation or professional consultation",
+]
+
+ALIGNMENT_FOUNDATION_NOTE = (
+    "You do not need to agree about everything to successfully parent your child. "
+    "Areas where you already agree can provide a foundation for addressing the areas "
+    "where your perspectives differ."
+)
+
+DISCUSSION_SEQUENCE = [
+    {"step": "Begin with alignment", "question": "What do both parents want for this child?"},
+    {"step": "Identify the child's need", "question": "What does the child need regarding this issue?"},
+    {"step": "Understand different perspectives", "question": "What is each parent observing?"},
+    {"step": "Identify missing information", "question": "What information would help?"},
+    {"step": "Generate options", "question": "What are the available choices?"},
+    {"step": "Determine next steps", "question": "What can the parents agree to try?"},
+]
+
+STANDARD_PAGE_TITLES = [
+    "Joint Alignment Overview",
+    "Your Child at the Center",
+    "Where You Align",
+    "Where Your Perspectives Differ",
+    "What Might Your Child Need?",
+    "Options & Resources",
+    "Questions for Parent Conversation",
+    "Professional Conversation Guide",
+    "Parent Action Plan",
+    "Joint Alignment Summary",
+]
+
+IPV_PAGE_TITLES = [
+    "Safety Notice",
+    "Individual Communication Concerns",
+    "Areas of Shared Child Concern",
+    "Differences in Perceived Safety",
+    "Communication Risk Factors",
+    "Options for Reducing Direct Interaction",
+    "Exchange / Transition Considerations",
+    "Professional Resources",
+    "Questions for Attorney / Mediator / Professional",
+    "Safety-Oriented Parenting Structure",
+]
+
+SHARED_GOALS_BASE = [
+    "Educational stability",
+    "Healthy relationship with both parents",
+    "Consistent medical care",
+    "Emotional security",
+    "Predictable routines",
+    "Reduced exposure to adult conflict",
+]
+
+
+def T(key, label, question, aligned, action, need):
+    return {
+        "key": key,
+        "label": label,
+        "question": question,
+        "aligned_text": aligned,
+        "action_phrase": action,
+        "child_need": need,
+    }
+
+
+ASSESSMENT_TYPES = {
+    "general": {
+        "key": "general",
+        "title": "General Co-Parenting",
+        "report_title": "JOINT ALIGNMENT REPORT",
+        "subtitle": "General Co-Parenting",
+        "description": "The broadest view of your co-parenting system: communication, decision-making, consistency, transitions, boundaries, and more.",
+        "central_question": "What predictable structure would help both parents consistently meet this child's needs?",
+        "shared_goal_options": SHARED_GOALS_BASE,
+        "priority_statement": "Based on both parents' responses, developing a more predictable method for {focus} appears to be an important area for continued parental discussion.",
+        "page_titles": STANDARD_PAGE_TITLES,
+        "disclaimer": STANDARD_DISCLAIMER,
+        "topics": [
+            T("communication", "Communication", "How well are you and the other parent exchanging child-related information?", "Both parents rated their communication effectiveness similarly.", "improving how child-related information is exchanged", "A predictable, low-conflict method for exchanging child-related information."),
+            T("decision_making", "Decision-Making", "How satisfied are you with how major decisions about your child are made?", "Both parents view the current decision-making process similarly.", "clarifying how major child-related decisions are made", "A clear, agreed process for making child-related decisions."),
+            T("consistency", "Consistency Between Households", "How consistent are rules and expectations between your two households?", "Both parents rated household consistency similarly.", "creating more consistent expectations between households", "More consistent expectations between households."),
+            T("transitions", "Transitions & Exchanges", "How smoothly are exchanges, pickups, and drop-offs currently working?", "Both parents view transitions and exchanges similarly.", "making exchanges and transitions more predictable", "Predictable, low-stress exchanges and transitions."),
+            T("boundaries", "Boundaries", "How appropriate are parent and child boundaries in your co-parenting relationship?", "Both parents rated parent and child boundaries similarly.", "strengthening parent and child boundaries", "Clear boundaries that keep adult matters between adults."),
+            T("conflict_exposure", "Child Exposure to Conflict", "How often is your child exposed to adult disagreement or tension?", "Both parents rated the child's exposure to conflict similarly.", "reducing the child's exposure to adult conflict", "Reduced exposure to adult disagreement."),
+            T("parenting_roles", "Parenting Roles", "How clear are you and the other parent about each person's parenting responsibilities?", "Both parents view parenting roles and responsibilities similarly.", "clarifying parenting roles and responsibilities", "Shared clarity about each parent's responsibilities."),
+            T("problem_solving", "Problem Solving", "How effectively are disagreements about your child currently resolved?", "Both parents rated problem solving similarly.", "resolving child-related disagreements more constructively", "A constructive process for resolving disagreements."),
+            T("schedule", "Parenting Schedule", "How well is the current parenting schedule working for your child?", "Both parents view the parenting schedule similarly.", "adjusting the parenting schedule", "A predictable parenting schedule the child can rely on."),
+            T("information_sharing", "Information Sharing", "How completely is important information (school, medical, activities) shared between households?", "Both parents rated information sharing similarly.", "sharing school, medical, and activity information more reliably", "Both parents receiving the same child-related information."),
+        ],
+        "options": [
+            "Co-parenting communication app",
+            "Structured communication protocol",
+            "Shared parenting calendar",
+            "Detailed parenting plan",
+            "Parenting coordinator",
+            "Child-focused mediation",
+            "Co-parenting counseling",
+            "Consistent household routines",
+            "Scheduled parent check-in meetings",
+            "Written information-sharing agreement",
+        ],
+        "needs": [
+            {"title": "Consistency", "text": "The child may benefit from more consistent expectations between households."},
+            {"title": "Information", "text": "Both parents may benefit from receiving the same child-related information directly."},
+            {"title": "Professional Input", "text": "An appropriate professional may provide information that helps parents make decisions."},
+            {"title": "Predictability", "text": "The child may benefit from knowing what to expect in each household."},
+        ],
+        "demo_concern_a": "Communication between households feels inconsistent and important details get lost.",
+        "demo_concern_b": "The child seems unsettled by different rules and expectations in each home.",
+    },
+    "communication": {
+        "key": "communication",
+        "title": "Communication",
+        "report_title": "JOINT ALIGNMENT REPORT",
+        "subtitle": "Communication",
+        "description": "A practical look at how parents exchange information: frequency, tone, response time, method, and boundaries.",
+        "central_question": "What communication structure would allow both parents to exchange necessary information while reducing opportunities for conflict?",
+        "shared_goal_options": SHARED_GOALS_BASE,
+        "priority_statement": "Based on both parents' responses, establishing a structured method for {focus} appears to be an important area for continued parental discussion.",
+        "page_titles": STANDARD_PAGE_TITLES,
+        "disclaimer": STANDARD_DISCLAIMER,
+        "topics": [
+            T("frequency", "Communication Frequency", "How do you feel about the frequency of communication with the other parent?", "Both parents rated communication frequency similarly.", "adjusting how often the parents communicate", "A communication frequency that keeps both parents informed without overload."),
+            T("tone", "Message Tone", "How would you rate the tone of messages exchanged with the other parent?", "Both parents rated the tone of their communication similarly.", "improving the tone of written communication", "A respectful, child-focused message tone."),
+            T("response_time", "Response Time", "How satisfied are you with response times between you and the other parent?", "Both parents rated response-time expectations similarly.", "setting shared expectations for response times", "Agreed response-time expectations."),
+            T("method", "Communication Method", "How well does your current communication method (text, email, app) work?", "Both parents view the current communication method similarly.", "choosing a more reliable communication method or platform", "A communication method both parents can rely on."),
+            T("emergency", "Emergency Communication", "How clearly defined is your process for emergency communication?", "Both parents rated the emergency communication process similarly.", "creating clear emergency communication rules", "A clear emergency communication protocol."),
+            T("child_info", "Child-Related Information", "How reliably is child-related information (school, health, activities) communicated?", "Both parents rated the flow of child-related information similarly.", "improving the flow of child-related information", "Reliable exchange of child-related information."),
+            T("boundaries", "Communication Boundaries", "How respected are communication boundaries (times, topics, channels)?", "Both parents rated communication boundaries similarly.", "establishing clearer communication boundaries", "Boundaries that keep communication child-focused."),
+            T("hostile_messages", "Hostile or Accusatory Messages", "How often do messages feel hostile, accusatory, or blaming?", "Both parents rated the presence of hostile messaging similarly.", "reducing hostile or accusatory messages", "Communication free of blame and accusation."),
+            T("overcommunication", "Overcommunication", "How often does communication feel excessive or overwhelming?", "Both parents rated communication volume similarly.", "reducing unnecessary communication volume", "A manageable volume of communication."),
+            T("undercommunication", "Failure to Communicate", "How often do important matters go uncommunicated?", "Both parents rated the reliability of important communication similarly.", "ensuring important matters are consistently communicated", "Consistent communication of important matters."),
+        ],
+        "options": [
+            "BIFF communication approach",
+            "Structured messaging guidelines",
+            "Email-only communication",
+            "App-based communication",
+            "Emergency communication rules",
+            "Agreed response windows",
+            "Child-only topics agreement",
+            "Professional-assisted communication",
+        ],
+        "needs": [
+            {"title": "Structure", "text": "The child may benefit when both parents exchange information through a predictable structure."},
+            {"title": "Information", "text": "Both parents may benefit from receiving the same child-related information directly."},
+            {"title": "Boundaries", "text": "Clear communication boundaries may reduce opportunities for misunderstanding."},
+            {"title": "Professional Input", "text": "A communication professional or mediator may help design a workable protocol."},
+        ],
+        "demo_concern_a": "Messages frequently turn hostile and important child information gets buried.",
+        "demo_concern_b": "There are too many messages per day, and response expectations are unclear.",
+    },
+    "high_conflict": {
+        "key": "high_conflict",
+        "title": "High-Conflict Co-Parenting",
+        "report_title": "JOINT ALIGNMENT REPORT",
+        "subtitle": "High-Conflict Co-Parenting",
+        "description": "Focuses on building a functional parenting system despite ongoing conflict — not on forcing cooperation.",
+        "central_question": "What parenting structure can reduce opportunities for adult conflict while still ensuring the child's needs are met?",
+        "shared_goal_options": SHARED_GOALS_BASE,
+        "priority_statement": "Based on both parents' responses, creating a structure that reduces opportunities for adult conflict around {focus} appears to be an important area for continued parental discussion.",
+        "page_titles": STANDARD_PAGE_TITLES,
+        "disclaimer": STANDARD_DISCLAIMER,
+        "topics": [
+            T("conflict_frequency", "Conflict Frequency", "How often do you and the other parent experience conflict?", "Both parents rated the frequency of conflict similarly.", "reducing how often conflicts occur", "Fewer conflict situations around the child."),
+            T("conflict_intensity", "Conflict Intensity", "How intense are conflicts when they occur?", "Both parents rated the intensity of conflict similarly.", "reducing the intensity of conflicts", "Lower-intensity interactions between the adults."),
+            T("boundaries", "Boundary Problems", "How often are parenting boundaries crossed?", "Both parents rated boundary problems similarly.", "establishing firmer parenting boundaries", "Clear boundaries that keep adult matters between adults."),
+            T("repeated_disputes", "Repeated Disputes", "How often do the same disputes repeat without resolution?", "Both parents rated repeated disputes similarly.", "resolving recurring disputes once and for all", "Resolution of recurring disputes so the child is not caught in between."),
+            T("decision_making", "Decision-Making", "How often does decision-making stall because of conflict?", "Both parents rated decision-making similarly.", "creating a decision-making protocol that works despite conflict", "Timely decisions about the child's needs."),
+            T("transitions", "Transitions", "How often do exchanges or transitions become conflict situations?", "Both parents rated transition conflict similarly.", "making exchanges conflict-free", "Calm, predictable exchanges and transitions."),
+            T("communication_triggers", "Communication Triggers", "How often does direct communication trigger conflict?", "Both parents rated communication triggers similarly.", "reducing communication that triggers conflict", "Communication structures that do not expose the child to conflict."),
+            T("child_involvement", "Child Involvement in Conflict", "How often is the child drawn into adult disagreements?", "Both parents rated child involvement similarly.", "keeping the child out of adult disagreements", "Protection from being drawn into adult disagreements."),
+            T("litigation_patterns", "Litigation Patterns", "How often do disputes escalate toward court or attorneys?", "Both parents rated escalation toward litigation similarly.", "reducing escalation toward court", "Resolution of disputes without repeated litigation."),
+            T("disengagement", "Ability to Disengage", "How difficult is it to disengage from unproductive interactions?", "Both parents rated the ability to disengage similarly.", "building the ability to disengage from unproductive interactions", "Adults who can disengage rather than escalate."),
+        ],
+        "options": [
+            "Parallel parenting",
+            "Structured exchanges",
+            "Limited communication",
+            "Written communication only",
+            "Specific decision protocols",
+            "Parenting coordinator / facilitator",
+            "Mediation",
+            "Professional consultation",
+            "Detailed parenting plan",
+        ],
+        "needs": [
+            {"title": "Structure", "text": "The child may benefit from a parenting structure that reduces opportunities for adult conflict."},
+            {"title": "Predictability", "text": "The child may benefit from knowing exactly what to expect, regardless of adult disagreement."},
+            {"title": "Protection", "text": "The child may benefit from being shielded from adult disagreements."},
+            {"title": "Professional Input", "text": "A parenting coordinator, mediator, or other professional may help design a functional system."},
+        ],
+        "demo_concern_a": "Every exchange turns into an argument, and the child is starting to notice.",
+        "demo_concern_b": "The same disputes keep repeating and nothing ever gets resolved.",
+    },
+    "ipv": {
+        "key": "ipv",
+        "title": "IPV / Family Violence Safety",
+        "report_title": "JOINT COMMUNICATION & SAFETY CONSIDERATIONS REPORT",
+        "subtitle": "Communication & Safety Considerations",
+        "description": "A safety-first report for situations involving intimate partner violence or family violence. Safety comes before agreement.",
+        "central_question": "What parenting structure appropriately addresses safety, power imbalances, and the child's needs?",
+        "shared_goal_options": [
+            "The child's physical safety",
+            "The child's emotional security",
+            "Predictable, safe exchanges",
+            "Healthy relationship with both parents where safe",
+            "Reduced exposure to adult conflict",
+            "Stable routines",
+        ],
+        "priority_statement": "Based on both parents' responses, a parenting structure that prioritizes safety around {focus} appears to be an important area for professional guidance.",
+        "page_titles": IPV_PAGE_TITLES,
+        "disclaimer": IPV_DISCLAIMER,
+        "topics": [
+            T("direct_contact_safety", "Safety of Direct Communication", "How safe do you feel during direct communication with the other parent?", "Both parents rated the safety of direct communication similarly.", "structuring safer communication", "Communication structures that protect safety."),
+            T("exchange_safety", "Safety of Exchanges", "How safe do exchanges and transitions feel for you and the child?", "Both parents rated the safety of exchanges similarly.", "making exchanges safer", "Safe, neutral exchanges for the child."),
+            T("boundary_violations", "Boundary Violations", "How often have agreed boundaries been violated?", "Both parents rated boundary violations similarly.", "establishing enforceable boundaries", "Boundaries that are respected and enforceable."),
+            T("intimidation", "Intimidation or Threats", "How often has intimidation or threatening behavior occurred?", "Both parents rated intimidation concerns similarly.", "reducing intimidation through structure", "Freedom from intimidation in parenting interactions."),
+            T("information_control", "Control of Information", "How often is child-related information withheld or used to control?", "Both parents rated information control similarly.", "ensuring child-related information flows appropriately", "Child-related information that is not used as leverage."),
+            T("child_concerns", "Concerns About the Child", "How concerned are you about the child's emotional or physical wellbeing?", "Both parents rated concerns about the child similarly.", "addressing concerns about the child's wellbeing", "The child's emotional and physical wellbeing protected."),
+            T("emergency_readiness", "Emergency Readiness", "How prepared do you feel to respond to an emergency involving the child?", "Both parents rated emergency readiness similarly.", "creating clear emergency protocols", "Clear emergency protocols for the child."),
+            T("support_resources", "Support Resources", "How connected are you to appropriate family-violence resources or support?", "Both parents rated their connection to support resources similarly.", "connecting with appropriate family-violence resources", "Appropriate support for both the child and the safe parent."),
+            T("legal_protections", "Legal Protections", "How clear are you about current legal protections or orders?", "Both parents rated clarity about legal protections similarly.", "clarifying legal protections and orders", "Clear legal protections that support safety."),
+            T("professional_guidance", "Professional Guidance", "How helpful would professional guidance be in structuring communication?", "Both parents rated the value of professional guidance similarly.", "obtaining professional guidance on communication structure", "Professional guidance that accounts for safety and power imbalances."),
+        ],
+        "options": [
+            "Third-party exchanges",
+            "Neutral exchange locations",
+            "Written-only communication",
+            "Communication through professionals",
+            "Parallel parenting",
+            "Separate mediation sessions",
+            "Virtual mediation",
+            "Attorney-assisted communication",
+            "Detailed parenting orders",
+            "Emergency protocols",
+            "Appropriate family-violence resources",
+        ],
+        "needs": [
+            {"title": "Safety", "text": "The child's physical and emotional safety is the foundation for every other consideration."},
+            {"title": "Reduced Direct Interaction", "text": "The child may benefit when parenting structures limit unnecessary direct adult interaction."},
+            {"title": "Predictability", "text": "The child may benefit from detailed, unambiguous arrangements that leave little room for dispute."},
+            {"title": "Professional Input", "text": "Professionals experienced with family violence may help design an appropriate structure."},
+        ],
+        "demo_concern_a": "Direct contact feels unsafe, and exchanges need a neutral location.",
+        "demo_concern_b": "Written communication is preferred; clarity about current orders is needed.",
+    },
+    "medical": {
+        "key": "medical",
+        "title": "Medical Needs",
+        "report_title": "JOINT ALIGNMENT REPORT",
+        "subtitle": "Medical Needs",
+        "description": "Aligns both parents around the child's medical care: providers, medication, appointments, and treatment plans.",
+        "central_question": "What structure would ensure the child receives consistent medical care across both households?",
+        "shared_goal_options": SHARED_GOALS_BASE,
+        "priority_statement": "Based on both parents' responses, ensuring consistent medical care regarding {focus} appears to be an important area for continued parental discussion.",
+        "page_titles": STANDARD_PAGE_TITLES,
+        "disclaimer": STANDARD_DISCLAIMER,
+        "topics": [
+            T("condition_awareness", "Understanding of Medical Needs", "How well do you understand the child's current medical needs?", "Both parents rated their understanding of the child's medical needs similarly.", "building a shared understanding of the child's medical needs", "Both parents understanding the child's medical needs."),
+            T("severity_view", "View of Severity", "How significant do you consider the child's medical condition to be?", "Both parents view the severity of the child's condition similarly.", "aligning on the significance of the child's condition", "A shared understanding of how significant the condition is."),
+            T("provider_access", "Healthcare Providers", "How satisfied are you with the child's current healthcare providers?", "Both parents rated the child's healthcare providers similarly.", "aligning on the child's healthcare providers", "Confidence in the child's healthcare providers."),
+            T("appointments", "Appointments", "How well are medical appointments being scheduled and attended?", "Both parents rated appointment management similarly.", "improving how appointments are scheduled and attended", "Medical appointments reliably scheduled and attended."),
+            T("medication", "Medication", "How concerned are you about the child's medication use?", "Both parents rated medication concerns similarly.", "aligning on the child's medication use", "Consistent implementation of the child's medication plan."),
+            T("prescription_management", "Prescription Management", "How well are prescriptions managed between households?", "Both parents rated prescription management similarly.", "improving prescription management between households", "Prescriptions managed consistently across both homes."),
+            T("insurance", "Insurance & Costs", "How well are insurance and medical costs being handled?", "Both parents rated the handling of insurance and costs similarly.", "clarifying insurance and medical cost responsibilities", "Clear handling of insurance and medical costs."),
+            T("emergency_care", "Emergency Care", "How clear is the plan for emergency medical care?", "Both parents rated the emergency care plan similarly.", "creating a clear emergency medical plan", "A clear emergency medical plan in both households."),
+            T("info_sharing", "Medical Information Sharing", "How completely is medical information shared between parents?", "Both parents rated medical information sharing similarly.", "ensuring both parents receive the same medical information", "Both parents receiving the same medical information directly."),
+            T("treatment_adherence", "Treatment Plan Adherence", "How consistently is the child's treatment plan followed across households?", "Both parents rated treatment plan adherence similarly.", "improving treatment plan consistency across households", "Consistent implementation of the child's medical treatment plan."),
+        ],
+        "options": [
+            "Joint pediatrician meeting",
+            "Written medication protocol",
+            "Shared patient portal access",
+            "Medication log",
+            "Duplicate medication at each home, if medically and legally appropriate",
+            "Emergency medical plan",
+            "Specialist consultation",
+            "Second opinion consultation",
+        ],
+        "needs": [
+            {"title": "Consistency", "text": "The child may benefit from consistent implementation of the medical treatment plan in both households."},
+            {"title": "Information", "text": "Both parents may benefit from receiving the same medical information directly from providers."},
+            {"title": "Professional Input", "text": "A pediatrician or specialist may provide information that helps parents make decisions."},
+            {"title": "Preparedness", "text": "The child may benefit from both households being equally prepared for a medical emergency."},
+        ],
+        "demo_concern_a": "Medication is not administered the same way in both homes.",
+        "demo_concern_b": "Medical information from appointments is not always shared promptly.",
+    },
+    "educational": {
+        "key": "educational",
+        "title": "Educational Needs",
+        "report_title": "JOINT ALIGNMENT REPORT",
+        "subtitle": "Educational Needs",
+        "description": "Aligns both parents around the child's education: academics, homework, teacher communication, tutoring, and special education.",
+        "central_question": "What structure would best help this child succeed academically in both homes?",
+        "shared_goal_options": SHARED_GOALS_BASE,
+        "priority_statement": "Based on both parents' responses, maintaining educational consistency while obtaining additional information regarding the child's academic needs appears to be an important area for continued parental discussion.",
+        "page_titles": STANDARD_PAGE_TITLES,
+        "disclaimer": STANDARD_DISCLAIMER,
+        "topics": [
+            T("academic_performance", "Academic Performance", "How concerned are you about the child's current academic performance?", "Both parents rated the child's academic performance similarly.", "supporting the child's academic performance", "Consistent academic support in both homes."),
+            T("attendance", "School Attendance", "How concerned are you about the child's school attendance?", "Both consider regular attendance a priority.", "supporting regular school attendance", "Regular, predictable school attendance."),
+            T("homework", "Homework Structure", "How much additional structure does the child need for homework?", "Both believe the child needs additional homework structure.", "creating a consistent homework structure", "A consistent homework routine that works in both homes."),
+            T("school_behavior", "Behavior at School", "How concerned are you about the child's behavior at school?", "Both parents rated the child's behavior at school similarly.", "supporting the child's behavior at school", "Consistent expectations about school behavior."),
+            T("teacher_communication", "Teacher Communication", "How important is direct communication with the child's teacher?", "Both support communication with the child's teacher.", "improving communication with the child's teacher", "Both parents receiving the same information from the school."),
+            T("tutoring", "Tutoring", "How urgently does the child need tutoring or additional academic support?", "Both parents view the need for tutoring similarly.", "determining whether tutoring would benefit the child", "Timely academic support if it is needed."),
+            T("evaluation", "School Evaluation / Testing", "How supportive are you of a formal school evaluation or testing?", "Both parents view school evaluation or testing similarly.", "determining whether a school evaluation would help", "Information about whether additional evaluation is needed."),
+            T("special_education", "Special Education (ARD/IEP)", "How relevant are special education services (ARD/IEP) for the child?", "Both parents view special education services similarly.", "exploring special education services (ARD/IEP)", "Access to appropriate services if the child qualifies."),
+            T("school_counselor", "School Counselor", "How helpful would the school counselor be right now?", "Both parents view the school counselor's role similarly.", "consulting the school counselor", "Access to school-based support."),
+            T("extracurricular", "Extracurricular Activities", "How important is it that the child continues extracurricular activities?", "Both want the child to continue participating.", "supporting the child's extracurricular participation", "Continued participation in activities the child enjoys."),
+        ],
+        "options": [
+            "Joint parent-teacher conference",
+            "Separate parent-teacher communications",
+            "Shared school portal access",
+            "Tutoring consultation",
+            "ARD / IEP meeting",
+            "School counselor consultation",
+            "Pediatrician consultation",
+            "Child therapist consultation",
+            "Parenting coordinator",
+            "Child-focused mediation",
+            "Co-parenting mediation",
+            "Structured communication protocol",
+        ],
+        "needs": [
+            {"title": "Consistency", "text": "The child may benefit from more consistent academic expectations between households."},
+            {"title": "Information", "text": "Both parents may benefit from receiving the same information directly from the school."},
+            {"title": "Professional Input", "text": "A teacher, counselor, pediatrician, therapist, or other appropriate professional may provide information that helps parents make decisions."},
+            {"title": "Predictability", "text": "The child may benefit from knowing what to expect academically in each household."},
+        ],
+        "demo_concern_a": "Difficulty completing homework between households.",
+        "demo_concern_b": "Child appears overwhelmed by current academic expectations.",
+    },
+    "psychological": {
+        "key": "psychological",
+        "title": "Psychological / Behavioral",
+        "report_title": "JOINT ALIGNMENT REPORT",
+        "subtitle": "Psychological / Behavioral Observations",
+        "description": "Compares parental observations about the child's emotional and behavioral wellbeing — without diagnosing.",
+        "central_question": "What information and structure would help both parents support the child's emotional wellbeing across both homes?",
+        "shared_goal_options": SHARED_GOALS_BASE,
+        "priority_statement": "Based on both parents' responses, obtaining additional information about {focus} while maintaining consistent routines appears to be an important area for continued parental discussion.",
+        "page_titles": STANDARD_PAGE_TITLES,
+        "disclaimer": STANDARD_DISCLAIMER,
+        "topics": [
+            T("emotional_regulation", "Emotional Regulation", "How concerned are you about the child's emotional regulation?", "Both parents rated observations about emotional regulation similarly.", "supporting the child's emotional regulation", "Support for the child's emotional regulation."),
+            T("behavior_changes", "Behavior Changes", "How concerned are you about recent changes in the child's behavior?", "Both parents rated recent behavior changes similarly.", "understanding recent changes in the child's behavior", "Attention to recent changes in behavior."),
+            T("anxiety_stress", "Anxiety / Stress Observations", "How often have you observed behaviors you associate with anxiety or stress?", "Both parents reported similar observations they associate with anxiety or stress.", "understanding behaviors the parents associate with anxiety or stress", "Understanding of what may be driving stress-related behaviors."),
+            T("school_behavior", "School Behavior", "How concerned are you about the child's behavior at school?", "Both parents rated the child's school behavior similarly.", "understanding the child's behavior at school", "Consistent responses to school behavior."),
+            T("sleep", "Sleep", "How concerned are you about the child's sleep?", "Both parents rated the child's sleep similarly.", "supporting healthy sleep for the child", "Healthy, consistent sleep routines."),
+            T("transitions", "Transitions Between Homes", "How does the child seem to handle transitions between households?", "Both parents rated the child's handling of transitions similarly.", "easing transitions between households for the child", "Smoother transitions between households."),
+            T("therapy", "Therapy / Counseling", "How supportive are you of therapy or counseling for the child?", "Both parents view therapy or counseling similarly.", "determining whether therapy or counseling would benefit the child", "Access to appropriate support if needed."),
+            T("medication", "Medication Perspectives", "How comfortable are you with medication as part of any treatment?", "Both parents view medication as part of treatment similarly.", "understanding the treatment options regarding medication", "Informed, shared decisions about treatment options."),
+            T("provider_communication", "Provider Communication", "How important is shared communication with the child's providers?", "Both parents view provider communication similarly.", "sharing communication with the child's providers", "Both parents receiving the same information from providers."),
+            T("routines", "Consistency of Routines", "How important are consistent routines for the child's wellbeing?", "Both parents view consistent routines similarly.", "aligning routines across households", "Consistent, calming routines in both homes."),
+        ],
+        "options": [
+            "Pediatrician consultation",
+            "Mental health professional consultation",
+            "School counselor consultation",
+            "Parent consultation with a child specialist",
+            "Shared provider information",
+            "Consistent routines across households",
+            "Follow-up assessment by an appropriate professional",
+        ],
+        "needs": [
+            {"title": "Observation, Not Diagnosis", "text": "One or both parents reported observing behaviors they associate with anxiety or stress. Only an appropriate professional can evaluate what these observations mean."},
+            {"title": "Consistency", "text": "The child may benefit from consistent, calming routines between households."},
+            {"title": "Professional Input", "text": "A pediatrician, mental health professional, or school counselor may provide information that helps parents make decisions."},
+            {"title": "Information", "text": "Both parents may benefit from receiving the same information directly from any provider involved with the child."},
+        ],
+        "demo_concern_a": "The child has trouble settling down after transitions between homes.",
+        "demo_concern_b": "Observed behaviors that seem like worry or stress before school days.",
+    },
+    "court": {
+        "key": "court",
+        "title": "Preparing for Court / Parenting Structure",
+        "report_title": "JOINT ALIGNMENT REPORT",
+        "subtitle": "Parenting Structure Preparation",
+        "description": "Turns parenting-plan issues into a mediation roadmap: agreed terms, terms close to agreement, and terms requiring discussion.",
+        "central_question": "Which parenting terms are already agreed, which are close, and which need structured discussion?",
+        "shared_goal_options": SHARED_GOALS_BASE,
+        "priority_statement": "Based on both parents' responses, {focus} appears to be an important area for structured discussion before or during the legal process.",
+        "page_titles": STANDARD_PAGE_TITLES,
+        "disclaimer": STANDARD_DISCLAIMER,
+        "topics": [
+            T("schedule", "Parenting Schedule", "How confident are you in your preferred parenting schedule?", "Both parents expressed similar parenting schedule preferences.", "aligning on a parenting schedule", "A parenting schedule the child can rely on."),
+            T("decision_making", "Decision-Making", "How clear are you on how major decisions should be allocated?", "Both parents expressed similar views on decision-making.", "aligning on decision-making allocation", "Clear allocation of major decisions."),
+            T("school", "School", "How clear are your preferences regarding school choice and involvement?", "Both parents expressed similar school-related preferences.", "aligning on school-related terms", "Stability in the child's schooling."),
+            T("medical", "Medical", "How clear are your preferences regarding medical decision-making?", "Both parents expressed similar medical decision-making preferences.", "aligning on medical decision-making terms", "Clear medical decision-making for the child."),
+            T("activities", "Activities", "How clear are your preferences about the child's activities?", "Both parents expressed similar activity preferences.", "aligning on activity-related terms", "Continuity in the child's activities."),
+            T("transportation", "Transportation", "How clear are you on transportation responsibilities?", "Both parents expressed similar transportation preferences.", "aligning on transportation responsibilities", "Reliable transportation arrangements."),
+            T("holidays", "Holidays & Special Days", "How clear are your preferences for holidays and special days?", "Both parents expressed similar holiday preferences.", "aligning on holiday schedules", "Predictable holidays and special days for the child."),
+            T("travel", "Travel", "How clear are your preferences about travel with the child?", "Both parents expressed similar travel preferences.", "aligning on travel terms", "Clear expectations around travel."),
+            T("communication", "Parent Communication", "How clear are you on parent-to-parent communication expectations?", "Both parents expressed similar communication expectations.", "aligning on communication expectations", "Reliable communication about the child."),
+            T("dispute_resolution", "Dispute Resolution", "How clear are you on how future disputes should be resolved?", "Both parents expressed similar dispute-resolution preferences.", "aligning on a dispute-resolution process", "A way to resolve future disputes without repeated conflict."),
+        ],
+        "options": [
+            "Child-focused mediation",
+            "Parenting coordinator / facilitator",
+            "Collaborative law consultation",
+            "Detailed parenting plan drafting",
+            "Professional consultation on disputed terms",
+            "Settlement conference",
+            "Structured negotiation through attorneys",
+        ],
+        "needs": [
+            {"title": "Clarity", "text": "The child may benefit from clear, specific parenting terms that leave little room for dispute."},
+            {"title": "Predictability", "text": "The child may benefit from knowing the schedule and expectations well in advance."},
+            {"title": "Information", "text": "Terms that are close to agreement may settle quickly once both parents have the same information."},
+            {"title": "Professional Input", "text": "A mediator or attorney may help convert areas of alignment into durable agreements."},
+        ],
+        "demo_concern_a": "Want a week-on/week-off schedule with clear holiday rotation.",
+        "demo_concern_b": "Prefer the current schedule with adjustments for summer and travel.",
+    },
+}
+
+ORDERED_TYPE_KEYS = ["general", "communication", "high_conflict", "ipv", "medical", "educational", "psychological", "court"]
+
+_DEMO_A_PATTERN = [3, 1, 2, 0, 2, 1, 3, 2, 1, 2, 3, 0]
+_DEMO_B_PATTERN = [3, 1, 1, 0, 4, 1, 3, 3, 1, 2, 4, 0]  # 4 == UNSURE index
+
+
+def demo_payload(type_key):
+    cfg = ASSESSMENT_TYPES[type_key]
+    topics = cfg["topics"]
+    a_answers, b_answers = {}, {}
+    for i, t in enumerate(topics):
+        a_answers[t["key"]] = SCALE[_DEMO_A_PATTERN[i % len(_DEMO_A_PATTERN)]]
+        b_answers[t["key"]] = SCALE[_DEMO_B_PATTERN[i % len(_DEMO_B_PATTERN)]]
+    goals = cfg["shared_goal_options"][:4]
+    return {
+        "a": {"answers": a_answers, "primary_concern": cfg["demo_concern_a"], "goals": goals},
+        "b": {"answers": b_answers, "primary_concern": cfg["demo_concern_b"], "goals": goals},
+        "child_name": "Alex",
+        "parent_a_name": "Parent A",
+        "parent_b_name": "Parent B",
+    }
+
+=== END FILE ===
+
+=== START FILE: /app/backend/report_engine.py ===
+from datetime import datetime, timezone
+
+from assessment_data import (
+    ASSESSMENT_TYPES,
+    SCALE,
+    UNSURE,
+    PURPOSE_ITEMS,
+    DIFFERENCES_NOTE,
+    ALIGNMENT_FOUNDATION_NOTE,
+    DISCUSSION_SEQUENCE,
+    PHILOSOPHY,
+)
+
+
+def compute_status(a, b):
+    if not a or not b or a == UNSURE or b == UNSURE:
+        return "info"
+    d = abs(SCALE.index(a) - SCALE.index(b))
+    if d == 0:
+        return "aligned"
+    if d == 1:
+        return "close"
+    return "different"
+
+
+def generate_report(case):
+    cfg = ASSESSMENT_TYPES[case["type"]]
+    ra = case["responses"]["a"]
+    rb = case["responses"]["b"]
+
+    topic_results = []
+    for t in cfg["topics"]:
+        av = ra["answers"].get(t["key"])
+        bv = rb["answers"].get(t["key"])
+        topic_results.append({
+            "key": t["key"],
+            "label": t["label"],
+            "aligned_text": t["aligned_text"],
+            "action_phrase": t["action_phrase"],
+            "child_need": t["child_need"],
+            "parent_a": av or UNSURE,
+            "parent_b": bv or UNSURE,
+            "status": compute_status(av, bv),
+        })
+
+    aligned = [t for t in topic_results if t["status"] == "aligned"]
+    close = [t for t in topic_results if t["status"] == "close"]
+    different = [t for t in topic_results if t["status"] == "different"]
+    info = [t for t in topic_results if t["status"] == "info"]
+    conversation = close + different
+
+    snapshot = {
+        "total": len(topic_results),
+        "aligned": len(aligned),
+        "different": len(conversation),
+        "info": len(info),
+    }
+
+    focus_source = different[0] if different else (close[0] if close else (info[0] if info else None))
+    focus = focus_source["label"].lower() if focus_source else "maintaining the child's current stability"
+    priority = cfg["priority_statement"].replace("{focus}", focus)
+
+    questions = []
+    for t in conversation[:4]:
+        questions.append(
+            f"What information would help both parents determine whether {t['action_phrase']} would benefit the child?"
+        )
+    if not questions:
+        questions.append(cfg["central_question"])
+    if len(questions) < 2:
+        questions.append(cfg["central_question"])
+
+    plan_issues = conversation + info
+    action_plan = []
+    for t in plan_issues[:3]:
+        action_plan.append({
+            "issue": t["label"],
+            "child_need": t["child_need"],
+            "already_agree": aligned[0]["aligned_text"] if aligned else "",
+        })
+
+    shared_goals = ra.get("goals") or rb.get("goals") or []
+
+    summary = {
+        "aligned": [t["aligned_text"] for t in aligned][:5],
+        "info": [f"Additional information about {t['label'].lower()} may help both parents." for t in info][:4],
+        "conversation": [f"Parents view {t['label'].lower()} differently and may benefit from a structured conversation." for t in conversation][:4],
+        "options": cfg["options"][:6],
+        "priority": priority,
+    }
+
+    is_court = case["type"] == "court"
+    court_map = None
+    if is_court:
+        court_map = {
+            "agreed": [t["label"] for t in aligned],
+            "close": [t["label"] for t in close],
+            "discussion": [t["label"] for t in different],
+            "info": [t["label"] for t in info],
+        }
+
+    return {
+        "assessment_type": case["type"],
+        "assessment_title": cfg["title"],
+        "report_title": cfg["report_title"],
+        "subtitle": f"Assessment: {cfg['subtitle']}",
+        "child_name": case.get("child_name", ""),
+        "parent_a_name": case.get("parent_a_name", "Parent A"),
+        "parent_b_name": case.get("parent_b_name", "Parent B"),
+        "parent_a_status": "Assessment completed",
+        "parent_b_status": "Assessment completed",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "is_demo": case.get("is_demo", False),
+        "page_titles": cfg["page_titles"],
+        "disclaimer": cfg["disclaimer"],
+        "purpose_items": PURPOSE_ITEMS,
+        "snapshot": snapshot,
+        "snapshot_note": "These numbers are not scores. They are a roadmap for conversation.",
+        "shared_goals": shared_goals,
+        "parent_a_concern": ra.get("primary_concern", ""),
+        "parent_b_concern": rb.get("primary_concern", ""),
+        "central_question": cfg["central_question"],
+        "alignments": [{"topic": t["label"], "text": t["aligned_text"]} for t in aligned],
+        "alignment_foundation_note": ALIGNMENT_FOUNDATION_NOTE,
+        "differences": [{"topic": t["label"], "parent_a": t["parent_a"], "parent_b": t["parent_b"]} for t in conversation],
+        "differences_note": DIFFERENCES_NOTE,
+        "child_needs": cfg["needs"],
+        "options": cfg["options"],
+        "options_note": "These are not recommendations. They are options for parents to explore.",
+        "conversation_questions": questions,
+        "professional_map": {
+            "alignment_count": len(aligned),
+            "conversation_count": len(conversation),
+            "professional_input_count": len(info),
+            "child_needs_count": len(cfg["needs"]),
+            "sequence": DISCUSSION_SEQUENCE,
+        },
+        "action_plan": action_plan,
+        "summary": summary,
+        "court_map": court_map,
+        "topic_results": topic_results,
+        "philosophy": PHILOSOPHY,
+        "philosophy_heading": "Alignment Before Agreement",
+        "philosophy_note": "You don't have to see everything the same way to begin working toward meeting your child's needs.",
+    }
+
+=== END FILE ===
+
+=== START FILE: /app/backend/tests/backend_test.py ===
+"""SA CoParents backend E2E tests."""
+import os
+import uuid
+import pytest
+import requests
+
+BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/") if os.environ.get("REACT_APP_BACKEND_URL") else "https://align-report.preview.emergentagent.com"
+API = f"{BASE_URL}/api"
+
+ADMIN_EMAIL = "mattsossi@bsossi.com"
+ADMIN_PASSWORD = "CoParents2026!"
+
+TYPE_KEYS = ["general", "communication", "high_conflict", "ipv", "medical", "educational", "psychological", "court"]
+
+
+@pytest.fixture(scope="session")
+def admin_session():
+    s = requests.Session()
+    r = s.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+    assert r.status_code == 200, f"Admin login failed: {r.status_code} {r.text}"
+    assert "access_token" in s.cookies, "No access_token cookie set"
+    return s
+
+
+@pytest.fixture(scope="session")
+def fresh_user_session():
+    s = requests.Session()
+    email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+    r = s.post(f"{API}/auth/register", json={
+        "name": "Test User", "email": email, "password": "testpass123", "role": "parent"
+    })
+    assert r.status_code == 200, f"Register failed: {r.status_code} {r.text}"
+    s.email = email
+    return s
+
+
+# Auth
+class TestAuth:
+    def test_register_new_user(self):
+        s = requests.Session()
+        email = f"reg_{uuid.uuid4().hex[:8]}@example.com"
+        r = s.post(f"{API}/auth/register", json={
+            "name": "Reg User", "email": email, "password": "password123", "role": "parent"
+        })
+        assert r.status_code == 200
+        data = r.json()
+        assert data["email"] == email
+        assert data["role"] == "parent"
+        assert "access_token" in s.cookies
+
+    def test_register_short_password(self):
+        s = requests.Session()
+        r = s.post(f"{API}/auth/register", json={
+            "name": "X", "email": f"short_{uuid.uuid4().hex[:6]}@x.com", "password": "short", "role": "parent"
+        })
+        assert r.status_code == 400
+
+    def test_login_admin(self, admin_session):
+        r = admin_session.get(f"{API}/auth/me")
+        assert r.status_code == 200
+        assert r.json()["email"] == ADMIN_EMAIL
+
+    def test_login_invalid(self):
+        r = requests.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": "wrongpw!"})
+        assert r.status_code == 401
+
+    def test_me_unauthenticated(self):
+        r = requests.get(f"{API}/auth/me")
+        assert r.status_code == 401
+
+    def test_logout(self):
+        s = requests.Session()
+        s.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+        r = s.post(f"{API}/auth/logout")
+        assert r.status_code == 200
+
+
+# Assessment types
+class TestAssessmentTypes:
+    def test_list_types_returns_8(self):
+        r = requests.get(f"{API}/assessment-types")
+        assert r.status_code == 200
+        types = r.json()
+        assert len(types) == 8
+        keys = [t["key"] for t in types]
+        assert set(keys) == set(TYPE_KEYS)
+        for t in types:
+            assert t["topic_count"] == 10
+
+    def test_get_type_educational(self):
+        r = requests.get(f"{API}/assessment-types/educational")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["key"] == "educational"
+        assert len(data["topics"]) == 10
+        assert len(data["scale"]) == 5
+
+    def test_get_type_ipv_disclaimer(self):
+        r = requests.get(f"{API}/assessment-types/ipv")
+        assert r.status_code == 200
+
+    def test_get_type_unknown(self):
+        r = requests.get(f"{API}/assessment-types/nope")
+        assert r.status_code == 404
+
+
+# Cases + report
+class TestCasesFlow:
+    def test_create_case_requires_auth(self):
+        r = requests.post(f"{API}/cases", json={"type": "general"})
+        assert r.status_code == 401
+
+    def test_create_and_get_case(self, fresh_user_session):
+        s = fresh_user_session
+        r = s.post(f"{API}/cases", json={
+            "type": "educational", "child_name": "TEST_Kid",
+            "parent_a_name": "TEST_A", "parent_b_name": "TEST_B"
+        })
+        assert r.status_code == 200
+        c = r.json()
+        assert c["type"] == "educational"
+        assert c["child_name"] == "TEST_Kid"
+        assert c["has_a"] is False and c["has_b"] is False
+        cid = c["id"]
+
+        r = s.get(f"{API}/cases/{cid}")
+        assert r.status_code == 200
+        assert r.json()["id"] == cid
+
+    def test_create_case_invalid_type(self, fresh_user_session):
+        r = fresh_user_session.post(f"{API}/cases", json={"type": "nope"})
+        assert r.status_code == 400
+
+    def test_report_incomplete_returns_400(self, fresh_user_session):
+        s = fresh_user_session
+        r = s.post(f"{API}/cases", json={"type": "general", "child_name": "TEST_Inc"})
+        cid = r.json()["id"]
+        r = s.get(f"{API}/cases/{cid}/report")
+        assert r.status_code == 400
+
+    def test_demo_and_report_for_all_types(self, fresh_user_session):
+        s = fresh_user_session
+        for tk in TYPE_KEYS:
+            r = s.post(f"{API}/cases", json={"type": tk, "child_name": "TEST_Demo"})
+            assert r.status_code == 200, f"create {tk}: {r.text}"
+            cid = r.json()["id"]
+            r = s.post(f"{API}/cases/{cid}/demo")
+            assert r.status_code == 200, f"demo {tk}: {r.text}"
+            assert r.json()["has_a"] and r.json()["has_b"]
+            assert r.json()["is_demo"] is True
+
+            r = s.get(f"{API}/cases/{cid}/report")
+            assert r.status_code == 200, f"report {tk}: {r.text}"
+            rep = r.json()
+            assert "pages" in rep or "page_titles" in rep or isinstance(rep, dict)
+
+    def test_save_partial_responses_rejected(self, fresh_user_session):
+        s = fresh_user_session
+        r = s.post(f"{API}/cases", json={"type": "general"})
+        cid = r.json()["id"]
+        r = s.put(f"{API}/cases/{cid}/responses/a", json={
+            "answers": {"communication": "No concern"},
+            "primary_concern": "test",
+            "goals": []
+        })
+        assert r.status_code == 400  # not all answered
+
+    def test_save_full_responses(self, fresh_user_session):
+        s = fresh_user_session
+        r = s.post(f"{API}/cases", json={"type": "general"})
+        cid = r.json()["id"]
+        types_r = requests.get(f"{API}/assessment-types/general").json()
+        answers = {t["key"]: "No concern" for t in types_r["topics"]}
+        r = s.put(f"{API}/cases/{cid}/responses/a", json={
+            "answers": answers, "primary_concern": "test", "goals": ["Educational stability"]
+        })
+        assert r.status_code == 200, r.text
+        assert r.json()["has_a"] is True
+        assert r.json()["has_b"] is False
+
+    def test_list_cases(self, fresh_user_session):
+        r = fresh_user_session.get(f"{API}/cases")
+        assert r.status_code == 200
+        assert isinstance(r.json(), list)
+        assert len(r.json()) >= 1
+
+    def test_delete_case(self, fresh_user_session):
+        s = fresh_user_session
+        r = s.post(f"{API}/cases", json={"type": "general", "child_name": "TEST_Del"})
+        cid = r.json()["id"]
+        r = s.delete(f"{API}/cases/{cid}")
+        assert r.status_code == 200
+        r = s.get(f"{API}/cases/{cid}")
+        assert r.status_code == 404
+
+    def test_cross_user_access_forbidden(self):
+        s1 = requests.Session()
+        e1 = f"u1_{uuid.uuid4().hex[:6]}@x.com"
+        s1.post(f"{API}/auth/register", json={"name": "U1", "email": e1, "password": "password123", "role": "parent"})
+        r = s1.post(f"{API}/cases", json={"type": "general"})
+        cid = r.json()["id"]
+
+        s2 = requests.Session()
+        e2 = f"u2_{uuid.uuid4().hex[:6]}@x.com"
+        s2.post(f"{API}/auth/register", json={"name": "U2", "email": e2, "password": "password123", "role": "parent"})
+        r = s2.get(f"{API}/cases/{cid}")
+        assert r.status_code == 404
+
+=== END FILE ===
+
+=== START FILE: /app/scripts/input_assessment.py ===
+#!/usr/bin/env python3
+"""Input a complete joint assessment (Parent A + Parent B) via the SA CoParents API.
+
+Usage:
+    python3 input_assessment.py                          # interactive mode (prompts for every answer)
+    python3 input_assessment.py --demo educational       # instant demo data for a type
+    python3 input_assessment.py --api http://localhost:8001
+
+Assessment types: general, communication, high_conflict, ipv, medical,
+                  educational, psychological, court
+"""
+
+import argparse
+import getpass
+import sys
+
+import requests
+
+TYPES = ["general", "communication", "high_conflict", "ipv", "medical", "educational", "psychological", "court"]
+
+
+def ask(prompt, default=""):
+    val = input(f"{prompt}" + (f" [{default}]" if default else "") + ": ").strip()
+    return val or default
+
+
+def ask_choice(question, options):
+    print(f"\n{question}")
+    for i, o in enumerate(options, 1):
+        print(f"  {i}. {o}")
+    while True:
+        raw = input("  > ").strip()
+        if raw.isdigit() and 1 <= int(raw) <= len(options):
+            return options[int(raw) - 1]
+        print("  Please enter a number from the list.")
+
+
+def ask_multi(prompt, options):
+    print(f"\n{prompt} (comma-separated numbers)")
+    for i, o in enumerate(options, 1):
+        print(f"  {i}. {o}")
+    raw = input("  > ").strip()
+    picks = []
+    for part in raw.split(","):
+        part = part.strip()
+        if part.isdigit() and 1 <= int(part) <= len(options):
+            picks.append(options[int(part) - 1])
+    return picks
+
+
+def collect_responses(session, api, label, cfg):
+    print(f"\n{'=' * 60}\n{label}'s responses\n{'=' * 60}")
+    answers = {}
+    for idx, t in enumerate(cfg["topics"], 1):
+        answers[t["key"]] = ask_choice(f"{idx}. {t['question']}", cfg["scale"])
+    concern = input(f"\n{label}'s primary concern (one or two sentences): ").strip()
+    goals = ask_multi("Shared goals for the child", cfg["shared_goal_options"])
+    return {"answers": answers, "primary_concern": concern, "goals": goals}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--api", default="http://localhost:8001", help="Backend base URL (no /api suffix)")
+    parser.add_argument("--demo", choices=TYPES, help="Create a case and fill it with demo data for this type")
+    args = parser.parse_args()
+    api = args.api.rstrip("/") + "/api"
+
+    session = requests.Session()
+
+    email = ask("Email")
+    password = getpass.getpass("Password: ")
+    r = session.post(f"{api}/auth/login", json={"email": email, "password": password})
+    if r.status_code != 200:
+        print(f"Login failed: {r.json().get('detail', r.text)}")
+        sys.exit(1)
+    print(f"Logged in as {r.json()['email']}")
+    token = session.cookies.get("access_token")
+    if token:
+        session.headers["Authorization"] = f"Bearer {token}"
+
+    if args.demo:
+        type_key = args.demo
+    else:
+        type_key = ask_choice("Choose an assessment type:", TYPES)
+
+    if args.demo:
+        case = session.post(f"{api}/cases", json={"type": type_key, "child_name": "Alex",
+                                                  "parent_a_name": "Parent A", "parent_b_name": "Parent B"}).json()
+        session.post(f"{api}/cases/{case['id']}/demo")
+        print(f"\nDemo '{type_key}' assessment created: {case['id']}")
+    else:
+        cfg = session.get(f"{api}/assessment-types/{type_key}").json()
+        child = ask("Child's first name (optional)")
+        pa = ask("Parent A name or label", "Parent A")
+        pb = ask("Parent B name or label", "Parent B")
+        case = session.post(f"{api}/cases", json={"type": type_key, "child_name": child,
+                                                  "parent_a_name": pa, "parent_b_name": pb}).json()
+        for parent, label in (("a", pa), ("b", pb)):
+            payload = collect_responses(session, api, label, cfg)
+            r = session.put(f"{api}/cases/{case['id']}/responses/{parent}", json=payload)
+            if r.status_code != 200:
+                print(f"Failed to save {label}'s responses: {r.json().get('detail', r.text)}")
+                sys.exit(1)
+        print(f"\nAssessment complete: {case['id']}")
+
+    report = session.get(f"{api}/cases/{case['id']}/report").json()
+    s = report["snapshot"]
+    print(f"\nReport: {report['report_title']} — {report['subtitle']}")
+    print(f"Snapshot: {s['aligned']} aligned | {s['different']} different perspectives | {s['info']} need more info (of {s['total']} topics)")
+    print(f"View at: /report/{case['id']}")
+
+
+if __name__ == "__main__":
+    main()
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/App.js ===
+import "@/App.css";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import Landing from "@/pages/Landing";
+import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import Wizard from "@/pages/Wizard";
+import ReportView from "@/pages/ReportView";
+
+function Protected({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background" data-testid="auth-loading">
+        <p className="text-muted-foreground text-sm">Loading…</p>
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/auth" replace />;
+  return children;
+}
+
+function App() {
+  return (
+    <div className="App">
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
+            <Route path="/new" element={<Protected><Wizard /></Protected>} />
+            <Route path="/report/:id" element={<Protected><ReportView /></Protected>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+        <Toaster position="top-center" />
+      </AuthProvider>
+    </div>
+  );
+}
+
+export default App;
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/App.css ===
+.App {
+  min-height: 100vh;
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/index.js ===
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "@/index.css";
+import App from "@/App";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </React.StrictMode>,
+);
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/index.css ===
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 45 22% 97%;
+        --foreground: 20 6% 15%;
+        --card: 0 0% 100%;
+        --card-foreground: 20 6% 15%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 20 6% 15%;
+        --primary: 158 20% 25%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 43 30% 88%;
+        --secondary-foreground: 20 6% 15%;
+        --muted: 45 25% 94%;
+        --muted-foreground: 25 8% 42%;
+        --accent: 28 47% 64%;
+        --accent-foreground: 20 6% 15%;
+        --destructive: 0 60% 45%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 44 20% 87%;
+        --input: 44 20% 80%;
+        --ring: 158 20% 25%;
+        --radius: 0.5rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground font-sans;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    h1, h2, h3, h4 {
+        @apply font-display tracking-tight;
+    }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+        border-left-style: inherit;
+        border-right-style: inherit;
+        border-top-style: inherit;
+        border-bottom-style: inherit;
+        border-left-color: inherit;
+        border-right-color: inherit;
+        border-top-color: inherit;
+        border-bottom-color: inherit;
+    }
+}
+
+.report-paper {
+    background: #ffffff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+    border: 1px solid #E5E1D8;
+}
+
+.report-page-enter {
+    animation: pageFade 0.25s ease;
+}
+
+@keyframes pageFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.worksheet-line {
+    border-bottom: 1px solid #D9D4C7;
+    min-height: 1.75rem;
+}
+
+.print-only {
+    display: none;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    .print-only {
+        display: block !important;
+    }
+    body {
+        background: #ffffff !important;
+    }
+    .report-paper {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        page-break-after: always;
+        break-after: page;
+    }
+    @page {
+        margin: 14mm;
+    }
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/context/AuthContext.jsx ===
+import { createContext, useContext, useEffect, useState } from "react";
+import api from "@/lib/api";
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/auth/me")
+      .then((r) => setUser(r.data))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const login = async (email, password) => {
+    const { data } = await api.post("/auth/login", { email, password });
+    setUser(data);
+    return data;
+  };
+
+  const register = async (payload) => {
+    const { data } = await api.post("/auth/register", payload);
+    setUser(data);
+    return data;
+  };
+
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } finally {
+      setUser(null);
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/lib/api.js ===
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: `${process.env.REACT_APP_BACKEND_URL}/api`,
+  withCredentials: true,
+});
+
+export function formatApiError(e) {
+  const detail = e?.response?.data?.detail;
+  if (detail == null) return e?.message || "Something went wrong. Please try again.";
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail.map((x) => (x && typeof x.msg === "string" ? x.msg : JSON.stringify(x))).join(" ");
+  }
+  if (typeof detail === "object" && typeof detail.msg === "string") return detail.msg;
+  return String(detail);
+}
+
+export default api;
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/lib/utils.js ===
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs) {
+  return twMerge(clsx(inputs));
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/hooks/use-toast.js ===
+"use client";
+// Inspired by react-hot-toast library
+import * as React from "react"
+
+const TOAST_LIMIT = 1
+const TOAST_REMOVE_DELAY = 1000000
+
+const actionTypes = {
+  ADD_TOAST: "ADD_TOAST",
+  UPDATE_TOAST: "UPDATE_TOAST",
+  DISMISS_TOAST: "DISMISS_TOAST",
+  REMOVE_TOAST: "REMOVE_TOAST"
+}
+
+let count = 0
+
+function genId() {
+  count = (count + 1) % Number.MAX_SAFE_INTEGER
+  return count.toString();
+}
+
+const toastTimeouts = new Map()
+
+const addToRemoveQueue = (toastId) => {
+  if (toastTimeouts.has(toastId)) {
+    return
+  }
+
+  const timeout = setTimeout(() => {
+    toastTimeouts.delete(toastId)
+    dispatch({
+      type: "REMOVE_TOAST",
+      toastId: toastId,
+    })
+  }, TOAST_REMOVE_DELAY)
+
+  toastTimeouts.set(toastId, timeout)
+}
+
+export const reducer = (state, action) => {
+  switch (action.type) {
+    case "ADD_TOAST":
+      return {
+        ...state,
+        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+      };
+
+    case "UPDATE_TOAST":
+      return {
+        ...state,
+        toasts: state.toasts.map((t) =>
+          t.id === action.toast.id ? { ...t, ...action.toast } : t),
+      };
+
+    case "DISMISS_TOAST": {
+      const { toastId } = action
+
+      // ! Side effects ! - This could be extracted into a dismissToast() action,
+      // but I'll keep it here for simplicity
+      if (toastId) {
+        addToRemoveQueue(toastId)
+      } else {
+        state.toasts.forEach((toast) => {
+          addToRemoveQueue(toast.id)
+        })
+      }
+
+      return {
+        ...state,
+        toasts: state.toasts.map((t) =>
+          t.id === toastId || toastId === undefined
+            ? {
+                ...t,
+                open: false,
+              }
+            : t),
+      };
+    }
+    case "REMOVE_TOAST":
+      if (action.toastId === undefined) {
+        return {
+          ...state,
+          toasts: [],
+        }
+      }
+      return {
+        ...state,
+        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+      };
+  }
+}
+
+const listeners = []
+
+let memoryState = { toasts: [] }
+
+function dispatch(action) {
+  memoryState = reducer(memoryState, action)
+  listeners.forEach((listener) => {
+    listener(memoryState)
+  })
+}
+
+function toast({
+  ...props
+}) {
+  const id = genId()
+
+  const update = (props) =>
+    dispatch({
+      type: "UPDATE_TOAST",
+      toast: { ...props, id },
+    })
+  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+  dispatch({
+    type: "ADD_TOAST",
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dismiss()
+      },
+    },
+  })
+
+  return {
+    id: id,
+    dismiss,
+    update,
+  }
+}
+
+function useToast() {
+  const [state, setState] = React.useState(memoryState)
+
+  React.useEffect(() => {
+    listeners.push(setState)
+    return () => {
+      const index = listeners.indexOf(setState)
+      if (index > -1) {
+        listeners.splice(index, 1)
+      }
+    };
+  }, [state])
+
+  return {
+    ...state,
+    toast,
+    dismiss: (toastId) => dispatch({ type: "DISMISS_TOAST", toastId }),
+  };
+}
+
+export { useToast, toast }
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/pages/Landing.jsx ===
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Users, MessageSquare, ShieldAlert, HeartPulse, GraduationCap,
+  Brain, Scale, MessagesSquare, ArrowRight, FileText,
+} from "lucide-react";
+
+const HERO_IMG = "https://images.unsplash.com/photo-1519226135464-df5a9dbcd2a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHw0fHxjaGlsZCUyMHBsYXlpbmclMjBwZWFjZWZ1bCUyMG5hdHVyZXxlbnwwfHx8fDE3ODgyMDE0Mzd8MA&ixlib=rb-4.1.0&q=85";
+const STONES_IMG = "https://images.unsplash.com/photo-1532009877282-3340270e0529?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzZ8MHwxfHNlYXJjaHwzfHxiYWxhbmNlZCUyMHN0b25lcyUyMHplbnxlbnwwfHx8fDE3ODgyMDE0MzZ8MA&ixlib=rb-4.1.0&q=85";
+
+const TYPES = [
+  { icon: Users, title: "General Co-Parenting" },
+  { icon: MessagesSquare, title: "Communication" },
+  { icon: ShieldAlert, title: "High-Conflict" },
+  { icon: ShieldAlert, title: "IPV / Family Violence Safety" },
+  { icon: HeartPulse, title: "Medical Needs" },
+  { icon: GraduationCap, title: "Educational Needs" },
+  { icon: Brain, title: "Psychological / Behavioral" },
+  { icon: Scale, title: "Preparing for Court" },
+];
+
+const PAGES = [
+  "Joint Alignment Overview", "Your Child at the Center", "Where You Align",
+  "Where Your Perspectives Differ", "What Might Your Child Need?", "Options & Resources",
+  "Questions for Parent Conversation", "Professional Conversation Guide",
+  "Parent Action Plan", "Joint Alignment Summary",
+];
+
+export default function Landing() {
+  return (
+    <div className="min-h-screen bg-background" data-testid="landing-page">
+      <header className="no-print max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+        <div className="flex items-center gap-2" data-testid="brand">
+          <FileText className="h-6 w-6 text-primary" />
+          <span className="font-display text-2xl font-semibold text-primary">SA CoParents</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link to="/auth" data-testid="nav-login-link">
+            <Button variant="ghost" data-testid="nav-login-btn">Sign in</Button>
+          </Link>
+          <Link to="/auth" data-testid="nav-get-started-link">
+            <Button data-testid="nav-get-started-btn">Get started</Button>
+          </Link>
+        </div>
+      </header>
+
+      <section className="max-w-6xl mx-auto px-6 pt-10 pb-20 grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <p className="text-sm uppercase tracking-widest text-accent font-semibold mb-4" data-testid="hero-eyebrow">
+            Alignment Before Agreement
+          </p>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground leading-tight" data-testid="hero-heading">
+            Two perspectives. One child at the center.
+          </h1>
+          <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-xl" data-testid="hero-subtext">
+            SA CoParents combines both parents' perspectives into a structured 10-page Joint Alignment
+            Report — showing where you align, where your perspectives differ, and what your child may need.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link to="/auth" data-testid="hero-cta-link">
+              <Button size="lg" className="gap-2" data-testid="hero-cta-btn">
+                Start a Joint Assessment <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/auth" data-testid="hero-demo-link">
+              <Button size="lg" variant="outline" data-testid="hero-demo-btn">Try the demo report</Button>
+            </Link>
+          </div>
+          <p className="mt-8 text-sm text-muted-foreground italic max-w-xl" data-testid="hero-philosophy">
+            "We value the parenting system by how well it supports the child, not by how friendly the adults appear."
+          </p>
+        </div>
+        <div className="relative">
+          <div className="absolute -top-6 -left-6 w-40 h-40 bg-secondary rounded-lg -z-10" />
+          <img
+            src={HERO_IMG}
+            alt="Child playing peacefully in nature"
+            className="rounded-lg shadow-xl object-cover w-full h-[420px]"
+            data-testid="hero-image"
+          />
+          <img
+            src={STONES_IMG}
+            alt="Balanced stones representing alignment"
+            className="absolute -bottom-8 -left-8 w-40 h-40 object-cover rounded-lg shadow-lg border-4 border-white hidden md:block"
+            data-testid="hero-image-secondary"
+          />
+        </div>
+      </section>
+
+      <section className="bg-secondary/60 py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-semibold" data-testid="pages-heading">A universal 10-page report</h2>
+          <p className="mt-3 text-muted-foreground max-w-2xl" data-testid="pages-subtext">
+            Every report is visually familiar. Page 3 always shows alignment, Page 4 always shows
+            differences, Page 5 focuses on the child — parents and professionals always know where to look.
+          </p>
+          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-5 gap-4" data-testid="pages-grid">
+            {PAGES.map((p, i) => (
+              <div
+                key={p}
+                className="bg-white rounded-lg border border-border p-5 hover:-translate-y-0.5 hover:shadow-md transition-[transform,box-shadow] duration-200"
+                data-testid={`page-card-${i + 1}`}
+              >
+                <span className="font-display text-3xl text-accent font-semibold">{i + 1}</span>
+                <p className="mt-2 text-sm font-medium leading-snug">{p}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-semibold" data-testid="types-heading">Eight specialized assessments</h2>
+          <p className="mt-3 text-muted-foreground max-w-2xl" data-testid="types-subtext">
+            The architecture stays the same. The questions and analysis change.
+          </p>
+          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="types-grid">
+            {TYPES.map((t) => (
+              <div
+                key={t.title}
+                className="bg-white rounded-lg border border-border p-6 flex items-start gap-4 hover:-translate-y-0.5 hover:shadow-md transition-[transform,box-shadow] duration-200"
+                data-testid={`type-card-${t.title.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+              >
+                <t.icon className="h-6 w-6 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm font-medium">{t.title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-border py-10">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <span className="font-display text-xl font-semibold text-primary">SA CoParents</span>
+          </div>
+          <p className="text-sm text-muted-foreground" data-testid="footer-note">
+            Educational resource. Not legal, medical, or psychological advice.
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/pages/Auth.jsx ===
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { FileText } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { formatApiError } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+export default function Auth() {
+  const [mode, setMode] = useState("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("parent");
+  const [busy, setBusy] = useState(false);
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      if (mode === "login") {
+        await login(email, password);
+      } else {
+        await register({ name, email, password, role });
+      }
+      navigate("/dashboard");
+    } catch (err) {
+      toast.error(formatApiError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col" data-testid="auth-page">
+      <header className="max-w-6xl w-full mx-auto px-6 py-6">
+        <Link to="/" className="flex items-center gap-2 w-fit" data-testid="auth-brand-link">
+          <FileText className="h-6 w-6 text-primary" />
+          <span className="font-display text-2xl font-semibold text-primary">SA CoParents</span>
+        </Link>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center px-6 pb-16">
+        <div className="w-full max-w-md bg-white border border-border rounded-lg p-8 shadow-sm" data-testid="auth-card">
+          <div className="flex gap-2 mb-8" role="tablist">
+            <button
+              type="button"
+              onClick={() => setMode("login")}
+              className={`flex-1 h-10 rounded-md text-sm font-medium transition-colors ${mode === "login" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+              data-testid="login-tab"
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("register")}
+              className={`flex-1 h-10 rounded-md text-sm font-medium transition-colors ${mode === "register" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+              data-testid="register-tab"
+            >
+              Create account
+            </button>
+          </div>
+
+          <h1 className="text-3xl font-semibold mb-6" data-testid="auth-heading">
+            {mode === "login" ? "Welcome back" : "Create your account"}
+          </h1>
+
+          <form onSubmit={submit} className="space-y-5" data-testid="auth-form">
+            {mode === "register" && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Full name</Label>
+                <Input id="name" className="h-12" value={name} onChange={(e) => setName(e.target.value)} required data-testid="name-input" />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" className="h-12" value={email} onChange={(e) => setEmail(e.target.value)} required data-testid="email-input" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" className="h-12" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={mode === "register" ? 8 : undefined} data-testid="password-input" />
+              {mode === "register" && <p className="text-xs text-muted-foreground">At least 8 characters.</p>}
+            </div>
+            {mode === "register" && (
+              <div className="space-y-3">
+                <Label>I am a…</Label>
+                <RadioGroup value={role} onValueChange={setRole} className="flex gap-6" data-testid="role-radio-group">
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="parent" id="role-parent" data-testid="role-parent-radio" />
+                    <Label htmlFor="role-parent" className="font-normal">Parent</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="professional" id="role-professional" data-testid="role-professional-radio" />
+                    <Label htmlFor="role-professional" className="font-normal">Professional</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+            <Button type="submit" className="w-full h-12" disabled={busy} data-testid="auth-submit-btn">
+              {busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
+            </Button>
+          </form>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/pages/Dashboard.jsx ===
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { FileText, Plus, Trash2, CheckCircle2, Circle, Sparkles } from "lucide-react";
+import api, { formatApiError } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+
+export default function Dashboard() {
+  const [cases, setCases] = useState(null);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const load = () => {
+    api.get("/cases")
+      .then((r) => setCases(r.data))
+      .catch((e) => toast.error(formatApiError(e)));
+  };
+
+  useEffect(load, []);
+
+  const remove = async (id) => {
+    try {
+      await api.delete(`/cases/${id}`);
+      toast.success("Assessment deleted");
+      load();
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
+
+  const loadDemo = async (id) => {
+    try {
+      await api.post(`/cases/${id}/demo`);
+      navigate(`/report/${id}`);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background" data-testid="dashboard-page">
+      <header className="bg-white border-b border-border">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2" data-testid="dash-brand-link">
+            <FileText className="h-6 w-6 text-primary" />
+            <span className="font-display text-2xl font-semibold text-primary">SA CoParents</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground hidden sm:block" data-testid="user-email">{user?.email}</span>
+            <Button variant="outline" size="sm" onClick={async () => { await logout(); navigate("/"); }} data-testid="logout-btn">
+              Sign out
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-6 py-10">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-semibold" data-testid="dash-heading">Your Assessments</h1>
+            <p className="text-muted-foreground mt-2" data-testid="dash-subtext">
+              Both parents complete the same assessment. The Joint Alignment Report combines their perspectives.
+            </p>
+          </div>
+          <Link to="/new" data-testid="new-assessment-link">
+            <Button className="gap-2" data-testid="new-assessment-btn"><Plus className="h-4 w-4" /> New Joint Assessment</Button>
+          </Link>
+        </div>
+
+        {cases === null ? (
+          <p className="text-muted-foreground" data-testid="cases-loading">Loading…</p>
+        ) : cases.length === 0 ? (
+          <div className="bg-white border border-dashed border-border rounded-lg p-16 text-center" data-testid="cases-empty">
+            <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
+            <p className="text-lg font-medium">No assessments yet</p>
+            <p className="text-sm text-muted-foreground mt-1 mb-6">Create your first joint assessment to generate a 10-page Joint Alignment Report.</p>
+            <Link to="/new" data-testid="empty-new-link">
+              <Button data-testid="empty-new-btn">Create assessment</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-4" data-testid="cases-grid">
+            {cases.map((c) => {
+              const ready = c.has_a && c.has_b;
+              return (
+                <div key={c.id} className="bg-white border border-border rounded-lg p-6" data-testid={`case-card-${c.id}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-widest text-accent font-semibold">{c.type_title}</p>
+                      <h3 className="text-xl font-semibold mt-1" data-testid={`case-title-${c.id}`}>
+                        {c.child_name ? `For ${c.child_name}` : "Joint Assessment"}
+                      </h3>
+                    </div>
+                    {c.is_demo && (
+                      <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded" data-testid={`case-demo-badge-${c.id}`}>Demo</span>
+                    )}
+                  </div>
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex items-center gap-2" data-testid={`case-status-a-${c.id}`}>
+                      {c.has_a ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
+                      <span>{c.parent_a_name}: {c.has_a ? "Assessment completed" : "Not completed"}</span>
+                    </div>
+                    <div className="flex items-center gap-2" data-testid={`case-status-b-${c.id}`}>
+                      {c.has_b ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
+                      <span>{c.parent_b_name}: {c.has_b ? "Assessment completed" : "Not completed"}</span>
+                    </div>
+                  </div>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {ready ? (
+                      <Link to={`/report/${c.id}`} data-testid={`case-report-link-${c.id}`}>
+                        <Button size="sm" data-testid={`case-report-btn-${c.id}`}>View Joint Report</Button>
+                      </Link>
+                    ) : (
+                      <Link to={`/new?case=${c.id}`} data-testid={`case-continue-link-${c.id}`}>
+                        <Button size="sm" variant="secondary" data-testid={`case-continue-btn-${c.id}`}>Continue</Button>
+                      </Link>
+                    )}
+                    <Button size="sm" variant="outline" className="gap-1.5" onClick={() => loadDemo(c.id)} data-testid={`case-demo-btn-${c.id}`}>
+                      <Sparkles className="h-3.5 w-3.5" /> Demo data
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(c.id)} data-testid={`case-delete-btn-${c.id}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/pages/Wizard.jsx ===
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import { FileText, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import api, { formatApiError } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+function ParentForm({ config, parentLabel, onSubmit, busy }) {
+  const [answers, setAnswers] = useState({});
+  const [concern, setConcern] = useState("");
+  const [goals, setGoals] = useState([]);
+
+  const toggleGoal = (g) => {
+    setGoals((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]));
+  };
+
+  const answered = Object.keys(answers).length;
+  const total = config.topics.length;
+
+  return (
+    <div data-testid={`parent-form-${parentLabel.replace(/\s+/g, "-").toLowerCase()}`}>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-3xl font-semibold">{parentLabel}'s Responses</h2>
+        <span className="text-sm text-muted-foreground" data-testid="answers-progress">
+          {answered} of {total} answered
+        </span>
+      </div>
+
+      <div className="space-y-6">
+        {config.topics.map((t, i) => (
+          <div key={t.key} className="bg-white border border-border rounded-lg p-6" data-testid={`question-${t.key}`}>
+            <p className="font-medium mb-1">
+              {i + 1}. {t.label}
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">{t.question}</p>
+            <RadioGroup
+              value={answers[t.key] || ""}
+              onValueChange={(v) => setAnswers((prev) => ({ ...prev, [t.key]: v }))}
+              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2"
+              data-testid={`answer-group-${t.key}`}
+            >
+              {config.scale.map((s) => (
+                <label
+                  key={s}
+                  htmlFor={`${t.key}-${s}`}
+                  className={`flex items-center gap-2 border rounded-md px-3 py-2.5 cursor-pointer text-sm transition-colors ${answers[t.key] === s ? "border-primary bg-secondary/60" : "border-border hover:bg-muted"}`}
+                  data-testid={`answer-${t.key}-${s.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+                >
+                  <RadioGroupItem value={s} id={`${t.key}-${s}`} />
+                  <span>{s}</span>
+                </label>
+              ))}
+            </RadioGroup>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white border border-border rounded-lg p-6 mt-6" data-testid="primary-concern-block">
+        <Label htmlFor={`concern-${parentLabel}`} className="font-medium">{parentLabel}'s primary concern</Label>
+        <p className="text-sm text-muted-foreground mt-1 mb-3">In one or two sentences, what concerns you most about your child right now?</p>
+        <Textarea
+          id={`concern-${parentLabel}`}
+          value={concern}
+          onChange={(e) => setConcern(e.target.value)}
+          placeholder="e.g. Difficulty completing homework between households."
+          className="min-h-[90px]"
+          data-testid="primary-concern-input"
+        />
+      </div>
+
+      <div className="bg-white border border-border rounded-lg p-6 mt-6" data-testid="shared-goals-block">
+        <Label className="font-medium">Shared goals for your child</Label>
+        <p className="text-sm text-muted-foreground mt-1 mb-4">Select every goal that matters to you. Shared selections appear on Page 2 of the report.</p>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {config.shared_goal_options.map((g) => (
+            <label key={g} className="flex items-center gap-3 text-sm cursor-pointer" data-testid={`goal-${g.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
+              <Checkbox checked={goals.includes(g)} onCheckedChange={() => toggleGoal(g)} />
+              <span>{g}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-8 flex justify-end">
+        <Button
+          size="lg"
+          disabled={answered < total || busy}
+          onClick={() => onSubmit({ answers, primary_concern: concern, goals })}
+          className="gap-2"
+          data-testid="submit-responses-btn"
+        >
+          {busy ? "Saving…" : "Save responses"} <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
+      {answered < total && (
+        <p className="text-right text-xs text-muted-foreground mt-2" data-testid="answers-required-note">
+          Please answer all {total} questions to continue.
+        </p>
+      )}
+    </div>
+  );
+}
+
+export default function Wizard() {
+  const [types, setTypes] = useState([]);
+  const [step, setStep] = useState(0);
+  const [typeKey, setTypeKey] = useState(null);
+  const [config, setConfig] = useState(null);
+  const [caseId, setCaseId] = useState(null);
+  const [names, setNames] = useState({ child_name: "", parent_a_name: "", parent_b_name: "" });
+  const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    api.get("/assessment-types").then((r) => setTypes(r.data)).catch((e) => toast.error(formatApiError(e)));
+  }, []);
+
+  const resumeCase = async (id) => {
+    try {
+      const { data: c } = await api.get(`/cases/${id}`);
+      const { data: cfg } = await api.get(`/assessment-types/${c.type}`);
+      setTypeKey(c.type);
+      setConfig(cfg);
+      setCaseId(c.id);
+      setNames({ child_name: c.child_name, parent_a_name: c.parent_a_name, parent_b_name: c.parent_b_name });
+      setStep(!c.has_a ? 2 : 3);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
+
+  useEffect(() => {
+    const existing = searchParams.get("case");
+    if (existing) resumeCase(existing);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const selectType = async (key) => {
+    setTypeKey(key);
+    try {
+      const { data } = await api.get(`/assessment-types/${key}`);
+      setConfig(data);
+      setStep(1);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
+
+  const createCase = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.post("/cases", { type: typeKey, ...names });
+      setCaseId(data.id);
+      setStep(2);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitResponses = async (parent, payload) => {
+    setBusy(true);
+    try {
+      const { data } = await api.put(`/cases/${caseId}/responses/${parent}`, payload);
+      if (parent === "a") {
+        setStep(3);
+      } else {
+        navigate(`/report/${caseId}`);
+      }
+      return data;
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const fillDemo = async () => {
+    setBusy(true);
+    try {
+      await api.post(`/cases/${caseId}/demo`);
+      navigate(`/report/${caseId}`);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const steps = ["Assessment type", "Details", `${names.parent_a_name || "Parent A"}`, `${names.parent_b_name || "Parent B"}`];
+
+  return (
+    <div className="min-h-screen bg-background" data-testid="wizard-page">
+      <header className="bg-white border-b border-border no-print">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/dashboard" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" data-testid="wizard-back-link">
+            <ArrowLeft className="h-4 w-4" /> Dashboard
+          </Link>
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <span className="font-display text-xl font-semibold text-primary">SA CoParents</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-6 py-10">
+        <div className="flex items-center gap-2 mb-10" data-testid="wizard-progress">
+          {steps.map((s, i) => (
+            <div key={s} className="flex items-center gap-2 flex-1 last:flex-none">
+              <span
+                className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold ${i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                data-testid={`step-indicator-${i}`}
+              >
+                {i + 1}
+              </span>
+              <span className={`text-xs hidden sm:block ${i === step ? "font-semibold" : "text-muted-foreground"}`}>{s}</span>
+              {i < steps.length - 1 && <div className="flex-1 h-px bg-border mx-2" />}
+            </div>
+          ))}
+        </div>
+
+        {step === 0 && (
+          <div data-testid="step-type">
+            <h1 className="text-4xl font-semibold mb-2">Choose an assessment</h1>
+            <p className="text-muted-foreground mb-8">Both parents will answer the same questions. The report combines both perspectives.</p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {types.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => selectType(t.key)}
+                  className="text-left bg-white border border-border rounded-lg p-6 hover:-translate-y-0.5 hover:shadow-md hover:border-primary transition-[transform,box-shadow,border-color] duration-200"
+                  data-testid={`type-option-${t.key}`}
+                >
+                  <p className="font-semibold">{t.title}</p>
+                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{t.description}</p>
+                  <p className="text-xs text-accent font-medium mt-3">{t.topic_count} topics</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div data-testid="step-details">
+            <h1 className="text-4xl font-semibold mb-2">Who is this assessment for?</h1>
+            <p className="text-muted-foreground mb-8">These names appear on the report. Initials or first names are fine.</p>
+            <div className="bg-white border border-border rounded-lg p-6 space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="child-name">Child's first name (optional)</Label>
+                <Input id="child-name" className="h-12" value={names.child_name} onChange={(e) => setNames({ ...names, child_name: e.target.value })} placeholder="e.g. Alex" data-testid="child-name-input" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="parent-a">Parent A name or label</Label>
+                <Input id="parent-a" className="h-12" value={names.parent_a_name} onChange={(e) => setNames({ ...names, parent_a_name: e.target.value })} placeholder="Parent A" data-testid="parent-a-name-input" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="parent-b">Parent B name or label</Label>
+                <Input id="parent-b" className="h-12" value={names.parent_b_name} onChange={(e) => setNames({ ...names, parent_b_name: e.target.value })} placeholder="Parent B" data-testid="parent-b-name-input" />
+              </div>
+              <div className="pt-2 flex justify-between items-center">
+                <button type="button" onClick={() => setStep(0)} className="text-sm text-muted-foreground hover:text-foreground" data-testid="back-to-types-btn">
+                  Back
+                </button>
+                <Button onClick={createCase} disabled={busy} className="gap-2" data-testid="create-case-btn">
+                  {busy ? "Creating…" : "Continue"} <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && config && (
+          <div data-testid="step-parent-a">
+            <div className="bg-secondary/60 border border-border rounded-lg p-4 mb-8 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm">Exploring the platform? Load realistic sample data instead of answering manually.</p>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={fillDemo} disabled={busy} data-testid="load-demo-btn-a">
+                <Sparkles className="h-3.5 w-3.5" /> Load demo data
+              </Button>
+            </div>
+            <ParentForm
+              config={config}
+              parentLabel={names.parent_a_name || "Parent A"}
+              busy={busy}
+              onSubmit={(payload) => submitResponses("a", payload)}
+            />
+          </div>
+        )}
+
+        {step === 3 && config && (
+          <div data-testid="step-parent-b">
+            <div className="bg-secondary/60 border border-border rounded-lg p-4 mb-8 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm">Skip ahead — load matching sample responses for both parents.</p>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={fillDemo} disabled={busy} data-testid="load-demo-btn-b">
+                <Sparkles className="h-3.5 w-3.5" /> Load demo data
+              </Button>
+            </div>
+            <ParentForm
+              config={config}
+              parentLabel={names.parent_b_name || "Parent B"}
+              busy={busy}
+              onSubmit={(payload) => submitResponses("b", payload)}
+            />
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/pages/ReportView.jsx ===
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { ArrowLeft, ArrowRight, Printer, FileText } from "lucide-react";
+import api, { formatApiError } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { REPORT_PAGES } from "@/components/report/Pages";
+
+export default function ReportView() {
+  const { id } = useParams();
+  const [report, setReport] = useState(null);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    api.get(`/cases/${id}/report`)
+      .then((r) => setReport(r.data))
+      .catch((e) => setError(formatApiError(e)));
+  }, [id]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6" data-testid="report-error">
+        <div className="max-w-md text-center">
+          <p className="text-lg font-medium">{error}</p>
+          <Link to="/dashboard" className="inline-block mt-6" data-testid="report-error-back-link">
+            <Button variant="outline" data-testid="report-error-back-btn">Back to dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" data-testid="report-loading">
+        <p className="text-muted-foreground text-sm">Generating report…</p>
+      </div>
+    );
+  }
+
+  const CurrentPage = REPORT_PAGES[page - 1];
+
+  return (
+    <div className="min-h-screen bg-background" data-testid="report-view">
+      <header className="no-print sticky top-0 z-20 bg-white border-b border-border">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+          <Link to="/dashboard" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground shrink-0" data-testid="report-back-link">
+            <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Dashboard</span>
+          </Link>
+          <div className="flex items-center gap-2 min-w-0">
+            <FileText className="h-5 w-5 text-primary shrink-0" />
+            <span className="font-display text-lg font-semibold text-primary truncate" data-testid="report-header-title">
+              {report.subtitle}
+            </span>
+          </div>
+          <Button size="sm" className="gap-2 shrink-0" onClick={() => window.print()} data-testid="print-report-btn">
+            <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Print / Save PDF</span>
+          </Button>
+        </div>
+      </header>
+
+      <nav className="no-print max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4" data-testid="page-nav">
+        <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)} className="gap-1.5" data-testid="prev-page-btn">
+          <ArrowLeft className="h-4 w-4" /> Prev
+        </Button>
+        <div className="flex items-center gap-1.5 flex-wrap justify-center" data-testid="page-dots">
+          {report.page_titles.map((t, i) => (
+            <button
+              key={t}
+              onClick={() => setPage(i + 1)}
+              title={`Page ${i + 1} — ${t}`}
+              className={`h-2.5 rounded-full transition-[width,background-color] duration-200 ${page === i + 1 ? "w-6 bg-primary" : "w-2.5 bg-border hover:bg-muted-foreground/40"}`}
+              data-testid={`page-dot-${i + 1}`}
+            />
+          ))}
+        </div>
+        <Button variant="outline" size="sm" disabled={page === 10} onClick={() => setPage(page + 1)} className="gap-1.5" data-testid="next-page-btn">
+          Next <ArrowRight className="h-4 w-4" />
+        </Button>
+      </nav>
+
+      <p className="no-print text-center text-xs text-muted-foreground mb-4" data-testid="current-page-label">
+        Page {page} of 10 — {report.page_titles[page - 1]}
+      </p>
+
+      <main className="no-print px-4 sm:px-6 pb-16" key={page}>
+        <CurrentPage r={report} />
+      </main>
+
+      <div className="print-only" data-testid="print-container">
+        {REPORT_PAGES.map((P, i) => (
+          <P key={i} r={report} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/components/report/Paper.jsx ===
+import { PieChart, Pie, Cell } from "recharts";
+
+export function Paper({ children, pageNum, pageTitle }) {
+  return (
+    <div
+      className="report-paper report-page-enter rounded-lg max-w-4xl mx-auto p-8 sm:p-12 md:p-14"
+      data-testid={`report-page-${pageNum}`}
+    >
+      <div className="flex items-baseline justify-between border-b border-border pb-4 mb-8">
+        <span className="font-display text-lg font-semibold text-primary">SA CoParents</span>
+        <span className="text-xs uppercase tracking-widest text-muted-foreground" data-testid={`page-label-${pageNum}`}>
+          Page {pageNum} of 10 — {pageTitle}
+        </span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+export function SectionHeading({ children, testId }) {
+  return (
+    <h2 className="text-3xl sm:text-4xl font-semibold text-foreground mb-6" data-testid={testId}>
+      {children}
+    </h2>
+  );
+}
+
+export function PullQuote({ children, testId }) {
+  return (
+    <div className="bg-secondary/50 border-l-4 border-accent rounded-r-lg p-5 my-6" data-testid={testId}>
+      <p className="font-display text-xl italic leading-relaxed text-foreground">{children}</p>
+    </div>
+  );
+}
+
+export function StatusDot({ color }) {
+  const map = {
+    green: "bg-align-green",
+    yellow: "bg-align-yellow",
+    blue: "bg-align-blue",
+    purple: "bg-align-purple",
+  };
+  return <span className={`inline-block h-3 w-3 rounded-full ${map[color]} shrink-0 mt-1.5`} />;
+}
+
+export function Snapshot({ snapshot, note }) {
+  const data = [
+    { name: "Aligned", value: snapshot.aligned, color: "#668B69" },
+    { name: "Different perspectives", value: snapshot.different, color: "#D4B46A" },
+    { name: "Need more information", value: snapshot.info, color: "#6096BA" },
+  ];
+  return (
+    <div className="border border-border rounded-lg p-6 bg-muted/40" data-testid="alignment-snapshot">
+      <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-4">
+        Your Joint Alignment Snapshot — {snapshot.total} Topics Reviewed
+      </p>
+      <div className="flex flex-col sm:flex-row items-center gap-8">
+        <PieChart width={180} height={180}>
+          <Pie data={data} innerRadius={52} outerRadius={80} dataKey="value" stroke="none">
+            {data.map((d) => (
+              <Cell key={d.name} fill={d.color} />
+            ))}
+          </Pie>
+        </PieChart>
+        <div className="space-y-3 flex-1 w-full">
+          {data.map((d) => (
+            <div key={d.name} className="flex items-center gap-3" data-testid={`snapshot-${d.name.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
+              <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+              <span className="font-display text-2xl font-semibold w-8" data-testid={`snapshot-count-${d.name.toLowerCase().replace(/[^a-z]+/g, "-")}`}>{d.value}</span>
+              <span className="text-sm">{d.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="mt-4 text-sm italic text-muted-foreground" data-testid="snapshot-note">{note}</p>
+    </div>
+  );
+}
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/src/components/report/Pages.jsx ===
+import { CheckCircle2, ArrowDown } from "lucide-react";
+import { Paper, SectionHeading, PullQuote, StatusDot, Snapshot } from "./Paper";
+
+function Page1({ r }) {
+  return (
+    <Paper pageNum={1} pageTitle={r.page_titles[0]}>
+      <div className="text-center mb-10">
+        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-2">SA CoParents</p>
+        <h1 className="text-4xl sm:text-5xl font-semibold text-primary" data-testid="report-title">{r.report_title}</h1>
+        <p className="mt-3 text-lg text-muted-foreground" data-testid="report-subtitle">{r.subtitle}</p>
+        {r.child_name && <p className="mt-1 text-sm text-muted-foreground" data-testid="report-child-name">Prepared with {r.child_name} at the center</p>}
+        {r.is_demo && (
+          <span className="inline-block mt-3 text-xs bg-secondary text-secondary-foreground px-3 py-1 rounded" data-testid="demo-badge">
+            Sample report — generated from demo data
+          </span>
+        )}
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4 mb-10">
+        <div className="border border-border rounded-lg p-5 text-center" data-testid="parent-a-status">
+          <p className="font-semibold">{r.parent_a_name}</p>
+          <p className="text-sm text-align-green mt-1 flex items-center justify-center gap-1.5">
+            <CheckCircle2 className="h-4 w-4" /> {r.parent_a_status}
+          </p>
+        </div>
+        <div className="border border-border rounded-lg p-5 text-center" data-testid="parent-b-status">
+          <p className="font-semibold">{r.parent_b_name}</p>
+          <p className="text-sm text-align-green mt-1 flex items-center justify-center gap-1.5">
+            <CheckCircle2 className="h-4 w-4" /> {r.parent_b_status}
+          </p>
+        </div>
+      </div>
+
+      <SectionHeading testId="purpose-heading">Purpose of This Report</SectionHeading>
+      <p className="text-muted-foreground mb-4">This report combines two parents' perspectives to help identify:</p>
+      <ul className="grid sm:grid-cols-2 gap-2 mb-8" data-testid="purpose-list">
+        {r.purpose_items.map((item) => (
+          <li key={item} className="flex items-center gap-2 text-sm">
+            <CheckCircle2 className="h-4 w-4 text-primary shrink-0" /> {item}
+          </li>
+        ))}
+      </ul>
+
+      <PullQuote testId="report-disclaimer">{r.disclaimer}</PullQuote>
+
+      <div className="mt-10">
+        <Snapshot snapshot={r.snapshot} note={r.snapshot_note} />
+      </div>
+    </Paper>
+  );
+}
+
+function Page2({ r }) {
+  return (
+    <Paper pageNum={2} pageTitle={r.page_titles[1]}>
+      <SectionHeading testId="child-center-heading">What Both Parents Told Us About Their Child</SectionHeading>
+      <p className="text-muted-foreground mb-8">
+        Before looking at any differences, here is what you already share: why you completed this assessment.
+      </p>
+
+      <h3 className="font-display text-2xl font-semibold mb-4">Shared Goals</h3>
+      <ul className="grid sm:grid-cols-2 gap-3 mb-10" data-testid="shared-goals-list">
+        {r.shared_goals.map((g) => (
+          <li key={g} className="flex items-center gap-2.5 text-sm bg-muted/50 rounded-md px-4 py-3">
+            <CheckCircle2 className="h-4 w-4 text-align-green shrink-0" /> {g}
+          </li>
+        ))}
+      </ul>
+
+      <div className="grid sm:grid-cols-2 gap-4 mb-10">
+        <div className="border border-border rounded-lg p-6" data-testid="parent-a-concern">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">{r.parent_a_name}'s Primary Concern</p>
+          <p className="font-display text-xl italic leading-relaxed">"{r.parent_a_concern || "Not provided."}"</p>
+        </div>
+        <div className="border border-border rounded-lg p-6" data-testid="parent-b-concern">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">{r.parent_b_name}'s Primary Concern</p>
+          <p className="font-display text-xl italic leading-relaxed">"{r.parent_b_concern || "Not provided."}"</p>
+        </div>
+      </div>
+
+      <h3 className="font-display text-2xl font-semibold mb-3">Shared Child-Focused Question</h3>
+      <PullQuote testId="central-question">{r.central_question}</PullQuote>
+    </Paper>
+  );
+}
+
+function Page3({ r }) {
+  return (
+    <Paper pageNum={3} pageTitle={r.page_titles[2]}>
+      <SectionHeading testId="alignment-heading">Areas of Alignment</SectionHeading>
+      <div className="flex items-center gap-2.5 mb-6">
+        <StatusDot color="green" />
+        <p className="font-semibold" data-testid="alignment-count">Strong Alignment — {r.alignments.length} area{r.alignments.length === 1 ? "" : "s"} identified</p>
+      </div>
+      <p className="text-muted-foreground mb-8">Both parents identified these issues similarly:</p>
+
+      {r.alignments.length === 0 ? (
+        <p className="text-muted-foreground italic" data-testid="no-alignments">
+          No areas of strong alignment were identified in this assessment. The differences identified on the next page are the starting point for conversation.
+        </p>
+      ) : (
+        <div className="space-y-4 mb-10" data-testid="alignments-list">
+          {r.alignments.map((a) => (
+            <div key={a.topic} className="flex gap-4 border border-border rounded-lg p-5">
+              <StatusDot color="green" />
+              <div>
+                <p className="font-semibold">{a.topic}</p>
+                <p className="text-sm text-muted-foreground mt-1">{a.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <h3 className="font-display text-2xl font-semibold mb-3">Build From What Already Works</h3>
+      <PullQuote testId="alignment-foundation-note">{r.alignment_foundation_note}</PullQuote>
+    </Paper>
+  );
+}
+
+function Page4({ r }) {
+  return (
+    <Paper pageNum={4} pageTitle={r.page_titles[3]}>
+      <SectionHeading testId="differences-heading">Differences in Perspective</SectionHeading>
+      {r.differences.length === 0 ? (
+        <p className="text-muted-foreground italic" data-testid="no-differences">
+          No significant differences in perspective were identified. Both parents responded similarly across all topics.
+        </p>
+      ) : (
+        <div className="overflow-x-auto mb-8" data-testid="differences-table-wrapper">
+          <table className="w-full text-sm border border-border rounded-lg overflow-hidden" data-testid="differences-table">
+            <thead>
+              <tr className="bg-muted/60 text-left">
+                <th className="px-4 py-3 font-semibold">Child Issue</th>
+                <th className="px-4 py-3 font-semibold">{r.parent_a_name}</th>
+                <th className="px-4 py-3 font-semibold">{r.parent_b_name}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {r.differences.map((d) => (
+                <tr key={d.topic} className="border-t border-border" data-testid={`difference-row-${d.topic.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
+                  <td className="px-4 py-3 font-medium">{d.topic}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{d.parent_a}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{d.parent_b}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <PullQuote testId="differences-note">{r.differences_note}</PullQuote>
+    </Paper>
+  );
+}
+
+function Page5({ r }) {
+  return (
+    <Paper pageNum={5} pageTitle={r.page_titles[4]}>
+      <SectionHeading testId="child-needs-heading">Child Needs Identified</SectionHeading>
+      <p className="text-muted-foreground mb-8">
+        Based on the parents' responses, the following areas may benefit from additional attention:
+      </p>
+      <div className="grid sm:grid-cols-2 gap-4 mb-10" data-testid="child-needs-list">
+        {r.child_needs.map((n) => (
+          <div key={n.title} className="border border-border rounded-lg p-6 bg-muted/40" data-testid={`child-need-${n.title.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
+            <p className="font-display text-xl font-semibold mb-2">{n.title}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{n.text}</p>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-border pt-6">
+        <p className="text-sm text-muted-foreground italic" data-testid="child-needs-note">
+          Notice what this page does not say: "one parent needs to…" Everything stays centered on the child.
+        </p>
+      </div>
+    </Paper>
+  );
+}
+
+function Page6({ r }) {
+  return (
+    <Paper pageNum={6} pageTitle={r.page_titles[5]}>
+      <SectionHeading testId="options-heading">Options to Consider</SectionHeading>
+      <p className="text-muted-foreground mb-8">Parents could consider:</p>
+      <div className="grid sm:grid-cols-2 gap-3 mb-10" data-testid="options-list">
+        {r.options.map((o) => (
+          <div key={o} className="flex items-center gap-3 border border-border rounded-md px-4 py-3" data-testid={`option-${o.toLowerCase().replace(/[^a-z]+/g, "-").slice(0, 40)}`}>
+            <span className="h-4 w-4 border-2 border-primary rounded-sm shrink-0" />
+            <span className="text-sm">{o}</span>
+          </div>
+        ))}
+      </div>
+      <PullQuote testId="options-note">
+        {r.options_note} This distinction preserves the educational and resource nature of this report.
+      </PullQuote>
+    </Paper>
+  );
+}
+
+function Page7({ r }) {
+  return (
+    <Paper pageNum={7} pageTitle={r.page_titles[6]}>
+      <SectionHeading testId="questions-heading">Questions Worth Discussing</SectionHeading>
+      <p className="text-muted-foreground mb-8">
+        This report converts positions into questions. Instead of "Why won't the other parent agree?",
+        the following questions prepare both parents for a child-focused conversation:
+      </p>
+      <div className="space-y-4 mb-10" data-testid="questions-list">
+        {r.conversation_questions.map((q, i) => (
+          <div key={i} className="border-l-4 border-align-blue rounded-r-lg bg-muted/40 p-5" data-testid={`conversation-question-${i}`}>
+            <p className="font-display text-lg italic leading-relaxed">{q}</p>
+          </div>
+        ))}
+      </div>
+      <PullQuote testId="questions-central">{r.central_question}</PullQuote>
+    </Paper>
+  );
+}
+
+function Page8({ r }) {
+  const m = r.professional_map;
+  const stats = [
+    { label: "Areas of Alignment", value: m.alignment_count, color: "green" },
+    { label: "Areas Needing Conversation", value: m.conversation_count, color: "blue" },
+    { label: "Possible Professional Input", value: m.professional_input_count, color: "yellow" },
+    { label: "Potential Child Needs", value: m.child_needs_count, color: "purple" },
+  ];
+  return (
+    <Paper pageNum={8} pageTitle={r.page_titles[7]}>
+      <SectionHeading testId="professional-heading">Professional Discussion Map</SectionHeading>
+      <p className="text-muted-foreground mb-8">
+        Designed for a mediator, attorney, therapist, parenting coordinator or facilitator, child specialist,
+        or other appropriate professional.
+      </p>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12" data-testid="professional-stats">
+        {stats.map((s) => (
+          <div key={s.label} className="border border-border rounded-lg p-5 text-center" data-testid={`stat-${s.label.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
+            <StatusDot color={s.color} />
+            <p className="font-display text-4xl font-semibold mt-2" data-testid={`stat-count-${s.label.toLowerCase().replace(/[^a-z]+/g, "-")}`}>{s.value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <h3 className="font-display text-2xl font-semibold mb-6">Suggested Discussion Sequence</h3>
+      <div className="space-y-0" data-testid="discussion-sequence">
+        {m.sequence.map((s, i) => (
+          <div key={s.step}>
+            <div className="flex items-start gap-4 border border-border rounded-lg p-5 bg-muted/30" data-testid={`sequence-step-${i}`}>
+              <span className="font-display text-2xl font-semibold text-accent w-8 shrink-0">{i + 1}</span>
+              <div>
+                <p className="font-semibold">{s.step}</p>
+                <p className="text-sm text-muted-foreground italic mt-1">"{s.question}"</p>
+              </div>
+            </div>
+            {i < m.sequence.length - 1 && (
+              <div className="flex justify-start pl-9 py-1">
+                <ArrowDown className="h-4 w-4 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </Paper>
+  );
+}
+
+function PlanBlock({ item, index }) {
+  const fields = [
+    { label: "What we already agree about:", value: item.already_agree },
+    { label: "Information we need:", value: "" },
+    { label: "Options we will consider:", value: "" },
+    { label: "Professional we may consult:", value: "" },
+    { label: "Next step:", value: "" },
+    { label: "Date to revisit:", value: "" },
+  ];
+  return (
+    <div className="border border-border rounded-lg p-6 mb-8" data-testid={`action-plan-${index}`}>
+      <p className="text-xs uppercase tracking-widest text-accent font-semibold">Issue #{index + 1}</p>
+      <h3 className="font-display text-2xl font-semibold mt-1 mb-4">{item.issue}</h3>
+      <div className="space-y-4">
+        <div>
+          <p className="text-sm font-medium">Child's Need:</p>
+          <p className="text-sm text-muted-foreground mt-1">{item.child_need}</p>
+        </div>
+        {fields.map((f) => (
+          <div key={f.label}>
+            <p className="text-sm font-medium">{f.label}</p>
+            {f.value ? (
+              <p className="text-sm text-muted-foreground mt-1">{f.value}</p>
+            ) : (
+              <div className="worksheet-line mt-1" />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Page9({ r }) {
+  return (
+    <Paper pageNum={9} pageTitle={r.page_titles[8]}>
+      <SectionHeading testId="action-plan-heading">Our Next Steps</SectionHeading>
+      <p className="text-muted-foreground mb-8">
+        A working plan for the top issues identified in this report. Complete this together, in mediation,
+        or with a professional.
+      </p>
+      {r.action_plan.length === 0 ? (
+        <p className="text-muted-foreground italic" data-testid="no-action-plan">
+          No issues requiring discussion were identified. Use this page to plan how to maintain your current alignment as your child grows.
+        </p>
+      ) : (
+        r.action_plan.map((item, i) => <PlanBlock key={item.issue} item={item} index={i} />)
+      )}
+    </Paper>
+  );
+}
+
+function SummaryList({ color, title, items, testId }) {
+  return (
+    <div className="mb-8" data-testid={testId}>
+      <div className="flex items-center gap-2.5 mb-4">
+        <StatusDot color={color} />
+        <h3 className="font-display text-2xl font-semibold">{title}</h3>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-sm text-muted-foreground italic ml-6">None identified in this assessment.</p>
+      ) : (
+        <ul className="space-y-2 ml-1">
+          {items.map((item, i) => (
+            <li key={i} className="flex gap-3 text-sm leading-relaxed" data-testid={`${testId}-item-${i}`}>
+              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-foreground/40 shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function Page10({ r }) {
+  const s = r.summary;
+  const cm = r.court_map;
+  return (
+    <Paper pageNum={10} pageTitle={r.page_titles[9]}>
+      <SectionHeading testId="summary-heading">Your Alignment Map</SectionHeading>
+
+      {cm ? (
+        <>
+          <SummaryList color="green" title="Agreed Parenting Terms" items={cm.agreed} testId="summary-agreed" />
+          <SummaryList color="yellow" title="Terms Close to Agreement" items={cm.close} testId="summary-close" />
+          <SummaryList color="blue" title="Terms Requiring Discussion" items={cm.discussion} testId="summary-discussion" />
+          <SummaryList color="purple" title="Issues Where Additional Information May Help" items={cm.info} testId="summary-info" />
+        </>
+      ) : (
+        <>
+          <SummaryList color="green" title="Where You Align" items={s.aligned} testId="summary-aligned" />
+          <SummaryList color="yellow" title="Where More Information May Help" items={s.info} testId="summary-more-info" />
+          <SummaryList color="blue" title="Where Conversation May Help" items={s.conversation} testId="summary-conversation" />
+          <SummaryList color="purple" title="Options to Explore" items={s.options} testId="summary-options" />
+        </>
+      )}
+
+      <div className="border border-border rounded-lg p-6 bg-muted/40 mb-10" data-testid="priority-statement">
+        <p className="text-xs uppercase tracking-widest text-accent font-semibold mb-3">Child-Focused Priority</p>
+        <p className="font-display text-lg leading-relaxed">{s.priority}</p>
+      </div>
+
+      <div className="text-center border-t border-border pt-10">
+        <h3 className="font-display text-4xl sm:text-5xl font-bold text-align-purple" data-testid="philosophy-heading">{r.philosophy_heading}</h3>
+        <p className="mt-3 text-muted-foreground max-w-xl mx-auto" data-testid="philosophy-note">{r.philosophy_note}</p>
+        <p className="mt-6 text-sm italic text-muted-foreground max-w-xl mx-auto" data-testid="philosophy-line">
+          "{r.philosophy}"
+        </p>
+      </div>
+    </Paper>
+  );
+}
+
+export const REPORT_PAGES = [Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10];
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/tailwind.config.js ===
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+    darkMode: ["class"],
+    content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./public/index.html"
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['"Cormorant Garamond"', 'serif'],
+        sans: ['"Work Sans"', 'sans-serif']
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)'
+      },
+      colors: {
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))'
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))'
+        },
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))'
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))'
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))'
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))'
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))'
+        },
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        align: {
+          green: '#668B69',
+          yellow: '#D4B46A',
+          blue: '#6096BA',
+          purple: '#9A8C98'
+        },
+        chart: {
+          '1': 'hsl(var(--chart-1))',
+          '2': 'hsl(var(--chart-2))',
+          '3': 'hsl(var(--chart-3))',
+          '4': 'hsl(var(--chart-4))',
+          '5': 'hsl(var(--chart-5))'
+        }
+      },
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' }
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' }
+        }
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out'
+      }
+    }
+  },
+  plugins: [require("tailwindcss-animate")],
+};
+
+=== END FILE ===
+
+=== START FILE: /app/frontend/package.json ===
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@hookform/resolvers": "5.0.1",
+    "@radix-ui/react-accordion": "1.2.8",
+    "@radix-ui/react-alert-dialog": "1.1.11",
+    "@radix-ui/react-aspect-ratio": "1.1.4",
+    "@radix-ui/react-avatar": "1.1.7",
+    "@radix-ui/react-checkbox": "1.2.3",
+    "@radix-ui/react-collapsible": "1.1.8",
+    "@radix-ui/react-context-menu": "2.2.12",
+    "@radix-ui/react-dialog": "1.1.11",
+    "@radix-ui/react-dropdown-menu": "2.1.12",
+    "@radix-ui/react-hover-card": "1.1.11",
+    "@radix-ui/react-label": "2.1.4",
+    "@radix-ui/react-menubar": "1.1.12",
+    "@radix-ui/react-navigation-menu": "1.2.10",
+    "@radix-ui/react-popover": "1.1.11",
+    "@radix-ui/react-progress": "1.1.4",
+    "@radix-ui/react-radio-group": "1.3.4",
+    "@radix-ui/react-scroll-area": "1.2.6",
+    "@radix-ui/react-select": "2.2.2",
+    "@radix-ui/react-separator": "1.1.4",
+    "@radix-ui/react-slider": "1.3.2",
+    "@radix-ui/react-slot": "1.2.0",
+    "@radix-ui/react-switch": "1.2.2",
+    "@radix-ui/react-tabs": "1.1.9",
+    "@radix-ui/react-toast": "1.2.11",
+    "@radix-ui/react-toggle": "1.1.6",
+    "@radix-ui/react-toggle-group": "1.1.7",
+    "@radix-ui/react-tooltip": "1.2.4",
+    "@tanstack/react-query": "5.56.2",
+    "axios": "1.18.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "cmdk": "1.1.1",
+    "cra-template": "1.2.0",
+    "date-fns": "4.1.0",
+    "dayjs": "1.11.13",
+    "embla-carousel-react": "8.6.0",
+    "framer-motion": "11.18.0",
+    "input-otp": "1.4.2",
+    "lodash": "4.18.1",
+    "lucide-react": "0.516.0",
+    "next-themes": "0.4.6",
+    "react": "19.0.0",
+    "react-day-picker": "8.10.1",
+    "react-dom": "19.0.0",
+    "react-hook-form": "7.56.2",
+    "react-resizable-panels": "3.0.1",
+    "react-router-dom": "7.15.0",
+    "react-scripts": "5.0.1",
+    "recharts": "3.6.0",
+    "sonner": "2.0.3",
+    "swr": "2.3.8",
+    "tailwind-merge": "3.2.0",
+    "tailwindcss-animate": "1.0.7",
+    "vaul": "1.1.2",
+    "zod": "3.24.4"
+  },
+  "scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11",
+    "@craco/craco": "7.1.0",
+    "@emergentbase/visual-edits": "https://assets.emergent.sh/npm/emergentbase-visual-edits-1.0.13.tgz",
+    "@eslint/js": "9.23.0",
+    "@types/lodash": "4.17.24",
+    "autoprefixer": "10.4.20",
+    "dotenv": "16.4.5",
+    "eslint": "9.23.0",
+    "eslint-plugin-import": "2.31.0",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react": "7.37.4",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "globals": "15.15.0",
+    "postcss": "8.5.10",
+    "tailwindcss": "3.4.17"
+  },
+  "resolutions": {
+    "react-router": "7.15.1",
+    "node-forge": "1.4.0",
+    "fast-uri": "3.1.2",
+    "flatted": "3.4.2",
+    "qs": "6.15.2",
+    "diff": "4.0.4",
+    "follow-redirects": "1.16.0",
+    "path-to-regexp": "0.1.13",
+    "rollup": "2.80.0",
+    "underscore": "1.13.8",
+    "@babel/plugin-transform-modules-systemjs": "7.29.4",
+    "@eslint/plugin-kit": "0.3.4",
+    "shell-quote": "1.9.0",
+    "jsonpath": "1.3.0",
+    "nth-check": "2.0.1",
+    "serialize-javascript": "7.0.5",
+    "uuid": "11.1.1",
+    "@tootallnate/once": "2.0.1",
+    "webpack-dev-server": "5.2.6",
+    "resolve-url-loader": "5.0.0",
+    "**/resolve-url-loader/postcss": "8.5.10",
+    "**/axios/form-data": "4.0.6",
+    "**/jsdom/form-data": "3.0.5",
+    "**/postcss-svgo/svgo": "2.8.1",
+    "**/webpack-dev-server/ws": "8.21.0",
+    "**/postcss-load-config/yaml": "2.8.3",
+    "**/cosmiconfig/yaml": "1.10.3",
+    "**/cssnano/yaml": "1.10.3",
+    "**/eslint/js-yaml": "4.3.0",
+    "**/@eslint/eslintrc/js-yaml": "4.3.0",
+    "**/svgo/js-yaml": "3.15.0",
+    "**/@istanbuljs/load-nyc-config/js-yaml": "3.15.0",
+    "**/css-loader/postcss": "8.5.10",
+    "**/css-minimizer-webpack-plugin/postcss": "8.5.10",
+    "**/react-scripts/postcss": "8.5.10",
+    "**/filelist/minimatch": "5.1.8",
+    "**/anymatch/picomatch": "2.3.2",
+    "**/micromatch/picomatch": "2.3.2",
+    "**/readdirp/picomatch": "2.3.2",
+    "**/jest-util/picomatch": "2.3.2",
+    "**/tinyglobby/picomatch": "4.0.4",
+    "http-proxy-middleware": "2.0.10"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
+
+=== END FILE ===
+
+=== START FILE: /app/INTEGRATION_README.md ===
+# Joint Alignment Report — Integration Guide
+
+This document is written for the agent working in the **sacoparentsapp.online** Emergent project.
+It describes how to port the Joint Assessment / Joint Alignment Report module from this repository
+into that app. The module is intentionally self-contained.
+
+## What This Module Is
+
+A universal 10-page **Joint Alignment Report** system: two parents each complete the same structured
+assessment (10 topics, 5-point concern scale), and a rule-based engine generates a 10-page report
+(alignment, differences in perspective, child needs, options, conversation questions, professional
+discussion map, action plan worksheet, alignment summary). Eight assessment types: General
+Co-Parenting, Communication, High-Conflict, IPV/Family Violence (safety-first variant), Medical,
+Educational, Psychological/Behavioral, Preparing for Court.
+
+## Files to Port (copy these)
+
+### Backend — copy verbatim, no changes needed
+| File | Contents |
+|---|---|
+| `backend/assessment_data.py` | All 8 assessment type configs: topics, questions, scales, options, child needs, page titles, disclaimers, demo payloads. No dependencies. |
+| `backend/report_engine.py` | `generate_report(case)` — pure rule-based function, takes a case dict, returns the full report JSON. Imports only from `assessment_data`. |
+
+### Backend — port the routes, adapt auth
+From `backend/server.py`, copy ONLY these route groups into the target app's router:
+- `GET  /api/assessment-types` and `GET /api/assessment-types/{key}` — static config, no auth changes needed.
+- `POST /api/cases`, `GET /api/cases`, `GET /api/cases/{id}`, `PUT /api/cases/{id}/responses/{a|b}`, `POST /api/cases/{id}/demo`, `GET /api/cases/{id}/report`, `DELETE /api/cases/{id}` — replace `get_current_user` with the target app's existing auth dependency, and `user["_id"]` with the target app's user id field. Cases are stored in a `cases` MongoDB collection with a string `id` (uuid), `user_id`, `type`, `child_name`, `parent_a_name`, `parent_b_name`, `responses: {a, b}`, `is_demo`, `created_at`.
+
+**DO NOT copy** the auth routes (`/api/auth/*`), JWT helpers, bcrypt code, admin seeding, or CORS setup — the target app already has its own auth. Reuse it.
+
+### Frontend — port and restyle
+| File | Role |
+|---|---|
+| `frontend/src/pages/Wizard.jsx` | 4-step intake: choose type → case details → Parent A form → Parent B form. Includes `ParentForm` component (radio scale per topic, primary concern textarea, shared-goals checkboxes) and demo-data buttons. |
+| `frontend/src/pages/ReportView.jsx` | Report viewer shell: page navigation (dots/prev/next), print button, print-only container rendering all 10 pages. |
+| `frontend/src/components/report/Pages.jsx` | The 10 report page components (`REPORT_PAGES` array). Consumes the report JSON directly. |
+| `frontend/src/components/report/Paper.jsx` | Paper shell, `Snapshot` donut chart (uses recharts), `PullQuote`, `StatusDot`, `SectionHeading`. |
+
+**DO NOT copy** `Landing.jsx`, `Auth.jsx`, `AuthContext.jsx`, or `lib/api.js` verbatim — adapt API calls to the target app's existing API client/auth context. Skip this app's auth pages entirely.
+
+## Frontend Dependencies to Check
+- `recharts` (snapshot donut) — `yarn add recharts` if missing.
+- `lucide-react`, `sonner`, shadcn `button/input/label/textarea/checkbox/radio-group` — already standard in Emergent templates.
+
+## Styles to Port
+From `frontend/src/index.css`: the `.report-paper`, `.report-page-enter`, `@keyframes pageFade`, `.worksheet-line`, `.print-only`, and the `@media print` block (critical for print/PDF output).
+From `frontend/tailwind.config.js`: the `align` color tokens (`green #668B69`, `yellow #D4B46A`, `blue #6096BA`, `purple #9A8C98`) used for status colors (`text-align-green`, `bg-align-purple`, etc.). Adapt hex values if the target app's palette differs.
+
+## Report JSON Contract
+`GET /api/cases/{id}/report` returns everything `Pages.jsx` needs: `page_titles[10]`, `disclaimer`, `snapshot {total, aligned, different, info}`, `shared_goals[]`, `parent_a_concern`, `parent_b_concern`, `central_question`, `alignments[{topic, text}]`, `differences[{topic, parent_a, parent_b}]`, `child_needs[{title, text}]`, `options[]`, `conversation_questions[]`, `professional_map`, `action_plan[{issue, child_need, already_agree}]`, `summary {aligned, info, conversation, options, priority}`, `court_map` (court type only), `philosophy`, `is_demo`. If you change the backend shape, update the page components to match.
+
+## Content Rules (important — preserve these when editing)
+- Differences are "differences in perspective", never conflicts/failures/discrepancies.
+- Options are "options for parents to explore", never recommendations.
+- Psychological report: describe parental observations, never diagnose.
+- IPV report: safety first — "Agreement between parents is not the measure of success where safety is a concern."
+- Every report ends with: "We value the parenting system by how well it supports the child, not by how friendly the adults appear."
+
+## Suggested Integration Order
+1. Copy the two backend module files; add routes; wire to existing auth. Verify with curl (`demo` → `report`).
+2. Add the frontend pages behind a route (e.g., `/joint-assessments`), adapt API calls, add nav link.
+3. Restyle to the target app's design system.
+4. Test end-to-end: create case → demo data → all 10 pages → print.
+
+## Test Credentials in This Repo
+See `/app/memory/test_credentials.md` (admin: mattsossi@bsossi.com). Not needed after the port — the target app's own users/auth apply.
+
+=== END FILE ===
+
