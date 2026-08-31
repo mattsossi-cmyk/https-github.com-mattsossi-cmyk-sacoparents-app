@@ -28,8 +28,15 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 from typing import Literal
 
-from auth import UserPublic, get_current_user, get_db
+from auth import (
+    UserPublic, get_current_user, get_db,
+    create_share_token, decode_share_token,
+)
 from joint_professional_report import build_joint_report
+from share_link_common import (
+    absolute_origin, is_link_preview_bot, render_preview_html, clean_note,
+)
+from share_routes import record_share_token, is_share_token_revoked
 from snc2_comparison import build_comparison
 from trauma_lens import redact_for_compare
 
@@ -420,3 +427,209 @@ async def email_joint_report(
         "audience": audience,
         "share_id": share_id,
     }
+
+
+
+# ---------------------------------------------------------------------------
+# Public shareable HTML / PDF / OG-preview link — mirrors the Joint
+# Agreement flow. Sending parent mints a signed token; mediators and
+# attorneys open the link in-browser without logging in.
+# ---------------------------------------------------------------------------
+
+_REPORT_LINK_EXPIRE_CHOICES = {1, 7, 14, 30}
+
+
+class JointReportShareLinkBody(BaseModel):
+    consent_acknowledged: bool = Field(
+        ...,
+        description=(
+            "Must be true. Confirms the sending parent has read the "
+            "pre-share consent bullets before the link is minted."
+        ),
+    )
+    expire_days: Optional[int] = 7
+    label: Optional[str] = Field(None, max_length=120)
+    note: Optional[str] = Field(
+        None, max_length=500,
+        description=(
+            "Optional short personal note from the sending parent, "
+            "displayed at the top of the shared page for the recipient."
+        ),
+    )
+
+
+@router.post("/{share_id}/share-link")
+async def create_joint_report_share_link(
+    share_id: str,
+    body: JointReportShareLinkBody,
+    request: Request,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Mint a signed, revocable, time-limited link a mediator/attorney can
+    open in-browser to view (and optionally download) the joint report."""
+    from datetime import datetime, timezone
+    from phi_access_routes import record_phi_access
+
+    if not body.consent_acknowledged:
+        raise HTTPException(
+            400,
+            "Explicit consent is required before a shareable link can be created.",
+        )
+    expire_days = (
+        body.expire_days if body.expire_days in _REPORT_LINK_EXPIRE_CHOICES else 7
+    )
+
+    share = await _find_active_share(db, share_id, user.user_id)
+    # Re-assemble so we fail fast (409) if either parent's inputs are
+    # still missing — same UX as the authenticated view.
+    await _assemble_report(db, share, user.user_id, share_id)
+
+    token = create_share_token(
+        doc_type="joint_report",
+        doc_id=share_id,
+        user_id=user.user_id,
+        expire_days=expire_days,
+    )
+    payload = decode_share_token(token) or {}
+    expires_at = (
+        datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+        if payload.get("exp") else None
+    )
+    await record_share_token(
+        db,
+        jti=payload.get("jti"),
+        user_id=user.user_id,
+        doc_type="joint_report",
+        doc_id=share_id,
+        expires_at=expires_at,
+        label=(body.label or None),
+        note=clean_note(body.note),
+    )
+    await record_phi_access(
+        db, user_id=user.user_id, action="share_link_created",
+        resource_type="joint_professional_report",
+        share_id=share_id, request=request,
+    )
+    return {
+        "token": token,
+        "jti": payload.get("jti"),
+        "path": f"/joint-report/shared/{token}",
+        "preview_path": f"/api/joint-professional-report/preview/{token}",
+        "api_path": f"/api/joint-professional-report/shared/{token}",
+        "expires_at": expires_at.isoformat() if expires_at else None,
+        "expire_days": expire_days,
+    }
+
+
+async def _load_shared_report(
+    token: str, db: AsyncIOMotorDatabase,
+) -> Dict[str, Any]:
+    """Decode the token, verify revocation, and rebuild the joint report
+    payload. Attaches the sender's optional landing note."""
+    payload = decode_share_token(token)
+    if not payload or payload.get("doc_type") != "joint_report":
+        raise HTTPException(404, "This link has expired or is invalid.")
+    jti = payload.get("jti")
+    if await is_share_token_revoked(db, jti):
+        raise HTTPException(404, "This link has been revoked by the sender.")
+    share_id = payload["doc_id"]
+    sender_id = payload["sub"]
+    share = await _find_active_share(db, share_id, sender_id)
+    report = await _assemble_report(db, share, sender_id, share_id)
+    report["shared_by_name"] = report.get("parent_a_name") or ""
+    if jti:
+        row = await db.share_tokens.find_one({"jti": jti}, {"_id": 0, "note": 1})
+        report["sender_note"] = (row or {}).get("note") or None
+    else:
+        report["sender_note"] = None
+    return report
+
+
+@router.get("/shared/{token}")
+async def get_shared_joint_report(token: str, request: Request):
+    """Public — no auth. JSON payload of the joint report."""
+    from phi_access_routes import record_phi_access
+
+    db: AsyncIOMotorDatabase = request.app.state.db
+    payload = await _load_shared_report(token, db)
+    decoded = decode_share_token(token) or {}
+    await record_phi_access(
+        db, user_id=decoded.get("sub") or "unknown",
+        action="external_read_via_share_link",
+        resource_type="joint_professional_report",
+        share_id=decoded.get("doc_id"), request=request,
+    )
+    return payload
+
+
+@router.get("/shared/{token}/pdf")
+async def get_shared_joint_report_pdf(token: str, request: Request):
+    """Public — no auth. Renders the PDF using the signed link."""
+    from joint_professional_report_pdf import build_joint_report_pdf
+    from phi_access_routes import record_phi_access
+
+    db: AsyncIOMotorDatabase = request.app.state.db
+    payload = await _load_shared_report(token, db)
+    pdf_bytes = build_joint_report_pdf(payload)
+    decoded = decode_share_token(token) or {}
+    share_id = decoded.get("doc_id") or "unknown"
+    await record_phi_access(
+        db, user_id=decoded.get("sub") or "unknown",
+        action="external_download_via_share_link",
+        resource_type="joint_professional_report_pdf",
+        share_id=decoded.get("doc_id"), request=request,
+    )
+    filename = f"joint-professional-report-{share_id[:10]}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "no-store, no-cache, must-revalidate, private",
+            "Pragma": "no-cache",
+        },
+    )
+
+
+@router.get("/preview/{token}")
+async def joint_report_link_preview(token: str, request: Request):
+    """Bot-aware OG preview. Real browsers get a 302 to the SPA
+    (`/joint-report/shared/{token}`); crawlers get OG-tagged HTML."""
+    from fastapi.responses import HTMLResponse, RedirectResponse
+
+    origin = absolute_origin(request)
+    spa_url = f"{origin}/joint-report/shared/{token}"
+    if not is_link_preview_bot(request.headers.get("user-agent", "")):
+        return RedirectResponse(url=spa_url, status_code=302)
+
+    db: AsyncIOMotorDatabase = request.app.state.db
+    sender = ""
+    try:
+        payload = await _load_shared_report(token, db)
+        sender = (payload or {}).get("shared_by_name") or ""
+    except HTTPException:
+        sender = ""
+    except Exception:  # pragma: no cover
+        sender = ""
+
+    if sender:
+        title = f"Joint Co-Parenting Summary for Professional Review · shared by {sender}"
+    else:
+        title = "Joint Co-Parenting Summary for Professional Review · SA CoParents"
+    description = (
+        "A neutral summary of both parents' inputs — pathways, dimension "
+        "notes, and shared-parenting implications — prepared for a "
+        "mediator or attorney. Not a signed agreement or court order."
+    )
+    html_body = render_preview_html(
+        title=title,
+        description=description,
+        canonical_url=spa_url,
+        og_image_url=f"{origin}/og-image.png",
+        og_image_alt="SA CoParents · Joint Co-Parenting Summary",
+    )
+    return HTMLResponse(
+        content=html_body,
+        headers={"Cache-Control": "public, max-age=300"},
+    )

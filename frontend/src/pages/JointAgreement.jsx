@@ -39,6 +39,7 @@ export default function JointAgreement() {
   const [shareLinkResult, setShareLinkResult] = useState(null);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [shareLinkRevoking, setShareLinkRevoking] = useState(false);
+  const [shareLinkNote, setShareLinkNote] = useState("");
   const shareLinkInputRef = useRef(null);
 
   // Auto-select the freshly-minted URL so tapping ⌘/Ctrl-C right after
@@ -160,6 +161,7 @@ export default function JointAgreement() {
     setShareLinkResult(null);
     setShareLinkCopied(false);
     setShareLinkExpireDays(7);
+    setShareLinkNote("");
     setShareLinkOpen(true);
   };
 
@@ -169,7 +171,11 @@ export default function JointAgreement() {
     try {
       const res = await api.post(
         `/joint-agreement/${encodeURIComponent(shareId)}/share-link`,
-        { consent_acknowledged: true, expire_days: shareLinkExpireDays },
+        {
+          consent_acknowledged: true,
+          expire_days: shareLinkExpireDays,
+          note: (shareLinkNote || "").trim() || undefined,
+        },
       );
       setShareLinkResult(res.data || null);
       toast.success("Shareable link created. Copy it below.");
@@ -581,6 +587,28 @@ export default function JointAgreement() {
                       <option value={14}>14 days</option>
                       <option value={30}>30 days</option>
                     </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="joint-agreement-share-link-note"
+                      className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
+                    >
+                      Optional note for the recipient
+                    </label>
+                    <textarea
+                      id="joint-agreement-share-link-note"
+                      value={shareLinkNote}
+                      onChange={(e) => setShareLinkNote(e.target.value.slice(0, 500))}
+                      disabled={shareLinkMinting}
+                      rows={3}
+                      maxLength={500}
+                      placeholder="e.g. Hi Sam — this is the joint draft I mentioned. Happy to walk through it on Tuesday."
+                      data-testid="joint-agreement-share-link-note-input"
+                      className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2 text-sm text-[#1A1330] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60 resize-none"
+                    />
+                    <div className="mt-1 text-[11px] text-[#857E9C] text-right">
+                      {shareLinkNote.length}/500
+                    </div>
                   </div>
                 </div>
               )}

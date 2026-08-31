@@ -36,11 +36,11 @@ def app_and_state(monkeypatch):
     phi_log: list = []
 
     async def _record_share_token(db, *, jti, user_id, doc_type, doc_id,
-                                  expires_at=None, label=None):
+                                  expires_at=None, label=None, note=None):
         tokens_store[jti] = {
             "jti": jti, "user_id": user_id, "doc_type": doc_type,
             "doc_id": doc_id, "expires_at": expires_at,
-            "label": label, "revoked_at": None,
+            "label": label, "note": note, "revoked_at": None,
         }
         return tokens_store[jti]
 
@@ -107,11 +107,23 @@ def app_and_state(monkeypatch):
     app.dependency_overrides[get_current_user] = _fake_user
 
     # -- Stub the DB dependency + app.state.db so route can access it -----
+    class _FakeShareTokensColl:
+        def __init__(self, store):
+            self._store = store
+
+        async def find_one(self, q, proj=None):  # noqa: ARG002
+            row = self._store.get(q.get("jti"))
+            if row is None:
+                return None
+            # Emulate projection loosely — proj is optional.
+            return dict(row)
+
     class _FakeDB:
         pass
 
     from auth import get_db
     _shared_db = _FakeDB()
+    _shared_db.share_tokens = _FakeShareTokensColl(tokens_store)  # type: ignore[attr-defined]
     app.dependency_overrides[get_db] = lambda: _shared_db
     app.state.db = _shared_db
 

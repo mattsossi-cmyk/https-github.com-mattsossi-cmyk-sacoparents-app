@@ -61,6 +61,7 @@ import PathwayReport from "@/pages/PathwayReport";
 import JointProfessionalReport from "@/pages/JointProfessionalReport";
 import JointAgreement from "@/pages/JointAgreement";
 import JointAgreementShared from "@/pages/JointAgreementShared";
+import JointReportShared from "@/pages/JointReportShared";
 import NDRiskAssessment from "@/pages/NDRiskAssessment";
 import NDRiskAssessmentResult from "@/pages/NDRiskAssessmentResult";
 import DimensionCompanion from "@/pages/DimensionCompanion";
@@ -133,6 +134,7 @@ function AppRoutes() {
         <Route path="/joint-professional-report" element={<JointProfessionalReport />} />
         <Route path="/joint-agreement" element={<JointAgreement />} />
         <Route path="/joint-agreement/shared/:token" element={<JointAgreementShared />} />
+        <Route path="/joint-report/shared/:token" element={<JointReportShared />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />
         <Route path="/shared/coparenting/:token" element={<SharedCoParentingReport />} />

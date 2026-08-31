@@ -48,6 +48,7 @@ async def record_share_token(
     doc_id: str,
     expires_at: Optional[datetime],
     label: Optional[str] = None,
+    note: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Persist a freshly-minted share token so it can be listed / revoked."""
     doc = {
@@ -56,6 +57,7 @@ async def record_share_token(
         "doc_type": doc_type,
         "doc_id": doc_id,
         "label": label,
+        "note": note,
         "created_at": _now_iso(),
         "expires_at": expires_at.isoformat() if expires_at else None,
         "revoked_at": None,

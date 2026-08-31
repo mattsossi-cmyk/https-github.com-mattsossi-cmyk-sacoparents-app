@@ -154,6 +154,27 @@ export default function JointAgreementShared() {
           </div>
         </div>
 
+        {d.sender_note && (
+          <div
+            className="mt-4 rounded-3xl border-2 border-[#CFC1EA] bg-white p-5 sm:p-6 shadow-sm"
+            data-testid="joint-agreement-shared-sender-note"
+          >
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 h-9 w-9 rounded-full grid place-items-center bg-white border-2 border-[#3D1A78] text-[#3D1A78] font-serif text-sm font-bold">
+                &ldquo;
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+                  A note from {sharedBy}
+                </div>
+                <p className="text-[15px] text-[#1A1330] leading-relaxed whitespace-pre-wrap">
+                  {d.sender_note}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
           <div>

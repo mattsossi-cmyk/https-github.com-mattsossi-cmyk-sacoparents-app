@@ -17,14 +17,16 @@
  *                       should aggregate. Server-side enforces that
  *                       the caller is a participant.
  */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Download, Loader2, ShieldAlert, ScrollText, Users, Info, Mail,
+  Link2, Copy, Check, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import JointReportEmailDialog from "../components/JointReportEmailDialog";
+import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -183,6 +185,93 @@ export default function JointProfessionalReport() {
   const [state, setState] = useState({ loading: true, data: null, error: null });
   const [downloading, setDownloading] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [shareLinkOpen, setShareLinkOpen] = useState(false);
+  const [shareLinkExpireDays, setShareLinkExpireDays] = useState(7);
+  const [shareLinkNote, setShareLinkNote] = useState("");
+  const [shareLinkMinting, setShareLinkMinting] = useState(false);
+  const [shareLinkResult, setShareLinkResult] = useState(null);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [shareLinkRevoking, setShareLinkRevoking] = useState(false);
+  const shareLinkInputRef = useRef(null);
+
+  useEffect(() => {
+    if (shareLinkResult && shareLinkInputRef.current) {
+      const el = shareLinkInputRef.current;
+      const t = window.setTimeout(() => {
+        try { el.focus(); el.select(); }
+        catch (e) { logError("report share-link focus failed", e); }
+      }, 60);
+      return () => window.clearTimeout(t);
+    }
+    return undefined;
+  }, [shareLinkResult]);
+
+  const openShareLink = async () => {
+    const ok = await requestPreShareConsent("Joint Report link");
+    if (!ok) return;
+    setShareLinkResult(null);
+    setShareLinkCopied(false);
+    setShareLinkExpireDays(7);
+    setShareLinkNote("");
+    setShareLinkOpen(true);
+  };
+
+  const mintShareLink = async () => {
+    if (!shareId) return;
+    setShareLinkMinting(true);
+    try {
+      const res = await api.post(
+        `/joint-professional-report/${encodeURIComponent(shareId)}/share-link`,
+        {
+          consent_acknowledged: true,
+          expire_days: shareLinkExpireDays,
+          note: (shareLinkNote || "").trim() || undefined,
+        },
+      );
+      setShareLinkResult(res.data || null);
+      toast.success("Shareable link created. Copy it below.");
+    } catch (err) {
+      logError("joint report share-link mint", err);
+      const msg = err?.response?.data?.detail
+        || "Could not create a shareable link right now. Please try again in a moment.";
+      toast.error(msg);
+    } finally {
+      setShareLinkMinting(false);
+    }
+  };
+
+  const copyShareLink = async () => {
+    if (!shareLinkResult) return;
+    const rel = shareLinkResult.preview_path || shareLinkResult.path;
+    const fullUrl = `${window.location.origin}${rel}`;
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      setShareLinkCopied(true);
+      toast.success("Link copied to clipboard.");
+      window.setTimeout(() => setShareLinkCopied(false), 2200);
+    } catch {
+      try {
+        shareLinkInputRef.current?.focus();
+        shareLinkInputRef.current?.select();
+      } catch (e) { logError("report share-link fallback focus", e); }
+      toast.info("Press ⌘/Ctrl-C to copy — the link is already selected.");
+    }
+  };
+
+  const revokeShareLink = async () => {
+    if (!shareLinkResult?.jti) return;
+    setShareLinkRevoking(true);
+    try {
+      await api.post(`/share/revoke`, { jti: shareLinkResult.jti });
+      toast.success("Link revoked. Anyone with the old link will now see an expired message.");
+      setShareLinkResult(null);
+    } catch (err) {
+      logError("joint report share-link revoke", err);
+      toast.error("Could not revoke the link right now. Please try again in a moment.");
+    } finally {
+      setShareLinkRevoking(false);
+    }
+  };
   const [emailSending, setEmailSending] = useState(false);
 
   useEffect(() => {
@@ -351,6 +440,15 @@ export default function JointProfessionalReport() {
             </Link>
             <button
               type="button"
+              onClick={openShareLink}
+              data-testid="joint-report-share-link-open"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
+              title="Create a link a mediator or attorney can open in-browser to view this Joint Report — no login required."
+            >
+              <Link2 size={14} /> Get shareable link
+            </button>
+            <button
+              type="button"
               onClick={() => setEmailOpen(true)}
               data-testid="joint-report-email-open"
               className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
@@ -453,6 +551,168 @@ export default function JointProfessionalReport() {
           parentAName={parentA}
           parentBName={parentB}
         />
+
+        {shareLinkOpen && (
+          <div
+            className="fixed inset-0 z-50 grid place-items-center bg-black/45 backdrop-blur-sm px-4"
+            data-testid="joint-report-share-link-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="joint-report-share-link-title"
+            onClick={() => !shareLinkMinting && !shareLinkRevoking && setShareLinkOpen(false)}
+          >
+            <div
+              className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-[#E5E0EE] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 pt-6">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+                  Shareable link
+                </div>
+                <h3
+                  id="joint-report-share-link-title"
+                  className="font-bold text-xl text-[#1A1330] leading-tight"
+                >
+                  Give your mediator or attorney direct access
+                </h3>
+              </div>
+
+              {!shareLinkResult && (
+                <div className="px-6 py-5 space-y-4">
+                  <p className="text-sm text-[#4B4567] leading-relaxed">
+                    We&rsquo;ll generate a signed link they can open in any
+                    browser — no login required. The link renders the same
+                    joint report you see here and lets them download the PDF.
+                    You can revoke it at any time.
+                  </p>
+                  <div>
+                    <label
+                      htmlFor="joint-report-share-link-expiry"
+                      className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
+                    >
+                      Link expires in
+                    </label>
+                    <select
+                      id="joint-report-share-link-expiry"
+                      value={shareLinkExpireDays}
+                      onChange={(e) => setShareLinkExpireDays(parseInt(e.target.value, 10))}
+                      disabled={shareLinkMinting}
+                      data-testid="joint-report-share-link-expiry-select"
+                      className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2.5 text-sm text-[#1A1330] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60"
+                    >
+                      <option value={1}>1 day</option>
+                      <option value={7}>7 days</option>
+                      <option value={14}>14 days</option>
+                      <option value={30}>30 days</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="joint-report-share-link-note"
+                      className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
+                    >
+                      Optional note for the recipient
+                    </label>
+                    <textarea
+                      id="joint-report-share-link-note"
+                      value={shareLinkNote}
+                      onChange={(e) => setShareLinkNote(e.target.value.slice(0, 500))}
+                      disabled={shareLinkMinting}
+                      rows={3}
+                      maxLength={500}
+                      placeholder="e.g. Hi Sam — this is the SNC v2 summary I mentioned. Happy to review on Tuesday."
+                      data-testid="joint-report-share-link-note-input"
+                      className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2 text-sm text-[#1A1330] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60 resize-none"
+                    />
+                    <div className="mt-1 text-[11px] text-[#857E9C] text-right">
+                      {shareLinkNote.length}/500
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {shareLinkResult && (
+                <div className="px-6 py-5 space-y-4">
+                  <p className="text-sm text-[#4B4567] leading-relaxed">
+                    Copy the link below and send it however you like —
+                    email, secure message, or paste it into your case
+                    system. Anyone with the link can view and download
+                    until you revoke it or it expires.
+                  </p>
+                  <div className="rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] p-3">
+                    <input
+                      ref={shareLinkInputRef}
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}${shareLinkResult.preview_path || shareLinkResult.path}`}
+                      onFocus={(e) => e.target.select()}
+                      data-testid="joint-report-share-link-url"
+                      className="w-full bg-transparent text-sm text-[#1A1330] font-mono outline-none"
+                    />
+                  </div>
+                  {shareLinkResult.expires_at && (
+                    <div
+                      className="text-xs text-[#4B4567]"
+                      data-testid="joint-report-share-link-expiry-info"
+                    >
+                      Expires{" "}
+                      {new Date(shareLinkResult.expires_at).toLocaleString(undefined, {
+                        year: "numeric", month: "short", day: "numeric",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between gap-2 px-6 pb-6 pt-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setShareLinkOpen(false)}
+                  disabled={shareLinkMinting || shareLinkRevoking}
+                  data-testid="joint-report-share-link-close"
+                  className="rounded-full bg-white border border-[#E5E0EE] text-[#1A1330] px-4 py-2.5 text-sm font-semibold hover:bg-[#F8F7FC] disabled:opacity-60"
+                >
+                  {shareLinkResult ? "Done" : "Cancel"}
+                </button>
+                {!shareLinkResult ? (
+                  <button
+                    type="button"
+                    onClick={mintShareLink}
+                    disabled={shareLinkMinting}
+                    data-testid="joint-report-share-link-create-btn"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+                  >
+                    {shareLinkMinting ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
+                    {shareLinkMinting ? "Creating…" : "Create link"}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={revokeShareLink}
+                      disabled={shareLinkRevoking}
+                      data-testid="joint-report-share-link-revoke-btn"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#B02A2A] text-[#B02A2A] px-4 py-2.5 text-sm font-semibold hover:bg-[#FBEBEB] disabled:opacity-60"
+                    >
+                      {shareLinkRevoking ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      Revoke
+                    </button>
+                    <button
+                      type="button"
+                      onClick={copyShareLink}
+                      data-testid="joint-report-share-link-copy-btn"
+                      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-5 py-2.5 text-sm font-semibold"
+                    >
+                      {shareLinkCopied ? <Check size={14} /> : <Copy size={14} />}
+                      {shareLinkCopied ? "Copied" : "Copy link"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

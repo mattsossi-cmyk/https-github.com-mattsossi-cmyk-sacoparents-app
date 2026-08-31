@@ -34,6 +34,12 @@ from joint_professional_report_routes import (
     _find_active_share, _load_user_display_name,
 )
 from share_routes import record_share_token, is_share_token_revoked
+from share_link_common import (
+    absolute_origin as _absolute_origin,
+    is_link_preview_bot as _is_link_preview_bot,
+    render_preview_html as _render_preview_html,
+    clean_note,
+)
 
 
 router = APIRouter(prefix="/joint-agreement", tags=["joint-agreement"])
@@ -392,6 +398,13 @@ class JointAgreementShareLinkBody(BaseModel):
     )
     expire_days: Optional[int] = 7
     label: Optional[str] = Field(None, max_length=120)
+    note: Optional[str] = Field(
+        None, max_length=500,
+        description=(
+            "Optional short personal note from the sending parent, "
+            "displayed at the top of the shared page for the recipient."
+        ),
+    )
 
 
 @router.post("/{share_id}/share-link")
@@ -439,6 +452,7 @@ async def create_joint_agreement_share_link(
         doc_id=share_id,
         expires_at=expires_at,
         label=(body.label or None),
+        note=clean_note(body.note),
     )
     await record_phi_access(
         db, user_id=user.user_id, action="share_link_created",
@@ -469,13 +483,22 @@ async def _load_shared_joint(
     payload = decode_share_token(token)
     if not payload or payload.get("doc_type") != "joint_agreement":
         raise HTTPException(404, "This link has expired or is invalid.")
-    if await is_share_token_revoked(db, payload.get("jti")):
+    jti = payload.get("jti")
+    if await is_share_token_revoked(db, jti):
         raise HTTPException(404, "This link has been revoked by the sender.")
     share_id = payload["doc_id"]
     sender_id = payload["sub"]
     share = await _find_active_share(db, share_id, sender_id)
     joint = await _assemble_joint_agreement(db, share, sender_id, share_id)
     joint["shared_by_name"] = joint.get("parent_a_name") or ""
+    # Pull the sender's optional landing note off the share_tokens row.
+    if jti:
+        row = await db.share_tokens.find_one(
+            {"jti": jti}, {"_id": 0, "note": 1},
+        )
+        joint["sender_note"] = (row or {}).get("note") or None
+    else:
+        joint["sender_note"] = None
     return joint
 
 
@@ -513,42 +536,8 @@ async def get_shared_joint_agreement(token: str, request: Request):
 # ---------------------------------------------------------------------------
 
 
-_BOT_UA_SIGNALS = (
-    "slackbot", "twitterbot", "facebookexternalhit", "facebot",
-    "linkedinbot", "whatsapp", "discordbot", "telegrambot",
-    "bingbot", "googlebot", "duckduckbot", "pinterest",
-    "redditbot", "applebot", "skypeuripreview", "vkshare",
-    "outbrain", "quora link preview", "showyoubot", "developers.google.com/+/web/snippet",
-    "cfnetwork", "imessage",  # iMessage previews
-    "embedly", "iframely", "opengraph",
-)
-
-
-def _is_link_preview_bot(user_agent: str) -> bool:
-    ua = (user_agent or "").lower()
-    return any(sig in ua for sig in _BOT_UA_SIGNALS)
-
-
-def _absolute_origin(request: Request) -> str:
-    """Derive the public origin for absolute OG URLs. Trusts the standard
-    reverse-proxy headers the ingress sets."""
-    proto = (
-        request.headers.get("x-forwarded-proto")
-        or request.url.scheme
-        or "https"
-    ).split(",")[0].strip()
-    host = (
-        request.headers.get("x-forwarded-host")
-        or request.headers.get("host")
-        or request.url.hostname
-        or "sacoparentsapp.online"
-    ).split(",")[0].strip()
-    return f"{proto}://{host}"
-
-
-def _html_escape(s: str) -> str:
-    import html as _html
-    return _html.escape(str(s or ""), quote=True)
+_BOT_UA_SIGNALS = ()  # deprecated — moved to share_link_common; retained
+# only to avoid breaking any external caller that imported the name.
 
 
 @router.get("/preview/{token}")
@@ -589,48 +578,16 @@ async def joint_agreement_link_preview(token: str, request: Request):
         "clauses — for discussion with a mediator or attorney. Not a "
         "signed agreement, court order, or legal document."
     )
-    og_image = f"{origin}/og-image.png"
-
-    body = f"""<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <title>{_html_escape(title)}</title>
-    <meta name="description" content="{_html_escape(description)}" />
-
-    <meta property="og:type" content="article" />
-    <meta property="og:site_name" content="SA CoParents" />
-    <meta property="og:url" content="{_html_escape(spa_url)}" />
-    <meta property="og:title" content="{_html_escape(title)}" />
-    <meta property="og:description" content="{_html_escape(description)}" />
-    <meta property="og:image" content="{_html_escape(og_image)}" />
-    <meta property="og:image:secure_url" content="{_html_escape(og_image)}" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="SA CoParents · Joint Co-Parenting Agreement Draft" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{_html_escape(title)}" />
-    <meta name="twitter:description" content="{_html_escape(description)}" />
-    <meta name="twitter:image" content="{_html_escape(og_image)}" />
-    <meta name="twitter:image:alt" content="SA CoParents · Joint Co-Parenting Agreement Draft" />
-
-    <!-- Fallback for the rare bot that also follows the meta refresh. -->
-    <meta http-equiv="refresh" content="0; url={_html_escape(spa_url)}" />
-    <link rel="canonical" href="{_html_escape(spa_url)}" />
-</head>
-<body>
-    <p>{_html_escape(title)}</p>
-    <p><a href="{_html_escape(spa_url)}">Open the shared agreement</a></p>
-</body>
-</html>"""
+    html_body = _render_preview_html(
+        title=title,
+        description=description,
+        canonical_url=spa_url,
+        og_image_url=f"{origin}/og-image.png",
+        og_image_alt="SA CoParents · Joint Co-Parenting Agreement Draft",
+    )
     return HTMLResponse(
-        content=body,
-        headers={
-            # Public + short cache so bots re-fetch after revocation.
-            "Cache-Control": "public, max-age=300",
-        },
+        content=html_body,
+        headers={"Cache-Control": "public, max-age=300"},
     )
 
 

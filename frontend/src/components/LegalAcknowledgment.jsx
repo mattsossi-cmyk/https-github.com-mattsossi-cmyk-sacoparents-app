@@ -78,7 +78,8 @@ export default function LegalAcknowledgment() {
     // carries the required disclaimer footer.
     if (
       location.pathname.startsWith("/shared/") ||
-      location.pathname.startsWith("/joint-agreement/shared/")
+      location.pathname.startsWith("/joint-agreement/shared/") ||
+      location.pathname.startsWith("/joint-report/shared/")
     ) {
       if (open) {
         setOpen(false);
