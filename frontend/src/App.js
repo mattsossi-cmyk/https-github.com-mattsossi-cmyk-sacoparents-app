@@ -12,6 +12,7 @@ import PolicyRefreshBanner from "@/components/PolicyRefreshBanner";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import OnboardingIntake from "@/pages/OnboardingIntake";
 import AuthCallback from "@/pages/AuthCallback";
 import Dashboard from "@/pages/Dashboard";
 import MyPlan from "@/pages/MyPlan";
@@ -118,6 +119,7 @@ function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/onboarding/what-do-you-need" element={<ProtectedRoute><OnboardingIntake /></ProtectedRoute>} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/magic" element={<MagicLinkConsume />} />
         <Route path="/auth/setup" element={<AccountSetup />} />

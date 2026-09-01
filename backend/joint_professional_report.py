@@ -573,6 +573,294 @@ def _section_issues_for_professional_discussion(
     )
 
 
+# ---------- parent-friendly 5-bucket view ----------
+
+def _bucket_what_you_both_care_about(
+    shared_pri: Dict[str, Any],
+    agreements: Dict[str, Any],
+    shared_pathways: List[str],
+) -> Dict[str, Any]:
+    """Bucket 1 — the alignment surface. Draws from shared priorities +
+    per-pathway agreements + pathways both parents named."""
+    items: List[Dict[str, Any]] = []
+    for row in shared_pri.get("rows") or []:
+        if row.get("alignment") not in {"aligned", "both_responded"}:
+            continue
+        summary_a = (row.get("parent_a") or {}).get("summary") or ""
+        summary_b = (row.get("parent_b") or {}).get("summary") or ""
+        text = summary_a or summary_b or row.get("childs_need") or row.get("topic") or ""
+        if text:
+            items.append({"text": text, "source": "priority"})
+    for row in agreements.get("rows") or []:
+        summary_a = (row.get("parent_a") or {}).get("summary") or ""
+        summary_b = (row.get("parent_b") or {}).get("summary") or ""
+        text = row.get("childs_need") or summary_a or summary_b or row.get("topic") or ""
+        if text:
+            items.append({
+                "text": text,
+                "source": row.get("pathway") or "alignment",
+            })
+    seen: set = set()
+    deduped: List[Dict[str, Any]] = []
+    for it in items:
+        key = (it["text"] or "").strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            deduped.append(it)
+    return {
+        "title": "What You Both Care About",
+        "description": (
+            "Areas where both parents expressed similar goals for the "
+            "child. This is your starting point — build from here."
+        ),
+        "items": deduped,
+        "shared_pathways": shared_pathways or [],
+        "count": len(deduped),
+    }
+
+
+def _bucket_where_you_see_things_differently(
+    differences: Dict[str, Any],
+    communication: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Bucket 2 — surface the perception gaps in plain-language pairs."""
+    items: List[Dict[str, Any]] = []
+    for row in differences.get("rows") or []:
+        items.append({
+            "topic": row.get("child_need") or row.get("topic") or "",
+            "parent_a": row.get("parent_a_view") or row.get("parent_a") or "",
+            "parent_b": row.get("parent_b_view") or row.get("parent_b") or "",
+            "source": row.get("pathway") or "difference",
+        })
+    for row in communication.get("rows") or []:
+        if row.get("alignment") in {"divergent", "one_only"}:
+            items.append({
+                "topic": row.get("child_need") or row.get("topic") or "Communication",
+                "parent_a": row.get("parent_a_view") or row.get("parent_a") or "",
+                "parent_b": row.get("parent_b_view") or row.get("parent_b") or "",
+                "source": "communication",
+            })
+    return {
+        "title": "Where You See Things Differently",
+        "description": (
+            "Topics where the two of you have different experiences, "
+            "concerns, or priorities right now. Different views don't "
+            "mean either parent is wrong — they mean this is worth a "
+            "focused conversation."
+        ),
+        "items": items,
+        "count": len(items),
+    }
+
+
+def _bucket_what_may_need_attention(
+    issues: Dict[str, Any],
+    household: Dict[str, Any],
+    lens_f3: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Bucket 3 — the topics worth resolving before parenting decisions."""
+    items: List[Dict[str, Any]] = []
+    for row in issues.get("rows") or []:
+        items.append({
+            "topic": row.get("topic") or row.get("child_need") or "",
+            "reason": row.get("professional_focus") or row.get("reason") or "",
+            "source": row.get("pathway") or "issue",
+        })
+    for row in household.get("rows") or []:
+        if row.get("alignment") in {"divergent", "close"}:
+            items.append({
+                "topic": row.get("child_need") or "Household consistency",
+                "reason": row.get("professional_focus") or row.get("difference_summary") or "",
+                "source": "household",
+            })
+    if lens_f3 and lens_f3.get("summary"):
+        items.append({
+            "topic": "Parenting-plan implications from the safety screen",
+            "reason": lens_f3.get("summary") or "",
+            "source": "safety",
+        })
+    return {
+        "title": "What May Need Attention",
+        "description": (
+            "Issues worth discussing before making parenting decisions — "
+            "not because someone is wrong, but because the two of you "
+            "haven't yet landed on a shared answer."
+        ),
+        "items": items,
+        "count": len(items),
+    }
+
+
+def _derive_options_to_consider(
+    differences: Dict[str, Any],
+    communication: Dict[str, Any],
+    issues: Dict[str, Any],
+    household: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """Bucket 4 — from-the-menu options. We never prescribe; every
+    option is framed as something the parents could consider."""
+    options: List[Dict[str, Any]] = []
+
+    if (communication.get("rows") or []):
+        options.append({
+            "title": "A shared communication channel",
+            "detail": (
+                "A co-parenting communication app (OurFamilyWizard, "
+                "TalkingParents, AppClose) can reduce miscommunication "
+                "and create a shared record for medical, school, and "
+                "schedule updates."
+            ),
+        })
+
+    if (household.get("rows") or []):
+        options.append({
+            "title": "A written between-homes routine",
+            "detail": (
+                "Consider a short written routine for bedtimes, "
+                "screen-time, homework, and transitions. Consistency "
+                "across two homes reduces stress for the child."
+            ),
+        })
+
+    if (differences.get("rows") or []):
+        options.append({
+            "title": "Structured mediation for the differences",
+            "detail": (
+                "A family mediator can help you work through the topics "
+                "in \"Where You See Things Differently\" one at a time "
+                "without the emotional escalation of doing it directly."
+            ),
+        })
+
+    if (issues.get("rows") or []):
+        options.append({
+            "title": "A short professional consultation",
+            "detail": (
+                "A one-hour meeting with a child therapist, family "
+                "attorney, or parenting coordinator can clarify which "
+                "issues need formal decisions and which can wait."
+            ),
+        })
+
+    # Always-safe generic option — the "next step" ladder.
+    options.append({
+        "title": "Bring this report to a professional",
+        "detail": (
+            "The Detailed Comparison at the bottom of this document is "
+            "written for attorneys, mediators, and therapists. Share it "
+            "with whoever is helping your family so they can start with "
+            "context."
+        ),
+    })
+    return options
+
+
+def _bucket_options_to_consider(
+    differences: Dict[str, Any],
+    communication: Dict[str, Any],
+    issues: Dict[str, Any],
+    household: Dict[str, Any],
+) -> Dict[str, Any]:
+    return {
+        "title": "Options to Consider",
+        "description": (
+            "Possible structures, resources, and communication "
+            "approaches — not prescriptions. Pick the ones that fit "
+            "your family."
+        ),
+        "items": _derive_options_to_consider(
+            differences, communication, issues, household,
+        ),
+        "count": None,  # count not shown for options
+    }
+
+
+def _derive_conversation_questions(
+    differences: Dict[str, Any],
+    shared_pri: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """Bucket 5 — turn perception gaps into child-focused questions."""
+    questions: List[Dict[str, Any]] = []
+    for row in (differences.get("rows") or [])[:6]:
+        topic = row.get("child_need") or row.get("topic") or "this topic"
+        questions.append({
+            "topic": topic,
+            "question": (
+                f"When it comes to {topic.lower()}, what does our child "
+                "seem to need most right now — and what would make it "
+                "easier for both of us to give them that?"
+            ),
+        })
+    if shared_pri.get("row_count", 0) > 0:
+        questions.append({
+            "topic": "Shared priorities",
+            "question": (
+                "We agreed that these priorities matter for our child. "
+                "What is one small change each of us could make this "
+                "month to move toward them?"
+            ),
+        })
+    # Always-safe closer.
+    questions.append({
+        "topic": "Next step",
+        "question": (
+            "What is one question we could ask a mediator or therapist "
+            "that would help us both make better decisions for our child?"
+        ),
+    })
+    return questions
+
+
+def _bucket_questions_for_next_conversation(
+    differences: Dict[str, Any],
+    shared_pri: Dict[str, Any],
+) -> Dict[str, Any]:
+    return {
+        "title": "Questions for Your Next Conversation",
+        "description": (
+            "Specific child-focused questions the two of you can "
+            "discuss yourselves, or take to mediation."
+        ),
+        "items": _derive_conversation_questions(differences, shared_pri),
+        "count": None,
+    }
+
+
+def _build_parent_view(
+    shared_pri: Dict[str, Any],
+    medical: Dict[str, Any],
+    educational: Dict[str, Any],
+    psychological: Dict[str, Any],
+    household: Dict[str, Any],
+    communication: Dict[str, Any],
+    agreements: Dict[str, Any],
+    differences: Dict[str, Any],
+    issues: Dict[str, Any],
+    shared_pathways: List[str],
+    lens_f3: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Compose the 5-bucket parent-friendly view over the existing
+    clinical sections. Detailed row strips remain in `sections` for
+    the Detailed Comparison appendix."""
+    return {
+        "what_you_both_care_about": _bucket_what_you_both_care_about(
+            shared_pri, agreements, shared_pathways,
+        ),
+        "where_you_see_things_differently": _bucket_where_you_see_things_differently(
+            differences, communication,
+        ),
+        "what_may_need_attention": _bucket_what_may_need_attention(
+            issues, household, lens_f3,
+        ),
+        "options_to_consider": _bucket_options_to_consider(
+            differences, communication, issues, household,
+        ),
+        "questions_for_next_conversation": _bucket_questions_for_next_conversation(
+            differences, shared_pri,
+        ),
+    }
+
+
 # ---------- output wrapper ----------
 
 def _wrap_section(
@@ -644,6 +932,20 @@ def build_joint_report(
         differences, communication, combined_f3,
     )
 
+    parent_view = _build_parent_view(
+        shared_pri=shared_pri,
+        medical=medical,
+        educational=educational,
+        psychological=psychological,
+        household=household,
+        communication=communication,
+        agreements=agreements,
+        differences=differences,
+        issues=issues,
+        shared_pathways=comparison.get("shared_pathways") or [],
+        lens_f3=combined_f3,
+    )
+
     return {
         "report_type": "joint_professional_summary",
         "report_title": "Joint Co-Parenting Summary for Professional Review",
@@ -661,6 +963,7 @@ def build_joint_report(
             "screen and are not shown to the co-parent."
         ),
         "shared_pathways": comparison.get("shared_pathways") or [],
+        "parent_view": parent_view,
         "sections": {
             "shared_priorities": shared_pri,
             "medical": medical,

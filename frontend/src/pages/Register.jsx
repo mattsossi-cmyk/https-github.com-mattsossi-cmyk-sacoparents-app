@@ -40,7 +40,7 @@ export default function Register() {
         children: children.filter((c) => c.name.trim()),
       });
       toast.success("Welcome. Your space is ready.");
-      navigate("/dashboard");
+      navigate("/onboarding/what-do-you-need", { replace: true });
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Could not create account.");
     } finally {

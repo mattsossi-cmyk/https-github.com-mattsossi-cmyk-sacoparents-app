@@ -79,7 +79,8 @@ export default function LegalAcknowledgment() {
     if (
       location.pathname.startsWith("/shared/") ||
       location.pathname.startsWith("/joint-agreement/shared/") ||
-      location.pathname.startsWith("/joint-report/shared/")
+      location.pathname.startsWith("/joint-report/shared/") ||
+      location.pathname.startsWith("/onboarding/")
     ) {
       if (open) {
         setOpen(false);

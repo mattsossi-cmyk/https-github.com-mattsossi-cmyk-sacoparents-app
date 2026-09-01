@@ -16,6 +16,7 @@ import {
   Download, Loader2, ShieldAlert, Users, ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
+import JointReportParentView from "../components/joint/JointReportParentView";
 import { API } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -250,6 +251,11 @@ export default function JointReportShared() {
           </div>
         </div>
 
+        {/* Primary presentation — parent-friendly 5-bucket view. */}
+        <div className="mt-6">
+          <JointReportParentView parentView={d.parent_view} />
+        </div>
+
         {/* Section titles — full narrative is in the PDF */}
         {Array.isArray(d.section_order) && d.section_order.length > 0 && (
           <div
@@ -257,7 +263,7 @@ export default function JointReportShared() {
             data-testid="joint-report-shared-sections-outline"
           >
             <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-3">
-              Sections in the full report
+              Detailed sections in the PDF
             </div>
             <ul className="space-y-1.5 text-sm text-[#1A1330]">
               {d.section_order.map((s) => (
@@ -268,10 +274,10 @@ export default function JointReportShared() {
               ))}
             </ul>
             <p className="mt-4 text-xs text-[#4B4567] leading-relaxed">
-              This shared view is an at-a-glance orientation. Download the PDF
-              above for the full section-by-section narrative, row strips
-              (Parent A · Parent B · Alignment · Child&rsquo;s need · Issue),
-              and any TISFL Parenting-Plan Implications.
+              The Detailed Comparison for attorneys, mediators, and
+              therapists — with row strips (Parent A · Parent B ·
+              Alignment · Child&rsquo;s need · Issue) and any TISFL
+              Parenting-Plan Implications — is included in the PDF above.
             </p>
           </div>
         )}
