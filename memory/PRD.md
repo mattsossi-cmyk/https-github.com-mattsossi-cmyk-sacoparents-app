@@ -212,6 +212,30 @@ Auth: Custom JWT (`auth.py`)
   opt-out flips it back + writes log). All 28 recent iter-tests
   green.
 
+### 2026-02-22 — Three-fer: /account page + Recent Shared on Joint Agreement + GPT toggle on Med/Psych
+- **Dedicated `/account` page**: New `pages/Account.jsx` — settings hub
+  hosting the marketing toggle, basic identity block, and deep-link
+  tiles to Data & Retention / HB 300 Notice / Privacy Policy.
+  Protected route (`<ProtectedRoute>`), reachable via a new
+  `Settings` icon in `AppShell.jsx` next to Sign Out.
+- **RecentlySharedWith on Joint Agreement**: Imported + mounted on
+  `pages/JointAgreement.jsx` right below the action-buttons row.
+  Same compact re-send strip already live on the Joint Report page.
+- **GPT toggle extended to Med + Psych Deep Dive**:
+  - Backend: `med_deep_routes.py` and `psych_deep_routes.py`
+    `regen-summary` now take a `model` param and dispatch to
+    Claude (default) or GPT 5.6 Terra. Invalid values downgrade
+    to Claude. Row payload gains `ai_summary_model`.
+  - Frontend: `SpecialNeedsV2MedicalDeepDiveReport.jsx` and
+    `SpecialNeedsV2PsychologicalDeepDiveReport.jsx` mirror the
+    Edu Deep model toggle + timestamp label pattern.
+  - Joint Report doesn't have an LLM regen path (summary is
+    composed from the Compare payload, not an LLM), so no toggle
+    surface there.
+- Coverage: `tests/test_iter132_...py` — 6 parametrised route tests
+  (`med-deep` + `psych-deep`, defaults to Claude, `model=gpt`
+  dispatches to GPT, invalid falls back). Full 48-test suite green.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming

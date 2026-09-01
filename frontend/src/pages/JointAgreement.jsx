@@ -343,6 +343,16 @@ export default function JointAgreement() {
           </div>
         </div>
 
+        {/* Compact re-send strip: last 3 professionals this parent has
+            emailed the Joint Agreement to. Auto-hides when empty. */}
+        <div className="mt-4">
+          <RecentlySharedWith
+            shareId={shareId}
+            artefactBase="joint-agreement"
+            artefactLabel="Joint Agreement"
+          />
+        </div>
+
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
           Joint Agreement Draft
         </div>

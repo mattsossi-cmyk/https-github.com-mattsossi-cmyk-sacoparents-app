@@ -14,6 +14,7 @@ from pydantic import BaseModel
 
 from auth import UserPublic, get_current_user, get_db
 from ai_summary import generate_executive_summary
+from ai_summary_gpt import generate_executive_summary_gpt
 from deep_dive_section_coach import load_or_generate_section_coach
 from psych_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION, public_schema, validate_answer
 from psych_deep_report import build_deep_dive_pdf, build_deep_dive_report
@@ -204,6 +205,8 @@ async def generate(user: UserPublic = Depends(get_current_user),
 
 class RegenSummaryIn(BaseModel):
     length: Optional[str] = "standard"
+    # "claude" (default) or "gpt". Same 5-line pattern as edu_deep_routes.
+    model: Optional[str] = "claude"
 
 
 @router.post("/report/regen-summary")
@@ -219,7 +222,14 @@ async def regen_summary(body: RegenSummaryIn = RegenSummaryIn(),
     length = (body.length or "standard").lower()
     if length not in ("short", "standard", "long"):
         length = "standard"
-    new_summary = await generate_executive_summary(
+    model_choice = (body.model or "claude").lower()
+    if model_choice not in ("claude", "gpt"):
+        model_choice = "claude"
+    generator = (
+        generate_executive_summary_gpt if model_choice == "gpt"
+        else generate_executive_summary
+    )
+    new_summary = await generator(
         product_name="Psychological / Behavioural Needs Deep Dive",
         report=report,
         length=length,
@@ -229,13 +239,20 @@ async def regen_summary(body: RegenSummaryIn = RegenSummaryIn(),
     now = _now_iso()
     report["ai_summary"] = new_summary
     report["ai_summary_length"] = length
+    report["ai_summary_model"] = model_choice
     report["ai_summary_regenerated_at"] = now
     await db[REPORTS].update_one(
         {"user_id": user.user_id},
-        {"$set": {"report": report, "ai_summary_regenerated_at": now, "ai_summary_length": length}},
+        {"$set": {
+            "report": report,
+            "ai_summary_regenerated_at": now,
+            "ai_summary_length": length,
+            "ai_summary_model": model_choice,
+        }},
     )
     cached["report"] = report
     cached["ai_summary_regenerated_at"] = now
+    cached["ai_summary_model"] = model_choice
     return {"ok": True, **cached}
 
 

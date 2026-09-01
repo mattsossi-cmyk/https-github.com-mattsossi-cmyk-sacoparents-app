@@ -35,6 +35,7 @@ import Terms from "@/pages/Terms";
 import Accessibility from "@/pages/Accessibility";
 import Methodology from "@/pages/Methodology";
 import DataRetention from "@/pages/DataRetention";
+import Account from "@/pages/Account";
 import DeleteAccount from "@/pages/DeleteAccount";
 import Reflection from "@/pages/Reflection";
 import Orientation from "@/pages/Orientation";
@@ -158,6 +159,7 @@ function AppRoutes() {
         <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/methodology" element={<Methodology />} />
         <Route path="/data-retention" element={<DataRetention />} />
+        <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/cancel-subscription" element={<CancelSubscription />} />
         <Route path="/safety" element={<Safety />} />

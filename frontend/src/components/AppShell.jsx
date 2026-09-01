@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, Facebook, ShieldAlert, Menu, X } from "lucide-react";
+import { LogOut, Facebook, ShieldAlert, Menu, X, Settings } from "lucide-react";
 
 import GuestBanner from "./GuestBanner";
 import AppFooter from "./AppFooter";
@@ -151,6 +151,15 @@ export default function AppShell({ children }) {
                 <Facebook size={16} />
               </a>
             )}
+            <Link
+              to="/account"
+              data-testid="header-account-link"
+              className="hidden sm:grid w-9 h-9 rounded-full bg-[#EFE9F9] hover:bg-[#E5E0EE] place-items-center text-[#4B4567] transition-colors"
+              aria-label="Account settings"
+              title="Account settings"
+            >
+              <Settings size={16} />
+            </Link>
             <button
               onClick={handleLogout}
               data-testid="logout-button"

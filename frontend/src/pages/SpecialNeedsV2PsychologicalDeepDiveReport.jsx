@@ -57,6 +57,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const [busy, setBusy] = useState(false);
   const [regenBusy, setRegenBusy] = useState(false);
   const [regenLength, setRegenLength] = useState("standard");
+  const [regenModel, setRegenModel] = useState("claude");
   const [report, setReport] = useState(null);
   const [signOnDownload, setSignOnDownload] = useState(false);
   const [signNote, setSignNote] = useState("");
@@ -77,9 +78,16 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const regenerateSummary = async () => {
     setRegenBusy(true);
     try {
-      const r = await api.post("/psych-deep/report/regen-summary", { length: regenLength });
+      const r = await api.post("/psych-deep/report/regen-summary", {
+        length: regenLength,
+        model: regenModel,
+      });
       setReport(r.data?.report || null);
-      toast.success("AI summary refreshed.");
+      toast.success(
+        regenModel === "gpt"
+          ? "Summary regenerated with GPT-5.6 Terra."
+          : "AI summary refreshed."
+      );
     } catch (err) {
       logError("psych-deep regen summary", err);
       toast.error(err?.response?.data?.detail || "Could not regenerate the summary.");
@@ -391,6 +399,25 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
                     </button>
                   ))}
                 </div>
+                <div className="inline-flex rounded-full border border-[#D6CFE8] overflow-hidden text-[10px] font-semibold"
+                     data-testid="psych-deep-model-toggle"
+                     title="Which AI writes this summary. Same prompts, same neutral guardrails - just a different voice.">
+                  {[
+                    { key: "claude", label: "Claude" },
+                    { key: "gpt",    label: "GPT 5.6" },
+                  ].map((m) => (
+                    <button
+                      key={m.key}
+                      type="button"
+                      onClick={() => setRegenModel(m.key)}
+                      disabled={regenBusy}
+                      data-testid={`psych-deep-model-${m.key}`}
+                      className={`px-3 py-1.5 transition-colors ${regenModel === m.key ? "bg-[#3D1A78] text-white" : "text-[#3D1A78] bg-white hover:bg-[#F5F1FB]"} disabled:opacity-60`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
                 <button onClick={regenerateSummary} disabled={regenBusy}
                   data-testid="psych-deep-regen-summary"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-[#D6CFE8] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
@@ -404,6 +431,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
               <p className="text-[10px] text-[#8471B3] italic mt-2" data-testid="psych-deep-regen-timestamp">
                 Last regenerated: {new Date(report.ai_summary_regenerated_at).toLocaleString()}
                 {report.ai_summary_length && ` · ${report.ai_summary_length}`}
+                {report.ai_summary_model && ` · ${report.ai_summary_model === "gpt" ? "GPT 5.6 Terra" : "Claude Sonnet 4.5"}`}
               </p>
             )}
           </SectionCard>
