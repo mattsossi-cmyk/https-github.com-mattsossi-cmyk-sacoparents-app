@@ -21,6 +21,7 @@ import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
 import LearningCenterCard from "../components/LearningCenterCard";
 import YourReportsCard from "../components/YourReportsCard";
 import ShareManagementPanel from "../components/ShareManagementPanel";
+import AlignReportCTA from "../components/AlignReportCTA";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -700,6 +701,13 @@ export default function Dashboard() {
             it has value to add. */}
         <div className="mt-6">
           <ShareManagementPanel />
+        </div>
+
+        {/* Companion tool: link out to the Align Report app for parents
+            who want a side-by-side shared parenting report. Opens in a
+            new tab so we never yank them out of their SA CoParents flow. */}
+        <div className="mt-6">
+          <AlignReportCTA />
         </div>
 
         {/* Everything else lives inside "Explore more tools" — kept, not
