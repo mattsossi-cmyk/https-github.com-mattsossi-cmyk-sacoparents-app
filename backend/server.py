@@ -553,6 +553,11 @@ async def startup():
 
 app.include_router(api)
 
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
