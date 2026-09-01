@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, HardDrive, Trash2, Download, Clock } from "lucide-react";
+import MarketingConsentToggle from "../components/account/MarketingConsentToggle";
 
 const LAST_UPDATED = "February 21, 2026";
 
@@ -39,6 +40,13 @@ export default function DataRetention() {
             <StatCard icon={<HardDrive size={16} />} label="Where it lives" value="MongoDB Atlas (US-East)" />
             <StatCard icon={<Clock size={16} />} label="Guest sandbox" value="1 year" />
             <StatCard icon={<Trash2 size={16} />} label="Deletion window" value="≤ 30 days" />
+          </div>
+
+          {/* Communication preferences — HB 300 marketing opt-in toggle.
+              Lives on the Data & Retention page (parents' account hub)
+              until a dedicated /account page ships. */}
+          <div className="not-prose my-6">
+            <MarketingConsentToggle />
           </div>
 
           <H2>Retention schedule</H2>

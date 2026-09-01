@@ -191,6 +191,27 @@ Auth: Custom JWT (`auth.py`)
   endpoint defaults to Claude, `model=gpt` dispatches to GPT,
   garbage values fall back to Claude). Full 39-test suite green.
 
+### 2026-02-22 — Marketing Consent Toggle UI
+- New reusable frontend component
+  `/app/frontend/src/components/account/MarketingConsentToggle.jsx` —
+  one-click HB 300 §181.152 marketing opt-in switch. Optimistic UI
+  with roll-back on failure, toasts on both success + revert, and a
+  "Currently opted IN / OUT" state chip so parents never guess.
+- Mounted on `DataRetention.jsx` (parents' current account hub)
+  above the retention schedule. Same component can drop into a
+  future dedicated `/account` page with zero refactor.
+- Wired to the existing backend endpoints (no new server code):
+  - `GET  /api/me/hb300/status` for initial state
+  - `POST /api/me/hb300/marketing` for the flip
+- Every toggle change lands in `phi_access_log` as
+  `marketing_opt_in` / `marketing_opt_out` per the existing HB 300
+  route implementation, so the auditor can reconstruct the exact
+  moment.
+- Coverage: `tests/test_iter131_...py` — 3 contract tests
+  (status returns flag, opt-in flips flag + writes PHI log,
+  opt-out flips it back + writes log). All 28 recent iter-tests
+  green.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming
