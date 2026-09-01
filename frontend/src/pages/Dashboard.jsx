@@ -138,20 +138,27 @@ const PREP_MODULES = [
     icon: <Brain size={16} />,           route: "/special-needs-v2/psychological-deep-dive" },
 ];
 
-// Category headings shown in the Preparation Modules card — restored
-// per the parent's request for the four-group menu they saw earlier
-// this morning (co-parenting / foundation / family violence / special
-// needs). The order is intentional: parents typically start with a
-// foundation statement, then move to co-parenting prep, only branch
-// into safety or special-needs if their situation calls for it.
+// Category headings shown in the Preparation Modules card — matches
+// the parent-friendly Six-Step language on the marketing site so the
+// tone stays consistent across the front door and the dashboard. Each
+// entry carries the formal clinical name as a subtitle so mediators
+// and attorneys reviewing the same dashboard see familiar terminology.
 const PREP_MODULE_CATEGORIES = [
-  { key: "coparenting",   label: "Co-Parenting Assessments",
+  { key: "coparenting",
+    label: "How Is Co-Parenting Going Right Now?",
+    formal: "Co-Parenting Assessments",
     hint: "Prepare for a mediator or professional conversation." },
-  { key: "foundation",    label: "Foundation Statements",
+  { key: "foundation",
+    label: "What Matters Most to You as a Parent?",
+    formal: "Foundation Statements",
     hint: "A short, printable position on what your child needs." },
-  { key: "safety",        label: "Family Violence Assessments",
+  { key: "safety",
+    label: "Is Everyone Feeling Safe?",
+    formal: "Family Violence Assessments",
     hint: "Private safety screen with a Texas crisis resource footer." },
-  { key: "special-needs", label: "Special Needs Assessments",
+  { key: "special-needs",
+    label: "What Does Your Child Need Most?",
+    formal: "Special Needs Assessments",
     hint: "Medical, Educational, and Psychological deep dives." },
 ];
 
@@ -606,9 +613,14 @@ export default function Dashboard() {
                   data-testid={`dashboard-prep-category-${cat.key}`}
                 >
                   <div className="flex items-baseline gap-3 flex-wrap">
-                    <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                    <div className="text-sm sm:text-base font-serif text-[#1A1330] font-semibold">
                       {cat.label}
                     </div>
+                    {cat.formal && (
+                      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                        {cat.formal}
+                      </div>
+                    )}
                     <div className="text-[11px] text-[#8471B3] italic">
                       {cat.hint}
                     </div>

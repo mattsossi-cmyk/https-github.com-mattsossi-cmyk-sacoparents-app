@@ -209,6 +209,285 @@ def _convergence_summary(sections: List[Dict[str, Any]]) -> Dict[str, Any]:
 # Public API.
 # ---------------------------------------------------------------------------
 
+# ---------- parent-friendly 5-bucket view ----------
+# Mirrors the Joint Report's parent_view treatment but mapped to the
+# agreement domain (proposed clauses instead of assessment perceptions).
+
+
+_AGREEMENT_SECTION_LABELS = {
+    "shared_goals":         "Child-centered goals",
+    "communication":        "Communication",
+    "child_needs":          "Child's needs",
+    "household_rules":      "Household rhythms",
+    "priority_items":       "Priority topics",
+    "open_for_discussion":  "Still open for discussion",
+}
+
+
+def _clause_short_text(row: Dict[str, Any], side: str) -> str:
+    """Pull the shortest useful text from a merged row (`both_proposed`
+    rows have both parents' texts; single-side rows only have one).
+    `side` in {'a', 'b', 'either'}."""
+    if side == "a":
+        return (row.get("parent_a_text") or row.get("text") or "").strip()
+    if side == "b":
+        return (row.get("parent_b_text") or row.get("text") or "").strip()
+    return (
+        row.get("parent_a_text")
+        or row.get("parent_b_text")
+        or row.get("text")
+        or ""
+    ).strip()
+
+
+def _both_proposed_items(sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    for sec in sections:
+        for row in (sec.get("both_proposed") or []):
+            text = _clause_short_text(row, "either")
+            if not text:
+                continue
+            out.append({
+                "text": text,
+                "area": row.get("area") or "",
+                "section": sec.get("key") or "",
+                "section_title": sec.get("title") or "",
+            })
+    return out
+
+
+def _different_ideas_items(
+    sections: List[Dict[str, Any]],
+    parent_a_name: str,
+    parent_b_name: str,
+) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    for sec in sections:
+        for row in (sec.get("parent_a_only") or []):
+            out.append({
+                "topic": row.get("area") or sec.get("title") or "",
+                "parent_a": _clause_short_text(row, "a"),
+                "parent_b": "",
+                "who": parent_a_name,
+                "section": sec.get("key") or "",
+                "section_title": sec.get("title") or "",
+            })
+        for row in (sec.get("parent_b_only") or []):
+            out.append({
+                "topic": row.get("area") or sec.get("title") or "",
+                "parent_a": "",
+                "parent_b": _clause_short_text(row, "b"),
+                "who": parent_b_name,
+                "section": sec.get("key") or "",
+                "section_title": sec.get("title") or "",
+            })
+    return out
+
+
+def _needs_refinement_items(sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Items either parent explicitly flagged as still-open. These are
+    the topics most likely to need a mediator's help — not because
+    someone is wrong, but because both parents agree it's unresolved."""
+    out: List[Dict[str, Any]] = []
+    for sec in sections:
+        if sec.get("key") != "open_for_discussion":
+            continue
+        for row in (sec.get("both_proposed") or []):
+            text = _clause_short_text(row, "either")
+            if text:
+                out.append({
+                    "topic": row.get("area") or "",
+                    "detail": text,
+                    "both_flagged": True,
+                })
+        for row in (sec.get("parent_a_only") or []) + (sec.get("parent_b_only") or []):
+            text = _clause_short_text(row, "either")
+            if text:
+                out.append({
+                    "topic": row.get("area") or "",
+                    "detail": text,
+                    "both_flagged": False,
+                })
+    return out
+
+
+def _blending_options(sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Deterministic "consider" options derived from the shape of the
+    divergence — never prescriptive, always framed as parents' choice."""
+    options: List[Dict[str, Any]] = []
+    section_map = {s.get("key"): s for s in sections}
+
+    if (section_map.get("communication") or {}).get("both_proposed"):
+        options.append({
+            "title": "Anchor to what you both already wrote",
+            "detail": (
+                "You both proposed the same communication clause. Adopt "
+                "it verbatim in the joint draft and use that shared "
+                "language as the reference point for anything else "
+                "you're still working out."
+            ),
+        })
+
+    single_side_total = sum(
+        len((section_map.get(k, {}) or {}).get("parent_a_only") or []) +
+        len((section_map.get(k, {}) or {}).get("parent_b_only") or [])
+        for k in ("communication", "child_needs", "household_rules")
+    )
+    if single_side_total >= 2:
+        options.append({
+            "title": "Blend rather than pick",
+            "detail": (
+                "Where each of you proposed something different, try "
+                "writing one merged clause that keeps the best of both. "
+                "Neither parent has to \"lose\" a clause — most can be "
+                "rephrased to hold both intents."
+            ),
+        })
+
+    if (section_map.get("open_for_discussion") or {}).get("row_count", 0) > 0:
+        options.append({
+            "title": "Bring the open items to a mediator",
+            "detail": (
+                "The clauses in \"May Need Refinement\" are explicitly "
+                "flagged as unresolved. A short mediated conversation "
+                "focused on those two or three items is usually more "
+                "productive than trying to resolve them directly."
+            ),
+        })
+
+    if (section_map.get("priority_items") or {}).get("both_proposed"):
+        options.append({
+            "title": "Use your shared priorities as tiebreakers",
+            "detail": (
+                "When you disagree on a specific clause, check whether "
+                "one option aligns better with the priority topics you "
+                "both ranked as most important. Shared priorities are "
+                "the best tiebreakers you have."
+            ),
+        })
+
+    # Always-safe closer.
+    options.append({
+        "title": "Bring this joint draft to your professional",
+        "detail": (
+            "The Detailed Comparison below is written for attorneys, "
+            "mediators, and therapists. Share this draft with whoever "
+            "is helping you so they can start with the full picture."
+        ),
+    })
+    return options
+
+
+def _next_conversation_questions(
+    sections: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Turn divergent clauses into child-focused questions the parents
+    can carry into a conversation or mediation session."""
+    questions: List[Dict[str, Any]] = []
+    seen_topics: set = set()
+    for sec in sections:
+        for bucket_key in ("parent_a_only", "parent_b_only"):
+            for row in (sec.get(bucket_key) or [])[:2]:
+                topic = (row.get("area") or sec.get("title") or "").strip()
+                if not topic or topic.lower() in seen_topics:
+                    continue
+                seen_topics.add(topic.lower())
+                questions.append({
+                    "topic": topic,
+                    "question": (
+                        f"On {topic.lower()}, what does our child seem "
+                        "to need most right now — and what would make "
+                        "it easier for both of us to give them that?"
+                    ),
+                })
+                if len(questions) >= 6:
+                    break
+            if len(questions) >= 6:
+                break
+        if len(questions) >= 6:
+            break
+
+    # Always include a shared-ground closer + a mediator closer so this
+    # bucket never leaves parents empty-handed.
+    questions.append({
+        "topic": "Shared ground",
+        "question": (
+            "What is one clause from the 'What You've Both Proposed' "
+            "list that we could adopt as-is this week to start "
+            "building momentum?"
+        ),
+    })
+    questions.append({
+        "topic": "Next step",
+        "question": (
+            "What is one question we could ask a mediator that would "
+            "help us both make better decisions for our child?"
+        ),
+    })
+    return questions
+
+
+def _build_agreement_parent_view(
+    sections: List[Dict[str, Any]],
+    parent_a_name: str,
+    parent_b_name: str,
+) -> Dict[str, Any]:
+    """5-bucket parent-friendly view over the merged agreement sections."""
+    both = _both_proposed_items(sections)
+    diffs = _different_ideas_items(sections, parent_a_name, parent_b_name)
+    refine = _needs_refinement_items(sections)
+    return {
+        "what_you_both_proposed": {
+            "title": "What You've Both Proposed",
+            "description": (
+                "Clauses that appear in both parents' drafts. Adopt "
+                "these first — they're already agreed in principle."
+            ),
+            "items": both,
+            "count": len(both),
+        },
+        "where_you_have_different_ideas": {
+            "title": "Where Each of You Has Different Ideas",
+            "description": (
+                "Clauses only one of you proposed. This is where a "
+                "conversation — with each other or with a mediator — "
+                "will do the most good."
+            ),
+            "items": diffs,
+            "count": len(diffs),
+        },
+        "may_need_refinement": {
+            "title": "Clauses That May Need Refinement",
+            "description": (
+                "Items either of you explicitly flagged as still open. "
+                "Not disagreements yet — just unresolved."
+            ),
+            "items": refine,
+            "count": len(refine),
+        },
+        "options_to_consider": {
+            "title": "Options for Blending Your Ideas",
+            "description": (
+                "Possible approaches to work through the differences. "
+                "None are prescriptions — pick the ones that fit."
+            ),
+            "items": _blending_options(sections),
+            "count": None,
+        },
+        "questions_for_next_conversation": {
+            "title": "Questions for Your Next Conversation",
+            "description": (
+                "Child-focused questions the two of you can discuss "
+                "yourselves or take to mediation."
+            ),
+            "items": _next_conversation_questions(sections),
+            "count": None,
+        },
+    }
+
+
+# ---------- assembly ----------
+
 def build_joint_agreement(
     *,
     share_id: str,
@@ -285,6 +564,9 @@ def build_joint_agreement(
             "parent_b_generated_at": agreement_b.get("generated_at"),
         },
         "sections":            sections,
+        "parent_view":         _build_agreement_parent_view(
+            sections, parent_a_name, parent_b_name,
+        ),
         "summary":             _convergence_summary(sections),
         "closing_notes": {
             "parent_a": str(agreement_a.get("closing_note") or "").strip(),

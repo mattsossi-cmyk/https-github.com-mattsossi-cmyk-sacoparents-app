@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Section } from "../components/joint/JointAgreementSections";
+import JointAgreementParentView from "../components/joint/JointAgreementParentView";
 import { API } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -258,14 +259,43 @@ export default function JointAgreementShared() {
           </div>
         </div>
 
-        {(d.sections || []).map((section) => (
-          <Section
-            key={section.key}
-            section={section}
+        {/* Primary presentation — parent-friendly 5-bucket view. */}
+        <div className="mt-6">
+          <JointAgreementParentView
+            parentView={d.parent_view}
             parentAName={parentA}
             parentBName={parentB}
           />
-        ))}
+        </div>
+
+        <details
+          className="mt-8 rounded-3xl border border-[#E5E0EE] bg-white/60 overflow-hidden"
+          data-testid="joint-agreement-shared-detailed-comparison"
+        >
+          <summary className="cursor-pointer px-5 py-4 flex items-center justify-between gap-3 hover:bg-white/80 transition-colors">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                For attorneys, mediators &amp; therapists
+              </div>
+              <div className="font-serif text-lg text-[#1A1330] mt-0.5">
+                Detailed Comparison
+              </div>
+            </div>
+            <span className="text-xs text-[#857E9C] font-semibold">
+              Click to expand
+            </span>
+          </summary>
+          <div className="px-5 pb-6 pt-2 border-t border-[#E5E0EE]">
+            {(d.sections || []).map((section) => (
+              <Section
+                key={section.key}
+                section={section}
+                parentAName={parentA}
+                parentBName={parentB}
+              />
+            ))}
+          </div>
+        </details>
 
         {(d.closing_notes?.parent_a || d.closing_notes?.parent_b) && (
           <section
