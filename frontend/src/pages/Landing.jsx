@@ -450,17 +450,41 @@ function Hero() {
       <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-[#D4C5F0]/40 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-32 w-[30rem] h-[30rem] rounded-full bg-[#A8DCDC]/40 blur-3xl pointer-events-none" />
 
+      {/* "Free App" badge — parents shouldn't have to guess at pricing. */}
+      <div
+        className="absolute top-24 right-4 sm:top-28 sm:right-8 lg:right-12 z-10 rotate-[8deg]"
+        aria-hidden="false"
+        data-testid="hero-free-app-badge"
+      >
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full bg-[#3D1A78]/25 blur-lg" />
+          <div className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-gradient-to-br from-[#3D1A78] to-[#5A2FA0] text-white grid place-items-center shadow-xl border-4 border-white">
+            <div className="text-center leading-tight">
+              <div className="text-[10px] uppercase tracking-[0.24em] font-bold opacity-90">Free</div>
+              <div className="font-serif text-lg sm:text-xl font-bold">App</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center fade-up">
         <Eyebrow>The SA CoParents App</Eyebrow>
         <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#1A1330] leading-[1.05] tracking-tight">
-          Prepare for better
+          Let&rsquo;s Start With
           <br />
-          <span className="text-[#3D1A78]">co-parenting conversations.</span>
+          <span className="text-[#3D1A78]">Your Family.</span>
         </h1>
         <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] mt-6 leading-relaxed">
-          Choose what your family is facing and receive a personalized
-          starting point, practical communication tools, and reports you
-          can bring to mediation or professional support.
+          Every family is different. SA CoParents helps you think through what
+          is happening, identify what your child may need, and explore
+          practical options for moving forward.
+        </p>
+        <p
+          className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-3 leading-relaxed italic"
+          data-testid="hero-reassurance-copy"
+        >
+          There are no perfect answers. You don&rsquo;t have to agree with the
+          other parent. Start by telling us what you see.
         </p>
 
         {/* Primary action — the situation picker IS the CTA. Everything
@@ -474,7 +498,7 @@ function Hero() {
           className="mt-6 text-xs sm:text-sm text-[#4B4567] max-w-2xl mx-auto"
           data-testid="hero-reassurance"
         >
-          Private guest access · No payment required to begin · About 10 minutes
+          Private guest access · No payment required · About 10 minutes
         </p>
 
         {/* Secondary paths — kept but demoted to text links so the one
@@ -606,24 +630,50 @@ function ThreeReportsCover({ testid, number, title, body, accent, sampleHref, sa
    SECTION — HOW IT WORKS
 ============================================================ */
 function HowItWorks() {
+  // Parent-friendly language on top, formal terminology as a small
+  // subtitle for attorneys/mediators/therapists reviewing the same page.
   const steps = [
     {
       n: "1",
-      title: "Assess",
+      title: "What's Going On?",
+      subtitle: "Tell Us About Your Family",
       icon: ClipboardList,
-      body: "Complete a brief co-parenting assessment to identify strengths and opportunities for growth.",
+      body: "Tell us a little about your current parenting situation. There are no wrong answers.",
     },
     {
       n: "2",
-      title: "Learn",
-      icon: BookOpen,
-      body: "Access practical tools, exercises, and guidance designed to improve communication, manage conflict, and strengthen co-parenting skills.",
+      title: "How Is Co-Parenting Going Right Now?",
+      subtitle: "Co-Parenting Relationship Assessment",
+      icon: MessageCircle,
+      body: "A short reflection on how the two of you exchange information, share decisions, and manage handoffs.",
     },
     {
       n: "3",
-      title: "Prepare",
+      title: "What Does Your Child Need Most?",
+      subtitle: "Child Needs Assessment",
+      icon: Baby,
+      body: "Think about your child's routines, relationships, education, health, activities and emotional needs.",
+    },
+    {
+      n: "4",
+      title: "What Matters Most to You as a Parent?",
+      subtitle: "Foundation Statement",
       icon: Compass,
-      body: "Develop the skills needed for productive conversations, healthier co-parenting, and successful Child-Focused Mediation.",
+      body: "We'll organize what you've told us into a clear Foundation Statement — your starting point in your own words.",
+    },
+    {
+      n: "5",
+      title: "Where Do We See Things the Same — and Differently?",
+      subtitle: "Joint Assessment",
+      icon: Users,
+      body: "If both parents participate, we identify areas of alignment as well as areas that may need more conversation.",
+    },
+    {
+      n: "6",
+      title: "Your Family's Next-Step Guide",
+      subtitle: "Professional / Joint Report",
+      icon: FileText,
+      body: "Not a verdict on who's right — options, resources, and questions you can take into mediation or a conversation with a professional.",
     },
   ];
   return (
@@ -633,31 +683,46 @@ function HowItWorks() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto fade-up">
-          <Eyebrow>How the App Works</Eyebrow>
+          <Eyebrow>Your Six-Step Parent Journey</Eyebrow>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight">
-            Three Steps Toward Healthier Co-Parenting
+            Six plain-language steps toward
+            <br className="hidden sm:block" /> a healthier plan for your child.
           </h2>
+          <p className="mt-5 text-sm sm:text-base text-[#4B4567] leading-relaxed">
+            Each step is written for parents first. The formal terminology
+            (used by attorneys, mediators, and therapists) appears in
+            smaller text underneath so the professionals reviewing your
+            reports can find the same information.
+          </p>
         </div>
 
-        <div className="mt-16 grid md:grid-cols-3 gap-6 lg:gap-8">
+        <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7">
           {steps.map((s) => (
             <div
               key={s.n}
-              className="card-soft p-7 sm:p-8 relative"
+              className="card-soft p-6 sm:p-7 relative"
               data-testid={`how-step-${s.n}`}
             >
-              <div className="absolute -top-5 -left-2 font-serif text-[5rem] leading-none text-[#3D1A78]/8 select-none">
+              <div className="absolute -top-4 -left-1 font-serif text-[4.5rem] leading-none text-[#3D1A78]/8 select-none">
                 {s.n}
               </div>
               <div className="relative">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] grid place-items-center text-white shadow-sm mb-5">
-                  <s.icon size={20} strokeWidth={2.2} />
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] grid place-items-center text-white shadow-sm mb-4">
+                  <s.icon size={18} strokeWidth={2.2} />
                 </div>
-                <Eyebrow>Step {s.n}</Eyebrow>
-                <h3 className="font-serif text-2xl text-[#1A1330] mb-3">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+                  Step {s.n}
+                </div>
+                <h3 className="font-serif text-[1.35rem] sm:text-2xl text-[#1A1330] leading-tight mb-1.5">
                   {s.title}
                 </h3>
-                <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed">
+                <div
+                  className="text-[11px] uppercase tracking-[0.16em] text-[#857E9C] font-semibold mb-3"
+                  data-testid={`how-step-${s.n}-formal-subtitle`}
+                >
+                  {s.subtitle}
+                </div>
+                <p className="text-sm sm:text-[15px] text-[#4B4567] leading-relaxed">
                   {s.body}
                 </p>
               </div>
@@ -666,9 +731,99 @@ function HowItWorks() {
         </div>
 
         <p className="text-center text-sm sm:text-base text-[#4B4567] mt-14 max-w-xl mx-auto">
-          Every step is designed to help parents create a healthier environment
-          for their children.
+          Every step is designed to help you make better decisions for
+          your child — not to decide which parent has the better answer.
         </p>
+      </div>
+    </section>
+  );
+}
+
+
+/* ============================================================
+   ALIGNMENT BEFORE AGREEMENT — the parent philosophy strip.
+   Sits between "How it works" and the trust signals so the reader
+   understands the guiding idea before they see the credentials.
+============================================================ */
+function AlignmentPhilosophy() {
+  const shared = [
+    "Our child needs consistency.",
+    "Our child needs a meaningful relationship with both parents.",
+    "School needs to become more stable.",
+    "Transitions are difficult for our child.",
+    "We need a better way to exchange information.",
+  ];
+  return (
+    <section
+      id="alignment-philosophy"
+      className="relative py-24 sm:py-28 bg-gradient-to-br from-[#3D1A78] via-[#4A2288] to-[#2DB5B5] text-white overflow-hidden"
+      data-testid="alignment-philosophy"
+    >
+      <div className="absolute -top-40 -left-40 w-[32rem] h-[32rem] rounded-full bg-white/8 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-[32rem] h-[32rem] rounded-full bg-white/8 blur-3xl pointer-events-none" />
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-3xl mx-auto">
+          <div className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#E8DEFA] mb-3">
+            The Parent Philosophy
+          </div>
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl leading-tight">
+            Start With Alignment.
+            <br />
+            <span className="text-[#A8DCDC]">Build Toward Agreement.</span>
+          </h2>
+          <p
+            className="mt-6 text-base sm:text-lg text-white/90 leading-relaxed"
+            data-testid="alignment-tagline"
+          >
+            Alignment does not mean agreement. Two parents may disagree
+            about schedules, schools, activities, medical treatment or
+            communication — and still become aligned around something
+            more fundamental.
+          </p>
+        </div>
+
+        <div
+          className="mt-12 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20 p-6 sm:p-8"
+          data-testid="alignment-shared-concerns"
+        >
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#A8DCDC] mb-4 text-center">
+            Shared concerns often sound like this
+          </div>
+          <ul className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+            {shared.map((s) => (
+              <li
+                key={s}
+                className="flex items-start gap-3 rounded-2xl bg-white/10 px-4 py-3"
+              >
+                <Handshake size={16} className="mt-0.5 shrink-0 text-[#A8DCDC]" />
+                <span className="font-serif text-[15px] sm:text-base italic leading-relaxed">
+                  &ldquo;{s}&rdquo;
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 text-center text-sm sm:text-base text-white/85 leading-relaxed max-w-2xl mx-auto">
+            Once the app identifies those shared concerns, negotiations
+            become much easier — even between parents who can&rsquo;t
+            agree on the details.
+          </p>
+        </div>
+
+        <div
+          className="mt-10 rounded-3xl border-2 border-white/30 p-6 sm:p-8 text-center"
+          data-testid="alignment-child-value"
+        >
+          <p className="font-serif text-xl sm:text-2xl leading-relaxed italic">
+            &ldquo;We value the parenting system by how well it supports
+            the child, not by how friendly the adults appear.&rdquo;
+          </p>
+          <p className="mt-4 text-sm text-white/75 max-w-2xl mx-auto leading-relaxed">
+            Successful co-parenting doesn&rsquo;t require former partners
+            to become friends. Sometimes clear boundaries, limited
+            communication and predictable structure are healthier than
+            trying to create an artificially friendly relationship.
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -917,7 +1072,7 @@ function FinalCTA() {
             no longer exists post-iter80; the new FAQ above this CTA
             covers that job. */}
         <div className="mt-9 flex items-center justify-center">
-          <PrimaryCTA testid="final-primary-cta">Start Your Assessment</PrimaryCTA>
+          <PrimaryCTA testid="final-primary-cta">Let&rsquo;s Start With Your Family</PrimaryCTA>
         </div>
 
         <div className="mt-16 inline-flex items-center gap-2 text-xs text-[#3D1A78] font-medium tracking-wide">
@@ -954,6 +1109,7 @@ export default function Landing() {
         <Hero />
         <ThreeReportsStrip />
         <HowItWorks />
+        <AlignmentPhilosophy />
         <TrustSignals />
         <HomepageFAQ />
         <FinalCTA />
