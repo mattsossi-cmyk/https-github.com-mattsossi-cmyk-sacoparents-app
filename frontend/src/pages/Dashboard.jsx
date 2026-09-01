@@ -1263,17 +1263,17 @@ export default function Dashboard() {
                   to={`/joint-professional-report?share=${encodeURIComponent(sncHighlights.share_id)}`}
                   className="text-[11px] font-semibold text-[#3D1A78] underline underline-offset-2 hover:text-[#2a0f5f]"
                   data-testid="dashboard-joint-professional-report-link"
-                  title="Open the Joint Co-Parenting Summary for Professional Review (side-by-side, for attorneys/mediators)."
+                  title="Open the Joint Alignment Report — side-by-side, for attorneys and mediators."
                 >
-                  Open Joint Professional Report →
+                  Open Joint Alignment Report →
                 </Link>
                 <Link
                   to={`/joint-agreement?share=${encodeURIComponent(sncHighlights.share_id)}`}
                   className="text-[11px] font-semibold text-[#2DB5B5] underline underline-offset-2 hover:text-[#1F8F8F]"
                   data-testid="dashboard-joint-agreement-link"
-                  title="Open the Joint Co-Parenting Agreement Draft — merged from both parents' individual drafts."
+                  title="Open the Joint Alignment Agreement — merged from both parents' individual drafts."
                 >
-                  Open Joint Agreement Draft →
+                  Open Joint Alignment Agreement →
                 </Link>
               </div>
             </div>

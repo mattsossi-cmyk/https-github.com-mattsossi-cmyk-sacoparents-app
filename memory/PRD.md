@@ -280,6 +280,36 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-02-25 — "Joint Alignment Report" terminology + assessment-completion promo card
+- New `frontend/src/components/JointAlignmentPromoCard.jsx` — the
+  "unmistakable next action" card. Two states via the existing
+  `/snc2/compare/dashboard/highlights` + `/invites/coparent` endpoints:
+  - Waiting: big **Create a Joint Alignment Report** headline, inline
+    "Co-Parent's email" field + **Invite Co-Parent** button. Copy
+    reassures: *"You never share passwords."*
+  - Ready: **Your Joint Alignment Report is ready** with two solid
+    CTAs — *View Joint Alignment Report* / *View Joint Alignment
+    Agreement* — both routed with `?mint=1` so the parent lands in the
+    share-link mint dialog in one tap.
+- Mounted at the top of `/next-steps/:assessment` (`NextSteps.jsx`) and
+  above the video block on `/summary` (`Summary.jsx`).
+- Parent-facing terminology swept from "Joint Professional Report" and
+  "Joint Agreement Draft" → **Joint Alignment Report** / **Joint
+  Alignment Agreement** across `Dashboard.jsx`, `PathwayReport.jsx`,
+  `SpecialNeedsV2CompareView.jsx`, `JointProfessionalReport.jsx`,
+  `JointAgreement.jsx`, `ShareReportQuickAction.jsx`, `Landing.jsx`.
+- Kept on-artefact professional-facing labels ("Joint Co-Parenting
+  Summary for Professional Review", "Joint Co-Parenting Agreement
+  Draft") unchanged on the shared-view pages and PDF outputs so
+  mediators/attorneys still recognise the artefact they receive.
+- Added parent-facing sublines directly under the artefact H1s on both
+  Joint pages: *"This is your Joint Alignment Report — send it to your
+  mediator or attorney. Your co-parent sees the same version."*
+- New `tests/test_iter136_promo_card_endpoints_contract.py` — 3 tests
+  locking the read-shape of the two endpoints the promo card depends
+  on. All 87 iter tests green. UI verified in browser: both waiting
+  and ready states render as designed.
+
 ### 2026-02-24 — In-app 6-digit code flows for email verify & password reset
 - New auth endpoints on `/api/auth/`:
   - `POST /verify-email/send-code` — mints a bcrypt-hashed 6-digit code

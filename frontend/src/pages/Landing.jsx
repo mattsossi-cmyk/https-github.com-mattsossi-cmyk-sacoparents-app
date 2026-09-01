@@ -671,7 +671,7 @@ function HowItWorks() {
     {
       n: "6",
       title: "Your Family's Next-Step Guide",
-      subtitle: "Professional / Joint Report",
+      subtitle: "Joint Alignment Report",
       icon: FileText,
       body: "Not a verdict on who's right — options, resources, and questions you can take into mediation or a conversation with a professional.",
     },

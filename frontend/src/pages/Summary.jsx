@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import DemoModeBanner from "../components/DemoModeBanner";
 import InviteCoparentCard from "../components/InviteCoparentCard";
+import JointAlignmentPromoCard from "../components/JointAlignmentPromoCard";
 import WatchFirstVideo from "../components/WatchFirstVideo";
 import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
 import ReportReviewNotice from "../components/ReportReviewNotice";
@@ -1296,6 +1297,13 @@ export default function Summary() {
         <ReportReviewNotice variant="individual" className="mb-6" />
 
         <DemoModeBanner />
+
+        {/* Unmistakable next-action card — pulled above the video so
+            parents see the Joint Alignment Report CTA the moment the
+            Summary loads, whether their co-parent has finished or not. */}
+        <div className="mb-8">
+          <JointAlignmentPromoCard testidPrefix="summary-joint-promo" />
+        </div>
 
         <div className="mb-8">
           <WatchFirstVideo

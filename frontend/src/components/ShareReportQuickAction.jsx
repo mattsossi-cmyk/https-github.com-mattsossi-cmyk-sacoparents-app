@@ -53,7 +53,7 @@ export default function ShareReportQuickAction({ sncHighlights }) {
         data-testid="dashboard-share-report-quick-action"
       >
         <FileText size={14} />
-        <span>Joint Report</span>
+        <span>Joint Alignment Report</span>
         <ArrowRight size={14} className="opacity-80" />
       </Link>
       <Link
@@ -62,7 +62,7 @@ export default function ShareReportQuickAction({ sncHighlights }) {
         data-testid="dashboard-share-agreement-quick-action"
       >
         <Handshake size={14} />
-        <span>Joint Agreement</span>
+        <span>Joint Alignment Agreement</span>
         <ArrowRight size={14} className="opacity-80" />
       </Link>
     </div>

@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
+import JointAlignmentPromoCard from "../components/JointAlignmentPromoCard";
 import { api } from "../lib/api";
 
 /**
@@ -243,6 +244,13 @@ export default function NextSteps() {
             {busy ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
             Regenerate
           </button>
+        </div>
+
+        {/* Unmistakable next-action card — Joint Alignment Report promo.
+            Flips between "Invite Co-Parent" (waiting) and
+            "Your Joint Alignment Report is ready" (ready) automatically. */}
+        <div className="mt-8">
+          <JointAlignmentPromoCard testidPrefix="next-steps-joint-promo" />
         </div>
 
         {loading ? (

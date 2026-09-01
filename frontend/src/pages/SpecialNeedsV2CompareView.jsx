@@ -181,9 +181,9 @@ export default function SpecialNeedsV2CompareView() {
                   to={`/joint-professional-report?share=${encodeURIComponent(shareId)}`}
                   data-testid="snc2-compare-joint-professional-report"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-white border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] transition-colors"
-                  title="Open the professional-facing Joint Co-Parenting Summary for Professional Review."
+                  title="Open the parent-facing Joint Alignment Report."
                 >
-                  Joint Professional Report
+                  Joint Alignment Report
                 </Link>
                 <button onClick={download} disabled={downloading} data-testid="snc2-compare-download-pdf"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">

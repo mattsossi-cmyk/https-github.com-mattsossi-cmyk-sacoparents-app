@@ -331,7 +331,7 @@ export default function JointAgreement() {
               onClick={openShareLink}
               data-testid="joint-agreement-share-link-open"
               className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
-              title="Create a link a mediator or attorney can open in-browser to view this joint agreement — no login required."
+              title="Create a link a mediator or attorney can open in-browser to view this Joint Alignment Agreement — no login required."
             >
               <Link2 size={14} /> Get shareable link
             </button>
@@ -340,7 +340,7 @@ export default function JointAgreement() {
               onClick={() => setEmailOpen(true)}
               data-testid="joint-agreement-email-open"
               className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
-              title="Email this Joint Agreement Draft to a mediator, attorney, court, or therapist."
+              title="Email this Joint Alignment Agreement to a mediator, attorney, court, or therapist."
             >
               <Mail size={14} /> Email to professional
             </button>
@@ -368,7 +368,7 @@ export default function JointAgreement() {
         </div>
 
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
-          Joint Agreement Draft
+          Joint Alignment Agreement
         </div>
         <h1
           className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1 leading-tight"
@@ -376,6 +376,14 @@ export default function JointAgreement() {
         >
           {d.report_title}
         </h1>
+        <p
+          className="mt-2 text-xs text-[#4B4567] max-w-2xl leading-relaxed"
+          data-testid="joint-agreement-parent-facing-subline"
+        >
+          This is your <strong>Joint Alignment Agreement</strong> — a neutral
+          draft you and your co-parent can hand to your mediator or attorney
+          as a starting point.
+        </p>
         <div className="mt-2 text-sm text-[#4B4567]" data-testid="joint-agreement-parents">
           {parentA} <span className="text-[#857E9C] mx-1">·</span> {parentB}
         </div>

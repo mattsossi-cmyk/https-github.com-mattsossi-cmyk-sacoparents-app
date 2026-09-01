@@ -136,10 +136,10 @@ export default function PathwayReport() {
                 to={`/joint-professional-report?share=${encodeURIComponent(shareId)}`}
                 data-testid="pathway-report-joint-report"
                 className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
-                title="Open the Joint Co-Parenting Summary for Professional Review — the professional-facing side-by-side."
+                title="Open the Joint Alignment Report — side-by-side, for attorneys and mediators."
               >
                 <ScrollText size={14} />
-                Joint Professional Report
+                Joint Alignment Report
               </Link>
             )}
             <Link
