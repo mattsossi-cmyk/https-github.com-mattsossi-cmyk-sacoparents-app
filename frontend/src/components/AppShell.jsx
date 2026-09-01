@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, Facebook, ShieldAlert, Menu, X, Settings } from "lucide-react";
+import { LogOut, Facebook, ShieldAlert, Menu, X, Settings, LogIn } from "lucide-react";
 
 import GuestBanner from "./GuestBanner";
 import AppFooter from "./AppFooter";
@@ -160,6 +160,21 @@ export default function AppShell({ children }) {
             >
               <Settings size={16} />
             </Link>
+            {/* Sign in pill — demo/guest users only. Real accounts already
+                have a session, so this would just be noise for them.
+                Routes to /login where they can also switch to /claim if
+                they want to save the current demo work into a real account. */}
+            {user?.is_guest && (
+              <Link
+                to="/login"
+                data-testid="header-signin-link"
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-[#3D1A78] text-white text-xs font-semibold hover:bg-[#2f1360] transition-colors"
+                title="Sign in to your existing account"
+              >
+                <LogIn size={14} />
+                <span className="hidden sm:inline">Sign in</span>
+              </Link>
+            )}
             <button
               onClick={handleLogout}
               data-testid="logout-button"
@@ -239,6 +254,17 @@ export default function AppShell({ children }) {
                   >
                     <Facebook size={18} />
                   </a>
+                )}
+                {user?.is_guest && (
+                  <Link
+                    to="/login"
+                    onClick={() => setMenuOpen(false)}
+                    data-testid="mobile-signin-link"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#3D1A78] text-white"
+                  >
+                    <LogIn size={14} />
+                    <span className="text-sm font-semibold">Sign in</span>
+                  </Link>
                 )}
                 <button
                   onClick={handleLogout}

@@ -280,6 +280,14 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-02-27 — Header Sign In pill for demo users
+- `frontend/src/components/AppShell.jsx`: purple "Sign in" pill in the
+  top nav rendered only when `user?.is_guest === true`, routing to
+  `/login`. Mirrored into the mobile menu. Real (non-guest) accounts
+  see no change. Solves the demo-user complaint that there was no way
+  to sign into an existing account from within the dashboard without
+  hitting Landing.
+
 ### 2026-02-26 — Report navigation trap fixes + Foundation Statement demo view
 - **Fix "stuck in report" trap**:
   - `JointProfessionalReport.jsx` + `JointAgreement.jsx`: strip `?mint=1`
