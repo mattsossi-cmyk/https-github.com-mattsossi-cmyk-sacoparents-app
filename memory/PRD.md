@@ -236,6 +236,25 @@ Auth: Custom JWT (`auth.py`)
   (`med-deep` + `psych-deep`, defaults to Claude, `model=gpt`
   dispatches to GPT, invalid falls back). Full 48-test suite green.
 
+### 2026-02-22 — Consent History modal
+- New backend endpoint `GET /api/me/hb300/consent-history` — returns
+  the caller's marketing opt-in / opt-out plus HB 300 acknowledgement
+  rows from `phi_access_log`, newest first, capped at 200. No writes,
+  filters strictly to the caller's own `user_id`, drops unrelated
+  `phi_access_log` actions.
+- New frontend component
+  `/app/frontend/src/components/account/ConsentHistoryModal.jsx` —
+  accessible dialog (Escape closes, click-outside closes, aria-modal
+  set) with per-event icon + timestamp + IP + UA + notice version.
+  Empty / loading / error states covered.
+- `MarketingConsentToggle` now surfaces a compact "See history"
+  button below the state chip that pops the modal open. Zero new
+  data — just a mirror of the log the parent already generates.
+- Coverage: `tests/test_iter133_...py` — 4 tests
+  (filters to consent actions only, newest-first, row shape carries
+  resource_id for ack rows, empty for a brand-new user). Full
+  27-recent + 48-existing-iter test suite green.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming

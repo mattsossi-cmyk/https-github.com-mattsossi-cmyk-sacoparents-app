@@ -236,6 +236,43 @@ async def get_hb300_status(
     }
 
 
+@router.get("/me/hb300/consent-history")
+async def get_consent_history(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Return the caller's marketing consent + HB 300 acknowledgement
+    history, newest-first. Powers the "See my consent history" modal
+    on the account page so parents have a self-serve paper trail
+    for every HB 300 §181.152 (marketing) and §181.154 (notice)
+    event on their record.
+
+    Rows are read directly from `phi_access_log` where they were
+    written by `POST /api/me/hb300/marketing` and
+    `POST /api/me/hb300/acknowledge`. No new writes — we're just
+    exposing what the caller already generated about themselves.
+    """
+    cursor = db.phi_access_log.find(
+        {
+            "user_id": user.user_id,
+            "action":  {"$in": ["marketing_opt_in", "marketing_opt_out",
+                                "hb300_ack"]},
+        },
+        {"_id": 0, "user_id": 0},
+    ).sort("at", -1).limit(200)
+    events: list = []
+    async for row in cursor:
+        at = row.get("at")
+        events.append({
+            "action":     row.get("action"),
+            "at":         at.isoformat() if hasattr(at, "isoformat") else at,
+            "ip":         row.get("ip"),
+            "user_agent": row.get("user_agent"),
+            "resource_id": row.get("resource_id"),  # notice_version on hb300_ack rows
+        })
+    return {"events": events, "total": len(events)}
+
+
 @router.post("/admin/breach-report")
 async def submit_breach_report(
     body: BreachReportPayload,

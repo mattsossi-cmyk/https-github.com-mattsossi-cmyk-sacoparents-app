@@ -15,9 +15,10 @@
  * toggle feels responsive. Toast confirms both success and revert.
  */
 import React, { useCallback, useEffect, useState } from "react";
-import { Loader2, Megaphone } from "lucide-react";
+import { Loader2, Megaphone, History } from "lucide-react";
 import { api } from "../../lib/api";
 import { toast } from "sonner";
+import ConsentHistoryModal from "./ConsentHistoryModal";
 
 
 export default function MarketingConsentToggle() {
@@ -25,6 +26,7 @@ export default function MarketingConsentToggle() {
   const [saving, setSaving] = useState(false);
   const [optIn, setOptIn] = useState(false);
   const [updatedAt, setUpdatedAt] = useState(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -66,6 +68,7 @@ export default function MarketingConsentToggle() {
   };
 
   return (
+    <>
     <div
       className="rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5"
       data-testid="marketing-consent-panel"
@@ -114,7 +117,7 @@ export default function MarketingConsentToggle() {
           )}
         </button>
       </div>
-      <div className="mt-3 pl-12 flex items-center gap-2 text-[10px] text-[#857E9C]">
+      <div className="mt-3 pl-12 flex items-center gap-2 text-[10px] text-[#857E9C] flex-wrap">
         <span
           className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 border border-[#E5E0EE] bg-[#FCFBFE]"
           data-testid="marketing-consent-state"
@@ -122,9 +125,23 @@ export default function MarketingConsentToggle() {
           {loading ? "Checking..." : optIn ? "Currently opted IN" : "Currently opted OUT"}
         </span>
         <span className="italic">
-          HB&nbsp;300 §181.152 — every change is timestamped in your PHI access log.
+          HB&nbsp;300 §181.152 &mdash; every change is timestamped in your PHI access log.
         </span>
+        <button
+          type="button"
+          onClick={() => setHistoryOpen(true)}
+          data-testid="consent-history-open"
+          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 border border-[#D6CFE8] text-[#3D1A78] bg-white hover:bg-[#F5F1FB] transition-colors font-semibold"
+        >
+          <History size={10} strokeWidth={2.4} />
+          See history
+        </button>
       </div>
     </div>
+    <ConsentHistoryModal
+      open={historyOpen}
+      onClose={() => setHistoryOpen(false)}
+    />
+    </>
   );
 }
