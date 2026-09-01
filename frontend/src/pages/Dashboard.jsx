@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { FileText, Plus, Trash2, CheckCircle2, Circle, Sparkles } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
+import { BrandLogo } from "@/components/Brand";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 
@@ -42,9 +43,8 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background" data-testid="dashboard-page">
       <header className="bg-white border-b border-border">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2" data-testid="dash-brand-link">
-            <FileText className="h-6 w-6 text-primary" />
-            <span className="font-display text-2xl font-semibold text-primary">SA CoParents</span>
+          <Link to="/" data-testid="dash-brand-link">
+            <BrandLogo />
           </Link>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block" data-testid="user-email">{user?.email}</span>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,25 +6,25 @@
 
 @layer base {
     :root {
-        --background: 45 22% 97%;
-        --foreground: 20 6% 15%;
+        --background: 270 40% 97%;
+        --foreground: 271 30% 20%;
         --card: 0 0% 100%;
-        --card-foreground: 20 6% 15%;
+        --card-foreground: 271 30% 20%;
         --popover: 0 0% 100%;
-        --popover-foreground: 20 6% 15%;
-        --primary: 158 20% 25%;
+        --popover-foreground: 271 30% 20%;
+        --primary: 271 52% 35%;
         --primary-foreground: 0 0% 100%;
-        --secondary: 43 30% 88%;
-        --secondary-foreground: 20 6% 15%;
-        --muted: 45 25% 94%;
-        --muted-foreground: 25 8% 42%;
-        --accent: 28 47% 64%;
-        --accent-foreground: 20 6% 15%;
+        --secondary: 176 45% 92%;
+        --secondary-foreground: 271 30% 20%;
+        --muted: 270 30% 94%;
+        --muted-foreground: 271 12% 42%;
+        --accent: 176 60% 40%;
+        --accent-foreground: 0 0% 100%;
         --destructive: 0 60% 45%;
         --destructive-foreground: 0 0% 98%;
-        --border: 44 20% 87%;
-        --input: 44 20% 80%;
-        --ring: 158 20% 25%;
+        --border: 270 25% 88%;
+        --input: 270 25% 82%;
+        --ring: 271 52% 35%;
         --radius: 0.5rem;
     }
 }

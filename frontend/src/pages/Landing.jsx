@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  Users, MessageSquare, ShieldAlert, HeartPulse, GraduationCap,
-  Brain, Scale, MessagesSquare, ArrowRight, FileText,
+  Users, ShieldAlert, HeartPulse, GraduationCap,
+  Brain, Scale, MessagesSquare, ArrowRight, Heart, HeartHandshake, Lightbulb,
 } from "lucide-react";
+import { BrandLogo } from "@/components/Brand";
 
-const HERO_IMG = "https://images.unsplash.com/photo-1519226135464-df5a9dbcd2a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHw0fHxjaGlsZCUyMHBsYXlpbmclMjBwZWFjZWZ1bCUyMG5hdHVyZXxlbnwwfHx8fDE3ODgyMDE0Mzd8MA&ixlib=rb-4.1.0&q=85";
-const STONES_IMG = "https://images.unsplash.com/photo-1532009877282-3340270e0529?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzZ8MHwxfHNlYXJjaHwzfHxiYWxhbmNlZCUyMHN0b25lcyUyMHplbnxlbnwwfHx8fDE3ODgyMDE0MzZ8MA&ixlib=rb-4.1.0&q=85";
+const POSTER_IMG = "https://customer-assets-cm19k8pv.emergentagent.net/job_align-report/artifacts/yyfhtbqg_ChatGPT%20Image%20Sep%201%2C%202026%2C%2005_47_45%20PM.png";
 
 const TYPES = [
   { icon: Users, title: "General Co-Parenting" },
@@ -26,13 +26,20 @@ const PAGES = [
   "Parent Action Plan", "Joint Alignment Summary",
 ];
 
+const PILLARS = [
+  { icon: Heart, label: "REFLECT", color: "text-brand-purple", desc: "Each parent's perspective matters." },
+  { icon: HeartHandshake, label: "ALIGN", color: "text-brand-teal", desc: "Discover areas of shared understanding." },
+  { icon: MessagesSquare, label: "COMMUNICATE", color: "text-brand-green", desc: "Identify differences without blame." },
+  { icon: Lightbulb, label: "CO-PARENT", color: "text-brand-orange", desc: "Access options and resources together." },
+  { icon: Users, label: "THRIVE", color: "text-brand-blue", desc: "Build a strong foundation for your child's future." },
+];
+
 export default function Landing() {
   return (
     <div className="min-h-screen bg-background" data-testid="landing-page">
       <header className="no-print max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2" data-testid="brand">
-          <FileText className="h-6 w-6 text-primary" />
-          <span className="font-display text-2xl font-semibold text-primary">SA CoParents</span>
+        <div data-testid="brand">
+          <BrandLogo />
         </div>
         <div className="flex items-center gap-3">
           <Link to="/auth" data-testid="nav-login-link">
@@ -46,13 +53,16 @@ export default function Landing() {
 
       <section className="max-w-6xl mx-auto px-6 pt-10 pb-20 grid md:grid-cols-2 gap-12 items-center">
         <div>
-          <p className="text-sm uppercase tracking-widest text-accent font-semibold mb-4" data-testid="hero-eyebrow">
-            Alignment Before Agreement
+          <p className="text-sm uppercase tracking-widest text-primary font-bold mb-4" data-testid="hero-eyebrow">
+            Align • Communicate • Thrive
           </p>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground leading-tight" data-testid="hero-heading">
-            Two perspectives. One child at the center.
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-purple leading-tight" data-testid="hero-heading">
+            The SA CoParents <span className="font-script text-brand-teal font-normal">Difference</span>
           </h1>
-          <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-xl" data-testid="hero-subtext">
+          <p className="mt-4 text-lg font-semibold text-foreground" data-testid="hero-tagline">
+            A better way to co-parent. A better future for your child.
+          </p>
+          <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-xl" data-testid="hero-subtext">
             SA CoParents combines both parents' perspectives into a structured 10-page Joint Alignment
             Report — showing where you align, where your perspectives differ, and what your child may need.
           </p>
@@ -66,24 +76,30 @@ export default function Landing() {
               <Button size="lg" variant="outline" data-testid="hero-demo-btn">Try the demo report</Button>
             </Link>
           </div>
-          <p className="mt-8 text-sm text-muted-foreground italic max-w-xl" data-testid="hero-philosophy">
-            "We value the parenting system by how well it supports the child, not by how friendly the adults appear."
+          <p className="mt-8 font-script text-2xl text-brand-purple max-w-xl" data-testid="hero-philosophy">
+            Starting with alignment, ending with agreement.
           </p>
         </div>
         <div className="relative">
-          <div className="absolute -top-6 -left-6 w-40 h-40 bg-secondary rounded-lg -z-10" />
+          <div className="absolute -top-4 -left-4 w-full h-full bg-secondary rounded-xl -z-10" />
           <img
-            src={HERO_IMG}
-            alt="Child playing peacefully in nature"
-            className="rounded-lg shadow-xl object-cover w-full h-[420px]"
+            src={POSTER_IMG}
+            alt="The SA CoParents Difference — Joint Alignment Report"
+            className="rounded-xl shadow-xl w-full"
             data-testid="hero-image"
           />
-          <img
-            src={STONES_IMG}
-            alt="Balanced stones representing alignment"
-            className="absolute -bottom-8 -left-8 w-40 h-40 object-cover rounded-lg shadow-lg border-4 border-white hidden md:block"
-            data-testid="hero-image-secondary"
-          />
+        </div>
+      </section>
+
+      <section className="border-y border-border bg-white/70 py-12" data-testid="pillars-section">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-5 gap-6">
+          {PILLARS.map((p) => (
+            <div key={p.label} className="text-center" data-testid={`pillar-${p.label.toLowerCase()}`}>
+              <p.icon className={`h-8 w-8 mx-auto ${p.color}`} />
+              <p className={`mt-2 text-sm font-extrabold tracking-wide ${p.color}`}>{p.label}</p>
+              <p className="mt-1 text-xs text-muted-foreground leading-snug">{p.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -132,13 +148,18 @@ export default function Landing() {
 
       <footer className="border-t border-border py-10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            <span className="font-display text-xl font-semibold text-primary">SA CoParents</span>
+          <div>
+            <BrandLogo size="text-xl" />
+            <p className="mt-1 text-xs uppercase tracking-widest text-primary font-bold" data-testid="footer-tagline">
+              Align • Communicate • Thrive
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground" data-testid="footer-note">
-            Educational resource. Not legal, medical, or psychological advice.
-          </p>
+          <div className="md:text-right">
+            <p className="text-sm text-muted-foreground" data-testid="footer-note">
+              Educational resource. Not legal, medical, or psychological advice.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1" data-testid="footer-site">sacoparentsapp.online</p>
+          </div>
         </div>
       </footer>
     </div>

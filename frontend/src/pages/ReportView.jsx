@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Printer, FileText } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
+import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { REPORT_PAGES } from "@/components/report/Pages";
 
@@ -48,9 +49,9 @@ export default function ReportView() {
           <Link to="/dashboard" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground shrink-0" data-testid="report-back-link">
             <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Dashboard</span>
           </Link>
-          <div className="flex items-center gap-2 min-w-0">
-            <FileText className="h-5 w-5 text-primary shrink-0" />
-            <span className="font-display text-lg font-semibold text-primary truncate" data-testid="report-header-title">
+          <div className="flex items-center gap-3 min-w-0">
+            <BrandLogo size="text-lg" />
+            <span className="text-sm text-muted-foreground truncate" data-testid="report-header-title">
               {report.subtitle}
             </span>
           </div>

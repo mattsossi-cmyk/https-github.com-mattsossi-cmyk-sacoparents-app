@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { FileText } from "lucide-react";
+import { BrandLogo } from "@/components/Brand";
 import { useAuth } from "@/context/AuthContext";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -53,9 +53,8 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background flex flex-col" data-testid="auth-page">
       <header className="max-w-6xl w-full mx-auto px-6 py-6">
-        <Link to="/" className="flex items-center gap-2 w-fit" data-testid="auth-brand-link">
-          <FileText className="h-6 w-6 text-primary" />
-          <span className="font-display text-2xl font-semibold text-primary">SA CoParents</span>
+        <Link to="/" className="w-fit" data-testid="auth-brand-link">
+          <BrandLogo />
         </Link>
       </header>
 

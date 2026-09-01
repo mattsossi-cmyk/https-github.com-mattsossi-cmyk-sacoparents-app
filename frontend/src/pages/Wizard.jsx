@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FileText, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
+import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -203,10 +204,7 @@ export default function Wizard() {
           <Link to="/dashboard" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" data-testid="wizard-back-link">
             <ArrowLeft className="h-4 w-4" /> Dashboard
           </Link>
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            <span className="font-display text-xl font-semibold text-primary">SA CoParents</span>
-          </div>
+          <BrandLogo size="text-xl" />
         </div>
       </header>
 

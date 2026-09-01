@@ -8,8 +8,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Cormorant Garamond"', 'serif'],
-        sans: ['"Work Sans"', 'sans-serif']
+        display: ['Montserrat', 'sans-serif'],
+        sans: ['Montserrat', 'sans-serif'],
+        script: ['"Kaushan Script"', 'cursive']
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -54,7 +55,14 @@ module.exports = {
           green: '#668B69',
           yellow: '#D4B46A',
           blue: '#6096BA',
-          purple: '#9A8C98'
+          purple: '#6A3FA0'
+        },
+        brand: {
+          purple: '#5B2A86',
+          teal: '#25A19A',
+          green: '#6BAF4E',
+          orange: '#F5A623',
+          blue: '#2E7CC2'
         },
         chart: {
           '1': 'hsl(var(--chart-1))',

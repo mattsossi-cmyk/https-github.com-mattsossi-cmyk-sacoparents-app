@@ -5,7 +5,7 @@ function Page1({ r }) {
   return (
     <Paper pageNum={1} pageTitle={r.page_titles[0]}>
       <div className="text-center mb-10">
-        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-2">SA CoParents</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-brand-purple font-bold mb-2">SA CoParents</p>
         <h1 className="text-4xl sm:text-5xl font-semibold text-primary" data-testid="report-title">{r.report_title}</h1>
         <p className="mt-3 text-lg text-muted-foreground" data-testid="report-subtitle">{r.subtitle}</p>
         {r.child_name && <p className="mt-1 text-sm text-muted-foreground" data-testid="report-child-name">Prepared with {r.child_name} at the center</p>}

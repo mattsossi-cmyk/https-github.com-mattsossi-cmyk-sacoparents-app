@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell } from "recharts";
+import { BrandLogo } from "@/components/Brand";
 
 export function Paper({ children, pageNum, pageTitle }) {
   return (
@@ -7,7 +8,7 @@ export function Paper({ children, pageNum, pageTitle }) {
       data-testid={`report-page-${pageNum}`}
     >
       <div className="flex items-baseline justify-between border-b border-border pb-4 mb-8">
-        <span className="font-display text-lg font-semibold text-primary">SA CoParents</span>
+        <BrandLogo size="text-lg" />
         <span className="text-xs uppercase tracking-widest text-muted-foreground" data-testid={`page-label-${pageNum}`}>
           Page {pageNum} of 10 — {pageTitle}
         </span>
