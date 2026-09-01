@@ -168,6 +168,29 @@ Auth: Custom JWT (`auth.py`)
   side effects, below-threshold share not nudged). Full 33-test
   joint-artefact suite green.
 
+### 2026-02-22 — ChatGPT integration (Regenerate with GPT 5.6 Terra)
+- New `ai_summary_gpt.generate_executive_summary_gpt(...)` — companion
+  to `ai_summary.generate_executive_summary` that targets
+  `openai/gpt-5.6-terra` via the Emergent Universal LLM Key. Same
+  prompt, same neutral guardrails, same signals extraction. Never
+  raises — the endpoint layer falls back to Claude on failure.
+- `/api/edu-deep/report/regen-summary` gained an optional `model`
+  param (`"claude"` default, `"gpt"` for the 5.6 Terra alternative).
+  Invalid values downgrade to Claude. The regenerated report row
+  now carries `ai_summary_model` so the UI can label who wrote it.
+- `SpecialNeedsV2EducationalDeepDiveReport.jsx` — added a
+  Claude / GPT 5.6 toggle beside the existing short/standard/long
+  length toggle. Regenerate button sends both length and model.
+  The timestamp caption now surfaces which model wrote the current
+  summary.
+- **Rollout note**: shipped on Edu Deep as the pilot surface. Same
+  pattern will drop cleanly onto Med Deep / Psych Deep / Joint
+  Report once the parent-side signal on Edu is clear.
+- Coverage: `tests/test_iter130_...py` — 6 tests (module targets
+  gpt-5.6-terra, fail-soft without key, fail-soft on exception,
+  endpoint defaults to Claude, `model=gpt` dispatches to GPT,
+  garbage values fall back to Claude). Full 39-test suite green.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming
