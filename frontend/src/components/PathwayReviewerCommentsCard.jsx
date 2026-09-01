@@ -68,6 +68,7 @@ export default function PathwayReviewerCommentsCard() {
 
   return (
     <div
+      id="pathway-reviewer-comments"
       className="rounded-3xl border border-[#E5E0EE] bg-white p-5"
       data-testid="pathway-reviewer-comments-card"
     >

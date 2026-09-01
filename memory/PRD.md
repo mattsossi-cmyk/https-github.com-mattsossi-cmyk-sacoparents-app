@@ -255,6 +255,29 @@ Auth: Custom JWT (`auth.py`)
   resource_id for ack rows, empty for a brand-new user). Full
   27-recent + 48-existing-iter test suite green.
 
+### 2026-02-22 — New-Comment Toast (live reviewer-comment ping)
+- New headless React component
+  `/app/frontend/src/components/NewCommentToaster.jsx` — polls
+  `/api/pathway-report/comments/mine` every 30s (plus on tab-focus)
+  and fires a `sonner` toast for each newly-arrived reviewer
+  comment. Aggregates when 3+ land at once so the corner stays
+  tidy. Toast action deep-links to the
+  `#pathway-reviewer-comments` anchor on the Dashboard for
+  smooth-scroll (or navigates + hashes when the parent is
+  elsewhere).
+- Baseline: on first-ever mount, the newest `created_at` is
+  written to `localStorage.pathwayCommentSeenAt` silently so a
+  returning parent doesn't get a wall of toasts for comments
+  that were already visible on the dashboard.
+- Wired into `Dashboard.jsx` (only visible / active while the
+  parent is on the primary in-app surface). Anchor `id` added
+  to `PathwayReviewerCommentsCard` so scroll-into-view works.
+- No new backend code — the endpoint has existed since the
+  cosign portal work. Coverage `tests/test_iter134_...py` —
+  3 contract tests locking the shape the toaster relies on
+  (`total`+`comments` keys, per-row `comment_text` field name,
+  newest-first ordering). All 30 recent iter-tests green.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming

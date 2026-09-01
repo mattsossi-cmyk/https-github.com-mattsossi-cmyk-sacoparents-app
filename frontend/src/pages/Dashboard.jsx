@@ -22,6 +22,7 @@ import LearningCenterCard from "../components/LearningCenterCard";
 import YourReportsCard from "../components/YourReportsCard";
 import ShareManagementPanel from "../components/ShareManagementPanel";
 import AlignReportCTA from "../components/AlignReportCTA";
+import NewCommentToaster from "../components/NewCommentToaster";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -478,6 +479,9 @@ export default function Dashboard() {
 
   return (
     <AppShell>
+      {/* Headless: polls the reviewer-comment feed and fires a toast
+          the moment a new comment lands. Renders nothing itself. */}
+      <NewCommentToaster />
       <div className="fade-up">
         <EmailHealthBanner />
         <VerificationBanner />
