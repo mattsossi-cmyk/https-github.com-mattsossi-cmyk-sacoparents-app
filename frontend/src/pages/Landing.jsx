@@ -660,6 +660,8 @@ function HowItWorks() {
       subtitle: "Foundation Statement",
       icon: Compass,
       body: "We'll organize what you've told us into a clear Foundation Statement — your starting point in your own words.",
+      sampleHref: "/foundation/demo",
+      sampleLabel: "See what one looks like",
     },
     {
       n: "5",
@@ -725,9 +727,31 @@ function HowItWorks() {
                 <p className="text-sm sm:text-[15px] text-[#4B4567] leading-relaxed">
                   {s.body}
                 </p>
+                {s.sampleHref && (
+                  <Link
+                    to={s.sampleHref}
+                    className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78] hover:underline"
+                    data-testid={`how-step-${s.n}-sample-link`}
+                  >
+                    {s.sampleLabel || "See a sample"} →
+                  </Link>
+                )}
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Prominent sample CTA — sits below the six-step grid so
+            visitors leave with a way to peek at a real artefact without
+            signing up. Links to the public Foundation Statement demo. */}
+        <div className="mt-10 flex justify-center">
+          <Link
+            to="/foundation/demo"
+            className="inline-flex items-center gap-2 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-6 py-3 text-sm font-semibold shadow-sm hover:bg-[#F5F1FB] hover:shadow-md transition-all"
+            data-testid="how-it-works-foundation-sample-cta"
+          >
+            See a sample Foundation Statement →
+          </Link>
         </div>
 
         <p className="text-center text-sm sm:text-base text-[#4B4567] mt-14 max-w-xl mx-auto">

@@ -280,6 +280,19 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-02-28 — Foundation Demo on Landing + Sign In on demo banner
+- `Landing.jsx` "How it works" section:
+  - Step 4 (Foundation Statement) card now shows a *"See what one looks
+    like →"* link routing to `/foundation/demo`.
+  - New outlined pill *"See a sample Foundation Statement →"* below the
+    six-step grid so visitors can peek at a real artefact before
+    signing up.
+- `DemoModeBanner.jsx`: added an outlined *"Sign in to my account"*
+  pill next to the existing solid *"Keep it forever →"* CTA. Gives
+  demo users two clear paths — sign into an existing account or claim
+  the current demo as a new one. Complements the header pill added
+  earlier for redundancy.
+
 ### 2026-02-27 — Header Sign In pill for demo users
 - `frontend/src/components/AppShell.jsx`: purple "Sign in" pill in the
   top nav rendered only when `user?.is_guest === true`, routing to

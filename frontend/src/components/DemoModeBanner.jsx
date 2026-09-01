@@ -65,6 +65,13 @@ export default function DemoModeBanner() {
         </div>
         <div className="flex flex-wrap gap-2 sm:justify-end">
           <Link
+            to="/login"
+            className="px-5 py-2.5 rounded-full border border-white/50 text-white text-sm font-semibold hover:bg-white/10 whitespace-nowrap"
+            data-testid="demo-mode-banner-signin-btn"
+          >
+            Sign in to my account
+          </Link>
+          <Link
             to="/claim"
             className="px-5 py-2.5 rounded-full bg-white text-[#3D1A78] text-sm font-semibold hover:bg-white/90 whitespace-nowrap"
             data-testid="demo-mode-banner-claim-btn"
