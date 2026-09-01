@@ -39,8 +39,8 @@ SECTIONS: List[Dict[str, Any]] = [
             {"id": "s1q3", "prompt": "Our co-parent conversations remain respectful, even during disagreements."},
             {"id": "s1q4", "prompt": "We use a shared calendar or communication app for schedule and updates."},
             {"id": "s1q5", "prompt": "When I need to share information, I focus on facts rather than emotions."},
-            {"id": "s1q6", "prompt": "The other parent shares information with me when they should."},
-            {"id": "s1q7", "prompt": "Conversations with the other parent escalate into conflict.", "reverse": True},
+            {"id": "s1q6", "prompt": "I get the information I need from the other parent about our child."},
+            {"id": "s1q7", "prompt": "Our conversations tip into personal conflict rather than staying focused on our child.", "reverse": True},
         ],
     },
     {
@@ -85,7 +85,7 @@ SECTIONS: List[Dict[str, Any]] = [
             {"id": "s4q4", "prompt": "Emergency contacts, insurance, and health records are shared and accessible."},
             {"id": "s4q5", "prompt": "We coordinate on specialist visits and follow-up appointments."},
             {"id": "s4q6", "prompt": "When my child has a health incident, I notify the other parent promptly."},
-            {"id": "s4q7", "prompt": "Medical decisions are made with both parents' input."},
+            {"id": "s4q7", "prompt": "Medical decisions come together with both parents' input."},
         ],
     },
     {

@@ -377,6 +377,49 @@ async def email_joint_report(
     except Exception as e:  # pragma: no cover - defensive
         raise HTTPException(500, "Could not assemble the joint report PDF.") from e
 
+    # Mint a shareable preview link so the recipient can click through
+    # to the in-browser view straight from their inbox. 30 days keeps
+    # the link alive across the typical mediator/attorney follow-up
+    # window; the parent can revoke it early from the share-management
+    # UI at any time. Preview minting is best-effort — if it fails the
+    # email still goes out with just the PDF attachment.
+    preview_url = None
+    preview_jti = None
+    try:
+        preview_token = create_share_token(
+            doc_type="joint_report",
+            doc_id=share_id,
+            user_id=user.user_id,
+            expire_days=30,
+        )
+        decoded_preview = decode_share_token(preview_token) or {}
+        preview_expires = (
+            datetime.fromtimestamp(decoded_preview["exp"], tz=timezone.utc)
+            if decoded_preview.get("exp") else None
+        )
+        preview_jti = decoded_preview.get("jti")
+        await record_share_token(
+            db,
+            jti=preview_jti,
+            user_id=user.user_id,
+            doc_type="joint_report",
+            doc_id=share_id,
+            expires_at=preview_expires,
+            label=f"Emailed to {to_email}",
+        )
+        preview_url = (
+            f"{absolute_origin(request)}"
+            f"/api/joint-professional-report/preview/{preview_token}"
+        )
+        from phi_access_routes import record_phi_access
+        await record_phi_access(
+            db, user_id=user.user_id, action="share_link_created",
+            resource_type="joint_professional_report",
+            share_id=share_id, request=request,
+        )
+    except Exception:  # noqa: BLE001 - preview link is best-effort
+        preview_url = None
+
     try:
         send_joint_professional_report(
             to_email=to_email,
@@ -389,6 +432,7 @@ async def email_joint_report(
             summary_counts=payload.get("summary_counts") or {},
             pdf_bytes=pdf_bytes,
             pdf_filename=f"joint-professional-report-{share_id[:10]}.pdf",
+            preview_url=preview_url,
         )
     except EmailNotConfigured as e:
         raise HTTPException(
@@ -411,6 +455,7 @@ async def email_joint_report(
         "recipient_name": (body.recipient_name or "").strip(),
         "recipient_role": body.recipient_role,
         "audience":       audience,
+        "preview_jti":    preview_jti,
         "sent_at":        now_iso,
     })
     # Audit-log this disclosure so it appears in the parent's own
@@ -426,6 +471,8 @@ async def email_joint_report(
         "emailed_to": to_email,
         "audience": audience,
         "share_id": share_id,
+        "preview_included": bool(preview_url),
+        "preview_jti": preview_jti,
     }
 
 

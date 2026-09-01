@@ -1,7 +1,8 @@
 # Phase 3 · Question-Tone Rewrites — Draft Diff for Sign-Off
 
-**Status:** DRAFT — no code has shipped. Reply "approve" to ship all, or
-line-edit any row and I'll apply just the ones you keep.
+**Status:** SNC v2 Table-1 rewrites SHIPPED 2026-02-22. Deep Dive
+enumeration (Sections 2-4 below) still pending user approval on the
+per-item diff.
 
 **Goal:** Soften accusatory phrasing across intake questions per your
 "How easy or difficult is it for the two of you to exchange important
@@ -10,26 +11,17 @@ DV/coercion items (Safety Assessment) — those must NOT be softened.
 
 ---
 
-## 1 · Co-Parenting Relationship Assessment (SNC / `coparenting_questions.py`)
+## 1 · Co-Parenting Relationship Assessment (SNC / `coparenting_questions.py`) — SHIPPED
 
-Current tone is mostly first-person self-reflection already ("I share
-important updates…") — good baseline. Only a handful lean accusatory
-or blame-shaped. Suggested rewrites below; blanks = leave as-is.
-
-| # | Section | Current | Suggested rewrite |
+| # | Section | Old prompt | New prompt (shipped 2026-02-22) |
 |---|---|---|---|
-| s1q6 | Communication | "The other parent shares information with me when they should." | "How easy is it to get the information you need from the other parent about our child?" *(scale wording may need adjustment — see note below)* |
-| s1q7 | Communication | "Conversations with the other parent escalate into conflict." | "How often do your conversations stay on the child rather than tipping into personal conflict?" *(reverse-scored flag flips: higher = better)* |
-| s2q6 | Transitions | "My child shows anxiety in the hours before an exchange." | Keep — this is a factual observation about the child, not a judgment |
-| s4q7 | Medical | "Medical decisions are made with both parents' input." | "How easy is it to make medical decisions together when they come up?" |
-| s10 (all) | Long-term | Already first-person, no change | — |
+| s1q6 | Communication | "The other parent shares information with me when they should." | "I get the information I need from the other parent about our child." |
+| s1q7 | Communication | "Conversations with the other parent escalate into conflict." | "Our conversations tip into personal conflict rather than staying focused on our child." (reverse-scored, direction preserved) |
+| s2q6 | Transitions | "My child shows anxiety in the hours before an exchange." | Kept — factual child observation, not a judgment |
+| s4q7 | Medical | "Medical decisions are made with both parents' input." | "Medical decisions come together with both parents' input." |
 
-> **Scale note:** if we shift several items from "Never / Rarely /
-> Sometimes / Often / Always" (frequency) toward "Very difficult /
-> Difficult / Neutral / Easy / Very easy" (ease), the scoring engine
-> needs the same 0-4 mapping and reverse-flag revisited. Recommendation:
-> keep the 0-4 frequency scale, only rewrite the *stem* — this
-> preserves back-compatibility with past submissions.
+Scoring engine unchanged: 0-4 frequency scale + existing reverse flags
+preserved so past submissions still map correctly.
 
 ---
 

@@ -75,9 +75,38 @@ Auth: Custom JWT (`auth.py`)
   tests cover mint → view → PDF → revoke, wrong-doc-type rejection,
   and invalid-token rejection. All pass.
 
+### 2026-02-22 — P1 shipments: Email + Link for Joint Report + PDF Parent View
+- `POST /api/joint-professional-report/{share_id}/email` now mints a
+  30-day preview share token, records it under the sending parent
+  with an `Emailed to <recipient>` label, and passes an absolute
+  `/api/joint-professional-report/preview/{token}` URL down to
+  `send_joint_professional_report`. Response gained
+  `preview_included`/`preview_jti` fields; `joint_report_emails` rows
+  now carry a `preview_jti` link back to the minted token.
+- `email_service.send_joint_professional_report` accepts optional
+  `preview_url`; when provided, HTML body renders an "Open the joint
+  report online" pill button and plaintext gets the URL block.
+  Backward-compatible: absent → block is omitted.
+- Joint Agreement PDF (`joint_agreement_pdf.py`) rebuilt to lead
+  with the 5-bucket Parent View (matches JointAgreementParentView.jsx
+  on-screen). The classic row-strip layout moved to "Appendix A -
+  Detailed Item Breakdown". Backward-compatible: payloads without
+  `parent_view` render the appendix only.
+- Phase 3 Question-Tone Rewrites — Table 1 (SNC v2) shipped:
+  s1q6, s1q7, s4q7 rewritten to neutral tone in
+  `coparenting_questions.py`. Scoring engine untouched; reverse
+  flags preserved so past submissions still map correctly. Deep
+  Dive banks (Med/Edu/Psych) still pending per-item enumeration.
+- Coverage: `tests/test_iter126_...py` — 5 new tests (30-day expiry
+  verified, preview URL passthrough, HTML+text block presence,
+  PDF parent-view+appendix presence, empty-payload safety).
+  All 60 combined iter113-126 tests pass.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming
+- Share Management Panel (UI to list active tokens, view analytics, revoke)
+- Reviewer View Analytics — "viewed N times · last opened <date>" pill
 - Policy-Refresh Email Blast (returning parents notice of new privacy)
 - Marketing-toggle UI on account page (backend endpoint exists)
 - Multi-State OCR payload (`total_individuals_affected`,
@@ -85,6 +114,7 @@ Auth: Custom JWT (`auth.py`)
 - Live Operator Alert on breach draft filing
 - Nudge Operator Preview endpoint (admin-only next-Monday preview)
 - New-Comment toast on dashboard when reviewer comments land
+- Phase 3 Deep-Dive Bank Enumeration (Med/Edu/Psych per-item diff)
 - HTML Co-Parenting Agreement form (user request — clarifying qs pending)
 
 ### P2 — Future
