@@ -144,6 +144,30 @@ Auth: Custom JWT (`auth.py`)
   correctly, route choice sets stay a subset of the allowed windows).
   All 28 combined tests pass.
 
+### 2026-02-22 — Silent-Reviewer Nudge sweep
+- New backend module `silent_reviewer_nudge.py` — daily scheduler that
+  emails the SENDING PARENT (never the reviewer) when a share they
+  emailed via `/joint-agreement/{id}/email` or
+  `/joint-professional-report/{id}/email` has gone unopened for
+  N days. Defaults: threshold 3 days, sweep every 60 min, gated by
+  `SILENT_REVIEWER_NUDGE_ENABLED=1`.
+- Guards: idempotent (`nudged_at` stamped after first send so no
+  candidate ever fires twice), skips revoked / expired tokens, skips
+  manually-minted "Get shareable link" tokens (label prefix check),
+  skips tokens whose `phi_access_log` already carries an
+  `external_read_via_share_link` row.
+- Nudge audit-logged as `silent_reviewer_nudge` on the parent's
+  PHI-access history so their accounting-of-disclosures export stays
+  complete.
+- New `email_service.send_silent_reviewer_nudge(...)` template — HTML
+  + plain, CTA back to `/dashboard` so the parent can re-send from
+  the Share Management Panel with one tap.
+- Coverage: `tests/test_iter129_...py` — 5 tests (ripe unopened is
+  nudged and stamped, already-opened is stamped without send,
+  revoked/expired/manual tokens skipped, dry_run reports without
+  side effects, below-threshold share not nudged). Full 33-test
+  joint-artefact suite green.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming

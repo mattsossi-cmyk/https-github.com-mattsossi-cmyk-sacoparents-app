@@ -259,6 +259,8 @@ async def startup_log():
     asyncio.create_task(weekly_compliance_reminder_loop(app))
     from compare_invite_nudge import compare_invite_nudge_loop
     asyncio.create_task(compare_invite_nudge_loop(app))
+    from silent_reviewer_nudge import silent_reviewer_nudge_loop
+    asyncio.create_task(silent_reviewer_nudge_loop(app))
 
 
 @app.on_event("shutdown")

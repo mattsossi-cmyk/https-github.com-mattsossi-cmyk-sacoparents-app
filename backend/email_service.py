@@ -217,6 +217,73 @@ def _cover_note(
 
 
 # ============ Public API ============
+def send_silent_reviewer_nudge(
+    *,
+    to_email: str,
+    parent_name: str,
+    recipient_display: str,
+    artefact_label: str,
+    share_page_url: str,
+    days_since_sent: int,
+) -> None:
+    """Nudge the SENDING PARENT (not the reviewer) when a share they
+    emailed hasn't been opened after N days.
+
+    Deliberately nudges the parent — never the reviewer — because the
+    parent chose the share, holds the audit relationship, and can
+    decide whether to re-send. Auto-emailing the professional risks
+    feeling like spam.
+    """
+    plain = (
+        f"Hi {parent_name or 'there'},\n\n"
+        f"Quick heads-up: {days_since_sent} days ago you emailed the "
+        f"{artefact_label} to {recipient_display}, and it hasn't been "
+        f"opened yet.\n\n"
+        "That could mean anything — a busy inbox, an unread folder, "
+        "or a link they just haven't gotten to. If it would help, you "
+        "can re-send it in one tap from your dashboard:\n\n"
+        f"{share_page_url}\n\n"
+        "You can also revoke the link from that page if you'd rather "
+        "share a fresh copy manually.\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'Hi {_html.escape(parent_name or "there")},'
+        f'</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'Quick heads-up: <strong>{days_since_sent} days ago</strong> '
+        f'you emailed the <strong>{_html.escape(artefact_label)}</strong> '
+        f'to <strong>{_html.escape(recipient_display)}</strong>, and it '
+        f"hasn't been opened yet."
+        f'</p>'
+        f'<div style="background:#F8F7FC;border-radius:14px;padding:14px 16px;'
+        f'margin:0 0 16px 0;border:1px solid #E5E0EE;color:#1A1330;'
+        f'font-size:14px;line-height:1.55;">'
+        f'That could mean anything &mdash; a busy inbox, an unread '
+        f"folder, or a link they just haven't gotten to. If it would "
+        f'help, you can re-send it in one tap from your dashboard.'
+        f'</div>'
+        f'<p style="font-size:12px;line-height:1.55;color:#857E9C;margin:0;">'
+        f'You can also revoke the link from your dashboard if you\u2019d '
+        f'rather share a fresh copy manually.'
+        f'</p>'
+    )
+    html = _branded_html(
+        headline=f"Your {artefact_label} hasn\u2019t been opened yet",
+        body_html=body_html,
+        cta_label="Open your dashboard",
+        cta_url=share_page_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=f"{recipient_display} hasn\u2019t opened your {artefact_label} yet",
+        html=html,
+        text=plain,
+        failure_message="Could not send the follow-up nudge right now.",
+    )
+
+
 def send_magic_link(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
     """Send a one-tap sign-in link."""
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
