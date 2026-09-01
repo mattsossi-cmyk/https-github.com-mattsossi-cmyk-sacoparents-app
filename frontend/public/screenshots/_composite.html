@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SA CoParents · Joint Report + Joint Agreement</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: #F5F1FB;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #1A1330;
+    }
+    .wrap {
+      width: 2560px;
+      padding: 44px 44px 40px 44px;
+    }
+    .header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 26px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #3D1A78;
+    }
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 48px;
+      line-height: 1.05;
+      color: #1A1330;
+      margin-top: 6px;
+      max-width: 1700px;
+    }
+    .h1-accent { color: #3D1A78; }
+    .tagline {
+      font-size: 15px;
+      color: #4B4567;
+      max-width: 640px;
+      text-align: right;
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .panel {
+      background: #ffffff;
+      border-radius: 22px;
+      box-shadow: 0 14px 40px rgba(45, 15, 95, 0.10);
+      overflow: hidden;
+      border: 1px solid #E5E0EE;
+    }
+    .caption {
+      padding: 18px 22px 12px 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #FBFAFD;
+      border-bottom: 1px solid #EDE7F7;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .badge.a { background: #EAF7F7; color: #0F6F6F; border: 1px solid #B5DFC5; }
+    .badge.b { background: #F5F1FB; color: #3D1A78; border: 1px solid #D6CFE8; }
+    .panel-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px;
+      line-height: 1.2;
+      color: #1A1330;
+    }
+    .panel-sub {
+      font-size: 12px;
+      color: #4B4567;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+    .shot { width: 100%; display: block; }
+    .footer {
+      margin-top: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+      font-size: 12px;
+      color: #857E9C;
+    }
+    .brand {
+      font-weight: 700;
+      color: #3D1A78;
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <div class="eyebrow">For professionals &middot; For parents</div>
+        <h1>
+          Two separated parents &mdash;
+          <span class="h1-accent">one shared story.</span>
+        </h1>
+      </div>
+      <div class="tagline">
+        Every claim is parent-attributed. Every section is written in
+        non-adjudicative language. Nothing here is a custody evaluation.
+      </div>
+    </div>
+    <div class="grid">
+      <div class="panel">
+        <div class="caption">
+          <span class="badge b">Joint Report</span>
+          <div>
+            <div class="panel-title">For attorneys &amp; mediators</div>
+            <div class="panel-sub">
+              Side-by-side summary of both parents&rsquo; answers &mdash; what they
+              agree on, where perceptions differ, what to raise next.
+            </div>
+          </div>
+        </div>
+        <img class="shot"
+             src="file:///app/frontend/public/screenshots/joint-professional-report.png"
+             alt="Joint Co-Parenting Summary for Professional Review" />
+      </div>
+      <div class="panel">
+        <div class="caption">
+          <span class="badge a">Joint Agreement</span>
+          <div>
+            <div class="panel-title">For parents to build together</div>
+            <div class="panel-sub">
+              Draft agreement grouped into 5 parent-friendly buckets: what
+              you both proposed, where you have different ideas, and more.
+            </div>
+          </div>
+        </div>
+        <img class="shot"
+             src="file:///app/frontend/public/screenshots/joint-agreement.png"
+             alt="Joint Co-Parenting Agreement Draft" />
+      </div>
+    </div>
+    <div class="footer">
+      <span>Generated from real answers &mdash; never a court recommendation.</span>
+      <span class="brand">SA CoParents &middot; sacoparentsapp.online</span>
+    </div>
+  </div>
+</body>
+</html>
