@@ -302,6 +302,21 @@ export default function JointProfessionalReport() {
     return () => { cancelled = true; };
   }, [shareId]);
 
+  // Auto-open the mint dialog when the parent arrives with ?mint=1
+  // (the Dashboard hero "Share a report" quick action). Fires once the
+  // report has finished loading so the consent-gate + form dropdown
+  // aren't racing the API call.
+  const autoMintTriggered = useRef(false);
+  useEffect(() => {
+    if (autoMintTriggered.current) return;
+    if (params.get("mint") !== "1") return;
+    if (state.loading || state.error || !state.data) return;
+    autoMintTriggered.current = true;
+    openShareLink();
+    // openShareLink is stable (component-scoped, no deps) — safe to omit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.loading, state.error, state.data, params]);
+
   const downloadPdf = async () => {
     if (!shareId) return;
     setDownloading(true);

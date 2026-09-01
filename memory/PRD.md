@@ -280,6 +280,25 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-02-23 — OG image swap + Dashboard "Share a report" quick action
+- `frontend/public/index.html`: swapped `og:image` / `twitter:image` to the
+  new `screenshots/joint-composite-og.png` (1200×630 letterboxed) with the
+  full-res `joint-composite.png` (2560×987) as a secondary tag. Titles /
+  descriptions updated to "Two separated parents — one shared story."
+  So every share of `sacoparentsapp.online` on Slack, iMessage, WhatsApp,
+  or Twitter renders the composite instead of the generic logo.
+- `frontend/public/screenshots/joint-composite-og.png`: generated
+  1200×630 letterboxed version of the composite for social scrapers.
+- New `frontend/src/components/ShareReportQuickAction.jsx`: compact pill
+  in the Dashboard Step 1 hero. Routes to
+  `/joint-professional-report?share=<id>&mint=1` when the Compare share
+  is ready; otherwise a soft-locked "unlocks after your Compare is ready"
+  state so the entry point is always visible.
+- `frontend/src/pages/JointProfessionalReport.jsx`: auto-fires the mint
+  dialog when `?mint=1` is present (once the report finishes loading).
+- Verified with screenshot tool — pill renders in ready state for
+  `parent1@test.com` (active Compare share) and routes cleanly.
+
 ### P1 — Upcoming
 - Policy-Refresh Email Blast (returning parents notice of new privacy)
 - Marketing-toggle UI on account page (backend endpoint exists)

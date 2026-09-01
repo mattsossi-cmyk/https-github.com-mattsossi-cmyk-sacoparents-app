@@ -21,6 +21,7 @@ import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
 import LearningCenterCard from "../components/LearningCenterCard";
 import YourReportsCard from "../components/YourReportsCard";
 import ShareManagementPanel from "../components/ShareManagementPanel";
+import ShareReportQuickAction from "../components/ShareReportQuickAction";
 import AlignReportCTA from "../components/AlignReportCTA";
 import NewCommentToaster from "../components/NewCommentToaster";
 import { api } from "../lib/api";
@@ -511,6 +512,12 @@ export default function Dashboard() {
             What best describes your situation
             {user?.name ? `, ${user.name.split(" ")[0]}?` : "?"}
           </h1>
+          {/* Quick action — shortest path from Dashboard to a shareable
+              Joint Report link. Soft-locked until the Compare share is
+              ready so it never sends a parent to an empty state. */}
+          <div className="mt-4">
+            <ShareReportQuickAction sncHighlights={sncHighlights} />
+          </div>
           {situationChoice ? (
             <div
               className="mt-4 flex items-center gap-3 flex-wrap"
