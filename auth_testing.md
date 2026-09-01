@@ -7,7 +7,7 @@ use test_database
 db.users.find({role: "admin"}).pretty()
 db.users.findOne({role: "admin"}, {password_hash: 1})
 ```
-Verify: bcrypt hash starts with `$2b$`, unique index on users.email, index on login_attempts.identifier.
+Verify: bcrypt hash starts with `$2b$`, indexes exist on users.email (unique), login_attempts.identifier, password_resets.expires_at (TTL).
 
 ## Step 2: API Testing
 ```
@@ -27,3 +27,16 @@ curl -b cookies.txt http://localhost:8001/api/auth/me
 ```
 curl -c cookies2.txt -X POST http://localhost:8001/api/auth/register -H "Content-Type: application/json" -d '{"name":"Test Parent","email":"parent@test.com","password":"testpass123","role":"parent"}'
 ```
+
+## Step 5: Password reset flow
+```
+curl -X POST http://localhost:8001/api/auth/forgot-password -H "Content-Type: application/json" -d '{"email":"mattsossi@bsossi.com"}'
+```
+Always returns 200 (no account enumeration). A 6-digit code is emailed via the managed
+Resend proxy and stored as a SHA-256 hash in `password_resets` (10-min TTL index).
+See /app/memory/test_credentials.md for how to set a known code hash for testing.
+```
+curl -X POST http://localhost:8001/api/auth/reset-password -H "Content-Type: application/json" -d '{"email":"mattsossi@bsossi.com","code":"123456","new_password":"newpass123"}'
+```
+Wrong/expired code returns 400. Successful reset updates the bcrypt hash, deletes the
+code (single-use), and clears login lockouts for that email.

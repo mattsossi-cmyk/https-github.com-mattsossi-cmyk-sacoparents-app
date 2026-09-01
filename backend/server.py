@@ -9,6 +9,15 @@ from datetime import datetime, timezone, timedelta
 
 import bcrypt
 import jwt
+import hashlib
+import ipaddress
+import re
+import secrets
+from html import escape
+from html.parser import HTMLParser
+from urllib.parse import urlparse
+
+import httpx
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -28,6 +37,105 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 JWT_ALGORITHM = "HS256"
+
+EMAIL_BASE_URL = "https://integrations.emergentagent.com"
+EMAIL_KEY = os.environ["EMERGENT_EMAIL_KEY"]
+EMAIL_FROM_NAME = os.environ["EMAIL_FROM_NAME"]
+EMAIL_REPLY_TO = os.environ.get("EMAIL_REPLY_TO")
+
+_SHORTENERS = ("bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly", "goo.gl", "rebrand.ly")
+_CRED_ASK = ("reply with your password", "reply with the code", "send your password", "cvv",
+             "send us your password", "enter your password below", "confirm your card number",
+             "your full card number", "seed phrase", "recovery phrase", "verify your card",
+             "social security number", "confirm your bank details")
+_HOSTISH = re.compile(r"\b(?:https?://)?((?:[a-z0-9-]+\.)+[a-z]{2,})", re.I)
+
+
+def _host_ok(host: str) -> bool:
+    if not host or "xn--" in host:
+        return False
+    try:
+        ipaddress.ip_address(host)
+        return False
+    except ValueError:
+        pass
+    return not any(host == s or host.endswith("." + s) for s in _SHORTENERS)
+
+
+def _same_site(shown: str, real: str) -> bool:
+    return shown == real or real.endswith("." + shown) or shown.endswith("." + real)
+
+
+class _EmailScan(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.tags, self.urls, self.anchors = set(), [], []
+        self._href, self._text = None, []
+
+    def handle_starttag(self, tag, attrs):
+        self.tags.add(tag.lower())
+        self.urls += [v for k, v in attrs if k.lower() in ("href", "src") and v]
+        if tag.lower() == "a":
+            self._href = dict((k.lower(), v) for k, v in attrs).get("href")
+            self._text = []
+
+    def handle_data(self, data):
+        if self._href is not None:
+            self._text.append(data)
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "a" and self._href is not None:
+            self.anchors.append((self._href, "".join(self._text)))
+            self._href, self._text = None, []
+
+
+def _assert_safe_email(subject: str, html: str) -> None:
+    scan = _EmailScan()
+    scan.feed(html)
+    if scan.tags & {"form", "input", "textarea", "select"}:
+        raise ValueError("No forms or input fields in email (G2)")
+    body = f"{subject}\n{html}".lower()
+    for p in _CRED_ASK:
+        if p in body:
+            raise ValueError(f"Email asks the recipient for credentials: {p!r} (G2)")
+    for url in scan.urls:
+        low = url.strip().lower()
+        if low.startswith(("mailto:", "tel:", "cid:", "#")):
+            continue
+        if not low.startswith("https://"):
+            raise ValueError(f"Email links/assets must be absolute https: {url!r} (G3)")
+        host = urlparse(low).hostname or ""
+        if not _host_ok(host) or urlparse(low).username is not None:
+            raise ValueError(f"Shortened, numeric-host or credential-bearing URL: {url!r} (G3)")
+    for href, text in scan.anchors:
+        real = urlparse(href.strip().lower()).hostname or ""
+        if not real:
+            continue
+        for m in _HOSTISH.finditer(text):
+            if not _same_site(m.group(1).lower(), real):
+                raise ValueError(f"Anchor text {m.group(1)!r} ≠ real link host {real!r} (G3)")
+
+
+async def send_email(*, to: str, subject: str, html: str, reply_to: str | None = None) -> str | None:
+    _assert_safe_email(subject, html)
+    payload = {"to": [to], "subject": subject, "html": html, "from_name": EMAIL_FROM_NAME}
+    if reply_to or EMAIL_REPLY_TO:
+        payload["contact_email"] = reply_to or EMAIL_REPLY_TO
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                f"{EMAIL_BASE_URL}/api/v1/email/send",
+                headers={"X-Email-Key": EMAIL_KEY},
+                json=payload,
+            )
+        resp.raise_for_status()
+        return resp.json().get("id")
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Email send failed: {e.response.status_code} {e.response.text}")
+        raise HTTPException(status_code=502, detail="Failed to send email")
+    except Exception as e:
+        logger.error(f"Email send error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send email")
 
 
 def jwt_secret():
@@ -191,6 +299,74 @@ async def refresh(request: Request, response: Response):
         key="access_token", value=create_access_token(user["_id"], user["email"]),
         httponly=True, secure=True, samesite="none", max_age=1800, path="/",
     )
+    return {"ok": True}
+
+
+class ForgotIn(BaseModel):
+    email: EmailStr
+
+
+class ResetIn(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str
+
+
+def hash_code(code: str) -> str:
+    return hashlib.sha256(code.encode("utf-8")).hexdigest()
+
+
+@api.post("/auth/forgot-password")
+async def forgot_password(body: ForgotIn):
+    email = body.email.lower()
+    user = await db.users.find_one({"email": email})
+    if user:
+        code = f"{secrets.randbelow(1000000):06d}"
+        await db.password_resets.delete_many({"email": email})
+        await db.password_resets.insert_one({
+            "email": email,
+            "code_hash": hash_code(code),
+            "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        name = user.get("name") or "there"
+        subject = f"Your {EMAIL_FROM_NAME} verification code"
+        html = (f'<table role="presentation" width="100%"><tr><td style="padding:24px;'
+                f'font-family:Arial,sans-serif">'
+                f'<p>Hi {escape(name)},</p>'
+                f'<p>Use this verification code to set a new password for your '
+                f'{escape(EMAIL_FROM_NAME)} account:</p>'
+                f'<p style="font-size:32px;font-weight:bold;letter-spacing:6px;margin:24px 0">{code}</p>'
+                f'<p>This code expires in 10 minutes. If you did not request a password reset, '
+                f'you can ignore this email.</p>'
+                f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never '
+                f'ask for your password by email.</p></td></tr></table>')
+        try:
+            await send_email(to=email, subject=subject, html=html)
+        except Exception:
+            logger.warning(f"Password-reset email not sent for {email}")
+    return {"ok": True, "detail": "If an account exists for that email, a verification code is on its way."}
+
+
+@api.post("/auth/reset-password")
+async def reset_password(body: ResetIn):
+    email = body.email.lower()
+    if len(body.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    doc = await db.password_resets.find_one({"email": email})
+    if not doc:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+    expires = doc["expires_at"]
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if expires < datetime.now(timezone.utc):
+        await db.password_resets.delete_many({"email": email})
+        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+    if doc["code_hash"] != hash_code(body.code.strip()):
+        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+    await db.users.update_one({"email": email}, {"$set": {"password_hash": hash_password(body.new_password)}})
+    await db.password_resets.delete_many({"email": email})
+    await db.login_attempts.delete_many({"identifier": {"$regex": f":{re.escape(email)}$"}})
     return {"ok": True}
 
 
@@ -371,6 +547,7 @@ async def startup():
     await db.users.create_index("email", unique=True)
     await db.login_attempts.create_index("identifier")
     await db.cases.create_index("user_id")
+    await db.password_resets.create_index("expires_at", expireAfterSeconds=0)
     await seed_admin()
 
 
