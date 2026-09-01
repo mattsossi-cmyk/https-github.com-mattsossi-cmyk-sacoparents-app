@@ -130,6 +130,20 @@ Auth: Custom JWT (`auth.py`)
   to accept the `token=` kwarg. All 79 joint-artefact + Med-Deep
   tests pass.
 
+### 2026-02-22 — Code review fix: 14-day share links honoured
+- Code review surfaced a source-confirmed HIGH: parents choosing the
+  "14 days" duration on the Joint Agreement / Joint Report share
+  dialog silently got a 7-day token. `auth.SHARE_TOKEN_WINDOWS` was
+  missing 14 while the route + UI advertised it, so
+  `create_share_token` fell back to the 7-day default.
+- Fix: added 14 to `SHARE_TOKEN_WINDOWS`. The emailed Joint
+  Agreement preview link (hard-coded `expire_days=14`) also now lives
+  the full 14 days.
+- Coverage: `tests/test_iter128_...py` — 3 regression tests
+  (round-trip every advertised window, disallowed value downgrades
+  correctly, route choice sets stay a subset of the allowed windows).
+  All 28 combined tests pass.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming

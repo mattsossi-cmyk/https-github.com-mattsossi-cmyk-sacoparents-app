@@ -165,8 +165,12 @@ JWT_COOKIE_NAME = "auth_token"
 JWT_COOKIE_MAX_AGE = ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 SHARE_TOKEN_EXPIRE_DAYS = 7
 # Allowed expiry windows for user-selectable share-link durations.
+# Must match the {1, 7, 14, 30} choice set advertised by the joint
+# artefact route dialogs (joint_agreement_routes / joint_professional_
+# report_routes) and the frontend share-link modals. Missing values
+# would silently downgrade to SHARE_TOKEN_EXPIRE_DAYS.
 # None = "never" (still revocable via the revocation list).
-SHARE_TOKEN_WINDOWS = {1, 7, 30, None}
+SHARE_TOKEN_WINDOWS = {1, 7, 14, 30, None}
 
 
 def create_share_token(
