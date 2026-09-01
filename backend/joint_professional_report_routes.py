@@ -477,6 +477,47 @@ async def email_joint_report(
     }
 
 
+# ---------------------------------------------------------------------------
+# Recently Shared With — the last 3 professionals this parent has emailed
+# the joint report to. Powers the compact re-send strip on the report
+# page so parents can follow up with one tap instead of re-typing the
+# recipient's email/name/role every time.
+# ---------------------------------------------------------------------------
+
+@router.get("/{share_id}/recent-recipients")
+async def recent_joint_report_recipients(
+    share_id: str,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return up to 3 most recent, DE-DUPLICATED-BY-EMAIL send-events
+    for the caller on this share. Older duplicates collapse to the
+    newest send. Consent-gated: caller must be a participant in an
+    active Compare share (same as the report itself)."""
+    await _find_active_share(db, share_id, user.user_id)
+    cursor = db.joint_report_emails.find(
+        {"user_id": user.user_id, "share_id": share_id},
+        {"_id": 0},
+    ).sort("sent_at", -1).limit(30)
+    seen: set = set()
+    recents: List[Dict[str, Any]] = []
+    async for row in cursor:
+        email = (row.get("to_email") or "").strip().lower()
+        if not email or email in seen:
+            continue
+        seen.add(email)
+        recents.append({
+            "to_email":       email,
+            "recipient_name": row.get("recipient_name") or "",
+            "recipient_role": row.get("recipient_role"),
+            "audience":       row.get("audience"),
+            "sent_at":        row.get("sent_at"),
+        })
+        if len(recents) >= 3:
+            break
+    return {"recipients": recents}
+
+
 
 # ---------------------------------------------------------------------------
 # Public shareable HTML / PDF / OG-preview link — mirrors the Joint

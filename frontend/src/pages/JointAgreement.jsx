@@ -20,6 +20,7 @@ import AppShell from "../components/AppShell";
 import JointReportEmailDialog from "../components/JointReportEmailDialog";
 import { Section } from "../components/joint/JointAgreementSections";
 import JointAgreementParentView from "../components/joint/JointAgreementParentView";
+import RecentlySharedWith from "../components/joint/RecentlySharedWith";
 import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";

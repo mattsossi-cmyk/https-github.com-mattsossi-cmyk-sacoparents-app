@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import JointReportEmailDialog from "../components/JointReportEmailDialog";
 import JointReportParentView from "../components/joint/JointReportParentView";
+import RecentlySharedWith from "../components/joint/RecentlySharedWith";
 import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -468,6 +469,14 @@ export default function JointProfessionalReport() {
               Download PDF
             </button>
           </div>
+        </div>
+
+        <div className="mt-4">
+          <RecentlySharedWith
+            shareId={shareId}
+            artefactBase="joint-professional-report"
+            artefactLabel="Joint Report"
+          />
         </div>
 
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">

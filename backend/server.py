@@ -67,6 +67,32 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="SA CoParents Mediation Prep API")
 
+
+# Kubernetes deployment probes hit the pod on the un-prefixed URLs
+# `/health` and `/ready`. Those requests never go through the ingress
+# path-rewrite, so the same endpoints ALSO have to live at the FastAPI
+# root — separate from the `/api/health` and `/api/ready` routes below
+# which are what the frontend and internal callers use.
+@app.get("/health", include_in_schema=False)
+async def root_health():
+    """Liveness probe (root path, for k8s). Never touches the DB."""
+    return {"status": "ok"}
+
+
+@app.get("/ready", include_in_schema=False)
+async def root_ready(response: Response):
+    """Readiness probe (root path, for k8s). Runs a cheap Mongo ping
+    with a tight timeout; returns 503 on failure so the pod is pulled
+    from the service endpoints."""
+    try:
+        await asyncio.wait_for(
+            app.state.db.command("ping"), timeout=1.5,
+        )
+        return {"status": "ready"}
+    except Exception:  # noqa: BLE001
+        response.status_code = 503
+        return {"status": "not_ready"}
+
 # Mongo — keep connection limits modest so production Atlas free-tier (max ~500
 # concurrent conns) is never exhausted. maxPoolSize defaults to 100 per client
 # which combined with multiple pod replicas can blow past Atlas limits.

@@ -313,6 +313,46 @@ async def email_joint_agreement(
 
 
 # ---------------------------------------------------------------------------
+# Recently Shared With — last 3 professionals this parent has emailed the
+# joint agreement to. Mirrors the Joint Report endpoint so the UI strip
+# can hit either artefact with the same shape.
+# ---------------------------------------------------------------------------
+
+@router.get("/{share_id}/recent-recipients")
+async def recent_joint_agreement_recipients(
+    share_id: str,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return up to 3 most-recent, de-duplicated-by-email send events
+    for the caller on this share. Consent-gated identically to the
+    email endpoint."""
+    await _find_active_share(db, share_id, user.user_id)
+    cursor = db.joint_agreement_emails.find(
+        {"user_id": user.user_id, "share_id": share_id},
+        {"_id": 0},
+    ).sort("sent_at", -1).limit(30)
+    seen: set = set()
+    recents: List[Dict[str, Any]] = []
+    async for row in cursor:
+        email = (row.get("to_email") or "").strip().lower()
+        if not email or email in seen:
+            continue
+        seen.add(email)
+        recents.append({
+            "to_email":       email,
+            "recipient_name": row.get("recipient_name") or "",
+            "recipient_role": row.get("recipient_role"),
+            "audience":       row.get("audience"),
+            "sent_at":        row.get("sent_at"),
+        })
+        if len(recents) >= 3:
+            break
+    return {"recipients": recents}
+
+
+
+# ---------------------------------------------------------------------------
 # Regenerate the caller's individual draft using the joint's
 # `both_proposed` clauses as anchors. Deterministic — the parent's
 # voice is preserved verbatim; anchor clauses are promoted to the top
