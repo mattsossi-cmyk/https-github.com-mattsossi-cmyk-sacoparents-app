@@ -535,11 +535,6 @@ async def seed_admin():
             "password_hash": hash_password(admin_password),
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-    elif not verify_password(admin_password, existing["password_hash"]):
-        await db.users.update_one(
-            {"email": admin_email.lower()},
-            {"$set": {"password_hash": hash_password(admin_password)}},
-        )
 
 
 @app.on_event("startup")
@@ -547,7 +542,6 @@ async def startup():
     await db.users.create_index("email", unique=True)
     await db.login_attempts.create_index("identifier")
     await db.cases.create_index("user_id")
-    await db.password_resets.create_index("expires_at", expireAfterSeconds=0)
     await seed_admin()
 
 
