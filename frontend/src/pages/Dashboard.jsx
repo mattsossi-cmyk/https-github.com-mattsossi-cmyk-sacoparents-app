@@ -20,6 +20,7 @@ import PublicMilestoneWall from "../components/PublicMilestoneWall";
 import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
 import LearningCenterCard from "../components/LearningCenterCard";
 import YourReportsCard from "../components/YourReportsCard";
+import ShareManagementPanel from "../components/ShareManagementPanel";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -691,6 +692,14 @@ export default function Dashboard() {
             deepDives={deepDives}
             compareStatus={compareStatus}
           />
+        </div>
+
+        {/* Active share links — parent's live shareable URLs with view
+            counts + one-tap revoke. Hides itself entirely when the parent
+            has no active tokens so the dashboard stays uncluttered until
+            it has value to add. */}
+        <div className="mt-6">
+          <ShareManagementPanel />
         </div>
 
         {/* Everything else lives inside "Explore more tools" — kept, not

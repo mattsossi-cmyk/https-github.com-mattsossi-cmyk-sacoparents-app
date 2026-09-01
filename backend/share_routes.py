@@ -49,8 +49,14 @@ async def record_share_token(
     expires_at: Optional[datetime],
     label: Optional[str] = None,
     note: Optional[str] = None,
+    token: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Persist a freshly-minted share token so it can be listed / revoked."""
+    """Persist a freshly-minted share token so it can be listed / revoked.
+
+    The signed `token` is stored so the owner's share-management panel
+    can surface a copy-link / open action. Only the owner ever reads
+    this field — endpoints filter by `user_id`.
+    """
     doc = {
         "jti": jti,
         "user_id": user_id,
@@ -58,6 +64,7 @@ async def record_share_token(
         "doc_id": doc_id,
         "label": label,
         "note": note,
+        "token": token,
         "created_at": _now_iso(),
         "expires_at": expires_at.isoformat() if expires_at else None,
         "revoked_at": None,
@@ -81,13 +88,61 @@ async def is_share_token_revoked(db: AsyncIOMotorDatabase, jti: Optional[str]) -
 def _public_row(doc: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "jti": doc.get("jti"),
+        "token": doc.get("token"),
         "doc_type": doc.get("doc_type"),
         "doc_id": doc.get("doc_id"),
         "label": doc.get("label"),
+        "note": doc.get("note"),
         "created_at": doc.get("created_at"),
         "expires_at": doc.get("expires_at"),
         "revoked_at": doc.get("revoked_at"),
     }
+
+
+_VIEW_ACTIONS = ("external_read_via_share_link",)
+_DOWNLOAD_ACTIONS = ("external_download_via_share_link",)
+
+
+async def _load_view_analytics(
+    db: AsyncIOMotorDatabase, jtis: List[str],
+) -> Dict[str, Dict[str, Any]]:
+    """Aggregate phi_access_log rows by jti so `/mine` can attach view
+    counts + last-opened timestamps to each row.
+
+    Returned shape per jti:
+      {"view_count": int, "download_count": int, "last_opened_at": iso|None}
+    """
+    if not jtis:
+        return {}
+    pipeline = [
+        {"$match": {
+            "jti": {"$in": jtis},
+            "action": {"$in": list(_VIEW_ACTIONS + _DOWNLOAD_ACTIONS)},
+        }},
+        {"$group": {
+            "_id": "$jti",
+            "view_count": {
+                "$sum": {"$cond": [
+                    {"$in": ["$action", list(_VIEW_ACTIONS)]}, 1, 0,
+                ]},
+            },
+            "download_count": {
+                "$sum": {"$cond": [
+                    {"$in": ["$action", list(_DOWNLOAD_ACTIONS)]}, 1, 0,
+                ]},
+            },
+            "last_opened_at": {"$max": "$at"},
+        }},
+    ]
+    out: Dict[str, Dict[str, Any]] = {}
+    async for row in db.phi_access_log.aggregate(pipeline):
+        last = row.get("last_opened_at")
+        out[row["_id"]] = {
+            "view_count": int(row.get("view_count") or 0),
+            "download_count": int(row.get("download_count") or 0),
+            "last_opened_at": last.isoformat() if hasattr(last, "isoformat") else last,
+        }
+    return out
 
 
 class RevokeIn(BaseModel):
@@ -97,10 +152,15 @@ class RevokeIn(BaseModel):
 @router.get("/mine")
 async def list_my_shares(user: UserPublic = Depends(get_current_user),
                         db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, List[Dict[str, Any]]]:
-    """Return active + past share tokens created by the current user."""
+    """Return active + past share tokens created by the current user,
+    each enriched with view/download counts and a last-opened timestamp
+    aggregated from `phi_access_log`."""
     cursor = db[COLLECTION].find({"user_id": user.user_id}, {"_id": 0}).sort("created_at", -1)
     rows = [_public_row(r) async for r in cursor]
     now = datetime.now(timezone.utc)
+    analytics = await _load_view_analytics(
+        db, [r["jti"] for r in rows if r.get("jti")],
+    )
     active, past = [], []
     for r in rows:
         expired = False
@@ -110,6 +170,10 @@ async def list_my_shares(user: UserPublic = Depends(get_current_user),
             except ValueError:
                 expired = False
         r["status"] = "revoked" if r.get("revoked_at") else ("expired" if expired else "active")
+        stats = analytics.get(r.get("jti") or "", {})
+        r["view_count"] = int(stats.get("view_count") or 0)
+        r["download_count"] = int(stats.get("download_count") or 0)
+        r["last_opened_at"] = stats.get("last_opened_at")
         (past if r["status"] != "active" else active).append(r)
     return {"active": active, "past": past}
 

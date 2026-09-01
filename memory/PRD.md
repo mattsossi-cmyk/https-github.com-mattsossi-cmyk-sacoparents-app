@@ -102,11 +102,37 @@ Auth: Custom JWT (`auth.py`)
   PDF parent-view+appendix presence, empty-payload safety).
   All 60 combined iter113-126 tests pass.
 
+### 2026-02-22 — Share Management Panel + Reviewer Analytics + Phase 3 Deep-Dive
+- `record_phi_access(...)` accepts optional `jti`; the four shared
+  endpoints (`/joint-agreement/shared/*`, `/joint-professional-report/shared/*`)
+  now stamp the token id on every external read + download so per-link
+  analytics can be aggregated.
+- `record_share_token(...)` persists the signed JWT under `token` on
+  the `share_tokens` row (owner-scoped, filtered by `user_id`) so the
+  owner's UI can surface copy-link / open-preview actions.
+- `GET /api/share/mine` enriched: each row carries `view_count`,
+  `download_count`, `last_opened_at`, `token`, `note` alongside the
+  existing status split (active/expired/revoked).
+- New frontend component
+  `/app/frontend/src/components/ShareManagementPanel.jsx`, mounted on
+  the Dashboard below `YourReportsCard`. Hidden entirely when the
+  parent has no active shares so it never clutters a fresh dashboard.
+  Every row shows the "viewed N times · opened <relative>" pill, a
+  copy-link, an open-in-new-tab button, and a confirm-gated revoke.
+- Phase 3 Deep-Dive tone rewrite: Med Deep Dive `s2_confirmation`
+  rewritten to neutral "How often does a pick-up confirmation reach
+  both parents..." (was "Does the other parent get a confirmation..."
+  which read accusatory). Edu-Deep and Psych-Deep v2 already use
+  first-person "We..." aspirational stems — no changes needed.
+- Coverage: `tests/test_iter127_...py` — 6 tests (jti persistence,
+  token persistence, analytics aggregation, active/expired split,
+  Med-Deep prompt neutrality). Iter123/124/126 fixtures updated
+  to accept the `token=` kwarg. All 79 joint-artefact + Med-Deep
+  tests pass.
+
 ## Prioritized Backlog
 
 ### P1 — Upcoming
-- Share Management Panel (UI to list active tokens, view analytics, revoke)
-- Reviewer View Analytics — "viewed N times · last opened <date>" pill
 - Policy-Refresh Email Blast (returning parents notice of new privacy)
 - Marketing-toggle UI on account page (backend endpoint exists)
 - Multi-State OCR payload (`total_individuals_affected`,
@@ -114,7 +140,6 @@ Auth: Custom JWT (`auth.py`)
 - Live Operator Alert on breach draft filing
 - Nudge Operator Preview endpoint (admin-only next-Monday preview)
 - New-Comment toast on dashboard when reviewer comments land
-- Phase 3 Deep-Dive Bank Enumeration (Med/Edu/Psych per-item diff)
 - HTML Co-Parenting Agreement form (user request — clarifying qs pending)
 
 ### P2 — Future

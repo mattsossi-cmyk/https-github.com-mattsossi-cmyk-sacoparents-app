@@ -33,11 +33,13 @@ def report_app(monkeypatch):
     phi_log: list = []
 
     async def _record_share_token(db, *, jti, user_id, doc_type, doc_id,
-                                  expires_at=None, label=None, note=None):
+                                  expires_at=None, label=None, note=None,
+                                  token=None):
         tokens_store[jti] = {
             "jti": jti, "user_id": user_id, "doc_type": doc_type,
             "doc_id": doc_id, "expires_at": expires_at,
-            "label": label, "note": note, "revoked_at": None,
+            "label": label, "note": note, "token": token,
+            "revoked_at": None,
         }
         return tokens_store[jti]
 

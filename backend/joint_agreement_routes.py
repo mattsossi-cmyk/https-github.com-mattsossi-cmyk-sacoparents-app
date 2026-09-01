@@ -244,6 +244,7 @@ async def email_joint_agreement(
             doc_id=share_id,
             expires_at=preview_expires,
             label=f"Emailed to {to_email}",
+            token=preview_token,
         )
         preview_url = f"{_absolute_origin(request)}/api/joint-agreement/preview/{preview_token}"
         from phi_access_routes import record_phi_access
@@ -453,6 +454,7 @@ async def create_joint_agreement_share_link(
         expires_at=expires_at,
         label=(body.label or None),
         note=clean_note(body.note),
+        token=token,
     )
     await record_phi_access(
         db, user_id=user.user_id, action="share_link_created",
@@ -517,7 +519,8 @@ async def get_shared_joint_agreement(token: str, request: Request):
         db, user_id=decoded.get("sub") or "unknown",
         action="external_read_via_share_link",
         resource_type="joint_agreement",
-        share_id=decoded.get("doc_id"), request=request,
+        share_id=decoded.get("doc_id"),
+        jti=decoded.get("jti"), request=request,
     )
     return payload
 
@@ -606,7 +609,8 @@ async def get_shared_joint_agreement_pdf(token: str, request: Request):
         db, user_id=decoded.get("sub") or "unknown",
         action="external_download_via_share_link",
         resource_type="joint_agreement_pdf",
-        share_id=decoded.get("doc_id"), request=request,
+        share_id=decoded.get("doc_id"),
+        jti=decoded.get("jti"), request=request,
     )
     filename = f"joint-coparenting-agreement-{share_id[:10]}.pdf"
     return Response(

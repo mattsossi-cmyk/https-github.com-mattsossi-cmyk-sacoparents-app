@@ -79,6 +79,7 @@ async def record_phi_access(
     resource_type: str,
     resource_id: Optional[str] = None,
     share_id: Optional[str] = None,
+    jti: Optional[str] = None,
     request: Optional[Request] = None,
 ) -> None:
     """Append a single audit row. Never raises — audit failures must
@@ -91,6 +92,7 @@ async def record_phi_access(
             "resource_type": resource_type,    # "joint_report" | "joint_agreement" | "safety_lens" | ...
             "resource_id":   resource_id,
             "share_id":      share_id,
+            "jti":           jti,              # share-token identifier when the action came through a shared link
             "at":            datetime.now(timezone.utc),
         }
         if request is not None:

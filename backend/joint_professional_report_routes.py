@@ -406,6 +406,7 @@ async def email_joint_report(
             doc_id=share_id,
             expires_at=preview_expires,
             label=f"Emailed to {to_email}",
+            token=preview_token,
         )
         preview_url = (
             f"{absolute_origin(request)}"
@@ -552,6 +553,7 @@ async def create_joint_report_share_link(
         expires_at=expires_at,
         label=(body.label or None),
         note=clean_note(body.note),
+        token=token,
     )
     await record_phi_access(
         db, user_id=user.user_id, action="share_link_created",
@@ -605,7 +607,8 @@ async def get_shared_joint_report(token: str, request: Request):
         db, user_id=decoded.get("sub") or "unknown",
         action="external_read_via_share_link",
         resource_type="joint_professional_report",
-        share_id=decoded.get("doc_id"), request=request,
+        share_id=decoded.get("doc_id"),
+        jti=decoded.get("jti"), request=request,
     )
     return payload
 
@@ -625,7 +628,8 @@ async def get_shared_joint_report_pdf(token: str, request: Request):
         db, user_id=decoded.get("sub") or "unknown",
         action="external_download_via_share_link",
         resource_type="joint_professional_report_pdf",
-        share_id=decoded.get("doc_id"), request=request,
+        share_id=decoded.get("doc_id"),
+        jti=decoded.get("jti"), request=request,
     )
     filename = f"joint-professional-report-{share_id[:10]}.pdf"
     return Response(

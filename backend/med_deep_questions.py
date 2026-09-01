@@ -157,7 +157,7 @@ DEEP_DIVE_SECTIONS: List[Dict[str, Any]] = [
         "pickup_issues":    _ml("In the last 6 months, which of these pick-up issues have occurred? Select all that apply.", PICKUP_ISSUES),
         "pickup_delays":    _sg("How often does a pick-up delay cause a missed dose?", FREQUENCY_5),
         "clear_assignment": _sg("Is it clear ahead of time who is picking up each prescription?", FREQUENCY_5),
-        "confirmation":     _sg("Does the other parent get a confirmation once medication has been picked up?", FREQUENCY_5),
+        "confirmation":     _sg("How often does a pick-up confirmation reach both parents once medication has been collected?", FREQUENCY_5),
      }},
     # 3. Medication Supply -----------------------------------------------
     {"id": "s3", "number": 3, "name": "Medication Supply Between Homes",
