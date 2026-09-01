@@ -409,6 +409,87 @@ def send_verification_link(*, to_email: str, link_url: str, user_name: Optional[
     )
 
 
+def send_verification_code(
+    *,
+    to_email: str,
+    code: str,
+    user_name: Optional[str] = None,
+) -> None:
+    """Send a 6-digit email verification code (in-app entry, no link)."""
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    plain = (
+        f"{greeting}\n\n"
+        "Enter this 6-digit code in the app to confirm your email address:\n\n"
+        f"    {code}\n\n"
+        "It expires in 15 minutes. If you didn't request this, you can safely "
+        "ignore this email.\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
+        f"{greeting} Enter this 6-digit code in the app to confirm your email address. "
+        f"It expires in <strong>15 minutes</strong>.</p>"
+        f'<div style="text-align:center;margin:24px 0 32px;">'
+        f'<div style="display:inline-block;font-family:-apple-system,SFMono-Regular,Menlo,monospace;'
+        f'letter-spacing:0.6em;font-size:34px;font-weight:800;color:#1A1330;background:#F1EEF7;'
+        f'border:1px solid #E5E0EE;border-radius:16px;padding:18px 30px 18px 36px;">{_html.escape(code)}</div></div>'
+        f'<p style="font-size:12px;color:#857E9C;margin:0;">Didn\'t request this? You can safely ignore this email.</p>'
+    )
+    html = _branded_html(
+        headline="Confirm your email",
+        body_html=body_html,
+        cta_label="",
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Your SA CoParents code: {code}",
+        html=html,
+        text=plain,
+        failure_message="Could not send your verification code right now. Please try again in a moment.",
+    )
+
+
+def send_password_reset_code(
+    *,
+    to_email: str,
+    code: str,
+    user_name: Optional[str] = None,
+) -> None:
+    """Send a 6-digit password-reset code (in-app entry, no link)."""
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    plain = (
+        f"{greeting}\n\n"
+        "Someone (probably you) asked to reset the password on your SA CoParents "
+        "account. Enter this 6-digit code in the app to choose a new password:\n\n"
+        f"    {code}\n\n"
+        "It expires in 15 minutes and can only be used once. If you didn't request "
+        "this, you can safely ignore this email — your password hasn't changed.\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
+        f"{greeting} Enter this 6-digit code in the app to choose a new password. "
+        f"It expires in <strong>15 minutes</strong> and can only be used once.</p>"
+        f'<div style="text-align:center;margin:24px 0 32px;">'
+        f'<div style="display:inline-block;font-family:-apple-system,SFMono-Regular,Menlo,monospace;'
+        f'letter-spacing:0.6em;font-size:34px;font-weight:800;color:#1A1330;background:#F1EEF7;'
+        f'border:1px solid #E5E0EE;border-radius:16px;padding:18px 30px 18px 36px;">{_html.escape(code)}</div></div>'
+        f'<p style="font-size:12px;color:#857E9C;margin:0;">Didn\'t request this? You can safely ignore this email — your password hasn\'t changed.</p>'
+    )
+    html = _branded_html(
+        headline="Reset your password",
+        body_html=body_html,
+        cta_label="",
+    )
+    _send(
+        to_email=to_email,
+        subject=f"SA CoParents reset code: {code}",
+        html=html,
+        text=plain,
+        failure_message="Could not send your reset code right now. Please try again in a moment.",
+    )
+
+
 def send_post_summary_checkin(
     *,
     to_email: str,

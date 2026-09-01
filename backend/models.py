@@ -80,6 +80,21 @@ class EmailVerifyConfirm(BaseModel):
     token: str
 
 
+class EmailCodeSend(BaseModel):
+    email: EmailStr
+
+
+class EmailCodeConfirm(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=4, max_length=8)
+
+
+class PasswordResetCodeConfirm(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=4, max_length=8)
+    password: str = Field(min_length=8)
+
+
 # ============ Prep Data Models ============
 class ChildGoalsPayload(BaseModel):
     selected_goals: List[str] = []

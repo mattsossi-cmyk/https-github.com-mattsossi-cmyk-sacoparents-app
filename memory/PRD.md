@@ -280,6 +280,37 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-02-24 — In-app 6-digit code flows for email verify & password reset
+- New auth endpoints on `/api/auth/`:
+  - `POST /verify-email/send-code` — mints a bcrypt-hashed 6-digit code
+    (15-min TTL, 5 attempts, 5/hr per-IP rate limit) and emails it via
+    Resend. Always 200 for privacy.
+  - `POST /verify-email/confirm-code` — validates `{email, code}`,
+    flips `email_verified: true`.
+  - `POST /password-reset/request-code` — same shape, mode `reset_code`.
+  - `POST /password-reset/confirm-code` — validates `{email, code,
+    password}`, rotates the password, marks the email verified,
+    burns any other outstanding auth tokens for the user, signs them in.
+- `email_service.py`: new `send_verification_code` and
+  `send_password_reset_code` templates with a big letter-spaced code
+  block and no CTA button (parents type the code back into the app).
+- New reusable `frontend/src/components/CodeInput.jsx` — 6-box numeric
+  entry with auto-advance, backspace clear-previous, arrow-key nav,
+  paste distribution, and `one-time-code` autocomplete hint.
+- `ForgotPassword.jsx` rewritten as a two-step flow: enter email →
+  receive code → type code + new password → auto sign-in. Toast
+  messaging preserves account-existence privacy.
+- `VerificationBanner.jsx` gains an "Enter code instead" button — the
+  banner sends the code inline and swaps in the 6-box input without
+  navigating away.
+- `Register.jsx`: added a subtle "Already have an account? Reset
+  password" link below the password field so returning users don't
+  have to bounce back to Login first.
+- New `tests/test_iter135_code_based_verification_and_reset.py` — 6
+  pytest cases covering happy path, wrong-code attempts,
+  invalidate-older-codes, already-verified short-circuit, unknown-email
+  privacy, and 5-attempt lockout. All 84 iter tests pass.
+
 ### 2026-02-23 — OG image swap + Dashboard "Share a report" quick action
 - `frontend/public/index.html`: swapped `og:image` / `twitter:image` to the
   new `screenshots/joint-composite-og.png` (1200×630 letterboxed) with the

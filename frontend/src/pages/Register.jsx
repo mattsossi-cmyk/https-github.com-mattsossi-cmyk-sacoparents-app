@@ -122,6 +122,15 @@ export default function Register() {
                 password={password}
                 testid="register-password-strength"
               />
+              <div className="mt-2 text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-[#3D1A78] font-semibold hover:underline"
+                  data-testid="register-forgot-password-link"
+                >
+                  Already have an account? Reset password
+                </Link>
+              </div>
             </div>
 
             <div>

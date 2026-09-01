@@ -12,8 +12,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm
-from email_service import send_magic_link, send_setup_link, send_password_reset_link, send_verification_link, EmailNotConfigured, EmailSendError
+from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm, EmailCodeSend, EmailCodeConfirm, PasswordResetCodeConfirm
+from email_service import send_magic_link, send_setup_link, send_password_reset_link, send_verification_link, send_verification_code, send_password_reset_code, EmailNotConfigured, EmailSendError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -1079,3 +1079,320 @@ async def confirm_verify_email(
     )
     await db.magic_links.update_one({"token": body.token}, {"$set": {"used": True}})
     return {"ok": True, "email": rec.get("email")}
+
+
+
+# ============================================================================
+# 6-digit code flows (in-app entry, no email link required)
+# ----------------------------------------------------------------------------
+# These endpoints layer on top of the existing token-based `/verify-email/*`
+# and `/password-reset/*` flows. Codes are stored bcrypt-hashed in the same
+# `magic_links` collection with distinct modes so both flows can coexist.
+# The user experience: request → receive 6 digits by email → type them into
+# the app. No link click required.
+# ============================================================================
+
+CODE_LIFETIME_MINUTES = 15
+CODE_RATE_LIMIT_PER_HOUR = 5
+CODE_MAX_ATTEMPTS = 5
+
+
+def _generate_numeric_code(digits: int = 6) -> str:
+    """Cryptographically-secure numeric OTP. Leading zeros preserved."""
+    upper = 10 ** digits
+    return f"{secrets.randbelow(upper):0{digits}d}"
+
+
+def _hash_code(code: str) -> str:
+    return pwd_ctx.hash(code)
+
+
+def _verify_code(plain: str, hashed: str) -> bool:
+    try:
+        return pwd_ctx.verify(plain, hashed)
+    except Exception:  # pragma: no cover — defensive
+        return False
+
+
+async def _issue_email_code(
+    db: AsyncIOMotorDatabase,
+    *,
+    mode: str,
+    email: str,
+    user_id: str,
+    ip: str,
+) -> str:
+    """Mint a fresh 6-digit code, invalidate any prior unused codes of the
+    same mode for this user, and persist the hashed record. Returns the
+    plaintext code so the caller can email it."""
+    # Burn all previously-unused codes of this mode for this user so a
+    # replay from an older email cannot be used after a new request.
+    await db.magic_links.update_many(
+        {"user_id": user_id, "mode": mode, "used": False},
+        {"$set": {"used": True, "invalidated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    code = _generate_numeric_code(6)
+    record = {
+        "token": secrets.token_urlsafe(16),  # opaque id — never emailed
+        "mode": mode,
+        "email": email,
+        "user_id": user_id,
+        "code_hash": _hash_code(code),
+        "attempts": 0,
+        "ip": ip,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "expires_at": (
+            datetime.now(timezone.utc) + timedelta(minutes=CODE_LIFETIME_MINUTES)
+        ).isoformat(),
+        "used": False,
+    }
+    await db.magic_links.insert_one(record)
+    return code
+
+
+async def _lookup_active_code(
+    db: AsyncIOMotorDatabase,
+    *,
+    mode: str,
+    email: str,
+) -> Optional[dict]:
+    """Return the most-recent unused-and-unexpired code record for
+    (email, mode), or None."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    return await db.magic_links.find_one(
+        {
+            "mode": mode,
+            "email": email,
+            "used": False,
+            "expires_at": {"$gt": now_iso},
+        },
+        {"_id": 0},
+        sort=[("created_at", -1)],
+    )
+
+
+@router.post("/verify-email/send-code")
+async def send_verify_email_code(
+    body: EmailCodeSend,
+    request: Request,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Send a 6-digit email-verification code to the account matching
+    `body.email`. Always returns 200 (privacy: don't leak account existence).
+    """
+    email = body.email.lower().strip()
+    ip = _client_ip(request)
+
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    recent = await db.magic_links.count_documents(
+        {"ip": ip, "mode": "verify_code", "created_at": {"$gte": one_hour_ago}}
+    )
+    if recent >= CODE_RATE_LIMIT_PER_HOUR:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many verification requests. Please try again later.",
+        )
+
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    if not user or user.get("is_guest") or user.get("suspended"):
+        return {
+            "ok": True,
+            "sent": False,
+            "message": "If an account exists for that email, we sent a 6-digit code. It expires in 15 minutes.",
+        }
+    if user.get("email_verified"):
+        return {
+            "ok": True,
+            "sent": False,
+            "already_verified": True,
+            "message": "This email is already verified.",
+        }
+
+    code = await _issue_email_code(
+        db, mode="verify_code", email=email, user_id=user["user_id"], ip=ip
+    )
+    try:
+        send_verification_code(to_email=email, code=code, user_name=user.get("name"))
+        return {
+            "ok": True,
+            "sent": True,
+            "message": "We sent a 6-digit code. It expires in 15 minutes.",
+        }
+    except EmailNotConfigured:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Verify code generated but SMTP not configured for user_id=%s "
+            "(code stored in magic_links)", user.get("user_id"),
+        )
+        return {
+            "ok": True,
+            "sent": False,
+            "message": "Code generated but email is not configured in this environment.",
+        }
+    except EmailSendError as e:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Verify code email send failed for user_id=%s (error_type=%s)",
+            user.get("user_id"), type(e).__name__,
+        )
+        return {
+            "ok": True,
+            "sent": False,
+            "message": "Could not send code right now. Please try again in a moment.",
+        }
+
+
+@router.post("/verify-email/confirm-code")
+async def confirm_verify_email_code(
+    body: EmailCodeConfirm,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Consume a 6-digit code and mark the user email_verified."""
+    email = body.email.lower().strip()
+    code = body.code.strip()
+
+    rec = await _lookup_active_code(db, mode="verify_code", email=email)
+    if not rec:
+        raise HTTPException(status_code=400, detail="Invalid or expired code.")
+
+    if rec.get("attempts", 0) >= CODE_MAX_ATTEMPTS:
+        await db.magic_links.update_one(
+            {"token": rec["token"]}, {"$set": {"used": True}}
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="Too many attempts on this code. Request a new one.",
+        )
+
+    if not _verify_code(code, rec.get("code_hash", "")):
+        await db.magic_links.update_one(
+            {"token": rec["token"]}, {"$inc": {"attempts": 1}}
+        )
+        raise HTTPException(status_code=400, detail="Invalid or expired code.")
+
+    await db.users.update_one(
+        {"user_id": rec["user_id"]},
+        {
+            "$set": {
+                "email_verified": True,
+                "email_verified_at": datetime.now(timezone.utc).isoformat(),
+            }
+        },
+    )
+    await db.magic_links.update_one({"token": rec["token"]}, {"$set": {"used": True}})
+    return {"ok": True, "email": email}
+
+
+@router.post("/password-reset/request-code")
+async def request_password_reset_code(
+    body: EmailCodeSend,
+    request: Request,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Send a 6-digit password-reset code. Always returns 200 (privacy)."""
+    email = body.email.lower().strip()
+    ip = _client_ip(request)
+
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    recent = await db.magic_links.count_documents(
+        {"ip": ip, "mode": "reset_code", "created_at": {"$gte": one_hour_ago}}
+    )
+    if recent >= CODE_RATE_LIMIT_PER_HOUR:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many reset requests. Please try again later.",
+        )
+
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    if not user or user.get("is_guest") or user.get("suspended"):
+        return {
+            "ok": True,
+            "sent": False,
+            "message": "If an account exists for that email, we sent a 6-digit code. It expires in 15 minutes.",
+        }
+
+    code = await _issue_email_code(
+        db, mode="reset_code", email=email, user_id=user["user_id"], ip=ip
+    )
+    try:
+        send_password_reset_code(to_email=email, code=code, user_name=user.get("name"))
+        import logging as _logging
+        _logging.getLogger(__name__).info(
+            "Password reset code sent for user_id=%s", user.get("user_id"),
+        )
+    except EmailNotConfigured:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Reset code generated but SMTP not configured for user_id=%s "
+            "(code stored in magic_links)", user.get("user_id"),
+        )
+    except EmailSendError as e:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Reset code email send failed for user_id=%s (error_type=%s)",
+            user.get("user_id"), type(e).__name__,
+        )
+
+    return {
+        "ok": True,
+        "sent": True,
+        "message": "If an account exists for that email, we sent a 6-digit code. It expires in 15 minutes.",
+    }
+
+
+@router.post("/password-reset/confirm-code", response_model=TokenResponse)
+async def confirm_password_reset_code(
+    body: PasswordResetCodeConfirm,
+    response: Response,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Verify the 6-digit code, set a new password, sign the user in."""
+    email = body.email.lower().strip()
+    code = body.code.strip()
+
+    rec = await _lookup_active_code(db, mode="reset_code", email=email)
+    if not rec:
+        raise HTTPException(status_code=400, detail="Invalid or expired code.")
+
+    if rec.get("attempts", 0) >= CODE_MAX_ATTEMPTS:
+        await db.magic_links.update_one(
+            {"token": rec["token"]}, {"$set": {"used": True}}
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="Too many attempts on this code. Request a new one.",
+        )
+
+    if not _verify_code(code, rec.get("code_hash", "")):
+        await db.magic_links.update_one(
+            {"token": rec["token"]}, {"$inc": {"attempts": 1}}
+        )
+        raise HTTPException(status_code=400, detail="Invalid or expired code.")
+
+    user = await db.users.find_one({"user_id": rec["user_id"]}, {"_id": 0})
+    if not user or user.get("suspended"):
+        raise HTTPException(status_code=400, detail="Account not available.")
+
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {
+            "$set": {
+                "hashed_password": hash_password(body.password),
+                "auth_method": user.get("auth_method") or "jwt",
+                "password_changed_at": datetime.now(timezone.utc).isoformat(),
+                "email_verified": True,
+            }
+        },
+    )
+    # Burn this code + any other outstanding auth codes/links for this user
+    # so an intercepted older code can't be replayed after the reset.
+    await db.magic_links.update_one({"token": rec["token"]}, {"$set": {"used": True}})
+    await db.magic_links.update_many(
+        {"user_id": user["user_id"], "used": False, "token": {"$ne": rec["token"]}},
+        {"$set": {"used": True}},
+    )
+
+    fresh = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    token = create_jwt(user["user_id"])
+    _set_jwt_cookie(response, token)
+    return TokenResponse(access_token=token, user=_serialize_user(fresh))
