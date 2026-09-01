@@ -84,6 +84,20 @@ export default function JointAgreement() {
     return () => { cancelled = true; };
   }, [shareId]);
 
+  // Auto-open the mint dialog when the parent arrives with ?mint=1 (from
+  // the Dashboard "Share the Joint Agreement" quick action). Fires once
+  // the agreement has loaded so the consent-gate + form aren't racing
+  // the API call.
+  const autoMintTriggered = useRef(false);
+  useEffect(() => {
+    if (autoMintTriggered.current) return;
+    if (params.get("mint") !== "1") return;
+    if (state.loading || state.error || !state.data) return;
+    autoMintTriggered.current = true;
+    openShareLink();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.loading, state.error, state.data, params]);
+
   const downloadPdf = async () => {
     if (!shareId) return;
     setDownloading(true);

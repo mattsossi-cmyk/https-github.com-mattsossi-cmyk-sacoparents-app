@@ -1,17 +1,19 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Share2, ArrowRight, Lock } from "lucide-react";
+import { Share2, ArrowRight, Lock, FileText, Handshake } from "lucide-react";
 
 /**
- * Compact "Share a report" quick-action pill for the Dashboard hero.
+ * "Share a report" quick-action row for the Dashboard hero.
  *
  * Behaviour:
  *   - If the parent has a ready Compare share (sncHighlights.ready &&
- *     sncHighlights.share_id) the pill routes straight into the Joint
- *     Professional Report where the "Create shareable link" mint dialog
- *     lives. That is the shortest path from Dashboard → shareable URL.
- *   - Otherwise the pill renders in a soft-locked state that explains
- *     what's needed to unlock, without hiding the entry point.
+ *     sncHighlights.share_id), two pills render side-by-side: one that
+ *     routes straight into the Joint Report mint dialog, one that
+ *     routes into the Joint Agreement mint dialog. Both use `?mint=1`
+ *     so the target page auto-opens its "Create shareable link"
+ *     dialog once the report/agreement finishes loading.
+ *   - Otherwise a single soft-locked pill explains what's needed to
+ *     unlock, without hiding the entry point.
  *
  * Placed inside the Step 1 hero card so parents see it above the fold
  * on every dashboard visit, but styled small enough that it never
@@ -21,28 +23,48 @@ export default function ShareReportQuickAction({ sncHighlights }) {
   const ready = Boolean(sncHighlights?.ready && sncHighlights?.share_id);
   const shareId = sncHighlights?.share_id;
 
-  if (ready) {
+  if (!ready) {
     return (
-      <Link
-        to={`/joint-professional-report?share=${encodeURIComponent(shareId)}&mint=1`}
-        className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] text-white px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-[#2f1360] hover:shadow-md transition-all"
-        data-testid="dashboard-share-report-quick-action"
+      <div
+        className="inline-flex items-center gap-2 rounded-full border border-[#E5E0EE] bg-[#FAF8FD] text-[#4B4567] px-4 py-2 text-xs sm:text-sm font-medium"
+        data-testid="dashboard-share-report-quick-action-locked"
+        title="Complete the Co-Parenting Assessment with your co-parent to unlock the shared report."
       >
-        <Share2 size={14} />
-        <span>Share a report with your mediator</span>
-        <ArrowRight size={14} className="opacity-80" />
-      </Link>
+        <Lock size={13} className="opacity-70" />
+        <span>Share a report — unlocks after your Compare is ready</span>
+      </div>
     );
   }
 
+  const encoded = encodeURIComponent(shareId);
+
   return (
     <div
-      className="inline-flex items-center gap-2 rounded-full border border-[#E5E0EE] bg-[#FAF8FD] text-[#4B4567] px-4 py-2 text-xs sm:text-sm font-medium"
-      data-testid="dashboard-share-report-quick-action-locked"
-      title="Complete the Co-Parenting Assessment with your co-parent to unlock the shared report."
+      className="flex flex-wrap items-center gap-2"
+      data-testid="dashboard-share-report-quick-actions"
     >
-      <Lock size={13} className="opacity-70" />
-      <span>Share a report — unlocks after your Compare is ready</span>
+      <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#3D1A78] mr-1">
+        <Share2 size={12} />
+        Share
+      </span>
+      <Link
+        to={`/joint-professional-report?share=${encoded}&mint=1`}
+        className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] text-white px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-[#2f1360] hover:shadow-md transition-all"
+        data-testid="dashboard-share-report-quick-action"
+      >
+        <FileText size={14} />
+        <span>Joint Report</span>
+        <ArrowRight size={14} className="opacity-80" />
+      </Link>
+      <Link
+        to={`/joint-agreement?share=${encoded}&mint=1`}
+        className="inline-flex items-center gap-2 rounded-full border border-[#3D1A78] text-[#3D1A78] bg-white px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-[#F1EEF7] hover:shadow-md transition-all"
+        data-testid="dashboard-share-agreement-quick-action"
+      >
+        <Handshake size={14} />
+        <span>Joint Agreement</span>
+        <ArrowRight size={14} className="opacity-80" />
+      </Link>
     </div>
   );
 }
