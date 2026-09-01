@@ -169,7 +169,20 @@ export default function MyPlan() {
                   {foundation}
                 </p>
               ) : (
-                <Empty text="You haven't written your Foundation Statement yet." to="/reflection" cta="Write it" />
+                <div className="space-y-2">
+                  <Empty
+                    text="You haven't written your Foundation Statement yet."
+                    to="/reflection"
+                    cta="Write it"
+                  />
+                  <Link
+                    to="/foundation/demo"
+                    className="inline-flex items-center gap-1 text-xs text-[#3D1A78] hover:underline font-medium"
+                    data-testid="myplan-foundation-see-example"
+                  >
+                    See what one looks like →
+                  </Link>
+                </div>
               )}
             </Card>
 

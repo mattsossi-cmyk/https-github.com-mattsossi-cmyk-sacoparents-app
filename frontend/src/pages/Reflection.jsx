@@ -161,6 +161,16 @@ export default function Reflection() {
           </span>
         </div>
 
+        <div className="mt-3">
+          <Link
+            to="/foundation/demo"
+            className="inline-flex items-center gap-1 text-xs text-[#3D1A78] hover:underline font-semibold"
+            data-testid="reflection-see-example"
+          >
+            See what a finished Foundation Statement looks like →
+          </Link>
+        </div>
+
         {/* Tab strip */}
         <div className="mt-7 inline-flex bg-[#EFE9F9] rounded-full p-1" data-testid="reflection-tabs">
           <button

@@ -27,7 +27,7 @@ import { logError } from "../lib/logger";
 
 
 export default function JointAgreement() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const shareId = params.get("share");
   const [state, setState] = useState({ loading: true, data: null, error: null });
   const [downloading, setDownloading] = useState(false);
@@ -87,7 +87,8 @@ export default function JointAgreement() {
   // Auto-open the mint dialog when the parent arrives with ?mint=1 (from
   // the Dashboard "Share the Joint Agreement" quick action). Fires once
   // the agreement has loaded so the consent-gate + form aren't racing
-  // the API call.
+  // the API call. Strip the `mint` param from the URL after firing so a
+  // refresh / browser-back / PWA relaunch doesn't retrigger the dialog.
   const autoMintTriggered = useRef(false);
   useEffect(() => {
     if (autoMintTriggered.current) return;
@@ -95,6 +96,9 @@ export default function JointAgreement() {
     if (state.loading || state.error || !state.data) return;
     autoMintTriggered.current = true;
     openShareLink();
+    const next = new URLSearchParams(params);
+    next.delete("mint");
+    setParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.loading, state.error, state.data, params]);
 

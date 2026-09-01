@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import JointReportParentView from "../components/joint/JointReportParentView";
+import SignedInEscapeHatch from "../components/SignedInEscapeHatch";
 import { API } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -134,6 +135,10 @@ export default function JointReportShared() {
       data-testid="joint-report-shared-root"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        {/* Signed-in parents landing on their own shared link need a way
+            home — public reviewers see nothing. */}
+        <SignedInEscapeHatch testid="joint-report-shared-signed-in-back" />
+
         {/* Provenance */}
         <div
           className="rounded-3xl border border-[#CFC1EA] bg-[#EFE9F9] p-5 sm:p-6"

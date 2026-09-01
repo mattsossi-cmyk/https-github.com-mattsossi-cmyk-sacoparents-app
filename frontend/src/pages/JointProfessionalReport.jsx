@@ -182,7 +182,7 @@ function Section({ meta, section, parentAName, parentBName }) {
 }
 
 export default function JointProfessionalReport() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const shareId = params.get("share");
   const [state, setState] = useState({ loading: true, data: null, error: null });
   const [downloading, setDownloading] = useState(false);
@@ -305,7 +305,10 @@ export default function JointProfessionalReport() {
   // Auto-open the mint dialog when the parent arrives with ?mint=1
   // (the Dashboard hero "Share a report" quick action). Fires once the
   // report has finished loading so the consent-gate + form dropdown
-  // aren't racing the API call.
+  // aren't racing the API call. We also strip the `mint` param from the
+  // URL after firing so a refresh, browser-back, or PWA relaunch doesn't
+  // re-open the dialog — that was the "I can't get out of the report"
+  // trap reported by parents.
   const autoMintTriggered = useRef(false);
   useEffect(() => {
     if (autoMintTriggered.current) return;
@@ -313,7 +316,11 @@ export default function JointProfessionalReport() {
     if (state.loading || state.error || !state.data) return;
     autoMintTriggered.current = true;
     openShareLink();
-    // openShareLink is stable (component-scoped, no deps) — safe to omit.
+    // Remove ?mint=1 from the URL without adding a history entry.
+    const next = new URLSearchParams(params);
+    next.delete("mint");
+    setParams(next, { replace: true });
+    // openShareLink / setParams are stable — safe to omit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.loading, state.error, state.data, params]);
 

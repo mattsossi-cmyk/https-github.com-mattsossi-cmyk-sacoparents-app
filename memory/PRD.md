@@ -280,6 +280,29 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-02-26 — Report navigation trap fixes + Foundation Statement demo view
+- **Fix "stuck in report" trap**:
+  - `JointProfessionalReport.jsx` + `JointAgreement.jsx`: strip `?mint=1`
+    from the URL immediately after the auto-open fires, so a refresh /
+    back-forward / PWA relaunch doesn't retrigger the mint dialog.
+  - New `frontend/src/components/SignedInEscapeHatch.jsx`: subtle "Back
+    to your dashboard" affordance that renders only when a real user is
+    signed in. Mounted on `JointReportShared.jsx` and
+    `JointAgreementShared.jsx` so signed-in parents landing on their
+    own public shared link have an in-app way home. Reviewers see
+    nothing — their view stays clean.
+- **New route** `/foundation/demo`:
+  - Public preview of a completed Foundation Statement using composite
+    fictional content mirroring the four Reflection prompts (child's
+    eyes / own part / best-case outcome / co-parent's eyes). Every
+    panel watermarked *EXAMPLE* so it can never be confused with real
+    data. Two CTAs (start your own / explore dashboard). Shareable
+    without auth — plants nicely in marketing emails or Landing.
+  - New entry points: `/my-plan` empty state adds *"See what one looks
+    like →"* under *"Write it →"*; `Reflection.jsx` intro adds *"See
+    what a finished Foundation Statement looks like →"*.
+- All 87 iter tests still green. UI verified in browser.
+
 ### 2026-02-25 — "Joint Alignment Report" terminology + assessment-completion promo card
 - New `frontend/src/components/JointAlignmentPromoCard.jsx` — the
   "unmistakable next action" card. Two states via the existing
