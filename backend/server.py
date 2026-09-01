@@ -194,6 +194,26 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_log():
     logger.info("SA CoParents backend ready. DB=%s", os.environ.get("DB_NAME"))
+    # Contract sanity: every duration advertised by the joint-artefact
+    # share-link dialogs MUST be in `auth.SHARE_TOKEN_WINDOWS`. If not,
+    # `create_share_token` silently downgrades to the 7-day default and
+    # parents get a shorter link than they were promised (iter128).
+    try:
+        from auth import SHARE_TOKEN_WINDOWS
+        from joint_agreement_routes import _SHARE_LINK_EXPIRE_CHOICES as _jae
+        from joint_professional_report_routes import (
+            _REPORT_LINK_EXPIRE_CHOICES as _jre,
+        )
+        drift = (_jae | _jre) - SHARE_TOKEN_WINDOWS
+        if drift:
+            logger.error(
+                "Share-link duration drift: routes offer %s but "
+                "auth.SHARE_TOKEN_WINDOWS is missing these values. "
+                "Tokens minted with those durations will silently "
+                "downgrade. Add them to SHARE_TOKEN_WINDOWS.", drift,
+            )
+    except Exception:  # noqa: BLE001 - never block boot on a diag check
+        logger.exception("Failed to verify share-link duration contract")
     # Compare-snapshot dedupe: unique per (share_id, snapshot_key). Idempotent
     # if the index already exists.
     try:

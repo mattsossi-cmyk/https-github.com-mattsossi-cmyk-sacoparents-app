@@ -472,7 +472,7 @@ function Hero() {
         <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#1A1330] leading-[1.05] tracking-tight">
           Let&rsquo;s Start With
           <br />
-          <span className="text-[#3D1A78]">Your Family.</span>
+          <span className="text-[#3D1A78]">You And Your Children.</span>
         </h1>
         <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] mt-6 leading-relaxed">
           Every family is different. SA CoParents helps you think through what
@@ -1072,7 +1072,7 @@ function FinalCTA() {
             no longer exists post-iter80; the new FAQ above this CTA
             covers that job. */}
         <div className="mt-9 flex items-center justify-center">
-          <PrimaryCTA testid="final-primary-cta">Let&rsquo;s Start With Your Family</PrimaryCTA>
+          <PrimaryCTA testid="final-primary-cta">Let&rsquo;s Start With You And Your Children</PrimaryCTA>
         </div>
 
         <div className="mt-16 inline-flex items-center gap-2 text-xs text-[#3D1A78] font-medium tracking-wide">
