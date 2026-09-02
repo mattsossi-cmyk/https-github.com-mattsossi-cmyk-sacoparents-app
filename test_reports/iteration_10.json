@@ -1,0 +1,25 @@
+{
+  "summary": "Frontend-only verification of iteration-10 edits (Landing pillar circles, /new route deletion, Dashboard 'Import from sacoparentsapp.online' card, legacy Previous Private Assessments handling, hub + joint-flow regression). All 6 requested checks passed. (1) Landing: pillars-section renders all 5 pillars (reflect/align/communicate/co-parent/thrive) with correct bg-brand-{purple,teal,green,orange,blue} filled circles and white icons; hero-cta-btn 'Start a Joint Assessment' present, hero-demo-btn absent; hero-image + pages-grid + footer-privacy-link intact. (2) /new route: catch-all Navigate redirects to / cleanly (final URL '/', landing-page rendered, no crash/blank, no console errors from route). (3) Dashboard on a fresh registered parent (iter10_1h7j8uox@testmail.dev): individual-tools-card titled 'Import from sacoparentsapp.online' with ext-link-code-input + ext-link-btn present, new-assessment-btn absent, assessments-section hidden. Bogus 8-char code 'ABCD1234' does NOT crash and does NOT show ext-linked-block (link attempt gracefully rejected — backend returns 400 as expected while sacoparentsapp.online is un-built). joint-tools-card, agreement-card, fv-contact-card, and invitation-code-input all render. (4) Legacy data: created a case via POST /api/cases + /demo for a fresh parent; dashboard then shows assessments-section titled 'Previous Private Assessments' with case-report-btn (View Joint Report) + case-delete-btn ONLY — NO case-continue-btn and NO case-demo-btn. /report/{id} 10-page report renders (Joint Alignment / Child at the Center / Where You Align / Perspectives Differ / Options & Resources / Action Plan all present). Deleting the case removes the section entirely. (5) Hub regression: /hub shows 20 hub-topic-* circles + hub-safety-circle; hub-safety-mobile hidden on 1920 desktop; selecting a topic + hub-create-btn navigates to /joint/new?subject=<key>. (6) No console errors other than pre-auth /api/auth/me 401 (expected).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CompleteReport.jsx empty-state renders TWO identical buttons (complete-empty-assessment-btn + complete-empty-joint-btn) both linking to /joint/new with the same label 'Create a Joint Report' — the first button (Plus icon) is likely a leftover from when private assessments existed; consider removing complete-empty-assessment-btn or repurposing it to open the sacoparentsapp.online link flow / hub.",
+    "Dashboard.jsx line 174: linkCode is uppercased on input but the button enables at length >= 6 (maxLength=8). The spec calls for an 8-char code; consider enforcing linkCode.trim().length === 8 to match sacoparentsapp.online link-code format.",
+    "Dashboard.jsx line 33 loads /external/link on every mount even for freshly registered users — fine, but on failure it optimistically sets {linked:false} which silently masks unrelated 5xx errors; consider distinguishing network errors from 'not linked' state.",
+    "No regression risk found from the Landing/Dashboard edits on the previously-verified agreement + pro-request + safety flows (Dashboard cards for those flows still present and unchanged)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested this iteration (main agent reports 87/87 green)", "frontend": "100% (6/6 requested checks)"},
+  "test_credentials": "Admin mattsossi@bsossi.com / CoParents2026!. Fresh parents registered live: iter10_1h7j8uox@testmail.dev / testpass123, iter10leg_0sztmmsq@testmail.dev / testpass123, iter10hub_<random>@testmail.dev / testpass123.",
+  "seed_data_creation": "3 fresh parent accounts + 1 legacy general case (fb570d56-6c05-4ef9-8dfb-b80f3d929d86) created via /api/cases + /api/cases/{id}/demo, then deleted at end of test.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration-10 landing/dashboard edits verified end-to-end from the public preview URL. /new is a redirect to / via the catch-all route (no Wizard.jsx in the codebase). Individual-tools-card is the ONLY entry point for individual data; ext-link uses /api/external/link which correctly 400s until sacoparentsapp.online implements the spec. Legacy cases (POST /api/cases + /demo) still render Previous Private Assessments with view + delete only. If retesting hub/joint E2E, register via UI (Google auth NOT used — email/password); use @testmail.dev emails (provider blocks @example.com).",
+  "rca of the issue": "No open issues in this iteration."
+}

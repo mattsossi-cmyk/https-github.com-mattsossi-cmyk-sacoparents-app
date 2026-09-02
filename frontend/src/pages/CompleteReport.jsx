@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Printer, CheckCircle2, Plus, Mail } from "lucide-react";
+import { ArrowLeft, Printer, CheckCircle2, Mail } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,6 @@ export default function CompleteReport() {
             <div className="text-center py-10" data-testid="complete-empty">
               <p className="text-lg font-medium mb-6 max-w-lg mx-auto">{report.empty_note}</p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <Link to="/new"><Button variant="outline" className="gap-2" data-testid="complete-empty-assessment-btn"><Plus className="h-4 w-4" /> Start a Private Assessment</Button></Link>
                 <Link to="/joint/new"><Button className="gap-2" data-testid="complete-empty-joint-btn"><Mail className="h-4 w-4" /> Create a Joint Report</Button></Link>
               </div>
             </div>

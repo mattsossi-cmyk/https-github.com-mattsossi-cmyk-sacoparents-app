@@ -27,11 +27,11 @@ const PAGES = [
 ];
 
 const PILLARS = [
-  { icon: Heart, label: "REFLECT", color: "text-brand-purple", desc: "Each parent's perspective matters." },
-  { icon: HeartHandshake, label: "ALIGN", color: "text-brand-teal", desc: "Discover areas of shared understanding." },
-  { icon: MessagesSquare, label: "COMMUNICATE", color: "text-brand-green", desc: "Identify differences without blame." },
-  { icon: Lightbulb, label: "CO-PARENT", color: "text-brand-orange", desc: "Access options and resources together." },
-  { icon: Users, label: "THRIVE", color: "text-brand-blue", desc: "Build a strong foundation for your child's future." },
+  { icon: Heart, label: "REFLECT", color: "text-brand-purple", bg: "bg-brand-purple", desc: "Each parent's perspective matters." },
+  { icon: HeartHandshake, label: "ALIGN", color: "text-brand-teal", bg: "bg-brand-teal", desc: "Discover areas of shared understanding." },
+  { icon: MessagesSquare, label: "COMMUNICATE", color: "text-brand-green", bg: "bg-brand-green", desc: "Identify differences without blame." },
+  { icon: Lightbulb, label: "CO-PARENT", color: "text-brand-orange", bg: "bg-brand-orange", desc: "Access options and resources together." },
+  { icon: Users, label: "THRIVE", color: "text-brand-blue", bg: "bg-brand-blue", desc: "Build a strong foundation for your child's future." },
 ];
 
 export default function Landing() {
@@ -72,9 +72,6 @@ export default function Landing() {
                 Start a Joint Assessment <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/auth" data-testid="hero-demo-link">
-              <Button size="lg" variant="outline" data-testid="hero-demo-btn">Try the demo report</Button>
-            </Link>
           </div>
           <p className="mt-8 font-script text-2xl text-brand-purple max-w-xl" data-testid="hero-philosophy">
             Starting with alignment, ending with agreement.
@@ -91,13 +88,15 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-white/70 py-12" data-testid="pillars-section">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-5 gap-6">
+      <section className="border-y border-border bg-white/70 py-16" data-testid="pillars-section">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-5 gap-8">
           {PILLARS.map((p) => (
             <div key={p.label} className="text-center" data-testid={`pillar-${p.label.toLowerCase()}`}>
-              <p.icon className={`h-8 w-8 mx-auto ${p.color}`} />
-              <p className={`mt-2 text-sm font-extrabold tracking-wide ${p.color}`}>{p.label}</p>
-              <p className="mt-1 text-xs text-muted-foreground leading-snug">{p.desc}</p>
+              <div className={`h-24 w-24 md:h-28 md:w-28 rounded-full ${p.bg} flex items-center justify-center mx-auto shadow-lg hover:scale-105 transition-transform duration-200`}>
+                <p.icon className="h-10 w-10 md:h-12 md:w-12 text-white" />
+              </div>
+              <p className={`mt-4 text-sm font-extrabold tracking-wide ${p.color}`}>{p.label}</p>
+              <p className="mt-1.5 text-xs text-muted-foreground leading-snug max-w-[180px] mx-auto">{p.desc}</p>
             </div>
           ))}
         </div>

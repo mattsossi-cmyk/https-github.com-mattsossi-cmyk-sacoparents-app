@@ -5,7 +5,6 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Landing from "@/pages/Landing";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
-import Wizard from "@/pages/Wizard";
 import ReportView from "@/pages/ReportView";
 import JointNew from "@/pages/JointNew";
 import Join from "@/pages/Join";
@@ -37,7 +36,6 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
-            <Route path="/new" element={<Protected><Wizard /></Protected>} />
             <Route path="/report/:id" element={<Protected><ReportView /></Protected>} />
             <Route path="/join/:token" element={<Join />} />
             <Route path="/joint/new" element={<Protected><JointNew /></Protected>} />

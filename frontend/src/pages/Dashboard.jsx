@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { FileText, Plus, Trash2, CheckCircle2, Circle, Sparkles, Mail, Scale, ShieldAlert } from "lucide-react";
+import { Trash2, CheckCircle2, Circle, Mail, Scale, ShieldAlert, Link2, Unlink } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { useAuth } from "@/context/AuthContext";
@@ -19,6 +19,8 @@ export default function Dashboard() {
   const [professionals, setProfessionals] = useState([]);
   const [proRequests, setProRequests] = useState([]);
   const [proForm, setProForm] = useState({ professional_email: "", child_name: "", co_parent_name: "", co_parent_email: "" });
+  const [extLink, setExtLink] = useState(null);
+  const [linkCode, setLinkCode] = useState("");
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -28,6 +30,7 @@ export default function Dashboard() {
     api.get("/joint/connections").then((r) => setConnections(r.data)).catch(() => {});
     api.get("/joint/config").then((r) => setSubjects(r.data.subjects)).catch(() => {});
     api.get("/joint/professional-requests").then((r) => setProRequests(r.data)).catch(() => {});
+    api.get("/external/link").then((r) => setExtLink(r.data)).catch(() => setExtLink({ linked: false }));
   };
 
   useEffect(load, []);
@@ -43,6 +46,28 @@ export default function Dashboard() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const linkAccount = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.post("/external/link", { code: linkCode.trim() });
+      toast.success(`Linked to ${data.external_email}`);
+      setLinkCode("");
+      load();
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const unlinkAccount = async () => {
+    try {
+      await api.delete("/external/link");
+      toast.success("Account unlinked");
+      load();
+    } catch (e) { toast.error(formatApiError(e)); }
   };
 
   const resend = async (iid) => {
@@ -111,15 +136,6 @@ export default function Dashboard() {
     }
   };
 
-  const loadDemo = async (id) => {
-    try {
-      await api.post(`/cases/${id}/demo`);
-      navigate(`/report/${id}`);
-    } catch (e) {
-      toast.error(formatApiError(e));
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background" data-testid="dashboard-page">
       <header className="bg-white border-b border-border">
@@ -139,17 +155,26 @@ export default function Dashboard() {
       <main className="max-w-6xl mx-auto px-6 py-10 space-y-12">
         <div>
           <h1 className="text-4xl font-semibold" data-testid="dash-heading">Dashboard</h1>
-          <p className="text-muted-foreground mt-2" data-testid="dash-subtext">Reflect privately, or invite your co-parent to explore one issue together.</p>
+          <p className="text-muted-foreground mt-2" data-testid="dash-subtext">Your individual assessments come from sacoparentsapp.online. Invite your co-parent to explore one issue together.</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4" data-testid="tools-grid">
           <div className="bg-white border border-border rounded-lg p-6" data-testid="individual-tools-card">
-            <p className="text-xs uppercase tracking-widest text-brand-teal font-bold">Individual Tools</p>
-            <h2 className="text-2xl font-semibold mt-1">Start a Private Assessment</h2>
-            <p className="text-sm text-muted-foreground mt-2 mb-5">Reflect privately on your parenting situation with a structured 10-topic assessment.</p>
-            <Link to="/new" data-testid="new-assessment-link">
-              <Button variant="outline" className="gap-2" data-testid="new-assessment-btn"><Plus className="h-4 w-4" /> Start a Private Assessment</Button>
-            </Link>
+            <p className="text-xs uppercase tracking-widest text-brand-teal font-bold">Individual Assessments</p>
+            <h2 className="text-2xl font-semibold mt-1">Import from sacoparentsapp.online</h2>
+            <p className="text-sm text-muted-foreground mt-2 mb-5">Individual assessments are completed in the SA CoParents app. Link once — your completed assessments are pulled into your Joint Reports automatically.</p>
+            {extLink?.linked ? (
+              <div data-testid="ext-linked-block">
+                <p className="text-sm" data-testid="ext-linked-email">Linked: <span className="font-semibold">{extLink.external_email}</span></p>
+                <p className="text-xs text-muted-foreground mt-1">Imported material stays private to you and is only used inside Joint Report comparisons.</p>
+                <Button variant="ghost" size="sm" className="mt-3 gap-1.5 text-destructive" onClick={unlinkAccount} data-testid="ext-unlink-btn"><Unlink className="h-3.5 w-3.5" /> Unlink account</Button>
+              </div>
+            ) : (
+              <div className="flex gap-2" data-testid="ext-link-block">
+                <Input value={linkCode} onChange={(e) => setLinkCode(e.target.value.toUpperCase())} placeholder="Link code from sacoparentsapp.online" className="h-11 uppercase tracking-widest" maxLength={8} data-testid="ext-link-code-input" />
+                <Button onClick={linkAccount} disabled={linkCode.trim().length !== 8 || busy} className="h-11 gap-1.5" data-testid="ext-link-btn"><Link2 className="h-4 w-4" /> Link</Button>
+              </div>
+            )}
           </div>
           <div className="bg-white border-2 border-primary/30 rounded-lg p-6" data-testid="joint-tools-card">
             <p className="text-xs uppercase tracking-widest text-primary font-bold">Joint Tools</p>
@@ -325,17 +350,11 @@ export default function Dashboard() {
           </div>
         )}
 
+        {cases !== null && cases.length > 0 && (
         <div data-testid="assessments-section">
-          <h2 className="text-2xl font-semibold mb-4">Private Assessments</h2>
-          {cases === null ? (
-            <p className="text-muted-foreground" data-testid="cases-loading">Loading…</p>
-          ) : cases.length === 0 ? (
-            <div className="bg-white border border-dashed border-border rounded-lg p-10 text-center" data-testid="cases-empty">
-              <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-              <p className="text-lg font-medium">No private assessments yet</p>
-              <p className="text-sm text-muted-foreground mt-1">Start one above, or generate a 10-page Joint Alignment Report from one.</p>
-            </div>
-          ) : (
+          <h2 className="text-2xl font-semibold mb-4">Previous Private Assessments</h2>
+          <p className="text-sm text-muted-foreground mb-4">Created before individual assessments moved to sacoparentsapp.online.</p>
+          {(
             <div className="grid md:grid-cols-2 gap-4" data-testid="cases-grid">
               {cases.map((c) => {
                 const ready = c.has_a && c.has_b;
@@ -363,18 +382,12 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="mt-5 flex flex-wrap gap-2">
-                      {ready ? (
+                      {ready && (
                         <Link to={`/report/${c.id}`} data-testid={`case-report-link-${c.id}`}>
                           <Button size="sm" data-testid={`case-report-btn-${c.id}`}>View Joint Report</Button>
                         </Link>
-                      ) : (
-                        <Link to={`/new?case=${c.id}`} data-testid={`case-continue-link-${c.id}`}>
-                          <Button size="sm" variant="secondary" data-testid={`case-continue-btn-${c.id}`}>Continue</Button>
-                        </Link>
                       )}
-                      <Button size="sm" variant="outline" className="gap-1.5" onClick={() => loadDemo(c.id)} data-testid={`case-demo-btn-${c.id}`}>
-                        <Sparkles className="h-3.5 w-3.5" /> Demo data
-                      </Button>
+                      {!ready && <span className="text-xs text-muted-foreground self-center" data-testid={`case-legacy-note-${c.id}`}>Incomplete — new individual assessments are completed in sacoparentsapp.online.</span>}
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(c.id)} data-testid={`case-delete-btn-${c.id}`}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -385,6 +398,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+        )}
       </main>
     </div>
   );
