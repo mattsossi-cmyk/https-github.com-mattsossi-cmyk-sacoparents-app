@@ -22,6 +22,7 @@ import LearningCenterCard from "../components/LearningCenterCard";
 import YourReportsCard from "../components/YourReportsCard";
 import ShareManagementPanel from "../components/ShareManagementPanel";
 import ShareReportQuickAction from "../components/ShareReportQuickAction";
+import AssessmentHistoryCard from "../components/AssessmentHistoryCard";
 import AlignReportCTA from "../components/AlignReportCTA";
 import NewCommentToaster from "../components/NewCommentToaster";
 import { api } from "../lib/api";
@@ -1279,6 +1280,20 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Assessment History — third access point per the parent-journey
+            walkthrough. Renders below the SNC highlights so parents who
+            scroll through the dashboard see: (1) Share pills at the top,
+            (2) Deep-dives / SNC highlights mid-page, (3) per-row Joint
+            Alignment Report links here. Only mounts when at least one
+            module is complete. */}
+        <div className="mt-4">
+          <AssessmentHistoryCard
+            steps={STEPS}
+            completed={completed}
+            sncHighlights={sncHighlights}
+          />
+        </div>
 
         {/* Optional Deep Dives progress */}
         {deepDives && (deepDives.deep_dives || []).some((d) => d.has_assessment) && (

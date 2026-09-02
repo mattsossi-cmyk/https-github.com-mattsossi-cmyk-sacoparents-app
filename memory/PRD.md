@@ -280,6 +280,26 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-03-01 — Third access point: Assessment History card on Dashboard
+- New `frontend/src/components/AssessmentHistoryCard.jsx` — compact
+  table of every completed prep module. Each row exposes a right-side
+  action:
+    - If Compare share is ready → *"View Joint Alignment Report →"*
+      routing to `/joint-professional-report?share=<id>&mint=1` (one-tap
+      to the mint dialog).
+    - Otherwise → subtle *"Review"* link to the module route so the
+      row still deep-links back into the flow.
+  Only renders when at least one module is complete.
+- Mounted below the SNC highlights block in `Dashboard.jsx`. Reads
+  from the existing `prep.completed` state and `sncHighlights` prop —
+  zero new network calls.
+- Header shows a *"Joint Report ready"* chip and a soft waiting hint
+  when no share exists yet ("Invite your co-parent to see a Joint
+  Alignment Report link appear next to each row.").
+- Verified in browser with `parent1@test.com`: 5 completed rows, 5
+  View Joint Alignment Report links, ready chip visible. All 87 iter
+  tests green.
+
 ### 2026-02-28 — Foundation Demo on Landing + Sign In on demo banner
 - `Landing.jsx` "How it works" section:
   - Step 4 (Foundation Statement) card now shows a *"See what one looks
