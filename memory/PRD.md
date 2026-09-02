@@ -48,8 +48,8 @@ See /app/memory/test_credentials.md. Admin: mattsossi@bsossi.com / CoParents2026
 ### P1
 - Editable Page 9 action plan (fill fields in-app, persist, print filled version)
 - Shareable read-only report link for professionals (token-based)
-- Invite flow: Parent A invites Parent B by email to complete their half
-- True PDF file download (server-generated) in addition to print
+- Unicode font embedding for PDFs (non-Latin-1 names render as ?)
+- Live end-to-end cross-app test once sacoparentsapp.online implements the integration spec
 
 ### P2
 - Reassessment over time ("Reassess & adjust as the child grows") with comparison between report versions
@@ -70,3 +70,15 @@ See /app/memory/test_credentials.md. Admin: mattsossi@bsossi.com / CoParents2026
 - Auth supports ?next= redirect for invitation links
 - Files: backend/joint_data.py, backend/joint_engine.py, joint endpoints in server.py; frontend pages JointNew/Join/JointAssessment/JointReport, Dashboard rewrite, components/ConfidentialityNotice.jsx
 - Testing: see /app/test_reports/iteration_4.json
+
+## Implemented (2026-09-02, later) — Agreements, Professional Requests, Privacy Policy, External Prefill
+- Co-parenting agreements: POST /api/joint/agreements (kind="agreement", 8 AGREEMENT_AREAS), both parents propose terms privately, generate_agreement() (Likely aligned/Close/Needs discussion), agreement PDF (build_agreement_pdf). Dashboard "Invite Co-Parent to Joint Agreement" button; /joint/new?kind=agreement wizard; agreement-document view in JointReport.
+- Contact-a-professional (family violence): GET /api/professionals, POST/GET /api/joint/professional-requests, POST .../prepare (professional creates all-safety-subjects report, invites BOTH parents; parents don't see it pre-accept; double-prepare 400; parent prepare 403). Dashboard red "Contact a Professional" card + pro inbox with Prepare.
+- Safety styling (iteration-8 gaps FIXED): JointReport red title + jr-safety-notice banner; Wizard IPV card red border; Pages.jsx IPV report-title red.
+- Privacy page: /privacy — full 32-section "Privacy, Confidentiality & Data Protection Policy" mirrored from sacoparentsapp.online, adapted to Align (rule-based, no AI; providers: Emergent/MongoDB Atlas/Resend) with formal Section 31 Notices provision. Linked from ConfidentialityNotice (all forms) and Landing footer.
+- External prefill: GET /api/external/assessments (fetch_external_export helper shared with joint import); Wizard ParentForm "Load my saved answers" panel (linked accounts only) pre-fills primary concern + shows saved assessments/statements as reference.
+- Tests: tests/test_agreements_and_pro_requests.py (5), tests/test_external_assessments.py (5). Suite: 87/87. QA: iteration_9.json (backend 82/82, frontend 100%).
+- Email stays on Emergent managed proxy (delivers to any recipient on platform-verified domain); user-offered BYO Resend key declined per platform email guardrails (2026-09-02).
+
+## BLOCKED — sacoparentsapp.online export endpoints
+Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online all return 404 — NOT implemented. User must open the other Emergent project and have its agent implement /app/SACOPARENTSAPP_ONLINE_INTEGRATION_SPEC.md (shared secret + 3 endpoints). Until then: link attempts 400, imports/prefill 502.
