@@ -15,6 +15,7 @@ cffi==2.1.1
 charset-normalizer==3.5.1
 click==8.5.0
 cryptography==50.0.1
+defusedxml==0.7.1
 distro==1.9.0
 dnspython==2.8.0
 ecdsa==0.19.2
@@ -25,6 +26,8 @@ fastapi==0.110.1
 fastuuid==0.14.0
 filelock==3.32.4
 flake8==7.3.0
+fonttools==4.64.0
+fpdf2==2.8.8
 frozenlist==1.8.0
 fsspec==2026.7.0
 google-ai-generativelanguage==0.6.15
@@ -87,6 +90,7 @@ Pygments==2.21.0
 PyJWT==2.13.0
 pymongo==4.6.3
 pyparsing==3.3.2
+pypdf==6.16.2
 pytest==9.1.1
 pytest-xdist==3.8.0
 python-dateutil==2.9.0.post0

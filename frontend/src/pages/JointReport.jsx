@@ -106,9 +106,11 @@ export default function JointReport() {
             <ArrowLeft className="h-4 w-4" /> Dashboard
           </Link>
           <BrandLogo size="text-xl" />
-          {ready && (
-            <Button size="sm" className="gap-2" onClick={() => window.print()} data-testid="joint-print-btn">
-              <Printer className="h-4 w-4" /> Download PDF
+          {ready && report && (
+            <Button size="sm" className="gap-2" asChild data-testid="joint-print-btn">
+              <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${id}/pdf`} download>
+                <Printer className="h-4 w-4" /> Download PDF
+              </a>
             </Button>
           )}
         </div>

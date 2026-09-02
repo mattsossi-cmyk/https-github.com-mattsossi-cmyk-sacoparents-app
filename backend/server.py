@@ -27,6 +27,7 @@ from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_pay
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, NEXT_STEPS
 from joint_engine import generate_joint_report
+from pdf_report import build_joint_pdf
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -852,6 +853,21 @@ async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
     if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
         raise HTTPException(status_code=400, detail="The Joint Report becomes available when both parents have completed their assessments")
     return generate_joint_report(doc)
+
+
+@api.get("/joint/reports/{rid}/pdf")
+async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
+    doc = await get_joint_report_doc(rid, user)
+    if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
+        raise HTTPException(status_code=400, detail="The Joint Report PDF becomes available when both parents have completed their assessments")
+    report = generate_joint_report(doc)
+    pdf_bytes = build_joint_pdf(report)
+    child = re.sub(r"[^a-z0-9-]", "", (doc.get("child_name") or "child").lower().replace(" ", "-")) or "child"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="joint-report-{child}.pdf"'},
+    )
 
 
 @api.post("/joint/reports/{rid}/share")
