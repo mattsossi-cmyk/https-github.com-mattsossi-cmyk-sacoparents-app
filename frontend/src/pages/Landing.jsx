@@ -159,6 +159,9 @@ export default function Landing() {
               Educational resource. Not legal, medical, or psychological advice.
             </p>
             <p className="text-xs text-muted-foreground mt-1" data-testid="footer-site">sacoparentsapp.online</p>
+            <Link to="/privacy" className="block text-xs text-primary mt-2 hover:underline" data-testid="footer-privacy-link">
+              Privacy, Confidentiality &amp; Notice Provision
+            </Link>
           </div>
         </div>
       </footer>

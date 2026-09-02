@@ -84,3 +84,5 @@ Response 404: {"detail": "No completed assessments found"}
 - Link codes are single-use and expire in 15 minutes.
 - The same confidentiality rules apply: imported material stays private to the importing
   parent until they choose to participate in a Joint Report comparison.
+- sacoparentsalign also uses Endpoint 3 to pre-fill private (individual) assessments with the
+  parent's saved answers (Wizard "Load my saved answers" panel), so parents never re-enter material.

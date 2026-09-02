@@ -141,6 +141,69 @@ SUBJECTS = {
             ["Could the parents agree on the goal before the details?", "What would each parent need to feel resolved?", "Is additional professional input needed?", "What happens if mediation does not resolve it?"],
         ),
     },
+    "co_parenting": {
+        "label": "Co-Parenting",
+        **S(
+            ["Predictable co-parenting structure", "Consistent expectations between homes", "Reliable information sharing", "Clear parenting roles", "Reduced child exposure to disagreement"],
+            ["What co-parenting structure best supports the child?", "How are responsibilities divided day to day?", "What information must always be shared?", "How will disagreements be handled?", "What is already working well?"],
+            ["Option A: A written co-parenting protocol covering routines and communication.", "Option B: A shared calendar plus scheduled monthly check-ins.", "Option C: Parenting coordination sessions to design the structure together."],
+            ["Could the parents agree on outcomes without identical approaches?", "What does the child most need from the co-parenting system?", "Would a parenting coordinator help?", "What can the parents agree to try first?"],
+        ),
+    },
+    "child_needs": {
+        "label": "Child's Needs",
+        **S(
+            ["The child's stated needs heard by both parents", "Age-appropriate consideration of the child's views", "Consistency around the child's top needs", "Professional input when needs are unclear", "Regular reassessment as the child grows"],
+            ["What does the child say they need?", "What does each parent observe day to day?", "Which needs are urgent versus ongoing?", "Who can provide an outside perspective?", "How will the parents revisit this as the child grows?"],
+            ["Option A: A child-specialist consultation to clarify needs.", "Option B: Each parent documents observations for two weeks, then compares.", "Option C: An age-appropriate conversation with the child, guided by a counselor."],
+            ["Could the parents agree on the child's top need?", "What observations should be shared?", "Would a child specialist help?", "What can be tried first?"],
+        ),
+    },
+    "special_needs": {
+        "label": "Special Needs",
+        **S(
+            ["Consistent implementation of support plans", "Shared understanding of the child's diagnosis or needs", "Coordinated therapies and appointments", "School accommodations aligned across homes", "Respite and support for both households"],
+            ["How is the support plan implemented in each home?", "What therapies or services are current or needed?", "How are school accommodations (IEP/ARD/504) coordinated?", "How are equipment and supplies handled between homes?", "What training would help each parent?"],
+            ["Option A: A joint meeting with the child's specialist or care coordinator.", "Option B: A written care protocol duplicated for both households.", "Option C: Coordinated ARD/IEP advocacy with shared school communication."],
+            ["Could the parents align on the support plan's priorities?", "What information from providers would help?", "Should both parents attend the next planning meeting?", "What consistency matters most to the child?"],
+        ),
+    },
+    "safety": {
+        "label": "Safety",
+        **S(
+            ["Physical and emotional safety first", "Structures that limit unsafe contact", "Clear emergency protocols", "Professional guidance experienced with family violence", "Detailed, unambiguous arrangements"],
+            ["What arrangements keep the child and the safe parent protected?", "Are current orders or protections clear to both parents?", "What communication is safe and necessary?", "What warning signs require immediate action?", "Who should be involved professionally?"],
+            ["Option A: Neutral or supervised exchange locations.", "Option B: Communication through an app or professionals only.", "Option C: Detailed parenting orders with emergency protocols."],
+            ["Is any direct communication currently safe?", "What professional guidance is in place?", "Are emergency contacts and protocols documented?", "What structure reduces risk while meeting the child's needs?"],
+        ),
+    },
+    "risk": {
+        "label": "Risk Factors",
+        **S(
+            ["Accurate identification of risk patterns", "Documentation through appropriate channels", "Power imbalances addressed in any process", "Safety planning before problem-solving", "Ongoing professional monitoring"],
+            ["What patterns of concern has each parent observed?", "Are there power imbalances affecting discussions?", "What documentation exists or should exist?", "What immediate safeguards are needed?", "Which professionals should assess the situation?"],
+            ["Option A: A professional risk assessment before any joint process.", "Option B: Separate (shuttle) mediation rather than face-to-face.", "Option C: Attorney-assisted communication only."],
+            ["Is joint discussion appropriate at all right now?", "What would a professional need to know?", "What protections exist today?", "What is the safest next step?"],
+        ),
+    },
+    "safety_communication": {
+        "label": "Safe Communication",
+        **S(
+            ["Communication channels that protect safety", "Written records of necessary communication", "No pressure for direct contact", "Emergency-only contact rules", "Professional-filtered communication when needed"],
+            ["What channel is safe for necessary communication?", "What topics are essential to communicate?", "What response expectations are realistic and safe?", "Should communication go through a third party?", "What happens in an emergency?"],
+            ["Option A: Written-only communication through a monitored app.", "Option B: Communication through attorneys or a coordinator.", "Option C: Emergency-only direct contact with all else in writing."],
+            ["Is any direct communication safe?", "What must be communicated for the child?", "Would a communication app provide the needed structure?", "Who can assist if communication breaks down?"],
+        ),
+    },
+    "safeguards": {
+        "label": "Safeguards",
+        **S(
+            ["Documented safety arrangements", "Enforceable boundaries and orders", "Safe exchange procedures", "Support resources for the child and the safe parent", "Regular review of safeguards"],
+            ["Which safeguards are currently in place?", "Are orders being followed?", "What additional protections are needed?", "How are exchanges made safe?", "When should safeguards be reviewed?"],
+            ["Option A: Supervised exchanges or visitation where appropriate.", "Option B: Detailed court orders with specific protections.", "Option C: A safety plan developed with a family-violence professional."],
+            ["Are current safeguards working?", "What would make exchanges safer?", "Is professional safety planning in place?", "What should be reviewed at the next check-in?"],
+        ),
+    },
     "custom": {
         "label": "Other / Custom Subject",
         **S(
@@ -154,5 +217,67 @@ SUBJECTS = {
 
 ORDERED_SUBJECT_KEYS = [
     "communication", "schedule", "education", "medical", "psychological", "activities",
-    "transitions", "decision_making", "holidays", "technology", "routine", "mediation", "custom",
+    "transitions", "decision_making", "holidays", "technology", "routine",
+    "co_parenting", "child_needs", "special_needs",
+    "safety", "risk", "safety_communication", "safeguards",
+    "mediation", "custom",
 ]
+
+HUB_MAIN_SUBJECTS = [
+    "co_parenting", "education", "medical", "psychological", "communication",
+    "child_needs", "schedule", "special_needs", "activities", "transitions",
+]
+
+HUB_SAFETY_SUBJECTS = ["safety", "risk", "safety_communication", "safeguards"]
+
+
+def merged_subject_config(subject_keys):
+    if len(subject_keys) == 1:
+        return SUBJECTS[subject_keys[0]]
+    merged = {"needs": [], "conversation": [], "options": [], "questions": []}
+    for k in subject_keys:
+        cfg = SUBJECTS[k]
+        label = cfg["label"]
+        merged["needs"] += cfg["needs"][:3]
+        merged["conversation"] += [f"[{label}] {q}" for q in cfg["conversation"][:3]]
+        merged["options"] += [f"[{label}] {o}" for o in cfg["options"][:2]]
+        merged["questions"] += [f"[{label}] {q}" for q in cfg["questions"][:2]]
+    return merged
+
+
+SAFETY_SUBJECT_KEYS = {"safety", "risk", "safety_communication", "safeguards"}
+SAFETY_CONFIDENTIALITY = (
+    "Confidentiality: Your individual responses will not be shared with the other party. "
+    "This report is prepared for review with a third-party mediator. Only the completed "
+    "comparison is provided to the mediator; your answers remain private."
+)
+
+SAFETY_PURPOSE = (
+    "This report is prepared through a third-party mediator rather than directly between the "
+    "parents. It compares the independently provided perspectives of both parents to identify "
+    "areas of shared understanding, differences in perspective, and subjects that may benefit "
+    "from professional assistance. Individual responses are not shared between the parties."
+)
+
+AGREEMENT_AREAS = [
+    ("parenting_schedule", "Parenting Schedule", "What parenting schedule arrangement do you propose?"),
+    ("holidays", "Holidays & Special Days", "What arrangement do you propose for holidays and special days?"),
+    ("decision_making", "Decision-Making", "What arrangement do you propose for major decisions about the child?"),
+    ("communication", "Parent Communication", "What arrangement do you propose for communication between the parents?"),
+    ("exchanges", "Exchanges & Transportation", "What arrangement do you propose for exchanges and transportation?"),
+    ("expenses", "Child-Related Expenses", "What arrangement do you propose for child-related expenses?"),
+    ("information_sharing", "Information Sharing", "What arrangement do you propose for sharing school, medical, and activity information?"),
+    ("dispute_resolution", "Dispute Resolution", "What arrangement do you propose for resolving future disagreements?"),
+]
+
+AGREEMENT_PURPOSE = (
+    "This document brings together both parents' independently proposed terms for a co-parenting "
+    "agreement. Terms where the parents' proposals align are ready to be formalized. Terms marked "
+    "for discussion are candidates for parent conversation or mediation before finalizing. "
+    "This document is not legal advice and does not determine which parent is right or wrong."
+)
+
+AGREEMENT_CONFIDENTIALITY = (
+    "Each parent's proposals remain private until both have submitted. This combined document "
+    "becomes visible to both parents only when complete."
+)

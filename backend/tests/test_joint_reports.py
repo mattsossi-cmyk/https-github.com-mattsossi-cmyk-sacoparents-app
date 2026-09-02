@@ -35,11 +35,11 @@ def _register(name="P", role="parent", email=None):
 
 # ---------------- Config ----------------
 class TestJointConfig:
-    def test_config_has_13_subjects_and_6_questions(self):
+    def test_config_has_20_subjects_and_6_questions(self):
         r = requests.get(f"{API}/joint/config")
         assert r.status_code == 200
         data = r.json()
-        assert len(data["subjects"]) == 13
+        assert len(data["subjects"]) == 20
         keys = [s["key"] for s in data["subjects"]]
         assert "education" in keys and "custom" in keys
         assert len(data["questions"]) == 6

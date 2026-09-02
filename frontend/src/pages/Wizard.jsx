@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { FileText, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { FileText, ArrowLeft, ArrowRight, Sparkles, Download } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
@@ -12,10 +12,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-function ParentForm({ config, parentLabel, onSubmit, busy }) {
+function ParentForm({ config, parentLabel, onSubmit, busy, allowImport }) {
   const [answers, setAnswers] = useState({});
   const [concern, setConcern] = useState("");
   const [goals, setGoals] = useState([]);
+  const [extData, setExtData] = useState(null);
+  const [importing, setImporting] = useState(false);
+
+  const importExternal = async () => {
+    setImporting(true);
+    try {
+      const { data } = await api.get("/external/assessments");
+      setExtData(data);
+      if (!concern.trim()) {
+        const stmt = (data.statements || [])[0];
+        const firstResponses = (data.assessments || []).map((a) => Object.values(a.responses || {})).flat();
+        const source = (stmt && stmt.content) || firstResponses.find((v) => typeof v === "string" && v.length > 40) || "";
+        if (source) setConcern(source.slice(0, 600));
+      }
+      toast.success("Loaded your saved sacoparentsapp.online material");
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const toggleGoal = (g) => {
     setGoals((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]));
@@ -32,6 +53,45 @@ function ParentForm({ config, parentLabel, onSubmit, busy }) {
           {answered} of {total} answered
         </span>
       </div>
+
+      {allowImport && (
+        <div className="bg-white border border-border rounded-lg p-5 mb-6" data-testid="external-import-block">
+          {!extData ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">Your sacoparentsapp.online account is linked — pull in your saved assessment answers instead of starting from scratch.</p>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={importExternal} disabled={importing} data-testid="import-external-btn">
+                <Download className="h-3.5 w-3.5" /> {importing ? "Loading…" : "Load my saved answers"}
+              </Button>
+            </div>
+          ) : (
+            <div data-testid="external-reference">
+              <p className="font-medium mb-3">Your saved material from sacoparentsapp.online</p>
+              <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
+                {(extData.statements || []).map((s, i) => (
+                  <div key={`stmt-${i}`} className="border-l-2 border-brand-teal pl-3" data-testid={`external-statement-${i}`}>
+                    <p className="text-sm font-medium">{s.title}</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{s.content}</p>
+                  </div>
+                ))}
+                {(extData.assessments || []).map((a, i) => (
+                  <div key={`asm-${i}`} className="border-l-2 border-brand-teal pl-3" data-testid={`external-assessment-${i}`}>
+                    <p className="text-sm font-medium">{a.title}</p>
+                    <dl className="mt-1 space-y-1.5">
+                      {Object.entries(a.responses || {}).map(([q, v]) => (
+                        <div key={q}>
+                          <dt className="text-xs text-muted-foreground">{q}</dt>
+                          <dd className="text-sm whitespace-pre-wrap">{String(v)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">Use this as your reference while answering below — your primary concern has been pre-filled where possible.</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-6">
         {config.topics.map((t, i) => (
@@ -120,11 +180,13 @@ export default function Wizard() {
   const [caseId, setCaseId] = useState(null);
   const [names, setNames] = useState({ child_name: "", parent_a_name: "", parent_b_name: "" });
   const [busy, setBusy] = useState(false);
+  const [extLinked, setExtLinked] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
     api.get("/assessment-types").then((r) => setTypes(r.data)).catch((e) => toast.error(formatApiError(e)));
+    api.get("/external/link").then((r) => setExtLinked(!!r.data.linked)).catch(() => {});
   }, []);
 
   const resumeCase = async (id) => {
@@ -238,7 +300,7 @@ export default function Wizard() {
                 <button
                   key={t.key}
                   onClick={() => selectType(t.key)}
-                  className="text-left bg-white border border-border rounded-lg p-6 hover:-translate-y-0.5 hover:shadow-md hover:border-primary transition-[transform,box-shadow,border-color] duration-200"
+                  className={`text-left bg-white border rounded-lg p-6 hover:-translate-y-0.5 hover:shadow-md transition-[transform,box-shadow,border-color] duration-200 ${t.key === "ipv" ? "border-red-300 hover:border-red-600" : "border-border hover:border-primary"}`}
                   data-testid={`type-option-${t.key}`}
                 >
                   <p className="font-semibold">{t.title}</p>
@@ -291,6 +353,7 @@ export default function Wizard() {
               config={config}
               parentLabel={names.parent_a_name || "Parent A"}
               busy={busy}
+              allowImport={extLinked}
               onSubmit={(payload) => submitResponses("a", payload)}
             />
           </div>
@@ -308,6 +371,7 @@ export default function Wizard() {
               config={config}
               parentLabel={names.parent_b_name || "Parent B"}
               busy={busy}
+              allowImport={extLinked}
               onSubmit={(payload) => submitResponses("b", payload)}
             />
           </div>

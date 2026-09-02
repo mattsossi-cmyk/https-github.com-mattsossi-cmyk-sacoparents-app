@@ -1,0 +1,38 @@
+{
+  "summary": "Verified the new Joint Report Hub end-to-end. Backend: added /app/backend/tests/test_hub_features.py (11 new tests covering /api/joint/config new subject keys, multi-subject POST /api/joint/reports & POST /api/joint/reports/professional, PATCH multi-subject 400 guard, /api/reports/complete for admin AND empty state for a fresh account, and a full multi-subject cycle including report generation with [subject] labels and PDF download). Fixed one outdated regression test (test_joint_reports.py had hardcoded 13 subjects; now 20). Full backend suite: 67/67 passing. Frontend Playwright: verified dashboard open-hub-link, /hub layout (10 main + 4 safety topic circles + both large circles), Focused vs Customized action title, hub-create-btn navigation with query params, hub-safety-circle preselects all 4 safety subjects, hub-complete-circle shows admin's 44 sections + totals, focused flow skips subject step to child step, mobile (<md) shows hub-mobile grid fallback. Complete report empty state validated via API (is_empty flag + 0 sections; frontend renders complete-empty testid).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Hub → JointNew multi-subject label rendering", "issue": "multi-subjects-line shows raw keys (e.g. 'safety + risk + safety_communication + safeguards') for the first ~200–500ms until /api/joint/config resolves, because JointNew.jsx renders before config load. Real users see it briefly flash before labels appear. Consider gating the line until subjects.length > 0 or fetching the config in a parent/lazy component to avoid the raw-key flash.", "affected_selectors": ["multi-subjects-line"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_hub_features.py",
+    "/app/backend/tests/test_joint_reports.py",
+    "/app/test_reports/pytest/hub_results.xml",
+    "/app/test_reports/pytest/full_iter7.xml"
+  ],
+  "action_items": [
+    "(Nice-to-have) Gate the multi-subjects-line in JointNew.jsx behind `subjects.length > 0` (or a small loading indicator) so users never see raw keys during config fetch.",
+    "(Nice-to-have) /api/joint/reports and /joint/reports/{id} responses omit the `subjects` array in joint_public(); FE currently derives from URL params only, but adding it to the response would make the API self-describing and simplify future consumers."
+  ],
+  "critical_code_review_comments": [
+    "server.py resolve_subjects() correctly handles both `subject` (str) and `subjects` (list). However JointReportIn.subject is still `str` (required); technically the API contract could accept subjects[] alone. Currently frontend always sends both so no bug, but tests confirmed passing subjects[] without subject returns 422.",
+    "joint_public() does not include `subjects` array in the response; only `subject` (which is 'multi' for customized reports). Non-blocking but inconsistent with the input contract.",
+    "PATCH /joint/invitations/{iid} guard for multi-subject reports works (returns 400 'Subject change is not available for customized reports'). Verified via test.",
+    "CompleteReport.jsx correctly reads `is_empty` from backend and renders complete-empty testid; totals + section blocks render for accounts with completed data (admin: 44 sections)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_hub_features.py (new)",
+    "/app/backend/tests/test_joint_reports.py (fixed hardcoded 13 -> 20 subjects)"
+  ],
+  "success_rate": {"backend": "100% (67/67)", "frontend": "100% (all Hub flows verified)"},
+  "test_credentials": "Admin: mattsossi@bsossi.com / CoParents2026!  Fresh test users created via API with TEST_*@example.com / testpass123.",
+  "seed_data_creation": "Multiple TEST_-prefixed accounts and joint reports created via API by the new pytest classes. Not cleaned up (low volume, standard practice matches prior iterations).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend covered by /app/backend/tests/test_hub_features.py (11 tests) covering all Hub-related endpoints including complete report empty vs populated, multi-subject full cycle with report + PDF, and the PATCH multi guard. If new subjects added, update test_joint_reports.py assert len(subjects)==20. Frontend Hub testids used: hub-page, hub-heading, hub-main-cluster, hub-safety-cluster, hub-complete-circle, hub-safety-circle, hub-topic-<key>, hub-safety-topic-<key>, hub-action-title, hub-action-subjects, hub-create-btn, hub-mobile, open-hub-link (dashboard), multi-subjects-line (JointNew), complete-title, complete-totals, complete-section-<i>, complete-empty (CompleteReport).",
+  "rca of the issue": "N/A - feature verified. Only minor UX polish item (raw-key flash on JointNew) flagged for main agent."
+}

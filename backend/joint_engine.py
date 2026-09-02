@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, timezone
 
-from joint_data import SUBJECTS, QUESTIONS, NEXT_STEPS
+from joint_data import SUBJECTS, QUESTIONS, NEXT_STEPS, merged_subject_config, SAFETY_CONFIDENTIALITY, SAFETY_PURPOSE, AGREEMENT_AREAS, AGREEMENT_PURPOSE, AGREEMENT_CONFIDENTIALITY
 
 STOPWORDS = set(
     "the a an and or of to in for with on at is are was were be been being this that these those "
@@ -131,7 +131,7 @@ def _theme_analysis(corpus_a, corpus_b, pa, pb, child):
 
 
 def generate_joint_report(doc):
-    cfg = SUBJECTS[doc["subject"]]
+    cfg = merged_subject_config(doc.get("subjects") or [doc["subject"]])
     subject_label = doc["subject_label"]
     child = doc.get("child_name") or "the child"
     resp_a = doc["responses"]["a"]
@@ -153,7 +153,9 @@ def generate_joint_report(doc):
         "parent_b_name": pb,
         "imported": imported,
         "date": datetime.now(timezone.utc).strftime("%B %d, %Y"),
-        "purpose": PURPOSE_TEXT,
+        "is_safety": bool(doc.get("is_safety")),
+        "confidentiality_note": SAFETY_CONFIDENTIALITY if doc.get("is_safety") else None,
+        "purpose": SAFETY_PURPOSE if doc.get("is_safety") else PURPOSE_TEXT,
         "alignment_statements": _alignment_statements(statements, subject_label, child),
         "differences": differences,
         "child_needs": cfg["needs"],
@@ -166,4 +168,46 @@ def generate_joint_report(doc):
         "philosophy_heading": "Alignment Before Agreement",
         "philosophy": "We value the parenting system by how well it supports the child, not by how friendly the adults appear.",
         "philosophy_note": "You don't have to see everything the same way to begin working toward meeting your child's needs.",
+    }
+
+
+def generate_agreement(doc):
+    child = doc.get("child_name") or "the child"
+    pa = doc["participants"]["a"].get("name") or "Parent A"
+    pb = doc["participants"]["b"].get("name") or "Parent B"
+    ra = doc["responses"]["a"]["answers"]
+    rb = doc["responses"]["b"]["answers"]
+
+    terms = []
+    for key, label, _question in AGREEMENT_AREAS:
+        common = shared_terms(ra.get(key, ""), rb.get(key, ""))
+        if len(common) >= 2:
+            status = "Likely aligned"
+        elif len(common) == 1:
+            status = "Close"
+        else:
+            status = "Needs discussion"
+        terms.append({
+            "key": key,
+            "label": label,
+            "parent_a": ra.get(key, ""),
+            "parent_b": rb.get(key, ""),
+            "status": status,
+        })
+
+    return {
+        "report_title": "Joint Co-Parenting Agreement",
+        "child_name": child,
+        "parent_a_name": pa,
+        "parent_b_name": pb,
+        "date": datetime.now(timezone.utc).strftime("%B %d, %Y"),
+        "purpose": AGREEMENT_PURPOSE,
+        "confidentiality_note": AGREEMENT_CONFIDENTIALITY,
+        "terms": terms,
+        "next_note": (
+            "Areas marked 'Needs discussion' are candidates for parent conversation or mediation "
+            "before finalizing. Consider having an appropriate professional review any final agreement."
+        ),
+        "philosophy_heading": "Alignment Before Agreement",
+        "philosophy": "We value the parenting system by how well it supports the child, not by how friendly the adults appear.",
     }

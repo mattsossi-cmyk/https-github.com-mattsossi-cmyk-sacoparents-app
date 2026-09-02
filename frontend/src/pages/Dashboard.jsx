@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { FileText, Plus, Trash2, CheckCircle2, Circle, Sparkles, Mail } from "lucide-react";
+import { FileText, Plus, Trash2, CheckCircle2, Circle, Sparkles, Mail, Scale, ShieldAlert } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { useAuth } from "@/context/AuthContext";
@@ -15,6 +15,10 @@ export default function Dashboard() {
   const [subjects, setSubjects] = useState([]);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showProForm, setShowProForm] = useState(false);
+  const [professionals, setProfessionals] = useState([]);
+  const [proRequests, setProRequests] = useState([]);
+  const [proForm, setProForm] = useState({ professional_email: "", child_name: "", co_parent_name: "", co_parent_email: "" });
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -23,6 +27,7 @@ export default function Dashboard() {
     api.get("/joint/reports").then((r) => setJoints(r.data)).catch(() => setJoints([]));
     api.get("/joint/connections").then((r) => setConnections(r.data)).catch(() => {});
     api.get("/joint/config").then((r) => setSubjects(r.data.subjects)).catch(() => {});
+    api.get("/joint/professional-requests").then((r) => setProRequests(r.data)).catch(() => {});
   };
 
   useEffect(load, []);
@@ -60,6 +65,39 @@ export default function Dashboard() {
       await api.patch(`/joint/invitations/${iid}`, { subject });
       toast.success("Subject updated");
       load();
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
+
+  const openProForm = async () => {
+    setShowProForm(!showProForm);
+    if (!showProForm && professionals.length === 0) {
+      try {
+        const { data } = await api.get("/professionals");
+        setProfessionals(data);
+      } catch (e) { toast.error(formatApiError(e)); }
+    }
+  };
+
+  const submitProRequest = async () => {
+    setBusy(true);
+    try {
+      await api.post("/joint/professional-requests", proForm);
+      toast.success("Request sent to the professional");
+      setShowProForm(false);
+      setProForm({ professional_email: "", child_name: "", co_parent_name: "", co_parent_email: "" });
+      load();
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const prepareRequest = async (reqId) => {
+    try {
+      const { data } = await api.post(`/joint/professional-requests/${reqId}/prepare`);
+      toast.success("Assessment prepared — invitations sent to both parents");
+      navigate(`/joint/${data.report_id}`);
     } catch (e) { toast.error(formatApiError(e)); }
   };
 
@@ -120,6 +158,54 @@ export default function Dashboard() {
             <Link to="/joint/new" data-testid="create-joint-report-link">
               <Button className="gap-2" data-testid="create-joint-report-btn"><Mail className="h-4 w-4" /> Invite My Co-Parent</Button>
             </Link>
+            <Link to="/hub" className="block mt-3 text-sm text-primary font-medium hover:underline" data-testid="open-hub-link">
+              Open the Joint Report Hub →
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4" data-testid="agreement-tools-grid">
+          <div className="bg-white border border-border rounded-lg p-6" data-testid="agreement-card">
+            <p className="text-xs uppercase tracking-widest text-brand-teal font-bold">Co-Parenting Agreement</p>
+            <h2 className="text-2xl font-semibold mt-1">Create a Joint Agreement</h2>
+            <p className="text-sm text-muted-foreground mt-2 mb-5">Invite the other parent to create the joint co-parenting agreement — each parent proposes terms privately.</p>
+            <Link to="/joint/new?kind=agreement" data-testid="create-agreement-link">
+              <Button variant="outline" className="gap-2" data-testid="create-agreement-btn"><Scale className="h-4 w-4" /> Invite Co-Parent to Joint Agreement</Button>
+            </Link>
+          </div>
+          <div className="bg-white border-2 border-red-200 rounded-lg p-6" data-testid="fv-contact-card">
+            <p className="text-xs uppercase tracking-widest text-red-700 font-bold">Family Violence Pathway</p>
+            <h2 className="text-2xl font-semibold mt-1">Contact a Professional</h2>
+            <p className="text-sm text-muted-foreground mt-2 mb-5">Have a professional prepare the joint family violence co-parenting assessment. Responses are not shared between the parties.</p>
+            <Button onClick={openProForm} className="gap-2 bg-red-700 hover:bg-red-800 text-white" data-testid="contact-professional-btn">
+              <ShieldAlert className="h-4 w-4" /> Contact a Professional
+            </Button>
+            {showProForm && (
+              <div className="mt-5 pt-4 border-t border-red-100 space-y-3" data-testid="pro-contact-form">
+                <select
+                  className="w-full h-11 rounded-md border border-input bg-white px-3 text-sm"
+                  value={proForm.professional_email}
+                  onChange={(e) => setProForm({ ...proForm, professional_email: e.target.value })}
+                  data-testid="pro-select"
+                >
+                  <option value="">Choose a registered professional…</option>
+                  {professionals.map((p) => (
+                    <option key={p.email} value={p.email}>{p.name} ({p.email})</option>
+                  ))}
+                </select>
+                <Input placeholder="Child's first name or initials" value={proForm.child_name} onChange={(e) => setProForm({ ...proForm, child_name: e.target.value })} data-testid="pro-child-input" />
+                <Input placeholder="Other parent's first name" value={proForm.co_parent_name} onChange={(e) => setProForm({ ...proForm, co_parent_name: e.target.value })} data-testid="pro-coparent-name-input" />
+                <Input type="email" placeholder="Other parent's email" value={proForm.co_parent_email} onChange={(e) => setProForm({ ...proForm, co_parent_email: e.target.value })} data-testid="pro-coparent-email-input" />
+                <Button
+                  onClick={submitProRequest}
+                  disabled={!proForm.professional_email || !proForm.child_name.trim() || !proForm.co_parent_name.trim() || !proForm.co_parent_email.trim() || busy}
+                  className="w-full bg-red-700 hover:bg-red-800 text-white"
+                  data-testid="pro-request-submit-btn"
+                >
+                  {busy ? "Sending…" : "Send Request to Professional"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -217,6 +303,27 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
+        {user?.role === "professional" && proRequests.length > 0 && (
+          <div data-testid="pro-requests-section">
+            <h2 className="text-2xl font-semibold mb-4">Facilitation Requests</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {proRequests.map((r) => (
+                <div key={r.id} className="bg-white border border-red-200 rounded-lg p-6" data-testid={`pro-request-${r.id}`}>
+                  <p className="text-xs uppercase tracking-widest text-red-700 font-semibold">Family Violence Assessment</p>
+                  <h3 className="text-xl font-semibold mt-1">{r.child_name ? `For ${r.child_name}` : "Joint Assessment"}</h3>
+                  <p className="text-sm text-muted-foreground mt-2">{r.parent_name} ({r.parent_email}) and {r.co_parent_name} ({r.co_parent_email})</p>
+                  <p className="text-xs text-muted-foreground mt-1" data-testid={`pro-request-status-${r.id}`}>Status: {r.status}</p>
+                  {r.status === "pending" && (
+                    <Button size="sm" className="mt-4 bg-red-700 hover:bg-red-800 text-white" onClick={() => prepareRequest(r.id)} data-testid={`pro-prepare-btn-${r.id}`}>
+                      Prepare Assessment
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div data-testid="assessments-section">
           <h2 className="text-2xl font-semibold mb-4">Private Assessments</h2>

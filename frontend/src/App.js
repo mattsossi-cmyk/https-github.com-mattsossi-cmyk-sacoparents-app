@@ -11,6 +11,9 @@ import JointNew from "@/pages/JointNew";
 import Join from "@/pages/Join";
 import JointAssessment from "@/pages/JointAssessment";
 import JointReport from "@/pages/JointReport";
+import Hub from "@/pages/Hub";
+import CompleteReport from "@/pages/CompleteReport";
+import Privacy from "@/pages/Privacy";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -40,6 +43,9 @@ function App() {
             <Route path="/joint/new" element={<Protected><JointNew /></Protected>} />
             <Route path="/joint/:id/assess" element={<Protected><JointAssessment /></Protected>} />
             <Route path="/joint/:id" element={<Protected><JointReport /></Protected>} />
+            <Route path="/hub" element={<Protected><Hub /></Protected>} />
+            <Route path="/hub/complete" element={<Protected><CompleteReport /></Protected>} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

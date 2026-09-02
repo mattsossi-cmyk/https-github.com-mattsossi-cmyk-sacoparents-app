@@ -1,0 +1,33 @@
+{
+  "summary": "Verified iteration-9 additions (co-parenting agreement flow + professional-request family violence flow) and iteration-8 frontend gap re-verification. All 3 previous frontend gaps are confirmed FIXED: (a) JointReport safety title renders text-red-700 AND jr-safety-notice red banner (bg-red-50/border-red-200) with SAFETY confidentiality text is visible, (b) Wizard IPV card (type-option-ipv) has border-red-300 red border, (c) IPV Pages.jsx report-title uses text-red-700. Backend: added new /app/backend/tests/test_agreements_and_pro_requests.py with 5 tests covering /joint/config agreement_areas, full agreement create -> accept -> respond (both parents) -> report (Joint Co-Parenting Agreement, 8 terms w/ Likely aligned|Close|Needs discussion, purpose + confidentiality_note) -> PDF (application/pdf, coparenting-agreement-<child>.pdf) -> privacy (A's detail view never contains B's answers), full professional-request cycle (list professionals, 404 unknown pro email, create request visible to parent + pro, parent 403 on prepare, pro prepare -> report_id + safety report with all 4 safety subjects, double-prepare -> 400, safety report visible only to pro not parents pre-accept), and safety-without-mediator regression (400). Full backend suite: 82/82 passed. Frontend end-to-end: dashboard shows both cards (create-agreement-btn + red contact-professional-btn), pro-contact-form opens with all 4 fields, pro request submitted successfully (toast); professional dashboard shows pro-requests-section with Prepare button that transitions status to 'prepared' with success toast 'Assessment prepared — invitations sent to both parents'; agreement wizard loads at /joint/new?kind=agreement with heading 'Create a Co-Parenting Agreement'; safety joint report renders red title + red confidentiality banner after both parents complete.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_agreements_and_pro_requests.py",
+    "/app/backend/tests/test_safety_reports.py"
+  ],
+  "action_items": [
+    "Optional UX: agreement wizard shows a 'Subject' step (step 1) even though kind=agreement has no subject choice — step label 'Subject' may be misleading; consider hiding/relabeling the first step for the agreement flow.",
+    "Optional: on JointReport detail page for a non-ready safety report, page still shows only 'Complete My Assessment' with no red safety banner; consider surfacing safety cues earlier (JointAssessment already does)."
+  ],
+  "critical_code_review_comments": [
+    "server.py line 882 uses AGREEMENT_AREAS keys only if doc.kind == 'agreement'; every other joint report (including safety multi-subject) uses the 6 QUESTIONS keys — good and unambiguous. Note tests must submit the QUESTIONS keys for safety reports, which is a small footgun for API consumers vs the subject_keys.",
+    "prepare_pro_request creates the safety report with creator_role='professional' and does not include the requesting parent as created_by — parents therefore correctly do not see the report in their /joint/reports list before accepting the invitation. Good.",
+    "/api/professionals returns ALL professional users to any authenticated caller — consider whether this is a privacy concern for larger deployments (currently professional email + name is fully public to any logged in parent).",
+    "AgreementIn / ProRequestIn use pydantic EmailStr — good input validation; server correctly lowercases emails for comparison."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_agreements_and_pro_requests.py (new, 5 tests)"
+  ],
+  "success_rate": {"backend": "100% (82/82)", "frontend": "100% (dashboard cards, pro-contact-form + submit, pro-inbox + Prepare, agreement wizard, iteration-8 gaps a/b/c all verified)"},
+  "test_credentials": "Admin mattsossi@bsossi.com / CoParents2026!. Test parents/pro registered via /api/auth/register with @testmail.dev emails, password testpass123. Live seeded during this run: ta_6993b787@testmail.dev (parent A), tb_457039b5@testmail.dev (parent B), pro_79422610@testmail.dev (professional). Safety report id aa4a385b-d7d5-4926-a0e4-e3c505616c20 completed both sides.",
+  "seed_data_creation": "New parents + professional registered via API for the run; new safety joint report prepared by professional and completed by both parents; new IPV private case created via /api/cases + /demo. All prefixed with test emails on @testmail.dev.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All backend + frontend for co-parenting agreement + pro-request + iteration-8 safety styling is green. Backend baseline: cd /app/backend && python3 -m pytest tests/ -q -> 82 passed. New backend tests: tests/test_agreements_and_pro_requests.py (config areas, full agreement flow, privacy, pro-request 200/403/404/400/prepare, safety-no-mediator 400). If you touch server.py agreement/pro-request handlers, rerun this file. Frontend uses /new for the private-assessment wizard (not /wizard). Safety multi-subject reports still validate using the 6 QUESTIONS keys (needs_most, working_well, concerns, improve, options, other_parent) — not the 4 safety subject_keys.",
+  "rca of the issue": "No open issues; iteration-8 3 frontend gaps confirmed fixed by conditional Tailwind classes (JointReport is_safety ternary for title color + new jr-safety-notice red block; Wizard IPV type key -> border-red-300; Pages.jsx assessment_type==='ipv' -> text-red-700 on report-title)."
+}

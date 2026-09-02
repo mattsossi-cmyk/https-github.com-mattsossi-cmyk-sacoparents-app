@@ -65,8 +65,9 @@ export default function JointAssessment() {
       .catch((e) => setError(formatApiError(e)));
   }, [id, navigate]);
 
-  const answered = config ? config.questions.filter((q) => (answers[q.key] || "").trim()).length : 0;
-  const total = config ? config.questions.length : 6;
+  const questionList = detail?.kind === "agreement" ? config?.agreement_areas || [] : config?.questions || [];
+  const answered = questionList.filter((q) => (answers[q.key] || "").trim()).length;
+  const total = questionList.length;
 
   const submit = async () => {
     setBusy(true);
@@ -115,11 +116,22 @@ export default function JointAssessment() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <p className="text-xs uppercase tracking-widest text-accent font-semibold" data-testid="assess-subject">{detail.subject_label}</p>
-        <h1 className="text-4xl font-semibold mt-1 mb-2" data-testid="assess-heading">Your Independent Reflection</h1>
+        <h1 className="text-4xl font-semibold mt-1 mb-2" data-testid="assess-heading">{detail.kind === "agreement" ? "Your Proposed Agreement Terms" : "Your Independent Reflection"}</h1>
         <p className="text-muted-foreground mb-2">
-          Regarding <strong>{detail.child_name}</strong>. Answer honestly — the other parent cannot see your answers.
+          Regarding <strong>{detail.child_name}</strong>. {detail.kind === "agreement" ? "Propose an arrangement for each area — the other parent does the same independently, and neither of you sees the other's proposals." : "Answer honestly — the other parent cannot see your answers."}
         </p>
         <p className="text-sm text-muted-foreground mb-8" data-testid="assess-progress">{answered} of {total} answered</p>
+
+        {detail.is_safety && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-5 mb-8" data-testid="safety-confidentiality">
+            <p className="font-semibold text-red-800">Confidentiality</p>
+            <p className="text-sm text-red-800/80 mt-1">
+              Your responses will not be shared between the parties. This report is prepared for review
+              with a third-party mediator{detail.professional_name ? ` (${detail.professional_name})` : ""}.
+              Only the completed comparison is provided to the mediator.
+            </p>
+          </div>
+        )}
 
         <div className="bg-secondary/50 border border-border rounded-lg p-5 mb-8" data-testid="import-card">
           <p className="font-semibold">Already completed an assessment on sacoparentsapp.online?</p>
@@ -150,8 +162,9 @@ export default function JointAssessment() {
         </div>
 
         <div className="space-y-6">
-          {config.questions.map((q, i) => (
+          {questionList.map((q, i) => (
             <div key={q.key} className="bg-white border border-border rounded-lg p-6" data-testid={`assess-question-${q.key}`}>
+              {q.label && <p className="text-xs uppercase tracking-widest text-accent font-semibold mb-1">{q.label}</p>}
               <Label htmlFor={`q-${q.key}`} className="font-medium">{i + 1}. {q.question}</Label>
               <Textarea
                 id={`q-${q.key}`}

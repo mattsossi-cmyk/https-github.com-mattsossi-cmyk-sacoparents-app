@@ -25,9 +25,10 @@ from pydantic import BaseModel, EmailStr
 
 from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
 from report_engine import generate_report
-from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, NEXT_STEPS
-from joint_engine import generate_joint_report
-from pdf_report import build_joint_pdf
+from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, NEXT_STEPS, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
+from joint_engine import generate_joint_report, generate_agreement
+from pdf_report import build_joint_pdf, build_agreement_pdf
+from complete_engine import build_complete_report
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -576,14 +577,17 @@ async def startup():
 class JointReportIn(BaseModel):
     subject: str
     custom_subject: str = ""
+    subjects: list[str] = []
     child_name: str
     co_parent_name: str
     co_parent_email: EmailStr
+    mediator_email: EmailStr | None = None
 
 
 class ProJointReportIn(BaseModel):
     subject: str
     custom_subject: str = ""
+    subjects: list[str] = []
     child_name: str
     parent_a_name: str
     parent_a_email: EmailStr
@@ -646,6 +650,9 @@ def joint_public(doc, user, invitation=None):
         "my_role": role,
         "is_creator": doc.get("created_by") == uid,
         "professional_name": doc.get("professional_name"),
+        "is_safety": bool(doc.get("is_safety")),
+        "subjects": doc.get("subjects") or [doc["subject"]],
+        "kind": doc.get("kind", "joint_report"),
         "participants": {},
     }
     for r in ("a", "b"):
@@ -723,27 +730,49 @@ async def joint_config():
         "subjects": [{"key": k, "label": SUBJECTS[k]["label"]} for k in ORDERED_SUBJECT_KEYS],
         "questions": [{"key": k, "area": a, "question": q} for k, a, q in QUESTIONS],
         "confidentiality_notice": CONFIDENTIALITY_NOTICE,
+        "agreement_areas": [{"key": k, "label": l, "question": q} for k, l, q in AGREEMENT_AREAS],
     }
+
+
+def resolve_subjects(body_subject: str, body_subjects: list, custom: str):
+    subject_keys = body_subjects or [body_subject]
+    if not subject_keys or any(k not in SUBJECTS for k in subject_keys):
+        raise HTTPException(status_code=400, detail="Unknown subject")
+    if len(subject_keys) > 1:
+        label = "Customized Report: " + " + ".join(SUBJECTS[k]["label"] for k in subject_keys[:3]) + ("…" if len(subject_keys) > 3 else "")
+        return "multi", subject_keys, label
+    subject = subject_keys[0]
+    label = custom.strip() if subject == "custom" else SUBJECTS[subject]["label"]
+    if subject == "custom" and not label:
+        label = "Custom Subject"
+    return subject, subject_keys, label
 
 
 @api.post("/joint/reports")
 async def create_joint_report(body: JointReportIn, user=Depends(get_current_user)):
-    label = None
-    if body.subject not in SUBJECTS:
-        raise HTTPException(status_code=400, detail="Unknown subject")
-    label = body.custom_subject.strip() if body.subject == "custom" else SUBJECTS[body.subject]["label"]
-    if body.subject == "custom" and not label:
-        label = "Custom Subject"
+    subject, subject_keys, label = resolve_subjects(body.subject, body.subjects, body.custom_subject)
+    is_safety = all(k in SAFETY_SUBJECT_KEYS for k in subject_keys)
+    mediator = None
+    if is_safety:
+        if not body.mediator_email:
+            raise HTTPException(status_code=400, detail="Family violence reports are prepared with a third-party mediator. Please provide the mediator's email.")
+        mediator = await db.users.find_one({"email": body.mediator_email.lower(), "role": "professional"})
+        if not mediator:
+            raise HTTPException(status_code=404, detail="No professional account found with that email. Ask your mediator to create a free professional account first.")
+        if mediator["_id"] == user["_id"]:
+            raise HTTPException(status_code=400, detail="You cannot designate yourself as the mediator.")
     rid = str(uuid.uuid4())
     doc = {
         "id": rid,
-        "subject": body.subject,
+        "subject": subject,
+        "subjects": subject_keys,
         "subject_label": label,
+        "is_safety": is_safety,
         "child_name": body.child_name.strip(),
         "created_by": user["_id"],
         "creator_role": "parent",
-        "professional_id": None,
-        "professional_name": None,
+        "professional_id": mediator["_id"] if mediator else None,
+        "professional_name": (mediator.get("name") or mediator["email"]) if mediator else None,
         "shared_with": [],
         "participants": {
             "a": {"user_id": user["_id"], "name": user.get("name", ""), "email": user["email"]},
@@ -755,6 +784,25 @@ async def create_joint_report(body: JointReportIn, user=Depends(get_current_user
     }
     await db.joint_reports.insert_one(doc)
     inv = await create_invitation(rid, "b", body.co_parent_name, body.co_parent_email, user.get("name", "Your co-parent"), doc["child_name"], label)
+    if mediator:
+        try:
+            await send_email(
+                to=mediator["email"],
+                subject=f"Family violence Joint Report facilitation requested - {EMAIL_FROM_NAME}",
+                html=(
+                    '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                    f"<p>Hi {escape(mediator.get('name') or 'there')},</p>"
+                    f"<p><strong>{escape(user.get('name', 'A parent'))}</strong> has requested your third-party "
+                    f"facilitation of a family-violence Joint Report regarding "
+                    f"<strong>{escape(doc['child_name'])}</strong> ({escape(label)}).</p>"
+                    "<p>Both parents' individual responses remain confidential and are not shared between the "
+                    "parties. You will see the completed comparison once both parents finish.</p>"
+                    f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open your dashboard</a></p>'
+                    "</td></tr></table>"
+                ),
+            )
+        except Exception:
+            logger.warning(f"Mediator notification not sent to {mediator['email']}")
     return {**joint_public(doc, user), "invitation": {"id": inv["id"], "code": inv["code"], "link": f"{app_url()}/join/{inv['token']}", "invitee_email": inv["invitee_email"], "status": "pending"}}
 
 
@@ -762,15 +810,12 @@ async def create_joint_report(body: JointReportIn, user=Depends(get_current_user
 async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_current_user)):
     if user.get("role") != "professional":
         raise HTTPException(status_code=403, detail="Only professional accounts can create reports for two parents")
-    if body.subject not in SUBJECTS:
-        raise HTTPException(status_code=400, detail="Unknown subject")
-    label = body.custom_subject.strip() if body.subject == "custom" else SUBJECTS[body.subject]["label"]
-    if body.subject == "custom" and not label:
-        label = "Custom Subject"
+    subject, subject_keys, label = resolve_subjects(body.subject, body.subjects, body.custom_subject)
     rid = str(uuid.uuid4())
     doc = {
         "id": rid,
-        "subject": body.subject,
+        "subject": subject,
+        "subjects": subject_keys,
         "subject_label": label,
         "child_name": body.child_name.strip(),
         "created_by": user["_id"],
@@ -834,7 +879,7 @@ async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(ge
     role = report_role(doc, user["_id"])
     if role is None:
         raise HTTPException(status_code=403, detail="Only invited parents can submit responses")
-    valid = {k for k, _, _ in QUESTIONS}
+    valid = {k for k, _, _ in AGREEMENT_AREAS} if doc.get("kind") == "agreement" else {k for k, _, _ in QUESTIONS}
     answers = {k: (body.answers.get(k) or "").strip() for k in valid}
     if any(not v for v in answers.values()):
         raise HTTPException(status_code=400, detail="Please answer all questions")
@@ -852,6 +897,8 @@ async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)
     if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
         raise HTTPException(status_code=400, detail="The Joint Report becomes available when both parents have completed their assessments")
+    if doc.get("kind") == "agreement":
+        return generate_agreement(doc)
     return generate_joint_report(doc)
 
 
@@ -860,15 +907,19 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)
     if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
         raise HTTPException(status_code=400, detail="The Joint Report PDF becomes available when both parents have completed their assessments")
-    report = generate_joint_report(doc)
-    pdf_bytes = build_joint_pdf(report)
     child = re.sub(r"[^a-z0-9-]", "", (doc.get("child_name") or "child").lower().replace(" ", "-")) or "child"
+    if doc.get("kind") == "agreement":
+        return Response(
+            content=build_agreement_pdf(generate_agreement(doc)),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="coparenting-agreement-{child}.pdf"'},
+        )
+    pdf_bytes = build_joint_pdf(generate_joint_report(doc))
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="joint-report-{child}.pdf"'},
     )
-
 
 @api.post("/joint/reports/{rid}/share")
 async def share_joint_report(rid: str, body: ShareIn, user=Depends(get_current_user)):
@@ -983,6 +1034,8 @@ async def change_invitation_subject(iid: str, body: PatchInvitationIn, user=Depe
         raise HTTPException(status_code=403, detail="Only the report creator can change the subject")
     if body.subject not in SUBJECTS:
         raise HTTPException(status_code=400, detail="Unknown subject")
+    if report["subject"] == "multi":
+        raise HTTPException(status_code=400, detail="Subject change is not available for customized reports")
     if report["status"] == "ready":
         raise HTTPException(status_code=400, detail="The subject cannot be changed after both parents have completed")
     label = body.custom_subject.strip() if body.subject == "custom" else SUBJECTS[body.subject]["label"]
@@ -1039,6 +1092,33 @@ async def unlink_external_account(user=Depends(get_current_user)):
     return {"ok": True}
 
 
+async def fetch_external_export(email: str):
+    try:
+        async with httpx.AsyncClient(timeout=30) as client_http:
+            resp = await client_http.get(
+                f"{EXTERNAL_APP_URL}/api/integrations/export-assessments",
+                headers={"X-Integration-Key": INTEGRATION_SECRET},
+                params={"email": email},
+            )
+    except Exception as e:
+        logger.error(f"External export error: {e}")
+        raise HTTPException(status_code=502, detail="Could not reach the SA CoParents service. Try again later.")
+    if resp.status_code == 404:
+        raise HTTPException(status_code=404, detail="No completed assessments found on your sacoparentsapp.online account")
+    if resp.status_code != 200:
+        raise HTTPException(status_code=502, detail="Could not retrieve your assessments from SA CoParents")
+    return resp.json()
+
+
+@api.get("/external/assessments")
+async def get_external_assessments(user=Depends(get_current_user)):
+    link = await db.account_links.find_one({"user_id": user["_id"]})
+    if not link:
+        raise HTTPException(status_code=400, detail="Link your sacoparentsapp.online account first")
+    payload = await fetch_external_export(link["external_email"])
+    return {"assessments": payload.get("assessments", []), "statements": payload.get("statements", [])}
+
+
 @api.post("/joint/reports/{rid}/import")
 async def import_external_assessment(rid: str, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)
@@ -1048,21 +1128,7 @@ async def import_external_assessment(rid: str, user=Depends(get_current_user)):
     link = await db.account_links.find_one({"user_id": user["_id"]})
     if not link:
         raise HTTPException(status_code=400, detail="Link your sacoparentsapp.online account first")
-    try:
-        async with httpx.AsyncClient(timeout=30) as client_http:
-            resp = await client_http.get(
-                f"{EXTERNAL_APP_URL}/api/integrations/export-assessments",
-                headers={"X-Integration-Key": INTEGRATION_SECRET},
-                params={"email": link["external_email"]},
-            )
-    except Exception as e:
-        logger.error(f"External export error: {e}")
-        raise HTTPException(status_code=502, detail="Could not reach the SA CoParents service. Try again later.")
-    if resp.status_code == 404:
-        raise HTTPException(status_code=404, detail="No completed assessments found on your sacoparentsapp.online account")
-    if resp.status_code != 200:
-        raise HTTPException(status_code=502, detail="Could not retrieve your assessments from SA CoParents")
-    payload = resp.json()
+    payload = await fetch_external_export(link["external_email"])
     updates = {
         f"responses.{role}": {
             "answers": {},
@@ -1077,6 +1143,170 @@ async def import_external_assessment(rid: str, user=Depends(get_current_user)):
     await db.joint_reports.update_one({"id": rid}, {"$set": updates})
     doc = await get_joint_report_doc(rid, user)
     return joint_public(doc, user)
+
+
+@api.get("/reports/complete")
+async def complete_alignment_report(user=Depends(get_current_user)):
+    uid = user["_id"]
+    cases = await db.cases.find({"user_id": uid}, {"_id": 0}).to_list(200)
+    joints = await db.joint_reports.find(
+        {"$or": [
+            {"created_by": uid},
+            {"participants.a.user_id": uid},
+            {"participants.b.user_id": uid},
+            {"professional_id": uid},
+            {"shared_with": uid},
+        ]},
+        {"_id": 0},
+    ).to_list(200)
+    return build_complete_report(cases, joints, user.get("name", ""))
+
+
+class AgreementIn(BaseModel):
+    child_name: str
+    co_parent_name: str
+    co_parent_email: EmailStr
+
+
+@api.post("/joint/agreements")
+async def create_agreement(body: AgreementIn, user=Depends(get_current_user)):
+    rid = str(uuid.uuid4())
+    doc = {
+        "id": rid,
+        "kind": "agreement",
+        "subject": "co_parenting",
+        "subjects": ["co_parenting"],
+        "subject_label": "Co-Parenting Agreement",
+        "is_safety": False,
+        "child_name": body.child_name.strip(),
+        "created_by": user["_id"],
+        "creator_role": "parent",
+        "professional_id": None,
+        "professional_name": None,
+        "shared_with": [],
+        "participants": {
+            "a": {"user_id": user["_id"], "name": user.get("name", ""), "email": user["email"]},
+            "b": {"user_id": None, "name": body.co_parent_name.strip(), "email": body.co_parent_email.lower()},
+        },
+        "responses": {},
+        "status": "pending_invite",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.joint_reports.insert_one(doc)
+    inv = await create_invitation(rid, "b", body.co_parent_name, body.co_parent_email, user.get("name", "Your co-parent"), doc["child_name"], "Co-Parenting Agreement")
+    return {**joint_public(doc, user), "invitation": {"id": inv["id"], "code": inv["code"], "link": f"{app_url()}/join/{inv['token']}", "invitee_email": inv["invitee_email"], "status": "pending"}}
+
+
+class ProRequestIn(BaseModel):
+    professional_email: EmailStr
+    child_name: str
+    co_parent_name: str
+    co_parent_email: EmailStr
+
+
+@api.get("/professionals")
+async def list_professionals(user=Depends(get_current_user)):
+    return await db.users.find({"role": "professional"}, {"_id": 0, "name": 1, "email": 1}).to_list(100)
+
+
+@api.post("/joint/professional-requests")
+async def create_pro_request(body: ProRequestIn, user=Depends(get_current_user)):
+    pro = await db.users.find_one({"email": body.professional_email.lower(), "role": "professional"})
+    if not pro:
+        raise HTTPException(status_code=404, detail="No professional account found with that email")
+    req = {
+        "id": str(uuid.uuid4()),
+        "parent_id": user["_id"],
+        "parent_name": user.get("name", ""),
+        "parent_email": user["email"],
+        "co_parent_name": body.co_parent_name.strip(),
+        "co_parent_email": body.co_parent_email.lower(),
+        "child_name": body.child_name.strip(),
+        "professional_id": pro["_id"],
+        "professional_name": pro.get("name", ""),
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.professional_requests.insert_one(req)
+    try:
+        await send_email(
+            to=pro["email"],
+            subject=f"Family violence assessment facilitation request - {EMAIL_FROM_NAME}",
+            html=(
+                '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
+                f"<p><strong>{escape(user.get('name', 'A parent'))}</strong> has asked you to prepare a joint "
+                f"family violence co-parenting assessment regarding <strong>{escape(req['child_name'])}</strong>.</p>"
+                f"<p>Parents: {escape(req['parent_name'])} ({escape(req['parent_email'])}) and "
+                f"{escape(req['co_parent_name'])} ({escape(req['co_parent_email'])}).</p>"
+                "<p>Both parents' individual responses remain confidential and are not shared between the "
+                "parties. You will see the completed comparison once both parents finish.</p>"
+                f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open your dashboard to prepare the assessment</a></p>'
+                "</td></tr></table>"
+            ),
+        )
+    except Exception:
+        logger.warning(f"Professional request email not sent to {pro['email']}")
+    return {"ok": True, "id": req["id"]}
+
+
+@api.get("/joint/professional-requests")
+async def list_pro_requests(user=Depends(get_current_user)):
+    if user.get("role") == "professional":
+        docs = await db.professional_requests.find({"professional_id": user["_id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    else:
+        docs = await db.professional_requests.find({"parent_id": user["_id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return [
+        {
+            "id": d["id"], "child_name": d["child_name"], "parent_name": d["parent_name"],
+            "parent_email": d["parent_email"], "co_parent_name": d["co_parent_name"],
+            "co_parent_email": d["co_parent_email"], "professional_name": d.get("professional_name", ""),
+            "status": d["status"], "created_at": d["created_at"],
+        }
+        for d in docs
+    ]
+
+
+@api.post("/joint/professional-requests/{req_id}/prepare")
+async def prepare_pro_request(req_id: str, user=Depends(get_current_user)):
+    if user.get("role") != "professional":
+        raise HTTPException(status_code=403, detail="Only professional accounts can prepare assessments")
+    req = await db.professional_requests.find_one({"id": req_id, "professional_id": user["_id"]})
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+    if req["status"] != "pending":
+        raise HTTPException(status_code=400, detail="This request has already been prepared")
+    rid = str(uuid.uuid4())
+    safety_subjects = sorted(SAFETY_SUBJECT_KEYS)
+    doc = {
+        "id": rid,
+        "kind": "joint_report",
+        "subject": "multi",
+        "subjects": safety_subjects,
+        "subject_label": "Family Violence & Safety Assessment",
+        "is_safety": True,
+        "child_name": req["child_name"],
+        "created_by": user["_id"],
+        "creator_role": "professional",
+        "professional_id": user["_id"],
+        "professional_name": user.get("name", ""),
+        "shared_with": [],
+        "participants": {
+            "a": {"user_id": None, "name": req["parent_name"], "email": req["parent_email"]},
+            "b": {"user_id": None, "name": req["co_parent_name"], "email": req["co_parent_email"]},
+        },
+        "responses": {},
+        "status": "pending_invite",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.joint_reports.insert_one(doc)
+    await create_invitation(rid, "a", req["parent_name"], req["parent_email"], user.get("name", "A professional"), req["child_name"], doc["subject_label"])
+    await create_invitation(rid, "b", req["co_parent_name"], req["co_parent_email"], user.get("name", "A professional"), req["child_name"], doc["subject_label"])
+    await db.professional_requests.update_one(
+        {"id": req_id},
+        {"$set": {"status": "prepared", "report_id": rid, "prepared_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"ok": True, "report_id": rid}
 
 
 app.include_router(api)

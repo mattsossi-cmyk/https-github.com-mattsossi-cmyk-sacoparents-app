@@ -159,3 +159,79 @@ def build_joint_pdf(r):
     _body(pdf, f'"{r["philosophy"]}"', italic=True)
 
     return bytes(pdf.output())
+
+
+def build_agreement_pdf(r):
+    pdf = _JointPDF()
+    pdf.set_margins(18, 18, 18)
+    pdf.set_auto_page_break(auto=True, margin=18)
+    pdf.add_page()
+
+    pdf.set_font("helvetica", "B", 11)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 6, "SA CoParents", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(6)
+    pdf.set_font("helvetica", "B", 22)
+    pdf.set_text_color(*PURPLE)
+    pdf.multi_cell(0, 10, _s(r["report_title"]), align="C")
+    pdf.ln(2)
+    pdf.set_font("helvetica", "", 11)
+    pdf.set_text_color(*GRAY)
+    for line in [
+        f"Child: {r['child_name']}",
+        f"Parents: {r['parent_a_name']} / {r['parent_b_name']}",
+        r["date"],
+    ]:
+        pdf.cell(0, 6, _s(line), align="C", new_x="LMARGIN", new_y="NEXT")
+    y = pdf.get_y() + 3
+    pdf.set_draw_color(220, 215, 230)
+    pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
+    pdf.ln(8)
+
+    _body(pdf, r["purpose"])
+    pdf.ln(2)
+    _body(pdf, r["confidentiality_note"], italic=True)
+    pdf.ln(4)
+
+    status_colors = {"Likely aligned": GREEN, "Close": YELLOW, "Needs discussion": BLUE}
+    for t in r["terms"]:
+        pdf.set_font("helvetica", "B", 11)
+        pdf.set_text_color(*DARK)
+        pdf.cell(120, 7, _s(t["label"]))
+        pdf.set_text_color(*status_colors.get(t["status"], BLUE))
+        pdf.cell(0, 7, _s(t["status"]), new_x="LMARGIN", new_y="NEXT")
+        _label(pdf, f"{r['parent_a_name']}'s Proposal")
+        _body(pdf, t["parent_a"], indent=4)
+        _label(pdf, f"{r['parent_b_name']}'s Proposal")
+        _body(pdf, t["parent_b"], indent=4)
+        pdf.ln(3)
+
+    _body(pdf, r["next_note"], italic=True)
+    pdf.ln(8)
+
+    pdf.set_font("helvetica", "B", 13)
+    pdf.set_text_color(*DARK)
+    pdf.cell(0, 8, "Signatures", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+    for name in (r["parent_a_name"], r["parent_b_name"]):
+        pdf.set_font("helvetica", "B", 10.5)
+        pdf.cell(0, 6, _s(name), new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(4)
+        y = pdf.get_y()
+        pdf.line(pdf.l_margin, y, pdf.l_margin + 80, y)
+        pdf.line(pdf.l_margin + 95, y, pdf.l_margin + 140, y)
+        pdf.set_font("helvetica", "", 8.5)
+        pdf.set_text_color(*GRAY)
+        pdf.set_xy(pdf.l_margin, y + 1)
+        pdf.cell(80, 5, "Signature")
+        pdf.set_xy(pdf.l_margin + 95, y + 1)
+        pdf.cell(45, 5, "Date", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(8)
+
+    pdf.set_font("helvetica", "B", 16)
+    pdf.set_text_color(*PURPLE)
+    pdf.multi_cell(0, 8, _s(r["philosophy_heading"]), align="C")
+    pdf.ln(1)
+    _body(pdf, f'"{r["philosophy"]}"', italic=True)
+
+    return bytes(pdf.output())

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export function ConfidentialityNotice() {
   return (
     <div className="bg-secondary/50 border border-border rounded-lg p-4 text-xs text-muted-foreground leading-relaxed" data-testid="confidentiality-notice">
@@ -12,6 +14,9 @@ export function ConfidentialityNotice() {
         similar output, the resulting document may contain selected information derived from your
         responses. You should review any report before sharing it.
       </p>
+      <Link to="/privacy" className="inline-block mt-2 text-primary font-medium hover:underline" data-testid="confidentiality-full-link">
+        Read the full Privacy, Confidentiality &amp; Notice Provision →
+      </Link>
     </div>
   );
 }

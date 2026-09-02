@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Copy, Check, Mail } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,38 @@ export default function JointNew() {
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [multiSubjects, setMultiSubjects] = useState([]);
+  const [paName, setPaName] = useState("");
+  const [paEmail, setPaEmail] = useState("");
+  const [mediatorEmail, setMediatorEmail] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const isPro = user?.role === "professional";
+  const isAgreement = searchParams.get("kind") === "agreement";
+  const SAFETY_KEYS = ["safety", "risk", "safety_communication", "safeguards"];
+  const activeSubjects = multiSubjects.length > 0 ? multiSubjects : subject ? [subject] : [];
+  const isSafety = activeSubjects.length > 0 && activeSubjects.every((k) => SAFETY_KEYS.includes(k));
+
+  useEffect(() => {
+    const kind = searchParams.get("kind");
+    if (kind === "agreement") {
+      setSubject("co_parenting");
+      setStep(1);
+      return;
+    }
+    const single = searchParams.get("subject");
+    const multi = searchParams.get("subjects");
+    if (multi) {
+      const keys = multi.split(",").filter(Boolean);
+      setMultiSubjects(keys);
+      setSubject(keys[0]);
+      setStep(1);
+    } else if (single) {
+      setSubject(single);
+      setStep(1);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     api.get("/joint/config").then((r) => setSubjects(r.data.subjects)).catch((e) => toast.error(formatApiError(e)));
@@ -39,14 +71,25 @@ export default function JointNew() {
   const submit = async () => {
     setBusy(true);
     try {
-      const { data } = await api.post("/joint/reports", {
-        subject,
-        custom_subject: customSubject,
-        child_name: childName,
-        co_parent_name: coName,
-        co_parent_email: coEmail,
-      });
-      setCreated(data);
+      const base = { child_name: childName };
+      if (multiSubjects.length > 1) {
+        base.subject = multiSubjects[0];
+        base.subjects = multiSubjects;
+      } else {
+        base.subject = subject;
+        base.custom_subject = customSubject;
+      }
+      const url = isAgreement ? "/joint/agreements" : isPro ? "/joint/reports/professional" : "/joint/reports";
+      const body = isPro
+        ? { ...base, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail }
+        : { ...base, co_parent_name: coName, co_parent_email: coEmail, mediator_email: isSafety && mediatorEmail.trim() ? mediatorEmail.trim() : undefined };
+      const { data } = await api.post(url, body);
+      if (isPro) {
+        toast.success("Invitations sent to both parents");
+        navigate("/dashboard");
+      } else {
+        setCreated(data);
+      }
     } catch (e) {
       toast.error(formatApiError(e));
     } finally {
@@ -110,8 +153,8 @@ export default function JointNew() {
           </div>
         ) : (
           <>
-            <h1 className="text-4xl font-semibold mb-2" data-testid="joint-new-heading">Create a Joint Report</h1>
-            <p className="text-muted-foreground mb-8">One subject. One child. Both parents answer independently — answers stay private until both are complete.</p>
+            <h1 className="text-4xl font-semibold mb-2" data-testid="joint-new-heading">{isAgreement ? "Create a Co-Parenting Agreement" : "Create a Joint Report"}</h1>
+            <p className="text-muted-foreground mb-8">{isAgreement ? "Invite the other parent to propose terms for your joint co-parenting agreement. Each parent's proposals stay private until both are complete." : "One subject. One child. Both parents answer independently — answers stay private until both are complete."}</p>
 
             <div className="flex items-center gap-2 mb-10" data-testid="joint-steps">
               {["Subject", "Child", "Invite"].map((s, i) => (
@@ -155,6 +198,11 @@ export default function JointNew() {
             {step === 1 && (
               <div data-testid="joint-step-child">
                 <h2 className="text-2xl font-semibold mb-4">Which child is this report about?</h2>
+                {multiSubjects.length > 1 && subjects.length > 0 && (
+                  <p className="text-sm text-muted-foreground mb-4" data-testid="multi-subjects-line">
+                    Subjects: {multiSubjects.map((k) => subjects.find((s) => s.key === k)?.label || k).join(" + ")}
+                  </p>
+                )}
                 <div className="bg-white border border-border rounded-lg p-6 space-y-2">
                   <Label htmlFor="joint-child">Child's first name or initials</Label>
                   <Input id="joint-child" className="h-12" value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="e.g. Sam" data-testid="joint-child-input" />
@@ -170,8 +218,22 @@ export default function JointNew() {
 
             {step === 2 && (
               <div data-testid="joint-step-invite">
-                <h2 className="text-2xl font-semibold mb-4">Invite the other parent</h2>
-                {connections.length > 0 && (
+                <h2 className="text-2xl font-semibold mb-4">{isPro ? "Invite both parents" : "Invite the other parent"}</h2>
+                {isSafety && !isPro && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-5 mb-4" data-testid="safety-pathway-note">
+                    <p className="font-semibold text-red-800">Family violence reports are prepared differently.</p>
+                    <p className="text-sm text-red-800/80 mt-1 mb-4">
+                      This report is created with a third-party mediator — not directly between the parents.
+                      Enter your mediator's email. They must have a free SA CoParents professional account.
+                    </p>
+                    <Label htmlFor="mediator-email" className="text-red-900">Mediator's email</Label>
+                    <Input id="mediator-email" type="email" className="h-12 mt-2 bg-white" value={mediatorEmail} onChange={(e) => setMediatorEmail(e.target.value)} placeholder="mediator@example.com" data-testid="mediator-email-input" />
+                    <p className="text-xs text-red-800/70 mt-3 font-medium">
+                      Confidentiality: your responses will not be shared with the other party. Only the completed comparison is provided to the mediator.
+                    </p>
+                  </div>
+                )}
+                {!isPro && connections.length > 0 && (
                   <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-4">
                     <Label className="font-medium">Already connected?</Label>
                     <select className="mt-2 w-full h-12 rounded-md border border-input bg-white px-3 text-sm" defaultValue="" onChange={(e) => pickConnection(e.target.value)} data-testid="connection-select">
@@ -183,12 +245,24 @@ export default function JointNew() {
                   </div>
                 )}
                 <div className="bg-white border border-border rounded-lg p-6 space-y-5">
+                  {isPro && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="pa-name">Parent A first name</Label>
+                        <Input id="pa-name" className="h-12" value={paName} onChange={(e) => setPaName(e.target.value)} placeholder="e.g. Ann" data-testid="parent-a-invite-name-input" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="pa-email">Parent A email</Label>
+                        <Input id="pa-email" type="email" className="h-12" value={paEmail} onChange={(e) => setPaEmail(e.target.value)} placeholder="ann@example.com" data-testid="parent-a-invite-email-input" />
+                      </div>
+                    </>
+                  )}
                   <div className="space-y-2">
-                    <Label htmlFor="co-name">Co-parent's first name</Label>
+                    <Label htmlFor="co-name">{isPro ? "Parent B first name" : "Co-parent's first name"}</Label>
                     <Input id="co-name" className="h-12" value={coName} onChange={(e) => setCoName(e.target.value)} placeholder="e.g. Jordan" data-testid="co-parent-name-input" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="co-email">Co-parent's email</Label>
+                    <Label htmlFor="co-email">{isPro ? "Parent B email" : "Co-parent's email"}</Label>
                     <Input id="co-email" type="email" className="h-12" value={coEmail} onChange={(e) => setCoEmail(e.target.value)} placeholder="jordan@example.com" data-testid="co-parent-email-input" />
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="invite-privacy-note">
@@ -197,8 +271,8 @@ export default function JointNew() {
                 </div>
                 <div className="mt-8 flex justify-between">
                   <button type="button" onClick={() => setStep(1)} className="text-sm text-muted-foreground hover:text-foreground" data-testid="invite-back-btn">Back</button>
-                  <Button onClick={submit} disabled={!coName.trim() || !coEmail.trim() || busy} className="gap-2" data-testid="send-invitation-btn">
-                    {busy ? "Sending…" : "Send Invitation"} <Mail className="h-4 w-4" />
+                  <Button onClick={submit} disabled={!coName.trim() || !coEmail.trim() || (isPro && (!paName.trim() || !paEmail.trim())) || (isSafety && !isPro && !mediatorEmail.trim()) || busy} className="gap-2" data-testid="send-invitation-btn">
+                    {busy ? "Sending…" : isPro ? "Send Both Invitations" : "Send Invitation"} <Mail className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
