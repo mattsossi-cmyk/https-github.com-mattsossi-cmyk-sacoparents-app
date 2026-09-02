@@ -118,7 +118,7 @@ export default function CodeInput({
     >
       {digits.map((d, i) => (
         <input
-          key={i}
+          key={`digit-${i}`}
           ref={(el) => { refs.current[i] = el; }}
           type="text"
           inputMode="numeric"
