@@ -23,16 +23,12 @@ def compute_status(a, b):
     return "different"
 
 
-def generate_report(case):
-    cfg = ASSESSMENT_TYPES[case["type"]]
-    ra = case["responses"]["a"]
-    rb = case["responses"]["b"]
-
-    topic_results = []
+def _analyze_topics(cfg, ra, rb):
+    results = []
     for t in cfg["topics"]:
         av = ra["answers"].get(t["key"])
         bv = rb["answers"].get(t["key"])
-        topic_results.append({
+        results.append({
             "key": t["key"],
             "label": t["label"],
             "aligned_text": t["aligned_text"],
@@ -42,62 +38,83 @@ def generate_report(case):
             "parent_b": bv or UNSURE,
             "status": compute_status(av, bv),
         })
+    buckets = {
+        "aligned": [t for t in results if t["status"] == "aligned"],
+        "close": [t for t in results if t["status"] == "close"],
+        "different": [t for t in results if t["status"] == "different"],
+        "info": [t for t in results if t["status"] == "info"],
+    }
+    buckets["conversation"] = buckets["close"] + buckets["different"]
+    return results, buckets
 
-    aligned = [t for t in topic_results if t["status"] == "aligned"]
-    close = [t for t in topic_results if t["status"] == "close"]
-    different = [t for t in topic_results if t["status"] == "different"]
-    info = [t for t in topic_results if t["status"] == "info"]
-    conversation = close + different
+
+def _priority_statement(cfg, buckets):
+    focus_source = buckets["different"][0] if buckets["different"] else (
+        buckets["close"][0] if buckets["close"] else (buckets["info"][0] if buckets["info"] else None)
+    )
+    focus = focus_source["label"].lower() if focus_source else "maintaining the child's current stability"
+    return cfg["priority_statement"].replace("{focus}", focus)
+
+
+def _build_questions(cfg, conversation):
+    questions = [
+        f"What information would help both parents determine whether {t['action_phrase']} would benefit the child?"
+        for t in conversation[:4]
+    ]
+    if not questions:
+        questions.append(cfg["central_question"])
+    return questions
+
+
+def _build_action_plan(buckets):
+    return [
+        {
+            "issue": t["label"],
+            "child_need": t["child_need"],
+            "already_agree": buckets["aligned"][0]["aligned_text"] if buckets["aligned"] else "",
+        }
+        for t in (buckets["conversation"] + buckets["info"])[:3]
+    ]
+
+
+def _build_summary(cfg, buckets, priority):
+    return {
+        "aligned": [t["aligned_text"] for t in buckets["aligned"]][:5],
+        "info": [f"Additional information about {t['label'].lower()} may help both parents." for t in buckets["info"]][:4],
+        "conversation": [f"Parents view {t['label'].lower()} differently and may benefit from a structured conversation." for t in buckets["conversation"]][:4],
+        "options": cfg["options"][:6],
+        "priority": priority,
+    }
+
+
+def _build_court_map(case_type, buckets):
+    if case_type != "court":
+        return None
+    return {
+        "agreed": [t["label"] for t in buckets["aligned"]],
+        "close": [t["label"] for t in buckets["close"]],
+        "discussion": [t["label"] for t in buckets["different"]],
+        "info": [t["label"] for t in buckets["info"]],
+    }
+
+
+def generate_report(case):
+    cfg = ASSESSMENT_TYPES[case["type"]]
+    ra = case["responses"]["a"]
+    rb = case["responses"]["b"]
+
+    topic_results, buckets = _analyze_topics(cfg, ra, rb)
+    aligned = buckets["aligned"]
+    conversation = buckets["conversation"]
 
     snapshot = {
         "total": len(topic_results),
         "aligned": len(aligned),
         "different": len(conversation),
-        "info": len(info),
+        "info": len(buckets["info"]),
     }
-
-    focus_source = different[0] if different else (close[0] if close else (info[0] if info else None))
-    focus = focus_source["label"].lower() if focus_source else "maintaining the child's current stability"
-    priority = cfg["priority_statement"].replace("{focus}", focus)
-
-    questions = []
-    for t in conversation[:4]:
-        questions.append(
-            f"What information would help both parents determine whether {t['action_phrase']} would benefit the child?"
-        )
-    if not questions:
-        questions.append(cfg["central_question"])
-    if len(questions) < 2:
-        questions.append(cfg["central_question"])
-
-    plan_issues = conversation + info
-    action_plan = []
-    for t in plan_issues[:3]:
-        action_plan.append({
-            "issue": t["label"],
-            "child_need": t["child_need"],
-            "already_agree": aligned[0]["aligned_text"] if aligned else "",
-        })
-
+    priority = _priority_statement(cfg, buckets)
     shared_goals = ra.get("goals") or rb.get("goals") or []
-
-    summary = {
-        "aligned": [t["aligned_text"] for t in aligned][:5],
-        "info": [f"Additional information about {t['label'].lower()} may help both parents." for t in info][:4],
-        "conversation": [f"Parents view {t['label'].lower()} differently and may benefit from a structured conversation." for t in conversation][:4],
-        "options": cfg["options"][:6],
-        "priority": priority,
-    }
-
-    is_court = case["type"] == "court"
-    court_map = None
-    if is_court:
-        court_map = {
-            "agreed": [t["label"] for t in aligned],
-            "close": [t["label"] for t in close],
-            "discussion": [t["label"] for t in different],
-            "info": [t["label"] for t in info],
-        }
 
     return {
         "assessment_type": case["type"],
@@ -127,17 +144,17 @@ def generate_report(case):
         "child_needs": cfg["needs"],
         "options": cfg["options"],
         "options_note": "These are not recommendations. They are options for parents to explore.",
-        "conversation_questions": questions,
+        "conversation_questions": _build_questions(cfg, conversation),
         "professional_map": {
             "alignment_count": len(aligned),
             "conversation_count": len(conversation),
-            "professional_input_count": len(info),
+            "professional_input_count": len(buckets["info"]),
             "child_needs_count": len(cfg["needs"]),
             "sequence": DISCUSSION_SEQUENCE,
         },
-        "action_plan": action_plan,
-        "summary": summary,
-        "court_map": court_map,
+        "action_plan": _build_action_plan(buckets),
+        "summary": _build_summary(cfg, buckets, priority),
+        "court_map": _build_court_map(case["type"], buckets),
         "topic_results": topic_results,
         "philosophy": PHILOSOPHY,
         "philosophy_heading": "Alignment Before Agreement",

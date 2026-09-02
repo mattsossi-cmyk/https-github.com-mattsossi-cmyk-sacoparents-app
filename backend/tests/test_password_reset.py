@@ -28,8 +28,9 @@ def mongo_db():
     client.close()
 
 
-def _register_user(email=None, password="OrigPass123"):
+def _register_user(email=None, password=None):
     email = email or f"pwreset_{uuid.uuid4().hex[:8]}@example.com"
+    password = password or f"Pw!{uuid.uuid4().hex[:12]}"
     s = requests.Session()
     r = s.post(f"{API}/auth/register", json={
         "name": "Reset User", "email": email, "password": password, "role": "parent"

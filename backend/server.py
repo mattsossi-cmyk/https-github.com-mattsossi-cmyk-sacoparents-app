@@ -91,31 +91,47 @@ class _EmailScan(HTMLParser):
             self._href, self._text = None, []
 
 
+def _check_no_form_fields(tags) -> None:
+    if tags & {"form", "input", "textarea", "select"}:
+        raise ValueError("No forms or input fields in email (G2)")
+
+
+def _check_no_credential_asks(subject: str, html: str) -> None:
+    body = f"{subject}\n{html}".lower()
+    for phrase in _CRED_ASK:
+        if phrase in body:
+            raise ValueError(f"Email asks the recipient for credentials: {phrase!r} (G2)")
+
+
+def _check_link_url(url: str) -> None:
+    low = url.strip().lower()
+    if low.startswith(("mailto:", "tel:", "cid:", "#")):
+        return
+    if not low.startswith("https://"):
+        raise ValueError(f"Email links/assets must be absolute https: {url!r} (G3)")
+    host = urlparse(low).hostname or ""
+    if not _host_ok(host) or urlparse(low).username is not None:
+        raise ValueError(f"Shortened, numeric-host or credential-bearing URL: {url!r} (G3)")
+
+
+def _check_anchor_matches_target(href: str, text: str) -> None:
+    real = urlparse(href.strip().lower()).hostname or ""
+    if not real:
+        return
+    for m in _HOSTISH.finditer(text):
+        if not _same_site(m.group(1).lower(), real):
+            raise ValueError(f"Anchor text {m.group(1)!r} ≠ real link host {real!r} (G3)")
+
+
 def _assert_safe_email(subject: str, html: str) -> None:
     scan = _EmailScan()
     scan.feed(html)
-    if scan.tags & {"form", "input", "textarea", "select"}:
-        raise ValueError("No forms or input fields in email (G2)")
-    body = f"{subject}\n{html}".lower()
-    for p in _CRED_ASK:
-        if p in body:
-            raise ValueError(f"Email asks the recipient for credentials: {p!r} (G2)")
+    _check_no_form_fields(scan.tags)
+    _check_no_credential_asks(subject, html)
     for url in scan.urls:
-        low = url.strip().lower()
-        if low.startswith(("mailto:", "tel:", "cid:", "#")):
-            continue
-        if not low.startswith("https://"):
-            raise ValueError(f"Email links/assets must be absolute https: {url!r} (G3)")
-        host = urlparse(low).hostname or ""
-        if not _host_ok(host) or urlparse(low).username is not None:
-            raise ValueError(f"Shortened, numeric-host or credential-bearing URL: {url!r} (G3)")
+        _check_link_url(url)
     for href, text in scan.anchors:
-        real = urlparse(href.strip().lower()).hostname or ""
-        if not real:
-            continue
-        for m in _HOSTISH.finditer(text):
-            if not _same_site(m.group(1).lower(), real):
-                raise ValueError(f"Anchor text {m.group(1)!r} ≠ real link host {real!r} (G3)")
+        _check_anchor_matches_target(href, text)
 
 
 async def send_email(*, to: str, subject: str, html: str, reply_to: str | None = None) -> str | None:

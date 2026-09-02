@@ -35,29 +35,21 @@ def shared_terms(a, b):
     return sorted(ka & kb)
 
 
-def generate_joint_report(doc):
-    cfg = SUBJECTS[doc["subject"]]
-    subject_label = doc["subject_label"]
-    child = doc.get("child_name") or "the child"
-    ra = doc["responses"]["a"]["answers"]
-    rb = doc["responses"]["b"]["answers"]
-    pa = doc["participants"]["a"].get("name") or "Parent A"
-    pb = doc["participants"]["b"].get("name") or "Parent B"
+def _status_for(common):
+    if len(common) >= 2:
+        return "Strong alignment"
+    if len(common) == 1:
+        return "Moderate alignment"
+    return "Needs discussion"
 
-    alignment_rows = []
-    alignment_statements = []
-    differences = []
-    for key, area, question in QUESTIONS:
+
+def _analyze_answers(ra, rb, child):
+    rows, statements, differences = [], [], []
+    for key, area, _question in QUESTIONS:
         common = shared_terms(ra.get(key, ""), rb.get(key, ""))
-        if len(common) >= 2:
-            status = "Strong alignment"
-        elif len(common) == 1:
-            status = "Moderate alignment"
-        else:
-            status = "Needs discussion"
-        alignment_rows.append({"area": area, "status": status})
+        rows.append({"area": area, "status": _status_for(common)})
         if common:
-            alignment_statements.append(
+            statements.append(
                 f"Both parents mentioned \"{', '.join(common[:3])}\" when describing {area.lower()}."
             )
         else:
@@ -67,35 +59,51 @@ def generate_joint_report(doc):
                 "parent_b": rb.get(key, ""),
                 "reframe": REFRAME_TEMPLATE.replace("{child}", child),
             })
+    return rows, statements, differences
 
-    if not alignment_statements:
-        alignment_statements = [
-            f"Both parents chose to participate regarding {subject_label.lower()} for {child} — "
-            "participation itself reflects a shared commitment to the child."
-        ]
 
-    paragraph = (
+def _alignment_statements(statements, subject_label, child):
+    if statements:
+        return statements
+    return [
+        f"Both parents chose to participate regarding {subject_label.lower()} for {child} — "
+        "participation itself reflects a shared commitment to the child."
+    ]
+
+
+def _alignment_paragraph(subject_label, child):
+    return (
         f"Both parents appear aligned around the goal of supporting {child} regarding "
         f"{subject_label.lower()}. Although they currently describe different perspectives in some "
         f"areas, both parents agree that {child}'s needs come first and that working toward a "
         "shared understanding is worthwhile."
     )
 
+
+def generate_joint_report(doc):
+    cfg = SUBJECTS[doc["subject"]]
+    subject_label = doc["subject_label"]
+    child = doc.get("child_name") or "the child"
+    ra = doc["responses"]["a"]["answers"]
+    rb = doc["responses"]["b"]["answers"]
+
+    rows, statements, differences = _analyze_answers(ra, rb, child)
+
     return {
         "report_title": "Joint Parenting Alignment Report",
         "subject_label": subject_label,
         "child_name": child,
-        "parent_a_name": pa,
-        "parent_b_name": pb,
+        "parent_a_name": doc["participants"]["a"].get("name") or "Parent A",
+        "parent_b_name": doc["participants"]["b"].get("name") or "Parent B",
         "date": datetime.now(timezone.utc).strftime("%B %d, %Y"),
         "purpose": PURPOSE_TEXT,
-        "alignment_statements": alignment_statements,
+        "alignment_statements": _alignment_statements(statements, subject_label, child),
         "differences": differences,
         "child_needs": cfg["needs"],
-        "alignment_map": alignment_rows,
+        "alignment_map": rows,
         "conversation": cfg["conversation"],
         "options": cfg["options"],
-        "alignment_paragraph": paragraph,
+        "alignment_paragraph": _alignment_paragraph(subject_label, child),
         "questions": cfg["questions"],
         "next_steps": NEXT_STEPS,
         "philosophy_heading": "Alignment Before Agreement",

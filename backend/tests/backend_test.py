@@ -3,12 +3,16 @@ import os
 import uuid
 import pytest
 import requests
+from dotenv import load_dotenv
 
-BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/") if os.environ.get("REACT_APP_BACKEND_URL") else "https://align-report.preview.emergentagent.com"
+load_dotenv("/app/backend/.env")
+load_dotenv("/app/frontend/.env")
+
+BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/")
 API = f"{BASE_URL}/api"
 
-ADMIN_EMAIL = "mattsossi@bsossi.com"
-ADMIN_PASSWORD = "CoParents2026!"
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "mattsossi@bsossi.com")
+ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
 TYPE_KEYS = ["general", "communication", "high_conflict", "ipv", "medical", "educational", "psychological", "court"]
 
