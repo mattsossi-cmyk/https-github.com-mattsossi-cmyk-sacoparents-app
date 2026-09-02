@@ -122,7 +122,7 @@ export default function JointReport() {
             {rows.map(([label, p]) => (
               <div key={label} className="flex items-center gap-2" data-testid={`status-row-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
                 {p.completed ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
-                <span>{label}: {p.completed ? "Complete" : p.accepted ? "In progress" : "Invitation sent"}</span>
+                <span>{label}: {p.completed ? (p.imported ? "Complete (imported from sacoparentsapp.online)" : "Complete") : p.accepted ? "In progress" : "Invitation sent"}</span>
               </div>
             ))}
             <div className="flex items-center gap-2" data-testid="status-row-report">

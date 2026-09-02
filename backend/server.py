@@ -45,6 +45,9 @@ EMAIL_KEY = os.environ["EMERGENT_EMAIL_KEY"]
 EMAIL_FROM_NAME = os.environ["EMAIL_FROM_NAME"]
 EMAIL_REPLY_TO = os.environ.get("EMAIL_REPLY_TO")
 
+EXTERNAL_APP_URL = os.environ["SACOPARENTS_APP_URL"].rstrip("/")
+INTEGRATION_SECRET = os.environ["INTEGRATION_SHARED_SECRET"]
+
 _SHORTENERS = ("bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly", "goo.gl", "rebrand.ly")
 _CRED_ASK = ("reply with your password", "reply with the code", "send your password", "cvv",
              "send us your password", "enter your password below", "confirm your card number",
@@ -563,6 +566,7 @@ async def startup():
     await db.joint_reports.create_index("created_by")
     await db.invitations.create_index("code")
     await db.invitations.create_index("token")
+    await db.account_links.create_index("user_id", unique=True)
     await seed_admin()
 
 
@@ -649,6 +653,7 @@ def joint_public(doc, user, invitation=None):
             "name": p.get("name", ""),
             "accepted": bool(p.get("user_id")),
             "completed": bool(doc.get("responses", {}).get(r)),
+            "imported": bool((doc.get("responses", {}).get(r) or {}).get("imported")),
         }
     if role:
         my = doc.get("responses", {}).get(role)
@@ -969,6 +974,93 @@ async def change_invitation_subject(iid: str, body: PatchInvitationIn, user=Depe
         label = "Custom Subject"
     await db.joint_reports.update_one({"id": report["id"]}, {"$set": {"subject": body.subject, "subject_label": label}})
     return {"ok": True, "subject_label": label}
+
+
+# ---------- External account linking (sacoparentsapp.online) ----------
+
+class LinkIn(BaseModel):
+    code: str
+
+
+@api.post("/external/link")
+async def link_external_account(body: LinkIn, user=Depends(get_current_user)):
+    code = body.code.strip().upper()
+    try:
+        async with httpx.AsyncClient(timeout=30) as client_http:
+            resp = await client_http.post(
+                f"{EXTERNAL_APP_URL}/api/integrations/verify-link-code",
+                headers={"X-Integration-Key": INTEGRATION_SECRET},
+                json={"code": code},
+            )
+    except Exception as e:
+        logger.error(f"External link verify error: {e}")
+        raise HTTPException(status_code=502, detail="Could not reach the SA CoParents service. Try again later.")
+    if resp.status_code != 200:
+        raise HTTPException(status_code=400, detail="Invalid or expired link code")
+    data = resp.json()
+    ext_email = (data.get("email") or "").lower()
+    if not ext_email:
+        raise HTTPException(status_code=502, detail="Unexpected response from the SA CoParents service")
+    await db.account_links.update_one(
+        {"user_id": user["_id"]},
+        {"$set": {"external_email": ext_email, "linked_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
+    )
+    return {"ok": True, "external_email": ext_email}
+
+
+@api.get("/external/link")
+async def get_external_link(user=Depends(get_current_user)):
+    link = await db.account_links.find_one({"user_id": user["_id"]}, {"_id": 0})
+    if not link:
+        return {"linked": False}
+    return {"linked": True, "external_email": link["external_email"], "linked_at": link["linked_at"]}
+
+
+@api.delete("/external/link")
+async def unlink_external_account(user=Depends(get_current_user)):
+    await db.account_links.delete_one({"user_id": user["_id"]})
+    return {"ok": True}
+
+
+@api.post("/joint/reports/{rid}/import")
+async def import_external_assessment(rid: str, user=Depends(get_current_user)):
+    doc = await get_joint_report_doc(rid, user)
+    role = report_role(doc, user["_id"])
+    if role is None:
+        raise HTTPException(status_code=403, detail="Only invited parents can import an assessment")
+    link = await db.account_links.find_one({"user_id": user["_id"]})
+    if not link:
+        raise HTTPException(status_code=400, detail="Link your sacoparentsapp.online account first")
+    try:
+        async with httpx.AsyncClient(timeout=30) as client_http:
+            resp = await client_http.get(
+                f"{EXTERNAL_APP_URL}/api/integrations/export-assessments",
+                headers={"X-Integration-Key": INTEGRATION_SECRET},
+                params={"email": link["external_email"]},
+            )
+    except Exception as e:
+        logger.error(f"External export error: {e}")
+        raise HTTPException(status_code=502, detail="Could not reach the SA CoParents service. Try again later.")
+    if resp.status_code == 404:
+        raise HTTPException(status_code=404, detail="No completed assessments found on your sacoparentsapp.online account")
+    if resp.status_code != 200:
+        raise HTTPException(status_code=502, detail="Could not retrieve your assessments from SA CoParents")
+    payload = resp.json()
+    updates = {
+        f"responses.{role}": {
+            "answers": {},
+            "imported": True,
+            "external": payload,
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+        }
+    }
+    other = "b" if role == "a" else "a"
+    if doc.get("responses", {}).get(other):
+        updates["status"] = "ready"
+    await db.joint_reports.update_one({"id": rid}, {"$set": updates})
+    doc = await get_joint_report_doc(rid, user)
+    return joint_public(doc, user)
 
 
 app.include_router(api)

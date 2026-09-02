@@ -80,21 +80,78 @@ def _alignment_paragraph(subject_label, child):
     )
 
 
+THEMES = {
+    "Communication": ["communication", "communicate", "message", "talk", "inform", "share information", "update"],
+    "Routine & Consistency": ["routine", "consistent", "consistency", "bedtime", "schedule", "predictable"],
+    "School & Homework": ["school", "homework", "teacher", "education", "academic", "grades", "attendance", "tutor"],
+    "Medical Care": ["medical", "doctor", "medication", "pediatrician", "health", "appointment"],
+    "Emotional Wellbeing": ["emotional", "anxiety", "stress", "worried", "feelings", "therapy", "counselor"],
+    "Exchanges & Transitions": ["exchange", "transition", "pickup", "pick-up", "dropoff", "drop-off"],
+    "Conflict": ["conflict", "argument", "argue", "fight", "disagreement", "tension"],
+    "Activities": ["activities", "sports", "extracurricular", "practice", "lessons"],
+}
+
+
+def _external_corpus(payload):
+    texts = []
+    for a in payload.get("assessments", []):
+        texts.append(str(a.get("title", "")))
+        for v in (a.get("responses") or {}).values():
+            texts.append(str(v))
+    for s in payload.get("statements", []):
+        texts.append(str(s.get("title", "")))
+        texts.append(str(s.get("content", "")))
+    return " ".join(texts)
+
+
+def _corpus(resp):
+    if resp.get("imported"):
+        return _external_corpus(resp.get("external") or {})
+    return " ".join(resp.get("answers", {}).values())
+
+
+def _theme_analysis(corpus_a, corpus_b, pa, pb, child):
+    pres_a = {name: any(k in corpus_a.lower() for k in kws) for name, kws in THEMES.items()}
+    pres_b = {name: any(k in corpus_b.lower() for k in kws) for name, kws in THEMES.items()}
+    rows, statements, differences = [], [], []
+    for theme in THEMES:
+        in_a, in_b = pres_a[theme], pres_b[theme]
+        if in_a and in_b:
+            rows.append({"area": theme, "status": "Strong alignment"})
+            statements.append(f"Both parents' material addresses {theme.lower()}.")
+        elif in_a or in_b:
+            rows.append({"area": theme, "status": "Needs discussion"})
+            differences.append({
+                "area": theme,
+                "parent_a": f"{theme} is addressed in {pa}'s material." if in_a else "Not addressed in the imported material.",
+                "parent_b": f"{theme} is addressed in {pb}'s material." if in_b else "Not addressed in the imported material.",
+                "reframe": REFRAME_TEMPLATE.replace("{child}", child),
+            })
+    return rows, statements, differences
+
+
 def generate_joint_report(doc):
     cfg = SUBJECTS[doc["subject"]]
     subject_label = doc["subject_label"]
     child = doc.get("child_name") or "the child"
-    ra = doc["responses"]["a"]["answers"]
-    rb = doc["responses"]["b"]["answers"]
+    resp_a = doc["responses"]["a"]
+    resp_b = doc["responses"]["b"]
+    pa = doc["participants"]["a"].get("name") or "Parent A"
+    pb = doc["participants"]["b"].get("name") or "Parent B"
+    imported = {"a": bool(resp_a.get("imported")), "b": bool(resp_b.get("imported"))}
 
-    rows, statements, differences = _analyze_answers(ra, rb, child)
+    if imported["a"] or imported["b"]:
+        rows, statements, differences = _theme_analysis(_corpus(resp_a), _corpus(resp_b), pa, pb, child)
+    else:
+        rows, statements, differences = _analyze_answers(resp_a["answers"], resp_b["answers"], child)
 
     return {
         "report_title": "Joint Parenting Alignment Report",
         "subject_label": subject_label,
         "child_name": child,
-        "parent_a_name": doc["participants"]["a"].get("name") or "Parent A",
-        "parent_b_name": doc["participants"]["b"].get("name") or "Parent B",
+        "parent_a_name": pa,
+        "parent_b_name": pb,
+        "imported": imported,
         "date": datetime.now(timezone.utc).strftime("%B %d, %Y"),
         "purpose": PURPOSE_TEXT,
         "alignment_statements": _alignment_statements(statements, subject_label, child),

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Download } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -16,7 +17,39 @@ export default function JointAssessment() {
   const [answers, setAnswers] = useState({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [link, setLink] = useState(null);
+  const [linkCode, setLinkCode] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.get("/external/link").then((r) => setLink(r.data)).catch(() => setLink({ linked: false }));
+  }, []);
+
+  const doLink = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.post("/external/link", { code: linkCode });
+      setLink({ linked: true, external_email: data.external_email });
+      toast.success("Accounts linked");
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doImport = async () => {
+    setBusy(true);
+    try {
+      await api.post(`/joint/reports/${id}/import`);
+      toast.success("Assessment imported — your side is complete.");
+      navigate(`/joint/${id}`);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
     Promise.all([api.get("/joint/config"), api.get(`/joint/reports/${id}`)])
@@ -87,6 +120,34 @@ export default function JointAssessment() {
           Regarding <strong>{detail.child_name}</strong>. Answer honestly — the other parent cannot see your answers.
         </p>
         <p className="text-sm text-muted-foreground mb-8" data-testid="assess-progress">{answered} of {total} answered</p>
+
+        <div className="bg-secondary/50 border border-border rounded-lg p-5 mb-8" data-testid="import-card">
+          <p className="font-semibold">Already completed an assessment on sacoparentsapp.online?</p>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">
+            Import it instead of answering these questions again. Your imported material is used as-is for the comparison.
+          </p>
+          {link === null ? null : link.linked ? (
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-sm text-muted-foreground" data-testid="linked-email">Linked: {link.external_email}</span>
+              <Button onClick={doImport} disabled={busy} className="gap-2" data-testid="import-assessment-btn">
+                <Download className="h-4 w-4" /> {busy ? "Importing…" : "Import My Assessment"}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2 max-w-lg items-center">
+              <Input
+                value={linkCode}
+                onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
+                placeholder="Link code from sacoparentsapp.online"
+                className="h-11 uppercase tracking-widest"
+                data-testid="link-code-input"
+              />
+              <Button variant="outline" onClick={doLink} disabled={!linkCode.trim() || busy} className="h-11" data-testid="link-accounts-btn">
+                Link Accounts
+              </Button>
+            </div>
+          )}
+        </div>
 
         <div className="space-y-6">
           {config.questions.map((q, i) => (
