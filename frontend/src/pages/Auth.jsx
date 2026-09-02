@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/Brand";
+import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
 import { useAuth } from "@/context/AuthContext";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -27,14 +28,13 @@ export default function Auth() {
     try {
       if (mode === "login") {
         await login(email, password);
-        navigate("/dashboard");
       } else if (mode === "register") {
         await register({ name, email, password, role });
-        navigate("/dashboard");
       } else if (mode === "forgot") {
         await api.post("/auth/forgot-password", { email });
         setMode("reset");
         toast.success("If an account exists for that email, a verification code is on its way.");
+        return;
       } else {
         await api.post("/auth/reset-password", { email, code: resetCode, new_password: newPassword });
         toast.success("Password updated. Sign in with your new password.");
@@ -42,7 +42,10 @@ export default function Auth() {
         setPassword("");
         setResetCode("");
         setNewPassword("");
+        return;
       }
+      const next = new URLSearchParams(window.location.search).get("next");
+      navigate(next || "/dashboard");
     } catch (err) {
       toast.error(formatApiError(err));
     } finally {
@@ -144,6 +147,7 @@ export default function Auth() {
                 </div>
               </>
             )}
+            {mode === "register" && <ConfidentialityNotice />}
             <Button type="submit" className="w-full h-12" disabled={busy} data-testid="auth-submit-btn">
               {busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? "Create account" : mode === "forgot" ? "Send verification code" : "Reset password"}
             </Button>

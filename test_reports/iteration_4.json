@@ -1,0 +1,60 @@
+{
+  "summary": "Comprehensive verification of the new Joint Report Builder feature (invite flow, privacy, professional flow, share, invitation management) plus regressions. Backend: 19/20 pytest tests passed against /api/joint/*. Frontend: full parent A→B UI flow verified end-to-end (create → invite → complete → accept via dashboard code → complete → 10-section Joint Report renders with 'Alignment Before Agreement' + Download PDF button). Privacy verified — Parent A's answer text never appears in Parent B's assessment view or in the GET /joint/reports/{id} detail response. /join/{token} logged-out preview + Sign-in-to-accept works. One real backend bug found: POST /api/joint/invitations/{id}/resend does not wrap send_invite_email in try/except (unlike create_invitation), so any Resend to an undeliverable recipient (e.g. @example.com blocked by Resend) returns 502 to the client instead of the intended 200.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/joint/invitations/{id}/resend",
+        "issue": "send_invite_email is awaited without try/except. When the upstream email provider rejects the recipient (e.g. Resend 422 'Undeliverable recipient' for @example.com invitees), send_email raises HTTPException and the resend endpoint returns 502 to the caller. The initial POST /joint/reports swallows the same failure (WARNING logged) and returns 200, so behavior is inconsistent. Fix: wrap the send call in try/except like create_invitation() does, log a warning, and still return {ok: true} (or return {ok: true, email_sent: false}). Impacts UI resend button reliability."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verifications": {
+    "joint_config": "GET /api/joint/config → 13 subjects (education present), 6 questions matching answer keys, confidentiality notice present.",
+    "create_joint_report_ui": "UI wizard (subject-education → child Sam → co-parent name+email) → POST /joint/reports 200 → invitation-sent-card + 6-char invitation-code-display shown + copy button.",
+    "assessment_ui": "6 textareas assess-answer-{needs_most|working_well|concerns|improve|options|other_parent}, confidentiality notice rendered, submit disabled until all 6 answered, POST /joint/reports/{id}/responses 200.",
+    "status_page": "After A submits, /joint/{id} shows 'Your assessment: Complete' + 'Other parent's assessment: Invitation sent' + joint-status-card + status-resend-btn + status-cancel-btn + status-change-subject dropdown + invitation code.",
+    "dashboard_accept_by_code": "Parent B registered with the invitee email → dashboard renders invitation-code-input + accept-invitation-btn → typing code + Accept lands on /joint/{id}/assess.",
+    "join_by_token_logged_out": "GET /join/{token} while unauthenticated shows invitation-card with inviter, child, subject, confidentiality notice, and 'Sign in to accept' button (join-signin-btn) linking to /auth?next=/join/{token}. Public lookup endpoint returns 200 without auth.",
+    "accept_wrong_email_403": "Accepting via code with a mismatched account email returns 403 (verified in test_accept_by_code_wrong_email_403).",
+    "cancel_invalidates_code": "POST /joint/invitations/{id}/cancel → subsequent accept with same code returns 404.",
+    "change_subject": "PATCH /joint/invitations/{id} updates subject_label; blocked (400) after both parents complete.",
+    "privacy_preservation": "During in-progress state, GET /joint/reports/{id} for parent B does NOT contain parent A's answer text (A_SECRET marker never present). Detail endpoint returns only my_answers for the caller's role. Non-participant → 404 on both /joint/reports/{id} and /joint/reports/{id}/report. Report endpoint returns 400 until both parents complete.",
+    "final_report_rendering": "When ready, /joint/{id} renders jr-purpose, jr-alignment, jr-differences, jr-map (6 rows), jr-options (3), jr-questions, jr-next-steps + 'Alignment Before Agreement' + joint-print-btn Download PDF. Backend generate_joint_report returns alignment_map length 6, options length 3, next_steps length 6.",
+    "professional_flow": "role='professional' registration works; POST /joint/reports/professional creates both invitations; report 400 until both parents complete; parent-shared report (POST /joint/reports/{id}/share) makes it visible to the professional via GET /joint/reports and GET /joint/reports/{id}/report. Non-professional email → 404. Non-professional role → 403 on the endpoint.",
+    "connections_auto_created": "After both parents accept, db.connections upserts an entry visible via GET /joint/connections for both users.",
+    "regressions": "Admin login (mattsossi@bsossi.com / CoParents2026!) succeeds; 8 assessment types intact; demo case → report returns 10 page_titles; forgot-password link visible on /auth sign-in tab; confidentiality notice visible on registration form."
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_joint_reports.py",
+    "/app/test_reports/pytest/joint_results.xml"
+  ],
+  "action_items": [
+    "Wrap send_invite_email() in try/except inside resend_invitation() (server.py ~line 920) so resend returns 200 even when the email provider rejects the recipient. Current behavior: 502. Expected: log warning, return {ok: true}. This matches the pattern already used in create_invitation()."
+  ],
+  "critical_code_review_comments": [
+    "resend_invitation lacks try/except around send_invite_email while create_invitation has it — inconsistent error handling (see action_items).",
+    "app_url() uses os.environ['APP_URL'] with no fallback; will crash if env var missing. Safe today because .env sets it, but consider os.environ.get with a sane default.",
+    "Dashboard.jsx accept flow uses code.trim().length < 6 as the enable gate; server accepts tokens via the same field which can be much longer. Non-blocking (users typing tokens are unusual on the dashboard), but worth noting.",
+    "server.py is 973 lines — approaching the >700 line split threshold. Consider extracting joint report endpoints to a router module for maintainability.",
+    "generate_joint_report keyword-overlap heuristic uses STOPWORDS list with 'child', 'children', 'parent' — good, prevents trivial overlap. Alignment threshold (>=2 shared words = Strong, ==1 = Moderate) is simple and worked in tests."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_joint_reports.py (new)"
+  ],
+  "success_rate": {
+    "backend": "95% (19/20 pytest — the 1 failure is the resend bug documented above)",
+    "frontend": "100% (all UI flows in review-request verified)"
+  },
+  "test_credentials": "Admin: mattsossi@bsossi.com / CoParents2026! (verified). Test parents/professionals were created fresh via /api/auth/register using uuid-derived @example.com emails.",
+  "seed_data_creation": "Tests create fresh users/reports per case with TEST_ / uuid prefixes; no seeded production data touched.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite covering Joint Report Builder lives at /app/backend/tests/test_joint_reports.py. Run with: REACT_APP_BACKEND_URL=<url> pytest backend/tests/test_joint_reports.py -v. Existing suite at /app/backend/tests/backend_test.py covers admin auth + private-assessment cases. To reproduce the resend bug: create a joint report with any @example.com co-parent email (blocked by Resend), then POST /joint/invitations/{id}/resend — returns 502. After the fix, expect 200.",
+  "rca of the issue": "Resend endpoint bug: server.py resend_invitation() awaits send_invite_email() without exception handling. send_email() (utility) raises HTTPException(status_code=502) on any provider failure. Meanwhile create_invitation() wraps the same call in try/except that only logs a warning. Recipient emails to @example.com are always rejected by the Resend provider (422 Undeliverable), so any Resend Invitation UI click for such recipients returns 502. Real-user recipients on delivering domains would succeed, so this may not have surfaced in manual curl testing with real inboxes."
+}

@@ -25,6 +25,8 @@ from pydantic import BaseModel, EmailStr
 
 from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
 from report_engine import generate_report
+from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, NEXT_STEPS
+from joint_engine import generate_joint_report
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -542,7 +544,415 @@ async def startup():
     await db.users.create_index("email", unique=True)
     await db.login_attempts.create_index("identifier")
     await db.cases.create_index("user_id")
+    await db.joint_reports.create_index("created_by")
+    await db.invitations.create_index("code")
+    await db.invitations.create_index("token")
     await seed_admin()
+
+
+# ---------- Joint Report Builder ----------
+
+class JointReportIn(BaseModel):
+    subject: str
+    custom_subject: str = ""
+    child_name: str
+    co_parent_name: str
+    co_parent_email: EmailStr
+
+
+class ProJointReportIn(BaseModel):
+    subject: str
+    custom_subject: str = ""
+    child_name: str
+    parent_a_name: str
+    parent_a_email: EmailStr
+    parent_b_name: str
+    parent_b_email: EmailStr
+
+
+class JointResponsesIn(BaseModel):
+    answers: dict
+
+
+class AcceptIn(BaseModel):
+    code: str
+
+
+class ShareIn(BaseModel):
+    email: EmailStr
+
+
+class PatchInvitationIn(BaseModel):
+    subject: str
+    custom_subject: str = ""
+
+
+def app_url():
+    return os.environ["APP_URL"].rstrip("/")
+
+
+def new_code():
+    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+    return "".join(secrets.choice(alphabet) for _ in range(6))
+
+
+def report_role(doc, user_id):
+    for role in ("a", "b"):
+        p = doc["participants"].get(role) or {}
+        if p.get("user_id") == user_id:
+            return role
+    return None
+
+
+def can_view_report(doc, user_id):
+    return (
+        report_role(doc, user_id) is not None
+        or doc.get("professional_id") == user_id
+        or user_id in doc.get("shared_with", [])
+    )
+
+
+def joint_public(doc, user, invitation=None):
+    uid = user["_id"]
+    role = report_role(doc, uid)
+    out = {
+        "id": doc["id"],
+        "subject": doc["subject"],
+        "subject_label": doc["subject_label"],
+        "child_name": doc["child_name"],
+        "status": doc["status"],
+        "created_at": doc["created_at"],
+        "my_role": role,
+        "is_creator": doc.get("created_by") == uid,
+        "professional_name": doc.get("professional_name"),
+        "participants": {},
+    }
+    for r in ("a", "b"):
+        p = doc["participants"][r]
+        out["participants"][r] = {
+            "name": p.get("name", ""),
+            "accepted": bool(p.get("user_id")),
+            "completed": bool(doc.get("responses", {}).get(r)),
+        }
+    if role:
+        my = doc.get("responses", {}).get(role)
+        out["my_answers"] = my["answers"] if my else None
+    if invitation and (doc.get("created_by") == uid):
+        out["invitation"] = {
+            "id": invitation["id"],
+            "code": invitation["code"],
+            "link": f"{app_url()}/join/{invitation['token']}",
+            "invitee_email": invitation["invitee_email"],
+            "status": invitation["status"],
+        }
+    return out
+
+
+async def send_invite_email(to_email, invitee_name, inviter_name, child_name, subject_label, token, code):
+    link = f"{app_url()}/join/{token}"
+    subject = f"You're invited to an {EMAIL_FROM_NAME} Joint Report"
+    html = (
+        '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+        f"<p>Hi {escape(invitee_name or 'there')},</p>"
+        f"<p>You've been invited to participate in an {escape(EMAIL_FROM_NAME)} Joint Report.</p>"
+        f"<p><strong>{escape(inviter_name)}</strong> has invited you to independently provide your "
+        f"perspective regarding <strong>{escape(child_name)}</strong> on the subject of "
+        f"<strong>{escape(subject_label)}</strong>.</p>"
+        "<p>Your individual answers remain private. SA CoParents will compare the parents' completed "
+        "responses to identify areas of alignment, differences in perspective, child-focused concerns, "
+        "and possible options for discussion.</p>"
+        f'<p><a href="{link}" style="display:inline-block;background:#5B2A86;color:#ffffff;'
+        'padding:12px 24px;text-decoration:none;border-radius:6px">Accept Invitation</a></p>'
+        f'<p>Or sign in and enter this invitation code: '
+        f'<strong style="letter-spacing:3px">{code}</strong></p>'
+        f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. Your answers are '
+        "private by default and are never shared without your choice.</p></td></tr></table>"
+    )
+    await send_email(to=to_email, subject=subject, html=html)
+
+
+async def create_invitation(report_id, role, invitee_name, invitee_email, inviter_name, child_name, subject_label):
+    iid = str(uuid.uuid4())
+    token = secrets.token_urlsafe(24)
+    code = new_code()
+    doc = {
+        "id": iid,
+        "report_id": report_id,
+        "role": role,
+        "invitee_name": invitee_name.strip(),
+        "invitee_email": invitee_email.lower(),
+        "inviter_name": inviter_name,
+        "token": token,
+        "code": code,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.invitations.insert_one(doc)
+    try:
+        await send_invite_email(invitee_email.lower(), invitee_name, inviter_name, child_name, subject_label, token, code)
+    except Exception:
+        logger.warning(f"Invitation email not sent to {invitee_email}")
+    return doc
+
+
+@api.get("/joint/config")
+async def joint_config():
+    return {
+        "subjects": [{"key": k, "label": SUBJECTS[k]["label"]} for k in ORDERED_SUBJECT_KEYS],
+        "questions": [{"key": k, "area": a, "question": q} for k, a, q in QUESTIONS],
+        "confidentiality_notice": CONFIDENTIALITY_NOTICE,
+    }
+
+
+@api.post("/joint/reports")
+async def create_joint_report(body: JointReportIn, user=Depends(get_current_user)):
+    label = None
+    if body.subject not in SUBJECTS:
+        raise HTTPException(status_code=400, detail="Unknown subject")
+    label = body.custom_subject.strip() if body.subject == "custom" else SUBJECTS[body.subject]["label"]
+    if body.subject == "custom" and not label:
+        label = "Custom Subject"
+    rid = str(uuid.uuid4())
+    doc = {
+        "id": rid,
+        "subject": body.subject,
+        "subject_label": label,
+        "child_name": body.child_name.strip(),
+        "created_by": user["_id"],
+        "creator_role": "parent",
+        "professional_id": None,
+        "professional_name": None,
+        "shared_with": [],
+        "participants": {
+            "a": {"user_id": user["_id"], "name": user.get("name", ""), "email": user["email"]},
+            "b": {"user_id": None, "name": body.co_parent_name.strip(), "email": body.co_parent_email.lower()},
+        },
+        "responses": {},
+        "status": "pending_invite",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.joint_reports.insert_one(doc)
+    inv = await create_invitation(rid, "b", body.co_parent_name, body.co_parent_email, user.get("name", "Your co-parent"), doc["child_name"], label)
+    return {**joint_public(doc, user), "invitation": {"id": inv["id"], "code": inv["code"], "link": f"{app_url()}/join/{inv['token']}", "invitee_email": inv["invitee_email"], "status": "pending"}}
+
+
+@api.post("/joint/reports/professional")
+async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_current_user)):
+    if user.get("role") != "professional":
+        raise HTTPException(status_code=403, detail="Only professional accounts can create reports for two parents")
+    if body.subject not in SUBJECTS:
+        raise HTTPException(status_code=400, detail="Unknown subject")
+    label = body.custom_subject.strip() if body.subject == "custom" else SUBJECTS[body.subject]["label"]
+    if body.subject == "custom" and not label:
+        label = "Custom Subject"
+    rid = str(uuid.uuid4())
+    doc = {
+        "id": rid,
+        "subject": body.subject,
+        "subject_label": label,
+        "child_name": body.child_name.strip(),
+        "created_by": user["_id"],
+        "creator_role": "professional",
+        "professional_id": user["_id"],
+        "professional_name": user.get("name", ""),
+        "shared_with": [],
+        "participants": {
+            "a": {"user_id": None, "name": body.parent_a_name.strip(), "email": body.parent_a_email.lower()},
+            "b": {"user_id": None, "name": body.parent_b_name.strip(), "email": body.parent_b_email.lower()},
+        },
+        "responses": {},
+        "status": "pending_invite",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.joint_reports.insert_one(doc)
+    await create_invitation(rid, "a", body.parent_a_name, body.parent_a_email, user.get("name", "A professional"), doc["child_name"], label)
+    await create_invitation(rid, "b", body.parent_b_name, body.parent_b_email, user.get("name", "A professional"), doc["child_name"], label)
+    return joint_public(doc, user)
+
+
+@api.get("/joint/reports")
+async def list_joint_reports(user=Depends(get_current_user)):
+    uid = user["_id"]
+    docs = await db.joint_reports.find(
+        {"$or": [
+            {"created_by": uid},
+            {"participants.a.user_id": uid},
+            {"participants.b.user_id": uid},
+            {"professional_id": uid},
+            {"shared_with": uid},
+        ]},
+        {"_id": 0},
+    ).sort("created_at", -1).to_list(200)
+    out = []
+    for d in docs:
+        inv = None
+        if d.get("created_by") == uid:
+            inv = await db.invitations.find_one({"report_id": d["id"], "status": "pending"}, {"_id": 0})
+        out.append(joint_public(d, user, inv))
+    return out
+
+
+async def get_joint_report_doc(rid, user):
+    doc = await db.joint_reports.find_one({"id": rid}, {"_id": 0})
+    if not doc or not can_view_report(doc, user["_id"]):
+        raise HTTPException(status_code=404, detail="Joint report not found")
+    return doc
+
+
+@api.get("/joint/reports/{rid}")
+async def get_joint_report(rid: str, user=Depends(get_current_user)):
+    doc = await get_joint_report_doc(rid, user)
+    inv = await db.invitations.find_one({"report_id": rid, "status": "pending"}, {"_id": 0})
+    return joint_public(doc, user, inv)
+
+
+@api.put("/joint/reports/{rid}/responses")
+async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(get_current_user)):
+    doc = await get_joint_report_doc(rid, user)
+    role = report_role(doc, user["_id"])
+    if role is None:
+        raise HTTPException(status_code=403, detail="Only invited parents can submit responses")
+    valid = {k for k, _, _ in QUESTIONS}
+    answers = {k: (body.answers.get(k) or "").strip() for k in valid}
+    if any(not v for v in answers.values()):
+        raise HTTPException(status_code=400, detail="Please answer all questions")
+    updates = {f"responses.{role}": {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}}
+    other = "b" if role == "a" else "a"
+    if doc.get("responses", {}).get(other):
+        updates["status"] = "ready"
+    await db.joint_reports.update_one({"id": rid}, {"$set": updates})
+    doc = await get_joint_report_doc(rid, user)
+    return joint_public(doc, user)
+
+
+@api.get("/joint/reports/{rid}/report")
+async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
+    doc = await get_joint_report_doc(rid, user)
+    if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
+        raise HTTPException(status_code=400, detail="The Joint Report becomes available when both parents have completed their assessments")
+    return generate_joint_report(doc)
+
+
+@api.post("/joint/reports/{rid}/share")
+async def share_joint_report(rid: str, body: ShareIn, user=Depends(get_current_user)):
+    doc = await get_joint_report_doc(rid, user)
+    if report_role(doc, user["_id"]) is None:
+        raise HTTPException(status_code=403, detail="Only a participating parent can share this report")
+    pro = await db.users.find_one({"email": body.email.lower(), "role": "professional"})
+    if not pro:
+        raise HTTPException(status_code=404, detail="No professional account found with that email")
+    await db.joint_reports.update_one({"id": rid}, {"$addToSet": {"shared_with": pro["_id"]}})
+    return {"ok": True, "shared_with": pro.get("name", body.email.lower())}
+
+
+@api.get("/joint/connections")
+async def list_connections(user=Depends(get_current_user)):
+    docs = await db.connections.find({"user_ids": user["_id"]}, {"_id": 0}).to_list(100)
+    out = []
+    for c in docs:
+        other_id = next((u for u in c["user_ids"] if u != user["_id"]), None)
+        other = await db.users.find_one({"_id": other_id}, {"_id": 0, "name": 1, "email": 1})
+        out.append({"id": c["id"], "other_name": (other or {}).get("name", "Co-parent"), "other_email": (other or {}).get("email", ""), "child_name": c.get("child_name", "")})
+    return out
+
+
+@api.get("/joint/invitations/lookup/{token}")
+async def lookup_invitation(token: str):
+    inv = await db.invitations.find_one({"token": token}, {"_id": 0})
+    if not inv or inv["status"] != "pending":
+        raise HTTPException(status_code=404, detail="This invitation is no longer valid")
+    report = await db.joint_reports.find_one({"id": inv["report_id"]}, {"_id": 0})
+    return {
+        "inviter_name": inv["inviter_name"],
+        "invitee_name": inv["invitee_name"],
+        "invitee_email": inv["invitee_email"],
+        "child_name": report["child_name"] if report else "",
+        "subject_label": report["subject_label"] if report else "",
+    }
+
+
+@api.post("/joint/invitations/accept")
+async def accept_invitation(body: AcceptIn, user=Depends(get_current_user)):
+    raw = body.code.strip()
+    inv = await db.invitations.find_one({"status": "pending", "$or": [{"code": raw.upper()}, {"token": raw}]})
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invalid or expired invitation code")
+    if inv["invitee_email"] != user["email"].lower():
+        raise HTTPException(status_code=403, detail="This invitation was sent to a different email address. Sign in with the email the invitation was sent to.")
+    report = await db.joint_reports.find_one({"id": inv["report_id"]}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Joint report not found")
+    role = inv["role"]
+    await db.joint_reports.update_one(
+        {"id": report["id"]},
+        {"$set": {
+            f"participants.{role}.user_id": user["_id"],
+            f"participants.{role}.name": user.get("name") or inv["invitee_name"],
+            "status": "in_progress",
+        }},
+    )
+    await db.invitations.update_one(
+        {"id": inv["id"]},
+        {"$set": {"status": "accepted", "accepted_by": user["_id"], "accepted_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    other_role = "b" if role == "a" else "a"
+    other = report["participants"][other_role]
+    if other.get("user_id"):
+        pair = sorted([user["_id"], other["user_id"]])
+        await db.connections.update_one(
+            {"user_ids": pair},
+            {"$setOnInsert": {"id": str(uuid.uuid4()), "user_ids": pair, "child_name": report["child_name"], "created_at": datetime.now(timezone.utc).isoformat()}},
+            upsert=True,
+        )
+    return {"ok": True, "report_id": report["id"]}
+
+
+@api.post("/joint/invitations/{iid}/resend")
+async def resend_invitation(iid: str, user=Depends(get_current_user)):
+    inv = await db.invitations.find_one({"id": iid}, {"_id": 0})
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+    report = await get_joint_report_doc(inv["report_id"], user)
+    if report.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the report creator can resend the invitation")
+    if inv["status"] != "pending":
+        raise HTTPException(status_code=400, detail="This invitation is no longer pending")
+    try:
+        await send_invite_email(inv["invitee_email"], inv["invitee_name"], inv["inviter_name"], report["child_name"], report["subject_label"], inv["token"], inv["code"])
+    except Exception:
+        logger.warning(f"Invitation resend email not sent to {inv['invitee_email']}")
+    return {"ok": True}
+
+
+@api.post("/joint/invitations/{iid}/cancel")
+async def cancel_invitation(iid: str, user=Depends(get_current_user)):
+    inv = await db.invitations.find_one({"id": iid}, {"_id": 0})
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+    report = await get_joint_report_doc(inv["report_id"], user)
+    if report.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the report creator can cancel the invitation")
+    await db.invitations.update_one({"id": iid}, {"$set": {"status": "cancelled"}})
+    return {"ok": True}
+
+
+@api.patch("/joint/invitations/{iid}")
+async def change_invitation_subject(iid: str, body: PatchInvitationIn, user=Depends(get_current_user)):
+    inv = await db.invitations.find_one({"id": iid}, {"_id": 0})
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+    report = await get_joint_report_doc(inv["report_id"], user)
+    if report.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the report creator can change the subject")
+    if body.subject not in SUBJECTS:
+        raise HTTPException(status_code=400, detail="Unknown subject")
+    if report["status"] == "ready":
+        raise HTTPException(status_code=400, detail="The subject cannot be changed after both parents have completed")
+    label = body.custom_subject.strip() if body.subject == "custom" else SUBJECTS[body.subject]["label"]
+    if body.subject == "custom" and not label:
+        label = "Custom Subject"
+    await db.joint_reports.update_one({"id": report["id"]}, {"$set": {"subject": body.subject, "subject_label": label}})
+    return {"ok": True, "subject_label": label}
 
 
 app.include_router(api)

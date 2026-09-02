@@ -1,0 +1,123 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import api, { formatApiError } from "@/lib/api";
+import { BrandLogo } from "@/components/Brand";
+import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+export default function JointAssessment() {
+  const { id } = useParams();
+  const [config, setConfig] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    Promise.all([api.get("/joint/config"), api.get(`/joint/reports/${id}`)])
+      .then(([c, d]) => {
+        setConfig(c.data);
+        setDetail(d.data);
+        if (d.data.my_answers) {
+          navigate(`/joint/${id}`, { replace: true });
+        } else if (!d.data.my_role || !d.data.participants[d.data.my_role]?.accepted) {
+          setError("Only invited parents can complete this assessment.");
+        }
+      })
+      .catch((e) => setError(formatApiError(e)));
+  }, [id, navigate]);
+
+  const answered = config ? config.questions.filter((q) => (answers[q.key] || "").trim()).length : 0;
+  const total = config ? config.questions.length : 6;
+
+  const submit = async () => {
+    setBusy(true);
+    try {
+      await api.put(`/joint/reports/${id}/responses`, { answers });
+      toast.success("Your responses are saved — they remain private until both parents finish.");
+      navigate(`/joint/${id}`);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6" data-testid="joint-assess-error">
+        <div className="max-w-md text-center">
+          <p className="text-lg font-medium">{error}</p>
+          <Link to="/dashboard" className="inline-block mt-6">
+            <Button variant="outline" data-testid="joint-assess-error-back-btn">Back to dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!config || !detail) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" data-testid="joint-assess-loading">
+        <p className="text-muted-foreground text-sm">Loading…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background" data-testid="joint-assessment-page">
+      <header className="bg-white border-b border-border">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/dashboard" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" data-testid="assess-back-link">
+            <ArrowLeft className="h-4 w-4" /> Dashboard
+          </Link>
+          <BrandLogo size="text-xl" />
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-6 py-10">
+        <p className="text-xs uppercase tracking-widest text-accent font-semibold" data-testid="assess-subject">{detail.subject_label}</p>
+        <h1 className="text-4xl font-semibold mt-1 mb-2" data-testid="assess-heading">Your Independent Reflection</h1>
+        <p className="text-muted-foreground mb-2">
+          Regarding <strong>{detail.child_name}</strong>. Answer honestly — the other parent cannot see your answers.
+        </p>
+        <p className="text-sm text-muted-foreground mb-8" data-testid="assess-progress">{answered} of {total} answered</p>
+
+        <div className="space-y-6">
+          {config.questions.map((q, i) => (
+            <div key={q.key} className="bg-white border border-border rounded-lg p-6" data-testid={`assess-question-${q.key}`}>
+              <Label htmlFor={`q-${q.key}`} className="font-medium">{i + 1}. {q.question}</Label>
+              <Textarea
+                id={`q-${q.key}`}
+                className="mt-3 min-h-[90px]"
+                value={answers[q.key] || ""}
+                onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
+                data-testid={`assess-answer-${q.key}`}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8">
+          <ConfidentialityNotice />
+        </div>
+
+        <div className="mt-8 flex justify-end">
+          <Button size="lg" className="gap-2" disabled={answered < total || busy} onClick={submit} data-testid="assess-submit-btn">
+            {busy ? "Saving…" : "Submit My Responses"} <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+        {answered < total && (
+          <p className="text-right text-xs text-muted-foreground mt-2" data-testid="assess-required-note">
+            Please answer all {total} questions to continue.
+          </p>
+        )}
+      </main>
+    </div>
+  );
+}

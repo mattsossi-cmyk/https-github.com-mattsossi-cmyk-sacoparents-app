@@ -60,3 +60,13 @@ See /app/memory/test_credentials.md. Admin: mattsossi@bsossi.com / CoParents2026
 ## Next Tasks
 1. Let the user review the 10-page report content/copy per type and adjust wording.
 2. Implement P1 sharing/invite flow when user confirms priority.
+
+## Implemented (2026-09-02) — Universal Joint Report Builder + Invitations
+- Invite Co-Parent flow: 6-char codes + token links, email via managed Resend, accept by code or /join/{token} (invitee email must match account), resend/cancel/change-subject, family connections (separate accounts, connection cards on dashboard)
+- Universal Joint Report Builder: 13 subjects (incl. custom), 3-step wizard (subject → child → invite), 6 free-text questions, rule-based report with keyword-overlap alignment heuristic (10 sections per spec), privacy enforced (partner answers never exposed; report gated until both complete)
+- Professional tools: POST /api/joint/reports/professional invites both parents; parents can share completed reports with professional accounts by email
+- Dashboard redesigned: Individual Tools + Joint Tools cards, "Already invited? Enter Invitation Code", connections, joint status cards
+- Confidentiality notice (verbatim from sacoparentsapp.online) on register, private assessments, and joint assessments
+- Auth supports ?next= redirect for invitation links
+- Files: backend/joint_data.py, backend/joint_engine.py, joint endpoints in server.py; frontend pages JointNew/Join/JointAssessment/JointReport, Dashboard rewrite, components/ConfidentialityNotice.jsx
+- Testing: see /app/test_reports/iteration_4.json

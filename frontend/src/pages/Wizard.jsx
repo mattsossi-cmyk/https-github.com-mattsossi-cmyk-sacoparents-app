@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { FileText, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
+import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,6 +86,10 @@ function ParentForm({ config, parentLabel, onSubmit, busy }) {
             </label>
           ))}
         </div>
+      </div>
+
+      <div className="mt-8">
+        <ConfidentialityNotice />
       </div>
 
       <div className="mt-8 flex justify-end">
