@@ -52,7 +52,16 @@ export default function Landing() {
       </header>
 
       <section className="max-w-6xl mx-auto px-6 pt-10 pb-20 grid md:grid-cols-2 gap-12 items-center">
-        <div>
+        <div className="relative md:order-first">
+          <div className="absolute -top-4 -right-4 w-full h-full bg-secondary rounded-xl -z-10" />
+          <img
+            src={POSTER_IMG}
+            alt="The SA CoParents Difference — Joint Alignment Report"
+            className="rounded-xl shadow-xl w-full"
+            data-testid="hero-image"
+          />
+        </div>
+        <div className="md:order-last">
           <p className="text-sm uppercase tracking-widest text-primary font-bold mb-4" data-testid="hero-eyebrow">
             Align • Communicate • Thrive
           </p>
@@ -77,14 +86,25 @@ export default function Landing() {
             Starting with alignment, ending with agreement.
           </p>
         </div>
-        <div className="relative">
-          <div className="absolute -top-4 -left-4 w-full h-full bg-secondary rounded-xl -z-10" />
-          <img
-            src={POSTER_IMG}
-            alt="The SA CoParents Difference — Joint Alignment Report"
-            className="rounded-xl shadow-xl w-full"
-            data-testid="hero-image"
-          />
+      </section>
+
+      <section className="max-w-4xl mx-auto px-6 pb-16" data-testid="journey-strip">
+        <div className="grid sm:grid-cols-[1fr_auto_1fr] gap-6 items-center">
+          <a href="https://sacoparentsapp.online" target="_blank" rel="noreferrer" className="group" data-testid="step-one">
+            <div className="bg-white border border-border rounded-xl p-6 text-center shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-200">
+              <div className="h-12 w-12 rounded-full bg-brand-teal text-white font-extrabold flex items-center justify-center mx-auto mb-3 text-lg">1</div>
+              <p className="font-bold text-brand-teal uppercase tracking-wide text-sm">Step One</p>
+              <p className="text-sm text-muted-foreground mt-1">Complete your private assessments in the SA CoParents app.</p>
+              <p className="text-xs text-primary mt-2 font-medium">sacoparentsapp.online →</p>
+            </div>
+          </a>
+          <ArrowRight className="h-6 w-6 text-muted-foreground mx-auto rotate-90 sm:rotate-0" />
+          <div className="bg-white border-2 border-brand-purple rounded-xl p-6 text-center shadow-sm" data-testid="step-two">
+            <div className="h-12 w-12 rounded-full bg-brand-purple text-white font-extrabold flex items-center justify-center mx-auto mb-3 text-lg">2</div>
+            <p className="font-bold text-brand-purple uppercase tracking-wide text-sm">Step Two</p>
+            <p className="text-sm text-muted-foreground mt-1">Align together here — build your Joint Alignment Report.</p>
+            <p className="text-xs text-brand-purple mt-2 font-medium italic">You are here</p>
+          </div>
         </div>
       </section>
 
