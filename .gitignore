@@ -31,9 +31,8 @@ dist/
 dist
 
 # Environment files (comprehensive coverage)
-.env
-.env.*
-!.env.example
+# NOTE: .env files ARE tracked in git intentionally — Emergent deployment
+# auto-updates them with production values.
 
 *token.json*
 *credentials.json*
