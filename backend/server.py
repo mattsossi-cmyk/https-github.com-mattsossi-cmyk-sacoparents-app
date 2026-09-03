@@ -28,7 +28,7 @@ from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_pay
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, NEXT_STEPS, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
 from joint_engine import generate_joint_report, generate_agreement
-from pdf_report import build_joint_pdf, build_agreement_pdf
+from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf
 from complete_engine import build_complete_report
 
 mongo_url = os.environ["MONGO_URL"]
@@ -535,6 +535,19 @@ async def get_report(case_id: str, user=Depends(get_current_user)):
     if not (c.get("responses", {}).get("a") and c.get("responses", {}).get("b")):
         raise HTTPException(status_code=400, detail="Both parents must complete the assessment before the report can be generated")
     return generate_report(c)
+
+
+@api.get("/cases/{case_id}/pdf")
+async def case_report_pdf(case_id: str, user=Depends(get_current_user)):
+    c = await get_owned_case(case_id, user)
+    if not (c.get("responses", {}).get("a") and c.get("responses", {}).get("b")):
+        raise HTTPException(status_code=400, detail="Both parents must complete the assessment before the PDF can be generated")
+    child = re.sub(r"[^a-z0-9-]", "", (c.get("child_name") or "child").lower().replace(" ", "-")) or "child"
+    return Response(
+        content=build_case_pdf(generate_report(c)),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="alignment-report-{child}.pdf"'},
+    )
 
 
 @api.delete("/cases/{case_id}")
@@ -1166,6 +1179,30 @@ async def complete_alignment_report(user=Depends(get_current_user)):
         {"_id": 0},
     ).to_list(200)
     return build_complete_report(cases, joints, user.get("name", ""))
+
+
+@api.get("/reports/complete/pdf")
+async def complete_alignment_report_pdf(user=Depends(get_current_user)):
+    uid = user["_id"]
+    cases = await db.cases.find({"user_id": uid}, {"_id": 0}).to_list(200)
+    joints = await db.joint_reports.find(
+        {"$or": [
+            {"created_by": uid},
+            {"participants.a.user_id": uid},
+            {"participants.b.user_id": uid},
+            {"professional_id": uid},
+            {"shared_with": uid},
+        ]},
+        {"_id": 0},
+    ).to_list(200)
+    report = build_complete_report(cases, joints, user.get("name", ""))
+    if report["is_empty"]:
+        raise HTTPException(status_code=400, detail="The Complete Report PDF becomes available once at least one assessment or joint report is complete")
+    return Response(
+        content=build_complete_pdf(report),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="complete-alignment-report.pdf"'},
+    )
 
 
 class AgreementIn(BaseModel):

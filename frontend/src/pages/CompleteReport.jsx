@@ -41,8 +41,10 @@ export default function CompleteReport() {
           </Link>
           <BrandLogo size="text-xl" />
           {!report.is_empty && (
-            <Button size="sm" className="gap-2" onClick={() => window.print()} data-testid="complete-print-btn">
-              <Printer className="h-4 w-4" /> Print
+            <Button size="sm" className="gap-2" asChild data-testid="complete-print-btn">
+              <a href={`${process.env.REACT_APP_BACKEND_URL}/api/reports/complete/pdf`} download>
+                <Printer className="h-4 w-4" /> Download PDF
+              </a>
             </Button>
           )}
         </div>

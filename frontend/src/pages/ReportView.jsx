@@ -55,8 +55,10 @@ export default function ReportView() {
               {report.subtitle}
             </span>
           </div>
-          <Button size="sm" className="gap-2 shrink-0" onClick={() => window.print()} data-testid="print-report-btn">
-            <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Print / Save PDF</span>
+          <Button size="sm" className="gap-2 shrink-0" asChild data-testid="print-report-btn">
+            <a href={`${process.env.REACT_APP_BACKEND_URL}/api/cases/${id}/pdf`} download>
+              <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Download PDF</span>
+            </a>
           </Button>
         </div>
       </header>
