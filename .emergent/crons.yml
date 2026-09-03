@@ -1,0 +1,8 @@
+crons:
+  - name: completion-nudge
+    description: "Emails parents when their co-parent completes their half, and both parents when a Joint Report is ready"
+    cron: "*/15 * * * *"
+    endpoint: "{{BASE_URL}}/api/cron/completion-nudge"
+    method: POST
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    enabled: true

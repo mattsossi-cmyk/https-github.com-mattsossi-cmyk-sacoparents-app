@@ -17,6 +17,7 @@ from html import escape
 from html.parser import HTMLParser
 from urllib.parse import urlparse
 
+import asyncio
 import httpx
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
 from starlette.middleware.cors import CORSMiddleware
@@ -46,6 +47,7 @@ EMAIL_BASE_URL = "https://integrations.emergentagent.com"
 EMAIL_KEY = os.environ["EMERGENT_EMAIL_KEY"]
 EMAIL_FROM_NAME = os.environ["EMAIL_FROM_NAME"]
 EMAIL_REPLY_TO = os.environ.get("EMAIL_REPLY_TO")
+WEBHOOK_CRON_SECRET = os.environ["WEBHOOK_CRON_SECRET"]
 
 EXTERNAL_APP_URL = os.environ["SACOPARENTS_APP_URL"].rstrip("/")
 INTEGRATION_SECRET = os.environ["INTEGRATION_SHARED_SECRET"]
@@ -1311,6 +1313,110 @@ async def prepare_pro_request(req_id: str, user=Depends(get_current_user)):
         {"$set": {"status": "prepared", "report_id": rid, "prepared_at": datetime.now(timezone.utc).isoformat()}},
     )
     return {"ok": True, "report_id": rid}
+
+
+# ---------- Scheduled completion notifications ----------
+
+@api.post("/cron/completion-nudge")
+async def cron_completion_nudge(request: Request):
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    auth = request.headers.get("authorization", "")
+    token = auth[7:] if auth.startswith("Bearer ") else ""
+    if not token or not secrets.compare_digest(token, WEBHOOK_CRON_SECRET):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    try:
+        envelope = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid request body")
+    run_id = (envelope or {}).get("run_id") or request.headers.get("x-webhook-id")
+    if run_id:
+        if await db.cron_runs.find_one({"run_id": run_id, "job": "completion-nudge"}):
+            return {"ok": True, "duplicate": True}
+        await db.cron_runs.insert_one({"run_id": run_id, "job": "completion-nudge", "at": datetime.now(timezone.utc).isoformat()})
+    asyncio.create_task(run_completion_nudges())
+    return {"ok": True}
+
+
+async def run_completion_nudges():
+    now = datetime.now(timezone.utc)
+    docs = await db.joint_reports.find({"status": {"$in": ["in_progress", "ready"]}}, {"_id": 0}).to_list(500)
+    for doc in docs:
+        try:
+            ra = doc.get("responses", {}).get("a")
+            rb = doc.get("responses", {}).get("b")
+            pa, pb = doc["participants"]["a"], doc["participants"]["b"]
+            label = doc.get("subject_label", "Joint Report")
+            child = doc.get("child_name") or "your child"
+            link = f"{app_url()}/joint/{doc['id']}"
+            if ra and rb:
+                try:
+                    done_at = max(
+                        datetime.fromisoformat(str(ra.get("completed_at", "")).replace("Z", "+00:00")),
+                        datetime.fromisoformat(str(rb.get("completed_at", "")).replace("Z", "+00:00")),
+                    )
+                except Exception:
+                    continue
+                if (now - done_at) > timedelta(hours=48):
+                    continue
+                sent = doc.get("ready_notified")
+                if not isinstance(sent, dict):
+                    sent = {}
+                updates = {}
+                for side, p in (("a", pa), ("b", pb)):
+                    if sent.get(side) or not p.get("email"):
+                        continue
+                    try:
+                        await send_email(
+                            to=p["email"],
+                            subject=f"Your Joint Report is ready - {EMAIL_FROM_NAME}",
+                            html=(
+                                '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                                f"<p>Hi {escape(p.get('name') or 'there')},</p>"
+                                f"<p>Both parents have completed their assessments for <strong>{escape(child)}</strong> ({escape(label)}). "
+                                "Your Joint Report is ready to view.</p>"
+                                f'<p><a href="{link}" style="color:#5B2A86">Open your Joint Report</a></p>'
+                                f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
+                                "</td></tr></table>"
+                            ),
+                        )
+                        updates[side] = now.isoformat()
+                    except Exception:
+                        logger.warning(f"Ready notification not sent to {p['email']}")
+                if updates:
+                    await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {"ready_notified": {**sent, **updates}}})
+                continue
+            if bool(ra) == bool(rb):
+                continue
+            done, other, side = (pa, pb, "b") if ra else (pb, pa, "a")
+            completed = ra if ra else rb
+            if doc.get("nudges", {}).get(side) or not other.get("email"):
+                continue
+            try:
+                done_at = datetime.fromisoformat(str(completed.get("completed_at", "")).replace("Z", "+00:00"))
+            except Exception:
+                continue
+            if not (timedelta(minutes=15) <= (now - done_at) <= timedelta(hours=48)):
+                continue
+            try:
+                await send_email(
+                    to=other["email"],
+                    subject=f"Your co-parent has completed their half - {EMAIL_FROM_NAME}",
+                    html=(
+                        '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                        f"<p>Hi {escape(other.get('name') or 'there')},</p>"
+                        f"<p><strong>{escape(done.get('name') or 'Your co-parent')}</strong> has completed their half of the "
+                        f"{escape(label)} for <strong>{escape(child)}</strong>. Once you complete yours, the Joint Report "
+                        "will be generated for both of you.</p>"
+                        f'<p><a href="{link}" style="color:#5B2A86">Complete your half</a></p>'
+                        f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
+                        "</td></tr></table>"
+                    ),
+                )
+                await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"nudges.{side}": now.isoformat()}})
+            except Exception:
+                logger.warning(f"Completion nudge not sent to {other['email']}")
+        except Exception as e:
+            logger.error(f"Nudge processing error for {doc.get('id')}: {e}")
 
 
 app.include_router(api)
