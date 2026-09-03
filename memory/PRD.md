@@ -128,6 +128,12 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## Deployment (2026-09-03, final scan)
 - Third scan caught ONE blocker: my .env/.env.* gitignore entries — this platform TRACKS .env files in git and auto-updates them with production values at deploy time. Removed those lines (memory/test_credentials.md stays ignored). Re-scan: PASS, zero findings. Live probes: /health, /, /privacy all 200.
 - CLEARED TO DEPLOY — user clicks the Deploy button.
+
+## PRODUCTION LIVE (2026-09-03)
+- Deployment confirmed live: https://align-report.emergent.host — /health 200, / 200. Deployment log scan: no /health 404s, no startup errors, no 5xx patterns (the old /health 404 issue is confirmed resolved in production).
+- Production smoke test: 11/11 PASS — register ×2, joint report create, code accept, both parents submit, status ready, report content, PDF download (4164 bytes, full text, not blank).
+- sacoparentsalign.com currently returns 301 (DNS propagation/final mapping pending).
+- Completion-nudge cron ships with deploy; first prod fire within 15 min of qualifying activity.
 - Brand.jsx now supports an optional `sub` prop (renders italic dark-green text under the wordmark); Landing header uses `sub="Step Two"` per user request. Screenshot-verified (italic / rgb(22,101,52)).
 - Landing hero swapped: poster image now LEFT, text RIGHT (md:order-first/last). Single hero image confirmed.
 - Landing journey strip (journey-strip): Step One card → links to sacoparentsapp.online ("Complete your private assessments in the SA CoParents app"), Step Two card → "You are here" (Align). Screenshot-verified.
