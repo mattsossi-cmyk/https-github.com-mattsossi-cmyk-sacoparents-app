@@ -2,6 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Share2, ArrowRight, Lock, FileText, Handshake } from "lucide-react";
 
+import {
+  jointReportUrl,
+  jointAgreementUrl,
+} from "../lib/jointArtefactUrls";
+
 /**
  * "Share a report" quick-action row for the Dashboard hero.
  *
@@ -48,7 +53,7 @@ export default function ShareReportQuickAction({ sncHighlights }) {
         Share
       </span>
       <Link
-        to={`/joint-professional-report?share=${encoded}&mint=1`}
+        to={jointReportUrl(shareId)}
         className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] text-white px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-[#2f1360] hover:shadow-md transition-all"
         data-testid="dashboard-share-report-quick-action"
       >
@@ -57,7 +62,7 @@ export default function ShareReportQuickAction({ sncHighlights }) {
         <ArrowRight size={14} className="opacity-80" />
       </Link>
       <Link
-        to={`/joint-agreement?share=${encoded}&mint=1`}
+        to={jointAgreementUrl(shareId)}
         className="inline-flex items-center gap-2 rounded-full border border-[#3D1A78] text-[#3D1A78] bg-white px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-[#F1EEF7] hover:shadow-md transition-all"
         data-testid="dashboard-share-agreement-quick-action"
       >

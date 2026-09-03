@@ -13,6 +13,10 @@ import { toast } from "sonner";
 
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
+import {
+  jointReportUrl,
+  jointAgreementUrl,
+} from "../lib/jointArtefactUrls";
 
 /**
  * JointAlignmentPromoCard — the "next unmistakable action" card.
@@ -144,7 +148,7 @@ export default function JointAlignmentPromoCard({
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <Link
-                to={`/joint-professional-report?share=${encodeURIComponent(shareId)}&mint=1`}
+                to={jointReportUrl(shareId)}
                 className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] text-white px-5 py-2.5 text-sm font-semibold shadow-sm hover:bg-[#2f1360] hover:shadow-md transition-all"
                 data-testid={`${testidPrefix}-view-report`}
               >
@@ -153,7 +157,7 @@ export default function JointAlignmentPromoCard({
                 <ArrowRight size={14} className="opacity-80" />
               </Link>
               <Link
-                to={`/joint-agreement?share=${encodeURIComponent(shareId)}&mint=1`}
+                to={jointAgreementUrl(shareId)}
                 className="inline-flex items-center gap-2 rounded-full border border-[#3D1A78] text-[#3D1A78] bg-white px-5 py-2.5 text-sm font-semibold shadow-sm hover:bg-[#F1EEF7] hover:shadow-md transition-all"
                 data-testid={`${testidPrefix}-view-agreement`}
               >

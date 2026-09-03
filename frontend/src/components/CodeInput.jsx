@@ -41,12 +41,19 @@ export default function CodeInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A joined value of `length` characters already implies every box is
+  // filled (empty boxes contribute nothing to the joined string), so we
+  // gate `onComplete` on length alone. The earlier `!joined.includes("")`
+  // guard was a permanent false — every string "includes" the empty
+  // string in JS — which silently killed auto-submit / auto-advance.
+  const isComplete = (joined) => joined.length === length;
+
   const updateAt = (idx, digit) => {
     const next = digits.slice();
     next[idx] = digit;
     const joined = next.join("");
     onChange(joined);
-    if (joined.length === length && !joined.includes("") && onComplete) {
+    if (isComplete(joined) && onComplete) {
       onComplete(joined);
     }
   };
@@ -68,7 +75,7 @@ export default function CodeInput({
       onChange(joined);
       const focusIdx = Math.min(idx + spread.length, length - 1);
       refs.current[focusIdx]?.focus();
-      if (joined.length === length && !joined.includes("") && onComplete) {
+      if (isComplete(joined) && onComplete) {
         onComplete(joined);
       }
       return;
@@ -106,7 +113,7 @@ export default function CodeInput({
     onChange(joined);
     const focusIdx = Math.min(idx + spread.length, length - 1);
     refs.current[focusIdx]?.focus();
-    if (joined.length === length && !joined.includes("") && onComplete) {
+    if (isComplete(joined) && onComplete) {
       onComplete(joined);
     }
   };

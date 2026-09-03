@@ -6,6 +6,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { jointReportUrl } from "../lib/jointArtefactUrls";
+
 /**
  * AssessmentHistoryCard — the third access point for the Joint Alignment
  * Report per the walkthrough.
@@ -91,7 +93,7 @@ export default function AssessmentHistoryCard({
               <div className="shrink-0 flex items-center gap-3">
                 {ready ? (
                   <Link
-                    to={`/joint-professional-report?share=${encodeURIComponent(shareId)}&mint=1`}
+                    to={jointReportUrl(shareId)}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78] hover:underline"
                     data-testid={`${testidPrefix}-view-report-${s.key}`}
                   >

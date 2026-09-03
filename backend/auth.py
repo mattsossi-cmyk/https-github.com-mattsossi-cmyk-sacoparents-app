@@ -1183,11 +1183,19 @@ async def send_verify_email_code(
     email = body.email.lower().strip()
     ip = _client_ip(request)
 
+    # Rate limit on IP AND on target email, so two parents behind the same
+    # NAT (shared home Wi-Fi) don't lock each other out when each requests
+    # their own verification code. We only 429 when BOTH signals are hot:
+    # a single IP hammering many accounts still hits the IP cap, but the
+    # common "co-parents sharing an egress" case survives.
     one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
-    recent = await db.magic_links.count_documents(
+    recent_by_ip = await db.magic_links.count_documents(
         {"ip": ip, "mode": "verify_code", "created_at": {"$gte": one_hour_ago}}
     )
-    if recent >= CODE_RATE_LIMIT_PER_HOUR:
+    recent_by_email = await db.magic_links.count_documents(
+        {"email": email, "mode": "verify_code", "created_at": {"$gte": one_hour_ago}}
+    )
+    if recent_by_ip >= CODE_RATE_LIMIT_PER_HOUR and recent_by_email >= CODE_RATE_LIMIT_PER_HOUR:
         raise HTTPException(
             status_code=429,
             detail="Too many verification requests. Please try again later.",
@@ -1293,11 +1301,15 @@ async def request_password_reset_code(
     email = body.email.lower().strip()
     ip = _client_ip(request)
 
+    # See `send_verify_email_code` — same shared-NAT rationale.
     one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
-    recent = await db.magic_links.count_documents(
+    recent_by_ip = await db.magic_links.count_documents(
         {"ip": ip, "mode": "reset_code", "created_at": {"$gte": one_hour_ago}}
     )
-    if recent >= CODE_RATE_LIMIT_PER_HOUR:
+    recent_by_email = await db.magic_links.count_documents(
+        {"email": email, "mode": "reset_code", "created_at": {"$gte": one_hour_ago}}
+    )
+    if recent_by_ip >= CODE_RATE_LIMIT_PER_HOUR and recent_by_email >= CODE_RATE_LIMIT_PER_HOUR:
         raise HTTPException(
             status_code=429,
             detail="Too many reset requests. Please try again later.",

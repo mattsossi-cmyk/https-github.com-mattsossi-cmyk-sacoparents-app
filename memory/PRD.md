@@ -280,6 +280,28 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-03-02 — Code review remediation
+- **[MEDIUM] `CodeInput.jsx` completion guard fix**: dropped the
+  permanently-false `!joined.includes("")` clause. `onComplete` now
+  fires reliably when all six OTP boxes are filled — auto-focus to
+  password field in `ForgotPassword` and auto-verify in
+  `VerificationBanner` work as designed. Added regression suite
+  `CodeInput.test.jsx` (3 cases: digit-by-digit fill, SMS-autofill
+  paste into box 0, non-digit stripping).
+- **[LOW] URL builder helper**: extracted
+  `frontend/src/lib/jointArtefactUrls.js` (`jointReportUrl`,
+  `jointAgreementUrl`). Consolidated three previously-duplicated
+  hand-built URL strings in `ShareReportQuickAction`,
+  `JointAlignmentPromoCard`, `AssessmentHistoryCard`.
+- **[LOW] Rate limit hardening for shared NAT**: `/verify-email/send-
+  code` and `/password-reset/request-code` now require BOTH per-IP AND
+  per-email counts to exceed `CODE_RATE_LIMIT_PER_HOUR` before
+  returning 429. Two co-parents on the same home Wi-Fi can each
+  request their own code without locking each other out; a single IP
+  hammering many accounts still hits the cap.
+- Backend regressions: all 87 iter tests green.
+- Frontend regressions: 3/3 new `CodeInput` tests green.
+
 ### 2026-03-01 — Third access point: Assessment History card on Dashboard
 - New `frontend/src/components/AssessmentHistoryCard.jsx` — compact
   table of every completed prep module. Each row exposes a right-side
