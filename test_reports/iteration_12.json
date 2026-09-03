@@ -1,0 +1,59 @@
+{
+  "summary": "Bug-verification pass for user report 'circles not visible'. Verified end-to-end on PRODUCTION (https://align-report.emergent.host) via fresh @testmail.dev parent registration. All circle-nav elements render and route correctly on both /dashboard and /hub (desktop + mobile). Confirmed the custom domain https://sacoparentsalign.com and https://www.sacoparentsalign.com are still served by Squarespace with a 'Coming Soon' parked page and are NOT connected to the Emergent deployment. Root cause of user's report = environmental: they were viewing the parked Squarespace domain, not the live app. No code fix needed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_evidence": {
+    "production_bundle": {
+      "url": "https://align-report.emergent.host/static/js/main.dd53104c.js",
+      "size_bytes": 831187,
+      "contains_circle-uniform": true,
+      "contains_circle-safety": true,
+      "contains_FAMILY_VIOLENCE": true,
+      "contains_bubble-": true
+    },
+    "custom_domain": {
+      "sacoparentsalign.com": "HTTP 301 -> www.sacoparentsalign.com (server: Squarespace)",
+      "www.sacoparentsalign.com": "HTTP 200 (server: Squarespace), <title>Coming Soon</title>",
+      "sacoparentsalign.com/health": "HTTP 301 (Squarespace redirect, not app health JSON)",
+      "conclusion": "Custom domain is a Squarespace-parked 'Coming Soon' page; NOT connected to Emergent deployment"
+    },
+    "production_ui_tests_desktop_1440x900": {
+      "registration": "SUCCESS with data-testid selectors (name-input, email-input, password-input, register-tab, auth-submit-btn) -> redirected to /dashboard",
+      "/dashboard": {"circle-nav-section": 1, "circle-uniform": 1, "circle-safety": 1, "bubbles": 16, "circle-nav-mobile": 1, "h1": "Dashboard"},
+      "/hub": {"circle-uniform": 1, "circle-safety": 1, "bubbles": 16, "h1": "Joint Report Builder"},
+      "click_circle-uniform": "-> /joint/new?subjects=communication,school,medical,psychological,schedule,routine,conflict PASS",
+      "click_bubble-school": "-> /joint/new?subject=school PASS",
+      "click_bubble-__complete": "-> /hub/complete PASS",
+      "click_circle-safety (parent role)": "-> /dashboard?contact=professional; 'professional' text visible on page PASS"
+    },
+    "production_ui_tests_mobile_390x800": {
+      "/hub": {"circle-nav-mobile": 1, "circle-uniform": 1, "circle-safety": 1, "bubbles": 16}
+    }
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Inform user: their custom domain sacoparentsalign.com is still parked on Squarespace with a 'Coming Soon' page — DNS/hosting for the apex + www must be pointed to the Emergent deployment (currently at align-report.emergent.host) OR they must use the emergent.host URL until DNS is switched.",
+    "No frontend code changes required — circles render and route correctly on production for authenticated parent users on both desktop and mobile."
+  ],
+  "critical_code_review_comments": [
+    "CircleNav testids and routing behavior on prod are consistent with the source in frontend/src/components/CircleNav.jsx (parent branch for circle-safety correctly routes to /dashboard?contact=professional, and Dashboard.jsx auto-opens the contact-professional form)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100%"},
+  "test_credentials": "Fresh registration testc_1788476289@testmail.dev / TestPass123! (parent role) — production ephemeral test account.",
+  "seed_data_creation": "None (one throwaway parent registration on production).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "User's original 'circles missing' complaint is environmental. Production app at https://align-report.emergent.host renders circle-nav flawlessly (verified with fresh parent registration). Custom domain sacoparentsalign.com (both apex and www) is a Squarespace 'Coming Soon' parked page. No React code fix is warranted; the fix belongs at the DNS/hosting layer.",
+  "rca of the issue": {
+    "reported_symptom": "'I don't see the circle buttons for the unified report and family violence report'",
+    "root_cause": "User was viewing https://sacoparentsalign.com (custom domain) which is still parked on Squarespace serving a 'Coming Soon' page (HTTP 301 apex -> www; www returns 200 with <title>Coming Soon</title>, server header: Squarespace). The live React app is deployed at https://align-report.emergent.host where the circles render correctly.",
+    "reproduction_of_working_state": "1) Open https://align-report.emergent.host/auth 2) Register a fresh parent account 3) Land on /dashboard -> circle-uniform + circle-safety + 8 bubbles visible 4) Navigate to /hub -> same. All click routes verified (see verification_evidence).",
+    "reproduction_of_broken_state": "1) Open https://sacoparentsalign.com -> 301 to www 2) www.sacoparentsalign.com returns a Squarespace 'Coming Soon' page — the React app never loads, hence no circles.",
+    "mitigation": "Point sacoparentsalign.com DNS/hosting to the Emergent deployment (or use the emergent.host domain). No frontend code change required."
+  }
+}
