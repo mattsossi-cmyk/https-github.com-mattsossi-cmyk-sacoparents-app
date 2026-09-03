@@ -89,3 +89,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Imported sacoparentsapp.online data is used ONLY inside Joint Reports (user decision — no individual views).
 - Backend case endpoints intentionally kept for legacy data; no new cases can be created via UI.
 - QA: /app/test_reports/iteration_10.json — frontend 100% (6/6): circles render in brand colors, /new cleanly redirects to /, import card works with graceful 400 on bogus codes, legacy cases show view/delete only, hub + joint flows unaffected. Follow-up fixes: link code enforced to exactly 8 chars; duplicate empty-state button in CompleteReport removed.
+
+## Deployment Readiness (2026-09-02)
+- Deployment agent scan: PASS. Fixed 2 N+1 blockers (list_joint_reports batched invitation lookup via $in; list_connections batched user lookup via $in) — verified live (both endpoints 200 with correct data) and 87/87 pytest green.
+- /health returns 200; all env vars in .env; no hardcoded secrets; CORS/admin seed/supervisor all OK.
+- Added /app/.gitignore (keeps memory/test_credentials.md and env files out of git).

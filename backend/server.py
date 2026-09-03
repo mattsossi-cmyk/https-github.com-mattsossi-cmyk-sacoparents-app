@@ -850,13 +850,12 @@ async def list_joint_reports(user=Depends(get_current_user)):
         ]},
         {"_id": 0},
     ).sort("created_at", -1).to_list(200)
-    out = []
-    for d in docs:
-        inv = None
-        if d.get("created_by") == uid:
-            inv = await db.invitations.find_one({"report_id": d["id"], "status": "pending"}, {"_id": 0})
-        out.append(joint_public(d, user, inv))
-    return out
+    own_ids = [d["id"] for d in docs if d.get("created_by") == uid]
+    inv_map = {}
+    if own_ids:
+        async for i in db.invitations.find({"report_id": {"$in": own_ids}, "status": "pending"}, {"_id": 0}):
+            inv_map.setdefault(i["report_id"], i)
+    return [joint_public(d, user, inv_map.get(d["id"]) if d.get("created_by") == uid else None) for d in docs]
 
 
 async def get_joint_report_doc(rid, user):
@@ -936,11 +935,16 @@ async def share_joint_report(rid: str, body: ShareIn, user=Depends(get_current_u
 @api.get("/joint/connections")
 async def list_connections(user=Depends(get_current_user)):
     docs = await db.connections.find({"user_ids": user["_id"]}, {"_id": 0}).to_list(100)
+    other_ids = [oid for c in docs for oid in [next((u for u in c["user_ids"] if u != user["_id"]), None)] if oid]
+    user_map = {}
+    if other_ids:
+        async for u in db.users.find({"_id": {"$in": other_ids}}, {"name": 1, "email": 1}):
+            user_map[u["_id"]] = u
     out = []
     for c in docs:
         other_id = next((u for u in c["user_ids"] if u != user["_id"]), None)
-        other = await db.users.find_one({"_id": other_id}, {"_id": 0, "name": 1, "email": 1})
-        out.append({"id": c["id"], "other_name": (other or {}).get("name", "Co-parent"), "other_email": (other or {}).get("email", ""), "child_name": c.get("child_name", "")})
+        other = user_map.get(other_id) or {}
+        out.append({"id": c["id"], "other_name": other.get("name", "Co-parent"), "other_email": other.get("email", ""), "child_name": c.get("child_name", "")})
     return out
 
 
