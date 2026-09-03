@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Trash2, CheckCircle2, Circle, Mail, Scale, ShieldAlert, Link2, Unlink } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
+import { CircleNav } from "@/components/CircleNav";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const [linkCode, setLinkCode] = useState("");
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const load = () => {
     api.get("/cases").then((r) => setCases(r.data)).catch((e) => toast.error(formatApiError(e)));
@@ -93,6 +95,10 @@ export default function Dashboard() {
     } catch (e) { toast.error(formatApiError(e)); }
   };
 
+  useEffect(() => {
+    if (searchParams.get("contact") === "professional") openProForm();
+  }, []);
+
   const openProForm = async () => {
     setShowProForm(!showProForm);
     if (!showProForm && professionals.length === 0) {
@@ -157,6 +163,10 @@ export default function Dashboard() {
           <h1 className="text-4xl font-semibold" data-testid="dash-heading">Dashboard</h1>
           <p className="text-muted-foreground mt-2" data-testid="dash-subtext">Your individual assessments come from sacoparentsapp.online. Invite your co-parent to explore one issue together.</p>
         </div>
+
+        <section data-testid="circle-nav-section">
+          <CircleNav isPro={user?.role === "professional"} />
+        </section>
 
         <div className="grid md:grid-cols-2 gap-4" data-testid="tools-grid">
           <div className="bg-white border border-border rounded-lg p-6" data-testid="individual-tools-card">

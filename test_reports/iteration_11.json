@@ -1,0 +1,24 @@
+{
+  "summary": "Frontend-only verification of Hub/Dashboard CircleNav redesign. Registered fresh parent + professional accounts. All requested flows verified end-to-end: /hub thin page + circle-nav (uniform + safety + 8 bubbles) renders correctly; Dashboard now shows circle-nav-section as main action area with existing tools grid intact; uniform circle -> /joint/new?subjects=all-7; each bubble (school confirmed, all 8 present) -> /joint/new?subject=<key> (wizard loads with joint-new-page, joint-steps, joint-child-input etc.); bubble-__complete -> /hub/complete; parent safety circle -> /dashboard?contact=professional AND auto-opens the pro form (pro-contact-form and pro-select visible without clicking contact-professional-btn); pro subtext differs from parent subtext (contains 'professional-facilitated'); pro safety circle -> /joint/new?subject=safety; mobile viewport 390x844 shows circle-nav-mobile (grid) with circle-uniform-mobile/circle-safety-mobile/bubble-mobile-*. Old testids (hub-main-cluster, hub-topic-*, hub-safety-circle, hub-create-btn) confirmed removed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard/Hub CircleNav", "issues": ["Minor React hydration warning in dev tools instrumentation: '<span> cannot be a child of <option>' comes from ve-tagger wrapping option children in a <span> — cosmetic dev-only warning, not from user code; does not break functionality."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CircleNav.jsx uses color.replace('text-','bg-') on the color className string to derive divider color — works for current 'text-brand-*' values but is fragile if color prop changes shape.",
+    "The dev-only ve-tagger warning about <span> inside <option> is not from CircleNav but from Dashboard's professionals <select><option> list; safe to ignore in production build."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "test_credentials": "Registered ephemeral parent_<ts>@testmail.dev / pro_<ts>@testmail.dev with TestPass1234!",
+  "seed_data_creation": "None (used fresh registrations)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Hub redesign fully verified. New testids: circle-nav, circle-nav-desktop, circle-nav-mobile, circle-uniform(-mobile), circle-safety(-mobile), bubble-<key> (7 subjects + __complete), bubble-mobile-<key>, circle-nav-section (on Dashboard). Parent safety -> /dashboard?contact=professional auto-opens pro form via useEffect on searchParams (openProForm at ~L100 in Dashboard.jsx). Pro form testids: pro-contact-form, pro-select, contact-professional-btn (pro-message-input / pro-submit-btn NOT present — form uses inline inputs and 'Send Request to Professional' button)."
+}
