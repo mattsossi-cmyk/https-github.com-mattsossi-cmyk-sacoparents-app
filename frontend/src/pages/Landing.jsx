@@ -39,7 +39,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background" data-testid="landing-page">
       <header className="no-print max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
         <div data-testid="brand">
-          <BrandLogo />
+          <BrandLogo sub="Step Two" />
         </div>
         <div className="flex items-center gap-3">
           <Link to="/auth" data-testid="nav-login-link">
