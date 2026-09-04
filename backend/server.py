@@ -1,6 +1,11 @@
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
+from pathlib import Path
 
-load_dotenv(override=True)
+load_dotenv()  # platform/Kubernetes env vars take precedence
+
+# The preview supervisor injects a stale APP_URL; the .env file carries the correct
+# value in preview and the platform-managed value in production.
+_APP_URL_FILE = dotenv_values(Path(__file__).resolve().parent / ".env").get("APP_URL")
 
 import os
 import uuid
@@ -629,7 +634,7 @@ class PatchInvitationIn(BaseModel):
 
 
 def app_url():
-    return os.environ["APP_URL"].rstrip("/")
+    return (_APP_URL_FILE or os.environ["APP_URL"]).rstrip("/")
 
 
 def new_code():
