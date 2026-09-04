@@ -469,22 +469,24 @@ function Hero() {
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center fade-up">
         <Eyebrow>The SA CoParents App</Eyebrow>
-        <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#1A1330] leading-[1.05] tracking-tight">
-          Let&rsquo;s Start With
-          <br />
-          <span className="text-[#3D1A78]">You And Your Children.</span>
-        </h1>
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] mt-6 leading-relaxed">
-          Every family is different. SA CoParents helps you think through what
-          is happening, identify what your child may need, and explore
-          practical options for moving forward.
-        </p>
-        <p
-          className="max-w-2xl mx-auto text-sm sm:text-base text-[#4B4567] mt-3 leading-relaxed italic"
-          data-testid="hero-reassurance-copy"
+        <h1
+          className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-[1.15] tracking-[0.02em] uppercase"
+          data-testid="hero-headline"
         >
-          There are no perfect answers. You don&rsquo;t have to agree with the
-          other parent. Start by telling us what you see.
+          With <span className="text-[#3D1A78]">Reflection.</span>
+          <br />
+          Build <span className="text-[#3D1A78]">Alignment.</span>
+          <br />
+          Create Better <span className="text-[#3D1A78]">Agreements.</span>
+        </h1>
+        <p
+          className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] mt-8 leading-relaxed"
+          data-testid="hero-supporting-copy"
+        >
+          SA CoParents helps parents independently identify their child&rsquo;s
+          needs, concerns and parenting priorities, discover areas of shared
+          understanding, identify differences without assigning blame, and
+          explore options and resources for moving forward.
         </p>
 
         {/* Primary action — the situation picker IS the CTA. Everything
