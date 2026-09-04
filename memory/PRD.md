@@ -280,6 +280,27 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-03-04 — Landing hero copy refresh (deploy prep)
+- `Landing.jsx` hero (`Hero()`): replaced "Let's Start With You And Your
+  Children." headline + supporting paragraph with the parent-facing
+  tagline requested by the founder:
+    - **WITH REFLECTION.**
+    - **BUILD ALIGNMENT.**
+    - **CREATE BETTER AGREEMENTS.**
+  Followed by: *"SA CoParents helps parents independently identify their
+  child's needs, concerns and parenting priorities, discover areas of
+  shared understanding, identify differences without assigning blame,
+  and explore options and resources for moving forward."*
+- Styling: serif, uppercase, tracking-tight; purple `#3D1A78` accent on
+  *Reflection / Alignment / Agreements*. Removed the italic
+  reassurance line to keep the intro focused. New `data-testid`s:
+  `hero-headline`, `hero-supporting-copy`.
+- Frontend compiled clean (only pre-existing intentional ESLint
+  warnings). Verified via screenshot on the preview URL.
+- Dispatched to deployer alongside the Joint Reports Picker, 6-digit
+  OTP flows, Foundation Statement Demo, Demo→Real upgrade CTAs, and
+  Assessment History joint-report links.
+
 ### 2026-03-03 — Joint Reports Picker (two-circle chooser + topic grid)
 - New `frontend/src/pages/JointReportsPicker.jsx` route at
   `/joint-reports` (protected). Two big primary circles
