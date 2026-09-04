@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import {
   HeartHandshake, Shield, Heart, GraduationCap, Stethoscope, Brain,
-  Calendar, RefreshCcw, ShieldAlert, Layers,
+  Calendar, RefreshCcw, ShieldAlert, Layers, Lock,
 } from "lucide-react";
 
 const ALL_SUBJECTS = "communication,school,medical,psychological,schedule,routine,conflict";
@@ -17,7 +17,7 @@ const BUBBLES = [
   { key: "__complete", label: "Complete Report", color: "bg-brand-purple", icon: Layers, to: "/hub/complete" },
 ];
 
-function MainBadge({ to, ring, color, icon: Icon, title, tagline, testid }) {
+function MainBadge({ to, ring, color, icon: Icon, title, tagline, notice, testid }) {
   return (
     <Link to={to} className="group block" data-testid={testid}>
       <div className={`h-52 w-52 lg:h-64 lg:w-64 rounded-full bg-white border-[10px] ${ring} shadow-xl flex flex-col items-center justify-center text-center p-5 group-hover:scale-105 group-hover:shadow-2xl transition-all duration-200`}>
@@ -37,6 +37,11 @@ function MainBadge({ to, ring, color, icon: Icon, title, tagline, testid }) {
             <div key={t}>{t}</div>
           ))}
         </div>
+        {notice && (
+          <div className="mt-2 text-[9px] lg:text-[10px] text-muted-foreground italic leading-tight flex items-center justify-center gap-1" data-testid={`${testid}-notice`}>
+            <Lock className="h-2.5 w-2.5 shrink-0" /> {notice}
+          </div>
+        )}
       </div>
     </Link>
   );
@@ -58,6 +63,7 @@ export function CircleNav({ isPro }) {
             icon={HeartHandshake}
             title={["UNIFORM", "ASSESSMENT"]}
             tagline={["Understand. Align.", "Support Your Child."]}
+            notice="Private by default — shared only by your choice"
             testid="circle-uniform"
           />
           <MainBadge
@@ -67,6 +73,7 @@ export function CircleNav({ isPro }) {
             icon={Shield}
             title={["FAMILY VIOLENCE", "ASSESSMENT"]}
             tagline={["Prioritize Safety.", "Plan for Protection."]}
+            notice="Shared only with your designated professional"
             testid="circle-safety"
           />
         </div>
@@ -100,6 +107,7 @@ export function CircleNav({ isPro }) {
             icon={HeartHandshake}
             title={["UNIFORM", "ASSESSMENT"]}
             tagline={["Understand. Align.", "Support Your Child."]}
+            notice="Private by default — shared only by your choice"
             testid="circle-uniform-mobile"
           />
           <MainBadge
@@ -109,6 +117,7 @@ export function CircleNav({ isPro }) {
             icon={Shield}
             title={["FAMILY VIOLENCE", "ASSESSMENT"]}
             tagline={["Prioritize Safety.", "Plan for Protection."]}
+            notice="Shared only with your designated professional"
             testid="circle-safety-mobile"
           />
         </div>
@@ -123,6 +132,11 @@ export function CircleNav({ isPro }) {
           ))}
         </div>
       </div>
+
+      <p className="mt-6 max-w-2xl mx-auto text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5 px-4" data-testid="circle-nav-confidentiality">
+        <Lock className="h-3.5 w-3.5 shrink-0" />
+        Every focused report starts by privately inviting your co-parent — individual answers are never shown to the other parent; only the generated report is shared. Family violence assessments go only to your designated professional.
+      </p>
     </div>
   );
 }

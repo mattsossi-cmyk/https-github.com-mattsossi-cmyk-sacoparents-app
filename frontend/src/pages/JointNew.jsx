@@ -8,6 +8,7 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
 
 export default function JointNew() {
   const [subjects, setSubjects] = useState([]);
@@ -269,6 +270,7 @@ export default function JointNew() {
                     Each parent keeps a separate login. Your co-parent receives an invitation code — never share your password.
                   </p>
                 </div>
+                <div className="mt-6" data-testid="jointnew-confidentiality"><ConfidentialityNotice /></div>
                 <div className="mt-8 flex justify-between">
                   <button type="button" onClick={() => setStep(1)} className="text-sm text-muted-foreground hover:text-foreground" data-testid="invite-back-btn">Back</button>
                   <Button onClick={submit} disabled={!coName.trim() || !coEmail.trim() || (isPro && (!paName.trim() || !paEmail.trim())) || (isSafety && !isPro && !mediatorEmail.trim()) || busy} className="gap-2" data-testid="send-invitation-btn">

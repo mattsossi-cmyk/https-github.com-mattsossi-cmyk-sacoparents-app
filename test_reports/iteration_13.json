@@ -1,0 +1,28 @@
+{
+  "summary": "Verified the JUST-IMPLEMENTED changes end-to-end on the preview environment. Backend: full pytest suite 97 passed / 1 error (error is admin lockout 429 — expected, unrelated). All 5 tests in test_pro_share_updates.py green. Frontend: registered fresh accounts and confirmed (1) circle-uniform-notice + circle-safety-notice + circle-nav-confidentiality render on /dashboard and /hub, (2) /joint/new invite step shows jointnew-confidentiality with a link to /privacy, (3) FV contact-professional form has NO pro-coparent-email-input, shows pro-privacy-note, and submits successfully with only professional + child_name (backend confirmed co_parent_email=None), (4) professional dashboard renders per-request card with pro-prepare-email-a-<id> + pro-prepare-email-b-<id>, prepare button correctly disabled until both emails filled, prepare succeeds and status flips to 'prepared', (5) completed joint report page shows share-email-input + share-professional-btn labeled 'Email to professional' and toast 'Shared with Dr Pro' after submit.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "verification_evidence": {
+    "pytest": {"passed": 97, "errors": 1, "error_reason": "admin login 429 rate-limit (pre-existing, unrelated to this task)", "junit": "/app/test_reports/pytest/iter13_results.xml"},
+    "circle_notices": {
+      "/dashboard": {"circle-uniform-notice": "Private by default — shared only by your choice", "circle-safety-notice": "Shared only with your designated professional", "circle-nav-confidentiality": "Every focused report starts by privately inviting your co-parent..."},
+      "/hub": "all three testids visible with same text"
+    },
+    "jointnew_confidentiality": "PRESENT on invite step (step 3) with anchor to /privacy",
+    "fv_form": {"pro-coparent-email-input": "REMOVED (null in DOM)", "pro-privacy-note": "No need for the other parent's email — the professional collects both parents' details privately. Responses are never shared between the parties.", "submit_with_no_coparent_email": "SUCCESS toast 'Request sent to the professional'; backend GET /joint/professional-requests returns co_parent_email=null"},
+    "pro_prepare_ui": {"pro-prepare-email-a-<id>": "PRESENT", "pro-prepare-email-b-<id>": "PRESENT", "pro-prepare-note-<id>": "Each parent receives their own private assessment link — responses are never shared between the parties.", "btn_disabled_when_empty": true, "btn_enabled_when_both_filled": true, "after_prepare_status": "prepared"},
+    "report_share": {"share-email-input": "PRESENT", "share-professional-btn label": "Email to professional", "success_toast": "Shared with Dr Pro"}
+  },
+  "test_report_links": ["/app/backend/tests/test_pro_share_updates.py", "/app/test_reports/pytest/iter13_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Minor pre-existing UX issue (NOT part of this task): Dashboard.jsx useEffect that opens the FV form when ?contact=professional is present runs only on first mount ([] deps). Clicking circle-safety from within /dashboard uses react-router <Link>, so the URL changes but the component does not remount and the form does not auto-open. Users must full-refresh /dashboard?contact=professional or click Contact-a-Professional button. Consider adding [searchParams] to the effect's deps and guarding against toggling if already open. Impact: minor, not blocking any of the tested behaviors."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (97/97 relevant, admin-lockout error excluded)", "frontend": "100%"},
+  "test_credentials": "Ephemeral testmail.dev accounts created during test (parent + professional, TestPass123!). No credential files modified.",
+  "seed_data_creation": "None persistent — throwaway registrations only.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All new work in this iteration (circle notices, FV form co-parent-email removal, pro prepare emails UI, share-email 'Email to professional' button) verified working on preview. Backend regression clean. The one useEffect quirk on Dashboard.jsx is pre-existing and orthogonal to this task."
+}

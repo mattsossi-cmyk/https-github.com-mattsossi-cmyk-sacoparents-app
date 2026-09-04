@@ -944,6 +944,22 @@ async def share_joint_report(rid: str, body: ShareIn, user=Depends(get_current_u
     if not pro:
         raise HTTPException(status_code=404, detail="No professional account found with that email")
     await db.joint_reports.update_one({"id": rid}, {"$addToSet": {"shared_with": pro["_id"]}})
+    try:
+        await send_email(
+            to=pro["email"],
+            subject=f"A joint report has been shared with you - {EMAIL_FROM_NAME}",
+            html=(
+                '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
+                f"<p><strong>{escape(user.get('name', 'A parent'))}</strong> has shared the "
+                f"{escape(doc.get('subject_label', 'Joint Report'))} for <strong>{escape(doc.get('child_name') or 'their child')}</strong> with you.</p>"
+                f'<p><a href="{app_url()}/joint/{rid}" style="color:#5B2A86">Open the shared report</a></p>'
+                f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
+                "</td></tr></table>"
+            ),
+        )
+    except Exception:
+        logger.warning(f"Share notification not sent to {pro['email']}")
     return {"ok": True, "shared_with": pro.get("name", body.email.lower())}
 
 
@@ -1243,8 +1259,14 @@ async def create_agreement(body: AgreementIn, user=Depends(get_current_user)):
 class ProRequestIn(BaseModel):
     professional_email: EmailStr
     child_name: str
-    co_parent_name: str
-    co_parent_email: EmailStr
+    co_parent_name: str = ""
+    co_parent_email: EmailStr | None = None
+
+
+class PrepareIn(BaseModel):
+    parent_a_email: EmailStr | None = None
+    parent_b_email: EmailStr | None = None
+    parent_b_name: str | None = None
 
 
 @api.get("/professionals")
@@ -1263,7 +1285,7 @@ async def create_pro_request(body: ProRequestIn, user=Depends(get_current_user))
         "parent_name": user.get("name", ""),
         "parent_email": user["email"],
         "co_parent_name": body.co_parent_name.strip(),
-        "co_parent_email": body.co_parent_email.lower(),
+        "co_parent_email": body.co_parent_email.lower() if body.co_parent_email else None,
         "child_name": body.child_name.strip(),
         "professional_id": pro["_id"],
         "professional_name": pro.get("name", ""),
@@ -1280,8 +1302,9 @@ async def create_pro_request(body: ProRequestIn, user=Depends(get_current_user))
                 f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
                 f"<p><strong>{escape(user.get('name', 'A parent'))}</strong> has asked you to prepare a joint "
                 f"family violence co-parenting assessment regarding <strong>{escape(req['child_name'])}</strong>.</p>"
-                f"<p>Parents: {escape(req['parent_name'])} ({escape(req['parent_email'])}) and "
-                f"{escape(req['co_parent_name'])} ({escape(req['co_parent_email'])}).</p>"
+                f"<p>Requesting parent: {escape(req['parent_name'])} ({escape(req['parent_email'])})."
+                + (f" Other parent: {escape(req['co_parent_name'])} ({escape(req['co_parent_email'])})." if req.get("co_parent_email") else " The other parent's details are collected privately when you prepare the assessment.")
+                + "</p>"
                 "<p>Both parents' individual responses remain confidential and are not shared between the "
                 "parties. You will see the completed comparison once both parents finish.</p>"
                 f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open your dashboard to prepare the assessment</a></p>'
@@ -1303,7 +1326,7 @@ async def list_pro_requests(user=Depends(get_current_user)):
         {
             "id": d["id"], "child_name": d["child_name"], "parent_name": d["parent_name"],
             "parent_email": d["parent_email"], "co_parent_name": d["co_parent_name"],
-            "co_parent_email": d["co_parent_email"], "professional_name": d.get("professional_name", ""),
+            "co_parent_email": d.get("co_parent_email"), "professional_name": d.get("professional_name", ""),
             "status": d["status"], "created_at": d["created_at"],
         }
         for d in docs
@@ -1311,7 +1334,7 @@ async def list_pro_requests(user=Depends(get_current_user)):
 
 
 @api.post("/joint/professional-requests/{req_id}/prepare")
-async def prepare_pro_request(req_id: str, user=Depends(get_current_user)):
+async def prepare_pro_request(req_id: str, body: PrepareIn | None = None, user=Depends(get_current_user)):
     if user.get("role") != "professional":
         raise HTTPException(status_code=403, detail="Only professional accounts can prepare assessments")
     req = await db.professional_requests.find_one({"id": req_id, "professional_id": user["_id"]})
@@ -1319,6 +1342,11 @@ async def prepare_pro_request(req_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Request not found")
     if req["status"] != "pending":
         raise HTTPException(status_code=400, detail="This request has already been prepared")
+    pa_email = str(body.parent_a_email).lower() if body and body.parent_a_email else req["parent_email"]
+    pb_email = str(body.parent_b_email).lower() if body and body.parent_b_email else (req.get("co_parent_email") or "")
+    pb_name = ((body.parent_b_name or "").strip() if body else "") or req.get("co_parent_name") or "Co-parent"
+    if not pb_email:
+        raise HTTPException(status_code=400, detail="Please provide both parents' email addresses so each receives their private assessment")
     rid = str(uuid.uuid4())
     safety_subjects = sorted(SAFETY_SUBJECT_KEYS)
     doc = {
@@ -1335,16 +1363,16 @@ async def prepare_pro_request(req_id: str, user=Depends(get_current_user)):
         "professional_name": user.get("name", ""),
         "shared_with": [],
         "participants": {
-            "a": {"user_id": None, "name": req["parent_name"], "email": req["parent_email"]},
-            "b": {"user_id": None, "name": req["co_parent_name"], "email": req["co_parent_email"]},
+            "a": {"user_id": None, "name": req["parent_name"], "email": pa_email},
+            "b": {"user_id": None, "name": pb_name, "email": pb_email},
         },
         "responses": {},
         "status": "pending_invite",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.joint_reports.insert_one(doc)
-    await create_invitation(rid, "a", req["parent_name"], req["parent_email"], user.get("name", "A professional"), req["child_name"], doc["subject_label"])
-    await create_invitation(rid, "b", req["co_parent_name"], req["co_parent_email"], user.get("name", "A professional"), req["child_name"], doc["subject_label"])
+    await create_invitation(rid, "a", req["parent_name"], pa_email, user.get("name", "A professional"), req["child_name"], doc["subject_label"])
+    await create_invitation(rid, "b", pb_name, pb_email, user.get("name", "A professional"), req["child_name"], doc["subject_label"])
     await db.professional_requests.update_one(
         {"id": req_id},
         {"$set": {"status": "prepared", "report_id": rid, "prepared_at": datetime.now(timezone.utc).isoformat()}},

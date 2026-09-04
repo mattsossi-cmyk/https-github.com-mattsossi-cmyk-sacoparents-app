@@ -19,7 +19,8 @@ export default function Dashboard() {
   const [showProForm, setShowProForm] = useState(false);
   const [professionals, setProfessionals] = useState([]);
   const [proRequests, setProRequests] = useState([]);
-  const [proForm, setProForm] = useState({ professional_email: "", child_name: "", co_parent_name: "", co_parent_email: "" });
+  const [proForm, setProForm] = useState({ professional_email: "", child_name: "", co_parent_name: "" });
+  const [prepEmails, setPrepEmails] = useState({});
   const [extLink, setExtLink] = useState(null);
   const [linkCode, setLinkCode] = useState("");
   const { user, logout } = useAuth();
@@ -96,8 +97,8 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (searchParams.get("contact") === "professional") openProForm();
-  }, []);
+    if (searchParams.get("contact") === "professional" && !showProForm) openProForm();
+  }, [searchParams]);
 
   const openProForm = async () => {
     setShowProForm(!showProForm);
@@ -115,7 +116,7 @@ export default function Dashboard() {
       await api.post("/joint/professional-requests", proForm);
       toast.success("Request sent to the professional");
       setShowProForm(false);
-      setProForm({ professional_email: "", child_name: "", co_parent_name: "", co_parent_email: "" });
+      setProForm({ professional_email: "", child_name: "", co_parent_name: "" });
       load();
     } catch (e) {
       toast.error(formatApiError(e));
@@ -125,8 +126,10 @@ export default function Dashboard() {
   };
 
   const prepareRequest = async (reqId) => {
+    const emails = prepEmails[reqId] || {};
+    const payload = emails.a?.trim() && emails.b?.trim() ? { parent_a_email: emails.a.trim(), parent_b_email: emails.b.trim() } : undefined;
     try {
-      const { data } = await api.post(`/joint/professional-requests/${reqId}/prepare`);
+      const { data } = await api.post(`/joint/professional-requests/${reqId}/prepare`, payload);
       toast.success("Assessment prepared — invitations sent to both parents");
       navigate(`/joint/${data.report_id}`);
     } catch (e) { toast.error(formatApiError(e)); }
@@ -211,7 +214,7 @@ export default function Dashboard() {
           <div className="bg-white border-2 border-red-200 rounded-lg p-6" data-testid="fv-contact-card">
             <p className="text-xs uppercase tracking-widest text-red-700 font-bold">Family Violence Pathway</p>
             <h2 className="text-2xl font-semibold mt-1">Contact a Professional</h2>
-            <p className="text-sm text-muted-foreground mt-2 mb-5">Have a professional prepare the joint family violence co-parenting assessment. Responses are not shared between the parties.</p>
+            <p className="text-sm text-muted-foreground mt-2 mb-5">A designated professional prepares the joint family violence co-parenting assessment — no need to provide the other parent's email. Responses are never shared between the parties.</p>
             <Button onClick={openProForm} className="gap-2 bg-red-700 hover:bg-red-800 text-white" data-testid="contact-professional-btn">
               <ShieldAlert className="h-4 w-4" /> Contact a Professional
             </Button>
@@ -229,11 +232,11 @@ export default function Dashboard() {
                   ))}
                 </select>
                 <Input placeholder="Child's first name or initials" value={proForm.child_name} onChange={(e) => setProForm({ ...proForm, child_name: e.target.value })} data-testid="pro-child-input" />
-                <Input placeholder="Other parent's first name" value={proForm.co_parent_name} onChange={(e) => setProForm({ ...proForm, co_parent_name: e.target.value })} data-testid="pro-coparent-name-input" />
-                <Input type="email" placeholder="Other parent's email" value={proForm.co_parent_email} onChange={(e) => setProForm({ ...proForm, co_parent_email: e.target.value })} data-testid="pro-coparent-email-input" />
+                <Input placeholder="Other parent's first name (optional)" value={proForm.co_parent_name} onChange={(e) => setProForm({ ...proForm, co_parent_name: e.target.value })} data-testid="pro-coparent-name-input" />
+                <p className="text-xs text-muted-foreground" data-testid="pro-privacy-note">No need for the other parent's email — the professional collects both parents' details privately. Responses are never shared between the parties.</p>
                 <Button
                   onClick={submitProRequest}
-                  disabled={!proForm.professional_email || !proForm.child_name.trim() || !proForm.co_parent_name.trim() || !proForm.co_parent_email.trim() || busy}
+                  disabled={!proForm.professional_email || !proForm.child_name.trim() || busy}
                   className="w-full bg-red-700 hover:bg-red-800 text-white"
                   data-testid="pro-request-submit-btn"
                 >
@@ -347,12 +350,21 @@ export default function Dashboard() {
                 <div key={r.id} className="bg-white border border-red-200 rounded-lg p-6" data-testid={`pro-request-${r.id}`}>
                   <p className="text-xs uppercase tracking-widest text-red-700 font-semibold">Family Violence Assessment</p>
                   <h3 className="text-xl font-semibold mt-1">{r.child_name ? `For ${r.child_name}` : "Joint Assessment"}</h3>
-                  <p className="text-sm text-muted-foreground mt-2">{r.parent_name} ({r.parent_email}) and {r.co_parent_name} ({r.co_parent_email})</p>
+                  <p className="text-sm text-muted-foreground mt-2">{r.parent_name} ({r.parent_email}){r.co_parent_email ? <> and {r.co_parent_name || "the other parent"} ({r.co_parent_email})</> : " — the other parent's details are collected privately at preparation"}</p>
                   <p className="text-xs text-muted-foreground mt-1" data-testid={`pro-request-status-${r.id}`}>Status: {r.status}</p>
                   {r.status === "pending" && (
-                    <Button size="sm" className="mt-4 bg-red-700 hover:bg-red-800 text-white" onClick={() => prepareRequest(r.id)} data-testid={`pro-prepare-btn-${r.id}`}>
-                      Prepare Assessment
-                    </Button>
+                    <div className="mt-4 space-y-2">
+                      {!r.co_parent_email && (
+                        <>
+                          <Input type="email" placeholder="First parent's email" value={prepEmails[r.id]?.a || ""} onChange={(e) => setPrepEmails({ ...prepEmails, [r.id]: { ...prepEmails[r.id], a: e.target.value } })} data-testid={`pro-prepare-email-a-${r.id}`} />
+                          <Input type="email" placeholder="Other parent's email" value={prepEmails[r.id]?.b || ""} onChange={(e) => setPrepEmails({ ...prepEmails, [r.id]: { ...prepEmails[r.id], b: e.target.value } })} data-testid={`pro-prepare-email-b-${r.id}`} />
+                        </>
+                      )}
+                      <Button size="sm" className="bg-red-700 hover:bg-red-800 text-white" onClick={() => prepareRequest(r.id)} disabled={!r.co_parent_email && !(prepEmails[r.id]?.a?.trim() && prepEmails[r.id]?.b?.trim())} data-testid={`pro-prepare-btn-${r.id}`}>
+                        Prepare Assessment
+                      </Button>
+                      <p className="text-xs text-muted-foreground" data-testid={`pro-prepare-note-${r.id}`}>Each parent receives their own private assessment link — responses are never shared between the parties.</p>
+                    </div>
                   )}
                 </div>
               ))}

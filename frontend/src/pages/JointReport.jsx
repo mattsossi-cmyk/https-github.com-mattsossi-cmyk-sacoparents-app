@@ -157,7 +157,7 @@ export default function JointReport() {
               <div className="flex gap-2 max-w-md">
                 <Input type="email" value={shareEmail} onChange={(e) => setShareEmail(e.target.value)} placeholder="professional@example.com" className="h-10" data-testid="share-email-input" />
                 <Button size="sm" variant="outline" className="gap-1.5 h-10" onClick={share} disabled={!shareEmail.trim()} data-testid="share-professional-btn">
-                  <Share2 className="h-3.5 w-3.5" /> Share
+                  <Share2 className="h-3.5 w-3.5" /> Email to professional
                 </Button>
               </div>
             </div>
