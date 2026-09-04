@@ -30,13 +30,22 @@ export default function ShareReportQuickAction({ sncHighlights }) {
 
   if (!ready) {
     return (
-      <div
-        className="inline-flex items-center gap-2 rounded-full border border-[#E5E0EE] bg-[#FAF8FD] text-[#4B4567] px-4 py-2 text-xs sm:text-sm font-medium"
-        data-testid="dashboard-share-report-quick-action-locked"
-        title="Complete the Co-Parenting Assessment with your co-parent to unlock the shared report."
-      >
-        <Lock size={13} className="opacity-70" />
-        <span>Share a report — unlocks after your Compare is ready</span>
+      <div className="flex flex-wrap items-center gap-2">
+        <div
+          className="inline-flex items-center gap-2 rounded-full border border-[#E5E0EE] bg-[#FAF8FD] text-[#4B4567] px-4 py-2 text-xs sm:text-sm font-medium"
+          data-testid="dashboard-share-report-quick-action-locked"
+          title="Complete the Co-Parenting Assessment with your co-parent to unlock the shared report."
+        >
+          <Lock size={13} className="opacity-70" />
+          <span>Share a report — unlocks after your Compare is ready</span>
+        </div>
+        <Link
+          to="/joint-reports"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3D1A78] hover:underline"
+          data-testid="dashboard-see-all-report-types"
+        >
+          See all report types →
+        </Link>
       </div>
     );
   }
@@ -69,6 +78,13 @@ export default function ShareReportQuickAction({ sncHighlights }) {
         <Handshake size={14} />
         <span>Joint Alignment Agreement</span>
         <ArrowRight size={14} className="opacity-80" />
+      </Link>
+      <Link
+        to="/joint-reports"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3D1A78] hover:underline"
+        data-testid="dashboard-see-all-report-types"
+      >
+        See all report types →
       </Link>
     </div>
   );

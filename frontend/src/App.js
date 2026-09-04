@@ -39,6 +39,7 @@ import Account from "@/pages/Account";
 import DeleteAccount from "@/pages/DeleteAccount";
 import Reflection from "@/pages/Reflection";
 import FoundationStatementDemo from "@/pages/FoundationStatementDemo";
+import JointReportsPicker from "@/pages/JointReportsPicker";
 import Orientation from "@/pages/Orientation";
 import ClaimAccount from "@/pages/ClaimAccount";
 import CancelSubscription from "@/pages/CancelSubscription";
@@ -137,6 +138,7 @@ function AppRoutes() {
         <Route path="/pathway-report" element={<PathwayReport />} />
         <Route path="/joint-professional-report" element={<JointProfessionalReport />} />
         <Route path="/joint-agreement" element={<JointAgreement />} />
+        <Route path="/joint-reports" element={<JointReportsPicker />} />
         <Route path="/joint-agreement/shared/:token" element={<JointAgreementShared />} />
         <Route path="/joint-report/shared/:token" element={<JointReportShared />} />
         <Route path="/signup" element={<SignUp />} />

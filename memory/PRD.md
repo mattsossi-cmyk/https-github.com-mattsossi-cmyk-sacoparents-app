@@ -280,6 +280,32 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-03-03 — Joint Reports Picker (two-circle chooser + topic grid)
+- New `frontend/src/pages/JointReportsPicker.jsx` route at
+  `/joint-reports` (protected). Two big primary circles
+  (**Complete Joint Alignment Report** + **Family Violence /
+  Communication Safety**) plus an 8-topic grid (Co-Parenting,
+  Education, Medical, Psychological, Special Needs, Communication,
+  Parenting Schedule, Activities). Topics with existing routes deep-
+  link into the corresponding compare/intake; the last three render
+  as non-interactive "Coming soon" chips.
+- Crisis-line banner (911 + 1-800-799-7233 + text START to 88788)
+  sits immediately below the Safety circle so parents in immediate
+  danger see it without entering the assessment.
+- Legend at the top names the **Private Reflection → Shared
+  Alignment** boundary explicitly ("Your reflective answers stay
+  private. Only the material you intentionally choose for comparison
+  appears in the joint report."). Copy work only — no server-side
+  privacy behavior changed (the boundary was already enforced).
+- Dashboard: `ShareReportQuickAction` now shows *"See all report
+  types →"* next to the pills so parents can jump straight to the
+  picker.
+- Verified in browser with `parent1@test.com`: title, legend, both
+  primary circles, crisis banner, and all 8 topic tiles render. Deep-
+  link URLs confirmed for Complete (routes with share_id) and 5
+  wired topics; 3 "Coming soon" tiles are non-clickable.
+- Regressions: 31 iter13x tests green (backend readiness PASS).
+
 ### 2026-03-02 — Code review remediation
 - **[MEDIUM] `CodeInput.jsx` completion guard fix**: dropped the
   permanently-false `!joined.includes("")` clause. `onComplete` now
