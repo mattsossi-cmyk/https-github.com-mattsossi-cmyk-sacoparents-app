@@ -195,8 +195,8 @@ function MarketingFooter() {
               <div className="font-serif text-white text-lg leading-none">
                 SA CoParents
               </div>
-              <div className="text-xs text-white/60 mt-1">
-                From conflict to cooperation.
+              <div className="text-xs text-white/60 mt-1" data-testid="footer-tagline">
+                With Reflection. Build Alignment. Create Better Agreements.
               </div>
             </div>
           </div>

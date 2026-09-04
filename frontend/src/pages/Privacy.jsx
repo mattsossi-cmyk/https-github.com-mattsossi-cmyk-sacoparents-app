@@ -622,6 +622,7 @@ export default function Privacy() {
 
           <H2>See also</H2>
           <ul>
+            <li><Link to="/legal/app-store-privacy" className="text-[#2A0F5F] underline">App Store &amp; Google Play disclosure</Link> — reconciled short-form label used in both store listings.</li>
             <li><Link to="/legal/hipaa" className="text-[#2A0F5F] underline">HIPAA Notice</Link> — health-adjacent data framing.</li>
             <li><Link to="/legal/privacy-practices" className="text-[#2A0F5F] underline">Notice of Privacy Practices</Link> — formal HIPAA-styled notice.</li>
             <li><Link to="/legal/hb300" className="text-[#2A0F5F] underline">Texas HB 300 Notice</Link> — Texas Medical Records Privacy Act addendum.</li>

@@ -28,6 +28,7 @@ import Summary from "@/pages/Summary";
 import Safety from "@/pages/Safety";
 import Watch from "@/pages/Watch";
 import Privacy from "@/pages/Privacy";
+import AppStorePrivacy from "@/pages/AppStorePrivacy";
 import HipaaNotice from "@/pages/HipaaNotice";
 import PrivacyPractices from "@/pages/PrivacyPractices";
 import Hb300Notice from "@/pages/Hb300Notice";
@@ -155,6 +156,7 @@ function AppRoutes() {
           }
         />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/legal/app-store-privacy" element={<AppStorePrivacy />} />
         <Route path="/legal/hipaa" element={<HipaaNotice />} />
         <Route path="/legal/privacy-practices" element={<PrivacyPractices />} />
         <Route path="/legal/hb300" element={<Hb300Notice />} />
