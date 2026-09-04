@@ -1,0 +1,37 @@
+{
+  "summary": "PRODUCTION verification against https://align-report.emergent.host after the load_dotenv + deploy fix. Ran 10 backend tests covering all 4 review-request feature sets (pro share links, foundation merge, FV email-less flow, core regression) and a frontend UI smoke test. 10/10 backend PASS and all frontend smoke checks PASS. The new build is live and every previously-broken feature works: /join links contain the correct prod host, /join/<token> route renders, foundation_statements merge into agreement report and PDF (with 'Foundation Statements' section), FV pro-request accepts request without co_parent_email (200), prepare with empty body returns 400 and with {parent_a_email,parent_b_email} returns 200 producing an is_safety report visible to the pro. Core: /health 200, /api/joint/config returns 8 agreement_areas, /api/cron/completion-nudge returns 401 without token, full 6-key joint report cycle with non-blank PDF, share-to-pro shows in pro's report list. Frontend landing shows correct tagline, 5 pillar circles, journey step-one/step-two, professionals-invite section; Dashboard renders 3 circles (uniform purple / agreement green / safety red with 'Request Professional' pill) + 4 bubbles (educational/medical/psychological/co-parenting).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/joint/reports/{id}/share", "issue": "Field is named 'email' (not 'professional_email'). Minor naming inconsistency vs the FV-request endpoint which uses 'professional_email'. Not a bug — just note for API consistency."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Dashboard Family Violence action pill", "issue": "The visible 'Request Professional' button under the safety circle does NOT carry data-testid='request-professional-pill' (query returned 0). Button works and is visible; only automated selector is missing.", "selector": "[data-testid=\"request-professional-pill\"]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_prod_verification.py",
+    "/app/test_reports/pytest/prod_verification.xml"
+  ],
+  "action_items": [
+    "(Optional) Add data-testid='request-professional-pill' to the 'Request Professional' button in CircleNav.jsx to match the review spec and improve testability.",
+    "(Optional) Rename the /joint/reports/{id}/share body field from 'email' to 'professional_email' for consistency with the FV professional-request endpoint."
+  ],
+  "critical_code_review_comments": [
+    "load_dotenv(override=True) fix on backend/server.py is confirmed live in the deployed build — /join links now point at align-report.emergent.host. Keep this pattern; any future supervisor env leak would silently break share links again.",
+    "ProRequestIn now correctly treats co_parent fields as Optional — the prod FV email-less request returns 200 as designed.",
+    "generate_agreement + build_agreement_pdf correctly merge foundation_statements end-to-end and render the 'Foundation Statements' section in the PDF."
+  ],
+  "updated_files": ["/app/backend/tests/test_prod_verification.py"],
+  "success_rate": {"backend": "100% (10/10)", "frontend": "100% smoke (tagline, 5 pillars, journey, professionals-invite, register-via-UI, dashboard 3 circles + 4 bubbles, Request Professional pill visible)"},
+  "test_credentials": "All accounts created dynamically via /api/auth/register with TEST_-prefixed @testmail.dev emails against the prod API. No admin credentials used.",
+  "seed_data_creation": "Real prod data created (test parents, pros, reports, one agreement with foundation statement, one FV safety report). All prefixed TEST_ per review guidance; safe to leave.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Prod verification suite lives at /app/backend/tests/test_prod_verification.py; run with `REACT_APP_BACKEND_URL=https://align-report.emergent.host pytest backend/tests/test_prod_verification.py -v`. It hits prod directly (custom User-Agent required — CDN 403s bare python-requests otherwise). Share endpoint body key is 'email' (not 'professional_email'). Prepare endpoint requires either parent_a/b or a co_parent_email in body — empty body correctly returns 400. Frontend register flow: click the 'Create account' tab first (data-testid absent — use role/name); inputs have testids name-input/email-input/password-input; role radios have no testid — use `label:has-text(\"Parent\")`.",
+  "rca of the issue": "Not applicable — this run is post-fix verification. Prior issue (stale APP_URL breaking share links) was resolved in iteration 15 by switching to load_dotenv(override=True) in backend/server.py, and the redeploy is now confirmed live via the /join link host and the FV-no-email endpoint returning 200."
+}
