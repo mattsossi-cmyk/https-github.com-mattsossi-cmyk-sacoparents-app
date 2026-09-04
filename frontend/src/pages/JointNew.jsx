@@ -86,11 +86,9 @@ export default function JointNew() {
         : { ...base, co_parent_name: coName, co_parent_email: coEmail, mediator_email: isSafety && mediatorEmail.trim() ? mediatorEmail.trim() : undefined };
       const { data } = await api.post(url, body);
       if (isPro) {
-        toast.success("Invitations sent to both parents");
-        navigate("/dashboard");
-      } else {
-        setCreated(data);
+        toast.success("Invitations sent — private share links are ready below");
       }
+      setCreated(data);
     } catch (e) {
       toast.error(formatApiError(e));
     } finally {
@@ -120,7 +118,41 @@ export default function JointNew() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-10">
-        {created ? (
+        {created && created.invitations ? (
+          <div className="bg-white border border-border rounded-lg p-8" data-testid="pro-invitations-card">
+            <div className="text-center mb-8">
+              <Mail className="h-10 w-10 text-primary mx-auto mb-4" />
+              <h1 className="text-3xl font-semibold">Parent Links Ready</h1>
+              <p className="text-muted-foreground mt-3 max-w-lg mx-auto">
+                Share each parent's private link to collect their information for <strong>{created.subject_label}</strong>
+                regarding <strong>{created.child_name || "the child"}</strong>. Each link is unique to that parent —
+                their answers stay private and are never shared between parents.
+              </p>
+            </div>
+            {created.invitations.map((inv) => (
+              <div key={inv.role} className="bg-muted/50 border border-border rounded-lg p-5 mb-4" data-testid={`pro-share-link-${inv.role}`}>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                  Parent {inv.role === "a" ? "A" : "B"} — {inv.invitee_name} ({inv.invitee_email})
+                </p>
+                <div className="flex items-center gap-2 flex-wrap mt-2">
+                  <code className="text-xs bg-white border border-border rounded px-2 py-1.5 flex-1 min-w-0 truncate" data-testid={`pro-link-text-${inv.role}`}>{inv.link}</code>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => copy(inv.link)} data-testid={`copy-link-${inv.role}-btn`}>
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy Link
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Backup code: <span className="font-semibold tracking-widest" data-testid={`pro-code-${inv.role}`}>{inv.code}</span> · An email invitation was also sent to {inv.invitee_email}.
+                </p>
+              </div>
+            ))}
+            <ConfidentialityNotice />
+            <div className="flex justify-center mt-6">
+              <Link to="/dashboard" data-testid="pro-done-link">
+                <Button variant="outline" data-testid="pro-done-btn">Back to Dashboard</Button>
+              </Link>
+            </div>
+          </div>
+        ) : created ? (
           <div className="bg-white border border-border rounded-lg p-8" data-testid="invitation-sent-card">
             <div className="text-center mb-8">
               <Mail className="h-10 w-10 text-primary mx-auto mb-4" />
@@ -142,6 +174,12 @@ export default function JointNew() {
               <p className="text-xs text-muted-foreground mt-3">
                 An email was sent to {created.invitation.invitee_email}. If it doesn't arrive, share this code or the invitation link directly.
               </p>
+              <div className="mt-3 flex items-center gap-2">
+                <code className="text-xs bg-white border border-border rounded px-2 py-1.5 flex-1 min-w-0 truncate" data-testid="invitation-link-display">{created.invitation.link}</code>
+                <Button size="sm" variant="ghost" className="gap-1.5 shrink-0" onClick={() => copy(created.invitation.link)} data-testid="copy-invite-link-btn">
+                  <Copy className="h-4 w-4" /> Copy Link
+                </Button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-3 justify-center">
               <Button className="gap-2" onClick={() => navigate(`/joint/${created.id}/assess`)} data-testid="complete-my-assessment-btn">

@@ -39,7 +39,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background" data-testid="landing-page">
       <header className="no-print max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
         <div data-testid="brand">
-          <BrandLogo sub="Step Two" />
+          <BrandLogo sub="Step 2 - Professional Corner - Joint Reports for Coparents" />
         </div>
         <div className="flex items-center gap-3">
           <Link to="/auth" data-testid="nav-login-link">
@@ -161,6 +161,47 @@ export default function Landing() {
                 <p className="text-sm font-medium">{t.title}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-secondary/40 border-t border-border py-16" data-testid="professionals-invite">
+        <div className="max-w-3xl mx-auto px-6">
+          <p className="text-xs uppercase tracking-widest text-brand-teal font-bold mb-2">An Invitation to Professionals</p>
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-6" data-testid="pro-invite-heading">Help Parents Find Alignment Before Agreement</h2>
+          <div className="space-y-4 text-muted-foreground leading-relaxed">
+            <p>SA CoParents Align invites family-law professionals, mediators, therapists, parenting professionals, and other child-focused practitioners to participate in a different approach to helping families navigate co-parenting decisions.</p>
+            <p>Parents often enter mediation, counseling, or the legal process with very different understandings of their child, their parenting relationship, and the problems they are trying to solve.</p>
+            <p className="text-foreground font-medium">SA CoParents Align starts before the disagreement.</p>
+            <p>Parents are guided through individual reflection so each parent can identify concerns, priorities, observations, and the needs of their child. When appropriate, their perspectives can then be brought together through Joint Alignment Reports that help identify:</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4 my-8">
+            {[
+              { t: "Areas of Alignment", d: "Where the parents already share common ground." },
+              { t: "Areas for Discussion", d: "Where their perspectives, priorities, or experiences differ." },
+              { t: "Options & Resources", d: "Possible approaches and professional resources that can help parents explore those differences." },
+              { t: "Child-Focused Next Steps", d: "Areas where parents may be able to build greater understanding and move toward workable agreements." },
+            ].map((x) => (
+              <div key={x.t} className="bg-white border border-border rounded-lg p-5" data-testid={`pro-pillar-${x.t.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
+                <p className="font-semibold text-brand-purple">{x.t}</p>
+                <p className="text-sm text-muted-foreground mt-1">{x.d}</p>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-4 text-muted-foreground leading-relaxed">
+            <h3 className="text-xl font-semibold text-foreground">Your Role as a Professional</h3>
+            <p>SA CoParents Align is not designed to replace the professional. It is designed to help professionals start with better information and a clearer picture of the family.</p>
+            <p>The reports can provide a structured starting point for mediation, counseling, parenting coordination, collaborative discussions, settlement conferences, and other family-law processes.</p>
+            <p>Rather than beginning with: <em className="text-foreground">&ldquo;Who is right?&rdquo;</em> we encourage professionals and parents to begin with:</p>
+            <p className="text-foreground font-medium italic">&ldquo;Where are these parents already aligned, where do they see things differently, and what does their child need from them next?&rdquo;</p>
+            <h3 className="text-xl font-semibold text-foreground">Join the SA CoParents Align Professional Community</h3>
+            <p>We invite professionals who share a commitment to thoughtful, child-focused family conflict resolution to explore SA CoParents Align and consider how these tools can complement the work they already do with families.</p>
+          </div>
+          <p className="mt-8 font-script text-2xl text-brand-purple" data-testid="pro-motto">Reflect Individually. Understand Together. Align Around the Child. Build Agreement.</p>
+          <div className="mt-8">
+            <Link to="/auth" data-testid="pro-join-link">
+              <Button size="lg" className="gap-2" data-testid="pro-join-btn">Create a Free Professional Account <ArrowRight className="h-4 w-4" /></Button>
+            </Link>
           </div>
         </div>
       </section>

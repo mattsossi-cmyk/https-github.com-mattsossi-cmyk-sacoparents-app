@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 import os
 import uuid
@@ -849,9 +849,12 @@ async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_curre
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.joint_reports.insert_one(doc)
-    await create_invitation(rid, "a", body.parent_a_name, body.parent_a_email, user.get("name", "A professional"), doc["child_name"], label)
-    await create_invitation(rid, "b", body.parent_b_name, body.parent_b_email, user.get("name", "A professional"), doc["child_name"], label)
-    return joint_public(doc, user)
+    inv_a = await create_invitation(rid, "a", body.parent_a_name, body.parent_a_email, user.get("name", "A professional"), doc["child_name"], label)
+    inv_b = await create_invitation(rid, "b", body.parent_b_name, body.parent_b_email, user.get("name", "A professional"), doc["child_name"], label)
+    return {**joint_public(doc, user), "invitations": [
+        {"role": i["role"], "code": i["code"], "link": f"{app_url()}/join/{i['token']}", "invitee_email": i["invitee_email"], "invitee_name": i["invitee_name"], "status": "pending"}
+        for i in (inv_a, inv_b)
+    ]}
 
 
 @api.get("/joint/reports")
