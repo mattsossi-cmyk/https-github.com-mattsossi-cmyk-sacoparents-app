@@ -195,6 +195,11 @@ def generate_agreement(doc):
             "status": status,
         })
 
+    foundation = []
+    for side, name in (("a", pa), ("b", pb)):
+        for s in (doc["responses"].get(side) or {}).get("foundation") or []:
+            foundation.append({"parent": name, "title": s.get("title", "Foundation Statement"), "content": s.get("content", "")})
+
     return {
         "report_title": "Joint Co-Parenting Agreement",
         "child_name": child,
@@ -204,6 +209,7 @@ def generate_agreement(doc):
         "purpose": AGREEMENT_PURPOSE,
         "confidentiality_note": AGREEMENT_CONFIDENTIALITY,
         "terms": terms,
+        "foundation_statements": foundation,
         "next_note": (
             "Areas marked 'Needs discussion' are candidates for parent conversation or mediation "
             "before finalizing. Consider having an appropriate professional review any final agreement."

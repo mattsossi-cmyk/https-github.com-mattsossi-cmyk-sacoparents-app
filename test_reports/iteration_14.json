@@ -1,0 +1,79 @@
+{
+  "summary": "Full QA on the new CircleNav (3 majors + 4 bubbles), Foundation Statements merge into agreements (backend + UI card), and professional Shared-With-Me dashboard section. All target functionality works end-to-end on preview. Backend pytest: 100 passed / 1 failed. The single failure (test_agreements_and_pro_requests.py::TestProfessionalRequestFlow::test_full_flow) is a genuine pre-existing bug in /api/professionals — the endpoint hard-caps at .to_list(100) and MongoDB now has 110 professional users from cumulative test runs, so a newly-registered pro can be truncated out of the response. Not caused by this iteration's changes; must be fixed by main agent.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/professionals", "issue": "Hard limit of .to_list(100) in server.py:1282; DB has 110 professional users (test accumulation) so newly-registered pros are sometimes truncated out. Causes intermittent failure of test_full_flow. Recommend paging or increasing/removing the limit."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_evidence": {
+    "circle_nav_desktop": {
+      "circle-uniform": "renders (purple, UNIFORM ASSESSMENT, tagline + notice 'Private by default — shared only by your choice')",
+      "circle-agreement": "renders (green, CO-PARENTING AGREEMENT, tagline 'Merge Foundation Statements. Build Your Agreement.', notice 'Foundation Statements merge from sacoparentsapp.online'); click -> /joint/new?kind=agreement",
+      "circle-safety": "renders (teal, FAMILY VIOLENCE ASSESSMENT, notice 'Shared only with your designated professional')",
+      "bubbles_present": ["bubble-education (Educational)", "bubble-medical (Medical)", "bubble-psychological (Psychological)", "bubble-co_parenting (General Coparenting Assessment)"],
+      "old_bubbles_absent": ["bubble-school=0", "bubble-conflict=0", "bubble-communication=0", "bubble-schedule=0", "bubble-routine=0", "bubble-__complete=0"],
+      "bubble-education click": "-> /joint/new?subject=education (OK)",
+      "circle-nav-complete-link": "visible, text 'View the Complete Joint Alignment Report →'",
+      "circle-nav-confidentiality": "visible with full disclaimer text"
+    },
+    "circle_nav_mobile_390x844": {
+      "circle-nav-mobile visible": true,
+      "badges rendered in mobile block": true,
+      "bubble-mobile-{education,medical,psychological,co_parenting}": "each count=1"
+    },
+    "foundation_card": {
+      "on /joint/{id}/assess for kind=agreement (unlinked account)": {
+        "foundation-card": "count=1 (visible)",
+        "foundation-link-hint": "count=1 (visible — hint to link sacoparentsapp.online)",
+        "foundation-pull-btn": "count=0 (absent until linked — correct per spec, since external app not built)"
+      }
+    },
+    "foundation_merge_backend_e2e": {
+      "create agreement": "200",
+      "B accept invitation": "200",
+      "B PUT responses (no foundation)": "200",
+      "A PUT responses with foundation=[{title:'Kid Priority', content:'predictable handoffs matter most for our daughter.'}]": "200",
+      "GET report": "foundation_statements=[{parent:'T TEST_pa_', title:'Kid Priority', content:'predictable handoffs matter most for our daughter.'}] — exactly A's statement (B's absent, correct)"
+    },
+    "backend_pytest_test_foundation_merge_py": "3/3 pass (verified in full run)",
+    "shared_with_me_professional_dashboard": {
+      "POST /api/joint/reports/{id}/share to professional email": "200 {ok:true, shared_with:'T TEST_pr_...'}",
+      "professional dashboard /dashboard": {
+        "shared-with-me-section": "count=1 (rendered)",
+        "shared-report-{rid}": "count=1 (card visible)",
+        "click card": "-> /joint/{rid} navigates cleanly, no error class elements, no crash/403; page contains child_name 'Kid X'"
+      }
+    },
+    "pytest": {
+      "passed": 100,
+      "failed": 1,
+      "failure": "test_agreements_and_pro_requests.py::TestProfessionalRequestFlow::test_full_flow — /api/professionals returned <100 rows and did not include the freshly-registered pro (DB has 110 pros; endpoint caps at .to_list(100))",
+      "junit": "/app/test_reports/pytest/iter14_results.xml"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_foundation_merge.py",
+    "/app/backend/tests/test_agreements_and_pro_requests.py",
+    "/app/test_reports/pytest/iter14_results.xml"
+  ],
+  "action_items": [
+    "Fix /api/professionals in backend/server.py:1282 — replace .to_list(100) with a larger cap or add pagination; DB currently has 110 professional accounts so the endpoint truncates and breaks parent workflows that need to invite a freshly-created pro. Same fix will make test_full_flow green again."
+  ],
+  "critical_code_review_comments": [
+    "backend/server.py:1282 — GET /api/professionals uses hard-coded .to_list(100). This is now producing a real bug in production data volume. Add ?limit/skip or a text-search filter (by email/name) instead of returning all pros.",
+    "Pre-existing (from iteration_13, not part of this iteration's scope): Dashboard.jsx useEffect for ?contact=professional deep-link runs only on mount ([] deps) — clicking circle-safety while already on /dashboard doesn't auto-open the FV form. Consider adding [searchParams] to deps."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "99% (100/101; the 1 failure is a pre-existing limit-cap bug, not from this iteration)", "frontend": "100%"},
+  "test_credentials": "Ephemeral testmail.dev accounts (TEST_pa_/TEST_pb_/TEST_pr_ + uuid) created via /api/auth/register, TestPass123!. No credentials files modified.",
+  "seed_data_creation": "None persistent — throwaway registrations and one throwaway agreement joint report only.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All new work in this iteration verified: CircleNav (3 majors + 4 bubbles + notices + complete link), Foundation Statements merge (backend PUT/GET/PDF via existing test_foundation_merge.py; frontend foundation-card + foundation-link-hint on agreement wizard), and Professional shared-with-me-section on dashboard (+ card click opens shared report). The only outstanding backend issue is a data-accumulation-induced truncation of /api/professionals — DB has 110 pros, endpoint caps at 100. Not in scope of this task but recommend fixing before next release. Full backend suite 100/101; expected to be 101/101 once the limit is fixed."
+}

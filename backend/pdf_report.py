@@ -209,6 +209,18 @@ def build_agreement_pdf(r):
     _body(pdf, r["next_note"], italic=True)
     pdf.ln(8)
 
+    if r.get("foundation_statements"):
+        pdf.set_font("helvetica", "B", 13)
+        pdf.set_text_color(*DARK)
+        pdf.cell(0, 8, "Foundation Statements", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(1)
+        _body(pdf, "Each parent's Foundation Statement from the SA CoParents app is included below to ground this agreement.", italic=True)
+        for fs in r["foundation_statements"]:
+            _label(pdf, f"{fs['parent']} — {fs['title']}")
+            _body(pdf, fs["content"], indent=4)
+            pdf.ln(1)
+        pdf.ln(6)
+
     pdf.set_font("helvetica", "B", 13)
     pdf.set_text_color(*DARK)
     pdf.cell(0, 8, "Signatures", new_x="LMARGIN", new_y="NEXT")

@@ -342,6 +342,23 @@ export default function Dashboard() {
           )}
         </div>
 
+        {user?.role === "professional" && (joints || []).some((j) => j.shared_with_me) && (
+          <div className="mb-10" data-testid="shared-with-me-section">
+            <h2 className="text-2xl font-semibold mb-4">Shared With Me</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {(joints || []).filter((j) => j.shared_with_me).map((j) => (
+                <Link key={j.id} to={`/joint/${j.id}`} className="block" data-testid={`shared-report-${j.id}`}>
+                  <div className="bg-white border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <p className="text-xs uppercase tracking-widest text-brand-teal font-bold">{j.subject_label}</p>
+                    <h3 className="text-xl font-semibold mt-1">For {j.child_name}</h3>
+                    <p className="text-sm text-muted-foreground mt-2">Shared by the parents — open to review the completed report.</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {user?.role === "professional" && proRequests.length > 0 && (
           <div data-testid="pro-requests-section">
             <h2 className="text-2xl font-semibold mb-4">Facilitation Requests</h2>

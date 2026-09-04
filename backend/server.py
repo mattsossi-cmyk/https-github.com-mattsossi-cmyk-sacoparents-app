@@ -612,6 +612,7 @@ class ProJointReportIn(BaseModel):
 
 class JointResponsesIn(BaseModel):
     answers: dict
+    foundation: list | None = None
 
 
 class AcceptIn(BaseModel):
@@ -668,6 +669,7 @@ def joint_public(doc, user, invitation=None):
         "is_safety": bool(doc.get("is_safety")),
         "subjects": doc.get("subjects") or [doc["subject"]],
         "kind": doc.get("kind", "joint_report"),
+        "shared_with_me": uid in doc.get("shared_with", []),
         "participants": {},
     }
     for r in ("a", "b"):
@@ -897,7 +899,13 @@ async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(ge
     answers = {k: (body.answers.get(k) or "").strip() for k in valid}
     if any(not v for v in answers.values()):
         raise HTTPException(status_code=400, detail="Please answer all questions")
-    updates = {f"responses.{role}": {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}}
+    payload = {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}
+    if doc.get("kind") == "agreement" and body.foundation:
+        payload["foundation"] = [
+            {"title": str(s.get("title", "Foundation Statement"))[:120], "content": str(s.get("content", ""))[:5000]}
+            for s in body.foundation if isinstance(s, dict)
+        ]
+    updates = {f"responses.{role}": payload}
     other = "b" if role == "a" else "a"
     if doc.get("responses", {}).get(other):
         updates["status"] = "ready"
@@ -1271,7 +1279,7 @@ class PrepareIn(BaseModel):
 
 @api.get("/professionals")
 async def list_professionals(user=Depends(get_current_user)):
-    return await db.users.find({"role": "professional"}, {"_id": 0, "name": 1, "email": 1}).to_list(100)
+    return await db.users.find({"role": "professional"}, {"_id": 0, "name": 1, "email": 1}).sort("name", 1).to_list(500)
 
 
 @api.post("/joint/professional-requests")

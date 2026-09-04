@@ -19,6 +19,7 @@ export default function JointAssessment() {
   const [error, setError] = useState(null);
   const [link, setLink] = useState(null);
   const [linkCode, setLinkCode] = useState("");
+  const [foundation, setFoundation] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +52,24 @@ export default function JointAssessment() {
     }
   };
 
+  const doFoundation = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.get("/external/assessments");
+      const stmts = data.statements || [];
+      if (!stmts.length) {
+        toast.error("No Foundation Statements found on your sacoparentsapp.online account");
+      } else {
+        setFoundation(stmts);
+        toast.success(`${stmts.length} Foundation Statement${stmts.length > 1 ? "s" : ""} ready to merge into the agreement`);
+      }
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   useEffect(() => {
     Promise.all([api.get("/joint/config"), api.get(`/joint/reports/${id}`)])
       .then(([c, d]) => {
@@ -72,7 +91,7 @@ export default function JointAssessment() {
   const submit = async () => {
     setBusy(true);
     try {
-      await api.put(`/joint/reports/${id}/responses`, { answers });
+      await api.put(`/joint/reports/${id}/responses`, { answers, ...(foundation ? { foundation } : {}) });
       toast.success("Your responses are saved — they remain private until both parents finish.");
       navigate(`/joint/${id}`);
     } catch (e) {
@@ -160,6 +179,31 @@ export default function JointAssessment() {
             </div>
           )}
         </div>
+
+        {detail.kind === "agreement" && (
+          <div className="bg-white border-2 border-brand-green rounded-lg p-5 mb-8" data-testid="foundation-card">
+            <p className="font-semibold text-brand-green">Foundation Statements</p>
+            <p className="text-sm text-muted-foreground mt-1 mb-4">
+              Your Foundation Statement from sacoparentsapp.online will be merged into the co-parenting agreement alongside your proposed terms.
+            </p>
+            {foundation ? (
+              <div data-testid="foundation-loaded">
+                <p className="text-sm font-medium mb-2">{foundation.length} statement{foundation.length > 1 ? "s" : ""} will be included:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  {foundation.map((s, i) => (
+                    <li key={i} className="text-sm text-muted-foreground">{s.title || `Statement ${i + 1}`}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : link?.linked ? (
+              <Button variant="outline" onClick={doFoundation} disabled={busy} className="gap-2" data-testid="pull-foundation-btn">
+                <Download className="h-4 w-4" /> {busy ? "Loading…" : "Pull in my Foundation Statements"}
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground" data-testid="foundation-link-hint">Link your sacoparentsapp.online account above to include your Foundation Statement.</p>
+            )}
+          </div>
+        )}
 
         <div className="space-y-6">
           {questionList.map((q, i) => (
