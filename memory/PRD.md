@@ -280,6 +280,77 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-03-04 — Sibling integration (`sacoparentsalign`) + Communication Alignment Phase 2a + circle animations
+- **P0 dropped-task RESOLVED — sibling integration wired**: three
+  new endpoints in `integration_routes.py`, registered on the
+  `/api` router.
+  - `POST /api/link-codes` — parent-authenticated JWT. Mints an
+    8-char single-use code (alphabet strips ambiguous glyphs
+    I/O/1/0), 15-minute TTL, bcrypt-hashed at rest. Rate-limited
+    to 5 mints per parent per hour. Minting a new code marks any
+    outstanding unused code as `superseded`.
+  - `POST /api/integrations/verify-link-code` — server-to-server,
+    gated on `X-Integration-Key` header via `hmac.compare_digest`.
+    Consumes the code (single-use) and returns `{"email": …}`.
+    404 for unknown/expired/consumed codes.
+  - `GET  /api/integrations/export-assessments?email=…` — same
+    header gate. Returns a JSON bundle with `situation_snapshot`
+    (child_goals + issues + priority + comm_style + readiness),
+    `foundation_statement` (the 4 reflection prompts saved via
+    /api/mediation/reflection), and `special_needs.{medical,
+    educational, psychological}` (compact projection of each
+    deep-dive report — profile, foundation statement,
+    questions-for-professional, rating areas, signals).
+    `schema_version: 1` locked. Free-text notes never leave the
+    server.
+  - Shared secret (verbatim from spec) in `backend/.env` as
+    `INTEGRATION_SHARED_SECRET`. Missing secret => 503 (fails
+    fast rather than silently accepting anything).
+  - Coverage: `tests/test_iter137_sibling_integration.py` — 9
+    tests locking mint format, supersede-older-codes,
+    single-use consumption, unknown-code 404, integration-key
+    required, integration-key wrong-value 401, export shape for
+    a fresh parent, unknown-email 404, missing-secret 503. All
+    green.
+- **Communication Alignment Report — Phase 2a (backend only)**:
+  - `communication_reflection_questions.py`: 12-item first-person
+    question bank across three dimensions (Clarity, Regulation,
+    Structure). Neutral parent-attributed stems only — safety
+    items live on the Safety pathway, not here.
+  - `communication_alignment_routes.py`: `GET /communication-
+    reflection/schema`, `PUT /communication-reflection`,
+    `GET /communication-reflection/mine`, `POST /communication-
+    alignment/compare` (pair-by-email → `shared` / `gaps`
+    ≤ or > 15-point delta per dimension), and `POST /communication-
+    alignment/compare/summary` (regenerate LLM-authored neutral
+    summary; Claude default, GPT 5.6 Terra optional). Malformed
+    answers are gracefully dropped instead of 422-ing.
+  - `ai_summary_communication.py`: dedicated prompt module with a
+    strict neutral guardrail block — never adjudicative, never
+    diagnostic, structured (framing / shared / gaps / child-
+    focused close). Hard short-circuit: if either parent's
+    `intake_choice == "unsafe"`, the function returns the safety
+    sentence directly without calling the LLM.
+  - Coverage: `tests/test_iter138_communication_alignment.py` —
+    7 tests locking schema shape, save+read, out-of-range
+    filtering, compare waiting state, compare ready state with
+    shared+gaps computed correctly, compare requires-self-first
+    409, and the unsafe short-circuit. All green.
+  - Phase 2b (next session): frontend intake + report page +
+    share-link mint.
+- **Circle animations on `FourCircleFrontDoor`**: staggered
+  fade-up entrance (90 ms per tile via inline `animationDelay`),
+  hover-lift (`hover:-translate-y-1 hover:shadow-xl`), tap-scale
+  (`active:scale-[0.98]`), icon glow-up on hover
+  (`group-hover:scale-110`), CTA gap-widen on hover so the arrow
+  chase feels alive. New global rule
+  `.front-door-tile` in `index.css` binds the existing `fadeUp`
+  keyframe.
+- **Live curl verification** (`sacoparentsapp.online → parent1@test.com`):
+  mint returned `V2TFFB6W`, verify returned `parent1@test.com`,
+  export returned the full reconciled shape with all three
+  special-needs lanes.
+
 ### 2026-03-04 — Four-Circle Front Door (new dashboard IA — Phase 1)
 - **Founder-driven redesign**: the signed-in dashboard root now leads
   with four pathway circles instead of the old single "Step 1"

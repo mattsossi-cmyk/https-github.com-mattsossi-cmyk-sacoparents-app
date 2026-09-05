@@ -220,12 +220,13 @@ export default function FourCircleFrontDoor({ userName }) {
         className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
         data-testid="front-door-circles"
       >
-        {CIRCLES.map((circle) => (
+        {CIRCLES.map((circle, idx) => (
           <FrontDoorTile
             key={circle.key}
             circle={circle}
             expanded={expandedKey === circle.key}
             onClick={() => handleCircleClick(circle)}
+            index={idx}
           />
         ))}
       </div>
@@ -289,7 +290,7 @@ export default function FourCircleFrontDoor({ userName }) {
   );
 }
 
-function FrontDoorTile({ circle, expanded, onClick }) {
+function FrontDoorTile({ circle, expanded, onClick, index = 0 }) {
   const Icon = circle.icon;
   return (
     <button
@@ -297,10 +298,11 @@ function FrontDoorTile({ circle, expanded, onClick }) {
       onClick={onClick}
       aria-expanded={circle.expandable ? expanded : undefined}
       data-testid={circle.testid}
-      className={`group text-left rounded-3xl border border-[#EFE9F9] bg-white p-5 ring-1 ${circle.tone.ring} ${circle.tone.hover} hover:shadow-lg transition-all duration-200 flex flex-col`}
+      style={{ animationDelay: `${index * 90}ms` }}
+      className={`front-door-tile group text-left rounded-3xl border border-[#EFE9F9] bg-white p-5 ring-1 ${circle.tone.ring} ${circle.tone.hover} hover:-translate-y-1 hover:shadow-xl active:translate-y-0 active:scale-[0.98] transition-all duration-200 flex flex-col`}
     >
       <div
-        className={`w-14 h-14 rounded-full grid place-items-center text-white shadow-md ${circle.tone.bg}`}
+        className={`w-14 h-14 rounded-full grid place-items-center text-white shadow-md ${circle.tone.bg} group-hover:scale-110 group-hover:shadow-lg transition-transform duration-200`}
       >
         <Icon size={26} strokeWidth={2.1} />
       </div>
@@ -316,7 +318,7 @@ function FrontDoorTile({ circle, expanded, onClick }) {
         {circle.detail}
       </p>
       <span
-        className={`inline-flex items-center gap-1.5 mt-4 text-[13px] font-semibold ${circle.tone.accent}`}
+        className={`inline-flex items-center gap-1.5 mt-4 text-[13px] font-semibold ${circle.tone.accent} group-hover:gap-2.5 transition-all duration-200`}
       >
         {circle.expandable
           ? expanded

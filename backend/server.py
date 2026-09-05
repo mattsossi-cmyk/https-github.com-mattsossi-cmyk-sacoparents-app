@@ -58,6 +58,8 @@ from insights_routes import (  # noqa: E402
     router as insights_router,
     admin_briefing_scheduler_loop,
 )
+from integration_routes import router as integration_router  # noqa: E402
+from communication_alignment_routes import router as communication_alignment_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -186,6 +188,8 @@ api_router.include_router(nd_risk_router)
 api_router.include_router(dimension_companion_router)
 api_router.include_router(intervention_compliance_router)
 api_router.include_router(reviewer_panel_router)
+api_router.include_router(integration_router)
+api_router.include_router(communication_alignment_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.

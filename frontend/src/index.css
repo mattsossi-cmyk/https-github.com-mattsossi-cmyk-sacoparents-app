@@ -117,6 +117,13 @@ h1, h2, h3, h4, .font-serif {
     animation: fadeUp .55s ease-out both;
 }
 
+/* Four-Circle Front Door — staggered entrance on the dashboard root.
+   Each tile carries `style={{ animationDelay: `${index * 90}ms` }}`
+   so the four circles cascade in left-to-right. */
+.front-door-tile {
+    animation: fadeUp .55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Wizard progress segment fill smooth */
 .progress-fill {
     transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
