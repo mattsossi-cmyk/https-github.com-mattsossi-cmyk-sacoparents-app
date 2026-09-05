@@ -58,25 +58,46 @@ def _register(client: TestClient) -> tuple[str, str]:
     return email, r.json()["access_token"]
 
 
-def _mint_code(client: TestClient, token: str) -> str:
+def _mint_code(client: TestClient, token: str, context: str | None = None) -> str:
+    body = {"context": context} if context else {}
     r = client.post(
         "/api/link-codes",
         headers={"Authorization": f"Bearer {token}"},
+        json=body,
     )
     assert r.status_code == 200, r.text
     body = r.json()
     assert "code" in body
-    assert len(body["code"]) == 8
+    assert body["code"].startswith("SA-")
+    assert len(body["code"]) == 9  # SA- + 6 digits
+    assert body["code"][3:].isdigit()
+    assert body.get("join_url", "").endswith(body["code"])
+    assert body.get("expires_at")
     return body["code"]
 
 
 # ------------------------- 1. Mint (POST /api/link-codes) ------------------------- #
 
-def test_mint_returns_8_char_code(client: TestClient) -> None:
+def test_mint_returns_human_readable_code(client: TestClient) -> None:
     _, token = _register(client)
     code = _mint_code(client, token)
-    # Uppercase alphabet + digits, no ambiguous glyphs.
-    assert set(code).issubset(set("ABCDEFGHJKLMNPQRSTUVWXYZ23456789"))
+    # SA-482731 format
+    assert code[:3] == "SA-"
+    digits = code[3:]
+    assert digits.isdigit() and len(digits) == 6
+
+
+def test_mint_persists_context_and_returns_it_on_verify(client: TestClient) -> None:
+    _, token = _register(client)
+    code = _mint_code(client, token, context="co-parenting")
+    r = client.post(
+        "/api/integrations/verify-link-code",
+        headers={"X-Integration-Key": SHARED_SECRET},
+        json={"code": code},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["context"] == "co-parenting"
 
 
 def test_mint_supersedes_previous_code(client: TestClient) -> None:
@@ -139,9 +160,33 @@ def test_verify_unknown_code_404(client: TestClient) -> None:
     r = client.post(
         "/api/integrations/verify-link-code",
         headers={"X-Integration-Key": SHARED_SECRET},
-        json={"code": "ZZZZZZZZ"},
+        json={"code": "SA-999999"},
     )
     assert r.status_code == 404
+
+
+def test_verify_normalises_human_input(client: TestClient) -> None:
+    """Accept 'SA-482731', 'sa 482731', '482731', 'SA482731' — anything with the 6 digits."""
+    _, token = _register(client)
+    # Mint fresh per variant since verify consumes single-use.
+    for build_variant in (
+        lambda d: f"SA-{d}",       # canonical
+        lambda d: f"sa-{d}",       # lowercase prefix
+        lambda d: f"sa {d}",       # space instead of hyphen
+        lambda d: d,               # digits only
+        lambda d: f"SA{d}",        # no separator
+    ):
+        code = _mint_code(client, token)
+        digits = code[3:]
+        variant = build_variant(digits)
+        r = client.post(
+            "/api/integrations/verify-link-code",
+            headers={"X-Integration-Key": SHARED_SECRET},
+            json={"code": variant},
+        )
+        assert r.status_code == 200, (
+            f"variant={variant!r} (digits={digits!r}) → {r.status_code} {r.text}"
+        )
 
 
 # ----------------- 3. Export (GET /export-assessments) ----------------- #
@@ -190,6 +235,6 @@ def test_missing_secret_returns_503(monkeypatch, client: TestClient) -> None:
     r = client.post(
         "/api/integrations/verify-link-code",
         headers={"X-Integration-Key": "anything"},
-        json={"code": "AAAAAAAA"},
+        json={"code": "SA-000000"},
     )
     assert r.status_code == 503

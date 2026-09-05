@@ -51,9 +51,14 @@ router = APIRouter(tags=["integrations"])
 logger = logging.getLogger(__name__)
 
 
-# 8-char alphabet, ambiguous glyphs (I, O, 1, 0) dropped.
-_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-_CODE_LENGTH = 8
+# Human-friendly, easy-to-say-out-loud code format: SA-XXXXXX.
+# Six digits keeps the space large (1,000,000) while staying trivially
+# readable over the phone. The "SA-" prefix is cosmetic on the way in
+# — the server normalises before hashing so a parent who types
+# "sa 482731" or "SA482731" still matches.
+_CODE_PREFIX = "SA-"
+_CODE_DIGITS = 6
+_CODE_LENGTH = len(_CODE_PREFIX) + _CODE_DIGITS  # "SA-482731" == 9 chars
 _CODE_TTL_MINUTES = 15
 _MINT_RATE_LIMIT_PER_HOUR = 5
 
@@ -67,7 +72,23 @@ def _now() -> datetime:
 
 
 def _generate_code() -> str:
-    return "".join(secrets.choice(_CODE_ALPHABET) for _ in range(_CODE_LENGTH))
+    digits = "".join(secrets.choice(string.digits) for _ in range(_CODE_DIGITS))
+    return f"{_CODE_PREFIX}{digits}"
+
+
+def _normalise_code(raw: str) -> str:
+    """
+    Accept the code the way a human would paste it: `SA-482731`, `SA
+    482731`, `sa482731`, or plain `482731`. Everything non-digit is
+    stripped and the canonical `SA-` prefix is re-attached so the
+    bcrypt lookup finds the mint we stored.
+    """
+    if not raw:
+        return ""
+    digits = "".join(ch for ch in raw if ch.isdigit())
+    if len(digits) != _CODE_DIGITS:
+        return ""
+    return f"{_CODE_PREFIX}{digits}"
 
 
 def _hash_code(code: str) -> str:
@@ -111,8 +132,20 @@ async def _mint_rate_limited(db: AsyncIOMotorDatabase, user_id: str) -> bool:
 
 # ------------------------------- schemas ------------------------------- #
 
+class LinkCodeMintRequest(BaseModel):
+    # Which assessment lane the parent is inviting the co-parent on.
+    # Optional — the mint works without one so the "link account"
+    # entry point in settings still functions — but assessment-end
+    # CTAs SHOULD pass it so the sibling app knows which lane to
+    # open when the co-parent joins.
+    context: Optional[str] = Field(default=None, max_length=32)
+
+
 class LinkCodeResponse(BaseModel):
     code: str = Field(..., min_length=_CODE_LENGTH, max_length=_CODE_LENGTH)
+    context: Optional[str] = None
+    expires_at: str = Field(..., description="ISO-8601 expiry timestamp")
+    join_url: str = Field(..., description="Public URL to paste into the invite message.")
 
 
 class VerifyLinkCodeRequest(BaseModel):
@@ -121,6 +154,7 @@ class VerifyLinkCodeRequest(BaseModel):
 
 class VerifyLinkCodeResponse(BaseModel):
     email: EmailStr
+    context: Optional[str] = None
 
 
 # ------------------------------- endpoints ------------------------------- #
@@ -128,14 +162,16 @@ class VerifyLinkCodeResponse(BaseModel):
 @router.post("/link-codes", response_model=LinkCodeResponse)
 async def mint_link_code(
     request: Request,
+    body: Optional[LinkCodeMintRequest] = None,
     current: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """
-    Parent-authenticated. Called from account settings on
-    sacoparentsapp.online when the parent wants to link their account
-    to sacoparentsalign.com. Returns a single-use 8-character code
-    the parent copies into the sibling app.
+    Parent-authenticated. Called from the "Create Joint Alignment
+    Report" / "Ready to Compare Perspectives?" CTA at the end of an
+    eligible assessment (or from the account-settings link entry).
+    Returns a human-readable `SA-482731`-shaped code plus a canonical
+    `join_url` the parent can paste into their invite message.
     """
     if current.is_guest:
         raise HTTPException(status_code=403, detail="Guest accounts cannot link")
@@ -154,21 +190,35 @@ async def mint_link_code(
     )
 
     code = _generate_code()
+    context = (body.context if body and body.context else None)
+    expires_at = _now() + timedelta(minutes=_CODE_TTL_MINUTES)
     doc = {
         "user_id": current.user_id,
         "email": current.email,
         "code_hash": _hash_code(code),
+        "context": context,
         "minted_at": _now(),
-        "expires_at": _now() + timedelta(minutes=_CODE_TTL_MINUTES),
+        "expires_at": expires_at,
         "consumed_at": None,
         "consumed_reason": None,
         "ip": request.client.host if request.client else None,
     }
     await db[_COLL].insert_one(doc)
     logger.info(
-        "link-code minted user=%s ttl_min=%s", current.user_id, _CODE_TTL_MINUTES
+        "link-code minted user=%s context=%s ttl_min=%s",
+        current.user_id,
+        context,
+        _CODE_TTL_MINUTES,
     )
-    return LinkCodeResponse(code=code)
+    align_base = os.environ.get(
+        "ALIGN_JOIN_URL_BASE", "https://sacoparentsalign.com/join"
+    ).rstrip("/")
+    return LinkCodeResponse(
+        code=code,
+        context=context,
+        expires_at=expires_at.astimezone(timezone.utc).isoformat(),
+        join_url=f"{align_base}/{code}",
+    )
 
 
 @router.post(
@@ -187,14 +237,19 @@ async def verify_link_code(
     """
     _verify_integration_key(x_integration_key)
 
+    # Normalise "SA-482731", "sa 482731", "482731" → "SA-482731".
+    normalised = _normalise_code(body.code)
+    if not normalised:
+        raise HTTPException(status_code=404, detail="Code not found or expired")
+
     # Look at only-unconsumed, non-expired candidates. Iterate to
     # compare the bcrypt hash (bcrypt hashes are not indexable).
     cursor = db[_COLL].find(
         {"consumed_at": None, "expires_at": {"$gte": _now()}},
-        {"_id": 1, "user_id": 1, "email": 1, "code_hash": 1},
+        {"_id": 1, "user_id": 1, "email": 1, "code_hash": 1, "context": 1},
     )
     async for candidate in cursor:
-        if _check_code(body.code, candidate.get("code_hash", "")):
+        if _check_code(normalised, candidate.get("code_hash", "")):
             await db[_COLL].update_one(
                 {"_id": candidate["_id"]},
                 {
@@ -205,11 +260,15 @@ async def verify_link_code(
                 },
             )
             logger.info(
-                "link-code verified user=%s email=%s",
+                "link-code verified user=%s email=%s context=%s",
                 candidate.get("user_id"),
                 candidate.get("email"),
+                candidate.get("context"),
             )
-            return VerifyLinkCodeResponse(email=candidate["email"])
+            return VerifyLinkCodeResponse(
+                email=candidate["email"],
+                context=candidate.get("context"),
+            )
 
     raise HTTPException(status_code=404, detail="Code not found or expired")
 

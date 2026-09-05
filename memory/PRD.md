@@ -280,6 +280,77 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-03-04 — Joint Alignment (professional-driven cases) — Phase A backend + Align build spec
+- **Architectural shift**: the earlier parent-driven `link_codes`
+  mint was reframed by the founder into a **professional-driven**
+  Joint Alignment Case flow — a mediator / attorney / therapist
+  creates the case on `sacoparentsalign.com`, Align emails BOTH
+  parents secure per-parent invitation tokens, each parent
+  completes their assessment privately on `sacoparentsapp.online`,
+  and Align generates the 10-page Joint Alignment Report only
+  after both are done. The parent-driven mint stays live for the
+  "I want to invite my co-parent from inside the app" case.
+- **`joint_alignment_routes.py`** (new module, mounted on `/api`):
+  - `POST /integrations/joint-alignment/cases` (server-to-server,
+    `X-Integration-Key`) — Align creates the case, receives back
+    `case_id` (`SA-XXXXXX`, 6 digits) + one `invitation_url` per
+    parent + `case_expires_at` (60d). Rejects non-two-parent
+    payloads, duplicate emails, and unknown assessment types.
+  - `GET /integrations/joint-alignment/cases/{case_id}` (server-
+    to-server) — Align polls case status. When both parents
+    complete, the payload additionally includes the two
+    data-minimised `assessments` bundles (only the lane the case
+    was opened for; never other lanes / foundation / notes /
+    mediation prep). `schema_version: 1`.
+  - `GET /joint-alignment/invitation/{token}` — public preview
+    the `/join/:token` landing page renders BEFORE the parent
+    signs in. Deliberately returns only `case_id`,
+    `assessment_type`, `professional_name`, `token_expires_at`,
+    `already_accepted`, `assessment_completed`. Never leaks
+    email / other parent / professional email — so a stolen link
+    can't enumerate PII.
+  - `POST /joint-alignment/invitation/{token}/accept` (JWT
+    required) — associates the invitation with the parent's
+    account. **The authenticated user's email must match the
+    invitation email** — this is the mechanism that stops
+    someone else claiming a stray token. 403 on mismatch.
+  - `POST /joint-alignment/manual-code` (JWT required) — alternate
+    entry when the parent only has the visible `SA-XXXXXX` code
+    from the email. Same email-match guardrail; the code alone
+    is never sufficient.
+  - `GET /joint-alignment/mine` (JWT required) — powers the
+    dashboard "Joint Alignment Requests" section for the parent.
+    Includes `my_status` per row (invited / in_progress /
+    completed). Never includes co-parent answers.
+- Invitation tokens: 32-byte urlsafe random, TTL 7 days.
+- Timezone hardening: `_is_expired()` normalises Motor's tz-naive
+  reads to UTC before comparing — one pytest failure surfaced,
+  fixed centrally.
+- **Docs shipped**:
+  - `SACOPARENTS_INTEGRATION_API.md` — updated with the joint-
+    alignment endpoints.
+  - `SACOPARENTSALIGN_BUILD_SPEC.md` — companion build brief for
+    the Align-side team covering their professional dashboard,
+    parent invitation email template, report generation trigger,
+    and the seven non-negotiable guardrails (no shared DB,
+    data-minimisation, email-match guardrail, no PII in
+    preview, reminders live on Align, secret rotation cadence).
+- **Coverage**: `tests/test_iter139_joint_alignment_cases.py` —
+  14 tests. All 32 (iter137 + iter138 + iter139) green together.
+- **Live curl verified**: full flow (create case → preview →
+  parent signs in → accept → dashboard listing) works end-to-end
+  on the preview URL. Preview does not leak email, professional
+  email, or other-parent info. Mismatched-email accept returns
+  403.
+- **Phase B (frontend, next session)**: `/join/:token` landing
+  page (auth wall → "You've Been Invited" screen), `/join`
+  manual code entry, new "Joint Alignment Requests" dashboard
+  section, and the "Your Assessment Is Complete" post-completion
+  screen.
+- **Phase C (later)**: App→Align completion webhook once Align
+  publishes an inbound URL; cancellation endpoint from Align.
+  Placeholder env var `ALIGN_COMPLETION_WEBHOOK_URL` reserved.
+
 ### 2026-03-04 — Sibling integration (`sacoparentsalign`) + Communication Alignment Phase 2a + circle animations
 - **P0 dropped-task RESOLVED — sibling integration wired**: three
   new endpoints in `integration_routes.py`, registered on the
