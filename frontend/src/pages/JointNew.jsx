@@ -26,6 +26,7 @@ export default function JointNew() {
   const [paName, setPaName] = useState("");
   const [paEmail, setPaEmail] = useState("");
   const [mediatorEmail, setMediatorEmail] = useState("");
+  const [caseRef, setCaseRef] = useState("");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -82,7 +83,7 @@ export default function JointNew() {
       }
       const url = isAgreement ? "/joint/agreements" : isPro ? "/joint/reports/professional" : "/joint/reports";
       const body = isPro
-        ? { ...base, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail }
+        ? { ...base, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail, case_reference: caseRef }
         : { ...base, co_parent_name: coName, co_parent_email: coEmail, mediator_email: isSafety && mediatorEmail.trim() ? mediatorEmail.trim() : undefined };
       const { data } = await api.post(url, body);
       if (isPro) {
@@ -123,6 +124,10 @@ export default function JointNew() {
             <div className="text-center mb-8">
               <Mail className="h-10 w-10 text-primary mx-auto mb-4" />
               <h1 className="text-3xl font-semibold">Parent Links Ready</h1>
+              {created.case_code && (
+                <p className="mt-3 text-sm" data-testid="pro-case-code">Alignment Case: <span className="font-display text-xl font-bold tracking-[0.2em] text-brand-purple">{created.case_code}</span></p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1" data-testid="pro-case-status">Status: Waiting for both parents</p>
               <p className="text-muted-foreground mt-3 max-w-lg mx-auto">
                 Share each parent's private link to collect their information for <strong>{created.subject_label}</strong>
                 regarding <strong>{created.child_name || "the child"}</strong>. Each link is unique to that parent —
@@ -164,7 +169,7 @@ export default function JointNew() {
               </p>
             </div>
             <div className="bg-muted/50 border border-border rounded-lg p-5 mb-6">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-2">Invitation code</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-2">Alignment Code</p>
               <div className="flex items-center gap-3">
                 <span className="font-display text-3xl font-bold tracking-[0.3em]" data-testid="invitation-code-display">{created.invitation.code}</span>
                 <Button size="sm" variant="outline" className="gap-1.5" onClick={() => copy(created.invitation.code)} data-testid="copy-code-btn">
@@ -304,6 +309,13 @@ export default function JointNew() {
                     <Label htmlFor="co-email">{isPro ? "Parent B email" : "Co-parent's email"}</Label>
                     <Input id="co-email" type="email" className="h-12" value={coEmail} onChange={(e) => setCoEmail(e.target.value)} placeholder="jordan@example.com" data-testid="co-parent-email-input" />
                   </div>
+                  {isPro && (
+                    <div className="space-y-2">
+                      <Label htmlFor="case-ref">Private case reference (optional)</Label>
+                      <Input id="case-ref" className="h-12" value={caseRef} onChange={(e) => setCaseRef(e.target.value)} placeholder="e.g. Your file #2026-114" data-testid="case-reference-input" />
+                      <p className="text-xs text-muted-foreground">Only you can see this — it is never shown to the parents.</p>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground" data-testid="invite-privacy-note">
                     Each parent keeps a separate login. Your co-parent receives an invitation code — never share your password.
                   </p>

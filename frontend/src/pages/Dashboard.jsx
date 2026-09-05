@@ -251,7 +251,7 @@ export default function Dashboard() {
           <p className="font-semibold mb-1">Already invited?</p>
           <p className="text-sm text-muted-foreground mb-4">Enter the invitation code from your email to join a Joint Report.</p>
           <div className="flex gap-2 max-w-md">
-            <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. K7P2QX" className="h-12 tracking-[0.3em] uppercase font-semibold" maxLength={6} data-testid="invitation-code-input" />
+            <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. SA-EDU-482731" className="h-12 tracking-[0.2em] uppercase font-semibold" maxLength={16} data-testid="invitation-code-input" />
             <Button onClick={acceptCode} disabled={code.trim().length < 6 || busy} className="h-12" data-testid="accept-invitation-btn">Accept</Button>
           </div>
         </div>
@@ -280,6 +280,7 @@ export default function Dashboard() {
             <div className="grid md:grid-cols-2 gap-4" data-testid="joints-grid">
               {joints.map((j) => {
                 const ready = j.status === "ready";
+                const pending = j.pending_invitations || (j.invitation && j.invitation.status === "pending" ? [j.invitation] : []);
                 const myP = j.my_role ? j.participants[j.my_role] : null;
                 const otherP = j.my_role ? j.participants[j.my_role === "a" ? "b" : "a"] : null;
                 const rows = j.my_role
@@ -290,11 +291,13 @@ export default function Dashboard() {
                     <p className="text-xs uppercase tracking-widest text-accent font-semibold">{j.subject_label}</p>
                     <h3 className="text-xl font-semibold mt-1" data-testid={`joint-title-${j.id}`}>{j.child_name ? `For ${j.child_name}` : "Joint Report"}</h3>
                     {j.professional_name && <p className="text-xs text-muted-foreground mt-1">Created by {j.professional_name} (professional)</p>}
+                    {j.case_code && <p className="text-xs text-muted-foreground mt-1" data-testid={`joint-case-code-${j.id}`}>Alignment Case: <span className="font-semibold tracking-widest">{j.case_code}</span></p>}
+                    {j.case_reference && <p className="text-xs text-muted-foreground mt-1" data-testid={`joint-case-ref-${j.id}`}>Your case reference: {j.case_reference} (private to you)</p>}
                     <div className="mt-4 space-y-2 text-sm">
                       {rows.map(([label, p]) => (
                         <div key={label} className="flex items-center gap-2" data-testid={`joint-row-${j.id}-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
                           {p.completed ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
-                          <span>{label}: {p.completed ? (p.imported ? "Complete (imported)" : "Complete") : p.accepted ? "In progress" : "Invitation sent"}</span>
+                          <span>{label}: {p.completed ? (p.imported ? "Complete (imported)" : "Complete") : p.accepted ? "In progress" : "Awaiting completion"}</span>
                         </div>
                       ))}
                       <div className="flex items-center gap-2" data-testid={`joint-report-status-${j.id}`}>
@@ -310,23 +313,27 @@ export default function Dashboard() {
                       )}
                       {(ready || (myP && myP.completed) || !j.my_role) && (
                         <Link to={`/joint/${j.id}`} data-testid={`joint-view-link-${j.id}`}>
-                          <Button size="sm" variant={ready ? "default" : "secondary"} data-testid={`joint-view-btn-${j.id}`}>{ready ? "View Joint Report" : "View Status"}</Button>
+                          <Button size="sm" variant={ready ? "default" : "secondary"} data-testid={`joint-view-btn-${j.id}`}>{ready ? (j.my_role ? "View Joint Report" : "Generate Report") : "View Status"}</Button>
                         </Link>
                       )}
-                      {j.is_creator && j.invitation && j.invitation.status === "pending" && (
+                      {j.is_creator && pending.length > 0 && (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => resend(j.invitation.id)} data-testid={`joint-resend-btn-${j.id}`}>Resend Invitation</Button>
+                          {pending.map((pi) => (
+                            <Button key={pi.id} size="sm" variant="outline" onClick={() => resend(pi.id)} data-testid={pending.length > 1 ? `joint-remind-btn-${j.id}-${pi.role}` : `joint-resend-btn-${j.id}`}>
+                              {pending.length > 1 ? `Send Reminder — ${pi.invitee_name || `Parent ${pi.role.toUpperCase()}`}` : "Send Reminder"}
+                            </Button>
+                          ))}
                           <select
                             className="h-9 rounded-md border border-input bg-white px-2 text-sm"
                             value={j.subject}
-                            onChange={(e) => changeSubject(j.invitation.id, e.target.value)}
+                            onChange={(e) => changeSubject(pending[0].id, e.target.value)}
                             data-testid={`joint-change-subject-${j.id}`}
                           >
                             {subjects.map((s) => (
                               <option key={s.key} value={s.key}>{s.label}</option>
                             ))}
                           </select>
-                          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => cancelInv(j.invitation.id)} data-testid={`joint-cancel-btn-${j.id}`}>Cancel Invitation</Button>
+                          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => cancelInv(pending[0].id)} data-testid={`joint-cancel-btn-${j.id}`}>Cancel Invitation</Button>
                         </>
                       )}
                     </div>

@@ -120,6 +120,8 @@ export default function JointReport() {
         <div className="no-print bg-white border border-border rounded-lg p-6 mb-8" data-testid="joint-status-card">
           <p className="text-xs uppercase tracking-widest text-accent font-semibold">{detail.subject_label}</p>
           <h1 className="text-2xl font-semibold mt-1" data-testid="joint-status-title">{detail.child_name ? `${detail.child_name} — Joint Report` : "Joint Report"}</h1>
+          {detail.case_code && <p className="mt-1 text-xs text-muted-foreground" data-testid="joint-case-code">Alignment Case: <span className="font-semibold tracking-widest">{detail.case_code}</span></p>}
+          {detail.case_reference && <p className="mt-1 text-xs text-muted-foreground" data-testid="joint-case-ref">Your case reference: {detail.case_reference} (private to you)</p>}
           <div className="mt-4 space-y-2 text-sm">
             {rows.map(([label, p]) => (
               <div key={label} className="flex items-center gap-2" data-testid={`status-row-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`}>

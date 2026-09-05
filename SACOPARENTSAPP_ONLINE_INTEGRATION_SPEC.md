@@ -86,3 +86,30 @@ Response 404: {"detail": "No completed assessments found"}
   parent until they choose to participate in a Joint Report comparison.
 - sacoparentsalign also uses Endpoint 3 to pre-fill private (individual) assessments with the
   parent's saved answers (Wizard "Load my saved answers" panel), so parents never re-enter material.
+
+## Case-based flow (added 2026-09-05) — Align creates the case, App delivers the assessment
+
+Professionals create a Joint Alignment Case in Align (`POST /api/joint/reports/professional`).
+Align generates the case/invitation code (`SA-XXX-NNNNNN`, e.g. SA-EDU-482731) and one secure
+invitation token per parent. Parents never type anything: the invitation email's
+"Complete My Assessment" button links to the App when `SACOPARENTS_APP_ASSESSMENT_URL` is set
+(`{SACOPARENTS_APP_ASSESSMENT_URL}/assessment?invite=<token>`), otherwise to Align's /join page.
+The case code is the backup method.
+
+Align exposes two server-to-server endpoints (header `X-Integration-Key: <INTEGRATION_SHARED_SECRET>`):
+
+1. `GET /api/integrations/case-invite/{token}` — resolve an invite token. Returns
+   `{case_id, report_id, assessment_type, child_name, parent_role, parent_name, parent_email,
+   professional_name, requested_by, invitation_status, case_status}` so the App can render
+   "Requested by [professional]" and know which case → parent → assessment.
+2. `POST /api/integrations/case-update` — App pushes status. Body:
+   `{token, status: "started"|"completed", assessment_id, responses: {…comparison fields…}}`.
+   "started" moves the case to in_progress; "completed" stores the parent's comparison fields as
+   their private completed side (`imported: true`). When both sides are complete the case becomes
+   "ready" and the professional is emailed a "Generate Joint Alignment Report" link.
+
+The App keeps raw assessment answers in its own database; Align only receives the comparison
+fields. One parent's material is never exposed to the other — only the generated comparison
+appears in the Joint Alignment Report. Align case data model additions on joint_reports:
+`case_code` (shown to participants), `case_reference` (optional, professional-only, never
+returned to parents), responses.{a|b}.imported/external as with account-link imports.
