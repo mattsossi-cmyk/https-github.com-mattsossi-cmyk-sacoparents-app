@@ -204,3 +204,4 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## Landing hero image replaced (2026-09-05)
 - User uploaded new poster "SA CoParents ALIGN FOR PROFESSIONALS — Building on Different Perspectives, Creating a Shared Future" (800x800 PNG) and asked to replace the hero image.
 - Saved to /app/frontend/public/align-pro-poster.png; Landing.jsx POSTER_IMG now "/align-pro-poster.png" (local public asset, was external artifact CDN URL); alt text updated to match new poster. Screenshot-verified on preview: natural 800x800, renders left of hero text. Old artifact URL no longer referenced.
+- Same request batch: landing hero CTA button text changed "Start a Joint Assessment" → "Create Joint Report" (Landing.jsx line ~81, data-testid hero-cta-btn).

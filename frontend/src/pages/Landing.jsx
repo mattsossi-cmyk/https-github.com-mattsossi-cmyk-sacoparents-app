@@ -78,7 +78,7 @@ export default function Landing() {
           <div className="mt-8 flex flex-wrap gap-4">
             <Link to="/auth" data-testid="hero-cta-link">
               <Button size="lg" className="gap-2" data-testid="hero-cta-btn">
-                Start a Joint Assessment <ArrowRight className="h-4 w-4" />
+                Create Joint Report <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
