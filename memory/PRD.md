@@ -280,6 +280,57 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-03-04 — Four-Circle Front Door (new dashboard IA — Phase 1)
+- **Founder-driven redesign**: the signed-in dashboard root now leads
+  with four pathway circles instead of the old single "Step 1"
+  situation picker. Copy taken verbatim from the founder's spec:
+  🟣 Co-Parenting · 🔵 Communication · 🟠 Family Violence & Safety
+  · 🟢 Child Needs. The old Step 1 hero now sits below as the
+  secondary layer so nothing existing regressed.
+- **`components/dashboard/FourCircleFrontDoor.jsx`** (new): four
+  circle tiles, each carrying the pathway prompt, a description
+  strip drawn from the founder's spec, a per-tone color palette
+  (purple / blue / orange / green), and a CTA. The Child Needs
+  circle expands *inline* into four sub-tiles (School & Education,
+  Medical, Emotional & Psychological, Special Needs) plus a
+  "Complete Child Needs Assessment" escape button. Above the
+  circles a 6-step journey strip names the unifying philosophy
+  (Reflect → Understand → Identify → Explore → Align → Agree). A
+  crisis banner (911 · 1-800-799-7233 · text START to 88788) sits
+  pinned below the circles.
+- **`pages/CommunicationPathway.jsx`** (new, `/communication`):
+  Phase 1 placeholder for the new Communication pathway. Asks
+  "What best describes your communication?" with the founder's
+  five choices (Generally productive / Difficult / High conflict /
+  Very limited / Communication feels unsafe). For the first four,
+  the page surfaces a recommended-tool list (BIFF, CLEAR Path,
+  written comms, boundaries, etc.). For "Communication feels
+  unsafe", the page auto-swaps to a "Safety comes first" panel
+  that routes the parent to `/safety` and offers a one-tap
+  1-800-799-7233 call. Choice is persisted in localStorage so the
+  dashboard can remember on return.
+- **`pages/JointReportsPicker.jsx`**: added a purple nudge banner
+  at the top ("New home for co-parenting pathways — try the new
+  front door →") that routes bookmarked visitors to `/dashboard`.
+  Both routes stay live for a release cycle per the founder's
+  choice.
+- **Wiring**: `App.js` registers `/communication` and imports
+  `CommunicationPathway`. `Dashboard.jsx` imports and renders
+  `FourCircleFrontDoor` immediately above the existing
+  `dashboard-step1-hero`. All new circles route to existing pages
+  (SNC v2 compare, Safety, Med/Edu/Psych Deep, Special Needs V2).
+- **Verification** via preview screenshots (`parent1@test.com`):
+  Front Door renders "Where would you like to start, Sam?" with
+  all 4 circles + 6-step strip + crisis strip; Child Needs
+  expansion works. Communication pathway "unsafe" choice triggers
+  the safety escalation panel. Joint Reports Picker nudge banner
+  renders above the two-circle picker.
+- **Phase 2 (next)**: backend + LLM prompts for the Communication
+  Alignment Report + Co-Parenting Reflection Alignment Report.
+- **Phase 3**: sunset the 8-topic grid inside JointReportsPicker
+  and fold that surface into the Front Door once parents have
+  migrated.
+
 ### 2026-03-04 — Meta / footer tagline refresh + App Store privacy disclosure
 - **Tagline propagation**: `frontend/public/index.html` `<title>`, `meta description`, `og:title`, `og:description`, `twitter:title`, `twitter:description`, `<noscript>` H1 + intro paragraph, and the JSON-LD WebApplication `description` now all carry the "With Reflection. Build Alignment. Create Better Agreements." headline + the reconciled paragraph copy. `frontend/public/manifest.json` `description` updated to the same. Landing marketing footer subline replaced ("From conflict to cooperation.") with the new three-part tagline (`data-testid="footer-tagline"`).
 - **App Store privacy disclosure**: new page `pages/AppStorePrivacy.jsx` at `/legal/app-store-privacy` — the single reconciled short-form statement referenced from both the Apple App Store Connect (App Privacy) and Google Play Console (Data Safety) submissions. Contents: five headline commitments (no tracking, no model training, encrypted in transit/at rest, delete anytime, adult-parent-only surface), 8-row reconciled data table (each row lists the Apple category + Google category, "Linked to user?", "Used for tracking?", and "Optional?"), a "data we deliberately do not collect" list, a data-sharing section, a parent-controls section, and a "store-console quick answers" copy-paste block for the operator submitting to each store. Linked from the main `/privacy` "See also" section as the first entry.

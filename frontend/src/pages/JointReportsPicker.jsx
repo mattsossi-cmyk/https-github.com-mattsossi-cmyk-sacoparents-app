@@ -245,6 +245,33 @@ export default function JointReportsPicker() {
   return (
     <AppShell>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        {/* New Front Door nudge — the picker is being superseded by the
+            four-circle dashboard root. Keep this route live for parents who
+            already bookmarked it, but point them home. */}
+        <div
+          className="mb-6 rounded-2xl border border-[#D6CFE8] bg-gradient-to-br from-[#F8F7FC] to-[#EFE9F9] p-4 flex items-start sm:items-center gap-3 sm:gap-4 flex-col sm:flex-row"
+          data-testid="joint-picker-front-door-nudge"
+        >
+          <div className="flex-1">
+            <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+              New home for co-parenting pathways
+            </div>
+            <p className="text-[14px] text-[#1A1330] leading-relaxed mt-1 !mb-0">
+              We&rsquo;ve moved to a simpler four-pathway front door on your
+              dashboard — Co-Parenting, Communication, Family Violence &amp;
+              Safety, and Child Needs.
+            </p>
+          </div>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] text-white px-4 py-2 text-sm font-semibold hover:bg-[#2A0F5F] transition self-start sm:self-auto"
+            data-testid="joint-picker-goto-front-door"
+          >
+            Try the new front door
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+
         <div className="mb-8">
           <div className="eyebrow text-[#3D1A78] mb-2">Joint reports</div>
           <h1

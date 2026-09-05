@@ -25,6 +25,7 @@ import ShareReportQuickAction from "../components/ShareReportQuickAction";
 import AssessmentHistoryCard from "../components/AssessmentHistoryCard";
 import AlignReportCTA from "../components/AlignReportCTA";
 import NewCommentToaster from "../components/NewCommentToaster";
+import FourCircleFrontDoor from "../components/dashboard/FourCircleFrontDoor";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -492,6 +493,14 @@ export default function Dashboard() {
         {/* Reminder pill for parents who arrived via the landing situation
             picker. Renders only when localStorage has a chosen focus. */}
         <PickerChoicePill />
+
+        {/* NEW (2026-03-04) — Four-Circle Front Door.
+            The founder's chosen dashboard root: four pathways with the
+            same six-step process underneath. Child Needs reveals its
+            sub-tiles inline. Everything below (Step 1 situation picker,
+            journey, cards) still renders for parents who want the deeper
+            surface. */}
+        <FourCircleFrontDoor userName={user?.name} />
 
         {/* Step 1 — "What best describes your situation?" opener.
             Deliberately the FIRST thing above the fold so the greeting a
