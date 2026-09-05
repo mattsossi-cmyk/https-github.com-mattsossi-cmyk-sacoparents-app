@@ -113,3 +113,7 @@ fields. One parent's material is never exposed to the other — only the generat
 appears in the Joint Alignment Report. Align case data model additions on joint_reports:
 `case_code` (shown to participants), `case_reference` (optional, professional-only, never
 returned to parents), responses.{a|b}.imported/external as with account-link imports.
+
+SECURITY: the original INTEGRATION_SHARED_SECRET was exposed in chat earlier and was ROTATED in
+the Align project on 2026-09-05. The sacoparentsapp.online project must be configured with the
+new value (copy it from the Align project's protected environment settings — never from chat).
