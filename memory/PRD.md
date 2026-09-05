@@ -280,6 +280,73 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-03-04 — Joint Alignment Phase B UI + Phase C completion hook & cancellation
+- **Completion hook (backend, Phase C partial)**:
+  `mark_assessment_completed(db, user_id, assessment_type,
+  assessment_ref=None)` — public helper wired into
+  `med_deep_routes.py`, `edu_deep_routes.py`, `psych_deep_routes.py`
+  (both fresh + cached branches of `/report/generate`) and
+  `communication_alignment_routes.py::save_reflection`. Marks the
+  parent slot as `assessment_completed_at` on every open case
+  matching the assessment_type, and flips the top-level case to
+  `both_complete` when both parents are done.
+  - MongoDB bug caught + fixed: original two-field `parents.*`
+    filter matched different array elements on the same doc; now
+    uses `$elemMatch` so the same parent slot is queried and
+    updated together.
+- **Outbound Align webhook**:
+  `_notify_align_completion(payload)` posts to
+  `ALIGN_COMPLETION_WEBHOOK_URL` (env var, currently unset;
+  helper logs and no-ops until Align publishes their URL).
+  Body is signed with HMAC-SHA256 of the request body using the
+  same `INTEGRATION_SHARED_SECRET`, header
+  `X-Integration-Signature`. Fail-soft: the parent-facing
+  completion path never fails because of a webhook problem.
+- **Align cancellation endpoint**:
+  `POST /api/integrations/joint-alignment/cases/{case_id}/cancel`
+  — server-to-server. Moves the case to `cancelled`, expires
+  every unclaimed invitation token on it (via
+  `parents.$[unclaimed].token_expires_at`). Idempotent: a
+  second cancel returns 404 ("no work to do").
+- **Phase B UI**:
+  - `pages/JoinInvitation.jsx` at `/join/:token` — the landing
+    the parent lands on from an Align email. Three-state page:
+    (1) unauthed → shows the invitation preview + auth wall
+    (Sign in / Create account), (2) authed + accepting → spinner,
+    (3) authed + accepted → "You're linked" panel + "Start My
+    Assessment" CTA that routes to the correct lane
+    (`/edu-deep`, `/med-deep`, `/psych-deep`, `/communication`,
+    or `/special-needs-v2`). 403 email-mismatch and 410 expired
+    both have their own friendly explainers. `data-testid`s on
+    every branch for testing.
+  - `pages/JoinCode.jsx` at `/join` — manual `SA-XXXXXX` entry
+    for parents who lost the email. Monospaced tracking-widest
+    input with the exact SA-482731 placeholder. Guardrail strip
+    explains code-alone is never sufficient. On success shows
+    the "linked" panel with the same Start Assessment CTA.
+  - `components/dashboard/JointAlignmentRequests.jsx` — new
+    dashboard section that hides itself when the parent has zero
+    cases (so solo parents don't grow an empty panel). Renders
+    the parent's cases with status pills (Invitation received /
+    In progress / Your assessment complete / Cancelled /
+    Expired), Continue / Start Assessment CTA per row, and a
+    top-right "Have an Alignment Code?" fallback link.
+  - Mounted directly under `FourCircleFrontDoor` on
+    `pages/Dashboard.jsx` so a parent invited by a professional
+    sees the case immediately.
+- **Companion spec shared**: `SACOPARENTSALIGN_BUILD_SPEC.md`
+  copied to `frontend/public/` so it's downloadable at
+  `https://sacoparentsapp.online/SACOPARENTSALIGN_BUILD_SPEC.md`
+  — the Align build team can grab it directly.
+- **Coverage**: `tests/test_iter140_completion_hook_and_cancel.py`
+  — 7 new tests. All 38 (iter137 + iter138 + iter139 + iter140)
+  green together. Frontend compiled clean. End-to-end preview
+  smoke-tested: preview renders no PII, auth wall works, manual
+  code page renders.
+- **Still pending for Phase C**: Align must publish their inbound
+  webhook URL before we can drop it into
+  `ALIGN_COMPLETION_WEBHOOK_URL`. The signing side is ready.
+
 ### 2026-03-04 — Joint Alignment (professional-driven cases) — Phase A backend + Align build spec
 - **Architectural shift**: the earlier parent-driven `link_codes`
   mint was reframed by the founder into a **professional-driven**

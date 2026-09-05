@@ -167,6 +167,13 @@ async def save_reflection(
         {"$set": doc, "$setOnInsert": {"created_at": _now()}},
         upsert=True,
     )
+    # Propagate to any open Joint Alignment Cases so a professional
+    # sees the parent as "completed" on the communication lane.
+    try:
+        from joint_alignment_routes import mark_assessment_completed  # noqa: WPS433
+        await mark_assessment_completed(db, current.user_id, "communication")
+    except Exception:  # noqa: BLE001
+        pass
     return {"ok": True, "score": scored}
 
 

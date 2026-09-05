@@ -26,6 +26,7 @@ import AssessmentHistoryCard from "../components/AssessmentHistoryCard";
 import AlignReportCTA from "../components/AlignReportCTA";
 import NewCommentToaster from "../components/NewCommentToaster";
 import FourCircleFrontDoor from "../components/dashboard/FourCircleFrontDoor";
+import JointAlignmentRequests from "../components/dashboard/JointAlignmentRequests";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -501,6 +502,10 @@ export default function Dashboard() {
             journey, cards) still renders for parents who want the deeper
             surface. */}
         <FourCircleFrontDoor userName={user?.name} />
+
+        {/* Joint Alignment Requests — hides itself when zero cases,
+            so a solo parent's dashboard doesn't grow an empty panel. */}
+        <JointAlignmentRequests />
 
         {/* Step 1 — "What best describes your situation?" opener.
             Deliberately the FIRST thing above the fold so the greeting a

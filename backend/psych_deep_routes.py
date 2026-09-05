@@ -198,8 +198,18 @@ async def generate(user: UserPublic = Depends(get_current_user),
         raise HTTPException(status_code=400, detail="Please answer some questions first.")
     cached = await _cached(db, user.user_id)
     if cached and not _is_stale(doc, cached):
+        try:
+            from joint_alignment_routes import mark_assessment_completed  # noqa: WPS433
+            await mark_assessment_completed(db, user.user_id, "psychological")
+        except Exception:  # noqa: BLE001
+            pass
         return {"cached": True, **cached}
     fresh = await _build_and_cache(db, user, doc)
+    try:
+        from joint_alignment_routes import mark_assessment_completed  # noqa: WPS433
+        await mark_assessment_completed(db, user.user_id, "psychological")
+    except Exception:  # noqa: BLE001
+        pass
     return {"cached": False, **fresh}
 
 

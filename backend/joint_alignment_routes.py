@@ -59,13 +59,16 @@ Guardrails
 """
 from __future__ import annotations
 
+import hashlib
 import hmac
+import json
 import logging
 import os
 import secrets
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
+import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Path
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field
@@ -642,3 +645,202 @@ async def list_my_cases(
             )
         cases.append(shape)
     return {"cases": cases}
+
+
+# =========================== completion + webhook =========================== #
+
+def _webhook_signature(body_bytes: bytes) -> str:
+    """
+    HMAC-SHA256 of the outgoing webhook body, using the same shared
+    secret Align already knows. Align verifies this on their inbound
+    endpoint so a spoofed webhook can't mark a case complete.
+    """
+    secret = _shared_secret() or ""
+    return hmac.new(
+        secret.encode("utf-8"), body_bytes, hashlib.sha256
+    ).hexdigest()
+
+
+async def _notify_align_completion(payload: Dict[str, Any]) -> None:
+    """
+    Best-effort POST to Align's inbound completion webhook. Never
+    raises — assessment completion in the App must not fail because
+    a downstream partner is unreachable. Retry / durable delivery
+    lives in Phase C+ once we have a real URL to wire.
+    """
+    url = os.environ.get("ALIGN_COMPLETION_WEBHOOK_URL")
+    if not url:
+        logger.info(
+            "align completion webhook skipped (no ALIGN_COMPLETION_WEBHOOK_URL); payload=%s",
+            payload,
+        )
+        return
+    body_bytes = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    signature = _webhook_signature(body_bytes)
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as http:
+            r = await http.post(
+                url,
+                content=body_bytes,
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Integration-Signature": signature,
+                },
+            )
+            logger.info(
+                "align completion webhook posted case=%s status=%s",
+                payload.get("case_id"),
+                r.status_code,
+            )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("align completion webhook failed: %s", exc)
+
+
+async def mark_assessment_completed(
+    db: AsyncIOMotorDatabase,
+    user_id: str,
+    assessment_type: str,
+    assessment_ref: Optional[str] = None,
+) -> List[str]:
+    """
+    Public helper called from anywhere an assessment finalises
+    (deep-dive report generation, SNC v2 completion, etc.). Marks
+    the authenticated parent's slot as `assessment_completed` on
+    every open case that matches the assessment_type, and fires the
+    outbound webhook to Align for each. Idempotent — a second call
+    for the same user + type will still mark the case as completed
+    with an updated timestamp, but Align's webhook receiver should
+    treat repeated notifications as a no-op.
+
+    Returns the list of case_ids that were updated (useful for logs
+    and for the frontend "your case advanced" nudge).
+    """
+    if assessment_type not in _ASSESSMENT_TYPES:
+        return []
+    now = _now()
+    updated: List[str] = []
+    async for case in db[_CASES_COLL].find(
+        {
+            "assessment_type": assessment_type,
+            "status": {"$nin": ["expired", "cancelled"]},
+            # $elemMatch so BOTH conditions apply to the same parent
+            # slot — otherwise the query matches docs where user A's
+            # slot is completed and user B's slot is not, and the
+            # `parents.$` update targets the wrong slot.
+            "parents": {
+                "$elemMatch": {
+                    "user_id": user_id,
+                    "assessment_completed_at": None,
+                }
+            },
+        }
+    ):
+        result = await db[_CASES_COLL].update_one(
+            {
+                "_id": case["_id"],
+                "parents": {
+                    "$elemMatch": {
+                        "user_id": user_id,
+                        "assessment_completed_at": None,
+                    }
+                },
+            },
+            {
+                "$set": {
+                    "parents.$.assessment_completed_at": now,
+                    "parents.$.assessment_ref": assessment_ref,
+                }
+            },
+        )
+        if result.modified_count == 0:
+            continue
+        updated.append(case["case_id"])
+
+        # Compute the fresh status and, if both are done, flip the
+        # top-level status too so pollers see it without recomputing.
+        fresh = await db[_CASES_COLL].find_one({"_id": case["_id"]})
+        parents = (fresh or {}).get("parents") or []
+        both_done = all(p.get("assessment_completed_at") for p in parents) and parents
+        if both_done and fresh.get("status") not in ("cancelled", "expired"):
+            await db[_CASES_COLL].update_one(
+                {"_id": case["_id"]},
+                {"$set": {"status": "both_complete"}},
+            )
+
+        await _notify_align_completion(
+            {
+                "event": "assessment_completed",
+                "case_id": case["case_id"],
+                "assessment_type": assessment_type,
+                "parent": {
+                    "email": next(
+                        (
+                            p.get("email")
+                            for p in parents
+                            if p.get("user_id") == user_id
+                        ),
+                        None,
+                    ),
+                    "slot": next(
+                        (
+                            p.get("parent_slot")
+                            for p in parents
+                            if p.get("user_id") == user_id
+                        ),
+                        None,
+                    ),
+                },
+                "both_complete": bool(both_done),
+                "completed_at": _iso(now),
+            }
+        )
+    if updated:
+        logger.info(
+            "assessment completion propagated user=%s type=%s cases=%s",
+            user_id,
+            assessment_type,
+            updated,
+        )
+    return updated
+
+
+# =========================== cancellation endpoint =========================== #
+
+class CancelCaseRequest(BaseModel):
+    reason: Optional[str] = Field(default=None, max_length=280)
+
+
+@router.post("/integrations/joint-alignment/cases/{case_id}/cancel")
+async def integration_cancel_case(
+    body: CancelCaseRequest,
+    case_id: str = Path(..., min_length=1, max_length=20),
+    x_integration_key: Optional[str] = Header(default=None, alias="X-Integration-Key"),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Server-to-server. Align cancels a case (professional retracted
+    it, wrong parents, dispute settled outside the process, etc.).
+    Marks the case `cancelled` and expires every unclaimed
+    invitation on it. A cancelled case never advances again.
+    """
+    _verify_integration_key(x_integration_key)
+    canonical = _normalise_case_id(case_id) or case_id
+    now = _now()
+    result = await db[_CASES_COLL].update_one(
+        {"case_id": canonical, "status": {"$nin": ["cancelled", "expired"]}},
+        {
+            "$set": {
+                "status": "cancelled",
+                "cancelled_at": now,
+                "cancelled_reason": body.reason,
+                "parents.$[unclaimed].token_expires_at": now,
+            }
+        },
+        array_filters=[{"unclaimed.accepted_at": None}],
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Case not found or already cancelled")
+    logger.info("joint-alignment case cancelled case_id=%s reason=%s", canonical, body.reason)
+    fresh = await db[_CASES_COLL].find_one({"case_id": canonical})
+    return _case_public_shape(fresh)
+
