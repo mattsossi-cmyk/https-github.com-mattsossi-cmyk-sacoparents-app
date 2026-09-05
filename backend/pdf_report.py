@@ -88,6 +88,10 @@ def build_joint_pdf(r):
     if imported.get("a") or imported.get("b"):
         pdf.set_font("helvetica", "I", 9)
         pdf.cell(0, 6, _s("Includes material imported from sacoparentsapp.online"), align="C", new_x="LMARGIN", new_y="NEXT")
+    if r.get("is_sample"):
+        pdf.set_font("helvetica", "I", 9)
+        pdf.set_text_color(*GRAY)
+        pdf.cell(0, 6, _s("SAMPLE - fictional example data shown for illustration"), align="C", new_x="LMARGIN", new_y="NEXT")
     y = pdf.get_y() + 3
     pdf.set_draw_color(220, 215, 230)
     pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)

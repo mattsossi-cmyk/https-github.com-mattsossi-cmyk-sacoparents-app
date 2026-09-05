@@ -133,7 +133,7 @@ SUBJECTS = {
         ),
     },
     "mediation": {
-        "label": "Mediation Issue",
+        "label": "Mediation Statement",
         **S(
             ["A structured setting for the conversation", "Both perspectives fully heard", "Focus on the child's needs", "Options generated before decisions", "Clear documentation of any agreement"],
             ["What outcome would each parent consider acceptable?", "What information is missing before deciding?", "What options have not yet been considered?", "What can each parent offer the other?", "What should be documented afterward?"],

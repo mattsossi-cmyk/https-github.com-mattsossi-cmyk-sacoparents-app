@@ -217,3 +217,44 @@ def generate_agreement(doc):
         "philosophy_heading": "Alignment Before Agreement",
         "philosophy": "We value the parenting system by how well it supports the child, not by how friendly the adults appear.",
     }
+
+
+SAMPLE_MEDIATION_PURPOSE = (
+    "This sample Mediation Statement shows how SA CoParents Align compares the independently "
+    "provided perspectives of both parents before or during mediation. It identifies areas of "
+    "alignment, differences in perspective, the child's identified needs, and neutral options "
+    "and resources for discussion. It is not designed to determine which parent is right or "
+    "wrong. The names and answers in this sample are fictional."
+)
+
+
+def sample_mediation_report():
+    answers_a = {
+        "needs_most": "Avery needs a predictable routine and calm communication between both parents so she feels secure in both homes.",
+        "working_well": "School pickup transitions are working well, and we both keep Avery's bedtime routine consistent.",
+        "concerns": "Last-minute schedule changes and tense communication at exchanges are affecting Avery.",
+        "improve": "I would like a shared calendar and a predictable weekly schedule with consistent bedtime in both homes.",
+        "options": "I would consider a single mediation session, a shared calendar, and exchanging written proposals before meeting.",
+        "other_parent": "The other parent may be concerned about flexibility for work travel and having enough quality time with Avery.",
+    }
+    answers_b = {
+        "needs_most": "Avery needs predictable routines, calm communication, and flexibility when work travel requires schedule changes.",
+        "working_well": "Bedtime routine is consistent in both homes, and school communication from teachers reaches both of us.",
+        "concerns": "I worry the rigid weekly plan does not work with my job, and our handoffs have become strained.",
+        "improve": "More flexibility around the weekly plan and calmer, more respectful communication during handoffs.",
+        "options": "I would consider mediation, written proposals exchanged before the session, and a shared online calendar.",
+        "other_parent": "Jordan may be concerned that too much flexibility makes the schedule unpredictable for Avery.",
+    }
+    doc = {
+        "subject": "mediation",
+        "subjects": ["mediation"],
+        "subject_label": "Mediation Statement",
+        "child_name": "Avery",
+        "participants": {"a": {"name": "Jordan M."}, "b": {"name": "Casey M."}},
+        "responses": {"a": {"answers": answers_a}, "b": {"answers": answers_b}},
+    }
+    report = generate_joint_report(doc)
+    report["report_title"] = "Sample Mediation Statement"
+    report["is_sample"] = True
+    report["purpose"] = SAMPLE_MEDIATION_PURPOSE
+    return report

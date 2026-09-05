@@ -198,9 +198,12 @@ export default function Landing() {
             <p>We invite professionals who share a commitment to thoughtful, child-focused family conflict resolution to explore SA CoParents Align and consider how these tools can complement the work they already do with families.</p>
           </div>
           <p className="mt-8 font-script text-2xl text-brand-purple" data-testid="pro-motto">Reflect Individually. Understand Together. Align Around the Child. Build Agreement.</p>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/auth" data-testid="pro-join-link">
               <Button size="lg" className="gap-2" data-testid="pro-join-btn">Create a Free Professional Account <ArrowRight className="h-4 w-4" /></Button>
+            </Link>
+            <Link to="/sample-mediation" data-testid="sample-mediation-link">
+              <Button size="lg" variant="outline" data-testid="sample-mediation-btn">Preview a Sample Mediation Statement</Button>
             </Link>
           </div>
         </div>

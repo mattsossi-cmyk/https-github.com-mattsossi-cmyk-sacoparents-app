@@ -32,7 +32,7 @@ from pydantic import BaseModel, EmailStr
 from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, NEXT_STEPS, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
-from joint_engine import generate_joint_report, generate_agreement
+from joint_engine import generate_joint_report, generate_agreement, sample_mediation_report
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf
 from complete_engine import build_complete_report
 
@@ -949,6 +949,20 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="joint-report-{child}.pdf"'},
+    )
+
+
+@api.get("/joint/sample/mediation")
+async def sample_mediation():
+    return sample_mediation_report()
+
+
+@api.get("/joint/sample/mediation/pdf")
+async def sample_mediation_pdf():
+    return Response(
+        content=build_joint_pdf(sample_mediation_report()),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="sample-mediation-statement.pdf"'},
     )
 
 @api.post("/joint/reports/{rid}/share")

@@ -13,6 +13,7 @@ import JointReport from "@/pages/JointReport";
 import Hub from "@/pages/Hub";
 import CompleteReport from "@/pages/CompleteReport";
 import Privacy from "@/pages/Privacy";
+import SampleMediation from "@/pages/SampleMediation";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -44,6 +45,7 @@ function App() {
             <Route path="/hub" element={<Protected><Hub /></Protected>} />
             <Route path="/hub/complete" element={<Protected><CompleteReport /></Protected>} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/sample-mediation" element={<SampleMediation />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
