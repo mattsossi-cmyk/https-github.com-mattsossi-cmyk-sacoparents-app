@@ -196,24 +196,86 @@ Full schemas: see `/app/backend/SACOPARENTS_INTEGRATION_API.md`.
    does not include email addresses or the other parent's name.
    Align must not reintroduce that leakage from its side.
 5. **Reminders and emails live on Align.** The App does not send
-   Joint Alignment reminders. If Align cancels a case, it must
-   inform the App (Phase C — cancellation endpoint TBD).
+   Joint Alignment reminders. When Align cancels a case, call
+   `POST /api/integrations/joint-alignment/cases/{case_id}/cancel`
+   with the shared-secret header — the App will mark the case
+   cancelled and expire every unclaimed invitation on it.
 6. **Rotate the shared secret annually** and coordinate the swap
    with 7 days notice to `mattsossi@bsossi.com`.
 
 ---
 
-## 6. What's coming in Phase C
+## 6. Integration surface — complete list
 
-Currently missing (to be built together in the next phase):
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/integrations/joint-alignment/cases` | Create case → `case_id` + 2 invitation URLs. |
+| GET | `/api/integrations/joint-alignment/cases/{case_id}` | Poll status; assessments included when both complete. |
+| POST | `/api/integrations/joint-alignment/cases/{case_id}/cancel` | Cancel case + expire unclaimed invitations. Body: `{ "reason": "…" }`. Idempotent → second call is `404`. |
 
-- **App → Align completion webhook**: the App posts to Align the
-  moment a parent finishes an eligible assessment. Requires Align
-  to publish an inbound webhook URL and a secret. Env var on the
-  App side: `ALIGN_COMPLETION_WEBHOOK_URL` (placeholder).
-- **Align → App cancellation endpoint**: when a professional
-  cancels a case, mark all invitations expired.
-- **Reminder cadence** for Align to re-send invitations.
+Parent-facing surfaces (documented for awareness — Align never
+calls these):
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/joint-alignment/invitation/{token}` | Public preview shown on `/join/:token`. No auth. Returns only `case_id`, `assessment_type`, `professional_name`, `token_expires_at`. No PII. |
+| POST | `/api/joint-alignment/invitation/{token}/accept` | Parent JWT. Email-match guard. Links case to account. |
+| POST | `/api/joint-alignment/manual-code` | Parent JWT. Fallback for the visible `SA-XXXXXX`. Same email-match guard. |
+| GET | `/api/joint-alignment/mine` | Parent JWT. Powers dashboard "Joint Alignment Requests" section. |
+
+Full schemas: see `/app/backend/SACOPARENTS_INTEGRATION_API.md`
+or fetch it at
+`https://sacoparentsapp.online/SACOPARENTSALIGN_BUILD_SPEC.md`.
+
+---
+
+## 7. Completion webhook (App → Align)
+
+The App will POST an `assessment_completed` event to Align the
+moment a parent's eligible assessment finalises. The signing
+infrastructure on the App side is live and waiting on Align to
+publish an inbound URL.
+
+**Align must publish an inbound endpoint that**:
+
+- Accepts `POST` with `Content-Type: application/json`.
+- Verifies the `X-Integration-Signature` header — it is the
+  HMAC-SHA256 hex digest of the request body, keyed with the same
+  shared secret. Reject requests whose signature does not verify
+  (constant-time comparison).
+- Returns `2xx` on accept, anything else on reject. The App logs
+  the response status and moves on — delivery is best-effort in
+  Phase C, upgraded to retries in Phase D.
+
+**Body shape**:
+
+```json
+{
+  "event": "assessment_completed",
+  "case_id": "SA-482731",
+  "assessment_type": "educational",
+  "parent": {
+    "email": "parent-a@example.com",
+    "slot": "A"
+  },
+  "both_complete": false,
+  "completed_at": "2026-03-05T12:34:56+00:00"
+}
+```
+
+When both parents finish, the *second* event will have
+`both_complete: true` — Align uses that as the trigger to fetch
+`/cases/{case_id}` (which now returns `status: both_complete` +
+the `assessments` payload) and generate the 10-page Joint
+Alignment Report.
+
+Once Align has the URL live, tell the App team to set:
+
+```
+ALIGN_COMPLETION_WEBHOOK_URL=https://sacoparentsalign.com/api/webhooks/app-completion
+```
+
+on the App backend and redeploy.
 
 ---
 
