@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/Brand";
 
-const POSTER_IMG = "https://customer-assets-cm19k8pv.emergentagent.net/job_align-report/artifacts/yyfhtbqg_ChatGPT%20Image%20Sep%201%2C%202026%2C%2005_47_45%20PM.png";
+const POSTER_IMG = "/align-pro-poster.png";
 
 const TYPES = [
   { icon: Users, title: "General Co-Parenting" },
@@ -56,7 +56,7 @@ export default function Landing() {
           <div className="absolute -top-4 -right-4 w-full h-full bg-secondary rounded-xl -z-10" />
           <img
             src={POSTER_IMG}
-            alt="The SA CoParents Difference — Joint Alignment Report"
+            alt="SA CoParents Align for Professionals — Building on Different Perspectives, Creating a Shared Future"
             className="rounded-xl shadow-xl w-full"
             data-testid="hero-image"
           />
