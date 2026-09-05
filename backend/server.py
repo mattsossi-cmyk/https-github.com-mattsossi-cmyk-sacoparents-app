@@ -59,6 +59,7 @@ from insights_routes import (  # noqa: E402
     admin_briefing_scheduler_loop,
 )
 from integration_routes import router as integration_router  # noqa: E402
+from professionals_routes import router as professionals_router  # noqa: E402
 from joint_alignment_routes import router as joint_alignment_router  # noqa: E402
 from communication_alignment_routes import router as communication_alignment_router  # noqa: E402
 
@@ -190,6 +191,7 @@ api_router.include_router(dimension_companion_router)
 api_router.include_router(intervention_compliance_router)
 api_router.include_router(reviewer_panel_router)
 api_router.include_router(integration_router)
+api_router.include_router(professionals_router)
 api_router.include_router(joint_alignment_router)
 api_router.include_router(communication_alignment_router)
 app.include_router(api_router)

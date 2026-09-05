@@ -280,6 +280,70 @@ Auth: Custom JWT (`auth.py`)
 
 ## Prioritized Backlog
 
+### 2026-03-04 — Professionals directory + parent-initiated send-code + co-parent completion toaster
+- **Professionals directory (iter142)**:
+  - New `professionals_routes.py` module.
+  - `GET /api/professionals` (public) — returns active professionals
+    ordered by `sort_order` then name. Idempotent seed inserts Matt
+    Sossi on first read of an empty collection:
+    - name: *Matt Sossi*
+    - credentials: *San Antonio Attorney, Family Law Mediator,
+      Parent Facilitator*
+    - license: *Licensed to Practice in the State of Texas*
+    - email: `mattsossi@bsossi.com`
+    - address: `16607 Blanco #703, San Antonio, Texas 78205`
+    - bio line focused on child-centered outcomes.
+    - NOTE: 78205 came from the founder's message; the prior HIPAA
+      contact block used 78232. Kept 78205 as the newer directive.
+  - `POST /api/professionals/{professional_id}/send-alignment-code`
+    (parent JWT). Mints an `SA-XXXXXX` code (reusing the
+    integration_routes helpers), tags the persisted link_codes doc
+    with `professional_id` + `assessment_type` + optional
+    `parent_message`, and emails the professional via Resend using
+    the branded template. Best-effort delivery — a Resend outage
+    surfaces `delivered: false` + a friendly message but never
+    fails the mint. Rate limit reuses the 5/hr guard from
+    parent-driven mints.
+  - Coverage: `tests/test_iter142_professionals_directory.py` —
+    6 tests (seed, idempotent seed, auth required, unknown id,
+    happy path, persisted context tag). All green.
+- **`pages/ProfessionalsDirectory.jsx`** at `/professionals`:
+  - Card grid rendering each professional (avatar initials in the
+    signature purple gradient, name, credentials, license, bio,
+    email, address). Selecting a card reveals a send-form with
+    an assessment-type select, an optional 1000-char message
+    textarea, and a purple-tinted reassurance strip explaining
+    "your individual answers stay private; the professional
+    receives only the code + your name + your message".
+  - Successful send flips to a green confirmation panel
+    displaying the code in a large monospaced pill + Copy Code
+    button (fallback for parents whose email didn't land) +
+    "Send to another professional" / "Back to dashboard" CTAs.
+    Preserves the code visibility even when Resend delivery
+    fails.
+  - Accepts `?assessment=<type>` in the URL so a completion CTA
+    on the assessment page can preselect the lane.
+- **Nudge added to `JointReportsPicker`** — a "Ready to hand this
+  off?" strip above the picker with a CTA to `/professionals`.
+- **Co-parent completion toaster (iter141)**:
+  - `GET /api/joint-alignment/mine` now returns a compact
+    `coparent` sub-object per case: `{name, completed_at}`. Never
+    the co-parent's email, user_id, or any answers. `completed_at`
+    is `None` until the co-parent finishes.
+  - `components/CoparentCompletionToaster.jsx` — headless poller
+    (60 s cadence + focus-triggered re-poll) mirroring the
+    conventions of `NewCommentToaster.jsx`. Fires a `sonner` toast
+    with a "Case SA-482731 — your turn" / "both of you are done"
+    description whenever a co-parent's `completed_at` crosses the
+    stored `coparentCompletionSeenAt` ISO in localStorage.
+    Aggregates when >2 events land at once. Mounted on the
+    Dashboard alongside the existing NewCommentToaster.
+  - Coverage: `tests/test_iter141_coparent_signal.py` — 2 tests
+    locking the shape leakage and the completed-timestamp flow.
+- **Test totals**: 46/46 pytest green across iter137–142. Frontend
+  compiled clean. Live smoke-tested — `/professionals` renders
+  Matt Sossi's card and the send-form reveals correctly.
+
 ### 2026-03-04 — Joint Alignment Phase B UI + Phase C completion hook & cancellation
 - **Completion hook (backend, Phase C partial)**:
   `mark_assessment_completed(db, user_id, assessment_type,

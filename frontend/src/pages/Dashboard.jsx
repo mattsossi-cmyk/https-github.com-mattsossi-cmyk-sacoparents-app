@@ -25,6 +25,7 @@ import ShareReportQuickAction from "../components/ShareReportQuickAction";
 import AssessmentHistoryCard from "../components/AssessmentHistoryCard";
 import AlignReportCTA from "../components/AlignReportCTA";
 import NewCommentToaster from "../components/NewCommentToaster";
+import CoparentCompletionToaster from "../components/CoparentCompletionToaster";
 import FourCircleFrontDoor from "../components/dashboard/FourCircleFrontDoor";
 import JointAlignmentRequests from "../components/dashboard/JointAlignmentRequests";
 import { api } from "../lib/api";
@@ -486,6 +487,7 @@ export default function Dashboard() {
       {/* Headless: polls the reviewer-comment feed and fires a toast
           the moment a new comment lands. Renders nothing itself. */}
       <NewCommentToaster />
+      <CoparentCompletionToaster />
       <div className="fade-up">
         <EmailHealthBanner />
         <VerificationBanner />

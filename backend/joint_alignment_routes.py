@@ -624,14 +624,24 @@ async def list_my_cases(
     cases = []
     async for case in cursor:
         shape = _case_public_shape(case)
-        # Add a `my_status` field so the parent's row can render
-        # without the frontend having to compute anything.
+        parents = case.get("parents") or []
         me = next(
             (
                 p
-                for p in case.get("parents") or []
+                for p in parents
                 if (p.get("email") or "").lower() == (current.email or "").lower()
                 or p.get("user_id") == current.user_id
+            ),
+            None,
+        )
+        coparent = next(
+            (
+                p
+                for p in parents
+                if not (
+                    (p.get("email") or "").lower() == (current.email or "").lower()
+                    or p.get("user_id") == current.user_id
+                )
             ),
             None,
         )
@@ -643,6 +653,14 @@ async def list_my_cases(
                 if me.get("accepted_at")
                 else "invited"
             )
+        # Surface co-parent milestone timestamps (not their answers) so
+        # the App can render a "your co-parent finished — your turn"
+        # toast without exposing anything the co-parent typed.
+        if coparent:
+            shape["coparent"] = {
+                "name": coparent.get("name"),
+                "completed_at": _iso(coparent.get("assessment_completed_at")),
+            }
         cases.append(shape)
     return {"cases": cases}
 
