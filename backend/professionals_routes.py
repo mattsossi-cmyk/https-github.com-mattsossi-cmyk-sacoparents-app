@@ -66,7 +66,7 @@ _INITIAL_ROSTER: List[Dict[str, Any]] = [
         "email": "mattsossi@bsossi.com",
         "address_lines": [
             "16607 Blanco #703",
-            "San Antonio, Texas 78205",
+            "San Antonio, Texas 78232",
         ],
         "city": "San Antonio",
         "state": "TX",
@@ -98,18 +98,54 @@ def _now() -> datetime:
 
 
 async def _ensure_seeded(db: AsyncIOMotorDatabase) -> None:
-    count = await db[_COLL].estimated_document_count()
-    if count > 0:
-        return
-    docs = []
+    """
+    Idempotent bootstrap:
+      * If the collection is empty → insert every entry in the
+        initial roster.
+      * If an initial-roster entry already exists → refresh the
+        canonical fields (name, credentials, license, email,
+        address, bio) so a founder-side update in this file
+        propagates to production without a manual DB touch.
+        `active` / `sort_order` / `phone` / `website` are NOT
+        refreshed so an admin toggling those in the DB is not
+        clobbered by a redeploy.
+    """
     for entry in _INITIAL_ROSTER:
-        docs.append({**entry, "created_at": _now(), "updated_at": _now()})
-    if docs:
+        existing = await db[_COLL].find_one(
+            {"professional_id": entry["professional_id"]}, {"_id": 1}
+        )
+        if not existing:
+            doc = {**entry, "created_at": _now(), "updated_at": _now()}
+            try:
+                await db[_COLL].insert_one(doc)
+                logger.info("professionals seed inserted %s", entry["professional_id"])
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("professionals seed insert failed: %s", exc)
+            continue
+        # Refresh canonical directory fields only — leave admin-
+        # controlled toggles alone.
+        refresh_fields = {
+            k: entry[k]
+            for k in (
+                "name",
+                "credentials",
+                "license",
+                "email",
+                "address_lines",
+                "city",
+                "state",
+                "bio",
+            )
+            if k in entry
+        }
+        refresh_fields["updated_at"] = _now()
         try:
-            await db[_COLL].insert_many(docs)
-            logger.info("professionals directory seeded (%s entries)", len(docs))
+            await db[_COLL].update_one(
+                {"professional_id": entry["professional_id"]},
+                {"$set": refresh_fields},
+            )
         except Exception as exc:  # noqa: BLE001
-            logger.warning("professionals seed skipped: %s", exc)
+            logger.warning("professionals seed refresh failed: %s", exc)
 
 
 def _public_shape(p: Dict[str, Any]) -> Dict[str, Any]:
@@ -163,6 +199,166 @@ async def list_professionals(
     cursor = db[_COLL].find({"active": True}).sort([("sort_order", 1), ("name", 1)])
     professionals = [_public_shape(p) async for p in cursor]
     return {"professionals": professionals}
+
+
+# =========================== admin editor =========================== #
+# Read-write directory management gated on `require_admin`.
+# Professionals cannot self-sign-up — every add / update passes
+# through an authenticated ADMIN_EMAILS session, matching the
+# founder's guardrail that "professionals have to be added with
+# permission".
+
+
+from analytics_routes import require_admin  # noqa: E402
+
+
+class AdminProfessionalUpsertBody(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
+    credentials: str = Field(..., min_length=1, max_length=400)
+    license: Optional[str] = Field(default=None, max_length=200)
+    email: EmailStr
+    phone: Optional[str] = Field(default=None, max_length=40)
+    website: Optional[str] = Field(default=None, max_length=200)
+    address_lines: List[str] = Field(default_factory=list)
+    city: Optional[str] = Field(default=None, max_length=100)
+    state: Optional[str] = Field(default=None, max_length=40)
+    bio: Optional[str] = Field(default=None, max_length=2000)
+    sort_order: int = Field(default=100)
+    active: bool = Field(default=True)
+
+
+class AdminProfessionalPatchBody(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    credentials: Optional[str] = Field(default=None, min_length=1, max_length=400)
+    license: Optional[str] = Field(default=None, max_length=200)
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = Field(default=None, max_length=40)
+    website: Optional[str] = Field(default=None, max_length=200)
+    address_lines: Optional[List[str]] = None
+    city: Optional[str] = Field(default=None, max_length=100)
+    state: Optional[str] = Field(default=None, max_length=40)
+    bio: Optional[str] = Field(default=None, max_length=2000)
+    sort_order: Optional[int] = None
+    active: Optional[bool] = None
+
+
+def _slugify_professional_id(name: str, existing: set) -> str:
+    """
+    Human-friendly professional_id derived from the name. Falls back
+    to appending an integer suffix if collisions occur.
+    """
+    base = "".join(
+        ch.lower() if ch.isalnum() else "-"
+        for ch in (name or "professional")
+    )
+    base = "-".join(seg for seg in base.split("-") if seg)[:60] or "professional"
+    if base not in existing:
+        return base
+    idx = 2
+    while f"{base}-{idx}" in existing:
+        idx += 1
+    return f"{base}-{idx}"
+
+
+@router.get("/admin/professionals")
+async def admin_list_professionals(
+    _admin: UserPublic = Depends(require_admin),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Admin listing — includes inactive rows and sort_order."""
+    await _ensure_seeded(db)
+    cursor = db[_COLL].find({}).sort([("sort_order", 1), ("name", 1)])
+    professionals = []
+    async for p in cursor:
+        professionals.append(
+            {
+                **_public_shape(p),
+                "active": bool(p.get("active", True)),
+                "sort_order": p.get("sort_order", 100),
+                "updated_at": (
+                    p.get("updated_at").isoformat()
+                    if isinstance(p.get("updated_at"), datetime)
+                    else None
+                ),
+            }
+        )
+    return {"professionals": professionals}
+
+
+@router.post("/admin/professionals")
+async def admin_create_professional(
+    body: AdminProfessionalUpsertBody,
+    admin: UserPublic = Depends(require_admin),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Admin-only professional creation. Every add is deliberate —
+    the frontend surfaces an "added with permission" note so an
+    admin never accidentally publishes a directory entry.
+    """
+    ids = {
+        doc["professional_id"]
+        async for doc in db[_COLL].find({}, {"professional_id": 1})
+    }
+    professional_id = _slugify_professional_id(body.name, ids)
+    doc = {
+        "professional_id": professional_id,
+        **body.model_dump(),
+        "created_at": _now(),
+        "updated_at": _now(),
+        "created_by_admin_email": admin.email,
+    }
+    await db[_COLL].insert_one(doc)
+    logger.info(
+        "professionals admin_create id=%s by=%s", professional_id, admin.email
+    )
+    fresh = await db[_COLL].find_one({"professional_id": professional_id})
+    return {
+        **_public_shape(fresh),
+        "active": bool(fresh.get("active", True)),
+        "sort_order": fresh.get("sort_order", 100),
+    }
+
+
+@router.patch("/admin/professionals/{professional_id}")
+async def admin_update_professional(
+    body: AdminProfessionalPatchBody,
+    professional_id: str = Path(..., min_length=1, max_length=64),
+    admin: UserPublic = Depends(require_admin),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Admin-only partial update. Also the entry point for
+    deactivation: send `{"active": false}` to hide a professional
+    from the public directory without deleting the row (audit
+    trail preserved).
+    """
+    # `exclude_unset` keeps `active=False` in the patch when the
+    # admin explicitly sends it, but drops keys the admin didn't
+    # touch. That's the shape we want for a PATCH.
+    patch = body.model_dump(exclude_unset=True)
+    if not patch:
+        raise HTTPException(status_code=400, detail="No fields provided")
+    patch["updated_at"] = _now()
+    patch["last_edited_by_admin_email"] = admin.email
+    result = await db[_COLL].update_one(
+        {"professional_id": professional_id}, {"$set": patch}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Professional not found")
+    logger.info(
+        "professionals admin_update id=%s by=%s fields=%s",
+        professional_id,
+        admin.email,
+        list(patch.keys()),
+    )
+    fresh = await db[_COLL].find_one({"professional_id": professional_id})
+    return {
+        **_public_shape(fresh),
+        "active": bool(fresh.get("active", True)),
+        "sort_order": fresh.get("sort_order", 100),
+    }
+
 
 
 @router.post(

@@ -40,6 +40,7 @@ from auth import (
     hash_password,
 )
 from models import TokenResponse, UserPublic
+from safety_gate import require_ipv_clearance, ipv_gate_status
 
 
 logger = logging.getLogger(__name__)
@@ -82,12 +83,33 @@ def _invite_to_public_dict(doc: dict) -> dict:
     return {
         "invite_id": doc.get("invite_id"),
         "invitee_email": doc.get("invitee_email"),
-        "status": doc.get("status"),
+        "status": _effective_status(doc),
         "created_at": doc.get("created_at"),
         "last_sent_at": doc.get("last_sent_at"),
         "opened_at": doc.get("opened_at"),
         "signed_up_at": doc.get("signed_up_at"),
     }
+
+
+def _effective_status(doc: dict) -> str:
+    """Return the *observed* status, expiring pending invitations that are
+    past their `expires_at`. Founder rule (2026-03-04): a pending invite
+    that runs out its lifetime is presumed rejected — never re-issuable."""
+    status = doc.get("status") or "pending"
+    if status != "pending":
+        return status
+    exp_iso = doc.get("expires_at")
+    if not exp_iso:
+        return status
+    try:
+        exp = datetime.fromisoformat(exp_iso)
+    except (TypeError, ValueError):
+        return status
+    if exp.tzinfo is None:
+        exp = exp.replace(tzinfo=timezone.utc)
+    if exp <= _now():
+        return "expired"
+    return status
 
 
 # ============ Pydantic bodies ============
@@ -126,17 +148,51 @@ async def send_coparent_invite(
             detail="That's your own email — try your co-parent's address instead.",
         )
 
-    # Rate-limit: 3 fresh invites per 24h (resends of an existing invite don't count).
-    day_ago = _iso(_now() - timedelta(days=1))
-    fresh_today = await db.coparent_invites.count_documents({
-        "inviter_user_id": current.user_id,
-        "created_at": {"$gte": day_ago},
-    })
+    # Founder safety guardrail (2026-03-04): every parent-to-co-parent invitation
+    # must be gated on the family-violence safety screen. Raises 403 with a
+    # structured `code`+`message` payload when the parent has not completed
+    # the screen or is at Level 1/2.
+    await require_ipv_clearance(db, current.user_id)
 
-    existing = await db.coparent_invites.find_one(
-        {"inviter_user_id": current.user_id, "invitee_email": invitee},
+    # Founder single-invite rule (2026-03-04): a parent gets ONE lifetime
+    # invitation to their co-parent. If it hasn't been accepted within the
+    # invitation lifetime it is presumed rejected — no further outreach
+    # is permitted from this app. Resends to the SAME still-pending
+    # recipient remain OK (they don't create a new invite).
+    prior = await db.coparent_invites.find_one(
+        {"inviter_user_id": current.user_id},
         {"_id": 0},
+        sort=[("created_at", -1)],
     )
+    if prior:
+        prior_status = _effective_status(prior)
+        same_recipient = _normalize_email(prior.get("invitee_email") or "") == invitee
+        if prior_status == "signed_up":
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Your co-parent has already accepted the invitation."
+                ),
+            )
+        if prior_status in ("expired", "rejected"):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Your previous invitation was not accepted within the "
+                    f"{INVITE_LIFETIME_DAYS}-day window and is now closed. "
+                    "Only one invitation is permitted between parents through this app."
+                ),
+            )
+        if not same_recipient:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "You already have a pending invitation to another co-parent email. "
+                    "Only one invitation is permitted between parents through this app."
+                ),
+            )
+
+    existing = prior if (prior and _normalize_email(prior.get("invitee_email") or "") == invitee) else None
 
     if existing:
         # Resend gate: too-soon resends are a no-op (still return success so the
@@ -152,14 +208,6 @@ async def send_coparent_invite(
         invite = existing
         token = invite["token"]
     else:
-        if fresh_today >= INVITE_RATE_LIMIT_PER_DAY:
-            raise HTTPException(
-                status_code=429,
-                detail=(
-                    f"You've sent {INVITE_RATE_LIMIT_PER_DAY} invites in the last 24 hours. "
-                    "Please try again tomorrow."
-                ),
-            )
         # Don't let users invite an email that is already a permanent account
         # of their own — that would just funnel them to their own login screen.
         target = await db.users.find_one(
@@ -225,7 +273,34 @@ async def list_my_invites(
     rows = [
         _invite_to_public_dict(doc) async for doc in cursor
     ]
-    return {"invites": rows, "rate_limit_per_day": INVITE_RATE_LIMIT_PER_DAY}
+    # Founder single-invite rule (2026-03-04): expose whether the parent
+    # has used their lifetime invitation so the UI can hide the form and
+    # show the current status instead of a fresh input.
+    invite_used = bool(rows)
+    latest_status = rows[0]["status"] if rows else None
+    can_send_new = not invite_used  # once used, no new invitations
+    return {
+        "invites": rows,
+        "invite_used": invite_used,
+        "latest_status": latest_status,
+        "can_send_new": can_send_new,
+        "policy": "one_invite_per_parent_lifetime",
+    }
+
+
+@router.get("/coparent/gate")
+async def coparent_invite_gate(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Non-raising status of the family-violence safety gate.
+
+    The Invite Co-Parent UIs call this on mount so they can render a
+    "complete the safety screen first" prompt (or a compassionate
+    resources card at Level 1/2) instead of surfacing an email input
+    the parent will then be blocked from submitting.
+    """
+    return await ipv_gate_status(db, current.user_id)
 
 
 @router.post("/coparent/resend/{invite_id}")
@@ -240,10 +315,19 @@ async def resend_coparent_invite(
     )
     if not invite:
         raise HTTPException(status_code=404, detail="Invite not found.")
-    if invite.get("status") == "signed_up":
+    status = _effective_status(invite)
+    if status == "signed_up":
         raise HTTPException(
             status_code=400,
             detail="This co-parent has already accepted your invite.",
+        )
+    if status in ("expired", "rejected"):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"This invitation ran out its {INVITE_LIFETIME_DAYS}-day window and "
+                "is now closed. Only one invitation is permitted between parents."
+            ),
         )
     # Re-route through the create endpoint logic for the resend gate / email.
     return await send_coparent_invite(

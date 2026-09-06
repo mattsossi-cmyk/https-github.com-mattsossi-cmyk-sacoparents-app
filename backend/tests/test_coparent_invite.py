@@ -73,7 +73,32 @@ def _make_inviter(api_client, base_url):
         json={"email": email, "name": "Inviter", "password": "TestPass123!"},
     )
     assert r.status_code in (200, 201), r.text
+    user_id = r.json()["user"]["user_id"]
+    _seed_passing_safety_screen(user_id, email)
     return email, r.json()["access_token"]
+
+
+def _seed_passing_safety_screen(user_id: str, email: str) -> None:
+    """Founder rule (2026-03-04): a parent must have a passing IPV screen
+    (Level 3 or 4) before sending co-parent invites. Legacy tests here
+    assumed the older un-gated behaviour, so we seed a Level 4 assessment
+    directly so they exercise the invite flow, not the gate."""
+    from datetime import datetime, timezone
+    from pymongo import MongoClient as SyncClient
+    sync = SyncClient(MONGO_URL)
+    try:
+        sync[DB_NAME]["safety_assessments"].delete_many({"user_id": user_id})
+        sync[DB_NAME]["safety_assessments"].insert_one({
+            "assessment_id": f"sa_test_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "email": email,
+            "section_1": {},
+            "section_2": {},
+            "result": {"level": 4, "pathway_title": "Level 4"},
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+    finally:
+        sync.close()
 
 
 def test_invite_requires_auth(base_url, api_client):

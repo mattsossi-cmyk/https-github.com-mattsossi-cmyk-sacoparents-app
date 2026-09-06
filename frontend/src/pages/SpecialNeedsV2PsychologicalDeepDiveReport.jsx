@@ -9,6 +9,7 @@ import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachSt
 import DeepDivePartsNarrative from "../components/deepdive/DeepDivePartsNarrative";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
+import AssessmentResultHandoff from "../components/AssessmentResultHandoff";
 import SignDownloadToggle from "../components/SignDownloadToggle";
 import { api } from "../lib/api";
 import { toast } from "sonner";
@@ -206,6 +207,8 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330]">Psychological &amp; Behavioural Assessment Report</h1>
 
         <ReportReviewNotice variant="individual" className="mt-5" />
+
+        <AssessmentResultHandoff assessmentType="psychological" />
 
         {/* Alignment Framework PDF — the printable fillable form that
             underpins the 25-question Psychological Deep Dive. Surfaced

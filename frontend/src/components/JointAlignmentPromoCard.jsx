@@ -8,6 +8,8 @@ import {
   Send,
   Loader2,
   ArrowRight,
+  ShieldAlert,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,22 +46,24 @@ export default function JointAlignmentPromoCard({
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
-  const [alreadyInvited, setAlreadyInvited] = useState(false);
+  const [inviteUsed, setInviteUsed] = useState(false);
+  const [latestStatus, setLatestStatus] = useState(null);
+  const [gate, setGate] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [highlights, invites] = await Promise.all([
+        const [highlights, invites, gateRes] = await Promise.all([
           api.get("/snc2/compare/dashboard/highlights").catch(() => null),
           api.get("/invites/coparent").catch(() => null),
+          api.get("/invites/coparent/gate").catch(() => null),
         ]);
         if (cancelled) return;
         setSnc(highlights?.data || null);
-        const pending = (invites?.data?.invites || []).some(
-          (i) => i.status === "pending" || i.status === "opened",
-        );
-        setAlreadyInvited(pending);
+        setInviteUsed(!!invites?.data?.invite_used);
+        setLatestStatus(invites?.data?.latest_status || null);
+        setGate(gateRes?.data || null);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -77,19 +81,19 @@ export default function JointAlignmentPromoCard({
     }
     setSending(true);
     try {
-      const r = await api.post("/invites/coparent", { email: v });
-      toast.success(
-        r.data?.resent
-          ? `Resent invite to ${v}.`
-          : `Invite sent to ${v}. They'll get an email shortly.`,
-      );
+      await api.post("/invites/coparent", { email: v });
+      toast.success(`Invite sent to ${v}. They'll get an email shortly.`);
       setEmail("");
-      setAlreadyInvited(true);
+      setInviteUsed(true);
+      setLatestStatus("pending");
     } catch (e) {
       logError("promo card invite send failed", e);
-      toast.error(
-        e?.response?.data?.detail || "Could not send invite. Please try again.",
-      );
+      const detail = e?.response?.data?.detail;
+      const msg =
+        (detail && typeof detail === "object" && detail.message) ||
+        detail ||
+        "Could not send invite. Please try again.";
+      toast.error(msg);
     } finally {
       setSending(false);
     }
@@ -197,20 +201,67 @@ export default function JointAlignmentPromoCard({
             .
           </p>
 
-          {alreadyInvited ? (
+          {inviteUsed ? (
             <div
               className="mt-5 flex items-center gap-2 text-sm text-[#3D1A78] bg-white rounded-2xl border border-[#E5E0EE] px-4 py-3"
               data-testid={`${testidPrefix}-invite-sent`}
             >
               <Send size={14} />
               <span>
-                Invite sent. We'll unlock this card the moment they finish.
+                {latestStatus === "expired" || latestStatus === "rejected"
+                  ? "Your invitation was not accepted within the 30-day window and is now closed. Only one invitation is permitted between parents."
+                  : latestStatus === "signed_up"
+                  ? "Your co-parent has joined. We'll unlock this card the moment their side is complete."
+                  : "Invite sent. We'll unlock this card the moment they finish."}
               </span>
+            </div>
+          ) : gate && !gate.clear && gate.code === "safety_screen_required" ? (
+            <div
+              className="mt-5 rounded-2xl border-2 border-[#F1D9B7] bg-[#FFF6EA] px-4 py-4"
+              data-testid={`${testidPrefix}-gate-required`}
+            >
+              <div className="flex items-start gap-3">
+                <ShieldAlert size={18} className="text-[#B45F13] shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="text-sm text-[#5A3C10] leading-relaxed">
+                    Complete the short family-violence safety screen first
+                    (about 5 minutes). Your answers stay private.
+                  </div>
+                  <Link
+                    to="/safety"
+                    data-testid={`${testidPrefix}-take-safety-link`}
+                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#B45F13] text-white text-sm font-semibold hover:brightness-110"
+                  >
+                    Take the safety screen
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : gate && !gate.clear && gate.code === "safety_screen_blocked" ? (
+            <div
+              className="mt-5 rounded-2xl border-2 border-[#F1B7B7] bg-[#FDECEC] px-4 py-4"
+              data-testid={`${testidPrefix}-gate-blocked`}
+            >
+              <div className="flex items-start gap-3">
+                <ShieldAlert size={18} className="text-[#9A3A23] shrink-0 mt-0.5" />
+                <div className="text-sm text-[#5B1F1F] leading-relaxed">
+                  Based on your safety screen, direct outreach to your co-parent
+                  through this app isn&rsquo;t recommended. A mediator or
+                  attorney can handle communication on your behalf.{" "}
+                  <a
+                    href="tel:18007997233"
+                    className="underline font-semibold whitespace-nowrap"
+                  >
+                    Hotline · 1-800-799-7233
+                  </a>
+                  .
+                </div>
+              </div>
             </div>
           ) : (
             <div className="mt-5">
               <label className="eyebrow block mb-2">
-                Co-parent's email
+                Co-parent&apos;s email
               </label>
               <div className="flex flex-col sm:flex-row gap-2">
                 <input
@@ -235,6 +286,12 @@ export default function JointAlignmentPromoCard({
                   {sending ? "Sending…" : "Invite Co-Parent"}
                 </button>
               </div>
+              <p
+                className="text-[11px] text-[#857E9C] mt-2 inline-flex items-center gap-1.5"
+                data-testid={`${testidPrefix}-one-shot-notice`}
+              >
+                <Lock size={11} /> One invitation per co-parent — please double-check the address.
+              </p>
             </div>
           )}
         </div>

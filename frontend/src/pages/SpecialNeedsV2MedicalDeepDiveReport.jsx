@@ -9,6 +9,7 @@ import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachSt
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 import SignDownloadToggle from "../components/SignDownloadToggle";
+import AssessmentResultHandoff from "../components/AssessmentResultHandoff";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
@@ -170,6 +171,8 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330]">Medical &middot; Prescription Assessment Report</h1>
 
         <ReportReviewNotice variant="individual" className="mt-5" />
+
+        <AssessmentResultHandoff assessmentType="medical" />
 
         {/* 1. Report Overview */}
         <SectionCard testid="med-report-overview">

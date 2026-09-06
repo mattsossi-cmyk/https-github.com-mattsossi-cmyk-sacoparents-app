@@ -7,13 +7,13 @@
  *
  * Autosaves via bulk endpoint, generates the report on completion.
  */
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, Save, Loader2, Sparkles, Users, X,
+  ArrowLeft, ArrowRight, CheckCircle2, Save, Loader2, Sparkles, Users, X, LayoutList,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 

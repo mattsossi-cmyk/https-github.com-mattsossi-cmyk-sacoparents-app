@@ -45,6 +45,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field
 
 from auth import UserPublic, get_current_user, get_db
+from safety_gate import require_ipv_clearance
 
 
 router = APIRouter(tags=["integrations"])
@@ -175,6 +176,13 @@ async def mint_link_code(
     """
     if current.is_guest:
         raise HTTPException(status_code=403, detail="Guest accounts cannot link")
+
+    # Founder safety guardrail (2026-03-04): a parent-minted link code is
+    # designed to be pasted to the *co-parent* so they can join on the
+    # sibling site. Gate on the family-violence screen. Professional-directed
+    # codes never come through this endpoint — `professionals_routes.py`
+    # inserts directly into the collection with a `prof:*` context.
+    await require_ipv_clearance(db, current.user_id)
 
     if await _mint_rate_limited(db, current.user_id):
         raise HTTPException(

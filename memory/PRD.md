@@ -27,6 +27,66 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-04 — Family-violence safety gate + single-invite lifetime rule
+- **`safety_gate.py`** (new backend module) — `require_ipv_clearance` /
+  `ipv_gate_status`. Blocks any parent-to-co-parent invitation unless the
+  parent has completed the family-violence safety screen AND scored Level 3
+  or 4 (Level 1 = high concern, Level 2 = coercive control both block).
+  Wired into:
+  - `POST /api/invites/coparent` (email invite) — 403 with structured
+    `{code, message, level, hotline, safety_screen_url}` payload.
+  - `POST /api/link-codes` (sibling-site join code) — same gate.
+  - New `GET /api/invites/coparent/gate` — non-raising probe so the UI
+    can render the correct panel on mount without submitting.
+  - Professional-directed sends (`/api/professionals/{id}/send-alignment-code`)
+    are deliberately NOT gated — a professional is not the safety risk.
+- **Single-invite lifetime rule** — a parent may issue AT MOST one
+  invitation to their co-parent through this app. Any second POST to a
+  different email, or after the prior invite expired, or after the
+  co-parent accepted → 400 with a compassionate message. Resends to
+  the *same* still-pending recipient are OK (they don't create a new
+  invite). Enforced in `invite_routes.py` via `_effective_status`
+  (auto-expires pending invites past their `expires_at`).
+- **`GET /api/invites/coparent`** enriched with `invite_used`,
+  `latest_status`, `can_send_new`, `policy:"one_invite_per_parent_lifetime"`
+  so the frontend can decide whether to render the form at all.
+- **`InviteCoparentCard.jsx`** rewritten to render four states based on
+  gate probe + invite_used: (a) safety-screen-required amber panel with a
+  "Take the safety screen" CTA, (b) safety-screen-blocked red panel with
+  hotline + DV advocate copy, (c) fresh clear-gate input with a new
+  "One invitation per co-parent" lock-icon caption, (d) already-used
+  panel showing the single invitation's status.
+- **`JointAlignmentPromoCard.jsx`** — same four-state UX mirrored in the
+  promo card's waiting variant so parents reaching the invite CTA from
+  the Summary / NextSteps pages see the same guardrail messaging.
+- **STATUS_META** picks up an "expired / not accepted" pill tone so the
+  presumed-rejected state is legible without needing a legend.
+- **Coverage**: `tests/test_iter144_safety_gate_on_invites.py` (12 tests)
+  + `tests/test_iter145_one_invite_per_parent.py` (7 tests). Full 65
+  iter137–iter145 suite still green. Legacy `test_coparent_invite.py`
+  and `test_iter137_sibling_integration.py` updated to seed a Level 4
+  safety assessment via Mongo so their invite-flow assertions still
+  run under the new gate.
+- **Verified live** on the preview URL for `parent1@test.com`:
+  no-screen state renders the amber "Take the safety screen" panel;
+  seeding Level 4 flips to the clean input + one-shot notice; seeding
+  Level 2 flips to the red "Direct outreach isn't recommended right
+  now" panel with the hotline strip.
+
+### 2026-03-04 — Front Door problem-led language shift complete
+- `FourCircleFrontDoor.jsx` — every circle now leads with the *problem*
+  the parent is trying to solve, not the tool name:
+  - Make a Co-Parenting Agreement (was: Co-Parenting)
+  - Communicate More Effectively (was: Communication)
+  - Address Safety Concerns (was: Family Violence & Safety)
+  - Address My Child's Needs (was: Child Needs)
+  Each circle now also renders a `detail` body paragraph (the previous
+  session forgot to add the field and every tile rendered blank body
+  text). Preserved: staggered entrance animations, hover-lift, and the
+  Co-Parenting / Child-Needs inline reveal panels.
+- Verified live at `/dashboard` — all four circles + bodies + CTAs
+  render as designed.
+
 ### 2026-02-21 — Compliance & Joint Artefact hardening
 - Full 32-section Privacy Policy + Policy Refresh Banner
 - Texas HB 300 endpoints (`hb300_routes.py`), Notice page, breach runbook,

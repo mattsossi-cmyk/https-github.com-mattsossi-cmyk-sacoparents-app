@@ -55,7 +55,31 @@ def _register(client: TestClient) -> tuple[str, str]:
         json={"email": email, "password": "TestPass123!", "name": "Iter137 Parent"},
     )
     assert r.status_code in (200, 201), r.text
+    # Founder rule (2026-03-04): a parent must pass the family-violence
+    # safety screen (Level 3+) before minting a co-parent link code.
+    # Legacy iter137 tests were written pre-gate — seed a Level 4 result
+    # directly so they exercise the mint flow, not the gate.
+    _seed_passing_safety(r.json()["user"]["user_id"], email)
     return email, r.json()["access_token"]
+
+
+def _seed_passing_safety(user_id: str, email: str) -> None:
+    from datetime import datetime, timezone
+    from pymongo import MongoClient as SyncClient
+    sync = SyncClient(MONGO_URL)
+    try:
+        sync[DB_NAME]["safety_assessments"].delete_many({"user_id": user_id})
+        sync[DB_NAME]["safety_assessments"].insert_one({
+            "assessment_id": f"sa_test_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "email": email,
+            "section_1": {},
+            "section_2": {},
+            "result": {"level": 4, "pathway_title": "Level 4"},
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+    finally:
+        sync.close()
 
 
 def _mint_code(client: TestClient, token: str, context: str | None = None) -> str:

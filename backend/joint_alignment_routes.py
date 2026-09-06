@@ -290,14 +290,23 @@ async def _minimised_assessment_payload(
 ) -> Optional[Dict[str, Any]]:
     """
     Only the assessment lane the case requested. Never the parent's
-    other lanes, foundation statement, mediation prep, or notes.
+    other lanes, unrelated notes, or safety-screen answers.
     Returns `None` if the parent has not completed this lane.
+
+    Co-Parenting pathway (2026-03-04 founder spec):
+        Co-Parenting Assessment → Foundation Statement →
+        Mediation Statement → Mediation Preparation.
+    So a co-parenting export bundles all four steps into a single
+    payload the Align joint report can render from.
     """
+    if assessment_type == "co-parenting":
+        return await _coparenting_payload(db, user_id)
+
     coll = _ASSESSMENT_REPORT_COLL.get(assessment_type)
     if not coll:
-        # Co-parenting / communication use different collections we
-        # can't safely export without a curated projection. Return
-        # None for now; Phase B/C will extend the mapping.
+        # Communication uses its own compare pipeline; special-needs
+        # is a super-set exported via med/edu/psych rather than a
+        # single collection. Return None for now.
         return None
     doc = await _latest_report(db, coll, user_id)
     if not doc:
@@ -312,6 +321,108 @@ async def _minimised_assessment_payload(
         "signals": doc.get("signals"),
         "generated_at": _iso(doc.get("generated_at")),
     }
+
+
+async def _coparenting_payload(
+    db: AsyncIOMotorDatabase, user_id: str
+) -> Optional[Dict[str, Any]]:
+    """
+    Bundle the four Co-Parenting pathway artefacts:
+      1. `assessment`         — SNC v2 co-parenting compare doc.
+      2. `foundation_statement` — the four reflective prompts saved
+         via /api/mediation/reflection.
+      3. `mediation_statement` — AI-generated short document (if
+         already generated). Nullable.
+      4. `mediation_preparation` — child_goals + issues + priority +
+         readiness sections from prep_data.
+
+    Returns `None` when NONE of the four artefacts exist for this
+    parent — the case shouldn't advance to `both_complete` without
+    at least one step done.
+    """
+    prep = await db.prep_data.find_one({"user_id": user_id}, {"_id": 0}) or {}
+    reflection = prep.get("reflection") or {}
+    completed = prep.get("completed") or {}
+    snc_doc = await db.snc_v2_answers.find_one({"user_id": user_id}, {"_id": 0})
+    mediation_statement_doc = await db.mediation_statements.find_one(
+        {"user_id": user_id}, sort=[("generated_at", -1)]
+    )
+
+    has_any = any(
+        [
+            snc_doc,
+            any(reflection.get(k) for k in ("child_lens", "my_part", "best_case", "coparent_lens")),
+            bool(mediation_statement_doc),
+            any(completed.values()),
+        ]
+    )
+    if not has_any:
+        return None
+
+    return {
+        "assessment": (
+            {
+                "answers_summary": _summarise_snc_answers(snc_doc.get("answers") if snc_doc else None),
+                "updated_at": _iso((snc_doc or {}).get("updated_at")),
+            }
+            if snc_doc
+            else None
+        ),
+        "foundation_statement": {
+            "child_lens": _clean(reflection.get("child_lens")),
+            "my_part": _clean(reflection.get("my_part")),
+            "best_case": _clean(reflection.get("best_case")),
+            "coparent_lens": _clean(reflection.get("coparent_lens")),
+            "updated_at": _iso(reflection.get("updated_at") or prep.get("updated_at")),
+        }
+        if reflection
+        else None,
+        "mediation_statement": (
+            {
+                "text": mediation_statement_doc.get("text"),
+                "generated_at": _iso(mediation_statement_doc.get("generated_at")),
+            }
+            if mediation_statement_doc
+            else None
+        ),
+        "mediation_preparation": {
+            "child_goals": _pick_prep(prep.get("child_goals"), ("focus", "topics", "notes")),
+            "issues": _pick_prep(prep.get("issues"), ("selected", "notes", "priority")),
+            "priority": _pick_prep(prep.get("priority"), ("issue", "why", "outcome")),
+            "readiness": _pick_prep(prep.get("readiness"), ("score", "reflection")),
+            "completed_sections": [k for k, v in completed.items() if v],
+            "updated_at": _iso(prep.get("updated_at")),
+        },
+        "pathway_version": 1,
+    }
+
+
+def _summarise_snc_answers(answers) -> Optional[Dict[str, Any]]:
+    """
+    Compact projection: how many questions answered per dimension.
+    Raw answers are never returned to Align — that would break the
+    data-minimisation contract.
+    """
+    if not isinstance(answers, dict):
+        return None
+    return {
+        "answered_count": sum(1 for v in answers.values() if v is not None),
+        "keys": sorted(answers.keys())[:50],
+    }
+
+
+def _pick_prep(source, keep):
+    if not isinstance(source, dict):
+        return None
+    picked = {k: source.get(k) for k in keep if source.get(k) is not None}
+    return picked or None
+
+
+def _clean(v):
+    if isinstance(v, str):
+        v = v.strip()
+        return v or None
+    return v
 
 
 # =========================== integration endpoints =========================== #

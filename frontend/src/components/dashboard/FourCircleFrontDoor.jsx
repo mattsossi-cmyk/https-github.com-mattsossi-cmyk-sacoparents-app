@@ -33,14 +33,23 @@ import {
   Puzzle,
   ArrowRight,
   Phone,
+  ClipboardCheck,
+  FileText,
+  FilePenLine,
+  ListChecks,
+  Handshake,
+  Baby,
+  HelpCircle,
 } from "lucide-react";
 
 const CIRCLES = [
   {
     key: "co-parenting",
-    label: "Co-Parenting",
-    prompt: "How are we doing as co-parents?",
-    icon: Users,
+    label: "Make a Co-Parenting Agreement",
+    prompt: "Prepare a mediator-ready foundation for a shared parenting agreement.",
+    detail:
+      "Walk the 4-step pathway: Assessment → Foundation Statement → Mediation Statement → Mediation Prep. Your co-parent takes it separately.",
+    icon: Handshake,
     tone: {
       ring: "ring-[#3D1A78]/25",
       hover: "hover:ring-[#3D1A78]/60",
@@ -48,16 +57,23 @@ const CIRCLES = [
       chip: "bg-[#EFE9F9] text-[#3D1A78]",
       accent: "text-[#3D1A78]",
     },
-    detail:
-      "Consistency, decision-making, schedules, exchanges, boundaries, activities, holidays, supporting each parent's bond, agreements & disagreements.",
-    cta: "Start the reflection →",
-    route: "/special-needs-v2/compare",
+    pathway: [
+      "Co-Parenting Assessment",
+      "Foundation Statement",
+      "Mediation Statement",
+    ],
+    cta: "Open the pathway",
     testid: "front-door-coparenting",
+    expandable: true,
+    endButton: "Create My Statement",
   },
   {
     key: "communication",
-    label: "Communication",
-    prompt: "How can we communicate more effectively?",
+    label: "Communicate More Effectively",
+    prompt:
+      "Reflect on your patterns, get coaching, and build a message you're proud to send.",
+    detail:
+      "For everyday messages — pickups, illnesses, school notes. Private reflection first, then optional coaching from an AI trained on de-escalation.",
     icon: MessageCircle,
     tone: {
       ring: "ring-[#1E6FA8]/25",
@@ -66,17 +82,23 @@ const CIRCLES = [
       chip: "bg-[#E4F1FA] text-[#1E6FA8]",
       accent: "text-[#1E6FA8]",
     },
-    detail:
-      "BIFF · CLEAR Path · boundaries · written communication · response expectations · child-focused messaging · conflict reduction · structured comms.",
-    cta: "Start the intake →",
+    pathway: [
+      "Individual Reflection",
+      "AI Communication Coach",
+      "Communication Builder",
+    ],
+    cta: "Start reflecting",
     route: "/communication",
     testid: "front-door-communication",
+    endButton: "Build My Message",
   },
   {
     key: "safety",
-    label: "Family Violence & Safety",
+    label: "Address Safety Concerns",
     prompt:
-      "What structure and safeguards may be needed to support safe parenting and the child's needs?",
+      "Private, calm, and never assumes alignment — safety comes first, always.",
+    detail:
+      "A private safety screen you complete alone. Nothing is shared unless you choose to share it. Includes hotlines, safety planning, and legal referrals.",
     icon: ShieldAlert,
     tone: {
       ring: "ring-[#B45F13]/25",
@@ -85,17 +107,24 @@ const CIRCLES = [
       chip: "bg-[#FFEEDA] text-[#8A4610]",
       accent: "text-[#8A4610]",
     },
-    detail:
-      "Safety Reflection → risks & power imbalances → communication safety → parenting structure → safeguards → options & resources. Safety comes first — alignment is not the objective here.",
-    cta: "Enter safely →",
+    pathway: [
+      "Private Safety Screen",
+      "Family Violence Co-Parenting Assessment",
+      "Safeguards & Resources",
+    ],
+    cta: "Enter safely",
     route: "/safety",
     testid: "front-door-safety",
+    endButton: "See My Safeguards",
   },
   {
     key: "child-needs",
-    label: "Child Needs",
-    prompt: "Help us address our child's needs.",
-    icon: Sparkles,
+    label: "Address My Child's Needs",
+    prompt:
+      "Educational, medical, or psychological — pick the lane, get your report, invite a joint review.",
+    detail:
+      "Deep-dive assessments for school, doctors, therapy, or coordinated special-needs care. Each finishes with an individual report and an optional joint-report invitation.",
+    icon: Baby,
     tone: {
       ring: "ring-[#1E7A55]/25",
       hover: "hover:ring-[#1E7A55]/60",
@@ -103,12 +132,15 @@ const CIRCLES = [
       chip: "bg-[#E1F3E8] text-[#1E7A55]",
       accent: "text-[#1E7A55]",
     },
-    detail:
-      "Pick one, several, or the complete assessment. Every choice below opens its own reflection → alignment pathway.",
-    cta: "Choose an area →",
-    // No `route` — expands inline into CHILD_NEEDS_TILES.
+    pathway: [
+      "Educational · Medical · Psychological Assessment",
+      "Individual Report",
+      "Joint Report Invitation",
+    ],
+    cta: "Choose an area",
     testid: "front-door-child-needs",
     expandable: true,
+    endButton: "Invite the Other Parent",
   },
 ];
 
@@ -151,6 +183,53 @@ const CHILD_NEEDS_TILES = [
   },
 ];
 
+/* Co-Parenting pathway (2026-03-04 founder spec):
+   Co-Parenting Assessment → Foundation Statement →
+   Mediation Statement → Mediation Preparation. Every step feeds
+   the joint alignment report on sacoparentsalign.com. */
+const COPARENTING_PATHWAY_TILES = [
+  {
+    key: "assessment",
+    step: 1,
+    label: "Co-Parenting Assessment",
+    detail:
+      "Reflect on parenting consistency, decisions, exchanges, boundaries, activities, holidays — the shared child-focused terrain.",
+    icon: ClipboardCheck,
+    route: "/special-needs-v2",
+    testid: "front-door-coparenting-assessment",
+  },
+  {
+    key: "foundation",
+    step: 2,
+    label: "Foundation Statement",
+    detail:
+      "The four reflective prompts that become your starting point — in your own words, framed neutrally for the professional.",
+    icon: FileText,
+    route: "/foundation",
+    testid: "front-door-coparenting-foundation",
+  },
+  {
+    key: "mediation-statement",
+    step: 3,
+    label: "Mediation Statement",
+    detail:
+      "SA CoParents shapes your reflections into a short mediator-ready statement — kept private until you choose to share it.",
+    icon: FilePenLine,
+    route: "/my-plan",
+    testid: "front-door-coparenting-mediation-statement",
+  },
+  {
+    key: "mediation-prep",
+    step: 4,
+    label: "Mediation Preparation",
+    detail:
+      "Child goals, issues, priority, readiness — the packet that walks into your mediator's office ready to go.",
+    icon: ListChecks,
+    route: "/dashboard#dashboard-step1-hero",
+    testid: "front-door-coparenting-mediation-prep",
+  },
+];
+
 const JOURNEY_STEPS = [
   { label: "Reflect", accent: "text-[#3D1A78]" },
   { label: "Understand", accent: "text-[#3D1A78]" },
@@ -163,6 +242,7 @@ const JOURNEY_STEPS = [
 export default function FourCircleFrontDoor({ userName }) {
   const navigate = useNavigate();
   const [expandedKey, setExpandedKey] = useState(null);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const handleCircleClick = (circle) => {
     if (circle.expandable) {
@@ -184,36 +264,14 @@ export default function FourCircleFrontDoor({ userName }) {
         className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight"
         data-testid="front-door-title"
       >
-        Where would you like to start
+        What would you like help with today
         {userName ? `, ${userName.split(" ")[0]}?` : "?"}
       </h1>
       <p className="text-[#4B4567] mt-3 max-w-2xl leading-relaxed text-[15px]">
-        SA CoParents is one guided system — pick the door that fits your
-        family right now. Each pathway walks you through the same six steps:
-        <span className="ml-1 font-medium text-[#1A1330]">
-          Reflect → Understand → Identify → Explore → Align → Agree.
-        </span>
+        Pick the problem you want help with — SA CoParents will guide you
+        through the right pathway. Every path is private, calm, and never
+        shares your answers without your permission.
       </p>
-
-      {/* Journey stepper — the unifying philosophy the founder called out */}
-      <div
-        className="mt-5 flex flex-wrap gap-x-2 gap-y-1 items-center text-[12px] sm:text-[13px]"
-        data-testid="front-door-journey-strip"
-      >
-        {JOURNEY_STEPS.map((step, idx) => (
-          <React.Fragment key={step.label}>
-            <span
-              className={`${step.accent} font-medium tracking-tight`}
-              data-testid={`front-door-journey-step-${idx + 1}`}
-            >
-              {idx + 1}. {step.label}
-            </span>
-            {idx < JOURNEY_STEPS.length - 1 && (
-              <ArrowRight size={13} className="text-[#C7BFDC]" aria-hidden />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
 
       {/* The four circles */}
       <div
@@ -265,6 +323,43 @@ export default function FourCircleFrontDoor({ userName }) {
               />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Inline reveal for Co-Parenting — the 4-step pathway that
+          feeds the joint alignment report on sacoparentsalign.com. */}
+      {expandedKey === "co-parenting" && (
+        <div
+          className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F8F7FC] p-5 sm:p-6"
+          data-testid="front-door-coparenting-panel"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                Co-Parenting pathway
+              </div>
+              <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-tight mt-1">
+                Walk through the four steps in order — or jump to one.
+              </h2>
+              <p className="text-[13px] text-[#4B4567] mt-1 leading-relaxed !mb-0">
+                Every step feeds the joint alignment report on
+                <strong className="text-[#1A1330]"> sacoparentsalign.com</strong>{" "}
+                once your professional opens the case.
+              </p>
+            </div>
+          </div>
+          <ol
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            data-testid="front-door-coparenting-steps"
+          >
+            {COPARENTING_PATHWAY_TILES.map((tile) => (
+              <PathwayStepTile
+                key={tile.key}
+                tile={tile}
+                onClick={() => navigate(tile.route)}
+              />
+            ))}
+          </ol>
         </div>
       )}
 
@@ -356,5 +451,41 @@ function ChildNeedsTile({ tile, onClick }) {
         aria-hidden
       />
     </button>
+  );
+}
+
+function PathwayStepTile({ tile, onClick }) {
+  const Icon = tile.icon;
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onClick}
+        data-testid={tile.testid}
+        className="w-full text-left rounded-2xl border border-[#D6CFE8] bg-white p-4 hover:border-[#3D1A78] hover:shadow-md transition flex gap-3 items-start"
+      >
+        <div className="flex flex-col items-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#3D1A78] text-white grid place-items-center">
+            <Icon size={18} strokeWidth={2.2} />
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#3D1A78] mt-1">
+            Step {tile.step}
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-serif text-lg text-[#1A1330] leading-tight">
+            {tile.label}
+          </div>
+          <p className="text-[12px] text-[#4B4567] mt-1 leading-snug">
+            {tile.detail}
+          </p>
+        </div>
+        <ArrowRight
+          size={16}
+          className="text-[#3D1A78] flex-shrink-0 mt-2"
+          aria-hidden
+        />
+      </button>
+    </li>
   );
 }
