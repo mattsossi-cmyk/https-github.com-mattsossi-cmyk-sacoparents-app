@@ -209,7 +209,7 @@ export default function Landing() {
             <ArrowRight className="h-6 w-6 text-muted-foreground mx-auto rotate-90 sm:rotate-0" />
             <div className="bg-white border-2 border-brand-purple rounded-xl p-6 text-center shadow-sm h-full" data-testid="step-two">
               <div className="h-12 w-12 rounded-full bg-brand-purple text-white font-extrabold flex items-center justify-center mx-auto mb-3 text-lg">2</div>
-              <p className="font-bold text-brand-purple uppercase tracking-wide text-sm">Step Two — Professional Alignment</p>
+              <p className="font-bold text-brand-purple uppercase tracking-wide text-sm">Step Two — Professional Joint Report</p>
               <p className="text-sm text-muted-foreground mt-2">An authorized professional uses Align to invite the parents, connect the completed assessments, and generate a structured Joint Alignment Report to guide mediation, counseling, parenting coordination, or other family-law processes.</p>
               <p className="text-xs text-brand-purple mt-2 font-medium italic">You are here</p>
             </div>

@@ -188,7 +188,7 @@ export default function Dashboard() {
         {isPro && user?.approved === false && (
           <div className="bg-align-yellow/10 border border-align-yellow/40 rounded-lg p-5 mb-6" data-testid="approval-pending-banner">
             <p className="font-semibold">Your professional account is pending approval</p>
-            <p className="text-sm text-muted-foreground mt-1">SA CoParents reviews new professional accounts before they can create Joint Alignment Cases. You'll receive an email once approved.</p>
+            <p className="text-sm text-muted-foreground mt-1">SA CoParents reviews new professional accounts before they can create Professional Alignment Cases. You'll receive an email once approved.</p>
           </div>
         )}
 
@@ -244,7 +244,7 @@ export default function Dashboard() {
                 <h2 className="text-2xl font-semibold mt-1">Create a Joint Report</h2>
                 <p className="text-sm text-muted-foreground mt-2 mb-5">Compare perspectives. Find alignment. Identify issues that may need discussion.</p>
                 <Link to="/joint/new" data-testid="create-joint-report-link">
-                  <Button className="gap-2" data-testid="create-joint-report-btn"><Mail className="h-4 w-4" /> Create a Joint Alignment Case</Button>
+                  <Button className="gap-2" data-testid="create-joint-report-btn"><Mail className="h-4 w-4" /> Create a Professional Alignment Case</Button>
                 </Link>
                 <Link to="/hub" className="block mt-3 text-sm text-primary font-medium hover:underline" data-testid="open-hub-link">
                   Open the Joint Report Hub →

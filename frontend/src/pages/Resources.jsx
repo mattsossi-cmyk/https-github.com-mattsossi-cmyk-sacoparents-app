@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const GETTING_STARTED = [
   "Create your free professional account.",
-  "Create a Joint Alignment Case: select the report subject and enter each parent's email. Align generates the Alignment Code (e.g. SA-EDU-482731) automatically.",
+  "Create a Professional Alignment Case: select the report subject and enter each parent's email. Align generates the Alignment Code (e.g. SA-EDU-482731) automatically.",
   "Each parent receives a separate, secure invitation — the email's button links them directly to their private assessment; the case code is only a backup.",
   "Track progress from your dashboard: invited, in progress, or complete for each parent, with a Send Reminder option for anyone outstanding.",
   "When both parents are complete, select Generate Report to view and download the Joint Alignment Report PDF.",
