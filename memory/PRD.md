@@ -27,6 +27,77 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-07 — Custom Reminder Copy for the 5-day nudge
+- **Data model** — case docs now carry an optional
+  `reminder_note` (max 240 chars) captured at mint time. Existing
+  cases store `None` and behave exactly as before (generic
+  reminder copy).
+- **Backend endpoints**:
+    - `POST /api/professional/joint-alignment/cases` accepts
+      `reminder_note` in the body — the string is stripped and
+      normalised to `None` when empty.
+    - `PATCH /api/professional/joint-alignment/cases/{id}/reminder-note`
+      (JWT + owner-only). Idempotent upsert to set or clear
+      (`{"reminder_note": null}`) the note post-mint. 404 on
+      cross-professional attempts (ownership guard).
+    - `GET /api/professional/joint-alignment/cases-i-created`
+      now exposes `reminder_note` on each row so the console can
+      preview / edit inline.
+- **Reminder email pass-through** — the 5-day gentle nudge sweep
+  (`joint_alignment_invite_nudge`) now attaches
+  `reminder_note` to every (case, parent) dispatch row.
+  `email_service.send_joint_alignment_invitation_reminder`
+  renders the note as a purple-left-bordered `<blockquote>`
+  right below the greeting with a small
+  "A NOTE FROM [Mediator Name]" eyebrow — the parent sees their
+  mediator's voice, not a generic template. Plaintext email
+  fallback also includes the note.
+- **Frontend `/new`** — added a 240-char textarea "Personal
+  reminder note (optional)" (`pj-reminder-note`) with a live
+  `X/240` character counter and helper copy "Shown to the
+  parent if we send the 5-day gentle nudge."
+- **Frontend `/mine`** — every non-terminal case row now shows
+  either:
+    - A tap-to-edit purple pill with the current note (italicised
+      quote + "tap to edit" hint) →
+      `pj-mine-note-preview-{case_id}`.
+    - Or a subtle "Add a personal reminder note" link when no
+      note is set → `pj-mine-note-add-{case_id}`.
+  Editing swaps the pill for an inline textarea (`Cancel` /
+  `Save` buttons with save-in-flight spinner). Save calls
+  PATCH, refreshes the list, and toasts "Reminder note saved"
+  (or "Reminder note cleared" when saved empty).
+- **Coverage grew iter150 from 21 → 25** (persist on create,
+  240-char cap enforced, PATCH set + clear round trip, PATCH
+  owner-only 404), and **iter151 from 6 → 7** (reminder_note
+  threads through to the dispatch row picked up by
+  `_find_stale_pending_parents`). All 42 tests green together
+  across iter150 + iter151 + iter152.
+- **Live E2E verified**: minted new case with a 37-char note,
+  navigated to `/mine`, saw the purple preview pill, tapped it
+  to edit, saved a new value, and confirmed the updated text
+  rendered. Also added a fresh note to a previously-no-note
+  case successfully.
+- **Files touched**:
+  - `backend/joint_alignment_routes.py` (adds
+    `reminder_note` field on `ProfessionalCreateCaseRequest`,
+    `ReminderNoteRequest` model, `PATCH /reminder-note`
+    endpoint, exposes `reminder_note` on
+    `cases-i-created`)
+  - `backend/joint_alignment_invite_nudge.py` (threads
+    `reminder_note` from case doc through to dispatch rows and
+    into `send_joint_alignment_invitation_reminder`)
+  - `backend/email_service.py` (adds `reminder_note` param
+    on the reminder email + purple blockquote HTML rendering)
+  - `frontend/src/pages/ProfessionalJointAlignmentNew.jsx`
+    (adds textarea + counter + submit wiring)
+  - `frontend/src/pages/ProfessionalJointAlignmentMine.jsx`
+    (adds preview pill + inline edit + save flow)
+  - `backend/tests/test_iter150_in_app_professional_cases.py`
+    (+4 tests)
+  - `backend/tests/test_iter151_joint_alignment_invite_nudge.py`
+    (+1 test)
+
 ### 2026-03-07 — Weekly-Digest Opt-Out Toggle on `/mine`
 - **Two new JWT-authenticated endpoints** in `joint_alignment_routes.py`:
     - `GET /api/professional/joint-alignment/digest-pref` —

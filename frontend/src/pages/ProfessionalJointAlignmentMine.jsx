@@ -27,6 +27,8 @@ import {
   AlertTriangle,
   X,
   FileDown,
+  MessageSquare,
+  Check,
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
@@ -67,6 +69,9 @@ export default function ProfessionalJointAlignmentMine() {
     try { return window.localStorage.getItem(FIRM_NAME_KEY) || ""; } catch { return ""; }
   });
   const [downloading, setDownloading] = useState(false);
+  const [noteEditingId, setNoteEditingId] = useState(null);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -169,6 +174,37 @@ export default function ProfessionalJointAlignmentMine() {
       toast.error("Download failed. Please try again.");
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const openNoteEdit = (c) => {
+    setNoteEditingId(c.case_id);
+    setNoteDraft(c.reminder_note || "");
+  };
+  const cancelNoteEdit = () => {
+    if (noteSaving) return;
+    setNoteEditingId(null);
+    setNoteDraft("");
+  };
+  const saveNote = async () => {
+    if (!noteEditingId) return;
+    setNoteSaving(true);
+    try {
+      await api.patch(
+        `/professional/joint-alignment/cases/${noteEditingId}/reminder-note`,
+        { reminder_note: noteDraft.trim() || null },
+      );
+      toast.success(
+        noteDraft.trim() ? "Reminder note saved." : "Reminder note cleared.",
+      );
+      setNoteEditingId(null);
+      setNoteDraft("");
+      load();
+    } catch (err) {
+      const detail = err?.response?.data?.detail || "Save failed";
+      toast.error(String(detail));
+    } finally {
+      setNoteSaving(false);
     }
   };
 
@@ -399,6 +435,80 @@ export default function ProfessionalJointAlignmentMine() {
                     </div>
                   ))}
                 </div>
+
+                {/* Reminder-note strip — displays the note (if any) and,
+                    for non-terminal cases, lets the mediator edit it inline. */}
+                {(c.status !== "cancelled" && c.status !== "expired") && (
+                  <div className="mt-3" data-testid={`pj-mine-note-${c.case_id}`}>
+                    {noteEditingId === c.case_id ? (
+                      <div className="rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] p-3">
+                        <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
+                          <MessageSquare size={10} /> Reminder note
+                        </div>
+                        <textarea
+                          rows={2}
+                          maxLength={240}
+                          value={noteDraft}
+                          onChange={(e) => setNoteDraft(e.target.value)}
+                          placeholder='e.g. "See you Thursday - takes about 15 minutes."'
+                          className="w-full rounded-lg border border-[#D6CFE8] bg-white text-sm text-[#1A1330] px-2.5 py-1.5 focus:outline-none focus:border-[#3D1A78] resize-none"
+                          data-testid={`pj-mine-note-input-${c.case_id}`}
+                        />
+                        <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                          <span className="text-[11px] text-[#857E9C]">
+                            {noteDraft.length}/240 · shown to the parent in the 5-day gentle nudge.
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={cancelNoteEdit}
+                              disabled={noteSaving}
+                              className="text-xs text-[#4B4567] hover:text-[#1A1330] px-2 py-1 disabled:opacity-60"
+                              data-testid={`pj-mine-note-cancel-${c.case_id}`}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={saveNote}
+                              disabled={noteSaving}
+                              className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1 text-xs font-semibold disabled:bg-[#C9C0DC]"
+                              data-testid={`pj-mine-note-save-${c.case_id}`}
+                            >
+                              {noteSaving ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Save
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : c.reminder_note ? (
+                      <button
+                        type="button"
+                        onClick={() => openNoteEdit(c)}
+                        className="w-full text-left rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] hover:bg-[#EFE7FA] p-3 transition-colors group"
+                        data-testid={`pj-mine-note-preview-${c.case_id}`}
+                      >
+                        <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
+                          <MessageSquare size={10} /> Reminder note
+                          <span className="ml-2 text-[10px] text-[#857E9C] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
+                            (tap to edit)
+                          </span>
+                        </div>
+                        <div className="text-sm text-[#1A1330] italic leading-snug">
+                          &ldquo;{c.reminder_note}&rdquo;
+                        </div>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openNoteEdit(c)}
+                        className="text-xs text-[#3D1A78] hover:underline inline-flex items-center gap-1"
+                        data-testid={`pj-mine-note-add-${c.case_id}`}
+                      >
+                        <MessageSquare size={11} /> Add a personal reminder note
+                      </button>
+                    )}
+                  </div>
+                )}
               </li>
             ))}
           </ul>

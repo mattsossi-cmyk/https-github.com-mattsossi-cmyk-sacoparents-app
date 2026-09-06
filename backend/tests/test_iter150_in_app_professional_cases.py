@@ -507,3 +507,87 @@ def test_digest_pref_requires_auth(client):
         json={"opted_in": False},
     )
     assert r2.status_code in (401, 403)
+
+
+# ---------------- reminder note (custom nudge copy) ---------------- #
+
+def test_reminder_note_persists_on_create(client):
+    _email, token, _name = _register(client)
+    r = client.post(
+        "/api/professional/joint-alignment/cases",
+        json={
+            "assessment_type": "co-parenting",
+            "parents": [
+                {"email": "a@example.com", "name": "A"},
+                {"email": "b@example.com", "name": "B"},
+            ],
+            "reminder_note": "  See you Thursday.  ",
+        },
+        headers=_headers(token),
+    )
+    assert r.status_code == 200
+    case_id = r.json()["case_id"]
+
+    # Read back via cases-i-created — the note should be exposed
+    # (stripped of surrounding whitespace).
+    listed = client.get(
+        "/api/professional/joint-alignment/cases-i-created",
+        headers=_headers(token),
+    ).json()
+    match = next(c for c in listed["cases"] if c["case_id"] == case_id)
+    assert match["reminder_note"] == "See you Thursday."
+
+
+def test_reminder_note_capped_at_240(client):
+    _email, token, _name = _register(client)
+    r = client.post(
+        "/api/professional/joint-alignment/cases",
+        json={
+            "assessment_type": "co-parenting",
+            "parents": [
+                {"email": "a@example.com"},
+                {"email": "b@example.com"},
+            ],
+            "reminder_note": "x" * 300,
+        },
+        headers=_headers(token),
+    )
+    # Pydantic max_length=240 → 422 Unprocessable Entity
+    assert r.status_code in (400, 422)
+
+
+def test_patch_reminder_note_updates_and_clears(client):
+    _email, token, _name = _register(client)
+    r = _make_case(client, token)
+    case_id = r.json()["case_id"]
+
+    # Set a note
+    r1 = client.patch(
+        f"/api/professional/joint-alignment/cases/{case_id}/reminder-note",
+        json={"reminder_note": "Call me if unsure."},
+        headers=_headers(token),
+    )
+    assert r1.status_code == 200
+    assert r1.json()["reminder_note"] == "Call me if unsure."
+
+    # Clear it with null
+    r2 = client.patch(
+        f"/api/professional/joint-alignment/cases/{case_id}/reminder-note",
+        json={"reminder_note": None},
+        headers=_headers(token),
+    )
+    assert r2.status_code == 200
+    assert r2.json()["reminder_note"] is None
+
+
+def test_patch_reminder_note_owner_only(client):
+    _email_a, token_a, _ = _register(client)
+    _email_b, token_b, _ = _register(client)
+    r = _make_case(client, token_a)
+    case_id = r.json()["case_id"]
+    r_b = client.patch(
+        f"/api/professional/joint-alignment/cases/{case_id}/reminder-note",
+        json={"reminder_note": "hijack"},
+        headers=_headers(token_b),
+    )
+    assert r_b.status_code == 404

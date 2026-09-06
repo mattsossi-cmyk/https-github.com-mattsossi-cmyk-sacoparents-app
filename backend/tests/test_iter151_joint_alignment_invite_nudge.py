@@ -193,3 +193,35 @@ def test_dedupe_prevents_repeat_nudges(db):
         finally:
             await _cleanup_case(db, case_id)
     asyncio.get_event_loop().run_until_complete(run())
+
+
+def test_reminder_note_flows_into_dispatched_row(db):
+    """When the case doc has `reminder_note`, the sweep must include
+    it in the (case, parent) row it hands to the email dispatcher."""
+    async def run():
+        stale = _now() - timedelta(days=_STALE_DAYS + 1)
+        case = _seed_case(minted_at=stale)
+        case["reminder_note"] = "Looking forward to our Thursday session."
+        case_id = case["case_id"]
+        await db[_CASES_COLLECTION].insert_one(case)
+        try:
+            r = await send_joint_alignment_invitation_reminders(
+                db, dry_run=True, force_window=True,
+            )
+            our = [x for x in r["results"] if x["case_id"] == case_id]
+            assert len(our) == 2
+            # dry_run rows don't carry the note themselves — they
+            # just prove the dispatcher was called. Confirm the
+            # nudge_sends dedupe row exists AND that the same-case
+            # row-finder attached the note.  We probe the internal
+            # `_find_stale_pending_parents` for that assertion.
+            from joint_alignment_invite_nudge import _find_stale_pending_parents
+            rows = await _find_stale_pending_parents(db, _now())
+            our_rows = [x for x in rows if x["case_id"] == case_id]
+            assert all(
+                x.get("reminder_note") == "Looking forward to our Thursday session."
+                for x in our_rows
+            )
+        finally:
+            await _cleanup_case(db, case_id)
+    asyncio.get_event_loop().run_until_complete(run())

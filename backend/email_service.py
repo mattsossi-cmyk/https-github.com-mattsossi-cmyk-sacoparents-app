@@ -1007,6 +1007,7 @@ def send_joint_alignment_invitation_reminder(
     professional_name: Optional[str] = None,
     parent_name: Optional[str] = None,
     assessment_type: Optional[str] = None,
+    reminder_note: Optional[str] = None,
 ) -> None:
     """
     Warm 5-day nudge to a parent whose Joint Alignment invitation is
@@ -1015,12 +1016,21 @@ def send_joint_alignment_invitation_reminder(
     genuine reasons for the delay (busy, mid-crisis, spam folder).
     Never scolds; always includes a one-line "you don't have to reply
     to this email — just click the link when you're ready" reassurance.
+
+    When the mediator supplied a `reminder_note` at case creation
+    (or edited it later via the /mine PATCH), it's rendered as a
+    highlighted quote block right below the greeting so the parent
+    sees their mediator's voice, not a generic template.
     """
     pro = (professional_name or "Your mediator").strip() or "Your mediator"
     greeting = f"Hi {parent_name}," if parent_name else "Hi,"
     lane = (assessment_type or "").replace("-", " ").strip() or "the assessment"
+
+    note = (reminder_note or "").strip()
+    note_plain = f'\n\nA note from {pro}:\n  "{note}"\n' if note else ""
     plain = (
-        f"{greeting}\n\n"
+        f"{greeting}\n"
+        f"{note_plain}\n"
         f"Just a gentle reminder that {pro} invited you to a private assessment on "
         f"SA CoParents as part of Joint Alignment case {case_id} a few days ago.\n\n"
         f"You'll answer a short set of {lane} reflection prompts on your own. Your "
@@ -1031,9 +1041,20 @@ def send_joint_alignment_invitation_reminder(
         "If life is complicated right now, it's completely fine to come back to it later.\n\n"
         "— SA CoParents · sacoparentsapp.online\n"
     )
+    note_html = (
+        f'<blockquote style="margin:0 0 18px 0;padding:12px 16px;border-left:3px solid '
+        f'#3D1A78;background:#F5F1FB;border-radius:0 12px 12px 0;font-size:14px;'
+        f'line-height:1.55;color:#1A1330;font-style:italic;">'
+        f'<div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;'
+        f'font-weight:700;font-style:normal;color:#3D1A78;margin-bottom:4px;">'
+        f'A note from {pro}</div>'
+        f'&ldquo;{note}&rdquo;'
+        f'</blockquote>'
+    ) if note else ""
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
         f"{greeting}</p>"
+        f"{note_html}"
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
         f"Just a gentle reminder that <strong>{pro}</strong> invited you to a private "
         f"assessment on SA CoParents as part of Joint Alignment case "

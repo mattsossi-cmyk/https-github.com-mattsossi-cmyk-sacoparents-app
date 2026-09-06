@@ -113,6 +113,7 @@ async def _find_stale_pending_parents(
     async for case in cursor:
         case_id = case.get("case_id") or ""
         professional_name = ((case.get("professional") or {}).get("name")) or ""
+        reminder_note = case.get("reminder_note") or ""
         parents = case.get("parents") or []
         for p in parents:
             if p.get("accepted_at"):
@@ -130,6 +131,7 @@ async def _find_stale_pending_parents(
             out.append({
                 "case_id": case_id,
                 "professional_name": professional_name,
+                "reminder_note": reminder_note,
                 "parent_email": p.get("email") or "",
                 "parent_name": p.get("name") or "",
                 "invitation_token": p.get("invitation_token") or "",
@@ -221,6 +223,7 @@ async def _dispatch_one(
             professional_name=row.get("professional_name") or None,
             parent_name=row.get("parent_name") or None,
             assessment_type=row.get("assessment_type") or None,
+            reminder_note=row.get("reminder_note") or None,
         )
     except EmailNotConfigured:
         return {**base, "reason": "email_not_configured"}

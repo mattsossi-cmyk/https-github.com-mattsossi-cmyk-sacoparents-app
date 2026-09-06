@@ -51,6 +51,7 @@ const EMPTY_FORM = {
   parent2_email: "",
   parent2_name: "",
   align_case_reference: "",
+  reminder_note: "",
 };
 
 export default function ProfessionalJointAlignmentNew() {
@@ -93,6 +94,9 @@ export default function ProfessionalJointAlignmentNew() {
       };
       if (form.align_case_reference.trim()) {
         payload.align_case_reference = form.align_case_reference.trim();
+      }
+      if (form.reminder_note.trim()) {
+        payload.reminder_note = form.reminder_note.trim();
       }
       const r = await api.post("/professional/joint-alignment/cases", payload);
       setResult(r.data);
@@ -353,6 +357,27 @@ export default function ProfessionalJointAlignmentNew() {
                   placeholder="Your firm's file / matter number"
                   data-testid="pj-reference"
                 />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-note">
+                  Personal reminder note (optional)
+                </label>
+                <textarea
+                  id="pj-note"
+                  rows={2}
+                  maxLength={240}
+                  autoComplete="off"
+                  className="mt-1 block w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78] resize-none"
+                  value={form.reminder_note}
+                  onChange={(e) => update({ reminder_note: e.target.value })}
+                  placeholder='e.g. "Looking forward to Thursday — this takes ~15 minutes."'
+                  data-testid="pj-reminder-note"
+                />
+                <div className="mt-1 flex items-center justify-between text-[11px] text-[#857E9C]">
+                  <span>Shown to the parent if we send the 5-day gentle nudge.</span>
+                  <span data-testid="pj-reminder-note-count">{form.reminder_note.length}/240</span>
+                </div>
               </div>
             </div>
 

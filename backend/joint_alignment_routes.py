@@ -461,6 +461,7 @@ class ProfessionalCreateCaseRequest(BaseModel):
     professional_name: Optional[str] = Field(default=None, max_length=200)
     professional_email: Optional[EmailStr] = Field(default=None)
     align_case_reference: Optional[str] = Field(default=None, max_length=128)
+    reminder_note: Optional[str] = Field(default=None, max_length=240)
 
 
 @router.post(
@@ -550,6 +551,7 @@ async def professional_create_case(
         "professional_created_by": current.user_id,
         "origin": "in_app_professional",
         "align_case_reference": body.align_case_reference,
+        "reminder_note": (body.reminder_note or "").strip() or None,
         "parents": parent_docs,
         "status": "pending",
         "created_at": now,
@@ -814,6 +816,7 @@ async def list_cases_i_created(
         # Because the caller minted the case, they can see the raw
         # invitation URLs (until expiry). This is what makes the
         # "resend the link" copy-paste flow possible for them.
+        shape["reminder_note"] = case.get("reminder_note")
         shape["parents"] = [
             {
                 **_parent_public_shape(p),
@@ -1341,6 +1344,43 @@ async def mark_assessment_completed(
 
 class CancelCaseRequest(BaseModel):
     reason: Optional[str] = Field(default=None, max_length=280)
+
+
+class ReminderNoteRequest(BaseModel):
+    reminder_note: Optional[str] = Field(default=None, max_length=240)
+
+
+@router.patch("/professional/joint-alignment/cases/{case_id}/reminder-note")
+async def professional_update_reminder_note(
+    body: ReminderNoteRequest,
+    case_id: str = Path(..., min_length=1, max_length=20),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    JWT-authenticated, owner-only. Update (or clear with `null`)
+    the mediator's one-line personal note that gets injected into
+    the 5-day invitation-reminder email. Idempotent — same value
+    posted twice is a no-op.
+    """
+    canonical = _normalise_case_id(case_id) or case_id
+    normalized = (body.reminder_note or "").strip() or None
+    result = await db[_CASES_COLL].update_one(
+        {
+            "case_id": canonical,
+            "$or": [
+                {"professional_created_by": current.user_id},
+                {"professional.id": current.user_id, "origin": "in_app_professional"},
+            ],
+        },
+        {"$set": {"reminder_note": normalized}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Case not found, or not owned by this account.",
+        )
+    return {"case_id": canonical, "reminder_note": normalized}
 
 
 @router.get("/professional/joint-alignment/cases/{case_id}/status-report.pdf")
