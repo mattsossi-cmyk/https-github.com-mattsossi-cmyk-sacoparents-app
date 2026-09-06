@@ -613,6 +613,12 @@ async def seed_admin():
             "password_hash": hash_password(admin_password),
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
+    elif not verify_password(admin_password, existing["password_hash"]):
+        await db.users.update_one(
+            {"email": admin_email.lower()},
+            {"$set": {"password_hash": hash_password(admin_password)}},
+        )
+        await db.login_attempts.delete_many({"identifier": {"$regex": f":{admin_email.lower()}$"}})
 
 
 @app.on_event("startup")
