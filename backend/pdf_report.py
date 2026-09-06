@@ -129,60 +129,61 @@ def _joint_alignment_map(pdf: FPDF, r: dict) -> None:
         pdf.cell(0, 7, _s(row["status"]), new_x="LMARGIN", new_y="NEXT")
 
 
-def build_joint_pdf(r: dict) -> bytes:
+def _joint_notes(r: dict) -> list:
     notes = []
     imported = r.get("imported") or {}
     if imported.get("a") or imported.get("b"):
         notes.append("Includes material imported from sacoparentsapp.online")
     if r.get("is_sample"):
         notes.append("SAMPLE - fictional example data shown for illustration")
+    return notes
 
-    pdf = _new_pdf()
-    _title_header(pdf, r["report_title"], [
-        f"Child: {r['child_name']}",
-        f"Subject: {r['subject_label']}",
-        f"Participants: {r['parent_a_name']} / {r['parent_b_name']}",
-        r["date"],
-    ], notes)
 
+def _joint_front_sections(pdf: FPDF, r: dict) -> None:
     _section_title(pdf, 1, "Purpose of This Report")
     _body(pdf, r["purpose"])
-
     _section_title(pdf, 2, "What Both Parents Agree About")
     pdf.set_font("helvetica", "B", 10.5)
     pdf.set_text_color(*GREEN)
     pdf.cell(0, 6, _s("Strong Alignment - both parents indicated that:"), new_x="LMARGIN", new_y="NEXT")
     for stmt in r["alignment_statements"]:
         _bullet(pdf, stmt)
-
     _joint_differences(pdf, r)
-
     _section_title(pdf, 4, "Child's Identified Needs")
     for n in r["child_needs"]:
         _bullet(pdf, n)
 
-    _joint_alignment_map(pdf, r)
 
+def _joint_back_sections(pdf: FPDF, r: dict) -> None:
+    _joint_alignment_map(pdf, r)
     _section_title(pdf, 6, "Areas for Conversation")
     for q in r["conversation"]:
         _bullet(pdf, q)
-
     _section_title(pdf, 7, "Options and Resources")
     _body(pdf, "Neutral options - SA CoParents does not decide; it builds options.", italic=True)
     for o in r["options"]:
         _bullet(pdf, o)
-
     _section_title(pdf, 8, "Potential Areas of Alignment")
     _body(pdf, r["alignment_paragraph"], italic=True)
-
     _section_title(pdf, 9, "Questions for the Parents")
     for q in r["questions"]:
         _bullet(pdf, q)
-
     _section_title(pdf, 10, "Possible Next Steps")
     for step in r["next_steps"]:
         _bullet(pdf, step)
 
+
+def build_joint_pdf(r: dict) -> bytes:
+    pdf = _new_pdf()
+    _title_header(pdf, r["report_title"], [
+        f"Child: {r['child_name']}",
+        f"Subject: {r['subject_label']}",
+        f"Participants: {r['parent_a_name']} / {r['parent_b_name']}",
+        r["date"],
+    ], _joint_notes(r))
+
+    _joint_front_sections(pdf, r)
+    _joint_back_sections(pdf, r)
     _philosophy_block(pdf, r["philosophy_heading"], r["philosophy_note"], r["philosophy"])
     return bytes(pdf.output())
 

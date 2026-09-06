@@ -4,57 +4,68 @@ from report_engine import generate_report
 from joint_engine import generate_joint_report
 
 
+def _assessment_section(c: dict, totals: dict, children: list) -> dict | None:
+    if not (c.get("responses", {}).get("a") and c.get("responses", {}).get("b")):
+        return None
+    rep = generate_report(c)
+    s = rep["snapshot"]
+    totals["aligned"] += s["aligned"]
+    totals["different"] += s["different"]
+    totals["info"] += s["info"]
+    if c.get("child_name"):
+        children.append(c["child_name"])
+    return {
+        "kind": "assessment",
+        "title": rep["assessment_title"],
+        "child_name": c.get("child_name", ""),
+        "snapshot": s,
+        "alignments": rep["alignments"],
+        "differences": rep["differences"],
+        "child_needs": [n["title"] for n in rep["child_needs"]],
+        "options": rep["options"][:4],
+        "questions": rep["conversation_questions"],
+        "priority": rep["summary"]["priority"],
+    }
+
+
+def _joint_section(j: dict, totals: dict, children: list) -> dict | None:
+    if j.get("status") != "ready":
+        return None
+    rep = generate_joint_report(j)
+    strong = sum(1 for r in rep["alignment_map"] if r["status"] == "Strong alignment")
+    moderate = sum(1 for r in rep["alignment_map"] if r["status"] == "Moderate alignment")
+    discussion = sum(1 for r in rep["alignment_map"] if r["status"] == "Needs discussion")
+    totals["aligned"] += strong
+    totals["different"] += discussion
+    totals["info"] += moderate
+    if rep.get("child_name"):
+        children.append(rep["child_name"])
+    return {
+        "kind": "joint",
+        "title": f"Focused Joint Report: {rep['subject_label']}",
+        "child_name": rep.get("child_name", ""),
+        "alignment_statements": rep["alignment_statements"],
+        "alignment_map": rep["alignment_map"],
+        "differences": rep["differences"],
+        "child_needs": rep["child_needs"],
+        "options": rep["options"],
+        "questions": rep["questions"],
+    }
+
+
 def build_complete_report(cases: list, joints: list, user_name: str) -> dict:
     sections = []
     totals = {"aligned": 0, "different": 0, "info": 0}
     children = []
 
     for c in cases:
-        if not (c.get("responses", {}).get("a") and c.get("responses", {}).get("b")):
-            continue
-        rep = generate_report(c)
-        s = rep["snapshot"]
-        totals["aligned"] += s["aligned"]
-        totals["different"] += s["different"]
-        totals["info"] += s["info"]
-        if c.get("child_name"):
-            children.append(c["child_name"])
-        sections.append({
-            "kind": "assessment",
-            "title": rep["assessment_title"],
-            "child_name": c.get("child_name", ""),
-            "snapshot": s,
-            "alignments": rep["alignments"],
-            "differences": rep["differences"],
-            "child_needs": [n["title"] for n in rep["child_needs"]],
-            "options": rep["options"][:4],
-            "questions": rep["conversation_questions"],
-            "priority": rep["summary"]["priority"],
-        })
-
+        sec = _assessment_section(c, totals, children)
+        if sec:
+            sections.append(sec)
     for j in joints:
-        if j.get("status") != "ready":
-            continue
-        rep = generate_joint_report(j)
-        strong = sum(1 for r in rep["alignment_map"] if r["status"] == "Strong alignment")
-        moderate = sum(1 for r in rep["alignment_map"] if r["status"] == "Moderate alignment")
-        discussion = sum(1 for r in rep["alignment_map"] if r["status"] == "Needs discussion")
-        totals["aligned"] += strong
-        totals["different"] += discussion
-        totals["info"] += moderate
-        if rep.get("child_name"):
-            children.append(rep["child_name"])
-        sections.append({
-            "kind": "joint",
-            "title": f"Focused Joint Report: {rep['subject_label']}",
-            "child_name": rep.get("child_name", ""),
-            "alignment_statements": rep["alignment_statements"],
-            "alignment_map": rep["alignment_map"],
-            "differences": rep["differences"],
-            "child_needs": rep["child_needs"],
-            "options": rep["options"],
-            "questions": rep["questions"],
-        })
+        sec = _joint_section(j, totals, children)
+        if sec:
+            sections.append(sec)
 
     return {
         "title": "Complete Joint Alignment Report",

@@ -110,23 +110,32 @@ def _corpus(resp):
     return " ".join(resp.get("answers", {}).values())
 
 
-def _theme_analysis(corpus_a, corpus_b, pa, pb, child):
+def _theme_row(theme: str, in_a: bool, in_b: bool, pa: str, pb: str, child: str) -> tuple:
+    if in_a and in_b:
+        return {"area": theme, "status": "Strong alignment"}, f"Both parents' material addresses {theme.lower()}.", None
+    if in_a or in_b:
+        difference = {
+            "area": theme,
+            "parent_a": f"{theme} is addressed in {pa}'s material." if in_a else "Not addressed in the imported material.",
+            "parent_b": f"{theme} is addressed in {pb}'s material." if in_b else "Not addressed in the imported material.",
+            "reframe": REFRAME_TEMPLATE.replace("{child}", child),
+        }
+        return {"area": theme, "status": "Needs discussion"}, None, difference
+    return None, None, None
+
+
+def _theme_analysis(corpus_a: str, corpus_b: str, pa: str, pb: str, child: str) -> tuple:
     pres_a = {name: any(k in corpus_a.lower() for k in kws) for name, kws in THEMES.items()}
     pres_b = {name: any(k in corpus_b.lower() for k in kws) for name, kws in THEMES.items()}
     rows, statements, differences = [], [], []
     for theme in THEMES:
-        in_a, in_b = pres_a[theme], pres_b[theme]
-        if in_a and in_b:
-            rows.append({"area": theme, "status": "Strong alignment"})
-            statements.append(f"Both parents' material addresses {theme.lower()}.")
-        elif in_a or in_b:
-            rows.append({"area": theme, "status": "Needs discussion"})
-            differences.append({
-                "area": theme,
-                "parent_a": f"{theme} is addressed in {pa}'s material." if in_a else "Not addressed in the imported material.",
-                "parent_b": f"{theme} is addressed in {pb}'s material." if in_b else "Not addressed in the imported material.",
-                "reframe": REFRAME_TEMPLATE.replace("{child}", child),
-            })
+        row, statement, difference = _theme_row(theme, pres_a[theme], pres_b[theme], pa, pb, child)
+        if row:
+            rows.append(row)
+        if statement:
+            statements.append(statement)
+        if difference:
+            differences.append(difference)
     return rows, statements, differences
 
 
@@ -171,34 +180,26 @@ def generate_joint_report(doc: dict) -> dict:
     }
 
 
+def _agreement_term(key: str, label: str, ra: dict, rb: dict) -> dict:
+    common = shared_terms(ra.get(key, ""), rb.get(key, ""))
+    status = "Likely aligned" if len(common) >= 2 else ("Close" if len(common) == 1 else "Needs discussion")
+    return {"key": key, "label": label, "parent_a": ra.get(key, ""), "parent_b": rb.get(key, ""), "status": status}
+
+
+def _foundation_entries(doc: dict, pa: str, pb: str) -> list:
+    entries = []
+    for side, name in (("a", pa), ("b", pb)):
+        for s in (doc["responses"].get(side) or {}).get("foundation") or []:
+            entries.append({"parent": name, "title": s.get("title", "Foundation Statement"), "content": s.get("content", "")})
+    return entries
+
+
 def generate_agreement(doc: dict) -> dict:
     child = doc.get("child_name") or "the child"
     pa = doc["participants"]["a"].get("name") or "Parent A"
     pb = doc["participants"]["b"].get("name") or "Parent B"
     ra = doc["responses"]["a"]["answers"]
     rb = doc["responses"]["b"]["answers"]
-
-    terms = []
-    for key, label, _question in AGREEMENT_AREAS:
-        common = shared_terms(ra.get(key, ""), rb.get(key, ""))
-        if len(common) >= 2:
-            status = "Likely aligned"
-        elif len(common) == 1:
-            status = "Close"
-        else:
-            status = "Needs discussion"
-        terms.append({
-            "key": key,
-            "label": label,
-            "parent_a": ra.get(key, ""),
-            "parent_b": rb.get(key, ""),
-            "status": status,
-        })
-
-    foundation = []
-    for side, name in (("a", pa), ("b", pb)):
-        for s in (doc["responses"].get(side) or {}).get("foundation") or []:
-            foundation.append({"parent": name, "title": s.get("title", "Foundation Statement"), "content": s.get("content", "")})
 
     return {
         "report_title": "Joint Co-Parenting Agreement",
@@ -208,8 +209,8 @@ def generate_agreement(doc: dict) -> dict:
         "date": datetime.now(timezone.utc).strftime("%B %d, %Y"),
         "purpose": AGREEMENT_PURPOSE,
         "confidentiality_note": AGREEMENT_CONFIDENTIALITY,
-        "terms": terms,
-        "foundation_statements": foundation,
+        "terms": [_agreement_term(key, label, ra, rb) for key, label, _question in AGREEMENT_AREAS],
+        "foundation_statements": _foundation_entries(doc, pa, pb),
         "next_note": (
             "Areas marked 'Needs discussion' are candidates for parent conversation or mediation "
             "before finalizing. Consider having an appropriate professional review any final agreement."

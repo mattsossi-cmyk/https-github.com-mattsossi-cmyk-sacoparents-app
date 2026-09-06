@@ -851,17 +851,19 @@ async def joint_config():
     }
 
 
-def resolve_subjects(body_subject: str, body_subjects: list, custom: str):
+def _multi_label(subject_keys: list) -> str:
+    label = "Customized Report: " + " + ".join(SUBJECTS[k]["label"] for k in subject_keys[:3])
+    return label + ("…" if len(subject_keys) > 3 else "")
+
+
+def resolve_subjects(body_subject: str, body_subjects: list, custom: str) -> tuple:
     subject_keys = body_subjects or [body_subject]
     if not subject_keys or any(k not in SUBJECTS for k in subject_keys):
         raise HTTPException(status_code=400, detail="Unknown subject")
     if len(subject_keys) > 1:
-        label = "Customized Report: " + " + ".join(SUBJECTS[k]["label"] for k in subject_keys[:3]) + ("…" if len(subject_keys) > 3 else "")
-        return "multi", subject_keys, label
+        return "multi", subject_keys, _multi_label(subject_keys)
     subject = subject_keys[0]
-    label = custom.strip() if subject == "custom" else SUBJECTS[subject]["label"]
-    if subject == "custom" and not label:
-        label = "Custom Subject"
+    label = (custom.strip() or "Custom Subject") if subject == "custom" else SUBJECTS[subject]["label"]
     return subject, subject_keys, label
 
 
@@ -1012,6 +1014,13 @@ async def get_joint_report(rid: str, user=Depends(get_current_user)):
     return joint_public(doc, user, pend[0] if pend else None, pending=pend)
 
 
+def _foundation_payload(body: JointResponsesIn) -> list:
+    return [
+        {"title": str(s.get("title", "Foundation Statement"))[:120], "content": str(s.get("content", ""))[:5000]}
+        for s in (body.foundation or []) if isinstance(s, dict)
+    ]
+
+
 def _validated_answers(doc: dict, body: JointResponsesIn) -> dict:
     valid = {k for k, _, _ in AGREEMENT_AREAS} if doc.get("kind") == "agreement" else {k for k, _, _ in QUESTIONS}
     answers = {k: (body.answers.get(k) or "").strip() for k in valid}
@@ -1019,10 +1028,7 @@ def _validated_answers(doc: dict, body: JointResponsesIn) -> dict:
         raise HTTPException(status_code=400, detail="Please answer all questions")
     payload = {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}
     if doc.get("kind") == "agreement" and body.foundation:
-        payload["foundation"] = [
-            {"title": str(s.get("title", "Foundation Statement"))[:120], "content": str(s.get("content", ""))[:5000]}
-            for s in body.foundation if isinstance(s, dict)
-        ]
+        payload["foundation"] = _foundation_payload(body)
     return payload
 
 
@@ -1650,9 +1656,16 @@ async def list_pro_requests(user=Depends(get_current_user)):
     ]
 
 
+def _first_email(*candidates) -> str:
+    for c in candidates:
+        if c:
+            return str(c).lower()
+    return ""
+
+
 def _resolve_prepare_parties(req: dict, body: "PrepareIn | None") -> tuple:
-    pa_email = str(body.parent_a_email).lower() if body and body.parent_a_email else req["parent_email"]
-    pb_email = str(body.parent_b_email).lower() if body and body.parent_b_email else (req.get("co_parent_email") or "")
+    pa_email = _first_email(body.parent_a_email if body else None, req["parent_email"])
+    pb_email = _first_email(body.parent_b_email if body else None, req.get("co_parent_email"))
     pb_name = ((body.parent_b_name or "").strip() if body else "") or req.get("co_parent_name") or "Co-parent"
     if not pb_email:
         raise HTTPException(status_code=400, detail="Please provide both parents' email addresses so each receives their private assessment")
@@ -1729,84 +1742,93 @@ async def cron_completion_nudge(request: Request):
     return {"ok": True}
 
 
+def _parse_iso(value) -> datetime | None:
+    try:
+        return datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
+async def _send_ready_notifications(doc: dict, now: datetime) -> None:
+    ra, rb = doc["responses"]["a"], doc["responses"]["b"]
+    done_a, done_b = _parse_iso(ra.get("completed_at")), _parse_iso(rb.get("completed_at"))
+    if not done_a or not done_b or (now - max(done_a, done_b)) > timedelta(hours=48):
+        return
+    sent = doc.get("ready_notified")
+    if not isinstance(sent, dict):
+        sent = {}
+    label = doc.get("subject_label", "Joint Report")
+    child = doc.get("child_name") or "your child"
+    link = f"{app_url()}/joint/{doc['id']}"
+    updates = {}
+    for side, p in (("a", doc["participants"]["a"]), ("b", doc["participants"]["b"])):
+        if sent.get(side) or not p.get("email"):
+            continue
+        try:
+            await send_email(
+                to=p["email"],
+                subject=f"Your Joint Report is ready - {EMAIL_FROM_NAME}",
+                html=(
+                    '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                    f"<p>Hi {escape(p.get('name') or 'there')},</p>"
+                    f"<p>Both parents have completed their assessments for <strong>{escape(child)}</strong> ({escape(label)}). "
+                    "Your Joint Report is ready to view.</p>"
+                    f'<p><a href="{link}" style="color:#5B2A86">Open your Joint Report</a></p>'
+                    f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
+                    "</td></tr></table>"
+                ),
+            )
+            updates[side] = now.isoformat()
+        except Exception:
+            logger.warning(f"Ready notification not sent to {p['email']}")
+    if updates:
+        await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {"ready_notified": {**sent, **updates}}})
+
+
+async def _send_completion_nudge(doc: dict, now: datetime) -> None:
+    ra = doc.get("responses", {}).get("a")
+    rb = doc.get("responses", {}).get("b")
+    if bool(ra) == bool(rb):
+        return
+    pa, pb = doc["participants"]["a"], doc["participants"]["b"]
+    done, other, side = (pa, pb, "b") if ra else (pb, pa, "a")
+    if doc.get("nudges", {}).get(side) or not other.get("email"):
+        return
+    done_at = _parse_iso((ra or rb).get("completed_at"))
+    if not done_at or not (timedelta(minutes=15) <= (now - done_at) <= timedelta(hours=48)):
+        return
+    label = doc.get("subject_label", "Joint Report")
+    child = doc.get("child_name") or "your child"
+    link = f"{app_url()}/joint/{doc['id']}"
+    try:
+        await send_email(
+            to=other["email"],
+            subject=f"Your co-parent has completed their half - {EMAIL_FROM_NAME}",
+            html=(
+                '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                f"<p>Hi {escape(other.get('name') or 'there')},</p>"
+                f"<p><strong>{escape(done.get('name') or 'Your co-parent')}</strong> has completed their half of the "
+                f"{escape(label)} for <strong>{escape(child)}</strong>. Once you complete yours, the Joint Report "
+                "will be generated for both of you.</p>"
+                f'<p><a href="{link}" style="color:#5B2A86">Complete your half</a></p>'
+                f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
+                "</td></tr></table>"
+            ),
+        )
+        await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"nudges.{side}": now.isoformat()}})
+    except Exception:
+        logger.warning(f"Completion nudge not sent to {other['email']}")
+
+
 async def run_completion_nudges():
     now = datetime.now(timezone.utc)
     docs = await db.joint_reports.find({"status": {"$in": ["in_progress", "ready"]}}, {"_id": 0}).to_list(500)
     for doc in docs:
         try:
-            ra = doc.get("responses", {}).get("a")
-            rb = doc.get("responses", {}).get("b")
-            pa, pb = doc["participants"]["a"], doc["participants"]["b"]
-            label = doc.get("subject_label", "Joint Report")
-            child = doc.get("child_name") or "your child"
-            link = f"{app_url()}/joint/{doc['id']}"
-            if ra and rb:
-                try:
-                    done_at = max(
-                        datetime.fromisoformat(str(ra.get("completed_at", "")).replace("Z", "+00:00")),
-                        datetime.fromisoformat(str(rb.get("completed_at", "")).replace("Z", "+00:00")),
-                    )
-                except Exception:
-                    continue
-                if (now - done_at) > timedelta(hours=48):
-                    continue
-                sent = doc.get("ready_notified")
-                if not isinstance(sent, dict):
-                    sent = {}
-                updates = {}
-                for side, p in (("a", pa), ("b", pb)):
-                    if sent.get(side) or not p.get("email"):
-                        continue
-                    try:
-                        await send_email(
-                            to=p["email"],
-                            subject=f"Your Joint Report is ready - {EMAIL_FROM_NAME}",
-                            html=(
-                                '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                                f"<p>Hi {escape(p.get('name') or 'there')},</p>"
-                                f"<p>Both parents have completed their assessments for <strong>{escape(child)}</strong> ({escape(label)}). "
-                                "Your Joint Report is ready to view.</p>"
-                                f'<p><a href="{link}" style="color:#5B2A86">Open your Joint Report</a></p>'
-                                f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
-                                "</td></tr></table>"
-                            ),
-                        )
-                        updates[side] = now.isoformat()
-                    except Exception:
-                        logger.warning(f"Ready notification not sent to {p['email']}")
-                if updates:
-                    await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {"ready_notified": {**sent, **updates}}})
-                continue
-            if bool(ra) == bool(rb):
-                continue
-            done, other, side = (pa, pb, "b") if ra else (pb, pa, "a")
-            completed = ra if ra else rb
-            if doc.get("nudges", {}).get(side) or not other.get("email"):
-                continue
-            try:
-                done_at = datetime.fromisoformat(str(completed.get("completed_at", "")).replace("Z", "+00:00"))
-            except Exception:
-                continue
-            if not (timedelta(minutes=15) <= (now - done_at) <= timedelta(hours=48)):
-                continue
-            try:
-                await send_email(
-                    to=other["email"],
-                    subject=f"Your co-parent has completed their half - {EMAIL_FROM_NAME}",
-                    html=(
-                        '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                        f"<p>Hi {escape(other.get('name') or 'there')},</p>"
-                        f"<p><strong>{escape(done.get('name') or 'Your co-parent')}</strong> has completed their half of the "
-                        f"{escape(label)} for <strong>{escape(child)}</strong>. Once you complete yours, the Joint Report "
-                        "will be generated for both of you.</p>"
-                        f'<p><a href="{link}" style="color:#5B2A86">Complete your half</a></p>'
-                        f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
-                        "</td></tr></table>"
-                    ),
-                )
-                await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"nudges.{side}": now.isoformat()}})
-            except Exception:
-                logger.warning(f"Completion nudge not sent to {other['email']}")
+            if doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b"):
+                await _send_ready_notifications(doc, now)
+            else:
+                await _send_completion_nudge(doc, now)
         except Exception as e:
             logger.error(f"Nudge processing error for {doc.get('id')}: {e}")
 

@@ -98,6 +98,25 @@ def _build_court_map(case_type, buckets):
     }
 
 
+def _perspective_sections(cfg: dict, ra: dict, rb: dict, aligned: list, conversation: list, buckets: dict) -> dict:
+    return {
+        "shared_goals": ra.get("goals") or rb.get("goals") or [],
+        "parent_a_concern": ra.get("primary_concern", ""),
+        "parent_b_concern": rb.get("primary_concern", ""),
+        "alignments": [{"topic": t["label"], "text": t["aligned_text"]} for t in aligned],
+        "alignment_foundation_note": ALIGNMENT_FOUNDATION_NOTE,
+        "differences": [{"topic": t["label"], "parent_a": t["parent_a"], "parent_b": t["parent_b"]} for t in conversation],
+        "differences_note": DIFFERENCES_NOTE,
+        "professional_map": {
+            "alignment_count": len(aligned),
+            "conversation_count": len(conversation),
+            "professional_input_count": len(buckets["info"]),
+            "child_needs_count": len(cfg["needs"]),
+            "sequence": DISCUSSION_SEQUENCE,
+        },
+    }
+
+
 def generate_report(case: dict) -> dict:
     cfg = ASSESSMENT_TYPES[case["type"]]
     ra = case["responses"]["a"]
@@ -114,7 +133,6 @@ def generate_report(case: dict) -> dict:
         "info": len(buckets["info"]),
     }
     priority = _priority_statement(cfg, buckets)
-    shared_goals = ra.get("goals") or rb.get("goals") or []
 
     return {
         "assessment_type": case["type"],
@@ -133,25 +151,12 @@ def generate_report(case: dict) -> dict:
         "purpose_items": PURPOSE_ITEMS,
         "snapshot": snapshot,
         "snapshot_note": "These numbers are not scores. They are a roadmap for conversation.",
-        "shared_goals": shared_goals,
-        "parent_a_concern": ra.get("primary_concern", ""),
-        "parent_b_concern": rb.get("primary_concern", ""),
+        **_perspective_sections(cfg, ra, rb, aligned, conversation, buckets),
         "central_question": cfg["central_question"],
-        "alignments": [{"topic": t["label"], "text": t["aligned_text"]} for t in aligned],
-        "alignment_foundation_note": ALIGNMENT_FOUNDATION_NOTE,
-        "differences": [{"topic": t["label"], "parent_a": t["parent_a"], "parent_b": t["parent_b"]} for t in conversation],
-        "differences_note": DIFFERENCES_NOTE,
         "child_needs": cfg["needs"],
         "options": cfg["options"],
         "options_note": "These are not recommendations. They are options for parents to explore.",
         "conversation_questions": _build_questions(cfg, conversation),
-        "professional_map": {
-            "alignment_count": len(aligned),
-            "conversation_count": len(conversation),
-            "professional_input_count": len(buckets["info"]),
-            "child_needs_count": len(cfg["needs"]),
-            "sequence": DISCUSSION_SEQUENCE,
-        },
         "action_plan": _build_action_plan(buckets),
         "summary": _build_summary(cfg, buckets, priority),
         "court_map": _build_court_map(case["type"], buckets),

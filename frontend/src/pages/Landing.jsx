@@ -185,7 +185,7 @@ export default function Landing() {
               <tbody>
                 <tr className="border-t border-border" data-testid="platform-row-app">
                   <td className="px-4 py-3 font-semibold text-brand-teal">SA CoParents App</td>
-                  <td className="px-4 py-3">Individual reflection and private assessments</td>
+                  <td className="px-4 py-3">Parent individual assessments and private reflection</td>
                   <td className="px-4 py-3">Parents</td>
                 </tr>
                 <tr className="border-t border-border" data-testid="platform-row-align">
@@ -201,7 +201,7 @@ export default function Landing() {
             <a href="https://sacoparentsapp.online" target="_blank" rel="noreferrer" className="group" data-testid="step-one">
               <div className="bg-white border border-border rounded-xl p-6 text-center shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-200 h-full">
                 <div className="h-12 w-12 rounded-full bg-brand-teal text-white font-extrabold flex items-center justify-center mx-auto mb-3 text-lg">1</div>
-                <p className="font-bold text-brand-teal uppercase tracking-wide text-sm">Step One — Individual Reflection</p>
+                <p className="font-bold text-brand-teal uppercase tracking-wide text-sm">Step One — Parent Individual Assessment</p>
                 <p className="text-sm text-muted-foreground mt-2">Each parent completes a private assessment through the SA CoParents App, describing concerns, observations, priorities, and their understanding of their child's needs.</p>
                 <p className="text-xs text-primary mt-2 font-medium">sacoparentsapp.online →</p>
               </div>
@@ -381,7 +381,7 @@ export default function Landing() {
           <li className="flex items-start gap-2.5"><CheckCircle2 className="h-4 w-4 text-brand-teal shrink-0 mt-0.5" /> <span><strong>Who it's for:</strong> mediators, family-law attorneys, therapists and counselors, parenting coordinators and facilitators, collaborative and court-appointed professionals.</span></li>
           <li className="flex items-start gap-2.5"><CheckCircle2 className="h-4 w-4 text-brand-teal shrink-0 mt-0.5" /> <span><strong>The problem it addresses:</strong> professionals too often begin with two competing narratives and no organized common ground. Align structures each parent's independent perspective before the first joint conversation.</span></li>
           <li className="flex items-start gap-2.5"><CheckCircle2 className="h-4 w-4 text-brand-teal shrink-0 mt-0.5" /> <span><strong>"Authorized professional":</strong> the practitioner who created the case and invited the parents. They control invitations, timing, and report access; parents participate only through that professional's secure invitation.</span></li>
-          <li className="flex items-start gap-2.5"><CheckCircle2 className="h-4 w-4 text-brand-teal shrink-0 mt-0.5" /> <span><strong>Parent platform:</strong> individual reflection and private assessments happen in the <a href="https://sacoparentsapp.online" target="_blank" rel="noreferrer" className="text-primary hover:underline">SA CoParents App</a> (sacoparentsapp.online) — Align is the professional counterpart.</span></li>
+          <li className="flex items-start gap-2.5"><CheckCircle2 className="h-4 w-4 text-brand-teal shrink-0 mt-0.5" /> <span><strong>Parent platform:</strong> parent individual assessments and private reflection happen in the <a href="https://sacoparentsapp.online" target="_blank" rel="noreferrer" className="text-primary hover:underline">SA CoParents App</a> (sacoparentsapp.online) — Align is the professional counterpart.</span></li>
         </ul>
       </section>
 

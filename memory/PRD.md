@@ -240,7 +240,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Type hints first pass: all of pdf_report.py; public functions of joint_engine (generate_joint_report/generate_agreement/sample_mediation_report), report_engine (generate_report), complete_engine (build_complete_report), joint_data (S, merged_subject_config), assessment_data (T, demo_payload); refactored server.py helpers. Note: joint_data/assessment_data are data modules — only 2 constructor functions each existed.
 - `is` literal flags (server.py 99/103/127/401/583): re-verified — all correct `is None`/`is not None`; no changes.
 - Verified: py_compile clean, decorators confirmed correctly placed, full suite 105/105 green after all refactors.
-
 ## Landing/auth polish round (2026-09-06, 5 user items)
 1. Registration confidentiality text: ConfidentialityNotice.jsx gained `variant` prop — "professional" copy (user-provided: professional account/case info private by default...) used on Auth register (non-parent flow) + JointNew; parent copy kept for Join/JointAssessment. Privacy.jsx full provision untouched.
 2. Ten-page vs sample reconciled by framing: landing chips block adds pages-sample-note ("preview is a condensed Sample Mediation Statement; full report follows the universal 10-page structure"); SampleMediation.jsx adds sample-condensed-note under the badge.
@@ -253,3 +252,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Frontend (Dashboard.jsx): unapproved pros see approval-pending-banner (case creation still server-blocked); admin sees admin-approvals-section with pending list + approve-pro-btn-<id> per pro.
 - Tests: casekit.new_user auto-approves professional fixtures via mongo (_approve lowercases email — GOTCHA: registration lowercases emails, so approval must too); new tests/test_professional_approval.py (7 tests: pending default, 403 gates ×3, admin list/approve flow, non-admin 403, unknown 404, parent unaffected). test_pro_share_links.py local _reg now approves pros. Suite: 112/112 green. UI verified: pending banner renders after fresh pro registration; admin section covered by API tests (admin UI not screenshot-verified — real admin login unavailable).
 - GOTCHA (frontend): inserting hooks/state above `const { user } = useAuth()` → TDZ crash "Cannot access 'user' before initialization". Place after.
+
+## Code-review round 3: cron refactor + complexity + hints (2026-09-06)
+- run_completion_nudges (complexity 25, depth 5) split into `_parse_iso`, `_send_ready_notifications`, `_send_completion_nudge` + thin dispatcher loop; behavior identical.
+- build_complete_report → `_assessment_section`/`_joint_section`; joint_engine `_theme_analysis` → `_theme_row`; generate_agreement → `_agreement_term`/`_foundation_entries`; build_joint_pdf → `_joint_notes`/`_joint_front_sections`/`_joint_back_sections`; report_engine generate_report → `_perspective_sections` (shared_goals now computed inside); server resolve_subjects → `_multi_label` + early returns; `_validated_answers` → `_foundation_payload`; `_resolve_prepare_parties` → `_first_email`.
+- Type hints added to all refactored/new functions (engines + server helpers).
+- Verified: py_compile clean; full suite 112/112 green after refactor.
+- Terminology rename (user): Step One is now "Parent Individual Assessment" — Landing journey strip heading, platform-table purpose row, leadership parent-platform bullet.
