@@ -27,6 +27,44 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-06 — Cost Splitter PDF Export
+- **`GET /api/activities-costs/compare.pdf`** — new endpoint that
+  returns a single-page A4 PDF combining the caller's cost ledger,
+  the co-parent's ledger (when paired), the per-category breakdown,
+  and a neutral suggested split (50/50 / income-weighted /
+  custom-%). All query params (`coparent_email`, `mode`,
+  `self_income`, `coparent_income`, `custom_pct`) are optional; the
+  PDF renders solo (just the caller's ledger, no split) when no
+  co-parent is passed. Reuses the existing `_load_bundle()` +
+  `_pair_categories()` helpers so the shape matches
+  `/compare` exactly. Notes on the co-parent's rows are redacted
+  upstream — the PDF renderer double-guards by only showing notes
+  on `show_notes=True` rows (caller's own).
+- **`activities_costs_pdf.py`** (new) — the renderer. Layout:
+  header strip + org contact block + parent-line meta + three-box
+  totals card + suggested-split card (mode-specific line +
+  amber/green/neutral balance headline + share-math subline) +
+  per-category two-column table + caller's ledger rows (10 max) +
+  co-parent's ledger rows (10 max, notes redacted). Neutrality
+  footer: "Prepared for mediator reference — Suggested split is
+  not an order or court decision".
+- **Frontend**: `CostSplitterPanel.jsx` gains a compact green
+  outlined "PDF" pill in the top-right of the panel header,
+  visible whenever any expense is logged. Clicking fires a
+  `fetch(..., {credentials: "include"})` → blob → programmatic
+  `<a download>` (mirrors the JointAgreement PDF pattern; JWT
+  auth is httpOnly-cookie based). Reads the caller's current
+  split preferences from the shared `sacoparents.costSplitter.split`
+  localStorage key via the new exported `loadSplitPrefs()` helper —
+  no state lifting, just a lightweight shared read.
+- **Coverage**: `tests/test_iter149_activities_costs_pdf.py` — 5
+  tests (auth required, solo-mode PDF, paired-mode across all three
+  split modes, unknown-coparent 404, content-disposition inline).
+  Full 33/33 across iter138 + iter146 + iter147 + iter148 + iter149
+  green. Live smoke: PDF endpoint returns 990KB valid PDF-1.3
+  bytes; the download pill mounts on the panel once the parent has
+  logged an entry.
+
 ### 2026-03-06 — Code-review remediation (scoped)
 - **`activities_costs_routes.compare()` refactor**: extracted the
   inner `_bundle` closure into a module-level `_load_bundle()`

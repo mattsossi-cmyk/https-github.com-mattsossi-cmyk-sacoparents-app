@@ -28,19 +28,15 @@ import { Info, Percent, RotateCcw, Scale, Wallet } from "lucide-react";
 
 const STORAGE_KEY = "sacoparents.costSplitter.split";
 
-function formatUSD(cents) {
-  return ((cents || 0) / 100).toLocaleString(undefined, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function loadPrefs() {
+/**
+ * Read the caller's saved split preferences from localStorage. Exposed
+ * so sibling components (like the PDF download button) can build query
+ * params without lifting state up.
+ */
+export function loadSplitPrefs() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
+    if (!raw) return { mode: "even", selfIncome: 0, coparentIncome: 0, customSelfPct: 50 };
     const parsed = JSON.parse(raw);
     return {
       mode: parsed.mode || "even",
@@ -51,8 +47,21 @@ function loadPrefs() {
         : 50,
     };
   } catch {
-    return null;
+    return { mode: "even", selfIncome: 0, coparentIncome: 0, customSelfPct: 50 };
   }
+}
+
+function formatUSD(cents) {
+  return ((cents || 0) / 100).toLocaleString(undefined, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function loadPrefs() {
+  return loadSplitPrefs();
 }
 
 function savePrefs(prefs) {

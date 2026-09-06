@@ -23,6 +23,7 @@ import {
   ChevronDown,
   ChevronUp,
   DollarSign,
+  Download,
   Info,
   Loader2,
   Plus,
@@ -31,9 +32,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { api } from "../lib/api";
+import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";
-import SplitSuggestion from "./SplitSuggestion";
+import SplitSuggestion, { loadSplitPrefs } from "./SplitSuggestion";
 
 function formatMoney(cents, currency = "USD") {
   const n = (cents || 0) / 100;
@@ -79,6 +80,47 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
     note: "",
   });
   const [saving, setSaving] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const downloadPdf = useCallback(async () => {
+    const prefs = loadSplitPrefs();
+    const params = new URLSearchParams();
+    if (coparentEmail) params.set("coparent_email", coparentEmail);
+    params.set("mode", prefs.mode || "even");
+    if (prefs.mode === "income") {
+      // Backend expects cents.
+      params.set("self_income", String(Math.round((prefs.selfIncome || 0) * 100)));
+      params.set(
+        "coparent_income",
+        String(Math.round((prefs.coparentIncome || 0) * 100)),
+      );
+    }
+    if (prefs.mode === "custom") {
+      params.set("custom_pct", String(Math.round(prefs.customSelfPct || 50)));
+    }
+    setDownloadingPdf(true);
+    try {
+      const res = await fetch(
+        `${API}/activities-costs/compare.pdf?${params.toString()}`,
+        { credentials: "include" },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "activity-cost-ledger.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      logError("cost-splitter download-pdf", err);
+      toast.error("Could not download the PDF right now.");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }, [coparentEmail]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -209,6 +251,23 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
             just with you.
           </p>
         </div>
+        {(selfTotal > 0 || coparentTotal > 0) && (
+          <button
+            type="button"
+            onClick={downloadPdf}
+            disabled={downloadingPdf}
+            data-testid="cost-splitter-download-pdf"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[#1E7A55] text-[#1E7A55] px-3 py-1.5 text-xs font-semibold hover:bg-[#EEF7F1] disabled:opacity-60"
+            title="Download a one-page PDF for your mediator"
+          >
+            {downloadingPdf ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Download size={12} />
+            )}
+            PDF
+          </button>
+        )}
       </div>
 
       {/* Totals card */}

@@ -26,11 +26,12 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field, field_validator
 
 from auth import UserPublic, get_current_user, get_db
+from activities_costs_pdf import build_cost_ledger_pdf
 
 
 router = APIRouter(tags=["activities-costs"], prefix="/activities-costs")
@@ -253,3 +254,83 @@ async def compare(
         ),
         "generated_at": _iso(_now()),
     }
+
+
+@router.get("/compare.pdf")
+async def compare_pdf(
+    coparent_email: Optional[str] = None,
+    mode: str = "even",
+    self_income: Optional[int] = None,
+    coparent_income: Optional[int] = None,
+    custom_pct: Optional[int] = None,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Generate a one-page PDF combining the caller's cost ledger, the
+    co-parent's ledger (when paired), the per-category breakdown, and a
+    neutral suggested split (50/50 / income-weighted / custom-%). If
+    `coparent_email` is not passed, the PDF renders solo — just the
+    caller's ledger with no split suggestion.
+
+    Query params for the split math mirror what the frontend already
+    tracks in `localStorage`; the server never persists them.
+    """
+    if mode not in {"even", "income", "custom"}:
+        mode = "even"
+
+    self_b = await _load_bundle(db, current.user_id, redact=False)
+
+    if coparent_email:
+        coparent = await db.users.find_one(
+            {"email": coparent_email.strip().lower()},
+            {"user_id": 1, "email": 1, "name": 1},
+        )
+        if not coparent:
+            raise HTTPException(status_code=404, detail="Co-parent account not found")
+        coparent_b = await _load_bundle(db, coparent["user_id"], redact=True)
+        compare_payload = {
+            "self": {"email": current.email, **self_b},
+            "coparent": {
+                "email": coparent["email"],
+                "name": coparent.get("name"),
+                **coparent_b,
+            },
+            "combined_total_cents": self_b["total_cents"] + coparent_b["total_cents"],
+            "per_category_pair": _pair_categories(
+                self_b["per_category"], coparent_b["per_category"]
+            ),
+        }
+        coparent_name = coparent.get("name") or coparent["email"]
+    else:
+        compare_payload = {
+            "self": {"email": current.email, **self_b},
+            "coparent": {"email": None, "name": None, "rows": [], "total_cents": 0,
+                         "per_category": {}, "count": 0},
+            "combined_total_cents": self_b["total_cents"],
+            "per_category_pair": _pair_categories(self_b["per_category"], {}),
+        }
+        coparent_name = None
+
+    self_name = getattr(current, "name", None) or current.email
+
+    pdf_bytes = build_cost_ledger_pdf(
+        compare_payload=compare_payload,
+        self_name=self_name,
+        coparent_name=coparent_name,
+        mode=mode,
+        self_income=self_income,
+        coparent_income=coparent_income,
+        custom_pct=custom_pct,
+        categories=CATEGORIES,
+    )
+    filename = "activity-cost-ledger.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "no-store, no-cache, must-revalidate, private",
+            "Pragma": "no-cache",
+        },
+    )
