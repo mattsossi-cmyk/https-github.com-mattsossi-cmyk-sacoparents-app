@@ -35,6 +35,7 @@ import { toast } from "sonner";
 
 import AppShell from "../components/AppShell";
 import BackToDashboardLink from "../components/BackToDashboardLink";
+import AIDraftedPill from "../components/AIDraftedPill";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -97,6 +98,7 @@ export default function CommunicationAlignment() {
   const [comparing, setComparing] = useState(false);
   const [payload, setPayload] = useState(null); // /compare response
   const [summary, setSummary] = useState(null);
+  const [summaryModel, setSummaryModel] = useState(null);
   const [summarizing, setSummarizing] = useState(false);
   const [shareCode, setShareCode] = useState(null);
   const [shareError, setShareError] = useState(null);
@@ -135,6 +137,7 @@ export default function CommunicationAlignment() {
             compare_payload: r.data,
           });
           setSummary(s.data?.summary || null);
+          setSummaryModel(s.data?.model || "claude");
         } catch (err) {
           logError("comm-alignment summary", err);
         } finally {
@@ -342,8 +345,17 @@ export default function CommunicationAlignment() {
           <div className="mt-6 space-y-6" data-testid="comm-alignment-ready">
             {/* Neutral exec summary */}
             <div className="rounded-3xl border border-[#D8E7F3] bg-white p-6 sm:p-7 shadow-sm">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1E6FA8] mb-2">
-                Neutral summary
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1E6FA8]">
+                  Neutral summary
+                </span>
+                {summary && summaryModel && (
+                  <AIDraftedPill
+                    model={summaryModel}
+                    tone="blue"
+                    testId="comm-alignment-summary-pill"
+                  />
+                )}
               </div>
               <h2 className="font-serif text-xl text-[#1A1330] leading-tight mb-3">
                 What the two of you actually said

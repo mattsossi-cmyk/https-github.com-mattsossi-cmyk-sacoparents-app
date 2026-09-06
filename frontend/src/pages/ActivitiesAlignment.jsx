@@ -24,6 +24,8 @@ import { toast } from "sonner";
 
 import AppShell from "../components/AppShell";
 import BackToDashboardLink from "../components/BackToDashboardLink";
+import AIDraftedPill from "../components/AIDraftedPill";
+import CostSplitterPanel from "../components/CostSplitterPanel";
 import PathwayEndCTA from "../components/PathwayEndCTA";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -87,6 +89,7 @@ export default function ActivitiesAlignment() {
   const [comparing, setComparing] = useState(false);
   const [payload, setPayload] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [summaryModel, setSummaryModel] = useState(null);
   const [summarizing, setSummarizing] = useState(false);
   const [shareCode, setShareCode] = useState(null);
   const [shareError, setShareError] = useState(null);
@@ -124,6 +127,7 @@ export default function ActivitiesAlignment() {
             compare_payload: r.data,
           });
           setSummary(s.data?.summary || null);
+          setSummaryModel(s.data?.model || "claude");
         } catch (err) {
           logError("activities-alignment summary", err);
         } finally {
@@ -324,8 +328,17 @@ export default function ActivitiesAlignment() {
         {ready && (
           <div className="mt-6 space-y-6" data-testid="activities-alignment-ready">
             <div className="rounded-3xl border border-[#C7E5D3] bg-white p-6 sm:p-7 shadow-sm">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1E7A55] mb-2">
-                Neutral summary
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1E7A55]">
+                  Neutral summary
+                </span>
+                {summary && summaryModel && (
+                  <AIDraftedPill
+                    model={summaryModel}
+                    tone="green"
+                    testId="activities-alignment-summary-pill"
+                  />
+                )}
               </div>
               <h2 className="font-serif text-xl text-[#1A1330] leading-tight mb-3">
                 What the two of you actually said
@@ -476,6 +489,18 @@ export default function ActivitiesAlignment() {
                 label: "Send to a professional",
                 to: "/professionals?assessment=activities",
               }}
+            />
+          </div>
+        )}
+
+        {/* Cost splitter is useful before, during, and after pairing —
+            keep it visible whenever the parent has completed their
+            reflection. */}
+        {hasSelf && (
+          <div className="mt-6">
+            <CostSplitterPanel
+              coparentEmail={payload?.coparent?.email}
+              coparentName={coparentName}
             />
           </div>
         )}

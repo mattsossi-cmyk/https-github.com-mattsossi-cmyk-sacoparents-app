@@ -27,6 +27,58 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-06 — Sample Library + AI-Drafted Pill + Cost Splitter
+- **Sample Library `/samples`** (`pages/Samples.jsx`) — public
+  browsable index of all 27 sample PDFs living in
+  `frontend/public/downloads/`. Grouped into six categories (Joint
+  Alignment Reports, Child Needs Deep-Dives, SNC, Co-Parenting +
+  Foundation, Family Violence & Safety, For Professionals) with a
+  jumplink strip so a visitor lands on the section they need without
+  scrolling. Each card exposes an "Open" + "Download" button. Public
+  route (no auth) so mediators and attorneys can evaluate the
+  artefact library before signing up. Linked from
+  `JointReportsPicker.jsx`.
+- **AI-Drafted Pill** (`components/AIDraftedPill.jsx`) — reusable
+  `<AIDraftedPill model="claude|gpt" tone="…" />` badge that marks a
+  summary block as LLM-authored so mediators immediately see what
+  came from the model versus the parents' verbatim answers. Applied
+  next to the "Neutral summary" eyebrow on all three alignment
+  pages:
+    - `CommunicationAlignment.jsx` (tone="blue")
+    - `ParentingScheduleAlignment.jsx` (tone="amber")
+    - `ActivitiesAlignment.jsx` (tone="green")
+  Each page now stores `summaryModel` in state so the label reflects
+  Claude vs. GPT 5.6 Terra when the parent regenerates.
+- **Cost Splitter** — a live activity-cost ledger that pairs by
+  co-parent email.
+  - Backend: `activities_costs_routes.py` (mounted at
+    `/api/activities-costs`, prefix-scoped). Endpoints:
+    `GET /categories` (public chip list),
+    `GET /mine` (list + total),
+    `POST ""` (create),
+    `DELETE /{cost_id}` (delete-own-only, 404 on foreign id),
+    `GET /compare?coparent_email=…` (you-vs-coparent totals +
+    per-category pair breakdown + row-level entries). Notes are
+    **always redacted on the co-parent's rows** — the parent's own
+    free-text stays private. Storage: `activity_costs` collection.
+  - Frontend: `components/CostSplitterPanel.jsx` — mounted on
+    `ActivitiesAlignment.jsx`. Renders three totals cards
+    (You / Co-parent / Combined), a stacked "By category" strip so
+    parents see the balance at a glance, a compact log-entry form
+    (activity label, category select, amount, private note, date),
+    and an expandable "my entries" list with delete. Auto-refreshes
+    after every write. Passes `coparentEmail` from the compare
+    payload so totals update live once the pair is linked.
+  - Coverage: `tests/test_iter148_activities_costs.py` — 7 tests
+    (categories public, create+read+total, unknown-category downgrades
+    to 'other', invalid amount 422, delete-own-only, compare totals
+    + note redaction, unknown-coparent 404). All green.
+- **Full 28-test suite** across iter138 + iter146 + iter147 + iter148
+  green. Frontend compiled clean (only pre-existing intentional
+  warnings). Live smoke-tested: `/samples` renders 27 cards across
+  6 categories, `/activities/alignment` mounts the cost splitter
+  once the parent's reflection is saved.
+
 ### 2026-03-06 — Parenting Schedule + Activities Joint Alignment Reports (fka "Coming soon")
 - **Two new Joint Alignment Reports** matching the Communication
   Alignment pattern shipped in iter138. Both surface on the

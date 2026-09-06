@@ -33,6 +33,7 @@ import { toast } from "sonner";
 
 import AppShell from "../components/AppShell";
 import BackToDashboardLink from "../components/BackToDashboardLink";
+import AIDraftedPill from "../components/AIDraftedPill";
 import PathwayEndCTA from "../components/PathwayEndCTA";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -96,6 +97,7 @@ export default function ParentingScheduleAlignment() {
   const [comparing, setComparing] = useState(false);
   const [payload, setPayload] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [summaryModel, setSummaryModel] = useState(null);
   const [summarizing, setSummarizing] = useState(false);
   const [shareCode, setShareCode] = useState(null);
   const [shareError, setShareError] = useState(null);
@@ -134,6 +136,7 @@ export default function ParentingScheduleAlignment() {
             { compare_payload: r.data },
           );
           setSummary(s.data?.summary || null);
+          setSummaryModel(s.data?.model || "claude");
         } catch (err) {
           logError("schedule-alignment summary", err);
         } finally {
@@ -335,8 +338,17 @@ export default function ParentingScheduleAlignment() {
         {ready && (
           <div className="mt-6 space-y-6" data-testid="schedule-alignment-ready">
             <div className="rounded-3xl border border-[#E6D8C1] bg-white p-6 sm:p-7 shadow-sm">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B45F13] mb-2">
-                Neutral summary
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B45F13]">
+                  Neutral summary
+                </span>
+                {summary && summaryModel && (
+                  <AIDraftedPill
+                    model={summaryModel}
+                    tone="amber"
+                    testId="schedule-alignment-summary-pill"
+                  />
+                )}
               </div>
               <h2 className="font-serif text-xl text-[#1A1330] leading-tight mb-3">
                 What the two of you actually said

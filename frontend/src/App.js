@@ -49,6 +49,7 @@ import ParentingScheduleReflection from "@/pages/ParentingScheduleReflection";
 import ParentingScheduleAlignment from "@/pages/ParentingScheduleAlignment";
 import ActivitiesReflection from "@/pages/ActivitiesReflection";
 import ActivitiesAlignment from "@/pages/ActivitiesAlignment";
+import Samples from "@/pages/Samples";
 import JoinInvitation from "@/pages/JoinInvitation";
 import JoinCode from "@/pages/JoinCode";
 import ProfessionalsDirectory from "@/pages/ProfessionalsDirectory";
@@ -133,6 +134,7 @@ function AppRoutes() {
         <PolicyRefreshBanner />
         <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/samples" element={<Samples />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/onboarding/what-do-you-need" element={<ProtectedRoute><OnboardingIntake /></ProtectedRoute>} />

@@ -416,7 +416,14 @@ export default function JointReportsPicker() {
           )}
         </div>
 
-        <div className="mt-10 text-center">
+        <div className="mt-10 text-center flex flex-wrap justify-center gap-4">
+          <Link
+            to="/samples"
+            className="text-xs text-[#3D1A78] hover:text-[#2A0F5F] underline underline-offset-2"
+            data-testid="joint-picker-samples-link"
+          >
+            Browse sample PDFs →
+          </Link>
           <Link
             to="/dashboard"
             className="text-xs text-[#4B4567] hover:text-[#3D1A78] underline underline-offset-2"
