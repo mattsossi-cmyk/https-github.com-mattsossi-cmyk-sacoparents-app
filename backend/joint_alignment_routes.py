@@ -123,6 +123,24 @@ def _is_expired(expires_at: Optional[datetime]) -> bool:
     return expires_at < _now()
 
 
+def _as_aware_utc(v) -> Optional[datetime]:
+    """Coerce any Mongo-returned datetime (tz-naive UTC) or ISO string
+    into a tz-aware UTC datetime. Returns None for falsy / unparsable
+    input. Used by the analytics aggregator when computing time-deltas
+    so mixed-timezone rows never TypeError."""
+    if v is None:
+        return None
+    if isinstance(v, datetime):
+        return v if v.tzinfo is not None else v.replace(tzinfo=timezone.utc)
+    if isinstance(v, str):
+        try:
+            parsed = datetime.fromisoformat(v.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
+    return None
+
+
 def _iso(v):
     if isinstance(v, datetime):
         return v.astimezone(timezone.utc).isoformat()
@@ -577,6 +595,143 @@ async def professional_create_case(
         parents=parent_response_rows,
         email_deliveries=email_status,
     )
+
+
+@router.get("/professional/joint-alignment/analytics")
+async def professional_case_analytics(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Aggregate stats over every case the caller minted via the
+    in-app flow — powers the analytics card on the `/mine` console.
+
+    Returns:
+      * `total_cases` — every case the caller ever created.
+      * status breakdown (active / cancelled / completed).
+      * `acceptance_rate` — % of invited parents who accepted their
+        invitation (0..100, or None when no parents invited yet).
+      * `avg_hours_to_first_accept` — mean hours from case creation
+        to whichever parent accepted first. None when no case has
+        had any acceptance yet.
+      * `avg_hours_to_both_complete` — mean hours from case creation
+        to the second-parent completion. None when no case has been
+        `both_complete`.
+      * `assessment_type_breakdown` — dict of lane → count.
+      * `most_common_assessment_type` — the top lane by count, or
+        None when no cases exist.
+
+    Data-minimisation: only aggregate rollups — never per-case or
+    per-parent detail — so a paralegal running analytics can't
+    accidentally extract PHI from parents they shouldn't see.
+    """
+    query = {
+        "$or": [
+            {"professional_created_by": current.user_id},
+            {"professional.id": current.user_id, "origin": "in_app_professional"},
+        ]
+    }
+    cases = [c async for c in db[_CASES_COLL].find(query)]
+
+    total_cases = len(cases)
+    if total_cases == 0:
+        return {
+            "total_cases": 0,
+            "active_cases": 0,
+            "cancelled_cases": 0,
+            "completed_cases": 0,
+            "acceptance_rate": None,
+            "avg_hours_to_first_accept": None,
+            "avg_hours_to_both_complete": None,
+            "assessment_type_breakdown": {},
+            "most_common_assessment_type": None,
+        }
+
+    active_cases = sum(1 for c in cases if c.get("status") in ("pending", "in_progress"))
+    cancelled_cases = sum(1 for c in cases if c.get("status") == "cancelled")
+    completed_cases = sum(1 for c in cases if c.get("status") == "both_complete")
+
+    # Acceptance rate: (accepted parents) / (invited parents).
+    # Every parent doc represents an invited parent, so denominator
+    # is just the total parents across every case.
+    invited_parents = 0
+    accepted_parents = 0
+    for c in cases:
+        for p in c.get("parents") or []:
+            invited_parents += 1
+            if p.get("accepted_at"):
+                accepted_parents += 1
+    acceptance_rate = (
+        round(accepted_parents / invited_parents * 100, 1)
+        if invited_parents > 0
+        else None
+    )
+
+    # Time-to-first-accept: for each case that has any acceptance,
+    # the delta from `created_at` to the EARLIEST parent's
+    # `accepted_at` (in hours).
+    first_accept_hours: List[float] = []
+    for c in cases:
+        created = _as_aware_utc(c.get("created_at"))
+        if not created:
+            continue
+        accepts = [
+            _as_aware_utc(p.get("accepted_at"))
+            for p in (c.get("parents") or [])
+            if p.get("accepted_at")
+        ]
+        accepts = [a for a in accepts if a]
+        if accepts:
+            first_accept_hours.append((min(accepts) - created).total_seconds() / 3600.0)
+    avg_hours_to_first_accept = (
+        round(sum(first_accept_hours) / len(first_accept_hours), 1)
+        if first_accept_hours
+        else None
+    )
+
+    # Time-to-both-complete: only cases where both parents completed
+    # — delta from `created_at` to the LATER `assessment_completed_at`.
+    both_complete_hours: List[float] = []
+    for c in cases:
+        created = _as_aware_utc(c.get("created_at"))
+        if not created:
+            continue
+        completions = [
+            _as_aware_utc(p.get("assessment_completed_at"))
+            for p in (c.get("parents") or [])
+            if p.get("assessment_completed_at")
+        ]
+        completions = [x for x in completions if x]
+        if len(completions) >= 2:
+            both_complete_hours.append((max(completions) - created).total_seconds() / 3600.0)
+    avg_hours_to_both_complete = (
+        round(sum(both_complete_hours) / len(both_complete_hours), 1)
+        if both_complete_hours
+        else None
+    )
+
+    # Assessment-lane breakdown.
+    breakdown: Dict[str, int] = {}
+    for c in cases:
+        lane = (c.get("assessment_type") or "unknown")
+        breakdown[lane] = breakdown.get(lane, 0) + 1
+    most_common = (
+        max(breakdown.items(), key=lambda kv: kv[1])[0]
+        if breakdown
+        else None
+    )
+
+    return {
+        "total_cases": total_cases,
+        "active_cases": active_cases,
+        "cancelled_cases": cancelled_cases,
+        "completed_cases": completed_cases,
+        "acceptance_rate": acceptance_rate,
+        "avg_hours_to_first_accept": avg_hours_to_first_accept,
+        "avg_hours_to_both_complete": avg_hours_to_both_complete,
+        "assessment_type_breakdown": breakdown,
+        "most_common_assessment_type": most_common,
+    }
 
 
 @router.get("/professional/joint-alignment/cases-i-created")

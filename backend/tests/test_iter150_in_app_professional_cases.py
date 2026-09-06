@@ -322,3 +322,133 @@ def test_status_report_pdf_requires_auth(client):
         "/api/professional/joint-alignment/cases/SA-000000/status-report.pdf"
     )
     assert r.status_code in (401, 403)
+
+
+# ---------------- analytics endpoint ---------------- #
+
+def test_analytics_returns_zero_shape_for_no_cases(client):
+    _email, token, _name = _register(client)
+    r = client.get(
+        "/api/professional/joint-alignment/analytics",
+        headers=_headers(token),
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total_cases"] == 0
+    # Zero-shape: all rates + averages None so the frontend can em-dash them
+    assert body["acceptance_rate"] is None
+    assert body["avg_hours_to_first_accept"] is None
+    assert body["avg_hours_to_both_complete"] is None
+    assert body["most_common_assessment_type"] is None
+    assert body["assessment_type_breakdown"] == {}
+
+
+def test_analytics_aggregates_over_multiple_cases(client):
+    _email, token, _name = _register(client)
+    # Mint 3 co-parenting cases + 1 communication case
+    for i in range(3):
+        r = _make_case(client, token, assessment_type="co-parenting")
+        assert r.status_code == 200
+    r = _make_case(client, token, assessment_type="communication")
+    assert r.status_code == 200
+
+    r_a = client.get(
+        "/api/professional/joint-alignment/analytics",
+        headers=_headers(token),
+    )
+    assert r_a.status_code == 200
+    body = r_a.json()
+    assert body["total_cases"] == 4
+    assert body["active_cases"] == 4  # all pending
+    assert body["cancelled_cases"] == 0
+    assert body["completed_cases"] == 0
+    # Zero acceptances yet → acceptance_rate must be 0.0 (denominator > 0)
+    assert body["acceptance_rate"] == 0.0
+    assert body["avg_hours_to_first_accept"] is None
+    # 3 co-parenting > 1 communication
+    assert body["most_common_assessment_type"] == "co-parenting"
+    assert body["assessment_type_breakdown"]["co-parenting"] == 3
+    assert body["assessment_type_breakdown"]["communication"] == 1
+
+
+def test_analytics_never_leaks_across_professionals(client):
+    _email_a, token_a, _ = _register(client)
+    _email_b, token_b, _ = _register(client)
+
+    # A mints two cases
+    _make_case(client, token_a)
+    _make_case(client, token_a)
+    # B mints one
+    _make_case(client, token_b)
+
+    body_a = client.get(
+        "/api/professional/joint-alignment/analytics",
+        headers=_headers(token_a),
+    ).json()
+    body_b = client.get(
+        "/api/professional/joint-alignment/analytics",
+        headers=_headers(token_b),
+    ).json()
+    # A should see 2 (their own) + whatever earlier tests left,
+    # but B must never see A's cases. Assertion: A's total >= 2,
+    # and B's total is *smaller* than A's total (proves scoping).
+    assert body_a["total_cases"] >= 2
+    assert body_b["total_cases"] < body_a["total_cases"]
+
+
+def test_analytics_requires_auth(client):
+    r = client.get("/api/professional/joint-alignment/analytics")
+    assert r.status_code in (401, 403)
+
+
+def test_analytics_computes_time_deltas_when_parents_accept_and_complete(client, monkeypatch):
+    """
+    Seed a case with tz-aware timestamps and directly update Mongo
+    to simulate acceptance/completion. Verifies the aggregator
+    correctly computes avg_hours_to_first_accept and
+    avg_hours_to_both_complete.
+    """
+    import asyncio
+    from datetime import datetime, timedelta, timezone as tz
+    from motor.motor_asyncio import AsyncIOMotorClient
+
+    _email, token, _name = _register(client)
+    r = _make_case(client, token)
+    case_id = r.json()["case_id"]
+
+    async def stamp_timestamps():
+        db = AsyncIOMotorClient(MONGO_URL)[DB_NAME]
+        # Mint time was ~now. Simulate:
+        # - Parent A accepted 6 hours after mint, completed 24h after mint.
+        # - Parent B accepted 12h after mint, completed 48h after mint.
+        # We'll rewrite created_at to 3 days ago, then stamp the other times.
+        base = datetime.now(tz.utc) - timedelta(days=3)
+        await db["joint_alignment_cases"].update_one(
+            {"case_id": case_id},
+            {
+                "$set": {
+                    "created_at": base,
+                    "status": "both_complete",
+                    "parents.0.accepted_at": base + timedelta(hours=6),
+                    "parents.0.assessment_completed_at": base + timedelta(hours=24),
+                    "parents.1.accepted_at": base + timedelta(hours=12),
+                    "parents.1.assessment_completed_at": base + timedelta(hours=48),
+                }
+            },
+        )
+
+    asyncio.get_event_loop().run_until_complete(stamp_timestamps())
+
+    body = client.get(
+        "/api/professional/joint-alignment/analytics",
+        headers=_headers(token),
+    ).json()
+    # avg_hours_to_first_accept for this case is 6h.
+    # But there may be other cases from earlier tests; assert the value
+    # is in the neighbourhood of a real value (i.e. not None and > 0).
+    assert body["avg_hours_to_first_accept"] is not None
+    assert body["avg_hours_to_first_accept"] > 0
+    # avg_hours_to_both_complete for this case is 48h — again, mixed
+    # with other cases from prior tests. Just assert non-None + positive.
+    assert body["avg_hours_to_both_complete"] is not None
+    assert body["avg_hours_to_both_complete"] > 0

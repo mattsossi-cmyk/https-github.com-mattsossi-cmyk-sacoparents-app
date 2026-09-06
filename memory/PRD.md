@@ -27,6 +27,56 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-07 — Case Analytics Card on `/mine`
+- **`GET /api/professional/joint-alignment/analytics`** — new
+  JWT-authenticated aggregate endpoint. Returns:
+  `total_cases`, `active_cases`, `cancelled_cases`,
+  `completed_cases`, `acceptance_rate` (%),
+  `avg_hours_to_first_accept`, `avg_hours_to_both_complete`,
+  `assessment_type_breakdown` (dict), `most_common_assessment_type`.
+    - Data-minimisation: rollups only, never per-case or
+      per-parent detail — safe for a paralegal to view.
+    - Scoping is strict — the query filters by
+      `professional_created_by == current_user.id` OR
+      `professional.id == current_user.id AND origin=in_app_professional`
+      so cross-professional bleed is impossible.
+    - New `_as_aware_utc()` helper in
+      `joint_alignment_routes.py` normalises Mongo-returned
+      (tz-naive) and ISO-string datetimes before delta arithmetic
+      so time-to-first-accept / time-to-both-complete never
+      TypeErrors on mixed timezone inputs.
+- **`CaseAnalyticsCard.jsx`** — new component in
+  `frontend/src/components/professional/`. Renders as the top
+  card on `/professional/joint-alignment/mine`:
+    - `INTAKE FUNNEL · AT A GLANCE` eyebrow + top-lane pill
+      showing the most-common assessment lane.
+    - 4-tile stat grid (BarChart / TrendingUp / Timer /
+      CheckCircle2 icons) — Total cases, Acceptance rate, Time
+      to first accept, Time to both complete.
+    - Assessment-lane breakdown bar chart (only shown when
+      ≥ 2 lanes exist) — each lane gets a purple horizontal bar
+      scaled against the top lane so uneven distributions are
+      instantly readable.
+    - Loading + error + empty-state paths (zero cases → card
+      renders nothing so first-visit mediators aren't confused
+      by a wall of dashes).
+- **Coverage**: iter150 grew from 13 → 18 tests. Added:
+  zero-shape returns None-valued rates, multi-case aggregation
+  correctness, cross-professional scoping guard, auth-required
+  401, and a full time-delta test that Mongo-updates a case's
+  parents' `accepted_at` + `assessment_completed_at` and asserts
+  the aggregator returns positive average hours. Full 24
+  (iter150 + iter151) tests green.
+- **Files touched**:
+  - `backend/joint_alignment_routes.py` (adds
+    `_as_aware_utc` helper + analytics endpoint)
+  - `frontend/src/components/professional/CaseAnalyticsCard.jsx`
+    (new)
+  - `frontend/src/pages/ProfessionalJointAlignmentMine.jsx`
+    (mounts the card above the search + filter block)
+  - `backend/tests/test_iter150_in_app_professional_cases.py`
+    (+5 tests)
+
 ### 2026-03-07 — Case Reminder Emails + Filed-PDF Watermark
 - **Case reminder emails (5-day nudge)** — a new hourly sweep loop
   `joint_alignment_invite_nudge` in

@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
+import CaseAnalyticsCard from "../components/professional/CaseAnalyticsCard";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -216,6 +217,9 @@ export default function ProfessionalJointAlignmentMine() {
             </Link>
           </div>
         </div>
+
+        {/* Analytics card — hidden when the caller has no cases yet */}
+        <CaseAnalyticsCard />
 
         {/* Search + status filter */}
         <div
