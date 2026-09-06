@@ -27,6 +27,42 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-06 — Code-review remediation round 2 (privacy + consent)
+- **HIGH — Co-parent private notes leak (fixed)**: the compare
+  endpoints on all three alignment surfaces (Communication,
+  Parenting Schedule, Activities) were shipping the co-parent's
+  private free-text `notes` and raw `answers` in the payload via
+  `**coparent_shape` — the UI didn't render them but they were
+  visible in DevTools/Network, contradicting the on-screen
+  guarantee that "individual notes stay private". Introduced a new
+  `_shape_public()` helper in each of `communication_alignment_routes.py`,
+  `parenting_schedule_alignment_routes.py`, and
+  `activities_alignment_routes.py` that drops both fields before
+  the co-parent branch is returned. Caller's own branch is
+  unchanged.
+- **MEDIUM — Cost-splitter email-enumeration (fixed)**: the
+  `/activities-costs/compare` and `/compare.pdf` endpoints
+  previously served any registered email's itemized ledger to any
+  authenticated caller. Added a 403 consent gate: the caller must
+  have logged at least one of their own entries before another
+  account's rows are returned. Mirrors the existing alignment
+  pattern that gates `/compare` on the caller's own reflection.
+- **LOW — Dead imports removed** (`useMemo` from
+  `ParentingScheduleReflection.jsx` and `ActivitiesReflection.jsx`).
+- **LOW — Comment aligned with cap** in
+  `activities_costs_routes.py` (`≤ $100,000 sanity cap`).
+- **Regression tests added**:
+    - iter138: co-parent branch of `/communication-alignment/compare`
+      asserted free of `notes` and `answers`.
+    - iter146: same guard for `/parenting-schedule-alignment/compare`.
+    - iter147: same guard for `/activities-alignment/compare`.
+    - iter148: new `test_compare_without_own_entries_is_forbidden`
+      confirms both `/compare` and `/compare.pdf` return 403 when the
+      caller has nothing logged; the existing 404 tests updated to
+      log an entry first so they still exercise the 404 branch.
+- Full 34/34 across iter138 + iter146 + iter147 + iter148 + iter149
+  green. Frontend compiled clean.
+
 ### 2026-03-06 — Cost Splitter PDF Export
 - **`GET /api/activities-costs/compare.pdf`** — new endpoint that
   returns a single-page A4 PDF combining the caller's cost ledger,

@@ -185,8 +185,44 @@ def test_compare_totals_and_note_redaction(client: TestClient) -> None:
 
 def test_compare_unknown_coparent_returns_404(client: TestClient) -> None:
     _, token = _register(client)
+    # Consent gate demands the caller has at least one entry before we
+    # even resolve the co-parent email — log one so we exercise the
+    # 404 branch rather than the 403 gate.
+    client.post(
+        "/api/activities-costs",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"activity_label": "Cleats", "amount_cents": 5500, "category": "gear"},
+    )
     r = client.get(
         "/api/activities-costs/compare?coparent_email=nobody-here@example.com",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert r.status_code == 404
+
+
+def test_compare_without_own_entries_is_forbidden(client: TestClient) -> None:
+    """
+    Consent gate: a caller with no logged entries of their own cannot
+    pull a stranger's itemized ledger by email. Regression guard for
+    the 2026-03-06 code-review enumeration finding.
+    """
+    _, token_a = _register(client)
+    email_b, token_b = _register(client)
+    # Parent B logs an entry so the account exists and has data.
+    client.post(
+        "/api/activities-costs",
+        headers={"Authorization": f"Bearer {token_b}"},
+        json={"activity_label": "Camp", "amount_cents": 15000, "category": "camps"},
+    )
+    # Parent A has nothing of their own → must be blocked.
+    r = client.get(
+        f"/api/activities-costs/compare?coparent_email={email_b}",
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert r.status_code == 403
+    # And parent A cannot get parent B's rows via the PDF path either.
+    r_pdf = client.get(
+        f"/api/activities-costs/compare.pdf?coparent_email={email_b}",
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert r_pdf.status_code == 403

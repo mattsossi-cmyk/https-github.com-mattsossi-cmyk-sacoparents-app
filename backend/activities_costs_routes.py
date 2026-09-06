@@ -67,7 +67,7 @@ def _iso(v):
 class CostCreate(BaseModel):
     activity_label: str = Field(..., min_length=1, max_length=120)
     category: str = Field(default="other")
-    amount_cents: int = Field(..., ge=1, le=1_00_000_00)  # ≤ $1M sanity cap
+    amount_cents: int = Field(..., ge=1, le=1_00_000_00)  # ≤ $100,000 sanity cap
     currency: str = Field(default="USD", min_length=3, max_length=3)
     incurred_on: Optional[str] = Field(default=None, description="ISO date; defaults to today.")
     note: Optional[str] = Field(default=None, max_length=500)
@@ -231,6 +231,17 @@ async def compare(
     if not coparent_email:
         raise HTTPException(status_code=400, detail="coparent_email required")
 
+    self_b = await _load_bundle(db, current.user_id, redact=False)
+    # Consent gate: only surface a stranger's itemized ledger when the
+    # caller has skin in the game. Mirrors the alignment-compare
+    # pattern that requires the caller's own reflection first — closes
+    # the email-enumeration attack noted in the 2026-03-06 code review.
+    if self_b["count"] == 0:
+        raise HTTPException(
+            status_code=403,
+            detail="Log at least one of your own entries before pairing.",
+        )
+
     coparent = await db.users.find_one(
         {"email": coparent_email.strip().lower()},
         {"user_id": 1, "email": 1, "name": 1},
@@ -238,7 +249,6 @@ async def compare(
     if not coparent:
         raise HTTPException(status_code=404, detail="Co-parent account not found")
 
-    self_b = await _load_bundle(db, current.user_id, redact=False)
     coparent_b = await _load_bundle(db, coparent["user_id"], redact=True)
 
     return {
@@ -282,6 +292,13 @@ async def compare_pdf(
     self_b = await _load_bundle(db, current.user_id, redact=False)
 
     if coparent_email:
+        # Consent gate: only pair when the caller has logged at least
+        # one of their own entries — same rule as `/compare`.
+        if self_b["count"] == 0:
+            raise HTTPException(
+                status_code=403,
+                detail="Log at least one of your own entries before pairing.",
+            )
         coparent = await db.users.find_one(
             {"email": coparent_email.strip().lower()},
             {"user_id": 1, "email": 1, "name": 1},

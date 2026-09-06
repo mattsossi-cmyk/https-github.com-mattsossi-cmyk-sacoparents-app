@@ -122,7 +122,8 @@ def test_compare_ready_state_returns_shared_and_gaps(client: TestClient) -> None
             },
         },
     )
-    # B: matching awareness + support, low logistics
+    # B: matching awareness + support, low logistics — with a private
+    # note that must never cross the parent boundary.
     client.put(
         "/api/activities-reflection",
         headers={"Authorization": f"Bearer {token_b}"},
@@ -132,6 +133,7 @@ def test_compare_ready_state_returns_shared_and_gaps(client: TestClient) -> None
                 "a5": 5, "a6": 5, "a7": 5, "a8": 5,   # support high (shared)
                 "a9": 1, "a10": 1, "a11": 1, "a12": 1, # logistics low (gap)
             },
+            "notes": {"a9": "PRIVATE — must not reach parent A"},
         },
     )
     r = client.post(
@@ -147,6 +149,10 @@ def test_compare_ready_state_returns_shared_and_gaps(client: TestClient) -> None
     assert "logistics" in gap_dims
     assert "awareness" in shared_dims
     assert "support" in shared_dims
+    # Privacy regression guard (2026-03-06 code review).
+    assert "notes" not in body["coparent"], body["coparent"]
+    assert "answers" not in body["coparent"], body["coparent"]
+    assert "notes" in body["self"]
 
 
 def test_compare_requires_self_reflection_first(client: TestClient) -> None:

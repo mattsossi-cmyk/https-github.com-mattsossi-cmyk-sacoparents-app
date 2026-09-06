@@ -141,6 +141,7 @@ def test_compare_ready_state_returns_shared_and_gaps(client: TestClient) -> None
                 "s5": 5, "s6": 5, "s7": 5, "s8": 5,    # flexibility high (shared)
                 "s9": 1, "s10": 1, "s11": 1, "s12": 1, # transitions low (gap)
             },
+            "notes": {"s9": "PRIVATE — should never reach the co-parent"},
         },
     )
     r = client.post(
@@ -156,6 +157,13 @@ def test_compare_ready_state_returns_shared_and_gaps(client: TestClient) -> None
     assert "transitions" in gap_dims
     assert "predictability" in shared_dims
     assert "flexibility" in shared_dims
+    # Privacy: co-parent branch must NOT leak free-text notes or raw
+    # answers to the caller. Regression guard for the 2026-03-06 code
+    # review finding.
+    assert "notes" not in body["coparent"], body["coparent"]
+    assert "answers" not in body["coparent"], body["coparent"]
+    # The caller's own branch should still carry their notes.
+    assert "notes" in body["self"]
 
 
 def test_compare_requires_self_reflection_first(client: TestClient) -> None:

@@ -96,6 +96,9 @@ def test_pdf_paired_mode_all_split_modes(client: TestClient) -> None:
 
 def test_pdf_unknown_coparent_returns_404(client: TestClient) -> None:
     _, token = _register(client)
+    # Log one entry so we bypass the consent-gate 403 and exercise
+    # the 404 branch instead.
+    _seed(client, token, [("Cleats", 5500, "gear")])
     r = client.get(
         "/api/activities-costs/compare.pdf?coparent_email=nobody-here@example.com",
         headers={"Authorization": f"Bearer {token}"},

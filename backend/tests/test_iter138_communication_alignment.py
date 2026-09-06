@@ -146,7 +146,8 @@ def test_compare_ready_state_returns_shared_and_gaps(client: TestClient) -> None
             "intake_choice": "productive",
         },
     )
-    # B: low regulation, matching clarity + structure
+    # B: low regulation, matching clarity + structure — private note
+    # must never cross the parent boundary.
     client.put(
         "/api/communication-reflection",
         headers={"Authorization": f"Bearer {token_b}"},
@@ -156,6 +157,7 @@ def test_compare_ready_state_returns_shared_and_gaps(client: TestClient) -> None
                 "c4": 1, "c5": 1, "c7": 1,              # regulation low (gap)
                 "c8": 5, "c9": 5, "c10": 5, "c11": 5,   # structure high (shared)
             },
+            "notes": {"c4": "PRIVATE — must not reach parent A"},
             "intake_choice": "difficult",
         },
     )
@@ -173,6 +175,11 @@ def test_compare_ready_state_returns_shared_and_gaps(client: TestClient) -> None
     assert "regulation" in gap_labels
     assert "clarity" in shared_labels
     assert "structure" in shared_labels
+    # Privacy regression guard (2026-03-06 code review): co-parent's
+    # free-text notes and raw answers must not appear in the payload.
+    assert "notes" not in body["coparent"], body["coparent"]
+    assert "answers" not in body["coparent"], body["coparent"]
+    assert "notes" in body["self"]
 
 
 def test_compare_requires_self_reflection_first(client: TestClient) -> None:

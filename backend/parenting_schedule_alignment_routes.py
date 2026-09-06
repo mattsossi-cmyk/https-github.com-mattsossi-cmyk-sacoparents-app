@@ -88,6 +88,18 @@ def _shape_self(doc: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def _shape_public(doc: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Co-parent-safe shape: drops private free-text `notes` and raw
+    `answers` before returning. Only aggregated scores + intake
+    choice cross the parent boundary.
+    """
+    shaped = _shape_self(doc)
+    shaped.pop("notes", None)
+    shaped.pop("answers", None)
+    return shaped
+
+
 def _diff_dimensions(
     self_dims: Dict[str, Any], coparent_dims: Dict[str, Any]
 ) -> Dict[str, List[Dict[str, Any]]]:
@@ -191,7 +203,7 @@ async def compare(
         }
 
     self_shape = _shape_self(self_doc)
-    coparent_shape = _shape_self(coparent_doc)
+    coparent_shape = _shape_public(coparent_doc)
     diff = _diff_dimensions(
         self_shape["score"].get("dimensions") or {},
         coparent_shape["score"].get("dimensions") or {},
