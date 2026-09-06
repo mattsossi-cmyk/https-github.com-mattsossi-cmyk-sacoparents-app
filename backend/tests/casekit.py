@@ -3,6 +3,8 @@ created through a real invitation (pro creates case -> parent registers with
 the invite token -> parent accepts)."""
 import os
 import uuid
+from dataclasses import dataclass
+
 import requests
 from dotenv import load_dotenv
 
@@ -10,6 +12,19 @@ load_dotenv("/app/backend/.env")
 
 # Throwaway password for self-destructing test accounts only — not a real secret.
 TEST_PASSWORD = os.environ.get("E2E_TEST_PASSWORD", "testpass123")
+
+ANSWER_KEYS = ["needs_most", "working_well", "concerns", "improve", "options", "other_parent"]
+
+
+@dataclass
+class CaseSpec:
+    subject: str = "education"
+    child: str = "TEST_Kid"
+    custom_subject: str = ""
+    subjects: list | None = None
+    pa_email: str | None = None
+    pb_email: str | None = None
+    case_reference: str = ""
 
 
 def _approve(email: str) -> None:
@@ -19,10 +34,9 @@ def _approve(email: str) -> None:
     client[os.environ["DB_NAME"]].users.update_one({"email": email.lower()}, {"$set": {"approved": True}})
     client.close()
 
-ANSWER_KEYS = ["needs_most", "working_well", "concerns", "improve", "options", "other_parent"]
 
-
-def new_user(api, role="professional", name="T", email=None, password=None, invite=""):
+def new_user(api: str, role: str = "professional", name: str = "T", email: str | None = None,
+             password: str | None = None, invite: str = "") -> requests.Session:
     s = requests.Session()
     email = email or f"t_{uuid.uuid4().hex[:8]}@example.com"
     r = s.post(f"{api}/auth/register", json={
@@ -36,22 +50,22 @@ def new_user(api, role="professional", name="T", email=None, password=None, invi
     return s
 
 
-def new_case(api, subject="education", child="TEST_Kid", custom_subject="", subjects=None,
-             pa_email=None, pb_email=None, case_reference=""):
+def new_case(api: str, spec: CaseSpec | None = None, **overrides) -> tuple:
     """Pro creates a case; both parents register via their invite tokens and accept.
     Returns (pro, pa, pb, create_response_dict)."""
+    spec = spec or CaseSpec(**overrides)
     pro = new_user(api, "professional", "Pro")
-    ea = pa_email or f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
-    eb = pb_email or f"t_pb_{uuid.uuid4().hex[:8]}@example.com"
+    ea = spec.pa_email or f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
+    eb = spec.pb_email or f"t_pb_{uuid.uuid4().hex[:8]}@example.com"
     payload = {
-        "subject": subject, "custom_subject": custom_subject, "child_name": child,
+        "subject": spec.subject, "custom_subject": spec.custom_subject, "child_name": spec.child,
         "parent_a_name": "Parent A", "parent_a_email": ea,
         "parent_b_name": "Parent B", "parent_b_email": eb,
     }
-    if subjects:
-        payload["subjects"] = subjects
-    if case_reference:
-        payload["case_reference"] = case_reference
+    if spec.subjects:
+        payload["subjects"] = spec.subjects
+    if spec.case_reference:
+        payload["case_reference"] = spec.case_reference
     r = pro.post(f"{api}/joint/reports/professional", json=payload)
     assert r.status_code == 200, f"pro create failed: {r.status_code} {r.text}"
     d = r.json()
@@ -64,7 +78,7 @@ def new_case(api, subject="education", child="TEST_Kid", custom_subject="", subj
     return pro, pa, pb, d
 
 
-def fill(api, session, rid, theme):
+def fill(api: str, session: requests.Session, rid: str, theme: str) -> dict:
     answers = {
         "needs_most": f"Our child needs {theme} academic support and consistent homework routines.",
         "working_well": f"The current homework schedule at my home works with {theme} consistent evening routines.",
@@ -78,9 +92,9 @@ def fill(api, session, rid, theme):
     return r.json()
 
 
-def completed_case(api, subject="education", **kwargs):
+def completed_case(api: str, subject: str = "education", **kwargs) -> tuple:
     """Full cycle: case created, both parents accept and complete. Returns (pro, pa, pb, report, detail)."""
-    pro, pa, pb, d = new_case(api, subject=subject, **kwargs)
+    pro, pa, pb, d = new_case(api, CaseSpec(subject=subject, **kwargs))
     rid = d["id"]
     fill(api, pa, rid, "alpha")
     fill(api, pb, rid, "beta")

@@ -152,7 +152,7 @@ class TestCasesFlow:
         c = r.json()
         assert c["type"] == "educational"
         assert c["child_name"] == "TEST_Kid"
-        assert c["has_a"] is False and c["has_b"] is False
+        assert c["has_a"] == False and c["has_b"] == False
         cid = c["id"]
 
         r = s.get(f"{API}/cases/{cid}")
@@ -179,7 +179,7 @@ class TestCasesFlow:
             r = s.post(f"{API}/cases/{cid}/demo")
             assert r.status_code == 200, f"demo {tk}: {r.text}"
             assert r.json()["has_a"] and r.json()["has_b"]
-            assert r.json()["is_demo"] is True
+            assert r.json()["is_demo"] == True
 
             r = s.get(f"{API}/cases/{cid}/report")
             assert r.status_code == 200, f"report {tk}: {r.text}"
@@ -207,8 +207,8 @@ class TestCasesFlow:
             "answers": answers, "primary_concern": "test", "goals": ["Educational stability"]
         })
         assert r.status_code == 200, r.text
-        assert r.json()["has_a"] is True
-        assert r.json()["has_b"] is False
+        assert r.json()["has_a"] == True
+        assert r.json()["has_b"] == False
 
     def test_list_cases(self, fresh_user_session):
         r = fresh_user_session.get(f"{API}/cases")

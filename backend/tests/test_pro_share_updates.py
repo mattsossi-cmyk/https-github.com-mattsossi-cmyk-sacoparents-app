@@ -79,7 +79,7 @@ class TestShareEmailsProfessional:
         pro2 = _pro("sharepro")
         r = a.post(f"{API}/joint/reports/{rid}/share", json={"email": pro2.email})
         assert r.status_code == 200, r.text
-        assert r.json()["ok"] is True
+        assert r.json()["ok"] == True
         docs = pro2.get(f"{API}/joint/reports").json()
         assert any(x["id"] == rid for x in docs), "shared report should appear in professional list"
         r2 = a.post(f"{API}/joint/reports/{rid}/share", json={"email": f"TEST_nopro_{uuid.uuid4().hex[:6]}@example.com"})

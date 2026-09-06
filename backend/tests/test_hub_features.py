@@ -76,7 +76,7 @@ class TestMultiSubjectCreate:
         })
         assert r.status_code == 200, r.text
         assert r.json()["subject"] == "multi"
-        assert r.json()["is_safety"] is True
+        assert r.json()["is_safety"] == True
 
     def test_single_subject_still_works(self):
         s = _pro("single")
@@ -163,7 +163,7 @@ class TestCompleteReport:
         r = s.get(f"{API}/reports/complete")
         assert r.status_code == 200, r.text
         data = r.json()
-        assert data.get("empty") is True or len(data.get("sections", [])) == 0
+        assert data.get("empty") == True or len(data.get("sections", [])) == 0
 
     def test_complete_report_with_data(self):
         """A user with a completed (demo) assessment gets sections and totals."""

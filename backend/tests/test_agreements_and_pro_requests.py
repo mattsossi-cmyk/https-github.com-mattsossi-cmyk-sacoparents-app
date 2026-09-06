@@ -178,7 +178,7 @@ class TestProfessionalRequestFlow:
         found = [r for r in pro.get(f"{API}/joint/reports").json() if r["id"] == rid]
         assert len(found) == 1
         rep = found[0]
-        assert rep.get("is_safety") is True
+        assert rep.get("is_safety") == True
         assert set(rep.get("subjects") or []) == {"safety", "risk", "safety_communication", "safeguards"}
         assert rep.get("case_code", "").startswith("SA-SAF-")
 

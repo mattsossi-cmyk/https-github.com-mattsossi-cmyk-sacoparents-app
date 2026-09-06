@@ -40,7 +40,7 @@ class TestProfessionalApproval:
         pro = _raw_pro()
         me = pro.get(f"{API}/auth/me").json()
         assert me["role"] == "professional"
-        assert me["approved"] is False
+        assert me["approved"] == False
 
     def test_unapproved_pro_cannot_create_case(self):
         pro = _raw_pro()
@@ -72,7 +72,7 @@ class TestProfessionalApproval:
         assert match, "new pro should appear in pending list"
         r = admin.post(f"{API}/admin/approve-professional/{match[0]['id']}")
         assert r.status_code == 200
-        assert pro.get(f"{API}/auth/me").json()["approved"] is True
+        assert pro.get(f"{API}/auth/me").json()["approved"] == True
         # approved pro can now create a case
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
@@ -99,4 +99,4 @@ class TestProfessionalApproval:
         pro, pa, pb, d = new_case(API)
         me = pa.get(f"{API}/auth/me").json()
         assert me["role"] == "parent"
-        assert me["approved"] is True
+        assert me["approved"] == True

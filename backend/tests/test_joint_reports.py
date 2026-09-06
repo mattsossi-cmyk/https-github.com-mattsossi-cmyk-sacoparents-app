@@ -77,7 +77,7 @@ class TestProCreateAndInvite:
         assert d["status"] == "pending_invite"
         assert d["professional_name"] == "Pro"
         assert d["case_reference"] == "REF-1"
-        assert d["is_creator"] is True
+        assert d["is_creator"] == True
 
     def test_create_unknown_subject_400(self):
         pro = new_user(API, "professional", "Pro")
@@ -340,7 +340,7 @@ class TestSharing:
         rid = d["id"]
         pro2 = new_user(API, "professional", "Reviewer")
         r = pa.post(f"{API}/joint/reports/{rid}/share", json={"email": pro2.email})
-        assert r.status_code == 200 and r.json()["ok"] is True
+        assert r.status_code == 200 and r.json()["ok"] == True
         assert any(x["id"] == rid for x in pro2.get(f"{API}/joint/reports").json())
         assert pro2.get(f"{API}/joint/reports/{rid}/report").status_code == 200
 

@@ -1755,10 +1755,26 @@ def _parse_iso(value) -> datetime | None:
         return None
 
 
-async def _send_ready_notifications(doc: dict, now: datetime) -> None:
+def _ready_email_html(name: str, child: str, label: str, link: str) -> str:
+    return (
+        '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+        f"<p>Hi {escape(name)},</p>"
+        f"<p>Both parents have completed their assessments for <strong>{escape(child)}</strong> ({escape(label)}). "
+        "Your Joint Report is ready to view.</p>"
+        f'<p><a href="{link}" style="color:#5B2A86">Open your Joint Report</a></p>'
+        f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
+        "</td></tr></table>"
+    )
+
+
+def _ready_window_open(doc: dict, now: datetime) -> bool:
     ra, rb = doc["responses"]["a"], doc["responses"]["b"]
     done_a, done_b = _parse_iso(ra.get("completed_at")), _parse_iso(rb.get("completed_at"))
-    if not done_a or not done_b or (now - max(done_a, done_b)) > timedelta(hours=48):
+    return bool(done_a and done_b) and (now - max(done_a, done_b)) <= timedelta(hours=48)
+
+
+async def _send_ready_notifications(doc: dict, now: datetime) -> None:
+    if not _ready_window_open(doc, now):
         return
     sent = doc.get("ready_notified")
     if not isinstance(sent, dict):
@@ -1774,15 +1790,7 @@ async def _send_ready_notifications(doc: dict, now: datetime) -> None:
             await send_email(
                 to=p["email"],
                 subject=f"Your Joint Report is ready - {EMAIL_FROM_NAME}",
-                html=(
-                    '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                    f"<p>Hi {escape(p.get('name') or 'there')},</p>"
-                    f"<p>Both parents have completed their assessments for <strong>{escape(child)}</strong> ({escape(label)}). "
-                    "Your Joint Report is ready to view.</p>"
-                    f'<p><a href="{link}" style="color:#5B2A86">Open your Joint Report</a></p>'
-                    f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
-                    "</td></tr></table>"
-                ),
+                html=_ready_email_html(p.get("name") or "there", child, label, link),
             )
             updates[side] = now.isoformat()
         except Exception:
@@ -1791,18 +1799,40 @@ async def _send_ready_notifications(doc: dict, now: datetime) -> None:
         await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {"ready_notified": {**sent, **updates}}})
 
 
-async def _send_completion_nudge(doc: dict, now: datetime) -> None:
+def _nudge_target(doc: dict, now: datetime) -> tuple[dict, dict, str] | None:
+    """Returns (done_participant, other_participant, side_to_nudge) when a nudge is due."""
     ra = doc.get("responses", {}).get("a")
     rb = doc.get("responses", {}).get("b")
     if bool(ra) == bool(rb):
-        return
+        return None
     pa, pb = doc["participants"]["a"], doc["participants"]["b"]
     done, other, side = (pa, pb, "b") if ra else (pb, pa, "a")
     if doc.get("nudges", {}).get(side) or not other.get("email"):
-        return
+        return None
     done_at = _parse_iso((ra or rb).get("completed_at"))
     if not done_at or not (timedelta(minutes=15) <= (now - done_at) <= timedelta(hours=48)):
+        return None
+    return done, other, side
+
+
+def _nudge_email_html(done_name: str, other_name: str, child: str, label: str, link: str) -> str:
+    return (
+        '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+        f"<p>Hi {escape(other_name)},</p>"
+        f"<p><strong>{escape(done_name)}</strong> has completed their half of the "
+        f"{escape(label)} for <strong>{escape(child)}</strong>. Once you complete yours, the Joint Report "
+        "will be generated for both of you.</p>"
+        f'<p><a href="{link}" style="color:#5B2A86">Complete your half</a></p>'
+        f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
+        "</td></tr></table>"
+    )
+
+
+async def _send_completion_nudge(doc: dict, now: datetime) -> None:
+    target = _nudge_target(doc, now)
+    if target is None:
         return
+    done, other, side = target
     label = doc.get("subject_label", "Joint Report")
     child = doc.get("child_name") or "your child"
     link = f"{app_url()}/joint/{doc['id']}"
@@ -1810,16 +1840,7 @@ async def _send_completion_nudge(doc: dict, now: datetime) -> None:
         await send_email(
             to=other["email"],
             subject=f"Your co-parent has completed their half - {EMAIL_FROM_NAME}",
-            html=(
-                '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                f"<p>Hi {escape(other.get('name') or 'there')},</p>"
-                f"<p><strong>{escape(done.get('name') or 'Your co-parent')}</strong> has completed their half of the "
-                f"{escape(label)} for <strong>{escape(child)}</strong>. Once you complete yours, the Joint Report "
-                "will be generated for both of you.</p>"
-                f'<p><a href="{link}" style="color:#5B2A86">Complete your half</a></p>'
-                f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
-                "</td></tr></table>"
-            ),
+            html=_nudge_email_html(done.get("name") or "Your co-parent", other.get("name") or "there", child, label, link),
         )
         await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"nudges.{side}": now.isoformat()}})
     except Exception:

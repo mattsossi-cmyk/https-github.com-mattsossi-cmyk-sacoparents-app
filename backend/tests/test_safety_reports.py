@@ -64,7 +64,7 @@ class TestFullSafetyCycle:
         assert rp.status_code == 200, rp.text
         rid = rp.json()["report_id"]
         rep = [x for x in pro.get(f"{API}/joint/reports").json() if x["id"] == rid][0]
-        assert rep["is_safety"] is True
+        assert rep["is_safety"] == True
         assert set(rep["subjects"]) == {"safety", "risk", "safety_communication", "safeguards"}
         assert rep.get("case_code", "").startswith("SA-SAF-")
         return pro, pa, pb, rid, rep["case_code"]
@@ -95,14 +95,14 @@ class TestFullSafetyCycle:
 
         # Parent gets the completed safety report with safety framing
         rep = pa.get(f"{API}/joint/reports/{rid}/report").json()
-        assert rep["is_safety"] is True
+        assert rep["is_safety"] == True
         assert rep["confidentiality_note"]
         assert "individual responses will not be shared" in rep["confidentiality_note"].lower()
         assert rep["purpose"].startswith("This report is prepared through a third-party mediator")
 
         # Professional (facilitator) can view the completed report + PDF
         r = pro.get(f"{API}/joint/reports/{rid}/report")
-        assert r.status_code == 200 and r.json()["is_safety"] is True
+        assert r.status_code == 200 and r.json()["is_safety"] == True
         r = pro.get(f"{API}/joint/reports/{rid}/pdf")
         assert r.status_code == 200
         assert r.headers.get("content-type", "").startswith("application/pdf")
@@ -113,7 +113,7 @@ class TestFullSafetyCycle:
         pa.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _answers("A ")})
         pb.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _answers("B ")})
         rep = pro.get(f"{API}/joint/reports/{rid}/report").json()
-        assert rep["is_safety"] is False
+        assert rep["is_safety"] == False
         assert rep["confidentiality_note"] is None
         assert not rep["purpose"].startswith("This report is prepared through a third-party mediator")
 
@@ -129,6 +129,6 @@ class TestJointPublicShape:
         })
         d = r.json()
         assert d["subjects"] == ["education"]
-        assert d["is_safety"] is False
+        assert d["is_safety"] == False
         assert d["professional_name"]
         assert d.get("case_code", "").startswith("SA-EDU-")
