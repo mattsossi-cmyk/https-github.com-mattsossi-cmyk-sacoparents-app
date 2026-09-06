@@ -25,6 +25,23 @@ export default function Dashboard() {
   const [linkCode, setLinkCode] = useState("");
   const { user, logout } = useAuth();
   const isPro = user?.role === "professional";
+  const [pendingPros, setPendingPros] = useState([]);
+
+  useEffect(() => {
+    if (user?.role === "admin") {
+      api.get("/admin/pending-professionals").then((r) => setPendingPros(r.data)).catch(() => {});
+    }
+  }, [user]);
+
+  const approvePro = async (id) => {
+    try {
+      await api.post(`/admin/approve-professional/${id}`);
+      toast.success("Professional approved");
+      setPendingPros((prev) => prev.filter((p) => p.id !== id));
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -167,6 +184,34 @@ export default function Dashboard() {
           <h1 className="text-4xl font-semibold" data-testid="dash-heading">Dashboard</h1>
           <p className="text-muted-foreground mt-2" data-testid="dash-subtext">Your individual assessments come from sacoparentsapp.online. Invite your co-parent to explore one issue together.</p>
         </div>
+
+        {isPro && user?.approved === false && (
+          <div className="bg-align-yellow/10 border border-align-yellow/40 rounded-lg p-5 mb-6" data-testid="approval-pending-banner">
+            <p className="font-semibold">Your professional account is pending approval</p>
+            <p className="text-sm text-muted-foreground mt-1">SA CoParents reviews new professional accounts before they can create Joint Alignment Cases. You'll receive an email once approved.</p>
+          </div>
+        )}
+
+        {user?.role === "admin" && (
+          <section className="bg-white border-2 border-align-yellow/50 rounded-lg p-6 mb-6" data-testid="admin-approvals-section">
+            <h2 className="text-lg font-semibold">Pending Professional Approvals</h2>
+            {pendingPros.length === 0 ? (
+              <p className="text-sm text-muted-foreground mt-2" data-testid="admin-approvals-empty">No professionals awaiting approval.</p>
+            ) : (
+              <ul className="mt-3 space-y-2" data-testid="admin-approvals-list">
+                {pendingPros.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-3 border border-border rounded-md px-4 py-3" data-testid={`pending-pro-${p.id}`}>
+                    <div>
+                      <p className="text-sm font-medium">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.email}</p>
+                    </div>
+                    <Button size="sm" onClick={() => approvePro(p.id)} data-testid={`approve-pro-btn-${p.id}`}>Approve</Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
 
         {isPro && (
           <section data-testid="circle-nav-section">

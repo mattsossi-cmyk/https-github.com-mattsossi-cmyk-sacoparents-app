@@ -15,6 +15,9 @@ def _reg(role="parent", prefix="sl"):
         "name": f"Test {prefix}", "email": email, "password": "testpass123", "role": role,
     })
     assert r.status_code == 200, r.text
+    if role == "professional":
+        from casekit import _approve
+        _approve(email)
     return s, email
 
 

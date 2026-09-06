@@ -218,6 +218,7 @@ def public_user(u: dict) -> dict:
         "email": u["email"],
         "name": u.get("name", ""),
         "role": u.get("role", "parent"),
+        "approved": u.get("approved", True),
     }
 
 
@@ -241,6 +242,13 @@ async def get_current_user(request: Request) -> dict:
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user
+
+
+def require_approved_professional(user: dict, detail: str) -> None:
+    if user.get("role") != "professional":
+        raise HTTPException(status_code=403, detail=detail)
+    if not user.get("approved", True):
+        raise HTTPException(status_code=403, detail="Your professional account is pending approval by SA CoParents. You will be able to create cases once your account is approved.")
 
 
 class RegisterIn(BaseModel):
@@ -277,10 +285,26 @@ async def register(body: RegisterIn, response: Response):
         "email": email,
         "name": body.name.strip(),
         "role": role,
+        "approved": False if role == "professional" else True,
         "password_hash": hash_password(body.password),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.users.insert_one(user)
+    if role == "professional":
+        try:
+            await send_email(
+                to=os.environ["ADMIN_EMAIL"],
+                subject=f"New professional registration awaiting approval - {EMAIL_FROM_NAME}",
+                html=(
+                    '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                    f"<p>A new professional account is awaiting approval:</p>"
+                    f"<p><strong>{escape(user['name'])}</strong><br/>{escape(email)}</p>"
+                    f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open the admin dashboard to approve</a></p>'
+                    "</td></tr></table>"
+                ),
+            )
+        except Exception:
+            logger.warning(f"Admin approval notification not sent for {email}")
     set_auth_cookies(response, uid, email)
     return public_user(user)
 
@@ -875,8 +899,7 @@ async def _notify_mediator(mediator: dict, user: dict, doc: dict, label: str) ->
 
 @api.post("/joint/reports")
 async def create_joint_report(body: JointReportIn, user=Depends(get_current_user)):
-    if user.get("role") != "professional":
-        raise HTTPException(status_code=403, detail="Joint reports are initiated by an authorized professional. Parents participate through a secure invitation.")
+    require_approved_professional(user, "Joint reports are initiated by an authorized professional. Parents participate through a secure invitation.")
     subject, subject_keys, label = resolve_subjects(body.subject, body.subjects, body.custom_subject)
     is_safety = all(k in SAFETY_SUBJECT_KEYS for k in subject_keys)
     mediator = await _resolve_mediator(body, user) if is_safety else None
@@ -912,8 +935,7 @@ async def create_joint_report(body: JointReportIn, user=Depends(get_current_user
 
 @api.post("/joint/reports/professional")
 async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_current_user)):
-    if user.get("role") != "professional":
-        raise HTTPException(status_code=403, detail="Only professional accounts can create reports for two parents")
+    require_approved_professional(user, "Only professional accounts can create reports for two parents")
     subject, subject_keys, label = resolve_subjects(body.subject, body.subjects, body.custom_subject)
     rid = str(uuid.uuid4())
     case_code = new_case_code(subject)
@@ -1478,8 +1500,7 @@ class AgreementIn(BaseModel):
 
 @api.post("/joint/agreements")
 async def create_agreement(body: AgreementIn, user=Depends(get_current_user)):
-    if user.get("role") != "professional":
-        raise HTTPException(status_code=403, detail="Co-parenting agreements are initiated by an authorized professional. Parents participate through a secure invitation.")
+    require_approved_professional(user, "Co-parenting agreements are initiated by an authorized professional. Parents participate through a secure invitation.")
     rid = str(uuid.uuid4())
     case_code = new_case_code("co_parenting", kind="agreement")
     pa_email = str(body.parent_a_email).lower()
@@ -1530,7 +1551,44 @@ class PrepareIn(BaseModel):
 
 @api.get("/professionals")
 async def list_professionals(user=Depends(get_current_user)):
-    return await db.users.find({"role": "professional"}, {"_id": 0, "name": 1, "email": 1}).sort("name", 1).to_list(500)
+    return await db.users.find({"role": "professional", "approved": {"$ne": False}}, {"_id": 0, "name": 1, "email": 1}).sort("name", 1).to_list(5000)
+
+
+@api.get("/admin/pending-professionals")
+async def list_pending_professionals(user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    docs = await db.users.find({"role": "professional", "approved": False}, {"password_hash": 0}).sort("created_at", -1).to_list(200)
+    return [public_user(u) for u in docs]
+
+
+@api.post("/admin/approve-professional/{user_id}")
+async def approve_professional(user_id: str, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    res = await db.users.update_one({"_id": user_id, "role": "professional"}, {"$set": {"approved": True}})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Professional not found")
+    pro = await db.users.find_one({"_id": user_id})
+    if pro:
+        try:
+            await send_email(
+                to=pro["email"],
+                subject=f"Your professional account is approved - {EMAIL_FROM_NAME}",
+                html=(
+                    '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                    f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
+                    "<p>Your SA CoParents Align professional account has been approved. You can now create "
+                    "Joint Alignment Cases and invite parents from your dashboard.</p>"
+                    f'<p><a href="{app_url()}/dashboard" style="display:inline-block;background:#5B2A86;color:#ffffff;'
+                    'padding:12px 24px;text-decoration:none;border-radius:6px">Open your dashboard</a></p>'
+                    f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}.</p>'
+                    "</td></tr></table>"
+                ),
+            )
+        except Exception:
+            logger.warning(f"Approval email not sent to {pro['email']}")
+    return {"ok": True}
 
 
 @api.post("/joint/professional-requests")
@@ -1629,8 +1687,7 @@ def _safety_case_doc(user: dict, req: dict, pa_email: str, pb_email: str, pb_nam
 
 @api.post("/joint/professional-requests/{req_id}/prepare")
 async def prepare_pro_request(req_id: str, body: PrepareIn | None = None, user=Depends(get_current_user)):
-    if user.get("role") != "professional":
-        raise HTTPException(status_code=403, detail="Only professional accounts can prepare assessments")
+    require_approved_professional(user, "Only professional accounts can prepare assessments")
     req = await db.professional_requests.find_one({"id": req_id, "professional_id": user["_id"]})
     if not req:
         raise HTTPException(status_code=404, detail="Request not found")

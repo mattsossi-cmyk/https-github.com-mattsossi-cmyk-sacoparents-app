@@ -4,9 +4,20 @@ the invite token -> parent accepts)."""
 import os
 import uuid
 import requests
+from dotenv import load_dotenv
+
+load_dotenv("/app/backend/.env")
 
 # Throwaway password for self-destructing test accounts only — not a real secret.
 TEST_PASSWORD = os.environ.get("E2E_TEST_PASSWORD", "testpass123")
+
+
+def _approve(email: str) -> None:
+    """Test fixtures act as already-approved professionals (real signups are pending)."""
+    import pymongo
+    client = pymongo.MongoClient(os.environ["MONGO_URL"])
+    client[os.environ["DB_NAME"]].users.update_one({"email": email.lower()}, {"$set": {"approved": True}})
+    client.close()
 
 ANSWER_KEYS = ["needs_most", "working_well", "concerns", "improve", "options", "other_parent"]
 
@@ -18,6 +29,8 @@ def new_user(api, role="professional", name="T", email=None, password=None, invi
         "name": name, "email": email, "password": password or TEST_PASSWORD, "role": role, "invite": invite,
     })
     assert r.status_code == 200, f"register {role} failed: {r.status_code} {r.text}"
+    if role == "professional":
+        _approve(email)
     s.email = email
     s.name = name
     return s
