@@ -33,7 +33,7 @@ from pydantic import BaseModel, EmailStr
 from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, NEXT_STEPS, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
-from joint_engine import generate_joint_report, generate_agreement, sample_mediation_report
+from joint_engine import generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf
 from complete_engine import build_complete_report
 
@@ -1095,6 +1095,31 @@ async def sample_mediation_pdf():
         content=build_joint_pdf(sample_mediation_report()),
         media_type="application/pdf",
         headers={"Content-Disposition": 'attachment; filename="sample-mediation-statement.pdf"'},
+    )
+
+
+@api.get("/joint/samples")
+async def list_sample_reports():
+    return sample_list()
+
+
+@api.get("/joint/sample/{key}")
+async def sample_report_json(key: str):
+    report = sample_report(key)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Unknown sample report")
+    return report
+
+
+@api.get("/joint/sample/{key}/pdf")
+async def sample_report_pdf(key: str):
+    report = sample_report(key)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Unknown sample report")
+    return Response(
+        content=build_joint_pdf(report),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="sample-{key}-report.pdf"'},
     )
 
 @api.post("/joint/reports/{rid}/share")

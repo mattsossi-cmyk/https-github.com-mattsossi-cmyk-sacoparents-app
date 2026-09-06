@@ -259,3 +259,179 @@ def sample_mediation_report() -> dict:
     report["is_sample"] = True
     report["purpose"] = SAMPLE_MEDIATION_PURPOSE
     return report
+
+SAMPLE_PURPOSE = (
+    "This sample report shows how SA CoParents Align compares the independently provided "
+    "perspectives of both parents. It identifies areas of alignment, differences in "
+    "perspective, the child's identified needs, and neutral options for professional-guided "
+    "discussion. It is not designed to determine which parent is right or wrong. The names "
+    "and answers in this sample are fictional."
+)
+
+SAMPLE_SCENARIOS: dict[str, dict] = {
+    "co_parenting": {
+        "subject": "co_parenting", "label": "General Co-Parenting", "title": "Sample General Co-Parenting Report",
+        "description": "Routines, rules, and day-to-day decisions across both homes.",
+        "child": "Maya", "pa": "Alex R.", "pb": "Sam R.",
+        "answers_a": {
+            "needs_most": "Maya needs predictable weekly routines and parents who present united expectations in both homes.",
+            "working_well": "Bedtime is consistent and we both follow through on agreements about discipline.",
+            "concerns": "Screen-time rules and weekend plans often change without discussion.",
+            "improve": "A shared calendar and agreed house rules that stay consistent.",
+            "options": "Shared calendar, written house rules both homes follow, and monthly co-parenting check-ins.",
+            "other_parent": "Sam may be concerned that strict routines limit spontaneity with Maya.",
+        },
+        "answers_b": {
+            "needs_most": "Maya needs consistent expectations and relaxed, quality time in both homes.",
+            "working_well": "We agree on bedtime and school-night expectations, which keeps Maya settled.",
+            "concerns": "I find the rigid schedule hard when family events come up on weekends.",
+            "improve": "More flexibility on special occasions while keeping core routines consistent.",
+            "options": "Core rules plus agreed flexibility for special occasions, shared calendar, monthly check-in call.",
+            "other_parent": "Alex may worry that exceptions make the schedule unpredictable for Maya.",
+        },
+    },
+    "communication": {
+        "subject": "communication", "label": "Communication", "title": "Sample Communication Report",
+        "description": "How parents share information, updates, and everyday messages.",
+        "child": "Ethan", "pa": "Robin T.", "pb": "Jamie T.",
+        "answers_a": {
+            "needs_most": "Ethan needs calm, respectful communication between his parents and timely updates about his day-to-day life.",
+            "working_well": "We both respond to school messages and share updates about Ethan's homework.",
+            "concerns": "Reply delays and terse text messages create confusion about Ethan's schedule.",
+            "improve": "I would like a shared communication app and weekly summary updates.",
+            "options": "A co-parenting app, weekly email summaries, or brief scheduled phone calls.",
+            "other_parent": "Jamie may worry that frequent messages feel overwhelming.",
+        },
+        "answers_b": {
+            "needs_most": "Ethan needs predictable routines and parents who communicate respectfully about his needs.",
+            "working_well": "School updates reach both of us and homework information is shared.",
+            "concerns": "Long message threads and delayed replies make planning difficult.",
+            "improve": "Shorter, structured weekly updates and a shared calendar.",
+            "options": "A shared calendar, weekly summary email, and keeping texts brief and child-focused.",
+            "other_parent": "Robin may be concerned about not receiving enough detail about Ethan's week.",
+        },
+    },
+    "education": {
+        "subject": "education", "label": "Educational Needs", "title": "Sample Educational Needs Report",
+        "description": "School, homework, tutoring, and academic support alignment.",
+        "child": "Sofia", "pa": "Pat L.", "pb": "Devon L.",
+        "answers_a": {
+            "needs_most": "Sofia needs consistent homework routines and support with math tutoring in both homes.",
+            "working_well": "Parent-teacher communication reaches both of us and school pickup runs smoothly.",
+            "concerns": "Sofia's reading practice is inconsistent between homes and tutoring attendance has slipped.",
+            "improve": "A shared homework log and agreement on the tutoring schedule.",
+            "options": "Option A: shared homework log. Option B: tutor updates copied to both parents.",
+            "other_parent": "Devon may be concerned about the cost and time commitment of tutoring.",
+        },
+        "answers_b": {
+            "needs_most": "Sofia needs steady reading practice and encouragement with homework every school night.",
+            "working_well": "We both attend school meetings and teacher updates are shared promptly.",
+            "concerns": "I worry homework routines differ between homes, which confuses Sofia.",
+            "improve": "Consistent homework expectations and a shared log both homes follow.",
+            "options": "A shared homework log, monthly teacher check-ins, and a tutor both homes support.",
+            "other_parent": "Pat may worry that too much academic pressure affects Sofia's confidence.",
+        },
+    },
+    "medical": {
+        "subject": "medical", "label": "Medical Needs", "title": "Sample Medical Needs Report",
+        "description": "Healthcare routines, medication, appointments, and care decisions.",
+        "child": "Noah", "pa": "Riley K.", "pb": "Morgan K.",
+        "answers_a": {
+            "needs_most": "Noah needs his asthma medication routine followed consistently in both homes.",
+            "working_well": "Pediatrician appointment summaries are shared and both of us attend key visits.",
+            "concerns": "Medication refills and inhaler checks sometimes fall through the cracks during exchanges.",
+            "improve": "A shared medication log and a clear handoff checklist at exchanges.",
+            "options": "Shared medication log, joint pediatrician portal access, and an exchange-day health checklist.",
+            "other_parent": "Morgan may be concerned about over-medicalizing minor symptoms.",
+        },
+        "answers_b": {
+            "needs_most": "Noah needs consistent medication routines and calm responses when his asthma flares.",
+            "working_well": "We both keep the pediatrician informed and share appointment outcomes.",
+            "concerns": "I worry the inhaler is not always checked before Noah's weekend transitions.",
+            "improve": "A simple checklist for medication and inhaler checks at every exchange.",
+            "options": "Exchange checklist, shared pharmacy account, and an agreed asthma action plan.",
+            "other_parent": "Riley may worry that differing routines confuse Noah about his care.",
+        },
+    },
+    "psychological": {
+        "subject": "psychological", "label": "Psychological Needs", "title": "Sample Psychological Needs Report",
+        "description": "Emotional wellbeing, counseling, and support strategies.",
+        "child": "Liam", "pa": "Avery S.", "pb": "Quinn S.",
+        "answers_a": {
+            "needs_most": "Liam needs emotional reassurance and consistent responses when he feels anxious about transitions.",
+            "working_well": "We both encourage Liam to talk about his feelings and keep his counselor informed.",
+            "concerns": "Liam's anxiety seems to spike before exchanges, and our responses differ between homes.",
+            "improve": "Aligned calming routines and shared guidance from Liam's counselor.",
+            "options": "Joint counselor guidance, an aligned bedtime calming routine, and a feelings journal that travels with Liam.",
+            "other_parent": "Quinn may be concerned about labeling Liam's feelings too early.",
+        },
+        "answers_b": {
+            "needs_most": "Liam needs predictable emotional support and adults who respond calmly to his worries.",
+            "working_well": "Both homes keep counseling appointments and share the counselor's recommendations.",
+            "concerns": "I notice Liam becomes withdrawn after tense handoffs between us.",
+            "improve": "Calmer, brief handoffs and a shared approach to reassurance.",
+            "options": "A counselor-guided plan, brief positive handoffs, and a shared feelings journal.",
+            "other_parent": "Avery may worry that too much focus on anxiety makes Liam more self-conscious.",
+        },
+    },
+    "safety": {
+        "subject": "safety", "label": "Safety / Family Violence", "title": "Sample Safety-Focused Report (Controlled Preview)",
+        "description": "Controlled preview of the professional-mediated safety report format.",
+        "safety": True,
+        "child": "the child", "pa": "Parent A", "pb": "Parent B",
+        "answers_a": {
+            "needs_most": "The child needs exchanges to happen in a neutral, public location with clear start and end times.",
+            "working_well": "The current supervised exchange protocol is being followed and documented by both households.",
+            "concerns": "Unplanned contact outside the agreed protocol creates uncertainty about safety arrangements.",
+            "improve": "Continued use of the supervised exchange center and written-only communication through the agreed channel.",
+            "options": "Supervised exchange center, written-only communication channel, and professional review of the safety plan.",
+            "other_parent": "The other parent likely wants predictability and clear boundaries around contact.",
+        },
+        "answers_b": {
+            "needs_most": "The child needs calm, structured exchanges and no exposure to adult disagreements.",
+            "working_well": "Written communication through the agreed channel is working and exchanges are documented.",
+            "concerns": "I would like the exchange schedule confirmed further in advance to reduce last-minute stress.",
+            "improve": "Advance confirmation of exchange times and continued professional oversight.",
+            "options": "Supervised exchanges, advance schedule confirmation, and periodic professional review.",
+            "other_parent": "The other parent likely shares the goal of keeping exchanges calm and predictable.",
+        },
+    },
+}
+
+
+def sample_report(key: str) -> dict | None:
+    if key == "mediation":
+        return sample_mediation_report()
+    sc = SAMPLE_SCENARIOS.get(key)
+    if sc is None:
+        return None
+    doc = {
+        "subject": sc["subject"],
+        "subjects": [sc["subject"]],
+        "subject_label": sc["label"],
+        "child_name": sc["child"],
+        "is_safety": bool(sc.get("safety")),
+        "participants": {"a": {"name": sc["pa"]}, "b": {"name": sc["pb"]}},
+        "responses": {"a": {"answers": sc["answers_a"]}, "b": {"answers": sc["answers_b"]}},
+    }
+    report = generate_joint_report(doc)
+    report["report_title"] = sc["title"]
+    report["is_sample"] = True
+    if sc.get("safety"):
+        report["purpose"] = f"{report['purpose']} The names and answers in this sample are fictional."
+    else:
+        report["purpose"] = SAMPLE_PURPOSE
+    return report
+
+
+def sample_list() -> list:
+    out = [
+        {"key": k, "label": v["label"], "description": v["description"], "is_safety": bool(v.get("safety"))}
+        for k, v in SAMPLE_SCENARIOS.items()
+    ]
+    out.append({
+        "key": "mediation", "label": "Mediation Statement",
+        "description": "Pre-mediation comparison statement for session preparation.", "is_safety": False,
+    })
+    return out
+

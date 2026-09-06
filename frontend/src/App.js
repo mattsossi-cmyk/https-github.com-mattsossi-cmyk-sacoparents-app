@@ -13,7 +13,8 @@ import JointReport from "@/pages/JointReport";
 import Hub from "@/pages/Hub";
 import CompleteReport from "@/pages/CompleteReport";
 import Privacy from "@/pages/Privacy";
-import SampleMediation from "@/pages/SampleMediation";
+import SampleReport from "@/pages/SampleReport";
+import Samples from "@/pages/Samples";
 import Resources from "@/pages/Resources";
 
 function Protected({ children }) {
@@ -46,7 +47,9 @@ function App() {
             <Route path="/hub" element={<Protected><Hub /></Protected>} />
             <Route path="/hub/complete" element={<Protected><CompleteReport /></Protected>} />
             <Route path="/privacy" element={<Privacy />} />
-            <Route path="/sample-mediation" element={<SampleMediation />} />
+            <Route path="/sample-mediation" element={<SampleReport fixedKey="mediation" />} />
+            <Route path="/samples" element={<Samples />} />
+            <Route path="/samples/:key" element={<SampleReport />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

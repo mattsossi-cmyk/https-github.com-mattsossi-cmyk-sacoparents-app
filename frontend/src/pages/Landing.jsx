@@ -2,9 +2,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Users, ShieldAlert, HeartPulse, GraduationCap, Brain, Scale, MessagesSquare,
-  ArrowRight, FileText, Mail, Eye, BookOpen, CheckCircle2, Lock,
+  ArrowRight, FileText, Mail, Eye, BookOpen, CheckCircle2, Lock, Download,
 } from "lucide-react";
 import { BrandLogo } from "@/components/Brand";
+import { SAMPLE_REPORTS, samplePdfUrl } from "@/lib/samples";
 
 const POSTER_IMG = "/align-hero-simple.jpg";
 const FLYER_IMG = "/align-pro-poster.png";
@@ -76,6 +77,16 @@ const SUBJECTS = [
   },
 ];
 
+const SAMPLE_KEY_BY_SLUG = {
+  general: "co_parenting",
+  communication: "communication",
+  safety: "safety",
+  medical: "medical",
+  educational: "education",
+  psychological: "psychological",
+  "mediation-court": "mediation",
+};
+
 const CLARITY_POINTS = [
   "Where the parents already share common ground",
   "Where their perspectives or priorities differ",
@@ -116,7 +127,7 @@ export default function Landing() {
           <a href="#how-it-works" className="text-muted-foreground hover:text-foreground" data-testid="nav-how-it-works">How It Works</a>
           <a href="#subjects" className="text-muted-foreground hover:text-foreground" data-testid="nav-joint-reports">Joint Reports</a>
           <a href="#applications" className="text-muted-foreground hover:text-foreground" data-testid="nav-applications">Professional Applications</a>
-          <Link to="/sample-mediation" className="text-muted-foreground hover:text-foreground" data-testid="nav-sample-report">Sample Report</Link>
+          <Link to="/samples" className="text-muted-foreground hover:text-foreground" data-testid="nav-sample-report">Sample Reports</Link>
           <Link to="/resources" className="text-muted-foreground hover:text-foreground" data-testid="nav-resources">Professional Resources</Link>
         </nav>
         <div className="flex items-center gap-3">
@@ -160,8 +171,8 @@ export default function Landing() {
                 Create a Free Professional Account <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/sample-mediation" data-testid="hero-sample-link">
-              <Button size="lg" variant="outline" data-testid="hero-sample-btn">Preview a Sample Joint Report</Button>
+            <Link to="/samples" data-testid="hero-sample-link">
+              <Button size="lg" variant="outline" data-testid="hero-sample-btn">Preview Sample Joint Reports</Button>
             </Link>
           </div>
           <p className="mt-8 font-script text-2xl text-brand-purple max-w-xl" data-testid="hero-philosophy">
@@ -244,7 +255,7 @@ export default function Landing() {
               <p className="font-semibold" data-testid="action-invite">Invite Parents to Participate</p>
             </div>
           </Link>
-          <Link to="/sample-mediation" data-testid="action-preview-link">
+          <Link to="/samples" data-testid="action-preview-link">
             <div className="bg-white border border-border rounded-xl p-6 h-full hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
               <Eye className="h-8 w-8 text-brand-green mb-3" />
               <p className="font-semibold" data-testid="action-preview">Preview Report Formats</p>
@@ -296,8 +307,48 @@ export default function Landing() {
               ))}
             </div>
             <p className="mt-3 text-xs text-muted-foreground" data-testid="pages-sample-note">
-              The preview is a condensed Sample Mediation Statement; every completed Joint Alignment Report follows this full universal 10-page structure.
+              Sample reports below are condensed; every completed Joint Alignment Report follows this full universal 10-page structure.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="samples" className="border-y border-border bg-white/70 py-20" data-testid="samples-section">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-semibold" data-testid="samples-heading">Sample Reports for Professionals</h2>
+          <p className="mt-3 text-muted-foreground max-w-2xl" data-testid="samples-subtext">
+            Preview the neutral, child-focused format your clients' reports will follow — alignment,
+            differences in perspective, the child's needs, options, and next steps. All samples use fictional data.
+          </p>
+          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="samples-grid">
+            {SAMPLE_REPORTS.map((s) => (
+              <div key={s.key} className={`bg-white border rounded-lg p-6 flex flex-col ${s.safety ? "border-red-300" : "border-border"}`} data-testid={`sample-card-${s.key}`}>
+                {s.safety && (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700 mb-3" data-testid={`sample-card-safety-badge-${s.key}`}>
+                    <ShieldAlert className="h-3.5 w-3.5" /> Professional-mediated preview
+                  </span>
+                )}
+                <h3 className="text-lg font-bold" data-testid={`sample-card-title-${s.key}`}>{s.label}</h3>
+                <p className="text-sm text-muted-foreground mt-2 flex-1">{s.blurb}</p>
+                <div className="flex gap-2 mt-5">
+                  <Link to={`/samples/${s.key}`} className="flex-1" data-testid={`sample-view-link-${s.key}`}>
+                    <Button variant="outline" size="sm" className="w-full gap-2" data-testid={`sample-view-btn-${s.key}`}>
+                      <Eye className="h-4 w-4" /> View
+                    </Button>
+                  </Link>
+                  <Button size="sm" className="flex-1 gap-2" asChild data-testid={`sample-download-btn-${s.key}`}>
+                    <a href={samplePdfUrl(s.key)} download>
+                      <Download className="h-4 w-4" /> PDF
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 text-center">
+            <Link to="/samples" data-testid="samples-view-all-link">
+              <Button variant="outline" data-testid="samples-view-all-btn">View All Sample Reports</Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -321,8 +372,8 @@ export default function Landing() {
               {s.note && (
                 <p className="mt-4 text-xs bg-red-50 border border-red-200 text-red-900 rounded-md p-3" data-testid="safety-note">{s.note}</p>
               )}
-              <Link to="/sample-mediation" className="inline-block mt-4" data-testid={`view-sample-${s.slug}`}>
-                <Button variant="outline" size="sm">View General Report Example</Button>
+              <Link to={SAMPLE_KEY_BY_SLUG[s.slug] ? `/samples/${SAMPLE_KEY_BY_SLUG[s.slug]}` : "/samples"} className="inline-block mt-4" data-testid={`view-sample-${s.slug}`}>
+                <Button variant="outline" size="sm">{SAMPLE_KEY_BY_SLUG[s.slug] ? "View Sample Report" : "View Report Examples"}</Button>
               </Link>
             </div>
           ))}
@@ -414,8 +465,8 @@ export default function Landing() {
             <Link to="/auth?mode=register" data-testid="pro-join-link">
               <Button size="lg" className="gap-2" data-testid="pro-join-btn">Create a Free Professional Account <ArrowRight className="h-4 w-4" /></Button>
             </Link>
-            <Link to="/sample-mediation" data-testid="sample-mediation-link">
-              <Button size="lg" variant="outline" data-testid="sample-mediation-btn">Preview a Sample Mediation Statement</Button>
+            <Link to="/samples" data-testid="sample-mediation-link">
+              <Button size="lg" variant="outline" data-testid="sample-mediation-btn">Browse Sample Reports</Button>
             </Link>
           </div>
           <div className="mt-10 max-w-md" data-testid="pro-flyer">
