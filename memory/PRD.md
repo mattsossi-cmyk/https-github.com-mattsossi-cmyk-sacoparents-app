@@ -27,6 +27,34 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-05 — Unsure Pathway + One Clear Ending + Dashboard refactor start
+- **"I'm not sure — help me choose"** mini-quiz on the Four-Circle
+  Front Door (`FourCircleFrontDoor.jsx`). Two soft, no-wrong-answer
+  questions map the parent to one of the four pathways and stamp a
+  bright "Recommended" badge on the matching circle in place. No
+  navigation, no interruption — just a subtle nudge so undecided
+  parents don't have to guess. Data-testids: `front-door-helper-open`,
+  `front-door-helper-panel`, `front-door-helper-q-focus-opt-*`,
+  `front-door-{circle}-recommended`.
+- **`PathwayEndCTA.jsx`** (new shared component) — a single, prominent
+  "what's next" panel that closes every pathway with one clear button
+  so parents never see competing terminal actions. Applied to five
+  terminal pages:
+  - `SpecialNeedsV2Report.jsx` → "Invite the other parent to compare"
+  - `SpecialNeedsV2EducationalDeepDiveReport.jsx` → same, edu path
+  - `SpecialNeedsV2MedicalDeepDiveReport.jsx` → same, medical path
+  - `SpecialNeedsV2PsychologicalDeepDiveReport.jsx` → same, psych path
+  - `JointAgreement.jsx` → "Create a shareable link" (opens the
+    existing share-link modal)
+  - `SafetyAssessment.jsx` results → "Send my case to a mediator"
+    (opens the DV-informed warm-handoff dialog)
+- **Dashboard.jsx refactor (start)** — extracted the ~90-line "What
+  best describes your situation?" hero into
+  `components/dashboard/SituationPickerHero.jsx` along with the
+  `INLINE_SITUATIONS` constant. Dashboard.jsx dropped from 1571 →
+  1484 lines with no behaviour change. Remaining splits (SafetyAssessment,
+  JointAgreement, deeper Dashboard sections) tracked as P2 backlog.
+
 ### 2026-03-05 — Global "Back to main menu" navigation
 - **`BackToDashboardPill.jsx`** (new) — fixed bottom-left floating pill
   ("Main menu") rendered globally via `App.js`. Visible on every

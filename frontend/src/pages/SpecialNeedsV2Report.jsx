@@ -14,6 +14,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import PathwayEndCTA from "../components/PathwayEndCTA";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert, Users, Mail } from "lucide-react";
@@ -323,6 +324,21 @@ export default function SpecialNeedsV2Report() {
         <ReportProvenanceFooter variant="snc" className="mt-8" />
 
         <div className="mt-8 text-xs text-[#8471B3] italic">{r.disclaimer}</div>
+
+        {/* One clear ending — invite the co-parent so the two reports
+            can be compared side-by-side into a Joint Alignment view. */}
+        <PathwayEndCTA
+          eyebrow="Child needs pathway"
+          title="Invite the other parent to compare"
+          description="Your co-parent takes the same assessment on their own device. When both are done, SA CoParents builds a neutral, side-by-side alignment view for you and any professional you choose to share it with."
+          primary={{
+            label: "Invite the other parent",
+            to: "/special-needs-v2/compare",
+          }}
+          tone="green"
+          icon={Users}
+          testId="snc2-report-end-cta"
+        />
       </div>
     </AppShell>
   );

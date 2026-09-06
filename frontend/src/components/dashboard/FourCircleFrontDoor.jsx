@@ -20,7 +20,7 @@
  * Underneath every circle, the same six-step process:
  *   Reflect → Understand → Identify → Explore → Align → Agree
  */
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users,
@@ -239,10 +239,81 @@ const JOURNEY_STEPS = [
   { label: "Agree", accent: "text-[#3D1A78]" },
 ];
 
+/* "Help me choose" mini-quiz — a very short, no-wrong-answer wizard for
+   parents who aren't sure which of the four circles fits their situation.
+   Two questions, each answer maps to one of the four keys. The final
+   recommendation highlights the matching circle in-place with a
+   "Recommended for you" badge. Keeps parents from having to guess. */
+const HELPER_QUESTIONS = [
+  {
+    id: "focus",
+    prompt: "What's most on your mind right now?",
+    options: [
+      {
+        key: "safety",
+        label: "I don't feel safe or things are escalating at home",
+        recommends: "safety",
+      },
+      {
+        key: "message",
+        label: "A specific message or exchange I don't know how to handle",
+        recommends: "communication",
+      },
+      {
+        key: "child",
+        label: "Something about my child — school, doctor, therapy",
+        recommends: "child-needs",
+      },
+      {
+        key: "agreement",
+        label: "Getting a written co-parenting plan together",
+        recommends: "co-parenting",
+      },
+    ],
+  },
+  {
+    id: "urgency",
+    prompt: "And how soon do you need this?",
+    options: [
+      {
+        key: "now",
+        label: "This week — I have something specific happening",
+        // Urgency doesn't override safety or communication.
+        recommends: null,
+      },
+      {
+        key: "soon",
+        label: "Over the next few weeks",
+        recommends: null,
+      },
+      {
+        key: "long",
+        label: "No specific deadline — I want the full picture",
+        recommends: null,
+      },
+    ],
+  },
+];
+
+const CIRCLE_LABELS = {
+  "co-parenting": "Make a Co-Parenting Agreement",
+  communication: "Communicate More Effectively",
+  safety: "Address Safety Concerns",
+  "child-needs": "Address My Child's Needs",
+};
+
 export default function FourCircleFrontDoor({ userName }) {
   const navigate = useNavigate();
   const [expandedKey, setExpandedKey] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [helpAnswers, setHelpAnswers] = useState({});
+
+  const recommendedKey = useMemo(() => {
+    const focus = HELPER_QUESTIONS[0].options.find(
+      (o) => o.key === helpAnswers.focus,
+    );
+    return focus?.recommends || null;
+  }, [helpAnswers.focus]);
 
   const handleCircleClick = (circle) => {
     if (circle.expandable) {
@@ -250,6 +321,10 @@ export default function FourCircleFrontDoor({ userName }) {
       return;
     }
     if (circle.route) navigate(circle.route);
+  };
+
+  const resetHelper = () => {
+    setHelpAnswers({});
   };
 
   return (
@@ -283,10 +358,43 @@ export default function FourCircleFrontDoor({ userName }) {
             key={circle.key}
             circle={circle}
             expanded={expandedKey === circle.key}
+            recommended={recommendedKey === circle.key}
             onClick={() => handleCircleClick(circle)}
             index={idx}
           />
         ))}
+      </div>
+
+      {/* "I'm not sure — help me choose" bridge. Sits directly below the
+          circles and, when tapped, opens a compact two-question wizard
+          that recommends one of the four circles in place (with a
+          "Recommended for you" badge) instead of forcing parents to
+          guess. Sticks to the founder's rule: no wrong answers, and
+          the recommendation never opens a new route — the parent still
+          taps the highlighted circle themselves. */}
+      <div className="mt-5" data-testid="front-door-helper-wrap">
+        {!helpOpen ? (
+          <button
+            type="button"
+            onClick={() => setHelpOpen(true)}
+            data-testid="front-door-helper-open"
+            className="inline-flex items-center gap-2 rounded-full border border-[#D6CFE8] bg-white px-4 py-2 text-sm text-[#3D1A78] font-semibold hover:bg-[#F5F1FB] transition-colors"
+          >
+            <HelpCircle size={14} />
+            I&rsquo;m not sure — help me choose
+          </button>
+        ) : (
+          <HelpMeChoosePanel
+            answers={helpAnswers}
+            setAnswers={setHelpAnswers}
+            recommendedKey={recommendedKey}
+            onDismiss={() => {
+              setHelpOpen(false);
+              resetHelper();
+            }}
+            onReset={resetHelper}
+          />
+        )}
       </div>
 
       {/* Inline reveal for Child Needs */}
@@ -385,7 +493,7 @@ export default function FourCircleFrontDoor({ userName }) {
   );
 }
 
-function FrontDoorTile({ circle, expanded, onClick, index = 0 }) {
+function FrontDoorTile({ circle, expanded, onClick, index = 0, recommended = false }) {
   const Icon = circle.icon;
   return (
     <button
@@ -394,8 +502,16 @@ function FrontDoorTile({ circle, expanded, onClick, index = 0 }) {
       aria-expanded={circle.expandable ? expanded : undefined}
       data-testid={circle.testid}
       style={{ animationDelay: `${index * 90}ms` }}
-      className={`front-door-tile group text-left rounded-3xl border border-[#EFE9F9] bg-white p-5 ring-1 ${circle.tone.ring} ${circle.tone.hover} hover:-translate-y-1 hover:shadow-xl active:translate-y-0 active:scale-[0.98] transition-all duration-200 flex flex-col`}
+      className={`front-door-tile group text-left rounded-3xl border ${recommended ? "border-[#3D1A78] shadow-lg ring-2 ring-[#3D1A78]/40" : "border-[#EFE9F9]"} bg-white p-5 ring-1 ${!recommended ? circle.tone.ring : ""} ${circle.tone.hover} hover:-translate-y-1 hover:shadow-xl active:translate-y-0 active:scale-[0.98] transition-all duration-200 flex flex-col relative`}
     >
+      {recommended && (
+        <span
+          className="absolute -top-2 left-4 inline-flex items-center gap-1 rounded-full bg-[#3D1A78] text-white px-2.5 py-0.5 text-[10px] uppercase tracking-[0.15em] font-bold shadow-md"
+          data-testid={`${circle.testid}-recommended`}
+        >
+          <Sparkles size={10} strokeWidth={2.4} /> Recommended
+        </span>
+      )}
       <div
         className={`w-14 h-14 rounded-full grid place-items-center text-white shadow-md ${circle.tone.bg} group-hover:scale-110 group-hover:shadow-lg transition-transform duration-200`}
       >
@@ -422,6 +538,128 @@ function FrontDoorTile({ circle, expanded, onClick, index = 0 }) {
           : circle.cta}
       </span>
     </button>
+  );
+}
+
+function HelpMeChoosePanel({ answers, setAnswers, recommendedKey, onDismiss, onReset }) {
+  const focusPicked = Boolean(answers.focus);
+  const urgencyPicked = Boolean(answers.urgency);
+  const step = focusPicked ? 2 : 1;
+  const showResult = focusPicked && urgencyPicked && recommendedKey;
+
+  return (
+    <div
+      className="rounded-3xl border border-[#D6CFE8] bg-gradient-to-br from-[#F8F7FC] to-white p-5 sm:p-6"
+      data-testid="front-door-helper-panel"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#3D1A78] text-white grid place-items-center shrink-0">
+            <HelpCircle size={18} strokeWidth={2.2} />
+          </div>
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+              Step {step} of 2
+            </div>
+            <h3 className="font-serif text-xl text-[#1A1330] leading-tight mt-1">
+              Let&rsquo;s find the right pathway together
+            </h3>
+            <p className="text-[13px] text-[#4B4567] mt-1 leading-relaxed max-w-xl">
+              Two quick questions. There are no wrong answers — SA CoParents
+              simply highlights the pathway that best fits what you told us.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          data-testid="front-door-helper-close"
+          className="text-xs text-[#4B4567] hover:text-[#3D1A78] underline shrink-0"
+        >
+          Close
+        </button>
+      </div>
+
+      {!showResult && (
+        <div className="mt-5 space-y-4">
+          {HELPER_QUESTIONS.map((q, qIdx) => {
+            // Only render the second question once the first is picked.
+            if (qIdx === 1 && !focusPicked) return null;
+            const currentAnswer = answers[q.id];
+            return (
+              <fieldset
+                key={q.id}
+                data-testid={`front-door-helper-q-${q.id}`}
+                className="rounded-2xl border border-[#E5E0EE] bg-white p-4"
+              >
+                <legend className="text-sm font-semibold text-[#1A1330] px-1">
+                  {q.prompt}
+                </legend>
+                <div className="mt-3 grid gap-2">
+                  {q.options.map((opt) => {
+                    const selected = currentAnswer === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() =>
+                          setAnswers((prev) => ({ ...prev, [q.id]: opt.key }))
+                        }
+                        data-testid={`front-door-helper-q-${q.id}-opt-${opt.key}`}
+                        className={`text-left rounded-xl border px-3.5 py-2.5 text-sm transition-all ${
+                          selected
+                            ? "border-[#3D1A78] bg-[#EFE9F9] text-[#1A1330] font-semibold shadow-sm"
+                            : "border-[#E5E0EE] bg-white text-[#1A1330] hover:border-[#3D1A78]"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            );
+          })}
+        </div>
+      )}
+
+      {showResult && (
+        <div
+          className="mt-5 rounded-2xl border-2 border-[#3D1A78]/40 bg-white p-4"
+          data-testid="front-door-helper-result"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#3D1A78] text-white grid place-items-center shrink-0">
+              <Sparkles size={18} strokeWidth={2.2} />
+            </div>
+            <div className="flex-1">
+              <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                Recommended for you
+              </div>
+              <div
+                className="font-serif text-xl text-[#1A1330] leading-tight mt-1"
+                data-testid="front-door-helper-result-label"
+              >
+                {CIRCLE_LABELS[recommendedKey]}
+              </div>
+              <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
+                Look above — this pathway is now highlighted for you. Tap it
+                when you&rsquo;re ready to start. You can always change your
+                answer later.
+              </p>
+              <button
+                type="button"
+                onClick={onReset}
+                data-testid="front-door-helper-restart"
+                className="mt-3 text-xs text-[#3D1A78] font-semibold hover:underline"
+              >
+                Answer the questions again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

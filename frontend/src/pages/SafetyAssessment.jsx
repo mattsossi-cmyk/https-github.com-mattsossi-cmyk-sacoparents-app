@@ -32,6 +32,7 @@ import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import DeviceSafetyBanner from "../components/DeviceSafetyBanner";
 import ScreenGuardrailPanel from "../components/ScreenGuardrailPanel";
 import ReviewerStatusChip from "../components/ReviewerStatusChip";
+import PathwayEndCTA from "../components/PathwayEndCTA";
 
 const TONE_STYLES = {
   danger: {
@@ -1704,6 +1705,22 @@ export default function SafetyAssessment() {
                 <a href="tel:911" className="underline font-bold text-[#1A1330]">911</a>.
               </p>
             </div>
+
+            {/* One clear ending — a warm handoff to a mediator/attorney.
+                This is the founder-mandated single next action for the
+                safety pathway. */}
+            <PathwayEndCTA
+              eyebrow="Safety pathway"
+              title="Send your case to a mediator instead"
+              description="A DV-informed mediator can handle the outreach so you never have to send a direct invitation. Only the fields you approve are shared."
+              primary={{
+                label: "Send my case to a mediator",
+                onClick: openMediatorDialog,
+              }}
+              tone="amber"
+              icon={ShieldAlert}
+              testId="safety-assessment-end-cta"
+            />
 
             <div className="mt-6 flex flex-wrap gap-3 justify-between">
               <Link

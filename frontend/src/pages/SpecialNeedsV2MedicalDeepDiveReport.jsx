@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import BackToDashboardLink from "../components/BackToDashboardLink";
+import PathwayEndCTA from "../components/PathwayEndCTA";
 import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachStrip";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
@@ -480,6 +481,20 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         <ReportProvenanceFooter variant="deepdive" className="mt-8" />
 
         <p className="text-[11px] text-[#4B4567] mt-8 italic">{report.disclaimer}</p>
+
+        {/* One clear ending — the founder-mandated single next action. */}
+        <PathwayEndCTA
+          eyebrow="Medical pathway"
+          title="Compare medical priorities with the other parent"
+          description="Your co-parent completes the same medical deep-dive on their own device. When both are done, SA CoParents builds a neutral side-by-side view of shared decisions and gaps."
+          primary={{
+            label: "Compare with the other parent",
+            to: "/special-needs-v2/medical-deep-dive/compare",
+          }}
+          tone="green"
+          icon={Users}
+          testId="med-deep-report-end-cta"
+        />
       </div>
     </AppShell>
   );

@@ -21,7 +21,6 @@ import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
 import LearningCenterCard from "../components/LearningCenterCard";
 import YourReportsCard from "../components/YourReportsCard";
 import ShareManagementPanel from "../components/ShareManagementPanel";
-import ShareReportQuickAction from "../components/ShareReportQuickAction";
 import AssessmentHistoryCard from "../components/AssessmentHistoryCard";
 import AlignReportCTA from "../components/AlignReportCTA";
 import NewCommentToaster from "../components/NewCommentToaster";
@@ -29,6 +28,7 @@ import CoparentCompletionToaster from "../components/CoparentCompletionToaster";
 import FourCircleFrontDoor from "../components/dashboard/FourCircleFrontDoor";
 import JointAlignmentRequests from "../components/dashboard/JointAlignmentRequests";
 import PersonalHomeStrip from "../components/dashboard/PersonalHomeStrip";
+import SituationPickerHero from "../components/dashboard/SituationPickerHero";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -57,24 +57,6 @@ import {
 import { logError } from "../lib/logger";
 
 import { CheckCircle2, ChevronRight, ChevronDown, Shield, Sparkles, RefreshCcw, Users, Eye, Trophy } from "lucide-react";
-
-// Six situations that route the visitor to the safest / most relevant
-// next step. Mirrors the language and order used on the Landing page so
-// pre- and post-signup experiences feel identical.
-const INLINE_SITUATIONS = [
-  { key: "cooperate",     label: "We generally cooperate",
-    icon: <Handshake size={18} />,       route: "#next-step" },
-  { key: "difficult",     label: "Communication is difficult",
-    icon: <MessageCircle size={18} />,   route: "#next-step" },
-  { key: "high-conflict", label: "We experience ongoing high conflict",
-    icon: <AlertTriangle size={18} />,   route: "/safety-assessment" },
-  { key: "safety",        label: "I have safety or family-violence concerns",
-    icon: <ShieldCheck size={18} />,     route: "/safety-assessment" },
-  { key: "special-needs", label: "Our child has unique educational, psychological or medical needs",
-    icon: <Baby size={18} />,            route: "/special-needs-v2" },
-  { key: "mediation",     label: "I am preparing for mediation or court",
-    icon: <Scale size={18} />,           route: "#next-step" },
-];
 
 // Situation-memory storage.  We remember the parent's latest pick so
 // return visits can highlight the matching prep module in the jump-menu
@@ -520,81 +502,13 @@ export default function Dashboard() {
             route you to the safest next step" prompt.  Remembers the last
             answer in localStorage so a returning parent gets a soft
             "you chose X - change my answer" instead of the full grid. */}
-        <div
-          className="mt-4 rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8 shadow-sm"
-          data-testid="dashboard-step1-hero"
-        >
-          <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">
-            Step 1
-          </div>
-          <h1
-            className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight"
-            data-testid="dashboard-greeting"
-          >
-            What best describes your situation
-            {user?.name ? `, ${user.name.split(" ")[0]}?` : "?"}
-          </h1>
-          {/* Quick action — shortest path from Dashboard to a shareable
-              Joint Report link. Soft-locked until the Compare share is
-              ready so it never sends a parent to an empty state. */}
-          <div className="mt-4">
-            <ShareReportQuickAction sncHighlights={sncHighlights} />
-          </div>
-          {situationChoice ? (
-            <div
-              className="mt-4 flex items-center gap-3 flex-wrap"
-              data-testid="dashboard-situation-remembered"
-            >
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#EFE9F9] text-[#3D1A78] px-3 py-1.5 text-xs font-semibold">
-                {(() => {
-                  const meta = INLINE_SITUATIONS.find((s) => s.key === situationChoice);
-                  return meta ? (
-                    <>
-                      {meta.icon}
-                      <span>You chose: {meta.label}</span>
-                    </>
-                  ) : <span>Situation remembered</span>;
-                })()}
-              </div>
-              <button
-                type="button"
-                onClick={forgetSituation}
-                className="text-xs text-[#4B4567] hover:text-[#3D1A78] hover:underline"
-                data-testid="dashboard-situation-reset"
-              >
-                Change my answer
-              </button>
-            </div>
-          ) : (
-            <>
-              <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-2xl">
-                There are no wrong answers. Your choice routes you straight
-                to the safest and most relevant next step for your family.
-              </p>
-              <div
-                className="mt-5 grid sm:grid-cols-2 gap-2.5"
-                data-testid="dashboard-situation-inline-picker"
-              >
-                {INLINE_SITUATIONS.map((s) => (
-                  <Link
-                    key={s.key}
-                    to={s.route}
-                    onClick={() => rememberSituation(s.key)}
-                    className="group text-left rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-center gap-3"
-                    data-testid={`dashboard-situation-${s.key}`}
-                  >
-                    <div className="shrink-0 w-9 h-9 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center group-hover:bg-[#3D1A78] group-hover:text-white transition-colors">
-                      {s.icon}
-                    </div>
-                    <span className="text-sm sm:text-[15px] text-[#1A1330] leading-snug">
-                      {s.label}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+        <SituationPickerHero
+          userName={user?.name}
+          situationChoice={situationChoice}
+          onRemember={rememberSituation}
+          onForget={forgetSituation}
+          sncHighlights={sncHighlights}
+        />
 
         {/* Primary "Do this next" home — auto-detects the parent's current
             stage on the 6-step linear journey and surfaces one big action.

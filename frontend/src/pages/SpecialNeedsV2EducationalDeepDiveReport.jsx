@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import BackToDashboardLink from "../components/BackToDashboardLink";
+import PathwayEndCTA from "../components/PathwayEndCTA";
 import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachStrip";
 import DeepDivePartsNarrative from "../components/deepdive/DeepDivePartsNarrative";
 import ReportReviewNotice from "../components/ReportReviewNotice";
@@ -579,6 +580,20 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         <ReportProvenanceFooter variant="deepdive" className="mt-8" />
 
         <p className="text-[11px] text-[#4B4567] mt-8 italic">{report.disclaimer}</p>
+
+        {/* One clear ending — the founder-mandated single next action. */}
+        <PathwayEndCTA
+          eyebrow="Educational pathway"
+          title="Compare educational priorities with the other parent"
+          description="Your co-parent completes the same 25-question deep dive on their own device. SA CoParents builds a neutral side-by-side view of where you agree and where a small tune-up would help."
+          primary={{
+            label: "Compare with the other parent",
+            to: "/special-needs-v2/educational-deep-dive/compare",
+          }}
+          tone="green"
+          icon={Users}
+          testId="edu-deep-report-end-cta"
+        />
       </div>
     </AppShell>
   );

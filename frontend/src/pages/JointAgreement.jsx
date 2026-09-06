@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
+import PathwayEndCTA from "../components/PathwayEndCTA";
 import JointReportEmailDialog from "../components/JointReportEmailDialog";
 import { Section } from "../components/joint/JointAgreementSections";
 import JointAgreementParentView from "../components/joint/JointAgreementParentView";
@@ -525,6 +526,20 @@ export default function JointAgreement() {
             <p className="text-sm text-[#1A1330]">{d.next_step}</p>
           </div>
         )}
+
+        {/* One clear ending — the founder-mandated single next action. */}
+        <PathwayEndCTA
+          eyebrow="Co-parenting agreement"
+          title="Send this draft to your mediator"
+          description="A short one-time link your mediator or attorney can open on any device. No account needed. You stay in control — revoke it any time."
+          primary={{
+            label: "Create a shareable link",
+            onClick: () => setShareLinkOpen(true),
+          }}
+          tone="purple"
+          icon={Link2}
+          testId="joint-agreement-end-cta"
+        />
 
         <div className="mt-10 text-[11px] text-[#857E9C] leading-relaxed border-t border-[#E5E0EE] pt-4">
           Draft for discussion · Not a signed agreement, court order, or legal
