@@ -241,3 +241,84 @@ def test_response_carries_email_delivery_status(client):
     for row in body["email_deliveries"]:
         assert "email" in row
         assert "delivered" in row
+
+
+# ---------------- watermarked status PDF download ---------------- #
+
+def test_status_report_pdf_watermarked_and_valid(client):
+    _email, token, _name = _register(client)
+    r = _make_case(client, token)
+    assert r.status_code == 200
+    case_id = r.json()["case_id"]
+
+    r_pdf = client.get(
+        f"/api/professional/joint-alignment/cases/{case_id}/status-report.pdf",
+        params={"firm": "Acme Legal LLP"},
+        headers=_headers(token),
+    )
+    assert r_pdf.status_code == 200
+    assert r_pdf.headers.get("content-type", "").startswith("application/pdf")
+    assert r_pdf.content[:4] == b"%PDF"
+
+    # Watermark stamp must be present in a decompressed stream on
+    # at least one page.
+    import re, zlib
+    found = False
+    for m in re.finditer(rb"stream\n(.+?)\nendstream", r_pdf.content, re.S):
+        s = m.group(1)
+        if s[:2] == b"x\x9c":
+            try:
+                d = zlib.decompress(s).decode("latin-1", errors="ignore")
+                if "Downloaded by Acme Legal LLP" in d:
+                    found = True
+                    break
+            except Exception:
+                continue
+    assert found, "watermark text should be stamped into at least one page's content stream"
+
+
+def test_status_report_pdf_falls_back_to_account_name_watermark(client):
+    _email, token, _name = _register(client)
+    r = _make_case(client, token)
+    assert r.status_code == 200
+    case_id = r.json()["case_id"]
+
+    r_pdf = client.get(
+        f"/api/professional/joint-alignment/cases/{case_id}/status-report.pdf",
+        headers=_headers(token),
+    )
+    assert r_pdf.status_code == 200
+    # No `firm` query param → uses account name fallback ("Iter150 Mediator")
+    import re, zlib
+    for m in re.finditer(rb"stream\n(.+?)\nendstream", r_pdf.content, re.S):
+        s = m.group(1)
+        if s[:2] == b"x\x9c":
+            try:
+                d = zlib.decompress(s).decode("latin-1", errors="ignore")
+                if "Downloaded by Iter150 Mediator" in d:
+                    return  # pass
+            except Exception:
+                continue
+    assert False, "fallback watermark from account name should be stamped"
+
+
+def test_status_report_pdf_owner_only(client):
+    _email_a, token_a, _ = _register(client)
+    _email_b, token_b, _ = _register(client)
+    r = _make_case(client, token_a)
+    case_id = r.json()["case_id"]
+
+    # B is not the creator → 404
+    r_pdf = client.get(
+        f"/api/professional/joint-alignment/cases/{case_id}/status-report.pdf",
+        params={"firm": "Sneaky LLC"},
+        headers=_headers(token_b),
+    )
+    assert r_pdf.status_code == 404
+
+
+def test_status_report_pdf_requires_auth(client):
+    r = client.get(
+        "/api/professional/joint-alignment/cases/SA-000000/status-report.pdf"
+    )
+    assert r.status_code in (401, 403)

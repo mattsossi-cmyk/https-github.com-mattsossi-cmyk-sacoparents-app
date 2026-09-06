@@ -26,12 +26,15 @@ import {
   Users,
   AlertTriangle,
   X,
+  FileDown,
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
+
+const FIRM_NAME_KEY = "sacoparents.pj.mine.firm_name.v1";
 
 const STATUS_FILTERS = [
   { key: "all", label: "All" },
@@ -57,6 +60,11 @@ export default function ProfessionalJointAlignmentMine() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [busyId, setBusyId] = useState(null);
+  const [downloadFor, setDownloadFor] = useState(null); // {case_id} or null when closed
+  const [firmName, setFirmName] = useState(() => {
+    try { return window.localStorage.getItem(FIRM_NAME_KEY) || ""; } catch { return ""; }
+  });
+  const [downloading, setDownloading] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -121,6 +129,44 @@ export default function ProfessionalJointAlignmentMine() {
       toast.error(String(detail));
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const openDownload = (caseId) => {
+    setDownloadFor({ caseId });
+  };
+  const closeDownload = () => {
+    if (!downloading) setDownloadFor(null);
+  };
+  const downloadCaseStatus = async () => {
+    if (!downloadFor) return;
+    const firm = firmName.trim();
+    if (!firm) {
+      toast.error("Enter a firm name for the watermark");
+      return;
+    }
+    setDownloading(true);
+    try {
+      try { window.localStorage.setItem(FIRM_NAME_KEY, firm); } catch { /* best-effort */ }
+      const res = await api.get(
+        `/professional/joint-alignment/cases/${downloadFor.caseId}/status-report.pdf`,
+        { params: { firm }, responseType: "blob" },
+      );
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${downloadFor.caseId}-status-report.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(`Downloaded ${downloadFor.caseId} status PDF`);
+      setDownloadFor(null);
+    } catch (err) {
+      logError("download failed:", err);
+      toast.error("Download failed. Please try again.");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -290,16 +336,26 @@ export default function ProfessionalJointAlignmentMine() {
                     </div>
                   </div>
                   {c.status !== "cancelled" && c.status !== "expired" && (
-                    <button
-                      type="button"
-                      onClick={() => revoke(c.case_id)}
-                      disabled={busyId === c.case_id}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[#EFB4B4] text-[#B02A2A] hover:bg-[#FEE4E2] px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60"
-                      data-testid={`pj-mine-revoke-${c.case_id}`}
-                    >
-                      {busyId === c.case_id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                      Revoke
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openDownload(c.case_id)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#D6CFE8] text-[#3D1A78] hover:bg-[#F5F1FB] px-3 py-1.5 text-xs font-semibold transition-colors"
+                        data-testid={`pj-mine-download-${c.case_id}`}
+                      >
+                        <FileDown size={12} /> Download PDF
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => revoke(c.case_id)}
+                        disabled={busyId === c.case_id}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#EFB4B4] text-[#B02A2A] hover:bg-[#FEE4E2] px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60"
+                        data-testid={`pj-mine-revoke-${c.case_id}`}
+                      >
+                        {busyId === c.case_id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                        Revoke
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -340,6 +396,91 @@ export default function ProfessionalJointAlignmentMine() {
               </li>
             ))}
           </ul>
+        )}
+
+        {/* Firm-name / watermark modal for PDF downloads */}
+        {downloadFor && (
+          <div
+            className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4"
+            onClick={closeDownload}
+            data-testid="pj-download-modal-backdrop"
+          >
+            <div
+              className="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 relative"
+              onClick={(e) => e.stopPropagation()}
+              data-testid="pj-download-modal"
+            >
+              <button
+                type="button"
+                onClick={closeDownload}
+                disabled={downloading}
+                className="absolute top-3 right-3 text-[#857E9C] hover:text-[#1A1330] disabled:opacity-40"
+                data-testid="pj-download-modal-close"
+                aria-label="Close"
+              >
+                <X size={16} />
+              </button>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#F5F1FB] text-[#3D1A78] grid place-items-center shrink-0">
+                  <FileDown size={18} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
+                    Case {downloadFor.caseId}
+                  </div>
+                  <h3 className="font-serif text-xl text-[#1A1330] mt-1 leading-tight">
+                    Download case status PDF
+                  </h3>
+                  <p className="text-xs text-[#4B4567] mt-2 leading-relaxed">
+                    We'll stamp your firm name plus a UTC download
+                    timestamp on every page so anyone who receives
+                    this copy can prove which version they were given.
+                  </p>
+                </div>
+              </div>
+
+              <label
+                htmlFor="pj-firm-name-input"
+                className="block mt-5 text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
+              >
+                Firm name for watermark
+              </label>
+              <input
+                id="pj-firm-name-input"
+                type="text"
+                value={firmName}
+                onChange={(e) => setFirmName(e.target.value)}
+                placeholder="e.g. Acme Legal LLP"
+                autoFocus
+                className="mt-1 block w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78]"
+                data-testid="pj-download-firm-input"
+              />
+              <div className="text-[11px] text-[#857E9C] mt-1">
+                Saved locally for next time.
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={closeDownload}
+                  disabled={downloading}
+                  className="rounded-full border border-[#E5E0EE] text-[#4B4567] hover:bg-[#FAF8FD] px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                  data-testid="pj-download-cancel"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadCaseStatus}
+                  disabled={downloading || !firmName.trim()}
+                  className="rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-4 py-2 text-sm font-semibold disabled:bg-[#C9C0DC] disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+                  data-testid="pj-download-confirm"
+                >
+                  {downloading ? <><Loader2 size={12} className="animate-spin" /> Preparing…</> : <><FileDown size={12} /> Download PDF</>}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </AppShell>

@@ -26,6 +26,7 @@ or immediately after the cover:
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from safety_assessment_pdf import _safe
@@ -36,6 +37,101 @@ AMBER_BG = (255, 246, 234)
 AMBER_BORDER = (241, 217, 183)
 AMBER_TEXT = (90, 60, 16)
 AMBER_ACCENT = (138, 70, 16)
+
+# ---------------------------------------------------------------------------
+# Filed-PDF watermark — subtle bottom-of-page footer stamped on every page
+# ---------------------------------------------------------------------------
+# Used when a professional downloads a court-facing PDF from the /mine
+# console. Marks each page with the caller's firm name + download
+# timestamp so a downstream recipient (co-counsel, judge, opposing
+# party) can verify which copy they were handed. Rendered in a very
+# muted grey so it never fights with the primary content, and always
+# includes the neutral "Downloaded by" prefix so it's clearly
+# provenance metadata — NOT a court seal or party endorsement.
+
+
+_WATERMARK_GREY = (140, 140, 155)
+
+
+def _iso_now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+
+def apply_professional_watermark(
+    pdf,
+    firm_name: Optional[str],
+    downloaded_at_iso: Optional[str] = None,
+) -> None:
+    """
+    Stamp a small provenance footer on every rendered page of `pdf`.
+    Call AFTER the builder has finished adding all pages but BEFORE
+    `pdf.output(...)` is invoked — the function walks `pages_count`
+    and writes into each page's canvas.
+
+    Silently no-ops if:
+      * `firm_name` is falsy (empty / None) — nothing to stamp.
+      * `pdf` doesn't expose fpdf2's page navigation API.
+
+    Never raises: watermarking is a nice-to-have, never a blocker
+    for the download itself.
+    """
+    if not firm_name:
+        return
+    firm = str(firm_name).strip()
+    if not firm:
+        return
+    if not (hasattr(pdf, "set_font") and hasattr(pdf, "text")):
+        return
+    pages_count = getattr(pdf, "pages_count", None)
+    if not pages_count:
+        return
+
+    stamp_text = _safe(
+        f"Downloaded by {firm} on {downloaded_at_iso or _iso_now()} · SA CoParents"
+    )
+
+    original_page = getattr(pdf, "page", None)
+    try:
+        page_w = getattr(pdf, "w", 210) or 210
+        page_h = getattr(pdf, "h", 297) or 297
+        # Save current font/colour state so restoring later doesn't
+        # break the caller's context (we're being called AFTER build
+        # completes, so this is defensive rather than strictly needed).
+        prev_font_family = getattr(pdf, "font_family", "helvetica")
+        prev_font_style = getattr(pdf, "font_style", "")
+        prev_font_size = getattr(pdf, "font_size_pt", 10) or 10
+
+        for i in range(1, pages_count + 1):
+            try:
+                pdf.page = i  # jump into page i's canvas
+                pdf.set_font("Helvetica", "I", 7.5)
+                pdf.set_text_color(*_WATERMARK_GREY)
+                # Bottom-right anchor — 8mm from right, 6mm from bottom.
+                # Falls under any content that already exists; fpdf2's
+                # text() overlays.
+                pdf.text(x=page_w - 8, y=page_h - 6, txt=stamp_text)
+            except Exception:  # noqa: BLE001
+                # A specific page's canvas can't be replayed (mixed
+                # engine / fpdf legacy compat) — skip that page rather
+                # than fail the whole watermark.
+                continue
+
+        # Restore state
+        try:
+            pdf.set_text_color(0, 0, 0)
+            if prev_font_family:
+                pdf.set_font(prev_font_family, prev_font_style, prev_font_size)
+        except Exception:  # noqa: BLE001
+            pass
+    finally:
+        # Return `page` to whatever the caller had. Setting page beyond
+        # the last one triggers fpdf2 to create a fresh page, which we
+        # DO NOT want after watermarking.
+        if original_page is not None:
+            try:
+                pdf.page = original_page
+            except Exception:  # noqa: BLE001
+                pass
 
 
 def _bullets(author_name: Optional[str], both_parents: bool) -> list[str]:

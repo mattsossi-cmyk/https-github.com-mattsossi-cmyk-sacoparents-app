@@ -157,6 +157,13 @@ export default function ForProfessionals() {
               <Sparkles size={14} /> Create a Joint Alignment case
             </Link>
             <Link
+              to="/professional/joint-alignment/mine"
+              className="inline-flex items-center gap-2 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-5 py-2.5 text-sm font-semibold transition-colors"
+              data-testid="for-pros-manage-cases-cta"
+            >
+              Manage my cases
+            </Link>
+            <Link
               to="/samples"
               className="inline-flex items-center gap-2 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-5 py-2.5 text-sm font-semibold transition-colors"
               data-testid="for-pros-primary-cta"

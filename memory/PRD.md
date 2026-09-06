@@ -27,6 +27,76 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-07 — Case Reminder Emails + Filed-PDF Watermark
+- **Case reminder emails (5-day nudge)** — a new hourly sweep loop
+  `joint_alignment_invite_nudge` in
+  `backend/joint_alignment_invite_nudge.py` matching the existing
+  `compare_invite_nudge` pattern. Rules:
+    - Only touches cases with `origin=in_app_professional` (server-
+      to-server cases from the sibling site handle their own
+      reminders on that side — no double-nudging).
+    - Fires for parents whose `accepted_at` is null AND the case
+      was minted ≥ 5 days ago AND the invitation token hasn't
+      expired yet.
+    - Dedupe row per (case_id, parent_email) with a 60-day TTL
+      (functionally "one reminder ever" — case TTL is 60 days).
+    - Skips demo-looking emails (`@demo.local`, `@guest.local`).
+    - New `email_service.send_joint_alignment_invitation_reminder`
+      uses a softer tone than the initial invite ("gentle reminder",
+      "no need to reply, click when you're ready").
+    - Gated on `JOINT_ALIGN_INVITE_NUDGE_ENABLED=1` — idle no-op
+      when unset. Registered from `server.py` alongside the
+      existing four sweep loops.
+    - Coverage: `tests/test_iter151_joint_alignment_invite_nudge.py`
+      — 6 tests (dispatches at 5+ days, skips fresh, skips
+      accepted, skips expired tokens, only in-app cases, dedupe
+      prevents repeats). All green.
+- **Filed-PDF watermark** — new `apply_professional_watermark(pdf,
+  firm_name)` helper in `court_report_disclaimer.py` walks every
+  rendered page via `pages_count` + `pdf.page` navigation and
+  stamps a muted grey bottom-right footer:
+  "Downloaded by \<firm\> on \<UTC timestamp\> · SA CoParents" —
+  provenance, not a court seal.
+- **Case-status PDF download from `/mine` console** — new endpoint
+  `GET /api/professional/joint-alignment/cases/{id}/status-report.pdf?firm=X`
+  (JWT + owner-only). New `case_status_pdf.py` builder produces a
+  small PDF containing: title block, case meta (assessment lane,
+  status, dates, professional-of-record), per-parent status
+  labels (no verbatim parent answers surfaced), the court-report
+  disclaimer, and the watermark on every page.
+  - Watermark falls back to the caller's account name if `firm`
+    query param omitted — never leaves the PDF unstamped.
+  - Filename: `SA-XXXXXX-status-report.pdf`.
+- **`/mine` UI additions** — every non-cancelled case row now has a
+  purple "Download PDF" button beside the red "Revoke" button.
+  Clicking opens a modal (`pj-download-modal`) with a firm-name
+  input (saved to LS under `sacoparents.pj.mine.firm_name.v1` so
+  a mediator only types it once). Confirm downloads the
+  watermarked PDF via a blob-URL + toast.
+- **`/for-professionals` hero** gained a secondary outlined CTA
+  "Manage my cases" (`for-pros-manage-cases-cta`) linking to the
+  new console alongside the primary "Create a Joint Alignment
+  case".
+- **Coverage**: iter150 grew from 9 → 13 tests (added
+  status-report-watermarked-and-valid, fallback-to-account-name,
+  owner-only-404, auth-required). All 19 (iter150 + iter151)
+  tests green together.
+- **Files touched**:
+  - `backend/joint_alignment_invite_nudge.py` (new)
+  - `backend/case_status_pdf.py` (new)
+  - `backend/court_report_disclaimer.py` (adds
+    `apply_professional_watermark`)
+  - `backend/email_service.py` (adds
+    `send_joint_alignment_invitation_reminder`)
+  - `backend/joint_alignment_routes.py` (adds status-report
+    download endpoint)
+  - `backend/server.py` (registers the new sweep loop)
+  - `frontend/src/pages/ProfessionalJointAlignmentMine.jsx`
+    (Download PDF button + firm-name modal + LS persistence)
+  - `frontend/src/pages/ForProfessionals.jsx` (Manage-my-cases CTA)
+  - `backend/tests/test_iter150_in_app_professional_cases.py` (+4 tests)
+  - `backend/tests/test_iter151_joint_alignment_invite_nudge.py` (new, 6 tests)
+
 ### 2026-03-07 — Court-Facing Disclaimer Sweep + Auto-Invite Emails + Cases-I-Created Full Page
 - **Court-report disclaimer sweep** — every remaining court-facing
   artefact now carries the six-caveat "not a custody evaluation"

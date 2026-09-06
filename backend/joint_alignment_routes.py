@@ -69,7 +69,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, Path
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Response
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field
 
@@ -1132,6 +1132,51 @@ async def mark_assessment_completed(
 
 class CancelCaseRequest(BaseModel):
     reason: Optional[str] = Field(default=None, max_length=280)
+
+
+@router.get("/professional/joint-alignment/cases/{case_id}/status-report.pdf")
+async def professional_case_status_pdf(
+    case_id: str = Path(..., min_length=1, max_length=20),
+    firm: Optional[str] = None,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    JWT-authenticated, owner-only PDF download from the /mine
+    console. Returns a small case-status PDF watermarked with the
+    professional's firm name (query param `?firm=...`) and the
+    UTC download timestamp on every page — so a downstream
+    recipient can trace which copy they received.
+
+    Falls back to the caller's account name if `firm` is omitted.
+    """
+    canonical = _normalise_case_id(case_id) or case_id
+    case = await db[_CASES_COLL].find_one({
+        "case_id": canonical,
+        "$or": [
+            {"professional_created_by": current.user_id},
+            {"professional.id": current.user_id, "origin": "in_app_professional"},
+        ],
+    })
+    if not case:
+        raise HTTPException(
+            status_code=404,
+            detail="Case not found, or not owned by this account.",
+        )
+
+    watermark = (firm or current.name or current.email or "").strip() or None
+
+    from case_status_pdf import build_case_status_pdf
+    pdf_bytes = build_case_status_pdf(case, watermark_firm_name=watermark)
+
+    filename = f"{canonical}-status-report.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
 
 
 @router.post("/professional/joint-alignment/cases/{case_id}/cancel")
