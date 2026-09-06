@@ -452,3 +452,58 @@ def test_analytics_computes_time_deltas_when_parents_accept_and_complete(client,
     # with other cases from prior tests. Just assert non-None + positive.
     assert body["avg_hours_to_both_complete"] is not None
     assert body["avg_hours_to_both_complete"] > 0
+
+
+# ---------------- weekly-digest preference endpoints ---------------- #
+
+def test_digest_pref_default_is_opted_in(client):
+    _email, token, _name = _register(client)
+    r = client.get(
+        "/api/professional/joint-alignment/digest-pref",
+        headers=_headers(token),
+    )
+    assert r.status_code == 200
+    body = r.json()
+    # Fresh account with no pref row → default True.
+    assert body["opted_in"] is True
+    assert body["updated_at"] is None
+
+
+def test_digest_pref_opt_out_and_back_in(client):
+    _email, token, _name = _register(client)
+
+    # Opt out
+    r_out = client.post(
+        "/api/professional/joint-alignment/digest-pref",
+        json={"opted_in": False},
+        headers=_headers(token),
+    )
+    assert r_out.status_code == 200
+    assert r_out.json()["opted_in"] is False
+    assert r_out.json()["updated_at"] is not None
+
+    # Verify GET reads back the opt-out
+    r_get = client.get(
+        "/api/professional/joint-alignment/digest-pref",
+        headers=_headers(token),
+    )
+    assert r_get.json()["opted_in"] is False
+
+    # Opt back in — idempotent upsert
+    r_in = client.post(
+        "/api/professional/joint-alignment/digest-pref",
+        json={"opted_in": True},
+        headers=_headers(token),
+    )
+    assert r_in.status_code == 200
+    assert r_in.json()["opted_in"] is True
+
+
+def test_digest_pref_requires_auth(client):
+    r = client.get("/api/professional/joint-alignment/digest-pref")
+    assert r.status_code in (401, 403)
+    r2 = client.post(
+        "/api/professional/joint-alignment/digest-pref",
+        json={"opted_in": False},
+    )
+    assert r2.status_code in (401, 403)

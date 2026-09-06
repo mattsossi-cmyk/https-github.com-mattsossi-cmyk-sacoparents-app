@@ -27,6 +27,54 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-07 — Weekly-Digest Opt-Out Toggle on `/mine`
+- **Two new JWT-authenticated endpoints** in `joint_alignment_routes.py`:
+    - `GET /api/professional/joint-alignment/digest-pref` —
+      returns `{opted_in: bool, updated_at: iso|null}`. Absent
+      row defaults to `opted_in=True` matching the "Reply STOP
+      to opt out" copy on the email.
+    - `POST /api/professional/joint-alignment/digest-pref` —
+      body `{opted_in: bool}`. Idempotent upsert into a new
+      `weekly_case_analytics_prefs` collection.
+- **Sweep loop honours opt-out** — `_dispatch_one` now checks
+  `_is_opted_in(db, user_id)` before every send and short-circuits
+  with `reason="opted_out"` when the flag is False. Default (no
+  row) still opts in so the toggle is opt-out, not opt-in.
+- **`WeeklyDigestToggle.jsx`** — new component in
+  `frontend/src/components/professional/`. Reads the pref on
+  mount, renders a green "Weekly digest: On" (Mail icon) or
+  neutral "Weekly digest: Off" (MailX icon) pill. One-tap
+  toggle with optimistic UI + rollback on failure. Shows a
+  friendly toast on both directions and a skeleton placeholder
+  while the pref loads so the header layout doesn't jump.
+- **`/mine` header** — toggle sits in the top-right actions row
+  beside "Refresh" and "New case", so a mediator seeing the
+  Monday email in their inbox and thinking "yeah no thanks" can
+  disable it before their coffee cools.
+- **Coverage grew iter150 from 18 → 21** (default GET,
+  opt-out+opt-back-in round trip, auth-required) and iter152
+  from 8 → 10 (sweep skips opted-out, sweep sends when
+  explicitly opted-in). Full 31 tests green together across
+  iter150 + iter152; 46-test cross-file suite still clean.
+- **Live E2E verified**: initial pill = "On", toggle → "Off",
+  reload → still "Off" (persisted), toggle again → "On" with
+  toast confirmation.
+- **Files touched**:
+  - `backend/joint_alignment_routes.py` (adds
+    `GET/POST /digest-pref` endpoints + `DigestPrefRequest`
+    model)
+  - `backend/weekly_case_analytics_email.py` (adds
+    `_PREFS_COLLECTION` constant + `_is_opted_in` helper +
+    the short-circuit in `_dispatch_one`)
+  - `frontend/src/components/professional/WeeklyDigestToggle.jsx`
+    (new)
+  - `frontend/src/pages/ProfessionalJointAlignmentMine.jsx`
+    (mounts the toggle in the header)
+  - `backend/tests/test_iter150_in_app_professional_cases.py`
+    (+3 tests)
+  - `backend/tests/test_iter152_weekly_case_analytics.py`
+    (+2 tests)
+
 ### 2026-03-07 — Weekly Analytics Email (Monday snapshot for mediators)
 - **`weekly_case_analytics_email` sweep module** — new
   `backend/weekly_case_analytics_email.py` mirroring the existing

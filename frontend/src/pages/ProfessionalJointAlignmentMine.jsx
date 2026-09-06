@@ -31,6 +31,7 @@ import {
 
 import AppShell from "../components/AppShell";
 import CaseAnalyticsCard from "../components/professional/CaseAnalyticsCard";
+import WeeklyDigestToggle from "../components/professional/WeeklyDigestToggle";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -197,7 +198,8 @@ export default function ProfessionalJointAlignmentMine() {
               no longer active.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <WeeklyDigestToggle />
             <button
               type="button"
               onClick={load}

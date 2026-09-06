@@ -220,3 +220,53 @@ def test_new_this_week_delta_only_counts_last_7_days(db):
         finally:
             await _cleanup_user(db, user_id)
     asyncio.get_event_loop().run_until_complete(run())
+
+
+# ---------------- opt-out preference honoured by the sweep ---------------- #
+
+def test_sweep_skips_opted_out_professional(db):
+    async def run():
+        user_id = f"prof-{uuid.uuid4().hex[:8]}"
+        email = f"pro_{uuid.uuid4().hex[:6]}@example.com"
+        await db[_USERS_COLLECTION].insert_one(_seed_user(user_id, email, "Pat"))
+        await db[_CASES_COLLECTION].insert_one(
+            _seed_case(user_id, email, "Pat", minted_at=_now() - timedelta(days=2))
+        )
+        # Explicit opt-out
+        from weekly_case_analytics_email import _PREFS_COLLECTION
+        await db[_PREFS_COLLECTION].insert_one({
+            "user_id": user_id, "opted_in": False, "updated_at": _now(),
+        })
+        try:
+            r = await send_weekly_case_analytics(db, dry_run=True, force_window=True)
+            ours = [x for x in r["results"] if x["user_id"] == user_id]
+            assert len(ours) == 1
+            assert ours[0]["sent"] is False
+            assert ours[0]["reason"] == "opted_out"
+        finally:
+            await _cleanup_user(db, user_id)
+            await db[_PREFS_COLLECTION].delete_many({"user_id": user_id})
+    asyncio.get_event_loop().run_until_complete(run())
+
+
+def test_sweep_sends_when_explicitly_opted_in(db):
+    async def run():
+        user_id = f"prof-{uuid.uuid4().hex[:8]}"
+        email = f"pro_{uuid.uuid4().hex[:6]}@example.com"
+        await db[_USERS_COLLECTION].insert_one(_seed_user(user_id, email, "Pat"))
+        await db[_CASES_COLLECTION].insert_one(
+            _seed_case(user_id, email, "Pat", minted_at=_now() - timedelta(days=2))
+        )
+        from weekly_case_analytics_email import _PREFS_COLLECTION
+        await db[_PREFS_COLLECTION].insert_one({
+            "user_id": user_id, "opted_in": True, "updated_at": _now(),
+        })
+        try:
+            r = await send_weekly_case_analytics(db, dry_run=True, force_window=True)
+            ours = [x for x in r["results"] if x["user_id"] == user_id]
+            assert len(ours) == 1
+            assert ours[0]["sent"] is True
+        finally:
+            await _cleanup_user(db, user_id)
+            await db[_PREFS_COLLECTION].delete_many({"user_id": user_id})
+    asyncio.get_event_loop().run_until_complete(run())

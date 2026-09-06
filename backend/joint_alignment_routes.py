@@ -597,6 +597,60 @@ async def professional_create_case(
     )
 
 
+@router.get("/professional/joint-alignment/digest-pref")
+async def get_digest_pref(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Read the caller's Monday-digest preference. Default is
+    `opted_in=True` — every mediator is opted in the moment they
+    mint their first case, matching the copy on the email itself
+    ("Reply STOP to opt out"). A UI toggle simply flips this row.
+    """
+    row = await db["weekly_case_analytics_prefs"].find_one(
+        {"user_id": current.user_id},
+        {"_id": 0, "opted_in": 1, "updated_at": 1},
+    ) or {}
+    return {
+        "opted_in": bool(row.get("opted_in", True)),
+        "updated_at": _iso(row.get("updated_at")),
+    }
+
+
+class DigestPrefRequest(BaseModel):
+    opted_in: bool
+
+
+@router.post("/professional/joint-alignment/digest-pref")
+async def set_digest_pref(
+    body: DigestPrefRequest,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Upsert the caller's Monday-digest preference. Idempotent:
+    posting the same value twice is a no-op. Also mirrors the
+    change into the `weekly_case_analytics_prefs` collection so
+    the sweep loop can honour it without a routes-layer import.
+    """
+    now = _now()
+    await db["weekly_case_analytics_prefs"].update_one(
+        {"user_id": current.user_id},
+        {"$set": {
+            "user_id": current.user_id,
+            "opted_in": bool(body.opted_in),
+            "updated_at": now,
+        }},
+        upsert=True,
+    )
+    logger.info(
+        "weekly-digest pref updated user=%s opted_in=%s",
+        current.user_id, body.opted_in,
+    )
+    return {"opted_in": bool(body.opted_in), "updated_at": _iso(now)}
+
+
 @router.get("/professional/joint-alignment/analytics")
 async def professional_case_analytics(
     current: UserPublic = Depends(get_current_user),

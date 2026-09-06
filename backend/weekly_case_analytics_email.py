@@ -28,6 +28,7 @@ log = logging.getLogger(__name__)
 
 _CASES_COLLECTION = "joint_alignment_cases"
 _SENDS_COLLECTION = "weekly_case_analytics_sends"
+_PREFS_COLLECTION = "weekly_case_analytics_prefs"
 _USERS_COLLECTION = "users"
 _ORIGIN_IN_APP = "in_app_professional"
 
@@ -240,6 +241,20 @@ async def _record_send(
     })
 
 
+async def _is_opted_in(db: AsyncIOMotorDatabase, user_id: str) -> bool:
+    """Digest opt-out preference is a soft toggle in the
+    `weekly_case_analytics_prefs` collection. Default is opted-in
+    (row absent) — matches the email footer copy ("Reply STOP to
+    opt out"). An explicit `opted_in=False` row short-circuits
+    the sweep for that mediator."""
+    row = await db[_PREFS_COLLECTION].find_one(
+        {"user_id": user_id}, {"_id": 0, "opted_in": 1},
+    )
+    if not row:
+        return True
+    return bool(row.get("opted_in", True))
+
+
 async def _dispatch_one(
     db: AsyncIOMotorDatabase,
     *,
@@ -249,6 +264,9 @@ async def _dispatch_one(
     dry_run: bool,
 ) -> Dict[str, Any]:
     base = {"user_id": user_id, "week_start": week_start, "sent": False}
+
+    if not await _is_opted_in(db, user_id):
+        return {**base, "reason": "opted_out"}
 
     if await _already_sent_this_week(db, user_id=user_id, week_start=week_start):
         return {**base, "reason": "already_sent_this_week"}
