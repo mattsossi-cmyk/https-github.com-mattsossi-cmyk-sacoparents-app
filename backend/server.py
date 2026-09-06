@@ -11,6 +11,7 @@ import os
 import uuid
 import logging
 from datetime import datetime, timezone, timedelta
+from dataclasses import dataclass
 
 import bcrypt
 import jwt
@@ -733,23 +734,36 @@ def joint_public(doc, user, invitation=None, pending=None):
     return out
 
 
-async def send_invite_email(to_email, invitee_name, inviter_name, child_name, subject_label, token, code, via_professional=False):
+@dataclass
+class InviteSpec:
+    report_id: str
+    role: str
+    invitee_name: str
+    invitee_email: str
+    inviter_name: str
+    child_name: str
+    subject_label: str
+    code: str = ""
+    via_professional: bool = False
+
+
+async def send_invite_email(spec: InviteSpec, token: str):
     link = f"{APP_ASSESSMENT_URL}/assessment?invite={token}" if APP_ASSESSMENT_URL else f"{app_url()}/join/{token}"
     subject = "Invitation to Complete Your SA CoParents Assessment"
     closing = (
         "After both parents have completed the requested assessment, SA CoParents Align will prepare "
         "the Joint Alignment Report for the authorized professional."
-        if via_professional else
+        if spec.via_professional else
         "After both parents have completed the requested assessment, SA CoParents Align will prepare "
         "the Joint Alignment Report."
     )
     html = (
         '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-        f"<p>Hi {escape(invitee_name or 'there')},</p>"
+        f"<p>Hi {escape(spec.invitee_name or 'there')},</p>"
         "<p>You have been invited to participate in an SA CoParents Joint Alignment Report regarding "
-        f"<strong>{escape(child_name)}</strong> ({escape(subject_label)}), at the request of {escape(inviter_name)}.</p>"
+        f"<strong>{escape(spec.child_name)}</strong> ({escape(spec.subject_label)}), at the request of {escape(spec.inviter_name)}.</p>"
         "<p>Your private participation code is:</p>"
-        f'<p><strong style="font-size:18px;letter-spacing:2px">{escape(code)}</strong></p>'
+        f'<p><strong style="font-size:18px;letter-spacing:2px">{escape(spec.code)}</strong></p>'
         "<p>Please use the link below to complete your individual SA CoParents assessment.</p>"
         "<p>Your individual responses are completed privately. Your co-parent will complete their own "
         "assessment separately. The Joint Alignment process is designed to identify areas of shared "
@@ -761,20 +775,21 @@ async def send_invite_email(to_email, invitee_name, inviter_name, child_name, su
         f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. If the button does not '
         "work, sign in and enter your participation code instead.</p></td></tr></table>"
     )
-    await send_email(to=to_email, subject=subject, html=html)
+    await send_email(to=spec.invitee_email, subject=subject, html=html)
 
 
-async def create_invitation(report_id, role, invitee_name, invitee_email, inviter_name, child_name, subject_label, code=None, via_professional=False):
+async def create_invitation(spec: InviteSpec):
     iid = str(uuid.uuid4())
     token = secrets.token_urlsafe(24)
-    code = code or new_code()
+    spec.invitee_email = spec.invitee_email.lower()
+    code = spec.code or new_code()
     doc = {
         "id": iid,
-        "report_id": report_id,
-        "role": role,
-        "invitee_name": invitee_name.strip(),
-        "invitee_email": invitee_email.lower(),
-        "inviter_name": inviter_name,
+        "report_id": spec.report_id,
+        "role": spec.role,
+        "invitee_name": spec.invitee_name.strip(),
+        "invitee_email": spec.invitee_email,
+        "inviter_name": spec.inviter_name,
         "token": token,
         "code": code,
         "status": "pending",
@@ -782,9 +797,9 @@ async def create_invitation(report_id, role, invitee_name, invitee_email, invite
     }
     await db.invitations.insert_one(doc)
     try:
-        await send_invite_email(invitee_email.lower(), invitee_name, inviter_name, child_name, subject_label, token, code, via_professional=via_professional)
+        await send_invite_email(spec, token)
     except Exception:
-        logger.warning(f"Invitation email not sent to {invitee_email}")
+        logger.warning(f"Invitation email not sent to {spec.invitee_email}")
     return doc
 
 
@@ -851,7 +866,7 @@ async def create_joint_report(body: JointReportIn, user=Depends(get_current_user
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.joint_reports.insert_one(doc)
-    inv = await create_invitation(rid, "b", body.co_parent_name, body.co_parent_email, user.get("name", "Your co-parent"), doc["child_name"], label, code=case_code)
+    inv = await create_invitation(InviteSpec(report_id=rid, role="b", invitee_name=body.co_parent_name, invitee_email=body.co_parent_email, inviter_name=user.get("name", "Your co-parent"), child_name=doc["child_name"], subject_label=label, code=case_code))
     if mediator:
         try:
             await send_email(
@@ -904,8 +919,8 @@ async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_curre
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.joint_reports.insert_one(doc)
-    inv_a = await create_invitation(rid, "a", body.parent_a_name, body.parent_a_email, user.get("name", "A professional"), doc["child_name"], label, code=case_code, via_professional=True)
-    inv_b = await create_invitation(rid, "b", body.parent_b_name, body.parent_b_email, user.get("name", "A professional"), doc["child_name"], label, code=case_code, via_professional=True)
+    inv_a = await create_invitation(InviteSpec(report_id=rid, role="a", invitee_name=body.parent_a_name, invitee_email=body.parent_a_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label=label, code=case_code, via_professional=True))
+    inv_b = await create_invitation(InviteSpec(report_id=rid, role="b", invitee_name=body.parent_b_name, invitee_email=body.parent_b_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label=label, code=case_code, via_professional=True))
     return {**joint_public(doc, user), "invitations": [
         {"role": i["role"], "code": i["code"], "link": f"{app_url()}/join/{i['token']}", "invitee_email": i["invitee_email"], "invitee_name": i["invitee_name"], "status": "pending"}
         for i in (inv_a, inv_b)
@@ -1133,7 +1148,11 @@ async def resend_invitation(iid: str, user=Depends(get_current_user)):
     if inv["status"] != "pending":
         raise HTTPException(status_code=400, detail="This invitation is no longer pending")
     try:
-        await send_invite_email(inv["invitee_email"], inv["invitee_name"], inv["inviter_name"], report["child_name"], report["subject_label"], inv["token"], inv["code"])
+        await send_invite_email(InviteSpec(
+            report_id=inv["report_id"], role=inv["role"], invitee_name=inv["invitee_name"],
+            invitee_email=inv["invitee_email"], inviter_name=inv["inviter_name"],
+            child_name=report["child_name"], subject_label=report["subject_label"], code=inv["code"],
+        ), inv["token"])
     except Exception:
         logger.warning(f"Invitation resend email not sent to {inv['invitee_email']}")
     return {"ok": True}
@@ -1454,8 +1473,8 @@ async def create_agreement(body: AgreementIn, user=Depends(get_current_user)):
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.joint_reports.insert_one(doc)
-    inv_a = await create_invitation(rid, "a", body.parent_a_name, pa_email, user.get("name", "A professional"), doc["child_name"], "Co-Parenting Agreement", code=case_code, via_professional=True)
-    inv_b = await create_invitation(rid, "b", body.parent_b_name, pb_email, user.get("name", "A professional"), doc["child_name"], "Co-Parenting Agreement", code=case_code, via_professional=True)
+    inv_a = await create_invitation(InviteSpec(report_id=rid, role="a", invitee_name=body.parent_a_name, invitee_email=pa_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label="Co-Parenting Agreement", code=case_code, via_professional=True))
+    inv_b = await create_invitation(InviteSpec(report_id=rid, role="b", invitee_name=body.parent_b_name, invitee_email=pb_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label="Co-Parenting Agreement", code=case_code, via_professional=True))
     return {**joint_public(doc, user), "invitations": [
         {"id": inv_a["id"], "role": "a", "code": inv_a["code"], "link": f"{app_url()}/join/{inv_a['token']}", "invitee_email": inv_a["invitee_email"], "email": inv_a["invitee_email"], "status": "pending"},
         {"id": inv_b["id"], "role": "b", "code": inv_b["code"], "link": f"{app_url()}/join/{inv_b['token']}", "invitee_email": inv_b["invitee_email"], "email": inv_b["invitee_email"], "status": "pending"},
@@ -1579,8 +1598,8 @@ async def prepare_pro_request(req_id: str, body: PrepareIn | None = None, user=D
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.joint_reports.insert_one(doc)
-    await create_invitation(rid, "a", req["parent_name"], pa_email, user.get("name", "A professional"), req["child_name"], doc["subject_label"], code=case_code, via_professional=True)
-    await create_invitation(rid, "b", pb_name, pb_email, user.get("name", "A professional"), req["child_name"], doc["subject_label"], code=case_code, via_professional=True)
+    await create_invitation(InviteSpec(report_id=rid, role="a", invitee_name=req["parent_name"], invitee_email=pa_email, inviter_name=user.get("name", "A professional"), child_name=req["child_name"], subject_label=doc["subject_label"], code=case_code, via_professional=True))
+    await create_invitation(InviteSpec(report_id=rid, role="b", invitee_name=pb_name, invitee_email=pb_email, inviter_name=user.get("name", "A professional"), child_name=req["child_name"], subject_label=doc["subject_label"], code=case_code, via_professional=True))
     await db.professional_requests.update_one(
         {"id": req_id},
         {"$set": {"status": "prepared", "report_id": rid, "prepared_at": datetime.now(timezone.utc).isoformat()}},

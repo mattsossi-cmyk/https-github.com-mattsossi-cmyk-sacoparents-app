@@ -1,17 +1,21 @@
 """Shared helpers for tests: Align is professional-initiated, so parents are
 created through a real invitation (pro creates case -> parent registers with
 the invite token -> parent accepts)."""
+import os
 import uuid
 import requests
+
+# Throwaway password for self-destructing test accounts only — not a real secret.
+TEST_PASSWORD = os.environ.get("E2E_TEST_PASSWORD", "testpass123")
 
 ANSWER_KEYS = ["needs_most", "working_well", "concerns", "improve", "options", "other_parent"]
 
 
-def new_user(api, role="professional", name="T", email=None, password="password123", invite=""):
+def new_user(api, role="professional", name="T", email=None, password=None, invite=""):
     s = requests.Session()
     email = email or f"t_{uuid.uuid4().hex[:8]}@example.com"
     r = s.post(f"{api}/auth/register", json={
-        "name": name, "email": email, "password": password, "role": role, "invite": invite,
+        "name": name, "email": email, "password": password or TEST_PASSWORD, "role": role, "invite": invite,
     })
     assert r.status_code == 200, f"register {role} failed: {r.status_code} {r.text}"
     s.email = email
