@@ -14,9 +14,32 @@ BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.pre
 API = f"{BASE_URL}/api"
 
 
+def _assert_full_report(rep: dict) -> None:
+    assert rep["report_title"] == "Joint Parenting Alignment Report"
+    assert rep["subject_label"] == "School / Education"
+    assert rep["child_name"] == "Sam"
+    assert len(rep["alignment_map"]) == 6
+    assert len(rep["options"]) == 3
+    assert len(rep["next_steps"]) == 6
+    assert rep["philosophy_heading"] == "Alignment Before Agreement"
+    assert len(rep["alignment_statements"]) >= 1
+
+
+def _case_reference_visible_to_creator_only() -> None:
+    pro2 = new_user(API, "professional", "Pro2")
+    r = pro2.post(f"{API}/joint/reports/professional", json={
+        "subject": "education", "child_name": "K2",
+        "parent_a_name": "A", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:8]}@example.com",
+        "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
+        "case_reference": "PRIVATE-1",
+    })
+    rid2 = r.json()["id"]
+    assert pro2.get(f"{API}/joint/reports/{rid2}").json()["case_reference"] == "PRIVATE-1"
+
+
 # ---------------- Config ----------------
 class TestJointConfig:
-    def test_config_has_20_subjects_and_6_questions(self):
+    def test_config_has_20_subjects_and_6_questions(self) -> None:
         r = requests.get(f"{API}/joint/config")
         assert r.status_code == 200
         data = r.json()
@@ -30,7 +53,7 @@ class TestJointConfig:
 
 # ---------------- Professional-only initiation ----------------
 class TestProfessionalInitiationGates:
-    def test_parent_cannot_create_joint_report_403(self):
+    def test_parent_cannot_create_joint_report_403(self) -> None:
         pro, pa, pb, d = new_case(API)
         r = pa.post(f"{API}/joint/reports", json={
             "subject": "education", "child_name": "K",
@@ -39,7 +62,7 @@ class TestProfessionalInitiationGates:
         assert r.status_code == 403
         assert "professional" in r.json()["detail"].lower()
 
-    def test_parent_cannot_create_agreement_403(self):
+    def test_parent_cannot_create_agreement_403(self) -> None:
         pro, pa, pb, d = new_case(API)
         r = pa.post(f"{API}/joint/agreements", json={
             "child_name": "K",
@@ -48,14 +71,14 @@ class TestProfessionalInitiationGates:
         })
         assert r.status_code == 403
 
-    def test_create_requires_auth_401(self):
+    def test_create_requires_auth_401(self) -> None:
         r = requests.post(f"{API}/joint/reports", json={
             "subject": "education", "child_name": "K",
             "co_parent_name": "B", "co_parent_email": "b@example.com",
         })
         assert r.status_code == 401
 
-    def test_professional_endpoint_requires_professional_role_403(self):
+    def test_professional_endpoint_requires_professional_role_403(self) -> None:
         pro, pa, pb, d = new_case(API)
         r = pa.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
@@ -67,7 +90,7 @@ class TestProfessionalInitiationGates:
 
 # ---------------- Create + Invite ----------------
 class TestProCreateAndInvite:
-    def test_pro_create_returns_case_code_and_shared_code(self):
+    def test_pro_create_returns_case_code_and_shared_code(self) -> None:
         pro, pa, pb, d = new_case(API, subject="education", child="TEST_Kid", case_reference="REF-1")
         assert re.fullmatch(r"SA-EDU-\d{6}", d["case_code"])
         invs = d["invitations"]
@@ -77,9 +100,9 @@ class TestProCreateAndInvite:
         assert d["status"] == "pending_invite"
         assert d["professional_name"] == "Pro"
         assert d["case_reference"] == "REF-1"
-        assert d["is_creator"] == True
+        assert d["is_creator"]
 
-    def test_create_unknown_subject_400(self):
+    def test_create_unknown_subject_400(self) -> None:
         pro = new_user(API, "professional", "Pro")
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "nope", "child_name": "K",
@@ -88,7 +111,7 @@ class TestProCreateAndInvite:
         })
         assert r.status_code == 400
 
-    def test_create_custom_subject(self):
+    def test_create_custom_subject(self) -> None:
         pro = new_user(API, "professional", "Pro")
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "custom", "custom_subject": "Summer travel", "child_name": "K",
@@ -101,7 +124,7 @@ class TestProCreateAndInvite:
 
 # ---------------- Accept via code/token ----------------
 class TestAccept:
-    def test_shared_case_code_email_disambiguation(self):
+    def test_shared_case_code_email_disambiguation(self) -> None:
         pro = new_user(API, "professional", "Pro")
         ea = f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
         eb = f"t_pb_{uuid.uuid4().hex[:8]}@example.com"
@@ -124,12 +147,12 @@ class TestAccept:
         r = stranger.post(f"{API}/joint/invitations/accept", json={"code": code})
         assert r.status_code == 403
 
-    def test_accept_invalid_code_404(self):
+    def test_accept_invalid_code_404(self) -> None:
         u = new_user(API, "professional", "U")
         r = u.post(f"{API}/joint/invitations/accept", json={"code": "SA-XXX-000000"})
         assert r.status_code == 404
 
-    def test_lookup_public_and_accept_by_token(self):
+    def test_lookup_public_and_accept_by_token(self) -> None:
         pro = new_user(API, "professional", "Pro")
         ea = f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
         r = pro.post(f"{API}/joint/reports/professional", json={
@@ -149,11 +172,11 @@ class TestAccept:
         r = pa.post(f"{API}/joint/invitations/accept", json={"code": token})
         assert r.status_code == 200 and r.json()["ok"]
 
-    def test_lookup_invalid_token_404(self):
+    def test_lookup_invalid_token_404(self) -> None:
         r = requests.get(f"{API}/joint/invitations/lookup/nonexistent_token_xyz")
         assert r.status_code == 404
 
-    def test_parent_register_with_wrong_invite_403(self):
+    def test_parent_register_with_wrong_invite_403(self) -> None:
         pro = new_user(API, "professional", "Pro")
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
@@ -172,7 +195,7 @@ class TestAccept:
 
 # ---------------- Full flow: privacy + report ----------------
 class TestFullFlow:
-    def test_full_flow_privacy_and_report(self):
+    def test_full_flow_privacy_and_report(self) -> None:
         pro, pa, pb, d = new_case(API, subject="education", child="Sam")
         rid = d["id"]
 
@@ -193,30 +216,14 @@ class TestFullFlow:
         assert r["status"] == "ready"
 
         # Report available to pro and both parents
-        rep = pro.get(f"{API}/joint/reports/{rid}/report").json()
-        assert rep["report_title"] == "Joint Parenting Alignment Report"
-        assert rep["subject_label"] == "School / Education"
-        assert rep["child_name"] == "Sam"
-        assert len(rep["alignment_map"]) == 6
-        assert len(rep["options"]) == 3
-        assert len(rep["next_steps"]) == 6
-        assert rep["philosophy_heading"] == "Alignment Before Agreement"
-        assert len(rep["alignment_statements"]) >= 1
+        _assert_full_report(pro.get(f"{API}/joint/reports/{rid}/report").json())
         assert pb.get(f"{API}/joint/reports/{rid}/report").status_code == 200
 
         # B sees own answers only
         assert pb.get(f"{API}/joint/reports/{rid}").json()["my_answers"]["needs_most"].startswith("Our child needs beta")
 
         # Case reference visible to pro creator, hidden from parents
-        pro2 = new_user(API, "professional", "Pro2")
-        r = pro2.post(f"{API}/joint/reports/professional", json={
-            "subject": "education", "child_name": "K2",
-            "parent_a_name": "A", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:8]}@example.com",
-            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
-            "case_reference": "PRIVATE-1",
-        })
-        rid2 = r.json()["id"]
-        assert pro2.get(f"{API}/joint/reports/{rid2}").json()["case_reference"] == "PRIVATE-1"
+        _case_reference_visible_to_creator_only()
 
         # Non-participant → 404
         stranger = new_user(API, "professional", "Stranger")
@@ -227,7 +234,7 @@ class TestFullFlow:
         conns = pa.get(f"{API}/joint/connections").json()
         assert any(c.get("other_email") == pb.email for c in conns)
 
-    def test_incomplete_answers_400(self):
+    def test_incomplete_answers_400(self) -> None:
         pro, pa, pb, d = new_case(API)
         rid = d["id"]
         r = pa.put(f"{API}/joint/reports/{rid}/responses", json={"answers": {"needs_most": "just one"}})
@@ -242,7 +249,7 @@ class TestInvitationManagement:
         inv = [i for i in rep["pending_invitations"] if i["role"] == role][0]
         return inv
 
-    def test_resend_ok(self):
+    def test_resend_ok(self) -> None:
         pro = new_user(API, "professional", "Pro")
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
@@ -254,7 +261,7 @@ class TestInvitationManagement:
         r = pro.post(f"{API}/joint/invitations/{inv['id']}/resend")
         assert r.status_code == 200
 
-    def test_resend_non_creator_forbidden(self):
+    def test_resend_non_creator_forbidden(self) -> None:
         pro, pa, pb, d = new_case(API)
         # after acceptance nothing is pending; use a fresh case still pending
         pro2 = new_user(API, "professional", "Pro2")
@@ -268,7 +275,7 @@ class TestInvitationManagement:
         r = other.post(f"{API}/joint/invitations/{inv['id']}/resend")
         assert r.status_code in (403, 404)
 
-    def test_change_subject_before_ready(self):
+    def test_change_subject_before_ready(self) -> None:
         pro = new_user(API, "professional", "Pro")
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
@@ -282,7 +289,7 @@ class TestInvitationManagement:
         assert r.json()["subject_label"] == "Medical Care"
         assert pro.get(f"{API}/joint/reports/{rid}").json()["subject_label"] == "Medical Care"
 
-    def test_change_subject_unknown_400(self):
+    def test_change_subject_unknown_400(self) -> None:
         pro = new_user(API, "professional", "Pro")
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
@@ -293,7 +300,7 @@ class TestInvitationManagement:
         r = pro.patch(f"{API}/joint/invitations/{inv['id']}", json={"subject": "bogus", "custom_subject": ""})
         assert r.status_code == 400
 
-    def test_change_subject_blocked_when_ready(self):
+    def test_change_subject_blocked_when_ready(self) -> None:
         pro = new_user(API, "professional", "Pro")
         ea = f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
         r = pro.post(f"{API}/joint/reports/professional", json={
@@ -315,7 +322,7 @@ class TestInvitationManagement:
         r = pro.patch(f"{API}/joint/invitations/{inv['id']}", json={"subject": "medical", "custom_subject": ""})
         assert r.status_code == 400
 
-    def test_cancel_invalidates_code(self):
+    def test_cancel_invalidates_code(self) -> None:
         pro = new_user(API, "professional", "Pro")
         ea = f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
         r = pro.post(f"{API}/joint/reports/professional", json={
@@ -335,16 +342,16 @@ class TestInvitationManagement:
 
 # ---------------- Sharing with other professionals ----------------
 class TestSharing:
-    def test_share_completed_report_with_professional(self):
+    def test_share_completed_report_with_professional(self) -> None:
         pro, pa, pb, d, detail = completed_case(API)
         rid = d["id"]
         pro2 = new_user(API, "professional", "Reviewer")
         r = pa.post(f"{API}/joint/reports/{rid}/share", json={"email": pro2.email})
-        assert r.status_code == 200 and r.json()["ok"] == True
+        assert r.status_code == 200 and r.json()["ok"]
         assert any(x["id"] == rid for x in pro2.get(f"{API}/joint/reports").json())
         assert pro2.get(f"{API}/joint/reports/{rid}/report").status_code == 200
 
-    def test_share_to_non_professional_email_404(self):
+    def test_share_to_non_professional_email_404(self) -> None:
         pro, pa, pb, d, detail = completed_case(API)
         r = pa.post(f"{API}/joint/reports/{d['id']}/share", json={"email": "no-such-pro@example.com"})
         assert r.status_code == 404

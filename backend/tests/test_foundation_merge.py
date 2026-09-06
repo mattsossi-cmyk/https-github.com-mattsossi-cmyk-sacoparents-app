@@ -47,7 +47,7 @@ def _agreement_with_foundation():
 
 
 class TestFoundationMerge:
-    def test_agreement_report_includes_foundation(self):
+    def test_agreement_report_includes_foundation(self) -> None:
         a, b, rid = _agreement_with_foundation()
         r = a.get(f"{API}/joint/reports/{rid}/report")
         assert r.status_code == 200, r.text
@@ -57,7 +57,7 @@ class TestFoundationMerge:
         assert "predictable handoffs" in fs[0]["content"]
         assert all(x["parent"] for x in fs)
 
-    def test_agreement_pdf_includes_foundation(self):
+    def test_agreement_pdf_includes_foundation(self) -> None:
         a, b, rid = _agreement_with_foundation()
         r = a.get(f"{API}/joint/reports/{rid}/pdf")
         assert r.status_code == 200, r.text
@@ -65,7 +65,7 @@ class TestFoundationMerge:
         assert "Foundation Statements" in text
         assert "predictable handoffs" in text
 
-    def test_agreement_without_foundation_still_works(self):
+    def test_agreement_without_foundation_still_works(self) -> None:
         a, b, rid = _agreement("Plain Kid")
         answers = {k: "shared decisions and calm handoffs every week" for k in AREA_KEYS}
         a.put(f"{API}/joint/reports/{rid}/responses", json={"answers": answers})

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Download, Eye, ShieldAlert } from "lucide-react";
-import { SAMPLE_REPORTS, samplePdfUrl } from "@/lib/samples";
+import { ArrowLeft } from "lucide-react";
+import { SAMPLE_REPORTS } from "@/lib/samples";
+import { SampleCard } from "@/components/SampleCard";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 
@@ -30,27 +31,7 @@ export default function Samples() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="samples-grid">
           {SAMPLE_REPORTS.map((s) => (
-            <div key={s.key} className={`bg-white border rounded-lg p-6 flex flex-col ${s.safety ? "border-red-300" : "border-border"}`} data-testid={`sample-card-${s.key}`}>
-              {s.safety && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700 mb-3" data-testid={`sample-card-safety-badge-${s.key}`}>
-                  <ShieldAlert className="h-3.5 w-3.5" /> Professional-mediated preview
-                </span>
-              )}
-              <h2 className="text-lg font-bold" data-testid={`sample-card-title-${s.key}`}>{s.label}</h2>
-              <p className="text-sm text-muted-foreground mt-2 flex-1">{s.blurb}</p>
-              <div className="flex gap-2 mt-5">
-                <Link to={`/samples/${s.key}`} className="flex-1" data-testid={`sample-view-link-${s.key}`}>
-                  <Button variant="outline" size="sm" className="w-full gap-2" data-testid={`sample-view-btn-${s.key}`}>
-                    <Eye className="h-4 w-4" /> View
-                  </Button>
-                </Link>
-                <Button size="sm" className="flex-1 gap-2" asChild data-testid={`sample-download-btn-${s.key}`}>
-                  <a href={samplePdfUrl(s.key)} download>
-                    <Download className="h-4 w-4" /> PDF
-                  </a>
-                </Button>
-              </div>
-            </div>
+            <SampleCard key={s.key} s={s} />
           ))}
         </div>
 

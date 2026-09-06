@@ -20,28 +20,28 @@ def _reg(prefix="ext"):
 
 
 class TestExternalAssessments:
-    def test_requires_auth(self):
+    def test_requires_auth(self) -> None:
         r = requests.get(f"{API}/external/assessments")
         assert r.status_code in (401, 403)
 
-    def test_fresh_link_status_false(self):
+    def test_fresh_link_status_false(self) -> None:
         s, _ = _reg()
         r = s.get(f"{API}/external/link")
         assert r.status_code == 200, r.text
         assert r.json() == {"linked": False}
 
-    def test_unlinked_assessments_400(self):
+    def test_unlinked_assessments_400(self) -> None:
         s, _ = _reg()
         r = s.get(f"{API}/external/assessments")
         assert r.status_code == 400, r.text
         assert "link" in r.json()["detail"].lower()
 
-    def test_bogus_link_code_400(self):
+    def test_bogus_link_code_400(self) -> None:
         s, _ = _reg()
         r = s.post(f"{API}/external/link", json={"code": "ZZZZZZZZ"})
         assert r.status_code in (400, 502), r.text
 
-    def test_unlink_ok(self):
+    def test_unlink_ok(self) -> None:
         s, _ = _reg()
         r = s.delete(f"{API}/external/link")
         assert r.status_code == 200, r.text

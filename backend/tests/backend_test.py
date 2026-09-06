@@ -55,7 +55,7 @@ def fresh_user_session():
 
 # Auth
 class TestAuth:
-    def test_register_new_user(self):
+    def test_register_new_user(self) -> None:
         s = requests.Session()
         email = f"reg_{uuid.uuid4().hex[:8]}@example.com"
         r = s.post(f"{API}/auth/register", json={
@@ -67,7 +67,7 @@ class TestAuth:
         assert data["role"] == "professional"
         assert "access_token" in s.cookies
 
-    def test_register_parent_without_invite_403(self):
+    def test_register_parent_without_invite_403(self) -> None:
         """Parents can only register through a professional's invitation."""
         s = requests.Session()
         r = s.post(f"{API}/auth/register", json={
@@ -77,7 +77,7 @@ class TestAuth:
         assert r.status_code == 403
         assert "invitation" in r.json()["detail"].lower()
 
-    def test_register_short_password(self):
+    def test_register_short_password(self) -> None:
         s = requests.Session()
         r = s.post(f"{API}/auth/register", json={
             "name": "X", "email": f"short_{uuid.uuid4().hex[:6]}@x.com", "password": "short", "role": "parent"
@@ -89,17 +89,17 @@ class TestAuth:
         assert r.status_code == 200
         assert r.json()["email"] == admin_session.email
 
-    def test_login_invalid(self):
+    def test_login_invalid(self) -> None:
         email = f"wrongpw_{uuid.uuid4().hex[:8]}@example.com"
         requests.post(f"{API}/auth/register", json={"name": "W", "email": email, "password": "password123", "role": "professional"})
         r = requests.post(f"{API}/auth/login", json={"email": email, "password": "wrongpw!"})
         assert r.status_code == 401
 
-    def test_me_unauthenticated(self):
+    def test_me_unauthenticated(self) -> None:
         r = requests.get(f"{API}/auth/me")
         assert r.status_code == 401
 
-    def test_logout(self):
+    def test_logout(self) -> None:
         s = requests.Session()
         email = f"logout_{uuid.uuid4().hex[:8]}@example.com"
         s.post(f"{API}/auth/register", json={"name": "L", "email": email, "password": "password123", "role": "professional"})
@@ -109,7 +109,7 @@ class TestAuth:
 
 # Assessment types
 class TestAssessmentTypes:
-    def test_list_types_returns_8(self):
+    def test_list_types_returns_8(self) -> None:
         r = requests.get(f"{API}/assessment-types")
         assert r.status_code == 200
         types = r.json()
@@ -119,7 +119,7 @@ class TestAssessmentTypes:
         for t in types:
             assert t["topic_count"] == 10
 
-    def test_get_type_educational(self):
+    def test_get_type_educational(self) -> None:
         r = requests.get(f"{API}/assessment-types/educational")
         assert r.status_code == 200
         data = r.json()
@@ -127,18 +127,18 @@ class TestAssessmentTypes:
         assert len(data["topics"]) == 10
         assert len(data["scale"]) == 5
 
-    def test_get_type_ipv_disclaimer(self):
+    def test_get_type_ipv_disclaimer(self) -> None:
         r = requests.get(f"{API}/assessment-types/ipv")
         assert r.status_code == 200
 
-    def test_get_type_unknown(self):
+    def test_get_type_unknown(self) -> None:
         r = requests.get(f"{API}/assessment-types/nope")
         assert r.status_code == 404
 
 
 # Cases + report
 class TestCasesFlow:
-    def test_create_case_requires_auth(self):
+    def test_create_case_requires_auth(self) -> None:
         r = requests.post(f"{API}/cases", json={"type": "general"})
         assert r.status_code == 401
 
@@ -152,7 +152,7 @@ class TestCasesFlow:
         c = r.json()
         assert c["type"] == "educational"
         assert c["child_name"] == "TEST_Kid"
-        assert c["has_a"] == False and c["has_b"] == False
+        assert not c["has_a"] and not c["has_b"]
         cid = c["id"]
 
         r = s.get(f"{API}/cases/{cid}")
@@ -179,7 +179,7 @@ class TestCasesFlow:
             r = s.post(f"{API}/cases/{cid}/demo")
             assert r.status_code == 200, f"demo {tk}: {r.text}"
             assert r.json()["has_a"] and r.json()["has_b"]
-            assert r.json()["is_demo"] == True
+            assert r.json()["is_demo"]
 
             r = s.get(f"{API}/cases/{cid}/report")
             assert r.status_code == 200, f"report {tk}: {r.text}"
@@ -207,8 +207,8 @@ class TestCasesFlow:
             "answers": answers, "primary_concern": "test", "goals": ["Educational stability"]
         })
         assert r.status_code == 200, r.text
-        assert r.json()["has_a"] == True
-        assert r.json()["has_b"] == False
+        assert r.json()["has_a"]
+        assert not r.json()["has_b"]
 
     def test_list_cases(self, fresh_user_session):
         r = fresh_user_session.get(f"{API}/cases")
@@ -225,7 +225,7 @@ class TestCasesFlow:
         r = s.get(f"{API}/cases/{cid}")
         assert r.status_code == 404
 
-    def test_cross_user_access_forbidden(self):
+    def test_cross_user_access_forbidden(self) -> None:
         s1 = requests.Session()
         e1 = f"u1_{uuid.uuid4().hex[:6]}@x.com"
         s1.post(f"{API}/auth/register", json={"name": "U1", "email": e1, "password": "password123", "role": "professional"})

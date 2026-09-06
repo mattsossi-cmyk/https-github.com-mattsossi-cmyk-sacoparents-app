@@ -22,7 +22,7 @@ def _reg(role="parent", prefix="sl"):
 
 
 class TestProfessionalShareLinks:
-    def test_pro_create_returns_two_parent_links(self):
+    def test_pro_create_returns_two_parent_links(self) -> None:
         pro, _ = _reg("professional", "slpro")
         pa = f"TEST_slpa_{uuid.uuid4().hex[:8]}@example.com"
         pb = f"TEST_slpb_{uuid.uuid4().hex[:8]}@example.com"
@@ -45,7 +45,7 @@ class TestProfessionalShareLinks:
         # tokens/links must be unique per parent
         assert by_role["a"]["link"] != by_role["b"]["link"]
 
-    def test_pro_links_work_for_any_subject(self):
+    def test_pro_links_work_for_any_subject(self) -> None:
         pro, _ = _reg("professional", "slpro2")
         for subj in ("medical", "psychological", "co_parenting"):
             r = pro.post(f"{API}/joint/reports/professional", json={
@@ -56,7 +56,7 @@ class TestProfessionalShareLinks:
             assert r.status_code in (200, 201), f"{subj}: {r.text}"
             assert len(r.json().get("invitations", [])) == 2, subj
 
-    def test_parent_create_blocked_403(self):
+    def test_parent_create_blocked_403(self) -> None:
         """Parents never initiate reports — the professional initiates every case."""
         from casekit import new_case
         pro, pa, pb, d = new_case(API)

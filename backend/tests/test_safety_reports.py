@@ -29,9 +29,21 @@ def _answers(theme):
     }
 
 
+def _assert_safety_payload(rep: dict) -> None:
+    assert rep["is_safety"]
+    assert rep["confidentiality_note"]
+    assert "individual responses will not be shared" in rep["confidentiality_note"].lower()
+    assert rep["purpose"].startswith("This report is prepared through a third-party mediator")
+
+
+def _submit_side(session, rid: str, theme: str) -> None:
+    r = session.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _answers(theme)})
+    assert r.status_code == 200, r.text
+
+
 # ---------------- Parent initiation blocked ----------------
 class TestParentInitiationBlocked:
-    def test_parent_cannot_create_safety_report_403(self):
+    def test_parent_cannot_create_safety_report_403(self) -> None:
         pro, pa, pb, d = new_case(API)
         r = pa.post(f"{API}/joint/reports", json={
             "subject": "safety", "child_name": "TEST_Kid",
@@ -39,7 +51,7 @@ class TestParentInitiationBlocked:
         })
         assert r.status_code == 403
 
-    def test_parent_cannot_create_any_report_403(self):
+    def test_parent_cannot_create_any_report_403(self) -> None:
         pro, pa, pb, d = new_case(API)
         r = pa.post(f"{API}/joint/reports", json={
             "subject": "education", "child_name": "TEST_Kid",
@@ -64,12 +76,12 @@ class TestFullSafetyCycle:
         assert rp.status_code == 200, rp.text
         rid = rp.json()["report_id"]
         rep = [x for x in pro.get(f"{API}/joint/reports").json() if x["id"] == rid][0]
-        assert rep["is_safety"] == True
+        assert rep["is_safety"]
         assert set(rep["subjects"]) == {"safety", "risk", "safety_communication", "safeguards"}
         assert rep.get("case_code", "").startswith("SA-SAF-")
         return pro, pa, pb, rid, rep["case_code"]
 
-    def test_full_cycle_mediator_view_and_privacy(self):
+    def test_full_cycle_mediator_view_and_privacy(self) -> None:
         pro, pa, pb, rid, code = self._prepared_case()
 
         # Parents accept via the shared case code (email disambiguation)
@@ -77,8 +89,7 @@ class TestFullSafetyCycle:
         assert pb.post(f"{API}/joint/invitations/accept", json={"code": code}).status_code == 200
 
         # A submits
-        r = pa.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _answers("morning_A ")})
-        assert r.status_code == 200
+        _submit_side(pa, rid, "morning_A ")
 
         # PRIVACY: B must not see A's answers
         blob = str(pb.get(f"{API}/joint/reports/{rid}").json()).lower()
@@ -90,37 +101,32 @@ class TestFullSafetyCycle:
         assert "morning_a" not in blob
 
         # B submits → ready
-        r = pb.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _answers("evening_B ")})
-        assert r.status_code == 200
+        _submit_side(pb, rid, "evening_B ")
 
         # Parent gets the completed safety report with safety framing
-        rep = pa.get(f"{API}/joint/reports/{rid}/report").json()
-        assert rep["is_safety"] == True
-        assert rep["confidentiality_note"]
-        assert "individual responses will not be shared" in rep["confidentiality_note"].lower()
-        assert rep["purpose"].startswith("This report is prepared through a third-party mediator")
+        _assert_safety_payload(pa.get(f"{API}/joint/reports/{rid}/report").json())
 
         # Professional (facilitator) can view the completed report + PDF
         r = pro.get(f"{API}/joint/reports/{rid}/report")
-        assert r.status_code == 200 and r.json()["is_safety"] == True
+        assert r.status_code == 200 and r.json()["is_safety"]
         r = pro.get(f"{API}/joint/reports/{rid}/pdf")
         assert r.status_code == 200
         assert r.headers.get("content-type", "").startswith("application/pdf")
 
-    def test_nonsafety_report_no_safety_fields(self):
+    def test_nonsafety_report_no_safety_fields(self) -> None:
         pro, pa, pb, d = new_case(API, subject="education")
         rid = d["id"]
-        pa.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _answers("A ")})
-        pb.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _answers("B ")})
+        _submit_side(pa, rid, "A ")
+        _submit_side(pb, rid, "B ")
         rep = pro.get(f"{API}/joint/reports/{rid}/report").json()
-        assert rep["is_safety"] == False
+        assert not rep["is_safety"]
         assert rep["confidentiality_note"] is None
         assert not rep["purpose"].startswith("This report is prepared through a third-party mediator")
 
 
 # ---------------- joint_public shape ----------------
 class TestJointPublicShape:
-    def test_joint_public_returns_subjects_and_is_safety(self):
+    def test_joint_public_returns_subjects_and_is_safety(self) -> None:
         pro = _pro("shape")
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
@@ -129,6 +135,6 @@ class TestJointPublicShape:
         })
         d = r.json()
         assert d["subjects"] == ["education"]
-        assert d["is_safety"] == False
+        assert not d["is_safety"]
         assert d["professional_name"]
         assert d.get("case_code", "").startswith("SA-EDU-")

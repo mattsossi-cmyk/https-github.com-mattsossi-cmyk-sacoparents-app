@@ -8,7 +8,7 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://align-report.preview
 KEYS = ["co_parenting", "communication", "education", "medical", "psychological", "safety", "mediation"]
 
 
-def test_samples_list():
+def test_samples_list() -> None:
     r = requests.get(f"{BASE_URL}/api/joint/samples", timeout=30)
     assert r.status_code == 200
     data = r.json()
@@ -18,10 +18,10 @@ def test_samples_list():
     keys = {i["key"] for i in items}
     assert keys == set(KEYS), f"Missing keys: expected {set(KEYS)} got {keys}"
     safety = next(i for i in items if i["key"] == "safety")
-    assert safety.get("is_safety") is True
+    assert safety.get("is_safety")
 
 
-def test_sample_bogus_404():
+def test_sample_bogus_404() -> None:
     r = requests.get(f"{BASE_URL}/api/joint/sample/bogus", timeout=30)
     assert r.status_code == 404
 
@@ -36,7 +36,7 @@ def test_sample_report_json(key):
     assert data.get("child_name")
     assert isinstance(data.get("alignment_statements"), list)
     if key == "safety":
-        assert data.get("is_safety") is True
+        assert data.get("is_safety")
         assert data.get("confidentiality_note")
         assert data.get("parent_a_name") == "Parent A"
         assert data.get("parent_b_name") == "Parent B"

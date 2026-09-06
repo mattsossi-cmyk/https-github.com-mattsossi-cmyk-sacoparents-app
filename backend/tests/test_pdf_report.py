@@ -92,7 +92,7 @@ class TestPdfDownload:
         r = s.get(f"{API}/joint/reports/{ready_report['rid']}/pdf", timeout=30)
         assert r.status_code == 404
 
-    def test_incomplete_report_400(self):
+    def test_incomplete_report_400(self) -> None:
         pro = _pro()
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "TestKid",
@@ -120,7 +120,7 @@ class TestCasePdf:
         assert d.status_code == 200, d.text
         return s, cid
 
-    def test_ipv_case_pdf_full_content(self):
+    def test_ipv_case_pdf_full_content(self) -> None:
         s, cid = self._ipv_case()
         r = s.get(f"{API}/cases/{cid}/pdf", timeout=60)
         assert r.status_code == 200
@@ -132,7 +132,7 @@ class TestCasePdf:
                        "Alignment Before Agreement", "Options", "Conversation"]:
             assert marker in text, f"missing marker: {marker!r}"
 
-    def test_case_pdf_incomplete_400(self):
+    def test_case_pdf_incomplete_400(self) -> None:
         sfx = os.urandom(4).hex()
         s = _register("CasePDFInc", f"TEST_casepdfinc_{sfx}@example.com")
         c = s.post(f"{API}/cases", json={
@@ -142,7 +142,7 @@ class TestCasePdf:
         r = s.get(f"{API}/cases/{cid}/pdf", timeout=30)
         assert r.status_code == 400, f"expected 400, got {r.status_code}"
 
-    def test_case_pdf_unauthenticated_401(self):
+    def test_case_pdf_unauthenticated_401(self) -> None:
         r = requests.get(f"{API}/cases/whatever/pdf", timeout=30)
         assert r.status_code in (401, 403)
 
@@ -150,7 +150,7 @@ class TestCasePdf:
 class TestCompletePdf:
     """Server-generated PDF for the aggregated Complete Joint Alignment Report."""
 
-    def test_complete_pdf_with_data(self):
+    def test_complete_pdf_with_data(self) -> None:
         sfx = os.urandom(4).hex()
         s = _register("CompletePDF", f"TEST_completepdf_{sfx}@example.com")
         c = s.post(f"{API}/cases", json={
@@ -170,12 +170,12 @@ class TestCompletePdf:
                        "Alignment Before Agreement", "Educational"]:
             assert marker in text, f"missing marker: {marker!r}"
 
-    def test_complete_pdf_empty_400(self):
+    def test_complete_pdf_empty_400(self) -> None:
         sfx = os.urandom(4).hex()
         s = _register("CompleteEmpty", f"TEST_completeempty_{sfx}@example.com")
         r = s.get(f"{API}/reports/complete/pdf", timeout=30)
         assert r.status_code == 400, f"expected 400, got {r.status_code}"
 
-    def test_complete_pdf_unauthenticated_401(self):
+    def test_complete_pdf_unauthenticated_401(self) -> None:
         r = requests.get(f"{API}/reports/complete/pdf", timeout=30)
         assert r.status_code in (401, 403)

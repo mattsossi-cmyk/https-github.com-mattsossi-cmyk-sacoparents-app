@@ -58,17 +58,17 @@ class TestForgotPassword:
         email, _ = _register_user()
         r = requests.post(f"{API}/auth/forgot-password", json={"email": email})
         assert r.status_code == 200
-        assert r.json().get("ok") == True
+        assert r.json().get("ok")
         # code hash stored
         doc = mongo_db.password_resets.find_one({"email": email.lower()})
         assert doc is not None
         assert "code_hash" in doc
 
-    def test_forgot_password_unknown_email_no_enumeration(self):
+    def test_forgot_password_unknown_email_no_enumeration(self) -> None:
         unknown = f"noone_{uuid.uuid4().hex[:8]}@nowhere.example"
         r = requests.post(f"{API}/auth/forgot-password", json={"email": unknown})
         assert r.status_code == 200
-        assert r.json().get("ok") == True
+        assert r.json().get("ok")
 
 
 class TestResetPassword:

@@ -41,7 +41,7 @@ def _answers(theme: str = "general") -> dict:
 
 # -------------------- 1) Professional share links --------------------
 class TestProShareLinks:
-    def test_pro_create_returns_two_parent_join_links(self):
+    def test_pro_create_returns_two_parent_join_links(self) -> None:
         pro = new_user(API, "professional", "Prod Pro")
         pa = f"t_prodpa_{uuid.uuid4().hex[:8]}@example.com"
         pb = f"t_prodpb_{uuid.uuid4().hex[:8]}@example.com"
@@ -62,7 +62,7 @@ class TestProShareLinks:
             assert len(inv["code"]) >= 6
         assert by_role["a"]["link"] != by_role["b"]["link"]
 
-    def test_join_route_renders(self):
+    def test_join_route_renders(self) -> None:
         pro = new_user(API, "professional", "Prod Pro2")
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "medical", "child_name": "Kid",
@@ -106,7 +106,7 @@ class TestFoundationMerge:
         assert rb.status_code == 200, rb.text
         return a, rid
 
-    def test_agreement_report_and_pdf_include_foundation(self):
+    def test_agreement_report_and_pdf_include_foundation(self) -> None:
         a, rid = self._agreement_with_foundation()
         r = a.get(f"{API}/joint/reports/{rid}/report")
         assert r.status_code == 200, r.text
@@ -130,7 +130,7 @@ class TestFVEmailless:
         pro = new_user(API, "professional", f"FV Pro {tag}")
         return pa, pro, pro.email
 
-    def test_fv_request_without_coparent_email(self):
+    def test_fv_request_without_coparent_email(self) -> None:
         parent, _pro, pro_email = self._parent_and_pro("one")
         r = parent.post(f"{API}/joint/professional-requests", json={
             "professional_email": pro_email,
@@ -138,7 +138,7 @@ class TestFVEmailless:
         })
         assert r.status_code == 200, f"expected 200, got {r.status_code} {r.text[:300]}"
 
-    def test_prepare_empty_body_400_then_with_emails_200(self):
+    def test_prepare_empty_body_400_then_with_emails_200(self) -> None:
         parent, pro, pro_email = self._parent_and_pro("two")
         r = parent.post(f"{API}/joint/professional-requests", json={
             "professional_email": pro_email, "child_name": "Kid",
@@ -168,26 +168,26 @@ class TestFVEmailless:
         reports = r.json() if isinstance(r.json(), list) else r.json().get("reports", [])
         match = [rep for rep in reports if rep.get("id") == rid]
         assert match, f"safety report {rid} not visible to pro"
-        assert match[0].get("is_safety") == True
+        assert match[0].get("is_safety")
 
 
 # -------------------- 4) Core regression --------------------
 class TestCoreRegression:
-    def test_health_ok(self):
+    def test_health_ok(self) -> None:
         r = requests.get(f"{PROD}/health", headers=HDRS, timeout=15)
         assert r.status_code == 200
 
-    def test_config_has_8_agreement_areas(self):
+    def test_config_has_8_agreement_areas(self) -> None:
         r = requests.get(f"{PROD_API}/joint/config", headers=HDRS, timeout=15)
         assert r.status_code == 200
         d = r.json()
         assert len(d.get("agreement_areas", [])) == 8
 
-    def test_cron_completion_nudge_requires_auth(self):
+    def test_cron_completion_nudge_requires_auth(self) -> None:
         r = requests.post(f"{PROD}/api/cron/completion-nudge", headers=HDRS, timeout=15)
         assert r.status_code == 401
 
-    def test_full_joint_cycle_and_pdf(self):
+    def test_full_joint_cycle_and_pdf(self) -> None:
         pro, pa, pb, d, detail = completed_case(API, subject="education")
         rid = d["id"]
         r = pa.get(f"{API}/joint/reports/{rid}/report")
@@ -197,7 +197,7 @@ class TestCoreRegression:
         assert r.headers.get("content-type", "").startswith("application/pdf")
         assert len(r.content) > 1000  # non-blank
 
-    def test_share_to_professional_shows_in_shared_with_me(self):
+    def test_share_to_professional_shows_in_shared_with_me(self) -> None:
         pro, pa, pb, d, detail = completed_case(API, subject="education")
         rid = d["id"]
         other_pro = new_user(API, "professional", "Share Target Pro")

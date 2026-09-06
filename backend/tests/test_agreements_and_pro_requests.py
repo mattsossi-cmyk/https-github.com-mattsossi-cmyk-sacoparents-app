@@ -69,9 +69,48 @@ def _agreement_answers(prefix, aligned=True):
     }
 
 
+def _submit_agreement(session, rid: str, side: str, aligned: bool = True) -> None:
+    r = session.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _agreement_answers(side, aligned=aligned)})
+    assert r.status_code == 200, r.text
+
+
+def _assert_agreement_report(data: dict) -> None:
+    assert data["report_title"] == "Joint Co-Parenting Agreement"
+    assert data.get("purpose")
+    assert data.get("confidentiality_note")
+    terms = data["terms"]
+    assert len(terms) == 8
+    assert [t["key"] for t in terms] == AGREEMENT_KEYS
+    for t in terms:
+        assert t["parent_a"] and t["parent_b"]
+        assert t["status"] in {"Likely aligned", "Close", "Needs discussion"}
+
+
+def _assert_agreement_pdf(pdf) -> None:
+    assert pdf.status_code == 200
+    assert pdf.headers.get("content-type", "").startswith("application/pdf")
+    assert "coparenting-agreement-" in pdf.headers.get("content-disposition", "")
+    assert pdf.content.startswith(b"%PDF")
+
+
+def _pro_request(session, pro_email: str, co_parent_email: str, child: str = "TEST_Kid"):
+    return session.post(f"{API}/joint/professional-requests", json={
+        "professional_email": pro_email,
+        "child_name": child,
+        "co_parent_name": "Test Parent Q",
+        "co_parent_email": co_parent_email,
+    })
+
+
+def _assert_safety_listing(rep: dict) -> None:
+    assert rep.get("is_safety")
+    assert set(rep.get("subjects") or []) == {"safety", "risk", "safety_communication", "safeguards"}
+    assert rep.get("case_code", "").startswith("SA-SAF-")
+
+
 # ------------------- Config -------------------
 class TestJointConfig:
-    def test_config_returns_8_agreement_areas(self):
+    def test_config_returns_8_agreement_areas(self) -> None:
         r = requests.get(f"{API}/joint/config", headers=UA)
         assert r.status_code == 200
         keys = [a["key"] for a in r.json()["agreement_areas"]]
@@ -82,7 +121,7 @@ class TestJointConfig:
 
 # ------------------- Agreement full flow -------------------
 class TestAgreementFullFlow:
-    def test_parent_cannot_create_agreement_403(self):
+    def test_parent_cannot_create_agreement_403(self) -> None:
         pro0, pa, pb, d = new_case(API)
         r = pa.post(f"{API}/joint/agreements", json={
             "child_name": "K",
@@ -91,43 +130,26 @@ class TestAgreementFullFlow:
         })
         assert r.status_code == 403
 
-    def test_create_accept_respond_report_pdf(self):
+    def test_create_accept_respond_report_pdf(self) -> None:
         pro, a, b, rid = _agreement_setup()
 
-        rA = a.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _agreement_answers("a", aligned=True)})
-        assert rA.status_code == 200, rA.text
+        _submit_agreement(a, rid, "a")
 
         detail_a = a.get(f"{API}/joint/reports/{rid}").json()
         assert "b" not in (detail_a.get("responses") or {}) or not detail_a["responses"].get("b", {}).get("answers")
 
         assert a.get(f"{API}/joint/reports/{rid}/report").status_code == 400
 
-        rB = b.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _agreement_answers("b", aligned=True)})
-        assert rB.status_code == 200
+        _submit_agreement(b, rid, "b")
 
         rpt = pro.get(f"{API}/joint/reports/{rid}/report")
         assert rpt.status_code == 200, rpt.text
-        data = rpt.json()
-        assert data["report_title"] == "Joint Co-Parenting Agreement"
-        assert data.get("purpose")
-        assert data.get("confidentiality_note")
-        terms = data["terms"]
-        assert len(terms) == 8
-        assert [t["key"] for t in terms] == AGREEMENT_KEYS
-        for t in terms:
-            assert t["parent_a"] and t["parent_b"]
-            assert t["status"] in {"Likely aligned", "Close", "Needs discussion"}
+        _assert_agreement_report(rpt.json())
+        _assert_agreement_pdf(a.get(f"{API}/joint/reports/{rid}/pdf"))
 
-        pdf = a.get(f"{API}/joint/reports/{rid}/pdf")
-        assert pdf.status_code == 200
-        assert pdf.headers.get("content-type", "").startswith("application/pdf")
-        assert "coparenting-agreement-" in pdf.headers.get("content-disposition", "")
-        assert pdf.content.startswith(b"%PDF")
-
-    def test_privacy_detail_view_hides_partner_answers(self):
+    def test_privacy_detail_view_hides_partner_answers(self) -> None:
         pro, a, b, rid = _agreement_setup()
-        rB = b.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _agreement_answers("b", aligned=False)})
-        assert rB.status_code == 200
+        _submit_agreement(b, rid, "b", aligned=False)
         detail_a = a.get(f"{API}/joint/reports/{rid}").json()
         blob = str(detail_a).lower()
         for v in _agreement_answers("b", aligned=False).values():
@@ -136,29 +158,19 @@ class TestAgreementFullFlow:
 
 # ------------------- Professionals list + Professional-request flow -------------------
 class TestProfessionalRequestFlow:
-    def test_full_flow(self):
+    def test_full_flow(self) -> None:
         seed_pro, parent, parent2, _d = new_case(API)
-        parent_email, parent2_email = parent.email, parent2.email
-        pro, pro_email = _pro("pro"), None
+        parent2_email = parent2.email
+        pro = _pro("pro")
         pro_email = pro.email
 
         pros = parent.get(f"{API}/professionals").json()
         assert any(p["email"] == pro_email.lower() for p in pros)
 
-        r404 = parent.post(f"{API}/joint/professional-requests", json={
-            "professional_email": f"ghost_{uuid.uuid4().hex[:6]}@testmail.dev",
-            "child_name": "TEST_Kid",
-            "co_parent_name": "Test Parent Q",
-            "co_parent_email": parent2_email,
-        })
+        r404 = _pro_request(parent, f"ghost_{uuid.uuid4().hex[:6]}@testmail.dev", parent2_email)
         assert r404.status_code == 404
 
-        rc = parent.post(f"{API}/joint/professional-requests", json={
-            "professional_email": pro_email,
-            "child_name": "TEST_Kid",
-            "co_parent_name": "Test Parent Q",
-            "co_parent_email": parent2_email,
-        })
+        rc = _pro_request(parent, pro_email, parent2_email)
         assert rc.status_code == 200, rc.text
         req_id = rc.json()["id"]
 
@@ -177,10 +189,7 @@ class TestProfessionalRequestFlow:
 
         found = [r for r in pro.get(f"{API}/joint/reports").json() if r["id"] == rid]
         assert len(found) == 1
-        rep = found[0]
-        assert rep.get("is_safety") == True
-        assert set(rep.get("subjects") or []) == {"safety", "risk", "safety_communication", "safeguards"}
-        assert rep.get("case_code", "").startswith("SA-SAF-")
+        _assert_safety_listing(found[0])
 
         pa_list = parent.get(f"{API}/joint/reports").json()
         assert not any(r["id"] == rid for r in pa_list), "Parent A must not see safety report before accepting invite"

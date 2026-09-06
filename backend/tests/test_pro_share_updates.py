@@ -32,7 +32,7 @@ def _mk_request(parent, pro_email, with_coparent=True):
 
 
 class TestProRequestNoCoParentEmail:
-    def test_request_without_coparent_email_succeeds(self):
+    def test_request_without_coparent_email_succeeds(self) -> None:
         parent = _parent()
         pro = _pro("fvpro")
         req_id = _mk_request(parent, pro.email, with_coparent=False)
@@ -40,7 +40,7 @@ class TestProRequestNoCoParentEmail:
         match = [r for r in mine if r["id"] == req_id]
         assert match and match[0]["co_parent_email"] is None
 
-    def test_prepare_without_emails_400_when_request_lacks_coparent(self):
+    def test_prepare_without_emails_400_when_request_lacks_coparent(self) -> None:
         parent = _parent()
         pro = _pro("fvpro")
         req_id = _mk_request(parent, pro.email, with_coparent=False)
@@ -48,7 +48,7 @@ class TestProRequestNoCoParentEmail:
         assert r.status_code == 400, r.text
         assert "email" in r.json()["detail"].lower()
 
-    def test_prepare_with_emails_succeeds(self):
+    def test_prepare_with_emails_succeeds(self) -> None:
         parent = _parent()
         pro = _pro("fvpro")
         req_id = _mk_request(parent, pro.email, with_coparent=False)
@@ -64,7 +64,7 @@ class TestProRequestNoCoParentEmail:
                       json={"parent_a_email": parent.email, "parent_b_email": coparent})
         assert r2.status_code == 400
 
-    def test_legacy_request_with_coparent_email_prepares_without_body(self):
+    def test_legacy_request_with_coparent_email_prepares_without_body(self) -> None:
         parent = _parent()
         pro = _pro("fvpro")
         req_id = _mk_request(parent, pro.email, with_coparent=True)
@@ -73,13 +73,13 @@ class TestProRequestNoCoParentEmail:
 
 
 class TestShareEmailsProfessional:
-    def test_share_grants_access_and_returns_name(self):
+    def test_share_grants_access_and_returns_name(self) -> None:
         pro1, a, b, d, detail = completed_case(API, subject="communication")
         rid = d["id"]
         pro2 = _pro("sharepro")
         r = a.post(f"{API}/joint/reports/{rid}/share", json={"email": pro2.email})
         assert r.status_code == 200, r.text
-        assert r.json()["ok"] == True
+        assert r.json()["ok"]
         docs = pro2.get(f"{API}/joint/reports").json()
         assert any(x["id"] == rid for x in docs), "shared report should appear in professional list"
         r2 = a.post(f"{API}/joint/reports/{rid}/share", json={"email": f"TEST_nopro_{uuid.uuid4().hex[:6]}@example.com"})

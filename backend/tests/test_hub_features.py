@@ -36,7 +36,7 @@ def _pro(prefix="hub"):
 # ---------- /api/joint/config new subject keys ----------
 
 class TestConfigSubjects:
-    def test_config_contains_hub_subjects(self):
+    def test_config_contains_hub_subjects(self) -> None:
         r = requests.get(f"{API}/joint/config")
         assert r.status_code == 200
         keys = {s["key"] for s in r.json()["subjects"]}
@@ -48,7 +48,7 @@ class TestConfigSubjects:
 # ---------- Multi-subject create (professional) ----------
 
 class TestMultiSubjectCreate:
-    def test_customized_report_creates_multi(self):
+    def test_customized_report_creates_multi(self) -> None:
         s = _pro("multi")
         r = s.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "subjects": ["education", "medical", "psychological"],
@@ -66,7 +66,7 @@ class TestMultiSubjectCreate:
         got = s.get(f"{API}/joint/reports/{data['id']}").json()
         assert got["subject"] == "multi"
 
-    def test_safety_pathway_multi_creates(self):
+    def test_safety_pathway_multi_creates(self) -> None:
         s = _pro("safety")
         r = s.post(f"{API}/joint/reports/professional", json={
             "subject": "safety", "subjects": ["safety", "risk", "safety_communication", "safeguards"],
@@ -76,9 +76,9 @@ class TestMultiSubjectCreate:
         })
         assert r.status_code == 200, r.text
         assert r.json()["subject"] == "multi"
-        assert r.json()["is_safety"] == True
+        assert r.json()["is_safety"]
 
-    def test_single_subject_still_works(self):
+    def test_single_subject_still_works(self) -> None:
         s = _pro("single")
         r = s.post(f"{API}/joint/reports/professional", json={
             "subject": "co_parenting", "child_name": "TEST_Kid",
@@ -88,7 +88,7 @@ class TestMultiSubjectCreate:
         assert r.status_code == 200, r.text
         assert r.json()["subject"] == "co_parenting"
 
-    def test_invalid_subject_rejected(self):
+    def test_invalid_subject_rejected(self) -> None:
         s = _pro("invalid")
         r = s.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "subjects": ["education", "not_a_real_subject"],
@@ -98,7 +98,7 @@ class TestMultiSubjectCreate:
         })
         assert r.status_code == 400
 
-    def test_parent_initiation_blocked(self):
+    def test_parent_initiation_blocked(self) -> None:
         pro, pa, pb, d = new_case(API)
         r = pa.post(f"{API}/joint/reports", json={
             "subject": "education", "child_name": "TEST_Kid",
@@ -110,7 +110,7 @@ class TestMultiSubjectCreate:
 # ---------- PATCH multi-subject guard ----------
 
 class TestPatchMultiGuard:
-    def test_patch_multi_returns_400(self):
+    def test_patch_multi_returns_400(self) -> None:
         s = _pro("patchguard")
         r = s.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "subjects": ["education", "medical"],
@@ -130,7 +130,7 @@ class TestPatchMultiGuard:
 # ---------- Professional dual-parent invite ----------
 
 class TestProfessionalCreate:
-    def test_professional_creates_report_and_sends_two_invitations(self):
+    def test_professional_creates_report_and_sends_two_invitations(self) -> None:
         s = _pro("pro")
         r = s.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "subjects": ["education", "medical"],
@@ -145,7 +145,7 @@ class TestProfessionalCreate:
         assert items, "Professional's report should appear in the list"
         assert len(items[0]["pending_invitations"]) == 2
 
-    def test_parent_cannot_call_professional_endpoint(self):
+    def test_parent_cannot_call_professional_endpoint(self) -> None:
         pro, pa, pb, d = new_case(API)
         r = pa.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "TEST_Kid",
@@ -158,14 +158,14 @@ class TestProfessionalCreate:
 # ---------- Complete Joint Alignment Report ----------
 
 class TestCompleteReport:
-    def test_empty_for_fresh_account(self):
+    def test_empty_for_fresh_account(self) -> None:
         s = _pro("empty")
         r = s.get(f"{API}/reports/complete")
         assert r.status_code == 200, r.text
         data = r.json()
-        assert data.get("empty") == True or len(data.get("sections", [])) == 0
+        assert data.get("empty") or len(data.get("sections", [])) == 0
 
-    def test_complete_report_with_data(self):
+    def test_complete_report_with_data(self) -> None:
         """A user with a completed (demo) assessment gets sections and totals."""
         s = _pro("complete")
         r = s.post(f"{API}/cases", json={"type": "educational", "child_name": "TEST_Kid"})
@@ -184,7 +184,7 @@ class TestCompleteReport:
 # ---------- Multi-subject full cycle ----------
 
 class TestMultiSubjectFullCycle:
-    def test_full_cycle_and_report_ready(self):
+    def test_full_cycle_and_report_ready(self) -> None:
         pro, pa, pb, d = new_case(API, subjects=["education", "medical"], subject="education")
         rid = d["id"]
         answers = {

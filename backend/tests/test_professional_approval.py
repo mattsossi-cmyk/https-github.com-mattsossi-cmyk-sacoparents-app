@@ -36,13 +36,13 @@ def _admin_session():
 
 
 class TestProfessionalApproval:
-    def test_new_professional_is_pending(self):
+    def test_new_professional_is_pending(self) -> None:
         pro = _raw_pro()
         me = pro.get(f"{API}/auth/me").json()
         assert me["role"] == "professional"
-        assert me["approved"] == False
+        assert not me["approved"]
 
-    def test_unapproved_pro_cannot_create_case(self):
+    def test_unapproved_pro_cannot_create_case(self) -> None:
         pro = _raw_pro()
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
@@ -52,7 +52,7 @@ class TestProfessionalApproval:
         assert r.status_code == 403
         assert "pending approval" in r.json()["detail"].lower()
 
-    def test_unapproved_pro_cannot_prepare_or_create_agreement(self):
+    def test_unapproved_pro_cannot_prepare_or_create_agreement(self) -> None:
         pro = _raw_pro()
         r = pro.post(f"{API}/joint/agreements", json={
             "child_name": "K",
@@ -64,7 +64,7 @@ class TestProfessionalApproval:
         r = pro.post(f"{API}/joint/professional-requests/whatever/prepare")
         assert r.status_code == 403
 
-    def test_admin_lists_and_approves(self):
+    def test_admin_lists_and_approves(self) -> None:
         pro = _raw_pro()
         admin = _admin_session()
         pending = admin.get(f"{API}/admin/pending-professionals").json()
@@ -72,7 +72,7 @@ class TestProfessionalApproval:
         assert match, "new pro should appear in pending list"
         r = admin.post(f"{API}/admin/approve-professional/{match[0]['id']}")
         assert r.status_code == 200
-        assert pro.get(f"{API}/auth/me").json()["approved"] == True
+        assert pro.get(f"{API}/auth/me").json()["approved"]
         # approved pro can now create a case
         r = pro.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
@@ -81,7 +81,7 @@ class TestProfessionalApproval:
         })
         assert r.status_code == 200, r.text
 
-    def test_non_admin_cannot_list_or_approve(self):
+    def test_non_admin_cannot_list_or_approve(self) -> None:
         seed_pro, pa, pb, d = new_case(API)  # approved professional fixture
         pro = _raw_pro()
         r = seed_pro.get(f"{API}/admin/pending-professionals")
@@ -90,13 +90,13 @@ class TestProfessionalApproval:
         r = seed_pro.post(f"{API}/admin/approve-professional/{me['id']}")
         assert r.status_code == 403
 
-    def test_approve_unknown_404(self):
+    def test_approve_unknown_404(self) -> None:
         admin = _admin_session()
         r = admin.post(f"{API}/admin/approve-professional/{uuid.uuid4()}")
         assert r.status_code == 404
 
-    def test_parent_registration_unaffected(self):
+    def test_parent_registration_unaffected(self) -> None:
         pro, pa, pb, d = new_case(API)
         me = pa.get(f"{API}/auth/me").json()
         assert me["role"] == "parent"
-        assert me["approved"] == True
+        assert me["approved"]

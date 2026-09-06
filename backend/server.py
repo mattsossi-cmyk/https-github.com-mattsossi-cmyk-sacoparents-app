@@ -1122,6 +1122,35 @@ async def sample_report_pdf(key: str):
         headers={"Content-Disposition": f'attachment; filename="sample-{key}-report.pdf"'},
     )
 
+
+class EmailSampleIn(BaseModel):
+    email: EmailStr
+
+
+@api.post("/joint/sample/{key}/email")
+async def email_sample_report(key: str, body: EmailSampleIn):
+    report = sample_report(key)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Unknown sample report")
+    label = report["subject_label"]
+    view_link = f"{app_url()}/samples/{key}"
+    pdf_link = f"{app_url()}/api/joint/sample/{key}/pdf"
+    await send_email(
+        to=str(body.email).lower(),
+        subject=f"Sample report: {label} - {EMAIL_FROM_NAME}",
+        html=(
+            '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+            "<p>Hello,</p>"
+            f"<p>Here is the sample <strong>{escape(label)}</strong> report from SA CoParents Align — an example of the "
+            "neutral, child-focused format professionals use to compare parent perspectives.</p>"
+            f'<p><a href="{view_link}" style="color:#5B2A86">View the sample report online</a></p>'
+            f'<p><a href="{pdf_link}" style="color:#5B2A86">Download the sample PDF</a></p>'
+            f'<p style="font-size:12px;color:#888">Sample uses fictional data. Sent by {escape(EMAIL_FROM_NAME)} via the public sample-sharing form.</p>'
+            "</td></tr></table>"
+        ),
+    )
+    return {"ok": True}
+
 @api.post("/joint/reports/{rid}/share")
 async def share_joint_report(rid: str, body: ShareIn, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)
