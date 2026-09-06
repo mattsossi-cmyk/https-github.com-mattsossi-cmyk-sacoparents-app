@@ -19,22 +19,21 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
   DollarSign,
   Download,
   Info,
   Loader2,
   Plus,
   Receipt,
-  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";
 import SplitSuggestion, { loadSplitPrefs } from "./SplitSuggestion";
+import CostSplitterTotals from "./cost/CostSplitterTotals";
+import CostSplitterCategoryBreakdown from "./cost/CostSplitterCategoryBreakdown";
+import CostSplitterEntriesList from "./cost/CostSplitterEntriesList";
 
 function formatMoney(cents, currency = "USD") {
   const n = (cents || 0) / 100;
@@ -52,25 +51,12 @@ function formatMoney(cents, currency = "USD") {
   })} ${currency}`;
 }
 
-function CategoryBar({ selfCents, coparentCents }) {
-  const total = selfCents + coparentCents || 1;
-  const selfPct = Math.round((selfCents / total) * 100);
-  const coparentPct = 100 - selfPct;
-  return (
-    <div className="flex h-2 w-full rounded-full overflow-hidden bg-[#EEF5F0]">
-      <div style={{ width: `${selfPct}%` }} className="bg-[#1E7A55]" />
-      <div style={{ width: `${coparentPct}%` }} className="bg-[#8471B3]" />
-    </div>
-  );
-}
-
 export default function CostSplitterPanel({ coparentEmail, coparentName }) {
   const [rows, setRows] = useState([]);
   const [totalCents, setTotalCents] = useState(0);
   const [categories, setCategories] = useState([]);
   const [compare, setCompare] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(false);
 
   const [form, setForm] = useState({
     activity_label: "",
@@ -271,76 +257,21 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
       </div>
 
       {/* Totals card */}
-      <div
-        className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4"
-        data-testid="cost-splitter-totals"
-      >
-        <div className="rounded-2xl border border-[#C7E5D3] bg-[#F1F9F4] p-4">
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-1">
-            You
-          </div>
-          <div className="font-serif text-2xl text-[#1A1330]" data-testid="cost-splitter-self-total">
-            {formatMoney(selfTotal)}
-          </div>
-          <div className="text-[11px] text-[#4B4567] mt-0.5">
-            {compare?.self?.count ?? rows.length} entr{(compare?.self?.count ?? rows.length) === 1 ? "y" : "ies"}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#E5E0EE] bg-[#F5F1FB] p-4">
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#8471B3] mb-1">
-            {coparentName || "Co-parent"}
-          </div>
-          <div className="font-serif text-2xl text-[#1A1330]" data-testid="cost-splitter-coparent-total">
-            {hasCompare ? formatMoney(coparentTotal) : "—"}
-          </div>
-          <div className="text-[11px] text-[#4B4567] mt-0.5">
-            {hasCompare
-              ? `${compare.coparent.count} entr${compare.coparent.count === 1 ? "y" : "ies"}`
-              : "Not linked yet"}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#D6CFE8] bg-white p-4">
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">
-            Combined
-          </div>
-          <div className="font-serif text-2xl text-[#1A1330]" data-testid="cost-splitter-combined-total">
-            {formatMoney(combinedTotal)}
-          </div>
-          <div className="text-[11px] text-[#4B4567] mt-0.5">
-            {hasCompare ? "Both accounts tallied" : "Log more to see the split"}
-          </div>
-        </div>
-      </div>
+      <CostSplitterTotals
+        selfTotal={selfTotal}
+        coparentTotal={coparentTotal}
+        combinedTotal={combinedTotal}
+        selfCount={compare?.self?.count ?? rows.length}
+        coparentCount={compare?.coparent?.count ?? 0}
+        hasCompare={hasCompare}
+        coparentName={coparentName}
+      />
 
       {/* Per-category breakdown */}
-      {perCategory.length > 0 && (
-        <div className="mb-5">
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#4B4567] mb-2">
-            By category
-          </div>
-          <div className="grid gap-2" data-testid="cost-splitter-categories">
-            {perCategory.map((cat) => (
-              <div key={cat.key} className="grid grid-cols-[1fr_auto] gap-3 items-center">
-                <div>
-                  <div className="text-sm text-[#1A1330]">{cat.label}</div>
-                  <CategoryBar
-                    selfCents={cat.self_cents || 0}
-                    coparentCents={cat.coparent_cents || 0}
-                  />
-                </div>
-                <div className="text-right">
-                  <div className="text-xs text-[#1E7A55] font-semibold">
-                    {formatMoney(cat.self_cents || 0)}
-                  </div>
-                  <div className="text-[11px] text-[#8471B3]">
-                    {hasCompare ? formatMoney(cat.coparent_cents || 0) : ""}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <CostSplitterCategoryBreakdown
+        perCategory={perCategory}
+        hasCompare={hasCompare}
+      />
 
       {/* Neutral split suggestion — deterministic math, never sent to
           the server. Renders whenever the parent has logged anything;
@@ -454,52 +385,11 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
       </form>
 
       {/* Entries table (expandable) */}
-      {rows.length > 0 && (
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="text-sm text-[#1E7A55] hover:text-[#0F5638] inline-flex items-center gap-1"
-            data-testid="cost-splitter-toggle"
-          >
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            {expanded ? "Hide" : "Show"} my {rows.length} entr{rows.length === 1 ? "y" : "ies"}
-          </button>
-          {expanded && (
-            <div className="mt-3 space-y-2" data-testid="cost-splitter-rows">
-              {rows.map((r) => (
-                <div
-                  key={r.cost_id}
-                  className="rounded-xl border border-[#DEF3E7] bg-white px-3 py-2 flex flex-wrap items-center gap-3"
-                >
-                  <div className="flex-1 min-w-[160px]">
-                    <div className="text-sm font-semibold text-[#1A1330]">
-                      {r.activity_label}
-                    </div>
-                    <div className="text-[11px] text-[#4B4567]">
-                      {categories.find((c) => c.key === r.category)?.label || r.category}
-                      {r.incurred_on ? ` · ${r.incurred_on}` : ""}
-                      {r.note ? ` · ${r.note}` : ""}
-                    </div>
-                  </div>
-                  <div className="font-serif text-base text-[#1A1330]">
-                    {formatMoney(r.amount_cents, r.currency)}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeRow(r.cost_id)}
-                    aria-label="Remove entry"
-                    data-testid={`cost-splitter-remove-${r.cost_id}`}
-                    className="text-[#9A3A23] hover:bg-[#FDECEC] rounded-full p-1.5"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <CostSplitterEntriesList
+        rows={rows}
+        categories={categories}
+        onRemove={removeRow}
+      />
 
       {loading && (
         <div className="mt-3 text-xs text-[#4B4567] inline-flex items-center gap-1.5">

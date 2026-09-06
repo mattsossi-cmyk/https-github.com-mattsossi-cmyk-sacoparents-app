@@ -27,6 +27,61 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-06 — Code-review remediation round 3 (scoped)
+- **`build_cost_ledger_pdf()` refactor**: 108 → 46 lines by extracting
+  three focused helpers into `activities_costs_pdf.py`:
+  `_resolve_split_ratio()` (mode → ratio math),
+  `_draw_meta_strip()` (parent-name banner), and
+  `_draw_ledger_pair()` (caller + co-parent ledger render). Cyclomatic
+  complexity dropped meaningfully. All 5 iter149 PDF tests still green.
+- **`CostSplitterPanel.jsx` split**: 512 → 401 lines by extracting
+  three subcomponents into a new `components/cost/` directory
+  (matches the `components/safety/`, `components/joint/`,
+  `components/activities/` split pattern already in the codebase):
+    - `CostSplitterTotals.jsx` — the three-box You / Co-parent / Combined card
+    - `CostSplitterCategoryBreakdown.jsx` — the "By category" bars + `CategoryBar` primitive
+    - `CostSplitterEntriesList.jsx` — the expandable my-entries list + delete-per-row
+  Fixed a duplicate `window.confirm` that would have fired twice
+  after the extraction. Live smoke: all 5 panel elements
+  (totals · categories · download · split · toggle) render
+  identically on `/activities/alignment`.
+- **Explicitly NOT touched** (documented regression landmines per
+  prior handoffs — every attempt to fix these has broken the app
+  30+ times):
+    - Circular imports (function-scoped on purpose to dodge FastAPI
+      startup deadlocks)
+    - 231 hook-dep warnings (mass-adding causes infinite fetch loops
+      on this codebase)
+    - MD5 in `intervention_compliance_routes.py`
+      (`usedforsecurity=False`; non-security dedupe hash)
+    - 49 localStorage instances (all non-sensitive UX state)
+    - "Hardcoded secrets" in test files (`TestPass123!` literals are
+      pytest fixtures, not real secrets)
+    - `ai_service.py` + `admin_nd_case_pdf.py` complexity
+      (P2 backlog per handoff)
+    - "Undefined variables (56)" — SAST tool false positives on
+      `TYPE_CHECKING`-guarded imports and conditional branches
+    - `AuthContext.useMemo` + `ReportShareControls.useCallback` deps
+      — same hook-deps landmine
+- **Wave 1-3 restructure work started**: two shared components in
+  place (`components/JourneyStepper.jsx` and
+  `components/CourtReportDisclaimer.jsx`). Diagnostic-sounding
+  labels softened everywhere they surface to users:
+  "Trauma-Informed Safety and Functioning Lens" →
+  **"Family Safety and Functioning Reflection"** and
+  "Neurodivergent Risk Assessment" →
+  **"Neurodivergent Child Support Planning Tool"** (Dashboard.jsx,
+  SafetyAssessment.jsx, SafetyAssessmentResultsCard.jsx,
+  VerifyCourtReport.jsx, HipaaNotice.jsx). The "ongoing high
+  conflict" tile on Landing.jsx no longer says "start with the
+  safety screen" — now says "we'll run a short private safety
+  check first" so high-conflict ≠ family-violence.
+- **Still pending from Wave 1-3** (paused for these code-review
+  fixes; will resume): Dashboard collapse into Four-Circle-only
+  primary decision, `<ExploreAllTools>` collapsible for the rest of
+  the surface, `/for-professionals` public page, court-report
+  disclaimer applied to every court-facing PDF/screen.
+
 ### 2026-03-06 — Code-review remediation round 2 (privacy + consent)
 - **HIGH — Co-parent private notes leak (fixed)**: the compare
   endpoints on all three alignment surfaces (Communication,

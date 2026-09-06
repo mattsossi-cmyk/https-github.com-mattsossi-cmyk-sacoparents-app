@@ -259,6 +259,57 @@ def _draw_ledger_rows(
     return rendered
 
 
+def _resolve_split_ratio(
+    mode: str,
+    self_income: Optional[int],
+    coparent_income: Optional[int],
+    custom_pct: Optional[int],
+) -> tuple[str, float]:
+    """Return the (normalised_mode, caller_share_ratio) tuple."""
+    if mode == "income" and (self_income or 0) + (coparent_income or 0) > 0:
+        return "income", (self_income or 0) / ((self_income or 0) + (coparent_income or 0))
+    if mode == "custom" and custom_pct is not None:
+        return "custom", max(0, min(100, int(custom_pct))) / 100
+    return "even", 0.5
+
+
+def _draw_meta_strip(pdf: _CostLedgerPDF, self_name: str, coparent_name: Optional[str]) -> None:
+    """Render the small "Prepared for … | Co-parent: …" strip at the top."""
+    pdf.set_font("Helvetica", "", 8.5)
+    pdf.set_text_color(*TEXT_MID)
+    parent_line = f"Prepared for: {self_name}"
+    if coparent_name:
+        parent_line += f"  |  Co-parent: {coparent_name}"
+    pdf.multi_cell(CONTENT_W, 4.5, parent_line)
+    pdf.ln(1)
+
+
+def _draw_ledger_pair(
+    pdf: _CostLedgerPDF,
+    self_bundle: Dict[str, Any],
+    coparent_bundle: Dict[str, Any],
+    cat_lookup: Dict[str, str],
+) -> None:
+    """Render caller's ledger, then co-parent's (notes redacted)."""
+    _draw_ledger_header(pdf, f"Your entries ({self_bundle.get('count', 0)})")
+    _draw_ledger_rows(
+        pdf,
+        self_bundle.get("rows") or [],
+        cat_lookup,
+        max_rows=10,
+        show_notes=True,
+    )
+    if coparent_bundle.get("rows"):
+        _draw_ledger_header(pdf, f"Co-parent entries ({coparent_bundle.get('count', 0)})")
+        _draw_ledger_rows(
+            pdf,
+            coparent_bundle.get("rows") or [],
+            cat_lookup,
+            max_rows=10,
+            show_notes=False,
+        )
+
+
 def build_cost_ledger_pdf(
     *,
     compare_payload: Dict[str, Any],
@@ -285,25 +336,14 @@ def build_cost_ledger_pdf(
     coparent_total = int(coparent_bundle.get("total_cents") or 0)
     per_category_pair = compare_payload.get("per_category_pair") or []
 
-    # Resolve the caller's share ratio the same way the frontend does.
-    if mode == "income" and (self_income or 0) + (coparent_income or 0) > 0:
-        ratio = (self_income or 0) / ((self_income or 0) + (coparent_income or 0))
-    elif mode == "custom" and custom_pct is not None:
-        ratio = max(0, min(100, int(custom_pct))) / 100
-    else:
-        mode = "even"
-        ratio = 0.5
-
+    resolved_mode, ratio = _resolve_split_ratio(mode, self_income, coparent_income, custom_pct)
     self_share_cents = round(combined * ratio)
     coparent_share_cents = combined - self_share_cents
 
-    cat_lookup: Dict[str, str] = {
-        c["key"]: c["label"] for c in (categories or [])
-    }
+    cat_lookup: Dict[str, str] = {c["key"]: c["label"] for c in (categories or [])}
 
-    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     pdf = _CostLedgerPDF(
-        generated_at=generated_at,
+        generated_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         self_name=self_name,
         coparent_name=coparent_name,
     )
@@ -312,22 +352,11 @@ def build_cost_ledger_pdf(
     pdf.set_left_margin(LEFT_M)
     pdf.set_right_margin(RIGHT_M)
 
-    # Meta strip
-    pdf.set_font("Helvetica", "", 8.5)
-    pdf.set_text_color(*TEXT_MID)
-    parent_line = f"Prepared for: {self_name}"
-    if coparent_name:
-        parent_line += f"  |  Co-parent: {coparent_name}"
-    pdf.multi_cell(CONTENT_W, 4.5, parent_line)
-    pdf.ln(1)
-
-    # Totals
+    _draw_meta_strip(pdf, self_name, coparent_name)
     _draw_totals(pdf, self_total, coparent_total, combined)
-
-    # Suggested split
     _draw_split(
         pdf,
-        mode=mode,
+        mode=resolved_mode,
         self_share_ratio=ratio,
         self_share_cents=self_share_cents,
         coparent_share_cents=coparent_share_cents,
@@ -337,31 +366,8 @@ def build_cost_ledger_pdf(
         coparent_income=coparent_income,
         custom_pct=custom_pct,
     )
-
-    # By-category
     _draw_category_table(pdf, per_category_pair)
-
-    # Ledger — self entries with notes, then co-parent entries with
-    # notes always redacted (already handled upstream but we double-
-    # guard by only rendering notes when show_notes=True).
-    _draw_ledger_header(pdf, f"Your entries ({self_bundle.get('count', 0)})")
-    _draw_ledger_rows(
-        pdf,
-        self_bundle.get("rows") or [],
-        cat_lookup,
-        max_rows=10,
-        show_notes=True,
-    )
-
-    if coparent_bundle.get("rows"):
-        _draw_ledger_header(pdf, f"Co-parent entries ({coparent_bundle.get('count', 0)})")
-        _draw_ledger_rows(
-            pdf,
-            coparent_bundle.get("rows") or [],
-            cat_lookup,
-            max_rows=10,
-            show_notes=False,
-        )
+    _draw_ledger_pair(pdf, self_bundle, coparent_bundle, cat_lookup)
 
     out = pdf.output(dest="S")
     if isinstance(out, str):
