@@ -30,6 +30,8 @@ import {
   Send,
 } from "lucide-react";
 
+import CourtReportDisclaimer from "../CourtReportDisclaimer";
+
 export const TONE_STYLES = {
   danger: {
     chip: "bg-[#FCE3DC] text-[#9A3A23] border-[#9A3A23]/25",
@@ -55,6 +57,7 @@ export const TONE_STYLES = {
 
 export default function SafetyAssessmentResultsCard({
   assessment,
+  authorName = null,
   onDownload,
   onDownloadCourt,
   onDownloadOnePager,
@@ -300,6 +303,12 @@ export default function SafetyAssessmentResultsCard({
           </p>
         </div>
 
+        <CourtReportDisclaimer
+          className="mb-4"
+          authorName={authorName || null}
+          bothParents={false}
+          testId="safety-results-court-disclaimer"
+        />
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
@@ -315,7 +324,7 @@ export default function SafetyAssessmentResultsCard({
             onClick={onDownloadCourt}
             disabled={downloadingCourt}
             data-testid="results-download-court-report"
-            title="TISFL Court Report — one finding per page, interpretation rules on page 1, signature block, safe to file. Does not include your raw Section 1 answers."
+            title="Family Safety and Functioning Reflection · Court-facing report — one finding per page, interpretation rules on page 1, signature block, safe to file. Does not include your raw Section 1 answers."
             className="inline-flex items-center gap-2 rounded-full bg-[#1A1330] text-white px-5 py-2.5 text-sm font-semibold shadow-md hover:bg-[#3D1A78] transition-colors disabled:opacity-60"
           >
             <Scale size={14} />

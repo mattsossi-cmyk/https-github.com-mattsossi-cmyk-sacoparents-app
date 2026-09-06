@@ -102,6 +102,8 @@ def _draw_heatmap(pdf: _NDPdf, threat: int, vuln: int) -> None:
     pdf.set_y(origin_y + 4 * cell + 6)
 
 
+from court_report_disclaimer import draw_court_report_disclaimer
+
 def build_nd_risk_pdf(
     *,
     assessment: Dict[str, Any],
@@ -159,6 +161,16 @@ def build_nd_risk_pdf(
     pdf.set_font("Courier", "", 9)
     pdf.cell(0, 5, _safe(assessment.get("assessment_id", "")), ln=1)
 
+    _section_break(pdf)
+
+    # Court-report disclaimer — six caveats a mediator or judge should
+    # see before reading the tier + heatmap. Introduced 2026-03-06 per
+    # product review. Uses the target parent's name when available.
+    draw_court_report_disclaimer(
+        pdf,
+        author_name=assessment.get("target_name") or None,
+        both_parents=False,
+    )
     _section_break(pdf)
 
     # ---- Overall tier ----------------------------------------------------

@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { toast } from "sonner";
 import { Toaster } from "../components/ui/sonner";
 import { CheckCircle2, Scale, ShieldCheck } from "lucide-react";
+import CourtReportDisclaimer from "../components/CourtReportDisclaimer";
 
 /**
  * Public Court-Report verify + co-sign page.
@@ -106,6 +107,13 @@ export default function VerifyCourtReport() {
           </div>
           This report is a guided self-reflection resource — <strong>not a clinical, forensic, legal, or professional evaluation</strong>. Co-signing acknowledges you have <em>discussed the findings with the parent</em>, not that you endorse them as an evaluation.
         </div>
+
+        <CourtReportDisclaimer
+          className="mb-6"
+          authorName={meta.parent_name || null}
+          bothParents={false}
+          testId="verify-court-report-disclaimer"
+        />
 
         <div className="rounded-3xl bg-white border border-[#E5E0EE] shadow-sm p-6 sm:p-8 mb-6">
           <div className="grid grid-cols-2 gap-4 mb-4 text-sm">

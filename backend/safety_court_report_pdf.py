@@ -234,6 +234,8 @@ def _sig_line(pdf: _CourtReportPDF, label: str, printed_name: str):
     pdf.set_text_color(*TEXT_DARK)
 
 
+from court_report_disclaimer import draw_court_report_disclaimer
+
 def build_court_report_pdf(
     *,
     user_name: str,
@@ -261,6 +263,16 @@ def build_court_report_pdf(
     pdf.set_auto_page_break(auto=True, margin=20)
 
     _render_cover(pdf, user_name=user_name, level=level, assessment_id=assessment_id)
+
+    # Court-report disclaimer — the six caveats a mediator or judge
+    # should see before reading any findings. Introduced 2026-03-06
+    # per product review; shared across every court-facing artefact.
+    pdf.add_page()
+    draw_court_report_disclaimer(
+        pdf,
+        author_name=user_name,
+        both_parents=False,
+    )
 
     finding_meta = [
         ("family_violence_pattern", 1, DANGER, []),

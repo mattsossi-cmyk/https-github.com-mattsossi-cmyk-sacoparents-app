@@ -196,7 +196,7 @@ function MarketingFooter() {
                 SA CoParents
               </div>
               <div className="text-xs text-white/60 mt-1" data-testid="footer-tagline">
-                With Reflection. Build Alignment. Create Better Agreements.
+                Build Alignment. Create Better Agreements.
               </div>
             </div>
           </div>
