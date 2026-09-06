@@ -98,7 +98,7 @@ def _build_court_map(case_type, buckets):
     }
 
 
-def generate_report(case):
+def generate_report(case: dict) -> dict:
     cfg = ASSESSMENT_TYPES[case["type"]]
     ra = case["responses"]["a"]
     rb = case["responses"]["b"]

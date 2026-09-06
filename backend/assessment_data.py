@@ -82,7 +82,7 @@ SHARED_GOALS_BASE = [
 ]
 
 
-def T(key, label, question, aligned, action, need):
+def T(key: str, label: str, question: str, aligned: str, action: str, need: str) -> tuple:
     return {
         "key": key,
         "label": label,
@@ -453,7 +453,7 @@ _DEMO_A_PATTERN = [3, 1, 2, 0, 2, 1, 3, 2, 1, 2, 3, 0]
 _DEMO_B_PATTERN = [3, 1, 1, 0, 4, 1, 3, 3, 1, 2, 4, 0]  # 4 == UNSURE index
 
 
-def demo_payload(type_key):
+def demo_payload(type_key: str) -> dict:
     cfg = ASSESSMENT_TYPES[type_key]
     topics = cfg["topics"]
     a_answers, b_answers = {}, {}

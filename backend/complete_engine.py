@@ -4,7 +4,7 @@ from report_engine import generate_report
 from joint_engine import generate_joint_report
 
 
-def build_complete_report(cases, joints, user_name):
+def build_complete_report(cases: list, joints: list, user_name: str) -> dict:
     sections = []
     totals = {"aligned": 0, "different": 0, "info": 0}
     children = []

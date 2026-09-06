@@ -28,7 +28,7 @@ NEXT_STEPS = [
 ]
 
 
-def S(needs, conversation, options, questions):
+def S(needs: list, conversation: list, options: list, questions: list) -> dict:
     return {"needs": needs, "conversation": conversation, "options": options, "questions": questions}
 
 
@@ -231,7 +231,7 @@ HUB_MAIN_SUBJECTS = [
 HUB_SAFETY_SUBJECTS = ["safety", "risk", "safety_communication", "safeguards"]
 
 
-def merged_subject_config(subject_keys):
+def merged_subject_config(subject_keys: list) -> dict:
     if len(subject_keys) == 1:
         return SUBJECTS[subject_keys[0]]
     merged = {"needs": [], "conversation": [], "options": [], "questions": []}

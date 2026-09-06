@@ -130,7 +130,7 @@ def _theme_analysis(corpus_a, corpus_b, pa, pb, child):
     return rows, statements, differences
 
 
-def generate_joint_report(doc):
+def generate_joint_report(doc: dict) -> dict:
     cfg = merged_subject_config(doc.get("subjects") or [doc["subject"]])
     subject_label = doc["subject_label"]
     child = doc.get("child_name") or "the child"
@@ -171,7 +171,7 @@ def generate_joint_report(doc):
     }
 
 
-def generate_agreement(doc):
+def generate_agreement(doc: dict) -> dict:
     child = doc.get("child_name") or "the child"
     pa = doc["participants"]["a"].get("name") or "Parent A"
     pb = doc["participants"]["b"].get("name") or "Parent B"
@@ -228,7 +228,7 @@ SAMPLE_MEDIATION_PURPOSE = (
 )
 
 
-def sample_mediation_report():
+def sample_mediation_report() -> dict:
     answers_a = {
         "needs_most": "Avery needs a predictable routine and calm communication between both parents so she feels secure in both homes.",
         "working_well": "School pickup transitions are working well, and we both keep Avery's bedtime routine consistent.",
