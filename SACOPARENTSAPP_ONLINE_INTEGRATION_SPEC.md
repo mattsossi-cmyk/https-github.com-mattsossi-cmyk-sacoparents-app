@@ -9,11 +9,16 @@ assessment. This document specifies exactly what sacoparentsapp.online must impl
 ## Shared Secret
 
 Both projects authenticate server-to-server with one shared secret.
-Add this exact line to sacoparentsapp.online's `backend/.env` (and its production env):
+Add this key to sacoparentsapp.online's `backend/.env` (and its production env):
 
 ```
-INTEGRATION_SHARED_SECRET="2f9c1e7a4b8d3f6a5c0e9d7b2f4a6c8e1d3b5a7c9e0f2a4b6c8d1e3f5a7b9c0d"
+INTEGRATION_SHARED_SECRET="<copy the current value from the Align project's backend env settings>"
 ```
+
+SECURITY: the shared secret is standardized across both projects (owner-directed, 2026-09-06).
+Copy the current value directly from the Align project's protected environment settings
+(`INTEGRATION_SHARED_SECRET` in Align's backend env) — never via chat. Both projects must
+hold the identical value or every integration call fails with 401.
 
 Every integration endpoint must compare the `X-Integration-Key` header against this value
 using a constant-time comparison (e.g. `hmac.compare_digest`) and return 401 on mismatch.
@@ -80,8 +85,7 @@ Response 404: {"detail": "No completed assessments found"}
 
 ## Notes
 
-- All calls are server-to-server over HTTPS; parents never handle tokens.
-- Link codes are single-use and expire in 15 minutes.
+- All calls are server-to-server over HTTPS; parents never handle tokens.- Link codes are single-use and expire in 15 minutes.
 - The same confidentiality rules apply: imported material stays private to the importing
   parent until they choose to participate in a Joint Report comparison.
 - sacoparentsalign also uses Endpoint 3 to pre-fill private (individual) assessments with the
@@ -114,6 +118,8 @@ appears in the Joint Alignment Report. Align case data model additions on joint_
 `case_code` (shown to participants), `case_reference` (optional, professional-only, never
 returned to parents), responses.{a|b}.imported/external as with account-link imports.
 
-SECURITY: the original INTEGRATION_SHARED_SECRET was exposed in chat earlier and was ROTATED in
-the Align project on 2026-09-05. The sacoparentsapp.online project must be configured with the
-new value (copy it from the Align project's protected environment settings — never from chat).
+SECRET RESOLUTION (2026-09-06): the sibling App (feel-good-tracker project) was configured with
+the ORIGINAL secret value. The owner directed Align to standardize on that same value; Align's
+backend/.env INTEGRATION_SHARED_SECRET was set back to match (verified: verify-link-code with
+the shared value returns 404 "Code not found or expired" = authenticated, not 401). The earlier
+rotation is superseded. The literal value must still never be printed in chat/specs going forward.
