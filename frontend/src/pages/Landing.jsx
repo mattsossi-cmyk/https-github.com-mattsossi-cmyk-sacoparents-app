@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/Brand";
 
-const POSTER_IMG = "/align-pro-poster.png";
+const POSTER_IMG = "/align-hero-simple.jpg";
+const FLYER_IMG = "/align-pro-poster.png";
 
 const PAGES = [
   "Joint Alignment Overview", "Your Child at the Center", "Where You Align",
@@ -133,7 +134,7 @@ export default function Landing() {
           <div className="absolute -top-4 -right-4 w-full h-full bg-secondary rounded-xl -z-10" />
           <img
             src={POSTER_IMG}
-            alt="SA CoParents Align for Professionals — Building on Different Perspectives, Creating a Shared Future"
+            alt="SA CoParents Align — For Professionals. Two parent perspectives. One child-focused report."
             className="rounded-xl shadow-xl w-full"
             data-testid="hero-image"
           />
@@ -294,6 +295,9 @@ export default function Landing() {
                 <span key={p} className="text-xs bg-white border border-border rounded-full px-3 py-1.5" data-testid={`page-chip-${i}`}>{p}</span>
               ))}
             </div>
+            <p className="mt-3 text-xs text-muted-foreground" data-testid="pages-sample-note">
+              The preview is a condensed Sample Mediation Statement; every completed Joint Alignment Report follows this full universal 10-page structure.
+            </p>
           </div>
         </div>
       </section>
@@ -318,7 +322,7 @@ export default function Landing() {
                 <p className="mt-4 text-xs bg-red-50 border border-red-200 text-red-900 rounded-md p-3" data-testid="safety-note">{s.note}</p>
               )}
               <Link to="/sample-mediation" className="inline-block mt-4" data-testid={`view-sample-${s.slug}`}>
-                <Button variant="outline" size="sm">View Sample</Button>
+                <Button variant="outline" size="sm">View General Report Example</Button>
               </Link>
             </div>
           ))}
@@ -365,6 +369,22 @@ export default function Landing() {
         </p>
       </section>
 
+      <section className="max-w-4xl mx-auto px-6 py-20" data-testid="leadership-section">
+        <h2 className="text-3xl md:text-4xl font-semibold" data-testid="leadership-heading">Created for the Professionals Who Guide Families</h2>
+        <p className="mt-4 text-muted-foreground leading-relaxed max-w-2xl">
+          SA CoParents Align was developed from family-law and mediation experience to help professionals
+          organize parent perspectives before beginning difficult child-related conversations. The platform
+          is designed to support informed professional dialogue, identify areas requiring attention, and help
+          families move from competing positions toward child-focused decisions.
+        </p>
+        <ul className="mt-6 space-y-2 text-sm">
+          <li className="flex items-start gap-2.5"><CheckCircle2 className="h-4 w-4 text-brand-teal shrink-0 mt-0.5" /> <span><strong>Who it's for:</strong> mediators, family-law attorneys, therapists and counselors, parenting coordinators and facilitators, collaborative and court-appointed professionals.</span></li>
+          <li className="flex items-start gap-2.5"><CheckCircle2 className="h-4 w-4 text-brand-teal shrink-0 mt-0.5" /> <span><strong>The problem it addresses:</strong> professionals too often begin with two competing narratives and no organized common ground. Align structures each parent's independent perspective before the first joint conversation.</span></li>
+          <li className="flex items-start gap-2.5"><CheckCircle2 className="h-4 w-4 text-brand-teal shrink-0 mt-0.5" /> <span><strong>"Authorized professional":</strong> the practitioner who created the case and invited the parents. They control invitations, timing, and report access; parents participate only through that professional's secure invitation.</span></li>
+          <li className="flex items-start gap-2.5"><CheckCircle2 className="h-4 w-4 text-brand-teal shrink-0 mt-0.5" /> <span><strong>Parent platform:</strong> individual reflection and private assessments happen in the <a href="https://sacoparentsapp.online" target="_blank" rel="noreferrer" className="text-primary hover:underline">SA CoParents App</a> (sacoparentsapp.online) — Align is the professional counterpart.</span></li>
+        </ul>
+      </section>
+
       <section id="invitation" className="bg-secondary/60 py-20" data-testid="professionals-invite">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-semibold" data-testid="invite-heading">Help Parents Find Alignment Before Agreement</h2>
@@ -397,6 +417,10 @@ export default function Landing() {
             <Link to="/sample-mediation" data-testid="sample-mediation-link">
               <Button size="lg" variant="outline" data-testid="sample-mediation-btn">Preview a Sample Mediation Statement</Button>
             </Link>
+          </div>
+          <div className="mt-10 max-w-md" data-testid="pro-flyer">
+            <img src={FLYER_IMG} alt="SA CoParents Align for Professionals — shareable overview" className="rounded-xl shadow-md w-full" />
+            <p className="mt-2 text-xs text-muted-foreground text-center">Shareable overview — feel free to forward to colleagues.</p>
           </div>
         </div>
       </section>

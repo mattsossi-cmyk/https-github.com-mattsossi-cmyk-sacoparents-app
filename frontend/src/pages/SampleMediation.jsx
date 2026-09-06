@@ -66,6 +66,10 @@ export default function SampleMediation() {
             <span className="inline-block mt-4 text-xs font-bold uppercase tracking-widest bg-align-yellow/20 text-yellow-700 px-3 py-1 rounded-full" data-testid="sample-badge">
               Sample — fictional example data
             </span>
+            <p className="mt-3 text-xs text-muted-foreground max-w-lg mx-auto" data-testid="sample-condensed-note">
+              This is a condensed Sample Mediation Statement. The complete Joint Alignment Report follows a universal
+              10-page structure (overview, alignment map, differences, child needs, options, conversation guide, action plan, and summary).
+            </p>
             <h1 className="text-4xl font-extrabold text-brand-purple mt-3" data-testid="sample-title">{report.report_title}</h1>
             <div className="mt-4 text-sm text-muted-foreground space-y-1">
               <p data-testid="sample-child">Child: <strong className="text-foreground">{report.child_name}</strong></p>

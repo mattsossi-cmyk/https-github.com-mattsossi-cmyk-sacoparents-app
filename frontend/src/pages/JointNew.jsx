@@ -148,7 +148,7 @@ export default function JointNew() {
                 </p>
               </div>
             ))}
-            <ConfidentialityNotice />
+            <ConfidentialityNotice variant="professional" />
             <div className="flex justify-center mt-6">
               <Link to="/dashboard" data-testid="pro-done-link">
                 <Button variant="outline" data-testid="pro-done-btn">Back to Dashboard</Button>

@@ -139,7 +139,7 @@ export default function Auth() {
                 </div>
               </>
             )}
-            {mode === "register" && <ConfidentialityNotice />}
+            {mode === "register" && <ConfidentialityNotice variant={isParentFlow ? "parent" : "professional"} />}
             <Button type="submit" className="w-full h-12" disabled={busy} data-testid="auth-submit-btn">
               {busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? (isParentFlow ? "Create parent account" : "Create professional account") : mode === "forgot" ? "Send verification code" : "Reset password"}
             </Button>
