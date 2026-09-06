@@ -93,19 +93,25 @@ const TOPIC_TILES = [
     key: "communication",
     label: "Communication",
     icon: MessageCircle,
-    comingSoon: true,
+    fallback: "/communication/reflection",
+    ready: () => "/communication/alignment",
+    alwaysStandalone: true,
   },
   {
     key: "schedule",
     label: "Parenting Schedule",
     icon: CalendarDays,
-    comingSoon: true,
+    fallback: "/schedule/reflection",
+    ready: () => "/schedule/alignment",
+    alwaysStandalone: true,
   },
   {
     key: "activities",
     label: "Activities",
     icon: Palette,
-    comingSoon: true,
+    fallback: "/activities/reflection",
+    ready: () => "/activities/alignment",
+    alwaysStandalone: true,
   },
 ];
 
@@ -198,8 +204,16 @@ function TopicCircle({ tile, shareId }) {
       </div>
     );
   }
-  const href = shareId ? tile.ready(shareId) : tile.fallback;
-  const isReady = Boolean(shareId);
+  // Standalone reflection-based topics (Communication, Parenting Schedule,
+  // Activities) have their own reflection→alignment flow; they don't need
+  // the SNC2 pair-and-compare share id.
+  const isStandalone = tile.alwaysStandalone;
+  const href = isStandalone
+    ? tile.fallback
+    : shareId
+      ? tile.ready(shareId)
+      : tile.fallback;
+  const isReady = !isStandalone && Boolean(shareId);
   return (
     <Link
       to={href}
@@ -211,7 +225,7 @@ function TopicCircle({ tile, shareId }) {
       </div>
       <div className="text-sm font-semibold text-[#1A1330]">{tile.label}</div>
       <div className="mt-1 text-[10px] uppercase tracking-[0.14em] font-semibold text-[#3D1A78]">
-        {isReady ? "Open compare" : "Start"}
+        {isStandalone ? "Start reflection" : isReady ? "Open compare" : "Start"}
       </div>
     </Link>
   );

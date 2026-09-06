@@ -27,6 +27,70 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-06 — Parenting Schedule + Activities Joint Alignment Reports (fka "Coming soon")
+- **Two new Joint Alignment Reports** matching the Communication
+  Alignment pattern shipped in iter138. Both surface on the
+  `/joint-reports` picker as fully-interactive tiles (no longer
+  "Coming soon").
+- **Parenting Schedule** — 12-question reflection scored across three
+  dimensions (Predictability, Flexibility, Transitions). Neutral
+  first-person stems only.
+  - Backend: `parenting_schedule_questions.py`,
+    `parenting_schedule_alignment_routes.py`,
+    `ai_summary_parenting_schedule.py`.
+  - Endpoints: `GET /api/parenting-schedule-reflection/schema`,
+    `PUT /api/parenting-schedule-reflection`,
+    `GET /api/parenting-schedule-reflection/mine`,
+    `POST /api/parenting-schedule-alignment/compare`,
+    `POST /api/parenting-schedule-alignment/compare/summary`.
+  - Storage: `parenting_schedule_reflections` collection.
+  - Frontend: `pages/ParentingScheduleReflection.jsx` at
+    `/schedule/reflection` (one-question-per-screen, auto-advance,
+    debounced auto-save 800ms) and `pages/ParentingScheduleAlignment.jsx`
+    at `/schedule/alignment` (solo → pair-by-email → waiting/ready
+    states → neutral LLM summary + `context="parenting_schedule"`
+    share-link mint). Amber palette so it visually reads distinct
+    from Communication (blue) and Activities (green).
+- **Activities** — same shape, 12 questions across Awareness,
+  Support, Logistics. Scope explicitly limited to kids'
+  extracurriculars — never medical / educational / therapeutic
+  decisions (those live on their own deep-dive pathways).
+  - Backend: `activities_reflection_questions.py`,
+    `activities_alignment_routes.py`, `ai_summary_activities.py`.
+  - Endpoints: `GET /api/activities-reflection/schema`,
+    `PUT /api/activities-reflection`,
+    `GET /api/activities-reflection/mine`,
+    `POST /api/activities-alignment/compare`,
+    `POST /api/activities-alignment/compare/summary`.
+  - Storage: `activities_reflections` collection.
+  - Frontend: `pages/ActivitiesReflection.jsx` at
+    `/activities/reflection` and `pages/ActivitiesAlignment.jsx` at
+    `/activities/alignment`. Green palette. `context="activities"`
+    on share-link mint.
+- **Joint Reports Picker updates**: three tiles (`communication`,
+  `schedule`, `activities`) flipped from `comingSoon: true` to
+  interactive links via the new `alwaysStandalone: true` flag on
+  `TopicCircle` (routes to reflection directly, bypassing the SNC2
+  Compare share-id check).
+- **Neutrality guardrails** (identical to iter138): both LLM summary
+  modules short-circuit to the safety sentence when either parent's
+  `intake_choice == "unsafe"`, use Claude Sonnet 4.5 by default with
+  GPT-5.6 Terra opt-in, never adjudicate, ~150-220 words,
+  parent-attributed language only, never invent specifics.
+- **Completion hook**: both save endpoints wire into
+  `joint_alignment_routes.mark_assessment_completed` so professional-
+  driven Joint Alignment Cases mark the correct parent slot as
+  completed when the reflection is finished.
+- **Coverage**: `tests/test_iter146_parenting_schedule_alignment.py`
+  (7 tests) + `tests/test_iter147_activities_alignment.py` (7 tests).
+  Full iter138 + iter146 + iter147 suite: 21/21 green. Frontend
+  compiled clean.
+- **Verified live**: `/joint-reports` renders all three previously-
+  "Coming soon" tiles as interactive `<a>` tags; `/schedule/reflection`,
+  `/schedule/alignment`, `/activities/reflection`, and
+  `/activities/alignment` all render with the correct hero, dimension
+  labels, and pair-by-email panels.
+
 ### 2026-03-05 — Unsure Pathway + One Clear Ending + Dashboard refactor start
 - **"I'm not sure — help me choose"** mini-quiz on the Four-Circle
   Front Door (`FourCircleFrontDoor.jsx`). Two soft, no-wrong-answer
@@ -386,6 +450,12 @@ Auth: Custom JWT (`auth.py`)
   3 contract tests locking the shape the toaster relies on
   (`total`+`comments` keys, per-row `comment_text` field name,
   newest-first ordering). All 30 recent iter-tests green.
+
+**Upcoming and Future Tasks**
+    Future Tasks:
+    - P3: Audio Intro for Professionals (Shimmer-voiced audio file).
+    - P3: Anchored Badge pill on regenerated clauses.
+    - P3: Centralised /samples landing page for all 18 sample PDFs.
 
 ## Prioritized Backlog
 

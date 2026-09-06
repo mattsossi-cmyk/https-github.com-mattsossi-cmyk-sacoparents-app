@@ -13,7 +13,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Download, Loader2, ShieldCheck, Users, Info, Mail, RefreshCw,
-  Link2, Copy, Check, Trash2,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "../components/AppShell";
@@ -22,6 +22,8 @@ import JointReportEmailDialog from "../components/JointReportEmailDialog";
 import { Section } from "../components/joint/JointAgreementSections";
 import JointAgreementParentView from "../components/joint/JointAgreementParentView";
 import RecentlySharedWith from "../components/joint/RecentlySharedWith";
+import RefreshDraftModal from "../components/joint/RefreshDraftModal";
+import AgreementShareLinkModal from "../components/joint/AgreementShareLinkModal";
 import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import { api, API } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -558,229 +560,33 @@ export default function JointAgreement() {
         />
 
         {regenConfirmOpen && (
-          <div
-            className="fixed inset-0 z-50 grid place-items-center bg-black/45 backdrop-blur-sm px-4"
-            data-testid="joint-agreement-regenerate-confirm"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="joint-agreement-regen-title"
-            onClick={() => !regenerating && setRegenConfirmOpen(false)}
-          >
-            <div
-              className="w-full max-w-md rounded-3xl bg-white shadow-2xl border border-[#E5E0EE] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="px-6 pt-6">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-[#1F5C3B] font-bold mb-1">
-                  Refresh my draft
-                </div>
-                <h3
-                  id="joint-agreement-regen-title"
-                  className="font-bold text-xl text-[#1A1330] leading-tight"
-                >
-                  Anchor your individual draft to what you both already proposed?
-                </h3>
-              </div>
-              <div className="px-6 py-5 space-y-3">
-                <p className="text-sm text-[#4B4567] leading-relaxed">
-                  We&rsquo;ll create a fresh version of <strong>your</strong>{" "}
-                  individual Co-Parenting Agreement Draft. Clauses that
-                  both you and {parentB.split(" ")[0] || "your co-parent"}{" "}
-                  already proposed will move to the top of each section
-                  and be marked as anchored.
-                </p>
-                <p className="text-sm text-[#4B4567] leading-relaxed">
-                  Your previous draft is kept — nothing is deleted.{" "}
-                  {(summary.both_proposed || 0)} clause
-                  {(summary.both_proposed || 0) === 1 ? "" : "s"} will be
-                  anchored.
-                </p>
-              </div>
-              <div className="flex items-center justify-end gap-2 px-6 pb-6 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setRegenConfirmOpen(false)}
-                  disabled={regenerating}
-                  data-testid="joint-agreement-regenerate-cancel"
-                  className="rounded-full bg-white border border-[#E5E0EE] text-[#1A1330] px-4 py-2.5 text-sm font-semibold hover:bg-[#F8F7FC] disabled:opacity-60"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={regenerateMine}
-                  disabled={regenerating}
-                  data-testid="joint-agreement-regenerate-confirm-btn"
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1F5C3B] to-[#2DB5B5] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
-                >
-                  {regenerating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                  {regenerating ? "Refreshing…" : "Refresh my draft"}
-                </button>
-              </div>
-            </div>
-          </div>
+          <RefreshDraftModal
+            open={regenConfirmOpen}
+            onCancel={() => setRegenConfirmOpen(false)}
+            onConfirm={regenerateMine}
+            regenerating={regenerating}
+            parentB={parentB}
+            bothProposedCount={summary.both_proposed || 0}
+          />
         )}
 
         {shareLinkOpen && (
-          <div
-            className="fixed inset-0 z-50 grid place-items-center bg-black/45 backdrop-blur-sm px-4"
-            data-testid="joint-agreement-share-link-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="joint-agreement-share-link-title"
-            onClick={() => !shareLinkMinting && !shareLinkRevoking && setShareLinkOpen(false)}
-          >
-            <div
-              className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-[#E5E0EE] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="px-6 pt-6">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
-                  Shareable link
-                </div>
-                <h3
-                  id="joint-agreement-share-link-title"
-                  className="font-bold text-xl text-[#1A1330] leading-tight"
-                >
-                  Give your mediator or attorney direct access
-                </h3>
-              </div>
-
-              {!shareLinkResult && (
-                <div className="px-6 py-5 space-y-4">
-                  <p className="text-sm text-[#4B4567] leading-relaxed">
-                    We&rsquo;ll generate a signed link they can open in
-                    any browser — no login required. The link renders the
-                    same joint draft you see here and lets them download
-                    the PDF. You can revoke it at any time.
-                  </p>
-                  <div>
-                    <label
-                      htmlFor="joint-agreement-share-link-expiry"
-                      className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
-                    >
-                      Link expires in
-                    </label>
-                    <select
-                      id="joint-agreement-share-link-expiry"
-                      value={shareLinkExpireDays}
-                      onChange={(e) => setShareLinkExpireDays(parseInt(e.target.value, 10))}
-                      disabled={shareLinkMinting}
-                      data-testid="joint-agreement-share-link-expiry-select"
-                      className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2.5 text-sm text-[#1A1330] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60"
-                    >
-                      <option value={1}>1 day</option>
-                      <option value={7}>7 days</option>
-                      <option value={14}>14 days</option>
-                      <option value={30}>30 days</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="joint-agreement-share-link-note"
-                      className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
-                    >
-                      Optional note for the recipient
-                    </label>
-                    <textarea
-                      id="joint-agreement-share-link-note"
-                      value={shareLinkNote}
-                      onChange={(e) => setShareLinkNote(e.target.value.slice(0, 500))}
-                      disabled={shareLinkMinting}
-                      rows={3}
-                      maxLength={500}
-                      placeholder="e.g. Hi Sam — this is the joint draft I mentioned. Happy to walk through it on Tuesday."
-                      data-testid="joint-agreement-share-link-note-input"
-                      className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2 text-sm text-[#1A1330] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60 resize-none"
-                    />
-                    <div className="mt-1 text-[11px] text-[#857E9C] text-right">
-                      {shareLinkNote.length}/500
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {shareLinkResult && (
-                <div className="px-6 py-5 space-y-4">
-                  <p className="text-sm text-[#4B4567] leading-relaxed">
-                    Copy the link below and send it however you like —
-                    email, secure message, or paste it into your case
-                    system. Anyone with the link can view and download
-                    until you revoke it or it expires.
-                  </p>
-                  <div className="rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] p-3">
-                    <input
-                      ref={shareLinkInputRef}
-                      type="text"
-                      readOnly
-                      value={`${window.location.origin}${shareLinkResult.preview_path || shareLinkResult.path}`}
-                      onFocus={(e) => e.target.select()}
-                      data-testid="joint-agreement-share-link-url"
-                      className="w-full bg-transparent text-sm text-[#1A1330] font-mono outline-none"
-                    />
-                  </div>
-                  {shareLinkResult.expires_at && (
-                    <div
-                      className="text-xs text-[#4B4567]"
-                      data-testid="joint-agreement-share-link-expiry-info"
-                    >
-                      Expires{" "}
-                      {new Date(shareLinkResult.expires_at).toLocaleString(undefined, {
-                        year: "numeric", month: "short", day: "numeric",
-                        hour: "2-digit", minute: "2-digit",
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="flex items-center justify-between gap-2 px-6 pb-6 pt-2 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => setShareLinkOpen(false)}
-                  disabled={shareLinkMinting || shareLinkRevoking}
-                  data-testid="joint-agreement-share-link-close"
-                  className="rounded-full bg-white border border-[#E5E0EE] text-[#1A1330] px-4 py-2.5 text-sm font-semibold hover:bg-[#F8F7FC] disabled:opacity-60"
-                >
-                  {shareLinkResult ? "Done" : "Cancel"}
-                </button>
-                {!shareLinkResult ? (
-                  <button
-                    type="button"
-                    onClick={mintShareLink}
-                    disabled={shareLinkMinting}
-                    data-testid="joint-agreement-share-link-create-btn"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
-                  >
-                    {shareLinkMinting ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
-                    {shareLinkMinting ? "Creating…" : "Create link"}
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={revokeShareLink}
-                      disabled={shareLinkRevoking}
-                      data-testid="joint-agreement-share-link-revoke-btn"
-                      className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#B02A2A] text-[#B02A2A] px-4 py-2.5 text-sm font-semibold hover:bg-[#FBEBEB] disabled:opacity-60"
-                    >
-                      {shareLinkRevoking ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                      Revoke
-                    </button>
-                    <button
-                      type="button"
-                      onClick={copyShareLink}
-                      data-testid="joint-agreement-share-link-copy-btn"
-                      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white px-5 py-2.5 text-sm font-semibold"
-                    >
-                      {shareLinkCopied ? <Check size={14} /> : <Copy size={14} />}
-                      {shareLinkCopied ? "Copied" : "Copy link"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <AgreementShareLinkModal
+            open={shareLinkOpen}
+            onClose={() => setShareLinkOpen(false)}
+            shareLinkResult={shareLinkResult}
+            shareLinkExpireDays={shareLinkExpireDays}
+            setShareLinkExpireDays={setShareLinkExpireDays}
+            shareLinkMinting={shareLinkMinting}
+            shareLinkRevoking={shareLinkRevoking}
+            shareLinkNote={shareLinkNote}
+            setShareLinkNote={setShareLinkNote}
+            onMint={mintShareLink}
+            onRevoke={revokeShareLink}
+            onCopy={copyShareLink}
+            shareLinkCopied={shareLinkCopied}
+            shareLinkInputRef={shareLinkInputRef}
+          />
         )}
       </div>
     </AppShell>

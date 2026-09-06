@@ -20,7 +20,7 @@
  * Underneath every circle, the same six-step process:
  *   Reflect → Understand → Identify → Explore → Align → Agree
  */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users,
@@ -46,9 +46,11 @@ const CIRCLES = [
   {
     key: "co-parenting",
     label: "Make a Co-Parenting Agreement",
-    prompt: "Prepare a mediator-ready foundation for a shared parenting agreement.",
+    prompt: "Put a written plan together you can bring to your mediator.",
     detail:
-      "Walk the 4-step pathway: Assessment → Foundation Statement → Mediation Statement → Mediation Prep. Your co-parent takes it separately.",
+      "Say what you want in your own words, and let SA CoParents shape it into something a mediator or attorney can read at a glance. Your co-parent goes through the same steps separately.",
+    clinicalDetail:
+      "Under the hood: Co-Parenting Assessment → Foundation Statement → Mediation Statement → Mediation Prep.",
     icon: Handshake,
     tone: {
       ring: "ring-[#3D1A78]/25",
@@ -70,10 +72,11 @@ const CIRCLES = [
   {
     key: "communication",
     label: "Communicate More Effectively",
-    prompt:
-      "Reflect on your patterns, get coaching, and build a message you're proud to send.",
+    prompt: "Draft a message you're proud to send.",
     detail:
-      "For everyday messages — pickups, illnesses, school notes. Private reflection first, then optional coaching from an AI trained on de-escalation.",
+      "For everyday messages — pickups, sick days, school notes. Think it through privately, then let AI help you write something calm and clear.",
+    clinicalDetail:
+      "Includes a private communication reflection and an optional AI coaching pass that borrows from de-escalation research.",
     icon: MessageCircle,
     tone: {
       ring: "ring-[#1E6FA8]/25",
@@ -95,10 +98,11 @@ const CIRCLES = [
   {
     key: "safety",
     label: "Address Safety Concerns",
-    prompt:
-      "Private, calm, and never assumes alignment — safety comes first, always.",
+    prompt: "A private check-in — nothing is ever shared without your say-so.",
     detail:
-      "A private safety screen you complete alone. Nothing is shared unless you choose to share it. Includes hotlines, safety planning, and legal referrals.",
+      "Answer a few questions on your own to see what a professional would notice. You'll leave with hotlines, a safety plan you can print, and clear next-step options.",
+    clinicalDetail:
+      "Includes the Trauma-Informed Safety & Functioning Lens (TISFL) family-violence screen and Texas HB 300-aligned resource referrals.",
     icon: ShieldAlert,
     tone: {
       ring: "ring-[#B45F13]/25",
@@ -120,10 +124,11 @@ const CIRCLES = [
   {
     key: "child-needs",
     label: "Address My Child's Needs",
-    prompt:
-      "Educational, medical, or psychological — pick the lane, get your report, invite a joint review.",
+    prompt: "Get a clear picture of school, doctor, or emotional support.",
     detail:
-      "Deep-dive assessments for school, doctors, therapy, or coordinated special-needs care. Each finishes with an individual report and an optional joint-report invitation.",
+      "Take a deep look at what your child needs — one area at a time. You'll get your own report, and you can invite the other parent to compare notes side-by-side.",
+    clinicalDetail:
+      "Under the hood: 25-question deep dives for Educational, Medical, and Psychological alignment, plus the Joint Alignment Report.",
     icon: Baby,
     tone: {
       ring: "ring-[#1E7A55]/25",
@@ -302,11 +307,52 @@ const CIRCLE_LABELS = {
   "child-needs": "Address My Child's Needs",
 };
 
+// Persist the two helper answers so returning parents see the
+// recommended pathway highlighted immediately — no need to re-run the
+// quiz on every visit. Scoped to this browser (localStorage). The
+// parent can always tap "Answer the questions again" or the close
+// button to clear.
+const HELPER_STORAGE_KEY = "sacoparents.frontdoor.helper.v1";
+
+function loadHelperAnswers() {
+  try {
+    const raw = window.localStorage.getItem(HELPER_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveHelperAnswers(answers) {
+  try {
+    if (answers && Object.keys(answers).length) {
+      window.localStorage.setItem(HELPER_STORAGE_KEY, JSON.stringify(answers));
+    } else {
+      window.localStorage.removeItem(HELPER_STORAGE_KEY);
+    }
+  } catch {
+    /* private mode — best-effort only */
+  }
+}
+
 export default function FourCircleFrontDoor({ userName }) {
   const navigate = useNavigate();
   const [expandedKey, setExpandedKey] = useState(null);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [helpAnswers, setHelpAnswers] = useState({});
+  // Load any previously saved quiz answers so the "Recommended" badge
+  // greets returning parents instead of making them re-quiz. If nothing
+  // was saved, we start with an empty object and the panel stays closed.
+  const [helpAnswers, setHelpAnswers] = useState(loadHelperAnswers);
+  const [helpOpen, setHelpOpen] = useState(
+    () => Object.keys(loadHelperAnswers()).length > 0,
+  );
+
+  // Persist every time the answers change so refreshes and next visits
+  // land on the same state.
+  useEffect(() => {
+    saveHelperAnswers(helpAnswers);
+  }, [helpAnswers]);
 
   const recommendedKey = useMemo(() => {
     const focus = HELPER_QUESTIONS[0].options.find(
@@ -373,7 +419,44 @@ export default function FourCircleFrontDoor({ userName }) {
           the recommendation never opens a new route — the parent still
           taps the highlighted circle themselves. */}
       <div className="mt-5" data-testid="front-door-helper-wrap">
-        {!helpOpen ? (
+        {helpOpen ? (
+          <HelpMeChoosePanel
+            answers={helpAnswers}
+            setAnswers={setHelpAnswers}
+            recommendedKey={recommendedKey}
+            onDismiss={() => {
+              // Keep the saved answers so the "Recommended" badge stays
+              // lit; just fold the panel. The parent can reopen the
+              // helper any time from the pill below.
+              setHelpOpen(false);
+            }}
+            onReset={resetHelper}
+          />
+        ) : recommendedKey ? (
+          // Returning parent — the helper has already recommended a
+          // pathway. Show a soft "saved" chip so they see it stuck and
+          // can revise or clear the answer any time.
+          <div
+            className="inline-flex items-center gap-2 rounded-full border border-[#D6CFE8] bg-[#F5F1FB] px-3 py-1.5 text-xs text-[#3D1A78]"
+            data-testid="front-door-helper-saved-chip"
+          >
+            <Sparkles size={12} strokeWidth={2.4} />
+            <span>
+              Recommended for you:{" "}
+              <strong className="font-semibold">
+                {CIRCLE_LABELS[recommendedKey]}
+              </strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => setHelpOpen(true)}
+              data-testid="front-door-helper-change"
+              className="ml-1 underline text-[#3D1A78] font-semibold hover:text-[#2A0F5F]"
+            >
+              Change my answer
+            </button>
+          </div>
+        ) : (
           <button
             type="button"
             onClick={() => setHelpOpen(true)}
@@ -383,17 +466,6 @@ export default function FourCircleFrontDoor({ userName }) {
             <HelpCircle size={14} />
             I&rsquo;m not sure — help me choose
           </button>
-        ) : (
-          <HelpMeChoosePanel
-            answers={helpAnswers}
-            setAnswers={setHelpAnswers}
-            recommendedKey={recommendedKey}
-            onDismiss={() => {
-              setHelpOpen(false);
-              resetHelper();
-            }}
-            onReset={resetHelper}
-          />
         )}
       </div>
 
@@ -422,7 +494,16 @@ export default function FourCircleFrontDoor({ userName }) {
               <ArrowRight size={14} />
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Now that the parent has expanded the tile, they've told us
+              they're interested — so surface the clinical terminology
+              they'll see downstream (25-question deep dives, joint
+              alignment report). */}
+          <ClinicalDetailChip
+            text={CIRCLES.find((c) => c.key === "child-needs")?.clinicalDetail}
+            tone="green"
+            testId="front-door-child-needs-clinical"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
             {CHILD_NEEDS_TILES.map((tile) => (
               <ChildNeedsTile
                 key={tile.key}
@@ -456,8 +537,16 @@ export default function FourCircleFrontDoor({ userName }) {
               </p>
             </div>
           </div>
+          {/* Surface the clinical steps now that the parent has opened
+              this pathway — they'll see these labels on the pages
+              they're about to visit, so name them here first. */}
+          <ClinicalDetailChip
+            text={CIRCLES.find((c) => c.key === "co-parenting")?.clinicalDetail}
+            tone="purple"
+            testId="front-door-coparenting-clinical"
+          />
           <ol
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4"
             data-testid="front-door-coparenting-steps"
           >
             {COPARENTING_PATHWAY_TILES.map((tile) => (
@@ -725,5 +814,33 @@ function PathwayStepTile({ tile, onClick }) {
         />
       </button>
     </li>
+  );
+}
+
+
+/**
+ * ClinicalDetailChip — a small "Under the hood" strip shown inside the
+ * expanded pathway panels. Delays the formal / clinical terminology
+ * (Foundation Statement, TISFL, Joint Alignment Report, etc.) until
+ * *after* the parent has told us they want to explore this pathway,
+ * per the 2026-03-05 founder rule: everyday language first, clinical
+ * terms revealed once they've selected.
+ */
+function ClinicalDetailChip({ text, tone = "purple", testId }) {
+  if (!text) return null;
+  const palette = {
+    purple: "border-[#D6CFE8] bg-white text-[#4B4567]",
+    green: "border-[#C9E7D4] bg-white text-[#215D3E]",
+  };
+  return (
+    <div
+      className={`inline-flex items-start gap-2 rounded-full border ${palette[tone] || palette.purple} px-3 py-1.5 text-[11px] leading-snug`}
+      data-testid={testId}
+    >
+      <span className="text-[10px] uppercase tracking-[0.16em] font-bold shrink-0 pt-[1px]">
+        Under the hood
+      </span>
+      <span className="text-[11px] leading-snug">{text}</span>
+    </div>
   );
 }

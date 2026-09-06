@@ -45,6 +45,10 @@ import JointReportsPicker from "@/pages/JointReportsPicker";
 import CommunicationPathway from "@/pages/CommunicationPathway";
 import CommunicationReflection from "@/pages/CommunicationReflection";
 import CommunicationAlignment from "@/pages/CommunicationAlignment";
+import ParentingScheduleReflection from "@/pages/ParentingScheduleReflection";
+import ParentingScheduleAlignment from "@/pages/ParentingScheduleAlignment";
+import ActivitiesReflection from "@/pages/ActivitiesReflection";
+import ActivitiesAlignment from "@/pages/ActivitiesAlignment";
 import JoinInvitation from "@/pages/JoinInvitation";
 import JoinCode from "@/pages/JoinCode";
 import ProfessionalsDirectory from "@/pages/ProfessionalsDirectory";
@@ -151,6 +155,10 @@ function AppRoutes() {
         <Route path="/communication" element={<CommunicationPathway />} />
         <Route path="/communication/reflection" element={<CommunicationReflection />} />
         <Route path="/communication/alignment" element={<CommunicationAlignment />} />
+        <Route path="/schedule/reflection" element={<ParentingScheduleReflection />} />
+        <Route path="/schedule/alignment" element={<ParentingScheduleAlignment />} />
+        <Route path="/activities/reflection" element={<ActivitiesReflection />} />
+        <Route path="/activities/alignment" element={<ActivitiesAlignment />} />
         <Route path="/join" element={<JoinCode />} />
         <Route path="/join/:token" element={<JoinInvitation />} />
         <Route path="/professionals" element={<ProfessionalsDirectory />} />

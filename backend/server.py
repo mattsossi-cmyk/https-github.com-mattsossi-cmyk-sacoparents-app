@@ -62,6 +62,8 @@ from integration_routes import router as integration_router  # noqa: E402
 from professionals_routes import router as professionals_router  # noqa: E402
 from joint_alignment_routes import router as joint_alignment_router  # noqa: E402
 from communication_alignment_routes import router as communication_alignment_router  # noqa: E402
+from parenting_schedule_alignment_routes import router as parenting_schedule_alignment_router  # noqa: E402
+from activities_alignment_routes import router as activities_alignment_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -194,6 +196,8 @@ api_router.include_router(integration_router)
 api_router.include_router(professionals_router)
 api_router.include_router(joint_alignment_router)
 api_router.include_router(communication_alignment_router)
+api_router.include_router(parenting_schedule_alignment_router)
+api_router.include_router(activities_alignment_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.
