@@ -522,7 +522,7 @@ export default function Dashboard() {
             sub-tiles inline. Everything below (Step 1 situation picker,
             journey, cards) still renders for parents who want the deeper
             surface. */}
-        <FourCircleFrontDoor userName={user?.name} />
+        <FourCircleFrontDoor userName={user?.name} situationChoice={situationChoice} />
 
         {/* Personal home strip — Continue where you left off + My statements
             + Joint-report invitations. Hides itself when nothing to surface. */}

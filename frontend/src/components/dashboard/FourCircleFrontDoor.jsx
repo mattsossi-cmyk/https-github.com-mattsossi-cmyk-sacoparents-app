@@ -307,6 +307,19 @@ const CIRCLE_LABELS = {
   "child-needs": "Address My Child's Needs",
 };
 
+/* Maps each Situation Picker choice (from Dashboard's
+   sacoparents_situation_choice_v1 LS key) to the front-door circle
+   that best fits it, so returning parents see a pulsing "Recommended"
+   halo on the pathway matching what they told us last visit. */
+const SITUATION_TO_CIRCLE = {
+  "cooperate":     "co-parenting",
+  "difficult":     "co-parenting",
+  "mediation":     "co-parenting",
+  "high-conflict": "safety",
+  "safety":        "safety",
+  "special-needs": "child-needs",
+};
+
 // Persist the two helper answers so returning parents see the
 // recommended pathway highlighted immediately — no need to re-run the
 // quiz on every visit. Scoped to this browser (localStorage). The
@@ -337,7 +350,7 @@ function saveHelperAnswers(answers) {
   }
 }
 
-export default function FourCircleFrontDoor({ userName }) {
+export default function FourCircleFrontDoor({ userName, situationChoice = null }) {
   const navigate = useNavigate();
   const [expandedKey, setExpandedKey] = useState(null);
   // Load any previously saved quiz answers so the "Recommended" badge
@@ -354,12 +367,25 @@ export default function FourCircleFrontDoor({ userName }) {
     saveHelperAnswers(helpAnswers);
   }, [helpAnswers]);
 
-  const recommendedKey = useMemo(() => {
+  const helperRecommendedKey = useMemo(() => {
     const focus = HELPER_QUESTIONS[0].options.find(
       (o) => o.key === helpAnswers.focus,
     );
     return focus?.recommends || null;
   }, [helpAnswers.focus]);
+
+  // If the parent used the "Help me choose" mini-quiz, its answer is
+  // the authoritative recommendation. Otherwise fall back to the
+  // Situation Picker choice from `Explore All Tools` — so a returning
+  // parent's most recent signal still lights up the matching circle.
+  const situationRecommendedKey = situationChoice
+    ? SITUATION_TO_CIRCLE[situationChoice] || null
+    : null;
+  const recommendedKey = helperRecommendedKey || situationRecommendedKey;
+  // Pulse only when the recommendation came from the Situation Picker
+  // (a passive signal) — helper-quiz answers already come with an
+  // in-your-face card, so a static badge is enough for them.
+  const shouldPulse = !helperRecommendedKey && Boolean(situationRecommendedKey);
 
   const handleCircleClick = (circle) => {
     if (circle.expandable) {
@@ -405,6 +431,7 @@ export default function FourCircleFrontDoor({ userName }) {
             circle={circle}
             expanded={expandedKey === circle.key}
             recommended={recommendedKey === circle.key}
+            pulsing={shouldPulse && recommendedKey === circle.key}
             onClick={() => handleCircleClick(circle)}
             index={idx}
           />
@@ -582,7 +609,7 @@ export default function FourCircleFrontDoor({ userName }) {
   );
 }
 
-function FrontDoorTile({ circle, expanded, onClick, index = 0, recommended = false }) {
+function FrontDoorTile({ circle, expanded, onClick, index = 0, recommended = false, pulsing = false }) {
   const Icon = circle.icon;
   return (
     <button
@@ -595,8 +622,9 @@ function FrontDoorTile({ circle, expanded, onClick, index = 0, recommended = fal
     >
       {recommended && (
         <span
-          className="absolute -top-2 left-4 inline-flex items-center gap-1 rounded-full bg-[#3D1A78] text-white px-2.5 py-0.5 text-[10px] uppercase tracking-[0.15em] font-bold shadow-md"
+          className={`absolute -top-2 left-4 inline-flex items-center gap-1 rounded-full bg-[#3D1A78] text-white px-2.5 py-0.5 text-[10px] uppercase tracking-[0.15em] font-bold shadow-md ${pulsing ? "recommended-pulse" : ""}`}
           data-testid={`${circle.testid}-recommended`}
+          data-pulsing={pulsing ? "true" : undefined}
         >
           <Sparkles size={10} strokeWidth={2.4} /> Recommended
         </span>

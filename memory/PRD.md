@@ -27,6 +27,37 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-07 — First-Visit Callout on 4 Circles (pulsing badge for returning parents)
+- **`FourCircleFrontDoor.jsx`** now accepts an optional `situationChoice`
+  prop and maps it via a new `SITUATION_TO_CIRCLE` table
+  (cooperate/difficult/mediation → co-parenting · high-conflict/safety
+  → safety · special-needs → child-needs) so returning parents land
+  on a pathway highlighted specifically for what they told us last
+  visit.
+- **Pulsing "Recommended for you" badge** — new `.recommended-pulse`
+  CSS class in `index.css` drives a soft brand-purple halo
+  (`recommendedPulse` keyframes, 1.6s loop). The badge only pulses
+  when the recommendation came from the *situation pick* (a passive
+  signal that needs eye-catching); explicit **"Help me choose"** quiz
+  answers still show a static badge (they already came with an
+  in-your-face result card so a pulse would be redundant).
+- **Precedence rule**: helper-quiz answer wins over the
+  situation-pick when both are set. When only the situation-pick
+  is present, the matching circle gets the pulsing badge. When
+  neither is set, no badge appears (fresh-visit baseline).
+- **`Dashboard.jsx`** now passes `situationChoice={situationChoice}`
+  (already lifted to state via `readSituation()`) into the
+  `FourCircleFrontDoor`. No additional writes — the existing
+  `SituationPickerHero` inside "Explore All Tools" continues to
+  seed the LS key.
+- **Smoke-tested live** across all three states (no signal, situation
+  only pulsing, helper-quiz-wins static) — badge testids include
+  `data-pulsing="true"` so the state is legible from automation.
+- **Files touched**:
+  - `frontend/src/components/dashboard/FourCircleFrontDoor.jsx`
+  - `frontend/src/pages/Dashboard.jsx`
+  - `frontend/src/index.css` (adds `@keyframes recommendedPulse` + `.recommended-pulse` class)
+
 ### 2026-03-07 — Dashboard "Overload" Restructure (Wave 1a) + `/for-professionals`
 - **P0 Orientation flow no longer blocks the dashboard** — the
   auto-redirect at `Dashboard.jsx` mount that yanked first-time
