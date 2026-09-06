@@ -932,6 +932,73 @@ def send_coparent_invite(*, to_email: str, link_url: str, inviter_name: Optional
     )
 
 
+
+def send_joint_alignment_invitation(
+    *,
+    to_email: str,
+    invitation_url: str,
+    case_id: str,
+    professional_name: Optional[str] = None,
+    parent_name: Optional[str] = None,
+    assessment_type: Optional[str] = None,
+) -> None:
+    """
+    Emailed to each parent when a mediator/attorney/paralegal mints
+    a Joint Alignment Case from `/professional/joint-alignment/new`.
+    Mirrors `send_coparent_invite`'s shape but the framing is
+    professional-driven — the parent is being invited by a named
+    professional as part of a mediation or attorney-led process,
+    not by their co-parent.
+    """
+    pro = (professional_name or "Your mediator").strip() or "Your mediator"
+    greeting = f"Hi {parent_name}," if parent_name else "Hi,"
+    lane = (assessment_type or "").replace("-", " ").strip() or "the assessment"
+    plain = (
+        f"{greeting}\n\n"
+        f"{pro} has invited you to complete a private assessment on SA CoParents as part of "
+        f"a Joint Alignment case ({case_id}).\n\n"
+        f"You'll answer a short set of {lane} reflection prompts on your own. Your answers "
+        "stay with you — the other parent never sees your individual responses. Once both of "
+        "you have finished, your mediator receives a neutral joint report.\n\n"
+        f"Open your invitation:\n{invitation_url}\n\n"
+        "This link expires in 7 days.\n\n"
+        "If you weren't expecting this email, you can ignore it — nothing happens until you "
+        "click the link and sign in with your matching email.\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"{greeting}</p>"
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"<strong>{pro}</strong> has invited you to complete a private assessment on "
+        f"SA CoParents as part of a Joint Alignment case "
+        f'(<span style="font-family:ui-monospace,monospace;color:#3D1A78;">{case_id}</span>).</p>'
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"You'll answer a short set of <strong>{lane}</strong> reflection prompts on "
+        "your own. Your answers stay with you — the other parent never sees your "
+        "individual responses. Your mediator receives a neutral joint report once both "
+        "of you have finished.</p>"
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">'
+        "This link expires in 7 days. If you weren't expecting this email, you can "
+        "ignore it — nothing happens until you click the link and sign in with your "
+        "matching email.</p>"
+    )
+    html = _branded_html(
+        headline=f"{pro} invited you to a Joint Alignment case",
+        body_html=body_html,
+        cta_label="Open my invitation",
+        cta_url=invitation_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=f"{pro} invited you to a SA CoParents Joint Alignment case ({case_id})",
+        html=html,
+        text=plain,
+        failure_message="Could not send the invitation right now.",
+    )
+
+
+
 def send_post_event_survey(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
     """Initial post-event ("How was mediation?") survey email — sent 7 days
     after a user generates their Mediation Summary."""

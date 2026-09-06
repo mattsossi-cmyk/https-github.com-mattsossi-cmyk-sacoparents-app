@@ -211,6 +211,7 @@ class CreateCaseResponse(BaseModel):
     created_at: str
     case_expires_at: str
     parents: List[CreateCaseParentResponse]
+    email_deliveries: Optional[List[Dict[str, Any]]] = None
 
 
 class ManualCodeRequest(BaseModel):
@@ -543,6 +544,30 @@ async def professional_create_case(
         current.user_id,
         assessment_type,
     )
+
+    # Best-effort invitation emails so the mediator doesn't have to
+    # copy-paste. Never fail the mint if delivery breaks — the URLs
+    # are already returned in the response for on-screen copy.
+    email_status: List[Dict[str, Any]] = []
+    for idx, (parent, row) in enumerate(zip(body.parents, parent_response_rows)):
+        try:
+            from email_service import send_joint_alignment_invitation
+            send_joint_alignment_invitation(
+                to_email=parent.email,
+                invitation_url=row.invitation_url,
+                case_id=case_id,
+                professional_name=prof_name,
+                parent_name=parent.name,
+                assessment_type=assessment_type,
+            )
+            email_status.append({"email": parent.email, "delivered": True})
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "joint-alignment invite email failed case=%s parent_idx=%s err=%s",
+                case_id, idx, exc,
+            )
+            email_status.append({"email": parent.email, "delivered": False})
+
     return CreateCaseResponse(
         case_id=case_id,
         status="pending",
@@ -550,6 +575,7 @@ async def professional_create_case(
         created_at=_iso(now),
         case_expires_at=_iso(case_exp),
         parents=parent_response_rows,
+        email_deliveries=email_status,
     )
 
 
@@ -1106,6 +1132,55 @@ async def mark_assessment_completed(
 
 class CancelCaseRequest(BaseModel):
     reason: Optional[str] = Field(default=None, max_length=280)
+
+
+@router.post("/professional/joint-alignment/cases/{case_id}/cancel")
+async def professional_cancel_case(
+    body: CancelCaseRequest,
+    case_id: str = Path(..., min_length=1, max_length=20),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    JWT-authenticated variant of `integration_cancel_case`. Only the
+    caller who minted the case can cancel it — never another
+    professional. Cancels the case, expires every unclaimed
+    invitation on it, records the cancellation reason. Idempotent
+    404 on a second cancel.
+    """
+    canonical = _normalise_case_id(case_id) or case_id
+    now = _now()
+    result = await db[_CASES_COLL].update_one(
+        {
+            "case_id": canonical,
+            "status": {"$nin": ["cancelled", "expired"]},
+            "$or": [
+                {"professional_created_by": current.user_id},
+                {"professional.id": current.user_id, "origin": "in_app_professional"},
+            ],
+        },
+        {
+            "$set": {
+                "status": "cancelled",
+                "cancelled_at": now,
+                "cancelled_reason": body.reason,
+                "cancelled_by_user_id": current.user_id,
+                "parents.$[unclaimed].token_expires_at": now,
+            }
+        },
+        array_filters=[{"unclaimed.accepted_at": None}],
+    )
+    if result.matched_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Case not found, already cancelled, or not owned by this account.",
+        )
+    logger.info(
+        "in-app professional cancel case_id=%s user=%s reason=%s",
+        canonical, current.user_id, body.reason,
+    )
+    fresh = await db[_CASES_COLL].find_one({"case_id": canonical})
+    return _case_public_shape(fresh)
 
 
 @router.post("/integrations/joint-alignment/cases/{case_id}/cancel")

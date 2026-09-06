@@ -55,6 +55,7 @@ import JoinCode from "@/pages/JoinCode";
 import ProfessionalsDirectory from "@/pages/ProfessionalsDirectory";
 import ForProfessionals from "@/pages/ForProfessionals";
 import ProfessionalJointAlignmentNew from "@/pages/ProfessionalJointAlignmentNew";
+import ProfessionalJointAlignmentMine from "@/pages/ProfessionalJointAlignmentMine";
 import AdminProfessionalsEditor from "@/pages/AdminProfessionalsEditor";
 import Orientation from "@/pages/Orientation";
 import ClaimAccount from "@/pages/ClaimAccount";
@@ -170,6 +171,10 @@ function AppRoutes() {
         <Route
           path="/professional/joint-alignment/new"
           element={<ProtectedRoute><ProfessionalJointAlignmentNew /></ProtectedRoute>}
+        />
+        <Route
+          path="/professional/joint-alignment/mine"
+          element={<ProtectedRoute><ProfessionalJointAlignmentMine /></ProtectedRoute>}
         />
         <Route path="/admin/professionals" element={<AdminProfessionalsEditor />} />
         <Route path="/joint-agreement/shared/:token" element={<JointAgreementShared />} />

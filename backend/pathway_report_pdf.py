@@ -27,6 +27,7 @@ from typing import Any, Dict, List, Optional
 from fpdf import FPDF
 
 from pdf_base import _safe, _section_break
+from court_report_disclaimer import draw_court_report_disclaimer
 
 
 # ---- Brand colours (mirror the briefing PDF) ---------------------------------
@@ -321,6 +322,16 @@ def build_pathway_report_pdf(
         hard_locked=bool(result.get("hard_locked_by")),
     )
     _draw_hard_lock_panel(pdf, list(result.get("hard_locked_by") or []))
+
+    # ---- 2b. Court-report disclaimer (six-bullet block) --------------------
+    # Ensures any mediator or judge who prints this pathway report sees
+    # the "not a custody evaluation" caveats before the factors + goals.
+    pdf.ln(2)
+    draw_court_report_disclaimer(
+        pdf,
+        author_name=caller_display_name or None,
+        both_parents=bool(result.get("is_dual_party")),
+    )
 
     # ---- 3. Factors --------------------------------------------------------
     _section_heading(pdf, "Factors supporting this pathway")

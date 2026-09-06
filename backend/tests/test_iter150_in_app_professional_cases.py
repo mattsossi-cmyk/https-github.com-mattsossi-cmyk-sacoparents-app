@@ -181,3 +181,63 @@ def test_cases_i_created_does_not_leak_other_professionals_cases(client):
     b_cases = listed_b.json().get("cases") or []
     b_case_ids = {c["case_id"] for c in b_cases}
     assert a_case_id not in b_case_ids, "cases-i-created leaked another professional's case"
+
+
+# ---------------- cancel + email delivery ---------------- #
+
+def test_professional_can_cancel_own_case(client):
+    _email, token, _name = _register(client)
+    r = _make_case(client, token)
+    assert r.status_code == 200
+    case_id = r.json()["case_id"]
+
+    r2 = client.post(
+        f"/api/professional/joint-alignment/cases/{case_id}/cancel",
+        json={"reason": "wrong parents"},
+        headers=_headers(token),
+    )
+    assert r2.status_code == 200, r2.text
+    assert r2.json()["status"] == "cancelled"
+
+    # Second cancel is a 404 (idempotent) — status already terminal.
+    r3 = client.post(
+        f"/api/professional/joint-alignment/cases/{case_id}/cancel",
+        json={"reason": None},
+        headers=_headers(token),
+    )
+    assert r3.status_code == 404
+
+
+def test_professional_cannot_cancel_another_professionals_case(client):
+    _email_a, token_a, _ = _register(client)
+    _email_b, token_b, _ = _register(client)
+
+    r_a = _make_case(client, token_a)
+    a_case_id = r_a.json()["case_id"]
+
+    r = client.post(
+        f"/api/professional/joint-alignment/cases/{a_case_id}/cancel",
+        json={"reason": None},
+        headers=_headers(token_b),
+    )
+    # Ownership guard: B is not the creator, so treated as not-found.
+    assert r.status_code == 404
+
+
+def test_response_carries_email_delivery_status(client):
+    """
+    Even when the outbound email backend is not configured in test,
+    the response must include `email_deliveries` with one row per
+    parent so the frontend can render the "Invitation sent / Not
+    sent — copy manually" hint deterministically.
+    """
+    _email, token, _name = _register(client)
+    r = _make_case(client, token)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert "email_deliveries" in body
+    assert isinstance(body["email_deliveries"], list)
+    assert len(body["email_deliveries"]) == 2
+    for row in body["email_deliveries"]:
+        assert "email" in row
+        assert "delivered" in row

@@ -27,6 +27,71 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-07 — Court-Facing Disclaimer Sweep + Auto-Invite Emails + Cases-I-Created Full Page
+- **Court-report disclaimer sweep** — every remaining court-facing
+  artefact now carries the six-caveat "not a custody evaluation"
+  disclaimer, matching the existing coverage on `nd_risk_pdf` and
+  `safety_court_report_pdf`.
+    - Frontend: `<CourtReportDisclaimer />` added to
+      `SpecialNeedsV2MedicalDeepDiveReport`,
+      `SpecialNeedsV2EducationalDeepDiveReport`,
+      `SpecialNeedsV2PsychologicalDeepDiveReport` (right after
+      `<AssessmentResultHandoff />`, above the numbered sections).
+      Each is wired with `authorName={cover.parent_name}` and
+      `bothParents={false}`. `SafetyAssessment` already carried
+      the disclaimer via `SafetyAssessmentResultsCard` (verified —
+      no duplicate insertion).
+    - Backend PDFs: `draw_court_report_disclaimer(...)` now runs on
+      `joint_professional_report_pdf` (its own page right after the
+      cover, `both_parents=True`), `joint_agreement_pdf` (same),
+      `snc2_report_pdf` (own page after cover, single-parent),
+      and `pathway_report_pdf` (below the primary-pathway card).
+      All four smoke-tested — every renderer returns a valid
+      `%PDF-` byte stream.
+- **Auto-invite emails from the in-app professional flow** — when
+  a mediator mints a case at `/professional/joint-alignment/new`,
+  both parents now receive the invitation email automatically via
+  Resend so the copy-paste dance is no longer required.
+    - New `email_service.send_joint_alignment_invitation(...)` with
+      professional-driven framing (case ID, professional name,
+      assessment lane, 7-day expiry, "sign in with matching email"
+      hint).
+    - Wired into `POST /api/professional/joint-alignment/cases`
+      as best-effort — a Resend outage never fails the mint.
+    - Response gained an optional `email_deliveries` list, one row
+      per parent with `{email, delivered: bool}` so the frontend
+      renders a green ✓ / amber "copy manually" hint per parent.
+    - Frontend result panel: per-parent delivery indicator with
+      `data-testid="pj-result-parent-{i}-delivery"` +
+      `data-delivered` attribute. Headline copy adapts to
+      all-sent / partial / none-sent states.
+- **Cases-I-Created full-page management console** at
+  `/professional/joint-alignment/mine` (protected):
+    - New JWT-authenticated endpoint
+      `POST /api/professional/joint-alignment/cases/{id}/cancel` —
+      owner-only revoke that expires unclaimed invitation tokens,
+      records the revoker's `user_id`, and returns 404 on
+      cross-professional attempts (ownership guard).
+    - Full-page UI: search bar (case_id / email / ref number),
+      5 filter chips with live counts (all / pending / in_progress /
+      both_complete / cancelled), per-row invitation-URL copy,
+      confirm-gated revoke that flips the status pill to red
+      "cancelled" and hides the revoke button. Empty state and
+      loading/error states covered.
+    - `/professional/joint-alignment/new` gains a "See all my
+      cases →" link both in the sidebar-list header and in the
+      post-mint success actions.
+    - Live E2E-tested: mint → email-delivery indicator renders
+      (delivered=false in preview since Resend key absent) →
+      `/mine` lists all 3 cases → search filters to 1 → revoke
+      → status flips to `cancelled` → revoke button removed →
+      toast "Case SA-XXXXXX revoked".
+- **Coverage grew from 6 → 9 iter150 pytest cases** — added:
+  professional-can-cancel-own-case (with idempotent-404 second
+  cancel), professional-cannot-cancel-anothers (ownership
+  guard 404), and response-carries-email-delivery-status
+  (shape lock). All 20 (iter139 + iter150) still green.
+
 ### 2026-03-07 — In-App Joint Alignment case creation + Situation-Pick Freshness Fade
 - **In-App Joint Alignment case creation** — mediators/attorneys/paralegals
   can now spin up a two-parent case from inside the parent app

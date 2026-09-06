@@ -12,6 +12,7 @@ import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 import SignDownloadToggle from "../components/SignDownloadToggle";
 import AssessmentResultHandoff from "../components/AssessmentResultHandoff";
+import CourtReportDisclaimer from "../components/CourtReportDisclaimer";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
@@ -179,6 +180,13 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         <ReportReviewNotice variant="individual" className="mt-5" />
 
         <AssessmentResultHandoff assessmentType="medical" />
+
+        <CourtReportDisclaimer
+          className="mt-6"
+          authorName={cover.parent_name || null}
+          bothParents={false}
+          testId="med-deep-report-court-disclaimer"
+        />
 
         {/* 1. Report Overview */}
         <SectionCard testid="med-report-overview">

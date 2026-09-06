@@ -12,6 +12,7 @@ import DeepDivePartsNarrative from "../components/deepdive/DeepDivePartsNarrativ
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 import AssessmentResultHandoff from "../components/AssessmentResultHandoff";
+import CourtReportDisclaimer from "../components/CourtReportDisclaimer";
 import SignDownloadToggle from "../components/SignDownloadToggle";
 import { api } from "../lib/api";
 import { toast } from "sonner";
@@ -181,6 +182,13 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         <ReportReviewNotice variant="individual" className="mt-5" />
 
         <AssessmentResultHandoff assessmentType="educational" />
+
+        <CourtReportDisclaimer
+          className="mt-6"
+          authorName={cover.parent_name || null}
+          bothParents={false}
+          testId="edu-deep-report-court-disclaimer"
+        />
 
         {/* v2 alignment score card — total, band, per-part breakdown */}
         {report.score_card && (

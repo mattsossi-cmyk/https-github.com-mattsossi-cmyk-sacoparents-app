@@ -172,14 +172,20 @@ export default function ProfessionalJointAlignmentNew() {
                   {result.case_id}
                 </h2>
                 <p className="text-xs text-[#1F5C3B] mt-1">
-                  Copy each parent's invitation link and send it via email, SMS, or your
-                  preferred channel. Links expire {new Date(result.parents[0].token_expires_at).toLocaleDateString()}.
+                  {result.email_deliveries && result.email_deliveries.every((e) => e.delivered)
+                    ? "Invitation emails sent to both parents."
+                    : result.email_deliveries && result.email_deliveries.some((e) => e.delivered)
+                      ? "One invitation email sent — the other bounced. Copy the failed link manually."
+                      : "Copy each parent's invitation link and send it via email, SMS, or your preferred channel."}{" "}
+                  Links expire {new Date(result.parents[0].token_expires_at).toLocaleDateString()}.
                 </p>
               </div>
             </div>
 
             <div className="space-y-4 mt-6">
-              {result.parents.map((p, i) => (
+              {result.parents.map((p, i) => {
+                const delivery = (result.email_deliveries || []).find((d) => d.email === p.email);
+                return (
                 <div
                   key={p.email}
                   className="rounded-2xl border border-[#B5DFC5] bg-white p-4"
@@ -191,6 +197,15 @@ export default function ProfessionalJointAlignmentNew() {
                         Parent {i + 1}
                       </div>
                       <div className="text-sm font-semibold text-[#1A1330]">{p.email}</div>
+                      {delivery && (
+                        <div
+                          className={`mt-1 text-[11px] font-semibold inline-flex items-center gap-1 ${delivery.delivered ? "text-[#1F5C3B]" : "text-[#8A4610]"}`}
+                          data-testid={`pj-result-parent-${i}-delivery`}
+                          data-delivered={delivery.delivered ? "true" : "false"}
+                        >
+                          {delivery.delivered ? "✓ Invitation email sent" : "! Email did not send — share the link below manually"}
+                        </div>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -208,7 +223,7 @@ export default function ProfessionalJointAlignmentNew() {
                     {p.invitation_url}
                   </div>
                 </div>
-              ))}
+              );})}
             </div>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -220,6 +235,13 @@ export default function ProfessionalJointAlignmentNew() {
               >
                 <Send size={14} /> Create another case
               </button>
+              <Link
+                to="/professional/joint-alignment/mine"
+                className="text-sm text-[#3D1A78] hover:underline"
+                data-testid="pj-visit-mine"
+              >
+                See all my cases →
+              </Link>
               <Link
                 to="/for-professionals"
                 className="text-sm text-[#3D1A78] hover:underline"
@@ -375,11 +397,20 @@ export default function ProfessionalJointAlignmentNew() {
 
         {myCases && myCases.length > 0 && !result && (
           <div className="mt-8" data-testid="pj-mine-list">
-            <div className="flex items-center gap-2 mb-3">
-              <Users size={14} className="text-[#3D1A78]" />
-              <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
-                Cases you&rsquo;ve created
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2">
+                <Users size={14} className="text-[#3D1A78]" />
+                <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
+                  Cases you&rsquo;ve created
+                </div>
               </div>
+              <Link
+                to="/professional/joint-alignment/mine"
+                className="text-xs font-semibold text-[#3D1A78] hover:underline"
+                data-testid="pj-see-all-cases"
+              >
+                See all my cases →
+              </Link>
             </div>
             <ul className="space-y-2">
               {myCases.slice(0, 6).map((c) => (

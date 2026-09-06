@@ -22,6 +22,7 @@ from safety_assessment_pdf import (
     ORG_NAME, ORG_TAGLINE, ORG_PHONE, ORG_EMAIL, LOGO_PATH,
     _safe,
 )
+from court_report_disclaimer import draw_court_report_disclaimer
 
 
 PAGE_W = 210
@@ -305,6 +306,21 @@ def build_joint_report_pdf(payload: Dict[str, Any]) -> bytes:
     pdf.set_auto_page_break(auto=True, margin=18)
 
     _cover_page(pdf, payload)
+
+    # Court-report disclaimer — six-bullet block on its own page right
+    # after the cover so any mediator or judge opening the PDF sees
+    # the "what this document is / is not" caveats before section
+    # content. `both_parents=True` because the joint report always
+    # combines two parents' inputs.
+    pdf.add_page()
+    parent_a = payload.get("parent_a_name") or ""
+    parent_b = payload.get("parent_b_name") or ""
+    author_label = " & ".join(n for n in (parent_a, parent_b) if n) or None
+    draw_court_report_disclaimer(
+        pdf,
+        author_name=author_label,
+        both_parents=True,
+    )
 
     pdf.add_page()
     section_colours = {

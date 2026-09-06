@@ -22,6 +22,7 @@ from safety_assessment_pdf import (
     ORG_NAME, ORG_TAGLINE, ORG_PHONE, ORG_EMAIL, LOGO_PATH,
     _safe,
 )
+from court_report_disclaimer import draw_court_report_disclaimer
 
 
 PAGE_W = 210
@@ -486,6 +487,19 @@ def build_joint_agreement_pdf(payload: Dict[str, Any]) -> bytes:
 
     parent_a = payload.get("parent_a_name") or "Parent A"
     parent_b = payload.get("parent_b_name") or "Parent B"
+
+    # Court-report disclaimer — six-bullet block on its own page right
+    # after the cover so the "what this document is / is not" caveats
+    # are unmissable before the Parent View bucket layout.
+    pdf.add_page()
+    author_label = " & ".join(
+        n for n in (payload.get("parent_a_name"), payload.get("parent_b_name")) if n
+    ) or None
+    draw_court_report_disclaimer(
+        pdf,
+        author_name=author_label,
+        both_parents=True,
+    )
 
     # ------------------------------------------------------------------
     # Parent View (5 buckets) - primary body of the PDF from this

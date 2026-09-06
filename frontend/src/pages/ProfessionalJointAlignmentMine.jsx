@@ -1,0 +1,347 @@
+/**
+ * `/professional/joint-alignment/mine` — Mediator/Attorney case
+ * management console. Shows every Joint Alignment Case the caller
+ * minted via the in-app flow, with:
+ *   * search (by case_id, professional reference, or parent email)
+ *   * status filter chips (all / pending / in progress / both complete / cancelled)
+ *   * per-row copy-invitation-link buttons (still-valid tokens only)
+ *   * revoke (with confirm) that POSTs to
+ *     /api/professional/joint-alignment/cases/{id}/cancel
+ *
+ * Complements the compact "Cases you've created" sidebar on the
+ * `/professional/joint-alignment/new` page — this route is the
+ * dedicated management surface.
+ */
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  Copy,
+  Loader2,
+  Search,
+  Sparkles,
+  Trash2,
+  Filter,
+  RefreshCcw,
+  Users,
+  AlertTriangle,
+  X,
+} from "lucide-react";
+
+import AppShell from "../components/AppShell";
+import { toast } from "sonner";
+import { api } from "../lib/api";
+import { logError } from "../lib/logger";
+
+const STATUS_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "pending", label: "Pending" },
+  { key: "in_progress", label: "In progress" },
+  { key: "both_complete", label: "Both complete" },
+  { key: "cancelled", label: "Cancelled" },
+];
+
+const STATUS_PILL = {
+  pending: "bg-[#F1EEF7] text-[#3D1A78] border-[#D6CFE8]",
+  in_progress: "bg-[#FFF6E5] text-[#8A5B00] border-[#F0D9A8]",
+  both_complete: "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
+  cancelled: "bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]",
+  expired: "bg-[#F1EEF7] text-[#857E9C] border-[#E5E0EE]",
+};
+
+export default function ProfessionalJointAlignmentMine() {
+  const navigate = useNavigate();
+  const [cases, setCases] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [busyId, setBusyId] = useState(null);
+
+  const load = () => {
+    setLoading(true);
+    setError(null);
+    api.get("/professional/joint-alignment/cases-i-created")
+      .then((r) => setCases(r.data?.cases || []))
+      .catch((err) => {
+        logError("Failed to load cases-i-created:", err);
+        setError("Could not load your cases. Please try again.");
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(load, []);
+
+  const filtered = useMemo(() => {
+    if (!cases) return [];
+    const q = search.trim().toLowerCase();
+    return cases.filter((c) => {
+      if (statusFilter !== "all" && c.status !== statusFilter) return false;
+      if (!q) return true;
+      if (c.case_id?.toLowerCase().includes(q)) return true;
+      if (c.align_case_reference?.toLowerCase().includes(q)) return true;
+      return (c.parents || []).some(
+        (p) => (p.email || "").toLowerCase().includes(q) ||
+               (p.name || "").toLowerCase().includes(q),
+      );
+    });
+  }, [cases, search, statusFilter]);
+
+  const counts = useMemo(() => {
+    const base = { all: 0, pending: 0, in_progress: 0, both_complete: 0, cancelled: 0 };
+    (cases || []).forEach((c) => {
+      base.all += 1;
+      if (c.status in base) base[c.status] += 1;
+    });
+    return base;
+  }, [cases]);
+
+  const copyToClipboard = (text, label) => {
+    try {
+      navigator.clipboard.writeText(text);
+      toast.success(`${label} copied`);
+    } catch (err) {
+      logError("clipboard failed:", err);
+      toast.error("Copy failed — long-press the link to copy manually");
+    }
+  };
+
+  const revoke = async (caseId) => {
+    const ok = window.confirm(
+      `Revoke case ${caseId}? Any unclaimed invitation links will stop working immediately. Parents who already accepted keep their access to the reflection, but the joint report won't advance.`,
+    );
+    if (!ok) return;
+    setBusyId(caseId);
+    try {
+      await api.post(`/professional/joint-alignment/cases/${caseId}/cancel`, { reason: null });
+      toast.success(`Case ${caseId} revoked`);
+      load();
+    } catch (err) {
+      const detail = err?.response?.data?.detail || "Revoke failed";
+      toast.error(String(detail));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <AppShell>
+      <div className="max-w-5xl mx-auto" data-testid="pj-mine-page">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1.5 text-sm text-[#4B4567] hover:text-[#1A1330] mb-4"
+          data-testid="pj-mine-back"
+        >
+          <ArrowLeft size={14} /> Back
+        </button>
+
+        <div className="flex items-baseline justify-between flex-wrap gap-3 mb-6">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-2">
+              <Users size={12} /> Cases you&rsquo;ve created
+            </div>
+            <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight" data-testid="pj-mine-headline">
+              Your Joint Alignment Cases
+            </h1>
+            <p className="text-sm text-[#4B4567] mt-2 max-w-2xl leading-relaxed">
+              Every case you&rsquo;ve minted from inside SA CoParents. Search by
+              case ID, email, or reference number — revoke anything that&rsquo;s
+              no longer active.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={load}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E0EE] text-[#3D1A78] hover:bg-[#F5F1FB] px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
+              data-testid="pj-mine-refresh"
+            >
+              {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
+              Refresh
+            </button>
+            <Link
+              to="/professional/joint-alignment/new"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1.5 text-xs font-semibold transition-colors"
+              data-testid="pj-mine-new"
+            >
+              <Sparkles size={12} /> New case
+            </Link>
+          </div>
+        </div>
+
+        {/* Search + status filter */}
+        <div
+          className="rounded-2xl border border-[#E5E0EE] bg-white p-4 mb-4 space-y-3"
+          data-testid="pj-mine-controls"
+        >
+          <div className="relative">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#857E9C]"
+              aria-hidden
+            />
+            <input
+              type="text"
+              placeholder="Search by case ID, email, or reference number…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-9 py-2 rounded-full border border-[#E5E0EE] bg-white text-sm text-[#1A1330] focus:outline-none focus:border-[#3D1A78]"
+              data-testid="pj-mine-search"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#857E9C] hover:text-[#1A1330]"
+                data-testid="pj-mine-search-clear"
+                aria-label="Clear search"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2" data-testid="pj-mine-filter-chips">
+            <Filter size={12} className="text-[#857E9C]" aria-hidden />
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setStatusFilter(f.key)}
+                className={`text-xs font-semibold rounded-full px-3 py-1 border transition-colors ${
+                  statusFilter === f.key
+                    ? "bg-[#3D1A78] border-[#3D1A78] text-white"
+                    : "bg-white border-[#E5E0EE] text-[#4B4567] hover:border-[#3D1A78]"
+                }`}
+                data-testid={`pj-mine-filter-${f.key}`}
+              >
+                {f.label} <span className="opacity-70">· {counts[f.key] ?? 0}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {error && (
+          <div
+            className="mb-4 flex items-start gap-2 rounded-2xl bg-[#FEE4E2] border border-[#F1B0A9] px-4 py-3 text-[13px] text-[#8A2C1E]"
+            data-testid="pj-mine-error"
+          >
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+            <p className="!m-0 leading-relaxed">{error}</p>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="p-10 text-center text-sm text-[#4B4567]" data-testid="pj-mine-loading">
+            <Loader2 size={16} className="animate-spin inline mr-2" /> Loading your cases…
+          </div>
+        ) : filtered.length === 0 ? (
+          <div
+            className="rounded-2xl border border-dashed border-[#D6CFE8] bg-[#FAF8FD] p-8 text-center"
+            data-testid="pj-mine-empty"
+          >
+            <Users size={22} className="mx-auto text-[#3D1A78] mb-3" aria-hidden />
+            <div className="font-serif text-lg text-[#1A1330]">
+              {(cases || []).length === 0
+                ? "No cases yet"
+                : "No cases match your search"}
+            </div>
+            <p className="text-sm text-[#4B4567] mt-1 max-w-md mx-auto leading-relaxed">
+              {(cases || []).length === 0
+                ? "Create your first Joint Alignment case from the button above and both parents will receive private invitation links."
+                : "Try a different search term or clear the status filter."}
+            </p>
+            {(cases || []).length === 0 && (
+              <Link
+                to="/professional/joint-alignment/new"
+                className="inline-flex items-center gap-1.5 mt-4 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-4 py-2 text-sm font-semibold transition-colors"
+                data-testid="pj-mine-empty-cta"
+              >
+                <Sparkles size={13} /> Create your first case
+              </Link>
+            )}
+          </div>
+        ) : (
+          <ul className="space-y-3" data-testid="pj-mine-list">
+            {filtered.map((c) => (
+              <li
+                key={c.case_id}
+                className="rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5"
+                data-testid={`pj-mine-row-${c.case_id}`}
+              >
+                <div className="flex items-baseline justify-between flex-wrap gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-base font-semibold text-[#1A1330]">
+                        {c.case_id}
+                      </span>
+                      <span
+                        className={`text-[10px] uppercase tracking-[0.15em] font-bold rounded-full px-2 py-0.5 border ${STATUS_PILL[c.status] || STATUS_PILL.expired}`}
+                        data-testid={`pj-mine-status-${c.case_id}`}
+                      >
+                        {c.status.replaceAll("_", " ")}
+                      </span>
+                    </div>
+                    <div className="text-xs text-[#4B4567] mt-1">
+                      {c.assessment_type.replace("-", " ")}
+                      {c.align_case_reference ? ` · Ref: ${c.align_case_reference}` : ""}
+                      {c.created_at ? ` · Created ${new Date(c.created_at).toLocaleDateString()}` : ""}
+                    </div>
+                  </div>
+                  {c.status !== "cancelled" && c.status !== "expired" && (
+                    <button
+                      type="button"
+                      onClick={() => revoke(c.case_id)}
+                      disabled={busyId === c.case_id}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#EFB4B4] text-[#B02A2A] hover:bg-[#FEE4E2] px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60"
+                      data-testid={`pj-mine-revoke-${c.case_id}`}
+                    >
+                      {busyId === c.case_id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                      Revoke
+                    </button>
+                  )}
+                </div>
+
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {(c.parents || []).map((p, pi) => (
+                    <div
+                      key={p.email || pi}
+                      className="rounded-xl border border-[#E5E0EE] bg-[#FAF8FD] p-3"
+                      data-testid={`pj-mine-parent-${c.case_id}-${pi}`}
+                    >
+                      <div className="flex items-baseline justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
+                            Parent {pi + 1}
+                          </div>
+                          <div className="text-sm text-[#1A1330] truncate">
+                            {p.name || p.email}
+                          </div>
+                          <div className="text-[11px] text-[#4B4567]">
+                            {p.status?.replace("_", " ") || "invited"}
+                            {p.assessment_completed_at ? " · completed" : ""}
+                          </div>
+                        </div>
+                        {p.invitation_url && (
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(p.invitation_url, `${c.case_id} · P${pi + 1}`)}
+                            className="text-[11px] font-semibold text-[#3D1A78] hover:underline inline-flex items-center gap-1 shrink-0"
+                            data-testid={`pj-mine-copy-${c.case_id}-${pi}`}
+                          >
+                            <Copy size={10} /> Copy link
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </AppShell>
+  );
+}

@@ -6,6 +6,8 @@ from typing import Any, Dict, Iterable, Optional
 
 from fpdf import FPDF
 
+from court_report_disclaimer import draw_court_report_disclaimer
+
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "sa_coparents_logo.png")
 ORG_NAME = "SA CoParents"
@@ -251,6 +253,18 @@ def build_snc2_pdf(*, report: Dict[str, Any],
         if signed_note:
             pdf._signed_note = signed_note
     _render_cover(pdf, report)
+
+    # Court-report disclaimer — six-bullet block right after the cover
+    # so mediators and judges see the caveats before family-situation
+    # and detailed findings.
+    pdf.add_page()
+    parent_name = ((report.get("family_situation") or {}).get("parent_name")) or None
+    draw_court_report_disclaimer(
+        pdf,
+        author_name=parent_name,
+        both_parents=False,
+    )
+
     _render_family_situation(pdf, report.get("family_situation") or {})
     _render_areas_of_need(pdf, report.get("areas_of_need") or {})
     _render_strengths(pdf, report.get("strengths") or {})
