@@ -65,6 +65,14 @@ import { CheckCircle2, ChevronRight, ChevronDown, Shield, Sparkles, RefreshCcw, 
 // survives page refresh but never crosses devices (that's the correct
 // scope — a returning parent on the same browser).
 const SITUATION_KEY = "sacoparents_situation_choice_v1";
+// Companion timestamp so the front-door pulsing highlight can auto-
+// decay after 14 days — a parent's family situation may have shifted
+// meaningfully in that window and a stale nudge on the dashboard
+// stops being helpful.  The raw choice is still preserved (prep-modules
+// recommendations, situation-picker chip, etc.) — only the pulsing
+// halo fades.
+const SITUATION_TS_KEY = "sacoparents_situation_choice_savedAt_v1";
+const SITUATION_FRESH_DAYS = 14;
 
 function readSituation() {
   try {
@@ -73,12 +81,31 @@ function readSituation() {
     return null;
   }
 }
+function readSituationSavedAt() {
+  try {
+    return window.localStorage.getItem(SITUATION_TS_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+function isSituationFresh(savedAtISO) {
+  if (!savedAtISO) return false;
+  const t = Date.parse(savedAtISO);
+  if (Number.isNaN(t)) return false;
+  return Date.now() - t < SITUATION_FRESH_DAYS * 86_400_000;
+}
 function saveSituation(key) {
-  try { window.localStorage.setItem(SITUATION_KEY, key); }
+  try {
+    window.localStorage.setItem(SITUATION_KEY, key);
+    window.localStorage.setItem(SITUATION_TS_KEY, new Date().toISOString());
+  }
   catch { /* private-mode / disabled storage — non-critical */ }
 }
 function clearSituation() {
-  try { window.localStorage.removeItem(SITUATION_KEY); }
+  try {
+    window.localStorage.removeItem(SITUATION_KEY);
+    window.localStorage.removeItem(SITUATION_TS_KEY);
+  }
   catch { /* best-effort */ }
 }
 
@@ -319,17 +346,28 @@ export default function Dashboard() {
   // we can highlight the matching prep module + show a "you chose X"
   // reset chip instead of re-asking the same question every login.
   const [situationChoice, setSituationChoice] = useState(readSituation);
+  const [situationSavedAt, setSituationSavedAt] = useState(readSituationSavedAt);
   const recommendedModules = situationChoice
     ? SITUATION_TO_RECOMMENDED_MODULES[situationChoice] || []
     : [];
   const rememberSituation = (key) => {
     saveSituation(key);
     setSituationChoice(key);
+    setSituationSavedAt(readSituationSavedAt());
   };
   const forgetSituation = () => {
     clearSituation();
     setSituationChoice(null);
+    setSituationSavedAt(null);
   };
+  // Fresh-only view of the situation pick — powers the pulsing halo
+  // on the 4-circle front door.  After 14 days we let the pulse decay
+  // so the dashboard stops nudging a parent whose reality may have
+  // shifted.  The raw `situationChoice` is preserved for the
+  // recommended-modules chip and the "you chose X" pill.
+  const freshSituationChoice = situationChoice && isSituationFresh(situationSavedAt)
+    ? situationChoice
+    : null;
 
   // First-time visitors — no longer auto-redirected off the dashboard.
   // The primary decision-surface (Four-Circle Front Door) must be visible
@@ -522,7 +560,7 @@ export default function Dashboard() {
             sub-tiles inline. Everything below (Step 1 situation picker,
             journey, cards) still renders for parents who want the deeper
             surface. */}
-        <FourCircleFrontDoor userName={user?.name} situationChoice={situationChoice} />
+        <FourCircleFrontDoor userName={user?.name} situationChoice={freshSituationChoice} />
 
         {/* Personal home strip — Continue where you left off + My statements
             + Joint-report invitations. Hides itself when nothing to surface. */}

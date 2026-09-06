@@ -150,8 +150,15 @@ export default function ForProfessionals() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              to="/samples"
+              to="/professional/joint-alignment/new"
               className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-5 py-2.5 text-sm font-semibold transition-colors"
+              data-testid="for-pros-create-case-cta"
+            >
+              <Sparkles size={14} /> Create a Joint Alignment case
+            </Link>
+            <Link
+              to="/samples"
+              className="inline-flex items-center gap-2 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-5 py-2.5 text-sm font-semibold transition-colors"
               data-testid="for-pros-primary-cta"
             >
               Browse sample reports <ArrowRight size={14} />

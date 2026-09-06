@@ -27,6 +27,58 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-07 — In-App Joint Alignment case creation + Situation-Pick Freshness Fade
+- **In-App Joint Alignment case creation** — mediators/attorneys/paralegals
+  can now spin up a two-parent case from inside the parent app
+  without bouncing to `sacoparentsalign.com`.
+    - Backend (in `joint_alignment_routes.py`): two new
+      JWT-authenticated endpoints on `/api`:
+      - `POST /professional/joint-alignment/cases` — same shape as
+        the server-to-server variant but the caller becomes the
+        professional of record (or overrides via
+        `professional_name` / `professional_email`). Mints
+        `SA-XXXXXX` case_id, generates two invitation URLs, records
+        `origin=in_app_professional` + `professional_created_by=<user_id>`.
+      - `GET /professional/joint-alignment/cases-i-created` —
+        lists the caller's minted cases. Copy-paste UX: each row
+        surfaces the raw `invitation_url` per parent (until expiry)
+        so a mediator can re-send the link at any time.
+    - Frontend: new page `/professional/joint-alignment/new`
+      (protected). Purple gradient hero + form (assessment lane +
+      two parent email/name inputs + optional firm reference) +
+      privacy assurance strip. On success flips to a green result
+      panel showing `SA-XXXXXX` + two copyable invitation URLs
+      + "Create another case" CTA. Sidebar lists the caller's
+      cases-i-created for one-tap resend.
+    - `/for-professionals` marketing page hero now leads with a
+      solid-purple **"Create a Joint Alignment case"** CTA
+      (`data-testid="for-pros-create-case-cta"`) linking to the
+      new page. Contact + Samples remain as outlined secondaries.
+    - Coverage: `tests/test_iter150_in_app_professional_cases.py`
+      — 6 tests (happy path, case-doc records caller as
+      professional + origin, unauthenticated 401, wrong parent
+      count 400, duplicate emails 400, unknown assessment_type 400,
+      cases-i-created does not leak other professionals' cases).
+      All 20 (iter139 + iter150) tests green together.
+- **Situation-Pick Freshness Fade** — the pulsing "Recommended"
+  halo on the Four-Circle Front Door now auto-decays after 14
+  days so a parent whose family situation has shifted since their
+  last visit isn't nagged by a stale recommendation.
+    - New companion LS key `sacoparents_situation_choice_savedAt_v1`
+      stamped every time `saveSituation(key)` fires.
+    - New `isSituationFresh(savedAt)` helper in `Dashboard.jsx`
+      checks the timestamp is < 14 days old.
+    - Only the pulsing halo uses `freshSituationChoice`; the raw
+      `situationChoice` continues to power the prep-modules
+      recommendation chip + the "you chose X — change my answer"
+      pill inside "Explore All Tools" (those still make sense at
+      the parent's request).
+    - Backfill-safe: existing pre-timestamp LS entries return
+      `savedAt=null` → treated as stale → no pulse until the parent
+      re-saves.
+    - Smoke-tested live: 15-day-old stale entry shows no badge; 2-day-
+      old fresh entry shows the pulsing badge.
+
 ### 2026-03-07 — First-Visit Callout on 4 Circles (pulsing badge for returning parents)
 - **`FourCircleFrontDoor.jsx`** now accepts an optional `situationChoice`
   prop and maps it via a new `SITUATION_TO_CIRCLE` table

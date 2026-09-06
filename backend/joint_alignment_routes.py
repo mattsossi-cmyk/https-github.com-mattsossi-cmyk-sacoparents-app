@@ -427,6 +427,175 @@ def _clean(v):
 
 # =========================== integration endpoints =========================== #
 
+class ProfessionalCreateCaseRequest(BaseModel):
+    """
+    In-app professional-driven case creation. Same shape as the
+    server-to-server variant but without the `professional` block —
+    the authenticated caller IS the professional. Optional
+    `professional_name` / `professional_email` overrides let a
+    coordinator create the case on behalf of another professional
+    (useful when a paralegal is logged in and driving the workflow
+    for the mediator).
+    """
+    assessment_type: str
+    parents: List[ParentInfo]
+    professional_name: Optional[str] = Field(default=None, max_length=200)
+    professional_email: Optional[EmailStr] = Field(default=None)
+    align_case_reference: Optional[str] = Field(default=None, max_length=128)
+
+
+@router.post(
+    "/professional/joint-alignment/cases",
+    response_model=CreateCaseResponse,
+)
+async def professional_create_case(
+    body: ProfessionalCreateCaseRequest,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    JWT-authenticated variant of `integration_create_case`. Lets a
+    mediator, attorney, or paralegal create a Joint Alignment Case
+    from inside the parent app without needing to bounce to
+    `sacoparentsalign.com`. The caller becomes the professional of
+    record (name/email pulled from their account) unless override
+    fields are supplied.
+
+    Rate-limited implicitly by JWT (one authenticated account can't
+    fan out mint requests to spam parents at high volume — abusive
+    accounts get locked out through the standard auth system).
+    """
+    assessment_type = _validate_assessment_type(body.assessment_type)
+
+    if len(body.parents) != 2:
+        raise HTTPException(
+            status_code=400,
+            detail="A Joint Alignment Case requires exactly two parents.",
+        )
+    emails = {p.email.lower() for p in body.parents}
+    if len(emails) != 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Parent emails must be distinct.",
+        )
+
+    prof_name = (body.professional_name or current.name or "").strip()
+    prof_email = (body.professional_email or current.email or "").strip().lower()
+    if not prof_name or not prof_email:
+        raise HTTPException(
+            status_code=400,
+            detail="Professional name and email are required.",
+        )
+
+    case_id = await _mint_unique_case_id(db)
+    now = _now()
+    token_exp = now + timedelta(days=_INVITATION_TTL_DAYS)
+    case_exp = now + timedelta(days=_CASE_TTL_DAYS)
+
+    parent_docs = []
+    parent_response_rows: List[CreateCaseParentResponse] = []
+    join_base = _join_base()
+    for idx, parent in enumerate(body.parents):
+        token = _mint_invitation_token()
+        parent_docs.append(
+            {
+                "parent_slot": "A" if idx == 0 else "B",
+                "email": parent.email.lower(),
+                "name": parent.name,
+                "invitation_token": token,
+                "token_expires_at": token_exp,
+                "accepted_at": None,
+                "user_id": None,
+                "assessment_completed_at": None,
+                "assessment_ref": None,
+            }
+        )
+        parent_response_rows.append(
+            CreateCaseParentResponse(
+                email=parent.email,
+                invitation_url=f"{join_base}/{token}",
+                token_expires_at=_iso(token_exp),
+            )
+        )
+
+    case_doc = {
+        "case_id": case_id,
+        "assessment_type": assessment_type,
+        "professional": {
+            # Track the app-user who minted the case so we can list
+            # cases-I-created without leaking cross-professional data.
+            "id": current.user_id,
+            "name": prof_name,
+            "email": prof_email,
+        },
+        "professional_created_by": current.user_id,
+        "origin": "in_app_professional",
+        "align_case_reference": body.align_case_reference,
+        "parents": parent_docs,
+        "status": "pending",
+        "created_at": now,
+        "case_expires_at": case_exp,
+    }
+    await db[_CASES_COLL].insert_one(case_doc)
+    logger.info(
+        "joint-alignment case created in-app case_id=%s prof_user=%s assessment=%s",
+        case_id,
+        current.user_id,
+        assessment_type,
+    )
+    return CreateCaseResponse(
+        case_id=case_id,
+        status="pending",
+        assessment_type=assessment_type,
+        created_at=_iso(now),
+        case_expires_at=_iso(case_exp),
+        parents=parent_response_rows,
+    )
+
+
+@router.get("/professional/joint-alignment/cases-i-created")
+async def list_cases_i_created(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    JWT-authenticated. Returns the cases the current user minted via
+    the in-app professional flow. Never surfaces cases the caller was
+    invited to as a parent — those live on `/joint-alignment/mine`
+    and are shaped for a different UI. Data-minimisation guardrail:
+    parent answers are never surfaced, only status + timestamps.
+    """
+    query = {
+        "$or": [
+            {"professional_created_by": current.user_id},
+            {"professional.id": current.user_id, "origin": "in_app_professional"},
+        ]
+    }
+    cursor = db[_CASES_COLL].find(query).sort("created_at", -1).limit(100)
+    cases = []
+    join_base = _join_base()
+    async for case in cursor:
+        shape = _case_public_shape(case)
+        # Because the caller minted the case, they can see the raw
+        # invitation URLs (until expiry). This is what makes the
+        # "resend the link" copy-paste flow possible for them.
+        shape["parents"] = [
+            {
+                **_parent_public_shape(p),
+                "email": p.get("email"),
+                "invitation_url": (
+                    f"{join_base}/{p['invitation_token']}"
+                    if p.get("invitation_token") and not _is_expired(p.get("token_expires_at"))
+                    else None
+                ),
+                "token_expires_at": _iso(p.get("token_expires_at")),
+            }
+            for p in (case.get("parents") or [])
+        ]
+        cases.append(shape)
+    return {"cases": cases}
+
+
 @router.post(
     "/integrations/joint-alignment/cases",
     response_model=CreateCaseResponse,
