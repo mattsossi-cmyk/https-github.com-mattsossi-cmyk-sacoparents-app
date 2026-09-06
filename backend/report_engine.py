@@ -12,7 +12,7 @@ from assessment_data import (
 )
 
 
-def compute_status(a, b):
+def compute_status(a: str | None, b: str | None) -> str:
     if not a or not b or a == UNSURE or b == UNSURE:
         return "info"
     d = abs(SCALE.index(a) - SCALE.index(b))
@@ -23,7 +23,7 @@ def compute_status(a, b):
     return "different"
 
 
-def _analyze_topics(cfg, ra, rb):
+def _analyze_topics(cfg: dict, ra: dict, rb: dict) -> tuple:
     results = []
     for t in cfg["topics"]:
         av = ra["answers"].get(t["key"])
@@ -48,7 +48,7 @@ def _analyze_topics(cfg, ra, rb):
     return results, buckets
 
 
-def _priority_statement(cfg, buckets):
+def _priority_statement(cfg: dict, buckets: dict) -> str:
     focus_source = buckets["different"][0] if buckets["different"] else (
         buckets["close"][0] if buckets["close"] else (buckets["info"][0] if buckets["info"] else None)
     )
@@ -56,7 +56,7 @@ def _priority_statement(cfg, buckets):
     return cfg["priority_statement"].replace("{focus}", focus)
 
 
-def _build_questions(cfg, conversation):
+def _build_questions(cfg: dict, conversation: list) -> list:
     questions = [
         f"What information would help both parents determine whether {t['action_phrase']} would benefit the child?"
         for t in conversation[:4]
@@ -66,7 +66,7 @@ def _build_questions(cfg, conversation):
     return questions
 
 
-def _build_action_plan(buckets):
+def _build_action_plan(buckets: dict) -> list:
     return [
         {
             "issue": t["label"],
@@ -77,7 +77,7 @@ def _build_action_plan(buckets):
     ]
 
 
-def _build_summary(cfg, buckets, priority):
+def _build_summary(cfg: dict, buckets: dict, priority: str) -> dict:
     return {
         "aligned": [t["aligned_text"] for t in buckets["aligned"]][:5],
         "info": [f"Additional information about {t['label'].lower()} may help both parents." for t in buckets["info"]][:4],
@@ -87,7 +87,7 @@ def _build_summary(cfg, buckets, priority):
     }
 
 
-def _build_court_map(case_type, buckets):
+def _build_court_map(case_type: str, buckets: dict) -> dict | None:
     if case_type != "court":
         return None
     return {

@@ -78,7 +78,10 @@ def _assert_agreement_report(data: dict) -> None:
     assert data["report_title"] == "Joint Co-Parenting Agreement"
     assert data.get("purpose")
     assert data.get("confidentiality_note")
-    terms = data["terms"]
+    _assert_agreement_terms(data["terms"])
+
+
+def _assert_agreement_terms(terms: list) -> None:
     assert len(terms) == 8
     assert [t["key"] for t in terms] == AGREEMENT_KEYS
     for t in terms:
@@ -158,24 +161,28 @@ class TestAgreementFullFlow:
 
 # ------------------- Professionals list + Professional-request flow -------------------
 class TestProfessionalRequestFlow:
-    def test_full_flow(self) -> None:
-        seed_pro, parent, parent2, _d = new_case(API)
-        parent2_email = parent2.email
+    def _created_request(self) -> tuple:
+        """Parent requests an FV assessment from a professional. Returns (parent, parent2, pro, req_id)."""
+        _seed_pro, parent, parent2, _d = new_case(API)
         pro = _pro("pro")
-        pro_email = pro.email
+        rc = _pro_request(parent, pro.email, parent2.email)
+        assert rc.status_code == 200, rc.text
+        return parent, parent2, pro, rc.json()["id"]
+
+    def test_request_creation_and_listing(self) -> None:
+        parent, parent2, pro, req_id = self._created_request()
 
         pros = parent.get(f"{API}/professionals").json()
-        assert any(p["email"] == pro_email.lower() for p in pros)
+        assert any(p["email"] == pro.email.lower() for p in pros)
 
-        r404 = _pro_request(parent, f"ghost_{uuid.uuid4().hex[:6]}@testmail.dev", parent2_email)
+        r404 = _pro_request(parent, f"ghost_{uuid.uuid4().hex[:6]}@testmail.dev", parent2.email)
         assert r404.status_code == 404
-
-        rc = _pro_request(parent, pro_email, parent2_email)
-        assert rc.status_code == 200, rc.text
-        req_id = rc.json()["id"]
 
         assert any(x["id"] == req_id for x in parent.get(f"{API}/joint/professional-requests").json())
         assert any(x["id"] == req_id for x in pro.get(f"{API}/joint/professional-requests").json())
+
+    def test_prepare_flow(self) -> None:
+        parent, parent2, pro, req_id = self._created_request()
 
         r403 = parent.post(f"{API}/joint/professional-requests/{req_id}/prepare")
         assert r403.status_code == 403

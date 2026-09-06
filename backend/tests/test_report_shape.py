@@ -46,19 +46,23 @@ def _make_and_report(session, case_type):
     return r.json()
 
 
-def test_educational_report_shape(admin_session):
-    data = _make_and_report(admin_session, "educational")
-    missing = REQUIRED_KEYS - set(data.keys())
-    assert not missing, f"missing keys: {missing}"
+def _assert_snapshot_and_summary(data: dict) -> None:
     snap = data["snapshot"]
     for k in ("total", "aligned", "different", "info"):
         assert k in snap, f"snapshot missing {k}"
-    assert data["court_map"] is None, "educational court_map should be null"
-    assert isinstance(data["page_titles"], list) and len(data["page_titles"]) == 10
-    assert isinstance(data["conversation_questions"], list) and len(data["conversation_questions"]) > 0
     summary = data["summary"]
     for k in ("aligned", "info", "conversation", "options", "priority"):
         assert k in summary, f"summary missing {k}"
+
+
+def test_educational_report_shape(admin_session) -> None:
+    data = _make_and_report(admin_session, "educational")
+    missing = REQUIRED_KEYS - set(data.keys())
+    assert not missing, f"missing keys: {missing}"
+    _assert_snapshot_and_summary(data)
+    assert data["court_map"] is None, "educational court_map should be null"
+    assert isinstance(data["page_titles"], list) and len(data["page_titles"]) == 10
+    assert isinstance(data["conversation_questions"], list) and len(data["conversation_questions"]) > 0
 
 
 def test_court_report_has_court_map(admin_session):

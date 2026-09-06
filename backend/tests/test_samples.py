@@ -27,7 +27,7 @@ def test_sample_bogus_404() -> None:
 
 
 @pytest.mark.parametrize("key", KEYS)
-def test_sample_report_json(key):
+def test_sample_report_json(key) -> None:
     r = requests.get(f"{BASE_URL}/api/joint/sample/{key}", timeout=30)
     assert r.status_code == 200, r.text
     data = r.json()
@@ -35,12 +35,17 @@ def test_sample_report_json(key):
     assert data.get("subject_label")
     assert data.get("child_name")
     assert isinstance(data.get("alignment_statements"), list)
-    if key == "safety":
-        assert data.get("is_safety")
-        assert data.get("confidentiality_note")
-        assert data.get("parent_a_name") == "Parent A"
-        assert data.get("parent_b_name") == "Parent B"
-        assert data.get("child_name") == "the child"
+
+
+def test_safety_sample_specifics() -> None:
+    r = requests.get(f"{BASE_URL}/api/joint/sample/safety", timeout=30)
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data.get("is_safety")
+    assert data.get("confidentiality_note")
+    assert data.get("parent_a_name") == "Parent A"
+    assert data.get("parent_b_name") == "Parent B"
+    assert data.get("child_name") == "the child"
 
 
 @pytest.mark.parametrize("key", KEYS)

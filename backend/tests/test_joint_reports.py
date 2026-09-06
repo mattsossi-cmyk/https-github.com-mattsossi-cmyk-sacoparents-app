@@ -37,6 +37,12 @@ def _case_reference_visible_to_creator_only() -> None:
     assert pro2.get(f"{API}/joint/reports/{rid2}").json()["case_reference"] == "PRIVATE-1"
 
 
+def _assert_stranger_404(rid: str) -> None:
+    stranger = new_user(API, "professional", "Stranger")
+    assert stranger.get(f"{API}/joint/reports/{rid}").status_code == 404
+    assert stranger.get(f"{API}/joint/reports/{rid}/report").status_code == 404
+
+
 # ---------------- Config ----------------
 class TestJointConfig:
     def test_config_has_20_subjects_and_6_questions(self) -> None:
@@ -226,9 +232,7 @@ class TestFullFlow:
         _case_reference_visible_to_creator_only()
 
         # Non-participant → 404
-        stranger = new_user(API, "professional", "Stranger")
-        assert stranger.get(f"{API}/joint/reports/{rid}").status_code == 404
-        assert stranger.get(f"{API}/joint/reports/{rid}/report").status_code == 404
+        _assert_stranger_404(rid)
 
         # Connection auto-created between parents
         conns = pa.get(f"{API}/joint/connections").json()

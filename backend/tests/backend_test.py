@@ -170,21 +170,21 @@ class TestCasesFlow:
         r = s.get(f"{API}/cases/{cid}/report")
         assert r.status_code == 400
 
-    def test_demo_and_report_for_all_types(self, fresh_user_session):
+    @pytest.mark.parametrize("tk", TYPE_KEYS)
+    def test_demo_and_report_for_all_types(self, fresh_user_session, tk) -> None:
         s = fresh_user_session
-        for tk in TYPE_KEYS:
-            r = s.post(f"{API}/cases", json={"type": tk, "child_name": "TEST_Demo"})
-            assert r.status_code == 200, f"create {tk}: {r.text}"
-            cid = r.json()["id"]
-            r = s.post(f"{API}/cases/{cid}/demo")
-            assert r.status_code == 200, f"demo {tk}: {r.text}"
-            assert r.json()["has_a"] and r.json()["has_b"]
-            assert r.json()["is_demo"]
+        r = s.post(f"{API}/cases", json={"type": tk, "child_name": "TEST_Demo"})
+        assert r.status_code == 200, f"create {tk}: {r.text}"
+        cid = r.json()["id"]
+        r = s.post(f"{API}/cases/{cid}/demo")
+        assert r.status_code == 200, f"demo {tk}: {r.text}"
+        assert r.json()["has_a"] and r.json()["has_b"]
+        assert r.json()["is_demo"]
 
-            r = s.get(f"{API}/cases/{cid}/report")
-            assert r.status_code == 200, f"report {tk}: {r.text}"
-            rep = r.json()
-            assert "pages" in rep or "page_titles" in rep or isinstance(rep, dict)
+        r = s.get(f"{API}/cases/{cid}/report")
+        assert r.status_code == 200, f"report {tk}: {r.text}"
+        rep = r.json()
+        assert "pages" in rep or "page_titles" in rep or isinstance(rep, dict)
 
     def test_save_partial_responses_rejected(self, fresh_user_session):
         s = fresh_user_session

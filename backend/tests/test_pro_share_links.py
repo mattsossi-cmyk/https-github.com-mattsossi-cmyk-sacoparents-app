@@ -21,6 +21,20 @@ def _reg(role="parent", prefix="sl"):
     return s, email
 
 
+def _assert_two_parent_links(data: dict, pa: str, pb: str) -> None:
+    invs = data.get("invitations")
+    assert invs and len(invs) == 2, f"expected 2 invitations, got {data.keys()}"
+    by_role = {i["role"]: i for i in invs}
+    assert set(by_role) == {"a", "b"}
+    for role, email in (("a", pa), ("b", pb)):
+        inv = by_role[role]
+        assert inv["invitee_email"] == email.lower()
+        assert "/join/" in inv["link"], f"missing join link: {inv}"
+        assert len(inv["code"]) >= 6
+    # tokens/links must be unique per parent
+    assert by_role["a"]["link"] != by_role["b"]["link"]
+
+
 class TestProfessionalShareLinks:
     def test_pro_create_returns_two_parent_links(self) -> None:
         pro, _ = _reg("professional", "slpro")
@@ -32,18 +46,7 @@ class TestProfessionalShareLinks:
             "parent_b_name": "Jordan", "parent_b_email": pb,
         })
         assert r.status_code in (200, 201), r.text
-        data = r.json()
-        invs = data.get("invitations")
-        assert invs and len(invs) == 2, f"expected 2 invitations, got {data.keys()}"
-        by_role = {i["role"]: i for i in invs}
-        assert set(by_role) == {"a", "b"}
-        for role, email in (("a", pa), ("b", pb)):
-            inv = by_role[role]
-            assert inv["invitee_email"] == email.lower()
-            assert "/join/" in inv["link"], f"missing join link: {inv}"
-            assert len(inv["code"]) >= 6
-        # tokens/links must be unique per parent
-        assert by_role["a"]["link"] != by_role["b"]["link"]
+        _assert_two_parent_links(r.json(), pa, pb)
 
     def test_pro_links_work_for_any_subject(self) -> None:
         pro, _ = _reg("professional", "slpro2")

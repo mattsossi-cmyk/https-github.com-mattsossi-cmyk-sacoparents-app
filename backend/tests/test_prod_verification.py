@@ -39,6 +39,19 @@ def _answers(theme: str = "general") -> dict:
     }
 
 
+def _assert_two_invitations(data: dict, pa: str, pb: str) -> None:
+    invs = data.get("invitations")
+    assert invs and len(invs) == 2
+    by_role = {i["role"]: i for i in invs}
+    assert set(by_role) == {"a", "b"}
+    for role, email in (("a", pa), ("b", pb)):
+        inv = by_role[role]
+        assert inv["invitee_email"] == email.lower()
+        assert "/join/" in inv["link"], f"missing /join/ in link: {inv}"
+        assert len(inv["code"]) >= 6
+    assert by_role["a"]["link"] != by_role["b"]["link"]
+
+
 # -------------------- 1) Professional share links --------------------
 class TestProShareLinks:
     def test_pro_create_returns_two_parent_join_links(self) -> None:
@@ -51,16 +64,7 @@ class TestProShareLinks:
             "parent_b_name": "Jordan", "parent_b_email": pb,
         })
         assert r.status_code in (200, 201), r.text
-        invs = r.json().get("invitations")
-        assert invs and len(invs) == 2
-        by_role = {i["role"]: i for i in invs}
-        assert set(by_role) == {"a", "b"}
-        for role, email in (("a", pa), ("b", pb)):
-            inv = by_role[role]
-            assert inv["invitee_email"] == email.lower()
-            assert "/join/" in inv["link"], f"missing /join/ in link: {inv}"
-            assert len(inv["code"]) >= 6
-        assert by_role["a"]["link"] != by_role["b"]["link"]
+        _assert_two_invitations(r.json(), pa, pb)
 
     def test_join_route_renders(self) -> None:
         pro = new_user(API, "professional", "Prod Pro2")
@@ -138,20 +142,25 @@ class TestFVEmailless:
         })
         assert r.status_code == 200, f"expected 200, got {r.status_code} {r.text[:300]}"
 
-    def test_prepare_empty_body_400_then_with_emails_200(self) -> None:
-        parent, pro, pro_email = self._parent_and_pro("two")
+    def _pending_request(self, tag: str) -> tuple:
+        parent, pro, pro_email = self._parent_and_pro(tag)
         r = parent.post(f"{API}/joint/professional-requests", json={
             "professional_email": pro_email, "child_name": "Kid",
         })
         assert r.status_code == 200, r.text
         req_id = r.json().get("id") or r.json().get("request_id")
         assert req_id, r.json()
+        return parent, pro, req_id
 
-        # empty body -> 400
+    def test_prepare_empty_body_400(self) -> None:
+        _parent, pro, req_id = self._pending_request("two")
+
         r = pro.post(f"{API}/joint/professional-requests/{req_id}/prepare", json={})
         assert r.status_code == 400, f"empty prepare should be 400, got {r.status_code} {r.text[:200]}"
 
-        # valid prepare
+    def test_prepare_with_emails_200(self) -> None:
+        _parent, pro, req_id = self._pending_request("three")
+
         pa = f"t_pra_{uuid.uuid4().hex[:6]}@example.com"
         pb = f"t_prb_{uuid.uuid4().hex[:6]}@example.com"
         r = pro.post(f"{API}/joint/professional-requests/{req_id}/prepare", json={
