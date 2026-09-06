@@ -285,9 +285,9 @@ const SITUATIONS = [
     focus: "safety",
     route: "/safety-assessment",
     result: {
-      title: "Start with the Family Violence and Communication Safety Screen.",
-      body: "Ongoing high conflict deserves a private safety screen BEFORE any cooperation work. We'll help you identify the safest communication pathway — from structured written to assisted — and surface Texas crisis resources.",
-      cta: "Start the safety screen",
+      title: "First a quick safety check — then we'll suggest a communication or mediation pathway.",
+      body: "High conflict isn't the same as family violence, and we don't assume it is. Before recommending a communication or mediation pathway, we'll run a short private safety check. If nothing concerning surfaces, you'll go straight into the co-parenting-agreement flow — with structure to keep the temperature down.",
+      cta: "Run the private safety check first",
       tone: "urgent",
       icon: <ShieldCheck size={20} />,
       safetyBanner: "If you are in immediate danger, call 911. Suicide & Crisis Lifeline: 988. National Domestic Violence Hotline: 1-800-799-SAFE.",

@@ -84,7 +84,7 @@ export default function SafetyAssessmentResultsCard({
       </div>
       <div className="p-6 sm:p-8">
         <div className="text-[10px] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-1.5">
-          Trauma-Informed Safety and Functioning Lens · TISFL
+          Family Safety and Functioning Reflection
         </div>
         <h2 className="font-bold text-2xl sm:text-3xl text-[#1A1330] mb-3" data-testid="results-pathway-title">
           {result.pathway_title}

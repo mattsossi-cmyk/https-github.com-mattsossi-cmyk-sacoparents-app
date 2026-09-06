@@ -39,7 +39,7 @@ export default function HipaaNotice() {
             Entities" — and their contracted "Business Associates".
           </p>
           <p>
-            <strong>SA CoParents is not a healthcare provider, and use of the platform does not, by itself, make information subject to HIPAA.</strong> We do not diagnose, treat, or bill for healthcare. When you fill in the Special Needs Co-Parenting Assessment or the Trauma-Informed Safety and Functioning Lens, you are self-reporting information about your child to help you prepare for co-parenting conversations. That work is a preparation resource, not clinical care.
+            <strong>SA CoParents is not a healthcare provider, and use of the platform does not, by itself, make information subject to HIPAA.</strong> We do not diagnose, treat, or bill for healthcare. When you fill in the Special Needs Co-Parenting Assessment or the Family Safety and Functioning Reflection, you are self-reporting information about your child to help you prepare for co-parenting conversations. That work is a preparation resource, not clinical care.
           </p>
           <p>
             <strong>We nevertheless treat health-related information as sensitive personal information</strong> and apply the privacy and security protections described in this notice and in our{" "}

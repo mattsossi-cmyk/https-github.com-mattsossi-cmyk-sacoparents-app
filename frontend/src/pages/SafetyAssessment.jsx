@@ -384,7 +384,7 @@ export default function SafetyAssessment() {
               </div>
             </div>
             <h1 className="font-bold text-3xl sm:text-4xl text-[#1A1330] tracking-tight mb-1">
-              Trauma-Informed Safety and Functioning Lens
+              Family Safety and Functioning Reflection
             </h1>
             <p className="text-sm text-[#4B4567] mb-3">
               Family Violence and Communication Safety Screen
@@ -454,7 +454,7 @@ export default function SafetyAssessment() {
               </a>
             </div>
 
-            {/* Trauma-Informed Safety and Functioning Lens — procedural safeguards */}
+            {/* Family Safety and Functioning Reflection — procedural safeguards */}
             <div
               className="rounded-2xl border border-[#3D1A78]/20 bg-[#F5F1FB] p-5 sm:p-6 mb-6"
               data-testid="tisfl-safeguards"

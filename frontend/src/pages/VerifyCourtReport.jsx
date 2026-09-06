@@ -95,7 +95,7 @@ export default function VerifyCourtReport() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-2">
           <ShieldCheck size={14} />
-          Trauma-Informed Safety and Functioning Lens · Court Report
+          Family Safety and Functioning Reflection · Court Report
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold mb-3 leading-tight">
           Reviewer Co-Sign Portal
