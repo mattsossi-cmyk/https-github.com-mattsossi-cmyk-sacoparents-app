@@ -1,36 +1,17 @@
-"""Joint Report Builder — invite flow, privacy, professional flow, sharing, management."""
+"""Joint Report Builder — professional-initiated cases, invite flow, privacy, sharing, management.
+
+Product rule (2026-09): professionals initiate every case. Parents register only
+through a secure invitation (token link primary, shared case code as backup).
+"""
 import os
+import re
 import uuid
-import pytest
 import requests
+
+from casekit import new_user, new_case, fill, completed_case, ANSWER_KEYS
 
 BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
-
-ANSWER_KEYS = ["needs_most", "working_well", "concerns", "improve", "options", "other_parent"]
-
-
-def _mk_answers(theme_words):
-    """Create realistic answer set that will share keywords for alignment heuristic."""
-    base = f"I feel our child needs {theme_words} consistent routines and clear homework expectations between homes."
-    return {
-        "needs_most": f"Our child needs {theme_words} academic support and consistent homework routines.",
-        "working_well": f"The current homework schedule at my home works with {theme_words} consistent evening routines.",
-        "concerns": f"I'm concerned about inconsistent homework completion and {theme_words} varying expectations between homes.",
-        "improve": f"I would like to improve communication about homework and academic {theme_words} expectations.",
-        "options": f"Option A: shared homework log. Option B: same homework times. {theme_words} coordinated with teacher.",
-        "other_parent": f"The other parent likely worries about homework quality and {theme_words} academic consistency.",
-    }
-
-
-def _register(name="P", role="parent", email=None):
-    s = requests.Session()
-    email = email or f"jt_{uuid.uuid4().hex[:8]}@example.com"
-    r = s.post(f"{API}/auth/register", json={"name": name, "email": email, "password": "password123", "role": role})
-    assert r.status_code == 200, r.text
-    s.email = email
-    s.name = name
-    return s
 
 
 # ---------------- Config ----------------
@@ -47,123 +28,172 @@ class TestJointConfig:
         assert "SA CoParents does not share" in data["confidentiality_notice"]
 
 
-# ---------------- Create + Invite ----------------
-class TestJointCreateAndInvite:
-    def test_create_joint_report_returns_code_and_link(self):
-        a = _register("Parent A")
-        invitee = f"invitee_{uuid.uuid4().hex[:6]}@example.com"
-        r = a.post(f"{API}/joint/reports", json={
-            "subject": "education", "custom_subject": "", "child_name": "TEST_Kid",
-            "co_parent_name": "Parent B", "co_parent_email": invitee,
-        })
-        assert r.status_code == 200, r.text
-        d = r.json()
-        assert d["subject"] == "education"
-        assert d["subject_label"] == "School / Education"
-        assert d["child_name"] == "TEST_Kid"
-        assert d["is_creator"] is True
-        assert d["my_role"] == "a"
-        assert d["status"] == "pending_invite"
-        inv = d["invitation"]
-        assert len(inv["code"]) == 6
-        assert inv["invitee_email"] == invitee.lower()
-        assert "/join/" in inv["link"]
-
-    def test_create_unknown_subject_400(self):
-        a = _register()
-        r = a.post(f"{API}/joint/reports", json={
-            "subject": "nope", "custom_subject": "", "child_name": "K",
-            "co_parent_name": "B", "co_parent_email": "b@example.com",
-        })
-        assert r.status_code == 400
-
-    def test_create_custom_subject(self):
-        a = _register()
-        r = a.post(f"{API}/joint/reports", json={
-            "subject": "custom", "custom_subject": "Summer travel", "child_name": "K",
+# ---------------- Professional-only initiation ----------------
+class TestProfessionalInitiationGates:
+    def test_parent_cannot_create_joint_report_403(self):
+        pro, pa, pb, d = new_case(API)
+        r = pa.post(f"{API}/joint/reports", json={
+            "subject": "education", "child_name": "K",
             "co_parent_name": "B", "co_parent_email": f"b_{uuid.uuid4().hex[:5]}@example.com",
         })
-        assert r.status_code == 200
-        assert r.json()["subject_label"] == "Summer travel"
+        assert r.status_code == 403
+        assert "professional" in r.json()["detail"].lower()
 
-    def test_create_requires_auth(self):
+    def test_parent_cannot_create_agreement_403(self):
+        pro, pa, pb, d = new_case(API)
+        r = pa.post(f"{API}/joint/agreements", json={
+            "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": pa.email,
+            "parent_b_name": "B", "parent_b_email": pb.email,
+        })
+        assert r.status_code == 403
+
+    def test_create_requires_auth_401(self):
         r = requests.post(f"{API}/joint/reports", json={
             "subject": "education", "child_name": "K",
             "co_parent_name": "B", "co_parent_email": "b@example.com",
         })
         assert r.status_code == 401
 
-
-# ---------------- Accept via code + full flow ----------------
-class TestAcceptAndFullFlow:
-    def test_accept_by_code_wrong_email_403(self):
-        a = _register("A")
-        invitee = f"target_{uuid.uuid4().hex[:6]}@example.com"
-        r = a.post(f"{API}/joint/reports", json={
+    def test_professional_endpoint_requires_professional_role_403(self):
+        pro, pa, pb, d = new_case(API)
+        r = pa.post(f"{API}/joint/reports/professional", json={
             "subject": "education", "child_name": "K",
-            "co_parent_name": "B", "co_parent_email": invitee,
+            "parent_a_name": "A", "parent_a_email": "a@example.com",
+            "parent_b_name": "B", "parent_b_email": "b@example.com",
         })
-        code = r.json()["invitation"]["code"]
-        # Register a different email
-        wrong = _register("Wrong")
-        r2 = wrong.post(f"{API}/joint/invitations/accept", json={"code": code})
-        assert r2.status_code == 403
+        assert r.status_code == 403
 
-    def test_accept_invalid_code(self):
-        b = _register("B")
-        r = b.post(f"{API}/joint/invitations/accept", json={"code": "ZZZZZZ"})
+
+# ---------------- Create + Invite ----------------
+class TestProCreateAndInvite:
+    def test_pro_create_returns_case_code_and_shared_code(self):
+        pro, pa, pb, d = new_case(API, subject="education", child="TEST_Kid", case_reference="REF-1")
+        assert re.fullmatch(r"SA-EDU-\d{6}", d["case_code"])
+        invs = d["invitations"]
+        assert len(invs) == 2
+        assert invs[0]["code"] == invs[1]["code"] == d["case_code"]
+        assert all("/join/" in i["link"] for i in invs)
+        assert d["status"] == "pending_invite"
+        assert d["professional_name"] == "Pro"
+        assert d["case_reference"] == "REF-1"
+        assert d["is_creator"] is True
+
+    def test_create_unknown_subject_400(self):
+        pro = new_user(API, "professional", "Pro")
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "nope", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": "a@example.com",
+            "parent_b_name": "B", "parent_b_email": "b@example.com",
+        })
+        assert r.status_code == 400
+
+    def test_create_custom_subject(self):
+        pro = new_user(API, "professional", "Pro")
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "custom", "custom_subject": "Summer travel", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": f"a_{uuid.uuid4().hex[:5]}@example.com",
+            "parent_b_name": "B", "parent_b_email": f"b_{uuid.uuid4().hex[:5]}@example.com",
+        })
+        assert r.status_code == 200
+        assert r.json()["subject_label"] == "Summer travel"
+
+
+# ---------------- Accept via code/token ----------------
+class TestAccept:
+    def test_shared_case_code_email_disambiguation(self):
+        pro = new_user(API, "professional", "Pro")
+        ea = f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
+        eb = f"t_pb_{uuid.uuid4().hex[:8]}@example.com"
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "education", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": ea,
+            "parent_b_name": "B", "parent_b_email": eb,
+        })
+        d = r.json()
+        code = d["case_code"]
+        toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
+
+        # Parent B registers with invite + accepts via the shared case code
+        pb = new_user(API, "parent", "B", email=eb, invite=toks["b"])
+        r = pb.post(f"{API}/joint/invitations/accept", json={"code": code})
+        assert r.status_code == 200 and r.json()["ok"]
+
+        # A wrong-email account cannot use the code
+        stranger = new_user(API, "professional", "Stranger")
+        r = stranger.post(f"{API}/joint/invitations/accept", json={"code": code})
+        assert r.status_code == 403
+
+    def test_accept_invalid_code_404(self):
+        u = new_user(API, "professional", "U")
+        r = u.post(f"{API}/joint/invitations/accept", json={"code": "SA-XXX-000000"})
         assert r.status_code == 404
 
-    def test_full_flow_privacy_and_report(self):
-        a = _register("Alice")
-        invitee = f"bob_{uuid.uuid4().hex[:6]}@example.com"
-        r = a.post(f"{API}/joint/reports", json={
-            "subject": "education", "child_name": "Sam",
-            "co_parent_name": "Bob", "co_parent_email": invitee,
+    def test_lookup_public_and_accept_by_token(self):
+        pro = new_user(API, "professional", "Pro")
+        ea = f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "communication", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": ea,
+            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
         })
-        assert r.status_code == 200
-        rid = r.json()["id"]
-        code = r.json()["invitation"]["code"]
+        inv_a = [i for i in r.json()["invitations"] if i["invitee_email"] == ea][0]
+        token = inv_a["link"].rsplit("/", 1)[-1]
 
-        # Register B with matching email
-        b = _register("Bob", email=invitee)
-
-        # B accepts by code
-        r = b.post(f"{API}/joint/invitations/accept", json={"code": code})
+        r = requests.get(f"{API}/joint/invitations/lookup/{token}")
         assert r.status_code == 200
-        assert r.json()["report_id"] == rid
+        assert r.json()["invitee_email"] == ea.lower()
+        assert r.json()["subject_label"] == "Communication"
+
+        pa = new_user(API, "parent", "A", email=ea, invite=token)
+        r = pa.post(f"{API}/joint/invitations/accept", json={"code": token})
+        assert r.status_code == 200 and r.json()["ok"]
+
+    def test_lookup_invalid_token_404(self):
+        r = requests.get(f"{API}/joint/invitations/lookup/nonexistent_token_xyz")
+        assert r.status_code == 404
+
+    def test_parent_register_with_wrong_invite_403(self):
+        pro = new_user(API, "professional", "Pro")
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "education", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:8]}@example.com",
+            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
+        })
+        tok = r.json()["invitations"][0]["link"].rsplit("/", 1)[-1]
+        # Different email than the invitation was sent to
+        s = requests.Session()
+        r = s.post(f"{API}/auth/register", json={
+            "name": "Wrong", "email": f"wrong_{uuid.uuid4().hex[:6]}@example.com",
+            "password": "password123", "role": "parent", "invite": tok,
+        })
+        assert r.status_code == 403
+
+
+# ---------------- Full flow: privacy + report ----------------
+class TestFullFlow:
+    def test_full_flow_privacy_and_report(self):
+        pro, pa, pb, d = new_case(API, subject="education", child="Sam")
+        rid = d["id"]
 
         # Report not ready until both complete → 400
-        r = a.get(f"{API}/joint/reports/{rid}/report")
-        assert r.status_code == 400
+        assert pro.get(f"{API}/joint/reports/{rid}/report").status_code == 400
 
         # A submits
-        r = a.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _mk_answers("morning ")})
-        assert r.status_code == 200
+        fill(API, pa, rid, "alpha")
+        assert pro.get(f"{API}/joint/reports/{rid}/report").status_code == 400
 
-        # Still 400 — only A done
-        r = a.get(f"{API}/joint/reports/{rid}/report")
-        assert r.status_code == 400
-
-        # PRIVACY: B fetches detail — must NOT see A's answers
-        r = b.get(f"{API}/joint/reports/{rid}")
-        assert r.status_code == 200
-        detail_b = r.json()
-        # B's my_answers should be None (not submitted yet)
+        # PRIVACY: B's detail must not contain A's answers
+        detail_b = pb.get(f"{API}/joint/reports/{rid}").json()
         assert detail_b.get("my_answers") is None
-        # No key in detail_b should contain parent A's response text
-        blob = str(detail_b).lower()
-        assert "morning" not in blob, f"Parent A's answers leaked to B: {detail_b}"
+        assert "alpha" not in str(detail_b).lower()
 
-        # B submits with different theme
-        r = b.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _mk_answers("evening ")})
-        assert r.status_code == 200
-        assert r.json()["status"] == "ready"
+        # B submits → ready
+        r = fill(API, pb, rid, "beta")
+        assert r["status"] == "ready"
 
-        # Report available now
-        r = a.get(f"{API}/joint/reports/{rid}/report")
-        assert r.status_code == 200
-        rep = r.json()
+        # Report available to pro and both parents
+        rep = pro.get(f"{API}/joint/reports/{rid}/report").json()
         assert rep["report_title"] == "Joint Parenting Alignment Report"
         assert rep["subject_label"] == "School / Education"
         assert rep["child_name"] == "Sam"
@@ -171,203 +201,150 @@ class TestAcceptAndFullFlow:
         assert len(rep["options"]) == 3
         assert len(rep["next_steps"]) == 6
         assert rep["philosophy_heading"] == "Alignment Before Agreement"
-        assert isinstance(rep["alignment_statements"], list) and len(rep["alignment_statements"]) >= 1
+        assert len(rep["alignment_statements"]) >= 1
+        assert pb.get(f"{API}/joint/reports/{rid}/report").status_code == 200
 
-        # B can also fetch report and see own answers now
-        r = b.get(f"{API}/joint/reports/{rid}")
-        assert r.status_code == 200
-        assert r.json()["my_answers"]["needs_most"].startswith("Our child needs evening")
-        r = b.get(f"{API}/joint/reports/{rid}/report")
-        assert r.status_code == 200
+        # B sees own answers only
+        assert pb.get(f"{API}/joint/reports/{rid}").json()["my_answers"]["needs_most"].startswith("Our child needs beta")
+
+        # Case reference visible to pro creator, hidden from parents
+        pro2 = new_user(API, "professional", "Pro2")
+        r = pro2.post(f"{API}/joint/reports/professional", json={
+            "subject": "education", "child_name": "K2",
+            "parent_a_name": "A", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:8]}@example.com",
+            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
+            "case_reference": "PRIVATE-1",
+        })
+        rid2 = r.json()["id"]
+        assert pro2.get(f"{API}/joint/reports/{rid2}").json()["case_reference"] == "PRIVATE-1"
 
         # Non-participant → 404
-        c = _register("Stranger")
-        r = c.get(f"{API}/joint/reports/{rid}")
-        assert r.status_code == 404
-        r = c.get(f"{API}/joint/reports/{rid}/report")
-        assert r.status_code == 404
+        stranger = new_user(API, "professional", "Stranger")
+        assert stranger.get(f"{API}/joint/reports/{rid}").status_code == 404
+        assert stranger.get(f"{API}/joint/reports/{rid}/report").status_code == 404
 
-        # Connection auto-created
-        r = a.get(f"{API}/joint/connections")
-        assert r.status_code == 200
-        assert any(c.get("other_email") == invitee for c in r.json())
+        # Connection auto-created between parents
+        conns = pa.get(f"{API}/joint/connections").json()
+        assert any(c.get("other_email") == pb.email for c in conns)
 
     def test_incomplete_answers_400(self):
-        a = _register()
-        r = a.post(f"{API}/joint/reports", json={
-            "subject": "education", "child_name": "K",
-            "co_parent_name": "B", "co_parent_email": f"b_{uuid.uuid4().hex[:5]}@example.com",
-        })
-        rid = r.json()["id"]
-        r = a.put(f"{API}/joint/reports/{rid}/responses", json={"answers": {"needs_most": "just one"}})
+        pro, pa, pb, d = new_case(API)
+        rid = d["id"]
+        r = pa.put(f"{API}/joint/reports/{rid}/responses", json={"answers": {"needs_most": "just one"}})
         assert r.status_code == 400
-
-
-# ---------------- Accept via token/link ----------------
-class TestAcceptByToken:
-    def test_lookup_and_accept_by_token(self):
-        a = _register("A")
-        invitee = f"tok_{uuid.uuid4().hex[:6]}@example.com"
-        r = a.post(f"{API}/joint/reports", json={
-            "subject": "communication", "child_name": "K",
-            "co_parent_name": "B", "co_parent_email": invitee,
-        })
-        link = r.json()["invitation"]["link"]
-        token = link.rsplit("/", 1)[-1]
-
-        # Public lookup (no auth)
-        r = requests.get(f"{API}/joint/invitations/lookup/{token}")
-        assert r.status_code == 200
-        assert r.json()["invitee_email"] == invitee.lower()
-        assert r.json()["subject_label"] == "Communication"
-
-        # Accept via token as body.code
-        b = _register("B", email=invitee)
-        r = b.post(f"{API}/joint/invitations/accept", json={"code": token})
-        assert r.status_code == 200
-
-    def test_lookup_invalid_token_404(self):
-        r = requests.get(f"{API}/joint/invitations/lookup/nonexistent_token_xyz")
-        assert r.status_code == 404
 
 
 # ---------------- Invitation management ----------------
 class TestInvitationManagement:
-    def _setup(self):
-        a = _register("A")
-        invitee = f"mgmt_{uuid.uuid4().hex[:6]}@example.com"
-        r = a.post(f"{API}/joint/reports", json={
-            "subject": "education", "child_name": "K",
-            "co_parent_name": "B", "co_parent_email": invitee,
-        })
-        return a, invitee, r.json()
+    def _pending_inv(self, pro, rid, role="a"):
+        reports = pro.get(f"{API}/joint/reports").json()
+        rep = [x for x in reports if x["id"] == rid][0]
+        inv = [i for i in rep["pending_invitations"] if i["role"] == role][0]
+        return inv
 
     def test_resend_ok(self):
-        a, invitee, d = self._setup()
-        r = a.post(f"{API}/joint/invitations/{d['invitation']['id']}/resend")
+        pro = new_user(API, "professional", "Pro")
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "education", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:8]}@example.com",
+            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
+        })
+        rid = r.json()["id"]
+        inv = self._pending_inv(pro, rid, "a")
+        r = pro.post(f"{API}/joint/invitations/{inv['id']}/resend")
         assert r.status_code == 200
 
     def test_resend_non_creator_forbidden(self):
-        a, invitee, d = self._setup()
-        other = _register("Other")
-        r = other.post(f"{API}/joint/invitations/{d['invitation']['id']}/resend")
+        pro, pa, pb, d = new_case(API)
+        # after acceptance nothing is pending; use a fresh case still pending
+        pro2 = new_user(API, "professional", "Pro2")
+        r = pro2.post(f"{API}/joint/reports/professional", json={
+            "subject": "education", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:8]}@example.com",
+            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
+        })
+        inv = self._pending_inv(pro2, r.json()["id"], "a")
+        other = new_user(API, "professional", "Other")
+        r = other.post(f"{API}/joint/invitations/{inv['id']}/resend")
         assert r.status_code in (403, 404)
 
     def test_change_subject_before_ready(self):
-        a, invitee, d = self._setup()
-        r = a.patch(f"{API}/joint/invitations/{d['invitation']['id']}", json={
-            "subject": "medical", "custom_subject": ""
+        pro = new_user(API, "professional", "Pro")
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "education", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:8]}@example.com",
+            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
         })
+        rid = r.json()["id"]
+        inv = self._pending_inv(pro, rid, "a")
+        r = pro.patch(f"{API}/joint/invitations/{inv['id']}", json={"subject": "medical", "custom_subject": ""})
         assert r.status_code == 200
         assert r.json()["subject_label"] == "Medical Care"
-        # Verify persistence
-        r = a.get(f"{API}/joint/reports/{d['id']}")
-        assert r.json()["subject_label"] == "Medical Care"
+        assert pro.get(f"{API}/joint/reports/{rid}").json()["subject_label"] == "Medical Care"
 
     def test_change_subject_unknown_400(self):
-        a, invitee, d = self._setup()
-        r = a.patch(f"{API}/joint/invitations/{d['invitation']['id']}", json={
-            "subject": "bogus", "custom_subject": ""
+        pro = new_user(API, "professional", "Pro")
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "education", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:8]}@example.com",
+            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
         })
+        inv = self._pending_inv(pro, r.json()["id"], "b")
+        r = pro.patch(f"{API}/joint/invitations/{inv['id']}", json={"subject": "bogus", "custom_subject": ""})
         assert r.status_code == 400
 
     def test_change_subject_blocked_when_ready(self):
-        a, invitee, d = self._setup()
-        rid = d["id"]
-        code = d["invitation"]["code"]
-        b = _register("B", email=invitee)
-        b.post(f"{API}/joint/invitations/accept", json={"code": code})
-        a.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _mk_answers("x ")})
-        b.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _mk_answers("y ")})
-        # Now ready
-        r = a.patch(f"{API}/joint/invitations/{d['invitation']['id']}", json={
-            "subject": "medical", "custom_subject": ""
+        pro = new_user(API, "professional", "Pro")
+        ea = f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "education", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": ea,
+            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
         })
+        d = r.json()
+        rid = d["id"]
+        inv = self._pending_inv(pro, rid, "a")
+        toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
+        pa = new_user(API, "parent", "A", email=ea, invite=toks["a"])
+        pb_email = [i["invitee_email"] for i in d["invitations"] if i["role"] == "b"][0]
+        pb = new_user(API, "parent", "B", email=pb_email, invite=toks["b"])
+        pa.post(f"{API}/joint/invitations/accept", json={"code": toks["a"]})
+        pb.post(f"{API}/joint/invitations/accept", json={"code": toks["b"]})
+        fill(API, pa, rid, "x")
+        fill(API, pb, rid, "y")
+        r = pro.patch(f"{API}/joint/invitations/{inv['id']}", json={"subject": "medical", "custom_subject": ""})
         assert r.status_code == 400
 
-    def test_cancel_makes_code_invalid(self):
-        a, invitee, d = self._setup()
-        r = a.post(f"{API}/joint/invitations/{d['invitation']['id']}/cancel")
+    def test_cancel_invalidates_code(self):
+        pro = new_user(API, "professional", "Pro")
+        ea = f"t_pa_{uuid.uuid4().hex[:8]}@example.com"
+        r = pro.post(f"{API}/joint/reports/professional", json={
+            "subject": "education", "child_name": "K",
+            "parent_a_name": "A", "parent_a_email": ea,
+            "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
+        })
+        d = r.json()
+        toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
+        pa = new_user(API, "parent", "A", email=ea, invite=toks["a"])
+        inv = self._pending_inv(pro, d["id"], "a")
+        r = pro.post(f"{API}/joint/invitations/{inv['id']}/cancel")
         assert r.status_code == 200
-        b = _register("B", email=invitee)
-        r = b.post(f"{API}/joint/invitations/accept", json={"code": d["invitation"]["code"]})
+        r = pa.post(f"{API}/joint/invitations/accept", json={"code": toks["a"]})
         assert r.status_code == 404
 
 
-# ---------------- Professional flow + share ----------------
-class TestProfessionalFlow:
-    def test_professional_creates_and_share(self):
-        pro = _register("Doc", role="professional")
-        email_a = f"pa_{uuid.uuid4().hex[:6]}@example.com"
-        email_b = f"pb_{uuid.uuid4().hex[:6]}@example.com"
-        r = pro.post(f"{API}/joint/reports/professional", json={
-            "subject": "schedule", "custom_subject": "", "child_name": "K",
-            "parent_a_name": "PA", "parent_a_email": email_a,
-            "parent_b_name": "PB", "parent_b_email": email_b,
-        })
-        assert r.status_code == 200, r.text
-        rid = r.json()["id"]
-        assert r.json()["professional_name"] == "Doc"
-
-        # Report 400 until both parents complete
-        r = pro.get(f"{API}/joint/reports/{rid}/report")
-        assert r.status_code == 400
-
-        # Both parents register + accept + complete (need codes — use list_joint_reports on the pro
-        # to fetch invitation codes? Pro only sees ONE pending inv via detail. We need to hit
-        # DB indirectly by using the invite link in join lookup... instead register both, then
-        # they need code. The response only returned one invitation (b/c list_joint_reports maps
-        # created_by → one pending). Codes are not returned to pro for both parents through the
-        # public API. Let's verify pro can see the report and status.
-        r = pro.get(f"{API}/joint/reports/{rid}")
-        assert r.status_code == 200
-        # For share test, use parent-only path: create a report a-b, complete it, then share w/ pro.
-        parent_a = _register("PPA")
-        invitee_b = f"pshare_{uuid.uuid4().hex[:6]}@example.com"
-        r = parent_a.post(f"{API}/joint/reports", json={
-            "subject": "education", "child_name": "K",
-            "co_parent_name": "PB", "co_parent_email": invitee_b,
-        })
-        rid2 = r.json()["id"]
-        code = r.json()["invitation"]["code"]
-        parent_b = _register("PPB", email=invitee_b)
-        parent_b.post(f"{API}/joint/invitations/accept", json={"code": code})
-        parent_a.put(f"{API}/joint/reports/{rid2}/responses", json={"answers": _mk_answers("x ")})
-        parent_b.put(f"{API}/joint/reports/{rid2}/responses", json={"answers": _mk_answers("y ")})
-
-        # Share with the professional
-        r = parent_a.post(f"{API}/joint/reports/{rid2}/share", json={"email": pro.email})
-        assert r.status_code == 200, r.text
-        assert r.json()["ok"] is True
-
-        # Professional now sees it in list + can fetch the report
-        r = pro.get(f"{API}/joint/reports")
-        assert any(x["id"] == rid2 for x in r.json())
-        r = pro.get(f"{API}/joint/reports/{rid2}/report")
-        assert r.status_code == 200
+# ---------------- Sharing with other professionals ----------------
+class TestSharing:
+    def test_share_completed_report_with_professional(self):
+        pro, pa, pb, d, detail = completed_case(API)
+        rid = d["id"]
+        pro2 = new_user(API, "professional", "Reviewer")
+        r = pa.post(f"{API}/joint/reports/{rid}/share", json={"email": pro2.email})
+        assert r.status_code == 200 and r.json()["ok"] is True
+        assert any(x["id"] == rid for x in pro2.get(f"{API}/joint/reports").json())
+        assert pro2.get(f"{API}/joint/reports/{rid}/report").status_code == 200
 
     def test_share_to_non_professional_email_404(self):
-        a = _register("A")
-        invitee = f"share_{uuid.uuid4().hex[:6]}@example.com"
-        r = a.post(f"{API}/joint/reports", json={
-            "subject": "education", "child_name": "K",
-            "co_parent_name": "B", "co_parent_email": invitee,
-        })
-        rid = r.json()["id"]
-        code = r.json()["invitation"]["code"]
-        b = _register("B", email=invitee)
-        b.post(f"{API}/joint/invitations/accept", json={"code": code})
-        a.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _mk_answers("x ")})
-        b.put(f"{API}/joint/reports/{rid}/responses", json={"answers": _mk_answers("y ")})
-
-        r = a.post(f"{API}/joint/reports/{rid}/share", json={"email": "no-such-pro@example.com"})
+        pro, pa, pb, d, detail = completed_case(API)
+        r = pa.post(f"{API}/joint/reports/{d['id']}/share", json={"email": "no-such-pro@example.com"})
         assert r.status_code == 404
-
-    def test_professional_endpoint_requires_professional_role(self):
-        a = _register("A")  # parent role
-        r = a.post(f"{API}/joint/reports/professional", json={
-            "subject": "education", "child_name": "K",
-            "parent_a_name": "A", "parent_a_email": "a@example.com",
-            "parent_b_name": "B", "parent_b_email": "b@example.com",
-        })
-        assert r.status_code == 403

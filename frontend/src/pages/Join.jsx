@@ -87,8 +87,11 @@ export default function Join() {
                 <Link to={`/auth?next=/join/${token}`} data-testid="join-signin-link">
                   <Button className="w-full h-12" data-testid="join-signin-btn">Sign in to accept</Button>
                 </Link>
+                <Link to={`/auth?mode=register&next=/join/${token}`} className="block" data-testid="join-register-link">
+                  <Button variant="outline" className="w-full h-12" data-testid="join-register-btn">Create your free parent account</Button>
+                </Link>
                 <p className="text-xs text-muted-foreground text-center">
-                  New here? Create a free account with <strong>{info.invitee_email}</strong> — the email this invitation was sent to.
+                  Use <strong>{info.invitee_email}</strong> — the email this invitation was sent to.
                 </p>
               </div>
             )}

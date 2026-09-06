@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [extLink, setExtLink] = useState(null);
   const [linkCode, setLinkCode] = useState("");
   const { user, logout } = useAuth();
+  const isPro = user?.role === "professional";
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -167,9 +168,11 @@ export default function Dashboard() {
           <p className="text-muted-foreground mt-2" data-testid="dash-subtext">Your individual assessments come from sacoparentsapp.online. Invite your co-parent to explore one issue together.</p>
         </div>
 
-        <section data-testid="circle-nav-section">
-          <CircleNav isPro={user?.role === "professional"} />
-        </section>
+        {isPro && (
+          <section data-testid="circle-nav-section">
+            <CircleNav isPro={isPro} />
+          </section>
+        )}
 
         <div className="grid md:grid-cols-2 gap-4" data-testid="tools-grid">
           <div className="bg-white border border-border rounded-lg p-6" data-testid="individual-tools-card">
@@ -191,18 +194,28 @@ export default function Dashboard() {
           </div>
           <div className="bg-white border-2 border-primary/30 rounded-lg p-6" data-testid="joint-tools-card">
             <p className="text-xs uppercase tracking-widest text-primary font-bold">Joint Tools</p>
-            <h2 className="text-2xl font-semibold mt-1">Create a Joint Report</h2>
-            <p className="text-sm text-muted-foreground mt-2 mb-5">Compare perspectives. Find alignment. Identify issues that may need discussion.</p>
-            <Link to="/joint/new" data-testid="create-joint-report-link">
-              <Button className="gap-2" data-testid="create-joint-report-btn"><Mail className="h-4 w-4" /> Invite My Co-Parent</Button>
-            </Link>
-            <Link to="/hub" className="block mt-3 text-sm text-primary font-medium hover:underline" data-testid="open-hub-link">
-              Open the Joint Report Hub →
-            </Link>
+            {isPro ? (
+              <>
+                <h2 className="text-2xl font-semibold mt-1">Create a Joint Report</h2>
+                <p className="text-sm text-muted-foreground mt-2 mb-5">Compare perspectives. Find alignment. Identify issues that may need discussion.</p>
+                <Link to="/joint/new" data-testid="create-joint-report-link">
+                  <Button className="gap-2" data-testid="create-joint-report-btn"><Mail className="h-4 w-4" /> Create a Joint Alignment Case</Button>
+                </Link>
+                <Link to="/hub" className="block mt-3 text-sm text-primary font-medium hover:underline" data-testid="open-hub-link">
+                  Open the Joint Report Hub →
+                </Link>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-semibold mt-1">Joint Reports</h2>
+                <p className="text-sm text-muted-foreground mt-2" data-testid="parent-joint-note">Joint reports are initiated by an authorized professional. When you're invited, enter your case code below or use the secure link in your invitation email.</p>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4" data-testid="agreement-tools-grid">
+        <div className={isPro ? "grid md:grid-cols-2 gap-4" : "grid gap-4"} data-testid="agreement-tools-grid">
+          {isPro && (
           <div className="bg-white border border-border rounded-lg p-6" data-testid="agreement-card">
             <p className="text-xs uppercase tracking-widest text-brand-teal font-bold">Co-Parenting Agreement</p>
             <h2 className="text-2xl font-semibold mt-1">Create a Joint Agreement</h2>
@@ -211,6 +224,7 @@ export default function Dashboard() {
               <Button variant="outline" className="gap-2" data-testid="create-agreement-btn"><Scale className="h-4 w-4" /> Invite Co-Parent to Joint Agreement</Button>
             </Link>
           </div>
+          )}
           <div className="bg-white border-2 border-red-200 rounded-lg p-6" data-testid="fv-contact-card">
             <p className="text-xs uppercase tracking-widest text-red-700 font-bold">Family Violence Pathway</p>
             <h2 className="text-2xl font-semibold mt-1">Contact a Professional</h2>

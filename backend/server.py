@@ -246,7 +246,8 @@ class RegisterIn(BaseModel):
     name: str
     email: EmailStr
     password: str
-    role: str = "parent"
+    role: str = "professional"
+    invite: str = ""
 
 
 class LoginIn(BaseModel):
@@ -261,12 +262,20 @@ async def register(body: RegisterIn, response: Response):
         raise HTTPException(status_code=400, detail="An account with this email already exists")
     if len(body.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    role = body.role if body.role in ("parent", "professional") else "professional"
+    if role == "parent":
+        raw = body.invite.strip()
+        inv = None
+        if raw:
+            inv = await db.invitations.find_one({"status": "pending", "invitee_email": email, "$or": [{"token": raw}, {"code": raw.upper()}]})
+        if not inv:
+            raise HTTPException(status_code=403, detail="Parent accounts are created through a secure invitation from a professional. Please use the link or case code in your invitation email.")
     uid = str(uuid.uuid4())
     user = {
         "_id": uid,
         "email": email,
         "name": body.name.strip(),
-        "role": body.role if body.role in ("parent", "professional") else "parent",
+        "role": role,
         "password_hash": hash_password(body.password),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -805,6 +814,8 @@ def resolve_subjects(body_subject: str, body_subjects: list, custom: str):
 
 @api.post("/joint/reports")
 async def create_joint_report(body: JointReportIn, user=Depends(get_current_user)):
+    if user.get("role") != "professional":
+        raise HTTPException(status_code=403, detail="Joint reports are initiated by an authorized professional. Parents participate through a secure invitation.")
     subject, subject_keys, label = resolve_subjects(body.subject, body.subjects, body.custom_subject)
     is_safety = all(k in SAFETY_SUBJECT_KEYS for k in subject_keys)
     mediator = None
@@ -875,6 +886,7 @@ async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_curre
         "subject": subject,
         "subjects": subject_keys,
         "subject_label": label,
+        "is_safety": all(k in SAFETY_SUBJECT_KEYS for k in subject_keys),
         "case_code": case_code,
         "case_reference": body.case_reference.strip()[:120],
         "child_name": body.child_name.strip(),
@@ -1405,14 +1417,20 @@ async def complete_alignment_report_pdf(user=Depends(get_current_user)):
 
 class AgreementIn(BaseModel):
     child_name: str
-    co_parent_name: str
-    co_parent_email: EmailStr
+    parent_a_name: str
+    parent_a_email: EmailStr
+    parent_b_name: str
+    parent_b_email: EmailStr
 
 
 @api.post("/joint/agreements")
 async def create_agreement(body: AgreementIn, user=Depends(get_current_user)):
+    if user.get("role") != "professional":
+        raise HTTPException(status_code=403, detail="Co-parenting agreements are initiated by an authorized professional. Parents participate through a secure invitation.")
     rid = str(uuid.uuid4())
     case_code = new_case_code("co_parenting", kind="agreement")
+    pa_email = str(body.parent_a_email).lower()
+    pb_email = str(body.parent_b_email).lower()
     doc = {
         "id": rid,
         "kind": "agreement",
@@ -1423,21 +1441,25 @@ async def create_agreement(body: AgreementIn, user=Depends(get_current_user)):
         "case_code": case_code,
         "child_name": body.child_name.strip(),
         "created_by": user["_id"],
-        "creator_role": "parent",
-        "professional_id": None,
-        "professional_name": None,
+        "creator_role": "professional",
+        "professional_id": user["_id"],
+        "professional_name": user.get("name", ""),
         "shared_with": [],
         "participants": {
-            "a": {"user_id": user["_id"], "name": user.get("name", ""), "email": user["email"]},
-            "b": {"user_id": None, "name": body.co_parent_name.strip(), "email": body.co_parent_email.lower()},
+            "a": {"user_id": None, "name": body.parent_a_name.strip(), "email": pa_email},
+            "b": {"user_id": None, "name": body.parent_b_name.strip(), "email": pb_email},
         },
         "responses": {},
         "status": "pending_invite",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.joint_reports.insert_one(doc)
-    inv = await create_invitation(rid, "b", body.co_parent_name, body.co_parent_email, user.get("name", "Your co-parent"), doc["child_name"], "Co-Parenting Agreement", code=case_code)
-    return {**joint_public(doc, user), "invitation": {"id": inv["id"], "code": inv["code"], "link": f"{app_url()}/join/{inv['token']}", "invitee_email": inv["invitee_email"], "status": "pending"}}
+    inv_a = await create_invitation(rid, "a", body.parent_a_name, pa_email, user.get("name", "A professional"), doc["child_name"], "Co-Parenting Agreement", code=case_code, via_professional=True)
+    inv_b = await create_invitation(rid, "b", body.parent_b_name, pb_email, user.get("name", "A professional"), doc["child_name"], "Co-Parenting Agreement", code=case_code, via_professional=True)
+    return {**joint_public(doc, user), "invitations": [
+        {"id": inv_a["id"], "role": "a", "code": inv_a["code"], "link": f"{app_url()}/join/{inv_a['token']}", "invitee_email": inv_a["invitee_email"], "email": inv_a["invitee_email"], "status": "pending"},
+        {"id": inv_b["id"], "role": "b", "code": inv_b["code"], "link": f"{app_url()}/join/{inv_b['token']}", "invitee_email": inv_b["invitee_email"], "email": inv_b["invitee_email"], "status": "pending"},
+    ]}
 
 
 class ProRequestIn(BaseModel):

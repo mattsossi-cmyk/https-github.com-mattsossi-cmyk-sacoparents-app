@@ -1,5 +1,6 @@
 """Verify demo report output shape - refactor byte-equivalence checks."""
 import os
+import uuid
 import requests
 import pytest
 from dotenv import load_dotenv
@@ -24,9 +25,12 @@ REQUIRED_KEYS = {
 
 @pytest.fixture(scope="module")
 def admin_session():
+    """Self-contained authenticated session (no dependence on a real user account)."""
     s = requests.Session()
-    r = s.post(f"{BASE_URL}/api/auth/login",
-               json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+    r = s.post(f"{BASE_URL}/api/auth/register", json={
+        "name": "Shape Fixture", "email": f"shape_{uuid.uuid4().hex[:8]}@example.com",
+        "password": "testpass123", "role": "professional",
+    })
     assert r.status_code == 200, r.text
     return s
 

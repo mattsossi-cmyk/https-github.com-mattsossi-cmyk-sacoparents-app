@@ -53,15 +53,12 @@ class TestProfessionalShareLinks:
             assert r.status_code in (200, 201), f"{subj}: {r.text}"
             assert len(r.json().get("invitations", [])) == 2, subj
 
-    def test_parent_create_includes_invitation_link(self):
-        a, _ = _reg(prefix="slparent")
-        r = a.post(f"{API}/joint/reports", json={
+    def test_parent_create_blocked_403(self):
+        """Parents never initiate reports — the professional initiates every case."""
+        from casekit import new_case
+        pro, pa, pb, d = new_case(API)
+        r = pa.post(f"{API}/joint/reports", json={
             "subject": "communication", "child_name": "Kid",
             "co_parent_name": "B", "co_parent_email": f"TEST_slb_{uuid.uuid4().hex[:6]}@example.com",
         })
-        assert r.status_code in (200, 201), r.text
-        inv = r.json()["invitation"]
-        assert "/join/" in inv["link"], f"parent create response should include the share link: {inv}"
-        # the link must resolve to a valid invitation (accept page uses the token)
-        token = inv["link"].rsplit("/join/", 1)[1]
-        assert len(token) > 10
+        assert r.status_code == 403

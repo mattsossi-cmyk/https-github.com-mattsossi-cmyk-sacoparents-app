@@ -13,16 +13,31 @@ API = f"{BASE_URL}/api"
 
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "mattsossi@bsossi.com")
 ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
+MONGO_URL = os.environ["MONGO_URL"]
+DB_NAME = os.environ["DB_NAME"]
+
+
+def _clear_admin_lockout():
+    """Brute-force lockout (15 min) would otherwise cascade across test runs."""
+    import pymongo
+    client = pymongo.MongoClient(MONGO_URL)
+    client[DB_NAME].login_attempts.delete_many({"identifier": {"$regex": f":{ADMIN_EMAIL}$"}})
+    client.close()
 
 TYPE_KEYS = ["general", "communication", "high_conflict", "ipv", "medical", "educational", "psychological", "court"]
 
 
 @pytest.fixture(scope="session")
 def admin_session():
+    """Self-contained authenticated session (no dependence on a real user account)."""
     s = requests.Session()
-    r = s.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
-    assert r.status_code == 200, f"Admin login failed: {r.status_code} {r.text}"
+    email = f"adminfix_{uuid.uuid4().hex[:8]}@example.com"
+    r = s.post(f"{API}/auth/register", json={
+        "name": "Fixture User", "email": email, "password": "testpass123", "role": "professional"
+    })
+    assert r.status_code == 200, f"Register failed: {r.status_code} {r.text}"
     assert "access_token" in s.cookies, "No access_token cookie set"
+    s.email = email
     return s
 
 
@@ -31,7 +46,7 @@ def fresh_user_session():
     s = requests.Session()
     email = f"test_{uuid.uuid4().hex[:8]}@example.com"
     r = s.post(f"{API}/auth/register", json={
-        "name": "Test User", "email": email, "password": "testpass123", "role": "parent"
+        "name": "Test User", "email": email, "password": "testpass123", "role": "professional"
     })
     assert r.status_code == 200, f"Register failed: {r.status_code} {r.text}"
     s.email = email
@@ -44,13 +59,23 @@ class TestAuth:
         s = requests.Session()
         email = f"reg_{uuid.uuid4().hex[:8]}@example.com"
         r = s.post(f"{API}/auth/register", json={
-            "name": "Reg User", "email": email, "password": "password123", "role": "parent"
+            "name": "Reg User", "email": email, "password": "password123", "role": "professional"
         })
         assert r.status_code == 200
         data = r.json()
         assert data["email"] == email
-        assert data["role"] == "parent"
+        assert data["role"] == "professional"
         assert "access_token" in s.cookies
+
+    def test_register_parent_without_invite_403(self):
+        """Parents can only register through a professional's invitation."""
+        s = requests.Session()
+        r = s.post(f"{API}/auth/register", json={
+            "name": "Gate", "email": f"gate_{uuid.uuid4().hex[:8]}@example.com",
+            "password": "password123", "role": "parent",
+        })
+        assert r.status_code == 403
+        assert "invitation" in r.json()["detail"].lower()
 
     def test_register_short_password(self):
         s = requests.Session()
@@ -62,10 +87,12 @@ class TestAuth:
     def test_login_admin(self, admin_session):
         r = admin_session.get(f"{API}/auth/me")
         assert r.status_code == 200
-        assert r.json()["email"] == ADMIN_EMAIL
+        assert r.json()["email"] == admin_session.email
 
     def test_login_invalid(self):
-        r = requests.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": "wrongpw!"})
+        email = f"wrongpw_{uuid.uuid4().hex[:8]}@example.com"
+        requests.post(f"{API}/auth/register", json={"name": "W", "email": email, "password": "password123", "role": "professional"})
+        r = requests.post(f"{API}/auth/login", json={"email": email, "password": "wrongpw!"})
         assert r.status_code == 401
 
     def test_me_unauthenticated(self):
@@ -74,7 +101,8 @@ class TestAuth:
 
     def test_logout(self):
         s = requests.Session()
-        s.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+        email = f"logout_{uuid.uuid4().hex[:8]}@example.com"
+        s.post(f"{API}/auth/register", json={"name": "L", "email": email, "password": "password123", "role": "professional"})
         r = s.post(f"{API}/auth/logout")
         assert r.status_code == 200
 
@@ -200,12 +228,12 @@ class TestCasesFlow:
     def test_cross_user_access_forbidden(self):
         s1 = requests.Session()
         e1 = f"u1_{uuid.uuid4().hex[:6]}@x.com"
-        s1.post(f"{API}/auth/register", json={"name": "U1", "email": e1, "password": "password123", "role": "parent"})
+        s1.post(f"{API}/auth/register", json={"name": "U1", "email": e1, "password": "password123", "role": "professional"})
         r = s1.post(f"{API}/cases", json={"type": "general"})
         cid = r.json()["id"]
 
         s2 = requests.Session()
         e2 = f"u2_{uuid.uuid4().hex[:6]}@x.com"
-        s2.post(f"{API}/auth/register", json={"name": "U2", "email": e2, "password": "password123", "role": "parent"})
+        s2.post(f"{API}/auth/register", json={"name": "U2", "email": e2, "password": "password123", "role": "professional"})
         r = s2.get(f"{API}/cases/{cid}")
         assert r.status_code == 404

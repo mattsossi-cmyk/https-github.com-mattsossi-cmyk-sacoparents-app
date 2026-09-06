@@ -8,14 +8,17 @@ import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function Auth() {
-  const [mode, setMode] = useState("login");
+  const search = new URLSearchParams(window.location.search);
+  const next = search.get("next") || "";
+  const inviteToken = next.startsWith("/join/") ? next.slice("/join/".length) : "";
+  const isParentFlow = Boolean(inviteToken);
+  const role = isParentFlow ? "parent" : "professional";
+  const [mode, setMode] = useState(search.get("mode") === "register" ? "register" : "login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("parent");
   const [busy, setBusy] = useState(false);
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -29,7 +32,7 @@ export default function Auth() {
       if (mode === "login") {
         await login(email, password);
       } else if (mode === "register") {
-        await register({ name, email, password, role });
+        await register({ name, email, password, role, invite: inviteToken });
       } else if (mode === "forgot") {
         await api.post("/auth/forgot-password", { email });
         setMode("reset");
@@ -44,7 +47,6 @@ export default function Auth() {
         setNewPassword("");
         return;
       }
-      const next = new URLSearchParams(window.location.search).get("next");
       navigate(next || "/dashboard");
     } catch (err) {
       toast.error(formatApiError(err));
@@ -85,7 +87,7 @@ export default function Auth() {
           )}
 
           <h1 className="text-3xl font-semibold mb-6" data-testid="auth-heading">
-            {mode === "login" ? "Welcome back" : mode === "register" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Enter your code"}
+            {mode === "login" ? "Welcome back" : mode === "register" ? (isParentFlow ? "Create your parent account" : "Create your professional account") : mode === "forgot" ? "Reset your password" : "Enter your code"}
           </h1>
 
           <form onSubmit={submit} className="space-y-5" data-testid="auth-form">
@@ -113,20 +115,10 @@ export default function Auth() {
                 {mode === "register" && <p className="text-xs text-muted-foreground">At least 8 characters.</p>}
               </div>
             )}
-            {mode === "register" && (
-              <div className="space-y-3">
-                <Label>I am a…</Label>
-                <RadioGroup value={role} onValueChange={setRole} className="flex gap-6" data-testid="role-radio-group">
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="parent" id="role-parent" data-testid="role-parent-radio" />
-                    <Label htmlFor="role-parent" className="font-normal">Parent</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="professional" id="role-professional" data-testid="role-professional-radio" />
-                    <Label htmlFor="role-professional" className="font-normal">Professional</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+            {mode === "register" && isParentFlow && (
+              <p className="text-sm text-muted-foreground bg-secondary/50 border border-border rounded-md p-3" data-testid="parent-invite-note">
+                You're creating a parent account to accept your secure invitation. Joint reports are initiated by authorized professionals.
+              </p>
             )}
             {mode === "forgot" && (
               <p className="text-sm text-muted-foreground" data-testid="forgot-info">
@@ -149,7 +141,7 @@ export default function Auth() {
             )}
             {mode === "register" && <ConfidentialityNotice />}
             <Button type="submit" className="w-full h-12" disabled={busy} data-testid="auth-submit-btn">
-              {busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? "Create account" : mode === "forgot" ? "Send verification code" : "Reset password"}
+              {busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? (isParentFlow ? "Create parent account" : "Create professional account") : mode === "forgot" ? "Send verification code" : "Reset password"}
             </Button>
             {(mode === "forgot" || mode === "reset") && (
               <button type="button" onClick={() => setMode("login")} className="w-full text-center text-sm text-muted-foreground hover:text-foreground" data-testid="back-to-login-btn">
@@ -157,6 +149,12 @@ export default function Auth() {
               </button>
             )}
           </form>
+          {(mode === "login" || mode === "register") && !isParentFlow && (
+            <div className="mt-6 bg-secondary/50 border border-border rounded-md p-4 text-sm" data-testid="parent-notice">
+              <p className="font-semibold">Are you a parent?</p>
+              <p className="text-muted-foreground mt-1">Individual parent assessments begin at <a href="https://sacoparentsapp.online" target="_blank" rel="noreferrer" className="text-primary hover:underline">SA CoParents App</a>. Joint reports here are initiated by an authorized professional — you'll enter through your secure invitation link or case code.</p>
+            </div>
+          )}
         </div>
       </main>
     </div>

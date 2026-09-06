@@ -81,14 +81,12 @@ export default function JointNew() {
         base.subject = subject;
         base.custom_subject = customSubject;
       }
-      const url = isAgreement ? "/joint/agreements" : isPro ? "/joint/reports/professional" : "/joint/reports";
-      const body = isPro
-        ? { ...base, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail, case_reference: caseRef }
-        : { ...base, co_parent_name: coName, co_parent_email: coEmail, mediator_email: isSafety && mediatorEmail.trim() ? mediatorEmail.trim() : undefined };
+      const url = isAgreement ? "/joint/agreements" : "/joint/reports/professional";
+      const body = isAgreement
+        ? { child_name: childName, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail }
+        : { ...base, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail, case_reference: caseRef };
       const { data } = await api.post(url, body);
-      if (isPro) {
-        toast.success("Invitations sent — private share links are ready below");
-      }
+      toast.success("Invitations sent — private share links are ready below");
       setCreated(data);
     } catch (e) {
       toast.error(formatApiError(e));

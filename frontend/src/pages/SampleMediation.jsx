@@ -150,11 +150,12 @@ export default function SampleMediation() {
         </div>
 
         <div className="mt-8 bg-white border border-border rounded-lg p-6 text-center" data-testid="sample-cta">
-          <p className="font-semibold text-lg">Ready to create your own Mediation Statement?</p>
-          <p className="text-sm text-muted-foreground mt-1">Each parent answers privately — the report only shows the generated alignment analysis.</p>
-          <Link to="/auth" className="inline-block mt-4" data-testid="sample-create-own-link">
-            <Button className="gap-2" data-testid="sample-create-own-btn">Get Started</Button>
+          <p className="font-semibold text-lg">SA CoParents Align is a professional platform.</p>
+          <p className="text-sm text-muted-foreground mt-1">Joint reports are initiated by authorized professionals — parents participate through a secure invitation.</p>
+          <Link to="/auth?mode=register" className="inline-block mt-4" data-testid="sample-create-own-link">
+            <Button className="gap-2" data-testid="sample-create-own-btn">Create a Free Professional Account</Button>
           </Link>
+          <p className="mt-3 text-xs text-muted-foreground">Are you a parent? Individual assessments begin at <a href="https://sacoparentsapp.online" target="_blank" rel="noreferrer" className="text-primary hover:underline">SA CoParents App</a>.</p>
         </div>
       </main>
     </div>
