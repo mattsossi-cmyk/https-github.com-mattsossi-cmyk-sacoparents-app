@@ -13,15 +13,11 @@ import logging
 from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass
 
-import bcrypt
 import jwt
 import hashlib
-import ipaddress
 import re
 import secrets
 from html import escape
-from html.parser import HTMLParser
-from urllib.parse import urlparse
 
 import asyncio
 import httpx
@@ -36,6 +32,8 @@ from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALIT
 from joint_engine import generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf
 from complete_engine import build_complete_report
+from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
+from email_utils import send_email, EMAIL_FROM_NAME, EMAIL_REPLY_TO
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -47,158 +45,11 @@ api = APIRouter(prefix="/api")
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-JWT_ALGORITHM = "HS256"
-
-EMAIL_BASE_URL = "https://integrations.emergentagent.com"
-EMAIL_KEY = os.environ["EMERGENT_EMAIL_KEY"]
-EMAIL_FROM_NAME = os.environ["EMAIL_FROM_NAME"]
-EMAIL_REPLY_TO = os.environ.get("EMAIL_REPLY_TO")
 WEBHOOK_CRON_SECRET = os.environ["WEBHOOK_CRON_SECRET"]
 
 EXTERNAL_APP_URL = os.environ["SACOPARENTS_APP_URL"].rstrip("/")
 INTEGRATION_SECRET = os.environ["INTEGRATION_SHARED_SECRET"]
 APP_ASSESSMENT_URL = os.environ.get("SACOPARENTS_APP_ASSESSMENT_URL", "").rstrip("/")
-
-_SHORTENERS = ("bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly", "goo.gl", "rebrand.ly")
-_CRED_ASK = ("reply with your password", "reply with the code", "send your password", "cvv",
-             "send us your password", "enter your password below", "confirm your card number",
-             "your full card number", "seed phrase", "recovery phrase", "verify your card",
-             "social security number", "confirm your bank details")
-_HOSTISH = re.compile(r"\b(?:https?://)?((?:[a-z0-9-]+\.)+[a-z]{2,})", re.I)
-
-
-def _host_ok(host: str) -> bool:
-    if not host or "xn--" in host:
-        return False
-    try:
-        ipaddress.ip_address(host)
-        return False
-    except ValueError:
-        pass
-    return not any(host == s or host.endswith("." + s) for s in _SHORTENERS)
-
-
-def _same_site(shown: str, real: str) -> bool:
-    return shown == real or real.endswith("." + shown) or shown.endswith("." + real)
-
-
-class _EmailScan(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.tags, self.urls, self.anchors = set(), [], []
-        self._href, self._text = None, []
-
-    def handle_starttag(self, tag, attrs):
-        self.tags.add(tag.lower())
-        self.urls += [v for k, v in attrs if k.lower() in ("href", "src") and v]
-        if tag.lower() == "a":
-            self._href = dict((k.lower(), v) for k, v in attrs).get("href")
-            self._text = []
-
-    def handle_data(self, data):
-        if self._href is not None:
-            self._text.append(data)
-
-    def handle_endtag(self, tag):
-        if tag.lower() == "a" and self._href is not None:
-            self.anchors.append((self._href, "".join(self._text)))
-            self._href, self._text = None, []
-
-
-def _check_no_form_fields(tags) -> None:
-    if tags & {"form", "input", "textarea", "select"}:
-        raise ValueError("No forms or input fields in email (G2)")
-
-
-def _check_no_credential_asks(subject: str, html: str) -> None:
-    body = f"{subject}\n{html}".lower()
-    for phrase in _CRED_ASK:
-        if phrase in body:
-            raise ValueError(f"Email asks the recipient for credentials: {phrase!r} (G2)")
-
-
-def _check_link_url(url: str) -> None:
-    low = url.strip().lower()
-    if low.startswith(("mailto:", "tel:", "cid:", "#")):
-        return
-    if not low.startswith("https://"):
-        raise ValueError(f"Email links/assets must be absolute https: {url!r} (G3)")
-    host = urlparse(low).hostname or ""
-    if not _host_ok(host) or urlparse(low).username is not None:
-        raise ValueError(f"Shortened, numeric-host or credential-bearing URL: {url!r} (G3)")
-
-
-def _check_anchor_matches_target(href: str, text: str) -> None:
-    real = urlparse(href.strip().lower()).hostname or ""
-    if not real:
-        return
-    for m in _HOSTISH.finditer(text):
-        if not _same_site(m.group(1).lower(), real):
-            raise ValueError(f"Anchor text {m.group(1)!r} ≠ real link host {real!r} (G3)")
-
-
-def _assert_safe_email(subject: str, html: str) -> None:
-    scan = _EmailScan()
-    scan.feed(html)
-    _check_no_form_fields(scan.tags)
-    _check_no_credential_asks(subject, html)
-    for url in scan.urls:
-        _check_link_url(url)
-    for href, text in scan.anchors:
-        _check_anchor_matches_target(href, text)
-
-
-async def send_email(*, to: str, subject: str, html: str, reply_to: str | None = None) -> str | None:
-    _assert_safe_email(subject, html)
-    payload = {"to": [to], "subject": subject, "html": html, "from_name": EMAIL_FROM_NAME}
-    if reply_to or EMAIL_REPLY_TO:
-        payload["contact_email"] = reply_to or EMAIL_REPLY_TO
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(
-                f"{EMAIL_BASE_URL}/api/v1/email/send",
-                headers={"X-Email-Key": EMAIL_KEY},
-                json=payload,
-            )
-        resp.raise_for_status()
-        return resp.json().get("id")
-    except httpx.HTTPStatusError as e:
-        logger.error(f"Email send failed: {e.response.status_code} {e.response.text}")
-        raise HTTPException(status_code=502, detail="Failed to send email")
-    except Exception as e:
-        logger.error(f"Email send error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to send email")
-
-
-def jwt_secret():
-    return os.environ["JWT_SECRET"]
-
-
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
-
-
-def create_access_token(user_id: str, email: str) -> str:
-    payload = {
-        "sub": user_id,
-        "email": email,
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
-        "type": "access",
-    }
-    return jwt.encode(payload, jwt_secret(), algorithm=JWT_ALGORITHM)
-
-
-def create_refresh_token(user_id: str) -> str:
-    payload = {
-        "sub": user_id,
-        "exp": datetime.now(timezone.utc) + timedelta(days=7),
-        "type": "refresh",
-    }
-    return jwt.encode(payload, jwt_secret(), algorithm=JWT_ALGORITHM)
 
 
 def set_auth_cookies(response: Response, user_id: str, email: str):
