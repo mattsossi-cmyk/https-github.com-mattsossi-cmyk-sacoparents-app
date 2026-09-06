@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import BiometricGate from "@/components/BiometricGate";
 import { PreShareConsentHost } from "@/components/PreShareConsentDialog";
 import PolicyRefreshBanner from "@/components/PolicyRefreshBanner";
+import BackToDashboardPill from "@/components/BackToDashboardPill";
 
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
@@ -42,6 +43,8 @@ import Reflection from "@/pages/Reflection";
 import FoundationStatementDemo from "@/pages/FoundationStatementDemo";
 import JointReportsPicker from "@/pages/JointReportsPicker";
 import CommunicationPathway from "@/pages/CommunicationPathway";
+import CommunicationReflection from "@/pages/CommunicationReflection";
+import CommunicationAlignment from "@/pages/CommunicationAlignment";
 import JoinInvitation from "@/pages/JoinInvitation";
 import JoinCode from "@/pages/JoinCode";
 import ProfessionalsDirectory from "@/pages/ProfessionalsDirectory";
@@ -146,6 +149,8 @@ function AppRoutes() {
         <Route path="/joint-agreement" element={<JointAgreement />} />
         <Route path="/joint-reports" element={<JointReportsPicker />} />
         <Route path="/communication" element={<CommunicationPathway />} />
+        <Route path="/communication/reflection" element={<CommunicationReflection />} />
+        <Route path="/communication/alignment" element={<CommunicationAlignment />} />
         <Route path="/join" element={<JoinCode />} />
         <Route path="/join/:token" element={<JoinInvitation />} />
         <Route path="/professionals" element={<ProfessionalsDirectory />} />
@@ -541,6 +546,7 @@ function App() {
         <AuthProvider>
           <LegalAcknowledgment />
           <AppRoutes />
+          <BackToDashboardPill />
           <PreShareConsentHost />
           <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
         </AuthProvider>

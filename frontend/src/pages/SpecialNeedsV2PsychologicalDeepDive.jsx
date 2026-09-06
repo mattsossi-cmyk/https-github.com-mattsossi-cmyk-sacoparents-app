@@ -8,6 +8,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import SectionCoachCard from "../components/deepdive/SectionCoachCard";
+import {
+  FocusModeToggle,
+  FocusItemProgress,
+} from "../components/deepdive/FocusModePanel";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
@@ -146,6 +150,8 @@ export default function SpecialNeedsV2PsychologicalDeepDive() {
   const [schema, setSchema] = useState(null);
   const [responses, setResponses] = useState({});
   const [current, setCurrent] = useState(0);
+  const [qIdx, setQIdx] = useState(0);
+  const [focusMode, setFocusMode] = useState(true);
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [saveState, setSaveState] = useState("idle"); // idle | saving | saved
@@ -290,11 +296,26 @@ export default function SpecialNeedsV2PsychologicalDeepDive() {
           </div>
         </div>
 
-        <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
-          {section.number}. {section.name}
+        <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight flex items-start justify-between gap-3">
+          <span>{section.number}. {section.name}</span>
+          <FocusModeToggle
+            focusMode={focusMode}
+            onToggle={() => setFocusMode((v) => !v)}
+            testid="psych-deep-toggle-focus"
+          />
         </h1>
         {section.purpose && (
           <p className="text-sm text-[#4B4567] mt-2 italic">{section.purpose}</p>
+        )}
+
+        {focusMode && section.items.length > 0 && (
+          <FocusItemProgress
+            qIdx={Math.min(qIdx, section.items.length - 1)}
+            total={section.items.length}
+            sectionIdx={current}
+            sectionTotal={visibleSections.length}
+            testid="psych-deep-focus-progress"
+          />
         )}
 
         {/* v2 alignment scale legend — only shown when this section uses
@@ -360,7 +381,7 @@ export default function SpecialNeedsV2PsychologicalDeepDive() {
             return (
               <button
                 key={s.id}
-                onClick={() => setCurrent(i)}
+                onClick={() => { setCurrent(i); setQIdx(0); }}
                 title={s.name}
                 aria-label={`${s.name} — ${st.answered} of ${st.total} answered`}
                 className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${cls}`}
@@ -373,7 +394,10 @@ export default function SpecialNeedsV2PsychologicalDeepDive() {
         </div>
 
         <div className="mt-6 bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm">
-          {section.items.map((it) => (
+          {(focusMode
+            ? [section.items[Math.min(qIdx, section.items.length - 1)]].filter(Boolean)
+            : section.items
+          ).map((it) => (
             <Item
               key={it.id}
               item={it}
@@ -393,14 +417,34 @@ export default function SpecialNeedsV2PsychologicalDeepDive() {
 
         <div className="mt-6 sticky bottom-4 bg-white/85 backdrop-blur border border-[#E5E0EE] rounded-full p-2 flex items-center justify-between gap-2" data-testid="psych-deep-nav">
           <button
-            disabled={first}
-            onClick={() => setCurrent(current - 1)}
+            disabled={focusMode ? (first && qIdx === 0) : first}
+            onClick={() => {
+              if (focusMode) {
+                if (qIdx > 0) {
+                  setQIdx(qIdx - 1);
+                } else if (!first) {
+                  const prevSection = visibleSections[current - 1];
+                  setCurrent(current - 1);
+                  setQIdx(Math.max(0, (prevSection?.items?.length || 1) - 1));
+                }
+              } else {
+                setCurrent(current - 1);
+              }
+            }}
             data-testid="psych-deep-prev"
             className="inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm border border-[#E5E0EE] text-[#3D1A78] disabled:opacity-40"
           >
             <ArrowLeft size={13} /> Previous
           </button>
-          {last ? (
+          {focusMode && qIdx < section.items.length - 1 ? (
+            <button
+              onClick={() => setQIdx(qIdx + 1)}
+              data-testid="psych-deep-next"
+              className="inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110"
+            >
+              Next <ArrowRight size={13} />
+            </button>
+          ) : last ? (
             <button
               onClick={finish}
               disabled={busy}
@@ -411,7 +455,7 @@ export default function SpecialNeedsV2PsychologicalDeepDive() {
             </button>
           ) : (
             <button
-              onClick={() => setCurrent(current + 1)}
+              onClick={() => { setCurrent(current + 1); setQIdx(0); }}
               data-testid="psych-deep-next"
               className="inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110"
             >

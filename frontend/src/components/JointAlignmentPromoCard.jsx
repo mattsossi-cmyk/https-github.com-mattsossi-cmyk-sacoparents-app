@@ -244,17 +244,26 @@ export default function JointAlignmentPromoCard({
             >
               <div className="flex items-start gap-3">
                 <ShieldAlert size={18} className="text-[#9A3A23] shrink-0 mt-0.5" />
-                <div className="text-sm text-[#5B1F1F] leading-relaxed">
-                  Based on your safety screen, direct outreach to your co-parent
-                  through this app isn&rsquo;t recommended. A mediator or
-                  attorney can handle communication on your behalf.{" "}
-                  <a
-                    href="tel:18007997233"
-                    className="underline font-semibold whitespace-nowrap"
+                <div className="flex-1">
+                  <div className="text-sm text-[#5B1F1F] leading-relaxed">
+                    Based on your safety screen, direct outreach to your co-parent
+                    through this app isn&rsquo;t recommended. A mediator or
+                    attorney can handle communication on your behalf.{" "}
+                    <a
+                      href="tel:18007997233"
+                      className="underline font-semibold whitespace-nowrap"
+                    >
+                      Hotline · 1-800-799-7233
+                    </a>
+                    .
+                  </div>
+                  <Link
+                    to="/professionals"
+                    data-testid={`${testidPrefix}-warm-handoff-cta`}
+                    className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#9A3A23] text-white px-4 py-2 text-sm font-semibold hover:brightness-110"
                   >
-                    Hotline · 1-800-799-7233
-                  </a>
-                  .
+                    Send my case to a mediator instead
+                  </Link>
                 </div>
               </div>
             </div>

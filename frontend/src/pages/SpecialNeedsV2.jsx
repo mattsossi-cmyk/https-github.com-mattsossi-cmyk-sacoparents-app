@@ -509,12 +509,15 @@ export default function SpecialNeedsV2() {
   const [scale, setScale] = useState([]);
   const [schema, setSchema] = useState(null);
   const [current, setCurrent] = useState(0);
+  const [questionIdx, setQuestionIdx] = useState(0);
+  const [focusMode, setFocusMode] = useState(true);
   const [answers, setAnswers] = useState({});
   const [pending, setPending] = useState({});
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState(null);
   const [completing, setCompleting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const advanceTimer = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -594,6 +597,7 @@ export default function SpecialNeedsV2() {
       await flushSave(send);
     }
     setCurrent(Math.max(0, Math.min((schema?.steps.length || 1) - 1, nextIdx)));
+    setQuestionIdx(0);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -649,6 +653,47 @@ export default function SpecialNeedsV2() {
   const totalSteps = schema.steps.length;
   const pct = totalScored.total > 0 ? Math.round((totalScored.answered / totalScored.total) * 100) : 0;
 
+  // Flatten every item in the CURRENT step into a linear list so we can
+  // render one question at a time. Each entry carries its pathway header
+  // so the parent still sees "Educational · s1_p1" context on a per-
+  // question card.
+  const flatItems = [];
+  step.pathways.forEach((pw) => {
+    pw.items.forEach((item) => {
+      flatItems.push({
+        pathway: pw,
+        item,
+        qid: `${step.id}_${pw.id}_${item.id}`,
+      });
+    });
+  });
+  const flatTotal = flatItems.length;
+  const safeIdx = Math.min(questionIdx, Math.max(0, flatTotal - 1));
+  const currentQ = flatItems[safeIdx];
+  const isLastQuestionOfStep = safeIdx >= flatTotal - 1;
+  const isLastStep = current === totalSteps - 1;
+  const isAssessmentEnd = focusMode && isLastQuestionOfStep && isLastStep;
+
+  // Auto-advance for single-choice + likert (never for textarea / multi
+  // where the parent may still be composing). ~350ms so the parent sees
+  // their selection register before we move on.
+  const setAnswerFocus = (qid, v) => {
+    setAnswer(qid, v);
+    if (!focusMode) return;
+    const itemType = currentQ?.item?.type;
+    if (itemType !== "likert" && itemType !== "single") return;
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    advanceTimer.current = setTimeout(() => {
+      if (safeIdx < flatTotal - 1) {
+        setQuestionIdx(safeIdx + 1);
+      } else if (!isLastStep) {
+        flushAndGo(current + 1);
+      }
+      // At the very end: leave the parent on the last question with
+      // the Complete button visible.
+    }, 350);
+  };
+
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10" data-testid="snc2-assessment-root">
@@ -673,28 +718,55 @@ export default function SpecialNeedsV2() {
             <Sparkles size={13} /> Medical Deep Dive <span className="text-[10px] text-[#8471B3]">(optional)</span>
           </Link>
         </div>
-        <div className="mb-4">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Our child has unique needs</div>
-          <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
-            Step {step.number}. {step.name}
-          </h1>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Our child has unique needs</div>
+            <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
+              Step {step.number}. {step.name}
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFocusMode((v) => !v)}
+            data-testid="snc2-toggle-focus-mode"
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-[#D6CFE8] text-[#3D1A78] hover:border-[#3D1A78]"
+            aria-pressed={!focusMode}
+            title={focusMode ? "Show all questions on this step" : "Focus on one question at a time"}
+          >
+            <LayoutList size={12} />
+            {focusMode ? "Show all" : "One at a time"}
+          </button>
         </div>
 
-        {/* progress */}
+        {/* progress — outer step bar + focused inner question bar */}
         <div className="mb-6">
           <div className="flex items-center justify-between text-xs text-[#4B4567] mb-2">
-            <div data-testid="snc2-progress-label">Step {current + 1} of {totalSteps} · {pct}% ({totalScored.answered}/{totalScored.total} rated)</div>
+            <div data-testid="snc2-progress-label">
+              {focusMode ? (
+                <>Question {Math.min(safeIdx + 1, flatTotal)} of {flatTotal} · Step {current + 1} of {totalSteps}</>
+              ) : (
+                <>Step {current + 1} of {totalSteps} · {pct}% ({totalScored.answered}/{totalScored.total} rated)</>
+              )}
+            </div>
             <div className="flex items-center gap-3">
               {saving && <span className="inline-flex items-center gap-1 text-[#3D1A78]"><Loader2 size={12} className="animate-spin" /> Saving…</span>}
               {!saving && savedAt && <span className="inline-flex items-center gap-1 text-[#2E7D5F]"><CheckCircle2 size={12} /> Saved</span>}
             </div>
           </div>
           <div className="h-2 w-full bg-[#EEE9F7] rounded-full overflow-hidden">
-            <div className="h-full bg-[#3D1A78] transition-all" style={{ width: `${pct}%` }} data-testid="snc2-progress-bar" />
+            <div
+              className="h-full bg-[#3D1A78] transition-all"
+              style={{
+                width: focusMode && flatTotal > 0
+                  ? `${Math.round(((safeIdx + 1) / flatTotal) * 100)}%`
+                  : `${pct}%`,
+              }}
+              data-testid="snc2-progress-bar"
+            />
           </div>
         </div>
 
-        {/* step tabs */}
+        {/* step tabs (kept in both modes — parents can jump ahead if needed) */}
         <div className="mb-6 overflow-x-auto -mx-4 px-4">
           <div className="flex gap-2 min-w-max">
             {schema.steps.map((s, i) => (
@@ -708,28 +780,64 @@ export default function SpecialNeedsV2() {
           </div>
         </div>
 
-        {/* content */}
-        <div className="space-y-6" data-testid={`snc2-step-${step.id}`}>
-          {step.pathways.map((pw) => (
-            <div key={pw.id} className="bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm" data-testid={`snc2-step-${step.id}-${pw.id}`}>
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">{pw.name}</div>
-              {pw.items.map((item) => {
-                const qid = `${step.id}_${pw.id}_${item.id}`;
-                return (
-                  <div key={qid} className="py-4 border-b border-[#EEE9F7] last:border-b-0" data-testid={`snc2-item-${qid}`}>
-                    <label className="block text-sm text-[#1A1330] mb-3">{item.prompt}</label>
-                    <ItemInput item={item} value={answers[qid]} onChange={(v) => setAnswer(qid, v)} scale={scale} qid={qid} />
-                  </div>
-                );
-              })}
+        {/* content — focus mode shows ONE question; list mode is the legacy view */}
+        {focusMode && currentQ ? (
+          <div
+            key={currentQ.qid}
+            className="bg-white rounded-3xl border border-[#E5E0EE] p-6 sm:p-8 shadow-sm animate-[fadeUp_240ms_ease-out]"
+            data-testid={`snc2-focus-${currentQ.qid}`}
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+              {currentQ.pathway.name}
             </div>
-          ))}
-        </div>
+            <label className="block text-lg sm:text-xl text-[#1A1330] font-serif leading-snug mb-6">
+              {currentQ.item.prompt}
+            </label>
+            <ItemInput
+              item={currentQ.item}
+              value={answers[currentQ.qid]}
+              onChange={(v) => setAnswerFocus(currentQ.qid, v)}
+              scale={scale}
+              qid={currentQ.qid}
+            />
+          </div>
+        ) : (
+          <div className="space-y-6" data-testid={`snc2-step-${step.id}`}>
+            {step.pathways.map((pw) => (
+              <div key={pw.id} className="bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm" data-testid={`snc2-step-${step.id}-${pw.id}`}>
+                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">{pw.name}</div>
+                {pw.items.map((item) => {
+                  const qid = `${step.id}_${pw.id}_${item.id}`;
+                  return (
+                    <div key={qid} className="py-4 border-b border-[#EEE9F7] last:border-b-0" data-testid={`snc2-item-${qid}`}>
+                      <label className="block text-sm text-[#1A1330] mb-3">{item.prompt}</label>
+                      <ItemInput item={item} value={answers[qid]} onChange={(v) => setAnswer(qid, v)} scale={scale} qid={qid} />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* footer nav */}
+        {/* footer nav — question-level in focus mode, step-level otherwise */}
         <div className="mt-6 sticky bottom-0 -mx-4 sm:mx-0 sm:relative bg-white/95 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none border-t border-[#EEE9F7] sm:border-none py-3 sm:py-0 px-4 sm:px-0 flex flex-wrap items-center justify-between gap-3">
-          <button data-testid="snc2-prev" onClick={() => flushAndGo(current - 1)} disabled={current === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm border border-[#D6CFE8] text-[#1A1330] bg-white disabled:opacity-40 hover:border-[#3D1A78]">
+          <button
+            data-testid="snc2-prev"
+            onClick={() => {
+              if (focusMode) {
+                if (safeIdx > 0) {
+                  setQuestionIdx(safeIdx - 1);
+                } else if (current > 0) {
+                  flushAndGo(current - 1);
+                }
+              } else {
+                flushAndGo(current - 1);
+              }
+            }}
+            disabled={focusMode ? (safeIdx === 0 && current === 0) : current === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm border border-[#D6CFE8] text-[#1A1330] bg-white disabled:opacity-40 hover:border-[#3D1A78]"
+          >
             <ArrowLeft size={14} /> Previous
           </button>
           <div className="flex items-center gap-2">
@@ -737,7 +845,27 @@ export default function SpecialNeedsV2() {
               className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm border border-[#D6CFE8] text-[#3D1A78] bg-white hover:border-[#3D1A78]">
               <Save size={14} /> <span className="hidden sm:inline">Save &amp; come back later</span><span className="sm:hidden">Save</span>
             </button>
-            {current < totalSteps - 1 ? (
+            {isAssessmentEnd ? (
+              <button data-testid="snc2-complete" onClick={complete} disabled={completing}
+                className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
+                {completing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                <span className="hidden sm:inline">Complete &amp; generate report</span><span className="sm:hidden">Complete</span>
+              </button>
+            ) : focusMode ? (
+              <button
+                data-testid="snc2-next"
+                onClick={() => {
+                  if (safeIdx < flatTotal - 1) {
+                    setQuestionIdx(safeIdx + 1);
+                  } else {
+                    flushAndGo(current + 1);
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110"
+              >
+                Next <ArrowRight size={14} />
+              </button>
+            ) : current < totalSteps - 1 ? (
               <button data-testid="snc2-next" onClick={() => flushAndGo(current + 1)}
                 className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm bg-[#3D1A78] text-white hover:brightness-110">
                 Next <ArrowRight size={14} />

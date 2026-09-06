@@ -28,6 +28,7 @@ import NewCommentToaster from "../components/NewCommentToaster";
 import CoparentCompletionToaster from "../components/CoparentCompletionToaster";
 import FourCircleFrontDoor from "../components/dashboard/FourCircleFrontDoor";
 import JointAlignmentRequests from "../components/dashboard/JointAlignmentRequests";
+import PersonalHomeStrip from "../components/dashboard/PersonalHomeStrip";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -504,6 +505,10 @@ export default function Dashboard() {
             journey, cards) still renders for parents who want the deeper
             surface. */}
         <FourCircleFrontDoor userName={user?.name} />
+
+        {/* Personal home strip — Continue where you left off + My statements
+            + Joint-report invitations. Hides itself when nothing to surface. */}
+        <PersonalHomeStrip />
 
         {/* Joint Alignment Requests — hides itself when zero cases,
             so a solo parent's dashboard doesn't grow an empty panel. */}

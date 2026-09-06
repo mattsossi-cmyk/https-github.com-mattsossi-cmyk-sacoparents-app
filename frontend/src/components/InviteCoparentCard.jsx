@@ -170,12 +170,13 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
             <ShieldAlert size={20} className="text-[#9A3A23] shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="font-serif text-lg text-[#5B1F1F]">
-                Direct outreach isn't recommended right now
+                Direct outreach isn&rsquo;t recommended right now
               </h4>
               <p className="text-sm text-[#5B1F1F]/90 mt-1 leading-relaxed">
                 Based on your safety screen, sending an invitation directly to
-                your co-parent through this app isn't safe. A mediator, attorney,
-                or DV advocate can handle communication safely on your behalf.
+                your co-parent through this app isn&rsquo;t safe. A mediator,
+                attorney, or DV advocate can handle communication safely on
+                your behalf.
               </p>
               <div className="mt-3 rounded-xl bg-white/70 border border-[#F1B7B7] px-4 py-3 flex items-center gap-3">
                 <Phone size={16} className="text-[#9A3A23] shrink-0" />
@@ -185,6 +186,19 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
                   <a href="tel:18007997233" className="underline font-semibold">1-800-799-7233</a>.
                 </div>
               </div>
+              {/* Warm handoff — one-tap to a vetted mediator/attorney */}
+              <Link
+                to="/professionals"
+                data-testid="invite-coparent-warm-handoff-cta"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#9A3A23] text-white px-4 py-2 text-sm font-semibold hover:brightness-110"
+              >
+                Send my case to a mediator instead
+              </Link>
+              <p className="mt-2 text-[11px] text-[#5B1F1F]/80 leading-relaxed">
+                A vetted family-law professional receives your case code and can
+                reach your co-parent safely — you never need to email them
+                directly.
+              </p>
               <Link
                 to="/safety"
                 data-testid="invite-coparent-review-safety-link"

@@ -112,6 +112,7 @@ export default function JointAlignmentRequests() {
 
   return (
     <section
+      id="joint-alignment-requests"
       className="mt-6 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7 shadow-sm"
       data-testid="joint-alignment-requests"
     >

@@ -220,11 +220,28 @@ export default function CommunicationPathway() {
             <div className="mt-6 rounded-2xl bg-[#EEF5FA] border border-[#D0E4EE] p-4 flex items-start gap-3 text-[13px] text-[#1E6FA8]">
               <Lock size={15} className="flex-shrink-0 mt-0.5" />
               <p className="!m-0 leading-relaxed text-[#1A1330]">
-                <strong>Coming next:</strong> your Communication Reflection
-                and Communication Alignment Report. Today this pathway
-                captures your intake; the reflection and joint report land in
-                the next release.
+                <strong>Now available:</strong> your private Communication
+                Reflection and the paired Communication Alignment Report.
+                Reflect first, invite your co-parent, then compare.
               </p>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/communication/reflection")}
+                data-testid="communication-start-reflection"
+                className="inline-flex items-center gap-2 rounded-full bg-[#1E6FA8] text-white px-5 py-2.5 text-sm font-semibold hover:brightness-110 transition"
+              >
+                Start my reflection <ArrowRight size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/communication/alignment")}
+                data-testid="communication-open-alignment"
+                className="inline-flex items-center gap-2 rounded-full bg-white text-[#1E6FA8] border border-[#1E6FA8] px-5 py-2.5 text-sm font-semibold hover:bg-[#EEF5FA] transition"
+              >
+                See my Alignment Report
+              </button>
             </div>
           </div>
         )}

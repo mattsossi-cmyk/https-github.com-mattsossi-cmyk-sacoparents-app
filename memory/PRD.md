@@ -27,6 +27,27 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-05 — Global "Back to main menu" navigation
+- **`BackToDashboardPill.jsx`** (new) — fixed bottom-left floating pill
+  ("Main menu") rendered globally via `App.js`. Visible on every
+  authenticated screen, hides itself on `/dashboard`, onboarding, auth
+  callbacks, and all public routes (landing, login, verify links,
+  shared reports, etc.). Uses `AuthContext` so unauthenticated visitors
+  never see it. `data-testid="back-to-dashboard-pill"`.
+- **`BackToDashboardLink.jsx`** (new) — reusable inline "← Back to main
+  menu" link component placed at the top of report / assessment pages
+  so users don't need to scroll to the pill.
+- Added the inline link to the four deep-dive / alignment report pages
+  that were missing an explicit dashboard shortcut at the top:
+  - `SpecialNeedsV2EducationalDeepDiveReport.jsx`
+  - `SpecialNeedsV2MedicalDeepDiveReport.jsx`
+  - `SpecialNeedsV2PsychologicalDeepDiveReport.jsx`
+  - `CommunicationAlignment.jsx` + `CommunicationReflection.jsx`
+- Smoke-tested with playwright: pill correctly hidden on `/dashboard`
+  and `/safety` (public), visible on `/communication/reflection`,
+  `/special-needs-v2`, and `/safety-assessment` (a page that does not
+  use `AppShell`), so coverage is truly global.
+
 ### 2026-03-04 — Family-violence safety gate + single-invite lifetime rule
 - **`safety_gate.py`** (new backend module) — `require_ipv_clearance` /
   `ipv_gate_status`. Blocks any parent-to-co-parent invitation unless the

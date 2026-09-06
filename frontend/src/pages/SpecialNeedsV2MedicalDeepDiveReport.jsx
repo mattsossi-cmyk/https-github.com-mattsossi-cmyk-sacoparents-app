@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import BackToDashboardLink from "../components/BackToDashboardLink";
 import ReportSectionCoachStrip from "../components/deepdive/ReportSectionCoachStrip";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
@@ -136,6 +137,10 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10" data-testid="med-deep-report-root">
+        <BackToDashboardLink
+          className="mb-3"
+          testId="med-deep-report-back-dashboard"
+        />
         <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
           <Link to="/special-needs-v2/educational-deep-dive" className="inline-flex items-center gap-1 text-xs text-[#4B4567] underline">
             <ArrowLeft size={12} /> Back to Deep Dive
