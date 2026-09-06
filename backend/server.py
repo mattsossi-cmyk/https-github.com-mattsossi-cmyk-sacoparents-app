@@ -642,7 +642,7 @@ class InviteSpec:
     via_professional: bool = False
 
 
-async def send_invite_email(spec: InviteSpec, token: str):
+def _invite_email_content(spec: InviteSpec, token: str) -> tuple[str, str]:
     link = f"{APP_ASSESSMENT_URL}/assessment?invite={token}" if APP_ASSESSMENT_URL else f"{app_url()}/join/{token}"
     subject = "Invitation to Complete Your SA CoParents Assessment"
     closing = (
@@ -670,6 +670,11 @@ async def send_invite_email(spec: InviteSpec, token: str):
         f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. If the button does not '
         "work, sign in and enter your participation code instead.</p></td></tr></table>"
     )
+    return subject, html
+
+
+async def send_invite_email(spec: InviteSpec, token: str):
+    subject, html = _invite_email_content(spec, token)
     await send_email(to=spec.invitee_email, subject=subject, html=html)
 
 
@@ -1121,6 +1126,22 @@ async def resend_invitation(iid: str, user=Depends(get_current_user)):
     except Exception:
         logger.warning(f"Invitation resend email not sent to {inv['invitee_email']}")
     return {"ok": True}
+
+
+@api.get("/joint/invitations/{iid}/reminder-preview")
+async def reminder_preview(iid: str, user=Depends(get_current_user)):
+    inv = await db.invitations.find_one({"id": iid}, {"_id": 0})
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+    report = await get_joint_report_doc(inv["report_id"], user)
+    if report.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the report creator can preview the reminder")
+    subject, html = _invite_email_content(InviteSpec(
+        report_id=inv["report_id"], role=inv["role"], invitee_name=inv["invitee_name"],
+        invitee_email=inv["invitee_email"], inviter_name=inv["inviter_name"],
+        child_name=report["child_name"], subject_label=report["subject_label"], code=inv["code"],
+    ), inv["token"])
+    return {"to": inv["invitee_email"], "subject": subject, "html": html}
 
 
 @api.post("/joint/invitations/{iid}/cancel")

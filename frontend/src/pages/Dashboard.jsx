@@ -8,6 +8,7 @@ import { CircleNav } from "@/components/CircleNav";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ReminderPreviewButton } from "@/components/ReminderPreview";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -378,9 +379,12 @@ export default function Dashboard() {
                       {j.is_creator && pending.length > 0 && (
                         <>
                           {pending.map((pi) => (
-                            <Button key={pi.id} size="sm" variant="outline" onClick={() => resend(pi.id)} data-testid={pending.length > 1 ? `joint-remind-btn-${j.id}-${pi.role}` : `joint-resend-btn-${j.id}`}>
-                              {pending.length > 1 ? `Send Reminder — ${pi.invitee_name || `Parent ${pi.role.toUpperCase()}`}` : "Send Reminder"}
-                            </Button>
+                            <ReminderPreviewButton
+                              key={pi.id}
+                              iid={pi.id}
+                              label={pending.length > 1 ? `Send Reminder — ${pi.invitee_name || `Parent ${pi.role.toUpperCase()}`}` : "Send Reminder"}
+                              testId={pending.length > 1 ? `joint-remind-btn-${j.id}-${pi.role}` : `joint-resend-btn-${j.id}`}
+                            />
                           ))}
                           <select
                             className="h-9 rounded-md border border-input bg-white px-2 text-sm"

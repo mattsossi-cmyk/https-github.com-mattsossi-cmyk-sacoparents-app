@@ -6,6 +6,7 @@ import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ReminderPreviewButton } from "@/components/ReminderPreview";
 
 function Section({ num, title, children, testId }) {
   return (
@@ -42,13 +43,6 @@ export default function JointReport() {
     api.get("/joint/config").then((r) => setSubjects(r.data.subjects)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  const resend = async () => {
-    try {
-      await api.post(`/joint/invitations/${detail.invitation.id}/resend`);
-      toast.success("Invitation resent");
-    } catch (e) { toast.error(formatApiError(e)); }
-  };
 
   const cancel = async () => {
     try {
@@ -140,7 +134,7 @@ export default function JointReport() {
             )}
             {detail.is_creator && detail.invitation && detail.invitation.status === "pending" && (
               <>
-                <Button size="sm" variant="outline" onClick={resend} data-testid="status-resend-btn">Resend Invitation</Button>
+                <ReminderPreviewButton iid={detail.invitation.id} label="Resend Invitation" testId="status-resend-btn" />
                 <select className="h-9 rounded-md border border-input bg-white px-2 text-sm" value={detail.subject} onChange={(e) => changeSubject(e.target.value)} data-testid="status-change-subject">
                   {subjects.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                 </select>

@@ -1,4 +1,13 @@
+import re
+from pathlib import Path
+
 from fpdf import FPDF
+
+_FONT_DIR = Path(__file__).resolve().parent / "fonts"
+_UNICODE_FONTS = all((_FONT_DIR / f).exists() for f in (
+    "DejaVuSans.ttf", "DejaVuSans-Bold.ttf", "DejaVuSans-Oblique.ttf", "DejaVuSans-BoldOblique.ttf",
+))
+FONT = "dejavu" if _UNICODE_FONTS else "helvetica"
 
 PURPLE = (91, 42, 134)
 TEAL = (37, 161, 154)
@@ -16,6 +25,8 @@ _REPLACEMENTS = [
 
 
 def _s(text) -> str:
+    if _UNICODE_FONTS:
+        return str(text)
     t = str(text)
     for a, b in _REPLACEMENTS:
         t = t.replace(a, b)
@@ -23,15 +34,27 @@ def _s(text) -> str:
 
 
 class _JointPDF(FPDF):
+    watermark_text: str | None = None
+
     def footer(self):
+        if self.watermark_text:
+            self.set_font(FONT, "B", 52)
+            self.set_text_color(235, 230, 242)
+            with self.rotation(40, self.w / 2, self.h / 2):
+                self.text(self.w / 2 - 68, self.h / 2, self.watermark_text)
         self.set_y(-14)
-        self.set_font("helvetica", "I", 8)
+        self.set_font(FONT, "I", 8)
         self.set_text_color(*GRAY)
         self.cell(0, 8, _s(f"SA CoParents - Page {self.page_no()}"), align="C")
 
 
 def _new_pdf() -> FPDF:
     pdf = _JointPDF()
+    if _UNICODE_FONTS:
+        pdf.add_font("dejavu", "", str(_FONT_DIR / "DejaVuSans.ttf"))
+        pdf.add_font("dejavu", "B", str(_FONT_DIR / "DejaVuSans-Bold.ttf"))
+        pdf.add_font("dejavu", "I", str(_FONT_DIR / "DejaVuSans-Oblique.ttf"))
+        pdf.add_font("dejavu", "BI", str(_FONT_DIR / "DejaVuSans-BoldOblique.ttf"))
     pdf.set_margins(18, 18, 18)
     pdf.set_auto_page_break(auto=True, margin=18)
     pdf.add_page()
@@ -39,20 +62,20 @@ def _new_pdf() -> FPDF:
 
 
 def _title_header(pdf: FPDF, title: str, lines: list, notes: list | None = None) -> None:
-    pdf.set_font("helvetica", "B", 11)
+    pdf.set_font(FONT, "B", 11)
     pdf.set_text_color(*TEAL)
     pdf.cell(0, 6, "SA CoParents", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(6)
-    pdf.set_font("helvetica", "B", 22)
+    pdf.set_font(FONT, "B", 22)
     pdf.set_text_color(*PURPLE)
     pdf.multi_cell(0, 10, _s(title), align="C")
     pdf.ln(2)
-    pdf.set_font("helvetica", "", 11)
+    pdf.set_font(FONT, "", 11)
     pdf.set_text_color(*GRAY)
     for line in lines:
         pdf.cell(0, 6, _s(line), align="C", new_x="LMARGIN", new_y="NEXT")
     for note in notes or []:
-        pdf.set_font("helvetica", "I", 9)
+        pdf.set_font(FONT, "I", 9)
         pdf.cell(0, 6, _s(note), align="C", new_x="LMARGIN", new_y="NEXT")
     y = pdf.get_y() + 3
     pdf.set_draw_color(220, 215, 230)
@@ -62,7 +85,7 @@ def _title_header(pdf: FPDF, title: str, lines: list, notes: list | None = None)
 
 def _philosophy_block(pdf: FPDF, heading: str, note: str, quote: str, size: int = 16) -> None:
     pdf.ln(8)
-    pdf.set_font("helvetica", "B", size)
+    pdf.set_font(FONT, "B", size)
     pdf.set_text_color(*PURPLE)
     pdf.multi_cell(0, 8 if size <= 16 else 9, _s(heading), align="C")
     pdf.ln(1)
@@ -73,7 +96,7 @@ def _philosophy_block(pdf: FPDF, heading: str, note: str, quote: str, size: int 
 
 def _section_title(pdf: FPDF, num, title: str) -> None:
     pdf.ln(4)
-    pdf.set_font("helvetica", "B", 13)
+    pdf.set_font(FONT, "B", 13)
     pdf.set_text_color(*TEAL)
     pdf.cell(8, 8, _s(f"{num}."))
     pdf.set_text_color(*DARK)
@@ -82,7 +105,7 @@ def _section_title(pdf: FPDF, num, title: str) -> None:
 
 
 def _body(pdf: FPDF, text: str, italic: bool = False, indent: int = 0) -> None:
-    pdf.set_font("helvetica", "I" if italic else "", 10.5)
+    pdf.set_font(FONT, "I" if italic else "", 10.5)
     pdf.set_text_color(*BODY)
     pdf.set_x(pdf.l_margin + indent)
     pdf.multi_cell(0, 5.5, _s(text))
@@ -91,13 +114,13 @@ def _body(pdf: FPDF, text: str, italic: bool = False, indent: int = 0) -> None:
 
 def _bullet(pdf: FPDF, text: str) -> None:
     pdf.set_x(pdf.l_margin + 4)
-    pdf.set_font("helvetica", "", 10.5)
+    pdf.set_font(FONT, "", 10.5)
     pdf.set_text_color(*BODY)
     pdf.multi_cell(0, 5.5, _s(f"-  {text}"))
 
 
 def _label(pdf: FPDF, text: str) -> None:
-    pdf.set_font("helvetica", "B", 9.5)
+    pdf.set_font(FONT, "B", 9.5)
     pdf.set_text_color(*GRAY)
     pdf.cell(0, 5, _s(text), new_x="LMARGIN", new_y="NEXT")
 
@@ -107,7 +130,7 @@ def _joint_differences(pdf: FPDF, r: dict) -> None:
     if not r["differences"]:
         _body(pdf, "No significant differences in perspective were identified.", italic=True)
     for d in r["differences"]:
-        pdf.set_font("helvetica", "B", 11)
+        pdf.set_font(FONT, "B", 11)
         pdf.set_text_color(*DARK)
         pdf.cell(0, 7, _s(d["area"]), new_x="LMARGIN", new_y="NEXT")
         _label(pdf, f"{r['parent_a_name']}'s Perspective")
@@ -122,7 +145,7 @@ def _joint_alignment_map(pdf: FPDF, r: dict) -> None:
     _section_title(pdf, 5, "Alignment Map")
     for row in r["alignment_map"]:
         color = GREEN if row["status"] == "Strong alignment" else (YELLOW if row["status"] == "Moderate alignment" else BLUE)
-        pdf.set_font("helvetica", "B", 10.5)
+        pdf.set_font(FONT, "B", 10.5)
         pdf.set_text_color(*DARK)
         pdf.cell(90, 7, _s(row["area"]))
         pdf.set_text_color(*color)
@@ -143,7 +166,7 @@ def _joint_front_sections(pdf: FPDF, r: dict) -> None:
     _section_title(pdf, 1, "Purpose of This Report")
     _body(pdf, r["purpose"])
     _section_title(pdf, 2, "What Both Parents Agree About")
-    pdf.set_font("helvetica", "B", 10.5)
+    pdf.set_font(FONT, "B", 10.5)
     pdf.set_text_color(*GREEN)
     pdf.cell(0, 6, _s("Strong Alignment - both parents indicated that:"), new_x="LMARGIN", new_y="NEXT")
     for stmt in r["alignment_statements"]:
@@ -175,6 +198,8 @@ def _joint_back_sections(pdf: FPDF, r: dict) -> None:
 
 def build_joint_pdf(r: dict) -> bytes:
     pdf = _new_pdf()
+    if r.get("is_sample"):
+        pdf.watermark_text = "SAMPLE REPORT"
     _title_header(pdf, r["report_title"], [
         f"Child: {r['child_name']}",
         f"Subject: {r['subject_label']}",
@@ -191,7 +216,7 @@ def build_joint_pdf(r: dict) -> bytes:
 def _agreement_terms(pdf: FPDF, r: dict) -> None:
     status_colors = {"Likely aligned": GREEN, "Close": YELLOW, "Needs discussion": BLUE}
     for t in r["terms"]:
-        pdf.set_font("helvetica", "B", 11)
+        pdf.set_font(FONT, "B", 11)
         pdf.set_text_color(*DARK)
         pdf.cell(120, 7, _s(t["label"]))
         pdf.set_text_color(*status_colors.get(t["status"], BLUE))
@@ -206,7 +231,7 @@ def _agreement_terms(pdf: FPDF, r: dict) -> None:
 def _agreement_foundation(pdf: FPDF, r: dict) -> None:
     if not r.get("foundation_statements"):
         return
-    pdf.set_font("helvetica", "B", 13)
+    pdf.set_font(FONT, "B", 13)
     pdf.set_text_color(*DARK)
     pdf.cell(0, 8, "Foundation Statements", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(1)
@@ -219,18 +244,18 @@ def _agreement_foundation(pdf: FPDF, r: dict) -> None:
 
 
 def _agreement_signatures(pdf: FPDF, r: dict) -> None:
-    pdf.set_font("helvetica", "B", 13)
+    pdf.set_font(FONT, "B", 13)
     pdf.set_text_color(*DARK)
     pdf.cell(0, 8, "Signatures", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
     for name in (r["parent_a_name"], r["parent_b_name"]):
-        pdf.set_font("helvetica", "B", 10.5)
+        pdf.set_font(FONT, "B", 10.5)
         pdf.cell(0, 6, _s(name), new_x="LMARGIN", new_y="NEXT")
         pdf.ln(4)
         y = pdf.get_y()
         pdf.line(pdf.l_margin, y, pdf.l_margin + 80, y)
         pdf.line(pdf.l_margin + 95, y, pdf.l_margin + 140, y)
-        pdf.set_font("helvetica", "", 8.5)
+        pdf.set_font(FONT, "", 8.5)
         pdf.set_text_color(*GRAY)
         pdf.set_xy(pdf.l_margin, y + 1)
         pdf.cell(80, 5, "Signature")
@@ -290,7 +315,7 @@ def _case_alignments(pdf: FPDF, r: dict, title: str) -> None:
     if not r["alignments"]:
         _body(pdf, "No strong alignment areas were identified yet.", italic=True)
     for a in r["alignments"]:
-        pdf.set_font("helvetica", "B", 11)
+        pdf.set_font(FONT, "B", 11)
         pdf.set_text_color(*GREEN)
         pdf.cell(0, 7, _s(a["topic"]), new_x="LMARGIN", new_y="NEXT")
         _body(pdf, a["text"], indent=4)
@@ -302,7 +327,7 @@ def _case_differences(pdf: FPDF, r: dict, title: str) -> None:
     if not r["differences"]:
         _body(pdf, "No significant differences in perspective were identified.", italic=True)
     for d in r["differences"]:
-        pdf.set_font("helvetica", "B", 11)
+        pdf.set_font(FONT, "B", 11)
         pdf.set_text_color(*DARK)
         pdf.cell(0, 7, _s(d["topic"]), new_x="LMARGIN", new_y="NEXT")
         _label(pdf, f"{r['parent_a_name']}'s Perspective")
@@ -316,7 +341,7 @@ def _case_differences(pdf: FPDF, r: dict, title: str) -> None:
 def _case_action_plan(pdf: FPDF, r: dict, title: str) -> None:
     _section_title(pdf, 9, title)
     for item in r["action_plan"]:
-        pdf.set_font("helvetica", "B", 11)
+        pdf.set_font(FONT, "B", 11)
         pdf.set_text_color(*DARK)
         pdf.cell(0, 7, _s(item["issue"]), new_x="LMARGIN", new_y="NEXT")
         _body(pdf, f"Child need: {item['child_need']}", indent=4)
@@ -330,8 +355,10 @@ def _case_action_plan(pdf: FPDF, r: dict, title: str) -> None:
 
 
 def build_case_pdf(r: dict) -> bytes:
-    notes = ["Demo report - sample data"] if r.get("is_demo") else []
+    notes = ["SAMPLE REPORT - demo data shown for illustration"] if r.get("is_demo") else []
     pdf = _new_pdf()
+    if r.get("is_demo"):
+        pdf.watermark_text = "SAMPLE REPORT"
     _title_header(pdf, r["report_title"], [
         f"Child: {r['child_name']}",
         f"Assessment: {r['assessment_title']}",
@@ -376,12 +403,12 @@ def _complete_assessment_section(pdf: FPDF, sec: dict) -> None:
     s = sec["snapshot"]
     _body(pdf, f"Topics: {s['total']}  |  Strong alignment: {s['aligned']}  |  Differences: {s['different']}  |  Needs more information: {s['info']}")
     for a in sec["alignments"]:
-        pdf.set_font("helvetica", "B", 10.5)
+        pdf.set_font(FONT, "B", 10.5)
         pdf.set_text_color(*GREEN)
         pdf.cell(0, 6, _s(a["topic"]), new_x="LMARGIN", new_y="NEXT")
         _body(pdf, a["text"], indent=4)
     for d in sec["differences"]:
-        pdf.set_font("helvetica", "B", 10.5)
+        pdf.set_font(FONT, "B", 10.5)
         pdf.set_text_color(*DARK)
         pdf.cell(0, 6, _s(d["topic"]), new_x="LMARGIN", new_y="NEXT")
         _body(pdf, d["parent_a"], indent=4)
@@ -395,13 +422,13 @@ def _complete_joint_section(pdf: FPDF, sec: dict) -> None:
         _bullet(pdf, stmt)
     for row in sec["alignment_map"]:
         color = GREEN if row["status"] == "Strong alignment" else (YELLOW if row["status"] == "Moderate alignment" else BLUE)
-        pdf.set_font("helvetica", "B", 10.5)
+        pdf.set_font(FONT, "B", 10.5)
         pdf.set_text_color(*DARK)
         pdf.cell(90, 7, _s(row["area"]))
         pdf.set_text_color(*color)
         pdf.cell(0, 7, _s(row["status"]), new_x="LMARGIN", new_y="NEXT")
     for d in sec["differences"]:
-        pdf.set_font("helvetica", "B", 10.5)
+        pdf.set_font(FONT, "B", 10.5)
         pdf.set_text_color(*DARK)
         pdf.cell(0, 6, _s(d["area"]), new_x="LMARGIN", new_y="NEXT")
         _body(pdf, d["parent_a"], indent=4)
