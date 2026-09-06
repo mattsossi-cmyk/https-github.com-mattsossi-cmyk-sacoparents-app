@@ -27,6 +27,35 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-06 — Code-review remediation (scoped)
+- **`activities_costs_routes.compare()` refactor**: extracted the
+  inner `_bundle` closure into a module-level `_load_bundle()`
+  helper and pulled the per-category merge logic into
+  `_pair_categories()`. The endpoint body itself dropped from 70 →
+  27 lines with no behaviour change. All 7 iter148 tests still green.
+- **`ActivitiesAlignment.jsx` split**: 511 → 345 lines by extracting
+  three sub-components into a new `components/activities/` directory
+  (mirrors the `components/safety/` + `components/joint/` split
+  pattern already in the codebase):
+    - `ActivitiesDimensionPrimitives.jsx` — `ScoreBar` + `DimensionRow`
+    - `ActivitiesSummaryCard.jsx` — the "Neutral summary" card
+    - `ActivitiesShareCodeCard.jsx` — the mint / shareCode / shareError render
+- **Explicitly NOT touched** (documented as regression landmines in
+  prior handoffs — every attempt to "fix" these breaks the app):
+    - Circular imports (function-scoped on purpose to dodge FastAPI
+      startup deadlocks)
+    - 230 React hook-dep warnings (mass-adding causes infinite fetch
+      loops on this codebase)
+    - MD5 in `intervention_compliance_routes.py` (already flagged
+      `usedforsecurity=False`; not a security use)
+    - 28 localStorage instances (all non-sensitive UX state:
+      dismissal flags, orientation, choice preferences)
+    - "Hardcoded secrets in test files" (test-only literals like
+      `TestPass123!` used to register throwaway users — fixtures,
+      not secrets)
+    - `ai_service.generate_nd_report` / `admin_nd_case_pdf` complexity
+      (parked on P2 backlog per handoff)
+
 ### 2026-03-06 — Samples Search + Split Suggestions
 - **Samples Search** (`pages/Samples.jsx`) — a plain search box above
   the category grid filters cards live by title, blurb, filename, and

@@ -175,6 +175,47 @@ async def delete_cost(
     return {"ok": True}
 
 
+async def _load_bundle(
+    db: AsyncIOMotorDatabase, user_id: str, *, redact: bool
+) -> Dict[str, Any]:
+    """Return one parent's rows + running totals for the compare endpoint."""
+    cursor = db[_COLL].find(
+        {"user_id": user_id},
+        sort=[("incurred_on", -1), ("created_at", -1)],
+    )
+    rows: List[Dict[str, Any]] = []
+    per_cat: Dict[str, int] = {}
+    total = 0
+    async for doc in cursor:
+        row = _shape_row(doc, redact_note=redact)
+        rows.append(row)
+        total += row["amount_cents"]
+        per_cat[row["category"]] = per_cat.get(row["category"], 0) + row["amount_cents"]
+    return {
+        "rows": rows,
+        "total_cents": total,
+        "per_category": per_cat,
+        "count": len(rows),
+    }
+
+
+def _pair_categories(
+    self_per_cat: Dict[str, int], coparent_per_cat: Dict[str, int]
+) -> List[Dict[str, Any]]:
+    """Merge the two parents' per-category totals into a side-by-side view."""
+    all_keys = sorted(set(self_per_cat) | set(coparent_per_cat))
+    label_by_key = {c["key"]: c["label"] for c in CATEGORIES}
+    return [
+        {
+            "key": k,
+            "label": label_by_key.get(k, k),
+            "self_cents": self_per_cat.get(k, 0),
+            "coparent_cents": coparent_per_cat.get(k, 0),
+        }
+        for k in all_keys
+    ]
+
+
 @router.get("/compare")
 async def compare(
     coparent_email: str,
@@ -196,54 +237,19 @@ async def compare(
     if not coparent:
         raise HTTPException(status_code=404, detail="Co-parent account not found")
 
-    async def _bundle(user_id: str, *, redact: bool) -> Dict[str, Any]:
-        cursor = db[_COLL].find(
-            {"user_id": user_id},
-            sort=[("incurred_on", -1), ("created_at", -1)],
-        )
-        rows: List[Dict[str, Any]] = []
-        per_cat: Dict[str, int] = {}
-        total = 0
-        async for doc in cursor:
-            row = _shape_row(doc, redact_note=redact)
-            rows.append(row)
-            total += row["amount_cents"]
-            per_cat[row["category"]] = per_cat.get(row["category"], 0) + row["amount_cents"]
-        return {
-            "rows": rows,
-            "total_cents": total,
-            "per_category": per_cat,
-            "count": len(rows),
-        }
-
-    self_b = await _bundle(current.user_id, redact=False)
-    coparent_b = await _bundle(coparent["user_id"], redact=True)
-    combined_total = self_b["total_cents"] + coparent_b["total_cents"]
-
-    # Merge per-category into a shared shape so the frontend can render
-    # a stacked / side-by-side chart without extra glue.
-    all_cats = sorted(set(self_b["per_category"]) | set(coparent_b["per_category"]))
-    per_category_pair = [
-        {
-            "key": k,
-            "label": next((c["label"] for c in CATEGORIES if c["key"] == k), k),
-            "self_cents": self_b["per_category"].get(k, 0),
-            "coparent_cents": coparent_b["per_category"].get(k, 0),
-        }
-        for k in all_cats
-    ]
+    self_b = await _load_bundle(db, current.user_id, redact=False)
+    coparent_b = await _load_bundle(db, coparent["user_id"], redact=True)
 
     return {
-        "self": {
-            "email": current.email,
-            **self_b,
-        },
+        "self": {"email": current.email, **self_b},
         "coparent": {
             "email": coparent["email"],
             "name": coparent.get("name"),
             **coparent_b,
         },
-        "combined_total_cents": combined_total,
-        "per_category_pair": per_category_pair,
+        "combined_total_cents": self_b["total_cents"] + coparent_b["total_cents"],
+        "per_category_pair": _pair_categories(
+            self_b["per_category"], coparent_b["per_category"]
+        ),
         "generated_at": _iso(_now()),
     }

@@ -8,14 +8,11 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  Copy,
   Handshake,
   Info,
-  Link as LinkIcon,
   Loader2,
   Mail,
   Palette,
-  Send,
   ShieldAlert,
   Sparkles,
   Users,
@@ -24,63 +21,13 @@ import { toast } from "sonner";
 
 import AppShell from "../components/AppShell";
 import BackToDashboardLink from "../components/BackToDashboardLink";
-import AIDraftedPill from "../components/AIDraftedPill";
 import CostSplitterPanel from "../components/CostSplitterPanel";
 import PathwayEndCTA from "../components/PathwayEndCTA";
+import ActivitiesSummaryCard from "../components/activities/ActivitiesSummaryCard";
+import ActivitiesShareCodeCard from "../components/activities/ActivitiesShareCodeCard";
+import { DimensionRow } from "../components/activities/ActivitiesDimensionPrimitives";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
-
-function ScoreBar({ value, tone = "self" }) {
-  const width = `${Math.min(100, Math.max(0, value || 0))}%`;
-  const color = tone === "self" ? "bg-[#1E7A55]" : "bg-[#8471B3]";
-  return (
-    <div className="h-2 w-full bg-[#EEF5F0] rounded-full overflow-hidden">
-      <div className={`h-full ${color}`} style={{ width }} />
-    </div>
-  );
-}
-
-function DimensionRow({ row, coparentName }) {
-  return (
-    <div
-      className="rounded-2xl border border-[#C7E5D3] bg-white p-4"
-      data-testid={`activities-dim-${row.dimension}`}
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <div className="font-serif text-lg text-[#1A1330] leading-tight">
-            {row.label}
-          </div>
-          <p className="text-[12px] text-[#4B4567] mt-0.5 leading-snug">
-            {row.blurb}
-          </p>
-        </div>
-        <div className="text-[11px] text-[#4B4567]">
-          Delta:{" "}
-          <span
-            className={`font-semibold ${row.delta <= 15 ? "text-[#1E7A55]" : "text-[#B45F13]"}`}
-          >
-            {row.delta}
-          </span>
-        </div>
-      </div>
-      <div className="mt-3 grid gap-3">
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-1">
-            You · {row.self_score}
-          </div>
-          <ScoreBar value={row.self_score} tone="self" />
-        </div>
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#8471B3] mb-1">
-            {coparentName || "Co-parent"} · {row.coparent_score}
-          </div>
-          <ScoreBar value={row.coparent_score} tone="coparent" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function ActivitiesAlignment() {
   const [self, setSelf] = useState(null);
@@ -327,42 +274,11 @@ export default function ActivitiesAlignment() {
 
         {ready && (
           <div className="mt-6 space-y-6" data-testid="activities-alignment-ready">
-            <div className="rounded-3xl border border-[#C7E5D3] bg-white p-6 sm:p-7 shadow-sm">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1E7A55]">
-                  Neutral summary
-                </span>
-                {summary && summaryModel && (
-                  <AIDraftedPill
-                    model={summaryModel}
-                    tone="green"
-                    testId="activities-alignment-summary-pill"
-                  />
-                )}
-              </div>
-              <h2 className="font-serif text-xl text-[#1A1330] leading-tight mb-3">
-                What the two of you actually said
-              </h2>
-              {summarizing && (
-                <div className="text-sm text-[#4B4567] inline-flex items-center gap-2">
-                  <Loader2 size={14} className="animate-spin" /> Composing a neutral summary…
-                </div>
-              )}
-              {!summarizing && summary && (
-                <p
-                  className="text-[15px] text-[#1A1330] leading-relaxed whitespace-pre-wrap"
-                  data-testid="activities-alignment-summary"
-                >
-                  {summary}
-                </p>
-              )}
-              {!summarizing && !summary && (
-                <p className="text-sm text-[#4B4567] italic">
-                  Summary unavailable — the dimensions below still tell the
-                  story.
-                </p>
-              )}
-            </div>
+            <ActivitiesSummaryCard
+              summary={summary}
+              summaryModel={summaryModel}
+              summarizing={summarizing}
+            />
 
             {payload.shared && payload.shared.length > 0 && (
               <div>
@@ -390,94 +306,13 @@ export default function ActivitiesAlignment() {
               </div>
             )}
 
-            <div className="rounded-3xl border border-[#C7E5D3] bg-white p-6 sm:p-7">
-              <div className="flex items-start gap-3 mb-3">
-                <LinkIcon size={20} className="text-[#1E7A55] shrink-0 mt-1" />
-                <div>
-                  <h2 className="font-serif text-xl text-[#1A1330] leading-tight">
-                    Send this to your mediator or attorney
-                  </h2>
-                  <p className="text-sm text-[#4B4567] mt-1 leading-relaxed">
-                    Get a short one-time code they can enter on{" "}
-                    <strong className="text-[#1A1330]">sacoparentsalign.com</strong>{" "}
-                    to pull up your Alignment Report.
-                  </p>
-                </div>
-              </div>
-
-              {shareError ? (
-                <div
-                  className="rounded-2xl border-2 border-[#F1B7B7] bg-[#FDECEC] p-4 flex items-start gap-3"
-                  data-testid="activities-alignment-share-error"
-                >
-                  <ShieldAlert size={18} className="text-[#9A3A23] shrink-0 mt-0.5" />
-                  <div className="text-sm text-[#5B1F1F] leading-relaxed">
-                    <div className="font-semibold">
-                      {shareError.code === "safety_screen_required"
-                        ? "Complete the family-violence safety screen first"
-                        : "Direct outreach isn't recommended right now"}
-                    </div>
-                    <p className="mt-1">{shareError.message}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Link
-                        to="/safety"
-                        className="inline-flex items-center gap-2 rounded-full bg-[#9A3A23] text-white px-4 py-2 text-xs font-semibold hover:brightness-110"
-                      >
-                        {shareError.code === "safety_screen_required"
-                          ? "Take the safety screen"
-                          : "Review my safety plan"}
-                      </Link>
-                      {shareError.code === "safety_screen_blocked" && (
-                        <Link
-                          to="/professionals"
-                          className="inline-flex items-center gap-2 rounded-full border border-[#9A3A23] text-[#9A3A23] px-4 py-2 text-xs font-semibold hover:bg-[#FDECEC]"
-                        >
-                          Send my case to a mediator instead
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : shareCode ? (
-                <div
-                  className="rounded-2xl bg-[#F1F9F4] border border-[#C7E5D3] p-5"
-                  data-testid="activities-alignment-share-success"
-                >
-                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#1E7A55] mb-1">
-                    Share code
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <code className="font-mono text-2xl tracking-widest text-[#1A1330] px-4 py-2 rounded-xl bg-white border border-[#C7E5D3]">
-                      {shareCode.code}
-                    </code>
-                    <button
-                      type="button"
-                      onClick={() => copyCode(shareCode.code)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold border border-[#1E7A55] text-[#1E7A55] hover:bg-[#DEF5E0]"
-                      data-testid="activities-alignment-copy-code"
-                    >
-                      <Copy size={12} /> Copy
-                    </button>
-                  </div>
-                  <p className="text-xs text-[#1E7A55] mt-3 leading-relaxed">
-                    Valid for 15 minutes. Send this code to your mediator or
-                    attorney — they enter it on the sibling app to view the
-                    report.
-                  </p>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={mintShareLink}
-                  disabled={minting}
-                  data-testid="activities-alignment-mint-code"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1E7A55] text-white text-sm font-semibold hover:brightness-110 disabled:opacity-60"
-                >
-                  {minting ? <Loader2 className="animate-spin" size={14} /> : <Send size={14} />}
-                  Get a share code
-                </button>
-              )}
-            </div>
+            <ActivitiesShareCodeCard
+              shareError={shareError}
+              shareCode={shareCode}
+              minting={minting}
+              onMint={mintShareLink}
+              onCopy={copyCode}
+            />
 
             <PathwayEndCTA
               testId="activities-alignment-end-cta"
