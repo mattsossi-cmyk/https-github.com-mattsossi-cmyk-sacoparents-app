@@ -277,6 +277,8 @@ async def startup_log():
     asyncio.create_task(silent_reviewer_nudge_loop(app))
     from joint_alignment_invite_nudge import joint_alignment_invite_nudge_loop
     asyncio.create_task(joint_alignment_invite_nudge_loop(app))
+    from weekly_case_analytics_email import weekly_case_analytics_loop
+    asyncio.create_task(weekly_case_analytics_loop(app))
 
 
 @app.on_event("shutdown")

@@ -27,6 +27,57 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-07 — Weekly Analytics Email (Monday snapshot for mediators)
+- **`weekly_case_analytics_email` sweep module** — new
+  `backend/weekly_case_analytics_email.py` mirroring the existing
+  `weekly_compliance_reminder` pattern. Rules:
+    - Runs once daily; sends only inside the Monday 09-11 UTC
+      window (configurable via `WEEKLY_CASE_ANALYTICS_START_HOUR_UTC` /
+      `WEEKLY_CASE_ANALYTICS_END_HOUR_UTC`).
+    - Candidate set: distinct `professional_created_by` ids over
+      `origin=in_app_professional` cases — sibling-site cases
+      never trigger this digest.
+    - Per-week dedupe row keyed on `(user_id, week_start_ISO)` so
+      a mediator gets exactly one snapshot per week even if the
+      loop re-runs.
+    - Skips demo-looking emails (`@demo.local`, `@guest.local`).
+    - Falls back to the professional block on the mediator's
+      first minted case when their `users` doc is missing.
+    - Env-gated on `WEEKLY_CASE_ANALYTICS_ENABLED=1` — idle no-op
+      when unset. Registered from `server.py`.
+- **`_compute_analytics(cases, week_ago)`** — self-contained
+  aggregator that mirrors the `/api/professional/joint-alignment/analytics`
+  endpoint's math plus two extra fields: `new_this_week` and
+  `completed_this_week` so the email can lead with a "This week"
+  delta strip. No routes-layer imports keeps the sweep loop
+  cleanly separable.
+- **`email_service.send_weekly_case_analytics_email`** — new
+  branded HTML email with:
+    - Purple "This week: N new · M completed" call-out.
+    - 4-tile HTML `<table>` grid mirroring the on-screen
+      `<CaseAnalyticsCard />` (Total cases, Acceptance rate,
+      Time to first accept, Time to both complete).
+    - Top-lane hint row.
+    - Reply-STOP opt-out footer and PHI-safe reminder that only
+      aggregate rollups are shared — no verbatim parent answers.
+    - Deep-link CTA to `/professional/joint-alignment/mine`.
+- **Coverage**: `tests/test_iter152_weekly_case_analytics.py` — 8
+  tests (Monday window guard, `_week_start` Monday rollback, happy
+  dry-run + dedupe row, dedupe blocks second send in the same
+  week, skips zero-cases professionals, skips outside-window
+  timestamps, skips demo emails, `new_this_week` delta
+  correctness). Full 46 tests green (iter139 + iter150 + iter151
+  + iter152 combined).
+- **Dry-run against live DB**: 48 candidates → 48 sent with
+  stats-shape validated.
+- **Files touched**:
+  - `backend/weekly_case_analytics_email.py` (new)
+  - `backend/email_service.py` (adds
+    `send_weekly_case_analytics_email` + `_fmt_hours` / `_fmt_lane`
+    helpers)
+  - `backend/server.py` (registers the new sweep loop)
+  - `backend/tests/test_iter152_weekly_case_analytics.py` (new, 8 tests)
+
 ### 2026-03-07 — Case Analytics Card on `/mine`
 - **`GET /api/professional/joint-alignment/analytics`** — new
   JWT-authenticated aggregate endpoint. Returns:

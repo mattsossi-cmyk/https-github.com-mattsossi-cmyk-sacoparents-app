@@ -1062,6 +1062,144 @@ def send_joint_alignment_invitation_reminder(
     )
 
 
+def _fmt_hours(h: Any) -> str:
+    """Human-friendly duration for the weekly analytics email —
+    matches the frontend `fmtHours()` in CaseAnalyticsCard."""
+    if h is None:
+        return "—"
+    try:
+        h = float(h)
+    except (TypeError, ValueError):
+        return "—"
+    if h < 1:
+        return f"{round(h * 60)}m"
+    if h < 24:
+        return f"{h:.1f}h"
+    return f"{h / 24:.1f}d"
+
+
+def _fmt_lane(lane: Optional[str]) -> str:
+    if not lane:
+        return "—"
+    return " ".join(w.capitalize() for w in lane.replace("_", " ").replace("-", " ").split())
+
+
+def send_weekly_case_analytics_email(
+    *,
+    to_email: str,
+    professional_name: Optional[str],
+    mine_url: str,
+    stats: dict,
+) -> None:
+    """
+    Monday-morning digest for a mediator with active in-app Joint
+    Alignment Cases. Summarises the same rollups the mediator sees
+    on `/professional/joint-alignment/mine` plus a `+N this week`
+    delta so a busy professional can spot trends in-inbox without
+    opening the app.
+    """
+    greeting = f"Hi {professional_name}," if professional_name else "Hi there,"
+
+    total = stats.get("total_cases", 0)
+    active = stats.get("active_cases", 0)
+    completed = stats.get("completed_cases", 0)
+    cancelled = stats.get("cancelled_cases", 0)
+    acceptance = stats.get("acceptance_rate")
+    first_accept_h = _fmt_hours(stats.get("avg_hours_to_first_accept"))
+    both_complete_h = _fmt_hours(stats.get("avg_hours_to_both_complete"))
+    top_lane = _fmt_lane(stats.get("most_common_assessment_type"))
+    new_this_week = stats.get("new_this_week", 0)
+    completed_this_week = stats.get("completed_this_week", 0)
+
+    acceptance_txt = f"{acceptance}%" if acceptance is not None else "—"
+
+    plain = (
+        f"{greeting}\n\n"
+        "Here's your SA CoParents Monday snapshot.\n\n"
+        f"THIS WEEK\n"
+        f"  * New cases minted: {new_this_week}\n"
+        f"  * Cases completed by both parents: {completed_this_week}\n\n"
+        f"OVERALL\n"
+        f"  * Total cases: {total} ({active} active · {completed} complete · {cancelled} cancelled)\n"
+        f"  * Acceptance rate: {acceptance_txt}\n"
+        f"  * Avg time to first accept: {first_accept_h}\n"
+        f"  * Avg time to both complete: {both_complete_h}\n"
+        f"  * Top assessment lane: {top_lane}\n\n"
+        f"Open the console: {mine_url}\n\n"
+        "Reply STOP to opt out of these weekly digests.\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+
+    # Stat-tile grid mirroring the on-screen card so opening the
+    # email feels like glancing at /mine.
+    def _tile(label: str, value: str, hint: str) -> str:
+        return (
+            f'<td style="padding:12px;border:1px solid #E5E0EE;border-radius:12px;'
+            f'background:#FAF8FD;vertical-align:top;">'
+            f'<div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;'
+            f'color:#4B4567;font-weight:700;">{label}</div>'
+            f'<div style="font-family:Georgia,serif;font-size:22px;color:#1A1330;'
+            f'margin:6px 0 2px 0;">{value}</div>'
+            f'<div style="font-size:11px;color:#857E9C;line-height:1.35;">{hint}</div>'
+            f'</td>'
+        )
+
+    week_row = (
+        f'<div style="background:#F5F1FB;border:1px solid #D6CFE8;border-radius:16px;'
+        f'padding:14px 16px;margin:0 0 18px 0;font-size:14px;color:#1A1330;">'
+        f'<strong>This week:</strong> {new_this_week} new · '
+        f'{completed_this_week} completed'
+        f'</div>'
+    )
+
+    tile_table = (
+        f'<table role="presentation" cellspacing="8" cellpadding="0" '
+        f'style="border-collapse:separate;border-spacing:8px;width:100%;">'
+        f'<tr>{_tile("Total cases", str(total), f"{active} active · {completed} complete · {cancelled} cancelled")}'
+        f'{_tile("Acceptance rate", acceptance_txt, "Parents who opened the invitation.")}</tr>'
+        f'<tr>{_tile("Time to first accept", first_accept_h, "From mint to first parent click.")}'
+        f'{_tile("Time to both complete", both_complete_h, "From mint to both parents finishing.")}</tr>'
+        f'</table>'
+    )
+
+    top_lane_row = (
+        f'<p style="font-size:13px;line-height:1.55;color:#4B4567;margin:16px 0 0 0;">'
+        f'<strong style="color:#3D1A78;">Top assessment lane:</strong> '
+        f'<span style="color:#1A1330;">{top_lane}</span>'
+        f'</p>'
+    ) if top_lane != "—" else ""
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"{greeting}</p>"
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 18px 0;">'
+        "Here's your Monday snapshot — the same numbers on your "
+        '<em>Cases you\'ve created</em> console, so you can spot the '
+        "trend without opening the app.</p>"
+        f"{week_row}"
+        f"{tile_table}"
+        f"{top_lane_row}"
+        '<p style="font-size:12px;color:#857E9C;line-height:1.5;margin:22px 0 0 0;">'
+        "Reply STOP to opt out of these weekly digests. This email contains "
+        "aggregate rollups only — never verbatim parent answers.</p>"
+    )
+
+    html = _branded_html(
+        headline="Your weekly case snapshot",
+        body_html=body_html,
+        cta_label="Open the console",
+        cta_url=mine_url,
+    )
+
+    _send(
+        to_email=to_email,
+        subject=f"SA CoParents · Monday snapshot ({total} cases · {new_this_week} new this week)",
+        html=html,
+        text=plain,
+        failure_message="Could not send the weekly digest right now.",
+    )
+
+
 
 
 def send_post_event_survey(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
