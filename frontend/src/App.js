@@ -53,6 +53,7 @@ import Samples from "@/pages/Samples";
 import JoinInvitation from "@/pages/JoinInvitation";
 import JoinCode from "@/pages/JoinCode";
 import ProfessionalsDirectory from "@/pages/ProfessionalsDirectory";
+import ForProfessionals from "@/pages/ForProfessionals";
 import AdminProfessionalsEditor from "@/pages/AdminProfessionalsEditor";
 import Orientation from "@/pages/Orientation";
 import ClaimAccount from "@/pages/ClaimAccount";
@@ -164,6 +165,7 @@ function AppRoutes() {
         <Route path="/join" element={<JoinCode />} />
         <Route path="/join/:token" element={<JoinInvitation />} />
         <Route path="/professionals" element={<ProfessionalsDirectory />} />
+        <Route path="/for-professionals" element={<ForProfessionals />} />
         <Route path="/admin/professionals" element={<AdminProfessionalsEditor />} />
         <Route path="/joint-agreement/shared/:token" element={<JointAgreementShared />} />
         <Route path="/joint-report/shared/:token" element={<JointReportShared />} />

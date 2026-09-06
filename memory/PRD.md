@@ -27,6 +27,47 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-07 — Dashboard "Overload" Restructure (Wave 1a) + `/for-professionals`
+- **P0 Orientation flow no longer blocks the dashboard** — the
+  auto-redirect at `Dashboard.jsx` mount that yanked first-time
+  visitors onto `/orientation` (hiding the 4-circle Front Door) has
+  been removed. A dismissible pill banner
+  (`data-testid="dashboard-tour-banner"`) now appears at the top of
+  the dashboard for first-timers with a purple "Take the tour" CTA
+  linking to `/orientation` and a "Dismiss" button that stamps the
+  `sacoparents.orientation_seen.v1` LS flag.
+- **`/orientation` Skip button re-styled as a prominent CTA pill** —
+  was a 12px grey text link in the corner; now a solid purple
+  filled pill with a right arrow (`text-sm font-semibold text-white
+  bg-[#3D1A78]`), so parents who reached the walkthrough by accident
+  can bail to the dashboard in one clear tap.
+- **Dashboard restructured — legacy secondary tools collapsed** —
+  the "SituationPickerHero" (legacy Step 1) and the full
+  four-category "Preparation modules" jump-menu (previously ~150
+  lines above the fold) are now wrapped inside a new
+  `dashboard-explore-all-tools` `<details>` collapsible so the 4
+  primary pathways stay the uncontested first surface. Everything
+  is one tap away — nothing removed.
+- **`/for-professionals` public landing page shipped** — new
+  `pages/ForProfessionals.jsx` at `/for-professionals` (no auth).
+  Hero + 4-highlight strip + 7 collapsible FAQs answering the exact
+  mediator/attorney questions from the founder's spec (admissibility,
+  neutrality guardrails, DV safety, co-parent privacy, data policy,
+  workflow fit, and sample-report access). Deep-links to `/samples`
+  and mailto Matt Sossi. Closing dark CTA panel. Registered in
+  `App.js`. Landing footer gained `footer-for-professionals-link`
+  and `footer-samples-link` so mediators can find it from the
+  public front door.
+- **Testing**: iter54 frontend Playwright report — all 7
+  review-request features PASS at 100% (`/app/test_reports/iteration_54.json`).
+  Verified: first-visit lands on dashboard, tour banner dismissable
+  and persisted, 4 front-door tiles above the fold, prep-modules
+  hidden behind Explore-All-Tools collapsible, Orientation skip
+  navigates + stamps LS, /for-professionals renders publicly with 7
+  FAQs all expanding, Landing footer surfaces both new links.
+- **Still pending from Wave 1a-3**: bring the joint-report process
+  inside the main app, court-report disclaimer applied everywhere.
+
 ### 2026-03-06 — Code-review remediation round 3 (scoped)
 - **`build_cost_ledger_pdf()` refactor**: 108 → 46 lines by extracting
   three focused helpers into `activities_costs_pdf.py`:

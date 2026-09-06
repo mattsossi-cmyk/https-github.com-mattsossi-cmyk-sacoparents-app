@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Check,
   ShieldAlert,
-  X,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 
@@ -174,10 +173,10 @@ export default function Orientation() {
         </div>
         <button
           onClick={skip}
-          className="text-[12px] text-[#4B4567] hover:text-[#1A1330] inline-flex items-center gap-1.5"
+          className="text-sm font-semibold text-white bg-[#3D1A78] hover:bg-[#2a0f5f] border border-[#3D1A78] rounded-full px-4 py-2 inline-flex items-center gap-1.5 transition-colors shadow-sm"
           data-testid="orientation-skip-button"
         >
-          Skip <X size={12} />
+          Skip to dashboard <ArrowRight size={14} />
         </button>
       </header>
 

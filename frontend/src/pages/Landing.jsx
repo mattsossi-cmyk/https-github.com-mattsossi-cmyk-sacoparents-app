@@ -201,6 +201,12 @@ function MarketingFooter() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+            <Link to="/for-professionals" className="hover:text-white" data-testid="footer-for-professionals-link">
+              For professionals
+            </Link>
+            <Link to="/samples" className="hover:text-white" data-testid="footer-samples-link">
+              Sample library
+            </Link>
             <Link to="/terms" className="hover:text-white" data-testid="footer-terms-link">
               Terms
             </Link>

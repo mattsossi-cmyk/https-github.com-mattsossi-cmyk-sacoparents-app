@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import VerificationBanner from "../components/VerificationBanner";
 import EmailHealthBanner from "../components/EmailHealthBanner";
@@ -302,7 +302,6 @@ function DashboardMoreResources({ collapsed, children }) {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [prep, setPrep] = useState({ completed: {} });
   const [summariesCount, setSummariesCount] = useState(0);
   const [pillarFlags, setPillarFlags] = useState({
@@ -332,12 +331,18 @@ export default function Dashboard() {
     setSituationChoice(null);
   };
 
-  // First-time visitors: send them through the orientation walkthrough.
-  useEffect(() => {
-    if (!hasSeenOrientation()) {
-      navigate("/orientation", { replace: true });
-    }
-  }, [navigate]);
+  // First-time visitors — no longer auto-redirected off the dashboard.
+  // The primary decision-surface (Four-Circle Front Door) must be visible
+  // on first visit. Instead we surface a small dismissible "Take a quick
+  // tour" banner (below) that links to /orientation.
+  const [showTourBanner, setShowTourBanner] = useState(!hasSeenOrientation());
+  const dismissTourBanner = () => {
+    // Persist as seen so the banner stays hidden on subsequent visits.
+    try {
+      localStorage.setItem("sacoparents.orientation_seen.v1", "true");
+    } catch { /* private mode — banner will reappear, harmless */ }
+    setShowTourBanner(false);
+  };
 
   // Weekly Progress Email — auto-fire on Sunday (UTC) if we haven't sent
   // one yet this ISO week. Silent no-op every other day. Backend enforces
@@ -480,6 +485,37 @@ export default function Dashboard() {
             picker. Renders only when localStorage has a chosen focus. */}
         <PickerChoicePill />
 
+        {/* First-visit tour banner — dismissible. Replaces the auto-redirect
+            that used to yank new users off the dashboard onto /orientation
+            before they could see the four pathways. */}
+        {showTourBanner && (
+          <div
+            className="mt-4 mb-2 rounded-2xl border border-[#D6CFE8] bg-gradient-to-r from-[#F5F1FB] to-[#FAF8FD] px-4 py-3 flex items-center gap-3 flex-wrap"
+            data-testid="dashboard-tour-banner"
+          >
+            <Compass size={18} className="text-[#3D1A78] shrink-0" />
+            <div className="flex-1 min-w-0 text-sm text-[#1A1330]">
+              <span className="font-semibold">New here?</span>
+              <span className="text-[#4B4567]"> Take the 60-second orientation to learn how the four pathways work.</span>
+            </div>
+            <Link
+              to="/orientation"
+              className="text-xs font-semibold text-white bg-[#3D1A78] hover:bg-[#2a0f5f] px-3 py-1.5 rounded-full inline-flex items-center gap-1 transition-colors"
+              data-testid="dashboard-tour-banner-cta"
+            >
+              Take the tour <ArrowRight size={12} />
+            </Link>
+            <button
+              onClick={dismissTourBanner}
+              className="text-xs text-[#4B4567] hover:text-[#1A1330] px-2 py-1"
+              data-testid="dashboard-tour-banner-dismiss"
+              aria-label="Dismiss tour banner"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* NEW (2026-03-04) — Four-Circle Front Door.
             The founder's chosen dashboard root: four pathways with the
             same six-step process underneath. Child Needs reveals its
@@ -496,24 +532,17 @@ export default function Dashboard() {
             so a solo parent's dashboard doesn't grow an empty panel. */}
         <JointAlignmentRequests />
 
-        {/* Step 1 — "What best describes your situation?" opener.
-            Deliberately the FIRST thing above the fold so the greeting a
-            parent sees isn't a generic time-of-day but a targeted "let's
-            route you to the safest next step" prompt.  Remembers the last
-            answer in localStorage so a returning parent gets a soft
-            "you chose X - change my answer" instead of the full grid. */}
-        <SituationPickerHero
-          userName={user?.name}
-          situationChoice={situationChoice}
-          onRemember={rememberSituation}
-          onForget={forgetSituation}
-          sncHighlights={sncHighlights}
-        />
+        {/* Step 1 legacy — "What best describes your situation?" and the
+            full Preparation modules grid now live inside the "Explore All
+            Tools" collapsible below. The 4-circle Front Door above is
+            the primary decision surface; these are kept for parents who
+            want the deeper legacy surface. */}
 
         {/* Primary "Do this next" home — auto-detects the parent's current
             stage on the 6-step linear journey and surfaces one big action.
-            #next-step anchor is targeted by the situation picker above so
-            "cooperate / difficult / mediation" all scroll here.
+            #next-step anchor is targeted by the situation picker inside
+            "Explore All Tools" so "cooperate / difficult / mediation" all
+            still scroll here.
 
             Note: the Gmail Mini Inbox card used to live here. Per the
             iteration-81 design pass ("one recommendation, one next
@@ -529,100 +558,135 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Preparation modules jump-menu — the parent's four-group
-            "co-parenting / foundation / family violence / special
-            needs" menu, restored per iter83 request. Each group is
-            titled with its own header row so parents can find the
-            right assessment at a glance. */}
-        <div
-          className="mt-6 rounded-3xl border border-[#E5E0EE] bg-[#FAF8FD] p-5 sm:p-6"
-          data-testid="dashboard-prep-modules"
+        {/* Explore All Tools — legacy Step 1 situation picker + full
+            preparation-modules grid. Collapsed by default so the primary
+            4-circle front door stays uncontested at the top of the fold. */}
+        <details
+          className="mt-6 group"
+          data-testid="dashboard-explore-all-tools"
         >
-          <div className="flex items-baseline justify-between flex-wrap gap-2">
+          <summary
+            className="cursor-pointer list-none rounded-2xl border border-[#E5E0EE] bg-white px-5 py-4 flex items-center justify-between hover:border-[#3D1A78] transition-colors"
+            data-testid="dashboard-explore-all-tools-summary"
+          >
             <div>
-              <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
-                Preparation modules
-              </div>
-              <div className="font-serif text-lg text-[#1A1330] mt-1">
-                Pick the assessment that fits your family
+              <div className="eyebrow text-[#3D1A78]">Explore all tools</div>
+              <div className="text-sm text-[#4B4567] mt-0.5">
+                See every assessment and reflection organised by family situation
+                — plus the classic "what best describes your situation?" picker.
               </div>
             </div>
-            <div className="text-xs text-[#4B4567]">
-              Each one generates a downloadable PDF.
-            </div>
-          </div>
+            <span className="text-[#3D1A78] text-sm font-bold group-open:hidden">
+              Show →
+            </span>
+            <span className="hidden group-open:inline text-[#3D1A78] text-sm font-bold">
+              Hide ↑
+            </span>
+          </summary>
+          <div className="mt-4 space-y-6">
+            <SituationPickerHero
+              userName={user?.name}
+              situationChoice={situationChoice}
+              onRemember={rememberSituation}
+              onForget={forgetSituation}
+              sncHighlights={sncHighlights}
+            />
 
-          <div className="mt-5 space-y-6">
-            {PREP_MODULE_CATEGORIES.map((cat) => {
-              const items = PREP_MODULES.filter((m) => m.category === cat.key);
-              if (items.length === 0) return null;
-              return (
-                <div
-                  key={cat.key}
-                  data-testid={`dashboard-prep-category-${cat.key}`}
-                >
-                  <div className="flex items-baseline gap-3 flex-wrap">
-                    <div className="text-sm sm:text-base font-serif text-[#1A1330] font-semibold">
-                      {cat.label}
-                    </div>
-                    {cat.formal && (
-                      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
-                        {cat.formal}
-                      </div>
-                    )}
-                    <div className="text-[11px] text-[#8471B3] italic">
-                      {cat.hint}
-                    </div>
+            {/* Preparation modules jump-menu — the parent's four-group
+                "co-parenting / foundation / family violence / special
+                needs" menu. Each group is titled with its own header row
+                so parents can find the right assessment at a glance. */}
+            <div
+              className="rounded-3xl border border-[#E5E0EE] bg-[#FAF8FD] p-5 sm:p-6"
+              data-testid="dashboard-prep-modules"
+            >
+              <div className="flex items-baseline justify-between flex-wrap gap-2">
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                    Preparation modules
                   </div>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                    {items.map((m) => {
-                      const isRec = recommendedModules.includes(m.key);
-                      return (
-                        <Link
-                          key={m.key}
-                          to={m.route}
-                          className={`group text-left rounded-2xl px-4 py-3 transition-colors flex items-start gap-3 ${
-                            isRec
-                              ? "border-2 border-[#3D1A78] bg-white shadow-sm hover:bg-[#F7F4FC]"
-                              : "border border-[#E5E0EE] bg-white hover:border-[#3D1A78] hover:bg-[#F7F4FC]"
-                          }`}
-                          data-testid={`dashboard-prep-module-${m.key}`}
-                          data-recommended={isRec ? "true" : undefined}
-                        >
-                          <div
-                            className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                              isRec
-                                ? "bg-[#3D1A78] text-white"
-                                : "bg-[#EFE9F9] text-[#3D1A78] group-hover:bg-[#3D1A78] group-hover:text-white"
-                            }`}
-                          >
-                            {m.icon}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <div className="text-sm font-semibold text-[#1A1330] truncate">
-                                {m.label}
-                              </div>
-                              {isRec && (
-                                <span
-                                  className="text-[9px] uppercase tracking-[0.16em] font-bold text-white bg-[#3D1A78] rounded-full px-2 py-0.5"
-                                  data-testid={`dashboard-prep-module-${m.key}-recommended`}
-                                >
-                                  Recommended for you
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-[#4B4567] mt-0.5">{m.hint}</div>
-                          </div>
-                        </Link>
-                      );
-                    })}
+                  <div className="font-serif text-lg text-[#1A1330] mt-1">
+                    Pick the assessment that fits your family
                   </div>
                 </div>
-              );
-            })}
+                <div className="text-xs text-[#4B4567]">
+                  Each one generates a downloadable PDF.
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-6">
+                {PREP_MODULE_CATEGORIES.map((cat) => {
+                  const items = PREP_MODULES.filter((m) => m.category === cat.key);
+                  if (items.length === 0) return null;
+                  return (
+                    <div
+                      key={cat.key}
+                      data-testid={`dashboard-prep-category-${cat.key}`}
+                    >
+                      <div className="flex items-baseline gap-3 flex-wrap">
+                        <div className="text-sm sm:text-base font-serif text-[#1A1330] font-semibold">
+                          {cat.label}
+                        </div>
+                        {cat.formal && (
+                          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                            {cat.formal}
+                          </div>
+                        )}
+                        <div className="text-[11px] text-[#8471B3] italic">
+                          {cat.hint}
+                        </div>
+                      </div>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        {items.map((m) => {
+                          const isRec = recommendedModules.includes(m.key);
+                          return (
+                            <Link
+                              key={m.key}
+                              to={m.route}
+                              className={`group text-left rounded-2xl px-4 py-3 transition-colors flex items-start gap-3 ${
+                                isRec
+                                  ? "border-2 border-[#3D1A78] bg-white shadow-sm hover:bg-[#F7F4FC]"
+                                  : "border border-[#E5E0EE] bg-white hover:border-[#3D1A78] hover:bg-[#F7F4FC]"
+                              }`}
+                              data-testid={`dashboard-prep-module-${m.key}`}
+                              data-recommended={isRec ? "true" : undefined}
+                            >
+                              <div
+                                className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                                  isRec
+                                    ? "bg-[#3D1A78] text-white"
+                                    : "bg-[#EFE9F9] text-[#3D1A78] group-hover:bg-[#3D1A78] group-hover:text-white"
+                                }`}
+                              >
+                                {m.icon}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <div className="text-sm font-semibold text-[#1A1330] truncate">
+                                    {m.label}
+                                  </div>
+                                  {isRec && (
+                                    <span
+                                      className="text-[9px] uppercase tracking-[0.16em] font-bold text-white bg-[#3D1A78] rounded-full px-2 py-0.5"
+                                      data-testid={`dashboard-prep-module-${m.key}-recommended`}
+                                    >
+                                      Recommended for you
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-[#4B4567] mt-0.5">{m.hint}</div>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
+        </details>
 
         {/* Five-milestone visual progress — small, high-signal ✓ pills that
             light up as parents complete Foundation, Child needs, Comms,
