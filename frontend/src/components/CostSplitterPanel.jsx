@@ -33,6 +33,7 @@ import { toast } from "sonner";
 
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
+import SplitSuggestion from "./SplitSuggestion";
 
 function formatMoney(cents, currency = "USD") {
   const n = (cents || 0) / 100;
@@ -280,6 +281,18 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Neutral split suggestion — deterministic math, never sent to
+          the server. Renders whenever the parent has logged anything;
+          waits for the pair to land before showing a real balance. */}
+      {(selfTotal > 0 || coparentTotal > 0) && (
+        <SplitSuggestion
+          selfCents={selfTotal}
+          coparentCents={coparentTotal}
+          coparentName={coparentName}
+          hasCompare={hasCompare}
+        />
       )}
 
       {/* Log-entry form */}

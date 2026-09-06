@@ -11,7 +11,7 @@
  * Grouped by category so a visitor can find what they need without
  * scrolling a long list.
  */
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -25,10 +25,12 @@ import {
   Heart,
   MessageCircle,
   Palette,
+  Search,
   ShieldAlert,
   Sparkles,
   Stethoscope,
   Users,
+  X,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -332,6 +334,28 @@ function CategoryBlock({ category }) {
 
 export default function Samples() {
   const totalCount = CATEGORIES.reduce((acc, c) => acc + c.samples.length, 0);
+  const [query, setQuery] = useState("");
+
+  // Filter categories to only those with matching cards. A match is
+  // case-insensitive substring match against sample title, blurb, or
+  // parent category label. Empty query → show everything.
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return CATEGORIES;
+    return CATEGORIES.map((cat) => {
+      const catHit = cat.label.toLowerCase().includes(q);
+      const samples = cat.samples.filter((s) => {
+        if (catHit) return true;
+        const hay = `${s.title || ""} ${s.blurb || ""} ${s.file || ""}`.toLowerCase();
+        return hay.includes(q);
+      });
+      return { ...cat, samples };
+    }).filter((cat) => cat.samples.length > 0);
+  }, [query]);
+
+  const filteredCount = filtered.reduce((acc, c) => acc + c.samples.length, 0);
+  const isFiltered = query.trim().length > 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FAFAFC] to-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -343,7 +367,7 @@ export default function Samples() {
           <ArrowLeft size={14} /> Back to home
         </Link>
 
-        <header className="mb-10" data-testid="samples-header">
+        <header className="mb-6" data-testid="samples-header">
           <div className="eyebrow text-[#3D1A78] mb-2">Sample library</div>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#1A1330] leading-tight">
             Every artefact this app can produce
@@ -356,21 +380,90 @@ export default function Samples() {
             fictional composite content watermarked{" "}
             <em className="font-medium">EXAMPLE</em>.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => (
-              <a
-                key={c.id}
-                href={`#category-${c.id}`}
-                className="text-xs rounded-full border border-[#D6CFE8] bg-white text-[#3D1A78] px-3 py-1.5 hover:bg-[#F5F1FB] font-medium"
-                data-testid={`samples-jumplink-${c.id}`}
-              >
-                {c.label} · {c.samples.length}
-              </a>
-            ))}
-          </div>
         </header>
 
-        {CATEGORIES.map((category) => (
+        {/* Search + jumplink strip */}
+        <div className="mb-10 space-y-4" data-testid="samples-search-strip">
+          <div className="relative max-w-xl">
+            <Search
+              size={16}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#857E9C]"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search samples — try 'medical', 'agreement', 'foundation'…"
+              aria-label="Search samples"
+              data-testid="samples-search-input"
+              className="w-full pl-11 pr-11 py-3 rounded-full border border-[#D6CFE8] bg-white text-sm text-[#1A1330] placeholder-[#857E9C] focus:outline-none focus:border-[#3D1A78] focus:ring-2 focus:ring-[#3D1A78]/20"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+                data-testid="samples-search-clear"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[#857E9C] hover:bg-[#F5F1FB] hover:text-[#3D1A78]"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          {isFiltered ? (
+            <div
+              className="text-xs text-[#4B4567]"
+              data-testid="samples-search-results-count"
+            >
+              {filteredCount === 0
+                ? "No samples match your search."
+                : `Showing ${filteredCount} of ${totalCount} samples matching "${query.trim()}".`}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((c) => (
+                <a
+                  key={c.id}
+                  href={`#category-${c.id}`}
+                  className="text-xs rounded-full border border-[#D6CFE8] bg-white text-[#3D1A78] px-3 py-1.5 hover:bg-[#F5F1FB] font-medium"
+                  data-testid={`samples-jumplink-${c.id}`}
+                >
+                  {c.label} · {c.samples.length}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {filtered.length === 0 && isFiltered && (
+          <div
+            className="rounded-3xl border border-dashed border-[#D6CFE8] bg-white p-8 text-center"
+            data-testid="samples-empty-state"
+          >
+            <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-[#F5F1FB] text-[#3D1A78] grid place-items-center">
+              <Search size={22} strokeWidth={2.2} />
+            </div>
+            <h2 className="font-serif text-xl text-[#1A1330]">
+              No sample matches &ldquo;{query.trim()}&rdquo;
+            </h2>
+            <p className="text-sm text-[#4B4567] mt-2 max-w-md mx-auto leading-relaxed">
+              Try broader terms like <em>medical</em>, <em>agreement</em>,{" "}
+              <em>foundation</em>, or <em>psychological</em> — or clear
+              the search to browse all {totalCount} samples.
+            </p>
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#3D1A78] text-white px-4 py-2 text-sm font-semibold hover:bg-[#2A0F5F]"
+              data-testid="samples-empty-clear"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
+
+        {filtered.map((category) => (
           <div id={`category-${category.id}`} key={category.id}>
             <CategoryBlock category={category} />
           </div>

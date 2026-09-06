@@ -27,6 +27,43 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-03-06 — Samples Search + Split Suggestions
+- **Samples Search** (`pages/Samples.jsx`) — a plain search box above
+  the category grid filters cards live by title, blurb, filename, and
+  parent-category label (case-insensitive substring). When a query is
+  active the jumplink strip is replaced with a compact
+  "Showing N of 27 samples matching …" caption; categories with zero
+  matches are hidden entirely so the visitor never scrolls empty
+  headers. When the query has no matches a friendly empty state
+  offers example broader terms + a one-click Clear button. Verified
+  live: 27 → 4 for "medical", 27 → 0 with the empty state for
+  nonsense.
+- **Split Suggestions** (`components/SplitSuggestion.jsx`, mounted
+  inside `CostSplitterPanel.jsx`) — a neutral, deterministic
+  suggested split rendered under the totals card whenever any
+  parent has logged an expense. Three modes:
+    1. **50/50 even** — each parent covers 50% of the combined total.
+    2. **Income-weighted** — parents type each other's monthly gross
+       income → share = income / combined.
+    3. **Custom %** — a range slider from 0-100% for the parent's
+       share (co-parent auto-inverts).
+  Output: a single "Balance" card that flips colour by state —
+  amber when the caller still owes money, green when the co-parent
+  owes them, purple when they're roughly square. When the caller
+  has no co-parent linked yet, the balance line degrades to a "Link
+  your co-parent to see a suggested balance" hint instead of a
+  misleading zero.
+  Guardrails: caption reads *"This is a suggestion, not an order —
+  take it to your mediator."* All income + custom-% values live in
+  `localStorage` under the `sacoparents.costSplitter.split` key —
+  never sent to the server, never shown to the co-parent. A
+  "Clear inputs" button drops them at any time.
+- Frontend compiled clean (only pre-existing intentional warnings).
+  Live smoke-tested: `/samples` filters correctly on "medical",
+  "psychological", and unknown terms; `/activities/alignment` mounts
+  the split-suggestion panel with all three modes + a balance line
+  once the parent has logged an expense.
+
 ### 2026-03-06 — Sample Library + AI-Drafted Pill + Cost Splitter
 - **Sample Library `/samples`** (`pages/Samples.jsx`) — public
   browsable index of all 27 sample PDFs living in
