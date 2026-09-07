@@ -90,7 +90,7 @@ const CIRCLES = [
       "AI Communication Coach",
       "Communication Builder",
     ],
-    cta: "Start reflecting",
+    cta: "Draft a message",
     route: "/communication",
     testid: "front-door-communication",
     endButton: "Build My Message",

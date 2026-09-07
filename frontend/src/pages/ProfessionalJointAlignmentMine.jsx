@@ -28,6 +28,7 @@ import {
   X,
   FileDown,
   MessageSquare,
+  Lock,
   Check,
 } from "lucide-react";
 
@@ -72,6 +73,11 @@ export default function ProfessionalJointAlignmentMine() {
   const [noteEditingId, setNoteEditingId] = useState(null);
   const [noteDraft, setNoteDraft] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
+  // Private "Case notes" — separate from the parent-visible
+  // reminder note above. Mediator-only, never surfaced to parents.
+  const [caseNotesEditingId, setCaseNotesEditingId] = useState(null);
+  const [caseNotesDraft, setCaseNotesDraft] = useState("");
+  const [caseNotesSaving, setCaseNotesSaving] = useState(false);
   const downloadModalRef = useRef(null);
   const downloadTriggerRef = useRef(null);
 
@@ -230,6 +236,38 @@ export default function ProfessionalJointAlignmentMine() {
       toast.error(String(detail));
     } finally {
       setNoteSaving(false);
+    }
+  };
+
+  // -------- Private "Case notes" editor --------
+  const openCaseNotesEdit = (c) => {
+    setCaseNotesEditingId(c.case_id);
+    setCaseNotesDraft(c.case_notes || "");
+  };
+  const cancelCaseNotesEdit = () => {
+    if (caseNotesSaving) return;
+    setCaseNotesEditingId(null);
+    setCaseNotesDraft("");
+  };
+  const saveCaseNotes = async () => {
+    if (!caseNotesEditingId) return;
+    setCaseNotesSaving(true);
+    try {
+      await api.patch(
+        `/professional/joint-alignment/cases/${caseNotesEditingId}/case-notes`,
+        { case_notes: caseNotesDraft.trim() || null },
+      );
+      toast.success(
+        caseNotesDraft.trim() ? "Private notes saved." : "Private notes cleared.",
+      );
+      setCaseNotesEditingId(null);
+      setCaseNotesDraft("");
+      load();
+    } catch (err) {
+      const detail = err?.response?.data?.detail || "Save failed";
+      toast.error(String(detail));
+    } finally {
+      setCaseNotesSaving(false);
     }
   };
 
@@ -535,6 +573,82 @@ export default function ProfessionalJointAlignmentMine() {
                         data-testid={`pj-mine-note-add-${c.case_id}`}
                       >
                         <MessageSquare size={11} /> Add a personal reminder note
+                      </button>
+                    )}
+
+                    {/* PRIVATE case notes — mediator-only, never surfaced
+                        to parents. Separate storage + endpoint from the
+                        reminder_note above. */}
+                    {caseNotesEditingId === c.case_id ? (
+                      <div className="mt-3 rounded-2xl border border-[#D6CFE8] bg-[#FBF9FE] p-3 space-y-2">
+                        <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] inline-flex items-center gap-1">
+                          <Lock size={10} /> Private notes · never shared with parents
+                        </div>
+                        <textarea
+                          value={caseNotesDraft}
+                          onChange={(e) => setCaseNotesDraft(e.target.value)}
+                          rows={4}
+                          maxLength={2000}
+                          placeholder="Internal session context — nobody but you sees this."
+                          className="w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78] resize-none"
+                          data-testid={`pj-mine-case-notes-textarea-${c.case_id}`}
+                        />
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-[#857E9C]">
+                            {caseNotesDraft.length}/2000
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={cancelCaseNotesEdit}
+                              disabled={caseNotesSaving}
+                              className="rounded-full border border-[#E5E0EE] text-[#4B4567] hover:bg-white px-3 py-1 text-[11px] font-semibold disabled:opacity-50"
+                              data-testid={`pj-mine-case-notes-cancel-${c.case_id}`}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={saveCaseNotes}
+                              disabled={caseNotesSaving}
+                              className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1 text-[11px] font-semibold disabled:bg-[#C9C0DC]"
+                              data-testid={`pj-mine-case-notes-save-${c.case_id}`}
+                            >
+                              {caseNotesSaving ? (
+                                <Loader2 size={11} className="animate-spin" />
+                              ) : (
+                                <Check size={11} />
+                              )}{" "}
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : c.case_notes ? (
+                      <button
+                        type="button"
+                        onClick={() => openCaseNotesEdit(c)}
+                        className="mt-3 group text-left w-full rounded-2xl border border-[#D6CFE8] bg-[#FBF9FE] p-3 hover:border-[#3D1A78] transition-colors"
+                        data-testid={`pj-mine-case-notes-preview-${c.case_id}`}
+                      >
+                        <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
+                          <Lock size={10} /> Private notes · never shared
+                          <span className="ml-2 text-[10px] text-[#857E9C] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
+                            (tap to edit)
+                          </span>
+                        </div>
+                        <div className="text-sm text-[#1A1330] leading-snug whitespace-pre-wrap line-clamp-3">
+                          {c.case_notes}
+                        </div>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openCaseNotesEdit(c)}
+                        className="mt-2 text-xs text-[#4B4567] hover:text-[#3D1A78] hover:underline inline-flex items-center gap-1"
+                        data-testid={`pj-mine-case-notes-add-${c.case_id}`}
+                      >
+                        <Lock size={11} /> Add private notes
                       </button>
                     )}
                   </div>

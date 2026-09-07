@@ -15,6 +15,9 @@ import { toast } from "sonner";
 
 import AppShell from "../components/AppShell";
 import DemoModeBanner from "../components/DemoModeBanner";
+import CoachModelPickerChip, {
+  useCoachModelPreference,
+} from "../components/coach/CoachModelPickerChip";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -335,6 +338,7 @@ export default function Coach() {
   const [sending, setSending] = useState(false);
   const starters = useStarters();
   const { sessions, reload: reloadSessions } = useSessions();
+  const [modelPreference, setModelPreference] = useCoachModelPreference();
   const scrollRef = useRef(null);
 
   // Load conversation when the URL sessionId changes.
@@ -394,6 +398,7 @@ export default function Coach() {
         navigate(`/coach/${newId}`, { replace: true });
         const sr = await api.post(`/coach/sessions/${newId}/message`, {
           content: prompt,
+          ...(modelPreference ? { model: modelPreference } : {}),
         });
         setMessages([sr.data.user_message, sr.data.assistant_message]);
         reloadSessions();
@@ -404,7 +409,7 @@ export default function Coach() {
         setSending(false);
       }
     },
-    [navigate, reloadSessions]
+    [navigate, reloadSessions, modelPreference]
   );
 
   const sendInSession = useCallback(
@@ -425,6 +430,7 @@ export default function Coach() {
       try {
         const r = await api.post(`/coach/sessions/${sessionId}/message`, {
           content,
+          ...(modelPreference ? { model: modelPreference } : {}),
         });
         setMessages((m) =>
           m
@@ -439,7 +445,7 @@ export default function Coach() {
         setSending(false);
       }
     },
-    [sessionId, createSessionAndSend, reloadSessions]
+    [sessionId, createSessionAndSend, reloadSessions, modelPreference]
   );
 
   const handleDelete = useCallback(
@@ -490,12 +496,20 @@ export default function Coach() {
 
           <div className="min-w-0">
             {!sessionId ? (
-              <EmptyState
-                starters={starters}
-                onPick={createSessionAndSend}
-                onStartBlank={() => navigate("/coach/new")}
-                busy={sending}
-              />
+              <>
+                <div className="flex justify-end mb-3">
+                  <CoachModelPickerChip
+                    value={modelPreference}
+                    onChange={setModelPreference}
+                  />
+                </div>
+                <EmptyState
+                  starters={starters}
+                  onPick={createSessionAndSend}
+                  onStartBlank={() => navigate("/coach/new")}
+                  busy={sending}
+                />
+              </>
             ) : (
               <>
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -510,13 +524,19 @@ export default function Coach() {
                       {session?.title || "New conversation"}
                     </h1>
                   </div>
-                  <Link
-                    to="/coach"
-                    className="shrink-0 inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-full bg-white border border-[#E5E0EE] text-[#3D1A78] hover:bg-[#F5F2FA]"
-                    data-testid="coach-new-conversation-btn"
-                  >
-                    <Plus size={14} /> New
-                  </Link>
+                  <div className="shrink-0 flex items-center gap-2 flex-wrap justify-end">
+                    <CoachModelPickerChip
+                      value={modelPreference}
+                      onChange={setModelPreference}
+                    />
+                    <Link
+                      to="/coach"
+                      className="inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-full bg-white border border-[#E5E0EE] text-[#3D1A78] hover:bg-[#F5F2FA]"
+                      data-testid="coach-new-conversation-btn"
+                    >
+                      <Plus size={14} /> New
+                    </Link>
+                  </div>
                 </div>
 
                 {session?.safety_flag && <SafetyBanner />}

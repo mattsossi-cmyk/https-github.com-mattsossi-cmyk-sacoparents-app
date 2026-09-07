@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -302,10 +302,17 @@ async def share_foundation_statement(
     # Audit trail — the parent can review who they've shared with
     # from `/my-plan` in a future iteration, and this row also
     # backs the rate limit above.
+    audit_id = uuid.uuid4().hex[:12]
     await db.foundation_statement_shares.insert_one({
+        "share_id": audit_id,
         "user_id": current.user_id,
         "recipient_email": recipient_email,
         "recipient_name": (body.recipient_name or "").strip() or None,
+        # We store the personal note verbatim so the parent can
+        # one-tap resend the exact same email later. Rows belong to
+        # the sender (`user_id: current.user_id`) so no cross-user
+        # exposure — parents only ever see their own history.
+        "personal_note": (body.personal_note or "").strip() or None,
         "had_personal_note": bool(
             body.personal_note and body.personal_note.strip()
         ),
@@ -315,6 +322,126 @@ async def share_foundation_statement(
     return {
         "ok": True,
         "delivered_to": recipient_email,
+        "remaining_this_hour": max(
+            0, _FOUNDATION_SHARE_HOURLY_LIMIT - recent_count - 1,
+        ),
+    }
+
+
+@router.get("/foundation-statement/shares")
+async def list_foundation_statement_shares(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Return the caller's most-recent Foundation Statement shares
+    (last 25). Powers the "Share history" view on /my-plan so a
+    parent can see who they've sent to and re-send with one tap."""
+    db = request.app.state.db
+    cursor = (
+        db.foundation_statement_shares
+        .find({"user_id": current.user_id})
+        .sort("created_at", -1)
+        .limit(25)
+    )
+    rows: List[Dict[str, Any]] = []
+    async for row in cursor:
+        rows.append({
+            "share_id": row.get("share_id"),
+            "recipient_email": row.get("recipient_email"),
+            "recipient_name": row.get("recipient_name"),
+            "personal_note": row.get("personal_note"),
+            "created_at": (
+                row["created_at"].isoformat()
+                if isinstance(row.get("created_at"), datetime)
+                else row.get("created_at")
+            ),
+        })
+    return {"shares": rows}
+
+
+@router.post("/foundation-statement/shares/{share_id}/resend")
+async def resend_foundation_statement_share(
+    share_id: str = Path(..., min_length=1, max_length=40),
+    request: Request = None,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Resend a previously-shared Foundation Statement to the same
+    recipient with the same personal note. The PDF is regenerated
+    on the fly so the recipient always gets the CURRENT reflection
+    content, not a stale snapshot — this matches parents' intuition
+    ("if I updated it, resend the fresh one"). Rate-limited via the
+    same 5/hour ceiling as first-time sends."""
+    from foundation_statement_pdf import (
+        build_foundation_statement_pdf,
+        foundation_statement_has_content,
+    )
+    db = request.app.state.db
+    original = await db.foundation_statement_shares.find_one({
+        "share_id": share_id,
+        "user_id": current.user_id,
+    })
+    if not original:
+        raise HTTPException(status_code=404, detail="Share not found.")
+
+    reflection = await _load_reflection_for_current(db, current.user_id)
+    if not foundation_statement_has_content(reflection):
+        raise HTTPException(
+            status_code=409,
+            detail="Your Foundation Statement is empty. Write at least one prompt on /reflection before resending.",
+        )
+
+    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+    recent_count = await db.foundation_statement_shares.count_documents({
+        "user_id": current.user_id,
+        "created_at": {"$gte": one_hour_ago},
+    })
+    if recent_count >= _FOUNDATION_SHARE_HOURLY_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail="You've hit the hourly share limit. Try again in an hour.",
+        )
+
+    pdf_bytes = build_foundation_statement_pdf(
+        author_name=_author_display_name(current),
+        reflection=reflection,
+    )
+    try:
+        email_service.send_foundation_statement_share(
+            to_email=original["recipient_email"],
+            recipient_name=original.get("recipient_name"),
+            sender_name=_author_display_name(current),
+            sender_email=current.email or "",
+            personal_note=original.get("personal_note"),
+            pdf_bytes=pdf_bytes,
+        )
+    except email_service.EmailNotConfigured as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Email isn't configured on this environment yet.",
+        ) from exc
+    except email_service.EmailSendError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc) or "Could not send email right now.",
+        ) from exc
+
+    # Fresh audit row so history + rate limit still work correctly.
+    new_id = uuid.uuid4().hex[:12]
+    await db.foundation_statement_shares.insert_one({
+        "share_id": new_id,
+        "user_id": current.user_id,
+        "recipient_email": original["recipient_email"],
+        "recipient_name": original.get("recipient_name"),
+        "personal_note": original.get("personal_note"),
+        "had_personal_note": bool(original.get("personal_note")),
+        "resent_from": share_id,
+        "sender_email": current.email,
+        "created_at": datetime.now(timezone.utc),
+    })
+    return {
+        "ok": True,
+        "delivered_to": original["recipient_email"],
+        "share_id": new_id,
         "remaining_this_hour": max(
             0, _FOUNDATION_SHARE_HOURLY_LIMIT - recent_count - 1,
         ),

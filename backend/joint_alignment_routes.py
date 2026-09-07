@@ -817,6 +817,10 @@ async def list_cases_i_created(
         # invitation URLs (until expiry). This is what makes the
         # "resend the link" copy-paste flow possible for them.
         shape["reminder_note"] = case.get("reminder_note")
+        # Private internal notes — never surfaced on any parent-facing
+        # payload. Only ever included in the mediator-authenticated
+        # /mine listing (this cursor).
+        shape["case_notes"] = case.get("case_notes")
         shape["parents"] = [
             {
                 **_parent_public_shape(p),
@@ -1381,6 +1385,52 @@ async def professional_update_reminder_note(
             detail="Case not found, or not owned by this account.",
         )
     return {"case_id": canonical, "reminder_note": normalized}
+
+
+class CaseNotesRequest(BaseModel):
+    case_notes: Optional[str] = Field(default=None, max_length=2000)
+
+
+@router.patch("/professional/joint-alignment/cases/{case_id}/case-notes")
+async def professional_update_case_notes(
+    body: CaseNotesRequest,
+    case_id: str = Path(..., min_length=1, max_length=20),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    JWT-authenticated, owner-only. Update (or clear with `null`) the
+    mediator's PRIVATE internal notes about this case.
+
+    Distinct from `reminder_note`:
+      * `reminder_note` (240 chars, parent-visible)  → gets injected
+        into the 5-day nudge email a parent receives.
+      * `case_notes`   (2000 chars, private)         → mediator-only,
+        never surfaced in ANY parent-facing payload (invitation
+        emails, nudge emails, joint report). Meant for internal
+        session context ("Alex wants short pickup windows", "Case
+        moving to court in April", etc.).
+
+    Idempotent — same value posted twice is a no-op.
+    """
+    canonical = _normalise_case_id(case_id) or case_id
+    normalized = (body.case_notes or "").strip() or None
+    result = await db[_CASES_COLL].update_one(
+        {
+            "case_id": canonical,
+            "$or": [
+                {"professional_created_by": current.user_id},
+                {"professional.id": current.user_id, "origin": "in_app_professional"},
+            ],
+        },
+        {"$set": {"case_notes": normalized}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Case not found, or not owned by this account.",
+        )
+    return {"case_id": canonical, "case_notes": normalized}
 
 
 @router.get("/professional/joint-alignment/cases/{case_id}/status-report.pdf")

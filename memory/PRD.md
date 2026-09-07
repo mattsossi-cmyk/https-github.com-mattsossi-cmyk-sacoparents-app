@@ -27,6 +27,39 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — Coach model chip + Case Notes + Share History
+- **Coach Model Picker Chip** — `/coach` page shows a two-state pill
+  "Sharper (GPT) ⇄ Warmer (Claude)" (top-right of both empty state
+  and active session). Choice persists to
+  `localStorage['sacoparents.coach.model']` and forwards as `body.model`
+  on every send. `null` (no pick) uses the app-wide primary.
+- **Renamed "Start reflecting"** CTA on the Communicate More Effectively
+  circle → "Draft a message" (last "reflection" text purged from
+  above-the-fold dashboard).
+- **Case Notes** (private, mediator-only) — new field
+  `case_notes` (max 2000 chars) on `joint_alignment_cases`.
+    - `PATCH /api/professional/joint-alignment/cases/{case_id}/case-notes`
+      (owner-only, 404 on stranger)
+    - Surfaces in `/cases-i-created` (mediator-authenticated), but
+      NEVER in any parent-facing payload — regression test locks
+      the contract.
+    - New inline expand-to-edit UI on `/mine` row, clearly labelled
+      "Private notes · never shared with parents".
+- **Foundation Statement Share History** — parents see every past send
+  from the "History" tab in the Share modal, with one-tap Resend.
+    - `GET  /api/mediation/foundation-statement/shares` (last 25)
+    - `POST /api/mediation/foundation-statement/shares/{share_id}/resend`
+      — regenerates the PDF from the CURRENT reflection and reuses
+      the original recipient + note, share-quota shared with first sends.
+    - Old audit rows now store `share_id` + `personal_note` verbatim
+      (previously only `had_personal_note` bool).
+- **Tests** — new `tests/test_iter157_case_notes_and_share_history.py`
+  (10 green: owner guard, private-notes non-leak, resend uses
+  original recipient + note, resend 409 when reflection wiped,
+  resend 404 for stranger).
+- **All 86 in-scope backend tests: green.**
+
+
 ### 2026-09-07 — ChatGPT-first: app-wide model default flipped to GPT
 - **New shared config** — `/app/backend/ai_models.py` exposes
   `resolve_model(preference)` returning `(provider, model_name)`.

@@ -12,7 +12,7 @@
  * disclaimer-stamped PDF as an artefact.
  */
 import { useEffect, useRef, useState } from "react";
-import { Loader2, X, Send, Download, ShieldCheck } from "lucide-react";
+import { Loader2, X, Send, Download, ShieldCheck, History, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
@@ -21,12 +21,18 @@ export default function FoundationStatementShareModal({
   open,
   onClose,
 }) {
-  const [tab, setTab] = useState("share"); // "share" | "download"
+  const [tab, setTab] = useState("share"); // "share" | "download" | "history"
   const [recipientEmail, setRecipientEmail] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  // Share-history state — loaded lazily when the History tab is
+  // first opened, and reloaded after every successful send so the
+  // list stays fresh.
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [resendingId, setResendingId] = useState(null);
   const dialogRef = useRef(null);
 
   // Reset every time the modal reopens.
@@ -38,6 +44,27 @@ export default function FoundationStatementShareModal({
       setNote("");
     }
   }, [open]);
+
+  // Lazy-load history when the tab is first shown, so the modal
+  // opens instantly regardless of network latency.
+  useEffect(() => {
+    if (!open || tab !== "history") return;
+    let cancelled = false;
+    setHistoryLoading(true);
+    api
+      .get("/mediation/foundation-statement/shares")
+      .then((r) => {
+        if (!cancelled) setHistory(r.data?.shares || []);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          logError("foundation history load failed", err);
+          toast.error("Couldn't load your share history.");
+        }
+      })
+      .finally(() => { if (!cancelled) setHistoryLoading(false); });
+    return () => { cancelled = true; };
+  }, [open, tab]);
 
   // Escape-to-close + focus trap-ish: initial focus on the first
   // input. Full trap left off intentionally — this modal is small
@@ -99,6 +126,30 @@ export default function FoundationStatementShareModal({
       toast.error(String(detail));
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleResend = async (shareId, recipientEmailLabel) => {
+    setResendingId(shareId);
+    try {
+      await api.post(
+        `/mediation/foundation-statement/shares/${shareId}/resend`,
+        {},
+      );
+      toast.success(`Re-sent to ${recipientEmailLabel}.`);
+      // Refresh the list so the new row appears at the top.
+      try {
+        const r = await api.get("/mediation/foundation-statement/shares");
+        setHistory(r.data?.shares || []);
+      } catch {
+        /* soft-fail — the send itself succeeded */
+      }
+    } catch (err) {
+      logError("foundation resend failed", err);
+      const detail = err?.response?.data?.detail || "Resend failed.";
+      toast.error(String(detail));
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -165,9 +216,19 @@ export default function FoundationStatementShareModal({
           >
             <Download size={12} /> Download PDF
           </button>
+          <button
+            type="button"
+            onClick={() => setTab("history")}
+            className={`px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 transition ${
+              tab === "history" ? "bg-white text-[#3D1A78] shadow" : "text-[#4B4567]"
+            }`}
+            data-testid="foundation-share-tab-history"
+          >
+            <History size={12} /> History
+          </button>
         </div>
 
-        {tab === "share" ? (
+        {tab === "share" && (
           <form onSubmit={handleShare} className="mt-5 space-y-4" data-testid="foundation-share-form">
             <div>
               <label
@@ -264,7 +325,9 @@ export default function FoundationStatementShareModal({
               </button>
             </div>
           </form>
-        ) : (
+        )}
+
+        {tab === "download" && (
           <div className="mt-5 space-y-4" data-testid="foundation-download-panel">
             <p className="text-sm text-[#4B4567] leading-relaxed">
               Download the one-page PDF and forward it however you like —
@@ -295,6 +358,74 @@ export default function FoundationStatementShareModal({
                 )}
               </button>
             </div>
+          </div>
+        )}
+
+        {tab === "history" && (
+          <div className="mt-5" data-testid="foundation-history-panel">
+            {historyLoading ? (
+              <div className="text-sm text-[#857E9C] flex items-center gap-2 py-6">
+                <Loader2 size={13} className="animate-spin" /> Loading your share history…
+              </div>
+            ) : history.length === 0 ? (
+              <div
+                className="rounded-2xl border border-dashed border-[#D6CFE8] p-5 text-center text-sm text-[#4B4567]"
+                data-testid="foundation-history-empty"
+              >
+                You haven&rsquo;t sent your Foundation Statement to anyone yet.
+                <br />
+                Once you do, this list will let you re-send with one tap.
+              </div>
+            ) : (
+              <ul className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+                {history.map((s) => {
+                  const when = s.created_at
+                    ? new Date(s.created_at).toLocaleString([], {
+                        month: "short", day: "numeric",
+                        hour: "2-digit", minute: "2-digit",
+                      })
+                    : "";
+                  const busy = resendingId === s.share_id;
+                  return (
+                    <li
+                      key={s.share_id}
+                      className="rounded-2xl border border-[#E5E0EE] bg-[#FBF9FE] px-3 py-2.5 flex items-center gap-3"
+                      data-testid={`foundation-history-row-${s.share_id}`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-[#1A1330] truncate">
+                          {s.recipient_name
+                            ? `${s.recipient_name} · ${s.recipient_email}`
+                            : s.recipient_email}
+                        </div>
+                        <div className="text-[11px] text-[#857E9C] mt-0.5">
+                          {when}
+                          {s.personal_note ? " · note included" : ""}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleResend(s.share_id, s.recipient_email)}
+                        disabled={busy || !!resendingId}
+                        className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1.5 text-xs font-semibold disabled:bg-[#C9C0DC] disabled:cursor-not-allowed"
+                        data-testid={`foundation-history-resend-${s.share_id}`}
+                      >
+                        {busy ? (
+                          <Loader2 size={11} className="animate-spin" />
+                        ) : (
+                          <RefreshCw size={11} />
+                        )}{" "}
+                        Resend
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <p className="mt-3 text-[11px] text-[#857E9C]">
+              Resends use your CURRENT Foundation Statement — if you&rsquo;ve
+              updated it, the recipient sees the newest version.
+            </p>
           </div>
         )}
       </div>
