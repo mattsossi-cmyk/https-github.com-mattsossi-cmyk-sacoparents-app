@@ -1,4 +1,10 @@
-"""Claude Sonnet 4.5 powered AI service via emergentintegrations."""
+"""AI service via emergentintegrations.
+
+App-wide primary model is GPT (openai/gpt-5.4) with Claude Sonnet 4.5
+as the on-demand fallback — see `ai_models.py`. Callers that want to
+pin a specific tone (e.g. Claude for the empathetic coaching voice)
+can pass `model_preference="claude"` explicitly.
+"""
 import json
 import os
 import uuid
@@ -7,9 +13,7 @@ from typing import Any, Dict, List, Optional
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
-
-CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
-PROVIDER = "anthropic"
+from ai_models import resolve_model
 
 
 # ============ Universal safety + scope guardrail ============
@@ -41,12 +45,13 @@ SAFETY_GUARDRAIL = (
 )
 
 
-def _make_chat(system_prompt: str) -> LlmChat:
+def _make_chat(system_prompt: str, model_preference: Optional[str] = None) -> LlmChat:
+    provider, model_name = resolve_model(model_preference)
     return LlmChat(
         api_key=os.environ["EMERGENT_LLM_KEY"],
         session_id=f"sa-coparents-{uuid.uuid4().hex[:10]}",
         system_message=SAFETY_GUARDRAIL + system_prompt,
-    ).with_model(PROVIDER, CLAUDE_MODEL)
+    ).with_model(provider, model_name)
 
 
 def _extract_json(text: str) -> Any:
@@ -969,6 +974,7 @@ async def generate_coach_reply(
     user_message: str,
     history: Optional[List[Dict[str, str]]] = None,
     prep_context: Optional[Dict[str, Any]] = None,
+    model_preference: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Multi-turn chat reply for the AI Coach.
 
@@ -978,6 +984,7 @@ async def generate_coach_reply(
         in chronological order. The system message is prepended internally.
       prep_context: optional prep data snapshot (child_goals, reflection,
         priority) used to personalise the reply.
+      model_preference: "gpt" | "claude" | None. `None` = app-wide primary.
     """
     system_message = SAFETY_GUARDRAIL + _COACH_SYSTEM_PROMPT + _coach_context_block(prep_context)
 
@@ -991,12 +998,13 @@ async def generate_coach_reply(
         if role in ("user", "assistant") and content:
             initial.append({"role": role, "content": content})
 
+    provider, model_name = resolve_model(model_preference)
     chat = LlmChat(
         api_key=os.environ["EMERGENT_LLM_KEY"],
         session_id=f"sa-coparents-coach-{uuid.uuid4().hex[:10]}",
         system_message=system_message,
         initial_messages=initial,
-    ).with_model(PROVIDER, CLAUDE_MODEL)
+    ).with_model(provider, model_name)
 
     response = await chat.send_message(UserMessage(text=user_message.strip()[:4000]))
     data = _extract_json(response) or {}
@@ -1104,11 +1112,12 @@ async def generate_special_needs_report_v2(*, profile, concerns, scores, disagre
         f"ASSESSMENT INPUT:\n{context}\n\n"
         "Write the 6-part care plan now. JSON only."
     )
+    provider, model_name = resolve_model(None)
     chat = LlmChat(
         api_key=os.environ["EMERGENT_LLM_KEY"],
         session_id=f"sa-sn-v2-{uuid.uuid4().hex[:10]}",
         system_message=SAFETY_GUARDRAIL + _SN_V2_SYSTEM,
-    ).with_model(PROVIDER, CLAUDE_MODEL)
+    ).with_model(provider, model_name)
 
     response = await chat.send_message(UserMessage(text=prompt))
     data = _extract_json(response) or {}

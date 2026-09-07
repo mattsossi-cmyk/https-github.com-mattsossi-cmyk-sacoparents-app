@@ -33,11 +33,10 @@ from typing import Any, Dict, List, Optional
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
+from ai_models import resolve_model
+
 
 logger = logging.getLogger(__name__)
-
-_MODEL_PROVIDER = "anthropic"
-_MODEL_NAME = "claude-sonnet-4-5-20250929"
 
 # Keys we accept back from the model. Anything else is dropped.
 _COACH_KEYS = ("doing_well", "coordination_gaps", "next_steps", "resources")
@@ -140,11 +139,14 @@ def _sanitize_output(raw: Any) -> Dict[str, List[str]]:
 
 async def generate_section_coach(*, product_label: str,
                                  section: Dict[str, Any],
-                                 responses: Dict[str, Any]) -> Optional[Dict[str, List[str]]]:
+                                 responses: Dict[str, Any],
+                                 model_preference: Optional[str] = None) -> Optional[Dict[str, List[str]]]:
     """Return a 4-list coach card for one section, or None on failure.
 
     Never raises: the caller falls back to a "try again later" nudge if the
     LLM call fails so the assessment flow stays reliable.
+
+    model_preference: "gpt" | "claude" | None. `None` = app-wide primary.
     """
     api_key = os.environ.get("EMERGENT_LLM_KEY")
     if not api_key:
@@ -161,11 +163,12 @@ async def generate_section_coach(*, product_label: str,
         f"{json.dumps(snapshot, ensure_ascii=False)}"
     )
     try:
+        provider, model_name = resolve_model(model_preference)
         chat = LlmChat(
             api_key=api_key,
             session_id=f"section-coach-{uuid.uuid4().hex[:10]}",
             system_message=_system_message(product_label),
-        ).with_model(_MODEL_PROVIDER, _MODEL_NAME)
+        ).with_model(provider, model_name)
         text = await chat.send_message(UserMessage(text=prompt))
         result = _sanitize_output(text)
         # If the model returned all four empty lists AND we had answers to

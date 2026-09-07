@@ -19,11 +19,10 @@ from typing import Any, Dict, Optional
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
+from ai_models import resolve_model
+
 
 logger = logging.getLogger(__name__)
-
-_MODEL_PROVIDER = "anthropic"
-_MODEL_NAME = "claude-sonnet-4-5-20250929"
 
 # Word targets for the summary length toggle. `standard` is the default and
 # matches the original ~200 word system prompt.
@@ -82,10 +81,12 @@ def _extract_signals(report: Dict[str, Any]) -> Dict[str, Any]:
 
 async def generate_executive_summary(*, product_name: str,
                                      report: Dict[str, Any],
-                                     length: str = "standard") -> Optional[str]:
+                                     length: str = "standard",
+                                     model_preference: Optional[str] = None) -> Optional[str]:
     """Return a short plain-language narrative, or None on failure.
 
     length: "short" | "standard" | "long" — controls target word count.
+    model_preference: "gpt" | "claude" | None. `None` = app-wide primary.
 
     Never raises: the caller falls back to a report-without-narrative if the
     LLM call fails so report generation stays reliable.
@@ -103,11 +104,12 @@ async def generate_executive_summary(*, product_name: str,
         f"{json.dumps(signals, ensure_ascii=False)}"
     )
     try:
+        provider, model_name = resolve_model(model_preference)
         chat = LlmChat(
             api_key=api_key,
             session_id=f"exec-summary-{uuid.uuid4().hex[:10]}",
             system_message=_system_message(length_key),
-        ).with_model(_MODEL_PROVIDER, _MODEL_NAME)
+        ).with_model(provider, model_name)
         text = await chat.send_message(UserMessage(text=prompt))
         if not isinstance(text, str):
             text = str(text)

@@ -35,7 +35,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import email_service
 from analytics_routes import ADMIN_EMAILS, require_admin
-from ai_service import CLAUDE_MODEL, PROVIDER, SAFETY_GUARDRAIL
+from ai_models import resolve_model
+from ai_service import SAFETY_GUARDRAIL
 from models import UserPublic
 
 
@@ -140,11 +141,12 @@ def _make_insights_chat() -> LlmChat:
         "Your tone: calm, professional, honest. No sycophancy. No marketing fluff.\n"
         "Output strict JSON only — no markdown, no apologies, no preamble."
     )
+    provider, model_name = resolve_model(None)
     return LlmChat(
         api_key=os.environ["EMERGENT_LLM_KEY"],
         session_id=f"insights-{uuid.uuid4().hex[:10]}",
         system_message=SAFETY_GUARDRAIL + system,
-    ).with_model(PROVIDER, CLAUDE_MODEL)
+    ).with_model(provider, model_name)
 
 
 def _extract_json(text: str) -> Dict[str, Any]:

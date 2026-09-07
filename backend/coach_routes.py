@@ -1,9 +1,11 @@
 """Interactive AI Coach chat routes.
 
-Multi-turn Claude Sonnet 4.5 chat that helps a parent move from
+Multi-turn GPT chat (Claude fallback) that helps a parent move from
 emotionally reactive to child-centered — BIFF-first, prep-aware, and
 safety-alert. Sessions and messages are persisted to Mongo so a parent
-can pick a conversation back up later.
+can pick a conversation back up later. Model choice is app-wide
+primary by default; a per-message `model` field (`"gpt"` | `"claude"`)
+lets parents switch tone on demand.
 
 Endpoints (mounted under /api/coach):
   POST   /sessions                       — create a new session
@@ -126,6 +128,10 @@ class NewSessionBody(BaseModel):
 
 class SendMessageBody(BaseModel):
     content: str = Field(min_length=1, max_length=MAX_MESSAGE_LEN)
+    # Per-message override — "gpt" | "claude" | None (use app-wide primary).
+    # Lets parents toggle tone from the chat surface (`/coach`) without
+    # changing the app-wide default.
+    model: Optional[str] = Field(default=None, max_length=20)
 
 
 # ---- endpoints ------------------------------------------------------------
@@ -243,6 +249,7 @@ async def send_message(
             user_message=user_content,
             history=history,
             prep_context=prep_context,
+            model_preference=body.model,
         )
     except Exception as e:  # noqa: BLE001
         # Roll back the user turn so the parent can re-try cleanly without

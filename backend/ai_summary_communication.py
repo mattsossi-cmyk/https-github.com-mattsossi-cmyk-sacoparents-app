@@ -26,14 +26,10 @@ from typing import Any, Dict, Optional
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
+from ai_models import resolve_model
+
 
 logger = logging.getLogger(__name__)
-
-_CLAUDE_PROVIDER = "anthropic"
-_CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
-
-_GPT_PROVIDER = "openai"
-_GPT_MODEL = "gpt-5.6-terra"
 
 
 def _system_message() -> str:
@@ -96,7 +92,7 @@ def _summarise_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def generate_communication_summary(
-    payload: Dict[str, Any], model: str = "claude"
+    payload: Dict[str, Any], model: Optional[str] = None
 ) -> Optional[str]:
     api_key = os.environ.get("EMERGENT_LLM_KEY")
     if not api_key:
@@ -118,9 +114,7 @@ async def generate_communication_summary(
             "Safety pathway instead."
         )
 
-    provider, model_name = (
-        (_GPT_PROVIDER, _GPT_MODEL) if model == "gpt" else (_CLAUDE_PROVIDER, _CLAUDE_MODEL)
-    )
+    provider, model_name = resolve_model(model)
     prompt = (
         "Product: Communication Alignment Report\n"
         "Compare signals JSON follows. Produce the short summary using the "

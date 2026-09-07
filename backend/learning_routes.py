@@ -39,9 +39,6 @@ router = APIRouter(prefix="/learning", tags=["learning"])
 _READS_COLLECTION = "learning_reads"
 _AI_COLLECTION = "learning_ai_expansions"
 
-_MODEL_PROVIDER = "anthropic"
-_MODEL_NAME = "claude-sonnet-4-5-20250929"
-
 
 class CoachIn(BaseModel):
     force: Optional[bool] = False
@@ -270,11 +267,13 @@ async def ai_expansion(hub_slug: str, article_slug: str,
         '{"paragraphs": ["...", "...", "..."]}'
     )
     try:
+        from ai_models import resolve_model
+        provider, model_name = resolve_model(None)
         chat = LlmChat(
             api_key=api_key,
             session_id=f"learning-coach-{uuid.uuid4().hex[:10]}",
             system_message=_COACH_SYSTEM,
-        ).with_model(_MODEL_PROVIDER, _MODEL_NAME)
+        ).with_model(provider, model_name)
         text = await chat.send_message(UserMessage(text=prompt))
     except Exception as e:  # noqa: BLE001
         logger.warning("learning coach LLM call failed for %s: %s", article_slug, e)

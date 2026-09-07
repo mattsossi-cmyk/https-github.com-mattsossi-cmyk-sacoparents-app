@@ -27,6 +27,31 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — ChatGPT-first: app-wide model default flipped to GPT
+- **New shared config** — `/app/backend/ai_models.py` exposes
+  `resolve_model(preference)` returning `(provider, model_name)`.
+  App-wide primary is `gpt-5.4` (openai) with `claude-sonnet-4-5-20250929`
+  (anthropic) as the on-demand fallback. Flip via
+  `AI_PRIMARY_MODEL=gpt|claude` env var.
+- **9 AI surfaces refactored** to use the shared config: `ai_service.py`
+  (coach, coaching, agreement drafts), `ai_summary.py`,
+  `ai_summary_activities.py`, `ai_summary_communication.py`,
+  `ai_summary_parenting_schedule.py`, `deep_dive_section_coach.py`,
+  `insights_routes.py`, `learning_routes.py`, `safety_ai_summary.py`.
+- **`?model=` / `body.model` toggle** now flows through the coach
+  chat + all summary surfaces. Parents can pin a specific tone
+  ("claude" for the warmer voice, "gpt" for the sharper one)
+  without changing the app-wide default.
+- **`/coach` chat page** — pre-existing chat UI (starters library,
+  past-conversations sidebar, session persistence) now runs on
+  GPT-5.4 by default. Verified end-to-end with 800-char reply +
+  followups + safety_flag detection.
+- **Regression tests** — `tests/test_iter156_ai_models_config.py`
+  (12 green: env matrix, override precedence, primary/fallback
+  pins, coach endpoint passes `model_preference` through).
+- **All 76 in-scope backend tests: green.**
+
+
 ### 2026-09-07 — Foundation Statement Share (send-before-session)
 - **New PDF** — `foundation_statement_pdf.py` composes a one-page,
   parent-authored artefact from the four canonical Reflection prompts.

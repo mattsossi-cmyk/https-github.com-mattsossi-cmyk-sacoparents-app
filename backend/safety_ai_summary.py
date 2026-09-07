@@ -37,11 +37,10 @@ from typing import Any, Dict, List, Optional
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
+from ai_models import resolve_model
+
 
 logger = logging.getLogger(__name__)
-
-_MODEL_PROVIDER = "anthropic"
-_MODEL_NAME = "claude-sonnet-4-5-20250929"
 
 # Character caps so a runaway LLM response can't blow the PDF layout.
 _CAP_OVERALL   = 2400
@@ -114,7 +113,7 @@ def _signals(doc: Dict[str, Any],
     }
 
 
-async def _one_shot(prompt: str, cap: int) -> Optional[str]:
+async def _one_shot(prompt: str, cap: int, model_preference: Optional[str] = None) -> Optional[str]:
     """Send a single prompt, apply a character cap, return trimmed text
     or None on any failure. Never raises."""
     api_key = os.environ.get("EMERGENT_LLM_KEY")
@@ -122,11 +121,12 @@ async def _one_shot(prompt: str, cap: int) -> Optional[str]:
         logger.warning("EMERGENT_LLM_KEY not configured — skipping safety AI summary")
         return None
     try:
+        provider, model_name = resolve_model(model_preference)
         chat = LlmChat(
             api_key=api_key,
             session_id=f"safety-summary-{uuid.uuid4().hex[:10]}",
             system_message=_system_message(),
-        ).with_model(_MODEL_PROVIDER, _MODEL_NAME)
+        ).with_model(provider, model_name)
         text = await chat.send_message(UserMessage(text=prompt))
         if not isinstance(text, str):
             text = str(text)
