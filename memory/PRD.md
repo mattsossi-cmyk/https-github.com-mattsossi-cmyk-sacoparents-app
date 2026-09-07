@@ -27,6 +27,32 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — Foundation Statement Share (send-before-session)
+- **New PDF** — `foundation_statement_pdf.py` composes a one-page,
+  parent-authored artefact from the four canonical Reflection prompts.
+  Includes purpose strip, court-report disclaimer, and provenance
+  watermark (author + timestamp) on every page.
+- **New endpoints**:
+    - `GET  /api/mediation/foundation-statement.pdf` — download own
+      Foundation Statement PDF (409 when reflection is empty).
+    - `POST /api/mediation/foundation-statement/share` — email PDF to
+      recipient. Rate-limited to 5/hour per user, refuses self-address
+      (400), refuses empty reflection (409), 502 on provider failure,
+      200 with `remaining_this_hour` counter on success.
+- **New email helper** — `send_foundation_statement_share()` in
+  `email_service.py`. Neutral, non-adjudicative copy; reply-to points
+  to the sender's email; optional personal note rendered as a callout.
+- **Frontend**:
+    - `FoundationStatementShareModal` (React) — two tabs (Email /
+      Download PDF), form validation, dialog semantics + Escape close.
+    - Wired into `/my-plan` Foundation Statement card ("Send to
+      co-parent or mediator" pill).
+    - Wired into `/reflection` sticky footer — appears after Save.
+- **Audit trail** — new `foundation_statement_shares` collection.
+- **Tests** — `tests/test_iter155_foundation_share.py` (14 green,
+  incl. live-server API + Resend delivery via `delivered@resend.dev`).
+
+
 ### 2026-09-07 — Foundation Statement rendering bug fix
 - **Root cause 1** (`MyPlan.jsx:100`) — `data = prep.data` but the
   `/api/mediation/prep` endpoint returns `reflection`/`child_goals`/

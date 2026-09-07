@@ -160,6 +160,168 @@ async def get_prep(
     return await _load_prep(request.app.state.db, current.user_id)
 
 
+
+# ============ Foundation Statement — download + share ============
+_FOUNDATION_SHARE_HOURLY_LIMIT = int(
+    os.environ.get("FOUNDATION_STATEMENT_SHARE_HOURLY_LIMIT", "5")
+)
+
+
+class FoundationStatementShareBody(BaseModel):
+    """Body for `POST /mediation/foundation-statement/share`."""
+    recipient_email: EmailStr
+    recipient_name: Optional[str] = Field(default=None, max_length=80)
+    personal_note: Optional[str] = Field(default=None, max_length=500)
+
+
+def _author_display_name(user: UserPublic) -> str:
+    """Prefer explicit display name; fall back to the email local-part
+    so we never surface an empty string on the PDF."""
+    if user.name and user.name.strip():
+        return user.name.strip()
+    if user.email:
+        return user.email.split("@", 1)[0]
+    return "A co-parent"
+
+
+async def _load_reflection_for_current(db, user_id: str) -> Dict[str, Any]:
+    prep = await _load_prep(db, user_id)
+    return prep.get("reflection") or {}
+
+
+@router.get("/foundation-statement.pdf")
+async def download_foundation_statement(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Download the caller's Foundation Statement as a one-page PDF.
+    Rejects with 409 when the parent hasn't written any prompts yet
+    so a hollow document can't be exfiltrated by accident."""
+    from foundation_statement_pdf import (
+        build_foundation_statement_pdf,
+        foundation_statement_has_content,
+    )
+    db = request.app.state.db
+    reflection = await _load_reflection_for_current(db, current.user_id)
+    if not foundation_statement_has_content(reflection):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Your Foundation Statement is empty. Write at least one "
+                "prompt on /reflection before downloading."
+            ),
+        )
+    pdf_bytes = build_foundation_statement_pdf(
+        author_name=_author_display_name(current),
+        reflection=reflection,
+    )
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                'attachment; filename="foundation-statement.pdf"'
+            ),
+        },
+    )
+
+
+@router.post("/foundation-statement/share")
+async def share_foundation_statement(
+    body: FoundationStatementShareBody,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Email the caller's Foundation Statement PDF to a recipient
+    (co-parent or mediator). Rate-limited per user per hour so a
+    misclick can't spam an inbox."""
+    from foundation_statement_pdf import (
+        build_foundation_statement_pdf,
+        foundation_statement_has_content,
+    )
+    db = request.app.state.db
+    reflection = await _load_reflection_for_current(db, current.user_id)
+    if not foundation_statement_has_content(reflection):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Your Foundation Statement is empty. Write at least one "
+                "prompt on /reflection before sharing."
+            ),
+        )
+    recipient_email = body.recipient_email.strip().lower()
+    if recipient_email == (current.email or "").strip().lower():
+        raise HTTPException(
+            status_code=400,
+            detail="You can't share the Foundation Statement with yourself.",
+        )
+
+    # Sliding-hour rate limit — cheap dedupe against misclicks.
+    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+    recent_count = await db.foundation_statement_shares.count_documents({
+        "user_id": current.user_id,
+        "created_at": {"$gte": one_hour_ago},
+    })
+    if recent_count >= _FOUNDATION_SHARE_HOURLY_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                "You've hit the hourly share limit. Take a breath and try "
+                "again in an hour."
+            ),
+        )
+
+    pdf_bytes = build_foundation_statement_pdf(
+        author_name=_author_display_name(current),
+        reflection=reflection,
+    )
+
+    try:
+        email_service.send_foundation_statement_share(
+            to_email=recipient_email,
+            recipient_name=body.recipient_name,
+            sender_name=_author_display_name(current),
+            sender_email=current.email or "",
+            personal_note=body.personal_note,
+            pdf_bytes=pdf_bytes,
+        )
+    except email_service.EmailNotConfigured as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Email isn't configured on this environment yet — "
+                "download the PDF and forward it manually for now."
+            ),
+        ) from exc
+    except email_service.EmailSendError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc) or "Could not send email right now.",
+        ) from exc
+
+    # Audit trail — the parent can review who they've shared with
+    # from `/my-plan` in a future iteration, and this row also
+    # backs the rate limit above.
+    await db.foundation_statement_shares.insert_one({
+        "user_id": current.user_id,
+        "recipient_email": recipient_email,
+        "recipient_name": (body.recipient_name or "").strip() or None,
+        "had_personal_note": bool(
+            body.personal_note and body.personal_note.strip()
+        ),
+        "sender_email": current.email,
+        "created_at": datetime.now(timezone.utc),
+    })
+    return {
+        "ok": True,
+        "delivered_to": recipient_email,
+        "remaining_this_hour": max(
+            0, _FOUNDATION_SHARE_HOURLY_LIMIT - recent_count - 1,
+        ),
+    }
+
+
+
 # ============ AI endpoints ============
 @router.post("/analyze-communication")
 async def analyze_communication(

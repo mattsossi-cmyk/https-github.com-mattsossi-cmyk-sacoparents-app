@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ClipboardCheck, Heart, Shield, Compass, Mail } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, Heart, Shield, Compass, Mail, Send } from "lucide-react";
 import AppShell from "../components/AppShell";
 import DemoModeBanner from "../components/DemoModeBanner";
 import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
 import SectionCoaching from "../components/SectionCoaching";
 import CertificateCard from "../components/CertificateCard";
 import GrowthTracker from "../components/GrowthTracker";
+import FoundationStatementShareModal from "../components/foundation/FoundationStatementShareModal";
 import { api } from "../lib/api";
 
 /**
@@ -75,6 +76,7 @@ export default function MyPlan() {
   const [summary, setSummary] = useState(null);
   const [gmail, setGmail] = useState({ connected: false });
   const [loading, setLoading] = useState(true);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -216,6 +218,16 @@ export default function MyPlan() {
                       {foundation}
                     </p>
                   )}
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShareOpen(true)}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1.5 text-xs font-semibold transition-colors"
+                      data-testid="myplan-foundation-share"
+                    >
+                      <Send size={12} /> Send to co-parent or mediator
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -365,6 +377,10 @@ export default function MyPlan() {
           </div>
         )}
       </div>
+      <FoundationStatementShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+      />
     </AppShell>
   );
 }

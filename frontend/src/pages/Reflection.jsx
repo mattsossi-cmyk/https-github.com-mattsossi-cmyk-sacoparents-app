@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import SafetyAlert from "../components/SafetyAlert";
 import BreathingExercise from "../components/BreathingExercise";
+import FoundationStatementShareModal from "../components/foundation/FoundationStatementShareModal";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 import { detectSafetyConcern } from "../lib/safety";
@@ -84,6 +85,7 @@ export default function Reflection() {
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState(null);
   const [tab, setTab] = useState("write"); // "write" | "history"
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     api
@@ -251,20 +253,32 @@ export default function Reflection() {
                     <span className="text-[#857E9C]">Your words stay with you.</span>
                   )}
                 </div>
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !hasContent}
-                  className="btn-sage inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  data-testid="reflection-save-button"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 size={14} className="animate-spin" /> Saving…
-                    </>
-                  ) : (
-                    "Save reflection"
+                <div className="flex items-center gap-2">
+                  {savedAt && hasContent && (
+                    <button
+                      type="button"
+                      onClick={() => setShareOpen(true)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-3 py-2 text-sm font-semibold transition-colors"
+                      data-testid="reflection-share-button"
+                    >
+                      <Send size={13} /> Send to co-parent or mediator
+                    </button>
                   )}
-                </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving || !hasContent}
+                    className="btn-sage inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="reflection-save-button"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" /> Saving…
+                      </>
+                    ) : (
+                      "Save reflection"
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </>
@@ -272,6 +286,10 @@ export default function Reflection() {
           <JournalHistory />
         )}
       </div>
+      <FoundationStatementShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+      />
     </AppShell>
   );
 }

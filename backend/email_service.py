@@ -1450,6 +1450,94 @@ def send_mediator_email(
     )
 
 
+
+def send_foundation_statement_share(
+    *,
+    to_email: str,
+    recipient_name: Optional[str],
+    sender_name: str,
+    sender_email: str,
+    personal_note: Optional[str],
+    pdf_bytes: bytes,
+) -> None:
+    """Email a parent's Foundation Statement PDF to a co-parent or
+    mediator. Neutral, non-adjudicative copy — this is a warm
+    "here's what I've been thinking" share, NOT a demand letter.
+    """
+    if not pdf_bytes:
+        raise EmailSendError("Nothing to send — the Foundation Statement is empty.")
+
+    display_sender = (sender_name or "").strip() or "A co-parent"
+    greeting = (
+        f"Hi {_html.escape(recipient_name.strip())},"
+        if recipient_name and recipient_name.strip()
+        else "Hi,"
+    )
+    intro = (
+        f"{display_sender} has shared their Foundation Statement with you — "
+        "a short reflection they wrote to prepare for your conversation. "
+        "It captures how they're thinking about their co-parenting right "
+        "now: from their child's perspective, from yours, and from their own."
+    )
+    context = (
+        "It is not a set of demands and it is not a court filing. "
+        "Reading it before you meet will make the conversation quicker "
+        "and calmer."
+    )
+
+    note_html = ""
+    note_plain = ""
+    if personal_note and personal_note.strip():
+        safe_note = _html.escape(personal_note.strip())
+        note_html = (
+            f'<div style="background:#F5F1FB;border-left:3px solid #3D1A78;'
+            f'border-radius:12px;padding:14px 18px;margin:0 0 20px 0;">'
+            f'<div style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;'
+            f'color:#3D1A78;font-weight:700;margin-bottom:6px;">A note from {_html.escape(display_sender)}</div>'
+            f'<div style="font-size:14px;color:#1A1330;line-height:1.55;white-space:pre-wrap;">{safe_note}</div>'
+            f"</div>"
+        )
+        note_plain = f"\nNote from {display_sender}:\n{personal_note.strip()}\n\n"
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">{greeting}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"{_html.escape(intro)}</p>"
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 20px 0;">'
+        f"{_html.escape(context)}</p>"
+        f"{note_html}"
+        f'<p style="font-size:14px;line-height:1.55;color:#4B4567;margin:0 0 8px 0;">'
+        f"The Foundation Statement is attached as a PDF. If you'd like to "
+        f"reply, you can respond directly to this email — it goes to "
+        f'<a href="mailto:{_html.escape(sender_email)}" style="color:#3D1A78;text-decoration:none;">'
+        f"{_html.escape(sender_email)}</a>.</p>"
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"{intro}\n\n"
+        f"{context}\n"
+        f"{note_plain}"
+        f"The Foundation Statement is attached as a PDF. "
+        f"You can reply directly to this email — it goes to {sender_email}.\n\n"
+        f"Warmly,\n{display_sender}\n"
+    )
+    html = _branded_html(
+        headline=f"{display_sender}'s Foundation Statement",
+        body_html=body_html,
+        cta_label="",
+    )
+    subject = f"{display_sender}'s Foundation Statement - before our conversation"
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=html,
+        text=plain,
+        reply_to=sender_email or None,
+        attachments=[("foundation-statement.pdf", pdf_bytes)],
+        failure_message="Couldn't send your Foundation Statement right now. Please try again in a moment.",
+    )
+
+
 def send_safety_assessment_report(
     *,
     to_email: str,
