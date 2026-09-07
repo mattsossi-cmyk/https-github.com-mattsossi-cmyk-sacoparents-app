@@ -148,6 +148,12 @@ def test_api_download_pdf_200_when_content():
     )
     assert r.status_code == 200
     assert r.headers["content-type"] == "application/pdf"
+    # The endpoint MUST send the file as an attachment (not inline) so
+    # the browser triggers a download instead of rendering the PDF
+    # inside an iframe — matters on mobile Safari.
+    disposition = r.headers.get("content-disposition", "")
+    assert "attachment" in disposition.lower(), disposition
+    assert "foundation-statement.pdf" in disposition, disposition
     assert r.content[:4] == b"%PDF"
 
 
@@ -195,3 +201,96 @@ def test_api_share_happy_path_via_resend_test_address():
     assert data["ok"] is True
     assert data["delivered_to"] == "delivered@resend.dev"
     assert data["remaining_this_hour"] == 4  # 5 max - this one = 4 remaining
+
+
+def test_api_share_rate_limit_429_after_five_sends():
+    """Sixth send within the hour must 429 with a friendly message.
+    Uses Resend's testing address so the first five actually deliver."""
+    _email, token = _register("ratelimit")
+    _save_reflection(token, {"child_lens": "content for rate limit test"})
+    for i in range(5):
+        r = requests.post(
+            f"{BASE_URL}/api/mediation/foundation-statement/share",
+            json={"recipient_email": "delivered@resend.dev"},
+            headers=_headers(token), timeout=30,
+        )
+        assert r.status_code == 200, f"send #{i + 1}: {r.status_code} {r.text}"
+        assert r.json()["remaining_this_hour"] == 5 - i - 1
+    r6 = requests.post(
+        f"{BASE_URL}/api/mediation/foundation-statement/share",
+        json={"recipient_email": "delivered@resend.dev"},
+        headers=_headers(token), timeout=30,
+    )
+    assert r6.status_code == 429, r6.text
+    assert "hour" in r6.json()["detail"].lower()
+
+
+def test_pdf_builder_handles_unicode_prompts(tmp_path: Path) -> None:
+    """En-dashes, em-dashes, smart quotes, and emoji must not crash
+    the latin1-only fpdf2 output — `_safe()` transliterates them."""
+    unicode_child = "My child would say — softly — that handoffs feel \u2018rushed\u2019."
+    unicode_own = "I over-explain \u2013 that's my part in it. \U0001F60A"  # emoji
+    unicode_best = "Calmer weeknights. \u201cLess texting, more listening.\u201d"
+    pdf_bytes = build_foundation_statement_pdf(
+        author_name="R\u00e9mi Parent",  # accented sender name
+        reflection={
+            "child_lens": unicode_child,
+            "own_part": unicode_own,
+            "best_outcome": unicode_best,
+        },
+    )
+    assert pdf_bytes[:4] == b"%PDF"
+    p = tmp_path / "u.pdf"; p.write_bytes(pdf_bytes)
+    r = subprocess.run(
+        ["pdftotext", "-layout", str(p), "-"],
+        capture_output=True, text=True, timeout=30,
+    )
+    assert r.returncode == 0
+    text = r.stdout
+    # The transliterated content is present — dashes/quotes/emoji
+    # collapse to ASCII fallbacks, but the CONTENT still shows up.
+    assert "handoffs feel" in text
+    assert "over-explain" in text
+    assert "Calmer weeknights" in text
+    assert "Less texting" in text
+    # Latin-1 accented chars survive as-is (fpdf2's latin-1 encoding
+    # supports them); only non-latin1 chars (emoji, CJK) get stripped.
+    assert "Rémi Parent" in text
+
+
+def test_api_share_uses_email_local_part_when_sender_has_no_name():
+    """A sender registered with an empty display name must still get
+    a sensible author string on the PDF (email local-part fallback),
+    and the download must succeed."""
+    suffix = uuid.uuid4().hex[:8]
+    email = f"TEST_fnd_noname_{suffix}@test.com"
+    # Fresh register with an EMPTY name.
+    r = requests.post(
+        f"{BASE_URL}/api/auth/register",
+        json={"email": email, "password": "TestPass123!", "name": ""},
+        timeout=30,
+    )
+    assert r.status_code == 200, r.text
+    token = r.json()["access_token"]
+    _save_reflection(token, {"child_lens": "content for no-name sender"})
+    r = requests.get(
+        f"{BASE_URL}/api/mediation/foundation-statement.pdf",
+        headers=_headers(token), timeout=30,
+    )
+    assert r.status_code == 200
+    # Extract and verify the "Written by <local-part>" line is present.
+    tmp_pdf = f"/tmp/foundation-noname-{suffix}.pdf"
+    with open(tmp_pdf, "wb") as f:
+        f.write(r.content)
+    proc = subprocess.run(
+        ["pdftotext", "-layout", tmp_pdf, "-"],
+        capture_output=True, text=True, timeout=30,
+    )
+    assert proc.returncode == 0
+    # `auth.register` lowercases the email, so the local-part
+    # fallback used by `_author_display_name` is lowercase too.
+    expected_local = email.lower().split("@", 1)[0]
+    assert expected_local in proc.stdout, (
+        f"Expected fallback author '{expected_local}' on PDF, got:\n{proc.stdout[:600]}"
+    )
+
