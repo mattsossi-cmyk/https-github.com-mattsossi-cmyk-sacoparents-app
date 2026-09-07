@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Sparkles,
@@ -86,20 +86,117 @@ export default function Reflection() {
   const [savedAt, setSavedAt] = useState(null);
   const [tab, setTab] = useState("write"); // "write" | "history"
   const [shareOpen, setShareOpen] = useState(false);
+  // Autosave plumbing — a debounced background save fires 1.5s after
+  // the parent stops typing, so nobody ever loses a keystroke to the
+  // browser dying / phone sleeping / accidental back-tap. `pendingRef`
+  // tracks the latest entries shape so the flusher always sends the
+  // *newest* content, not a stale snapshot captured at debounce time.
+  const debounceTimerRef = useRef(null);
+  const pendingRef = useRef(null);
+  const lastSavedJsonRef = useRef("");
+  const inFlightRef = useRef(false);
+
+  // Actual writer. Compares against `lastSavedJsonRef` so we don't
+  // fire a save when nothing changed (e.g., a blur event after a
+  // load with no edits). Best-effort — silent toast on failure so
+  // background saves don't pester the parent.
+  const flushSave = useCallback(async () => {
+    if (inFlightRef.current) return;
+    const snapshot = pendingRef.current;
+    if (!snapshot) return;
+    const json = JSON.stringify(snapshot);
+    if (json === lastSavedJsonRef.current) return;
+    inFlightRef.current = true;
+    try {
+      await api.put("/mediation/reflection", snapshot);
+      lastSavedJsonRef.current = json;
+      setSavedAt(new Date());
+    } catch (err) {
+      // Autosave is best-effort — parent can still hit the visible
+      // Save button. Log for us but don't toast (would be noisy on
+      // flaky Wi-Fi).
+      logError("Autosave failed:", err);
+    } finally {
+      inFlightRef.current = false;
+    }
+  }, []);
+
+  // Clear the debounce timer on unmount so we don't schedule a save
+  // against a component that's already gone.
+  useEffect(() => () => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+  }, []);
+
+  // Save-on-hide: if the parent switches tab or closes the app on
+  // mobile, flush any pending edits synchronously. Uses `sendBeacon`
+  // when available so the request survives the page unload.
+  useEffect(() => {
+    const flushOnHide = () => {
+      const snapshot = pendingRef.current;
+      if (!snapshot) return;
+      const json = JSON.stringify(snapshot);
+      if (json === lastSavedJsonRef.current) return;
+      try {
+        const url = `${process.env.REACT_APP_BACKEND_URL}/api/mediation/reflection`;
+        if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+          const blob = new Blob([json], { type: "application/json" });
+          navigator.sendBeacon(url, blob);
+          lastSavedJsonRef.current = json;
+        } else {
+          flushSave();
+        }
+      } catch {
+        /* soft-fail — the parent still has the explicit Save button */
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flushOnHide();
+    };
+    window.addEventListener("pagehide", flushOnHide);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", flushOnHide);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [flushSave]);
 
   useEffect(() => {
     api
       .get("/mediation/prep")
       .then((r) => {
-        setEntries((r.data?.reflection) || {});
+        const reflection = r.data?.reflection || {};
+        setEntries(reflection);
+        // Seed the "last saved" fingerprint so autosave doesn't
+        // resave the initial load or blur.
+        lastSavedJsonRef.current = JSON.stringify(reflection);
+        pendingRef.current = reflection;
       })
       .catch((err) => logError("Failed to load reflection:", err))
       .finally(() => setLoading(false));
     // Mount-only fetch. `api`, setters, logError are stable.
   }, []);
 
-  const updateEntry = (id, val) =>
-    setEntries((prev) => ({ ...prev, [id]: val }));
+  const updateEntry = (id, val) => {
+    setEntries((prev) => {
+      const next = { ...prev, [id]: val };
+      // Track newest snapshot in a ref so `flushSave` always sends
+      // the latest content (avoids stale-closure bugs when the
+      // debounce fires later).
+      pendingRef.current = next;
+      return next;
+    });
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      flushSave();
+    }, 1500);
+  };
+
+  // Immediate flush when a textarea loses focus — safety net so
+  // "type → tab away" always persists without waiting for the debounce.
+  const flushNow = useCallback(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    flushSave();
+  }, [flushSave]);
 
   const safetyLevel = useMemo(() => {
     // Only concat string values — the persisted reflection dict may also
@@ -231,6 +328,7 @@ export default function Reflection() {
                       prompt={p}
                       value={entries[p.id] || ""}
                       onChange={(v) => updateEntry(p.id, v)}
+                      onBlur={flushNow}
                     />
                   ))}
                 </div>
@@ -244,13 +342,17 @@ export default function Reflection() {
                     <>
                       <Check size={14} className="text-[#3D1A78] shrink-0" />
                       <span className="truncate">
-                        Saved {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        Autosaved {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </>
                   ) : hasContent ? (
-                    <span className="italic text-[#857E9C]">Unsaved changes</span>
+                    <span className="italic text-[#857E9C]">
+                      Autosaving as you type…
+                    </span>
                   ) : (
-                    <span className="text-[#857E9C]">Your words stay with you.</span>
+                    <span className="text-[#857E9C]">
+                      Your words stay with you — saved automatically.
+                    </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -294,7 +396,7 @@ export default function Reflection() {
   );
 }
 
-function PromptCard({ prompt, value, onChange }) {
+function PromptCard({ prompt, value, onChange, onBlur }) {
   const { id, label, placeholder, icon: Icon } = prompt;
   return (
     <div className="card-soft p-5 sm:p-6" data-testid={`reflection-prompt-${id}`}>
@@ -312,6 +414,7 @@ function PromptCard({ prompt, value, onChange }) {
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         data-testid={`reflection-textarea-${id}`}
       />
     </div>

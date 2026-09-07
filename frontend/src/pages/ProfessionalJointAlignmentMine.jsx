@@ -29,6 +29,7 @@ import {
   FileDown,
   FileSpreadsheet,
   MessageSquare,
+  UserRound,
   Lock,
   Check,
   Mail,
@@ -38,6 +39,7 @@ import AppShell from "../components/AppShell";
 import CaseAnalyticsCard from "../components/professional/CaseAnalyticsCard";
 import WeeklyDigestToggle from "../components/professional/WeeklyDigestToggle";
 import ReminderPreviewModal from "../components/professional/ReminderPreviewModal";
+import ProfessionalDirectoryModal from "../components/professional/ProfessionalDirectoryModal";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -84,6 +86,12 @@ export default function ProfessionalJointAlignmentMine() {
   // Reminder-preview modal — holds the case_id of the row the mediator
   // wants to preview the 5-day gentle-nudge email for.
   const [previewCaseId, setPreviewCaseId] = useState(null);
+  // Professional directory (sacoparentsalign.com) modal. When
+  // opened from the top-of-page action it invites without binding
+  // to a case; when opened from a case row, it pre-fills the
+  // case_id and shows a pill in the modal header.
+  const [directoryOpen, setDirectoryOpen] = useState(false);
+  const [directoryCaseId, setDirectoryCaseId] = useState(null);
   const downloadModalRef = useRef(null);
   const downloadTriggerRef = useRef(null);
 
@@ -323,6 +331,18 @@ export default function ProfessionalJointAlignmentMine() {
             >
               <FileSpreadsheet size={12} /> Bulk import
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setDirectoryCaseId(null);
+                setDirectoryOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-3 py-1.5 text-xs font-semibold transition-colors"
+              data-testid="pj-mine-invite-pro"
+              title="Invite a professional from the sacoparentsalign.com directory"
+            >
+              <UserRound size={12} /> Invite a pro
+            </button>
             <Link
               to="/professional/joint-alignment/new"
               className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1.5 text-xs font-semibold transition-colors"
@@ -790,6 +810,11 @@ export default function ProfessionalJointAlignmentMine() {
         open={!!previewCaseId}
         caseId={previewCaseId}
         onClose={() => setPreviewCaseId(null)}
+      />
+      <ProfessionalDirectoryModal
+        open={directoryOpen}
+        caseId={directoryCaseId}
+        onClose={() => setDirectoryOpen(false)}
       />
     </AppShell>
   );

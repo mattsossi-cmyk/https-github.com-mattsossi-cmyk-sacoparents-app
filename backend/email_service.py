@@ -2923,3 +2923,87 @@ def send_weekly_compliance_reminder(
         text=plain,
         failure_message="Couldn't send the weekly compliance reminder right now.",
     )
+
+
+
+def send_professional_directory_invitation(
+    *,
+    to_email: str,
+    professional_name: str,
+    inviter_name: str,
+    inviter_email: str,
+    case_id: Optional[str],
+    personal_note: Optional[str],
+    join_url: str,
+) -> None:
+    """Warm invitation to a professional in the sacoparentsalign.com
+    directory, dispatched by a mediator who wants to co-manage a case
+    with them. The professional lands on the sibling site to accept
+    and doesn't need an SA CoParents login."""
+    display_inviter = (inviter_name or "").strip() or "A colleague"
+    greeting = (
+        f"Hi {_html.escape(professional_name.split()[0])},"
+        if professional_name
+        else "Hi,"
+    )
+    case_line = (
+        f" for Joint Alignment case <strong>{_html.escape(case_id)}</strong>"
+        if case_id else ""
+    )
+    case_line_plain = f" for Joint Alignment case {case_id}" if case_id else ""
+
+    note_html = ""
+    note_plain = ""
+    if personal_note and personal_note.strip():
+        safe = _html.escape(personal_note.strip())
+        note_html = (
+            f'<blockquote style="margin:0 0 18px 0;padding:12px 16px;'
+            f'border-left:3px solid #3D1A78;background:#F5F1FB;'
+            f'border-radius:0 12px 12px 0;font-size:14px;line-height:1.55;'
+            f'color:#1A1330;font-style:italic;">'
+            f'<div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;'
+            f'font-weight:700;font-style:normal;color:#3D1A78;margin-bottom:4px;">'
+            f'A note from {_html.escape(display_inviter)}</div>'
+            f'&ldquo;{safe}&rdquo;'
+            f'</blockquote>'
+        )
+        note_plain = f'\nNote from {display_inviter}:\n  "{personal_note.strip()}"\n'
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"{greeting}</p>"
+        f"{note_html}"
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"<strong>{_html.escape(display_inviter)}</strong> has invited you to "
+        f"co-manage a co-parenting matter{case_line} through SA CoParents Align. "
+        f"You can accept from the sacoparentsalign.com portal — no new login required.</p>"
+        '<p style="font-size:14px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">'
+        "Accepting gives you view + coordination access to the case. You can "
+        "decline this invitation at any time from the same portal.</p>"
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"{display_inviter} has invited you to co-manage a co-parenting matter"
+        f"{case_line_plain} through SA CoParents Align.\n\n"
+        f"{note_plain}"
+        f"Accept your invitation:\n{join_url}\n\n"
+        "No new login required — you'll use your sacoparentsalign.com account.\n\n"
+        "— SA CoParents Align · sacoparentsalign.com\n"
+    )
+    html = _branded_html(
+        headline=f"{display_inviter} has invited you to a case",
+        body_html=body_html,
+        cta_label="View the invitation on sacoparentsalign.com",
+        cta_url=join_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=(
+            f"{display_inviter} invited you to co-manage a case"
+            + (f" ({case_id})" if case_id else "")
+        ),
+        html=html,
+        text=plain,
+        reply_to=inviter_email or None,
+        failure_message="Could not send the invitation right now.",
+    )

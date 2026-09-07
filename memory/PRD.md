@@ -27,6 +27,92 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — Reflection Autosave + sacoparentsalign.com Directory Invite
+
+**🐞 Bug fix — Foundation Statement creation autosave**
+- Root cause of the reported "parents can't create their foundation
+  statements" bug: **no autosave**. Parents typed on mobile, phone
+  slept / tab closed / back-tapped before hitting the sticky "Save"
+  button, and lost everything. Save button is also often occluded
+  by the mobile keyboard.
+- Fix: **debounced 1500ms autosave** + **immediate save-on-blur** +
+  **`pagehide` / visibilitychange sendBeacon flush** so no
+  keystroke is ever lost — even if the parent closes the browser
+  mid-sentence.
+- New refs in `Reflection.jsx`:
+  - `pendingRef` — always holds the latest entries snapshot so
+    the debounced flusher sends the newest content.
+  - `lastSavedJsonRef` — dedupes; a save fires only when content
+    actually changed.
+  - `inFlightRef` — prevents overlapping saves.
+- Sticky-bar copy updated from *"Unsaved changes"* → *"Autosaving as
+  you type…"* / *"Autosaved 09:04 PM"* so parents feel the safety
+  net working. The explicit **Save reflection** button stays for
+  parents who like the certainty.
+- Coverage: `tests/test_iter162_reflection_autosave.py` (3 tests) —
+  verifies partial single-prompt saves, progressive writes, and
+  down-edits (clearing a prompt).
+
+**✨ Feature — Invite a professional from sacoparentsalign.com**
+- **New module `/app/backend/professional_directory.py`** with a
+  swappable `_fetch_directory()` seam. Today serves a **hardcoded
+  roster of 5 sample pros** (Adele/Nomsa/Kagiso/Priya/Sanet)
+  spanning mediation, psychology, family law, therapy, and
+  financial mediation. Tomorrow: swap the one function to point at
+  the sibling API — no call-site changes.
+- **Endpoint `GET /api/professional/directory`** — JWT-required,
+  supports `?q=` (substring across name/title/city/specialties)
+  and `?specialty=` (exact tag) filters.
+- **Endpoint `POST /api/professional/directory/invite`** —
+  mediator picks a `professional_id`, optionally binds a
+  `case_id` they own, adds a `personal_note`, and we email a warm
+  invitation to `{professional}@sacoparentsalign.com` with a
+  `sacoparentsalign.com/join?case=&token=...` accept URL.
+- **Guardrails**:
+  - 20 invitations / hour / mediator rate limit.
+  - Same (mediator, professional) pair within 24h returns 409.
+  - Foreign `case_id` returns 404 (no leakage).
+  - Email delivery failures return 502 with the provider's message.
+- **Audit collection**: `professional_directory_invites` — one row
+  per dispatch with inviter, case, professional, note, and the
+  opaque join-URL token. Powers the future "who did I invite?"
+  audit view + the duplicate guard.
+- **New frontend `ProfessionalDirectoryModal.jsx`** — two-pane
+  modal (searchable list → send composer). Live directory search
+  with 250ms debounce, specialty pills, case-binding pill when
+  opened from a case row, note textarea with 500-char counter, and
+  a "They'll accept from sacoparentsalign.com — no login required"
+  reassurance line. Mounted from a new **"Invite a pro"** pill in
+  the `/mine` header row.
+- **Integration doc**: `/app/memory/INTEGRATION_TODO_sacoparentsalign.md`
+  spec-in-full for the sibling directory endpoint — exact JSON
+  contract, auth header, error codes, env var names, and the
+  webhook-back plan for accept notifications. The one file the
+  sibling team needs to read.
+- **Coverage**: `tests/test_iter163_professional_directory.py`
+  (13 tests: 4 unit + 9 live) covering mock roster shape, filter
+  logic, auth guards, happy-path invite, 404 unknown pro, 409
+  duplicate, 404 foreign case, case-bound join URL.
+- **Live-verified**: mediator on `/mine` → clicks "Invite a pro"
+  → modal opens with 5 professionals → search "Cape" narrows to
+  Adele Van Wyk → clicks Invite → send pane shows Dr. Nomsa's
+  contact email → note filled → Send → toast "Invitation sent to
+  nomsa@sacoparentsalign.com" → modal closes cleanly.
+- **Files touched**:
+  - `backend/professional_directory.py` (new)
+  - `backend/email_service.py` (adds `send_professional_directory_invitation`)
+  - `backend/joint_alignment_routes.py` (adds `/directory`
+    + `/directory/invite` endpoints, imports `uuid`)
+  - `frontend/src/pages/Reflection.jsx` (autosave + save-on-blur
+    + pagehide flush)
+  - `frontend/src/components/professional/ProfessionalDirectoryModal.jsx` (new)
+  - `frontend/src/pages/ProfessionalJointAlignmentMine.jsx`
+    (mounts modal + adds "Invite a pro" pill)
+  - `memory/INTEGRATION_TODO_sacoparentsalign.md` (new doc)
+  - `backend/tests/test_iter162_reflection_autosave.py` (new, 3 tests)
+  - `backend/tests/test_iter163_professional_directory.py` (new, 13 tests)
+
+
 ### 2026-09-07 — Foundation Statement Recipient-Open Analytics
 - **P1 — Closes the "did they read it?" feedback loop.** When a
   parent opens the Share modal's History tab, each row now shows a

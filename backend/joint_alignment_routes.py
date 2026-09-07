@@ -65,6 +65,7 @@ import json
 import logging
 import os
 import secrets
+import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -680,6 +681,70 @@ async def _bulk_duplicate_case_exists(
     return active_row.get("case_id") if active_row else None
 
 
+_BULK_IMPORTS_COLL = "bulk_csv_imports"
+_BULK_HISTORY_PAGE_LIMIT = 50           # cap for list endpoint
+_BULK_SAMPLE_ERROR_LIMIT = 5            # errors stored inline on the summary row
+
+
+async def _record_bulk_import(
+    db: AsyncIOMotorDatabase,
+    *,
+    user_id: str,
+    filename: Optional[str],
+    default_lane: Optional[str],
+    default_note: Optional[str],
+    total_rows: int,
+    created: List[Dict[str, Any]],
+    skipped: List[Dict[str, Any]],
+    errored: List[Dict[str, Any]],
+    variant: str,      # "single" or "stream" — powers UX distinction
+    started_at: datetime,
+) -> str:
+    """Persist a one-line summary of a bulk-CSV import so the
+    mediator can visit `/professional/joint-alignment/bulk/history`
+    later and re-inspect a batch. Errors are truncated to the first
+    5 for the summary row; full detail lives in the `errored`
+    breakdown stored alongside.
+
+    Never raises — a logging failure MUST NOT abort a successful
+    import (the cases already exist). Returns the new import_id, or
+    an empty string on failure.
+    """
+    try:
+        import_id = uuid.uuid4().hex[:12]
+        await db[_BULK_IMPORTS_COLL].insert_one({
+            "import_id": import_id,
+            "user_id": user_id,
+            "variant": variant,
+            "filename": (filename or "").strip() or None,
+            "default_assessment_type": default_lane,
+            "default_reminder_note": default_note,
+            "started_at": started_at,
+            "finished_at": _now(),
+            "total_rows": total_rows,
+            "created_count": len(created),
+            "skipped_count": len(skipped),
+            "errored_count": len(errored),
+            # Case IDs kept in insert order so a mediator can walk the
+            # imports table and jump to any of the 100 minted cases.
+            "case_ids": [c.get("case_id") for c in created if c.get("case_id")],
+            # Skipped duplicate case IDs kept too so the mediator can
+            # see which existing cases the re-upload pointed at.
+            "skipped_case_ids": [
+                s.get("case_id") for s in skipped if s.get("case_id")
+            ],
+            # Store the full errored breakdown — 100 rows worst-case,
+            # each a small `{row, reason}` doc, so total size stays
+            # well under the 16 MB Mongo cap.
+            "errored_rows": errored,
+            "sample_errors": errored[:_BULK_SAMPLE_ERROR_LIMIT],
+        })
+        return import_id
+    except Exception:  # noqa: BLE001 — logging never blocks the import
+        logger.exception("bulk-csv import log failed user=%s", user_id)
+        return ""
+
+
 @router.post("/professional/joint-alignment/cases/bulk-csv")
 async def professional_bulk_create_from_csv(
     file: UploadFile = File(..., description="CSV file with case rows."),
@@ -789,6 +854,7 @@ async def professional_bulk_create_from_csv(
 
     default_lane = (default_assessment_type or "").strip() or None
     default_note = (default_reminder_note or "").strip() or None
+    started_at = _now()
 
     for offset, row in enumerate(data_rows):
         # Row numbers are 1-indexed AND include the header row, so the
@@ -884,7 +950,21 @@ async def professional_bulk_create_from_csv(
         "joint-alignment bulk-csv import user=%s total=%s created=%s skipped=%s errored=%s",
         current.user_id, len(data_rows), len(created), len(skipped), len(errored),
     )
+    import_id = await _record_bulk_import(
+        db,
+        user_id=current.user_id,
+        filename=file.filename,
+        default_lane=default_lane,
+        default_note=default_note,
+        total_rows=len(data_rows),
+        created=created,
+        skipped=skipped,
+        errored=errored,
+        variant="single",
+        started_at=started_at,
+    )
     return {
+        "import_id": import_id or None,
         "total_rows": len(data_rows),
         "created": created,
         "skipped": skipped,
@@ -975,6 +1055,13 @@ async def professional_bulk_create_from_csv_stream(
         flushes to the wire immediately (FastAPI/StreamingResponse
         wires this to Starlette's send loop with no buffering)."""
         totals = {"created": 0, "skipped": 0, "errored": 0}
+        # Accumulate the raw row records too so we can persist a
+        # single "bulk import" summary row for the History page
+        # after the stream finishes.
+        created: List[Dict[str, Any]] = []
+        skipped: List[Dict[str, Any]] = []
+        errored: List[Dict[str, Any]] = []
+        started_at = _now()
         yield json.dumps({"event": "start", "total_rows": len(data_rows)}) + "\n"
 
         for offset, row in enumerate(data_rows):
@@ -988,6 +1075,7 @@ async def professional_bulk_create_from_csv_stream(
                         "status": "errored",
                         "reason": "missing parent1_email or parent2_email",
                     })
+                    errored.append({"row": row_no, "reason": payload["reason"]})
                     totals["errored"] += 1
                     yield json.dumps(payload) + "\n"
                     continue
@@ -1001,6 +1089,7 @@ async def professional_bulk_create_from_csv_stream(
                         "reason": "duplicate",
                         "case_id": dup,
                     })
+                    skipped.append({"row": row_no, "reason": "duplicate", "case_id": dup})
                     totals["skipped"] += 1
                     yield json.dumps(payload) + "\n"
                     continue
@@ -1011,6 +1100,7 @@ async def professional_bulk_create_from_csv_stream(
                         "status": "errored",
                         "reason": "missing assessment_type (and no default)",
                     })
+                    errored.append({"row": row_no, "reason": payload["reason"]})
                     totals["errored"] += 1
                     yield json.dumps(payload) + "\n"
                     continue
@@ -1031,6 +1121,7 @@ async def professional_bulk_create_from_csv_stream(
                         "status": "errored",
                         "reason": first.get("msg") or "invalid row",
                     })
+                    errored.append({"row": row_no, "reason": payload["reason"]})
                     totals["errored"] += 1
                     yield json.dumps(payload) + "\n"
                     continue
@@ -1041,6 +1132,7 @@ async def professional_bulk_create_from_csv_stream(
                     )
                 except HTTPException as he:
                     payload.update({"status": "errored", "reason": he.detail})
+                    errored.append({"row": row_no, "reason": he.detail})
                     totals["errored"] += 1
                     yield json.dumps(payload) + "\n"
                     continue
@@ -1055,6 +1147,7 @@ async def professional_bulk_create_from_csv_stream(
                     ],
                     "email_deliveries": res.email_deliveries or [],
                 })
+                created.append({"row": row_no, "case_id": res.case_id})
                 totals["created"] += 1
                 yield json.dumps(payload) + "\n"
 
@@ -1062,14 +1155,31 @@ async def professional_bulk_create_from_csv_stream(
                 logger.exception(
                     "bulk-csv stream row failure user=%s row=%s", user_id, row_no,
                 )
+                errored.append({"row": row_no, "reason": str(exc) or "unknown error"})
                 totals["errored"] += 1
                 yield json.dumps({
                     "event": "row", "row": row_no,
                     "status": "errored", "reason": str(exc) or "unknown error",
                 }) + "\n"
 
+        # Persist an import-summary row so the History page can list
+        # this batch later. Never blocks the client — logged best-effort.
+        import_id = await _record_bulk_import(
+            db,
+            user_id=user_id,
+            filename=file.filename,
+            default_lane=default_lane,
+            default_note=default_note,
+            total_rows=len(data_rows),
+            created=created,
+            skipped=skipped,
+            errored=errored,
+            variant="stream",
+            started_at=started_at,
+        )
         yield json.dumps({
             "event": "done",
+            "import_id": import_id or None,
             "summary": {"total_rows": len(data_rows), **totals},
         }) + "\n"
 
@@ -1113,6 +1223,78 @@ async def professional_bulk_csv_template(
             ),
         },
     )
+
+
+@router.get("/professional/joint-alignment/bulk/history")
+async def professional_bulk_history(
+    limit: int = 20,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Paginated list of the caller's past bulk-CSV imports (most
+    recent first, capped at 50). Powers the `/bulk/history` page so
+    a mediator can look back at last week's caseload upload and see
+    which cases got created."""
+    safe_limit = max(1, min(limit or 20, _BULK_HISTORY_PAGE_LIMIT))
+    cursor = (
+        db[_BULK_IMPORTS_COLL]
+        .find({"user_id": current.user_id})
+        .sort("started_at", -1)
+        .limit(safe_limit)
+    )
+    rows: List[Dict[str, Any]] = []
+    async for row in cursor:
+        rows.append({
+            "import_id": row.get("import_id"),
+            "variant": row.get("variant") or "single",
+            "filename": row.get("filename"),
+            "default_assessment_type": row.get("default_assessment_type"),
+            "default_reminder_note": row.get("default_reminder_note"),
+            "started_at": _iso(row.get("started_at")) if row.get("started_at") else None,
+            "finished_at": _iso(row.get("finished_at")) if row.get("finished_at") else None,
+            "total_rows": row.get("total_rows", 0),
+            "created_count": row.get("created_count", 0),
+            "skipped_count": row.get("skipped_count", 0),
+            "errored_count": row.get("errored_count", 0),
+            "sample_errors": row.get("sample_errors") or [],
+        })
+    return {"imports": rows}
+
+
+@router.get("/professional/joint-alignment/bulk/history/{import_id}")
+async def professional_bulk_history_detail(
+    import_id: str = Path(..., min_length=6, max_length=64),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Full detail of a single bulk import — all created case IDs,
+    all skipped duplicates, all errored rows. Owner-only (404 for
+    foreign imports so the existence of the import isn't leaked)."""
+    row = await db[_BULK_IMPORTS_COLL].find_one(
+        {"import_id": import_id, "user_id": current.user_id},
+        {"_id": 0},
+    )
+    if not row:
+        raise HTTPException(
+            status_code=404,
+            detail="Import not found, or not owned by this account.",
+        )
+    return {
+        "import_id": row.get("import_id"),
+        "variant": row.get("variant") or "single",
+        "filename": row.get("filename"),
+        "default_assessment_type": row.get("default_assessment_type"),
+        "default_reminder_note": row.get("default_reminder_note"),
+        "started_at": _iso(row.get("started_at")) if row.get("started_at") else None,
+        "finished_at": _iso(row.get("finished_at")) if row.get("finished_at") else None,
+        "total_rows": row.get("total_rows", 0),
+        "created_count": row.get("created_count", 0),
+        "skipped_count": row.get("skipped_count", 0),
+        "errored_count": row.get("errored_count", 0),
+        "case_ids": row.get("case_ids") or [],
+        "skipped_case_ids": row.get("skipped_case_ids") or [],
+        "errored_rows": row.get("errored_rows") or [],
+    }
 
 
 @router.get("/professional/joint-alignment/digest-pref")
@@ -2296,4 +2478,199 @@ async def integration_cancel_case(
     logger.info("joint-alignment case cancelled case_id=%s reason=%s", canonical, body.reason)
     fresh = await db[_CASES_COLL].find_one({"case_id": canonical})
     return _case_public_shape(fresh)
+
+
+
+# ============ Professional directory (sacoparentsalign.com) ============
+# Directory-backed invitations. A mediator on `/mine` picks a
+# professional from the sibling-site directory and dispatches an
+# invitation email. The recipient lands on `sacoparentsalign.com/join`
+# to accept — no SA CoParents login required, because the sibling
+# site owns the professional's account. See
+# `/app/memory/INTEGRATION_TODO_sacoparentsalign.md` for the future
+# API contract; today the directory is served from a hardcoded roster.
+
+_DIRECTORY_INVITE_HOURLY_LIMIT = int(
+    os.environ.get("PROFESSIONAL_DIRECTORY_INVITE_HOURLY_LIMIT", "20")
+)
+
+
+@router.get("/professional/directory")
+async def get_professional_directory(
+    q: Optional[str] = None,
+    specialty: Optional[str] = None,
+    current: UserPublic = Depends(get_current_user),
+):
+    """List professionals from the sacoparentsalign.com directory.
+    JWT-required — the directory is a paid partner list, not public
+    marketing.
+
+    Query params:
+      * `q` — free-text substring (matches name, title, city,
+        specialties).
+      * `specialty` — exact specialty tag.
+    """
+    from professional_directory import list_directory
+    _ = current  # auth guard only
+    return {
+        "professionals": await list_directory(query=q, specialty=specialty),
+    }
+
+
+class DirectoryInviteBody(BaseModel):
+    """Body for `POST /professional/directory/invite`."""
+    professional_id: str = Field(..., min_length=1, max_length=40)
+    case_id: Optional[str] = Field(default=None, max_length=20)
+    personal_note: Optional[str] = Field(default=None, max_length=500)
+
+
+@router.post("/professional/directory/invite")
+async def invite_professional_from_directory(
+    body: DirectoryInviteBody,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """A mediator picks a professional from the sacoparentsalign.com
+    directory and asks us to email them an invitation to co-manage a
+    case. The email points at
+    `sacoparentsalign.com/join?case={case_id}&token=...` so the
+    sibling site handles onboarding — nothing to do on our side
+    beyond dispatching the email and logging the audit row.
+
+    Guardrails:
+      * Rate-limited to 20 invitations per hour per mediator.
+      * A duplicate invitation to the same (mediator, professional)
+        pair within 24 hours 409s.
+      * When `case_id` is supplied it must belong to the calling
+        mediator — foreign cases 404.
+    """
+    from professional_directory import (
+        align_join_url_for,
+        count_recent_invitations_to,
+        get_professional,
+        record_invitation,
+    )
+    from email_service import (
+        EmailNotConfigured,
+        EmailSendError,
+        send_professional_directory_invitation,
+    )
+
+    professional = await get_professional(body.professional_id)
+    if not professional:
+        raise HTTPException(
+            status_code=404,
+            detail="Professional not found in the directory.",
+        )
+    to_email = (professional.get("contact_email") or "").strip().lower()
+    if not to_email:
+        raise HTTPException(
+            status_code=409,
+            detail="This professional has no contact email on file yet.",
+        )
+
+    # Optional: bind to a case the mediator owns.
+    case_id: Optional[str] = None
+    if body.case_id and body.case_id.strip():
+        case_id = _normalise_case_id(body.case_id) or body.case_id.strip()
+        owned = await db[_CASES_COLL].find_one(
+            {
+                "case_id": case_id,
+                "$or": [
+                    {"professional_created_by": current.user_id},
+                    {"professional.id": current.user_id, "origin": "in_app_professional"},
+                ],
+            },
+            {"_id": 0, "case_id": 1},
+        )
+        if not owned:
+            raise HTTPException(
+                status_code=404,
+                detail="Case not found, or not owned by this account.",
+            )
+
+    # Hourly rate limit — belt to the per-pair 24h duplicate check.
+    now = _now()
+    hour_ago = now - timedelta(hours=1)
+    recent_hour = await db.professional_directory_invites.count_documents({
+        "inviter_user_id": current.user_id,
+        "created_at": {"$gte": hour_ago},
+    })
+    if recent_hour >= _DIRECTORY_INVITE_HOURLY_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"You've hit the {_DIRECTORY_INVITE_HOURLY_LIMIT}/hour "
+                "invite limit. Try again shortly."
+            ),
+        )
+
+    # Duplicate guard — same mediator + same pro within 24h is a
+    # fat-finger, not a real second invitation.
+    dup = await count_recent_invitations_to(
+        db,
+        inviter_user_id=current.user_id,
+        professional_id=body.professional_id,
+        within_hours=24,
+    )
+    if dup > 0:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "You've already invited this professional in the last 24 hours. "
+                "Give them a moment to respond before re-sending."
+            ),
+        )
+
+    # Mint a short opaque join token — the sibling site validates it
+    # when the professional lands on /join. We don't need to sign it
+    # heavily today because the sibling side owns the accept flow;
+    # `secrets.token_urlsafe` is plenty of entropy.
+    invite_token = secrets.token_urlsafe(24)
+    invite_id = uuid.uuid4().hex[:12]
+    join_url = align_join_url_for(case_id=case_id, token=invite_token)
+
+    try:
+        send_professional_directory_invitation(
+            to_email=to_email,
+            professional_name=professional.get("name") or "",
+            inviter_name=current.name or "",
+            inviter_email=current.email or "",
+            case_id=case_id,
+            personal_note=body.personal_note,
+            join_url=join_url,
+        )
+    except EmailNotConfigured as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Email isn't configured on this environment yet.",
+        ) from exc
+    except EmailSendError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc) or "Could not send the invitation right now.",
+        ) from exc
+
+    await record_invitation(
+        db,
+        inviter_user_id=current.user_id,
+        inviter_name=current.name,
+        inviter_email=current.email,
+        case_id=case_id,
+        professional=professional,
+        personal_note=body.personal_note,
+        join_url=join_url,
+        invite_id=invite_id,
+    )
+
+    return {
+        "ok": True,
+        "invite_id": invite_id,
+        "delivered_to": to_email,
+        "join_url": join_url,
+        "case_id": case_id,
+        "remaining_this_hour": max(
+            0, _DIRECTORY_INVITE_HOURLY_LIMIT - recent_hour - 1,
+        ),
+    }
 
