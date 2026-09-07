@@ -84,7 +84,7 @@ export default function MyPlan() {
       api.get("/gmail/status").catch(() => ({ data: { connected: false } })),
     ]).then(([p, s, g]) => {
       if (cancelled) return;
-      setPrep(p.data || { completed: {}, data: {} });
+      setPrep(p.data || { completed: {} });
       // Latest summary = first entry (backend returns newest first)
       const list = Array.isArray(s?.data) ? s.data : s?.data?.summaries || [];
       setSummary(list.length > 0 ? list[0] : null);
@@ -97,12 +97,46 @@ export default function MyPlan() {
   }, []);
 
   const completed = prep.completed || {};
-  const data = prep.data || {};
+  // The /api/mediation/prep endpoint returns the parent's saved state
+  // at the TOP level (`reflection`, `child_goals`, `comm_style`, etc.);
+  // there is no nested `.data` envelope. Reading `prep.data` used to
+  // yield `{}` here, silently emptying every card on this page.
+  const data = prep;
   const doneCount = Object.values(completed).filter(Boolean).length;
   const totalModules = Object.keys(MODULE_LABELS).length;
 
   const goals = data.child_goals?.selected_goals || data.child_goals?.goals || [];
-  const foundation = data.reflection?.text || data.reflection?.foundation || "";
+  // Foundation Statement is composed from the four Reflection prompts —
+  // Reflection.jsx saves them as `child_lens` / `own_part` /
+  // `best_outcome` / `coparent_feedback` on the reflection dict, NOT
+  // as a single `text`/`foundation` field. Legacy prompt keys are
+  // included so pre-2026 reflections continue to render. If a very
+  // old row happened to save a monolithic `text`/`foundation` string
+  // we still surface it as a final fallback.
+  const foundationSections = (() => {
+    const r = data.reflection || {};
+    const canonical = [
+      { key: "child_lens", label: "Through your child's eyes" },
+      { key: "own_part", label: "Your own part" },
+      { key: "best_outcome", label: "Your best-case outcome" },
+      { key: "coparent_feedback", label: "Through your co-parent's eyes" },
+    ];
+    const parts = canonical
+      .map((s) => ({
+        label: s.label,
+        text: typeof r[s.key] === "string" ? r[s.key].trim() : "",
+      }))
+      .filter((s) => s.text.length > 0);
+    if (parts.length > 0) return parts;
+    // Legacy fallbacks — older prompt keys or a monolithic string.
+    const legacy = ["worry", "triggers", "calm_strategy", "appreciation", "release", "text", "foundation"]
+      .map((k) => (typeof r[k] === "string" ? r[k].trim() : ""))
+      .filter(Boolean);
+    return legacy.length > 0
+      ? [{ label: "", text: legacy.join("\n\n") }]
+      : [];
+  })();
+  const foundation = foundationSections.map((s) => s.text).join("\n\n");
   const summaryReady = Boolean(summary?.summary_id || summary?.readiness_score !== undefined);
 
   return (
@@ -165,9 +199,24 @@ export default function MyPlan() {
               testid="myplan-foundation"
             >
               {foundation ? (
-                <p className="text-sm text-[#1A1330] leading-relaxed line-clamp-6 whitespace-pre-wrap">
-                  {foundation}
-                </p>
+                <div className="space-y-3 text-sm text-[#1A1330] leading-relaxed">
+                  {foundationSections.length > 1 || foundationSections[0]?.label ? (
+                    foundationSections.map((s, i) => (
+                      <div key={i} data-testid={`myplan-foundation-section-${i}`}>
+                        {s.label && (
+                          <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1">
+                            {s.label}
+                          </div>
+                        )}
+                        <p className="whitespace-pre-wrap line-clamp-3">{s.text}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="whitespace-pre-wrap line-clamp-6">
+                      {foundation}
+                    </p>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-2">
                   <Empty

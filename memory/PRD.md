@@ -27,6 +27,28 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — Foundation Statement rendering bug fix
+- **Root cause 1** (`MyPlan.jsx:100`) — `data = prep.data` but the
+  `/api/mediation/prep` endpoint returns `reflection`/`child_goals`/
+  etc. at the TOP level, no `.data` envelope. This silently emptied
+  every card on `/my-plan` — Foundation Statement, Child Goals,
+  Assessments Completed all showed empty-state placeholders even
+  when the parent had completed them.
+- **Root cause 2** (`MyPlan.jsx:105`, `ai_service.py:924`) — both
+  read a non-existent `reflection.text` / `reflection.foundation`
+  field. Reflection.jsx actually saves prompts under keyed fields:
+  `child_lens`, `own_part`, `best_outcome`, `coparent_feedback`.
+- **Fix** — MyPlan now reads `prep` directly and composes the
+  Foundation Statement as four labelled sections. `_coach_context_block`
+  now composes the same excerpt from the four canonical prompt keys
+  (with legacy-key + monolith fallbacks). Regression suite in
+  `tests/test_iter154_foundation_composition.py` (6 tests, all green).
+- **Verified end-to-end** — parent1@test.com has a saved reflection;
+  `/my-plan` now renders "Through your child's eyes / Your own part /
+  Your best-case outcome / Through your co-parent's eyes" as four
+  distinct labelled sections and Assessments Completed shows 6/6.
+
+
 ### 2026-09-07 — Code Review action items (Professional Joint Alignment scope)
 - **P1 — PDF watermark clipping fix** (`court_report_disclaimer.py`) —
   Right-aligns the "Downloaded by …" firm-name + timestamp stamp by

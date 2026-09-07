@@ -921,9 +921,35 @@ def _coach_context_block(prep_context: Optional[Dict[str, Any]]) -> str:
     if goal_labels:
         parts.append("Child-centered goals this parent has committed to: " + "; ".join(goal_labels))
 
-    foundation = (prep_context.get("reflection") or {}).get("text")
-    if isinstance(foundation, str) and foundation.strip():
-        parts.append("Their Foundation Statement (excerpt): \"" + foundation.strip()[:280] + "\"")
+    # Foundation Statement — Reflection.jsx saves this as four labelled
+    # prompt strings (child_lens / own_part / best_outcome /
+    # coparent_feedback), not as a single `.text` field. Compose from
+    # whichever canonical prompt keys the parent has actually filled in;
+    # fall back to legacy keys so pre-2026 reflections still surface.
+    reflection = prep_context.get("reflection") or {}
+    if isinstance(reflection, dict):
+        prompt_keys = [
+            "child_lens", "own_part", "best_outcome", "coparent_feedback",
+            "worry", "triggers", "calm_strategy", "appreciation", "release",
+        ]
+        composed_parts: List[str] = []
+        for k in prompt_keys:
+            v = reflection.get(k)
+            if isinstance(v, str) and v.strip():
+                composed_parts.append(v.strip())
+        # Historical monolith field — retained as a last-resort fallback.
+        if not composed_parts:
+            for legacy_key in ("text", "foundation"):
+                v = reflection.get(legacy_key)
+                if isinstance(v, str) and v.strip():
+                    composed_parts.append(v.strip())
+                    break
+        foundation = "\n\n".join(composed_parts)
+        if foundation:
+            parts.append(
+                "Their Foundation Statement (excerpt): \""
+                + foundation[:280] + "\""
+            )
 
     priority_topics = _extract_priority_topics(prep_context.get("priority"))
     if priority_topics:
