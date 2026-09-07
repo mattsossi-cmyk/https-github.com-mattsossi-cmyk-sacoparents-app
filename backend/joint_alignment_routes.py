@@ -70,7 +70,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, Path, Response, UploadFile, File
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Request, Response, UploadFile, File
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field, ValidationError
 
@@ -1519,6 +1519,18 @@ async def list_cases_i_created(
         # payload. Only ever included in the mediator-authenticated
         # /mine listing (this cursor).
         shape["case_notes"] = case.get("case_notes")
+        # Directory-invite acceptances — mediator-only. Each row logs
+        # a `sacoparentsalign.com` professional who accepted a bind
+        # invite for this case. Never leaked to parent-facing shapes.
+        shape["directory_invite_acceptances"] = [
+            {
+                "invite_id": r.get("invite_id"),
+                "professional_name": r.get("professional_name"),
+                "professional_email": r.get("professional_email"),
+                "accepted_at": _iso(r.get("accepted_at")),
+            }
+            for r in (case.get("directory_invite_acceptances") or [])
+        ]
         shape["parents"] = [
             {
                 **_parent_public_shape(p),
@@ -2083,6 +2095,118 @@ async def professional_update_reminder_note(
             detail="Case not found, or not owned by this account.",
         )
     return {"case_id": canonical, "reminder_note": normalized}
+
+
+# =========================== reminder-note templates =========================== #
+# Mediators repeat the same reminder-note copy across cases — "See you
+# Thursday · takes about 15 minutes" for the intake pattern, "One more
+# nudge, promise it's the last one" for follow-ups. Saved templates
+# eliminate the retype.
+
+_REMINDER_TEMPLATES_COLL = "reminder_note_templates"
+_REMINDER_TEMPLATES_MAX_PER_USER = 12
+
+
+class ReminderTemplateCreate(BaseModel):
+    """Body for `POST /api/professional/reminder-note-templates`."""
+    label: str = Field(..., min_length=1, max_length=60)
+    body: str = Field(..., min_length=1, max_length=240)
+
+
+@router.get("/professional/reminder-note-templates")
+async def list_reminder_note_templates(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """List the caller's saved reminder-note templates, alphabetised
+    by label. Capped at 12 rows per mediator."""
+    cursor = (
+        db[_REMINDER_TEMPLATES_COLL]
+        .find({"user_id": current.user_id}, {"_id": 0, "user_id": 0})
+        .sort("label", 1)
+    )
+    templates: List[Dict[str, Any]] = []
+    async for row in cursor:
+        templates.append({
+            "template_id": row.get("template_id"),
+            "label": row.get("label"),
+            "body": row.get("body"),
+            "created_at": _iso(row.get("created_at")),
+        })
+    return {"templates": templates}
+
+
+@router.post("/professional/reminder-note-templates")
+async def create_reminder_note_template(
+    body: ReminderTemplateCreate,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Save a reusable reminder-note template. Duplicate labels are
+    rejected (409) so the picker UI doesn't show two identical
+    entries. Hard cap of 12 templates per mediator."""
+    label = body.label.strip()
+    text = body.body.strip()
+    if not label or not text:
+        raise HTTPException(
+            status_code=400,
+            detail="Both `label` and `body` are required.",
+        )
+
+    count = await db[_REMINDER_TEMPLATES_COLL].count_documents(
+        {"user_id": current.user_id},
+    )
+    if count >= _REMINDER_TEMPLATES_MAX_PER_USER:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"You already have {_REMINDER_TEMPLATES_MAX_PER_USER} "
+                "reminder-note templates saved. Delete one to add another."
+            ),
+        )
+
+    dup = await db[_REMINDER_TEMPLATES_COLL].find_one(
+        {"user_id": current.user_id, "label": label},
+        {"_id": 1},
+    )
+    if dup:
+        raise HTTPException(
+            status_code=409,
+            detail=f"A template with label “{label}” already exists.",
+        )
+
+    template_id = uuid.uuid4().hex[:12]
+    now = _now()
+    await db[_REMINDER_TEMPLATES_COLL].insert_one({
+        "template_id": template_id,
+        "user_id": current.user_id,
+        "label": label,
+        "body": text,
+        "created_at": now,
+    })
+    return {
+        "template_id": template_id,
+        "label": label,
+        "body": text,
+        "created_at": _iso(now),
+    }
+
+
+@router.delete("/professional/reminder-note-templates/{template_id}")
+async def delete_reminder_note_template(
+    template_id: str = Path(..., min_length=1, max_length=64),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Delete a template owned by the caller. Foreign template_ids
+    return 404 (never leak whether an id ever existed)."""
+    result = await db[_REMINDER_TEMPLATES_COLL].delete_one({
+        "template_id": template_id,
+        "user_id": current.user_id,
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Template not found.")
+    return {"template_id": template_id, "deleted": True}
 
 
 @router.get("/professional/joint-alignment/cases/{case_id}/reminder-preview")
@@ -2661,6 +2785,7 @@ async def invite_professional_from_directory(
         personal_note=body.personal_note,
         join_url=join_url,
         invite_id=invite_id,
+        invite_token=invite_token,
     )
 
     return {
@@ -2674,3 +2799,170 @@ async def invite_professional_from_directory(
         ),
     }
 
+
+
+# ---------------------------------------------------------------------
+# sacoparentsalign.com → SA CoParents accept webhook.
+# When a professional accepts an invitation on the sibling site, that
+# site calls us back on this endpoint so we can:
+#   * flip the invite row to status=accepted (idempotent),
+#   * if the invite was case-bound, append a `case_events` audit row
+#     to the case doc so mediators see the acceptance on `/mine`.
+# ---------------------------------------------------------------------
+
+class AcceptWebhookBody(BaseModel):
+    """Payload from sacoparentsalign.com when a pro accepts an invite."""
+    token: str = Field(..., min_length=1, max_length=200)
+    accepted_at: Optional[str] = Field(default=None, max_length=64)  # ISO-8601
+    professional_id: Optional[str] = Field(default=None, max_length=80)
+    professional_name: Optional[str] = Field(default=None, max_length=200)
+    professional_email: Optional[str] = Field(default=None, max_length=200)
+
+
+@router.post("/professional/directory/invite/accept-webhook")
+async def professional_directory_invite_accept_webhook(
+    request: Request,
+    x_sacoparentsalign_signature: Optional[str] = Header(
+        default=None, alias="X-Sacoparentsalign-Signature",
+    ),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Called by sacoparentsalign.com when a professional accepts an
+    invitation dispatched via `/professional/directory/invite`.
+
+    Auth: HMAC-SHA256 signature of the RAW request body, keyed by
+    `SACOPARENTSALIGN_WEBHOOK_SECRET`, in header
+    `X-Sacoparentsalign-Signature` (with or without `sha256=` prefix).
+
+    Body shape:
+      { token: str,                # invite_token minted at invite time
+        accepted_at: str?,         # ISO-8601 UTC; server-time fallback
+        professional_id: str?,     # sibling's canonical id (may differ)
+        professional_name: str?,
+        professional_email: str? }
+
+    Responses:
+      * 200 `{ok: true, status, case_id?, applied: bool}` — applied
+        the flip (or the invite was already accepted → applied=false,
+        idempotent).
+      * 401 — bad or missing signature.
+      * 404 — unknown token (never leak whether a token was ever valid).
+      * 503 — server-side `SACOPARENTSALIGN_WEBHOOK_SECRET` not set.
+    """
+    from professional_directory import (
+        webhook_secret,
+        verify_webhook_signature,
+        find_invite_by_token,
+        mark_invite_accepted,
+    )
+
+    if not webhook_secret():
+        raise HTTPException(
+            status_code=503,
+            detail="Accept webhook is not configured on this environment.",
+        )
+
+    raw = await request.body()
+    if not verify_webhook_signature(
+        raw_body=raw, signature_header=x_sacoparentsalign_signature,
+    ):
+        raise HTTPException(status_code=401, detail="Invalid signature.")
+
+    try:
+        parsed = AcceptWebhookBody.model_validate_json(raw)
+    except ValidationError as exc:
+        raise HTTPException(status_code=400, detail=exc.errors()) from exc
+
+    invite = await find_invite_by_token(db, invite_token=parsed.token)
+    if not invite:
+        raise HTTPException(status_code=404, detail="Unknown invite token.")
+
+    accepted_at: datetime
+    if parsed.accepted_at:
+        parsed_ts = _as_aware_utc(parsed.accepted_at)
+        accepted_at = parsed_ts or _now()
+    else:
+        accepted_at = _now()
+
+    applied = await mark_invite_accepted(
+        db,
+        invite_token=parsed.token,
+        accepted_at=accepted_at,
+        accepted_professional_id=parsed.professional_id,
+        accepted_professional_name=parsed.professional_name,
+        accepted_professional_email=parsed.professional_email,
+    )
+
+    # If the invite was bound to a case, append an event so mediators
+    # see "Dr. Nomsa accepted on Sep 7" on the /mine console. Case
+    # ownership was already enforced at invite time — this is a
+    # trusted server-to-server callback.
+    case_id = invite.get("case_id")
+    if applied and case_id:
+        try:
+            display_name = (
+                parsed.professional_name
+                or invite.get("professional_name")
+                or "Professional"
+            )
+            await db[_CASES_COLL].update_one(
+                {"case_id": case_id},
+                {"$push": {
+                    "directory_invite_acceptances": {
+                        "invite_id": invite.get("invite_id"),
+                        "professional_name": display_name,
+                        "professional_email": (
+                            parsed.professional_email
+                            or invite.get("professional_email")
+                        ),
+                        "accepted_at": accepted_at,
+                    },
+                }},
+            )
+        except Exception:
+            logger.exception(
+                "directory-invite accept case-event append failed "
+                "invite_id=%s case_id=%s",
+                invite.get("invite_id"), case_id,
+            )
+
+    return {
+        "ok": True,
+        "status": "accepted",
+        "case_id": case_id,
+        "applied": applied,
+    }
+
+
+@router.get("/professional/directory/invites")
+async def list_professional_directory_invites(
+    limit: int = 50,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return the caller's most recent invitations (both pending and
+    accepted). Powers the mediator-facing "Who did I invite?" audit
+    view. Raw invite_token is stripped so a compromised session
+    cannot forge acceptance webhooks."""
+    from professional_directory import list_invites_for_inviter
+
+    rows = await list_invites_for_inviter(
+        db, inviter_user_id=current.user_id, limit=limit,
+    )
+    return {
+        "invites": [
+            {
+                "invite_id": row.get("invite_id"),
+                "case_id": row.get("case_id"),
+                "professional_id": row.get("professional_id"),
+                "professional_name": row.get("professional_name"),
+                "professional_email": row.get("professional_email"),
+                "personal_note": row.get("personal_note"),
+                "status": row.get("status") or "pending",
+                "created_at": _iso(row.get("created_at")),
+                "accepted_at": _iso(row.get("accepted_at")) if row.get("accepted_at") else None,
+                "accepted_professional_name": row.get("accepted_professional_name"),
+            }
+            for row in rows
+        ],
+    }

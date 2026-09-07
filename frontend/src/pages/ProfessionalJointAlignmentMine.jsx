@@ -33,6 +33,7 @@ import {
   Lock,
   Check,
   Mail,
+  History,
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
@@ -40,6 +41,7 @@ import CaseAnalyticsCard from "../components/professional/CaseAnalyticsCard";
 import WeeklyDigestToggle from "../components/professional/WeeklyDigestToggle";
 import ReminderPreviewModal from "../components/professional/ReminderPreviewModal";
 import ProfessionalDirectoryModal from "../components/professional/ProfessionalDirectoryModal";
+import ReminderNoteTemplatePicker from "../components/professional/ReminderNoteTemplatePicker";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -331,6 +333,14 @@ export default function ProfessionalJointAlignmentMine() {
             >
               <FileSpreadsheet size={12} /> Bulk import
             </Link>
+            <Link
+              to="/professional/joint-alignment/bulk/history"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E0EE] text-[#3D1A78] hover:bg-[#F5F1FB] px-3 py-1.5 text-xs font-semibold transition-colors"
+              data-testid="pj-mine-bulk-history"
+              title="Audit of past CSV imports"
+            >
+              <History size={12} /> History
+            </Link>
             <button
               type="button"
               onClick={() => {
@@ -555,6 +565,12 @@ export default function ProfessionalJointAlignmentMine() {
                           placeholder='e.g. "See you Thursday - takes about 15 minutes."'
                           className="w-full rounded-lg border border-[#D6CFE8] bg-white text-sm text-[#1A1330] px-2.5 py-1.5 focus:outline-none focus:border-[#3D1A78] resize-none"
                           data-testid={`pj-mine-note-input-${c.case_id}`}
+                        />
+                        <ReminderNoteTemplatePicker
+                          currentValue={noteDraft}
+                          onInsert={(text) => setNoteDraft(text.slice(0, 240))}
+                          testidPrefix={`pj-mine-tpl-${c.case_id}`}
+                          compact
                         />
                         <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
                           <span className="text-[11px] text-[#857E9C]">

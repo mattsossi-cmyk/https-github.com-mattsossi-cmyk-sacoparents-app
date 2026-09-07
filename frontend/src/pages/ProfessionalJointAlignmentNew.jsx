@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
+import ReminderNoteTemplatePicker from "../components/professional/ReminderNoteTemplatePicker";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -378,6 +379,11 @@ export default function ProfessionalJointAlignmentNew() {
                   <span>Shown to the parent if we send the 5-day gentle nudge.</span>
                   <span data-testid="pj-reminder-note-count">{form.reminder_note.length}/240</span>
                 </div>
+                <ReminderNoteTemplatePicker
+                  currentValue={form.reminder_note}
+                  onInsert={(text) => update({ reminder_note: text.slice(0, 240) })}
+                  testidPrefix="pj-new-tpl"
+                />
               </div>
             </div>
 

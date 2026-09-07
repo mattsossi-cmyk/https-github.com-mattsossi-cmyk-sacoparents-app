@@ -186,13 +186,20 @@ async def record_invitation(
     personal_note: Optional[str],
     join_url: str,
     invite_id: str,
+    invite_token: str,
 ) -> None:
     """Persist one row per invitation dispatched. Powers the future
     "who did I invite?" audit view + prevents duplicate spam
     (a mediator hitting Send twice in five seconds is caught by the
-    call-site rate limit query on this collection)."""
+    call-site rate limit query on this collection).
+
+    `invite_token` is the raw opaque nonce embedded in the join_url —
+    stored separately so the sacoparentsalign.com accept webhook can
+    look up an invite row by token alone.
+    """
     await db[_INVITE_COLL].insert_one({
         "invite_id": invite_id,
+        "invite_token": invite_token,
         "inviter_user_id": inviter_user_id,
         "inviter_name": inviter_name or None,
         "inviter_email": inviter_email or None,
@@ -203,6 +210,8 @@ async def record_invitation(
         "personal_note": (personal_note or "").strip() or None,
         "join_url": join_url,
         "created_at": datetime.now(timezone.utc),
+        "status": "pending",  # pending | accepted | declined
+        "accepted_at": None,
     })
 
 
@@ -235,3 +244,100 @@ def align_join_url_for(*, case_id: Optional[str], token: str) -> str:
     if case_id:
         qs = f"case={case_id}&{qs}"
     return f"{base.rstrip('/')}/join?{qs}"
+
+
+# ---------------------------------------------------------------------
+# Accept-webhook — sacoparentsalign.com calls BACK when a professional
+# accepts an invite so the SA CoParents side can update case status.
+# ---------------------------------------------------------------------
+import hashlib
+import hmac
+
+
+def webhook_secret() -> Optional[str]:
+    """Shared HMAC secret for the accept webhook. Set on both sides
+    of the integration. Missing → webhook endpoint 503s."""
+    return os.environ.get("SACOPARENTSALIGN_WEBHOOK_SECRET")
+
+
+def verify_webhook_signature(*, raw_body: bytes, signature_header: Optional[str]) -> bool:
+    """Verify an inbound webhook payload signed by sacoparentsalign.com.
+
+    Contract: sibling site computes
+        hex_sig = HMAC-SHA256(shared_secret, raw_body).hexdigest()
+    and sends it verbatim in the `X-Sacoparentsalign-Signature` header
+    (optionally prefixed with `sha256=`). We recompute and compare with
+    `hmac.compare_digest` so timing attacks are moot.
+    """
+    secret = webhook_secret()
+    if not secret or not signature_header:
+        return False
+    sig = signature_header.strip()
+    if sig.lower().startswith("sha256="):
+        sig = sig[len("sha256="):]
+    expected = hmac.new(
+        secret.encode("utf-8"), raw_body, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, sig)
+
+
+async def find_invite_by_token(
+    db: AsyncIOMotorDatabase, *, invite_token: str,
+) -> Optional[Dict[str, Any]]:
+    """Look up an invite row by its raw opaque token. Returns None
+    when the token is unknown."""
+    if not invite_token:
+        return None
+    return await db[_INVITE_COLL].find_one(
+        {"invite_token": invite_token}, {"_id": 0},
+    )
+
+
+async def mark_invite_accepted(
+    db: AsyncIOMotorDatabase,
+    *,
+    invite_token: str,
+    accepted_at: datetime,
+    accepted_professional_id: Optional[str] = None,
+    accepted_professional_name: Optional[str] = None,
+    accepted_professional_email: Optional[str] = None,
+) -> bool:
+    """Idempotent update — set `status="accepted"` on an invite that is
+    still `pending`. Returns True when a row was flipped, False when
+    the invite was already accepted (or missing). Safe to call twice.
+    """
+    result = await db[_INVITE_COLL].update_one(
+        {"invite_token": invite_token, "status": {"$ne": "accepted"}},
+        {"$set": {
+            "status": "accepted",
+            "accepted_at": accepted_at,
+            "accepted_professional_id": accepted_professional_id,
+            "accepted_professional_name": accepted_professional_name,
+            "accepted_professional_email": accepted_professional_email,
+        }},
+    )
+    return result.modified_count > 0
+
+
+async def list_invites_for_inviter(
+    db: AsyncIOMotorDatabase,
+    *,
+    inviter_user_id: str,
+    limit: int = 50,
+) -> List[Dict[str, Any]]:
+    """Return the caller's most recent invites (both pending and
+    accepted). Powers the mediator-facing audit view."""
+    safe_limit = max(1, min(int(limit or 50), 100))
+    cursor = (
+        db[_INVITE_COLL]
+        .find(
+            {"inviter_user_id": inviter_user_id},
+            {"_id": 0, "invite_token": 0},  # never leak the raw token
+        )
+        .sort("created_at", -1)
+        .limit(safe_limit)
+    )
+    rows: List[Dict[str, Any]] = []
+    async for row in cursor:
+        rows.append(row)
+    return rows

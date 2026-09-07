@@ -27,6 +27,114 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — Accept-webhook + Bulk-Import History Page + Reminder Note Templates
+
+**✨ P1 — Server-to-server accept webhook**
+- New endpoint `POST /api/professional/directory/invite/accept-webhook`
+  that sacoparentsalign.com calls back when a professional accepts an
+  invitation dispatched via `/professional/directory/invite`.
+- Auth: HMAC-SHA256 signature over the raw request body, keyed on
+  `SACOPARENTSALIGN_WEBHOOK_SECRET`, carried in
+  `X-Sacoparentsalign-Signature` (with or without `sha256=` prefix).
+  Signature is verified BEFORE the JSON body is parsed so a tampered
+  payload never leaks a 400.
+- Idempotent: second identical call returns `applied=false` (200).
+  Unknown token → 404 (never leaks whether a token was ever valid).
+- When the invite was case-bound, the acceptance is pushed to
+  `joint_alignment_cases.directory_invite_acceptances` and surfaced
+  on `GET /cases-i-created` (mediator-only shape) so mediators see
+  "Dr. Nomsa accepted this case invite on Sep 7" without opening
+  the sibling site.
+- New mediator-facing audit endpoint
+  `GET /api/professional/directory/invites` — returns the caller's
+  own invites (pending + accepted), scrubbing the raw `invite_token`
+  from every row (would enable forged webhook calls otherwise).
+- **Storage change**: `professional_directory_invites` rows now
+  persist the raw `invite_token` alongside `join_url` so the webhook
+  can identify a specific row without URL parsing. Also adds
+  `status`, `accepted_at`, `accepted_professional_{id,name,email}`.
+- **Integration doc updated**: `INTEGRATION_TODO_sacoparentsalign.md`
+  now spec-in-full for the accept webhook contract — exact header,
+  body shape, signature algorithm, retry policy, idempotency
+  semantics. New env var to set once the sibling ships:
+  `SACOPARENTSALIGN_WEBHOOK_SECRET`.
+
+**✨ P1 — Bulk-Import History page** at
+`/professional/joint-alignment/bulk/history`
+- Two-column layout (mobile-stacked): left column is a 20-row list
+  of the caller's past CSV bulk imports (most-recent first), each
+  card showing filename · started-at · created/skipped/errored
+  pills. Right pane loads the selected import's detail with three
+  count tiles + a wrap-flexed list of created case-ID chips (each
+  a `<Link>` to `/mine?search=SA-XXXXXX`) + skipped-duplicate chips
+  + errored rows with per-row reason.
+- Empty-state ("No bulk imports yet") with a "Start a bulk import"
+  CTA when the caller has nothing yet.
+- New "History" pill on the `/mine` header (next to Bulk import) and
+  a "View past imports →" link on the top of the `/bulk` page so
+  the audit is one tap away from every entry point.
+- No new backend endpoints needed — reuses
+  `GET /api/professional/joint-alignment/bulk/history` and
+  `GET .../bulk/history/{import_id}` shipped in a prior iteration.
+
+**✨ P2 — Reusable reminder-note templates**
+- New CRUD collection `reminder_note_templates`:
+  - `GET /api/professional/reminder-note-templates` — list caller's
+    templates, alphabetised by label.
+  - `POST /api/professional/reminder-note-templates` — save a
+    template. Duplicate label 409, empty label/body 400, body >
+    240 chars 422, 13th template 409 (hard cap of 12 per user).
+  - `DELETE /api/professional/reminder-note-templates/{tid}` —
+    owner-only; 404 for foreign template_ids.
+- New reusable frontend component
+  `ReminderNoteTemplatePicker.jsx` mounted on:
+  - `/professional/joint-alignment/new` (below the reminder-note
+    textarea) — testids `pj-new-tpl-*`.
+  - `/professional/joint-alignment/mine` inline case editor —
+    testids `pj-mine-tpl-{case_id}-*`.
+- Three actions per instance:
+  - "Insert template" dropdown — pastes a saved body into the
+    textarea.
+  - "Save as template" — inline label input, POST, toast success.
+    Disabled when textarea is empty; disabled when label is blank.
+  - "Manage" — modal listing every saved template with a Trash
+    button per row.
+- **Coverage**: `tests/test_iter164_webhook_and_templates.py`
+  (12 tests: 6 webhook, 2 audit-list, 6 templates). **57-test
+  regression across iter150 + iter159 + iter163 + iter164 green.**
+- **Live-verified**: mediator on `/mine` → clicks "History" pill →
+  bulk history page loads with real import cards from parent1's
+  prior uploads → clicks row → detail pane shows count tiles
+  + case-ID chips linking to `/mine?search=SA-XXXXXX`. Mobile
+  390px overflow-free. Template picker on `/new` shows correct
+  disabled/enabled states as the textarea fills.
+- **Files touched**:
+  - `backend/joint_alignment_routes.py` (+ webhook endpoint,
+    + invites-audit GET, + reminder-note-templates CRUD trio,
+    + `Request` import, + directory_invite_acceptances surfaced
+    on cases-i-created)
+  - `backend/professional_directory.py` (+ invite_token stored,
+    + `webhook_secret`, `verify_webhook_signature`,
+    `find_invite_by_token`, `mark_invite_accepted`,
+    `list_invites_for_inviter`)
+  - `backend/.env` (+ `SACOPARENTSALIGN_WEBHOOK_SECRET`)
+  - `frontend/src/pages/ProfessionalJointAlignmentBulkHistory.jsx`
+    (new)
+  - `frontend/src/components/professional/ReminderNoteTemplatePicker.jsx`
+    (new)
+  - `frontend/src/App.js` (registers the new route)
+  - `frontend/src/pages/ProfessionalJointAlignmentMine.jsx`
+    (adds "History" pill, mounts template picker in inline editor)
+  - `frontend/src/pages/ProfessionalJointAlignmentBulk.jsx`
+    (adds "View past imports →" link)
+  - `frontend/src/pages/ProfessionalJointAlignmentNew.jsx`
+    (mounts template picker below reminder-note textarea)
+  - `memory/INTEGRATION_TODO_sacoparentsalign.md` (adds full
+    accept-webhook contract + new env var)
+  - `backend/tests/test_iter164_webhook_and_templates.py` (new,
+    12 tests)
+
+
 ### 2026-09-07 — Reflection Autosave + sacoparentsalign.com Directory Invite
 
 **🐞 Bug fix — Foundation Statement creation autosave**

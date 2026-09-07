@@ -1,0 +1,33 @@
+{
+  "summary": "Iter164 end-to-end verification. Backend: all 12 iter164 pytest cases PASS (webhook happy path + idempotency + bad/missing signature + 404 unknown token + case-bound event append; audit list scoping; template CRUD auth/dup/length/owner-scope/12-cap). Regression across iter150 + iter159 + iter163 = 57/57 PASS (record_invitation signature change did not break anything). Frontend: /professional/joint-alignment/bulk/history renders with 3 real bulk-history-row cards (data-testid=bulk-history-row-*), clicking a row loads detail pane with SA- case-id chips. pj-mine-bulk-history pill on /mine is an <a href> and navigates to bulk/history. pj-new-tpl-row/insert/save/manage all present on /new; save is properly disabled when textarea empty and enabled when filled; save opens inline TEMPLATE LABEL input; Manage modal opens with 'You haven't saved any templates yet' empty state and 12-template limit copy. Bulk page shows 'View past imports' link.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "All pages after login", "issues": ["LegalAcknowledgment modal (data-testid=legal-acknowledgment-modal, z-[1000]) re-mounts on every route change — even after the user acknowledges within the same session, next page navigation shows it again. Pre-seeding sac_legal_ack_v1 in localStorage does not persist it. This is pre-existing, out of iter164 scope, but is a UX friction and blocks automated test clicks unless the modal DOM node is removed. Consider persisting session-level flag or reading server-side ack on mount."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter164_webhook_and_templates.py",
+    "/app/test_reports/pytest/iter164.xml"
+  ],
+  "action_items": [
+    "(Optional / P3, out-of-scope for iter164) Investigate why LegalAcknowledgment modal re-mounts on every route change in the same browser session even though STORAGE_KEY 'sac_legal_ack_v1' should suppress it. May be an unrelated legal_ack version bump or the modal component ignoring localStorage on fresh mount."
+  ],
+  "critical_code_review_comments": [
+    "professional_directory.verify_webhook_signature correctly hashes raw request bytes BEFORE JSON parse, so tampered payloads with bad sig return 401 not 400 — good.",
+    "GET /api/professional/directory/invites response schema in joint_alignment_routes.py excludes invite_token — verified via test_invites_audit_list_is_scoped_to_caller; prevents token forgery.",
+    "Template hard cap of 12 is enforced server-side (13th → 409) — good defense-in-depth vs relying on FE.",
+    "ReminderNoteTemplatePicker exposes correct data-testids on both /new (pj-new-tpl-*) and /mine (pj-mine-tpl-{case_id}-*) surfaces — good for testability.",
+    "No mongo _id leakage observed in any iter164 endpoint response."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None — parent1 already had 3 existing bulk imports from prior iterations which were used to verify the row list + drill-down.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter164 is fully green. When automating this app, note the legal-acknowledgment-modal will intercept pointer events on route changes; remove it via `document.querySelector('[data-testid=\"legal-acknowledgment-modal\"]').remove()` from page.evaluate before clicking pills/rows, or use JS .click() on anchor elements. Reminder textarea is data-testid='pj-reminder-note'. Template label placeholder is 'e.g. \"Thursday intake\"' (not containing the word 'label' as literal placeholder text — the visible 'TEMPLATE LABEL' is a <label> element, not the input placeholder).",
+  "rca of the issue": "N/A — no iter164 issues detected."
+}

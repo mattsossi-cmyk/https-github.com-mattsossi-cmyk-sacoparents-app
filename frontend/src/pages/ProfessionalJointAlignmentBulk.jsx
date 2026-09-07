@@ -250,13 +250,22 @@ export default function ProfessionalJointAlignmentBulk() {
   return (
     <AppShell>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        <Link
-          to="/professional/joint-alignment/mine"
-          className="inline-flex items-center gap-1.5 text-sm text-[#3D1A78] hover:underline mb-4"
-          data-testid="bulk-back-link"
-        >
-          <ArrowLeft size={14} /> Back to my cases
-        </Link>
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <Link
+            to="/professional/joint-alignment/mine"
+            className="inline-flex items-center gap-1.5 text-sm text-[#3D1A78] hover:underline"
+            data-testid="bulk-back-link"
+          >
+            <ArrowLeft size={14} /> Back to my cases
+          </Link>
+          <Link
+            to="/professional/joint-alignment/bulk/history"
+            className="inline-flex items-center gap-1.5 text-xs text-[#3D1A78] hover:underline"
+            data-testid="bulk-history-link"
+          >
+            View past imports →
+          </Link>
+        </div>
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
           <Sparkles size={12} /> Bulk import
         </div>

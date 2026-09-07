@@ -95,20 +95,57 @@ professional. `sacoparentsalign.com` owns:
 - authenticating the professional against their sacoparentsalign.com
   account (no SA CoParents login is issued);
 - persisting the acceptance;
-- optionally calling BACK into SA CoParents on a webhook so the case
-  status reflects the acceptance (webhook contract TBD — file a
-  follow-up issue when needed).
+- calling BACK into SA CoParents on the accept webhook so the case
+  status reflects the acceptance (see webhook contract below).
 
 The `token` value is a `secrets.token_urlsafe(24)` opaque nonce
-(no JWT). It is stored in `professional_directory_invites.join_url`
-on the SA CoParents side. When the sibling site hits back with a
-webhook, matching by this token identifies the invitation row.
+(no JWT). It is stored in `professional_directory_invites.invite_token`
+on the SA CoParents side.
+
+### Accept webhook — `POST https://sacoparentsapp.online/api/professional/directory/invite/accept-webhook`
+
+Called by sacoparentsalign.com the moment a professional accepts.
+
+**Headers:**
+- `Content-Type: application/json`
+- `X-Sacoparentsalign-Signature: sha256=<hex>` — hex-encoded
+  HMAC-SHA256 of the raw request body keyed by the shared secret set
+  on both sides as `SACOPARENTSALIGN_WEBHOOK_SECRET`. The `sha256=`
+  prefix is accepted but optional.
+
+**Body:**
+```json
+{
+  "token": "<the opaque invite token>",
+  "accepted_at": "2026-09-07T21:20:00Z",     // optional, server time fallback
+  "professional_id": "sacpa-002",             // sibling canonical id
+  "professional_name": "Dr. Nomsa Dlamini",   // display name
+  "professional_email": "nomsa@sacoparentsalign.com"
+}
+```
+
+**Responses:**
+- `200 {ok: true, status: "accepted", case_id: str|null, applied: bool}`
+  — flip persisted (or was already applied → `applied=false`,
+  idempotent). If the invite was case-bound, an audit row is appended
+  to `joint_alignment_cases.directory_invite_acceptances` so the
+  mediator sees the acceptance on `/mine`.
+- `400` — body malformed (missing `token`).
+- `401` — bad or missing signature.
+- `404` — unknown invite token (never leak whether a token was
+  ever valid).
+- `503` — server-side `SACOPARENTSALIGN_WEBHOOK_SECRET` not set.
+
+**Idempotency:** safe to call twice. Second call returns
+`applied=false` with a 200. Recommended: sibling site retries with
+exponential backoff on network errors.
 
 ## Environment variables to set on production once the sibling ships
 
 ```env
 SACOPARENTSALIGN_BASE_URL=https://sacoparentsalign.com
 SACOPARENTSALIGN_API_KEY=<sibling-issued-bearer>
+SACOPARENTSALIGN_WEBHOOK_SECRET=<shared 32+ char secret used by BOTH sides>
 ```
 
 ## What still lives as a mock on the SA CoParents side
