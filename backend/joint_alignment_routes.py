@@ -892,6 +892,200 @@ async def professional_bulk_create_from_csv(
     }
 
 
+@router.post("/professional/joint-alignment/cases/bulk-csv/stream")
+async def professional_bulk_create_from_csv_stream(
+    file: UploadFile = File(..., description="CSV file with case rows."),
+    default_assessment_type: Optional[str] = None,
+    default_reminder_note: Optional[str] = None,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Streaming NDJSON variant of `bulk-csv`. Emits one JSON line per
+    event so the frontend can update a live progress bar as each
+    case gets minted — critical UX for 100-row imports that take
+    ~60-120 seconds end-to-end.
+
+    Event stream shape (one per line, `\\n`-delimited):
+      * `{"event":"start","total_rows":N}`                    — before any row work
+      * `{"event":"row","row":N,"status":"created|skipped|errored","case_id":?,"reason":?,"parents":?}`  — one per row
+      * `{"event":"done","summary":{total,created,skipped,errored}}`  — final
+
+    Fatal errors (invalid CSV / oversize / missing columns) still
+    return standard HTTP 4xx BEFORE the stream begins so the client
+    can surface them in an error toast without needing to parse
+    NDJSON.
+    """
+    import csv
+    import io
+    import json
+
+    from fastapi.responses import StreamingResponse
+
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Upload must be a .csv file.")
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="CSV is empty.")
+    if len(raw) > _BULK_CSV_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"CSV is too large. Max {_BULK_CSV_MAX_BYTES // 1024} KB.",
+        )
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV must be UTF-8 encoded (or plain ASCII).",
+        ) from exc
+
+    rows = list(csv.reader(io.StringIO(text)))
+    if not rows:
+        raise HTTPException(status_code=400, detail="CSV has no rows.")
+    header_map = _normalise_bulk_headers(rows[0])
+    if "parent1_email" not in header_map or "parent2_email" not in header_map:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV must include both parent1_email and parent2_email columns.",
+        )
+    data_rows = rows[1:]
+    while data_rows and all(not (c or "").strip() for c in data_rows[-1]):
+        data_rows.pop()
+    if len(data_rows) == 0:
+        raise HTTPException(status_code=400, detail="CSV has no data rows.")
+    if len(data_rows) > _BULK_CSV_MAX_ROWS:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Too many rows. Max {_BULK_CSV_MAX_ROWS} cases per upload.",
+        )
+
+    def cell(row, key: str) -> str:
+        idx = header_map.get(key)
+        if idx is None or idx >= len(row):
+            return ""
+        return (row[idx] or "").strip()
+
+    default_lane = (default_assessment_type or "").strip() or None
+    default_note = (default_reminder_note or "").strip() or None
+    user_id = current.user_id
+
+    async def _emit():
+        """Async generator that yields NDJSON lines. Each `yield`
+        flushes to the wire immediately (FastAPI/StreamingResponse
+        wires this to Starlette's send loop with no buffering)."""
+        totals = {"created": 0, "skipped": 0, "errored": 0}
+        yield json.dumps({"event": "start", "total_rows": len(data_rows)}) + "\n"
+
+        for offset, row in enumerate(data_rows):
+            row_no = offset + 2
+            payload: Dict[str, Any] = {"event": "row", "row": row_no}
+            try:
+                email_a = cell(row, "parent1_email")
+                email_b = cell(row, "parent2_email")
+                if not email_a or not email_b:
+                    payload.update({
+                        "status": "errored",
+                        "reason": "missing parent1_email or parent2_email",
+                    })
+                    totals["errored"] += 1
+                    yield json.dumps(payload) + "\n"
+                    continue
+
+                dup = await _bulk_duplicate_case_exists(
+                    db, user_id=user_id, email_a=email_a, email_b=email_b,
+                )
+                if dup:
+                    payload.update({
+                        "status": "skipped",
+                        "reason": "duplicate",
+                        "case_id": dup,
+                    })
+                    totals["skipped"] += 1
+                    yield json.dumps(payload) + "\n"
+                    continue
+
+                lane = cell(row, "assessment_type") or default_lane
+                if not lane:
+                    payload.update({
+                        "status": "errored",
+                        "reason": "missing assessment_type (and no default)",
+                    })
+                    totals["errored"] += 1
+                    yield json.dumps(payload) + "\n"
+                    continue
+
+                try:
+                    request_body = ProfessionalCreateCaseRequest(
+                        assessment_type=lane,
+                        parents=[
+                            ParentInfo(email=email_a, name=cell(row, "parent1_name") or None),
+                            ParentInfo(email=email_b, name=cell(row, "parent2_name") or None),
+                        ],
+                        align_case_reference=cell(row, "reference") or None,
+                        reminder_note=(cell(row, "reminder_note") or default_note),
+                    )
+                except ValidationError as ve:
+                    first = ve.errors()[0] if ve.errors() else {}
+                    payload.update({
+                        "status": "errored",
+                        "reason": first.get("msg") or "invalid row",
+                    })
+                    totals["errored"] += 1
+                    yield json.dumps(payload) + "\n"
+                    continue
+
+                try:
+                    res = await _create_and_invite_case(
+                        body=request_body, current=current, db=db,
+                    )
+                except HTTPException as he:
+                    payload.update({"status": "errored", "reason": he.detail})
+                    totals["errored"] += 1
+                    yield json.dumps(payload) + "\n"
+                    continue
+
+                payload.update({
+                    "status": "created",
+                    "case_id": res.case_id,
+                    "assessment_type": res.assessment_type,
+                    "parents": [
+                        {"email": p.email, "invitation_url": p.invitation_url}
+                        for p in res.parents
+                    ],
+                    "email_deliveries": res.email_deliveries or [],
+                })
+                totals["created"] += 1
+                yield json.dumps(payload) + "\n"
+
+            except Exception as exc:  # noqa: BLE001
+                logger.exception(
+                    "bulk-csv stream row failure user=%s row=%s", user_id, row_no,
+                )
+                totals["errored"] += 1
+                yield json.dumps({
+                    "event": "row", "row": row_no,
+                    "status": "errored", "reason": str(exc) or "unknown error",
+                }) + "\n"
+
+        yield json.dumps({
+            "event": "done",
+            "summary": {"total_rows": len(data_rows), **totals},
+        }) + "\n"
+
+    return StreamingResponse(
+        _emit(),
+        media_type="application/x-ndjson",
+        headers={
+            # Disable proxy buffering so each line hits the browser as
+            # it's produced (nginx / cloudfront otherwise wait for
+            # ~8KB before flushing).
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @router.get("/professional/joint-alignment/cases/bulk-csv/template")
 async def professional_bulk_csv_template(
     current: UserPublic = Depends(get_current_user),
@@ -1787,6 +1981,145 @@ async def professional_reminder_preview(
         "subject": rendered["subject"],
         "html": rendered["html"],
         "text": rendered["text"],
+    }
+
+
+# Rate limit: keep test-send friendly for QA but not a spam vector.
+_REMINDER_TEST_SEND_HOURLY_LIMIT = int(
+    os.environ.get("REMINDER_TEST_SEND_HOURLY_LIMIT", "10")
+)
+
+
+@router.post("/professional/joint-alignment/cases/{case_id}/reminder-preview/send-test")
+async def professional_reminder_send_test(
+    case_id: str = Path(..., min_length=1, max_length=20),
+    parent_index: int = 0,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Send the rendered reminder email to the MEDIATOR'S OWN inbox
+    so they can see what it looks like in their real mail client
+    (spam filtering, mobile Gmail rendering, dark-mode inversion,
+    etc.) BEFORE the 5-day sweep dispatches to the parent.
+
+    Never touches the parent's inbox. Never counts against the
+    parent's rate limits. Owner-only, JWT required.
+
+    Rate-limited to 10 test-sends / hour per mediator to keep this
+    from becoming an accidental spam vector.
+    """
+    from email_service import (
+        EmailNotConfigured,
+        EmailSendError,
+        render_joint_alignment_invitation_reminder,
+        _send,  # low-level dispatcher — bypasses the parent-facing send helper.
+    )
+
+    canonical = _normalise_case_id(case_id) or case_id
+    case = await db[_CASES_COLL].find_one(
+        {
+            "case_id": canonical,
+            "$or": [
+                {"professional_created_by": current.user_id},
+                {"professional.id": current.user_id, "origin": "in_app_professional"},
+            ],
+        },
+        {"_id": 0},
+    )
+    if not case:
+        raise HTTPException(
+            status_code=404,
+            detail="Case not found, or not owned by this account.",
+        )
+    mediator_email = (current.email or "").strip().lower()
+    if not mediator_email:
+        raise HTTPException(
+            status_code=400,
+            detail="Your account has no email on file — can't send a test.",
+        )
+
+    # Simple per-mediator hourly rate limit backed by a lightweight
+    # counter collection. Keeps this endpoint from becoming spam.
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(hours=1)
+    recent = await db.reminder_preview_test_sends.count_documents({
+        "user_id": current.user_id,
+        "sent_at": {"$gte": window_start},
+    })
+    if recent >= _REMINDER_TEST_SEND_HOURLY_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"Test-send limit reached — {_REMINDER_TEST_SEND_HOURLY_LIMIT} per hour. "
+                "Try again shortly."
+            ),
+        )
+
+    parents = case.get("parents") or []
+    if not parents:
+        raise HTTPException(
+            status_code=409,
+            detail="This case has no invited parents on record.",
+        )
+    if parent_index < 0 or parent_index >= len(parents):
+        raise HTTPException(
+            status_code=400,
+            detail=f"parent_index must be 0…{len(parents) - 1} for this case.",
+        )
+    parent = parents[parent_index]
+    professional = case.get("professional") or {}
+    professional_name = professional.get("name") or professional.get("email") or None
+
+    rendered = render_joint_alignment_invitation_reminder(
+        invitation_url=parent.get("invitation_url") or "",
+        case_id=canonical,
+        professional_name=professional_name,
+        parent_name=parent.get("name") or None,
+        assessment_type=case.get("assessment_type") or None,
+        reminder_note=case.get("reminder_note") or None,
+    )
+    # Re-brand the subject so the mediator can spot the test in
+    # their inbox (and never mistakes it for a live send).
+    test_subject = f"[TEST PREVIEW] {rendered['subject']}"
+
+    try:
+        _send(
+            to_email=mediator_email,
+            subject=test_subject,
+            html=rendered["html"],
+            text=(
+                "This is a TEST preview — the real recipient did NOT receive "
+                "this email. It's here so you can QA the rendering in your "
+                "actual mail client.\n\n"
+                + rendered["text"]
+            ),
+            failure_message="Couldn't send the test right now.",
+        )
+    except EmailNotConfigured as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Email isn't configured on this environment yet.",
+        ) from exc
+    except EmailSendError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc) or "Could not send the test right now.",
+        ) from exc
+
+    # Audit row for the rate limit + support forensics.
+    await db.reminder_preview_test_sends.insert_one({
+        "user_id": current.user_id,
+        "case_id": canonical,
+        "parent_index": parent_index,
+        "mediator_email": mediator_email,
+        "sent_at": now,
+    })
+    return {
+        "ok": True,
+        "delivered_to": mediator_email,
+        "remaining_this_hour": max(
+            0, _REMINDER_TEST_SEND_HOURLY_LIMIT - recent - 1,
+        ),
     }
 
 

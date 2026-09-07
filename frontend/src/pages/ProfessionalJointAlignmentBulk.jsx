@@ -34,6 +34,8 @@ import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
+const API_ROOT = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
 const ASSESSMENT_LANES = [
   { value: "", label: "Set per-row from CSV" },
   { value: "communication",  label: "Communication" },
@@ -68,7 +70,13 @@ export default function ProfessionalJointAlignmentBulk() {
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  // Live-progress state (populated as NDJSON events stream in from
+  // the /bulk-csv/stream endpoint).
+  const [progress, setProgress] = useState({
+    total: 0, done: 0, created: 0, skipped: 0, errored: 0, lastRow: null,
+  });
   const inputRef = useRef(null);
+  const abortRef = useRef(null);
 
   const handleTemplate = async () => {
     try {
@@ -104,35 +112,117 @@ export default function ProfessionalJointAlignmentBulk() {
     setUploading(true);
     setError(null);
     setResult(null);
+    setProgress({ total: 0, done: 0, created: 0, skipped: 0, errored: 0, lastRow: null });
+
+    // We collect the streamed events into these arrays as they
+    // arrive so we can render the same rich results table the
+    // non-streaming endpoint returned.
+    const created = [];
+    const skipped = [];
+    const errored = [];
+    let total = 0;
+
+    // The shared axios `api` client can't stream response bodies,
+    // so we drop to fetch() for this one call. Cookies + JWT are
+    // both attached the same way as the axios client uses.
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       const form = new FormData();
       form.append("file", file);
-      const params = {};
-      if (defaultLane) params.default_assessment_type = defaultLane;
-      if (defaultNote.trim()) params.default_reminder_note = defaultNote.trim();
-      const r = await api.post(
-        "/professional/joint-alignment/cases/bulk-csv",
-        form,
-        {
-          params,
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
-      setResult(r.data);
-      const c = r.data?.created?.length || 0;
-      const s = r.data?.skipped?.length || 0;
-      const e = r.data?.errored?.length || 0;
-      if (c > 0) toast.success(`Created ${c} case${c === 1 ? "" : "s"}${s ? ` · skipped ${s} duplicates` : ""}${e ? ` · ${e} errored` : ""}`);
-      else if (s > 0 && e === 0) toast(`All ${s} row${s === 1 ? "" : "s"} were duplicates — nothing new to send.`);
-      else toast.error(`${e} row${e === 1 ? "" : "s"} couldn't be processed.`);
+      const qs = new URLSearchParams();
+      if (defaultLane) qs.set("default_assessment_type", defaultLane);
+      if (defaultNote.trim()) qs.set("default_reminder_note", defaultNote.trim());
+      const url = `${API_ROOT}/professional/joint-alignment/cases/bulk-csv/stream${
+        qs.toString() ? `?${qs}` : ""
+      }`;
+      // JWT lives in an httpOnly `auth_token` cookie so we just
+      // pass `credentials: "include"` and let the browser attach it.
+      // fetch() is used here instead of axios because axios can't
+      // stream response bodies.
+      const res = await fetch(url, {
+        method: "POST",
+        credentials: "include",
+        body: form,
+        signal: controller.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        let detail = "Upload failed.";
+        try {
+          const j = await res.json();
+          detail = j?.detail || detail;
+        } catch { /* body wasn't JSON */ }
+        throw new Error(detail);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        // Each event is a single \n-terminated line. Keep the tail
+        // in `buffer` in case a chunk arrives split mid-line.
+        let nl;
+        while ((nl = buffer.indexOf("\n")) !== -1) {
+          const line = buffer.slice(0, nl).trim();
+          buffer = buffer.slice(nl + 1);
+          if (!line) continue;
+          let evt;
+          try { evt = JSON.parse(line); } catch { continue; }
+          if (evt.event === "start") {
+            total = evt.total_rows || 0;
+            setProgress((p) => ({ ...p, total }));
+          } else if (evt.event === "row") {
+            if (evt.status === "created") {
+              created.push(evt);
+            } else if (evt.status === "skipped") {
+              skipped.push(evt);
+            } else {
+              errored.push(evt);
+            }
+            setProgress((p) => ({
+              total,
+              done:    p.done + 1,
+              created: created.length,
+              skipped: skipped.length,
+              errored: errored.length,
+              lastRow: evt,
+            }));
+          } else if (evt.event === "done") {
+            setResult({
+              total_rows: evt.summary?.total_rows || total,
+              created, skipped, errored,
+            });
+            const c = created.length;
+            const s = skipped.length;
+            const e = errored.length;
+            if (c > 0) toast.success(`Created ${c} case${c === 1 ? "" : "s"}${s ? ` · skipped ${s} duplicates` : ""}${e ? ` · ${e} errored` : ""}`);
+            else if (s > 0 && e === 0) toast(`All ${s} row${s === 1 ? "" : "s"} were duplicates — nothing new to send.`);
+            else toast.error(`${e} row${e === 1 ? "" : "s"} couldn't be processed.`);
+          }
+        }
+      }
     } catch (err) {
-      logError("bulk csv upload failed", err);
-      const detail = err?.response?.data?.detail || "Upload failed.";
-      setError(String(detail));
-      toast.error(String(detail));
+      if (err?.name === "AbortError") {
+        toast("Upload cancelled.");
+      } else {
+        logError("bulk csv streaming upload failed", err);
+        const detail = err?.message || "Upload failed.";
+        setError(String(detail));
+        toast.error(String(detail));
+      }
     } finally {
+      abortRef.current = null;
       setUploading(false);
     }
+  };
+
+  const handleCancelUpload = () => {
+    if (abortRef.current) abortRef.current.abort();
   };
 
   const totals = useMemo(() => ({
@@ -321,6 +411,16 @@ export default function ProfessionalJointAlignmentBulk() {
                 Clear
               </button>
             )}
+            {uploading && (
+              <button
+                type="button"
+                onClick={handleCancelUpload}
+                className="rounded-full border border-[#F5D0C5] text-[#9A3A23] hover:bg-[#FCE3DC] bg-white px-4 py-2 text-sm font-semibold"
+                data-testid="bulk-cancel-upload"
+              >
+                Cancel
+              </button>
+            )}
             <button
               type="button"
               onClick={handleUpload}
@@ -335,6 +435,42 @@ export default function ProfessionalJointAlignmentBulk() {
               )}
             </button>
           </div>
+
+          {uploading && progress.total > 0 && (
+            <div className="mt-4" data-testid="bulk-progress">
+              <div className="flex items-center justify-between text-[11px] mb-1">
+                <span className="text-[#4B4567] font-semibold">
+                  {progress.done} / {progress.total} rows
+                </span>
+                <span className="text-[#857E9C]">
+                  <span className="text-[#1F5C3B] font-semibold">{progress.created} ✓</span>
+                  {" · "}
+                  <span className="text-[#3D1A78] font-semibold">{progress.skipped} 〰</span>
+                  {" · "}
+                  <span className="text-[#9A3A23] font-semibold">{progress.errored} ⚠</span>
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-[#EFE9F9] overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#5B27B8] to-[#3D1A78] transition-[width] duration-300"
+                  style={{
+                    width: `${Math.min(100, (progress.done / Math.max(1, progress.total)) * 100)}%`,
+                  }}
+                  data-testid="bulk-progress-bar"
+                />
+              </div>
+              {progress.lastRow && (
+                <p className="mt-2 text-[11px] text-[#857E9C] font-mono truncate" data-testid="bulk-progress-lastrow">
+                  Row {progress.lastRow.row}:{" "}
+                  {progress.lastRow.status === "created"
+                    ? `${progress.lastRow.case_id} created`
+                    : progress.lastRow.status === "skipped"
+                      ? `${progress.lastRow.case_id || ""} skipped (${progress.lastRow.reason})`
+                      : `errored — ${progress.lastRow.reason}`}
+                </p>
+              )}
+            </div>
+          )}
 
           {error && (
             <div

@@ -27,6 +27,140 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — Foundation Statement Recipient-Open Analytics
+- **P1 — Closes the "did they read it?" feedback loop.** When a
+  parent opens the Share modal's History tab, each row now shows a
+  soft eye icon + `2 opens · opened 6m ago` line for the recipients
+  who have actually clicked the preview URL.
+- **New module `/app/backend/foundation_statement_analytics.py`**
+  with three responsibilities:
+    - `is_link_preview_bot(user_agent)` — filters ~20 known
+      link-preview crawlers (Slack, Discord, WhatsApp, Twitter/X,
+      Facebook, LinkedIn, Telegram, Skype) plus scripts (curl,
+      wget, python-requests, Postman). A missing UA is treated as
+      a bot (real browsers always send one).
+    - `record_preview_open()` — inserts one row per human open into
+      `foundation_statement_preview_opens` with `{jti, owner,
+      opened_at, ip_hash, user_agent, referer}`. Never blocks the
+      recipient's response — any DB failure is swallowed.
+    - `opens_by_jti()` — one `$group` aggregation returns
+      `{jti: {open_count, last_opened_at, unique_ip_count}}` for
+      the entire batch of history rows in a single round-trip.
+- **Privacy posture**:
+    - IPs are hashed with SHA-256 and truncated to 16 chars before
+      storage — enough for unique-viewer de-dup, nowhere near enough
+      to reverse-engineer.
+    - Analytics scope is enforced by `doc_owner_user_id` — a
+      foreign parent cannot see another parent's open stats (test
+      `test_analytics_are_scoped_per_sender`).
+    - Bot filtering runs BEFORE the write so Slack link unfurls
+      never inflate the count.
+- **Endpoint updates on `/api/mediation`**:
+    - `GET /foundation-statement/shared/{token}` — now records an
+      open (bot-filtered) as a side effect.
+    - `GET /foundation-statement/shares` history payload — now
+      returns `{open_count, last_opened_at, unique_ip_count}` per
+      row, aggregated in a single Mongo `$group` pipeline.
+- **Frontend `FoundationStatementShareModal.jsx`**:
+    - New `formatLastOpened(iso)` helper produces human-friendly
+      timestamps: `opened now`, `opened 3m ago`, `opened 4h ago`,
+      `opened yesterday`, `opened 2d ago`, `opened Sep 5`.
+    - Each history row now conditionally renders the analytics
+      line under the recipient's email + timestamp. Unopened rows
+      render nothing (no `0 opens` noise).
+    - Historical opens on revoked links are STILL displayed so a
+      parent can see the retro count even after they killed the URL.
+- **Coverage** — `tests/test_iter161_foundation_analytics.py`
+  (11 tests: 4 pure unit + 7 live-server). Bot-filter false-positive
+  guardrails on real browser UAs. Regression clean against
+  iter155-160.
+- **Live-verified**: parent1 shared statement → 2 human opens (Chrome
+  + Safari UAs) → History tab shows `👁 2 opens · opened 1m ago`
+  under the top row. Slack + WhatsApp + curl opens on a separate
+  share were correctly ignored (0 count). Mobile 390px overflow-free.
+- **Files touched**:
+  - `backend/foundation_statement_analytics.py` (new)
+  - `backend/mediation_routes.py` (wires analytics into shared
+    endpoint + extends history payload)
+  - `frontend/src/components/foundation/FoundationStatementShareModal.jsx`
+    (adds `formatLastOpened` helper + per-row analytics line + Eye icon)
+  - `backend/tests/test_iter161_foundation_analytics.py` (new, 11 tests)
+
+
+### 2026-09-07 — Revoke Shared Preview + CSV Streaming + Preview Test-Send
+- **P1 — Revoke Shared Preview Link**: Parents can now switch off a
+  specific preview URL on demand, from the Share modal's History tab
+  on `/my-plan`.
+    - Backend: `GET /foundation-statement/shares` history payload
+      now returns `{preview_jti, preview_status, preview_expires_at}`
+      per share row (with statuses `active | revoked | expired |
+      none`). Legacy pre-preview rows report `none`.
+    - New endpoint `POST /foundation-statement/preview-links/revoke`
+      (JWT + owner-only, idempotent, 404 for foreign JTI, 400 for
+      non-foundation doc types).
+    - Frontend: History rows in `FoundationStatementShareModal`
+      now display a colored status pill and, for active links, a
+      "Revoke preview link" button that flips the row optimistically
+      and issues a `window.confirm` before hitting the API.
+    - Public shared endpoint already checks `is_share_token_revoked`,
+      so revoking a link makes the recipient's URL 404 immediately.
+- **P2 — CSV Live Progress Bar**: Bulk imports now stream
+  event-by-event so a 100-row upload shows a moving progress bar
+  and per-row status instead of freezing for 60-120 seconds.
+    - Backend: new `POST /professional/joint-alignment/cases/bulk-csv/stream`
+      endpoint returns `application/x-ndjson`. Emits one
+      `{"event":"start"}`, one `{"event":"row"}` per parsed row,
+      one `{"event":"done"}` — with fatal 4xx errors still surfacing
+      BEFORE the stream begins so the client can toast them.
+      `X-Accel-Buffering: no` header disables nginx/CDN buffering.
+    - Frontend: `ProfessionalJointAlignmentBulk.jsx` swaps axios
+      for `fetch()` + `ReadableStream` to consume NDJSON. Renders
+      a live purple gradient progress bar (`data-testid="bulk-progress-bar"`),
+      running counters for created/skipped/errored, the last-row
+      status line, and a Cancel button (backed by `AbortController`).
+    - The non-streaming `/bulk-csv` endpoint is retained for the
+      pytest suite + any script consumers.
+- **P1 — Preview Test-Send**: Mediators can send the exact reminder
+  email to their own inbox from the Preview modal — perfect for
+  spam-filter / mobile-Gmail / dark-mode QA before the 5-day sweep
+  fires against a parent.
+    - Backend: new `POST /professional/joint-alignment/cases/{case_id}/reminder-preview/send-test?parent_index=0|1`
+      (JWT + owner-only). Rate-limited to 10 sends/hour per mediator
+      via a `reminder_preview_test_sends` audit collection.
+    - Subject is prefixed with `[TEST PREVIEW]` and the plaintext
+      body carries a "this is a TEST — real recipient did NOT
+      receive this" preamble so no mediator ever mistakes a QA
+      copy for a live send.
+    - Frontend: "Send test to my inbox" pill in the ReminderPreviewModal
+      footer next to Done. Toast confirms the delivered-to address.
+- **Coverage** — `tests/test_iter160_revoke_stream_testsend.py`
+  (14 tests: 5 revoke, 5 streaming, 4 test-send). Combined
+  regression across iter155-160: **78 tests green** (+ 1 skipped
+  live-TTS test that requires the LLM key in env).
+- **Live-verified**:
+  - Parent 1 → `/my-plan` Share modal → History tab shows 4 rows
+    with status pills ("Link revoked" / "Link active"). Revoke
+    button flips a row to revoked instantly, public URL 404s.
+  - Mediator uploads 6-row CSV → progress bar ticks from `0/6` →
+    `6/6` in real time with running counters `5 ✓ · 0 〰 · 1 ⚠`,
+    Cancel button visible mid-import. Final `Created 5 · Errored 1`
+    matches server response.
+  - Mediator opens Preview modal → clicks "Send test to my inbox"
+    → toast confirms delivery to `mattsossi@bsossi.com`.
+- **Files touched**:
+  - `backend/mediation_routes.py` (adds preview_jti/status to
+    shares history, new revoke endpoint)
+  - `backend/joint_alignment_routes.py` (adds streaming NDJSON
+    bulk endpoint, adds send-test endpoint + rate limit collection)
+  - `frontend/src/components/foundation/FoundationStatementShareModal.jsx`
+    (adds revoke button + status pills)
+  - `frontend/src/pages/ProfessionalJointAlignmentBulk.jsx`
+    (swaps to fetch+stream, adds progress bar + Cancel)
+  - `frontend/src/components/professional/ReminderPreviewModal.jsx`
+    (adds test-send button)
+  - `backend/tests/test_iter160_revoke_stream_testsend.py` (new, 14 tests)
+
+
 ### 2026-09-07 — Shared Preview Page + Reminder Preview Modal + Bulk CSV
 - **P1 — Foundation Statement Shared Preview** (`/foundation/shared/:token`) —
   every share now mints a **30-day revocable JWT preview link** the

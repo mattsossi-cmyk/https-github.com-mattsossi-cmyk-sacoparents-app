@@ -14,7 +14,7 @@
  * some mediators forward to inboxes that strip HTML.
  */
 import { useEffect, useRef, useState } from "react";
-import { Loader2, X, Mail, FileText, User, CheckCircle2 } from "lucide-react";
+import { Loader2, X, Mail, FileText, User, CheckCircle2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
@@ -25,6 +25,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState(null);
+  const [testSending, setTestSending] = useState(false);
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -69,6 +70,26 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
+  const handleTestSend = async () => {
+    if (!caseId || testSending) return;
+    setTestSending(true);
+    try {
+      const r = await api.post(
+        `/professional/joint-alignment/cases/${encodeURIComponent(caseId)}/reminder-preview/send-test`,
+        {},
+        { params: { parent_index: parentIndex } },
+      );
+      const to = r.data?.delivered_to || "your inbox";
+      toast.success(`Test sent to ${to} · look for the [TEST PREVIEW] tag.`);
+    } catch (err) {
+      logError("reminder test send failed", err);
+      const detail = err?.response?.data?.detail || "Couldn't send the test.";
+      toast.error(String(detail));
+    } finally {
+      setTestSending(false);
+    }
+  };
 
   if (!open) return null;
 
@@ -225,7 +246,21 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
           )}
         </div>
 
-        <div className="px-6 py-3 border-t border-[#EEE8F7] flex justify-end">
+        <div className="px-6 py-3 border-t border-[#EEE8F7] flex flex-wrap items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={handleTestSend}
+            disabled={testSending || loading || !preview}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] bg-white px-4 py-2 text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+            title="Email this exact preview to your own inbox to check rendering"
+            data-testid="reminder-preview-test-send"
+          >
+            {testSending ? (
+              <><Loader2 size={13} className="animate-spin" /> Sending…</>
+            ) : (
+              <><Send size={13} /> Send test to my inbox</>
+            )}
+          </button>
           <button
             type="button"
             onClick={onClose}

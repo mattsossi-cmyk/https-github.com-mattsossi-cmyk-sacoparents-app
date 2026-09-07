@@ -402,7 +402,15 @@ async def list_foundation_statement_shares(
 ):
     """Return the caller's most-recent Foundation Statement shares
     (last 25). Powers the "Share history" view on /my-plan so a
-    parent can see who they've sent to and re-send with one tap."""
+    parent can see who they've sent to and re-send with one tap.
+
+    For every share row that carries a `preview_token`, we resolve
+    its `share_tokens` sibling doc + compute one of four statuses:
+      * `active`   — link still opens
+      * `revoked`  — parent hit Revoke; recipient now 404s
+      * `expired`  — 30-day window elapsed
+      * `none`     — legacy row (pre-preview-link feature)
+    """
     db = request.app.state.db
     cursor = (
         db.foundation_statement_shares
@@ -410,8 +418,57 @@ async def list_foundation_statement_shares(
         .sort("created_at", -1)
         .limit(25)
     )
-    rows: List[Dict[str, Any]] = []
+    audit_rows: List[Dict[str, Any]] = []
     async for row in cursor:
+        audit_rows.append(row)
+
+    # Batch-fetch the sibling share_tokens rows so we don't fan out
+    # N queries. Only rows with a preview_token participate.
+    tokens = [r.get("preview_token") for r in audit_rows if r.get("preview_token")]
+    token_meta: Dict[str, Dict[str, Any]] = {}
+    if tokens:
+        # Look up by the FULL token — share_tokens stores the raw
+        # JWT under the `token` field. We keep the jti alongside so
+        # the frontend can call the revoke endpoint.
+        async for tok_doc in db.share_tokens.find(
+            {"token": {"$in": tokens}, "user_id": current.user_id},
+            {"_id": 0, "token": 1, "jti": 1, "revoked_at": 1, "expires_at": 1},
+        ):
+            token_meta[tok_doc["token"]] = tok_doc
+
+    # Aggregate open counts / last-opened per jti in one round-trip
+    # so the History tab stays fast even with 25 share rows.
+    jtis = [t.get("jti") for t in token_meta.values() if t.get("jti")]
+    open_stats: Dict[str, Dict[str, Any]] = {}
+    if jtis:
+        from foundation_statement_analytics import opens_by_jti
+        open_stats = await opens_by_jti(db, user_id=current.user_id, jtis=jtis)
+
+    now = datetime.now(timezone.utc)
+    rows: List[Dict[str, Any]] = []
+    for row in audit_rows:
+        preview_token = row.get("preview_token")
+        preview_status = "none"
+        preview_jti: Optional[str] = None
+        expires_at: Optional[str] = None
+        if preview_token:
+            meta = token_meta.get(preview_token) or {}
+            preview_jti = meta.get("jti")
+            expires_at = meta.get("expires_at")
+            if meta.get("revoked_at"):
+                preview_status = "revoked"
+            elif meta.get("expires_at"):
+                # `expires_at` is stored as an ISO string on
+                # share_tokens.
+                try:
+                    exp = datetime.fromisoformat(str(meta["expires_at"]))
+                    if exp.tzinfo is None:
+                        exp = exp.replace(tzinfo=timezone.utc)
+                    preview_status = "expired" if exp < now else "active"
+                except ValueError:
+                    preview_status = "active"
+            else:
+                preview_status = "active"
         rows.append({
             "share_id": row.get("share_id"),
             "recipient_email": row.get("recipient_email"),
@@ -422,8 +479,73 @@ async def list_foundation_statement_shares(
                 if isinstance(row.get("created_at"), datetime)
                 else row.get("created_at")
             ),
+            # Preview link surface — powers the "Manage links" UI
+            # on the parent's Share modal.
+            "preview_jti": preview_jti,
+            "preview_status": preview_status,
+            "preview_expires_at": expires_at,
+            # Open analytics (bot-filtered) — closes the "did they
+            # read it?" feedback loop.
+            "open_count": (
+                open_stats.get(preview_jti, {}).get("open_count", 0)
+                if preview_jti else 0
+            ),
+            "last_opened_at": (
+                open_stats.get(preview_jti, {}).get("last_opened_at")
+                if preview_jti else None
+            ),
+            "unique_ip_count": (
+                open_stats.get(preview_jti, {}).get("unique_ip_count", 0)
+                if preview_jti else 0
+            ),
         })
     return {"shares": rows}
+
+
+class FoundationPreviewRevokeBody(BaseModel):
+    """Body for `POST /foundation-statement/preview-links/revoke`."""
+    jti: str = Field(..., min_length=8, max_length=128)
+
+
+@router.post("/foundation-statement/preview-links/revoke")
+async def revoke_foundation_preview_link(
+    body: FoundationPreviewRevokeBody,
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Revoke a Foundation Statement preview link by JTI. Idempotent
+    — revoking an already-revoked link is a soft no-op so a
+    double-tap on the UI never surfaces an error.
+
+    Ownership check: the caller must own the token (user_id match).
+    A cross-user attempt 404s so we don't leak the existence of a
+    foreign token.
+    """
+    db = request.app.state.db
+    tok = await db.share_tokens.find_one(
+        {"jti": body.jti, "user_id": current.user_id},
+        {"_id": 0, "jti": 1, "revoked_at": 1, "doc_type": 1},
+    )
+    if not tok:
+        raise HTTPException(
+            status_code=404,
+            detail="Preview link not found or not owned by this account.",
+        )
+    if tok.get("doc_type") != "foundation_statement":
+        # Belt-and-braces — this endpoint is dedicated to statement
+        # tokens so we never accidentally revoke someone's Joint
+        # Agreement share.
+        raise HTTPException(
+            status_code=400,
+            detail="This link is not a Foundation Statement preview.",
+        )
+    if tok.get("revoked_at"):
+        return {"ok": True, "already_revoked": True}
+    await db.share_tokens.update_one(
+        {"jti": body.jti, "user_id": current.user_id},
+        {"$set": {"revoked_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"ok": True, "already_revoked": False}
 
 
 @router.post("/foundation-statement/shares/{share_id}/resend")
@@ -702,6 +824,10 @@ async def get_shared_foundation_statement(
     render them; the recipient never sees the parent's private
     metadata (email, user_id, other prep sections)."""
     from foundation_statement_voice import foundation_statement_sections
+    from foundation_statement_analytics import (
+        client_ip_from_request,
+        record_preview_open,
+    )
     db = request.app.state.db
     payload, user_doc = await _load_shared_foundation(token=token, db=db)
     reflection = await _load_reflection_for_current(db, user_doc["user_id"])
@@ -714,6 +840,17 @@ async def get_shared_foundation_statement(
             404,
             "The sender has removed the content of their Foundation Statement.",
         )
+    # Best-effort analytics — bot-filtered inside `record_preview_open`
+    # so a link-unfurl doesn't inflate the count. NEVER blocks the
+    # response.
+    await record_preview_open(
+        db,
+        jti=payload.get("jti"),
+        doc_owner_user_id=user_doc.get("user_id"),
+        user_agent=request.headers.get("user-agent"),
+        ip=client_ip_from_request(request),
+        referer=request.headers.get("referer"),
+    )
     # Look up the note the sender attached at mint time (recipient
     # name / personal note) — best-effort, present on newer rows.
     landing_note: Optional[str] = None

@@ -12,10 +12,31 @@
  * disclaimer-stamped PDF as an artefact.
  */
 import { useEffect, useRef, useState } from "react";
-import { Loader2, X, Send, Download, ShieldCheck, History, RefreshCw } from "lucide-react";
+import { Loader2, X, Send, Download, ShieldCheck, History, RefreshCw, Ban, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
+
+/**
+ * Human-friendly "last opened" phrasing. `now`, `2 minutes ago`,
+ * `3 hours ago`, `yesterday`, `Sep 5`. Returns null for invalid /
+ * missing input so the parent UI can hide the row entirely.
+ */
+function formatLastOpened(iso) {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return null;
+  const diffSec = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (diffSec < 45) return "opened now";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `opened ${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `opened ${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay === 1) return "opened yesterday";
+  if (diffDay < 7) return `opened ${diffDay}d ago`;
+  return `opened ${new Date(iso).toLocaleDateString([], { month: "short", day: "numeric" })}`;
+}
 
 export default function FoundationStatementShareModal({
   open,
@@ -33,6 +54,7 @@ export default function FoundationStatementShareModal({
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [resendingId, setResendingId] = useState(null);
+  const [revokingJti, setRevokingJti] = useState(null);
   const dialogRef = useRef(null);
 
   // Reset every time the modal reopens.
@@ -158,6 +180,39 @@ export default function FoundationStatementShareModal({
       toast.error(String(detail));
     } finally {
       setResendingId(null);
+    }
+  };
+
+  const handleRevoke = async (jti, recipientEmailLabel) => {
+    if (!jti) return;
+    // Fast, in-thread confirm — a preview link tap-through is
+    // irreversible, so we make the parent explicitly confirm.
+    // eslint-disable-next-line no-alert
+    const ok = window.confirm(
+      `Revoke the preview link for ${recipientEmailLabel}?\n\n` +
+      "The recipient's browser link will stop working immediately. " +
+      "The PDF they've already downloaded is unaffected. You can " +
+      "always send them a fresh link.",
+    );
+    if (!ok) return;
+    setRevokingJti(jti);
+    try {
+      await api.post(
+        "/mediation/foundation-statement/preview-links/revoke",
+        { jti },
+      );
+      toast.success(`Preview link for ${recipientEmailLabel} revoked.`);
+      // Optimistically update local state so the row flips to
+      // "revoked" without a full round-trip.
+      setHistory((rows) => rows.map((r) =>
+        r.preview_jti === jti ? { ...r, preview_status: "revoked" } : r,
+      ));
+    } catch (err) {
+      logError("foundation revoke failed", err);
+      const detail = err?.response?.data?.detail || "Revoke failed.";
+      toast.error(String(detail));
+    } finally {
+      setRevokingJti(null);
     }
   };
 
@@ -394,37 +449,98 @@ export default function FoundationStatementShareModal({
                       })
                     : "";
                   const busy = resendingId === s.share_id;
+                  const revoking = revokingJti && s.preview_jti === revokingJti;
+                  const status = s.preview_status || "none";
+                  const isActivePreview = status === "active";
+                  const opens = Number(s.open_count || 0);
+                  const uniqueOpens = Number(s.unique_ip_count || 0);
+                  const lastOpenedLabel = formatLastOpened(s.last_opened_at);
+                  const statusPill = (
+                    status === "active"  ? { label: "Link active",  cls: "bg-[#E6F4EC] text-[#1F5C3B]" } :
+                    status === "revoked" ? { label: "Link revoked", cls: "bg-[#FCE3DC] text-[#9A3A23]" } :
+                    status === "expired" ? { label: "Link expired", cls: "bg-[#F1EEF7] text-[#4B4567]" } :
+                    null
+                  );
                   return (
                     <li
                       key={s.share_id}
-                      className="rounded-2xl border border-[#E5E0EE] bg-[#FBF9FE] px-3 py-2.5 flex items-center gap-3"
+                      className="rounded-2xl border border-[#E5E0EE] bg-[#FBF9FE] px-3 py-2.5"
                       data-testid={`foundation-history-row-${s.share_id}`}
                     >
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-[#1A1330] truncate">
-                          {s.recipient_name
-                            ? `${s.recipient_name} · ${s.recipient_email}`
-                            : s.recipient_email}
+                      <div className="flex items-center gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-semibold text-[#1A1330] truncate">
+                            {s.recipient_name
+                              ? `${s.recipient_name} · ${s.recipient_email}`
+                              : s.recipient_email}
+                          </div>
+                          <div className="text-[11px] text-[#857E9C] mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                            <span>{when}</span>
+                            {s.personal_note && <span>· note included</span>}
+                            {statusPill && (
+                              <span
+                                className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${statusPill.cls}`}
+                                data-testid={`foundation-history-status-${s.share_id}`}
+                              >
+                                {statusPill.label}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-[11px] text-[#857E9C] mt-0.5">
-                          {when}
-                          {s.personal_note ? " · note included" : ""}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleResend(s.share_id, s.recipient_email)}
+                          disabled={busy || !!resendingId}
+                          className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1.5 text-xs font-semibold disabled:bg-[#C9C0DC] disabled:cursor-not-allowed"
+                          data-testid={`foundation-history-resend-${s.share_id}`}
+                        >
+                          {busy ? (
+                            <Loader2 size={11} className="animate-spin" />
+                          ) : (
+                            <RefreshCw size={11} />
+                          )}{" "}
+                          Resend
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleResend(s.share_id, s.recipient_email)}
-                        disabled={busy || !!resendingId}
-                        className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1.5 text-xs font-semibold disabled:bg-[#C9C0DC] disabled:cursor-not-allowed"
-                        data-testid={`foundation-history-resend-${s.share_id}`}
-                      >
-                        {busy ? (
-                          <Loader2 size={11} className="animate-spin" />
-                        ) : (
-                          <RefreshCw size={11} />
-                        )}{" "}
-                        Resend
-                      </button>
+                      {(opens > 0 || uniqueOpens > 0) && (
+                        <div
+                          className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-[#3D1A78]"
+                          data-testid={`foundation-history-opens-${s.share_id}`}
+                        >
+                          <Eye size={11} />
+                          <span className="font-semibold">
+                            {opens} open{opens === 1 ? "" : "s"}
+                            {uniqueOpens > 1 && (
+                              <span className="text-[#4B4567] font-normal">
+                                {" "}· {uniqueOpens} viewer
+                                {uniqueOpens === 1 ? "" : "s"}
+                              </span>
+                            )}
+                          </span>
+                          {lastOpenedLabel && (
+                            <span className="text-[#4B4567]">· {lastOpenedLabel}</span>
+                          )}
+                        </div>
+                      )}
+                      {isActivePreview && (
+                        <div className="mt-2 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleRevoke(s.preview_jti, s.recipient_email)}
+                            disabled={!!revokingJti}
+                            className="inline-flex items-center gap-1 rounded-full border border-[#F5D0C5] text-[#9A3A23] hover:bg-[#FCE3DC] bg-white px-2.5 py-1 text-[11px] font-semibold disabled:opacity-60"
+                            data-testid={`foundation-history-revoke-${s.share_id}`}
+                            title="Turn off the online preview link for this recipient"
+                          >
+                            {revoking ? (
+                              <Loader2 size={10} className="animate-spin" />
+                            ) : (
+                              <Ban size={10} />
+                            )}
+                            Revoke preview link
+                          </button>
+                        </div>
+                      )}
                     </li>
                   );
                 })}
