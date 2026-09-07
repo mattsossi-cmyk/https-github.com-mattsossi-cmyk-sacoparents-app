@@ -121,6 +121,7 @@ export default function ForProfessionals() {
       </header>
 
       {/* Hero */}
+      <main id="main-content">
       <section className="px-5 sm:px-8 py-12 sm:py-16 bg-gradient-to-b from-[#F5F1FB] to-white">
         <div className="max-w-6xl mx-auto">
           <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#D6CFE8] px-3 py-1 mb-6" data-testid="for-pros-eyebrow">
@@ -296,6 +297,7 @@ export default function ForProfessionals() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer legal strip */}
       <footer className="px-5 sm:px-8 py-6 border-t border-[#E5E0EE] bg-[#FAF8FD]">

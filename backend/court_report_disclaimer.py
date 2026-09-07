@@ -107,9 +107,21 @@ def apply_professional_watermark(
                 pdf.set_font("Helvetica", "I", 7.5)
                 pdf.set_text_color(*_WATERMARK_GREY)
                 # Bottom-right anchor — 8mm from right, 6mm from bottom.
-                # Falls under any content that already exists; fpdf2's
-                # text() overlays.
-                pdf.text(x=page_w - 8, y=page_h - 6, txt=stamp_text)
+                # fpdf2's `text()` is left-anchored, so we must subtract
+                # the rendered string width to actually sit against the
+                # right margin. Without this, long firm names get
+                # clipped past the page edge and the provenance stamp
+                # disappears — defeating the traceability contract.
+                stamp_width = 0.0
+                try:
+                    stamp_width = pdf.get_string_width(stamp_text)
+                except Exception:  # noqa: BLE001
+                    stamp_width = 0.0
+                pdf.text(
+                    x=page_w - 8 - stamp_width,
+                    y=page_h - 6,
+                    txt=stamp_text,
+                )
             except Exception:  # noqa: BLE001
                 # A specific page's canvas can't be replayed (mixed
                 # engine / fpdf legacy compat) — skip that page rather

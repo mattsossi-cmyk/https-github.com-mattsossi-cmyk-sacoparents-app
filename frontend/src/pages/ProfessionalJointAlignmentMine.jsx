@@ -12,7 +12,7 @@
  * `/professional/joint-alignment/new` page — this route is the
  * dedicated management surface.
  */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -72,6 +72,30 @@ export default function ProfessionalJointAlignmentMine() {
   const [noteEditingId, setNoteEditingId] = useState(null);
   const [noteDraft, setNoteDraft] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
+  const downloadModalRef = useRef(null);
+  const downloadTriggerRef = useRef(null);
+
+  // Close the download modal on Escape and restore focus to whichever
+  // "Download PDF" button opened it — matches WAI-ARIA APG dialog
+  // pattern so keyboard/screen-reader users aren't stranded.
+  useEffect(() => {
+    if (!downloadFor) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape" && !downloading) {
+        setDownloadFor(null);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [downloadFor, downloading]);
+
+  useEffect(() => {
+    // Restore focus back to the trigger button once the modal closes.
+    if (!downloadFor && downloadTriggerRef.current) {
+      try { downloadTriggerRef.current.focus(); } catch { /* noop */ }
+      downloadTriggerRef.current = null;
+    }
+  }, [downloadFor]);
 
   const load = () => {
     setLoading(true);
@@ -139,7 +163,8 @@ export default function ProfessionalJointAlignmentMine() {
     }
   };
 
-  const openDownload = (caseId) => {
+  const openDownload = (caseId, triggerEl) => {
+    if (triggerEl) downloadTriggerRef.current = triggerEl;
     setDownloadFor({ caseId });
   };
   const closeDownload = () => {
@@ -297,6 +322,7 @@ export default function ProfessionalJointAlignmentMine() {
                 key={f.key}
                 type="button"
                 onClick={() => setStatusFilter(f.key)}
+                aria-pressed={statusFilter === f.key}
                 className={`text-xs font-semibold rounded-full px-3 py-1 border transition-colors ${
                   statusFilter === f.key
                     ? "bg-[#3D1A78] border-[#3D1A78] text-white"
@@ -313,6 +339,8 @@ export default function ProfessionalJointAlignmentMine() {
         {error && (
           <div
             className="mb-4 flex items-start gap-2 rounded-2xl bg-[#FEE4E2] border border-[#F1B0A9] px-4 py-3 text-[13px] text-[#8A2C1E]"
+            role="alert"
+            aria-live="polite"
             data-testid="pj-mine-error"
           >
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
@@ -381,22 +409,24 @@ export default function ProfessionalJointAlignmentMine() {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => openDownload(c.case_id)}
+                        onClick={(e) => openDownload(c.case_id, e.currentTarget)}
                         className="inline-flex items-center gap-1.5 rounded-full border border-[#D6CFE8] text-[#3D1A78] hover:bg-[#F5F1FB] px-3 py-1.5 text-xs font-semibold transition-colors"
                         data-testid={`pj-mine-download-${c.case_id}`}
                       >
                         <FileDown size={12} /> Download PDF
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => revoke(c.case_id)}
-                        disabled={busyId === c.case_id}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-[#EFB4B4] text-[#B02A2A] hover:bg-[#FEE4E2] px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60"
-                        data-testid={`pj-mine-revoke-${c.case_id}`}
-                      >
-                        {busyId === c.case_id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                        Revoke
-                      </button>
+                      {c.status !== "both_complete" && (
+                        <button
+                          type="button"
+                          onClick={() => revoke(c.case_id)}
+                          disabled={busyId === c.case_id}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-[#EFB4B4] text-[#B02A2A] hover:bg-[#FEE4E2] px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60"
+                          data-testid={`pj-mine-revoke-${c.case_id}`}
+                        >
+                          {busyId === c.case_id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                          Revoke
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -524,6 +554,10 @@ export default function ProfessionalJointAlignmentMine() {
             <div
               className="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 relative"
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="pj-download-modal-title"
+              ref={downloadModalRef}
               data-testid="pj-download-modal"
             >
               <button
@@ -544,7 +578,10 @@ export default function ProfessionalJointAlignmentMine() {
                   <div className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
                     Case {downloadFor.caseId}
                   </div>
-                  <h3 className="font-serif text-xl text-[#1A1330] mt-1 leading-tight">
+                  <h3
+                    id="pj-download-modal-title"
+                    className="font-serif text-xl text-[#1A1330] mt-1 leading-tight"
+                  >
                     Download case status PDF
                   </h3>
                   <p className="text-xs text-[#4B4567] mt-2 leading-relaxed">

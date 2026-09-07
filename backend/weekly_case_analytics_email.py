@@ -6,7 +6,9 @@ Case, this sweep sends a weekly rollup email summarising their
 first-accept, average time-to-both-complete, top assessment lane,
 and a `+N this week` delta so trends are visible at a glance.
 
-Runs once daily on Monday between 09:00-11:00 UTC. Dedupe is per
+Runs once daily on Monday between 09:00-11:00 in the configured
+send-window timezone (defaults to America/Chicago so it lands in the
+mediator's morning, not the middle of the night). Dedupe is per
 (user_id, ISO-week) so a Monday-morning cron nudge fires exactly
 once per mediator per week.
 
@@ -18,8 +20,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 from typing import Any, Dict, List, Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -33,8 +36,25 @@ _USERS_COLLECTION = "users"
 _ORIGIN_IN_APP = "in_app_professional"
 
 _SWEEP_INTERVAL_S = int(os.environ.get("WEEKLY_CASE_ANALYTICS_SWEEP_SECONDS", "3600"))
-_MONDAY_SEND_START_UTC_HOUR = int(os.environ.get("WEEKLY_CASE_ANALYTICS_START_HOUR_UTC", "9"))
-_MONDAY_SEND_END_UTC_HOUR = int(os.environ.get("WEEKLY_CASE_ANALYTICS_END_HOUR_UTC", "11"))
+# Send-window hours are evaluated in a configurable local timezone
+# so "Monday morning" actually lands in the recipient's morning.
+# Defaults to the app's operating market (San Antonio → America/Chicago).
+_MONDAY_SEND_START_HOUR = int(os.environ.get("WEEKLY_CASE_ANALYTICS_START_HOUR", "9"))
+_MONDAY_SEND_END_HOUR = int(os.environ.get("WEEKLY_CASE_ANALYTICS_END_HOUR", "11"))
+_SEND_WINDOW_TZ_NAME = (
+    os.environ.get("WEEKLY_CASE_ANALYTICS_TZ") or "America/Chicago"
+)
+
+
+def _send_window_tz() -> tzinfo:
+    try:
+        return ZoneInfo(_SEND_WINDOW_TZ_NAME)
+    except ZoneInfoNotFoundError:
+        log.warning(
+            "weekly_case_analytics: unknown timezone %r; falling back to UTC",
+            _SEND_WINDOW_TZ_NAME,
+        )
+        return timezone.utc
 
 
 def _now_utc() -> datetime:
@@ -42,20 +62,26 @@ def _now_utc() -> datetime:
 
 
 def _week_start(dt: Optional[datetime] = None) -> str:
-    """ISO date (YYYY-MM-DD) of the Monday preceding `dt` — used as
-    the dedupe key so a Monday sweep can't double-send within the
-    same week."""
-    d = (dt or _now_utc()).astimezone(timezone.utc)
+    """ISO date (YYYY-MM-DD) of the Monday preceding `dt` — evaluated
+    in the configured send-window timezone so a "Monday" boundary
+    matches the recipient's local Monday, not UTC's. Used as the
+    dedupe key so a Monday sweep can't double-send within the same
+    week."""
+    tz = _send_window_tz()
+    d = (dt or _now_utc()).astimezone(tz)
     monday = d - timedelta(days=d.weekday())
     return monday.strftime("%Y-%m-%d")
 
 
 def _in_send_window(now: datetime) -> bool:
-    """True iff `now` is Monday between the configured UTC hour window."""
-    now = now.astimezone(timezone.utc)
+    """True iff `now` is Monday between the configured hour window,
+    evaluated in the configured local timezone (defaults to
+    America/Chicago so the "Monday-morning" digest actually lands in
+    the mediator's morning)."""
+    local = now.astimezone(_send_window_tz())
     return (
-        now.weekday() == 0
-        and _MONDAY_SEND_START_UTC_HOUR <= now.hour < _MONDAY_SEND_END_UTC_HOUR
+        local.weekday() == 0
+        and _MONDAY_SEND_START_HOUR <= local.hour < _MONDAY_SEND_END_HOUR
     )
 
 

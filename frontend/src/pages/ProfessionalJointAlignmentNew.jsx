@@ -397,6 +397,8 @@ export default function ProfessionalJointAlignmentNew() {
             {error && (
               <div
                 className="mt-4 flex items-start gap-3 rounded-2xl bg-[#FEE4E2] border border-[#F1B0A9] px-4 py-3 text-[13px] text-[#8A2C1E]"
+                role="alert"
+                aria-live="polite"
                 data-testid="pj-error"
               >
                 <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />

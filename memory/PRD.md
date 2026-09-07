@@ -27,6 +27,34 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — Code Review action items (Professional Joint Alignment scope)
+- **P1 — PDF watermark clipping fix** (`court_report_disclaimer.py`) —
+  Right-aligns the "Downloaded by …" firm-name + timestamp stamp by
+  subtracting the measured `get_string_width` so long firm names no
+  longer overflow off the page edge. Fresh regression tests in
+  `tests/test_iter153_watermark_placement.py` cover the fix.
+- **P2 — `prefers-reduced-motion` respected** (`frontend/src/index.css`) —
+  Kills the infinite `.recommended-pulse` and staggered entrances for
+  users with OS reduced-motion set (WCAG 2.2.2 / 2.3.3).
+- **P2 — Weekly digest send window now in local TZ**
+  (`weekly_case_analytics_email.py`) — Monday-morning digest window
+  is evaluated in the configured local timezone (defaults to
+  `America/Chicago` — the app's operating market). Test suite
+  updated to match; new env vars `WEEKLY_CASE_ANALYTICS_TZ`,
+  `WEEKLY_CASE_ANALYTICS_START_HOUR`, `WEEKLY_CASE_ANALYTICS_END_HOUR`.
+- **P2 — Download-PDF modal has proper dialog semantics**
+  (`ProfessionalJointAlignmentMine.jsx`) — `role="dialog"`,
+  `aria-modal="true"`, `aria-labelledby`, Escape-to-close, and
+  focus returned to the trigger button on close.
+- **Minor a11y polish** — `aria-pressed` on status-filter pills +
+  `WeeklyDigestToggle`; `role="alert" aria-live="polite"` on error
+  banners in `/mine`, `/new`, and `CaseAnalyticsCard`;
+  `<main id="main-content">` landmark on `/for-professionals`.
+- **UX consistency** — Revoke button hidden on `both_complete`
+  cases (Download PDF remains); revoking a completed case wasn't
+  a coherent action from the mediator's mental model.
+
+
 ### 2026-03-07 — Custom Reminder Copy for the 5-day nudge
 - **Data model** — case docs now carry an optional
   `reminder_note` (max 240 chars) captured at mint time. Existing

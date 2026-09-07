@@ -72,6 +72,7 @@ export default function WeeklyDigestToggle() {
       type="button"
       onClick={toggle}
       disabled={busy}
+      aria-pressed={optedIn}
       title={
         optedIn
           ? "Click to pause the Monday analytics email."

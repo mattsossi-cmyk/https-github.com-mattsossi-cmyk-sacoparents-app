@@ -78,16 +78,21 @@ def _seed_case(user_id: str, professional_email: str, professional_name: str, mi
 # --- pure helpers ----
 
 def test_in_send_window_only_monday_morning():
-    """Send window is Monday 09-11 UTC only."""
-    # Monday 2026-03-02 10:00 UTC
-    monday_am = datetime(2026, 3, 2, 10, 0, tzinfo=timezone.utc)
+    """Send window is Monday 09-11 in the configured local TZ
+    (defaults to America/Chicago). 2026-03-02 is CST (UTC-6),
+    so Monday 10:00 Central == Monday 16:00 UTC."""
+    # Monday 2026-03-02 10:00 America/Chicago  → 16:00 UTC
+    monday_am = datetime(2026, 3, 2, 16, 0, tzinfo=timezone.utc)
     assert _in_send_window(monday_am) is True
-    # Same day, 15:00 UTC (afternoon) — outside window
-    monday_pm = datetime(2026, 3, 2, 15, 0, tzinfo=timezone.utc)
+    # Same day, 15:00 Central → 21:00 UTC (afternoon) — outside window
+    monday_pm = datetime(2026, 3, 2, 21, 0, tzinfo=timezone.utc)
     assert _in_send_window(monday_pm) is False
-    # Tuesday 10:00 UTC — wrong day
-    tue = datetime(2026, 3, 3, 10, 0, tzinfo=timezone.utc)
+    # Tuesday 10:00 Central → 16:00 UTC (wrong day)
+    tue = datetime(2026, 3, 3, 16, 0, tzinfo=timezone.utc)
     assert _in_send_window(tue) is False
+    # 10:00 UTC on that Monday is only 04:00 Central — outside window
+    early_utc = datetime(2026, 3, 2, 10, 0, tzinfo=timezone.utc)
+    assert _in_send_window(early_utc) is False
 
 
 def test_week_start_returns_monday_iso():

@@ -67,6 +67,8 @@ export default function CaseAnalyticsCard() {
     return (
       <div
         className="rounded-2xl border border-[#F1B0A9] bg-[#FEE4E2] px-4 py-3 mb-4 text-xs text-[#8A2C1E]"
+        role="alert"
+        aria-live="polite"
         data-testid="pj-analytics-error"
       >
         {error}

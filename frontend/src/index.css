@@ -136,6 +136,30 @@ h1, h2, h3, h4, .font-serif {
     animation: recommendedPulse 1.6s ease-out infinite;
 }
 
+/* Reduced-motion — respect user OS preference (WCAG 2.3.3 / 2.2.2).
+   Kill the infinite pulse and staggered entrances for anyone who has
+   asked the OS to reduce motion (vestibular sensitivity, migraine
+   triggers, seizure risk). Instant transitions replace the animations
+   so the UI still updates. */
+@media (prefers-reduced-motion: reduce) {
+    .recommended-pulse,
+    .front-door-tile,
+    .fade-up {
+        animation: none !important;
+    }
+    .progress-fill {
+        transition: none !important;
+    }
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 
 /* Wizard progress segment fill smooth */
 .progress-fill {
