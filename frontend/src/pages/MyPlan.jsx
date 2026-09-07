@@ -8,6 +8,7 @@ import SectionCoaching from "../components/SectionCoaching";
 import CertificateCard from "../components/CertificateCard";
 import GrowthTracker from "../components/GrowthTracker";
 import FoundationStatementShareModal from "../components/foundation/FoundationStatementShareModal";
+import FoundationStatementVoicePlayer from "../components/foundation/FoundationStatementVoicePlayer";
 import { api } from "../lib/api";
 
 /**
@@ -77,6 +78,9 @@ export default function MyPlan() {
   const [gmail, setGmail] = useState({ connected: false });
   const [loading, setLoading] = useState(true);
   const [shareOpen, setShareOpen] = useState(false);
+  // Highlights the section currently being read aloud (see the
+  // `FoundationStatementVoicePlayer` `onSectionChange` callback).
+  const [activeVoiceSection, setActiveVoiceSection] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -203,22 +207,49 @@ export default function MyPlan() {
               {foundation ? (
                 <div className="space-y-3 text-sm text-[#1A1330] leading-relaxed">
                   {foundationSections.length > 1 || foundationSections[0]?.label ? (
-                    foundationSections.map((s, i) => (
-                      <div key={i} data-testid={`myplan-foundation-section-${i}`}>
-                        {s.label && (
-                          <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1">
-                            {s.label}
-                          </div>
-                        )}
-                        <p className="whitespace-pre-wrap line-clamp-3">{s.text}</p>
-                      </div>
-                    ))
+                    foundationSections.map((s, i) => {
+                      // Find the raw prompt key so we can highlight the
+                      // section currently being spoken aloud by the
+                      // voice player.
+                      const promptKey = (
+                        s.label === "Through your child's eyes" ? "child_lens"
+                        : s.label === "Your own part" ? "own_part"
+                        : s.label === "Your best-case outcome" ? "best_outcome"
+                        : s.label === "Through your co-parent's eyes" ? "coparent_feedback"
+                        : null
+                      );
+                      const active = promptKey && promptKey === activeVoiceSection;
+                      return (
+                        <div
+                          key={i}
+                          data-testid={`myplan-foundation-section-${i}`}
+                          data-voice-active={active ? "true" : undefined}
+                          className={
+                            active
+                              ? "rounded-xl bg-[#EFE9F9] px-3 py-2 -mx-3 transition-colors"
+                              : "transition-colors"
+                          }
+                        >
+                          {s.label && (
+                            <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1">
+                              {s.label}
+                            </div>
+                          )}
+                          <p className="whitespace-pre-wrap line-clamp-3">{s.text}</p>
+                        </div>
+                      );
+                    })
                   ) : (
                     <p className="whitespace-pre-wrap line-clamp-6">
                       {foundation}
                     </p>
                   )}
-                  <div className="pt-1">
+                  <div className="pt-1 flex flex-wrap items-center gap-2">
+                    <FoundationStatementVoicePlayer
+                      variant="inline"
+                      compact
+                      onSectionChange={setActiveVoiceSection}
+                    />
                     <button
                       type="button"
                       onClick={() => setShareOpen(true)}
@@ -381,6 +412,12 @@ export default function MyPlan() {
         open={shareOpen}
         onClose={() => setShareOpen(false)}
       />
+      {foundation && (
+        <FoundationStatementVoicePlayer
+          variant="floating"
+          onSectionChange={setActiveVoiceSection}
+        />
+      )}
     </AppShell>
   );
 }

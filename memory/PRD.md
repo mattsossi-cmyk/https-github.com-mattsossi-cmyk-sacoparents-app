@@ -27,6 +27,68 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — Foundation Statement Voice Playback ("Read to me")
+- **New `/app/backend/foundation_statement_voice.py`** — pure module
+  that sanitises reflection text (strips emoji / URLs / markdown
+  before TTS), composes the spoken form (section 0 gets a "Here is
+  your Foundation Statement..." preamble so a forwarded recording is
+  self-contained), and provides a per-section idempotent Mongo cache
+  keyed on `(user_id, section_key, text_sha, voice, model, format)`.
+  Supported voices: `shimmer` (default), `nova`, `alloy`, `fable`.
+  Supported models: `tts-1` (default), `tts-1-hd`.
+- **New endpoints** on `/api/mediation`:
+    - `GET /foundation-statement/voice/manifest?voice=…&model=…`
+      returns the ordered [{index, key, label, text, word_count,
+      audio_url}] payload matching the PDF renderer's section order,
+      plus `supported_voices` + `supported_models` so the frontend
+      can build the voice dropdown from a single source of truth.
+      409 when the reflection is empty; unknown voice/model
+      degrades silently to the defaults.
+    - `GET /foundation-statement/voice/section/{key}?voice=…&model=…`
+      streams `audio/mpeg` bytes for a single section. Cached forever
+      per (user, content, voice); tweak the text and only that
+      section re-bills. Emits `X-Voice-Cache: hit|miss` so QA can
+      inspect. 404 for unknown section, 409 for empty reflection.
+- **`FoundationStatementVoicePlayer` (React)** — the "Read to me"
+  component. Two variants share the same underlying state:
+    - `variant="inline"` — pill button next to Send/PDF on the
+      Foundation Statement card, plus a small voice dropdown.
+    - `variant="floating"` — fixed bottom-right FAB (mobile-first).
+      Only mounts when the parent actually has statement content.
+    - Play/Pause/Resume/Stop, session-scoped blob-URL cache, and
+      pre-warms the next section while the current one plays so
+      playback is gapless. Emits `onSectionChange(sectionKey|null)`
+      up to MyPlan.
+- **`/my-plan` highlighting** — Foundation Statement card lights each
+  section with a soft purple background (`data-voice-active="true"`)
+  as it's read aloud. Follows `prefers-reduced-motion` for the
+  transition.
+- **Coverage** — new `tests/test_iter158_foundation_voice.py` (19
+  tests, 18 pure + 1 live-TTS smoke that verifies audio/mpeg content
+  and cache-hit round-trip). Regression: 51 tests green across
+  iter154 + iter155 + iter157 + iter158 combined.
+- **Live-verified**: parent1@test.com → /my-plan → clicked "Read to
+  me" → audio played back through Shimmer voice at 10.7s duration →
+  first section highlighted purple → Nova voice switch worked →
+  Pause + Stop + Resume all worked → mobile 390px viewport clean.
+- **What's not shipped**: mediator-facing playback. Mediators
+  currently receive the statement as an emailed PDF, and there is
+  no in-app screen where they view the statement's prose content
+  (`/mine` shows cases, not reflections). Adding a token-based
+  shared-statement preview page (like `/joint-agreement/shared/`)
+  would unlock mediator-side Read-to-Me in one iteration.
+- **Files touched**:
+  - `backend/foundation_statement_voice.py` (new)
+  - `backend/mediation_routes.py` (adds `/voice/manifest` +
+    `/voice/section/{key}` endpoints)
+  - `backend/requirements.txt` (adds `emoji==2.15.0` for TTS
+    text sanitisation)
+  - `frontend/src/components/foundation/FoundationStatementVoicePlayer.jsx` (new)
+  - `frontend/src/pages/MyPlan.jsx` (mounts inline + floating
+    players, wires section highlight state)
+  - `backend/tests/test_iter158_foundation_voice.py` (new, 19 tests)
+
+
 ### 2026-09-07 — Coach model chip + Case Notes + Share History
 - **Coach Model Picker Chip** — `/coach` page shows a two-state pill
   "Sharper (GPT) ⇄ Warmer (Claude)" (top-right of both empty state

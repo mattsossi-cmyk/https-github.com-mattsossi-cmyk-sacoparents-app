@@ -448,6 +448,122 @@ async def resend_foundation_statement_share(
     }
 
 
+# ============ Foundation Statement — "Read to me" voice playback ============
+@router.get("/foundation-statement/voice/manifest")
+async def foundation_statement_voice_manifest(
+    request: Request,
+    voice: Optional[str] = None,
+    model: Optional[str] = None,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Return the ordered list of prompt sections the parent has
+    filled in, along with a per-section audio URL. The frontend fires
+    one audio request per section so each row can highlight as it
+    plays. Rejects with 409 when the reflection is empty."""
+    from foundation_statement_voice import (
+        foundation_statement_sections,
+        normalise_model,
+        normalise_voice,
+        SUPPORTED_VOICES,
+        SUPPORTED_MODELS,
+    )
+    db = request.app.state.db
+    reflection = await _load_reflection_for_current(db, current.user_id)
+    sections = foundation_statement_sections(reflection)
+    if not sections:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Your Foundation Statement is empty. Write at least one "
+                "prompt on /reflection before using Read to me."
+            ),
+        )
+    v = normalise_voice(voice)
+    m = normalise_model(model)
+    api_prefix = "/api/mediation/foundation-statement/voice/section"
+    manifest = []
+    for idx, sec in enumerate(sections):
+        # Word count powers a smooth per-section duration estimate on
+        # the client while the audio blob loads.
+        word_count = len(sec["sanitized"].split())
+        manifest.append({
+            "index": idx,
+            "key": sec["key"],
+            "label": sec["label"],
+            "text": sec["text"],
+            "word_count": word_count,
+            "audio_url": (
+                f"{api_prefix}/{sec['key']}?voice={v}&model={m}"
+            ),
+        })
+    return {
+        "sections": manifest,
+        "voice": v,
+        "model": m,
+        "supported_voices": list(SUPPORTED_VOICES),
+        "supported_models": list(SUPPORTED_MODELS),
+    }
+
+
+@router.get("/foundation-statement/voice/section/{section_key}")
+async def foundation_statement_voice_section(
+    request: Request,
+    section_key: str = Path(..., min_length=1, max_length=40),
+    voice: Optional[str] = None,
+    model: Optional[str] = None,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Stream a single section as MP3 audio. Cached per-user +
+    per-content so repeated plays don't re-bill Emergent credits."""
+    from foundation_statement_voice import (
+        foundation_statement_sections,
+        get_or_generate_section_audio,
+        normalise_model,
+        normalise_voice,
+    )
+    db = request.app.state.db
+    reflection = await _load_reflection_for_current(db, current.user_id)
+    sections = foundation_statement_sections(reflection)
+    if not sections:
+        raise HTTPException(
+            status_code=409,
+            detail="Your Foundation Statement is empty.",
+        )
+    # Look up the requested section + preserve its index (spoken
+    # intro is only added to section 0).
+    target: Optional[Dict[str, Any]] = None
+    target_index = -1
+    for idx, sec in enumerate(sections):
+        if sec["key"] == section_key:
+            target = sec
+            target_index = idx
+            break
+    if target is None:
+        raise HTTPException(status_code=404, detail="Unknown section.")
+    v = normalise_voice(voice)
+    m = normalise_model(model)
+    try:
+        audio_bytes, cache_hit = await get_or_generate_section_audio(
+            db,
+            user_id=current.user_id,
+            section=target,
+            section_index=target_index,
+            voice=v,
+            model=m,
+        )
+    except RuntimeError as exc:
+        # Missing key OR provider returned unexpected payload — both
+        # are 502 (upstream issue), not 500.
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return StreamingResponse(
+        BytesIO(audio_bytes),
+        media_type="audio/mpeg",
+        headers={
+            "Cache-Control": "private, max-age=3600",
+            "X-Voice-Cache": "hit" if cache_hit else "miss",
+        },
+    )
+
 
 # ============ AI endpoints ============
 @router.post("/analyze-communication")
