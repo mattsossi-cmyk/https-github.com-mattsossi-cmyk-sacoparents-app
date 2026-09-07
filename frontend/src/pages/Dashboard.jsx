@@ -557,48 +557,22 @@ export default function Dashboard() {
         {/* NEW (2026-03-04) — Four-Circle Front Door.
             The founder's chosen dashboard root: four pathways with the
             same six-step process underneath. Child Needs reveals its
-            sub-tiles inline. Everything below (Step 1 situation picker,
-            journey, cards) still renders for parents who want the deeper
-            surface. */}
+            sub-tiles inline. Per the 2026-09-07 simplification, this
+            is now the ONLY thing above the fold — the Personal home
+            strip, Joint Alignment requests, Next Step journey, Your
+            Progress, Your Reports, and Active Share links all render
+            inside the "Explore all tools" collapsible below so a
+            stressed parent's dashboard reduces to a clean 4-way
+            picker. */}
         <FourCircleFrontDoor userName={user?.name} situationChoice={freshSituationChoice} />
 
-        {/* Personal home strip — Continue where you left off + My statements
-            + Joint-report invitations. Hides itself when nothing to surface. */}
-        <PersonalHomeStrip />
-
-        {/* Joint Alignment Requests — hides itself when zero cases,
-            so a solo parent's dashboard doesn't grow an empty panel. */}
-        <JointAlignmentRequests />
-
-        {/* Step 1 legacy — "What best describes your situation?" and the
-            full Preparation modules grid now live inside the "Explore All
-            Tools" collapsible below. The 4-circle Front Door above is
-            the primary decision surface; these are kept for parents who
-            want the deeper legacy surface. */}
-
-        {/* Primary "Do this next" home — auto-detects the parent's current
-            stage on the 6-step linear journey and surfaces one big action.
-            #next-step anchor is targeted by the situation picker inside
-            "Explore All Tools" so "cooperate / difficult / mediation" all
-            still scroll here.
-
-            Note: the Gmail Mini Inbox card used to live here. Per the
-            iteration-81 design pass ("one recommendation, one next
-            action, one clear outcome at each stage"), Gmail is a
-            major trust request and now lives only on the dedicated
-            /gmail page — reachable via the app-shell nav, not hoisted
-            above the parent's next action. */}
-        <div id="next-step" className="mt-6">
-          <NextStepJourney
-            completed={completed}
-            summariesCount={summariesCount}
-            hasCertificate={pillarFlags.hasCertificate}
-          />
-        </div>
-
-        {/* Explore All Tools — legacy Step 1 situation picker + full
-            preparation-modules grid. Collapsed by default so the primary
-            4-circle front door stays uncontested at the top of the fold. */}
+        {/* Explore All Tools — home for everything that used to render
+            unconditionally above the fold: Continue where you left off,
+            Joint-report invitations, Next Step journey, Your Progress
+            milestones, Your Reports, Active Share links, and the
+            legacy Step 1 situation picker + prep-modules grid.
+            Collapsed by default so the primary 4-circle front door
+            stays uncontested. */}
         <details
           className="mt-6 group"
           data-testid="dashboard-explore-all-tools"
@@ -610,8 +584,9 @@ export default function Dashboard() {
             <div>
               <div className="eyebrow text-[#3D1A78]">Explore all tools</div>
               <div className="text-sm text-[#4B4567] mt-0.5">
-                See every assessment and reflection organised by family situation
-                — plus the classic "what best describes your situation?" picker.
+                Invitations, your six-step journey, progress milestones,
+                reports, share links, and every assessment organised by
+                family situation.
               </div>
             </div>
             <span className="text-[#3D1A78] text-sm font-bold group-open:hidden">
@@ -622,6 +597,45 @@ export default function Dashboard() {
             </span>
           </summary>
           <div className="mt-4 space-y-6">
+            {/* Personal home strip — Continue where you left off + My statements
+                + Joint-report invitations. Hides itself when nothing to surface. */}
+            <PersonalHomeStrip />
+
+            {/* Joint Alignment Requests — hides itself when zero cases. */}
+            <JointAlignmentRequests />
+
+            {/* Primary "Do this next" — auto-detects the parent's current
+                stage on the 6-step linear journey and surfaces one big
+                action. #next-step anchor is targeted by the situation
+                picker below so "cooperate / difficult / mediation" all
+                still scroll here. */}
+            <div id="next-step">
+              <NextStepJourney
+                completed={completed}
+                summariesCount={summariesCount}
+                hasCertificate={pillarFlags.hasCertificate}
+              />
+            </div>
+
+            {/* Five-milestone visual progress — small, high-signal ✓ pills. */}
+            <ProgressDashboardCard />
+
+            {/* Your Reports — compact launcher showing ready / in-progress / not-started. */}
+            <YourReportsCard
+              summariesCount={summariesCount}
+              sncStatus={sncStatus}
+              deepDives={deepDives}
+              compareStatus={compareStatus}
+            />
+
+            {/* Active share links — parent's live shareable URLs with view
+                counts + one-tap revoke. Hides itself entirely when the
+                parent has no active tokens. */}
+            <ShareManagementPanel />
+
+            {/* Companion tool: link out to the Align Report app. */}
+            <AlignReportCTA />
+
             <SituationPickerHero
               userName={user?.name}
               situationChoice={situationChoice}
@@ -726,38 +740,11 @@ export default function Dashboard() {
           </div>
         </details>
 
-        {/* Five-milestone visual progress — small, high-signal ✓ pills that
-            light up as parents complete Foundation, Child needs, Comms,
-            Mediation prep, and Conflict-reduced criteria. */}
-        <div className="mt-6">
-          <ProgressDashboardCard />
-        </div>
-
-        {/* Your Reports — compact launcher showing which reports are ready
-            vs in progress vs not started. Third above-the-fold block. */}
-        <div className="mt-6">
-          <YourReportsCard
-            summariesCount={summariesCount}
-            sncStatus={sncStatus}
-            deepDives={deepDives}
-            compareStatus={compareStatus}
-          />
-        </div>
-
-        {/* Active share links — parent's live shareable URLs with view
-            counts + one-tap revoke. Hides itself entirely when the parent
-            has no active tokens so the dashboard stays uncluttered until
-            it has value to add. */}
-        <div className="mt-6">
-          <ShareManagementPanel />
-        </div>
-
-        {/* Companion tool: link out to the Align Report app for parents
-            who want a side-by-side shared parenting report. Opens in a
-            new tab so we never yank them out of their SA CoParents flow. */}
-        <div className="mt-6">
-          <AlignReportCTA />
-        </div>
+        {/* Five-milestone visual progress, Your Reports, Active Share
+            links, and the Align Report CTA now render inside the
+            "Explore all tools" collapsible above — see the 2026-09-07
+            simplification. The tree previously duplicated them at
+            top level; that duplication has been removed. */}
 
         {/* Everything else lives inside "Explore more tools" — kept, not
             removed, so a stressed parent's first fold stays focused on
