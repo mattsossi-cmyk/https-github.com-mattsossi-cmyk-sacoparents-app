@@ -53,6 +53,9 @@ function App() {
             <Route path="/resources" element={<Resources />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <footer className="py-4 text-center text-xs text-muted-foreground" data-testid="copyright-footer">
+            © {new Date().getFullYear()} SA CoParents Align · sacoparentsalign.com · All rights reserved
+          </footer>
         </BrowserRouter>
         <Toaster position="top-center" />
       </AuthProvider>

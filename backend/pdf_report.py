@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from pathlib import Path
 
 from fpdf import FPDF
@@ -45,7 +46,7 @@ class _JointPDF(FPDF):
         self.set_y(-14)
         self.set_font(FONT, "I", 8)
         self.set_text_color(*GRAY)
-        self.cell(0, 8, _s(f"SA CoParents - Page {self.page_no()}"), align="C")
+        self.cell(0, 8, _s(f"SA CoParents Align - © {datetime.now().year} sacoparentsalign.com - Page {self.page_no()}"), align="C")
 
 
 def _new_pdf() -> FPDF:
