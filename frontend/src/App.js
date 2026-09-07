@@ -56,6 +56,7 @@ import ProfessionalsDirectory from "@/pages/ProfessionalsDirectory";
 import ForProfessionals from "@/pages/ForProfessionals";
 import ProfessionalJointAlignmentNew from "@/pages/ProfessionalJointAlignmentNew";
 import ProfessionalJointAlignmentMine from "@/pages/ProfessionalJointAlignmentMine";
+import ProfessionalJointAlignmentBulk from "@/pages/ProfessionalJointAlignmentBulk";
 import AdminProfessionalsEditor from "@/pages/AdminProfessionalsEditor";
 import Orientation from "@/pages/Orientation";
 import ClaimAccount from "@/pages/ClaimAccount";
@@ -82,6 +83,7 @@ import PathwayReport from "@/pages/PathwayReport";
 import JointProfessionalReport from "@/pages/JointProfessionalReport";
 import JointAgreement from "@/pages/JointAgreement";
 import JointAgreementShared from "@/pages/JointAgreementShared";
+import FoundationStatementShared from "@/pages/FoundationStatementShared";
 import JointReportShared from "@/pages/JointReportShared";
 import NDRiskAssessment from "@/pages/NDRiskAssessment";
 import NDRiskAssessmentResult from "@/pages/NDRiskAssessmentResult";
@@ -176,8 +178,13 @@ function AppRoutes() {
           path="/professional/joint-alignment/mine"
           element={<ProtectedRoute><ProfessionalJointAlignmentMine /></ProtectedRoute>}
         />
+        <Route
+          path="/professional/joint-alignment/bulk"
+          element={<ProtectedRoute><ProfessionalJointAlignmentBulk /></ProtectedRoute>}
+        />
         <Route path="/admin/professionals" element={<AdminProfessionalsEditor />} />
         <Route path="/joint-agreement/shared/:token" element={<JointAgreementShared />} />
+        <Route path="/foundation/shared/:token" element={<FoundationStatementShared />} />
         <Route path="/joint-report/shared/:token" element={<JointReportShared />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/mediator-badge" element={<MediatorBadge />} />

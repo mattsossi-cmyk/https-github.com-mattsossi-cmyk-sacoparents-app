@@ -117,8 +117,16 @@ export default function FoundationStatementShareModal({
       const body = { recipient_email: recipientEmail.trim() };
       if (recipientName.trim()) body.recipient_name = recipientName.trim();
       if (note.trim()) body.personal_note = note.trim();
-      await api.post("/mediation/foundation-statement/share", body);
-      toast.success(`Sent to ${recipientEmail.trim()}.`);
+      const res = await api.post("/mediation/foundation-statement/share", body);
+      const url = res?.data?.preview_url;
+      if (url && typeof navigator !== "undefined" && navigator.clipboard) {
+        try { await navigator.clipboard.writeText(url); } catch { /* soft-fail */ }
+      }
+      toast.success(
+        url
+          ? `Sent to ${recipientEmail.trim()} · preview link copied to clipboard`
+          : `Sent to ${recipientEmail.trim()}.`,
+      );
       onClose();
     } catch (err) {
       logError("foundation share failed", err);

@@ -69,9 +69,9 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, Path, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Response, UploadFile, File
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ValidationError
 
 from auth import UserPublic, get_current_user, get_db
 
@@ -485,6 +485,23 @@ async def professional_create_case(
     fan out mint requests to spam parents at high volume — abusive
     accounts get locked out through the standard auth system).
     """
+    return await _create_and_invite_case(body=body, current=current, db=db)
+
+
+async def _create_and_invite_case(
+    *,
+    body: ProfessionalCreateCaseRequest,
+    current: UserPublic,
+    db: AsyncIOMotorDatabase,
+) -> CreateCaseResponse:
+    """Shared core between the single-case POST endpoint and the
+    bulk CSV import. Validates the payload, mints the case + tokens,
+    inserts the case doc, and best-effort fires invitation emails.
+
+    Raises `HTTPException` for validation failures — the bulk caller
+    catches them and records each row's outcome individually so a
+    single bad row doesn't abort the whole import.
+    """
     assessment_type = _validate_assessment_type(body.assessment_type)
 
     if len(body.parents) != 2:
@@ -596,6 +613,311 @@ async def professional_create_case(
         case_expires_at=_iso(case_exp),
         parents=parent_response_rows,
         email_deliveries=email_status,
+    )
+
+
+# ============ Bulk CSV Invite ============
+# Header names accepted in the uploaded CSV (case-insensitive). A row
+# that provides `assessment_type` (or the alias `type`) overrides the
+# multipart form's `default_assessment_type` fallback. A row that
+# provides `reminder_note` (alias `note`) overrides the multipart's
+# `default_reminder_note`.
+#
+# Required columns per row: parent1_email, parent2_email.
+# Optional: parent1_name, parent2_name, assessment_type, reminder_note, reference.
+_BULK_CSV_MAX_ROWS = 100
+_BULK_CSV_MAX_BYTES = 128 * 1024  # 128KB — comfortably covers 100 rows
+_BULK_CSV_ALIASES = {
+    "parent1_email": {"parent1_email", "parent_1_email", "email_1", "parent1email"},
+    "parent2_email": {"parent2_email", "parent_2_email", "email_2", "parent2email"},
+    "parent1_name":  {"parent1_name", "parent_1_name", "name_1", "parent1name"},
+    "parent2_name":  {"parent2_name", "parent_2_name", "name_2", "parent2name"},
+    "assessment_type": {"assessment_type", "type", "lane", "assessment"},
+    "reminder_note": {"reminder_note", "note"},
+    "reference":     {"reference", "ref", "align_case_reference"},
+}
+
+
+def _normalise_bulk_headers(raw_headers: List[str]) -> Dict[str, int]:
+    """Map incoming CSV header cell → canonical field name (via the
+    alias table). Returns {canonical_field: column_index}. Extra
+    columns are ignored (never raise — mediators paste from Excel and
+    often carry stray columns)."""
+    out: Dict[str, int] = {}
+    for idx, raw in enumerate(raw_headers):
+        key = (raw or "").strip().lower()
+        for canonical, aliases in _BULK_CSV_ALIASES.items():
+            if canonical in out:
+                continue
+            if key in aliases:
+                out[canonical] = idx
+                break
+    return out
+
+
+async def _bulk_duplicate_case_exists(
+    db: AsyncIOMotorDatabase,
+    *,
+    user_id: str,
+    email_a: str,
+    email_b: str,
+) -> Optional[str]:
+    """Return an active `case_id` when the caller has already minted
+    an in-app case pairing these two emails (any lane), otherwise
+    None. Only "pending" and "in_progress" are considered active —
+    finished / cancelled / expired cases don't block a fresh mint."""
+    e1 = email_a.lower()
+    e2 = email_b.lower()
+    active_row = await db[_CASES_COLL].find_one(
+        {
+            "professional_created_by": user_id,
+            "origin": "in_app_professional",
+            "status": {"$in": ["pending", "in_progress"]},
+            "parents.email": {"$all": [e1, e2]},
+        },
+        {"_id": 0, "case_id": 1},
+    )
+    return active_row.get("case_id") if active_row else None
+
+
+@router.post("/professional/joint-alignment/cases/bulk-csv")
+async def professional_bulk_create_from_csv(
+    file: UploadFile = File(..., description="CSV file with case rows."),
+    default_assessment_type: Optional[str] = None,
+    default_reminder_note: Optional[str] = None,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    JWT-authenticated bulk case importer for mediators / paralegals
+    running a caseload. Mints up to 100 Joint Alignment cases from a
+    single CSV upload.
+
+    Behaviour:
+      * The CSV must have a header row; column order is flexible.
+      * Required columns: `parent1_email`, `parent2_email`.
+      * Optional per-row: `parent1_name`, `parent2_name`,
+        `assessment_type`, `reminder_note`, `reference`.
+      * Missing per-row `assessment_type` falls back to the form's
+        `default_assessment_type` field.
+      * Missing per-row `reminder_note` falls back to `default_reminder_note`.
+      * Rows are minted sequentially (invitation emails go out via the
+        same best-effort path as the single-case endpoint).
+      * A row that would duplicate an active case owned by this
+        mediator (same two emails) is SILENTLY SKIPPED — never
+        errored, so a mediator can safely re-upload a CSV.
+      * Bad rows (invalid email, missing lane) get recorded in
+        the response's `errored` array; the rest of the CSV still
+        goes through.
+
+    Response shape:
+    ```
+    {
+      "created":   [{"row": 2, "case_id": "SA-XXXXXX", "parents": [{email, invitation_url}]}, ...],
+      "skipped":   [{"row": 3, "reason": "duplicate", "case_id": "SA-YYYYYY"}, ...],
+      "errored":   [{"row": 4, "reason": "..."}, ...],
+      "total_rows": 20
+    }
+    ```
+    """
+    import csv
+    import io
+
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(
+            status_code=400,
+            detail="Upload must be a .csv file.",
+        )
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="CSV is empty.")
+    if len(raw) > _BULK_CSV_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"CSV is too large. Max {_BULK_CSV_MAX_BYTES // 1024} KB.",
+        )
+
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV must be UTF-8 encoded (or plain ASCII).",
+        ) from exc
+
+    reader = csv.reader(io.StringIO(text))
+    rows = list(reader)
+    if not rows:
+        raise HTTPException(status_code=400, detail="CSV has no rows.")
+
+    header_row = rows[0]
+    header_map = _normalise_bulk_headers(header_row)
+    if "parent1_email" not in header_map or "parent2_email" not in header_map:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "CSV must include both parent1_email and parent2_email "
+                "columns."
+            ),
+        )
+
+    data_rows = rows[1:]
+    # Drop blank tail rows (Excel exports frequently trail with empties).
+    while data_rows and all(not (c or "").strip() for c in data_rows[-1]):
+        data_rows.pop()
+
+    if len(data_rows) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV has no data rows.",
+        )
+    if len(data_rows) > _BULK_CSV_MAX_ROWS:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Too many rows. Max {_BULK_CSV_MAX_ROWS} cases per upload.",
+        )
+
+    def cell(row, key: str) -> str:
+        idx = header_map.get(key)
+        if idx is None or idx >= len(row):
+            return ""
+        return (row[idx] or "").strip()
+
+    created: List[Dict[str, Any]] = []
+    skipped: List[Dict[str, Any]] = []
+    errored: List[Dict[str, Any]] = []
+
+    default_lane = (default_assessment_type or "").strip() or None
+    default_note = (default_reminder_note or "").strip() or None
+
+    for offset, row in enumerate(data_rows):
+        # Row numbers are 1-indexed AND include the header row, so the
+        # first data row is `row 2` in a spreadsheet.
+        row_no = offset + 2
+        try:
+            email_a = cell(row, "parent1_email")
+            email_b = cell(row, "parent2_email")
+            if not email_a or not email_b:
+                errored.append({
+                    "row": row_no,
+                    "reason": "missing parent1_email or parent2_email",
+                })
+                continue
+
+            # Silent-skip duplicates BEFORE any lane / validation checks
+            # so a re-uploaded CSV never surfaces spurious "missing lane"
+            # errors on rows the mediator already minted.
+            dup_case_id = await _bulk_duplicate_case_exists(
+                db,
+                user_id=current.user_id,
+                email_a=email_a,
+                email_b=email_b,
+            )
+            if dup_case_id:
+                skipped.append({
+                    "row": row_no,
+                    "reason": "duplicate",
+                    "case_id": dup_case_id,
+                })
+                continue
+
+            lane = cell(row, "assessment_type") or default_lane
+            if not lane:
+                errored.append({
+                    "row": row_no,
+                    "reason": "missing assessment_type (and no default)",
+                })
+                continue
+
+            try:
+                request_body = ProfessionalCreateCaseRequest(
+                    assessment_type=lane,
+                    parents=[
+                        ParentInfo(
+                            email=email_a,
+                            name=cell(row, "parent1_name") or None,
+                        ),
+                        ParentInfo(
+                            email=email_b,
+                            name=cell(row, "parent2_name") or None,
+                        ),
+                    ],
+                    align_case_reference=cell(row, "reference") or None,
+                    reminder_note=(cell(row, "reminder_note") or default_note),
+                )
+            except ValidationError as ve:
+                # First validation error is enough context for a
+                # human — surface the message verbatim so they can
+                # fix the row without decoding pydantic dumps.
+                first = ve.errors()[0] if ve.errors() else {}
+                errored.append({
+                    "row": row_no,
+                    "reason": first.get("msg") or "invalid row",
+                })
+                continue
+
+            try:
+                res = await _create_and_invite_case(
+                    body=request_body, current=current, db=db,
+                )
+            except HTTPException as he:
+                errored.append({"row": row_no, "reason": he.detail})
+                continue
+
+            created.append({
+                "row": row_no,
+                "case_id": res.case_id,
+                "assessment_type": res.assessment_type,
+                "parents": [
+                    {"email": p.email, "invitation_url": p.invitation_url}
+                    for p in res.parents
+                ],
+                "email_deliveries": res.email_deliveries or [],
+            })
+        except Exception as exc:  # noqa: BLE001 — defensive per-row guard
+            logger.exception(
+                "bulk-csv row failure user=%s row=%s", current.user_id, row_no,
+            )
+            errored.append({"row": row_no, "reason": str(exc) or "unknown error"})
+
+    logger.info(
+        "joint-alignment bulk-csv import user=%s total=%s created=%s skipped=%s errored=%s",
+        current.user_id, len(data_rows), len(created), len(skipped), len(errored),
+    )
+    return {
+        "total_rows": len(data_rows),
+        "created": created,
+        "skipped": skipped,
+        "errored": errored,
+    }
+
+
+@router.get("/professional/joint-alignment/cases/bulk-csv/template")
+async def professional_bulk_csv_template(
+    current: UserPublic = Depends(get_current_user),
+):
+    """Download an empty CSV template the mediator can fill in with
+    the correct column headers already in place. JWT-required so the
+    template doesn't get scraped by anonymous crawlers."""
+    from fastapi.responses import Response as FastAPIResponse
+    _ = current
+    header_line = (
+        "parent1_email,parent1_name,parent2_email,parent2_name,"
+        "assessment_type,reminder_note,reference\n"
+    )
+    example = (
+        "sam@example.com,Sam Parent,riley@example.com,Riley Parent,"
+        "communication,See you Thursday - takes about 15 minutes.,MATTER-2026-001\n"
+    )
+    body = header_line + example
+    return FastAPIResponse(
+        content=body,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": (
+                'attachment; filename="joint-alignment-bulk-template.csv"'
+            ),
+        },
     )
 
 
@@ -1385,6 +1707,87 @@ async def professional_update_reminder_note(
             detail="Case not found, or not owned by this account.",
         )
     return {"case_id": canonical, "reminder_note": normalized}
+
+
+@router.get("/professional/joint-alignment/cases/{case_id}/reminder-preview")
+async def professional_reminder_preview(
+    case_id: str = Path(..., min_length=1, max_length=20),
+    parent_index: int = 0,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Render the 5-day gentle-nudge email exactly as the parent will
+    receive it, WITHOUT sending anything. Owner-only, JWT required.
+
+    Powers the "Preview" pill next to the reminder-note field on the
+    mediator's `/mine` console so they can sanity-check the exact
+    wording their personal note lands in — including the mediator's
+    display name, assessment lane, case ID and one-tap invitation URL.
+
+    Query params:
+      * `parent_index` (0 or 1) — pick which parent's copy to render.
+        Defaults to 0 (first invited parent). If the requested parent
+        has already accepted, we still render the email so the
+        mediator can see "what the reminder would say" for QA.
+
+    Never dispatches to Resend. Never records a PHI-access log
+    (it's a pure UI-side preview against the mediator's own case).
+    """
+    from email_service import render_joint_alignment_invitation_reminder
+
+    canonical = _normalise_case_id(case_id) or case_id
+    case = await db[_CASES_COLL].find_one(
+        {
+            "case_id": canonical,
+            "$or": [
+                {"professional_created_by": current.user_id},
+                {"professional.id": current.user_id, "origin": "in_app_professional"},
+            ],
+        },
+        {"_id": 0},
+    )
+    if not case:
+        raise HTTPException(
+            status_code=404,
+            detail="Case not found, or not owned by this account.",
+        )
+    parents = case.get("parents") or []
+    if not parents:
+        raise HTTPException(
+            status_code=409,
+            detail="This case has no invited parents on record.",
+        )
+    if parent_index < 0 or parent_index >= len(parents):
+        raise HTTPException(
+            status_code=400,
+            detail=f"parent_index must be 0…{len(parents) - 1} for this case.",
+        )
+    parent = parents[parent_index]
+    professional = case.get("professional") or {}
+    professional_name = (
+        professional.get("name")
+        or professional.get("email")
+        or None
+    )
+    rendered = render_joint_alignment_invitation_reminder(
+        invitation_url=parent.get("invitation_url") or "",
+        case_id=canonical,
+        professional_name=professional_name,
+        parent_name=parent.get("name") or None,
+        assessment_type=case.get("assessment_type") or None,
+        reminder_note=case.get("reminder_note") or None,
+    )
+    return {
+        "case_id": canonical,
+        "parent_index": parent_index,
+        "parent_email": parent.get("email"),
+        "parent_name": parent.get("name") or None,
+        "parent_accepted": bool(parent.get("accepted_at")),
+        "has_reminder_note": bool((case.get("reminder_note") or "").strip()),
+        "subject": rendered["subject"],
+        "html": rendered["html"],
+        "text": rendered["text"],
+    }
 
 
 class CaseNotesRequest(BaseModel):

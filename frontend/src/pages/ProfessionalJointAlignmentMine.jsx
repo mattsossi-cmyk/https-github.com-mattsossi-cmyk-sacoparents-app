@@ -27,14 +27,17 @@ import {
   AlertTriangle,
   X,
   FileDown,
+  FileSpreadsheet,
   MessageSquare,
   Lock,
   Check,
+  Mail,
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
 import CaseAnalyticsCard from "../components/professional/CaseAnalyticsCard";
 import WeeklyDigestToggle from "../components/professional/WeeklyDigestToggle";
+import ReminderPreviewModal from "../components/professional/ReminderPreviewModal";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -78,6 +81,9 @@ export default function ProfessionalJointAlignmentMine() {
   const [caseNotesEditingId, setCaseNotesEditingId] = useState(null);
   const [caseNotesDraft, setCaseNotesDraft] = useState("");
   const [caseNotesSaving, setCaseNotesSaving] = useState(false);
+  // Reminder-preview modal — holds the case_id of the row the mediator
+  // wants to preview the 5-day gentle-nudge email for.
+  const [previewCaseId, setPreviewCaseId] = useState(null);
   const downloadModalRef = useRef(null);
   const downloadTriggerRef = useRef(null);
 
@@ -309,6 +315,14 @@ export default function ProfessionalJointAlignmentMine() {
               {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
               Refresh
             </button>
+            <Link
+              to="/professional/joint-alignment/bulk"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-3 py-1.5 text-xs font-semibold transition-colors"
+              data-testid="pj-mine-bulk"
+              title="Import many cases from a CSV"
+            >
+              <FileSpreadsheet size={12} /> Bulk import
+            </Link>
             <Link
               to="/professional/joint-alignment/new"
               className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1.5 text-xs font-semibold transition-colors"
@@ -549,31 +563,53 @@ export default function ProfessionalJointAlignmentMine() {
                         </div>
                       </div>
                     ) : c.reminder_note ? (
-                      <button
-                        type="button"
-                        onClick={() => openNoteEdit(c)}
-                        className="w-full text-left rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] hover:bg-[#EFE7FA] p-3 transition-colors group"
-                        data-testid={`pj-mine-note-preview-${c.case_id}`}
-                      >
-                        <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
-                          <MessageSquare size={10} /> Reminder note
-                          <span className="ml-2 text-[10px] text-[#857E9C] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
-                            (tap to edit)
-                          </span>
-                        </div>
-                        <div className="text-sm text-[#1A1330] italic leading-snug">
-                          &ldquo;{c.reminder_note}&rdquo;
-                        </div>
-                      </button>
+                      <div className="flex items-stretch gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openNoteEdit(c)}
+                          className="flex-1 text-left rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] hover:bg-[#EFE7FA] p-3 transition-colors group"
+                          data-testid={`pj-mine-note-preview-${c.case_id}`}
+                        >
+                          <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
+                            <MessageSquare size={10} /> Reminder note
+                            <span className="ml-2 text-[10px] text-[#857E9C] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
+                              (tap to edit)
+                            </span>
+                          </div>
+                          <div className="text-sm text-[#1A1330] italic leading-snug">
+                            &ldquo;{c.reminder_note}&rdquo;
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewCaseId(c.case_id)}
+                          className="rounded-xl border border-[#D6CFE8] bg-white hover:bg-[#F5F1FB] px-3 text-xs font-semibold text-[#3D1A78] inline-flex items-center gap-1 self-stretch"
+                          title="Preview the reminder email a parent will receive"
+                          data-testid={`pj-mine-note-emailpreview-${c.case_id}`}
+                        >
+                          <Mail size={12} /> Preview
+                        </button>
+                      </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => openNoteEdit(c)}
-                        className="text-xs text-[#3D1A78] hover:underline inline-flex items-center gap-1"
-                        data-testid={`pj-mine-note-add-${c.case_id}`}
-                      >
-                        <MessageSquare size={11} /> Add a personal reminder note
-                      </button>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => openNoteEdit(c)}
+                          className="text-xs text-[#3D1A78] hover:underline inline-flex items-center gap-1"
+                          data-testid={`pj-mine-note-add-${c.case_id}`}
+                        >
+                          <MessageSquare size={11} /> Add a personal reminder note
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewCaseId(c.case_id)}
+                          className="text-xs text-[#4B4567] hover:text-[#3D1A78] inline-flex items-center gap-1"
+                          title="Preview the reminder email a parent will receive (uses the default template)"
+                          data-testid={`pj-mine-note-emailpreview-${c.case_id}`}
+                        >
+                          <Mail size={11} /> Preview reminder email
+                        </button>
+                      </div>
                     )}
 
                     {/* PRIVATE case notes — mediator-only, never surfaced
@@ -750,6 +786,11 @@ export default function ProfessionalJointAlignmentMine() {
           </div>
         )}
       </div>
+      <ReminderPreviewModal
+        open={!!previewCaseId}
+        caseId={previewCaseId}
+        onClose={() => setPreviewCaseId(null)}
+      />
     </AppShell>
   );
 }

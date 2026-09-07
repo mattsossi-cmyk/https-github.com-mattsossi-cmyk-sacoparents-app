@@ -27,6 +27,103 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-07 — Shared Preview Page + Reminder Preview Modal + Bulk CSV
+- **P1 — Foundation Statement Shared Preview** (`/foundation/shared/:token`) —
+  every share now mints a **30-day revocable JWT preview link** the
+  recipient (co-parent, mediator, attorney) can open in-browser without
+  logging in.
+    - New endpoints on `/api/mediation`:
+      - `GET /foundation-statement/shared/{token}` — public JSON with
+        the four canonical sections + sender name + optional landing
+        note. Never leaks the sender's user_id / email / other prep
+        surfaces.
+      - `GET /foundation-statement/shared/{token}/voice/manifest` +
+        `.../voice/section/{key}` — public voice endpoints that share
+        the SAME per-user cache as the authenticated `/my-plan` player
+        (parent's own play + recipient's play never re-bill for the
+        same content).
+    - Share + resend endpoints on `/api/mediation` now embed the
+      `preview_url` in the emailed HTML (purple "Open the statement
+      online" pill) AND return it in the JSON response so the
+      Share modal can copy-to-clipboard for the sender.
+    - New public page `FoundationStatementShared.jsx` — reads the
+      manifest, renders sender name + sections + Read-to-me
+      (Shimmer/Nova/Alloy/Fable), highlights each section as it
+      plays, and closes with the neutral court-report disclaimer.
+    - 404s cleanly for expired / revoked / invalid tokens AND for
+      cases where the sender wiped their reflection after minting.
+- **P1 — Reminder Preview Modal** — the mediator now taps a
+  **Preview** pill next to the reminder-note field on `/mine` and
+  sees the EXACT email the 5-day gentle-nudge sweep will send:
+    - Backend: new `render_joint_alignment_invitation_reminder(...)`
+      pure renderer in `email_service.py`. Existing send helper
+      delegates to it, so preview + send stay in lockstep forever.
+    - New endpoint
+      `GET /api/professional/joint-alignment/cases/{case_id}/reminder-preview?parent_index=0|1`
+      (JWT + owner-only). 400 for out-of-range parent index,
+      404 for foreign cases.
+    - Response shape: `{subject, html, text, parent_email,
+      parent_name, parent_accepted, has_reminder_note}`.
+    - Frontend `ReminderPreviewModal.jsx` — 2-tab modal
+      (HTML in a `sandbox=""` iframe / plain-text fallback) with
+      Parent 1 / Parent 2 toggle and an "already accepted — this
+      email would NOT fire" info badge when the sweep would skip
+      that recipient.
+- **P2 — Bulk CSV Invite** — mediators can now mint up to **100
+  Joint Alignment cases per upload** from one CSV.
+    - Backend: refactored `professional_create_case` into a
+      shared `_create_and_invite_case(...)` core so the new bulk
+      endpoint reuses the exact minting + invite path (no
+      code-drift risk).
+    - `POST /api/professional/joint-alignment/cases/bulk-csv`
+      (multipart) — parses the CSV with flexible header aliases
+      (`parent1_email` / `parent_1_email` / `email_1`, etc.),
+      silently skips rows that would duplicate an active case
+      owned by the caller, and returns per-row `created` /
+      `skipped` / `errored` arrays so partial uploads never abort.
+      128 KB / 100 row caps. Optional `default_assessment_type` +
+      `default_reminder_note` query params fill blank cells.
+    - `GET .../bulk-csv/template` — JWT-required CSV template
+      download with headers + example row.
+    - Frontend `ProfessionalJointAlignmentBulk.jsx` at
+      `/professional/joint-alignment/bulk`:
+      3-step layout (template → defaults → upload) + a
+      dropzone + a per-row results table with `Copy all
+      invitation URLs` action for the mediator to paste into
+      their case-management sheet.
+    - New "Bulk import" pill in the `/mine` header row.
+- **Coverage** — `tests/test_iter159_shared_preview_and_bulk.py`
+  (19 tests: 5 shared preview, 5 reminder preview, 9 bulk CSV).
+  Combined regression against iter150-159: **145 tests green**.
+- **Live-verified**: parent1 shares statement → email + preview URL
+  → mediator opens URL unauthenticated → 4 sections rendered +
+  Read-to-me plays with Shimmer → section highlight follows.
+  Admin mediator opens `/mine` → Preview pill on a case row →
+  modal shows exact HTML + plaintext with case ID + note.
+  Bulk upload of 3-row CSV (2 valid, 1 invalid email) → 2 cases
+  created, 1 errored, results tiles render correctly.
+- **Files touched**:
+  - `backend/mediation_routes.py` (adds `_mint_foundation_share_link`,
+    public shared endpoints, preview_url in share/resend responses)
+  - `backend/email_service.py` (adds `preview_url` param to
+    Foundation share email, adds `render_joint_alignment_invitation_reminder`
+    pure renderer)
+  - `backend/joint_alignment_routes.py` (extracts
+    `_create_and_invite_case`, adds bulk CSV endpoint + template
+    endpoint + reminder-preview endpoint, imports UploadFile +
+    ValidationError)
+  - `frontend/src/pages/FoundationStatementShared.jsx` (new)
+  - `frontend/src/pages/ProfessionalJointAlignmentBulk.jsx` (new)
+  - `frontend/src/components/professional/ReminderPreviewModal.jsx` (new)
+  - `frontend/src/pages/ProfessionalJointAlignmentMine.jsx` (mounts
+    the ReminderPreviewModal + adds `Bulk import` pill in header +
+    Preview button on each reminder-note pill)
+  - `frontend/src/components/foundation/FoundationStatementShareModal.jsx`
+    (auto-copies preview_url to clipboard on successful share)
+  - `frontend/src/App.js` (registers 2 new routes)
+  - `backend/tests/test_iter159_shared_preview_and_bulk.py` (new, 19 tests)
+
+
 ### 2026-09-07 — Foundation Statement Voice Playback ("Read to me")
 - **New `/app/backend/foundation_statement_voice.py`** — pure module
   that sanitises reflection text (strips emoji / URLs / markdown

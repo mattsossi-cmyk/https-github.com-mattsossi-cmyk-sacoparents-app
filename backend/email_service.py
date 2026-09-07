@@ -999,28 +999,20 @@ def send_joint_alignment_invitation(
 
 
 
-def send_joint_alignment_invitation_reminder(
+def render_joint_alignment_invitation_reminder(
     *,
-    to_email: str,
     invitation_url: str,
     case_id: str,
     professional_name: Optional[str] = None,
     parent_name: Optional[str] = None,
     assessment_type: Optional[str] = None,
     reminder_note: Optional[str] = None,
-) -> None:
-    """
-    Warm 5-day nudge to a parent whose Joint Alignment invitation is
-    still unaccepted. Softer tone than the initial invite email
-    (`send_joint_alignment_invitation`) because the parent may have
-    genuine reasons for the delay (busy, mid-crisis, spam folder).
-    Never scolds; always includes a one-line "you don't have to reply
-    to this email — just click the link when you're ready" reassurance.
-
-    When the mediator supplied a `reminder_note` at case creation
-    (or edited it later via the /mine PATCH), it's rendered as a
-    highlighted quote block right below the greeting so the parent
-    sees their mediator's voice, not a generic template.
+) -> Dict[str, str]:
+    """Pure renderer for the 5-day gentle-nudge email. Returns
+    ``{"subject", "html", "text"}`` so a mediator's Preview modal
+    can show exactly what the parent will receive without dispatching
+    anything to Resend. Delivery goes through the paired
+    ``send_joint_alignment_invitation_reminder`` wrapper below.
     """
     pro = (professional_name or "Your mediator").strip() or "Your mediator"
     greeting = f"Hi {parent_name}," if parent_name else "Hi,"
@@ -1074,11 +1066,46 @@ def send_joint_alignment_invitation_reminder(
         cta_label="Open my invitation",
         cta_url=invitation_url,
     )
+    subject = f"Reminder — {pro} is still expecting you on SA CoParents ({case_id})"
+    return {"subject": subject, "html": html, "text": plain}
+
+
+def send_joint_alignment_invitation_reminder(
+    *,
+    to_email: str,
+    invitation_url: str,
+    case_id: str,
+    professional_name: Optional[str] = None,
+    parent_name: Optional[str] = None,
+    assessment_type: Optional[str] = None,
+    reminder_note: Optional[str] = None,
+) -> None:
+    """
+    Warm 5-day nudge to a parent whose Joint Alignment invitation is
+    still unaccepted. Softer tone than the initial invite email
+    (`send_joint_alignment_invitation`) because the parent may have
+    genuine reasons for the delay (busy, mid-crisis, spam folder).
+    Never scolds; always includes a one-line "you don't have to reply
+    to this email — just click the link when you're ready" reassurance.
+
+    When the mediator supplied a `reminder_note` at case creation
+    (or edited it later via the /mine PATCH), it's rendered as a
+    highlighted quote block right below the greeting so the parent
+    sees their mediator's voice, not a generic template.
+    """
+    rendered = render_joint_alignment_invitation_reminder(
+        invitation_url=invitation_url,
+        case_id=case_id,
+        professional_name=professional_name,
+        parent_name=parent_name,
+        assessment_type=assessment_type,
+        reminder_note=reminder_note,
+    )
     _send(
         to_email=to_email,
-        subject=f"Reminder — {pro} is still expecting you on SA CoParents ({case_id})",
-        html=html,
-        text=plain,
+        subject=rendered["subject"],
+        html=rendered["html"],
+        text=rendered["text"],
         failure_message="Could not send the reminder right now.",
     )
 
@@ -1459,10 +1486,16 @@ def send_foundation_statement_share(
     sender_email: str,
     personal_note: Optional[str],
     pdf_bytes: bytes,
+    preview_url: Optional[str] = None,
 ) -> None:
     """Email a parent's Foundation Statement PDF to a co-parent or
     mediator. Neutral, non-adjudicative copy — this is a warm
     "here's what I've been thinking" share, NOT a demand letter.
+
+    When `preview_url` is supplied, a purple "Open online" pill button
+    is rendered above the reply line so the recipient can open the
+    statement in-browser (with "Read to me" playback) without
+    downloading the PDF.
     """
     if not pdf_bytes:
         raise EmailSendError("Nothing to send — the Foundation Statement is empty.")
@@ -1499,6 +1532,25 @@ def send_foundation_statement_share(
         )
         note_plain = f"\nNote from {display_sender}:\n{personal_note.strip()}\n\n"
 
+    preview_html = ""
+    preview_plain = ""
+    if preview_url:
+        safe_url = _html.escape(preview_url)
+        preview_html = (
+            f'<div style="margin:0 0 20px 0;">'
+            f'<a href="{safe_url}" '
+            f'style="display:inline-block;background:#3D1A78;color:#FFFFFF;'
+            f"text-decoration:none;padding:12px 22px;border-radius:999px;"
+            f'font-weight:700;font-size:14px;">Open the statement online</a>'
+            f'<div style="font-size:12px;color:#857E9C;margin-top:8px;">'
+            f"You can read or listen to it — the link works on any device.</div>"
+            f"</div>"
+        )
+        preview_plain = (
+            f"\nPrefer to view in your browser? Open online (with "
+            f"'Read to me' voice playback):\n{preview_url}\n"
+        )
+
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">{greeting}</p>'
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
@@ -1506,6 +1558,7 @@ def send_foundation_statement_share(
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 20px 0;">'
         f"{_html.escape(context)}</p>"
         f"{note_html}"
+        f"{preview_html}"
         f'<p style="font-size:14px;line-height:1.55;color:#4B4567;margin:0 0 8px 0;">'
         f"The Foundation Statement is attached as a PDF. If you'd like to "
         f"reply, you can respond directly to this email — it goes to "
@@ -1517,6 +1570,7 @@ def send_foundation_statement_share(
         f"{intro}\n\n"
         f"{context}\n"
         f"{note_plain}"
+        f"{preview_plain}"
         f"The Foundation Statement is attached as a PDF. "
         f"You can reply directly to this email — it goes to {sender_email}.\n\n"
         f"Warmly,\n{display_sender}\n"

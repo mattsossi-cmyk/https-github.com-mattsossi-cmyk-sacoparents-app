@@ -3,7 +3,7 @@ import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.responses import StreamingResponse
@@ -165,6 +165,10 @@ async def get_prep(
 _FOUNDATION_SHARE_HOURLY_LIMIT = int(
     os.environ.get("FOUNDATION_STATEMENT_SHARE_HOURLY_LIMIT", "5")
 )
+# 30-day preview link — matches the Joint Agreement / Joint Report
+# share-token windows. Recipient-facing URL is short-lived; the audit
+# row + PDF attachment remain forever.
+_FOUNDATION_PREVIEW_EXPIRE_DAYS = 30
 
 
 class FoundationStatementShareBody(BaseModel):
@@ -187,6 +191,53 @@ def _author_display_name(user: UserPublic) -> str:
 async def _load_reflection_for_current(db, user_id: str) -> Dict[str, Any]:
     prep = await _load_prep(db, user_id)
     return prep.get("reflection") or {}
+
+
+async def _mint_foundation_share_link(
+    *,
+    request: Request,
+    db,
+    user: UserPublic,
+    expire_days: int,
+    recipient_email: Optional[str],
+    personal_note: Optional[str],
+) -> Tuple[str, str]:
+    """Mint a signed, revocable share-preview token for the caller's
+    Foundation Statement and return `(token, absolute_preview_url)`.
+
+    The URL is stable across resends of the same original share row
+    because a *new* token is minted every time (matches Joint Report
+    behaviour) — parents don't have a "reuse the old link" flow. A
+    revoked/expired token 404s cleanly on the public endpoints.
+    """
+    from datetime import datetime, timezone
+    from share_link_common import absolute_origin
+
+    token = create_share_token(
+        doc_type="foundation_statement",
+        doc_id=user.user_id,   # the reflection is scoped to the user
+        user_id=user.user_id,
+        expire_days=expire_days,
+    )
+    payload = decode_share_token(token) or {}
+    expires_at = (
+        datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+        if payload.get("exp") else None
+    )
+    await record_share_token(
+        db,
+        jti=payload.get("jti"),
+        user_id=user.user_id,
+        doc_type="foundation_statement",
+        doc_id=user.user_id,
+        expires_at=expires_at,
+        label=recipient_email or None,
+        note=(personal_note or "").strip() or None,
+        token=token,
+    )
+    origin = absolute_origin(request)
+    preview_url = f"{origin}/foundation/shared/{token}"
+    return token, preview_url
 
 
 @router.get("/foundation-statement.pdf")
@@ -276,6 +327,18 @@ async def share_foundation_statement(
         reflection=reflection,
     )
 
+    # Mint a 30-day share-preview token BEFORE sending the email so
+    # the recipient can open the statement in-browser (with "Read to
+    # me" voice playback) without downloading the PDF attachment.
+    share_token_str, preview_url = await _mint_foundation_share_link(
+        request=request,
+        db=db,
+        user=current,
+        expire_days=_FOUNDATION_PREVIEW_EXPIRE_DAYS,
+        recipient_email=recipient_email,
+        personal_note=body.personal_note,
+    )
+
     try:
         email_service.send_foundation_statement_share(
             to_email=recipient_email,
@@ -284,6 +347,7 @@ async def share_foundation_statement(
             sender_email=current.email or "",
             personal_note=body.personal_note,
             pdf_bytes=pdf_bytes,
+            preview_url=preview_url,
         )
     except email_service.EmailNotConfigured as exc:
         raise HTTPException(
@@ -316,12 +380,15 @@ async def share_foundation_statement(
         "had_personal_note": bool(
             body.personal_note and body.personal_note.strip()
         ),
+        "preview_token": share_token_str,
         "sender_email": current.email,
         "created_at": datetime.now(timezone.utc),
     })
     return {
         "ok": True,
         "delivered_to": recipient_email,
+        "preview_url": preview_url,
+        "preview_expires_in_days": _FOUNDATION_PREVIEW_EXPIRE_DAYS,
         "remaining_this_hour": max(
             0, _FOUNDATION_SHARE_HOURLY_LIMIT - recent_count - 1,
         ),
@@ -405,6 +472,16 @@ async def resend_foundation_statement_share(
         author_name=_author_display_name(current),
         reflection=reflection,
     )
+    # Resends mint a *fresh* 30-day preview URL — the earlier link's
+    # jti isn't reused, so revoking one doesn't nuke the other.
+    share_token_str, preview_url = await _mint_foundation_share_link(
+        request=request,
+        db=db,
+        user=current,
+        expire_days=_FOUNDATION_PREVIEW_EXPIRE_DAYS,
+        recipient_email=original["recipient_email"],
+        personal_note=original.get("personal_note"),
+    )
     try:
         email_service.send_foundation_statement_share(
             to_email=original["recipient_email"],
@@ -413,6 +490,7 @@ async def resend_foundation_statement_share(
             sender_email=current.email or "",
             personal_note=original.get("personal_note"),
             pdf_bytes=pdf_bytes,
+            preview_url=preview_url,
         )
     except email_service.EmailNotConfigured as exc:
         raise HTTPException(
@@ -434,6 +512,7 @@ async def resend_foundation_statement_share(
         "recipient_name": original.get("recipient_name"),
         "personal_note": original.get("personal_note"),
         "had_personal_note": bool(original.get("personal_note")),
+        "preview_token": share_token_str,
         "resent_from": share_id,
         "sender_email": current.email,
         "created_at": datetime.now(timezone.utc),
@@ -441,6 +520,7 @@ async def resend_foundation_statement_share(
     return {
         "ok": True,
         "delivered_to": original["recipient_email"],
+        "preview_url": preview_url,
         "share_id": new_id,
         "remaining_this_hour": max(
             0, _FOUNDATION_SHARE_HOURLY_LIMIT - recent_count - 1,
@@ -560,6 +640,201 @@ async def foundation_statement_voice_section(
         media_type="audio/mpeg",
         headers={
             "Cache-Control": "private, max-age=3600",
+            "X-Voice-Cache": "hit" if cache_hit else "miss",
+        },
+    )
+
+
+# ============ Foundation Statement — public shared preview ============
+# These endpoints back a token-signed public preview page. Recipients
+# (co-parents, mediators, attorneys) open `/foundation/shared/:token`
+# in-browser after receiving the parent's email and see the statement
+# rendered warmly + a "Read to me" voice player. No login required.
+#
+# Contract mirrors the Joint Agreement / Joint Report share pattern
+# already shipped: JWT-signed token, revocable via `share_tokens`,
+# 30-day default expiry.
+
+async def _load_shared_foundation(
+    *,
+    token: str,
+    db,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Decode + validate a foundation-statement share token. Returns
+    (payload, sender_user_doc). Raises 404 for expired / revoked /
+    invalid tokens so we never leak the reason to a bad actor."""
+    payload = decode_share_token(token)
+    if not payload or payload.get("doc_type") != "foundation_statement":
+        raise HTTPException(404, "This link has expired or is invalid.")
+    jti = payload.get("jti")
+    if await is_share_token_revoked(db, jti):
+        raise HTTPException(404, "This link has been revoked by the sender.")
+    sender_id = payload.get("sub")
+    if not sender_id:
+        raise HTTPException(404, "This link is malformed.")
+    user_doc = await db.users.find_one(
+        {"user_id": sender_id},
+        {"_id": 0, "user_id": 1, "name": 1, "email": 1},
+    )
+    if not user_doc:
+        raise HTTPException(404, "This link is no longer available.")
+    return payload, user_doc
+
+
+def _sender_display_name(user_doc: Dict[str, Any]) -> str:
+    name = (user_doc.get("name") or "").strip()
+    if name:
+        return name
+    email = (user_doc.get("email") or "").strip()
+    if email:
+        return email.split("@", 1)[0]
+    return "A co-parent"
+
+
+@router.get("/foundation-statement/shared/{token}")
+async def get_shared_foundation_statement(
+    token: str,
+    request: Request,
+):
+    """Public — no auth. Returns the JSON payload of the parent's
+    Foundation Statement for the token's holder. The four canonical
+    prompts are surfaced as [{key, label, text}] so a React page can
+    render them; the recipient never sees the parent's private
+    metadata (email, user_id, other prep sections)."""
+    from foundation_statement_voice import foundation_statement_sections
+    db = request.app.state.db
+    payload, user_doc = await _load_shared_foundation(token=token, db=db)
+    reflection = await _load_reflection_for_current(db, user_doc["user_id"])
+    sections = foundation_statement_sections(reflection)
+    if not sections:
+        # Sender wrote their reflection at share time but has since
+        # cleared it — treat as revoked-shaped 404 so the recipient
+        # doesn't see an empty document.
+        raise HTTPException(
+            404,
+            "The sender has removed the content of their Foundation Statement.",
+        )
+    # Look up the note the sender attached at mint time (recipient
+    # name / personal note) — best-effort, present on newer rows.
+    landing_note: Optional[str] = None
+    if payload.get("jti"):
+        row = await db.share_tokens.find_one(
+            {"jti": payload["jti"]},
+            {"_id": 0, "note": 1},
+        )
+        landing_note = (row or {}).get("note") or None
+    return {
+        "sender_name": _sender_display_name(user_doc),
+        "sections": [
+            {"key": s["key"], "label": s["label"], "text": s["text"]}
+            for s in sections
+        ],
+        "sender_note": landing_note,
+        "expires_at": (
+            datetime.fromtimestamp(payload["exp"], tz=timezone.utc).isoformat()
+            if payload.get("exp") else None
+        ),
+    }
+
+
+@router.get("/foundation-statement/shared/{token}/voice/manifest")
+async def get_shared_foundation_voice_manifest(
+    token: str,
+    request: Request,
+    voice: Optional[str] = None,
+    model: Optional[str] = None,
+):
+    """Public voice manifest for a shared statement — same shape as
+    the authenticated manifest, but the `audio_url` points at the
+    public `/shared/{token}/voice/section/{key}` endpoint."""
+    from foundation_statement_voice import (
+        foundation_statement_sections,
+        normalise_model,
+        normalise_voice,
+        SUPPORTED_MODELS,
+        SUPPORTED_VOICES,
+    )
+    db = request.app.state.db
+    _payload, user_doc = await _load_shared_foundation(token=token, db=db)
+    reflection = await _load_reflection_for_current(db, user_doc["user_id"])
+    sections = foundation_statement_sections(reflection)
+    if not sections:
+        raise HTTPException(404, "This statement has no content.")
+    v = normalise_voice(voice)
+    m = normalise_model(model)
+    prefix = f"/api/mediation/foundation-statement/shared/{token}/voice/section"
+    return {
+        "sections": [
+            {
+                "index": idx,
+                "key": sec["key"],
+                "label": sec["label"],
+                "text": sec["text"],
+                "word_count": len(sec["sanitized"].split()),
+                "audio_url": f"{prefix}/{sec['key']}?voice={v}&model={m}",
+            }
+            for idx, sec in enumerate(sections)
+        ],
+        "voice": v,
+        "model": m,
+        "supported_voices": list(SUPPORTED_VOICES),
+        "supported_models": list(SUPPORTED_MODELS),
+        "sender_name": _sender_display_name(user_doc),
+    }
+
+
+@router.get("/foundation-statement/shared/{token}/voice/section/{section_key}")
+async def get_shared_foundation_voice_section(
+    token: str,
+    request: Request,
+    section_key: str = Path(..., min_length=1, max_length=40),
+    voice: Optional[str] = None,
+    model: Optional[str] = None,
+):
+    """Public per-section MP3 stream for a shared Foundation Statement.
+    Cache is shared with the authenticated per-user cache — same
+    (user_id, section_key, text_sha, voice, model) key, so the parent
+    tapping "Read to me" on their own /my-plan warms the cache for
+    every mediator who later opens the shared link (and vice versa)."""
+    from foundation_statement_voice import (
+        foundation_statement_sections,
+        get_or_generate_section_audio,
+        normalise_model,
+        normalise_voice,
+    )
+    db = request.app.state.db
+    _payload, user_doc = await _load_shared_foundation(token=token, db=db)
+    reflection = await _load_reflection_for_current(db, user_doc["user_id"])
+    sections = foundation_statement_sections(reflection)
+    if not sections:
+        raise HTTPException(404, "This statement has no content.")
+    target: Optional[Dict[str, Any]] = None
+    target_index = -1
+    for idx, sec in enumerate(sections):
+        if sec["key"] == section_key:
+            target = sec
+            target_index = idx
+            break
+    if target is None:
+        raise HTTPException(404, "Unknown section.")
+    v = normalise_voice(voice)
+    m = normalise_model(model)
+    try:
+        audio_bytes, cache_hit = await get_or_generate_section_audio(
+            db,
+            user_id=user_doc["user_id"],
+            section=target,
+            section_index=target_index,
+            voice=v,
+            model=m,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return StreamingResponse(
+        BytesIO(audio_bytes),
+        media_type="audio/mpeg",
+        headers={
+            "Cache-Control": "public, max-age=3600",
             "X-Voice-Cache": "hit" if cache_hit else "miss",
         },
     )
