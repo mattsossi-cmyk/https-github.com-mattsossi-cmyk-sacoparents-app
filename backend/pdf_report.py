@@ -1,5 +1,3 @@
-import re
-from datetime import datetime
 from pathlib import Path
 
 from fpdf import FPDF
@@ -386,47 +384,42 @@ def _case_action_plan(pdf: FPDF, r: dict, title: str) -> None:
         _bullet(pdf, line)
 
 
+def _case_bullet_section(pdf: FPDF, num: int, title: str, items: list, note: str | None = None) -> None:
+    _section_title(pdf, num, title)
+    for item in items:
+        _bullet(pdf, item if isinstance(item, str) else str(item))
+    if note:
+        _body(pdf, note, italic=True)
+
+
+def _case_professional_map(pdf: FPDF, r: dict, title: str) -> None:
+    pm = r.get("professional_map") or {}
+    _case_bullet_section(pdf, 8, title, pm.get("sequence") or [])
+    _body(pdf, f"Alignment areas: {pm.get('alignment_count', 0)}  |  Conversation areas: {pm.get('conversation_count', 0)}  |  Needs professional input: {pm.get('professional_input_count', 0)}  |  Child needs: {pm.get('child_needs_count', 0)}")
+
+
 def build_case_pdf(r: dict) -> bytes:
-    notes = ["SAMPLE REPORT - demo data shown for illustration"] if r.get("is_demo") else []
+    demo = bool(r.get("is_demo"))
     pdf = _new_pdf()
-    if r.get("is_demo"):
+    if demo:
         pdf.watermark_text = "SAMPLE REPORT"
     _title_header(pdf, r["report_title"], [
         f"Child: {r['child_name']}",
         f"Assessment: {r['assessment_title']}",
         f"Parents: {r['parent_a_name']} / {r['parent_b_name']}",
         str(r.get("generated_at", ""))[:10],
-    ], notes)
+    ], ["SAMPLE REPORT - demo data shown for illustration"] if demo else [])
 
     titles = r["page_titles"]
-
     _case_snapshot(pdf, r, titles[0])
     _case_goals(pdf, r, titles[1])
     _case_alignments(pdf, r, titles[2])
     _case_differences(pdf, r, titles[3])
-
-    _section_title(pdf, 5, titles[4])
-    for n in r["child_needs"]:
-        _bullet(pdf, n)
-
-    _section_title(pdf, 6, titles[5])
-    for o in r["options"]:
-        _bullet(pdf, o)
-    _body(pdf, f"{r['options_note']} This distinction preserves the educational and resource nature of this report.", italic=True)
-
-    _section_title(pdf, 7, titles[6])
-    for q in r["conversation_questions"]:
-        _bullet(pdf, q if isinstance(q, str) else str(q))
-    _body(pdf, r["central_question"], italic=True)
-
-    _section_title(pdf, 8, titles[7])
-    pm = r.get("professional_map") or {}
-    for s_item in pm.get("sequence") or []:
-        _bullet(pdf, s_item if isinstance(s_item, str) else str(s_item))
-    _body(pdf, f"Alignment areas: {pm.get('alignment_count', 0)}  |  Conversation areas: {pm.get('conversation_count', 0)}  |  Needs professional input: {pm.get('professional_input_count', 0)}  |  Child needs: {pm.get('child_needs_count', 0)}")
-
+    _case_bullet_section(pdf, 5, titles[4], r["child_needs"])
+    _case_bullet_section(pdf, 6, titles[5], r["options"], f"{r['options_note']} This distinction preserves the educational and resource nature of this report.")
+    _case_bullet_section(pdf, 7, titles[6], r["conversation_questions"], r["central_question"])
+    _case_professional_map(pdf, r, titles[7])
     _case_action_plan(pdf, r, titles[8])
-
     _philosophy_block(pdf, r["philosophy_heading"], r["philosophy_note"], r["philosophy"], size=18)
     return bytes(pdf.output())
 

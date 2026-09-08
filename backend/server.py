@@ -28,12 +28,12 @@ from pydantic import BaseModel, EmailStr
 
 from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
 from report_engine import generate_report
-from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, NEXT_STEPS, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
+from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
 from joint_engine import generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
-from email_utils import send_email, EMAIL_FROM_NAME, EMAIL_REPLY_TO
+from email_utils import send_email, EMAIL_FROM_NAME
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -41,6 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
+BUILD_ID = "2026-09-08.3"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -125,61 +126,71 @@ class LoginIn(BaseModel):
     password: str
 
 
-@api.post("/auth/register")
-async def register(body: RegisterIn, response: Response):
-    email = body.email.lower()
+async def _validate_registration(body: RegisterIn, email: str, role: str) -> None:
     if await db.users.find_one({"email": email}):
         raise HTTPException(status_code=400, detail="An account with this email already exists")
     if len(body.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
-    role = body.role if body.role in ("parent", "professional") else "professional"
     if role == "parent":
         raw = body.invite.strip()
-        inv = None
-        if raw:
-            inv = await db.invitations.find_one({"status": "pending", "invitee_email": email, "$or": [{"token": raw}, {"code": raw.upper()}]})
+        inv = await db.invitations.find_one({"status": "pending", "invitee_email": email, "$or": [{"token": raw}, {"code": raw.upper()}]}) if raw else None
         if not inv:
             raise HTTPException(status_code=403, detail="Parent accounts are created through a secure invitation from a professional. Please use the link or case code in your invitation email.")
     if role == "professional" and not body.agreements_accepted:
         raise HTTPException(status_code=400, detail="Please accept the professional-use, confidentiality, privacy, and appropriate-use agreements to create a professional account.")
+
+
+def _professional_profile(body: RegisterIn) -> dict:
+    return {
+        "phone": body.phone.strip(),
+        "organization": body.organization.strip(),
+        "pro_role": body.pro_role.strip(),
+        "city": body.city.strip(),
+        "state": body.state.strip(),
+        "license_number": body.license_number.strip(),
+        "website": body.website.strip(),
+    }
+
+
+async def _notify_admin_new_professional(user: dict) -> None:
+    try:
+        await send_email(
+            to=os.environ["ADMIN_EMAIL"],
+            subject=f"New professional registration awaiting approval - {EMAIL_FROM_NAME}",
+            html=(
+                '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                "<p>A new professional account is awaiting approval:</p>"
+                f"<p><strong>{escape(user['name'])}</strong><br/>{escape(user['email'])}</p>"
+                f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open the admin dashboard to approve</a></p>'
+                "</td></tr></table>"
+            ),
+        )
+    except Exception:
+        logger.warning(f"Admin approval notification not sent for {user['email']}")
+
+
+@api.post("/auth/register")
+async def register(body: RegisterIn, response: Response):
+    email = body.email.lower()
+    role = body.role if body.role in ("parent", "professional") else "professional"
+    await _validate_registration(body, email, role)
     uid = str(uuid.uuid4())
     user = {
         "_id": uid,
         "email": email,
         "name": body.name.strip(),
         "role": role,
-        "approved": False if role == "professional" else True,
+        "approved": role != "professional",
         "password_hash": hash_password(body.password),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     if role == "professional":
         user["verification_level"] = "credentials_pending"
         user["agreements_accepted_at"] = user["created_at"]
-        user["profile"] = {
-            "phone": body.phone.strip(),
-            "organization": body.organization.strip(),
-            "pro_role": body.pro_role.strip(),
-            "city": body.city.strip(),
-            "state": body.state.strip(),
-            "license_number": body.license_number.strip(),
-            "website": body.website.strip(),
-        }
+        user["profile"] = _professional_profile(body)
     await db.users.insert_one(user)
     if role == "professional":
-        try:
-            await send_email(
-                to=os.environ["ADMIN_EMAIL"],
-                subject=f"New professional registration awaiting approval - {EMAIL_FROM_NAME}",
-                html=(
-                    '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                    f"<p>A new professional account is awaiting approval:</p>"
-                    f"<p><strong>{escape(user['name'])}</strong><br/>{escape(email)}</p>"
-                    f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open the admin dashboard to approve</a></p>'
-                    "</td></tr></table>"
-                ),
-            )
-        except Exception:
-            logger.warning(f"Admin approval notification not sent for {email}")
+        await _notify_admin_new_professional(user)
     set_auth_cookies(response, uid, email)
     return public_user(user)
 
@@ -650,9 +661,8 @@ INVITE_EXPIRING_SOON_DAYS = 4
 
 
 def invite_expired(inv: dict) -> bool:
-    try:
-        created = datetime.fromisoformat(inv.get("created_at", ""))
-    except ValueError:
+    created = _parse_iso(inv.get("created_at"))
+    if created is None:
         return False
     return created + timedelta(days=INVITE_EXPIRY_DAYS) < datetime.now(timezone.utc)
 
@@ -1120,18 +1130,20 @@ async def share_joint_report(rid: str, body: ShareIn, user=Depends(get_current_u
 
 @api.get("/joint/connections")
 async def list_connections(user=Depends(get_current_user)):
-    docs = await db.connections.find({"user_ids": user["_id"]}, {"_id": 0}).to_list(100)
-    other_ids = [oid for c in docs for oid in [next((u for u in c["user_ids"] if u != user["_id"]), None)] if oid]
-    user_map = {}
-    if other_ids:
-        async for u in db.users.find({"_id": {"$in": other_ids}}, {"name": 1, "email": 1}):
-            user_map[u["_id"]] = u
-    out = []
-    for c in docs:
-        other_id = next((u for u in c["user_ids"] if u != user["_id"]), None)
-        other = user_map.get(other_id) or {}
-        out.append({"id": c["id"], "other_name": other.get("name", "Co-parent"), "other_email": other.get("email", ""), "child_name": c.get("child_name", "")})
-    return out
+    uid = user["_id"]
+    docs = await db.connections.find({"user_ids": uid}, {"_id": 0}).to_list(100)
+    other_of = {c["id"]: next((u for u in c["user_ids"] if u != uid), None) for c in docs}
+    other_ids = [oid for oid in other_of.values() if oid]
+    user_map = {u["_id"]: u async for u in db.users.find({"_id": {"$in": other_ids}}, {"name": 1, "email": 1})} if other_ids else {}
+    return [
+        {
+            "id": c["id"],
+            "other_name": user_map.get(other_of[c["id"]], {}).get("name", "Co-parent"),
+            "other_email": user_map.get(other_of[c["id"]], {}).get("email", ""),
+            "child_name": c.get("child_name", ""),
+        }
+        for c in docs
+    ]
 
 
 @api.get("/joint/invitations/lookup/{token}")
@@ -2037,12 +2049,8 @@ def _matter_state(report: dict, pending: list, now: datetime) -> tuple[str, str]
         return "ready", "Report ready"
     a = bool(report.get("responses", {}).get("a"))
     b = bool(report.get("responses", {}).get("b"))
-    if a and not b:
-        key, label = "awaiting_b", "Awaiting Parent 2"
-    elif b and not a:
-        key, label = "awaiting_a", "Awaiting Parent 1"
-    else:
-        key, label = "awaiting_both", "Awaiting both parents"
+    states = {(True, False): ("awaiting_b", "Awaiting Parent 2"), (False, True): ("awaiting_a", "Awaiting Parent 1")}
+    key, label = states.get((a, b), ("awaiting_both", "Awaiting both parents"))
     expiring = [i for i in pending if _parse_iso(i["created_at"]) + timedelta(days=INVITE_EXPIRY_DAYS - INVITE_EXPIRING_SOON_DAYS) <= now]
     if expiring:
         label += f" &middot; {len(expiring)} invitation{'s' if len(expiring) != 1 else ''} expiring/expired"
@@ -2112,48 +2120,66 @@ async def run_weekly_summaries() -> None:
             logger.warning(f"Weekly summary not sent to {pro['email']}")
 
 
-async def run_expiry_digests() -> None:
-    now = datetime.now(timezone.utc)
-    today = now.date().isoformat()
+def _digest_html(pro: dict, rows: list[str], freq: str) -> str:
+    return (
+        '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+        f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
+        f"<p>The following parent invitations expire within {INVITE_EXPIRING_SOON_DAYS} days or have already expired. "
+        "You can send a reminder or reissue a fresh invitation from your Family Matters page.</p>"
+        f"<ul>{''.join(rows)}</ul>"
+        f'<p><a href="{app_url()}/matters?filter=expiring" style="display:inline-block;background:#5B2A86;color:#ffffff;'
+        'padding:12px 24px;text-decoration:none;border-radius:6px">Open Family Matters</a></p>'
+        f'<p style="font-size:12px;color:#888">{"Weekly" if freq == "weekly" else "Daily"} digest sent by {escape(EMAIL_FROM_NAME)}. '
+        f'Change how often you receive this at {app_url()}/matters. Parent responses are never included in email.</p>'
+        "</td></tr></table>"
+    )
+
+
+async def _expiring_rows_by_pro(now: datetime) -> dict[str, list[str]]:
     cutoff = (now - timedelta(days=INVITE_EXPIRY_DAYS - INVITE_EXPIRING_SOON_DAYS)).isoformat()
     invs = await db.invitations.find({"status": "pending", "created_at": {"$lte": cutoff}}, {"_id": 0}).to_list(2000)
     if not invs:
-        return
-    reports = {r["id"]: r async for r in db.joint_reports.find({"id": {"$in": list({i["report_id"] for i in invs})}, "archived": {"$ne": True}}, {"_id": 0})}
+        return {}
+    rids = list({i["report_id"] for i in invs})
+    reports = {r["id"]: r async for r in db.joint_reports.find({"id": {"$in": rids}, "archived": {"$ne": True}}, {"_id": 0})}
     by_pro: dict[str, list[str]] = {}
     for inv in invs:
         report = reports.get(inv["report_id"])
         if report and report.get("created_by"):
             by_pro.setdefault(report["created_by"], []).append(_digest_row(report, inv, now))
-    for pro_id, rows in by_pro.items():
-        if await db.cron_runs.find_one({"job": "expiry-digest-sent", "pro_id": pro_id, "day": today}):
-            continue
-        pro = await db.users.find_one({"_id": pro_id, "role": "professional"})
-        if not pro:
-            continue
-        freq = pro.get("digest_frequency") or "daily"
-        if freq == "off" or (freq == "weekly" and now.weekday() != 0):
-            continue
-        try:
-            await send_email(
-                to=pro["email"],
-                subject=f"{len(rows)} parent invitation{'s' if len(rows) != 1 else ''} expiring soon - {EMAIL_FROM_NAME}",
-                html=(
-                    '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                    f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
-                    f"<p>The following parent invitations expire within {INVITE_EXPIRING_SOON_DAYS} days or have already expired. "
-                    "You can send a reminder or reissue a fresh invitation from your Family Matters page.</p>"
-                    f"<ul>{''.join(rows)}</ul>"
-                    f'<p><a href="{app_url()}/matters?filter=expiring" style="display:inline-block;background:#5B2A86;color:#ffffff;'
-                    'padding:12px 24px;text-decoration:none;border-radius:6px">Open Family Matters</a></p>'
-                    f'<p style="font-size:12px;color:#888">{"Weekly" if freq == "weekly" else "Daily"} digest sent by {escape(EMAIL_FROM_NAME)}. '
-                    f'Change how often you receive this at {app_url()}/matters. Parent responses are never included in email.</p>'
-                    "</td></tr></table>"
-                ),
-            )
-            await db.cron_runs.insert_one({"job": "expiry-digest-sent", "pro_id": pro_id, "day": today, "count": len(rows), "at": now.isoformat()})
-        except Exception:
-            logger.warning(f"Expiry digest not sent to {pro['email']}")
+    return by_pro
+
+
+def _digest_due(pro: dict, now: datetime) -> str | None:
+    freq = pro.get("digest_frequency") or "daily"
+    if freq == "off" or (freq == "weekly" and now.weekday() != 0):
+        return None
+    return freq
+
+
+async def _send_digest(pro_id: str, rows: list[str], now: datetime) -> None:
+    today = now.date().isoformat()
+    if await db.cron_runs.find_one({"job": "expiry-digest-sent", "pro_id": pro_id, "day": today}):
+        return
+    pro = await db.users.find_one({"_id": pro_id, "role": "professional"})
+    freq = _digest_due(pro, now) if pro else None
+    if not freq:
+        return
+    try:
+        await send_email(
+            to=pro["email"],
+            subject=f"{len(rows)} parent invitation{'s' if len(rows) != 1 else ''} expiring soon - {EMAIL_FROM_NAME}",
+            html=_digest_html(pro, rows, freq),
+        )
+        await db.cron_runs.insert_one({"job": "expiry-digest-sent", "pro_id": pro_id, "day": today, "count": len(rows), "at": now.isoformat()})
+    except Exception:
+        logger.warning(f"Expiry digest not sent to {pro['email']}")
+
+
+async def run_expiry_digests() -> None:
+    now = datetime.now(timezone.utc)
+    for pro_id, rows in (await _expiring_rows_by_pro(now)).items():
+        await _send_digest(pro_id, rows, now)
 
 
 def _parse_iso(value) -> datetime | None:
@@ -2266,6 +2292,11 @@ async def run_completion_nudges():
                 await _send_completion_nudge(doc, now)
         except Exception as e:
             logger.error(f"Nudge processing error for {doc.get('id')}: {e}")
+
+
+@api.get("/health")
+async def api_health():
+    return {"status": "healthy", "build": BUILD_ID}
 
 
 app.include_router(api)

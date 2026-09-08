@@ -332,3 +332,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Preferences now {digest_frequency, weekly_summary}; `DigestPreference.jsx` has On/Off switch row.
 - Purged 2088 @example.com fixture users + 390 reports + 4268 invites. Test suite recreates fixtures each run.
 - Production still all /api 404.
+
+## 2026-09-08 — Code review round + production probe correction
+- CORRECTION: production backend is UP. Real probe paths: `/health` (root, 200 in prod), `/api/joint/samples` (200 in prod), `/api/joint/config` (200). `/api/health` and `/api/samples` never existed → earlier "all /api 404" conclusion was wrong; prod is merely STALE (today's routes /api/me/preferences, /api/verify 404 in prod, 200 in preview).
+- Added `GET /api/health` → {"status","build": BUILD_ID} (BUILD_ID const near router). After user deploys, verify prod `/api/health` returns build "2026-09-08.3".
+- Refactors: register() split into _validate_registration/_professional_profile/_notify_admin_new_professional; run_expiry_digests split into _expiring_rows_by_pro/_digest_due/_send_digest/_digest_html; build_case_pdf → _case_bullet_section/_case_professional_map; list_connections simplified; invite_expired uses _parse_iso; _matter_state uses dict lookup. Unused imports removed. Scanner "is vs ==" claims are all `is None` — false positives (do not change).
+- NOTE: routes must be declared BEFORE `app.include_router(api)`.

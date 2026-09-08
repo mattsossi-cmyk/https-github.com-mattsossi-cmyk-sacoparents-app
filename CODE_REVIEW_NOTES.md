@@ -23,3 +23,8 @@ verified with real controlled inboxes instead.
 Pure helpers are extracted to `auth_utils.py` (password/JWT) and `email_utils.py` (delivery +
 content safety). Route handlers stay in server.py by design; a router-level split is deferred
 until the file grows further.
+
+## Round (2026-09-08)
+- "is vs ==" findings (server.py, email_utils.py, joint_engine.py): all are `is None` / `is not None` identity checks — correct Python, left unchanged.
+- "Undefined variable" findings (invite_expired `created`, _matter_state `key/label`): false positives (early return / all branches assign). Rewritten anyway for scanner clarity.
+- Complexity: run_expiry_digests 18→~3, register 13→~5, build_case_pdf 11→~2, list_connections 12→~3. radon: no functions ≥ C remaining in server.py/pdf_report.py.
