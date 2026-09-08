@@ -11,7 +11,7 @@ from edu_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION
 from edu_deep_scoring import score_deep_dive
 from edu_deep_journey import build_journey_report
 from deep_dive_narrative import render_parts_narrative
-from pdf_base import LOGO_PATH, _safe, _section_break
+from pdf_base import LOGO_PATH, _safe, _section_break, render_pdf_copyright
 
 
 # ---------------------------------------------------------------------------
@@ -235,6 +235,7 @@ class _PDF(FPDF):
         self.set_y(-11); self.set_font("Helvetica", "I", 7.5); self.set_text_color(133, 126, 156)
         self.cell(0, 4, _safe(f"Educational Deep Dive Report  ·  Page {self.page_no()} of {{nb}}"), align="C")
 
+        render_pdf_copyright(self)
     def h1(self, t):
         self.set_x(self.l_margin); self.set_font("Helvetica", "B", 17); self.set_text_color(26, 19, 48)
         self.multi_cell(self.epw, 7.5, _safe(t)); self.ln(0.5)

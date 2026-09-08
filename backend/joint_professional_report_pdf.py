@@ -23,6 +23,7 @@ from safety_assessment_pdf import (
     _safe,
 )
 from court_report_disclaimer import draw_court_report_disclaimer
+from pdf_base import render_pdf_copyright
 
 
 PAGE_W = 210
@@ -89,6 +90,7 @@ class _JointReportPDF(FPDF):
         self.set_text_color(*TEXT_DARK)
 
 
+        render_pdf_copyright(self)
 def _body(pdf: _JointReportPDF, text: str, *, size: int = 9, italic: bool = False):
     pdf.set_font("Helvetica", "I" if italic else "", size)
     pdf.set_x(LEFT_M)

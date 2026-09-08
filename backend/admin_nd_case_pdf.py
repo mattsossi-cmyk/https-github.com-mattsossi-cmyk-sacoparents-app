@@ -23,7 +23,7 @@ from typing import Any, Dict, List
 
 from fpdf import FPDF
 
-from pdf_base import LOGO_PATH, _safe, _section_break
+from pdf_base import LOGO_PATH, _safe, _section_break, render_pdf_copyright
 
 
 TIER_COLORS = {
@@ -65,6 +65,7 @@ class _CasePdf(FPDF):
         ), align="C")
 
 
+        render_pdf_copyright(self)
 def _tier_pill(pdf: _CasePdf, label: str, tier: str, *, width: float = 0.0) -> None:
     color = TIER_COLORS.get(tier, (61, 26, 120))
     pdf.set_fill_color(*color)

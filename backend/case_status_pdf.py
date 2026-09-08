@@ -23,6 +23,7 @@ from court_report_disclaimer import (
     apply_professional_watermark,
     draw_court_report_disclaimer,
 )
+from pdf_base import render_pdf_copyright
 from safety_assessment_pdf import _safe
 
 
@@ -47,6 +48,9 @@ class _CaseStatusPDF(FPDF):
         self.set_text_color(120, 120, 130)
         self.cell(0, 6, "SA CoParents - Joint Alignment Case Status", ln=1, align="R")
         self.set_text_color(0, 0, 0)
+
+    def footer(self) -> None:  # noqa: D401 - fpdf hook
+        render_pdf_copyright(self)
 
 
 def _fmt_dt(v: Any) -> str:

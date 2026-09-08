@@ -6,6 +6,7 @@ from typing import Any, Dict, List
 
 from fpdf import FPDF
 from PIL import Image
+from pdf_base import render_pdf_copyright
 
 
 SAGE = (132, 157, 142)
@@ -139,6 +140,7 @@ class PrepSummaryPDF(FPDF):
 
     def footer(self):
         if self._chromeless:
+            render_pdf_copyright(self)
             return
         from pdf_watermark import stamp_signature_line
         stamp_signature_line(self)
@@ -151,6 +153,8 @@ class PrepSummaryPDF(FPDF):
             align="C",
             ln=1,
         )
+
+        render_pdf_copyright(self)
 
     def section_title(self, text: str):
         self.ln(4)
@@ -379,6 +383,7 @@ class AgreementPDF(FPDF):
             ln=1,
         )
 
+        render_pdf_copyright(self)
     def section_title(self, text: str):
         self.ln(4)
         self.set_font("Helvetica", "B", 13)

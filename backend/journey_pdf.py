@@ -42,9 +42,11 @@ def _pdf_class(product_name: str, footer_name: str):
 
         def footer(self):
             from pdf_watermark import stamp_signature_line
+            from pdf_base import render_pdf_copyright
             stamp_signature_line(self)
             self.set_y(-11); self.set_font("Helvetica", "I", 7.5); self.set_text_color(133, 126, 156)
             self.cell(0, 4, _safe(f"{footer_name}  ·  Page {self.page_no()} of {{nb}}"), align="C")
+            render_pdf_copyright(self)
 
     return _JourneyPDF
 

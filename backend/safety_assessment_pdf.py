@@ -11,6 +11,7 @@ from io import BytesIO
 from typing import Any, Dict, List
 
 from fpdf import FPDF
+from pdf_base import render_pdf_copyright
 
 
 # Re-use brand colors and replacements from pdf_service to stay visually consistent.
@@ -96,6 +97,7 @@ class SafetyAssessmentPDF(FPDF):
             align="C", ln=1,
         )
 
+        render_pdf_copyright(self)
     def section_title(self, text: str):
         self.ln(3)
         self.set_font("Helvetica", "B", 13)

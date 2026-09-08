@@ -46,3 +46,24 @@ def _section_break(pdf) -> None:
     pdf.set_draw_color(220, 214, 232); pdf.set_line_width(0.2)
     pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
     pdf.ln(1.5)
+
+
+_COPYRIGHT_LINE = "(c) 2026 sacoparentsalign.com - All rights reserved."
+
+
+def render_pdf_copyright(pdf) -> None:
+    """
+    Render the global copyright strip at the very bottom of the
+    current PDF page. Called from every report's `footer()` method
+    so it appears on EVERY page of EVERY generated report.
+
+    Sits at 6mm from the bottom edge — under any existing footer
+    text — in tiny italic grey.
+    """
+    try:
+        pdf.set_y(-6)
+        pdf.set_font("Helvetica", "I", 6.5)
+        pdf.set_text_color(133, 126, 156)   # #857E9C
+        pdf.cell(0, 3, _safe(_COPYRIGHT_LINE), align="C", ln=1)
+    except Exception:  # noqa: BLE001 — footer must never crash a report
+        pass

@@ -10,6 +10,7 @@ from journey_pdf import build_journey_pdf
 from med_deep_journey import build_journey_report as build_med_journey
 from med_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION
 from med_deep_scoring import score_deep_dive
+from pdf_base import render_pdf_copyright
 
 
 class _MedPDF(_EduPDF):
@@ -33,6 +34,7 @@ class _MedPDF(_EduPDF):
         self.cell(0, 4, _safe(f"Prescription & Medication Coordination Deep Dive  ·  Page {self.page_no()} of {{nb}}"), align="C")
 
 
+        render_pdf_copyright(self)
 SECTION_TEMPLATES = {
     "s1": {
         "strength": "Both parents share an accurate, current picture of every prescription.",

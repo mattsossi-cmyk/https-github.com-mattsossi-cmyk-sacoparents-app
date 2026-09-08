@@ -85,6 +85,7 @@ class _CourtReportPDF(FPDF):
         self.set_text_color(*TEXT_DARK)
 
 
+        render_pdf_copyright(self)
 def _title(pdf: _CourtReportPDF, text: str, colour=None):
     pdf.ln(2)
     pdf.set_font("Helvetica", "B", 13)
@@ -235,6 +236,7 @@ def _sig_line(pdf: _CourtReportPDF, label: str, printed_name: str):
 
 
 from court_report_disclaimer import draw_court_report_disclaimer
+from pdf_base import render_pdf_copyright
 
 def build_court_report_pdf(
     *,

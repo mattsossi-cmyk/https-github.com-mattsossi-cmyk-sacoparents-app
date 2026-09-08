@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterable, Optional
 from fpdf import FPDF
 
 from court_report_disclaimer import draw_court_report_disclaimer
+from pdf_base import render_pdf_copyright
 
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "sa_coparents_logo.png")
@@ -69,6 +70,7 @@ class _PDF(FPDF):
         self.set_y(-11); self.set_font("Helvetica", "I", 7.5); self.set_text_color(133, 126, 156)
         self.cell(0, 4, _safe(f"Individual Parent Report  ·  Page {self.page_no()} of {{nb}}"), align="C")
 
+        render_pdf_copyright(self)
     def h1(self, t):
         self.set_x(self.l_margin); self.set_font("Helvetica", "B", 17); self.set_text_color(26, 19, 48)
         self.multi_cell(self.epw, 7.5, _safe(t)); self.ln(0.5)

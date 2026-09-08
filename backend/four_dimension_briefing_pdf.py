@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from fpdf import FPDF
 
-from pdf_base import LOGO_PATH, _safe, _section_break
+from pdf_base import LOGO_PATH, _safe, _section_break, render_pdf_copyright
 from pdf_watermark import stamp_watermark, stamp_signature_line
 
 
@@ -113,6 +113,7 @@ class _BriefingPDF(FPDF):
         stamp_signature_line(self)
 
 
+        render_pdf_copyright(self)
 def _pill(pdf: _BriefingPDF, label: str, rgb: tuple, *, height: float = 6, width: float = 0) -> None:
     pdf.set_fill_color(*rgb)
     pdf.set_text_color(255, 255, 255)

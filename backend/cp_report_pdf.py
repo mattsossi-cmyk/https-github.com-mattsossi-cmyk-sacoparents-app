@@ -16,6 +16,7 @@ from io import BytesIO
 from typing import Any, Dict, Iterable, List
 
 from fpdf import FPDF
+from pdf_base import render_pdf_copyright
 
 
 _RATING_COLOR = {
@@ -62,6 +63,7 @@ class _CPReportPDF(FPDF):
         self.set_text_color(133, 126, 156)
         self.cell(0, 5, f"Page {self.page_no()}/{{nb}}  ·  Educational reflection tool - not legal or clinical advice.", align="C")
 
+        render_pdf_copyright(self)
     def h1(self, text: str):
         self.set_font("Helvetica", "B", 18)
         self.set_text_color(26, 19, 48)

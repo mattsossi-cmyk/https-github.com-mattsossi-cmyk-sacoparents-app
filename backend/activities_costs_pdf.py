@@ -25,6 +25,7 @@ from safety_assessment_pdf import (
     ORG_NAME, ORG_PHONE, ORG_EMAIL, LOGO_PATH,
     _safe,
 )
+from pdf_base import render_pdf_copyright
 
 
 PAGE_W = 210
@@ -85,6 +86,7 @@ class _CostLedgerPDF(FPDF):
         self.set_text_color(*TEXT_DARK)
 
 
+        render_pdf_copyright(self)
 def _fmt_usd(cents: int) -> str:
     n = (cents or 0) / 100
     return f"${n:,.2f}"

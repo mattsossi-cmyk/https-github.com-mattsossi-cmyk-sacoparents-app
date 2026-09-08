@@ -26,7 +26,7 @@ from typing import Any, Dict, List, Optional
 
 from fpdf import FPDF
 
-from pdf_base import _safe, _section_break
+from pdf_base import _safe, _section_break, render_pdf_copyright
 from court_report_disclaimer import draw_court_report_disclaimer
 
 
@@ -131,6 +131,7 @@ class _PathwayPDF(FPDF):
 
 # ---- Reusable low-level widgets ----------------------------------------------
 
+        render_pdf_copyright(self)
 def _eyebrow(pdf: _PathwayPDF, text: str) -> None:
     pdf.set_font("Helvetica", "B", 8)
     pdf.set_text_color(*BRAND_PURPLE)

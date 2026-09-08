@@ -11,6 +11,7 @@ from journey_pdf import build_journey_pdf
 from psych_deep_journey import build_journey_report as build_psych_journey
 from psych_deep_questions import DEEP_DIVE_SECTIONS, DEEP_DIVE_VERSION
 from psych_deep_scoring import score_deep_dive
+from pdf_base import render_pdf_copyright
 
 
 class _PsychPDF(_EduPDF):
@@ -32,6 +33,7 @@ class _PsychPDF(_EduPDF):
         self.cell(0, 4, _safe(f"Psychological Deep Dive Report  ·  Page {self.page_no()} of {{nb}}"), align="C")
 
 
+        render_pdf_copyright(self)
 SECTION_TEMPLATES = {
     "s1": {
         "challenge": "Multiple active diagnoses signal that coordination between homes is essential.",

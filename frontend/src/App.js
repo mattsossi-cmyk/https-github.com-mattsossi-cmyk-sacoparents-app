@@ -58,6 +58,7 @@ import ProfessionalJointAlignmentNew from "@/pages/ProfessionalJointAlignmentNew
 import ProfessionalJointAlignmentMine from "@/pages/ProfessionalJointAlignmentMine";
 import ProfessionalJointAlignmentBulk from "@/pages/ProfessionalJointAlignmentBulk";
 import ProfessionalJointAlignmentBulkHistory from "@/pages/ProfessionalJointAlignmentBulkHistory";
+import JointAlignmentPreview from "@/pages/JointAlignmentPreview";
 import ShareWithProfessional from "@/pages/ShareWithProfessional";
 import SharedWithProfessionals from "@/pages/SharedWithProfessionals";
 import ForPortalEngineers from "@/pages/ForPortalEngineers";
@@ -117,6 +118,7 @@ import SpecialNeedsV2MedicalDeepDiveCompareView from "@/pages/SpecialNeedsV2Medi
 import LearningCenter from "@/pages/LearningCenter";
 import LearningArticle from "@/pages/LearningArticle";
 import LegalAcknowledgment from "@/components/LegalAcknowledgment";
+import GlobalCopyright from "@/components/GlobalCopyright";
 
 const TOAST_OPTIONS = {
   style: {
@@ -189,6 +191,10 @@ function AppRoutes() {
         <Route
           path="/professional/joint-alignment/bulk/history"
           element={<ProtectedRoute><ProfessionalJointAlignmentBulkHistory /></ProtectedRoute>}
+        />
+        <Route
+          path="/joint-alignment/cases/:caseId/preview"
+          element={<ProtectedRoute><JointAlignmentPreview /></ProtectedRoute>}
         />
         <Route
           path="/share/professional"
@@ -580,6 +586,7 @@ function AppRoutes() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <GlobalCopyright />
       </BiometricGate>
     </HashAuthGuard>
   );

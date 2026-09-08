@@ -29,6 +29,7 @@ from safety_assessment_pdf import (
     _safe,
 )
 from trauma_lens import LENS_NAME, SELF_REFLECTION_DISCLAIMER
+from pdf_base import render_pdf_copyright
 
 
 # ---------- Recommended-questions bank ----------
@@ -116,6 +117,7 @@ class _OnePagerPDF(FPDF):
         self.set_text_color(*TEXT_DARK)
 
 
+        render_pdf_copyright(self)
 def _section_heading(pdf: _OnePagerPDF, text: str, colour):
     pdf.ln(1)
     pdf.set_font("Helvetica", "B", 10)

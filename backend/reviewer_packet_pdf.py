@@ -9,7 +9,7 @@ from typing import List
 
 from fpdf import FPDF
 
-from pdf_base import LOGO_PATH, _safe, _section_break
+from pdf_base import LOGO_PATH, _safe, _section_break, render_pdf_copyright
 
 
 REVIEW_CHECKLIST = [
@@ -67,6 +67,7 @@ class _PacketPDF(FPDF):
         self.cell(0, 3, _safe(f"Page {self.page_no()}"), align="C")
 
 
+        render_pdf_copyright(self)
 def _numbered_bullet(pdf: _PacketPDF, num: int, text: str) -> None:
     pdf.set_x(pdf.l_margin)
     pdf.set_font("Helvetica", "B", 9.5); pdf.set_text_color(61, 26, 120)

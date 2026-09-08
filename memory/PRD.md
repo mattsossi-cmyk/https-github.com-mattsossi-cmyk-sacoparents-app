@@ -27,6 +27,51 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Iter173 · JA Preview + For-Professionals + Global Copyright
+
+**🟡 P1 — Joint Alignment Preview (agreement-flag-only)**
+- New endpoint `GET /api/joint-alignment/cases/{case_id}/preview`
+  returns per-topic `agree` / `differ` / `incomplete` flags plus a
+  `{total, agreed, differed, incomplete}` summary. Guards: caller
+  must be a party, both parents must have active
+  `comparison_consent`, both must have `assessment_completed_at`.
+  Response NEVER exposes raw content — stable hash of each topic's
+  minimised payload (volatile `updated_at` / `generated_at` fields
+  stripped so identical answers submitted seconds apart still read
+  as `agree`).
+- New page `/joint-alignment/cases/:caseId/preview`
+  (`JointAlignmentPreview.jsx`) with private-review banner, count
+  pills, per-topic list, and a legal-note block.
+- Dashboard `JointAlignmentRequests` component now surfaces a
+  "Preview joint outcome" button once a case flips to
+  `both_complete`.
+- Coverage: `tests/test_iter173_joint_align_preview.py` (9 tests,
+  green).
+
+**🟡 P2 — `/for-professionals` (clinical-neutral refresh)**
+- Removed hero and closing-CTA gradients; hero copy tightened to
+  a neutral "SA CoParents for mediation practices." headline that
+  reads like a directory listing rather than a sales page.
+- Added `/for-professionals` to `PUBLIC_MARKETING_PATHS` in
+  `LegalAcknowledgment.jsx` so mediators arriving from LinkedIn
+  don't hit the disclaimer modal on landing.
+
+**🟡 P2 — Global copyright rollout**
+- New `<GlobalCopyright />` component mounted once in `App.js`
+  after `<Routes />` so every page ends with
+  `© 2026 sacoparentsalign.com · All rights reserved.`
+- Replaced the two existing per-page copyright lines
+  (`ForProfessionals`, `Watch`) so the new attribution is the
+  only copyright shown anywhere.
+- New shared helper `pdf_base.render_pdf_copyright(pdf)` writing
+  the same line at 6mm from the bottom edge of every PDF page.
+  Injected into every `footer(self)` method across 20 report
+  builders + added a `footer` method to `_FoundationPDF` and
+  `_CaseStatusPDF` (which previously used the FPDF default no-op).
+  Rendered on chromeless / cover pages too.
+
+
+## What's Implemented
 ### 2026-09-08 — Iter172 · Access-Expiring In-App Banner
 
 **🟡 P1 — Expiring-Soon Banner on /shared-with-professionals**

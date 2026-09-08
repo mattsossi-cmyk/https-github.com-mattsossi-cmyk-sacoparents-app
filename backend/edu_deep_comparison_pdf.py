@@ -5,6 +5,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 from fpdf import FPDF
+from pdf_base import render_pdf_copyright
 
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "sa_coparents_logo.png")
@@ -75,6 +76,7 @@ class _PDF(FPDF):
         self.set_text_color(133, 126, 156)
         self.cell(0, 4, _safe(f"Neutral Co-Parent Comparison  ·  Page {self.page_no()} of {{nb}}"), align="C")
 
+        render_pdf_copyright(self)
     def h1(self, t: str):
         self.set_font("Helvetica", "B", 20)
         self.set_text_color(26, 19, 48)

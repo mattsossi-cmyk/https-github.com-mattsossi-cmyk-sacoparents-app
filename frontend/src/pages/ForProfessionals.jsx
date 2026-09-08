@@ -122,7 +122,7 @@ export default function ForProfessionals() {
 
       {/* Hero */}
       <main id="main-content">
-      <section className="px-5 sm:px-8 py-12 sm:py-16 bg-gradient-to-b from-[#F5F1FB] to-white">
+      <section className="px-5 sm:px-8 py-12 sm:py-16 bg-white border-b border-[#E5E0EE]">
         <div className="max-w-6xl mx-auto">
           <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#D6CFE8] px-3 py-1 mb-6" data-testid="for-pros-eyebrow">
             <Award size={12} className="text-[#3D1A78]" />
@@ -134,19 +134,18 @@ export default function ForProfessionals() {
             className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#1A1330] leading-[1.05] tracking-tight max-w-4xl"
             data-testid="for-pros-headline"
           >
-            Parents arrive prepared.
-            <br />
-            <span className="text-[#3D1A78]">You keep the professional call.</span>
+            SA CoParents for mediation practices.
           </h1>
           <p
             className="mt-6 text-base sm:text-lg text-[#4B4567] leading-relaxed max-w-3xl"
             data-testid="for-pros-supporting-copy"
           >
-            SA CoParents helps separated parents run structured, neutral
-            reflections before mediation — child-focused goals, communication
-            patterns, priority ranking, and safety awareness. What lands on
-            your desk is a mediator-ready prep artefact you can trust to be
-            non-diagnostic, non-adjudicative, and clearly disclaimed.
+            SA CoParents produces neutral, mediator-facing preparation
+            artefacts from structured parent reflections — Foundation
+            Statement, Communication Reflection, Activities Cost Split,
+            and the six-topic Joint Alignment compare. Every artefact
+            is non-diagnostic, non-adjudicative, and disclaimed on the
+            first page.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -265,15 +264,16 @@ export default function ForProfessionals() {
       </section>
 
       {/* Closing CTA */}
-      <section className="px-5 sm:px-8 py-14 sm:py-20 bg-gradient-to-br from-[#1A1330] to-[#3D1A78] text-white">
+      <section className="px-5 sm:px-8 py-14 sm:py-20 bg-[#1A1330] text-white">
         <div className="max-w-4xl mx-auto text-center">
           <Heart size={28} className="mx-auto text-[#CFC1EA] mb-4" />
           <h2 className="font-serif text-3xl sm:text-4xl leading-tight">
-            Ready to see what a prepared client looks like?
+            Review a sample before you refer.
           </h2>
           <p className="mt-4 text-[#CFC1EA] max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            Browse the full sample library, then reach out if you'd like to
-            introduce SA CoParents to your practice.
+            The full sample library is public — no signup required.
+            Reach out via email when you&rsquo;d like to discuss
+            introducing SA CoParents to a specific case or practice.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
@@ -302,7 +302,7 @@ export default function ForProfessionals() {
       {/* Footer legal strip */}
       <footer className="px-5 sm:px-8 py-6 border-t border-[#E5E0EE] bg-[#FAF8FD]">
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-[#4B4567]">
-          <div>© SA CoParents. Advisory prep tools — not legal advice, therapy, or diagnosis.</div>
+          <div>Advisory prep tools — not legal advice, therapy, or diagnosis.</div>
           <div className="flex items-center gap-4">
             <Link to="/privacy" className="hover:underline" data-testid="for-pros-footer-privacy">Privacy</Link>
             <Link to="/legal/hipaa" className="hover:underline" data-testid="for-pros-footer-hipaa">HIPAA</Link>

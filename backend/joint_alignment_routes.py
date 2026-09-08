@@ -3216,3 +3216,231 @@ async def get_case_consent_status(
             "release_template": _JA_RELEASE_CONSENT_TEXT_TEMPLATE,
         },
     }
+
+
+# =========================== Joint Alignment on-screen preview =========================== #
+# On-screen "did we agree?" preview shown between the comparison-
+# consent step and the release-consent step. Per the family-safety
+# spec, this stage MUST NOT leak either parent's raw content — the
+# preview is agreement-flag-only ("agree" / "differ" / "incomplete")
+# per structural topic derived from the minimised payload.
+#
+# Only viewable by the two parents on the case (never the mediator).
+# Both parents must have active `comparison_consent`. Preview does
+# NOT flip status to `released` and never sends the report to any
+# professional. That still requires the separate `release_consent`
+# from both parents.
+
+def _stable_hash(v: Any) -> str:
+    """
+    Deterministic canonical hash of any JSON-serialisable value.
+    Sorted keys / no whitespace so two structurally-identical
+    payloads always hash the same.
+
+    Recursively strips volatile timestamp fields (`updated_at`,
+    `generated_at`) that reflect *when* a parent saved a section,
+    not *what* they saved — otherwise two identical answers submitted
+    seconds apart would compare as `differ`.
+    """
+    def _strip(obj: Any) -> Any:
+        if isinstance(obj, dict):
+            return {
+                k: _strip(val) for k, val in obj.items()
+                if k not in ("updated_at", "generated_at")
+            }
+        if isinstance(obj, list):
+            return [_strip(x) for x in obj]
+        return obj
+
+    return hashlib.sha256(
+        json.dumps(
+            _strip(v), sort_keys=True, separators=(",", ":"), default=str,
+        ).encode("utf-8"),
+    ).hexdigest()
+
+
+def _topic_label(assessment_type: str, key: str) -> str:
+    """Pretty label per topic key. Falls back to Title Case."""
+    labels = {
+        "assessment": "Co-Parenting Assessment",
+        "foundation_statement": "Foundation Statement",
+        "mediation_statement": "Mediation Statement",
+        "mediation_preparation": "Mediation Preparation",
+        "profile": "Child Profile",
+        "questions_for_school_or_parent": "Questions for School",
+        "questions_for_provider": "Questions for Provider",
+        "questions_for_therapist": "Questions for Therapist",
+        "rating_areas": "Rating Areas",
+        "signals": "Signal Flags",
+    }
+    return labels.get(key) or key.replace("_", " ").title()
+
+
+def _topic_order(assessment_type: str) -> List[str]:
+    """Stable topic order per assessment_type so the preview reads
+    the same for both parents."""
+    if assessment_type == "co-parenting":
+        return [
+            "assessment", "foundation_statement",
+            "mediation_statement", "mediation_preparation",
+        ]
+    return [
+        "profile", "foundation_statement", "rating_areas", "signals",
+        "questions_for_school_or_parent",
+        "questions_for_provider", "questions_for_therapist",
+    ]
+
+
+def _derive_preview_topics(
+    assessment_type: str,
+    payload_a: Optional[Dict[str, Any]],
+    payload_b: Optional[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Build the per-topic agreement flags list. Never returns raw
+    content — only a flag string per topic.
+    """
+    a = payload_a or {}
+    b = payload_b or {}
+    order = _topic_order(assessment_type)
+    # Union of predicted order + any extras the payload may add.
+    seen = set(order)
+    for extra in list(a.keys()) + list(b.keys()):
+        if extra not in seen and extra != "pathway_version" and extra != "generated_at":
+            order.append(extra)
+            seen.add(extra)
+
+    out: List[Dict[str, Any]] = []
+    for key in order:
+        va = a.get(key)
+        vb = b.get(key)
+        a_done = va not in (None, {}, [], "")
+        b_done = vb not in (None, {}, [], "")
+        if not a_done and not b_done:
+            # Neither parent produced anything for this topic — skip
+            # entirely so the parent isn't shown noise.
+            continue
+        if not (a_done and b_done):
+            alignment = "incomplete"
+        else:
+            alignment = "agree" if _stable_hash(va) == _stable_hash(vb) else "differ"
+        out.append({
+            "topic_key": key,
+            "topic_label": _topic_label(assessment_type, key),
+            "alignment": alignment,
+            "parent_a_completed": a_done,
+            "parent_b_completed": b_done,
+        })
+    return out
+
+
+@router.get("/joint-alignment/cases/{case_id}/preview")
+async def get_case_alignment_preview(
+    case_id: str = Path(..., min_length=6, max_length=32),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Agreement-flag-only preview of the two parents' completed
+    assessments. Runs the same compare as the final Joint Alignment
+    Report but returns ONLY per-topic `agree / differ / incomplete`
+    flags — never the underlying content. Powers the on-screen
+    review step between comparison-consent and release-consent.
+
+    Guards:
+      * Case must exist and not be `expired`/`cancelled`.
+      * Caller must be one of the two parents on the case. Mediators
+        cannot see this preview — they see the final release-gated
+        report instead.
+      * Both parents must have active `comparison_consent` (not
+        revoked). Missing on either side → 403.
+      * Both parents must have completed the assessment
+        (`assessment_completed_at`). Missing on either side → 409.
+
+    Response never includes:
+      * Any parent's raw answers, journal entries, safety data, or
+        AI Coach content.
+      * The other parent's identity beyond the display name already
+        available from `_case_public_shape`.
+    """
+    case = await db[_CASES_COLL].find_one({"case_id": case_id})
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found.")
+    if case.get("status") in ("expired", "cancelled"):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Case is {case.get('status')}.",
+        )
+
+    caller_email = (current.email or "").lower()
+    parents = case.get("parents") or []
+    if not any(
+        (p.get("email") or "").lower() == caller_email for p in parents
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a party to this case.",
+        )
+
+    # Consent gate — BOTH parents must have active comparison consent.
+    def _comp_active(p: Dict[str, Any]) -> bool:
+        return bool(p.get("comparison_consent_at")) and not p.get(
+            "comparison_consent_revoked_at",
+        )
+    if not (parents and all(_comp_active(p) for p in parents)):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Both parents must record their comparison consent "
+                "before the preview is available."
+            ),
+        )
+
+    # Completion gate — both parents must have finished their assessment.
+    if not all(p.get("assessment_completed_at") for p in parents):
+        raise HTTPException(
+            status_code=409,
+            detail="Both parents must complete their assessment first.",
+        )
+
+    assessment_type = case.get("assessment_type") or ""
+    payloads: List[Optional[Dict[str, Any]]] = []
+    for p in parents:
+        uid = p.get("user_id")
+        if not uid:
+            payloads.append(None)
+            continue
+        payloads.append(
+            await _minimised_assessment_payload(db, assessment_type, uid),
+        )
+    while len(payloads) < 2:
+        payloads.append(None)
+
+    topics = _derive_preview_topics(
+        assessment_type, payloads[0], payloads[1],
+    )
+    counts = {"total": len(topics), "agreed": 0, "differed": 0, "incomplete": 0}
+    for t in topics:
+        if t["alignment"] == "agree":
+            counts["agreed"] += 1
+        elif t["alignment"] == "differ":
+            counts["differed"] += 1
+        else:
+            counts["incomplete"] += 1
+
+    return {
+        "case_id": case_id,
+        "assessment_type": assessment_type,
+        "generated_at": _iso(_now()),
+        "parents": [
+            {"name": p.get("name"), "email": p.get("email")} for p in parents
+        ],
+        "topics": topics,
+        "summary": counts,
+        "preview_notice": (
+            "Nothing has been shared with anyone outside your household. "
+            "This is a private, agreement-flag-only preview. To release "
+            "the full Joint Alignment Report to a named professional you "
+            "both need to record separate release consent."
+        ),
+    }

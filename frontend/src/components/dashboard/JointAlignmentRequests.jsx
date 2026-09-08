@@ -214,6 +214,19 @@ function CaseRow({ caseData, navigate }) {
             Awaiting co-parent
           </span>
         )}
+        {caseData.status === "both_complete" && (
+          <button
+            type="button"
+            onClick={() => navigate(
+              `/joint-alignment/cases/${caseData.case_id}/preview`,
+            )}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-[13px] font-semibold hover:bg-[#F5F1FB] transition"
+            data-testid={`joint-alignment-preview-${caseData.case_id}`}
+          >
+            Preview joint outcome
+            <ArrowRight size={12} />
+          </button>
+        )}
       </div>
     </li>
   );

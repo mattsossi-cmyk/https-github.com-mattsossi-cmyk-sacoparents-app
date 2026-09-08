@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 
 from fpdf import FPDF
 
-from pdf_base import LOGO_PATH, _safe, _section_break
+from pdf_base import LOGO_PATH, _safe, _section_break, render_pdf_copyright
 from pdf_watermark import stamp_watermark, stamp_signature_line
 
 TIER_COLORS: Dict[str, tuple] = {
@@ -45,6 +45,7 @@ class _NDPdf(FPDF):
         stamp_signature_line(self)
 
 
+        render_pdf_copyright(self)
 def _tier_pill(pdf: _NDPdf, label: str, tier: str) -> None:
     color = TIER_COLORS.get(tier, (61, 26, 120))
     pdf.set_fill_color(*color)

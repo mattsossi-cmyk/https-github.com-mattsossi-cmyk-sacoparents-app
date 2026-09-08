@@ -28,6 +28,7 @@ from safety_assessment_pdf import (
     ORG_NAME, ORG_TAGLINE, ORG_PHONE, ORG_EMAIL, LOGO_PATH,
     _safe,
 )
+from pdf_base import render_pdf_copyright
 
 
 PAGE_W = 210
@@ -172,6 +173,7 @@ class _IntroPDF(FPDF):
         self.set_text_color(*TEXT_DARK)
 
 
+        render_pdf_copyright(self)
 def build_professional_intro_pdf() -> bytes:
     """Render the 3-minute intro as a branded PDF and return raw bytes."""
     now = datetime.now(timezone.utc).strftime("%B %d, %Y")
