@@ -30,7 +30,7 @@ from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_pay
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
 from joint_engine import generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
-from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf
+from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
 from email_utils import send_email, EMAIL_FROM_NAME
@@ -751,6 +751,11 @@ def _invite_email_content(spec: InviteSpec, token: str) -> tuple[str, str]:
         f'<p><a href="{link}" style="display:inline-block;background:#5B2A86;color:#ffffff;'
         'padding:12px 24px;text-decoration:none;border-radius:6px">Complete My Assessment</a></p>'
         f"<p>{closing}</p>"
+        f'<table role="presentation" style="margin-top:8px"><tr><td style="vertical-align:top;padding-right:14px">'
+        f'<img src="{app_url()}/api/verify/{escape(spec.code)}/qr.png" width="96" height="96" alt="QR code to verify this professional" style="display:block;border:1px solid #ddd;border-radius:6px"></td>'
+        f'<td style="vertical-align:top;font-size:13px;color:#444">Want to confirm who sent this? Scan the code or visit '
+        f'<a href="{app_url()}/verify?code={escape(spec.code)}" style="color:#5B2A86">{escape(app_url())}/verify</a> and enter case code <strong>{escape(spec.code)}</strong> '
+        "to see the professional's approval and credential status.</td></tr></table>"
         "<p>Please do not forward this invitation or share your sign-in credentials.</p>"
         f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. If the button does not '
         "work, sign in and enter your participation code instead.</p></td></tr></table>"
@@ -947,6 +952,13 @@ async def list_joint_reports(user=Depends(get_current_user)):
     ]
 
 
+def _verify_info(doc: dict) -> dict | None:
+    code = doc.get("case_code")
+    if not code:
+        return None
+    return {"case_code": code, "url": f"{app_url()}/verify?code={code}"}
+
+
 async def _report_professional(doc: dict) -> dict | None:
     pid = doc.get("professional_id") or doc.get("created_by")
     pro = await db.users.find_one({"_id": pid, "role": "professional"}, {"name": 1, "verification_level": 1}) if pid else None
@@ -1025,7 +1037,7 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
             media_type="application/pdf",
             headers={"Content-Disposition": f'attachment; filename="coparenting-agreement-{child}.pdf"'},
         )
-    pdf_bytes = build_joint_pdf({**generate_joint_report(doc), "professional": await _report_professional(doc)})
+    pdf_bytes = build_joint_pdf({**generate_joint_report(doc), "professional": await _report_professional(doc), "verify": _verify_info(doc)})
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -1317,6 +1329,15 @@ async def delete_professional_note(rid: str, nid: str, user=Depends(get_current_
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Note not found")
     return {"ok": True}
+
+
+@api.get("/verify/{case_code}/qr.png")
+async def public_verify_qr(case_code: str):
+    code = re.sub(r"[^A-Z0-9-]", "", case_code.strip().upper())[:20]
+    if len(code) < 6:
+        raise HTTPException(status_code=400, detail="Invalid case code")
+    return Response(content=verify_qr_png(f"{app_url()}/verify?code={code}"), media_type="image/png",
+                    headers={"Cache-Control": "public, max-age=86400"})
 
 
 @api.get("/verify/{case_code}")

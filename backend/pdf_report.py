@@ -1,5 +1,7 @@
 from pathlib import Path
+from io import BytesIO
 
+import qrcode
 from fpdf import FPDF
 
 _FONT_DIR = Path(__file__).resolve().parent / "fonts"
@@ -45,6 +47,27 @@ class _JointPDF(FPDF):
         self.set_font(FONT, "I", 8)
         self.set_text_color(*GRAY)
         self.cell(0, 8, _s(f"Copyright 2026 SA CoParents. All Rights Reserved. - sacoparentsalign.com - Page {self.page_no()}"), align="C")
+
+
+def verify_qr_png(url: str) -> bytes:
+    img = qrcode.make(url, box_size=6, border=1)
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def _verify_qr_block(pdf: FPDF, verify: dict) -> None:
+    size = 22
+    x = pdf.w - pdf.r_margin - size
+    y = pdf.t_margin
+    pdf.image(BytesIO(verify_qr_png(verify["url"])), x=x, y=y, w=size, h=size)
+    pdf.set_xy(x - 2, y + size + 0.5)
+    pdf.set_font(FONT, "", 6.5)
+    pdf.set_text_color(*GRAY)
+    pdf.cell(size + 4, 3, "Scan to verify", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_xy(x - 2, y + size + 3.5)
+    pdf.cell(size + 4, 3, _s(verify["case_code"]), align="C")
+    pdf.set_xy(pdf.l_margin, pdf.t_margin)
 
 
 def _new_pdf() -> FPDF:
@@ -230,6 +253,8 @@ def build_joint_pdf(r: dict) -> bytes:
     pdf = _new_pdf()
     if r.get("is_sample"):
         pdf.watermark_text = "SAMPLE REPORT"
+    if r.get("verify"):
+        _verify_qr_block(pdf, r["verify"])
     _title_header(pdf, r["report_title"], [
         f"Child: {r['child_name']}",
         f"Subject: {r['subject_label']}",

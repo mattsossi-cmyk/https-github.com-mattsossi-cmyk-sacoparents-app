@@ -338,3 +338,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Added `GET /api/health` → {"status","build": BUILD_ID} (BUILD_ID const near router). After user deploys, verify prod `/api/health` returns build "2026-09-08.3".
 - Refactors: register() split into _validate_registration/_professional_profile/_notify_admin_new_professional; run_expiry_digests split into _expiring_rows_by_pro/_digest_due/_send_digest/_digest_html; build_case_pdf → _case_bullet_section/_case_professional_map; list_connections simplified; invite_expired uses _parse_iso; _matter_state uses dict lookup. Unused imports removed. Scanner "is vs ==" claims are all `is None` — false positives (do not change).
 - NOTE: routes must be declared BEFORE `app.include_router(api)`.
+
+## 2026-09-08 — Verification QR + test fixture cleanup (pytest 152/152)
+- `GET /api/verify/{code}/qr.png` (public, cached 1d) → QR to /verify?code=. Invitation email now embeds QR + verify link; Joint Report PDFs show QR top-right ("Scan to verify" + case code) via `_verify_qr_block`, driven by `verify` key from `_verify_info(doc)`. Dependency: qrcode[pil] (requirements.txt updated).
+- `tests/conftest.py`: `pytest_sessionfinish` (controller only under xdist) purges @example.com / @x.com fixture users + their reports/invites/notes/cases/connections/cron_runs. Suite now leaves DB clean (only panel.test.pro pending).
+- Production still stale (no /api/health build id yet).
