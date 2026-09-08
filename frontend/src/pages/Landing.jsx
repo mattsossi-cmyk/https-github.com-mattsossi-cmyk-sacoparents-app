@@ -130,6 +130,7 @@ export default function Landing() {
           <a href="#applications" className="text-muted-foreground hover:text-foreground" data-testid="nav-applications">Professional Applications</a>
           <Link to="/samples" className="text-muted-foreground hover:text-foreground" data-testid="nav-sample-report">Sample Reports</Link>
           <Link to="/resources" className="text-muted-foreground hover:text-foreground" data-testid="nav-resources">Professional Resources</Link>
+          <Link to="/verify" className="text-muted-foreground hover:text-foreground" data-testid="nav-verify">Verify a Professional</Link>
         </nav>
         <div className="flex items-center gap-3">
           <Link to="/auth" data-testid="nav-login-link">

@@ -1275,6 +1275,49 @@ async def delete_professional_note(rid: str, nid: str, user=Depends(get_current_
     return {"ok": True}
 
 
+@api.get("/verify/{case_code}")
+async def public_verify_case(case_code: str):
+    code = re.sub(r"[^A-Z0-9-]", "", case_code.strip().upper())[:20]
+    if len(code) < 6:
+        raise HTTPException(status_code=400, detail="Enter the case code from your invitation (e.g. SA-EDU-123456)")
+    report = await db.joint_reports.find_one({"case_code": code}, {"_id": 0, "created_by": 1, "professional_id": 1, "subject_label": 1, "archived": 1, "created_at": 1})
+    if not report:
+        raise HTTPException(status_code=404, detail="No Professional Alignment Case matches that code. Check the code in your invitation email.")
+    pro_id = report.get("professional_id") or report.get("created_by")
+    pro = await db.users.find_one({"_id": pro_id, "role": "professional"}, {"name": 1, "approved": 1, "verification_level": 1, "profile": 1})
+    if not pro:
+        raise HTTPException(status_code=404, detail="No professional is assigned to this case.")
+    profile = pro.get("profile") or {}
+    return {
+        "case_code": code,
+        "subject_label": report.get("subject_label", ""),
+        "case_active": not report.get("archived"),
+        "professional_name": pro.get("name", ""),
+        "professional_role": profile.get("pro_role", ""),
+        "organization": profile.get("organization", ""),
+        "account_approved": bool(pro.get("approved")),
+        "credentials_verified": pro.get("verification_level") == "credentials_verified",
+    }
+
+
+@api.get("/notes/search")
+async def search_professional_notes(q: str = "", user=Depends(get_current_user)):
+    needle = q.strip()
+    if len(needle) < 2:
+        return []
+    notes = await db.professional_notes.find(
+        {"author_id": user["_id"], "text": {"$regex": re.escape(needle), "$options": "i"}}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    rids = list({n["report_id"] for n in notes})
+    reports = {r["id"]: r async for r in db.joint_reports.find({"id": {"$in": rids}}, {"_id": 0, "id": 1, "case_code": 1, "subject_label": 1, "child_name": 1, "archived": 1})}
+    out = []
+    for n in notes:
+        r = reports.get(n["report_id"], {})
+        child = (r.get("child_name") or "").strip()
+        out.append({**n, "case_code": r.get("case_code", ""), "subject_label": r.get("subject_label", ""), "child_ref": f"{child[0].upper()}." if child else "", "archived": bool(r.get("archived"))})
+    return out
+
+
 @api.get("/joint/reports/{rid}/activity")
 async def report_activity(rid: str, user=Depends(get_current_user)):
     report = await get_joint_report_doc(rid, user)

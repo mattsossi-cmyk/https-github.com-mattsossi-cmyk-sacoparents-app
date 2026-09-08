@@ -317,3 +317,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Notes: `PUT/DELETE /api/joint/reports/{rid}/notes/{nid}`; edits push prior text to `revisions[]` and set `updated_at`. `MatterNotes.jsx` now has edit/delete/history UI; `ProWorkspace` reuses it (old pro-note-* testids removed).
 - /matters honours `?filter=` query param.
 - Production still all /api 404 (frontend 200).
+
+## 2026-09-08 — Public verification page + note search (pytest 152/152; iteration_25 frontend)
+- `GET /api/verify/{case_code}` (public): professional name/role/org, account_approved, credentials_verified, case_active. Never returns parent/child data. Page `/verify` (Verify.jsx), nav link on Landing, hint link on /join.
+- `GET /api/notes/search?q=` (professional, own notes, min 2 chars, regex-escaped) with case_code/subject/child initial. `NoteSearch.jsx` at bottom of /matters with highlighted matches.
+- Production still all /api 404 (frontend 200).

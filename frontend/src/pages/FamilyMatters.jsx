@@ -6,6 +6,7 @@ import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { MatterNotes } from "@/components/MatterNotes";
+import { NoteSearch } from "@/components/NoteSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -161,6 +162,7 @@ export default function FamilyMatters() {
         ) : (
           <ul className="space-y-3" data-testid="matters-list">{shown.map((j) => <MatterRow key={j.id} j={j} onToggle={toggle} onReissue={reissue} />)}</ul>
         )}
+        <NoteSearch />
       </main>
     </div>
   );

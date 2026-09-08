@@ -69,6 +69,9 @@ export default function Join() {
               responses to identify areas of alignment, differences in perspective, child-focused concerns,
               and possible options for discussion.
             </p>
+            <p className="mt-2 text-xs text-muted-foreground" data-testid="invitation-verify-hint">
+              Want to confirm this professional first? <Link to="/verify" className="text-primary underline" data-testid="invitation-verify-link">Check their verification status</Link> using the case code in your email.
+            </p>
             <div className="mt-6">
               <ConfidentialityNotice />
             </div>
