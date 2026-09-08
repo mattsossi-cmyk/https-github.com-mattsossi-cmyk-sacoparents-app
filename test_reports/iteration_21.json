@@ -1,0 +1,30 @@
+{
+  "summary": "Frontend E2E verified for iteration 21: (1) Admin declined-registrations collapsible log + Reconsider flow (declined.test.pro@gmail.com reason='Unable to verify license number provided.'), and (2) /matters new 'Expiring Invitations' filter chip + yellow expiring notice + Send Reminder preview modal on matter SA-EDU-642310. Regressions (admin panel role/org/license for panel.test.pro; /matters search + archive/restore) all pass. State restored (decline.test.pro re-declined with original reason).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/admin/reconsider-professional/{id}", "issue": "One transient 502 observed at ingress on first call; retry (and server-side effect) succeeded on next attempt. Not reproducible on curl."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "None - all requested checks pass. Optional: consider handling initial dashboard render race where admin API calls occasionally need ~4-5s to hydrate after login (silent .catch swallows any early 401). Not a functional bug."
+  ],
+  "critical_code_review_comments": [
+    "Dashboard.jsx admin useEffect fires on user change; API errors are swallowed with .catch(() => {}) — a 401 or 502 leaves counts silently at 0 with no user-facing feedback. Consider a toast on non-2xx or a retry.",
+    "FamilyMatters.jsx expiringInvites filters strictly by expires_at <= 4d; edge case: past-expiry entries render 'has expired' correctly (verified in matter row logic)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only scope)", "frontend": "100%"},
+  "test_credentials": "admin mattsossi@bsossi.com / CoParents2026! ; professional approval.test.pro1@gmail.com / TestPass2026! (both worked)",
+  "seed_data_creation": "None. State fully restored: decline.test.pro@gmail.com is back in declined-log with original reason 'Unable to verify license number provided.' after test reconsider+re-decline cycle. panel.test.pro@gmail.com left untouched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Verified UI testids: declined-log-toggle, declined-log-list, declined-pro-{id}, declined-reason-{id}, reconsider-pro-btn-{id}, decline-pro-btn-{id}, decline-form-{id}, decline-reason-input-{id}, decline-confirm-btn-{id}, pending-pro-{id}, matters-filter-expiring, matter-expiring-{inviteId}, matter-remind-btn-{inviteId}. Login route is /auth (not /login). Admin dashboard needs ~4-6s wait after navigation for /api/admin/pending-professionals + /api/admin/declined-professionals to complete; UI counts stay at 0 during that window (silent catch). Pending list currently has 47 rows including many old test accounts (pwreset_*, test_ext_*, t_pro_*). ReminderPreview modal shows 'Preview reminder email — To: parent.b.val1@gmail.com — Subject: Invitation to Complete Your SA CoParents Assessment' with an HTML iframe preview; Escape/Cancel closes without sending. Expiring filter counted 1 for approval.test.pro1@gmail.com (SA-EDU-642310, Parent 2, 2 days left).",
+  "rca of the issue": "No functional issues observed. Ingress returned a transient 502 during one POST to /api/admin/reconsider-professional/{id}; server actually persisted the change (verified via curl - subsequent GET showed the user moved to pending). Suggest surfacing errors to the user (currently swallowed by .catch(() => {})) so operators know when a network hiccup occurs and can retry."
+}

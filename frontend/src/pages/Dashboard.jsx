@@ -27,12 +27,26 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const isPro = user?.role === "professional";
   const [pendingPros, setPendingPros] = useState([]);
+  const [declinedPros, setDeclinedPros] = useState([]);
+  const [showDeclined, setShowDeclined] = useState(false);
 
   useEffect(() => {
     if (user?.role === "admin") {
       api.get("/admin/pending-professionals").then((r) => setPendingPros(r.data)).catch(() => {});
+      api.get("/admin/declined-professionals").then((r) => setDeclinedPros(r.data)).catch(() => {});
     }
   }, [user]);
+
+  const reconsiderPro = async (p) => {
+    try {
+      await api.post(`/admin/reconsider-professional/${p.id}`);
+      toast.success("Moved back to pending approvals");
+      setDeclinedPros((prev) => prev.filter((d) => d.id !== p.id));
+      setPendingPros((prev) => [{ ...p, verification_level: "credentials_pending" }, ...prev]);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
 
   const approvePro = async (id) => {
     try {
@@ -49,6 +63,8 @@ export default function Dashboard() {
     try {
       await api.post(`/admin/decline-professional/${id}`, { reason: declineReason });
       toast.success("Registration declined");
+      const declined = pendingPros.find((p) => p.id === id);
+      if (declined) setDeclinedPros((prev) => [{ ...declined, declined_reason: declineReason, declined_at: new Date().toISOString() }, ...prev]);
       setPendingPros((prev) => prev.filter((p) => p.id !== id));
       setDeclining(null);
       setDeclineReason("");
@@ -263,6 +279,30 @@ export default function Dashboard() {
                 ))}
               </ul>
             )}
+            <div className="mt-5 border-t border-border pt-4" data-testid="declined-log-section">
+              <button onClick={() => setShowDeclined((v) => !v)} className="text-sm font-medium text-primary hover:underline" data-testid="declined-log-toggle">
+                {showDeclined ? "Hide" : "Show"} declined registrations ({declinedPros.length})
+              </button>
+              {showDeclined && (
+                declinedPros.length === 0 ? (
+                  <p className="text-xs text-muted-foreground mt-2" data-testid="declined-log-empty">No declined registrations.</p>
+                ) : (
+                  <ul className="mt-3 space-y-2" data-testid="declined-log-list">
+                    {declinedPros.map((p) => (
+                      <li key={p.id} className="flex items-start justify-between gap-3 border border-border rounded-md px-4 py-3 bg-muted/30" data-testid={`declined-pro-${p.id}`}>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">{p.name} <span className="text-muted-foreground font-normal">· {p.email}</span></p>
+                          <p className="text-xs text-muted-foreground">{[p.profile?.pro_role, p.profile?.organization, p.profile?.license_number].filter(Boolean).join(" · ") || "No profile details"}</p>
+                          <p className="text-xs mt-1" data-testid={`declined-reason-${p.id}`}><span className="text-muted-foreground">Reason:</span> {p.declined_reason}</p>
+                          {p.declined_at && <p className="text-[11px] text-muted-foreground mt-0.5">Declined {new Date(p.declined_at).toLocaleDateString()}</p>}
+                        </div>
+                        <Button size="sm" variant="outline" onClick={() => reconsiderPro(p)} data-testid={`reconsider-pro-btn-${p.id}`}>Reconsider</Button>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              )}
+            </div>
           </section>
         )}
 

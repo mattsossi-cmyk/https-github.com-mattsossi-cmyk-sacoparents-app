@@ -611,11 +611,21 @@ def _invitation_public(invitation: dict) -> dict:
     }
 
 
+INVITE_EXPIRY_DAYS = 14
+INVITE_EXPIRING_SOON_DAYS = 4
+
+
 def _pending_public(pending: list) -> list:
-    return [
-        {"id": i["id"], "role": i["role"], "invitee_email": i["invitee_email"], "invitee_name": i.get("invitee_name", ""), "status": i["status"]}
-        for i in pending
-    ]
+    out = []
+    for i in pending:
+        created = i.get("created_at", "")
+        expires_at = ""
+        try:
+            expires_at = (datetime.fromisoformat(created) + timedelta(days=INVITE_EXPIRY_DAYS)).isoformat()
+        except ValueError:
+            pass
+        out.append({"id": i["id"], "role": i["role"], "invitee_email": i["invitee_email"], "invitee_name": i.get("invitee_name", ""), "status": i["status"], "created_at": created, "expires_at": expires_at})
+    return out
 
 
 def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending: list | None = None) -> dict:
@@ -1561,6 +1571,27 @@ async def list_pending_professionals(user=Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin only")
     docs = await db.users.find({"role": "professional", "approved": False, "declined": {"$ne": True}}, {"password_hash": 0}).sort("created_at", -1).to_list(200)
     return [{**public_user(u), "profile": u.get("profile", {}), "created_at": u.get("created_at", ""), "verification_level": u.get("verification_level", "")} for u in docs]
+
+
+@api.get("/admin/declined-professionals")
+async def list_declined_professionals(user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    docs = await db.users.find({"role": "professional", "declined": True}, {"password_hash": 0}).sort("declined_at", -1).to_list(200)
+    return [{**public_user(u), "profile": u.get("profile", {}), "created_at": u.get("created_at", ""), "declined_at": u.get("declined_at", ""), "declined_reason": u.get("declined_reason", "")} for u in docs]
+
+
+@api.post("/admin/reconsider-professional/{user_id}")
+async def reconsider_professional(user_id: str, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    res = await db.users.update_one(
+        {"_id": user_id, "role": "professional", "declined": True},
+        {"$set": {"declined": False, "verification_level": "credentials_pending", "reconsidered_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Declined professional not found")
+    return {"ok": True}
 
 
 @api.post("/admin/approve-professional/{user_id}")

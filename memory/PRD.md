@@ -287,3 +287,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - New page `/matters` (`FamilyMatters.jsx`): search, 6 status chips (all/awaiting_parents/awaiting_a/awaiting_b/ready/archived), child shown by initial only, Archive/Restore. Dashboard "My Family Matters" card → /matters; archived hidden from dashboard Joint Reports.
 - Note: pytest suite re-creates unapproved fixture professionals (non-gmail domains) → they show in admin panel after test runs; clean with delete_many on non gmail/bsossi unapproved pros. Consider making pending list exclude fixtures or having tests clean up.
 - Deploy still pending user click.
+
+## 2026-09-08 — Expiring invitations + declined log (tested: iteration_21 frontend 100%, pytest 148/148)
+- `_pending_public` now includes `created_at`, `expires_at` (created + 14 days; INVITE_EXPIRY_DAYS). No enforcement of expiry yet — display only.
+- /matters: "Expiring Invitations" chip; matters with pending invites expiring ≤4 days show notice + Send Reminder (ReminderPreviewButton).
+- Admin: `GET /api/admin/declined-professionals`, `POST /api/admin/reconsider-professional/{id}`; Dashboard collapsible declined log with reason + Reconsider.
+- Test data: SA-EDU-642310 role-b invitation backdated 12 days to exercise expiring state.
+- PRODUCTION: frontend 200 but ALL /api routes 404 on sacoparentsalign.com and align-report.emergent.host (incl. /api/health which was 200 before). Deployment agent static scan passes; runtime logs not obtained. Needs redeploy / platform check.

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Archive, ArchiveRestore, Search, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Archive, ArchiveRestore, Search, CheckCircle2, Clock, ShieldAlert, AlertTriangle } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
+import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -13,8 +14,15 @@ const FILTERS = [
   ["awaiting_a", "Awaiting Parent 1"],
   ["awaiting_b", "Awaiting Parent 2"],
   ["ready", "Report Ready"],
+  ["expiring", "Expiring Invitations"],
   ["archived", "Archived"],
 ];
+
+const DAY = 86400000;
+export function expiringInvites(j) {
+  return (j.pending_invitations || []).filter((i) => i.expires_at && new Date(i.expires_at).getTime() - Date.now() <= 4 * DAY);
+}
+const daysLeft = (iso) => Math.ceil((new Date(iso).getTime() - Date.now()) / DAY);
 
 export function matterStatus(j) {
   if (j.archived) return { key: "archived", label: "Archived" };
@@ -51,6 +59,16 @@ function MatterRow({ j, onToggle }) {
           {s.key === "ready" ? <CheckCircle2 className="h-3.5 w-3.5 text-align-green" /> : <Clock className="h-3.5 w-3.5" />}
           {done}/2 parent assessments complete · opened {new Date(j.created_at).toLocaleDateString()}
         </p>
+        {expiringInvites(j).map((i) => {
+          const d = daysLeft(i.expires_at);
+          return (
+            <div key={i.id} className="mt-2 flex flex-wrap items-center gap-2 text-xs bg-align-yellow/15 border border-align-yellow/40 rounded-md px-3 py-1.5" data-testid={`matter-expiring-${i.id}`}>
+              <AlertTriangle className="h-3.5 w-3.5 text-yellow-800" />
+              <span>Invitation to Parent {i.role === "a" ? "1" : "2"} {d > 0 ? `expires in ${d} day${d === 1 ? "" : "s"}` : "has expired"}</span>
+              <ReminderPreviewButton iid={i.id} label="Send Reminder" testId={`matter-remind-btn-${i.id}`} />
+            </div>
+          );
+        })}
       </div>
       <div className="flex gap-2 shrink-0">
         <Link to={`/joint/${j.id}`} data-testid={`matter-open-link-${j.id}`}><Button size="sm" variant={s.key === "ready" ? "default" : "outline"} data-testid={`matter-open-btn-${j.id}`}>{s.key === "ready" ? "View Report" : "Open"}</Button></Link>
@@ -79,8 +97,8 @@ export default function FamilyMatters() {
   };
 
   const counts = useMemo(() => {
-    const c = { all: 0 };
-    (joints || []).forEach((j) => { const k = matterStatus(j).key; c[k] = (c[k] || 0) + 1; if (k !== "archived") c.all += 1; });
+    const c = { all: 0, expiring: 0 };
+    (joints || []).forEach((j) => { const k = matterStatus(j).key; c[k] = (c[k] || 0) + 1; if (k !== "archived") { c.all += 1; if (expiringInvites(j).length) c.expiring += 1; } });
     return c;
   }, [joints]);
 
@@ -88,7 +106,8 @@ export default function FamilyMatters() {
     const needle = q.trim().toLowerCase();
     return (joints || []).filter((j) => {
       const k = matterStatus(j).key;
-      if (filter === "all" ? k === "archived" : k !== filter) return false;
+      if (filter === "expiring") { if (k === "archived" || !expiringInvites(j).length) return false; }
+      else if (filter === "all" ? k === "archived" : k !== filter) return false;
       if (!needle) return true;
       return [j.case_code, j.subject_label, j.child_name, j.case_reference, j.participants?.a?.name, j.participants?.b?.name].some((v) => (v || "").toLowerCase().includes(needle));
     });
