@@ -108,6 +108,14 @@ class RegisterIn(BaseModel):
     password: str
     role: str = "professional"
     invite: str = ""
+    agreements_accepted: bool = False
+    phone: str = ""
+    organization: str = ""
+    pro_role: str = ""
+    city: str = ""
+    state: str = ""
+    license_number: str = ""
+    website: str = ""
 
 
 class LoginIn(BaseModel):
@@ -130,6 +138,8 @@ async def register(body: RegisterIn, response: Response):
             inv = await db.invitations.find_one({"status": "pending", "invitee_email": email, "$or": [{"token": raw}, {"code": raw.upper()}]})
         if not inv:
             raise HTTPException(status_code=403, detail="Parent accounts are created through a secure invitation from a professional. Please use the link or case code in your invitation email.")
+    if role == "professional" and not body.agreements_accepted:
+        raise HTTPException(status_code=400, detail="Please accept the professional-use, confidentiality, privacy, and appropriate-use agreements to create a professional account.")
     uid = str(uuid.uuid4())
     user = {
         "_id": uid,
@@ -140,6 +150,18 @@ async def register(body: RegisterIn, response: Response):
         "password_hash": hash_password(body.password),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
+    if role == "professional":
+        user["verification_level"] = "credentials_pending"
+        user["agreements_accepted_at"] = user["created_at"]
+        user["profile"] = {
+            "phone": body.phone.strip(),
+            "organization": body.organization.strip(),
+            "pro_role": body.pro_role.strip(),
+            "city": body.city.strip(),
+            "state": body.state.strip(),
+            "license_number": body.license_number.strip(),
+            "website": body.website.strip(),
+        }
     await db.users.insert_one(user)
     if role == "professional":
         try:
@@ -1142,6 +1164,46 @@ async def reminder_preview(iid: str, user=Depends(get_current_user)):
         child_name=report["child_name"], subject_label=report["subject_label"], code=inv["code"],
     ), inv["token"])
     return {"to": inv["invitee_email"], "subject": subject, "html": html}
+
+
+class NoteIn(BaseModel):
+    text: str
+
+
+@api.post("/joint/reports/{rid}/notes")
+async def add_professional_note(rid: str, body: NoteIn, user=Depends(get_current_user)):
+    report = await get_joint_report_doc(rid, user)
+    if report.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the assigned professional can add notes")
+    if not body.text.strip():
+        raise HTTPException(status_code=400, detail="Note text is required")
+    note = {"id": str(uuid.uuid4()), "report_id": rid, "author_id": user["_id"],
+            "text": body.text.strip(), "created_at": datetime.now(timezone.utc).isoformat()}
+    await db.professional_notes.insert_one(note)
+    return {"ok": True, "id": note["id"]}
+
+
+@api.get("/joint/reports/{rid}/notes")
+async def list_professional_notes(rid: str, user=Depends(get_current_user)):
+    report = await get_joint_report_doc(rid, user)
+    if report.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the assigned professional can view notes")
+    return await db.professional_notes.find(
+        {"report_id": rid, "author_id": user["_id"]}, {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+
+
+@api.get("/joint/reports/{rid}/activity")
+async def report_activity(rid: str, user=Depends(get_current_user)):
+    report = await get_joint_report_doc(rid, user)
+    if report.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the assigned professional can view activity")
+    invs = await db.invitations.find({"report_id": rid}, {"_id": 0, "token": 0}).to_list(20)
+    events = await db.access_events.find({"report_id": rid}, {"_id": 0}).sort("at", -1).to_list(200)
+    return {
+        "invitations": invs, "access_events": events,
+        "created_at": report.get("created_at"), "status": report.get("status"),
+    }
 
 
 @api.post("/joint/invitations/{iid}/cancel")

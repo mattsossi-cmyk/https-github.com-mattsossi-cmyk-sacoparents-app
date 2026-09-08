@@ -13,6 +13,7 @@ def _reg(role="parent", prefix="sl"):
     s = requests.Session()
     r = s.post(f"{API}/auth/register", json={
         "name": f"Test {prefix}", "email": email, "password": "testpass123", "role": role,
+        "agreements_accepted": role == "professional",
     })
     assert r.status_code == 200, r.text
     if role == "professional":

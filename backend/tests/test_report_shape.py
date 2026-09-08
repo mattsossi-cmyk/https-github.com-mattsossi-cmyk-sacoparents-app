@@ -29,7 +29,7 @@ def admin_session():
     s = requests.Session()
     r = s.post(f"{BASE_URL}/api/auth/register", json={
         "name": "Shape Fixture", "email": f"shape_{uuid.uuid4().hex[:8]}@example.com",
-        "password": "testpass123", "role": "professional",
+        "password": "testpass123", "role": "professional", "agreements_accepted": True,
     })
     assert r.status_code == 200, r.text
     return s

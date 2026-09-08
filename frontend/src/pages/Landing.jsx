@@ -156,28 +156,31 @@ export default function Landing() {
             SA CoParents Align
           </p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-purple leading-tight" data-testid="hero-heading">
-            Professional Joint Reports for Child-Focused Family Resolution
+            Turn Parent Reflection Into Child-Focused Alignment
           </h1>
           <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-xl" data-testid="hero-subtext">
-            Bring independently provided parent perspectives together in one structured report — showing areas
-            of alignment, differences requiring discussion, the child's identified needs, and constructive
-            options for moving forward.
+            Securely receive parent-authorized reports, understand where parents are aligned, identify
+            areas that need professional guidance, and help families build practical agreements around
+            their child's needs.
           </p>
           <p className="mt-3 text-sm text-muted-foreground max-w-xl" data-testid="hero-audience">
             Built for mediators, attorneys, therapists, parenting professionals, and other child-focused practitioners.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link to="/auth?mode=register" data-testid="hero-cta-link">
-              <Button size="lg" className="gap-2" data-testid="hero-cta-btn">
-                Create a Free Professional Account <ArrowRight className="h-4 w-4" />
+            <Link to="/auth" data-testid="hero-accept-link">
+              <Button size="lg" className="gap-2" data-testid="hero-accept-btn">
+                Accept a Parent Invitation <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/samples" data-testid="hero-sample-link">
-              <Button size="lg" variant="outline" data-testid="hero-sample-btn">Preview Sample Joint Reports</Button>
+            <Link to="/auth?mode=register" data-testid="hero-cta-link">
+              <Button size="lg" variant="outline" data-testid="hero-cta-btn">Create Professional Account</Button>
+            </Link>
+            <Link to="/auth" data-testid="hero-signin-link">
+              <Button size="lg" variant="ghost" data-testid="hero-signin-btn">Professional Sign In</Button>
             </Link>
           </div>
           <p className="mt-8 font-script text-2xl text-brand-purple max-w-xl" data-testid="hero-philosophy">
-            Alignment Before Agreement.
+            Parents Reflect. Professionals Align. Families Build Agreements.
           </p>
         </div>
       </section>
@@ -417,6 +420,21 @@ export default function Landing() {
         </ul>
       </section>
 
+      <section className="max-w-4xl mx-auto px-6 py-12" data-testid="pro-disclaimer-section">
+        <div className="bg-secondary/50 border border-border rounded-lg p-6 text-sm text-muted-foreground" data-testid="pro-disclaimer">
+          <strong className="text-foreground">Professional-use disclaimer.</strong> SA CoParents Align is an
+          educational, organizational, and mediation-preparation platform. It does not provide legal advice,
+          therapy, medical advice, custody evaluations, psychological diagnoses, or recommendations about
+          which parent is better. Reports are intended to support informed professional conversations and
+          child-focused decision-making.
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground italic max-w-3xl" data-testid="philosophy-line">
+          Start with individual reflection. Discover shared understanding. Identify differences without
+          assigning blame. Provide options and resources. Build alignment around the child's needs.
+          Use alignment as the foundation for agreement.
+        </p>
+      </section>
+
       <section id="invitation" className="bg-secondary/60 py-20" data-testid="professionals-invite">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-semibold" data-testid="invite-heading">Help Parents Find Alignment Before Agreement</h2>
@@ -459,9 +477,22 @@ export default function Landing() {
 
       <footer className="border-t border-border py-8" data-testid="landing-footer">
         <div className="max-w-6xl mx-auto px-6 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-4xl" data-testid="footer-disclaimer">
+            SA CoParents Align is an educational and professional-support platform. It does not provide legal
+            advice, therapy, medical advice, custody evaluations, psychological diagnoses, or emergency services.
+            Reports are conversation starters intended to support child-focused professional work and are not
+            determinations of fact, parental fitness, or the best interests of a child.
+          </p>
           <BrandLogo size="text-xl" />
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/privacy" className="hover:text-foreground" data-testid="footer-privacy-link">Confidentiality &amp; Privacy</Link>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            <Link to="/privacy" className="hover:text-foreground" data-testid="footer-privacy-link">Privacy Policy</Link>
+            <Link to="/legal/terms" className="hover:text-foreground" data-testid="footer-terms-link">Terms of Use</Link>
+            <Link to="/legal/professional-use" className="hover:text-foreground" data-testid="footer-pro-use-link">Professional-Use Agreement</Link>
+            <Link to="/legal/methodology" className="hover:text-foreground" data-testid="footer-methodology-link">Methodology</Link>
+            <Link to="/legal/data-retention" className="hover:text-foreground" data-testid="footer-retention-link">Data Retention</Link>
+            <Link to="/legal/accessibility" className="hover:text-foreground" data-testid="footer-accessibility-link">Accessibility</Link>
+            <Link to="/legal/safety-resources" className="hover:text-foreground" data-testid="footer-safety-link">Safety Resources</Link>
+            <Link to="/legal/contact" className="hover:text-foreground" data-testid="footer-contact-link">Contact SA CoParents</Link>
             <Link to="/resources" className="hover:text-foreground" data-testid="footer-resources-link">Professional Resources</Link>
             <a href="https://sacoparentsapp.online" target="_blank" rel="noreferrer" className="hover:text-foreground" data-testid="footer-app-link">SA CoParents App</a>
           </div>

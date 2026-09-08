@@ -1,0 +1,79 @@
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import api, { formatApiError } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+
+export function ProWorkspace({ rid }) {
+  const [notes, setNotes] = useState(null);
+  const [activity, setActivity] = useState(null);
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = () => {
+    api.get(`/joint/reports/${rid}/notes`).then((r) => setNotes(r.data)).catch((e) => toast.error(formatApiError(e)));
+    api.get(`/joint/reports/${rid}/activity`).then((r) => setActivity(r.data)).catch(() => {});
+  };
+  useEffect(load, [rid]);
+
+  const addNote = async () => {
+    if (!draft.trim()) return;
+    setBusy(true);
+    try {
+      await api.post(`/joint/reports/${rid}/notes`, { text: draft.trim() });
+      setDraft("");
+      toast.success("Private note saved");
+      load();
+    } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="no-print grid md:grid-cols-2 gap-6 mt-10" data-testid="pro-workspace">
+      <section className="bg-white border border-border rounded-lg p-6" data-testid="pro-notes-section">
+        <h2 className="text-lg font-semibold" data-testid="pro-notes-heading">Professional Notes</h2>
+        <p className="text-xs text-muted-foreground mt-1 mb-4">Private work notes — visible only to you, never included in parent reports or shared with either parent.</p>
+        <textarea
+          className="w-full min-h-24 border border-border rounded-md p-3 text-sm bg-background"
+          placeholder="Add a private note…"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          data-testid="pro-note-input"
+        />
+        <Button size="sm" className="mt-2" onClick={addNote} disabled={!draft.trim() || busy} data-testid="pro-note-save-btn">
+          {busy ? "Saving…" : "Save Note"}
+        </Button>
+        <ul className="mt-4 space-y-2" data-testid="pro-notes-list">
+          {(notes || []).map((n) => (
+            <li key={n.id} className="border border-border rounded-md p-3" data-testid={`pro-note-${n.id}`}>
+              <p className="text-sm">{n.text}</p>
+              <p className="text-xs text-muted-foreground mt-1">{String(n.created_at).slice(0, 16).replace("T", " ")}</p>
+            </li>
+          ))}
+          {notes && notes.length === 0 && <li className="text-sm text-muted-foreground" data-testid="pro-notes-empty">No notes yet.</li>}
+        </ul>
+      </section>
+
+      <section className="bg-white border border-border rounded-lg p-6" data-testid="pro-activity-section">
+        <h2 className="text-lg font-semibold" data-testid="pro-activity-heading">Consent &amp; Activity</h2>
+        <p className="text-xs text-muted-foreground mt-1 mb-4">Invitations and access events for this matter.</p>
+        {!activity ? (
+          <p className="text-sm text-muted-foreground" data-testid="pro-activity-loading">Loading…</p>
+        ) : (
+          <ul className="space-y-2 text-sm" data-testid="pro-activity-list">
+            {(activity.invitations || []).map((inv) => (
+              <li key={inv.id} className="flex items-center justify-between border border-border rounded-md px-3 py-2" data-testid={`pro-activity-inv-${inv.role}`}>
+                <span>Invitation — {inv.invitee_name || inv.invitee_email}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{inv.status}</span>
+              </li>
+            ))}
+            {(activity.access_events || []).map((ev, i) => (
+              <li key={i} className="flex items-center justify-between border border-border rounded-md px-3 py-2" data-testid={`pro-activity-event-${i}`}>
+                <span>{ev.action}</span>
+                <span className="text-xs text-muted-foreground">{String(ev.at).slice(0, 16).replace("T", " ")}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}

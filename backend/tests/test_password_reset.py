@@ -33,7 +33,7 @@ def _register_user(email=None, password=None):
     password = password or f"Pw!{uuid.uuid4().hex[:12]}"
     s = requests.Session()
     r = s.post(f"{API}/auth/register", json={
-        "name": "Reset User", "email": email, "password": password, "role": "professional"
+        "name": "Reset User", "email": email, "password": password, "role": "professional", "agreements_accepted": True
     })
     assert r.status_code == 200, r.text
     return email, password

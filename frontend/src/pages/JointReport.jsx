@@ -7,6 +7,7 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
+import { ProWorkspace } from "@/components/ProWorkspace";
 
 function Section({ num, title, children, testId }) {
   return (
@@ -360,6 +361,7 @@ export default function JointReport() {
             </div>
           </div>
         )}
+        {detail.is_creator && <ProWorkspace rid={id} />}
       </main>
     </div>
   );

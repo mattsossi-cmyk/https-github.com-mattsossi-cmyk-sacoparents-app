@@ -13,7 +13,7 @@ def _reg(prefix="ext"):
     email = f"TEST_{prefix}_{uuid.uuid4().hex[:10]}@example.com"
     s = requests.Session()
     r = s.post(f"{API}/auth/register", json={
-        "name": f"Test {prefix}", "email": email, "password": "testpass123", "role": "professional",
+        "name": f"Test {prefix}", "email": email, "password": "testpass123", "role": "professional", "agreements_accepted": True,
     })
     assert r.status_code == 200, r.text
     return s, email

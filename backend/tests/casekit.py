@@ -40,7 +40,8 @@ def new_user(api: str, role: str = "professional", name: str = "T", email: str |
     s = requests.Session()
     email = email or f"t_{uuid.uuid4().hex[:8]}@example.com"
     r = s.post(f"{api}/auth/register", json={
-        "name": name, "email": email, "password": password or TEST_PASSWORD, "role": role, "invite": invite,
+        "name": name, "email": email, "password": password or TEST_PASSWORD, "role": role,
+        "invite": invite, "agreements_accepted": role == "professional",
     })
     assert r.status_code == 200, f"register {role} failed: {r.status_code} {r.text}"
     if role == "professional":

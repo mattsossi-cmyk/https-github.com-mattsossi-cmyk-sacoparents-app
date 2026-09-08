@@ -20,6 +20,8 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [profile, setProfile] = useState({ phone: "", organization: "", pro_role: "", city: "", state: "", license_number: "", website: "" });
+  const [agreed, setAgreed] = useState(false);
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const { login, register } = useAuth();
@@ -32,7 +34,7 @@ export default function Auth() {
       if (mode === "login") {
         await login(email, password);
       } else if (mode === "register") {
-        await register({ name, email, password, role, invite: inviteToken });
+        await register({ name, email, password, role, invite: inviteToken, agreements_accepted: agreed, ...profile });
       } else if (mode === "forgot") {
         await api.post("/auth/forgot-password", { email });
         setMode("reset");
@@ -97,6 +99,47 @@ export default function Auth() {
                 <Input id="name" className="h-12" value={name} onChange={(e) => setName(e.target.value)} required data-testid="name-input" />
               </div>
             )}
+            {mode === "register" && !isParentFlow && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" className="h-12" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} data-testid="phone-input" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="organization">Organization</Label>
+                    <Input id="organization" className="h-12" value={profile.organization} onChange={(e) => setProfile({ ...profile, organization: e.target.value })} data-testid="organization-input" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pro-role">Professional role</Label>
+                  <select id="pro-role" className="w-full h-12 rounded-md border border-input bg-white px-3 text-sm" value={profile.pro_role} onChange={(e) => setProfile({ ...profile, pro_role: e.target.value })} data-testid="pro-role-select">
+                    <option value="">Choose your role…</option>
+                    {["Mediator", "Attorney", "Therapist or counselor", "Parenting facilitator or coordinator", "Amicus attorney", "Child advocate", "Educational professional", "Medical professional", "Other approved professional"].map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input id="city" className="h-12" value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} data-testid="city-input" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State</Label>
+                    <Input id="state" className="h-12" value={profile.state} onChange={(e) => setProfile({ ...profile, state: e.target.value })} data-testid="state-input" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="license">License, certification, or State Bar number (when applicable)</Label>
+                  <Input id="license" className="h-12" value={profile.license_number} onChange={(e) => setProfile({ ...profile, license_number: e.target.value })} data-testid="license-input" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">Professional website (optional)</Label>
+                  <Input id="website" className="h-12" value={profile.website} onChange={(e) => setProfile({ ...profile, website: e.target.value })} data-testid="website-input" />
+                </div>
+              </>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" className="h-12" value={email} onChange={(e) => setEmail(e.target.value)} required data-testid="email-input" />
@@ -139,8 +182,19 @@ export default function Auth() {
                 </div>
               </>
             )}
+            {mode === "register" && !isParentFlow && (
+              <>
+                <label className="flex items-start gap-2.5 text-sm text-muted-foreground" data-testid="agreements-row">
+                  <input type="checkbox" className="mt-1" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} data-testid="agreements-checkbox" />
+                  <span>I accept the <Link to="/legal/professional-use" className="text-primary hover:underline">Professional-Use Agreement</Link>, confidentiality acknowledgment, <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>, appropriate-use policy, and no-professional-relationship disclaimer.</span>
+                </label>
+                <p className="text-xs text-muted-foreground bg-secondary/50 border border-border rounded-md p-3" data-testid="no-relationship-disclaimer">
+                  Creating or using an SA CoParents Align account does not establish an attorney-client, therapist-client, physician-patient, mediator, evaluator, or other professional relationship with a parent or family.
+                </p>
+              </>
+            )}
             {mode === "register" && <ConfidentialityNotice variant={isParentFlow ? "parent" : "professional"} />}
-            <Button type="submit" className="w-full h-12" disabled={busy} data-testid="auth-submit-btn">
+            <Button type="submit" className="w-full h-12" disabled={busy || (mode === "register" && !isParentFlow && !agreed)} data-testid="auth-submit-btn">
               {busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? (isParentFlow ? "Create parent account" : "Create professional account") : mode === "forgot" ? "Send verification code" : "Reset password"}
             </Button>
             {(mode === "forgot" || mode === "reset") && (

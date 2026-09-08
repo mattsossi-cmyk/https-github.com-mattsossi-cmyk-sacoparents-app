@@ -186,6 +186,27 @@ export default function Dashboard() {
           <p className="text-muted-foreground mt-2" data-testid="dash-subtext">Your individual assessments come from sacoparentsapp.online. Invite your co-parent to explore one issue together.</p>
         </div>
 
+        {isPro && (
+          <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="primary-actions-grid">
+            <Link to="/accept-invite" className="bg-white border-2 border-primary/40 rounded-lg p-5 hover:border-primary transition-colors" data-testid="action-accept-invite">
+              <p className="font-semibold">Accept a Parent Invitation</p>
+              <p className="text-xs text-muted-foreground mt-1">Review and accept secure invitations from parents.</p>
+            </Link>
+            <Link to="/hub" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-family-matters">
+              <p className="font-semibold">My Family Matters</p>
+              <p className="text-xs text-muted-foreground mt-1">Track participation and matter status.</p>
+            </Link>
+            <Link to="/joint/new" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-invite-parents">
+              <p className="font-semibold">Invite Parents to Participate</p>
+              <p className="text-xs text-muted-foreground mt-1">Create a family matter and invite both parents separately.</p>
+            </Link>
+            <a href="#joint-reports-list" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-joint-reports">
+              <p className="font-semibold">Joint Alignment Reports</p>
+              <p className="text-xs text-muted-foreground mt-1">Reports ready to generate or review.</p>
+            </a>
+          </section>
+        )}
+
         {isPro && user?.approved === false && (
           <div className="bg-align-yellow/10 border border-align-yellow/40 rounded-lg p-5 mb-6" data-testid="approval-pending-banner">
             <p className="font-semibold">Your professional account is pending approval</p>

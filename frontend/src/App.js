@@ -15,6 +15,8 @@ import CompleteReport from "@/pages/CompleteReport";
 import Privacy from "@/pages/Privacy";
 import SampleReport from "@/pages/SampleReport";
 import Samples from "@/pages/Samples";
+import Legal from "@/pages/Legal";
+import AcceptInvite from "@/pages/AcceptInvite";
 import Resources from "@/pages/Resources";
 
 function Protected({ children }) {
@@ -50,11 +52,13 @@ function App() {
             <Route path="/sample-mediation" element={<SampleReport fixedKey="mediation" />} />
             <Route path="/samples" element={<Samples />} />
             <Route path="/samples/:key" element={<SampleReport />} />
+            <Route path="/legal/:page" element={<Legal />} />
+            <Route path="/accept-invite" element={<Protected><AcceptInvite /></Protected>} />
             <Route path="/resources" element={<Resources />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <footer className="py-4 text-center text-xs text-muted-foreground" data-testid="copyright-footer">
-            © {new Date().getFullYear()} SA CoParents Align · sacoparentsalign.com · All rights reserved
+            Copyright 2026 SA CoParents. All Rights Reserved. · sacoparentsalign.com
           </footer>
         </BrowserRouter>
         <Toaster position="top-center" />

@@ -33,7 +33,7 @@ def admin_session():
     s = requests.Session()
     email = f"adminfix_{uuid.uuid4().hex[:8]}@example.com"
     r = s.post(f"{API}/auth/register", json={
-        "name": "Fixture User", "email": email, "password": "testpass123", "role": "professional"
+        "name": "Fixture User", "email": email, "password": "testpass123", "role": "professional", "agreements_accepted": True
     })
     assert r.status_code == 200, f"Register failed: {r.status_code} {r.text}"
     assert "access_token" in s.cookies, "No access_token cookie set"
@@ -46,7 +46,7 @@ def fresh_user_session():
     s = requests.Session()
     email = f"test_{uuid.uuid4().hex[:8]}@example.com"
     r = s.post(f"{API}/auth/register", json={
-        "name": "Test User", "email": email, "password": "testpass123", "role": "professional"
+        "name": "Test User", "email": email, "password": "testpass123", "role": "professional", "agreements_accepted": True
     })
     assert r.status_code == 200, f"Register failed: {r.status_code} {r.text}"
     s.email = email
@@ -59,7 +59,7 @@ class TestAuth:
         s = requests.Session()
         email = f"reg_{uuid.uuid4().hex[:8]}@example.com"
         r = s.post(f"{API}/auth/register", json={
-            "name": "Reg User", "email": email, "password": "password123", "role": "professional"
+            "name": "Reg User", "email": email, "password": "password123", "role": "professional", "agreements_accepted": True
         })
         assert r.status_code == 200
         data = r.json()
@@ -91,7 +91,7 @@ class TestAuth:
 
     def test_login_invalid(self) -> None:
         email = f"wrongpw_{uuid.uuid4().hex[:8]}@example.com"
-        requests.post(f"{API}/auth/register", json={"name": "W", "email": email, "password": "password123", "role": "professional"})
+        requests.post(f"{API}/auth/register", json={"name": "W", "email": email, "password": "password123", "role": "professional", "agreements_accepted": True})
         r = requests.post(f"{API}/auth/login", json={"email": email, "password": "wrongpw!"})
         assert r.status_code == 401
 
@@ -102,7 +102,7 @@ class TestAuth:
     def test_logout(self) -> None:
         s = requests.Session()
         email = f"logout_{uuid.uuid4().hex[:8]}@example.com"
-        s.post(f"{API}/auth/register", json={"name": "L", "email": email, "password": "password123", "role": "professional"})
+        s.post(f"{API}/auth/register", json={"name": "L", "email": email, "password": "password123", "role": "professional", "agreements_accepted": True})
         r = s.post(f"{API}/auth/logout")
         assert r.status_code == 200
 
@@ -228,12 +228,12 @@ class TestCasesFlow:
     def test_cross_user_access_forbidden(self) -> None:
         s1 = requests.Session()
         e1 = f"u1_{uuid.uuid4().hex[:6]}@x.com"
-        s1.post(f"{API}/auth/register", json={"name": "U1", "email": e1, "password": "password123", "role": "professional"})
+        s1.post(f"{API}/auth/register", json={"name": "U1", "email": e1, "password": "password123", "role": "professional", "agreements_accepted": True})
         r = s1.post(f"{API}/cases", json={"type": "general"})
         cid = r.json()["id"]
 
         s2 = requests.Session()
         e2 = f"u2_{uuid.uuid4().hex[:6]}@x.com"
-        s2.post(f"{API}/auth/register", json={"name": "U2", "email": e2, "password": "password123", "role": "professional"})
+        s2.post(f"{API}/auth/register", json={"name": "U2", "email": e2, "password": "password123", "role": "professional", "agreements_accepted": True})
         r = s2.get(f"{API}/cases/{cid}")
         assert r.status_code == 404

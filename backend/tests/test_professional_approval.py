@@ -21,7 +21,7 @@ def _raw_pro():
     """Register a professional the real way — starts unapproved."""
     s = requests.Session()
     email = f"t_pro_{uuid.uuid4().hex[:8]}@example.com"
-    r = s.post(f"{API}/auth/register", json={"name": "New Pro", "email": email, "password": TEST_PASSWORD, "role": "professional"})
+    r = s.post(f"{API}/auth/register", json={"name": "New Pro", "email": email, "password": TEST_PASSWORD, "role": "professional", "agreements_accepted": True})
     assert r.status_code == 200, r.text
     s.email = email
     return s
