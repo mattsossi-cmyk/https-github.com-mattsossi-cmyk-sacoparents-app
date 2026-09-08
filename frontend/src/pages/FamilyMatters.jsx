@@ -91,7 +91,7 @@ function MatterRow({ j, onToggle, onReissue }) {
 export default function FamilyMatters() {
   const [joints, setJoints] = useState(null);
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState(() => new URLSearchParams(window.location.search).get("filter") || "all");
 
   const load = () => api.get("/joint/reports").then((r) => setJoints(r.data)).catch((e) => toast.error(formatApiError(e)));
   useEffect(() => { load(); }, []);

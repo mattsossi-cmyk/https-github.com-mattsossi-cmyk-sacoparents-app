@@ -311,3 +311,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `_report_professional(doc)` in server.py looks up professional_id/created_by → {name, credentials_verified}; passed as `professional` into `build_joint_pdf`.
 - `pdf_report._professional_line`: "Facilitating professional: <name>" + green "Credentials Verified" pill in the title header (only when verified). Samples unaffected (no professional key).
 - Production: still all /api 404 as of this session (frontend 200). User must redeploy / inspect platform deploy logs.
+
+## 2026-09-08 — Expiry digest cron + note edit/delete with revisions (pytest 152/152; iteration_24 frontend)
+- `POST /api/cron/expiry-digest` (Bearer WEBHOOK_CRON_SECRET, idempotent by run_id via `_cron_accept`), background `run_expiry_digests()`: one email per professional/day listing pending invites expiring ≤4 days or expired (child by initial; link /matters?filter=expiring). Dedup via cron_runs {job:'expiry-digest-sent', pro_id, day}. Scheduled in .emergent/crons.yml daily 08:00 America/Chicago.
+- Notes: `PUT/DELETE /api/joint/reports/{rid}/notes/{nid}`; edits push prior text to `revisions[]` and set `updated_at`. `MatterNotes.jsx` now has edit/delete/history UI; `ProWorkspace` reuses it (old pro-note-* testids removed).
+- /matters honours `?filter=` query param.
+- Production still all /api 404 (frontend 200).

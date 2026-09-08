@@ -1251,6 +1251,30 @@ async def list_professional_notes(rid: str, user=Depends(get_current_user)):
     ).sort("created_at", -1).to_list(200)
 
 
+@api.put("/joint/reports/{rid}/notes/{nid}")
+async def edit_professional_note(rid: str, nid: str, body: NoteIn, user=Depends(get_current_user)):
+    text = body.text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Note text is required")
+    note = await db.professional_notes.find_one({"id": nid, "report_id": rid, "author_id": user["_id"]}, {"_id": 0})
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    if note["text"] == text:
+        return {"ok": True, "unchanged": True}
+    now = datetime.now(timezone.utc).isoformat()
+    revision = {"text": note["text"], "at": note.get("updated_at") or note["created_at"]}
+    await db.professional_notes.update_one({"id": nid}, {"$set": {"text": text, "updated_at": now}, "$push": {"revisions": revision}})
+    return {"ok": True, "updated_at": now}
+
+
+@api.delete("/joint/reports/{rid}/notes/{nid}")
+async def delete_professional_note(rid: str, nid: str, user=Depends(get_current_user)):
+    res = await db.professional_notes.delete_one({"id": nid, "report_id": rid, "author_id": user["_id"]})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Note not found")
+    return {"ok": True}
+
+
 @api.get("/joint/reports/{rid}/activity")
 async def report_activity(rid: str, user=Depends(get_current_user)):
     report = await get_joint_report_doc(rid, user)
@@ -1876,9 +1900,7 @@ async def prepare_pro_request(req_id: str, body: PrepareIn | None = None, user=D
 
 # ---------- Scheduled completion notifications ----------
 
-@api.post("/cron/completion-nudge")
-async def cron_completion_nudge(request: Request):
-    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+async def _cron_accept(request: Request, job: str) -> dict:
     auth = request.headers.get("authorization", "")
     token = auth[7:] if auth.startswith("Bearer ") else ""
     if not token or not secrets.compare_digest(token, WEBHOOK_CRON_SECRET):
@@ -1889,11 +1911,80 @@ async def cron_completion_nudge(request: Request):
         raise HTTPException(status_code=400, detail="Invalid request body")
     run_id = (envelope or {}).get("run_id") or request.headers.get("x-webhook-id")
     if run_id:
-        if await db.cron_runs.find_one({"run_id": run_id, "job": "completion-nudge"}):
+        if await db.cron_runs.find_one({"run_id": run_id, "job": job}):
             return {"ok": True, "duplicate": True}
-        await db.cron_runs.insert_one({"run_id": run_id, "job": "completion-nudge", "at": datetime.now(timezone.utc).isoformat()})
-    asyncio.create_task(run_completion_nudges())
+        await db.cron_runs.insert_one({"run_id": run_id, "job": job, "at": datetime.now(timezone.utc).isoformat()})
     return {"ok": True}
+
+
+@api.post("/cron/completion-nudge")
+async def cron_completion_nudge(request: Request):
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    ack = await _cron_accept(request, "completion-nudge")
+    if ack.get("duplicate"):
+        return ack
+    asyncio.create_task(run_completion_nudges())
+    return ack
+
+
+@api.post("/cron/expiry-digest")
+async def cron_expiry_digest(request: Request):
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    ack = await _cron_accept(request, "expiry-digest")
+    if ack.get("duplicate"):
+        return ack
+    asyncio.create_task(run_expiry_digests())
+    return ack
+
+
+def _digest_row(report: dict, inv: dict, now: datetime) -> str:
+    expires = _parse_iso(inv["created_at"]) + timedelta(days=INVITE_EXPIRY_DAYS)
+    days = (expires - now).days
+    when = "has expired" if expires <= now else ("expires today" if days == 0 else f"expires in {days} day{'s' if days != 1 else ''}")
+    child = (report.get("child_name") or "").strip()
+    child_ref = f"{child[0].upper()}." if child else "child"
+    parent = "Parent 1" if inv["role"] == "a" else "Parent 2"
+    return f"<li><strong>{escape(report.get('case_code') or report['id'])}</strong> ({escape(report.get('subject_label', ''))}, matter for {escape(child_ref)}) &mdash; invitation to {parent} {when}</li>"
+
+
+async def run_expiry_digests() -> None:
+    now = datetime.now(timezone.utc)
+    today = now.date().isoformat()
+    cutoff = (now - timedelta(days=INVITE_EXPIRY_DAYS - INVITE_EXPIRING_SOON_DAYS)).isoformat()
+    invs = await db.invitations.find({"status": "pending", "created_at": {"$lte": cutoff}}, {"_id": 0}).to_list(2000)
+    if not invs:
+        return
+    reports = {r["id"]: r async for r in db.joint_reports.find({"id": {"$in": list({i["report_id"] for i in invs})}, "archived": {"$ne": True}}, {"_id": 0})}
+    by_pro: dict[str, list[str]] = {}
+    for inv in invs:
+        report = reports.get(inv["report_id"])
+        if report and report.get("created_by"):
+            by_pro.setdefault(report["created_by"], []).append(_digest_row(report, inv, now))
+    for pro_id, rows in by_pro.items():
+        if await db.cron_runs.find_one({"job": "expiry-digest-sent", "pro_id": pro_id, "day": today}):
+            continue
+        pro = await db.users.find_one({"_id": pro_id, "role": "professional"})
+        if not pro:
+            continue
+        try:
+            await send_email(
+                to=pro["email"],
+                subject=f"{len(rows)} parent invitation{'s' if len(rows) != 1 else ''} expiring soon - {EMAIL_FROM_NAME}",
+                html=(
+                    '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                    f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
+                    f"<p>The following parent invitations expire within {INVITE_EXPIRING_SOON_DAYS} days or have already expired. "
+                    "You can send a reminder or reissue a fresh invitation from your Family Matters page.</p>"
+                    f"<ul>{''.join(rows)}</ul>"
+                    f'<p><a href="{app_url()}/matters?filter=expiring" style="display:inline-block;background:#5B2A86;color:#ffffff;'
+                    'padding:12px 24px;text-decoration:none;border-radius:6px">Open Family Matters</a></p>'
+                    f'<p style="font-size:12px;color:#888">Daily digest sent by {escape(EMAIL_FROM_NAME)}. Parent responses are never included in email.</p>'
+                    "</td></tr></table>"
+                ),
+            )
+            await db.cron_runs.insert_one({"job": "expiry-digest-sent", "pro_id": pro_id, "day": today, "count": len(rows), "at": now.isoformat()})
+        except Exception:
+            logger.warning(f"Expiry digest not sent to {pro['email']}")
 
 
 def _parse_iso(value) -> datetime | None:

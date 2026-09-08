@@ -1,0 +1,24 @@
+{
+  "summary": "Frontend-only verification of Matter Notes edit/delete + revision history and /matters?filter=expiring deep-link chip. All 5 requested scenarios PASS. (1) Login approval.test.pro1@gmail.com → dashboard → /matters. Opened Notes on SA-EDU-642310, added 'QA note original', edit→save produced toast 'Note updated', text became 'QA note edited', matter-note-edited-{nid} marker visible, matter-note-history-btn shows '1 revision', history panel renders prior text 'QA note original' with .line-through decoration. (2) Cancel path: opened edit again, typed 'SHOULD NOT PERSIST', clicked cancel → text unchanged (remained 'QA note edited'). (3) Delete: accepted window.confirm dialog → toast 'Note deleted', matter-note-{nid} disappears, pre-existing 'Session 1…' note preserved. (4) /matters?filter=expiring on load shows 'Expiring Invitations (1)' chip active (purple filled) and matter SA-EDU-642310 listed with 'Invitation to Parent 2 expires in 3 days' banner + Send Reminder / Reissue Invitation (NOT clicked). (5) /joint/dda358d8-874e-424d-bb4b-ff70df50dbbd renders pro-notes-section with the same MatterNotes component (edit + delete buttons visible on Session 1 note). Regression: /matters search 'SA-EDU-642310' returns 1 result; All Active filter default; dashboard loads without errors; credentials-verified badge present in header.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "MatterNotes.save() sends PUT even when text is identical to n.text; the disabled state on the save button only checks !text.trim(), not whether text changed. Backend correctly no-ops but the UX still shows 'Note updated' toast on unchanged saves. Consider comparing text.trim() === n.text.trim() to disable Save or skip the request.",
+    "Save button in NoteItem doesn't warn if text was reset to empty — the disabled={!text.trim()} handles it, but pressing Save with whitespace-only content is possible if user has trailing spaces (currently trimmed server-side; UI still trims via text.trim() before send — OK).",
+    "Delete uses window.confirm() which is not stylable and inconsistent with the app's shadcn dialog usage. Consider replacing with an AlertDialog for design consistency.",
+    "load() in MatterNotes re-fetches every time onChanged fires, causing a brief flicker on the note list after each edit/delete. Optimistic update or SWR-style stale-while-revalidate would be smoother."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only)", "frontend": "100%"},
+  "test_credentials": "approval.test.pro1@gmail.com / TestPass2026! — authenticated successfully via /auth (redirects to /dashboard for pros).",
+  "seed_data_creation": "Test note created and cleaned up (deleted) in same run. Pre-existing 'Session 1…' note untouched.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login lands on /dashboard for professional users; navigate to /matters afterwards. Notes CRUD works end-to-end with revision history rendering. window.confirm dialogs are handled with page.once('dialog', d.accept()). Expiring filter deep link (/matters?filter=expiring) correctly preselects the chip. matter-notes-list-{rid} children include a bare 'Loading…' li without a testid before data arrives; wait ~1.5s after opening notes for stable list."
+}
