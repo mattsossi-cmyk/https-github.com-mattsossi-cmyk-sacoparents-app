@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend E2E for admin decline flow, admin pending panel Role/Org/License display, and new /matters (Family Matters) page. All 5 requested test blocks pass after fixing one critical React bug in FamilyMatters.jsx (useEffect returning a Promise caused 'destroy is not a function' runtime crash that blocked the page from rendering).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "FamilyMatters.jsx", "issue": "FIXED: useEffect(load, []) where load returns Promise (arrow with .then()) crashed React with 'destroy is not a function' and rendered an Uncaught runtime errors overlay hiding the entire /matters page. Fixed by wrapping: useEffect(() => { load(); }, []).", "selector": "[data-testid='family-matters-page']", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Review the useEffect fix applied in /app/frontend/src/pages/FamilyMatters.jsx line 71 (small, safe change).",
+    "Optional: There is a brief timing window on first load of /matters where chip counts render as (0) before /joint/reports resolves; counts update as soon as data arrives. Not a functional bug."
+  ],
+  "critical_code_review_comments": [
+    "FamilyMatters.jsx: passing an arrow that returns a Promise directly to useEffect must be avoided (React expects void or a cleanup fn). Same pattern should be audited across other pages.",
+    "Admin pending-professionals API returns 26 pending rows including many old test accounts (pwreset_*, test_ext_*, t_pro_*). Consider a cleanup job or filter to keep panel focused; not a bug for this iteration."
+  ],
+  "updated_files": ["/app/frontend/src/pages/FamilyMatters.jsx"],
+  "success_rate": {"backend": "n/a (not in scope)", "frontend": "100% after fix"},
+  "test_credentials": "admin mattsossi@bsossi.com / CoParents2026! ; professional approval.test.pro1@gmail.com / TestPass2026! (both worked)",
+  "seed_data_creation": "Registered and immediately declined one throwaway professional (qa.decline.<rand>@gmail.com) via /api/auth/register + Decline flow. panel.test.pro@gmail.com left untouched as instructed.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Verified: (1) admin-approvals-section shows pending-pro-role/-org/-license testids for all 26 pending pros; panel.test.pro@gmail.com row contains Mediator / Alamo Family Mediation (San Antonio, TX) / TX-MED-4471. (2) decline-pro-btn opens decline-form-{id}; decline-confirm-btn-{id} disabled when reason empty, enabled after text, submit shows toast 'Registration declined', removes row, applicant no longer in /api/admin/pending-professionals. (3) Dashboard action-family-matters -> /matters. (4) /matters has family-matters-page, matters-heading 'My Family Matters', matters-search-input, 6 filter chips (all, awaiting_parents, awaiting_a, awaiting_b, ready, archived), matter-row-{id} with matter-status-{id} badge; child name shown as initial only (verified 'Matter for V. \u00b7 SA-EDU-642310' for approval.test.pro1). (5) Search 'SA-EDU' narrows list. Archive toggles matter (toast 'Matter archived'/'Matter restored'), archived hidden from All Active, appears under Archived with Restore button, and hidden from dashboard joints-grid. (6) matter-open-btn-{id} navigates to /joint/{id}. Also: admin session gets clobbered if you call /api/auth/register from the same browser context because register logs the new user in; use a separate context (as done here) or call the endpoint before admin login.",
+  "rca of the issue": "FamilyMatters.jsx line 71 originally: `useEffect(load, []);` where `load = () => api.get('/joint/reports').then(...).catch(...)`. Because .then() returns a Promise, React treated the Promise as the effect's return value and later invoked it as a cleanup function -> TypeError: destroy is not a function. In development this triggers React's error overlay which fully covered the page, so no matter-row / heading / search / filters were interactable. Fix: wrap as `useEffect(() => { load(); }, []);` so the effect returns undefined."
+}

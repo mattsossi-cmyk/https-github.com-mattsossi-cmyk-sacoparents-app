@@ -43,6 +43,19 @@ export default function Dashboard() {
       toast.error(formatApiError(e));
     }
   };
+  const [declining, setDeclining] = useState(null);
+  const [declineReason, setDeclineReason] = useState("");
+  const declinePro = async (id) => {
+    try {
+      await api.post(`/admin/decline-professional/${id}`, { reason: declineReason });
+      toast.success("Registration declined");
+      setPendingPros((prev) => prev.filter((p) => p.id !== id));
+      setDeclining(null);
+      setDeclineReason("");
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -192,7 +205,7 @@ export default function Dashboard() {
               <p className="font-semibold">Accept a Parent Invitation</p>
               <p className="text-xs text-muted-foreground mt-1">Review and accept secure invitations from parents.</p>
             </Link>
-            <Link to="/hub" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-family-matters">
+            <Link to="/matters" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-family-matters">
               <p className="font-semibold">My Family Matters</p>
               <p className="text-xs text-muted-foreground mt-1">Track participation and matter status.</p>
             </Link>
@@ -234,7 +247,18 @@ export default function Dashboard() {
                       {p.profile?.website && <a href={p.profile.website} target="_blank" rel="noreferrer" className="text-xs text-align-teal underline mt-1 inline-block" data-testid={`pending-pro-website-${p.id}`}>{p.profile.website}</a>}
                       {p.created_at && <p className="text-[11px] text-muted-foreground mt-1">Registered {new Date(p.created_at).toLocaleDateString()}</p>}
                     </div>
-                    <Button size="sm" onClick={() => approvePro(p.id)} data-testid={`approve-pro-btn-${p.id}`}>Approve</Button>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => approvePro(p.id)} data-testid={`approve-pro-btn-${p.id}`}>Approve</Button>
+                        <Button size="sm" variant="outline" className="text-destructive border-destructive/40" onClick={() => { setDeclining(declining === p.id ? null : p.id); setDeclineReason(""); }} data-testid={`decline-pro-btn-${p.id}`}>Decline</Button>
+                      </div>
+                      {declining === p.id && (
+                        <div className="flex gap-2 w-72" data-testid={`decline-form-${p.id}`}>
+                          <Input value={declineReason} onChange={(e) => setDeclineReason(e.target.value)} placeholder="Brief reason (sent to applicant)" maxLength={500} data-testid={`decline-reason-input-${p.id}`} />
+                          <Button size="sm" variant="destructive" disabled={!declineReason.trim()} onClick={() => declinePro(p.id)} data-testid={`decline-confirm-btn-${p.id}`}>Confirm</Button>
+                        </div>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -366,7 +390,7 @@ export default function Dashboard() {
             <p className="text-sm text-muted-foreground" data-testid="joints-empty">No joint reports yet. Create one above to invite your co-parent.</p>
           ) : (
             <div className="grid md:grid-cols-2 gap-4" data-testid="joints-grid">
-              {joints.map((j) => {
+              {joints.filter((j) => !j.archived).map((j) => {
                 const ready = j.status === "ready";
                 const pending = j.pending_invitations || (j.invitation && j.invitation.status === "pending" ? [j.invitation] : []);
                 const myP = j.my_role ? j.participants[j.my_role] : null;

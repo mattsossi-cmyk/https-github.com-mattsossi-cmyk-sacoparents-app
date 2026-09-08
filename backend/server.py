@@ -636,6 +636,7 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
         "kind": doc.get("kind", "joint_report"),
         "shared_with_me": uid in doc.get("shared_with", []),
         "case_code": doc.get("case_code"),
+        "archived": bool(doc.get("archived")),
         "participants": _participants_public(doc),
     }
     if doc.get("case_reference") and doc.get("created_by") == uid:
@@ -1558,7 +1559,7 @@ async def list_professionals(user=Depends(get_current_user)):
 async def list_pending_professionals(user=Depends(get_current_user)):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
-    docs = await db.users.find({"role": "professional", "approved": False}, {"password_hash": 0}).sort("created_at", -1).to_list(200)
+    docs = await db.users.find({"role": "professional", "approved": False, "declined": {"$ne": True}}, {"password_hash": 0}).sort("created_at", -1).to_list(200)
     return [{**public_user(u), "profile": u.get("profile", {}), "created_at": u.get("created_at", ""), "verification_level": u.get("verification_level", "")} for u in docs]
 
 
@@ -1589,6 +1590,57 @@ async def approve_professional(user_id: str, user=Depends(get_current_user)):
         except Exception:
             logger.warning(f"Approval email not sent to {pro['email']}")
     return {"ok": True}
+
+
+class DeclineIn(BaseModel):
+    reason: str = ""
+
+
+@api.post("/admin/decline-professional/{user_id}")
+async def decline_professional(user_id: str, body: DeclineIn, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    reason = body.reason.strip()[:500]
+    if not reason:
+        raise HTTPException(status_code=400, detail="Please provide a brief reason for declining")
+    res = await db.users.update_one(
+        {"_id": user_id, "role": "professional", "approved": False},
+        {"$set": {"declined": True, "declined_reason": reason, "declined_at": datetime.now(timezone.utc).isoformat(), "verification_level": "declined"}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Pending professional not found")
+    pro = await db.users.find_one({"_id": user_id})
+    if pro:
+        try:
+            await send_email(
+                to=pro["email"],
+                subject=f"Update on your professional account request - {EMAIL_FROM_NAME}",
+                html=(
+                    '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                    f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
+                    "<p>Thank you for your interest in SA CoParents Align. We were unable to approve your professional account at this time.</p>"
+                    f"<p><strong>Reason:</strong> {escape(reason)}</p>"
+                    f"<p>If you believe this was in error or can provide additional credential information, reply to this email or contact {escape(os.environ['ADMIN_EMAIL'])}.</p>"
+                    f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}.</p>'
+                    "</td></tr></table>"
+                ),
+            )
+        except Exception:
+            logger.warning(f"Decline email not sent to {pro['email']}")
+    return {"ok": True}
+
+
+class ArchiveIn(BaseModel):
+    archived: bool = True
+
+
+@api.patch("/joint/reports/{rid}/archive")
+async def archive_joint_report(rid: str, body: ArchiveIn, user=Depends(get_current_user)):
+    doc = await db.joint_reports.find_one({"id": rid}, {"_id": 0})
+    if not doc or (doc.get("created_by") != user["_id"] and doc.get("professional_id") != user["_id"]):
+        raise HTTPException(status_code=404, detail="Report not found")
+    await db.joint_reports.update_one({"id": rid}, {"$set": {"archived": body.archived, "archived_at": datetime.now(timezone.utc).isoformat() if body.archived else None}})
+    return {"ok": True, "archived": body.archived}
 
 
 @api.post("/joint/professional-requests")

@@ -18,6 +18,7 @@ import Samples from "@/pages/Samples";
 import Legal from "@/pages/Legal";
 import AcceptInvite from "@/pages/AcceptInvite";
 import Resources from "@/pages/Resources";
+import FamilyMatters from "@/pages/FamilyMatters";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -55,6 +56,7 @@ function App() {
             <Route path="/legal/:page" element={<Legal />} />
             <Route path="/accept-invite" element={<Protected><AcceptInvite /></Protected>} />
             <Route path="/resources" element={<Resources />} />
+            <Route path="/matters" element={<Protected><FamilyMatters /></Protected>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <footer className="py-4 text-center text-xs text-muted-foreground" data-testid="copyright-footer">

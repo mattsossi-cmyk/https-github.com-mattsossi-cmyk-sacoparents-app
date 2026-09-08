@@ -280,3 +280,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Dashboard admin panel shows Role / Organization (city, state) / License per pending professional, plus phone, website, registration date. data-testids: `pending-pro-role-{id}`, `pending-pro-org-{id}`, `pending-pro-license-{id}`.
 - Cleaned 191 fixture (non-gmail/bsossi) unapproved test professionals from DB.
 - Note: preview proxy showed "Preview Unavailable" during this session; frontend compiled OK and API verified via curl. Visual check pending.
+
+## 2026-09-08 — Decline applicant + Family Matters page (tested: iteration_20, 148/148 backend)
+- `POST /api/admin/decline-professional/{id}` {reason} (required, ≤500 chars) → sets declined flag/reason, emails applicant, removes from pending list. Dashboard: Decline button + inline reason form (`decline-pro-btn-{id}`, `decline-reason-input-{id}`, `decline-confirm-btn-{id}`).
+- `PATCH /api/joint/reports/{rid}/archive` {archived} (creator/professional only); `archived` field added to joint_public.
+- New page `/matters` (`FamilyMatters.jsx`): search, 6 status chips (all/awaiting_parents/awaiting_a/awaiting_b/ready/archived), child shown by initial only, Archive/Restore. Dashboard "My Family Matters" card → /matters; archived hidden from dashboard Joint Reports.
+- Note: pytest suite re-creates unapproved fixture professionals (non-gmail domains) → they show in admin panel after test runs; clean with delete_many on non gmail/bsossi unapproved pros. Consider making pending list exclude fixtures or having tests clean up.
+- Deploy still pending user click.
