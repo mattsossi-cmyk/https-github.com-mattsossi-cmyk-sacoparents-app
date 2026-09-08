@@ -6,7 +6,6 @@ professional owns the case and parents participate via secure invitations.
 """
 import os
 import uuid
-import requests
 
 from casekit import new_user, new_case
 

@@ -2,6 +2,8 @@
 import os
 import re
 
+import pytest
+
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -29,7 +31,7 @@ def _purge_fixture_accounts() -> None:
     client.close()
 
 
-def pytest_sessionfinish(session, exitstatus):
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     # Under pytest-xdist only the controller runs this (workers carry `workerinput`), so cleanup happens once, after all workers finish.
     if hasattr(session.config, "workerinput"):
         return

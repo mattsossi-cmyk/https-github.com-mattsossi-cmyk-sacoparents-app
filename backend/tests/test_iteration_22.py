@@ -11,7 +11,7 @@ PRO2 = ("approval.test.pro2@gmail.com", "TestPass2026!")
 MATTER_CASE_CODE = "SA-EDU-642310"
 
 
-def _login(email, password):
+def _login(email: str, password: str) -> requests.Session:
     s = requests.Session()
     r = s.post(f"{API}/auth/login", json={"email": email, "password": password}, timeout=15)
     assert r.status_code == 200, f"login failed for {email}: {r.status_code} {r.text}"
@@ -19,17 +19,17 @@ def _login(email, password):
 
 
 @pytest.fixture(scope="module")
-def sess_pro1():
+def sess_pro1() -> requests.Session:
     return _login(*PRO1)
 
 
 @pytest.fixture(scope="module")
-def sess_pro2():
+def sess_pro2() -> requests.Session:
     return _login(*PRO2)
 
 
 @pytest.fixture(scope="module")
-def matter_pro1(sess_pro1):
+def matter_pro1(sess_pro1: requests.Session) -> dict:
     r = sess_pro1.get(f"{API}/joint/reports", timeout=15)
     assert r.status_code == 200
     reports = r.json()
@@ -38,12 +38,12 @@ def matter_pro1(sess_pro1):
     return m
 
 
-def test_lookup_invalid_token_404():
+def test_lookup_invalid_token_404() -> None:
     r = requests.get(f"{API}/joint/invitations/lookup/definitely-not-a-real-token-xyz", timeout=10)
     assert r.status_code == 404, f"expected 404 got {r.status_code} {r.text}"
 
 
-def test_matter_pending_invites_expose_expiry_fields(matter_pro1):
+def test_matter_pending_invites_expose_expiry_fields(matter_pro1: dict) -> None:
     pending = matter_pro1.get("pending_invitations") or []
     b = [p for p in pending if p.get("role") == "b"]
     assert b, f"No pending invites for role b: {pending}"
@@ -52,13 +52,13 @@ def test_matter_pending_invites_expose_expiry_fields(matter_pro1):
         assert isinstance(p.get("expired"), bool), f"expired flag missing: {p}"
 
 
-def test_notes_privacy_pro2_cannot_read(sess_pro2, matter_pro1):
+def test_notes_privacy_pro2_cannot_read(sess_pro2: requests.Session, matter_pro1: dict) -> None:
     rid = matter_pro1["id"]
     r = sess_pro2.get(f"{API}/joint/reports/{rid}/notes", timeout=15)
     assert r.status_code in (403, 404), f"pro2 got unexpected {r.status_code}: {r.text}"
 
 
-def test_pro1_can_read_notes(sess_pro1, matter_pro1):
+def test_pro1_can_read_notes(sess_pro1: requests.Session, matter_pro1: dict) -> None:
     rid = matter_pro1["id"]
     r = sess_pro1.get(f"{API}/joint/reports/{rid}/notes", timeout=15)
     assert r.status_code == 200

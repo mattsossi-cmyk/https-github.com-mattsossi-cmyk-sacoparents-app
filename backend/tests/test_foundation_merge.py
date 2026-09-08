@@ -3,7 +3,6 @@
 import io
 import os
 import uuid
-import requests
 from pypdf import PdfReader
 
 from casekit import new_user

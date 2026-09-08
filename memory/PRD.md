@@ -347,3 +347,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-09-08 — Forgot-password reliability (pytest 152/152; iteration_28)
 - Root cause of "no passcode": Emergent email API 429 rate-limited (test suites burned quota) and forgot_password swallowed the failure. Fixes: send_email retries up to 3x on 429 (2s/4s backoff) then raises 503 with honest message; forgot_password surfaces 503/502 and deletes the stale reset record; fixture domains (@example.com/@x.com/@example.org) skip the provider entirely (FIXTURE_EMAIL_RE) incl. admin new-registration notifications. Auth.jsx toast updated.
 - Verified: owner email reset request → provider 202 after one 429 retry.
+
+## 2026-09-08 — Code review round 3 (pytest 152/152)
+- send_email split into helpers; test type hints; unused test imports removed. "is None" findings remain false positives. Prod still stale.

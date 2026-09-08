@@ -14,7 +14,7 @@ import uuid
 import requests
 from pypdf import PdfReader
 
-from casekit import new_case, new_user, fill, completed_case, CaseSpec
+from casekit import new_case, new_user, completed_case, CaseSpec
 
 PROD = "https://align-report.emergent.host"
 BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.preview.emergentagent.com").rstrip("/")

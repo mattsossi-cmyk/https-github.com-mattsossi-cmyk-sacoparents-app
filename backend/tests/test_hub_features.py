@@ -8,10 +8,9 @@
 import os
 import uuid
 import requests
-import pytest
 from dotenv import load_dotenv
 
-from casekit import new_user, new_case, fill
+from casekit import new_user, new_case
 
 load_dotenv("/app/backend/.env")
 

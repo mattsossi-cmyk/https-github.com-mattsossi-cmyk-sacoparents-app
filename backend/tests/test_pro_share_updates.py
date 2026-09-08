@@ -4,7 +4,6 @@ and the share-report email notification. Parents are created via invitations
 (professional-initiated model)."""
 import os
 import uuid
-import requests
 
 from casekit import new_user, new_case, completed_case
 

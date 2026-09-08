@@ -28,3 +28,9 @@ until the file grows further.
 - "is vs ==" findings (server.py, email_utils.py, joint_engine.py): all are `is None` / `is not None` identity checks — correct Python, left unchanged.
 - "Undefined variable" findings (invite_expired `created`, _matter_state `key/label`): false positives (early return / all branches assign). Rewritten anyway for scanner clarity.
 - Complexity: run_expiry_digests 18→~3, register 13→~5, build_case_pdf 11→~2, list_connections 12→~3. radon: no functions ≥ C remaining in server.py/pdf_report.py.
+
+## Round (2026-09-08, later)
+- send_email complexity 11 → split into _email_payload / _post_email / _post_with_retry / _send_failure (all ≤ B).
+- "is vs ==": all 15 flagged lines are `is None` / `is not None` — correct, unchanged (third time flagged; scanner false positive).
+- Type hints added: test_iteration_22.py, test_password_reset.py, conftest.py. Unused test imports removed (ruff F401).
+- server.py module split deferred: routes already delegate to auth_utils / email_utils / pdf_report / joint_engine / report_engine; further splitting is a larger refactor with no user-visible value right now.

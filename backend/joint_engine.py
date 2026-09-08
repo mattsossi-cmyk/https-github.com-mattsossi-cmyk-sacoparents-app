@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, timezone
 
-from joint_data import SUBJECTS, QUESTIONS, NEXT_STEPS, merged_subject_config, SAFETY_CONFIDENTIALITY, SAFETY_PURPOSE, AGREEMENT_AREAS, AGREEMENT_PURPOSE, AGREEMENT_CONFIDENTIALITY
+from joint_data import QUESTIONS, NEXT_STEPS, merged_subject_config, SAFETY_CONFIDENTIALITY, SAFETY_PURPOSE, AGREEMENT_AREAS, AGREEMENT_PURPOSE, AGREEMENT_CONFIDENTIALITY
 
 STOPWORDS = set(
     "the a an and or of to in for with on at is are was were be been being this that these those "
