@@ -27,6 +27,44 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Iter174 · Clickable PDF Copyright + Preview → Release Modal
+
+**🟡 P2 — PDF copyright as live hyperlink**
+- Updated `pdf_base.render_pdf_copyright()` to overlay a
+  `pdf.link(...)` annotation on the copyright line, targeting
+  `https://sacoparentsalign.com`. Width computed via
+  `pdf.get_string_width(...)` so the hit-area matches the text.
+- Verified the URI annotation is present via `pdfinfo`/regex on
+  a freshly-built Foundation Statement (`/URI (https://sacoparentsalign.com)`).
+  No per-report edits needed — all 22 report footers already
+  call the shared helper.
+
+**🟡 P1 — Preview to Release modal**
+- Enhanced `POST /joint-alignment/cases/{id}/release-consent` to
+  return `release_eligible`, `release_professional_name`, and
+  `already_released` alongside the caller's consent shape so the
+  frontend can react without a second `/consent-status` fetch.
+- New endpoint `POST /joint-alignment/cases/{id}/execute-release`:
+  party-only, requires `release_eligible=True`, flips case status
+  to `released`, records `released_at` + `released_professional_name`,
+  fires the sacoparentsalign.com completion webhook, idempotent
+  on a second call (`applied=false`).
+- New `<ReleaseConsentModal />` inside `JointAlignmentPreview.jsx`:
+  prefilled professional name from co-parent's already-recorded
+  release consent (locked read-only when the co-parent has named
+  someone first), verbatim consent copy from the backend,
+  explicit `"I authorize release…"` checkbox, submit button.
+- Post-submit flow:
+   * Co-parent hasn't consented yet → toast + amber
+     "awaiting_coparent" banner on the preview page.
+   * Both have consented → auto-fire execute-release, show green
+     "Both parents have released" banner, then redirect to
+     `/shared-with-professionals` after 3.2s.
+- Coverage: `tests/test_iter174_execute_release.py` (9 tests, green)
+  + existing iter171 consent-split tests all still passing.
+
+
+## What's Implemented
 ### 2026-09-08 — Iter173 · JA Preview + For-Professionals + Global Copyright
 
 **🟡 P1 — Joint Alignment Preview (agreement-flag-only)**

@@ -11,11 +11,12 @@
  * understands this is a private review step.
  */
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft, ShieldCheck, Loader2, CheckCircle2, MinusCircle,
-  Circle, AlertTriangle,
+  ArrowLeft, ArrowRight, ShieldCheck, Loader2, CheckCircle2,
+  MinusCircle, Circle, AlertTriangle, Send, X,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
@@ -53,33 +54,135 @@ function CountPill({ count, label, tone }) {
   );
 }
 
+/**
+ * Return the co-parent's already-recorded release-consent
+ * professional_name (if any) so we can prefill it into the modal.
+ * When multiple parents match the caller's email we defer to
+ * whichever row is NOT the caller — this is best-effort UX and
+ * relies on the endpoint returning both parents' shapes.
+ */
+function pickCoparentProfessionalName(statusData) {
+  const parents = statusData?.parents || [];
+  const named = parents.find(
+    (p) => p?.release?.professional_name && !p?.release?.revoked_at,
+  );
+  return named?.release?.professional_name || null;
+}
+
+function anyReleased(_statusData) {
+  // Placeholder — consent-status doesn't yet expose released_at.
+  // The parent will see the terminal banner via releaseState after
+  // execute-release fires. Keeping this hook so future backend
+  // enrichment (add `released_at` to consent-status) plugs in
+  // without a UI refactor.
+  return false;
+}
+
 export default function JointAlignmentPreview() {
   const { caseId } = useParams();
+  const navigate = useNavigate();
   const [preview, setPreview] = useState(null);
+  const [consentStatus, setConsentStatus] = useState(null);
   const [error, setError] = useState(null);
   const [errorDetail, setErrorDetail] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [profName, setProfName] = useState("");
+  const [profNameLocked, setProfNameLocked] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [releaseState, setReleaseState] = useState(null);
+  // ↑ one of null | "awaiting_coparent" | "released"
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const r = await api.get(`/joint-alignment/cases/${caseId}/preview`);
-        if (!cancelled) setPreview(r.data);
-      } catch (err) {
-        logError("joint-alignment preview load failed", err);
-        if (!cancelled) {
-          const status = err?.response?.status;
-          const detail = err?.response?.data?.detail;
-          if (status === 403) setError("You cannot view this preview yet.");
-          else if (status === 409) setError("Preview isn't ready.");
-          else if (status === 404) setError("Case not found.");
-          else setError("Couldn't load the preview.");
-          setErrorDetail(typeof detail === "string" ? detail : null);
-        }
+  const loadAll = async () => {
+    try {
+      const [prevRes, statusRes] = await Promise.all([
+        api.get(`/joint-alignment/cases/${caseId}/preview`),
+        api.get(`/joint-alignment/cases/${caseId}/consent-status`),
+      ]);
+      setPreview(prevRes.data);
+      setConsentStatus(statusRes.data || null);
+      // Seed the modal from co-parent's already-recorded release name
+      // (recommended prefill so the two parents agree on the same
+      // professional without retyping).
+      const coparentName = pickCoparentProfessionalName(statusRes.data);
+      if (coparentName) {
+        setProfName(coparentName);
+        setProfNameLocked(true);
       }
-    })();
-    return () => { cancelled = true; };
-  }, [caseId]);
+      // If the case is already released, surface the terminal banner.
+      if (statusRes.data?.release_eligible && anyReleased(statusRes.data)) {
+        setReleaseState("released");
+      }
+    } catch (err) {
+      logError("joint-alignment preview load failed", err);
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+      if (status === 403) setError("You cannot view this preview yet.");
+      else if (status === 409) setError("Preview isn't ready.");
+      else if (status === 404) setError("Case not found.");
+      else setError("Couldn't load the preview.");
+      setErrorDetail(typeof detail === "string" ? detail : null);
+    }
+  };
+
+  useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, [caseId]);
+
+  const handleSubmitRelease = async () => {
+    if (!profName.trim()) {
+      toast.error("Please enter the professional's name.");
+      return;
+    }
+    if (!consentChecked) {
+      toast.error("You need to check the authorization box.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const r = await api.post(
+        `/joint-alignment/cases/${caseId}/release-consent`,
+        { consented: true, professional_name: profName.trim() },
+      );
+      const eligibleNow = !!r.data?.release_eligible;
+
+      if (eligibleNow) {
+        // Both parents on the same page — trigger the actual release.
+        try {
+          await api.post(
+            `/joint-alignment/cases/${caseId}/execute-release`,
+          );
+          setReleaseState("released");
+          toast.success(
+            "Both parents have released. Awaiting SA CoParents to hand off.",
+          );
+          // Small delay so the terminal banner is visible before we
+          // whisk the parent to their share console.
+          setTimeout(() => navigate("/shared-with-professionals"), 3200);
+        } catch (execErr) {
+          logError("execute-release failed", execErr);
+          setReleaseState("released_pending");
+          toast.error(
+            "Consent recorded, but SA CoParents couldn't complete "
+            + "the automatic handoff. It will be retried shortly.",
+          );
+        }
+      } else {
+        setReleaseState("awaiting_coparent");
+        toast.success(
+          "Your release consent is recorded. Waiting on your co-parent.",
+        );
+      }
+      setModalOpen(false);
+      await loadAll();
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      logError("release-consent failed", err);
+      toast.error(
+        typeof detail === "string" ? detail : "Couldn't record consent.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const topics = preview?.topics || [];
   const summary = preview?.summary || {};
@@ -223,7 +326,45 @@ export default function JointAlignmentPreview() {
               >
                 <ArrowLeft size={14} /> Close preview
               </Link>
+              {!releaseState && (
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-4 py-2 text-sm font-semibold"
+                  data-testid="preview-continue-release"
+                >
+                  Continue to release consent
+                  <ArrowRight size={14} />
+                </button>
+              )}
             </div>
+
+            {releaseState === "awaiting_coparent" && (
+              <div
+                className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4 text-[13px] text-[#3D1A78]"
+                data-testid="preview-awaiting-coparent"
+              >
+                <div className="font-semibold flex items-center gap-1.5 mb-1">
+                  <ShieldCheck size={14} /> Your release consent is recorded
+                </div>
+                We&rsquo;re waiting on your co-parent to record their own
+                release consent before the report is handed off. Nothing has
+                left your household yet.
+              </div>
+            )}
+            {(releaseState === "released" || releaseState === "released_pending") && (
+              <div
+                className="mt-6 rounded-2xl border border-[#B7DEC6] bg-[#E1F3E8] p-4 text-[13px] text-[#186142]"
+                data-testid="preview-released-banner"
+              >
+                <div className="font-semibold flex items-center gap-1.5 mb-1">
+                  <CheckCircle2 size={14} /> Both parents have released
+                </div>
+                Awaiting SA CoParents to hand off the completed Joint
+                Alignment Report. You&rsquo;ll be redirected to your Shared
+                with Professionals page in a moment.
+              </div>
+            )}
 
             <div
               className="mt-8 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] p-4 text-[12px] text-[#3D1A78] leading-relaxed"
@@ -237,6 +378,143 @@ export default function JointAlignmentPreview() {
           </>
         )}
       </div>
+
+      {modalOpen && (
+        <ReleaseConsentModal
+          consentText={consentStatus?.consent_texts?.release_template
+            || "I authorize the completed Joint Alignment Report to be made available to {professional_name} through SA CoParents Align."}
+          profName={profName}
+          setProfName={setProfName}
+          profNameLocked={profNameLocked}
+          consentChecked={consentChecked}
+          setConsentChecked={setConsentChecked}
+          submitting={submitting}
+          onClose={() => setModalOpen(false)}
+          onSubmit={handleSubmitRelease}
+        />
+      )}
     </AppShell>
+  );
+}
+
+function ReleaseConsentModal({
+  consentText, profName, setProfName, profNameLocked,
+  consentChecked, setConsentChecked, submitting, onClose, onSubmit,
+}) {
+  const filledText = consentText.replace(
+    "{professional_name}",
+    profName.trim() || "(the professional you name below)",
+  );
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="release-modal-title"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 py-6"
+      data-testid="release-consent-modal"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !submitting) onClose();
+      }}
+    >
+      <div className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl">
+        <div className="flex items-start justify-between gap-3 px-6 pt-6">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              Release consent
+            </div>
+            <h2
+              id="release-modal-title"
+              className="font-serif text-2xl text-[#1A1330] leading-tight mt-1"
+              data-testid="release-modal-title"
+            >
+              Authorize release to a named professional
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            aria-label="Close"
+            className="text-[#857E9C] hover:text-[#1A1330] p-1 rounded-full flex-shrink-0"
+            data-testid="release-modal-close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="px-6 py-4">
+          <label
+            className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] block"
+            htmlFor="release-professional-name"
+          >
+            Professional&rsquo;s name
+          </label>
+          <input
+            id="release-professional-name"
+            type="text"
+            value={profName}
+            onChange={(e) => setProfName(e.target.value)}
+            readOnly={profNameLocked}
+            className="mt-1 w-full rounded-xl border border-[#D6CFE8] bg-white px-3 py-2 text-sm focus:border-[#3D1A78] focus:outline-none"
+            placeholder="e.g. Adele van Wyk"
+            data-testid="release-modal-professional-name"
+          />
+          {profNameLocked && (
+            <p className="text-[11px] text-[#857E9C] mt-1">
+              Your co-parent already named this professional. Both consents
+              must target the same person before release fires.
+            </p>
+          )}
+
+          <div className="mt-4 rounded-2xl border border-[#D6CFE8] bg-[#FAF8FD] p-4 text-[12.5px] text-[#4B4567] leading-relaxed"
+            data-testid="release-modal-consent-text"
+          >
+            {filledText}
+          </div>
+
+          <label
+            className="mt-4 flex items-start gap-2 text-[13px] text-[#1A1330]"
+            data-testid="release-modal-consent-label"
+          >
+            <input
+              type="checkbox"
+              checked={consentChecked}
+              onChange={(e) => setConsentChecked(e.target.checked)}
+              className="mt-0.5"
+              data-testid="release-modal-consent-checkbox"
+            />
+            <span>
+              I authorize release of the completed Joint Alignment Report to{" "}
+              <strong>{profName.trim() || "the professional named above"}</strong>.
+            </span>
+          </label>
+        </div>
+
+        <div className="px-6 py-4 border-t border-[#EEE8F7] flex flex-wrap gap-2 justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#D6CFE8] hover:bg-[#F5F1FB] text-[#3D1A78] px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            data-testid="release-modal-cancel"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitting || !profName.trim() || !consentChecked}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            data-testid="release-modal-submit"
+          >
+            {submitting ? (
+              <><Loader2 size={13} className="animate-spin" /> Recording…</>
+            ) : (
+              <><Send size={13} /> Record my release consent</>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

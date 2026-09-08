@@ -3145,12 +3145,36 @@ async def record_release_consent(
          if (p.get("email") or "").lower() == parent_email_lower),
         parent,
     )
+
+    # Roll up so the caller can react (e.g., trigger execute-release)
+    # without a second consent-status call.
+    fresh_parents = fresh.get("parents") or []
+
+    def _release_active(p: Dict[str, Any]) -> bool:
+        return bool(p.get("release_consent_at")) and not p.get(
+            "release_consent_revoked_at",
+        )
+    release_pros = {
+        p.get("release_consent_professional_name")
+        for p in fresh_parents if _release_active(p)
+    }
+    release_eligible = (
+        bool(fresh_parents)
+        and all(_release_active(p) for p in fresh_parents)
+        and len(release_pros) == 1
+    )
+
     return {
         "case_id": case_id,
         "consent": _consent_shape(fresh_parent),
         "consent_text": _JA_RELEASE_CONSENT_TEXT_TEMPLATE.format(
             professional_name=professional_name,
         ),
+        "release_eligible": release_eligible,
+        "release_professional_name": (
+            next(iter(release_pros)) if release_eligible else None
+        ),
+        "already_released": bool(fresh.get("released_at")),
     }
 
 
@@ -3215,6 +3239,110 @@ async def get_case_consent_status(
             "comparison": _JA_COMPARISON_CONSENT_TEXT,
             "release_template": _JA_RELEASE_CONSENT_TEXT_TEMPLATE,
         },
+    }
+
+
+@router.post("/joint-alignment/cases/{case_id}/execute-release")
+async def execute_case_release(
+    case_id: str = Path(..., min_length=6, max_length=32),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Flip the case to `released` once BOTH parents have recorded
+    active `release_consent` for the SAME professional.
+
+    Guardrails:
+      * Only a party to the case may trigger execution.
+      * Both parents' release consent must be active (not revoked)
+        AND target the same professional_name. Otherwise 409.
+      * Idempotent — a second call after `released_at` is set
+        returns the same shape with `applied=false`.
+      * Best-effort webhook to sacoparentsalign.com (never crashes
+        the request). The audit row on the case is what matters.
+
+    Never sends any raw parent content — only the case metadata +
+    the professional_name that BOTH parents have already
+    independently authorised.
+    """
+    case = await db[_CASES_COLL].find_one({"case_id": case_id})
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found.")
+    if case.get("status") in ("expired", "cancelled"):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Case is {case.get('status')}.",
+        )
+    caller_email = (current.email or "").lower()
+    parents = case.get("parents") or []
+    if not any(
+        (p.get("email") or "").lower() == caller_email for p in parents
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a party to this case.",
+        )
+
+    def _release_active(p: Dict[str, Any]) -> bool:
+        return bool(p.get("release_consent_at")) and not p.get(
+            "release_consent_revoked_at",
+        )
+    release_pros = {
+        p.get("release_consent_professional_name")
+        for p in parents if _release_active(p)
+    }
+    eligible = (
+        bool(parents)
+        and all(_release_active(p) for p in parents)
+        and len(release_pros) == 1
+    )
+    if not eligible:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Both parents must record release consent for the "
+                "same professional before the report can be released."
+            ),
+        )
+    professional_name = next(iter(release_pros))
+
+    # Idempotent — a case that was already released stays released.
+    if case.get("released_at"):
+        return {
+            "case_id": case_id,
+            "applied": False,
+            "released_at": _iso(case.get("released_at")),
+            "released_professional_name": case.get(
+                "released_professional_name",
+            ) or professional_name,
+        }
+
+    now = _now()
+    await db[_CASES_COLL].update_one(
+        {"case_id": case_id},
+        {"$set": {
+            "released_at": now,
+            "released_professional_name": professional_name,
+            "released_by_user_id": current.user_id,
+            "status": "released",
+        }},
+    )
+
+    # Best-effort webhook — never crash the release call on a
+    # partner outage. The parent already saw the on-screen success
+    # banner by the time we get here.
+    await _notify_align_completion({
+        "event": "case_released",
+        "case_id": case_id,
+        "assessment_type": case.get("assessment_type"),
+        "professional_name": professional_name,
+        "released_at": _iso(now),
+    })
+
+    return {
+        "case_id": case_id,
+        "applied": True,
+        "released_at": _iso(now),
+        "released_professional_name": professional_name,
     }
 
 

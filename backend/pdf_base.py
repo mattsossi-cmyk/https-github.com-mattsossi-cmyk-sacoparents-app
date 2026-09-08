@@ -49,6 +49,7 @@ def _section_break(pdf) -> None:
 
 
 _COPYRIGHT_LINE = "(c) 2026 sacoparentsalign.com - All rights reserved."
+_COPYRIGHT_URL = "https://sacoparentsalign.com"
 
 
 def render_pdf_copyright(pdf) -> None:
@@ -58,12 +59,30 @@ def render_pdf_copyright(pdf) -> None:
     so it appears on EVERY page of EVERY generated report.
 
     Sits at 6mm from the bottom edge — under any existing footer
-    text — in tiny italic grey.
+    text — in tiny italic grey. The centred text is overlaid with a
+    clickable `pdf.link(...)` rectangle so on-screen PDF viewers
+    (Preview, Acrobat, Chrome) open sacoparentsalign.com in a new
+    tab when a reader clicks the line.
     """
     try:
         pdf.set_y(-6)
         pdf.set_font("Helvetica", "I", 6.5)
         pdf.set_text_color(133, 126, 156)   # #857E9C
-        pdf.cell(0, 3, _safe(_COPYRIGHT_LINE), align="C", ln=1)
+        safe_text = _safe(_COPYRIGHT_LINE)
+        # Snapshot the row's Y before we render so we can compute the
+        # clickable rectangle *after* fpdf2 has centred the text.
+        y_before = pdf.get_y()
+        pdf.cell(0, 3, safe_text, align="C", ln=1)
+        # Overlay a link rectangle covering the actual text width,
+        # horizontally centred like the cell we just wrote. Width
+        # is measured with fpdf2's `get_string_width` under the
+        # same font state we just used.
+        try:
+            text_w = pdf.get_string_width(safe_text)
+        except Exception:  # noqa: BLE001
+            text_w = 90.0
+        page_w = pdf.w - pdf.l_margin - pdf.r_margin
+        link_x = pdf.l_margin + max(0.0, (page_w - text_w) / 2)
+        pdf.link(link_x, y_before, text_w, 3, _COPYRIGHT_URL)
     except Exception:  # noqa: BLE001 — footer must never crash a report
         pass
