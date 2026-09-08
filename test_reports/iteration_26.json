@@ -1,0 +1,22 @@
+{
+  "summary": "Frontend-only test of DigestPreference on /matters. All acceptance criteria met: control visible with Daily initially selected (aria-checked=true, hint 'Every morning at 8am Central'). Weekly click → toast 'Expiry digest set to weekly', hint 'Mondays only'; reload persisted Weekly. Off click → toast 'Expiry digest turned off', hint 'No digest emails'. Daily restore → toast 'Expiry digest set to daily', hint 'Every morning at 8am Central'. Regression on /matters passes: heading 'My Family Matters', filter chips (All Active/Awaiting Both Parents/etc.), matter list card, and 'Search My Private Notes' all render. Preference left on Daily as instructed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "DigestPreference.jsx uses api.get('/me/preferences') on mount without indicating loading state beyond disabling buttons; consider a skeleton for a11y clarity.",
+    "Fallback on GET error sets value='daily' locally without a toast — silent failure could mask backend issues."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "approval.test.pro1@gmail.com / TestPass2026! (worked; note /login redirects to homepage — auth entry is /auth via 'Professional Sign In')",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Digest preference feature fully functional. Preference persisted via PUT /api/me/preferences. Left at 'daily'."
+}

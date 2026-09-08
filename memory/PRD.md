@@ -322,3 +322,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `GET /api/verify/{case_code}` (public): professional name/role/org, account_approved, credentials_verified, case_active. Never returns parent/child data. Page `/verify` (Verify.jsx), nav link on Landing, hint link on /join.
 - `GET /api/notes/search?q=` (professional, own notes, min 2 chars, regex-escaped) with case_code/subject/child initial. `NoteSearch.jsx` at bottom of /matters with highlighted matches.
 - Production still all /api 404 (frontend 200).
+
+## 2026-09-08 — Digest preferences (pytest 152/152; iteration_26 frontend)
+- `GET/PUT /api/me/preferences` {digest_frequency: daily|weekly|off} stored on user. `run_expiry_digests` skips "off" and sends "weekly" only on Mondays (UTC weekday 0). `DigestPreference.jsx` on /matters.
+- Production still all /api 404 (frontend 200) — unchanged all session.

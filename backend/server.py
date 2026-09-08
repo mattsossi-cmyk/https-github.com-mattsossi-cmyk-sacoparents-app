@@ -221,6 +221,26 @@ async def me(user=Depends(get_current_user)):
     return public_user(user)
 
 
+DIGEST_CHOICES = ("daily", "weekly", "off")
+
+
+class PreferencesIn(BaseModel):
+    digest_frequency: str
+
+
+@api.get("/me/preferences")
+async def get_preferences(user=Depends(get_current_user)):
+    return {"digest_frequency": user.get("digest_frequency") or "daily"}
+
+
+@api.put("/me/preferences")
+async def update_preferences(body: PreferencesIn, user=Depends(get_current_user)):
+    if body.digest_frequency not in DIGEST_CHOICES:
+        raise HTTPException(status_code=400, detail="Choose daily, weekly, or off")
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"digest_frequency": body.digest_frequency}})
+    return {"ok": True, "digest_frequency": body.digest_frequency}
+
+
 @api.post("/auth/refresh")
 async def refresh(request: Request, response: Response):
     token = request.cookies.get("refresh_token")
@@ -2009,6 +2029,9 @@ async def run_expiry_digests() -> None:
         pro = await db.users.find_one({"_id": pro_id, "role": "professional"})
         if not pro:
             continue
+        freq = pro.get("digest_frequency") or "daily"
+        if freq == "off" or (freq == "weekly" and now.weekday() != 0):
+            continue
         try:
             await send_email(
                 to=pro["email"],
@@ -2021,7 +2044,8 @@ async def run_expiry_digests() -> None:
                     f"<ul>{''.join(rows)}</ul>"
                     f'<p><a href="{app_url()}/matters?filter=expiring" style="display:inline-block;background:#5B2A86;color:#ffffff;'
                     'padding:12px 24px;text-decoration:none;border-radius:6px">Open Family Matters</a></p>'
-                    f'<p style="font-size:12px;color:#888">Daily digest sent by {escape(EMAIL_FROM_NAME)}. Parent responses are never included in email.</p>'
+                    f'<p style="font-size:12px;color:#888">{"Weekly" if freq == "weekly" else "Daily"} digest sent by {escape(EMAIL_FROM_NAME)}. '
+                    f'Change how often you receive this at {app_url()}/matters. Parent responses are never included in email.</p>'
                     "</td></tr></table>"
                 ),
             )

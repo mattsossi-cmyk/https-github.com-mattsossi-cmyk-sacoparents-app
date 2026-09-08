@@ -7,6 +7,7 @@ import { BrandLogo } from "@/components/Brand";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { MatterNotes } from "@/components/MatterNotes";
 import { NoteSearch } from "@/components/NoteSearch";
+import { DigestPreference } from "@/components/DigestPreference";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -144,6 +145,7 @@ export default function FamilyMatters() {
           <h1 className="text-4xl font-semibold" data-testid="matters-heading">My Family Matters</h1>
           <p className="text-muted-foreground mt-2">Track parent participation and report readiness. Children are shown by initial only.</p>
         </div>
+        <DigestPreference />
         <div className="relative max-w-md">
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by case code, subject, reference or parent" className="pl-9 h-11" data-testid="matters-search-input" />
