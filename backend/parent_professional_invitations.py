@@ -67,6 +67,11 @@ _INVITE_RATE_LIMIT_PER_HOUR = 30
 _MAX_REPORTS_PER_INVITE = 10
 _ALLOWED_ACCESS_DAYS = {7, 30, 60, 90}
 _DEFAULT_ACCESS_DAYS = 30
+# Extend-only: the 14-day slot is offered from the in-app "Access
+# expiring soon" banner as a lightweight, one-tap re-up.
+_ALLOWED_EXTEND_DAYS = {7, 14, 30, 60, 90}
+_DEFAULT_EXTEND_DAYS = 14
+_EXPIRING_SOON_WINDOW_DAYS = 7
 _CONSENT_VERSION = "2026-09-08"       # bump on every legal-copy change
 
 # Consent text kept verbatim as required by spec — copy is stored
@@ -178,14 +183,14 @@ class CreateInvitationBody(BaseModel):
 
 
 class ExtendAccessBody(BaseModel):
-    access_days: int = Field(default=_DEFAULT_ACCESS_DAYS)
+    access_days: int = Field(default=_DEFAULT_EXTEND_DAYS)
 
     @field_validator("access_days")
     @classmethod
     def _access_days_allowed(cls, v: int) -> int:
-        if v not in _ALLOWED_ACCESS_DAYS:
+        if v not in _ALLOWED_EXTEND_DAYS:
             raise ValueError(
-                f"access_days must be one of {sorted(_ALLOWED_ACCESS_DAYS)}",
+                f"access_days must be one of {sorted(_ALLOWED_EXTEND_DAYS)}",
             )
         return v
 
@@ -431,6 +436,58 @@ async def list_professional_invitations(
     async for inv in cursor:
         invitations.append(_shape_invite(inv))
     return {"invitations": invitations}
+
+
+@router.get("/parent/professional-invitations/expiring-soon")
+async def list_expiring_soon_invitations(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Return the caller's still-active invitations whose
+    `access_expiration` falls inside the next
+    `_EXPIRING_SOON_WINDOW_DAYS` days (default 7).
+
+    Powers the in-app amber banner on `/shared-with-professionals`
+    so the parent can tap **Extend** before the automated 7-day
+    warning email lands.
+
+    Excludes:
+      * revoked invites (`revoked_at != None`)
+      * already-expired invites (`access_expiration < now`)
+      * declined invites
+      * invites whose status has flipped to `access_expired` by the sweep
+    """
+    now = _now()
+    window_end = now + timedelta(days=_EXPIRING_SOON_WINDOW_DAYS)
+    cursor = db[_INVITES_COLL].find(
+        {
+            "inviting_parent_id": current.user_id,
+            "revoked_at": None,
+            "status": {"$nin": ["access_expired", "declined"]},
+            "access_expiration": {"$gte": now, "$lte": window_end},
+        },
+        {"_id": 0, "invitation_token_hash": 0},
+    ).sort("access_expiration", 1)
+    items: List[Dict[str, Any]] = []
+    async for inv in cursor:
+        shaped = _shape_invite(inv)
+        exp = _as_utc(inv.get("access_expiration"))
+        # Whole-day countdown, rounded down so the banner never says
+        # "in 0 days" when there are still hours left — floors to 0
+        # only when it's genuinely within the last day.
+        days_left: Optional[int] = None
+        if exp is not None:
+            seconds = (exp - now).total_seconds()
+            days_left = max(0, int(seconds // 86400))
+        shaped["days_until_expiration"] = days_left
+        items.append(shaped)
+    return {
+        "window_days": _EXPIRING_SOON_WINDOW_DAYS,
+        "default_extend_days": _DEFAULT_EXTEND_DAYS,
+        "allowed_extend_days": sorted(_ALLOWED_EXTEND_DAYS),
+        "invitations": items,
+    }
 
 
 @router.get("/parent/professional-invitations/{invitation_id}")

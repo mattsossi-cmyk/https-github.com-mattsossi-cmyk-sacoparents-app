@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft, ShieldCheck, Loader2, RefreshCcw, Send, Ban, CalendarClock,
-  Mail, FileText, Users, AlertCircle, Sparkles, Copy,
+  Mail, FileText, Users, AlertCircle, Sparkles, Copy, Clock, X,
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
@@ -47,16 +47,23 @@ export default function SharedWithProfessionals() {
   const [prefs, setPrefs] = useState(null);       // {mode, explicit_pref, active_invitation_count, auto_threshold}
   const [prefsBusy, setPrefsBusy] = useState(false);
   const [testDigestBusy, setTestDigestBusy] = useState(false);
+  const [expiringSoon, setExpiringSoon] = useState(null);   // {invitations, window_days, default_extend_days}
+  const [bannerDismissed, setBannerDismissed] = useState(
+    () => (typeof window !== "undefined"
+      && window.sessionStorage?.getItem("expiring-banner-dismissed") === "1"),
+  );
 
   const load = async () => {
     setError(null);
     try {
-      const [invRes, prefsRes] = await Promise.all([
+      const [invRes, prefsRes, expiringRes] = await Promise.all([
         api.get("/parent/professional-invitations"),
         api.get("/parent/notification-mode"),
+        api.get("/parent/professional-invitations/expiring-soon"),
       ]);
       setInvitations(invRes.data?.invitations || []);
       setPrefs(prefsRes.data || null);
+      setExpiringSoon(expiringRes.data || null);
     } catch (err) {
       logError("shared-with-pros load failed", err);
       setError("Couldn't load your invitations.");
@@ -64,6 +71,11 @@ export default function SharedWithProfessionals() {
     }
   };
   useEffect(() => { load(); }, []);
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    try { window.sessionStorage?.setItem("expiring-banner-dismissed", "1"); } catch { /* noop */ }
+  };
 
   const setMode = async (mode) => {
     setPrefsBusy(true);
@@ -123,10 +135,10 @@ export default function SharedWithProfessionals() {
   };
 
   const handleExtend = async (inv) => {
-    const raw = window.prompt("Extend access by how many days? (7 / 30 / 60 / 90)", "30");
+    const raw = window.prompt("Extend access by how many days? (7 / 14 / 30 / 60 / 90)", "14");
     const days = parseInt(raw || "", 10);
-    if (![7, 30, 60, 90].includes(days)) {
-      toast.error("Please pick 7, 30, 60, or 90.");
+    if (![7, 14, 30, 60, 90].includes(days)) {
+      toast.error("Please pick 7, 14, 30, 60, or 90.");
       return;
     }
     setBusyId(inv.invitation_id);
@@ -139,6 +151,26 @@ export default function SharedWithProfessionals() {
       await load();
     } catch (err) {
       const detail = err?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Couldn't extend access.");
+    } finally { setBusyId(null); }
+  };
+
+  const handleQuickExtend = async (inv, days) => {
+    setBusyId(inv.invitation_id);
+    try {
+      const r = await api.post(
+        `/parent/professional-invitations/${inv.invitation_id}/extend`,
+        { access_days: days },
+      );
+      const newExp = r.data?.access_expiration
+        ? new Date(r.data.access_expiration).toLocaleDateString(undefined,
+            { dateStyle: "medium" })
+        : "the new date";
+      toast.success(`Access extended by ${days} days · now expires ${newExp}.`);
+      await load();
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      logError("quick extend failed", err);
       toast.error(typeof detail === "string" ? detail : "Couldn't extend access.");
     } finally { setBusyId(null); }
   };
@@ -212,6 +244,90 @@ export default function SharedWithProfessionals() {
         {error && (
           <div role="alert" className="mt-6 rounded-xl bg-[#FCE3DC] border border-[#F5D0C5] text-[#9A3A23] px-4 py-3 text-sm">
             {error}
+          </div>
+        )}
+
+        {/* ---------- Access expiring soon banner ---------- */}
+        {expiringSoon && (expiringSoon.invitations || []).length > 0 && !bannerDismissed && (
+          <div
+            className="mt-6 rounded-2xl border border-[#F0D9A1] bg-[#FFF6E5] p-4 sm:p-5"
+            role="alert"
+            data-testid="expiring-soon-banner"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                <Clock size={16} className="text-[#8A5B00] flex-shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <div
+                    className="text-sm font-semibold text-[#5C3D00]"
+                    data-testid="expiring-soon-banner-title"
+                  >
+                    {expiringSoon.invitations.length === 1
+                      ? "1 invitation is about to expire"
+                      : `${expiringSoon.invitations.length} invitations are about to expire`}
+                  </div>
+                  <p className="text-[12px] text-[#7A5300] mt-0.5 leading-relaxed">
+                    Access will end within the next {expiringSoon.window_days || 7} days.
+                    Extend now if the professional still needs to review your reports —
+                    a reminder email will otherwise be sent {expiringSoon.window_days || 7} days
+                    before expiration.
+                  </p>
+                  <ul className="mt-3 space-y-2" data-testid="expiring-soon-list">
+                    {expiringSoon.invitations.map((inv) => {
+                      const days = inv.days_until_expiration;
+                      const daysCopy = days === 0
+                        ? "expires today"
+                        : days === 1
+                        ? "expires in 1 day"
+                        : `expires in ${days} days`;
+                      return (
+                        <li
+                          key={inv.invitation_id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/70 border border-[#F0D9A1] px-3 py-2"
+                          data-testid={`expiring-soon-row-${inv.invitation_id}`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-semibold text-[#5C3D00] truncate">
+                              {inv.professional_first_name} {inv.professional_last_name}
+                              <span className="text-[11px] font-normal text-[#8A5B00] ml-1">
+                                · {daysCopy}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-[#7A5300] truncate">
+                              {(inv.selected_reports || []).map((r) => r.title).join(", ") || "—"}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickExtend(
+                              inv, expiringSoon.default_extend_days || 14,
+                            )}
+                            disabled={busyId === inv.invitation_id}
+                            className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1 text-[11px] font-semibold disabled:opacity-50 flex-shrink-0"
+                            data-testid={`expiring-soon-extend-${inv.invitation_id}`}
+                          >
+                            {busyId === inv.invitation_id
+                              ? <Loader2 size={11} className="animate-spin" />
+                              : <CalendarClock size={11} />}
+                            Extend +{expiringSoon.default_extend_days || 14}d
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={dismissBanner}
+                aria-label="Dismiss for this session"
+                title="Dismiss for this session"
+                className="text-[#8A5B00] hover:text-[#5C3D00] p-1 rounded-full flex-shrink-0"
+                data-testid="expiring-soon-dismiss"
+              >
+                <X size={14} />
+              </button>
+            </div>
           </div>
         )}
 

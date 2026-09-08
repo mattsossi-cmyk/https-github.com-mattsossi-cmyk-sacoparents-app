@@ -27,6 +27,30 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Iter172 · Access-Expiring In-App Banner
+
+**🟡 P1 — Expiring-Soon Banner on /shared-with-professionals**
+- New backend endpoint
+  `GET /api/parent/professional-invitations/expiring-soon` returns
+  invites whose `access_expiration` falls inside the next 7 days,
+  excluding revoked / declined / already-expired rows. Scoped to
+  the caller. Response advertises `default_extend_days=14`,
+  `allowed_extend_days=[7,14,30,60,90]`, and per-row
+  `days_until_expiration`.
+- Extend endpoint (`POST .../{id}/extend`) now accepts 14-day slot
+  and defaults to +14d when the body omits `access_days`. Create
+  validator still restricts to {7,30,60,90} — 14 is extend-only.
+- New amber banner (`data-testid="expiring-soon-banner"`) on
+  `/shared-with-professionals`: lists imminent expirations with a
+  one-tap "Extend +14d" button and a session-level dismiss.
+- Banner refreshes automatically after a successful extend, and
+  the row falls out of the list once its expiration moves past
+  the 7-day window.
+- Coverage: `tests/test_iter172_expiring_banner.py` (9 tests,
+  all passing). Regressions on iter168/171 pass green (28 tests).
+
+
+## What's Implemented
 ### 2026-09-08 — Iter171 · 4-in-1 · Sweep + Preview + Handshake Doc + Consent Split
 
 **✨ P2 — Digest Preview**
