@@ -283,6 +283,8 @@ async def startup_log():
     asyncio.create_task(weekly_case_analytics_loop(app))
     from parent_share_digest import parent_share_digest_loop
     asyncio.create_task(parent_share_digest_loop(app))
+    from access_expiring_sweep import access_expiring_sweep_loop
+    asyncio.create_task(access_expiring_sweep_loop(app))
 
 
 @app.on_event("shutdown")

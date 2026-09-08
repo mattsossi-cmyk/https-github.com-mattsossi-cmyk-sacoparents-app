@@ -21,6 +21,7 @@ const PUBLIC_MARKETING_PATHS = new Set([
   "/safety",
   "/login",
   "/signup",
+  "/for-portal-engineers",
 ]);
 
 /**

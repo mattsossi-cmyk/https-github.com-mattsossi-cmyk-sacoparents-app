@@ -27,6 +27,112 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Iter171 · 4-in-1 · Sweep + Preview + Handshake Doc + Consent Split
+
+**✨ P2 — Digest Preview**
+- New endpoint `POST /api/parent/notification-mode/preview-digest`.
+  Rolls up the caller's last 7 days of `report_access_events` (real
+  events) OR falls back to a demo payload with fictitious pros
+  when the caller has no events yet. Sends via
+  `send_parent_share_digest_email`.
+- New "Send me a test digest" button on the
+  `/shared-with-professionals` notification-preferences card
+  (data-testid `notification-mode-preview`). Success toast reports
+  whether the digest included real events or a demo sample.
+
+**✨ P2 — Handshake Doc page**
+- New public route `/for-portal-engineers` (no auth required —
+  added to `PUBLIC_MARKETING_PATHS` so the legal-disclaimer modal
+  doesn't gate external portal engineers).
+- Six sections: Auth, Permission-check GET, Event POST, Accept-
+  webhook (the OTHER direction), CLI simulator, Error contract.
+- 30+ copyable code blocks (click-to-copy on hover).
+- 100% overflow-free at 390px AND 1920px (verified).
+- Mirrors the CLI at `scripts/portal_handshake_simulator.py` so
+  external engineers can validate their portal implementation
+  byte-for-byte.
+
+**✨ P2 — Access-Expiring Sweep**
+- New backend module `access_expiring_sweep.py`:
+    * `flip_expired_invitations` — cascades `access_expiration < now`
+      invitations to `status="access_expired"` + linked
+      `professional_report_permissions.status="expired"`.
+      Idempotent — second call is a no-op.
+    * `send_access_expiring_warnings` — finds invitations exactly 7
+      days from `access_expiration` (±24h band), sends a warning
+      email via `send_parent_share_access_expiring_email`, and
+      dedupes via `access_expiring_warning_sends` collection.
+    * `run_access_expiring_sweep` — public entrypoint that runs
+      the warning pass BEFORE the flip pass (so a parent gets one
+      last chance to Extend before the row is auto-expired).
+- Background loop `access_expiring_sweep_loop` registered on
+  server startup. Idle no-op unless
+  `ACCESS_EXPIRING_SWEEP_ENABLED=1`.
+- New email helper `send_parent_share_access_expiring_email`
+  (branded, plaintext + HTML).
+- New collection: `access_expiring_warning_sends` (dedupe key).
+
+**✨ P1 — Joint Alignment consent split**
+Per the family-safety spec, comparison-of-answers and
+release-of-report-to-professional are now TWO distinct consents:
+
+- **New endpoints (all on the case)**:
+    * `POST /api/joint-alignment/cases/{id}/comparison-consent` —
+      caller records (or revokes) their consent to have their
+      answers compared with the co-parent's. `consented=false`
+      body revokes.
+    * `POST /api/joint-alignment/cases/{id}/release-consent` —
+      caller records (or revokes) their consent to release the
+      resulting Joint Alignment Report to a NAMED professional
+      (`professional_name` field).
+    * `GET /api/joint-alignment/cases/{id}/consent-status` —
+      returns per-parent state PLUS rollup eligibility flags:
+      `comparison_eligible` (both parents consented, no revokes)
+      and `release_eligible` (both parents consented to the SAME
+      professional_name).
+- **Per-parent fields added** to `joint_alignment_cases.parents[]`:
+  `comparison_consent_at`, `comparison_consent_version`,
+  `comparison_consent_revoked_at`, `release_consent_at`,
+  `release_consent_professional_name`, `release_consent_version`,
+  `release_consent_revoked_at`.
+- **Verbatim consent texts** stored per spec:
+    * Comparison: "I authorize SA CoParents to compare the selected
+      completed reports from both participating parents for the
+      limited purpose of identifying shared child-focused goals…"
+    * Release: templated with the professional_name.
+- **Auth**: caller is identified by JWT + email match against
+  `parents[].email`. Non-parties + non-mediators get 403.
+- **Audit-trail-safe revoke**: `consented=false` preserves the
+  historical `consented_at` and only adds `revoked_at`, so
+  revocation doesn't erase a parent's earlier yes.
+
+**Testing**:
+- New file `tests/test_iter171_sweep_preview_consent.py` (9 tests).
+- Regression across iter168 + iter169 + iter170 + iter171 = 44/44
+  green in ~93s.
+- Testing-agent verdict: backend 100%, frontend 100%. Zero
+  overflow at 390px and 1920px on the new public page after a
+  `max-w-full + whitespace-pre + overflow-hidden` polish on the
+  code-block component.
+
+**Files touched**:
+- `backend/access_expiring_sweep.py` (new)
+- `backend/parent_professional_invitations.py` (adds
+  preview-digest endpoint)
+- `backend/joint_alignment_routes.py` (adds 3 consent-split
+  endpoints)
+- `backend/email_service.py` (adds `send_parent_share_access_expiring_email`)
+- `backend/server.py` (registers `access_expiring_sweep_loop`)
+- `frontend/src/pages/ForPortalEngineers.jsx` (new public page)
+- `frontend/src/pages/SharedWithProfessionals.jsx` (adds test-digest
+  button + handler)
+- `frontend/src/App.js` (new `/for-portal-engineers` route)
+- `frontend/src/components/LegalAcknowledgment.jsx` (adds
+  `/for-portal-engineers` to `PUBLIC_MARKETING_PATHS`)
+- `backend/tests/test_iter171_sweep_preview_consent.py` (new,
+  9 tests)
+
+
 ### 2026-09-08 — Notification Digest + Portal Handshake Simulator
 
 **✨ P2 — Daily share-notification digest (iter169)**

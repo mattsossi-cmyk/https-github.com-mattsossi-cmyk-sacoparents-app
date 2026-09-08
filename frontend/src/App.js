@@ -60,6 +60,7 @@ import ProfessionalJointAlignmentBulk from "@/pages/ProfessionalJointAlignmentBu
 import ProfessionalJointAlignmentBulkHistory from "@/pages/ProfessionalJointAlignmentBulkHistory";
 import ShareWithProfessional from "@/pages/ShareWithProfessional";
 import SharedWithProfessionals from "@/pages/SharedWithProfessionals";
+import ForPortalEngineers from "@/pages/ForPortalEngineers";
 import AdminProfessionalsEditor from "@/pages/AdminProfessionalsEditor";
 import Orientation from "@/pages/Orientation";
 import ClaimAccount from "@/pages/ClaimAccount";
@@ -197,6 +198,7 @@ function AppRoutes() {
           path="/shared-with-professionals"
           element={<ProtectedRoute><SharedWithProfessionals /></ProtectedRoute>}
         />
+        <Route path="/for-portal-engineers" element={<ForPortalEngineers />} />
         <Route path="/admin/professionals" element={<AdminProfessionalsEditor />} />
         <Route path="/joint-agreement/shared/:token" element={<JointAgreementShared />} />
         <Route path="/foundation/shared/:token" element={<FoundationStatementShared />} />

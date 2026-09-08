@@ -3279,3 +3279,79 @@ def send_parent_share_digest_email(
         text=plain,
         failure_message="Digest delivery failed.",
     )
+
+
+def send_parent_share_access_expiring_email(
+    *,
+    to_email: str,
+    parent_name: Optional[str],
+    professional_name: str,
+    professional_email: Optional[str],
+    report_titles: List[str],
+    access_expires_at: Any,
+) -> None:
+    """Fired ONCE per invitation, 7 days ahead of `access_expiration`.
+    Gives the parent a chance to Extend before the professional's
+    portal access silently ends."""
+    salutation = (
+        f"Hi {_html.escape(parent_name.split()[0])},"
+        if parent_name else "Hi,"
+    )
+    exp_str = ""
+    if hasattr(access_expires_at, "isoformat"):
+        try:
+            exp_str = access_expires_at.strftime("%B %d, %Y")
+        except Exception:
+            exp_str = access_expires_at.isoformat()[:10]
+    elif isinstance(access_expires_at, str) and access_expires_at:
+        exp_str = access_expires_at[:10]
+
+    titles_html = ", ".join(_html.escape(t) for t in report_titles[:6])
+    if len(report_titles) > 6:
+        titles_html += f" (+{len(report_titles) - 6} more)"
+    if not titles_html:
+        titles_html = "your shared report"
+    titles_plain = ", ".join(report_titles) or "your shared report"
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">{salutation}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">Heads up — the report access you granted '
+        f'<strong>{_html.escape(professional_name)}</strong>'
+        f'{(" (" + _html.escape(professional_email) + ")") if professional_email else ""}'
+        f' is scheduled to expire on <strong>{_html.escape(exp_str) or "the scheduled date"}</strong>.</p>'
+        f'<p style="font-size:14px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">'
+        f'Reports covered: <strong>{titles_html}</strong>.</p>'
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;'
+        'margin:0 0 22px 0;">If they still need portal access, hit '
+        '<strong>Extend</strong> on the Shared With Professionals '
+        "page — you can push the expiration out by 7, 30, 60, or 90 "
+        "days at any time. Once access expires you can always send a "
+        "fresh invitation later.</p>"
+    )
+    plain = (
+        f"{salutation}\n\n"
+        f"The report access you granted {professional_name}"
+        f"{(' (' + (professional_email or '') + ')') if professional_email else ''}"
+        f" is scheduled to expire on {exp_str or 'the scheduled date'}.\n\n"
+        f"Reports covered: {titles_plain}.\n\n"
+        "Extend or revoke anytime:\n"
+        "https://sacoparentsapp.online/shared-with-professionals\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    html = _branded_html(
+        headline="Access is expiring in 7 days",
+        body_html=body_html,
+        cta_label="Extend or revoke",
+        cta_url="https://sacoparentsapp.online/shared-with-professionals",
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Heads up: {professional_name}'s access expires soon",
+        html=html,
+        text=plain,
+        failure_message="Access-expiring warning delivery failed.",
+    )
+

@@ -2966,3 +2966,253 @@ async def list_professional_directory_invites(
             for row in rows
         ],
     }
+
+
+
+# =========================== Joint Alignment consent split =========================== #
+# Per the family-safety spec, comparison and professional-release are
+# TWO distinct actions requiring TWO separate consents:
+#
+#   * `comparison_consent` — parent authorises the app to compare
+#     their answers with their co-parent's. Does not authorise anyone
+#     outside the household to see the resulting report.
+#   * `release_consent` — parent authorises the app to hand the
+#     Joint Alignment Report to a NAMED professional. Requires a
+#     matching consent from the co-parent for the same professional
+#     before the release actually happens.
+#
+# Guardrails:
+#   * Consent to comparison DOES NOT auto-authorise professional access.
+#   * A parent can revoke either consent at any time before release.
+#   * Every consent row records `consent_version` verbatim so future
+#     legal-copy edits don't retroactively rewrite what was agreed.
+#
+
+_JA_COMPARISON_CONSENT_TEXT = (
+    "I authorize SA CoParents to compare the selected completed reports "
+    "from both participating parents for the limited purpose of "
+    "identifying shared child-focused goals, different perspectives, "
+    "and topics that may benefit from professional discussion. I "
+    "understand that the comparison is not a determination of truth, "
+    "parental fitness, custody, or the best interests of the child."
+)
+_JA_RELEASE_CONSENT_TEXT_TEMPLATE = (
+    "I authorize the completed Joint Alignment Report to be made "
+    "available to {professional_name} through SA CoParents Align. "
+    "This authorization applies only to the completed Joint Alignment "
+    "Report and does not provide access to my raw answers, private "
+    "journal, AI Coach conversations, protected safety responses, or "
+    "other unselected reports."
+)
+_JA_CONSENT_VERSION = "2026-09-08"
+
+
+class ComparisonConsentBody(BaseModel):
+    consented: bool = True
+    """Set to `false` to revoke a previously-recorded consent. Default
+    `true` because the wizard is affirmative-action only."""
+
+
+class ReleaseConsentBody(BaseModel):
+    professional_name: str = Field(..., min_length=1, max_length=160)
+    """The exact display name of the professional the parent is
+    releasing the Joint Alignment Report to. Case-insensitive when
+    the sibling app resolves eligibility, but stored verbatim for
+    audit."""
+    consented: bool = True
+
+
+async def _resolve_parent_in_case(
+    db: AsyncIOMotorDatabase, *, case_id: str, current_email: str,
+) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    """Fetch the case + locate the parent row whose email matches the
+    caller. Raises 404 when the case is missing / the caller isn't a
+    party."""
+    case = await db[_CASES_COLL].find_one({"case_id": case_id})
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found.")
+    email_lower = (current_email or "").lower()
+    parent = next(
+        (p for p in case.get("parents") or []
+         if (p.get("email") or "").lower() == email_lower),
+        None,
+    )
+    if not parent:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a party to this case.",
+        )
+    return case, parent
+
+
+def _consent_shape(parent: Dict[str, Any]) -> Dict[str, Any]:
+    """Public per-parent consent shape."""
+    return {
+        "email": parent.get("email"),
+        "name": parent.get("name"),
+        "comparison": {
+            "consented": bool(parent.get("comparison_consent_at")),
+            "consented_at": _iso(parent.get("comparison_consent_at")),
+            "revoked_at": _iso(parent.get("comparison_consent_revoked_at"))
+                if parent.get("comparison_consent_revoked_at") else None,
+            "version": parent.get("comparison_consent_version"),
+        },
+        "release": {
+            "consented": bool(parent.get("release_consent_at")),
+            "consented_at": _iso(parent.get("release_consent_at")),
+            "revoked_at": _iso(parent.get("release_consent_revoked_at"))
+                if parent.get("release_consent_revoked_at") else None,
+            "professional_name": parent.get("release_consent_professional_name"),
+            "version": parent.get("release_consent_version"),
+        },
+    }
+
+
+@router.post("/joint-alignment/cases/{case_id}/comparison-consent")
+async def record_comparison_consent(
+    body: ComparisonConsentBody,
+    case_id: str = Path(..., min_length=6, max_length=32),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """The caller records (or revokes) their consent to have their
+    answers compared with the co-parent's. Independent from
+    release-to-professional consent."""
+    case, parent = await _resolve_parent_in_case(
+        db, case_id=case_id, current_email=current.email or "",
+    )
+    now = _now()
+    parent_email_lower = (parent.get("email") or "").lower()
+    set_fields: Dict[str, Any] = {}
+    if body.consented:
+        set_fields["parents.$.comparison_consent_at"] = now
+        set_fields["parents.$.comparison_consent_version"] = _JA_CONSENT_VERSION
+        set_fields["parents.$.comparison_consent_revoked_at"] = None
+    else:
+        # Revoke — keep original consent-at for audit, add revoked_at.
+        set_fields["parents.$.comparison_consent_revoked_at"] = now
+
+    await db[_CASES_COLL].update_one(
+        {"case_id": case_id, "parents.email": parent.get("email")},
+        {"$set": set_fields},
+    )
+    fresh = await db[_CASES_COLL].find_one({"case_id": case_id})
+    fresh_parent = next(
+        (p for p in fresh.get("parents") or []
+         if (p.get("email") or "").lower() == parent_email_lower),
+        parent,
+    )
+    return {
+        "case_id": case_id,
+        "consent": _consent_shape(fresh_parent),
+        "consent_text": _JA_COMPARISON_CONSENT_TEXT,
+    }
+
+
+@router.post("/joint-alignment/cases/{case_id}/release-consent")
+async def record_release_consent(
+    body: ReleaseConsentBody,
+    case_id: str = Path(..., min_length=6, max_length=32),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """The caller records (or revokes) their consent to release the
+    resulting Joint Alignment Report to a NAMED professional.
+    Distinct from comparison consent — a parent may consent to
+    compare without consenting to release."""
+    professional_name = body.professional_name.strip()
+    case, parent = await _resolve_parent_in_case(
+        db, case_id=case_id, current_email=current.email or "",
+    )
+    now = _now()
+    parent_email_lower = (parent.get("email") or "").lower()
+    set_fields: Dict[str, Any] = {}
+    if body.consented:
+        set_fields["parents.$.release_consent_at"] = now
+        set_fields["parents.$.release_consent_professional_name"] = professional_name
+        set_fields["parents.$.release_consent_version"] = _JA_CONSENT_VERSION
+        set_fields["parents.$.release_consent_revoked_at"] = None
+    else:
+        set_fields["parents.$.release_consent_revoked_at"] = now
+
+    await db[_CASES_COLL].update_one(
+        {"case_id": case_id, "parents.email": parent.get("email")},
+        {"$set": set_fields},
+    )
+    fresh = await db[_CASES_COLL].find_one({"case_id": case_id})
+    fresh_parent = next(
+        (p for p in fresh.get("parents") or []
+         if (p.get("email") or "").lower() == parent_email_lower),
+        parent,
+    )
+    return {
+        "case_id": case_id,
+        "consent": _consent_shape(fresh_parent),
+        "consent_text": _JA_RELEASE_CONSENT_TEXT_TEMPLATE.format(
+            professional_name=professional_name,
+        ),
+    }
+
+
+@router.get("/joint-alignment/cases/{case_id}/consent-status")
+async def get_case_consent_status(
+    case_id: str = Path(..., min_length=6, max_length=32),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return the consent state for BOTH parents on this case.
+    Accessible to any party in the case OR the case mediator so the
+    /mine console can show progress.
+
+    Eligibility flags rolled up at the top of the response:
+      * `comparison_eligible` — both parents' `comparison.consented`
+        AND neither has revoked.
+      * `release_eligible` — both parents' `release.consented` for
+        the SAME professional_name AND neither has revoked.
+    """
+    case = await db[_CASES_COLL].find_one({"case_id": case_id})
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found.")
+    parties = {
+        (p.get("email") or "").lower() for p in case.get("parents") or []
+    }
+    mediator_id = (case.get("professional") or {}).get("user_id")
+    caller_email = (current.email or "").lower()
+    is_party = caller_email in parties
+    is_mediator = bool(mediator_id and mediator_id == current.user_id)
+    if not (is_party or is_mediator):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a party to this case.",
+        )
+
+    per_parent = [_consent_shape(p) for p in case.get("parents") or []]
+
+    def _consent_active(row: Dict[str, Any], kind: str) -> bool:
+        block = row.get(kind) or {}
+        return bool(block.get("consented")) and not block.get("revoked_at")
+
+    all_comp = all(_consent_active(r, "comparison") for r in per_parent)
+    comparison_eligible = bool(per_parent) and all_comp
+
+    release_pros = {r["release"]["professional_name"] for r in per_parent
+                    if _consent_active(r, "release")}
+    release_eligible = (
+        bool(per_parent)
+        and all(_consent_active(r, "release") for r in per_parent)
+        and len(release_pros) == 1
+    )
+    return {
+        "case_id": case_id,
+        "consent_version": _JA_CONSENT_VERSION,
+        "parents": per_parent,
+        "comparison_eligible": comparison_eligible,
+        "release_eligible": release_eligible,
+        "release_professional_name": (
+            next(iter(release_pros)) if release_eligible else None
+        ),
+        "consent_texts": {
+            "comparison": _JA_COMPARISON_CONSENT_TEXT,
+            "release_template": _JA_RELEASE_CONSENT_TEXT_TEMPLATE,
+        },
+    }

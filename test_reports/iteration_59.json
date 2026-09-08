@@ -1,0 +1,33 @@
+{
+  "summary": "Iter171 verified end-to-end. Backend: all 9 iter171 pytest tests green (access-expiring sweep flip + warn+dedupe, digest preview 200/401, JA consent-split comparison/release/status/revoke/403). Regression iter168+169+170 = 35/35 green. Combined 44/44 in ~63s. Direct curl of /api/parent/notification-mode/preview-digest with parent1 JWT returns 200 {delivered:true, source:'demo_sample', event_count:5}; unauth returns 401. Frontend: /for-portal-engineers is public and renders with data-testid=for-portal-engineers-page; all six required sections (portal-eng-title, section-auth, section-permission-check, section-events, section-cli, portal-eng-contact-email) visible; 38 code blocks present (>=5 required); no horizontal overflow at 1920px nor 390px (scrollWidth==clientWidth==390). /shared-with-professionals renders 'Send me a test digest' button (data-testid=notification-mode-preview) inside notification-mode-card; JS-triggered click fires POST /api/parent/notification-mode/preview-digest -> 200 with expected payload — integration verified.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Any authed page (incl. /shared-with-professionals) and public /for-portal-engineers", "issues": ["Global 'Just so we're on the same page' disclaimer modal overlays the page and intercepts real user clicks (a native Playwright .click(force=True) landed on a Privacy Policy link inside the modal instead of the underlying button). This is a pre-existing app-wide modal — not new in iter171 — but it does block first-interaction clicks on the new 'Send me a test digest' button until the user acknowledges. Consider suppressing this modal on the public /for-portal-engineers route (external portal engineers shouldn't see a legal-disclaimer overlay before they can read the contract docs)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter171_sweep_preview_consent.py",
+    "/app/test_reports/pytest/iter171.xml"
+  ],
+  "action_items": [
+    "Optional: suppress the global legal-disclaimer modal on the public /for-portal-engineers route so external portal engineers can read the handshake docs without dismissing it.",
+    "Optional: on /shared-with-professionals, the disclaimer modal should be dismissed before rendering interactive controls, OR the notification-mode card should be pushed below the fold — currently a first-time user's click on 'Send me a test digest' is captured by the modal."
+  ],
+  "critical_code_review_comments": [
+    "access_expiring_sweep.flip_expired_invitations correctly cascades to professional_report_permissions and is idempotent — verified.",
+    "_iter_warning_candidates uses a ±24h band and dedupes via access_expiring_warning_sends collection — dedupe path verified by dry-run twice.",
+    "parent_professional_invitations.preview-digest handler returns source='demo_sample' + event_count=5 for a user with zero recent events — matches spec.",
+    "joint_alignment_routes consent-split: comparison_eligible is only True when BOTH parents consented AND neither revoked; release_eligible additionally requires SAME professional_name — behaviour matched by the 9-test suite.",
+    "Revoke branch preserves historical consented_at and only writes revoked_at (audit-trail spec) — verified by test_revoke_comparison_clears_eligibility_flag."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (44/44 including iter168-171 regression)", "frontend": "100% (portal doc page + digest-preview integration)"},
+  "test_credentials": "parent1@test.com / TestPass123! (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "Pytest fixtures create TEST_ prefixed users + JA cases per test; nothing manual.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter171 is fully working. All four backlog items delivered: (1) preview-digest endpoint 200/401 with demo_sample fallback, (2) public /for-portal-engineers page overflow-free at 390px + 1920px with 38 copyable code blocks, (3) access-expiring sweep flip + warn+dedupe pure-Python functions all pass (background loop stays idle unless ACCESS_EXPIRING_SWEEP_ENABLED=1), (4) JA consent-split (comparison + release + status + revoke) with per-parent scoping and rollup eligibility flags. Only cosmetic caveat is the global disclaimer modal intercepting first-click on any page — pre-existing, not iter171."
+}

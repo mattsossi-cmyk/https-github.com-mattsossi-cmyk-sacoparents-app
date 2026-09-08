@@ -46,6 +46,7 @@ export default function SharedWithProfessionals() {
   const [busyId, setBusyId] = useState(null);
   const [prefs, setPrefs] = useState(null);       // {mode, explicit_pref, active_invitation_count, auto_threshold}
   const [prefsBusy, setPrefsBusy] = useState(false);
+  const [testDigestBusy, setTestDigestBusy] = useState(false);
 
   const load = async () => {
     setError(null);
@@ -85,6 +86,23 @@ export default function SharedWithProfessionals() {
       toast.error("Couldn't update notification mode.");
     } finally {
       setPrefsBusy(false);
+    }
+  };
+
+  const handleSendTestDigest = async () => {
+    setTestDigestBusy(true);
+    try {
+      const r = await api.post("/parent/notification-mode/preview-digest");
+      const src = r.data?.source === "demo_sample"
+        ? "with sample data (you have no recent activity)"
+        : `with your last ${r.data?.event_count || 0} events`;
+      toast.success(`Test digest sent to ${r.data?.to} ${src}.`);
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      logError("test digest send failed", err);
+      toast.error(typeof detail === "string" ? detail : "Couldn't send the test digest.");
+    } finally {
+      setTestDigestBusy(false);
     }
   };
 
@@ -277,6 +295,20 @@ export default function SharedWithProfessionals() {
                   Use automatic
                 </button>
               )}
+              <button
+                type="button"
+                onClick={handleSendTestDigest}
+                disabled={testDigestBusy}
+                data-testid="notification-mode-preview"
+                className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold text-[#3D1A78] hover:bg-[#F5F1FB] border border-transparent"
+                title="Send a sample digest email to your inbox"
+              >
+                {testDigestBusy ? (
+                  <><Loader2 size={11} className="animate-spin" /> Sending…</>
+                ) : (
+                  <><Mail size={11} /> Send me a test digest</>
+                )}
+              </button>
             </div>
           </div>
         )}

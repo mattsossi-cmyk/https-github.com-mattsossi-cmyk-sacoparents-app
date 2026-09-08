@@ -856,3 +856,87 @@ async def set_notification_mode_endpoint(
         db, parent_id=current.user_id, mode=body.mode,
     )
     return {"mode": resolved, "requested": body.mode}
+
+
+@router.post("/parent/notification-mode/preview-digest")
+async def send_test_digest(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Send the caller a SAMPLE digest email so they can eyeball
+    what tomorrow's rollup will look like. Rolls up the last 7
+    days of real events; if the parent has no events yet, sends a
+    demo payload with fictitious data so the styling / copy is
+    still visible."""
+    from parent_share_digest import _gather_events
+    from email_service import (
+        EmailNotConfigured, EmailSendError,
+        send_parent_share_digest_email,
+    )
+    if not current.email or "@" not in (current.email or ""):
+        raise HTTPException(status_code=400, detail="No verified email on file.")
+
+    end = _now()
+    start = end - timedelta(days=7)
+    events = await _gather_events(
+        db, parent_id=current.user_id, since=start, until=end,
+    )
+
+    if events:
+        # Real rollup from the caller's own recent activity.
+        invite_ids = {ev.get("invitation_id") for ev in events if ev.get("invitation_id")}
+        invite_lookup: Dict[str, Dict[str, Any]] = {}
+        async for inv in db[_INVITES_COLL].find({"invitation_id": {"$in": list(invite_ids)}}):
+            invite_lookup[inv.get("invitation_id")] = inv
+        perm_ids = {ev.get("permission_id") for ev in events if ev.get("permission_id")}
+        perm_lookup: Dict[str, Dict[str, Any]] = {}
+        async for p in db[_PERMS_COLL].find({"permission_id": {"$in": list(perm_ids)}}):
+            perm_lookup[p.get("permission_id")] = p
+        from parent_share_digest import _summarise_events
+        summary = _summarise_events(events, invite_lookup, perm_lookup)
+        source = "real_events_last_7_days"
+    else:
+        # Demo payload so preview always renders SOMETHING legible.
+        summary = {
+            "professionals": [
+                {
+                    "professional_name": "Adele van Wyk",
+                    "professional_email": "adele@example-mediation.co.za",
+                    "views": 3, "downloads": 1,
+                    "reports_touched": ["Foundation Statement",
+                                        "Communication Reflection"],
+                    "accepted": True, "declined": False,
+                },
+                {
+                    "professional_name": "Dr. Priya Naidoo",
+                    "professional_email": "priya@example.com",
+                    "views": 1, "downloads": 0,
+                    "reports_touched": ["Educational Needs Report"],
+                    "accepted": False, "declined": False,
+                },
+            ],
+            "total_events": 5, "total_views": 4, "total_downloads": 1,
+        }
+        source = "demo_sample"
+
+    try:
+        send_parent_share_digest_email(
+            to_email=current.email,
+            parent_name=current.name,
+            digest_day=(end - timedelta(days=1)).strftime("%Y-%m-%d"),
+            summary=summary,
+        )
+    except EmailNotConfigured:
+        raise HTTPException(
+            status_code=503,
+            detail="Email delivery isn't configured on this environment.",
+        )
+    except EmailSendError as exc:
+        raise HTTPException(status_code=502, detail=str(exc) or "Delivery failed.") from exc
+
+    return {
+        "delivered": True,
+        "to": current.email,
+        "source": source,
+        "event_count": summary["total_events"],
+    }
