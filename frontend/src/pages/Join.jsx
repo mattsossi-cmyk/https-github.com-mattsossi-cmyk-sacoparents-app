@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Mail } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import api, { formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { BrandLogo } from "@/components/Brand";
@@ -60,7 +61,7 @@ export default function Join() {
               You've been invited to participate in an SA CoParents Joint Report.
             </p>
             <p className="mt-4 leading-relaxed">
-              <strong>{info.inviter_name}</strong> has invited you to independently provide your perspective
+              <strong>{info.inviter_name}</strong>{info.professional_verified && <> <VerifiedBadge testId="invite-pro-verified-badge" className="align-middle" /></>} has invited you to independently provide your perspective
               regarding <strong>{info.child_name}</strong> on the subject of <strong>{info.subject_label}</strong>.
             </p>
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed" data-testid="invitation-privacy">

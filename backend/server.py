@@ -70,6 +70,8 @@ def public_user(u: dict) -> dict:
         "name": u.get("name", ""),
         "role": u.get("role", "parent"),
         "approved": u.get("approved", True),
+        "verification_level": u.get("verification_level", ""),
+        "credentials_verified": u.get("verification_level") == "credentials_verified",
     }
 
 
@@ -1100,12 +1102,14 @@ async def lookup_invitation(token: str):
     if invite_expired(inv):
         raise HTTPException(status_code=410, detail="This invitation has expired. Please ask the professional to send a fresh invitation.")
     report = await db.joint_reports.find_one({"id": inv["report_id"]}, {"_id": 0})
+    pro = await db.users.find_one({"_id": report["created_by"]}, {"verification_level": 1}) if report and report.get("created_by") else None
     return {
         "inviter_name": inv["inviter_name"],
         "invitee_name": inv["invitee_name"],
         "invitee_email": inv["invitee_email"],
         "child_name": report["child_name"] if report else "",
         "subject_label": report["subject_label"] if report else "",
+        "professional_verified": bool(pro and pro.get("verification_level") == "credentials_verified"),
     }
 
 
@@ -1599,7 +1603,35 @@ class PrepareIn(BaseModel):
 
 @api.get("/professionals")
 async def list_professionals(user=Depends(get_current_user)):
-    return await db.users.find({"role": "professional", "approved": {"$ne": False}}, {"_id": 0, "name": 1, "email": 1}).sort("name", 1).to_list(5000)
+    return await db.users.find({"role": "professional", "approved": {"$ne": False}}, {"_id": 0, "name": 1, "email": 1, "verification_level": 1}).sort("name", 1).to_list(5000)
+
+
+@api.get("/admin/professionals")
+async def list_approved_professionals(user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    docs = await db.users.find({"role": "professional", "approved": True}, {"password_hash": 0}).sort("name", 1).to_list(500)
+    return [{**public_user(u), "profile": u.get("profile", {}), "credentials_verified_at": u.get("credentials_verified_at", "")} for u in docs]
+
+
+class VerifyIn(BaseModel):
+    verified: bool = True
+
+
+@api.post("/admin/verify-credentials/{user_id}")
+async def verify_credentials(user_id: str, body: VerifyIn, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    now = datetime.now(timezone.utc).isoformat()
+    update = (
+        {"verification_level": "credentials_verified", "credentials_verified_at": now, "credentials_verified_by": user["_id"]}
+        if body.verified else
+        {"verification_level": "credentials_pending", "credentials_verified_at": "", "credentials_verified_by": ""}
+    )
+    res = await db.users.update_one({"_id": user_id, "role": "professional", "approved": True}, {"$set": update})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Approved professional not found")
+    return {"ok": True, "credentials_verified": body.verified}
 
 
 @api.get("/admin/pending-professionals")

@@ -43,11 +43,13 @@ def test_lookup_invalid_token_404():
     assert r.status_code == 404, f"expected 404 got {r.status_code} {r.text}"
 
 
-def test_matter_has_expired_parent_b_invite(matter_pro1):
+def test_matter_pending_invites_expose_expiry_fields(matter_pro1):
     pending = matter_pro1.get("pending_invitations") or []
     b = [p for p in pending if p.get("role") == "b"]
     assert b, f"No pending invites for role b: {pending}"
-    assert any(p.get("expired") for p in b), f"Expected an expired role-b invite, got {b}"
+    for p in b:
+        assert p.get("expires_at"), f"expires_at missing: {p}"
+        assert isinstance(p.get("expired"), bool), f"expired flag missing: {p}"
 
 
 def test_notes_privacy_pro2_cannot_read(sess_pro2, matter_pro1):

@@ -9,6 +9,8 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { AdminProfessionals } from "@/components/AdminProfessionals";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -202,6 +204,7 @@ export default function Dashboard() {
           </Link>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block" data-testid="user-email">{user?.email}</span>
+            {user?.credentials_verified && <VerifiedBadge />}
             <Button variant="outline" size="sm" onClick={async () => { await logout(); navigate("/"); }} data-testid="logout-btn">
               Sign out
             </Button>
@@ -305,6 +308,8 @@ export default function Dashboard() {
             </div>
           </section>
         )}
+
+        {user?.role === "admin" && <AdminProfessionals />}
 
         {isPro && (
           <section data-testid="circle-nav-section">

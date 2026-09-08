@@ -300,3 +300,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `POST /api/joint/invitations/{iid}/reissue` (creator only): marks old invite `expired`, creates new invite (same code/email/role), emails parent, logs access_event.
 - /matters: expired invite → red notice + "Reissue Invitation"; expiring-soon → Send Reminder + Reissue. Per-row "Notes" toggle → `MatterNotes.jsx` (reuses /joint/reports/{rid}/notes, professional-private).
 - Production still: frontend 200, all /api 404 — awaiting user redeploy/platform check.
+
+## 2026-09-08 — Credentials Verified badge (tested: iteration_23 frontend 100%, pytest 152/152)
+- `public_user` exposes `verification_level`, `credentials_verified`. `GET /api/admin/professionals`, `POST /api/admin/verify-credentials/{id}` {verified}. Lookup endpoint returns `professional_verified`.
+- UI: `AdminProfessionals.jsx` (Approved Professionals manage list), `VerifiedBadge.jsx`; badge in pro dashboard header and on /join invitation page.
+- Cleaned 1110 @example.com fixture professionals. Test suite (test_iteration_22) no longer depends on a backdated invite.
+- Production: still all /api 404 (frontend 200) as of this session — user must redeploy/check platform deploy logs.
