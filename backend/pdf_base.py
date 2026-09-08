@@ -15,6 +15,7 @@ Exports:
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -48,8 +49,14 @@ def _section_break(pdf) -> None:
     pdf.ln(1.5)
 
 
-_COPYRIGHT_LINE = "(c) 2026 sacoparentsalign.com - All rights reserved."
 _COPYRIGHT_URL = "https://sacoparentsalign.com"
+
+
+def _copyright_line() -> str:
+    """Compose the copyright line with the current UTC year — so we
+    don't hand-edit strings in January. Latin-1 safe (parens instead
+    of the ©-glyph)."""
+    return f"(c) {datetime.now(timezone.utc).year} sacoparentsalign.com - All rights reserved."
 
 
 def render_pdf_copyright(pdf) -> None:
@@ -68,7 +75,7 @@ def render_pdf_copyright(pdf) -> None:
         pdf.set_y(-6)
         pdf.set_font("Helvetica", "I", 6.5)
         pdf.set_text_color(133, 126, 156)   # #857E9C
-        safe_text = _safe(_COPYRIGHT_LINE)
+        safe_text = _safe(_copyright_line())
         # Snapshot the row's Y before we render so we can compute the
         # clickable rectangle *after* fpdf2 has centred the text.
         y_before = pdf.get_y()

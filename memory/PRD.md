@@ -27,6 +27,37 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Iter175 · Release Confirmation Email + Copyright Year Auto
+
+**🟡 P1 — Release confirmation email**
+- New `email_service.send_joint_alignment_release_confirmation()` —
+  neutral / clinical receipt sent to BOTH parents right after
+  `execute-release` succeeds. Includes case_id, assessment label,
+  professional name, released_at timestamp, and a
+  "review/extend/revoke" CTA linking to
+  `/shared-with-professionals`. HTML + plain-text bodies.
+- Wired into `execute-release` handler as a best-effort dispatch
+  (per-parent try/except so a single delivery failure never
+  aborts the release itself or blocks the co-parent's receipt).
+  Skipped entirely on the idempotent second call (which returns
+  `applied=false` before reaching the email loop).
+
+**🟡 P2 — Copyright year auto**
+- Backend: `pdf_base._copyright_line()` now composes the line
+  using `datetime.now(timezone.utc).year` at every render so the
+  PDF footer rolls over automatically on 1 Jan.
+- Frontend: `<GlobalCopyright />` now interpolates
+  `new Date().getFullYear()` — same auto-rollover for the web
+  footer. Screenshot confirmed `© 2026` today.
+- Coverage: `tests/test_iter175_release_email_and_year.py`
+  (4 tests, green): direct patch-based test on the email helper
+  (asserts to_email, subject, case_id, professional name, and
+  assessment label in the rendered HTML + plain text), plus
+  execute-release response contract checks and a year-in-line
+  assertion.
+
+
+## What's Implemented
 ### 2026-09-08 — Iter174 · Clickable PDF Copyright + Preview → Release Modal
 
 **🟡 P2 — PDF copyright as live hyperlink**

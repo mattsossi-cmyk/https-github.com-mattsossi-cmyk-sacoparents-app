@@ -3355,3 +3355,93 @@ def send_parent_share_access_expiring_email(
         failure_message="Access-expiring warning delivery failed.",
     )
 
+
+
+def send_joint_alignment_release_confirmation(
+    *,
+    to_email: str,
+    parent_name: Optional[str],
+    case_id: str,
+    assessment_type: str,
+    professional_name: str,
+    released_at: Any,
+) -> None:
+    """Confirmation email fired best-effort from `execute-release` to
+    BOTH parents so they have a receipt outside the app. Neutral,
+    non-celebratory copy. Never crashes the release itself — the
+    caller wraps this in try/except."""
+    salutation = (
+        f"Hi {_html.escape(parent_name.split()[0])},"
+        if parent_name else "Hi,"
+    )
+    when_str = ""
+    if hasattr(released_at, "strftime"):
+        try:
+            when_str = released_at.strftime("%B %d, %Y at %H:%M UTC")
+        except Exception:
+            when_str = str(released_at)[:19].replace("T", " ") + " UTC"
+    elif isinstance(released_at, str) and released_at:
+        when_str = released_at[:19].replace("T", " ") + " UTC"
+    else:
+        when_str = "just now"
+
+    label_map = {
+        "co-parenting": "Co-Parenting",
+        "communication": "Communication",
+        "educational": "Educational Needs",
+        "medical": "Medical Needs",
+        "psychological": "Psychological / Emotional",
+        "special-needs": "Special Needs",
+    }
+    assessment_label = label_map.get(assessment_type, assessment_type or "Joint Alignment")
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">{salutation}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">This is your receipt that the completed '
+        f'{_html.escape(assessment_label)} Joint Alignment Report on '
+        f'case <strong>{_html.escape(case_id)}</strong> has been '
+        f'released to <strong>{_html.escape(professional_name)}</strong>.</p>'
+        f'<p style="font-size:14px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">'
+        f'Released on <strong>{_html.escape(when_str)}</strong>.</p>'
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;'
+        'margin:0 0 12px 0;">'
+        "Review, extend, or revoke access anytime from your "
+        "<em>Shared with Professionals</em> page. "
+        "Nothing outside the completed Joint Alignment Report "
+        "was shared — your raw answers, journals, and AI-coach "
+        "conversations remain private to you.</p>"
+        '<p style="font-size:12px;line-height:1.5;color:#857E9C;'
+        'margin:0 0 22px 0;font-style:italic;">'
+        "This receipt is a record of consent, not a legal "
+        "determination. SA CoParents is an educational and "
+        "preparation tool, not legal advice or therapy.</p>"
+    )
+    plain = (
+        f"{salutation}\n\n"
+        f"This is your receipt that the completed {assessment_label} "
+        f"Joint Alignment Report on case {case_id} has been released "
+        f"to {professional_name}.\n\n"
+        f"Released on {when_str}.\n\n"
+        "Review, extend, or revoke access anytime:\n"
+        "https://sacoparentsapp.online/shared-with-professionals\n\n"
+        "Nothing outside the completed Joint Alignment Report was "
+        "shared. Your raw answers, journals, and AI-coach "
+        "conversations remain private to you.\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    html = _branded_html(
+        headline=f"Joint Alignment Report released - Case {case_id}",
+        body_html=body_html,
+        cta_label="Open Shared with Professionals",
+        cta_url="https://sacoparentsapp.online/shared-with-professionals",
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Joint Alignment Report released to {professional_name}",
+        html=html,
+        text=plain,
+        failure_message="Release confirmation delivery failed.",
+    )

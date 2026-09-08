@@ -3338,6 +3338,34 @@ async def execute_case_release(
         "released_at": _iso(now),
     })
 
+    # Best-effort receipt email to BOTH parents. Never crash the
+    # release call on a Resend outage. Skips any parent row with a
+    # missing / invalid email.
+    try:
+        from email_service import (
+            send_joint_alignment_release_confirmation,
+        )
+        for p in parents:
+            addr = (p.get("email") or "").strip()
+            if not addr or "@" not in addr:
+                continue
+            try:
+                send_joint_alignment_release_confirmation(
+                    to_email=addr,
+                    parent_name=p.get("name"),
+                    case_id=case_id,
+                    assessment_type=case.get("assessment_type") or "",
+                    professional_name=professional_name,
+                    released_at=now,
+                )
+            except Exception:  # noqa: BLE001
+                logger.warning(
+                    "release confirmation email failed for %s on case %s",
+                    addr, case_id, exc_info=True,
+                )
+    except Exception:  # noqa: BLE001
+        logger.exception("release confirmation dispatch failed")
+
     return {
         "case_id": case_id,
         "applied": True,
