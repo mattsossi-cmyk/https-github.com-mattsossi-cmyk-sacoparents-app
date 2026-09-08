@@ -326,3 +326,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-09-08 — Digest preferences (pytest 152/152; iteration_26 frontend)
 - `GET/PUT /api/me/preferences` {digest_frequency: daily|weekly|off} stored on user. `run_expiry_digests` skips "off" and sends "weekly" only on Mondays (UTC weekday 0). `DigestPreference.jsx` on /matters.
 - Production still all /api 404 (frontend 200) — unchanged all session.
+
+## 2026-09-08 — Weekly caseload summary (pytest 152/152; iteration_27 frontend)
+- `POST /api/cron/weekly-summary` (Mon 08:00 America/Chicago in crons.yml; 3 crons total). `run_weekly_summaries`: per approved professional (skips @example.com fixtures, weekly_summary=false), one email per ISO week: counts (ready / awaiting one / awaiting both / notes added this week) + table of active matters (child by initial). Dedup cron_runs {job:'weekly-summary-sent', pro_id, week}.
+- Preferences now {digest_frequency, weekly_summary}; `DigestPreference.jsx` has On/Off switch row.
+- Purged 2088 @example.com fixture users + 390 reports + 4268 invites. Test suite recreates fixtures each run.
+- Production still all /api 404.

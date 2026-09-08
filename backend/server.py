@@ -225,20 +225,32 @@ DIGEST_CHOICES = ("daily", "weekly", "off")
 
 
 class PreferencesIn(BaseModel):
-    digest_frequency: str
+    digest_frequency: str | None = None
+    weekly_summary: bool | None = None
+
+
+def _prefs(user: dict) -> dict:
+    return {"digest_frequency": user.get("digest_frequency") or "daily", "weekly_summary": user.get("weekly_summary", True)}
 
 
 @api.get("/me/preferences")
 async def get_preferences(user=Depends(get_current_user)):
-    return {"digest_frequency": user.get("digest_frequency") or "daily"}
+    return _prefs(user)
 
 
 @api.put("/me/preferences")
 async def update_preferences(body: PreferencesIn, user=Depends(get_current_user)):
-    if body.digest_frequency not in DIGEST_CHOICES:
-        raise HTTPException(status_code=400, detail="Choose daily, weekly, or off")
-    await db.users.update_one({"_id": user["_id"]}, {"$set": {"digest_frequency": body.digest_frequency}})
-    return {"ok": True, "digest_frequency": body.digest_frequency}
+    update = {}
+    if body.digest_frequency is not None:
+        if body.digest_frequency not in DIGEST_CHOICES:
+            raise HTTPException(status_code=400, detail="Choose daily, weekly, or off")
+        update["digest_frequency"] = body.digest_frequency
+    if body.weekly_summary is not None:
+        update["weekly_summary"] = body.weekly_summary
+    if not update:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+    await db.users.update_one({"_id": user["_id"]}, {"$set": update})
+    return {"ok": True, **_prefs({**user, **update})}
 
 
 @api.post("/auth/refresh")
@@ -2008,6 +2020,96 @@ def _digest_row(report: dict, inv: dict, now: datetime) -> str:
     child_ref = f"{child[0].upper()}." if child else "child"
     parent = "Parent 1" if inv["role"] == "a" else "Parent 2"
     return f"<li><strong>{escape(report.get('case_code') or report['id'])}</strong> ({escape(report.get('subject_label', ''))}, matter for {escape(child_ref)}) &mdash; invitation to {parent} {when}</li>"
+
+
+@api.post("/cron/weekly-summary")
+async def cron_weekly_summary(request: Request):
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    ack = await _cron_accept(request, "weekly-summary")
+    if ack.get("duplicate"):
+        return ack
+    asyncio.create_task(run_weekly_summaries())
+    return ack
+
+
+def _matter_state(report: dict, pending: list, now: datetime) -> tuple[str, str]:
+    if report.get("status") == "ready":
+        return "ready", "Report ready"
+    a = bool(report.get("responses", {}).get("a"))
+    b = bool(report.get("responses", {}).get("b"))
+    if a and not b:
+        key, label = "awaiting_b", "Awaiting Parent 2"
+    elif b and not a:
+        key, label = "awaiting_a", "Awaiting Parent 1"
+    else:
+        key, label = "awaiting_both", "Awaiting both parents"
+    expiring = [i for i in pending if _parse_iso(i["created_at"]) + timedelta(days=INVITE_EXPIRY_DAYS - INVITE_EXPIRING_SOON_DAYS) <= now]
+    if expiring:
+        label += f" &middot; {len(expiring)} invitation{'s' if len(expiring) != 1 else ''} expiring/expired"
+    return key, label
+
+
+def _summary_row(report: dict, label: str) -> str:
+    child = (report.get("child_name") or "").strip()
+    child_ref = f"{child[0].upper()}." if child else "child"
+    return (
+        f"<tr><td style=\"padding:6px 8px;border-bottom:1px solid #eee\"><strong>{escape(report.get('case_code') or report['id'][:8])}</strong><br>"
+        f"<span style=\"color:#666;font-size:12px\">{escape(report.get('subject_label', ''))} &middot; matter for {escape(child_ref)}</span></td>"
+        f"<td style=\"padding:6px 8px;border-bottom:1px solid #eee\">{label}</td></tr>"
+    )
+
+
+async def _weekly_summary_html(pro: dict, reports: list, now: datetime) -> str:
+    rids = [r["id"] for r in reports]
+    pending: dict[str, list] = {}
+    async for i in db.invitations.find({"report_id": {"$in": rids}, "status": "pending"}, {"_id": 0}):
+        pending.setdefault(i["report_id"], []).append(i)
+    week_ago = (now - timedelta(days=7)).isoformat()
+    new_notes = await db.professional_notes.count_documents({"author_id": pro["_id"], "created_at": {"$gte": week_ago}})
+    counts = {"ready": 0, "awaiting_a": 0, "awaiting_b": 0, "awaiting_both": 0}
+    rows = []
+    for r in sorted(reports, key=lambda x: x.get("created_at", "")):
+        key, label = _matter_state(r, pending.get(r["id"], []), now)
+        counts[key] += 1
+        rows.append(_summary_row(r, label))
+    return (
+        '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+        f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
+        f"<p>Here is your Monday overview of <strong>{len(reports)} active family matter{'s' if len(reports) != 1 else ''}</strong>.</p>"
+        f"<p style=\"font-size:14px\"><strong>{counts['ready']}</strong> report{'s' if counts['ready'] != 1 else ''} ready &middot; "
+        f"<strong>{counts['awaiting_a'] + counts['awaiting_b']}</strong> awaiting one parent &middot; "
+        f"<strong>{counts['awaiting_both']}</strong> awaiting both parents &middot; "
+        f"<strong>{new_notes}</strong> private note{'s' if new_notes != 1 else ''} added this week</p>"
+        f"<table style=\"border-collapse:collapse;width:100%;font-size:14px\">{''.join(rows)}</table>"
+        f'<p><a href="{app_url()}/matters" style="display:inline-block;background:#5B2A86;color:#ffffff;'
+        'padding:12px 24px;text-decoration:none;border-radius:6px;margin-top:12px">Open Family Matters</a></p>'
+        f'<p style="font-size:12px;color:#888">Weekly caseload summary sent by {escape(EMAIL_FROM_NAME)}. '
+        f'Turn this off at {app_url()}/matters. Children are shown by initial only; parent responses are never included in email.</p>'
+        "</td></tr></table>"
+    )
+
+
+async def run_weekly_summaries() -> None:
+    now = datetime.now(timezone.utc)
+    week = now.strftime("%G-W%V")
+    by_pro: dict[str, list] = {}
+    async for r in db.joint_reports.find({"archived": {"$ne": True}, "created_by": {"$ne": None}}, {"_id": 0}):
+        by_pro.setdefault(r["created_by"], []).append(r)
+    for pro_id, reports in by_pro.items():
+        if await db.cron_runs.find_one({"job": "weekly-summary-sent", "pro_id": pro_id, "week": week}):
+            continue
+        pro = await db.users.find_one({"_id": pro_id, "role": "professional", "approved": True})
+        if not pro or not pro.get("weekly_summary", True) or pro["email"].endswith("@example.com"):
+            continue
+        try:
+            await send_email(
+                to=pro["email"],
+                subject=f"Weekly caseload summary: {len(reports)} active matter{'s' if len(reports) != 1 else ''} - {EMAIL_FROM_NAME}",
+                html=await _weekly_summary_html(pro, reports, now),
+            )
+            await db.cron_runs.insert_one({"job": "weekly-summary-sent", "pro_id": pro_id, "week": week, "count": len(reports), "at": now.isoformat()})
+        except Exception:
+            logger.warning(f"Weekly summary not sent to {pro['email']}")
 
 
 async def run_expiry_digests() -> None:

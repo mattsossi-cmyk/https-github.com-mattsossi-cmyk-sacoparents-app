@@ -1,0 +1,18 @@
+{
+  "summary": "Frontend-only test of new 'Monday caseload summary' weekly-summary-toggle on /matters. All acceptance criteria PASS. Initial state: toggle 'On' (aria-checked=true), hint 'Every Monday: status of every active matter'. Click 1 -> 'Off' (aria-checked=false), toast 'Weekly caseload summary turned off', hint 'No weekly overview email'. Reload -> still 'Off' (persisted). Click 2 -> 'On' (aria-checked=true), toast 'Weekly caseload summary turned on', hint 'Every Monday: status of every active matter'. Regression: digest-option-daily still aria-checked=true (Daily selected); h1 'My Family Matters', filter chips (All Active, Awaiting Both Parents, Awaiting Parent 1/2, Report Ready, Expiring Invitations, Archived), matter card 'Matter for V. SA-EDU-642310', and 'Search My Private Notes' all render. Left toggle in On state as instructed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "DigestPreference.jsx GET /me/preferences fallback silently sets defaults on error (no toast) — could mask backend outage.",
+    "The switch button uses role='switch' but no aria-label; screen readers only get the visible 'On'/'Off' text. Consider aria-label='Monday caseload summary'."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "approval.test.pro1@gmail.com / TestPass2026! via /auth (Sign in tab)",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Weekly caseload summary toggle fully functional and persists via PUT /api/me/preferences. Left in On state; digest_frequency=daily."
+}
