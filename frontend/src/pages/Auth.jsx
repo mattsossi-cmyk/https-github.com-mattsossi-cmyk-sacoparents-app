@@ -38,7 +38,7 @@ export default function Auth() {
       } else if (mode === "forgot") {
         await api.post("/auth/forgot-password", { email });
         setMode("reset");
-        toast.success("If an account exists for that email, a verification code is on its way.");
+        toast.success("Check your inbox — your 6-digit verification code is on its way (valid for 10 minutes).");
         return;
       } else {
         await api.post("/auth/reset-password", { email, code: resetCode, new_password: newPassword });

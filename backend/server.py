@@ -33,7 +33,7 @@ from joint_engine import generate_joint_report, generate_agreement, sample_media
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
-from email_utils import send_email, EMAIL_FROM_NAME
+from email_utils import send_email, EMAIL_FROM_NAME, FIXTURE_EMAIL_RE
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -189,7 +189,7 @@ async def register(body: RegisterIn, response: Response):
         user["agreements_accepted_at"] = user["created_at"]
         user["profile"] = _professional_profile(body)
     await db.users.insert_one(user)
-    if role == "professional":
+    if role == "professional" and not FIXTURE_EMAIL_RE.search(email):
         await _notify_admin_new_professional(user)
     set_auth_cookies(response, uid, email)
     return public_user(user)
@@ -326,8 +326,12 @@ async def forgot_password(body: ForgotIn):
                 f'ask for your password by email.</p></td></tr></table>')
         try:
             await send_email(to=email, subject=subject, html=html)
-        except Exception:
+        except HTTPException as e:
             logger.warning(f"Password-reset email not sent for {email}")
+            await db.password_resets.delete_many({"email": email})
+            if e.status_code == 503:
+                raise HTTPException(status_code=503, detail="We couldn't send your verification code right now because our email service is busy. Please try again in a few minutes.")
+            raise HTTPException(status_code=502, detail="We couldn't send your verification code. Please try again shortly or contact support.")
     return {"ok": True, "detail": "If an account exists for that email, a verification code is on its way."}
 
 

@@ -343,3 +343,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `GET /api/verify/{code}/qr.png` (public, cached 1d) → QR to /verify?code=. Invitation email now embeds QR + verify link; Joint Report PDFs show QR top-right ("Scan to verify" + case code) via `_verify_qr_block`, driven by `verify` key from `_verify_info(doc)`. Dependency: qrcode[pil] (requirements.txt updated).
 - `tests/conftest.py`: `pytest_sessionfinish` (controller only under xdist) purges @example.com / @x.com fixture users + their reports/invites/notes/cases/connections/cron_runs. Suite now leaves DB clean (only panel.test.pro pending).
 - Production still stale (no /api/health build id yet).
+
+## 2026-09-08 — Forgot-password reliability (pytest 152/152; iteration_28)
+- Root cause of "no passcode": Emergent email API 429 rate-limited (test suites burned quota) and forgot_password swallowed the failure. Fixes: send_email retries up to 3x on 429 (2s/4s backoff) then raises 503 with honest message; forgot_password surfaces 503/502 and deletes the stale reset record; fixture domains (@example.com/@x.com/@example.org) skip the provider entirely (FIXTURE_EMAIL_RE) incl. admin new-registration notifications. Auth.jsx toast updated.
+- Verified: owner email reset request → provider 202 after one 429 retry.

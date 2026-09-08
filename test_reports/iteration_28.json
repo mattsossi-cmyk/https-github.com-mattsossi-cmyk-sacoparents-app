@@ -1,0 +1,19 @@
+{
+  "summary": "Full backend+frontend test of forgot-password/reset-password flow. Backend: 8/8 pytest tests pass (fixture-domain forgot returns 200 and writes password_resets doc; wrong code=400 'Invalid or expired verification code'; expired code=400; short password=400; no doc=400; happy-path reset+relogin works; login lockout is cleared on reset; unknown email returns 200 to prevent enumeration). Frontend: /auth forgot-password-link switches to 'Reset your password' heading with forgot-info text; submitting fixture email qa.reset.<rand>@example.com produces toast 'Check your inbox — your 6-digit verification code is on its way (valid for 10 minutes).' and transitions to 'Enter your code' screen with reset-code-input + new-password-input visible. Fixture domain @example.com correctly skipped by provider (email_utils.FIXTURE_EMAIL_RE).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/test_password_reset.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py forgot_password: on 502/503 from send_email the password_resets doc is deleted (good) but the outer response still returns the generic 'ok:true' text only when no exception — the raise path returns 503/502 correctly. Behavior matches spec.",
+    "email_utils.send_email retries up to 3 times on 429 with 2s/4s backoff; consider capping total wait or making it configurable so a single forgot request doesn't block a request thread ~6s.",
+    "reset_password uses constant-time-ish sha256 hash compare via != — acceptable since code_hash is sha256 hex; still, hmac.compare_digest would be defense-in-depth."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (8/8)", "frontend": "100%"},
+  "test_credentials": "none — fixture registrations at @example.com",
+  "seed_data_creation": "Multiple pwreset_*@example.com and qa.reset.*@example.com fixture users created via /api/auth/register (session-end conftest purges @example.com).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Forgot/reset flow verified end-to-end. Backend test file is /app/backend/tests/test_password_reset.py (8 tests, all passing). Fixture-domain regex in email_utils prevents provider calls to @example.com/@x.com/@example.org."
+}

@@ -1,4 +1,5 @@
 """Email delivery + outbound-content safety checks (extracted from server.py)."""
+import asyncio
 import ipaddress
 import logging
 import os
@@ -105,23 +106,37 @@ def _assert_safe_email(subject: str, html: str) -> None:
         _check_anchor_matches_target(href, text)
 
 
+FIXTURE_EMAIL_RE = re.compile(r"@(example\.com|x\.com|example\.org)$", re.I)
+
+
 async def send_email(*, to: str, subject: str, html: str, reply_to: str | None = None) -> str | None:
     _assert_safe_email(subject, html)
+    if FIXTURE_EMAIL_RE.search(to):
+        logger.info(f"Skipping email to fixture address {to}")
+        return None
     payload = {"to": [to], "subject": subject, "html": html, "from_name": EMAIL_FROM_NAME}
     if reply_to or EMAIL_REPLY_TO:
         payload["contact_email"] = reply_to or EMAIL_REPLY_TO
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(
-                f"{EMAIL_BASE_URL}/api/v1/email/send",
-                headers={"X-Email-Key": EMAIL_KEY},
-                json=payload,
-            )
-        resp.raise_for_status()
-        return resp.json().get("id")
-    except httpx.HTTPStatusError as e:
-        logger.error(f"Email send failed: {e.response.status_code} {e.response.text}")
-        raise HTTPException(status_code=502, detail="Failed to send email")
-    except Exception as e:
-        logger.error(f"Email send error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to send email")
+    last_status = None
+    for attempt in range(3):
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    f"{EMAIL_BASE_URL}/api/v1/email/send",
+                    headers={"X-Email-Key": EMAIL_KEY},
+                    json=payload,
+                )
+            resp.raise_for_status()
+            return resp.json().get("id")
+        except httpx.HTTPStatusError as e:
+            last_status = e.response.status_code
+            logger.error(f"Email send failed: {last_status} {e.response.text}")
+            if last_status != 429 or attempt == 2:
+                break
+            await asyncio.sleep(2 * (attempt + 1))
+        except Exception as e:
+            logger.error(f"Email send error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to send email")
+    if last_status == 429:
+        raise HTTPException(status_code=503, detail="Our email service is busy right now. Please try again in a few minutes.")
+    raise HTTPException(status_code=502, detail="Failed to send email")
