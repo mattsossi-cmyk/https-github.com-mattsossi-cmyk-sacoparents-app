@@ -1,0 +1,26 @@
+{
+  "summary": "Frontend E2E verified for admin + Joy first-login force-password-change + regression for approval.test.pro1. Admin (mattsossi@bsossi.com/CoParents2026!): no force-password-modal, credentials-verified-badge present, name 'Matt Sossi' present, primary-actions-grid has 4 cards, admin-approvals-section + admin-professionals-section present, action-family-matters navigates to /matters and shows 2 matter rows (incl. SA-EDU-529622). Joy (joy@bsossi.com/JoyPreviewTest2026!): force-password-modal visible on dashboard; wrong current -> 'Current password is incorrect'; mismatched confirm -> 'New passwords do not match'; correct submit -> 'Password updated…' toast, modal gone, remains gone on reload; credentials-verified-badge present. Old password JoyPreviewTest2026! -> 401 'Invalid email or password'; new password JoyQA2026!secure -> dashboard 200 with no modal. Password successfully restored to JoyPreviewTest2026! via POST /api/auth/change-password (200 {ok:true}). Regression: approval.test.pro1@gmail.com/TestPass2026! reaches /dashboard without force-password-modal.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Joy dashboard header", "issues": ["Header shows email 'joy@bsossi.com' instead of the requested display name 'Joy Curbow, MS'. Credentials Verified badge is correctly shown. Admin header correctly shows 'Matt Sossi'. Likely Joy's user profile display_name / full_name field is not populated or the header component falls back to email when name is empty."]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_30.json"],
+  "action_items": [
+    "Populate/return Joy Curbow's display name (e.g., 'Joy Curbow, MS') in the /api/auth/me response and/or seed_professionals so the dashboard header renders the name instead of email. Admin already shows 'Matt Sossi' correctly."
+  ],
+  "critical_code_review_comments": [
+    "Force-password flow correctly enforces server-side validation (400 wrong current, mismatched confirm handled), UI toasts are clear, modal disappears and stays gone on reload confirming must_change_password flag is cleared server-side.",
+    "Header name fallback: verify Dashboard/Header component uses user.full_name || user.display_name || user.name before falling back to email; ensure seed_professionals writes name for Joy."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "95%"},
+  "test_credentials": "admin: mattsossi@bsossi.com/CoParents2026! ; joy@bsossi.com/JoyPreviewTest2026! (restored) ; approval.test.pro1@gmail.com/TestPass2026!",
+  "seed_data_creation": "None. Joy password was temporarily changed to JoyQA2026!secure then restored to JoyPreviewTest2026! via /api/auth/change-password to keep documented preview password valid.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All force-password flow assertions pass with data-testids: force-password-modal, force-pw-current, force-pw-new, force-pw-confirm, force-pw-submit. Toasts appear as top-level text nodes (queried via body.text_content). Only outstanding item: Joy's dashboard header shows email instead of 'Joy Curbow, MS'. Verify by logging in as joy and inspecting header user-name element."
+}

@@ -6,7 +6,7 @@ import { Link, Navigate } from "react-router-dom";
 
 export default function Hub() {
   const { user, loading } = useAuth();
-  const isPro = user?.role === "professional";
+  const isPro = user?.role === "professional" || user?.role === "admin";
 
   if (!loading && user && !isPro) return <Navigate to="/dashboard" replace />;
 

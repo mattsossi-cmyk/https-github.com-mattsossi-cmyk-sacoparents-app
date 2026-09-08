@@ -360,3 +360,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-09-08 — Resend code (pytest 152/152)
 - forgot_password: 60s server cooldown per email (429). Auth.jsx reset screen: countdown `resend-code-countdown` then `resend-code-btn`; resend restarts 60s. Needs deploy to reach prod.
+
+## 2026-09-08 — Admin-as-professional + seeded Joy Curbow (pytest 152/152; BUILD 2026-09-08.4)
+- `is_pro()` = role in (professional, admin); frontend isPro likewise (Dashboard/Hub/JointNew). seed_admin sets ADMIN_PROFILE (Matt Sossi: Attorney, Family Law Mediator, Parent Facilitator & Amicus Attorney; 16607 Blanco #703 San Antonio TX 78232; 210-224-1667), approved + credentials_verified; no longer overwrites password if `password_reset_by_user` set (set by reset-password / change-password).
+- `seed_professionals`: creates joy@bsossi.com (approved, verified, must_change_password) with password from env JOY_TEMP_PASSWORD (added to backend/.env). `POST /api/auth/change-password`; `ForcePasswordChange.jsx` modal on dashboard when must_change_password.
+- Both take effect in PRODUCTION on next Deploy (seed runs at startup). Prod admin password: user reset it today; agent cannot log in to prod admin anymore.
+- Dashboard header now shows name · email (`user-name` testid). iteration_30: 100% backend / 95% frontend (only note: header name, fixed).

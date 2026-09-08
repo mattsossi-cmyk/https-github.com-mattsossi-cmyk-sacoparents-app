@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AdminProfessionals } from "@/components/AdminProfessionals";
+import { ForcePasswordChange } from "@/components/ForcePasswordChange";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -26,8 +27,8 @@ export default function Dashboard() {
   const [prepEmails, setPrepEmails] = useState({});
   const [extLink, setExtLink] = useState(null);
   const [linkCode, setLinkCode] = useState("");
-  const { user, logout } = useAuth();
-  const isPro = user?.role === "professional";
+  const { user, logout, refresh } = useAuth();
+  const isPro = user?.role === "professional" || user?.role === "admin";
   const [pendingPros, setPendingPros] = useState([]);
   const [declinedPros, setDeclinedPros] = useState([]);
   const [showDeclined, setShowDeclined] = useState(false);
@@ -197,13 +198,14 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background" data-testid="dashboard-page">
+      {user?.must_change_password && <ForcePasswordChange onDone={refresh} />}
       <header className="bg-white border-b border-border">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" data-testid="dash-brand-link">
             <BrandLogo />
           </Link>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:block" data-testid="user-email">{user?.email}</span>
+            <span className="text-sm hidden sm:block" data-testid="user-email"><span className="font-medium" data-testid="user-name">{user?.name}</span>{user?.name ? <span className="text-muted-foreground"> · {user?.email}</span> : <span className="text-muted-foreground">{user?.email}</span>}</span>
             {user?.credentials_verified && <VerifiedBadge />}
             <Button variant="outline" size="sm" onClick={async () => { await logout(); navigate("/"); }} data-testid="logout-btn">
               Sign out
@@ -509,7 +511,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {user?.role === "professional" && (joints || []).some((j) => j.shared_with_me) && (
+        {isPro && (joints || []).some((j) => j.shared_with_me) && (
           <div className="mb-10" data-testid="shared-with-me-section">
             <h2 className="text-2xl font-semibold mb-4">Shared With Me</h2>
             <div className="grid md:grid-cols-2 gap-4">
@@ -526,7 +528,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {user?.role === "professional" && proRequests.length > 0 && (
+        {isPro && proRequests.length > 0 && (
           <div data-testid="pro-requests-section">
             <h2 className="text-2xl font-semibold mb-4">Facilitation Requests</h2>
             <div className="grid md:grid-cols-2 gap-4">

@@ -30,7 +30,7 @@ export default function JointNew() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const isPro = user?.role === "professional";
+  const isPro = user?.role === "professional" || user?.role === "admin";
   const isAgreement = searchParams.get("kind") === "agreement";
   const SAFETY_KEYS = ["safety", "risk", "safety_communication", "safeguards"];
   const activeSubjects = multiSubjects.length > 0 ? multiSubjects : subject ? [subject] : [];

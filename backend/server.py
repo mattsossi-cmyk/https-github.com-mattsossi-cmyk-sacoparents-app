@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-08.3"
+BUILD_ID = "2026-09-08.4"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -73,6 +73,8 @@ def public_user(u: dict) -> dict:
         "approved": u.get("approved", True),
         "verification_level": u.get("verification_level", ""),
         "credentials_verified": u.get("verification_level") == "credentials_verified",
+        "must_change_password": bool(u.get("must_change_password")),
+        "profile": u.get("profile", {}),
     }
 
 
@@ -98,8 +100,15 @@ async def get_current_user(request: Request) -> dict:
     return user
 
 
+PRO_ROLES = ("professional", "admin")
+
+
+def is_pro(user: dict) -> bool:
+    return user.get("role") in PRO_ROLES
+
+
 def require_approved_professional(user: dict, detail: str) -> None:
-    if user.get("role") != "professional":
+    if not is_pro(user):
         raise HTTPException(status_code=403, detail=detail)
     if not user.get("approved", True):
         raise HTTPException(status_code=403, detail="Your professional account is pending approval by SA CoParents. You will be able to create cases once your account is approved.")
@@ -338,6 +347,28 @@ async def forgot_password(body: ForgotIn):
     return {"ok": True, "detail": "If an account exists for that email, a verification code is on its way."}
 
 
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@api.post("/auth/change-password")
+async def change_password(body: ChangePasswordIn, user=Depends(get_current_user)):
+    if not verify_password(body.current_password, user["password_hash"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    if len(body.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    if body.new_password == body.current_password:
+        raise HTTPException(status_code=400, detail="Choose a password different from your temporary one")
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"password_hash": hash_password(body.new_password), "password_reset_by_user": True, "password_changed_at": datetime.now(timezone.utc).isoformat()},
+         "$unset": {"must_change_password": ""}},
+    )
+    return {"ok": True}
+
+
+
 @api.post("/auth/reset-password")
 async def reset_password(body: ResetIn):
     email = body.email.lower()
@@ -354,7 +385,7 @@ async def reset_password(body: ResetIn):
         raise HTTPException(status_code=400, detail="Invalid or expired verification code")
     if doc["code_hash"] != hash_code(body.code.strip()):
         raise HTTPException(status_code=400, detail="Invalid or expired verification code")
-    await db.users.update_one({"email": email}, {"$set": {"password_hash": hash_password(body.new_password)}})
+    await db.users.update_one({"email": email}, {"$set": {"password_hash": hash_password(body.new_password), "password_reset_by_user": True}, "$unset": {"must_change_password": ""}})
     await db.password_resets.delete_many({"email": email})
     await db.login_attempts.delete_many({"identifier": {"$regex": f":{re.escape(email)}$"}})
     return {"ok": True}
@@ -523,6 +554,35 @@ async def delete_case(case_id: str, user=Depends(get_current_user)):
     return {"ok": True}
 
 
+ADMIN_PROFILE = {
+    "name": "Matt Sossi",
+    "pro_role": "Attorney, Family Law Mediator, Parent Facilitator & Amicus Attorney",
+    "organization": "Law Office of Matt Sossi",
+    "address": "16607 Blanco #703",
+    "city": "San Antonio",
+    "state": "Texas 78232",
+    "phone": "210-224-1667",
+    "license_number": "Texas Attorney",
+}
+
+SEEDED_PROFESSIONALS = [
+    {
+        "email": "joy@bsossi.com",
+        "name": "Joy Curbow, MS",
+        "password_env": "JOY_TEMP_PASSWORD",
+        "profile": {
+            "pro_role": "Family Law Mediator",
+            "organization": "Law Office of Matt Sossi",
+            "address": "16607 Blanco #703",
+            "city": "San Antonio",
+            "state": "Texas 78232",
+            "phone": "210-224-1667",
+            "license_number": "",
+        },
+    },
+]
+
+
 async def seed_admin():
     admin_email = os.environ.get("ADMIN_EMAIL")
     admin_password = os.environ.get("ADMIN_PASSWORD")
@@ -533,17 +593,47 @@ async def seed_admin():
         await db.users.insert_one({
             "_id": str(uuid.uuid4()),
             "email": admin_email.lower(),
-            "name": "Admin",
+            "name": ADMIN_PROFILE["name"],
             "role": "admin",
+            "approved": True,
             "password_hash": hash_password(admin_password),
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-    elif not verify_password(admin_password, existing["password_hash"]):
+    elif not existing.get("password_reset_by_user") and not verify_password(admin_password, existing["password_hash"]):
         await db.users.update_one(
             {"email": admin_email.lower()},
             {"$set": {"password_hash": hash_password(admin_password)}},
         )
         await db.login_attempts.delete_many({"identifier": {"$regex": f":{admin_email.lower()}$"}})
+    if not (existing or {}).get("profile", {}).get("pro_role"):
+        await db.users.update_one(
+            {"email": admin_email.lower()},
+            {"$set": {"name": ADMIN_PROFILE["name"], "approved": True, "verification_level": "credentials_verified",
+                      "credentials_verified_at": datetime.now(timezone.utc).isoformat(),
+                      "profile": {k: v for k, v in ADMIN_PROFILE.items() if k != "name"}}},
+        )
+
+
+async def seed_professionals():
+    for spec in SEEDED_PROFESSIONALS:
+        temp_password = os.environ.get(spec["password_env"])
+        if not temp_password or await db.users.find_one({"email": spec["email"]}):
+            continue
+        now = datetime.now(timezone.utc).isoformat()
+        await db.users.insert_one({
+            "_id": str(uuid.uuid4()),
+            "email": spec["email"],
+            "name": spec["name"],
+            "role": "professional",
+            "approved": True,
+            "approved_at": now,
+            "verification_level": "credentials_verified",
+            "credentials_verified_at": now,
+            "profile": spec["profile"],
+            "must_change_password": True,
+            "password_hash": hash_password(temp_password),
+            "created_at": now,
+        })
 
 
 @app.on_event("startup")
@@ -556,6 +646,7 @@ async def startup():
     await db.invitations.create_index("token")
     await db.account_links.create_index("user_id", unique=True)
     await seed_admin()
+    await seed_professionals()
 
 
 # ---------- Joint Report Builder ----------
@@ -1934,7 +2025,7 @@ async def create_pro_request(body: ProRequestIn, user=Depends(get_current_user))
 
 @api.get("/joint/professional-requests")
 async def list_pro_requests(user=Depends(get_current_user)):
-    if user.get("role") == "professional":
+    if is_pro(user):
         docs = await db.professional_requests.find({"professional_id": user["_id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
     else:
         docs = await db.professional_requests.find({"parent_id": user["_id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
