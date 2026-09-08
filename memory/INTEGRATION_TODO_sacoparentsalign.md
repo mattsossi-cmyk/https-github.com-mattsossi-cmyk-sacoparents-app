@@ -24,27 +24,50 @@
 - Frontend "Invite a professional" surface on `/mine` (see
   `ProfessionalDirectoryModal.jsx`).
 
-## The one file to change when the sibling directory ships
+## The one line to change when the sibling directory ships
 
-`/app/backend/professional_directory.py` → `_fetch_directory()`
+**Nothing.** As of iter166 (2026-09-07), `professional_directory.py`
+already contains a live httpx client that activates automatically
+the moment **both** env vars below are set on production:
+
+```env
+SACOPARENTSALIGN_BASE_URL=https://sacoparentsalign.com
+SACOPARENTSALIGN_API_KEY=<sibling-issued-bearer>
+```
+
+Setting **both** switches `_fetch_directory()` from the hardcoded
+`_MOCK_DIRECTORY` roster to a live GET against
+`{SACOPARENTSALIGN_BASE_URL}/api/directory/professionals` with:
+- 8-second timeout
+- 60-second in-process response cache (per-worker)
+- graceful fallback to `_MOCK_DIRECTORY` on ANY sibling failure
+  (timeout, DNS error, 4xx, 5xx, non-JSON body, missing
+  `professionals[]` key, or every row missing required fields)
+- per-row validation: rows missing `id`, `name`, or `contact_email`
+  are dropped before returning
+
+Zero call-site changes, zero UI changes, zero deploys — the
+`/professional/directory` endpoint just starts returning real
+sibling data as soon as the env vars are configured.
+
+Delete `_MOCK_DIRECTORY` from `professional_directory.py` when the
+sibling is stable enough that a fallback roster is no longer
+desired.
+
+## Reference implementation (already shipped inside `_fetch_directory_from_sibling`)
 
 ```python
-# TODAY (temporary):
-async def _fetch_directory() -> List[Dict[str, Any]]:
-    return list(_MOCK_DIRECTORY)
-
-# TOMORROW (swap in one place, no call-site changes):
-async def _fetch_directory() -> List[Dict[str, Any]]:
-    import httpx
-    base = os.environ["SACOPARENTSALIGN_BASE_URL"]
-    api_key = os.environ["SACOPARENTSALIGN_API_KEY"]
+async def _fetch_directory_from_sibling(base, api_key):
     async with httpx.AsyncClient(timeout=8) as client:
         r = await client.get(
             f"{base}/api/directory/professionals",
             headers={"Authorization": f"Bearer {api_key}"},
         )
-        r.raise_for_status()
-        return r.json().get("professionals", [])
+    if r.status_code >= 400:
+        return None  # → caller falls back to mock
+    payload = r.json()
+    rows = payload.get("professionals", [])
+    return [row for row in rows if _validate_directory_row(row)] or None
 ```
 
 ## Contract the sibling directory MUST expose

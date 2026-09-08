@@ -27,6 +27,91 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Sample Library Extended + Directory API Swap (cutover-ready)
+
+**✨ P2 — Sample Library extended with 3 live-rendered PDFs**
+- New generator module `/app/backend/generate_samples.py` renders
+  three anonymised sample PDFs using the LIVE production renderers
+  with hard-coded fictitious fixtures (Sam & Riley Parent, kids
+  Jordan & Alex):
+  - **Foundation Statement — Sample** (`sacoparents-foundation-statement-sample.pdf`)
+    — the exact one-page reflection a parent emails their mediator
+    pre-session, in the same layout parents get in production.
+  - **Joint Alignment Case Status Report — Sample**
+    (`sacoparents-case-status-report-sample.pdf`) — mediator-facing
+    one-page status snapshot with per-parent progress, downloaded
+    from `/mine`.
+  - **Activities Cost Splitter Ledger — Sample**
+    (`sacoparents-cost-splitter-sample.pdf`) — full income-weighted
+    split example (42k / 58k) across sport, music, education, and
+    medical categories with a side-by-side two-parent ledger.
+- All three files land in `/app/frontend/public/downloads/` and are
+  served directly by CRA's static handler.
+- `Samples.jsx` now shows **30 sample cards** across **7 categories**:
+  - "Joint Alignment Reports" grew to **5** (Case Status added).
+  - "Co-Parenting Agreement + Foundation" grew to **7** (fresh
+    live-rendered Foundation Statement added alongside the legacy
+    sample).
+  - **New category "Activities Cost Splitter · 1"** with amber
+    tone, mounted between Special-Needs and Family-Violence.
+- Coverage: `tests/test_iter165_sample_generators.py` (5 tests) —
+  each generator returns valid `%PDF-` bytes, `generate_all()`
+  writes 3 files, shipped copies exist and are valid PDFs.
+
+**✨ P2 — Directory API swap: cutover-ready via env vars alone**
+- `professional_directory._fetch_directory()` now switches from the
+  hardcoded `_MOCK_DIRECTORY` roster to a live sibling API call
+  **the moment BOTH `SACOPARENTSALIGN_BASE_URL` and
+  `SACOPARENTSALIGN_API_KEY` are set** — zero code changes needed
+  for the cutover.
+- **Live path**: `httpx.AsyncClient` with 8s timeout, hits
+  `{BASE}/api/directory/professionals` with
+  `Authorization: Bearer {API_KEY}`.
+- **60s in-process response cache** so a burst of mediator visits
+  doesn't hammer the sibling.
+- **Graceful fallback** to `_MOCK_DIRECTORY` on ANY failure:
+  timeout, DNS error, transport error, 4xx, 5xx, non-JSON body,
+  missing `professionals[]` key, or every row failing validation.
+- **Per-row validation**: rows missing string `id`, `name`, or
+  `contact_email` are dropped before returning.
+- **No cache-poison**: a failed fetch does NOT cache the mock
+  fallback — the very next call retries the sibling so a brief
+  outage doesn't trap the app in mock-mode for 60 seconds.
+- **`INTEGRATION_TODO_sacoparentsalign.md` updated**: the "one file
+  to change" section now reads "**Nothing.** Set the two env vars
+  and the swap is live." Zero call-site changes, zero UI changes,
+  zero deploys required.
+- Coverage: `tests/test_iter166_directory_api_swap.py` (11 tests)
+  — env-var gating, happy path (URL + Authorization header
+  asserted), row validation drops bad rows, fallbacks on 502 +
+  timeout + bad-JSON + missing-key + all-invalid-rows, 60s cache
+  hit on second call, no cache-poison after a failure, half-set
+  env skips network entirely.
+- **All 47 tests green** across iter163 (13) + iter164 (12) +
+  iter165 (5) + iter166 (11) + iter142 baseline (6). No
+  regressions.
+- **Live-verified**: `/samples` renders all 30 cards, all 3 new
+  PDFs downloadable at `/downloads/*` with HTTP 200 + valid
+  `%PDF-` header. Directory endpoint `GET /api/professional/directory`
+  still returns 5 mock pros (env vars intentionally unset on
+  preview).
+- **Files touched**:
+  - `backend/generate_samples.py` (new)
+  - `backend/professional_directory.py` (env-gated `_fetch_directory`,
+    + `_fetch_directory_from_sibling`, + `_cached_directory` /
+    `_store_cached_directory` / `_clear_directory_cache`,
+    + `_validate_directory_row`)
+  - `frontend/src/pages/Samples.jsx` (adds 3 new sample cards,
+    new "Activities Cost Splitter" category)
+  - `frontend/public/downloads/sacoparents-foundation-statement-sample.pdf` (new)
+  - `frontend/public/downloads/sacoparents-case-status-report-sample.pdf` (new)
+  - `frontend/public/downloads/sacoparents-cost-splitter-sample.pdf` (new)
+  - `memory/INTEGRATION_TODO_sacoparentsalign.md` (documents the
+    cutover-ready state)
+  - `backend/tests/test_iter165_sample_generators.py` (new, 5 tests)
+  - `backend/tests/test_iter166_directory_api_swap.py` (new, 11 tests)
+
+
 ### 2026-09-07 — Accept-webhook + Bulk-Import History Page + Reminder Note Templates
 
 **✨ P1 — Server-to-server accept webhook**

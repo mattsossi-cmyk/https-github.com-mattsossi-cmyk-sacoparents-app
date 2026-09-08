@@ -1,0 +1,25 @@
+{
+  "summary": "Iter165 (sample library) + iter166 (directory API swap) fully validated. Backend: 47/47 tests green (iter142:6, iter163:13, iter164:12, iter165:5, iter166:11). Frontend /samples page renders 30 cards across 7 categories including the 3 new cards (Foundation Statement Sample, Case Status Report Sample, Cost Splitter Ledger) and a new 'Activities Cost Splitter · 1' filter chip. All 3 new PDFs served at /downloads/* return HTTP 200 with valid %PDF- headers. GET /api/professional/directory still returns the 5 mock pros (env vars intentionally unset). No regressions detected.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter165_sample_generators.py",
+    "/app/backend/tests/test_iter166_directory_api_swap.py",
+    "/app/backend/tests/test_iter163_professional_directory.py",
+    "/app/backend/tests/test_iter164_webhook_and_templates.py",
+    "/app/test_reports/pytest/iter166_pytest.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "professional_directory._fetch_directory() fallback design (no cache-poisoning on failure, immediate retry on next call) is well-tested and behaves correctly.",
+    "Row-level validation is strict (string id/name/contact_email required) — good defensive posture against malformed sibling payloads.",
+    "Non-blocker: multiple fpdf2 DeprecationWarnings surface during sample generation (ln=, dest=, txt= parameters). Consider upgrading to new_x/new_y and text= APIs in a maintenance pass."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! — /samples page is public (no auth needed for this iteration).",
+  "seed_data_creation": "None. Sample PDFs are pre-built and shipped in /app/frontend/public/downloads/.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter165 sample generators write to /app/frontend/public/downloads/ — do NOT run `python generate_samples.py` without monkeypatching OUT_DIR (overwrites shipping files, forces git-diff). Iter166 directory swap gated by SACOPARENTSALIGN_BASE_URL + SACOPARENTSALIGN_API_KEY — both remain UNSET in test env by design; app stays in mock mode. To exercise the sibling code path, set both env vars and monkeypatch httpx (see test_iter166_directory_api_swap.py for the FakeAsyncClient pattern)."
+}

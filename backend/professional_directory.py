@@ -101,26 +101,145 @@ _MOCK_DIRECTORY: List[Dict[str, Any]] = [
 async def _fetch_directory() -> List[Dict[str, Any]]:
     """Return the sacoparentsalign.com professional directory.
 
-    Today: returns the hardcoded `_MOCK_DIRECTORY` above.
+    Behavior:
+      * When BOTH `SACOPARENTSALIGN_BASE_URL` and
+        `SACOPARENTSALIGN_API_KEY` env vars are set, we hit the
+        sibling API and cache the result in-process for 60 seconds
+        so a burst of mediator visits doesn't hammer the sibling.
+      * On any sibling failure (timeout, DNS, 5xx, bad JSON,
+        response missing `professionals[]`, or every row missing
+        required fields), we fall back to the hardcoded
+        `_MOCK_DIRECTORY` and log a warning. `/mine` must never
+        break because the sibling had a bad afternoon.
+      * When either env var is absent, we skip the network entirely
+        and return the mock roster — no logs, no noise.
 
-    Tomorrow: replace with an HTTP call to the real sibling API. The
-    return shape MUST stay identical (see INTEGRATION_TODO doc).
+    The sibling API is documented in
+    `/app/memory/INTEGRATION_TODO_sacoparentsalign.md`.
+    """
+    base = os.environ.get("SACOPARENTSALIGN_BASE_URL")
+    api_key = os.environ.get("SACOPARENTSALIGN_API_KEY")
+    if not (base and api_key):
+        return list(_MOCK_DIRECTORY)
 
-    Example future implementation (do not enable until the sibling
-    endpoint ships):
+    cached = _cached_directory()
+    if cached is not None:
+        return cached
 
+    rows = await _fetch_directory_from_sibling(base.rstrip("/"), api_key)
+    if rows is None:
+        # Fall back to mock — never surface an outage to the
+        # mediator UI. Return WITHOUT caching so the very next call
+        # retries the sibling (temporary blip recovery).
+        return list(_MOCK_DIRECTORY)
+
+    _store_cached_directory(rows)
+    return rows
+
+
+# ---------------------------------------------------------------------
+# Sibling API — internal helpers (guarded on env vars in _fetch_directory).
+# ---------------------------------------------------------------------
+_DIRECTORY_CACHE_TTL_SECONDS = 60
+_directory_cache: Dict[str, Any] = {"rows": None, "expires_at": None}
+
+
+def _cached_directory() -> Optional[List[Dict[str, Any]]]:
+    exp = _directory_cache.get("expires_at")
+    rows = _directory_cache.get("rows")
+    if not rows or not exp:
+        return None
+    if datetime.now(timezone.utc) >= exp:
+        return None
+    return list(rows)
+
+
+def _store_cached_directory(rows: List[Dict[str, Any]]) -> None:
+    from datetime import timedelta
+    _directory_cache["rows"] = list(rows)
+    _directory_cache["expires_at"] = (
+        datetime.now(timezone.utc) + timedelta(seconds=_DIRECTORY_CACHE_TTL_SECONDS)
+    )
+
+
+def _clear_directory_cache() -> None:
+    """Test hook — never wired into a route."""
+    _directory_cache["rows"] = None
+    _directory_cache["expires_at"] = None
+
+
+_REQUIRED_ROW_FIELDS = ("id", "name", "contact_email")
+
+
+def _validate_directory_row(row: Any) -> bool:
+    if not isinstance(row, dict):
+        return False
+    return all(
+        isinstance(row.get(k), str) and row.get(k).strip()
+        for k in _REQUIRED_ROW_FIELDS
+    )
+
+
+async def _fetch_directory_from_sibling(
+    base: str, api_key: str,
+) -> Optional[List[Dict[str, Any]]]:
+    """Call the sibling directory API. Return the professional rows
+    on success, `None` on ANY failure (caller falls back to mock).
+    Never raises."""
+    import logging as _logging
+    log = _logging.getLogger(__name__)
+
+    try:
         import httpx
-        base = os.environ.get("SACOPARENTSALIGN_BASE_URL")
-        api_key = os.environ.get("SACOPARENTSALIGN_API_KEY")
-        async with httpx.AsyncClient(timeout=8) as client:
+    except ImportError:  # pragma: no cover — httpx ships in reqs
+        log.warning("httpx not installed — falling back to mock directory")
+        return None
+
+    url = f"{base}/api/directory/professionals"
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
             r = await client.get(
-                f"{base}/api/directory/professionals",
+                url,
                 headers={"Authorization": f"Bearer {api_key}"},
             )
-            r.raise_for_status()
-            return r.json().get("professionals", [])
-    """
-    return list(_MOCK_DIRECTORY)
+    except (httpx.TimeoutException, httpx.TransportError, httpx.HTTPError) as exc:
+        log.warning("sacoparentsalign directory fetch failed: %s", exc)
+        return None
+    except Exception as exc:  # pragma: no cover — belt-and-braces
+        log.exception("sacoparentsalign directory fetch crashed: %s", exc)
+        return None
+
+    if r.status_code >= 500 or r.status_code == 429:
+        log.warning(
+            "sacoparentsalign directory returned %s — falling back to mock",
+            r.status_code,
+        )
+        return None
+    if r.status_code >= 400:
+        log.warning(
+            "sacoparentsalign directory rejected our request (%s) — falling back",
+            r.status_code,
+        )
+        return None
+
+    try:
+        payload = r.json()
+    except ValueError:
+        log.warning("sacoparentsalign directory returned non-JSON — falling back")
+        return None
+
+    raw_rows = payload.get("professionals") if isinstance(payload, dict) else None
+    if not isinstance(raw_rows, list):
+        log.warning("sacoparentsalign directory shape mismatch — falling back")
+        return None
+
+    valid = [row for row in raw_rows if _validate_directory_row(row)]
+    if not valid:
+        log.warning(
+            "sacoparentsalign directory returned no valid rows — falling back",
+        )
+        return None
+    return valid
 
 
 def _tokenise(text: str) -> List[str]:

@@ -58,6 +58,11 @@ const CATEGORIES = [
         blurb: "Two-parent starter agreement produced from the Compare flow — for mediators to refine.",
       },
       {
+        file: "sacoparents-case-status-report-sample.pdf",
+        title: "Joint Alignment Case Status Report",
+        blurb: "One-page mediator-facing status snapshot with per-parent progress. Downloaded from the /mine console.",
+      },
+      {
         file: "coparenting_psychological_alignment_framework.pdf",
         title: "Psychological Alignment Framework",
         blurb: "Methodology notes for the psychological deep-dive scoring.",
@@ -163,8 +168,13 @@ const CATEGORIES = [
         title: "Co-Parent Commitment Agreement (Sample)",
       },
       {
+        file: "sacoparents-foundation-statement-sample.pdf",
+        title: "Foundation Statement — Sample (Live-Rendered)",
+        blurb: "Fresh sample rendered by the live generator — the exact one-page reflection PDF a parent emails to their mediator before the first session.",
+      },
+      {
         file: "sacoparents-foundation-statement.pdf",
-        title: "Foundation Statement — Sample",
+        title: "Foundation Statement — Legacy Sample",
         blurb: "The four-prompt reflective statement mediators use as the co-parenting north star.",
       },
       {
@@ -178,6 +188,21 @@ const CATEGORIES = [
       {
         file: "coparent-adhd-addendum.pdf",
         title: "Co-Parent ADHD Addendum",
+      },
+    ],
+  },
+  {
+    id: "cost-splitter",
+    label: "Activities Cost Splitter",
+    icon: CalendarDays,
+    tone: "amber",
+    blurb:
+      "Neutral cost-share breakdown across activities, education, and medical spend — plus a suggested income-weighted split. Not a court order.",
+    samples: [
+      {
+        file: "sacoparents-cost-splitter-sample.pdf",
+        title: "Cost Splitter Ledger + Suggested Split",
+        blurb: "Sample income-weighted split (42k / 58k) across sport, music, education and medical categories. Two-parent ledger side-by-side.",
       },
     ],
   },
