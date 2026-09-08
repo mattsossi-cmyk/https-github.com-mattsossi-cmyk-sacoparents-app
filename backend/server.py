@@ -905,6 +905,14 @@ async def list_joint_reports(user=Depends(get_current_user)):
     ]
 
 
+async def _report_professional(doc: dict) -> dict | None:
+    pid = doc.get("professional_id") or doc.get("created_by")
+    pro = await db.users.find_one({"_id": pid, "role": "professional"}, {"name": 1, "verification_level": 1}) if pid else None
+    if not pro:
+        return None
+    return {"name": pro.get("name", ""), "credentials_verified": pro.get("verification_level") == "credentials_verified"}
+
+
 async def get_joint_report_doc(rid, user):
     doc = await db.joint_reports.find_one({"id": rid}, {"_id": 0})
     if not doc or not can_view_report(doc, user["_id"]):
@@ -975,7 +983,7 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
             media_type="application/pdf",
             headers={"Content-Disposition": f'attachment; filename="coparenting-agreement-{child}.pdf"'},
         )
-    pdf_bytes = build_joint_pdf(generate_joint_report(doc))
+    pdf_bytes = build_joint_pdf({**generate_joint_report(doc), "professional": await _report_professional(doc)})
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

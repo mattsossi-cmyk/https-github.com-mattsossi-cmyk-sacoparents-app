@@ -62,7 +62,36 @@ def _new_pdf() -> FPDF:
     return pdf
 
 
-def _title_header(pdf: FPDF, title: str, lines: list, notes: list | None = None) -> None:
+def _professional_line(pdf: FPDF, pro: dict) -> None:
+    label = f"Facilitating professional: {pro.get('name') or 'Professional'}"
+    pdf.set_font(FONT, "", 11)
+    pdf.set_text_color(*GRAY)
+    if not pro.get("credentials_verified"):
+        pdf.cell(0, 6, _s(label), align="C", new_x="LMARGIN", new_y="NEXT")
+        return
+    badge = "Credentials Verified"
+    pdf.set_font(FONT, "", 11)
+    w_label = pdf.get_string_width(_s(label))
+    pdf.set_font(FONT, "B", 8)
+    w_badge = pdf.get_string_width(badge) + 6
+    x = (pdf.w - (w_label + 3 + w_badge)) / 2
+    y = pdf.get_y()
+    pdf.set_xy(x, y)
+    pdf.set_font(FONT, "", 11)
+    pdf.set_text_color(*GRAY)
+    pdf.cell(w_label, 6, _s(label))
+    bx = x + w_label + 3
+    pdf.set_fill_color(230, 240, 231)
+    pdf.set_draw_color(*GREEN)
+    pdf.rect(bx, y + 0.8, w_badge, 4.6, style="DF")
+    pdf.set_xy(bx, y + 0.8)
+    pdf.set_font(FONT, "B", 8)
+    pdf.set_text_color(*GREEN)
+    pdf.cell(w_badge, 4.6, badge, align="C")
+    pdf.set_xy(pdf.l_margin, y + 6)
+
+
+def _title_header(pdf: FPDF, title: str, lines: list, notes: list | None = None, pro: dict | None = None) -> None:
     pdf.set_font(FONT, "B", 11)
     pdf.set_text_color(*TEAL)
     pdf.cell(0, 6, "SA CoParents", new_x="LMARGIN", new_y="NEXT")
@@ -75,6 +104,8 @@ def _title_header(pdf: FPDF, title: str, lines: list, notes: list | None = None)
     pdf.set_text_color(*GRAY)
     for line in lines:
         pdf.cell(0, 6, _s(line), align="C", new_x="LMARGIN", new_y="NEXT")
+    if pro:
+        _professional_line(pdf, pro)
     for note in notes or []:
         pdf.set_font(FONT, "I", 9)
         pdf.cell(0, 6, _s(note), align="C", new_x="LMARGIN", new_y="NEXT")
@@ -206,7 +237,7 @@ def build_joint_pdf(r: dict) -> bytes:
         f"Subject: {r['subject_label']}",
         f"Participants: {r['parent_a_name']} / {r['parent_b_name']}",
         r["date"],
-    ], _joint_notes(r))
+    ], _joint_notes(r), pro=r.get("professional"))
 
     _joint_front_sections(pdf, r)
     _joint_back_sections(pdf, r)

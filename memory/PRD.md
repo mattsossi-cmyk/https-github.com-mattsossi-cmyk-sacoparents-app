@@ -306,3 +306,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - UI: `AdminProfessionals.jsx` (Approved Professionals manage list), `VerifiedBadge.jsx`; badge in pro dashboard header and on /join invitation page.
 - Cleaned 1110 @example.com fixture professionals. Test suite (test_iteration_22) no longer depends on a backdated invite.
 - Production: still all /api 404 (frontend 200) as of this session — user must redeploy/check platform deploy logs.
+
+## 2026-09-08 — Verified badge on Joint Report PDFs (pytest 152/152, rendered & visually checked)
+- `_report_professional(doc)` in server.py looks up professional_id/created_by → {name, credentials_verified}; passed as `professional` into `build_joint_pdf`.
+- `pdf_report._professional_line`: "Facilitating professional: <name>" + green "Credentials Verified" pill in the title header (only when verified). Samples unaffected (no professional key).
+- Production: still all /api 404 as of this session (frontend 200). User must redeploy / inspect platform deploy logs.
