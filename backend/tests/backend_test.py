@@ -17,7 +17,7 @@ MONGO_URL = os.environ["MONGO_URL"]
 DB_NAME = os.environ["DB_NAME"]
 
 
-def _clear_admin_lockout():
+def _clear_admin_lockout() -> None:
     """Brute-force lockout (15 min) would otherwise cascade across test runs."""
     import pymongo
     client = pymongo.MongoClient(MONGO_URL)
@@ -28,7 +28,7 @@ TYPE_KEYS = ["general", "communication", "high_conflict", "ipv", "medical", "edu
 
 
 @pytest.fixture(scope="session")
-def admin_session():
+def admin_session() -> requests.Session:
     """Self-contained authenticated session (no dependence on a real user account)."""
     s = requests.Session()
     email = f"adminfix_{uuid.uuid4().hex[:8]}@example.com"
@@ -42,7 +42,7 @@ def admin_session():
 
 
 @pytest.fixture(scope="session")
-def fresh_user_session():
+def fresh_user_session() -> requests.Session:
     s = requests.Session()
     email = f"test_{uuid.uuid4().hex[:8]}@example.com"
     r = s.post(f"{API}/auth/register", json={
@@ -84,7 +84,7 @@ class TestAuth:
         })
         assert r.status_code == 400
 
-    def test_login_admin(self, admin_session):
+    def test_login_admin(self, admin_session: requests.Session) -> None:
         r = admin_session.get(f"{API}/auth/me")
         assert r.status_code == 200
         assert r.json()["email"] == admin_session.email
@@ -142,7 +142,7 @@ class TestCasesFlow:
         r = requests.post(f"{API}/cases", json={"type": "general"})
         assert r.status_code == 401
 
-    def test_create_and_get_case(self, fresh_user_session):
+    def test_create_and_get_case(self, fresh_user_session: requests.Session) -> None:
         s = fresh_user_session
         r = s.post(f"{API}/cases", json={
             "type": "educational", "child_name": "TEST_Kid",
@@ -159,11 +159,11 @@ class TestCasesFlow:
         assert r.status_code == 200
         assert r.json()["id"] == cid
 
-    def test_create_case_invalid_type(self, fresh_user_session):
+    def test_create_case_invalid_type(self, fresh_user_session: requests.Session) -> None:
         r = fresh_user_session.post(f"{API}/cases", json={"type": "nope"})
         assert r.status_code == 400
 
-    def test_report_incomplete_returns_400(self, fresh_user_session):
+    def test_report_incomplete_returns_400(self, fresh_user_session: requests.Session) -> None:
         s = fresh_user_session
         r = s.post(f"{API}/cases", json={"type": "general", "child_name": "TEST_Inc"})
         cid = r.json()["id"]
@@ -186,7 +186,7 @@ class TestCasesFlow:
         rep = r.json()
         assert "pages" in rep or "page_titles" in rep or isinstance(rep, dict)
 
-    def test_save_partial_responses_rejected(self, fresh_user_session):
+    def test_save_partial_responses_rejected(self, fresh_user_session: requests.Session) -> None:
         s = fresh_user_session
         r = s.post(f"{API}/cases", json={"type": "general"})
         cid = r.json()["id"]
@@ -197,7 +197,7 @@ class TestCasesFlow:
         })
         assert r.status_code == 400  # not all answered
 
-    def test_save_full_responses(self, fresh_user_session):
+    def test_save_full_responses(self, fresh_user_session: requests.Session) -> None:
         s = fresh_user_session
         r = s.post(f"{API}/cases", json={"type": "general"})
         cid = r.json()["id"]
@@ -210,13 +210,13 @@ class TestCasesFlow:
         assert r.json()["has_a"]
         assert not r.json()["has_b"]
 
-    def test_list_cases(self, fresh_user_session):
+    def test_list_cases(self, fresh_user_session: requests.Session) -> None:
         r = fresh_user_session.get(f"{API}/cases")
         assert r.status_code == 200
         assert isinstance(r.json(), list)
         assert len(r.json()) >= 1
 
-    def test_delete_case(self, fresh_user_session):
+    def test_delete_case(self, fresh_user_session: requests.Session) -> None:
         s = fresh_user_session
         r = s.post(f"{API}/cases", json={"type": "general", "child_name": "TEST_Del"})
         cid = r.json()["id"]

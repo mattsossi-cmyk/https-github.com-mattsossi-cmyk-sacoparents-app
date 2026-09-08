@@ -5,23 +5,25 @@ and the share-report email notification. Parents are created via invitations
 import os
 import uuid
 
+import requests
+
 from casekit import new_user, new_case, completed_case
 
 BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
 
 
-def _pro(prefix="fv"):
+def _pro(prefix: str = "fv") -> requests.Session:
     return new_user(API, "professional", f"Pro {prefix}")
 
 
-def _parent():
+def _parent() -> requests.Session:
     """A registered parent account (created through a real invitation)."""
     pro, pa, pb, d = new_case(API)
     return pa
 
 
-def _mk_request(parent, pro_email, with_coparent=True):
+def _mk_request(parent: requests.Session, pro_email: str, with_coparent: bool = True) -> str:
     body = {"professional_email": pro_email, "child_name": "FV Kid", "co_parent_name": "Other Parent"}
     if with_coparent:
         body["co_parent_email"] = f"TEST_fvcop_{uuid.uuid4().hex[:8]}@example.com"

@@ -350,3 +350,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-09-08 — Code review round 3 (pytest 152/152)
 - send_email split into helpers; test type hints; unused test imports removed. "is None" findings remain false positives. Prod still stale.
+
+## 2026-09-08 — PRODUCTION VERIFIED (build 2026-09-08.3 live)
+- /api/health → build 2026-09-08.3; new frontend bundle main.8eb11ace.js; footer copyright present; hero + nav-verify present.
+- Live & verified in prod: /verify page + /api/verify (404 for unknown code as designed), QR endpoint (200 image/png), /api/me/preferences (401 unauth / prefs for user), notes search, all 3 cron endpoints (401 unauth), reminder-preview (401 unauth), admin pending list w/ profile, decline → declined log → reconsider, admin/professionals list, sample PDFs (DejaVu fonts embedded, SAMPLE REPORT watermark, copyright footer), forgot-password fixture path.
+- Prod fixture account prod.verify.pro@example.com left in DECLINED state (reason notes it is a test fixture) — safe to ignore/delete from declined log.
+- Note: real prod case codes differ from preview (SA-EDU-642310 is preview-only).
+- Test type hints round 4 done; pytest 152/152.

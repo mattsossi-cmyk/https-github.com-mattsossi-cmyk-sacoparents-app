@@ -14,16 +14,16 @@ API = f"{BASE_URL}/api"
 ANSWER_KEYS = ["needs_most", "working_well", "concerns", "improve", "options", "other_parent"]
 
 
-def _pro():
+def _pro() -> requests.Session:
     return new_user(API, "professional", "Pro")
 
 
-def _register(name, email):
+def _register(name: str, email: str) -> requests.Session:
     return new_user(API, "professional", name, email=email)
 
 
 @pytest.fixture(scope="module")
-def ready_report():
+def ready_report() -> dict:
     sfx = os.urandom(4).hex()
     pro = _pro()
     ea, eb = f"TEST_pdfa_{sfx}@example.com", f"TEST_pdfb_{sfx}@example.com"
@@ -54,7 +54,7 @@ def _pdf_text(content: bytes) -> str:
 
 
 class TestPdfDownload:
-    def test_parent_a_gets_pdf(self, ready_report):
+    def test_parent_a_gets_pdf(self, ready_report: dict) -> None:
         r = ready_report["a"].get(f"{API}/joint/reports/{ready_report['rid']}/pdf", timeout=60)
         assert r.status_code == 200
         assert r.headers.get("content-type", "").startswith("application/pdf")
@@ -72,22 +72,22 @@ class TestPdfDownload:
             assert marker in text, f"missing marker: {marker!r}"
         assert "Ann" in text and "Jordan" in text
 
-    def test_parent_b_gets_pdf(self, ready_report):
+    def test_parent_b_gets_pdf(self, ready_report: dict) -> None:
         r = ready_report["b"].get(f"{API}/joint/reports/{ready_report['rid']}/pdf", timeout=60)
         assert r.status_code == 200
         assert r.headers.get("content-type", "").startswith("application/pdf")
         assert len(r.content) > 3000
 
-    def test_professional_gets_pdf(self, ready_report):
+    def test_professional_gets_pdf(self, ready_report: dict) -> None:
         r = ready_report["pro"].get(f"{API}/joint/reports/{ready_report['rid']}/pdf", timeout=60)
         assert r.status_code == 200
         assert r.content.startswith(b"%PDF")
 
-    def test_unauthenticated_401(self, ready_report):
+    def test_unauthenticated_401(self, ready_report: dict) -> None:
         r = requests.get(f"{API}/joint/reports/{ready_report['rid']}/pdf", timeout=30)
         assert r.status_code == 401
 
-    def test_non_participant_404(self, ready_report):
+    def test_non_participant_404(self, ready_report: dict) -> None:
         s = _register("NP", f"TEST_nonpart_{os.urandom(4).hex()}@example.com")
         r = s.get(f"{API}/joint/reports/{ready_report['rid']}/pdf", timeout=30)
         assert r.status_code == 404
@@ -107,7 +107,7 @@ class TestPdfDownload:
 class TestCasePdf:
     """Server-generated PDF for the 10-page individual assessment report (incl. IPV/family violence)."""
 
-    def _ipv_case(self):
+    def _ipv_case(self) -> tuple:
         sfx = os.urandom(4).hex()
         s = _register("CasePDF", f"TEST_casepdf_{sfx}@example.com")
         c = s.post(f"{API}/cases", json={

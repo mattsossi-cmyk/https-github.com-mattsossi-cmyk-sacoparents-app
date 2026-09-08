@@ -34,3 +34,8 @@ until the file grows further.
 - "is vs ==": all 15 flagged lines are `is None` / `is not None` — correct, unchanged (third time flagged; scanner false positive).
 - Type hints added: test_iteration_22.py, test_password_reset.py, conftest.py. Unused test imports removed (ruff F401).
 - server.py module split deferred: routes already delegate to auth_utils / email_utils / pdf_report / joint_engine / report_engine; further splitting is a larger refactor with no user-visible value right now.
+
+## Round (2026-09-08, #4)
+- "is vs ==" (server.py ×13, joint_engine.py, email_utils.py ×3): re-verified — every flagged line is `is None` / `is not None`, which the report itself says is the correct use of `is`. Unchanged.
+- Type hints: test_report_shape.py, test_pdf_report.py, backend_test.py, test_pro_share_updates.py — all def signatures now annotated (0 unannotated).
+- server.py import count: deferred (see previous round).

@@ -24,7 +24,7 @@ REQUIRED_KEYS = {
 
 
 @pytest.fixture(scope="module")
-def admin_session():
+def admin_session() -> requests.Session:
     """Self-contained authenticated session (no dependence on a real user account)."""
     s = requests.Session()
     r = s.post(f"{BASE_URL}/api/auth/register", json={
@@ -35,7 +35,7 @@ def admin_session():
     return s
 
 
-def _make_and_report(session, case_type):
+def _make_and_report(session: requests.Session, case_type: str) -> dict:
     r = session.post(f"{BASE_URL}/api/cases", json={"type": case_type})
     assert r.status_code == 200, r.text
     cid = r.json()["id"]
@@ -65,7 +65,7 @@ def test_educational_report_shape(admin_session) -> None:
     assert isinstance(data["conversation_questions"], list) and len(data["conversation_questions"]) > 0
 
 
-def test_court_report_has_court_map(admin_session):
+def test_court_report_has_court_map(admin_session: requests.Session) -> None:
     data = _make_and_report(admin_session, "court")
     assert data["court_map"] is not None, "court type must have court_map"
     cm = data["court_map"]
@@ -73,7 +73,7 @@ def test_court_report_has_court_map(admin_session):
         assert bucket in cm, f"court_map missing {bucket}"
 
 
-def test_conversation_questions_no_duplicates(admin_session):
+def test_conversation_questions_no_duplicates(admin_session: requests.Session) -> None:
     """Intentional fix: central question no longer appended twice when 0 differing topics."""
     data = _make_and_report(admin_session, "educational")
     qs = data["conversation_questions"]
