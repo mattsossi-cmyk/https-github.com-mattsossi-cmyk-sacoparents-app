@@ -283,13 +283,23 @@ def _case_public_shape(case: Dict[str, Any]) -> Dict[str, Any]:
         "parents": [_parent_public_shape(p) for p in (case.get("parents") or [])],
         "created_at": _iso(case.get("created_at")),
         "case_expires_at": _iso(case.get("case_expires_at")),
+        # Terminal-state fields — set once `POST .../execute-release`
+        # fires. Consumers group `released_at != null` cases into
+        # a "Handed off" bucket so live cases stay uncluttered.
+        "released_at": _iso(case.get("released_at")) if case.get("released_at") else None,
+        "released_professional_name": case.get("released_professional_name"),
     }
 
 
 def _derived_status(case: Dict[str, Any]) -> str:
     parents = case.get("parents") or []
+    # `released` is terminal — trumps everything, but expired /
+    # cancelled still win (they mean the case was killed before or
+    # after release respectively and we want that visible).
     if case.get("status") in ("expired", "cancelled"):
         return case["status"]
+    if case.get("released_at"):
+        return "released"
     completed = sum(1 for p in parents if p.get("assessment_completed_at"))
     accepted = sum(1 for p in parents if p.get("accepted_at"))
     if completed >= len(parents) and parents:

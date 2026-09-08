@@ -27,6 +27,36 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Iter177 · Handed-Off Cases Section on Parent Dashboard
+
+**🟡 P2 — Live vs Handed-Off case grouping**
+- Backend: `_case_public_shape()` now emits `released_at` +
+  `released_professional_name` on every case in
+  `/joint-alignment/mine`. `_derived_status()` returns
+  `"released"` when the case has a `released_at` (expired /
+  cancelled still win — a killed case remains visibly killed).
+- Frontend: `JointAlignmentRequests.jsx` splits cases into two
+  buckets via `useMemo`:
+    * "Live" — rendered inline as before with Start / Continue /
+      Preview joint outcome CTAs.
+    * "Handed off" — under a collapsible section with a count
+      pill, ShieldCheck icon, and per-row "View receipt" link
+      that jumps to the Preview page (where the persisted
+      released-state banner now shows).
+  Handed-off rows are compact: "Released to X · Sept 8, 2026" —
+  no start / preview CTAs (they'd be misleading on a terminal
+  case).
+- Empty-state variants: the whole section still hides when the
+  parent has zero cases; when they only have handed-off cases,
+  a small "No live cases right now" hint appears above the
+  collapsible.
+- Coverage: `tests/test_iter177_released_cases_mine.py` (4 tests,
+  green): released_at null on new case, flips to `released`
+  after execute-release, both parents see terminal state,
+  expired precedence preserved.
+
+
+## What's Implemented
 ### 2026-09-08 — Iter176 · Referring-Pro BCC + Persisted Released State
 
 **🟡 P2 — Referring professional BCC on release receipts**
