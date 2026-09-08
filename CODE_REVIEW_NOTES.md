@@ -39,3 +39,8 @@ until the file grows further.
 - "is vs ==" (server.py ×13, joint_engine.py, email_utils.py ×3): re-verified — every flagged line is `is None` / `is not None`, which the report itself says is the correct use of `is`. Unchanged.
 - Type hints: test_report_shape.py, test_pdf_report.py, backend_test.py, test_pro_share_updates.py — all def signatures now annotated (0 unannotated).
 - server.py import count: deferred (see previous round).
+
+## Round (2026-09-08, #5) — "is vs ==" (25 occurrences)
+Every one of the 25 flagged lines verified by direct inspection (server.py ×13, email_utils.py ×3, joint_engine.py ×1, tests ×8):
+all are `is None` (14) or `is not None` (11). PEP 8 mandates `is`/`is not` for None comparisons; `== None` would be the anti-pattern.
+No code change made. Fifth consecutive false-positive report for this rule — the scanner appears to flag any `is` operator.
