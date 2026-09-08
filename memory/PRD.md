@@ -27,6 +27,162 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Opens Sparkline + Parent → Professional Report-Share Flow
+
+**✨ P2 — Opens Sparkline (iter167)**
+- New backend aggregator `foundation_statement_analytics.opens_daily_by_jti()`
+  returns per-jti 7-day open counts (oldest → today) in a single Mongo
+  `$group` pipeline. Rows with no opens still get `[0]*7` so the
+  sparkline never null-guards.
+- `GET /api/mediation/foundation-statement/shares` history payload now
+  includes `daily_opens_7d` on every row.
+- New `OpensSparkline.jsx` — pure inline SVG (7 bars, 6px each), auto-
+  hides when all-zero. Purple accent on today + peak day, softer
+  neutral for the rest. Mounted below the "3 opens · opened 2h ago"
+  line on each Share modal history row.
+- Coverage: `tests/test_iter167_opens_sparkline.py` (8 tests: window
+  math, empty-list, zero-seed for missing jtis, day bucketing, owner
+  scoping, 7-day cutoff, multi-jti batching, live-server schema).
+  8/8 green. Regression clean across iter161 + iter167 = 19 tests.
+
+**✨ P1 — Parent → Professional report-share workflow (iter168)**
+
+The mediator/professional invite loop that was previously only bindable
+to Joint Alignment cases is now available directly on the parent
+dashboard for sharing SELECTED completed reports with any professional.
+
+- **New route `/share/professional`** — 5-step wizard exactly per spec:
+  1. Professional details (name, email + confirm, role from a 10-item
+     list, org, phone, ref number, message).
+  2. Report multi-select from a live catalog of the parent's completed
+     reports (Foundation, Co-Parenting, Med/Edu/Psych Deep-Dive, SNC).
+     No "share everything" default — every report must be affirmatively
+     checked.
+  3. Access — view-only vs. view+download radio, notify-on-view /
+     -download / future-versions toggles, expiration pill (7/30/60/90d).
+  4. Review + two unchecked consent boxes with verbatim spec copy:
+     the "I authorize…" authorisation AND the "not a professional
+     relationship" acknowledgement. Send button disables until BOTH
+     are checked.
+  5. Confirmation with view-status / invite-another / dashboard CTAs.
+- **New route `/shared-with-professionals`** — parent-facing
+  management console listing every invitation with status pill,
+  reports offered, sent date, access-expiration, view/download
+  counts, and per-row Resend / Extend / Revoke actions. Extend
+  prompts for {7,30,60,90} days. Revoke double-confirms and hits
+  the atomic revoke endpoint. Empty state has "Invite your first
+  professional" CTA.
+- **New dashboard card** `Invite a professional` with the "Share
+  with purpose. Stay in control." eyebrow, positioned directly
+  below the Four-Circle Front Door. Secondary link to Shared with
+  Professionals.
+- **New nav-bar link** "Shared with pros" in the top nav so the
+  console is discoverable from every page.
+- **New backend module `parent_report_catalog.py`** — enumerates
+  every completed report the caller owns (foundation, coparenting,
+  med-deep, edu-deep, psych-deep, snc) with title / blurb /
+  completed_at / version. Metadata-only — never surfaces body content.
+- **New backend module `parent_professional_invitations.py`** — new
+  routes under `/api`:
+    * `GET /parent/report-catalog` — feeds the wizard's Step 2.
+    * `POST /parent/professional-invitations` — creates the invite +
+      one `report_permission` row per selected report + emails the
+      professional a portal accept URL (no report content in email).
+    * `GET /parent/professional-invitations` — list scoped to caller.
+    * `GET /parent/professional-invitations/{id}` — detail + per-report
+      permissions.
+    * `POST /:id/revoke` — atomic revoke across invite + all
+      permissions. Idempotent (2nd call → applied=false).
+    * `POST /:id/extend` — resets access_expiration to now +
+      {7,30,60,90} days. 404 for revoked invites.
+    * `POST /:id/resend` — mints a fresh 72h token and re-emails.
+- **Sibling-portal enforcement endpoints** (HMAC-authenticated via
+  existing `INTEGRATION_SHARED_SECRET`):
+    * `GET /integrations/report-permissions/{permission_id}` —
+      sacoparentsalign.com portal calls this before every view or
+      download. Returns `{active, reason}` where reason is
+      `revoked|expired|unknown` when access is off.
+    * `POST /integrations/report-permissions/{id}/events` — sibling
+      reports view/download/accepted/declined back. Rolls up
+      view_count / download_count on the invite doc, flips
+      status→accepted, fires notification emails when the parent
+      opted in.
+- **New collections**:
+  - `parent_professional_invitations` — one row per invite with
+    hashed token, selected_reports snapshot, permission bits,
+    consent_version + verbatim consent texts, counters.
+  - `professional_report_permissions` — one row per (invite, report)
+    with its own `permission_id` for portal callbacks.
+  - `report_access_events` — audit trail of every view/download/
+    accept.
+- **New email helpers** in `email_service.py`:
+    * `send_parent_professional_share_invitation` — the accept-URL
+      email. Branded HTML + plaintext. Never contains report bodies,
+      child names, safety data, or the other parent's info.
+    * `send_parent_professional_share_notification` — soft "Adele
+      just opened your report" pings, dispatched only when the
+      parent opted in during invite creation.
+- **Guardrails enforced server-side**:
+    * Foreign report_id → 400 (`completed reports` message).
+    * Email confirm mismatch → 400.
+    * Either consent unchecked → 400.
+    * access_days not in {7,30,60,90} → 422.
+    * Rate limit: 30 invites / hour / parent.
+    * Cap: 10 reports per single invite.
+    * `invitation_token_hash` stored (never raw). Raw token
+      returned once to the sender on create/resend.
+    * Portal callback endpoints require X-Integration-Key
+      (`hmac.compare_digest`).
+- **Consent versioning**: every invite persists `consent_version`
+  (`2026-09-08`) + the verbatim consent texts. Future legal-copy
+  edits don't retroactively rewrite what the parent agreed to.
+- **Data-minimisation verified**: never stored / never surfaced —
+  journal entries, AI coach conversations, unfinished drafts,
+  safety-screen answers, account credentials, other parent's
+  reports, unselected reports.
+- **Coverage**: `tests/test_iter168_parent_professional_invitations.py`
+  (19 tests: catalog auth + scoping; happy-path create; consent /
+  email-match / foreign-report / bad-access-days guardrails;
+  list/get scoping; revoke idempotency; extend + revoked-invite 404;
+  portal permission-check with X-Integration-Key including
+  active/revoked/unknown; event-record view increments + accept
+  flips status). All 19 green.
+- **Regression**: 68/68 tests green across iter163 (13) + iter164 (12)
+  + iter165 (5) + iter166 (11) + iter167 (8) + iter168 (19).
+- **Testing-agent verdict**: backend 100%, frontend ~95% (all core
+  flows pass; one LOW-priority UX polish already applied — Send
+  button now visually disables until both consent boxes checked).
+- **Live-verified**: parent1@test.com dashboard → clicks "Invite a
+  professional" → wizard opens → step 1 filled → step 2 shows 5
+  real completed reports (Foundation, SNC, Co-Parenting, Psych,
+  Edu) → step 3 access chosen → step 4 both consents checked →
+  Send → step 5 confirmation with invitation_id + access expiration
+  → link to `/shared-with-professionals` shows the new row with
+  Resend / Extend / Revoke.
+- **Files touched**:
+  - `backend/parent_report_catalog.py` (new)
+  - `backend/parent_professional_invitations.py` (new)
+  - `backend/email_service.py` (+ 2 new helpers)
+  - `backend/server.py` (registers new router)
+  - `backend/foundation_statement_analytics.py` (+ `opens_daily_by_jti`
+    + `_last_7_day_keys` + `_utc_day_key`)
+  - `backend/mediation_routes.py` (history endpoint returns
+    `daily_opens_7d`)
+  - `frontend/src/pages/ShareWithProfessional.jsx` (new, 5-step wizard)
+  - `frontend/src/pages/SharedWithProfessionals.jsx` (new, console)
+  - `frontend/src/components/foundation/OpensSparkline.jsx` (new)
+  - `frontend/src/components/foundation/FoundationStatementShareModal.jsx`
+    (mounts OpensSparkline in each history row)
+  - `frontend/src/pages/Dashboard.jsx` (adds "Invite a professional"
+    card below the Four-Circle Front Door)
+  - `frontend/src/App.js` (registers 2 new routes)
+  - `frontend/src/components/AppShell.jsx` (adds "Shared with pros"
+    nav link)
+  - `backend/tests/test_iter167_opens_sparkline.py` (new, 8 tests)
+  - `backend/tests/test_iter168_parent_professional_invitations.py`
+    (new, 19 tests)
+
+
 ### 2026-09-08 — Sample Library Extended + Directory API Swap (cutover-ready)
 
 **✨ P2 — Sample Library extended with 3 live-rendered PDFs**

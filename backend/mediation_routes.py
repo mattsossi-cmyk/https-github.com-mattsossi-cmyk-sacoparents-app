@@ -440,9 +440,13 @@ async def list_foundation_statement_shares(
     # so the History tab stays fast even with 25 share rows.
     jtis = [t.get("jti") for t in token_meta.values() if t.get("jti")]
     open_stats: Dict[str, Dict[str, Any]] = {}
+    daily_stats: Dict[str, List[int]] = {}
     if jtis:
-        from foundation_statement_analytics import opens_by_jti
+        from foundation_statement_analytics import opens_by_jti, opens_daily_by_jti
         open_stats = await opens_by_jti(db, user_id=current.user_id, jtis=jtis)
+        daily_stats = await opens_daily_by_jti(
+            db, user_id=current.user_id, jtis=jtis,
+        )
 
     now = datetime.now(timezone.utc)
     rows: List[Dict[str, Any]] = []
@@ -497,6 +501,12 @@ async def list_foundation_statement_shares(
             "unique_ip_count": (
                 open_stats.get(preview_jti, {}).get("unique_ip_count", 0)
                 if preview_jti else 0
+            ),
+            # 7-day per-day open counts, oldest → today. Always a
+            # 7-element list so the sparkline never null-guards.
+            "daily_opens_7d": (
+                daily_stats.get(preview_jti) or [0] * 7
+                if preview_jti else [0] * 7
             ),
         })
     return {"shares": rows}

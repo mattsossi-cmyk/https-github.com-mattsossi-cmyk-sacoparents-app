@@ -44,6 +44,7 @@ const navLinks = [
   { to: "/prep/readiness", label: "Readiness" },
   { to: "/summary", label: "Summary" },
   { to: "/progress", label: "Progress" },
+  { to: "/shared-with-professionals", label: "Shared with pros" },
 ];
 
 const ADMIN_EMAILS = new Set(["mattsossi@bsossi.com"]);

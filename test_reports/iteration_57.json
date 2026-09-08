@@ -1,0 +1,32 @@
+{
+  "summary": "iter168 (parent → professional report-share) full regression. Backend: 68/68 tests green (iter168=19 + iter163+164+165+166+167=49). Frontend: dashboard 'Invite a professional' card + CTA + secondary link work; 5-step wizard flows end-to-end (step1 professional info, step2 report multi-select — 5 completed reports visible for parent1, step3 access options, step4 review + 2 consent boxes, step5 confirmation shown); /shared-with-professionals lists invitations with per-row Resend/Extend/Revoke; Revoke transitions row to 'Access revoked' pill and correctly hides row actions.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ShareWithProfessional wizard step 4", "issue": "Send button (`Send secure invitation`) is NOT disabled when the two consent boxes are unchecked, and clicking it while unchecked silently does nothing (no error toast / no inline error). Functionally the submit is blocked (URL stays on step 4), but users get no feedback about WHY. Preferred: disable button until both consent-authorised + consent-relationship are checked, or show an inline error.", "selector": "button:has-text('Send secure invitation')", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter168_parent_professional_invitations.py",
+    "/app/test_reports/pytest/iter168.xml",
+    "/app/test_reports/pytest/iter163-167.xml"
+  ],
+  "action_items": [
+    "(Optional / LOW) Disable the wizard Send button until both consent checkboxes are ticked, or surface a validation error on click so users understand why nothing happens."
+  ],
+  "critical_code_review_comments": [
+    "notify-download testid is conditionally rendered (only when download_permission is enabled) — this is correct behavior and matches the label 'Notify me when downloaded'. Not a bug.",
+    "ShareWithProfessional.jsx is 695 lines — approaching the 700-line soft cap; consider splitting per-step subcomponents on next refactor.",
+    "No visible ObjectId leaks, all endpoints scoped by caller, integration key check on portal callbacks verified via backend tests."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (68/68)", "frontend": "~95% (all core flows pass; 1 minor UX polish)"},
+  "test_credentials": "parent1@test.com / TestPass123!",
+  "seed_data_creation": "Created 1 new invitation to reviewer-test@example.com during wizard smoke test, then revoked it. Adele van Wyk invitation from prior smoke test still present as active row.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter168 shipped clean. parent1@test.com now has 2+ invitations in /shared-with-professionals (1 active to Adele, 1 revoked to Test Reviewer). Wizard consent-gating is silent (no toast when submit blocked) — logged as LOW-priority polish. All 68 regression tests green in cloud env using REACT_APP_BACKEND_URL. Note: test file uses `from tests.conftest import BASE_URL`, so pytest must be invoked from /app/backend (cwd), not /app.",
+  "rca of the issue": "N/A — no critical bugs. Only minor UX polish: ShareWithProfessional.jsx step 4 renders the submit button in normal enabled state even when the two required consent checkboxes are unchecked. The submit handler likely returns early if either box is unchecked, but no user-facing feedback is shown. Fix: bind `disabled={!consentAuthorised || !consentRelationship}` on the send button OR call toast.error on the guard branch."
+}

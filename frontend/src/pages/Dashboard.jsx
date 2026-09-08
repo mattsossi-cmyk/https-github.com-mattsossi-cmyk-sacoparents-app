@@ -566,6 +566,46 @@ export default function Dashboard() {
             picker. */}
         <FourCircleFrontDoor userName={user?.name} situationChoice={freshSituationChoice} />
 
+        {/* Invite a Professional — parent-controlled report sharing. */}
+        <div
+          className="mt-6 rounded-3xl border border-[#D6CFE8] bg-gradient-to-br from-[#F5F1FB] to-[#EFE7FA] p-5 sm:p-6"
+          data-testid="dashboard-invite-pro-card"
+        >
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                Share with purpose. Stay in control.
+              </div>
+              <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-snug">
+                Invite a professional
+              </h3>
+              <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed max-w-xl">
+                Securely share selected SA CoParents reports with your
+                mediator, attorney, therapist, or parenting facilitator.
+                <strong> You decide which reports are shared.</strong> Your
+                raw answers, journal entries, drafts, AI Coach
+                conversations, and unselected reports remain private.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  to="/share/professional"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-4 py-2 text-sm font-semibold"
+                  data-testid="dashboard-invite-pro-cta"
+                >
+                  Invite a professional
+                </Link>
+                <Link
+                  to="/shared-with-professionals"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-white px-4 py-2 text-sm font-semibold"
+                  data-testid="dashboard-shared-with-pros-link"
+                >
+                  Shared with professionals
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Explore All Tools — home for everything that used to render
             unconditionally above the fold: Continue where you left off,
             Joint-report invitations, Next Step journey, Your Progress

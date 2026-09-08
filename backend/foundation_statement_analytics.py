@@ -170,3 +170,93 @@ async def opens_by_jti(
             "unique_ip_count": len([ip for ip in row.get("unique_ips") or [] if ip]),
         }
     return out
+
+
+# ---------------------------------------------------------------------
+# 7-day sparkline aggregation — powers the tiny bar chart under
+# each history row in the Share modal.
+# ---------------------------------------------------------------------
+
+def _utc_day_key(dt: datetime) -> str:
+    """Bucket a datetime into its UTC calendar day (YYYY-MM-DD).
+    Motor sometimes returns tz-naive datetimes even when we stored
+    tz-aware, so normalise before formatting."""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%d")
+
+
+def _last_7_day_keys(now: Optional[datetime] = None) -> List[str]:
+    """Return the last 7 UTC day keys, oldest-first
+    (e.g. ["2026-09-01", ..., "2026-09-07"]).
+    """
+    from datetime import timedelta
+    end = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    return [
+        (end - timedelta(days=n)).strftime("%Y-%m-%d")
+        for n in range(6, -1, -1)  # 6..0 → oldest → today
+    ]
+
+
+async def opens_daily_by_jti(
+    db: AsyncIOMotorDatabase,
+    *,
+    user_id: str,
+    jtis: List[str],
+    now: Optional[datetime] = None,
+) -> Dict[str, List[int]]:
+    """Return per-jti 7-day open counts, oldest-first. Every jti in
+    the input gets a 7-element list — jtis with no opens in the
+    window get [0,0,0,0,0,0,0] so the sparkline component doesn't
+    need to null-guard.
+
+    Scoped by `doc_owner_user_id` so a parent can only see their own
+    share stats. Opens older than 7 days are excluded from the
+    window (they're still in `open_count`).
+    """
+    if not jtis:
+        return {}
+    from datetime import timedelta
+    end = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    # 7-day window in UTC: today + 6 previous days. Start of the
+    # oldest day (00:00 UTC) so opens at 23:59 that day still count.
+    day_keys = _last_7_day_keys(end)
+    oldest_day_start = datetime.fromisoformat(day_keys[0]).replace(
+        tzinfo=timezone.utc,
+    )
+    pipeline = [
+        {
+            "$match": {
+                "doc_owner_user_id": user_id,
+                "jti": {"$in": jtis},
+                "opened_at": {"$gte": oldest_day_start},
+            },
+        },
+        {
+            "$group": {
+                "_id": {
+                    "jti": "$jti",
+                    "day": {
+                        "$dateToString": {
+                            "format": "%Y-%m-%d",
+                            "date": "$opened_at",
+                            "timezone": "UTC",
+                        },
+                    },
+                },
+                "count": {"$sum": 1},
+            },
+        },
+    ]
+    # Seed every requested jti with zeros so downstream never gets
+    # `None`.
+    day_index = {key: idx for idx, key in enumerate(day_keys)}
+    out: Dict[str, List[int]] = {jti: [0] * 7 for jti in jtis}
+    async for row in db[_OPENS_COLL].aggregate(pipeline):
+        jti = row["_id"]["jti"]
+        day = row["_id"]["day"]
+        idx = day_index.get(day)
+        if idx is None or jti not in out:
+            continue
+        out[jti][idx] = int(row.get("count") or 0)
+    return out

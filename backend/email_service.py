@@ -3007,3 +3007,188 @@ def send_professional_directory_invitation(
         reply_to=inviter_email or None,
         failure_message="Could not send the invitation right now.",
     )
+
+
+
+def send_parent_professional_share_invitation(
+    *,
+    to_email: str,
+    professional_first_name: str,
+    inviting_parent_name: str,
+    inviting_parent_email: str,
+    selected_report_titles: List[str],
+    reference_number: Optional[str],
+    personal_message: Optional[str],
+    accept_url: str,
+    token_expires_at: Optional[str],
+) -> None:
+    """Parent → professional invite email to review SELECTED reports
+    on sacoparentsalign.com. Never contains report bodies, safety
+    data, child names, or the other parent's information — only
+    category metadata and the accept URL."""
+    display_parent = (inviting_parent_name or "").strip() or "A parent"
+    greeting = (
+        f"Hi {_html.escape(professional_first_name)},"
+        if professional_first_name else "Hi,"
+    )
+    reports_line_html = ""
+    reports_line_plain = ""
+    if selected_report_titles:
+        titles = ", ".join(_html.escape(t) for t in selected_report_titles[:6])
+        if len(selected_report_titles) > 6:
+            titles += f" (+{len(selected_report_titles) - 6} more)"
+        reports_line_html = (
+            f'<p style="font-size:14px;line-height:1.55;color:#4B4567;'
+            f'margin:0 0 14px 0;"><strong>Reports offered:</strong> {titles}</p>'
+        )
+        reports_line_plain = (
+            "Reports offered: "
+            + ", ".join(selected_report_titles[:6])
+            + (f" (+{len(selected_report_titles) - 6} more)"
+               if len(selected_report_titles) > 6 else "")
+            + "\n"
+        )
+    ref_line_html = ""
+    ref_line_plain = ""
+    if reference_number and reference_number.strip():
+        ref_line_html = (
+            f'<p style="font-size:13px;line-height:1.55;color:#857E9C;'
+            f'margin:0 0 14px 0;">Family reference: '
+            f'<strong>{_html.escape(reference_number.strip())}</strong></p>'
+        )
+        ref_line_plain = f"Family reference: {reference_number.strip()}\n"
+    note_html = ""
+    note_plain = ""
+    if personal_message and personal_message.strip():
+        safe = _html.escape(personal_message.strip())
+        note_html = (
+            f'<blockquote style="margin:0 0 18px 0;padding:12px 16px;'
+            f'border-left:3px solid #3D1A78;background:#F5F1FB;'
+            f'border-radius:0 12px 12px 0;font-size:14px;line-height:1.55;'
+            f'color:#1A1330;font-style:italic;">'
+            f'<div style="font-size:10px;letter-spacing:0.14em;'
+            f'text-transform:uppercase;font-weight:700;font-style:normal;'
+            f'color:#3D1A78;margin-bottom:4px;">'
+            f'Note from {_html.escape(display_parent)}</div>'
+            f'&ldquo;{safe}&rdquo;'
+            f'</blockquote>'
+        )
+        note_plain = (
+            f"\nNote from {display_parent}:\n"
+            f'  "{personal_message.strip()}"\n'
+        )
+    expires_line_html = ""
+    expires_line_plain = ""
+    if token_expires_at:
+        expires_line_html = (
+            f'<p style="font-size:12px;line-height:1.5;color:#857E9C;'
+            f'margin:14px 0 0 0;">This secure link expires within 72 hours '
+            f'(by {_html.escape(token_expires_at)}). If it expires, the '
+            f'parent can resend a fresh invitation.</p>'
+        )
+        expires_line_plain = (
+            f"\nThis secure link expires within 72 hours "
+            f"(by {token_expires_at}). If it expires, the parent can "
+            f"resend a fresh invitation.\n"
+        )
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">{greeting}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;"><strong>{_html.escape(display_parent)}</strong> '
+        f"has invited you to securely review selected child-focused reports "
+        f"through SA CoParents Align.</p>"
+        f"{note_html}"
+        f"{reports_line_html}"
+        f"{ref_line_html}"
+        '<p style="font-size:14px;line-height:1.55;color:#857E9C;'
+        'margin:0 0 22px 0;">The reports are not attached to this email. '
+        "Use the secure link below to sign in or create a verified professional "
+        "account and review the invitation.</p>"
+        f"{expires_line_html}"
+    )
+    plain = (
+        f"{greeting}\n\n"
+        f"{display_parent} has invited you to securely review selected "
+        f"child-focused reports through SA CoParents Align.\n"
+        f"{note_plain}"
+        f"{reports_line_plain}"
+        f"{ref_line_plain}"
+        "\nThe reports are not attached to this email. Use the secure link "
+        "below to sign in or create a verified professional account.\n\n"
+        f"Review Secure Invitation:\n{accept_url}\n"
+        f"{expires_line_plain}"
+        "\n— SA CoParents · sacoparentsapp.online\n"
+    )
+    html = _branded_html(
+        headline="A Parent Has Invited You to SA CoParents Align",
+        body_html=body_html,
+        cta_label="Review Secure Invitation",
+        cta_url=accept_url,
+    )
+    _send(
+        to_email=to_email,
+        subject="A Parent Has Invited You to SA CoParents Align",
+        html=html,
+        text=plain,
+        reply_to=inviting_parent_email or None,
+        failure_message="Could not send the invitation right now.",
+    )
+
+
+def send_parent_professional_share_notification(
+    *,
+    to_email: Optional[str],
+    event: str,
+    professional_display_name: Optional[str],
+    report_title: Optional[str],
+) -> None:
+    """Send the parent a soft in-loop notification when the invited
+    professional views / downloads / accepts. Never contains report
+    body content."""
+    if not to_email:
+        return
+    display_pro = (professional_display_name or "").strip() or "The professional"
+    verbs = {
+        "viewed": "just opened",
+        "downloaded": "just downloaded",
+        "accepted": "accepted your invitation",
+        "declined": "declined your invitation",
+    }
+    verb = verbs.get(event, event)
+    report_line = f" {_html.escape(report_title)}" if report_title else ""
+    subject = f"{display_pro} {verb} your shared report".strip()
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">'
+        f'<strong>{_html.escape(display_pro)}</strong> {verb}'
+        f'{report_line}.</p>'
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;'
+        'margin:0 0 14px 0;">You can review your sharing settings, extend '
+        "access, or revoke the invitation from your <em>Shared With "
+        "Professionals</em> page.</p>"
+    )
+    plain = (
+        f"{display_pro} {verb}"
+        f"{(' ' + report_title) if report_title else ''}.\n\n"
+        "Review your sharing settings anytime under Shared With Professionals.\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    html = _branded_html(
+        headline=subject,
+        body_html=body_html,
+        cta_label="Manage sharing",
+        cta_url="https://sacoparentsapp.online/shared-with-professionals",
+    )
+    try:
+        _send(
+            to_email=to_email,
+            subject=subject,
+            html=html,
+            text=plain,
+            failure_message="Notification delivery failed.",
+        )
+    except Exception:  # noqa: BLE001 — notifications never break the caller
+        _logger = __import__("logging").getLogger(__name__)
+        _logger.warning("share notification email dispatch failed to %s", to_email)

@@ -16,6 +16,7 @@ import { Loader2, X, Send, Download, ShieldCheck, History, RefreshCw, Ban, Eye }
 import { toast } from "sonner";
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
+import OpensSparkline from "./OpensSparkline";
 
 /**
  * Human-friendly "last opened" phrasing. `now`, `2 minutes ago`,
@@ -504,22 +505,28 @@ export default function FoundationStatementShareModal({
                       </div>
                       {(opens > 0 || uniqueOpens > 0) && (
                         <div
-                          className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-[#3D1A78]"
+                          className="mt-1.5 flex items-center gap-2 flex-wrap"
                           data-testid={`foundation-history-opens-${s.share_id}`}
                         >
-                          <Eye size={11} />
-                          <span className="font-semibold">
-                            {opens} open{opens === 1 ? "" : "s"}
-                            {uniqueOpens > 1 && (
-                              <span className="text-[#4B4567] font-normal">
-                                {" "}· {uniqueOpens} viewer
-                                {uniqueOpens === 1 ? "" : "s"}
-                              </span>
+                          <div className="inline-flex items-center gap-1.5 text-[11px] text-[#3D1A78]">
+                            <Eye size={11} />
+                            <span className="font-semibold">
+                              {opens} open{opens === 1 ? "" : "s"}
+                              {uniqueOpens > 1 && (
+                                <span className="text-[#4B4567] font-normal">
+                                  {" "}· {uniqueOpens} viewer
+                                  {uniqueOpens === 1 ? "" : "s"}
+                                </span>
+                              )}
+                            </span>
+                            {lastOpenedLabel && (
+                              <span className="text-[#4B4567]">· {lastOpenedLabel}</span>
                             )}
-                          </span>
-                          {lastOpenedLabel && (
-                            <span className="text-[#4B4567]">· {lastOpenedLabel}</span>
-                          )}
+                          </div>
+                          <OpensSparkline
+                            days={s.daily_opens_7d}
+                            testid={`foundation-history-sparkline-${s.share_id}`}
+                          />
                         </div>
                       )}
                       {isActivePreview && (

@@ -58,6 +58,8 @@ import ProfessionalJointAlignmentNew from "@/pages/ProfessionalJointAlignmentNew
 import ProfessionalJointAlignmentMine from "@/pages/ProfessionalJointAlignmentMine";
 import ProfessionalJointAlignmentBulk from "@/pages/ProfessionalJointAlignmentBulk";
 import ProfessionalJointAlignmentBulkHistory from "@/pages/ProfessionalJointAlignmentBulkHistory";
+import ShareWithProfessional from "@/pages/ShareWithProfessional";
+import SharedWithProfessionals from "@/pages/SharedWithProfessionals";
 import AdminProfessionalsEditor from "@/pages/AdminProfessionalsEditor";
 import Orientation from "@/pages/Orientation";
 import ClaimAccount from "@/pages/ClaimAccount";
@@ -186,6 +188,14 @@ function AppRoutes() {
         <Route
           path="/professional/joint-alignment/bulk/history"
           element={<ProtectedRoute><ProfessionalJointAlignmentBulkHistory /></ProtectedRoute>}
+        />
+        <Route
+          path="/share/professional"
+          element={<ProtectedRoute><ShareWithProfessional /></ProtectedRoute>}
+        />
+        <Route
+          path="/shared-with-professionals"
+          element={<ProtectedRoute><SharedWithProfessionals /></ProtectedRoute>}
         />
         <Route path="/admin/professionals" element={<AdminProfessionalsEditor />} />
         <Route path="/joint-agreement/shared/:token" element={<JointAgreementShared />} />
