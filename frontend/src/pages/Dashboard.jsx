@@ -222,10 +222,17 @@ export default function Dashboard() {
             ) : (
               <ul className="mt-3 space-y-2" data-testid="admin-approvals-list">
                 {pendingPros.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between gap-3 border border-border rounded-md px-4 py-3" data-testid={`pending-pro-${p.id}`}>
-                    <div>
+                  <li key={p.id} className="flex items-start justify-between gap-3 border border-border rounded-md px-4 py-3" data-testid={`pending-pro-${p.id}`}>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.email}</p>
+                      <p className="text-xs text-muted-foreground">{p.email}{p.profile?.phone ? ` · ${p.profile.phone}` : ""}</p>
+                      <dl className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+                        <div data-testid={`pending-pro-role-${p.id}`}><dt className="text-muted-foreground">Role</dt><dd className="font-medium">{p.profile?.pro_role || "Not provided"}</dd></div>
+                        <div data-testid={`pending-pro-org-${p.id}`}><dt className="text-muted-foreground">Organization</dt><dd className="font-medium">{p.profile?.organization || "Not provided"}{(p.profile?.city || p.profile?.state) ? ` (${[p.profile.city, p.profile.state].filter(Boolean).join(", ")})` : ""}</dd></div>
+                        <div data-testid={`pending-pro-license-${p.id}`}><dt className="text-muted-foreground">License / Credential</dt><dd className="font-medium">{p.profile?.license_number || "Not provided"}</dd></div>
+                      </dl>
+                      {p.profile?.website && <a href={p.profile.website} target="_blank" rel="noreferrer" className="text-xs text-align-teal underline mt-1 inline-block" data-testid={`pending-pro-website-${p.id}`}>{p.profile.website}</a>}
+                      {p.created_at && <p className="text-[11px] text-muted-foreground mt-1">Registered {new Date(p.created_at).toLocaleDateString()}</p>}
                     </div>
                     <Button size="sm" onClick={() => approvePro(p.id)} data-testid={`approve-pro-btn-${p.id}`}>Approve</Button>
                   </li>

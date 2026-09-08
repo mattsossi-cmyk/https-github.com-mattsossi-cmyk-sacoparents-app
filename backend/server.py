@@ -1559,7 +1559,7 @@ async def list_pending_professionals(user=Depends(get_current_user)):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     docs = await db.users.find({"role": "professional", "approved": False}, {"password_hash": 0}).sort("created_at", -1).to_list(200)
-    return [public_user(u) for u in docs]
+    return [{**public_user(u), "profile": u.get("profile", {}), "created_at": u.get("created_at", ""), "verification_level": u.get("verification_level", "")} for u in docs]
 
 
 @api.post("/admin/approve-professional/{user_id}")
