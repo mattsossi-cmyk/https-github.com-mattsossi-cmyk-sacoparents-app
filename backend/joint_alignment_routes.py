@@ -3235,6 +3235,12 @@ async def get_case_consent_status(
         "release_professional_name": (
             next(iter(release_pros)) if release_eligible else None
         ),
+        # Terminal-state flags — populated once the case has actually
+        # been released via `POST .../execute-release`. Powers the
+        # preview page's "already released" banner across refresh.
+        "released_at": _iso(case.get("released_at")) if case.get("released_at") else None,
+        "released_professional_name": case.get("released_professional_name"),
+        "released_by_user_id": case.get("released_by_user_id"),
         "consent_texts": {
             "comparison": _JA_COMPARISON_CONSENT_TEXT,
             "release_template": _JA_RELEASE_CONSENT_TEXT_TEMPLATE,
@@ -3340,11 +3346,18 @@ async def execute_case_release(
 
     # Best-effort receipt email to BOTH parents. Never crash the
     # release call on a Resend outage. Skips any parent row with a
-    # missing / invalid email.
+    # missing / invalid email. The referring professional is BCC'd
+    # so the case file has the same audit trail — parents see a
+    # transparent "cc'd to X" line in the body (never a silent copy).
     try:
         from email_service import (
             send_joint_alignment_release_confirmation,
         )
+        professional_bcc = (
+            (case.get("professional") or {}).get("email") or ""
+        ).strip()
+        if "@" not in professional_bcc:
+            professional_bcc = ""
         for p in parents:
             addr = (p.get("email") or "").strip()
             if not addr or "@" not in addr:
@@ -3357,6 +3370,7 @@ async def execute_case_release(
                     assessment_type=case.get("assessment_type") or "",
                     professional_name=professional_name,
                     released_at=now,
+                    bcc_email=professional_bcc or None,
                 )
             except Exception:  # noqa: BLE001
                 logger.warning(

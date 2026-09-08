@@ -59,6 +59,7 @@ def _send(
     html: str,
     text: str,
     reply_to: Optional[str] = None,
+    bcc: Optional[List[str]] = None,
     attachments: Optional[List[Tuple[str, bytes]]] = None,
     failure_message: str,
     require_encrypted: bool = False,
@@ -133,6 +134,16 @@ def _send(
     }
     if reply_to or cfg["reply_to"]:
         params["reply_to"] = [reply_to or cfg["reply_to"]]
+    # Optional BCC — kept OFF the Virtru path above because encrypted
+    # delivery has stricter recipient rules; on the Resend fallback
+    # path we forward as-is, deduped against the To line.
+    if bcc:
+        deduped = [
+            addr for addr in bcc
+            if addr and "@" in addr and addr.lower() != (to_email or "").lower()
+        ]
+        if deduped:
+            params["bcc"] = deduped
     if attachments:
         params["attachments"] = [
             {
@@ -3365,11 +3376,18 @@ def send_joint_alignment_release_confirmation(
     assessment_type: str,
     professional_name: str,
     released_at: Any,
+    bcc_email: Optional[str] = None,
 ) -> None:
     """Confirmation email fired best-effort from `execute-release` to
     BOTH parents so they have a receipt outside the app. Neutral,
     non-celebratory copy. Never crashes the release itself — the
-    caller wraps this in try/except."""
+    caller wraps this in try/except.
+
+    When `bcc_email` is set the referring professional receives a
+    silent-but-transparent copy: silent in the sense that the To
+    line does not include them, transparent in the sense that the
+    email body says the professional was cc'd so the parents are
+    not surprised."""
     salutation = (
         f"Hi {_html.escape(parent_name.split()[0])},"
         if parent_name else "Hi,"
@@ -3395,6 +3413,27 @@ def send_joint_alignment_release_confirmation(
     }
     assessment_label = label_map.get(assessment_type, assessment_type or "Joint Alignment")
 
+    valid_bcc = (
+        bcc_email.strip()
+        if bcc_email and isinstance(bcc_email, str) and "@" in bcc_email
+        else None
+    )
+    bcc_html = ""
+    bcc_plain = ""
+    if valid_bcc:
+        bcc_html = (
+            '<p style="font-size:13px;line-height:1.55;color:#857E9C;'
+            'margin:0 0 14px 0;">'
+            f"A copy of this receipt was also sent to "
+            f"<strong>{_html.escape(valid_bcc)}</strong> "
+            f"({_html.escape(professional_name)}) for their case file."
+            "</p>"
+        )
+        bcc_plain = (
+            f"A copy of this receipt was also sent to {valid_bcc} "
+            f"({professional_name}) for their case file.\n\n"
+        )
+
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
         f'margin:0 0 14px 0;">{salutation}</p>'
@@ -3406,6 +3445,7 @@ def send_joint_alignment_release_confirmation(
         f'<p style="font-size:14px;line-height:1.55;color:#4B4567;'
         f'margin:0 0 14px 0;">'
         f'Released on <strong>{_html.escape(when_str)}</strong>.</p>'
+        + bcc_html +
         '<p style="font-size:13px;line-height:1.55;color:#857E9C;'
         'margin:0 0 12px 0;">'
         "Review, extend, or revoke access anytime from your "
@@ -3425,6 +3465,7 @@ def send_joint_alignment_release_confirmation(
         f"Joint Alignment Report on case {case_id} has been released "
         f"to {professional_name}.\n\n"
         f"Released on {when_str}.\n\n"
+        + bcc_plain +
         "Review, extend, or revoke access anytime:\n"
         "https://sacoparentsapp.online/shared-with-professionals\n\n"
         "Nothing outside the completed Joint Alignment Report was "
@@ -3443,5 +3484,6 @@ def send_joint_alignment_release_confirmation(
         subject=f"Joint Alignment Report released to {professional_name}",
         html=html,
         text=plain,
+        bcc=[valid_bcc] if valid_bcc else None,
         failure_message="Release confirmation delivery failed.",
     )

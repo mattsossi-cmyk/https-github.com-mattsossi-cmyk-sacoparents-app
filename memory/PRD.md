@@ -27,6 +27,39 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Iter176 · Referring-Pro BCC + Persisted Released State
+
+**🟡 P2 — Referring professional BCC on release receipts**
+- `email_service._send()` now accepts an optional `bcc: List[str]`
+  and forwards it to Resend (deduped against the To line to avoid
+  self-copies).
+- `send_joint_alignment_release_confirmation()` gained a
+  `bcc_email` kwarg + injects a transparent "cc'd to X for their
+  case file" line in HTML + plain-text bodies — parents are never
+  copied silently.
+- `execute-release` handler reads `case.professional.email` and
+  passes it as BCC on BOTH parents' receipts. Skipped silently
+  when the field is missing / invalid so a mis-shaped case never
+  crashes the release itself.
+
+**🟡 P1 — /consent-status persisted released state**
+- Response now includes `released_at` (ISO string or null),
+  `released_professional_name`, and `released_by_user_id` at the
+  top level.
+- `JointAlignmentPreview.jsx` `anyReleased()` helper now reads
+  the persisted field, so a hard refresh on a case that was
+  released earlier in the day shows the green terminal banner
+  instead of resurfacing the "Continue to release consent" CTA.
+- Coverage: `tests/test_iter176_bcc_and_released_status.py`
+  (5 tests, green): 3 direct patch-based helper tests
+  (bcc forwarding, bcc absence, invalid bcc) + 2 e2e persistence
+  tests (`released_at=null` pre-release,
+  `released_at=<ISO>` post-release). Route-side BCC plumbing is a
+  single-line kwarg pass-through verified by inspection; e2e
+  effect covered by the persistence tests.
+
+
+## What's Implemented
 ### 2026-09-08 — Iter175 · Release Confirmation Email + Copyright Year Auto
 
 **🟡 P1 — Release confirmation email**

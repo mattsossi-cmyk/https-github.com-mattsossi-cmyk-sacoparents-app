@@ -69,13 +69,12 @@ function pickCoparentProfessionalName(statusData) {
   return named?.release?.professional_name || null;
 }
 
-function anyReleased(_statusData) {
-  // Placeholder — consent-status doesn't yet expose released_at.
-  // The parent will see the terminal banner via releaseState after
-  // execute-release fires. Keeping this hook so future backend
-  // enrichment (add `released_at` to consent-status) plugs in
-  // without a UI refactor.
-  return false;
+function anyReleased(statusData) {
+  // Terminal-state check — `released_at` is set once execute-release
+  // has fired. Persists across page refresh so the parent doesn't
+  // see the "Continue to release consent" CTA reappear after a
+  // successful release earlier in the day.
+  return !!(statusData && statusData.released_at);
 }
 
 export default function JointAlignmentPreview() {
