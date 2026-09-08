@@ -294,3 +294,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Admin: `GET /api/admin/declined-professionals`, `POST /api/admin/reconsider-professional/{id}`; Dashboard collapsible declined log with reason + Reconsider.
 - Test data: SA-EDU-642310 role-b invitation backdated 12 days to exercise expiring state.
 - PRODUCTION: frontend 200 but ALL /api routes 404 on sacoparentsalign.com and align-report.emergent.host (incl. /api/health which was 200 before). Deployment agent static scan passes; runtime logs not obtained. Needs redeploy / platform check.
+
+## 2026-09-08 — Matter Notes + invitation expiry enforcement (tested: iteration_22 100% both, pytest 152/152)
+- `invite_expired()` (14 days from created_at) enforced in lookup (410), accept (410), resend (410), integration case-invite (410).
+- `POST /api/joint/invitations/{iid}/reissue` (creator only): marks old invite `expired`, creates new invite (same code/email/role), emails parent, logs access_event.
+- /matters: expired invite → red notice + "Reissue Invitation"; expiring-soon → Send Reminder + Reissue. Per-row "Notes" toggle → `MatterNotes.jsx` (reuses /joint/reports/{rid}/notes, professional-private).
+- Production still: frontend 200, all /api 404 — awaiting user redeploy/platform check.

@@ -1,0 +1,27 @@
+{
+  "summary": "Iteration 22 verified end-to-end: (1) Matter Notes UI on /matters for SA-EDU-642310 — panel toggles, existing 'Session 1' note loads, save button disabled when empty/enabled with text, save shows 'Private note saved' toast, new note appears at top, textarea clears, second click hides panel. (2) Invitation expiry — expired role-b invite shows red 'Invitation to Parent 2 has expired — the link no longer works' notice with matter-reissue-btn and NO Send Reminder inside. Clicking reissue shows 'Fresh invitation sent — the old link no longer works' toast, red notice disappears, Expiring Invitations chip decreased from 1 → 0, backend reflects new pending role-b invite (expired=false, new id). (3) Notes privacy verified via API — pro2 gets 403 on GET /joint/reports/{rid}/notes; pro1 sees the notes. (4) Invalid token lookup returns 404. Backend pytest 4/4 pass; Frontend all steps pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration_22.py",
+    "/app/test_reports/pytest/iter22.xml"
+  ],
+  "action_items": [
+    "None functional. Note: main agent's pre-test 'expired invitation' seed had already been consumed by a prior reissue (perhaps external), so testing agent re-aged the current pending role-b invite (id cd580cab-...) to 20 days old via direct DB update to reproduce the expired UI state before performing the one allowed reissue. Post-reissue the row is healthy again (fresh pending invite, 14d validity). One additional invitation email was sent to parent.b.val1@gmail.com (the single reissue budget allowed by the review request)."
+  ],
+  "critical_code_review_comments": [
+    "server.py lookup_invitation returns 404 (not 410) when a stale invitation has status='expired' (post-reissue), because the query short-circuits before invite_expired() check. Spec says '/join/{token} lookup returns 410 for expired'. Currently only invitations that are still status='pending' AND past 14d return 410; post-reissue tokens return 404 with 'no longer valid'. Frontend/UX-wise this is OK, but if the spec strictly requires 410 for any expired token (including reissued/status='expired'), consider handling status=='expired' before the pending guard.",
+    "MatterNotes.jsx loads notes on every panel mount and after every save (load() call). Fine at current volume; consider optimistic update to avoid extra GET.",
+    "FamilyMatters.jsx reissue handler uses toast for both success/error and reload; no loading spinner on the button during the call. Minor UX polish."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration_22.py (new)"
+  ],
+  "success_rate": {"backend": "100% (4/4)", "frontend": "100%"},
+  "test_credentials": "approval.test.pro1@gmail.com / TestPass2026! and approval.test.pro2@gmail.com / TestPass2026! both worked.",
+  "seed_data_creation": "DB tweak: aged the pending role-b invite (id cd580cab-2426-44b8-adfa-d093bc9847f7) to created_at=now-20d to simulate expired state, then performed the reissue via UI (creating a brand new pending invite with today's created_at and 14d validity; old invite marked status='expired'). Test note 'TEST_NOTE_iter22 automated verification' was created via UI and then deleted from professional_notes to leave notes list identical to pre-test state. Original 'Session 1: both parents open to a shared school calendar.' seeded note preserved.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Verified testids: matter-notes-btn-{rid}, matter-notes-{rid}, matter-note-input-{rid}, matter-note-save-btn-{rid}, matter-notes-list-{rid}, matter-note-{noteId}, matter-expiring-{inviteId}, matter-reissue-btn-{inviteId}, matters-filter-expiring. Matter SA-EDU-642310 report id = dda358d8-874e-424d-bb4b-ff70df50dbbd. As of end of this iteration: role-b pending invite is fresh (created 2026-09-08 ~17:44 UTC, expires ~2026-09-22, expired=false). Old expired invites remaining in db.invitations with status='expired': f7cf6cdc-d1e4-4c4e-b54f-84945f724e6e (original) + cd580cab-2426-44b8-adfa-d093bc9847f7 (aged+reissued during this test). If next iteration needs to re-test the reissue flow, expect no expired notice by default; either re-age the current pending invite via DB or ask main agent to reseed. Only one email budget was used this iteration; email rate limits still apply.",
+  "rca of the issue": "No functional issues. Only observation: lookup endpoint returns 404 instead of 410 for tokens whose parent invitation was moved to status='expired' by a prior reissue. This is because line 1098 rejects any non-pending invitation with 404 before line 1100's date-based 410 check runs. Not affecting current UX (frontend only surfaces reissue button, never asks user to re-visit the old link), but flag if the acceptance criterion strictly requires 410 for stale reissued tokens."
+}

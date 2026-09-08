@@ -615,6 +615,14 @@ INVITE_EXPIRY_DAYS = 14
 INVITE_EXPIRING_SOON_DAYS = 4
 
 
+def invite_expired(inv: dict) -> bool:
+    try:
+        created = datetime.fromisoformat(inv.get("created_at", ""))
+    except ValueError:
+        return False
+    return created + timedelta(days=INVITE_EXPIRY_DAYS) < datetime.now(timezone.utc)
+
+
 def _pending_public(pending: list) -> list:
     out = []
     for i in pending:
@@ -624,7 +632,7 @@ def _pending_public(pending: list) -> list:
             expires_at = (datetime.fromisoformat(created) + timedelta(days=INVITE_EXPIRY_DAYS)).isoformat()
         except ValueError:
             pass
-        out.append({"id": i["id"], "role": i["role"], "invitee_email": i["invitee_email"], "invitee_name": i.get("invitee_name", ""), "status": i["status"], "created_at": created, "expires_at": expires_at})
+        out.append({"id": i["id"], "role": i["role"], "invitee_email": i["invitee_email"], "invitee_name": i.get("invitee_name", ""), "status": i["status"], "created_at": created, "expires_at": expires_at, "expired": invite_expired(i)})
     return out
 
 
@@ -1089,6 +1097,8 @@ async def lookup_invitation(token: str):
     inv = await db.invitations.find_one({"token": token}, {"_id": 0})
     if not inv or inv["status"] != "pending":
         raise HTTPException(status_code=404, detail="This invitation is no longer valid")
+    if invite_expired(inv):
+        raise HTTPException(status_code=410, detail="This invitation has expired. Please ask the professional to send a fresh invitation.")
     report = await db.joint_reports.find_one({"id": inv["report_id"]}, {"_id": 0})
     return {
         "inviter_name": inv["inviter_name"],
@@ -1112,6 +1122,8 @@ async def accept_invitation(body: AcceptIn, user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Invalid or expired invitation code")
     if inv["invitee_email"] != user["email"].lower():
         raise HTTPException(status_code=403, detail="This invitation was sent to a different email address. Sign in with the email the invitation was sent to.")
+    if invite_expired(inv):
+        raise HTTPException(status_code=410, detail="This invitation has expired. Please ask the professional to send a fresh invitation.")
     report = await db.joint_reports.find_one({"id": inv["report_id"]}, {"_id": 0})
     if not report:
         raise HTTPException(status_code=404, detail="Joint report not found")
@@ -1150,6 +1162,8 @@ async def resend_invitation(iid: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Only the report creator can resend the invitation")
     if inv["status"] != "pending":
         raise HTTPException(status_code=400, detail="This invitation is no longer pending")
+    if invite_expired(inv):
+        raise HTTPException(status_code=410, detail="This invitation has expired. Reissue a fresh invitation instead.")
     try:
         await send_invite_email(InviteSpec(
             report_id=inv["report_id"], role=inv["role"], invitee_name=inv["invitee_name"],
@@ -1159,6 +1173,27 @@ async def resend_invitation(iid: str, user=Depends(get_current_user)):
     except Exception:
         logger.warning(f"Invitation resend email not sent to {inv['invitee_email']}")
     return {"ok": True}
+
+
+@api.post("/joint/invitations/{iid}/reissue")
+async def reissue_invitation(iid: str, user=Depends(get_current_user)):
+    inv = await db.invitations.find_one({"id": iid}, {"_id": 0})
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+    report = await get_joint_report_doc(inv["report_id"], user)
+    if report.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the report creator can reissue the invitation")
+    if inv["status"] != "pending":
+        raise HTTPException(status_code=400, detail="This invitation is no longer pending")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.invitations.update_one({"id": iid}, {"$set": {"status": "expired", "expired_at": now}})
+    new_inv = await create_invitation(InviteSpec(
+        report_id=inv["report_id"], role=inv["role"], invitee_name=inv["invitee_name"],
+        invitee_email=inv["invitee_email"], inviter_name=inv["inviter_name"],
+        child_name=report["child_name"], subject_label=report["subject_label"], code=inv["code"],
+    ))
+    await db.access_events.insert_one({"report_id": report["id"], "action": f"Invitation reissued to Parent {'1' if inv['role'] == 'a' else '2'}", "at": now, "by": user["_id"]})
+    return {"ok": True, **_pending_public([new_inv])[0]}
 
 
 @api.get("/joint/invitations/{iid}/reminder-preview")
@@ -1264,6 +1299,8 @@ async def integration_case_invite(token: str, request: Request):
     inv = await db.invitations.find_one({"token": token}, {"_id": 0})
     if not inv:
         raise HTTPException(status_code=404, detail="Invalid or expired invitation token")
+    if inv["status"] == "pending" and invite_expired(inv):
+        raise HTTPException(status_code=410, detail="This invitation has expired")
     report = await db.joint_reports.find_one({"id": inv["report_id"]}, {"_id": 0})
     if not report:
         raise HTTPException(status_code=404, detail="Case not found")

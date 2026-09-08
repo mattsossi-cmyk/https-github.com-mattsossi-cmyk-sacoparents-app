@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Archive, ArchiveRestore, Search, CheckCircle2, Clock, ShieldAlert, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Archive, ArchiveRestore, Search, CheckCircle2, Clock, ShieldAlert, AlertTriangle, StickyNote, RefreshCw } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
+import { MatterNotes } from "@/components/MatterNotes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -43,11 +44,13 @@ const badgeClass = {
   awaiting_parents: "bg-secondary text-foreground",
 };
 
-function MatterRow({ j, onToggle }) {
+function MatterRow({ j, onToggle, onReissue }) {
   const s = matterStatus(j);
   const done = ["a", "b"].filter((r) => j.participants?.[r]?.completed).length;
+  const [showNotes, setShowNotes] = useState(false);
   return (
-    <li className="bg-white border border-border rounded-lg px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3" data-testid={`matter-row-${j.id}`}>
+    <li className="bg-white border border-border rounded-lg px-5 py-4" data-testid={`matter-row-${j.id}`}>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-[11px] font-semibold uppercase tracking-wider rounded-full px-2.5 py-0.5 ${badgeClass[s.key]}`} data-testid={`matter-status-${j.id}`}>{s.label}</span>
@@ -61,21 +64,26 @@ function MatterRow({ j, onToggle }) {
         </p>
         {expiringInvites(j).map((i) => {
           const d = daysLeft(i.expires_at);
+          const expired = i.expired || d <= 0;
           return (
-            <div key={i.id} className="mt-2 flex flex-wrap items-center gap-2 text-xs bg-align-yellow/15 border border-align-yellow/40 rounded-md px-3 py-1.5" data-testid={`matter-expiring-${i.id}`}>
-              <AlertTriangle className="h-3.5 w-3.5 text-yellow-800" />
-              <span>Invitation to Parent {i.role === "a" ? "1" : "2"} {d > 0 ? `expires in ${d} day${d === 1 ? "" : "s"}` : "has expired"}</span>
-              <ReminderPreviewButton iid={i.id} label="Send Reminder" testId={`matter-remind-btn-${i.id}`} />
+            <div key={i.id} className={`mt-2 flex flex-wrap items-center gap-2 text-xs rounded-md px-3 py-1.5 border ${expired ? "bg-red-50 border-red-200" : "bg-align-yellow/15 border-align-yellow/40"}`} data-testid={`matter-expiring-${i.id}`}>
+              <AlertTriangle className={`h-3.5 w-3.5 ${expired ? "text-red-700" : "text-yellow-800"}`} />
+              <span>Invitation to Parent {i.role === "a" ? "1" : "2"} {expired ? "has expired — the link no longer works" : `expires in ${d} day${d === 1 ? "" : "s"}`}</span>
+              {!expired && <ReminderPreviewButton iid={i.id} label="Send Reminder" testId={`matter-remind-btn-${i.id}`} />}
+              <Button size="sm" variant={expired ? "default" : "outline"} className="h-7 gap-1.5" onClick={() => onReissue(i)} data-testid={`matter-reissue-btn-${i.id}`}><RefreshCw className="h-3 w-3" /> Reissue Invitation</Button>
             </div>
           );
         })}
       </div>
       <div className="flex gap-2 shrink-0">
         <Link to={`/joint/${j.id}`} data-testid={`matter-open-link-${j.id}`}><Button size="sm" variant={s.key === "ready" ? "default" : "outline"} data-testid={`matter-open-btn-${j.id}`}>{s.key === "ready" ? "View Report" : "Open"}</Button></Link>
+        <Button size="sm" variant="ghost" onClick={() => setShowNotes((v) => !v)} className="gap-1.5" data-testid={`matter-notes-btn-${j.id}`}><StickyNote className="h-3.5 w-3.5" /> Notes</Button>
         <Button size="sm" variant="ghost" onClick={() => onToggle(j)} className="gap-1.5" data-testid={`matter-archive-btn-${j.id}`}>
           {j.archived ? <><ArchiveRestore className="h-3.5 w-3.5" /> Restore</> : <><Archive className="h-3.5 w-3.5" /> Archive</>}
         </Button>
       </div>
+    </div>
+    {showNotes && <MatterNotes rid={j.id} />}
     </li>
   );
 }
@@ -92,6 +100,14 @@ export default function FamilyMatters() {
     try {
       await api.patch(`/joint/reports/${j.id}/archive`, { archived: !j.archived });
       toast.success(j.archived ? "Matter restored" : "Matter archived");
+      load();
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
+
+  const reissue = async (i) => {
+    try {
+      await api.post(`/joint/invitations/${i.id}/reissue`);
+      toast.success("Fresh invitation sent — the old link no longer works");
       load();
     } catch (e) { toast.error(formatApiError(e)); }
   };
@@ -143,7 +159,7 @@ export default function FamilyMatters() {
         ) : shown.length === 0 ? (
           <p className="text-sm text-muted-foreground bg-white border border-border rounded-lg p-6" data-testid="matters-empty">No family matters match this view.</p>
         ) : (
-          <ul className="space-y-3" data-testid="matters-list">{shown.map((j) => <MatterRow key={j.id} j={j} onToggle={toggle} />)}</ul>
+          <ul className="space-y-3" data-testid="matters-list">{shown.map((j) => <MatterRow key={j.id} j={j} onToggle={toggle} onReissue={reissue} />)}</ul>
         )}
       </main>
     </div>
