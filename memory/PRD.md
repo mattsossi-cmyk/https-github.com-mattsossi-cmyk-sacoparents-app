@@ -357,3 +357,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Prod fixture account prod.verify.pro@example.com left in DECLINED state (reason notes it is a test fixture) — safe to ignore/delete from declined log.
 - Note: real prod case codes differ from preview (SA-EDU-642310 is preview-only).
 - Test type hints round 4 done; pytest 152/152.
+
+## 2026-09-08 — Resend code (pytest 152/152)
+- forgot_password: 60s server cooldown per email (429). Auth.jsx reset screen: countdown `resend-code-countdown` then `resend-code-btn`; resend restarts 60s. Needs deploy to reach prod.

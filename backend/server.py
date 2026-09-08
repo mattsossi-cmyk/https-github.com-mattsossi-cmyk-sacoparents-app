@@ -304,6 +304,9 @@ async def forgot_password(body: ForgotIn):
     email = body.email.lower()
     user = await db.users.find_one({"email": email})
     if user:
+        recent = await db.password_resets.find_one({"email": email})
+        if recent and (datetime.now(timezone.utc) - _parse_iso(recent.get("created_at"))).total_seconds() < 60:
+            raise HTTPException(status_code=429, detail="A code was just sent. Please wait a minute before requesting another.")
         code = f"{secrets.randbelow(1000000):06d}"
         await db.password_resets.delete_many({"email": email})
         await db.password_resets.insert_one({

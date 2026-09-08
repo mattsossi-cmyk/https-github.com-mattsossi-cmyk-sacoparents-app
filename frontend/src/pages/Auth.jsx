@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/Brand";
@@ -24,6 +24,26 @@ export default function Auth() {
   const [agreed, setAgreed] = useState(false);
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const resendCode = async () => {
+    setResending(true);
+    try {
+      await api.post("/auth/forgot-password", { email });
+      toast.success("A fresh code is on its way — check your inbox.");
+      setCooldown(60);
+    } catch (e) {
+      toast.error(formatApiError(e));
+      if (e?.response?.status === 429) setCooldown(60);
+    } finally { setResending(false); }
+  };
   const { login, register } = useAuth();
   const navigate = useNavigate();
 
@@ -38,6 +58,7 @@ export default function Auth() {
       } else if (mode === "forgot") {
         await api.post("/auth/forgot-password", { email });
         setMode("reset");
+        setCooldown(60);
         toast.success("Check your inbox — your 6-digit verification code is on its way (valid for 10 minutes).");
         return;
       } else {
@@ -174,6 +195,14 @@ export default function Auth() {
                   <Label htmlFor="reset-code">Verification code</Label>
                   <Input id="reset-code" className="h-12 tracking-[0.3em] text-center text-lg" value={resetCode} onChange={(e) => setResetCode(e.target.value)} required maxLength={6} placeholder="6-digit code" data-testid="reset-code-input" />
                   <p className="text-xs text-muted-foreground">Check your email for the code. It expires in 10 minutes.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Didn't get it?{" "}
+                    {cooldown > 0 ? (
+                      <span data-testid="resend-code-countdown">Resend available in {cooldown}s</span>
+                    ) : (
+                      <button type="button" onClick={resendCode} disabled={resending} className="text-primary underline disabled:opacity-50" data-testid="resend-code-btn">{resending ? "Sending…" : "Resend code"}</button>
+                    )}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="new-password">New password</Label>
