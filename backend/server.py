@@ -281,6 +281,8 @@ async def startup_log():
     asyncio.create_task(joint_alignment_invite_nudge_loop(app))
     from weekly_case_analytics_email import weekly_case_analytics_loop
     asyncio.create_task(weekly_case_analytics_loop(app))
+    from parent_share_digest import parent_share_digest_loop
+    asyncio.create_task(parent_share_digest_loop(app))
 
 
 @app.on_event("shutdown")

@@ -44,12 +44,18 @@ export default function SharedWithProfessionals() {
   const [invitations, setInvitations] = useState(null);
   const [error, setError] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [prefs, setPrefs] = useState(null);       // {mode, explicit_pref, active_invitation_count, auto_threshold}
+  const [prefsBusy, setPrefsBusy] = useState(false);
 
   const load = async () => {
     setError(null);
     try {
-      const r = await api.get("/parent/professional-invitations");
-      setInvitations(r.data?.invitations || []);
+      const [invRes, prefsRes] = await Promise.all([
+        api.get("/parent/professional-invitations"),
+        api.get("/parent/notification-mode"),
+      ]);
+      setInvitations(invRes.data?.invitations || []);
+      setPrefs(prefsRes.data || null);
     } catch (err) {
       logError("shared-with-pros load failed", err);
       setError("Couldn't load your invitations.");
@@ -57,6 +63,30 @@ export default function SharedWithProfessionals() {
     }
   };
   useEffect(() => { load(); }, []);
+
+  const setMode = async (mode) => {
+    setPrefsBusy(true);
+    try {
+      const r = await api.put("/parent/notification-mode", { mode });
+      setPrefs((p) => ({
+        ...(p || {}),
+        mode: r.data.mode,
+        explicit_pref: mode === "auto" ? null : mode,
+      }));
+      toast.success(
+        mode === "digest"
+          ? "You'll get one daily digest email."
+          : mode === "immediate"
+          ? "You'll get an email for each view or download."
+          : "Back to automatic mode.",
+      );
+    } catch (err) {
+      logError("set notification mode failed", err);
+      toast.error("Couldn't update notification mode.");
+    } finally {
+      setPrefsBusy(false);
+    }
+  };
 
   const handleRevoke = async (inv) => {
     if (!window.confirm(
@@ -166,6 +196,91 @@ export default function SharedWithProfessionals() {
             {error}
           </div>
         )}
+
+        {/* ---------- Notification mode toggle ---------- */}
+        {prefs && (invitations || []).length > 0 && (
+          <div
+            className="mt-6 rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5"
+            data-testid="notification-mode-card"
+          >
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+                  Notification preferences
+                </div>
+                <h3 className="text-sm font-semibold text-[#1A1330] mt-0.5">
+                  How should we notify you about professional activity?
+                </h3>
+                <p className="text-[12px] text-[#4B4567] mt-1 leading-relaxed">
+                  {prefs.mode === "digest" ? (
+                    <>
+                      You&rsquo;re in <strong>daily digest</strong> mode — one
+                      rollup email each morning covering every view and
+                      download.
+                    </>
+                  ) : (
+                    <>
+                      You&rsquo;re getting an <strong>immediate email</strong>{" "}
+                      each time a professional views or downloads a report.
+                    </>
+                  )}
+                  {" "}
+                  {prefs.explicit_pref
+                    ? <span className="text-[#857E9C]">Manually set.</span>
+                    : (
+                      <span className="text-[#857E9C]">
+                        Auto-elevated to digest once you have{" "}
+                        {prefs.auto_threshold}+ active invitations
+                        (you currently have {prefs.active_invitation_count}).
+                      </span>
+                    )}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setMode("immediate")}
+                disabled={prefsBusy}
+                aria-pressed={prefs.mode === "immediate"}
+                data-testid="notification-mode-immediate"
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold border transition-colors ${
+                  prefs.mode === "immediate"
+                    ? "bg-[#3D1A78] text-white border-[#3D1A78]"
+                    : "bg-white text-[#3D1A78] border-[#D6CFE8] hover:bg-[#F5F1FB]"
+                } disabled:opacity-50`}
+              >
+                Immediate emails
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("digest")}
+                disabled={prefsBusy}
+                aria-pressed={prefs.mode === "digest"}
+                data-testid="notification-mode-digest"
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold border transition-colors ${
+                  prefs.mode === "digest"
+                    ? "bg-[#3D1A78] text-white border-[#3D1A78]"
+                    : "bg-white text-[#3D1A78] border-[#D6CFE8] hover:bg-[#F5F1FB]"
+                } disabled:opacity-50`}
+              >
+                Daily digest
+              </button>
+              {prefs.explicit_pref && (
+                <button
+                  type="button"
+                  onClick={() => setMode("auto")}
+                  disabled={prefsBusy}
+                  data-testid="notification-mode-auto"
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold text-[#857E9C] hover:text-[#3D1A78]"
+                >
+                  Use automatic
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {invitations === null && (
           <div className="mt-8 text-center text-[#857E9C]" data-testid="shared-loading">
             <Loader2 className="animate-spin inline mr-2" size={16} />

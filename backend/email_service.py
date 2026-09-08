@@ -3192,3 +3192,90 @@ def send_parent_professional_share_notification(
     except Exception:  # noqa: BLE001 — notifications never break the caller
         _logger = __import__("logging").getLogger(__name__)
         _logger.warning("share notification email dispatch failed to %s", to_email)
+
+
+def send_parent_share_digest_email(
+    *,
+    to_email: str,
+    parent_name: Optional[str],
+    digest_day: str,
+    summary: Dict[str, Any],
+) -> None:
+    """Daily rollup of professional activity for parents in digest
+    mode. `summary` shape:
+        {"professionals": [
+            {"professional_name", "views", "downloads",
+             "reports_touched": [str, ...], "accepted": bool, "declined": bool}
+         ],
+         "total_events", "total_views", "total_downloads"}
+    """
+    salutation = (
+        f"Hi {_html.escape(parent_name.split()[0])},"
+        if parent_name else "Hi,"
+    )
+    pros = summary.get("professionals") or []
+    total_events = int(summary.get("total_events") or 0)
+    total_views = int(summary.get("total_views") or 0)
+    total_downloads = int(summary.get("total_downloads") or 0)
+
+    rows_html = []
+    rows_plain = []
+    for pro in pros:
+        reports_html = ", ".join(_html.escape(t) for t in pro.get("reports_touched", []))
+        badges = []
+        if pro.get("accepted"): badges.append("Accepted")
+        if pro.get("declined"): badges.append("Declined")
+        if pro.get("views"): badges.append(f"{pro['views']} view{'s' if pro['views'] != 1 else ''}")
+        if pro.get("downloads"): badges.append(f"{pro['downloads']} download{'s' if pro['downloads'] != 1 else ''}")
+        badges_html = " · ".join(_html.escape(b) for b in badges) or "No activity"
+        rows_html.append(
+            '<tr><td style="padding:10px 14px;border-top:1px solid #EEE8F7;">'
+            f'<div style="font-size:14px;font-weight:600;color:#1A1330;">'
+            f'{_html.escape(pro.get("professional_name") or "A professional")}</div>'
+            f'<div style="font-size:12px;color:#4B4567;margin-top:2px;">{badges_html}</div>'
+            f'<div style="font-size:11px;color:#857E9C;margin-top:2px;">{reports_html}</div>'
+            '</td></tr>'
+        )
+        rows_plain.append(
+            f"- {pro.get('professional_name') or 'A professional'}: {badges_html}\n"
+            f"    Reports: {', '.join(pro.get('reports_touched', []))}\n"
+        )
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">{salutation}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">Here&rsquo;s what your invited professionals '
+        f"did with the reports you shared on <strong>{_html.escape(digest_day)}</strong>.</p>"
+        '<table style="width:100%;border-collapse:collapse;border:1px solid #EEE8F7;'
+        'border-radius:12px;overflow:hidden;background:white;margin:0 0 18px 0;">'
+        f'{"".join(rows_html)}'
+        '</table>'
+        f'<p style="font-size:12px;color:#857E9C;line-height:1.5;margin:0 0 14px 0;">'
+        f"Total: {total_events} event{'s' if total_events != 1 else ''} "
+        f"({total_views} view{'s' if total_views != 1 else ''}, "
+        f"{total_downloads} download{'s' if total_downloads != 1 else ''}).</p>"
+    )
+    plain = (
+        f"{salutation}\n\n"
+        f"Here's what your invited professionals did with the reports you "
+        f"shared on {digest_day}.\n\n"
+        + "".join(rows_plain)
+        + f"\nTotal: {total_events} events ({total_views} views, {total_downloads} downloads).\n\n"
+        "Manage sharing anytime:\n"
+        "https://sacoparentsapp.online/shared-with-professionals\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+    html = _branded_html(
+        headline=f"Daily digest · {digest_day}",
+        body_html=body_html,
+        cta_label="Manage sharing",
+        cta_url="https://sacoparentsapp.online/shared-with-professionals",
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Daily share digest · {digest_day}",
+        html=html,
+        text=plain,
+        failure_message="Digest delivery failed.",
+    )

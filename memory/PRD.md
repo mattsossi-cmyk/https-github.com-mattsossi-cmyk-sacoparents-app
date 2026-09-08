@@ -27,6 +27,97 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-08 — Notification Digest + Portal Handshake Simulator
+
+**✨ P2 — Daily share-notification digest (iter169)**
+Parents with **≥3 active invitations** (non-revoked + not-expired)
+are auto-elevated into "digest mode" — one rolled-up email per
+morning covering every view / download / accept from the previous
+UTC day, replacing per-event pings.
+
+- **Auto rule**: `active_invitations >= 3` → mode auto-resolves to
+  `digest` unless the parent has an explicit `immediate` override.
+- **Explicit override**: parent can pin `immediate` or `digest`
+  regardless of the auto rule, or `auto` to clear the pin.
+- **Per-event notification suppression** — when a parent's resolved
+  mode is `digest`, the per-event notification email in
+  `parent_professional_invitations.record_access_event` is skipped.
+  Event recording (view_count / download_count / status flip) still
+  runs — only the outgoing email is suppressed. Audit trail stays
+  intact.
+- **Rollup email content** — per-professional block listing views /
+  downloads / accepted/declined + specific report titles that were
+  touched. Zero report body content. Zero counterparty info.
+- **Idempotency** — dedupe key is `(parent_id, digest_day)` in
+  `parent_share_digest_sends`. Silence-is-safety: parent had no
+  events that day → we still record `no_events_silent` so the
+  loop doesn't re-scan them until tomorrow.
+- **Backend endpoints**:
+    * `GET /api/parent/notification-mode` — returns
+      `{mode, explicit_pref, active_invitation_count, auto_threshold}`.
+    * `PUT /api/parent/notification-mode` — body
+      `{mode: "digest"|"immediate"|"auto"}`. `"auto"` clears the
+      explicit pref so the auto rule kicks in again.
+- **Frontend**: new "Notification preferences" card on
+  `/shared-with-professionals` (only shown when the parent has at
+  least one invitation). Two aria-pressed pill toggles (Immediate
+  emails / Daily digest) + a "Use automatic" clear-override link
+  when the parent has manually set a pref.
+- **Background job** `parent_share_digest_loop` runs on the
+  configurable send-window (default `America/Chicago 07:00–10:00`)
+  behind the `PARENT_SHARE_DIGEST_ENABLED=1` env flag. Idle no-op
+  when unset — safe to leave registered.
+- **New collections**:
+    * `digest_notification_prefs` (parent_id → mode override)
+    * `parent_share_digest_sends` (dedupe key + event_count)
+- **Coverage**: `tests/test_iter169_share_digest.py` (11 tests) —
+  auth guards, auto rule, explicit overrides, `auto` clears
+  pref, `_iter_candidate_parents` respects immediate opt-outs,
+  dry-run with-events vs. no-events-silent paths, digest-mode
+  event recording still increments view_count.
+
+**✨ P2 — Portal Handshake Simulator (iter170)**
+A preview-only CLI for the sacoparentsalign.com portal engineers
+so they can validate the contract byte-for-byte BEFORE their
+portal ships.
+
+- **New CLI** `/app/scripts/portal_handshake_simulator.py`:
+    * Takes `--base-url`, `--integration-key`, `--permission-id`
+      and one or more `--events {view,download,accepted,declined}`.
+    * Hits the same two endpoints their portal must implement:
+        - `GET /api/integrations/report-permissions/{id}` (auth check)
+        - `POST /api/integrations/report-permissions/{id}/events`
+    * Prints the full request + response for every hop.
+    * Prints a **redacted** curl replay line for every request that
+      references `$INTEGRATION_SHARED_SECRET` (never embeds the raw
+      key — safe to paste into a bug tracker).
+    * Exit 0 on success, 1 on any HTTP failure, 2 on missing key.
+- **Coverage**: `tests/test_iter170_portal_simulator.py` (5 tests) —
+  `--help`, missing-key exit 2, happy-path exit 0 with Active +
+  Event-recorded output, curl output never contains the raw
+  secret, unknown-permission exits 1.
+
+**Rollup for the week**: 84/84 tests green across iter163
+(directory) + iter164 (webhook + templates) + iter165 (samples) +
+iter166 (directory swap) + iter167 (opens sparkline) + iter168
+(parent-pro invitations) + iter169 (share digest) + iter170
+(handshake simulator).
+
+**Files touched**:
+- `backend/parent_share_digest.py` (new)
+- `backend/parent_professional_invitations.py` (adds
+  notification-mode GET/PUT + digest-mode suppression)
+- `backend/email_service.py` (adds `send_parent_share_digest_email`;
+  fixes `send_parent_professional_share_notification` to keep its
+  outgoing `_send` call after a mid-file insert)
+- `backend/server.py` (registers `parent_share_digest_loop`)
+- `frontend/src/pages/SharedWithProfessionals.jsx` (Notification
+  preferences card + mode toggle handlers)
+- `scripts/portal_handshake_simulator.py` (new CLI)
+- `backend/tests/test_iter169_share_digest.py` (new, 11 tests)
+- `backend/tests/test_iter170_portal_simulator.py` (new, 5 tests)
+
+
 ### 2026-09-08 — Opens Sparkline + Parent → Professional Report-Share Flow
 
 **✨ P2 — Opens Sparkline (iter167)**

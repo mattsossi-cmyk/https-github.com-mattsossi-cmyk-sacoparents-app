@@ -744,11 +744,20 @@ async def record_access_event(
 
     # Fire the notification email best-effort. Never crash on
     # provider errors — the audit event is what really matters.
+    # When the parent is in "digest" mode, suppress per-event emails
+    # here — the daily rollup will cover them.
     try:
         from email_service import (
             send_parent_professional_share_notification,
         )
-        if body.event == "view" and bool(inv.get("notify_on_view")):
+        from parent_share_digest import get_notification_mode
+        digest_mode = await get_notification_mode(
+            db, parent_id=inv.get("inviting_parent_id"),
+        )
+        if digest_mode == "digest":
+            # Skip per-event pings — rolled up in the daily digest.
+            pass
+        elif body.event == "view" and bool(inv.get("notify_on_view")):
             send_parent_professional_share_notification(
                 to_email=inv.get("inviting_parent_email"),
                 event="viewed",
@@ -798,3 +807,52 @@ async def get_parent_report_catalog(
     from parent_report_catalog import list_completed_reports
     reports = await list_completed_reports(db, user_id=current.user_id)
     return {"reports": reports}
+
+
+# ---------------------------------------------------------------------
+# Digest / immediate notification-mode preference for the parent.
+# ---------------------------------------------------------------------
+
+class SetNotificationModeBody(BaseModel):
+    mode: str = Field(..., pattern="^(digest|immediate|auto)$")
+
+
+@router.get("/parent/notification-mode")
+async def get_notification_mode_endpoint(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return the caller's resolved notification mode + how many
+    active invitations they have (drives the toggle-UI copy and the
+    auto-elevation hint)."""
+    from parent_share_digest import (
+        get_notification_mode, _active_invitation_count,
+        _MIN_ACTIVE_INVITATIONS_FOR_AUTO_DIGEST,
+    )
+    resolved = await get_notification_mode(db, parent_id=current.user_id)
+    active = await _active_invitation_count(db, current.user_id)
+    pref = await db["digest_notification_prefs"].find_one(
+        {"parent_id": current.user_id}, {"_id": 0, "mode": 1},
+    )
+    return {
+        "mode": resolved,
+        "explicit_pref": (pref or {}).get("mode"),
+        "active_invitation_count": active,
+        "auto_threshold": _MIN_ACTIVE_INVITATIONS_FOR_AUTO_DIGEST,
+    }
+
+
+@router.put("/parent/notification-mode")
+async def set_notification_mode_endpoint(
+    body: SetNotificationModeBody,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Set the caller's explicit notification-mode override.
+    `"auto"` clears the override so the auto-elevation rule kicks
+    in again."""
+    from parent_share_digest import set_notification_mode
+    resolved = await set_notification_mode(
+        db, parent_id=current.user_id, mode=body.mode,
+    )
+    return {"mode": resolved, "requested": body.mode}
