@@ -44,3 +44,8 @@ until the file grows further.
 Every one of the 25 flagged lines verified by direct inspection (server.py ×13, email_utils.py ×3, joint_engine.py ×1, tests ×8):
 all are `is None` (14) or `is not None` (11). PEP 8 mandates `is`/`is not` for None comparisons; `== None` would be the anti-pattern.
 No code change made. Fifth consecutive false-positive report for this rule — the scanner appears to flag any `is` operator.
+
+## 2026-09-09 — Code review round 5 ("is vs ==", 25 locations)
+- Every flagged line (server.py ×13, joint_engine.py:406, email_utils.py 57/61/85, 8 test lines) is `is None` / `is not None`.
+  Verified with grep: zero comparisons of `is` against string/number literals exist in the codebase.
+  `is None` is the PEP 8-mandated form; converting to `== None` would be a regression (E711). No changes made.
