@@ -51,6 +51,7 @@ import ActivitiesReflection from "@/pages/ActivitiesReflection";
 import ActivitiesAlignment from "@/pages/ActivitiesAlignment";
 import Samples from "@/pages/Samples";
 import JoinInvitation from "@/pages/JoinInvitation";
+import JoinInvitationSamplePreview from "@/pages/JoinInvitationSamplePreview";
 import JoinCode from "@/pages/JoinCode";
 import ProfessionalsDirectory from "@/pages/ProfessionalsDirectory";
 import ForProfessionals from "@/pages/ForProfessionals";
@@ -173,6 +174,7 @@ function AppRoutes() {
         <Route path="/activities/reflection" element={<ActivitiesReflection />} />
         <Route path="/activities/alignment" element={<ActivitiesAlignment />} />
         <Route path="/join" element={<JoinCode />} />
+        <Route path="/join/sample-preview" element={<JoinInvitationSamplePreview />} />
         <Route path="/join/:token" element={<JoinInvitation />} />
         <Route path="/professionals" element={<ProfessionalsDirectory />} />
         <Route path="/for-professionals" element={<ForProfessionals />} />

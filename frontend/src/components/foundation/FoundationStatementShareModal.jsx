@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
 import OpensSparkline from "./OpensSparkline";
+import EmailDeliveryBadge from "../EmailDeliveryBadge";
 
 /**
  * Human-friendly "last opened" phrasing. `now`, `2 minutes ago`,
@@ -50,6 +51,7 @@ export default function FoundationStatementShareModal({
   const [sending, setSending] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [emailingMe, setEmailingMe] = useState(false);
+  const [deliveryTick, setDeliveryTick] = useState(0);
   // Share-history state — loaded lazily when the History tab is
   // first opened, and reloaded after every successful send so the
   // list stays fresh.
@@ -140,6 +142,7 @@ export default function FoundationStatementShareModal({
       toast.success(
         `Foundation Statement emailed to ${res.data?.sent_to || "your inbox"}.`,
       );
+      setDeliveryTick((v) => v + 1);
       onClose();
     } catch (err) {
       logError("foundation email-me failed", err);
@@ -439,6 +442,10 @@ export default function FoundationStatementShareModal({
                   <><Mail size={12} /> Email me the PDF</>
                 )}
               </button>
+              <EmailDeliveryBadge
+                reportType="foundation_statement"
+                refreshKey={deliveryTick}
+              />
               <button
                 type="button"
                 onClick={handleDownload}

@@ -23,6 +23,7 @@ const PUBLIC_MARKETING_PATHS = new Set([
   "/signup",
   "/for-portal-engineers",
   "/for-professionals",
+  "/join/sample-preview",
 ]);
 
 /**

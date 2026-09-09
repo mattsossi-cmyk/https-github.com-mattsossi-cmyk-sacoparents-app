@@ -15,7 +15,7 @@
  * so we can't pre-check on the client — the accept call is the
  * source of truth on whether the parent is the right person.
  */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ShieldCheck,
@@ -66,6 +66,13 @@ export default function JoinInvitation() {
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  // After the invitation is accepted, we auto-focus the primary
+  // "Start My Assessment" button so a keyboard user (or a mobile
+  // screen reader) can press Enter to advance without hunting for
+  // the CTA. Guard: only fires once per accept so React strict
+  // mode / re-renders don't re-focus mid-typing.
+  const startBtnRef = useRef(null);
+  const autoFocusedRef = useRef(false);
   const [emailMismatch, setEmailMismatch] = useState(false);
 
   const authToken = getToken();
@@ -107,6 +114,22 @@ export default function JoinInvitation() {
       } catch { /* noop */ }
     }
   }, [preview]);
+
+  // Auto-focus the Start My Assessment CTA the moment the accept
+  // completes. Fires exactly once so we don't fight the parent if
+  // they've tabbed away.
+  useEffect(() => {
+    if (!accepted || autoFocusedRef.current) return;
+    const el = startBtnRef.current;
+    if (!el) return;
+    autoFocusedRef.current = true;
+    // Small delay so screen readers announce the "You're linked"
+    // heading before focus jumps.
+    const t = window.setTimeout(() => {
+      try { el.focus({ preventScroll: false }); } catch { /* noop */ }
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [accepted]);
 
   // 2. Auto-accept when the parent is signed in and the preview loaded.
   useEffect(() => {
@@ -346,9 +369,10 @@ export default function JoinInvitation() {
                   </p>
                   <div className="mt-4 flex flex-wrap gap-3">
                     <button
+                      ref={startBtnRef}
                       type="button"
                       onClick={gotoAssessment}
-                      className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] text-white px-5 py-2.5 text-sm font-semibold hover:bg-[#2A0F5F] transition"
+                      className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] text-white px-5 py-2.5 text-sm font-semibold hover:bg-[#2A0F5F] focus:outline-none focus:ring-2 focus:ring-[#3D1A78] focus:ring-offset-2 transition"
                       data-testid="join-invitation-start-assessment"
                     >
                       <Sparkles size={16} />
@@ -363,6 +387,12 @@ export default function JoinInvitation() {
                       Go to my dashboard
                     </button>
                   </div>
+                  <p
+                    className="mt-3 text-[11.5px] text-[#857E9C]"
+                    data-testid="join-invitation-keyboard-hint"
+                  >
+                    Press <kbd className="font-mono">Enter</kbd> to continue.
+                  </p>
                 </div>
               )}
 

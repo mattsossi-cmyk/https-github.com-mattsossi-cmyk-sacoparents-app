@@ -27,6 +27,58 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-09 — Iter180 · Auto-Focus + Sample Preview + Delivery Badge
+
+**🟢 P3 — Prof Preview Auto-Focus**
+- `JoinInvitation.jsx` now attaches a `ref` to the primary Start My
+  Assessment CTA and auto-focuses it 250ms after the invitation is
+  accepted (so screen readers announce the "you're linked" heading
+  first). Runs once per accept (`autoFocusedRef`) so React strict-
+  mode double-invokes don't re-steal focus.
+- Small keyboard hint added under the CTAs:
+  *"Press Enter to continue."*
+- `focus:ring-2 focus:ring-[#3D1A78]` for a visible focus ring
+  when the browser announces it.
+
+**🟢 P3 — Path B Sample Link**
+- Collapsed Path B card on Landing now shows a tiny
+  *"See a sample invited screen →"* link (only on the collapsed
+  variant, kept out of the expanded state so real users don't
+  see it once they're mid-flow).
+- New public route `/join/sample-preview` renders a stub
+  invitation page (professional_name "Adele van Wyk (sample)",
+  invited_first_name "Alex") with a dismissible amber sample
+  banner and a disabled *Begin my reflection* button. Added to
+  `PUBLIC_MARKETING_PATHS` so mediators arriving from LinkedIn
+  never hit the legal modal.
+- Router: route registered BEFORE `/join/:token` since Route
+  order matters — the more-specific static path must resolve
+  first.
+
+**🟡 P2 — Email Delivery Badge**
+- New leaf module `backend/report_deliveries.py` with a
+  `record_email_delivery()` helper and a `GET /report-deliveries`
+  endpoint. Writes per-user, per-report_type receipts into a new
+  `report_deliveries` collection. Never crashes the caller
+  (empty user/email/type paths are noops).
+- Wired the helper into ALL five email endpoints on success:
+  Foundation Statement, SNC report, Educational / Medical /
+  Psychological deep-dives.
+- New shared `<EmailDeliveryBadge />` component with a
+  `formatRelative()` helper. Renders a small green
+  *"✓ Sent to X · 2 min ago"* pill next to the Email me button.
+  Title attribute shows the exact ISO timestamp on hover.
+  Auto-refreshes every 30s via a tick state; also refetches
+  when the parent taps Email again via `refreshKey` prop.
+- Badge added on all four report pages + inside the Foundation
+  Statement share modal.
+- Coverage: `tests/test_iter180_email_delivery_badge.py` (7 tests,
+  green): endpoint auth + null-slots + write-and-read + timestamp
+  bumps on second write + noops on invalid inputs + e2e via
+  Foundation Statement email path.
+
+
+## What's Implemented
 ### 2026-09-09 — Iter179 · Foundation Email + Prof Personalization + Path B Deep Link
 
 **🟡 P2 — Foundation Statement email parity**

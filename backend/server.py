@@ -33,6 +33,7 @@ from psych_deep_comparison_routes import router as psych_deep_compare_router  # 
 from med_deep_comparison_routes import router as med_deep_compare_router  # noqa: E402
 from psych_deep_routes import router as psych_deep_router  # noqa: E402
 from med_deep_routes import router as med_deep_router  # noqa: E402
+from report_deliveries import router as report_deliveries_router  # noqa: E402
 from deep_dives_routes import router as deep_dives_router  # noqa: E402
 from progress_dashboard_routes import router as progress_dashboard_router  # noqa: E402
 from wall_routes import router as wall_router  # noqa: E402
@@ -165,6 +166,7 @@ api_router.include_router(safety_assessment_router)
 api_router.include_router(gmail_router)
 api_router.include_router(coparenting_router)
 api_router.include_router(snc2_router)
+api_router.include_router(report_deliveries_router)
 api_router.include_router(snc2_compare_router)
 api_router.include_router(edu_deep_router)
 api_router.include_router(edu_deep_compare_router)

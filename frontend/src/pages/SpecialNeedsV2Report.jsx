@@ -21,6 +21,7 @@ import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert, Users,
 import { logError } from "../lib/logger";
 import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
+import EmailDeliveryBadge from "../components/EmailDeliveryBadge";
 import SignDownloadToggle from "../components/SignDownloadToggle";
 
 const STATUS_COLOR = {
@@ -58,6 +59,7 @@ export default function SpecialNeedsV2Report() {
   const [busy, setBusy] = useState(false);
   const [signOnDownload, setSignOnDownload] = useState(false);
   const [signNote, setSignNote] = useState("");
+  const [deliveryTick, setDeliveryTick] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -104,6 +106,7 @@ export default function SpecialNeedsV2Report() {
     try {
       const res = await api.post("/snc2/report/email", {});
       toast.success(`Report emailed to ${res.data?.sent_to || "your inbox"}.`);
+      setDeliveryTick((v) => v + 1);
     } catch (err) {
       logError("snc2 email", err);
       toast.error(err?.response?.data?.detail || "Could not email your report right now.");
@@ -181,6 +184,7 @@ export default function SpecialNeedsV2Report() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
               <Mail size={13} /> Email me the PDF
             </button>
+            <EmailDeliveryBadge reportType="snc_report" refreshKey={deliveryTick} />
             <button onClick={regenerate} disabled={busy} data-testid="snc2-report-regenerate"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
               {busy ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />} Regenerate

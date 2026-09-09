@@ -484,27 +484,41 @@ function PathBInvitedCard() {
 
   if (!expanded) {
     return (
-      <button
-        type="button"
-        onClick={() => setExpanded(true)}
-        className="group text-left rounded-3xl bg-white border-2 border-[#D6CFE8] hover:border-[#3D1A78] p-5 sm:p-6 transition shadow-sm"
-        data-testid="hero-invited-cta"
+      <div
+        className="text-left rounded-3xl bg-white border-2 border-[#D6CFE8] hover:border-[#3D1A78] p-5 sm:p-6 transition shadow-sm"
+        data-testid="hero-invited-cta-wrap"
       >
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
-          Path B
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="w-full text-left"
+          data-testid="hero-invited-cta"
+        >
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            Path B
+          </div>
+          <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
+            I was invited by a professional
+          </div>
+          <div className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
+            Open the link your mediator or attorney emailed you — or
+            paste the code they gave you. We&rsquo;ll auto-connect the
+            rest.
+          </div>
+          <div className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#3D1A78] group-hover:underline">
+            Continue your invitation →
+          </div>
+        </button>
+        <div className="mt-3 pt-3 border-t border-[#EFE9F9]">
+          <Link
+            to="/join/sample-preview"
+            className="text-[11px] text-[#857E9C] hover:text-[#3D1A78] hover:underline"
+            data-testid="hero-invited-sample-link"
+          >
+            See a sample invited screen →
+          </Link>
         </div>
-        <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
-          I was invited by a professional
-        </div>
-        <div className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
-          Open the link your mediator or attorney emailed you — or
-          paste the code they gave you. We&rsquo;ll auto-connect the
-          rest.
-        </div>
-        <div className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#3D1A78] group-hover:underline">
-          Continue your invitation →
-        </div>
-      </button>
+      </div>
     );
   }
 

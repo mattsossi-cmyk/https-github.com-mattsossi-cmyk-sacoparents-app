@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Download, Loader2, Mail, RefreshCcw, Sparkles, Users,
 } from "lucide-react";
+
+import EmailDeliveryBadge from "../components/EmailDeliveryBadge";
 import { logError } from "../lib/logger";
 
 
@@ -63,6 +65,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
   const [report, setReport] = useState(null);
   const [signOnDownload, setSignOnDownload] = useState(false);
   const [signNote, setSignNote] = useState("");
+  const [deliveryTick, setDeliveryTick] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -120,6 +123,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
     try {
       const res = await api.post("/med-deep/report/email", {});
       toast.success(`Report emailed to ${res.data?.sent_to || "your inbox"}.`);
+      setDeliveryTick((v) => v + 1);
     } catch (err) {
       logError("med-deep email", err);
       toast.error(err?.response?.data?.detail || "Could not email your report right now.");
@@ -171,6 +175,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
               <Mail size={13} /> Email me the PDF
             </button>
+            <EmailDeliveryBadge reportType="med_deep" refreshKey={deliveryTick} />
             <button onClick={load} disabled={busy} data-testid="med-deep-report-refresh"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#E5E0EE] text-[#3D1A78] hover:bg-[#EEE9F7]">
               <RefreshCcw size={13} /> Refresh

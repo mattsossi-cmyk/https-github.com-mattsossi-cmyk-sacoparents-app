@@ -322,6 +322,11 @@ async def report_email(
         )
     except email_service.EmailSendError as e:
         raise HTTPException(status_code=502, detail=str(e))
+    from report_deliveries import record_email_delivery
+    await record_email_delivery(
+        db, user_id=user.user_id,
+        report_type="psych_deep", to_email=to_email,
+    )
     return {"ok": True, "sent_to": to_email, "filename": filename}
 
 

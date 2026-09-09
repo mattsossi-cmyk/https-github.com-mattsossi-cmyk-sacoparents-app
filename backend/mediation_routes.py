@@ -332,6 +332,11 @@ async def email_foundation_statement_to_me(
         )
     except email_service.EmailSendError as e:
         raise HTTPException(status_code=502, detail=str(e))
+    from report_deliveries import record_email_delivery
+    await record_email_delivery(
+        db, user_id=current.user_id,
+        report_type="foundation_statement", to_email=to_email,
+    )
     return {
         "ok": True,
         "sent_to": to_email,
