@@ -1,0 +1,40 @@
+{
+  "summary": "Frontend-only test of Professional Directory feature as approved pro (approval.test.pro1@gmail.com). All functional flows pass: dashboard professionals-section renders with heading 'Available Professionals', count '5 approved colleagues', 4 compact preview cards, professionals-view-all-btn navigates to /professionals; action-professionals card present (5 primary action cards total: accept-invite, family-matters, invite-parents, joint-reports, professionals). /professionals shows 5 cards, verified badges on Joy Curbow, Albert W. Smith, Matt Sossi, and approval.test.pro2 (4 badges total); own card shows '(you)' and NO refer button; email mailto: links present. Search 'Curbow' filters to 1 card (Joy Curbow, MS). Refer flow: dialog opens with 5 matter options, message input works, POST /api/professionals/{id}/refer returns 200, toast 'Referral sent to Albert W. Smith, PhD' shows, dialog closes. ONE CRITICAL DESIGN BUG: at 390px viewport, /professionals AND /dashboard have massive horizontal overflow (scrollWidth=862 vs 390). Root cause: pro-card cells expand to ~838px because their parent grid lacks a base grid-cols-1.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/professionals AND /dashboard professionals-section at 390px",
+        "issues": [
+          "Horizontal overflow of 472px (scrollWidth=862 vs viewport=390). Every pro-card renders at width ~838px on mobile, breaking the 'no horizontal overflow' acceptance criterion for this feature.",
+          "RCA: In Professionals.jsx line 116 the grid uses `grid sm:grid-cols-2 lg:grid-cols-3 gap-4` and in ProfessionalsPreview.jsx line 25 `grid sm:grid-cols-2 lg:grid-cols-4 gap-4` — both missing a base `grid-cols-1`. Without grid-template-columns set, CSS Grid falls back to auto-sized implicit tracks, so cells stretch to fit their widest child (the VerifiedBadge 'CREDENTIALS VERIFIED' at 187px + min-w-0 content). Fix: add `grid-cols-1` to both grid classes."
+        ]
+      },
+      {
+        "screen": "/professionals cards at desktop 3-column layout",
+        "issues": [
+          "When VerifiedBadge is present the name is aggressively truncated (e.g. 'Albert ...', 'Joy Cur...', 'Approv...', 'Matt So...') because the 187px 'CREDENTIALS VERIFIED' badge eats most of the row width in a narrow 3-col cell. Consider a shorter badge label (icon + 'Verified') or stack badge under the name."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Add `grid-cols-1` to the base of the two grids: Professionals.jsx line 116 (`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4`) and ProfessionalsPreview.jsx line 25 (`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4`). This is the single fix that removes the mobile horizontal overflow on both /professionals and /dashboard.",
+    "Optional: shorten VerifiedBadge label to 'Verified' or move badge to a second line so professional names aren't truncated to 4-6 chars in 3-column desktop view."
+  ],
+  "critical_code_review_comments": [
+    "Professionals.jsx and ProfessionalsPreview.jsx use `grid` Tailwind class without a base column count. On viewports narrower than sm (640px), no grid-template-columns is set, so CSS Grid uses implicit auto-sized tracks that stretch to content width — this is why pro-cards balloon to ~838px at 390px viewport. Always pair `grid` with a base `grid-cols-{n}`.",
+    "ProfessionalCard: badge shrink-0 combined with `min-w-0` name div still lets the badge consume ~187px in narrow desktop 3-col cells, forcing name truncation to a handful of characters. Consider hiding the 'CREDENTIALS VERIFIED' text on smaller cell widths or stacking below the name."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "90% (all functional flows pass; mobile overflow regression fails 'no horizontal overflow' criterion)"},
+  "test_credentials": "approval.test.pro1@gmail.com / TestPass2026! (used successfully). 5 approved pros in directory: Albert W. Smith, PhD; Approval Notify Test; Approval Test Pro (self); Joy Curbow, MS; Matt Sossi. 4 have credentials_verified=true.",
+  "seed_data_creation": "None.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Functional feature works end-to-end (dashboard section, action card, directory page, search, verified badges, own-card '(you)' without refer button, refer dialog + toast + 200 POST). Only outstanding item is the mobile grid overflow bug — one CSS class change on two lines. Refer POST verified to /api/professionals/{id}/refer returning 200 with toast 'Referral sent to <name>'. matter options populated with 5 entries for approval.test.pro1. 403-for-parents backend behavior was not exercised via UI (backend tests already 3/3 per prior context).",
+  "rca of the issue": "Mobile overflow RCA: Tailwind's `grid` utility only enables `display: grid` — it does NOT set columns. In Professionals.jsx (line 116) and ProfessionalsPreview.jsx (line 25) the classes read `grid sm:grid-cols-2 lg:grid-cols-3 gap-4` (and `lg:grid-cols-4`). Below the sm breakpoint (640px), no `grid-template-columns` rule applies, so the grid falls back to a single implicit auto-sized track. That track sizes to the widest child, and each ProfessionalCard's row `<div class='flex items-start justify-between gap-2'>` contains a `min-w-0` name column plus a `shrink-0` VerifiedBadge (~187px 'CREDENTIALS VERIFIED' label), producing an ~838px card in a 390px viewport → 472px horizontal overflow. Fix: add explicit `grid-cols-1` at the base breakpoint in both files. Verified same overflow occurs on /dashboard because ProfessionalsPreview is rendered there."
+}

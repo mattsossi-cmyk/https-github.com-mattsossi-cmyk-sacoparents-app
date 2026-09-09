@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-09.9"
+BUILD_ID = "2026-09-09.10"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -1901,6 +1901,68 @@ class PrepareIn(BaseModel):
 @api.get("/professionals")
 async def list_professionals(user=Depends(get_current_user)):
     return await db.users.find({"role": "professional", "approved": {"$ne": False}}, {"_id": 0, "name": 1, "email": 1, "verification_level": 1}).sort("name", 1).to_list(5000)
+
+
+def _directory_entry(u: dict) -> dict:
+    p = u.get("profile") or {}
+    return {
+        "id": u["_id"], "name": u.get("name", ""), "email": u["email"],
+        "pro_role": p.get("pro_role", ""), "organization": p.get("organization", ""),
+        "phone": p.get("phone", ""), "city": p.get("city", ""), "state": p.get("state", ""),
+        "credentials_verified": u.get("verification_level") == "credentials_verified",
+    }
+
+
+@api.get("/professionals/directory")
+async def professionals_directory(user=Depends(get_current_user)):
+    require_approved_professional(user, "The professional directory is available to approved professionals")
+    docs = await db.users.find(
+        {"role": {"$in": list(PRO_ROLES)}, "approved": True},
+        {"password_hash": 0},
+    ).sort("name", 1).to_list(5000)
+    return [_directory_entry(u) for u in docs]
+
+
+class ReferIn(BaseModel):
+    message: str = ""
+    report_id: str | None = None
+
+
+@api.post("/professionals/{pro_id}/refer")
+async def refer_to_professional(pro_id: str, body: ReferIn, user=Depends(get_current_user)):
+    require_approved_professional(user, "Only approved professionals can refer cases")
+    if pro_id == user["_id"]:
+        raise HTTPException(status_code=400, detail="You cannot refer a case to yourself")
+    colleague = await db.users.find_one({"_id": pro_id, "role": {"$in": list(PRO_ROLES)}, "approved": True})
+    if not colleague:
+        raise HTTPException(status_code=404, detail="Professional not found")
+    matter_line = ""
+    if body.report_id:
+        rep = await db.joint_reports.find_one({"id": body.report_id, "created_by": user["_id"]}, {"_id": 0, "case_code": 1, "subject_label": 1})
+        if not rep:
+            raise HTTPException(status_code=404, detail="Matter not found")
+        matter_line = f"<p><strong>Matter:</strong> {escape(rep.get('subject_label', 'Joint Report'))} — Alignment Case {escape(rep.get('case_code', ''))}</p>"
+    message = body.message.strip()
+    p = user.get("profile") or {}
+    contact = ", ".join(x for x in (user["email"], p.get("phone", "")) if x)
+    await send_email(
+        to=colleague["email"],
+        subject=f"Case referral from {user.get('name', 'a colleague')} - {EMAIL_FROM_NAME}",
+        html=_pro_email_wrap(
+            f"<p>Hi {escape(colleague.get('name') or 'there')},</p>"
+            f"<p><strong>{escape(user.get('name', 'A colleague'))}</strong>"
+            + (f" ({escape(p.get('pro_role'))}, {escape(p.get('organization'))})" if p.get("pro_role") and p.get("organization") else "")
+            + " would like to refer a family matter to you through the SA CoParents Align professional directory.</p>"
+            + matter_line
+            + (f"<blockquote style=\"border-left:3px solid #5B2A86;padding-left:12px;color:#333\">{escape(message)}</blockquote>" if message else "")
+            + f"<p>Reply directly to the referring professional: {escape(contact)}.</p>"
+            "<p style=\"font-size:13px;color:#555\">No parent information or report content is shared by this message. "
+            "Report access is granted only through the professional's secure case invitation.</p>"),
+        reply_to=user["email"],
+    )
+    now = datetime.now(timezone.utc).isoformat()
+    await db.referrals.insert_one({"id": str(uuid.uuid4()), "from_id": user["_id"], "to_id": pro_id, "report_id": body.report_id, "message": message[:1000], "at": now})
+    return {"ok": True, "to": colleague.get("name", colleague["email"])}
 
 
 @api.post("/admin/email-test")

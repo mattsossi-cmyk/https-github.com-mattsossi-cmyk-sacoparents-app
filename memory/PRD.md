@@ -422,6 +422,11 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Live: simplified landing (hero CTAs, four-steps, align-model, report-section, methodology button; no mobile overflow), /methodology + PDF (200), /accept-invite SPA, lookup endpoint auth-protected (401), sample PDF 200.
 - Not yet live: .8 (admin email-test, 15-min codes) and .9 (one-click reset link — prod reset-password still requires email+code, 422 on token body). Albert login probe → 401 (can't distinguish "no account" vs wrong password without prod admin access; ALSMITH_TEMP_PASSWORD must exist in prod env).
 
+## 2026-09-09 — Professional Directory + refer-a-case (BUILD 2026-09-09.10; test_professional_directory 3/3; iteration_37)
+- `GET /api/professionals/directory` (approved pros/admins only; 403 otherwise): id, name, email, pro_role, organization, phone, city, state, credentials_verified. `POST /api/professionals/{id}/refer` {message, report_id?}: emails colleague (reply-to referrer) with referrer contact + optional case code/subject only — no parent data; logged in `referrals`; 400 self, 404 unknown pro / matter not created by me.
+- `/professionals` page (Professionals.jsx: search, cards, VerifiedBadge, contact links, "Refer a case" dialog w/ matter select). Dashboard: `ProfessionalsPreview` section "Available Professionals" (4 compact cards + Full directory) for approved pros, plus 5th primary action card `action-professionals`. Mobile overflow fix: grid-cols-1 base, min-w-0/overflow-hidden card, break-all email.
+
+
 
 
 

@@ -13,6 +13,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AdminProfessionals } from "@/components/AdminProfessionals";
 import { ForcePasswordChange } from "@/components/ForcePasswordChange";
 import { ParentRequestStatus } from "@/components/ParentRequestStatus";
+import { ProfessionalsPreview } from "@/components/ProfessionalsPreview";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -239,6 +240,10 @@ export default function Dashboard() {
               <p className="font-semibold">Joint Alignment Reports</p>
               <p className="text-xs text-muted-foreground mt-1">Reports ready to generate or review.</p>
             </a>
+            <Link to="/professionals" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-professionals">
+              <p className="font-semibold">Professional Directory</p>
+              <p className="text-xs text-muted-foreground mt-1">Find colleagues and refer a case.</p>
+            </Link>
           </section>
         )}
 
@@ -530,6 +535,8 @@ export default function Dashboard() {
         )}
 
         {!isPro && <ParentRequestStatus requests={proRequests} />}
+
+        {isPro && user?.approved !== false && <ProfessionalsPreview userId={user?.id} />}
 
         {isPro && proRequests.length > 0 && (
           <div data-testid="pro-requests-section">

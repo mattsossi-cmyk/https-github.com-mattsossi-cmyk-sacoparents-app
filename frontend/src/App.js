@@ -18,6 +18,7 @@ import Samples from "@/pages/Samples";
 import Legal from "@/pages/Legal";
 import AcceptInvite from "@/pages/AcceptInvite";
 import Methodology from "@/pages/Methodology";
+import Professionals from "@/pages/Professionals";
 import Resources from "@/pages/Resources";
 import FamilyMatters from "@/pages/FamilyMatters";
 import Verify from "@/pages/Verify";
@@ -61,6 +62,7 @@ function App() {
             <Route path="/matters" element={<Protected><FamilyMatters /></Protected>} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/methodology" element={<Methodology />} />
+            <Route path="/professionals" element={<Protected><Professionals /></Protected>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <footer className="py-4 text-center text-xs text-muted-foreground" data-testid="copyright-footer">
