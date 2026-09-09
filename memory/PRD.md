@@ -27,6 +27,36 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-09 — Iter185 · Landing Smoke Render Test (jsdom)
+
+**🟢 P2 — Landing.jsx crash-fail regression test**
+- New `frontend/src/pages/Landing.test.jsx` mounts the full `<Landing />`
+  tree in jsdom (via raw `react-dom/client` + `act`, same pattern as
+  the existing `CodeInput.test.jsx`) and asserts:
+  1. The page renders without throwing (would have caught the iter181
+     `Briefcase` removal that would have crashed every anonymous
+     home-page visit).
+  2. 13 marquee `data-testid`s from the ecosystem strip, individual→
+     joint bridge, three-reports strip, joint-journey card, and
+     professional-connection card all resolve to real DOM nodes.
+  3. A healthy count of `svg.lucide` elements ships — belt-and-
+     suspenders against an import that silently drops a whole
+     component instead of throwing.
+- **Mocks** (kept minimal):
+  - `react-router-dom` → mocked `virtual: true` because v7 ships ESM-
+    first `exports` that CRA's default Jest resolver can't traverse;
+    the smoke test doesn't need real routing.
+  - `../lib/api` → axios stub so no network call fires in jsdom.
+  - `./Orientation` → stub, Landing only imports `markOrientationSeen`
+    as a side-effect.
+- Sets `global.IS_REACT_ACT_ENVIRONMENT = true` so React 18's `act(...)`
+  is recognised under Jest and the test log stays clean.
+- **Mutation-tested**: temporarily removing `Briefcase` from Landing's
+  lucide imports made all 3 tests fail with the exact "React tried to
+  render undefined" error — confirming the test guards the intended
+  regression class. Restored + all 3/3 pass. Full frontend suite:
+  12/12 across 3 test files.
+
 ### 2026-09-09 — Iter184 · Sample Joint Alignment PDF + Email-to-Coparent
 
 **🟢 P2 — Downloadable Sample PDF**
