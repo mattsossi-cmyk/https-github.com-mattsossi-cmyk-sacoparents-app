@@ -380,3 +380,11 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Landing top: H1 "Professional Tools for Child-Focused Alignment", user's subtext, CTAs INVITE PARENTS (→ /joint/new, protected) + PROFESSIONAL SIGN IN; journey line "Professional invites → Parents reflect → Align compares → Professional guides".
 - /joint/new for pros (isPro && !agreement): panels order child(Create Case: case ref + child) → invite(Parent 1/2 name+email) → subject(Choose Assessment: Co-Parenting, Communication, Educational, Medical, Psychological, Mediation, Complete Alignment[multi 5 subjects]) → "Send Invitations". PRO_ASSESSMENTS const. Parents keep old order. JointReport header PDF button icon-only on mobile.
 - Compare View iteration_32 passed (mobile overflow fixed here).
+
+
+## 2026-09-09 — Landing simplification for conversion (BUILD 2026-09-09.3; iteration_34 69/69)
+- Hero CTAs: primary "Create a Free Professional Account" (+ sub-line "Start a case and invite parents", → /auth?mode=register), "Professional Sign In", small link "Have an invitation? Accept Invitation". Removed Invite Parents/Accept trio. Journey line: "Create Case → Invite Parents → Compare Perspectives → Build Alignment → Work Toward Agreement".
+- New purple `four-steps` centerpiece (step-create/invite/report/guide, user's exact copy) replaces the 5-stage workflow strip, platforms table, journey strip, pro-actions, clarity, applications, leadership and long invitation sections.
+- New `AlignModel.jsx` signature graphic: THE CHILD at center; Reflection → Comparison → Alignment → Options → Agreement.
+- 10-page report section promoted (numbered page-chip-0..9 + sample buttons). Samples trimmed to 3 cards; subjects collapsed to 8 compact links → sample pages; one short "Professional control. Parent privacy." section + parent notice; disclaimer + footer.
+- Mobile: header Sign In hidden <sm, smaller brand subline, hero CTA wraps — zero horizontal overflow at 390px. Needs Deploy/Republish (prod last confirmed 2026-09-08.4).

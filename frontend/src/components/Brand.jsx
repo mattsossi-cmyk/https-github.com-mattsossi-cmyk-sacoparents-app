@@ -9,7 +9,7 @@ export function BrandLogo({ size = "text-2xl", sub }) {
         <span className="text-brand-teal">CoParents</span>
       </span>
       {sub && (
-        <span className="italic text-green-800 text-sm mt-1 tracking-wide" data-testid="brand-sub">{sub}</span>
+        <span className="italic text-green-800 text-xs sm:text-sm mt-1 tracking-wide" data-testid="brand-sub">{sub}</span>
       )}
     </span>
   );
