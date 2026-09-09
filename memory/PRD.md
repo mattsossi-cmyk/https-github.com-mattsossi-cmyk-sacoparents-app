@@ -402,4 +402,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - fpdf2 gotcha: `multi_cell` defaults new_x=RIGHT — always pass `new_x="LMARGIN", new_y="NEXT"` before another full-width cell, else "Not enough horizontal space" 500.
 - PROD still 2026-09-09.2 at time of work — user must Deploy.
 
+## 2026-09-09 — Seeded Albert W. Smith, PhD (BUILD 2026-09-09.6)
+- Added to `SEEDED_PROFESSIONALS`: dralsmith@gmail.com, "Albert W. Smith, PhD", Psychologist, same office address, phone 210-854-8964; approved + credentials_verified + must_change_password; temp password env `ALSMITH_TEMP_PASSWORD` (backend/.env). Matt Sossi already existed with the supplied details (admin + approved/verified professional) — no change needed.
+- Preview login verified (must_change_password=true). Production: needs Deploy AND `ALSMITH_TEMP_PASSWORD` set in the production environment variables, else seed is skipped.
+
+
 

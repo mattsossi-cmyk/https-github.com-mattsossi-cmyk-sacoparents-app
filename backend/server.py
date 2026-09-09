@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-09.5"
+BUILD_ID = "2026-09-09.6"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -577,6 +577,20 @@ SEEDED_PROFESSIONALS = [
             "city": "San Antonio",
             "state": "Texas 78232",
             "phone": "210-224-1667",
+            "license_number": "",
+        },
+    },
+    {
+        "email": "dralsmith@gmail.com",
+        "name": "Albert W. Smith, PhD",
+        "password_env": "ALSMITH_TEMP_PASSWORD",
+        "profile": {
+            "pro_role": "Psychologist",
+            "organization": "Law Office of Matt Sossi",
+            "address": "16607 Blanco #703",
+            "city": "San Antonio",
+            "state": "Texas 78232",
+            "phone": "210-854-8964",
             "license_number": "",
         },
     },
