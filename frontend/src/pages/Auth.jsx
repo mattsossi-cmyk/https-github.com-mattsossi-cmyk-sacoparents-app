@@ -15,7 +15,8 @@ export default function Auth() {
   const inviteToken = next.startsWith("/join/") ? next.slice("/join/".length) : "";
   const isParentFlow = Boolean(inviteToken);
   const role = isParentFlow ? "parent" : "professional";
-  const [mode, setMode] = useState(search.get("mode") === "register" ? "register" : "login");
+  const resetToken = search.get("rt") || "";
+  const [mode, setMode] = useState(search.get("mode") === "register" ? "register" : resetToken ? "reset" : "login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,8 +63,9 @@ export default function Auth() {
         toast.success("Check your inbox (and spam folder) — your 6-digit verification code is on its way (valid for 15 minutes).");
         return;
       } else {
-        await api.post("/auth/reset-password", { email, code: resetCode, new_password: newPassword });
+        await api.post("/auth/reset-password", resetToken ? { token: resetToken, new_password: newPassword } : { email, code: resetCode, new_password: newPassword });
         toast.success("Password updated. Sign in with your new password.");
+        if (resetToken) navigate("/auth", { replace: true });
         setMode("login");
         setPassword("");
         setResetCode("");
@@ -110,7 +112,7 @@ export default function Auth() {
           )}
 
           <h1 className="text-3xl font-semibold mb-6" data-testid="auth-heading">
-            {mode === "login" ? "Welcome back" : mode === "register" ? (isParentFlow ? "Create your parent account" : "Create your professional account") : mode === "forgot" ? "Reset your password" : "Enter your code"}
+            {mode === "login" ? "Welcome back" : mode === "register" ? (isParentFlow ? "Create your parent account" : "Create your professional account") : mode === "forgot" ? "Reset your password" : resetToken ? "Set a new password" : "Enter your code"}
           </h1>
 
           <form onSubmit={submit} className="space-y-5" data-testid="auth-form">
@@ -161,10 +163,12 @@ export default function Auth() {
                 </div>
               </>
             )}
+            {!(mode === "reset" && resetToken) && (
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" className="h-12" value={email} onChange={(e) => setEmail(e.target.value)} required data-testid="email-input" />
             </div>
+            )}
             {(mode === "login" || mode === "register") && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -191,6 +195,9 @@ export default function Auth() {
             )}
             {mode === "reset" && (
               <>
+                {resetToken ? (
+                  <p className="text-sm text-muted-foreground" data-testid="reset-link-info">You opened a one-click reset link. Choose a new password below — no code needed.</p>
+                ) : (
                 <div className="space-y-2">
                   <Label htmlFor="reset-code">Verification code</Label>
                   <Input id="reset-code" className="h-12 tracking-[0.3em] text-center text-lg" value={resetCode} onChange={(e) => setResetCode(e.target.value)} required maxLength={6} placeholder="6-digit code" data-testid="reset-code-input" />
@@ -204,6 +211,7 @@ export default function Auth() {
                     )}
                   </p>
                 </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="new-password">New password</Label>
                   <Input id="new-password" type="password" className="h-12" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={8} data-testid="new-password-input" />

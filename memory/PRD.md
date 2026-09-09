@@ -414,6 +414,11 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - User (Matt, production) reported reset code never arrives. Findings: prod + preview `/api/auth/forgot-password` return 200; provider accepted direct test to mattsossi@bsossi.com (202, ids 167b0908…, 37256e9e…). Send failures already surface as 502/503, so a 200 means the provider accepted → likely spam/filtering at recipient domain, or stale code (each new request replaces the previous one; my curl tests also invalidated his code).
 - Changes: reset code validity 10 → 15 min (server + Auth.jsx copy, "check spam", "new code replaces previous"); new admin-only `POST /api/admin/email-test` sends a delivery test to the admin's own inbox and returns provider id/build; button `admin-email-test-btn` in AdminProfessionals header. Code-review round: `is None` findings again false positives (unchanged); test_access_log.py split into fixture + parametrized tests (7 passing).
 
+## 2026-09-09 — One-click password reset link (BUILD 2026-09-09.9; test_password_reset 12/12)
+- forgot-password now also stores `link_hash` (sha256 of `secrets.token_urlsafe(32)`) in the same `password_resets` doc; email has a "Reset my password" button → `/auth?mode=reset&rt=<token>`. reset-password accepts `{token,new_password}` OR `{email,code,new_password}`; same 15-min expiry; both consumed on success (delete_many by email). Email optional in `ResetIn`.
+- Auth.jsx: `rt` param → mode reset, shows `reset-link-info`, hides code input, posts token; navigates to /auth after success.
+
+
 
 
 

@@ -135,3 +135,33 @@ class TestResetPassword:
         # Login should succeed (lockout cleared)
         r = requests.post(f"{API}/auth/login", json={"email": email, "password": new_pw})
         assert r.status_code == 200
+
+
+KNOWN_LINK = "link-token-test-abc123"
+KNOWN_LINK_HASH = hashlib.sha256(KNOWN_LINK.encode()).hexdigest()
+
+
+class TestResetLink:
+    def test_forgot_stores_link_hash(self, mongo_db: pymongo.database.Database) -> None:
+        email, _ = _register_user()
+        requests.post(f"{API}/auth/forgot-password", json={"email": email})
+        doc = mongo_db.password_resets.find_one({"email": email.lower()})
+        assert doc and doc.get("link_hash") and doc["link_hash"] != doc["code_hash"]
+
+    def test_one_click_link_resets_without_code_and_is_single_use(self, mongo_db: pymongo.database.Database) -> None:
+        email, _ = _register_user()
+        requests.post(f"{API}/auth/forgot-password", json={"email": email})
+        mongo_db.password_resets.update_one({"email": email.lower()}, {"$set": {"link_hash": KNOWN_LINK_HASH}})
+        r = requests.post(f"{API}/auth/reset-password", json={"token": KNOWN_LINK, "new_password": "LinkPass1234!"})
+        assert r.status_code == 200, r.text
+        assert requests.post(f"{API}/auth/login", json={"email": email, "password": "LinkPass1234!"}).status_code == 200
+        r2 = requests.post(f"{API}/auth/reset-password", json={"token": KNOWN_LINK, "new_password": "Another1234!"})
+        assert r2.status_code == 400
+
+    def test_bad_link_token_400(self) -> None:
+        r = requests.post(f"{API}/auth/reset-password", json={"token": "nope", "new_password": "Whatever1234!"})
+        assert r.status_code == 400
+
+    def test_missing_email_and_token_400(self) -> None:
+        r = requests.post(f"{API}/auth/reset-password", json={"new_password": "Whatever1234!"})
+        assert r.status_code == 400

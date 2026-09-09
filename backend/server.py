@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-09.8"
+BUILD_ID = "2026-09-09.9"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -299,8 +299,9 @@ class ForgotIn(BaseModel):
 
 
 class ResetIn(BaseModel):
-    email: EmailStr
-    code: str
+    email: EmailStr | None = None
+    code: str = ""
+    token: str = ""
     new_password: str
 
 
@@ -317,13 +318,16 @@ async def forgot_password(body: ForgotIn):
         if recent and (datetime.now(timezone.utc) - _parse_iso(recent.get("created_at"))).total_seconds() < 60:
             raise HTTPException(status_code=429, detail="A code was just sent. Please wait a minute before requesting another.")
         code = f"{secrets.randbelow(1000000):06d}"
+        link_token = secrets.token_urlsafe(32)
         await db.password_resets.delete_many({"email": email})
         await db.password_resets.insert_one({
             "email": email,
             "code_hash": hash_code(code),
+            "link_hash": hash_code(link_token),
             "expires_at": datetime.now(timezone.utc) + timedelta(minutes=15),
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
+        reset_url = f"{app_url()}/auth?mode=reset&rt={link_token}"
         name = user.get("name") or "there"
         subject = f"Your {EMAIL_FROM_NAME} verification code"
         html = (f'<table role="presentation" width="100%"><tr><td style="padding:24px;'
@@ -332,7 +336,10 @@ async def forgot_password(body: ForgotIn):
                 f'<p>Use this verification code to set a new password for your '
                 f'{escape(EMAIL_FROM_NAME)} account:</p>'
                 f'<p style="font-size:32px;font-weight:bold;letter-spacing:6px;margin:24px 0">{code}</p>'
-                f'<p>This code expires in 15 minutes. If you did not request a password reset, '
+                f'<p>Or skip the code and reset in one click:</p>'
+                f'<p style="margin:16px 0"><a href="{reset_url}" style="background:#5B2A86;color:#fff;padding:12px 20px;'
+                f'border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block">Reset my password</a></p>'
+                f'<p>The code and link expire in 15 minutes and can be used once. If you did not request a password reset, '
                 f'you can ignore this email.</p>'
                 f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never '
                 f'ask for your password by email.</p></td></tr></table>')
@@ -371,19 +378,25 @@ async def change_password(body: ChangePasswordIn, user=Depends(get_current_user)
 
 @api.post("/auth/reset-password")
 async def reset_password(body: ResetIn):
-    email = body.email.lower()
     if len(body.new_password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
-    doc = await db.password_resets.find_one({"email": email})
+    token = body.token.strip()
+    if token:
+        doc = await db.password_resets.find_one({"link_hash": hash_code(token)})
+    elif body.email:
+        doc = await db.password_resets.find_one({"email": body.email.lower()})
+    else:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
     if not doc:
         raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+    email = doc["email"]
     expires = doc["expires_at"]
     if expires.tzinfo is None:
         expires = expires.replace(tzinfo=timezone.utc)
     if expires < datetime.now(timezone.utc):
         await db.password_resets.delete_many({"email": email})
         raise HTTPException(status_code=400, detail="Invalid or expired verification code")
-    if doc["code_hash"] != hash_code(body.code.strip()):
+    if not token and doc["code_hash"] != hash_code(body.code.strip()):
         raise HTTPException(status_code=400, detail="Invalid or expired verification code")
     await db.users.update_one({"email": email}, {"$set": {"password_hash": hash_password(body.new_password), "password_reset_by_user": True}, "$unset": {"must_change_password": ""}})
     await db.password_resets.delete_many({"email": email})
