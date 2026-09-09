@@ -31,6 +31,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import ProfessionalsIntroAudio from "../components/ProfessionalsIntroAudio";
+import PreferredProfessionalsStrip from "../components/PreferredProfessionalsStrip";
 
 // The four-step Align workflow — mirrors the same 4-step framing used
 // on the Landing ecosystem strip so parents and professionals see the
@@ -223,6 +224,11 @@ export default function ForProfessionals() {
         </div>
       </section>
 
+      {/* Preferred professionals — small directory strip so a
+          visitor sees at a glance that real practitioners already
+          use the tool. Hidden if the endpoint returns zero rows. */}
+      <PreferredProfessionalsStrip />
+
       {/* Four-step Align workflow — mirrors the exact language on
           the Landing ecosystem strip so both sites use the same
           vocabulary. Sits directly under the hero so a professional
@@ -231,8 +237,7 @@ export default function ForProfessionals() {
       <section
         className="px-5 sm:px-8 py-14 sm:py-20 bg-white border-b border-[#E5E0EE]"
         data-testid="for-pros-align-workflow"
-      >
-        <div className="max-w-6xl mx-auto">
+      >        <div className="max-w-6xl mx-auto">
           <div className="max-w-2xl">
             <div className="eyebrow mb-2">Your workflow on SA CoParents Align</div>
             <h2 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">

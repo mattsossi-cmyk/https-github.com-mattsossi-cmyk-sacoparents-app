@@ -819,6 +819,15 @@ function IndividualToJointBridge() {
             of shared understanding, differences worth discussing, and
             options for moving forward.
           </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link
+              to="/samples/joint-alignment-preview"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0E7A7A] hover:underline"
+              data-testid="joint-journey-see-sample"
+            >
+              See a sample joint preview <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

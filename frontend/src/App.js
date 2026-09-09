@@ -60,6 +60,7 @@ import ProfessionalJointAlignmentMine from "@/pages/ProfessionalJointAlignmentMi
 import ProfessionalJointAlignmentBulk from "@/pages/ProfessionalJointAlignmentBulk";
 import ProfessionalJointAlignmentBulkHistory from "@/pages/ProfessionalJointAlignmentBulkHistory";
 import JointAlignmentPreview from "@/pages/JointAlignmentPreview";
+import JointAlignmentSamplePreview from "@/pages/JointAlignmentSamplePreview";
 import ShareWithProfessional from "@/pages/ShareWithProfessional";
 import SharedWithProfessionals from "@/pages/SharedWithProfessionals";
 import ForPortalEngineers from "@/pages/ForPortalEngineers";
@@ -147,6 +148,7 @@ function AppRoutes() {
         <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/samples" element={<Samples />} />
+        <Route path="/samples/joint-alignment-preview" element={<JointAlignmentSamplePreview />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/onboarding/what-do-you-need" element={<ProtectedRoute><OnboardingIntake /></ProtectedRoute>} />

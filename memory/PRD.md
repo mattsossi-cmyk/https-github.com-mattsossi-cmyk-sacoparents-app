@@ -27,6 +27,42 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-09 — Iter183 · Joint Alignment Sample Preview + Preferred Professionals Strip
+
+**🟢 P2 — Public Joint Alignment Sample Preview**
+- New public page `frontend/src/pages/JointAlignmentSamplePreview.jsx`
+  mounted at `/samples/joint-alignment-preview`. Mirrors the exact
+  layout of the real (auth-gated) `JointAlignmentPreview`:
+  purple SAMPLE banner ("Alex & Sam with child Rian — fictional"),
+  privacy reassurance card, agreed / differed / incomplete count
+  pills, and a topic-by-topic list with agree / differ / incomplete
+  flags. Fictional-and-neutral by design — six mixed topics
+  (routines, screen time, extracurriculars, handovers, holidays,
+  healthcare) chosen so a hesitant parent sees both agreement and
+  friction on the same page.
+- Three CTAs at the bottom mirror the dual-track landing framing:
+  primary **Start on my own** → `/register`, secondary **I have an
+  invitation** → `/join`, and tertiary **See other sample reports**
+  → `/samples`.
+- Discoverability: the Landing `IndividualToJointBridge` card now
+  carries a **See a sample joint preview →** teal link that jumps
+  straight to the new page.
+- Wired in `App.js` at `/samples/joint-alignment-preview` (no auth).
+- New pytest `tests/test_iter182_joint_alignment_sample.py` guards
+  the public route reachability (200 + `text/html` + SPA root).
+
+**🟢 P2 — Preferred Professionals Strip on `/for-professionals`**
+- New `frontend/src/components/PreferredProfessionalsStrip.jsx`
+  fetches from the existing public `GET /api/professionals` endpoint
+  and renders up to six cards (name · credentials · city, state ·
+  mailto link). Silent fallback — if the endpoint fails or returns
+  zero rows, the whole strip is hidden so a marketing page never
+  shows a broken skeleton.
+- Mounted on `ForProfessionals.jsx` between the hero and the four-
+  step Align workflow, with a **View full directory →** link back to
+  `/professionals`. Currently surfaces Matt Sossi (the only active
+  founder-listed practitioner).
+
 ### 2026-09-09 — Iter182 · Dashboard Ecosystem Strip + Align Workflow + Intro Audio
 
 **🟢 P2 — Dashboard Ecosystem Strip (compact)**
