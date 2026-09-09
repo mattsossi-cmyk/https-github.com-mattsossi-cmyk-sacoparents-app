@@ -388,3 +388,11 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - New `AlignModel.jsx` signature graphic: THE CHILD at center; Reflection → Comparison → Alignment → Options → Agreement.
 - 10-page report section promoted (numbered page-chip-0..9 + sample buttons). Samples trimmed to 3 cards; subjects collapsed to 8 compact links → sample pages; one short "Professional control. Parent privacy." section + parent notice; disclaimer + footer.
 - Mobile: header Sign In hidden <sm, smaller brand subline, hero CTA wraps — zero horizontal overflow at 390px. Needs Deploy/Republish (prod last confirmed 2026-09-08.4).
+
+## 2026-09-09 — Professional invitation acceptance + /methodology (BUILD 2026-09-09.4; pytest 159/159; iteration_35)
+- `professional_requests` now carry `token_hash` (sha256 of opaque `secrets.token_urlsafe(32)`), `professional_email`, `expires_at` (+72h, `PRO_INVITE_TTL_HOURS`), `token_used_at`, `decided_at`, `events[]` audit (sent / info_requested / accepted / declined / conflict_reported). Email to pro links `/accept-invite?token=…` with minimal info (no parent emails pre-acceptance; do-not-forward notice).
+- Endpoints: `GET /api/joint/professional-requests/lookup?token=` (404 invalid, 403 email mismatch, 410 expired/used, minimal payload); `POST …/{id}/decline` {reason}, `…/request-info` {reason required, stays pending}, `…/conflict` → `declined_conflict`; `prepare` (=accept) now consumes token, 410 when expired. List returns computed `expired` status + events. Parent notified by neutral email on decline/conflict/info.
+- `AcceptInvite.jsx`: token mode + list mode, Accept / Request more information / Decline / Conflict of interest decision panels, expiry countdown, token error panel. Bug fixed post-test: request-info no longer removes card.
+- `Methodology.jsx` at `/methodology` (public): AlignModel graphic, 4 steps, 10 pages, "what the model will not do", copy-link + print. Landing `model-methodology-btn` + footer link point to it (legal/methodology page kept).
+- PROD at time of work: 2026-09-09.2 (Invite Parents wave live; simplified landing .3 and this .4 pending Deploy).
+

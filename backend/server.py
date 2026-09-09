@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-09.3"
+BUILD_ID = "2026-09-09.4"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -1981,11 +1981,48 @@ async def archive_joint_report(rid: str, body: ArchiveIn, user=Depends(get_curre
     return {"ok": True, "archived": body.archived}
 
 
+PRO_INVITE_TTL_HOURS = 72
+
+
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def _pro_req_status(d: dict) -> str:
+    if d["status"] == "pending" and d.get("expires_at") and d["expires_at"] < datetime.now(timezone.utc).isoformat():
+        return "expired"
+    return d["status"]
+
+
+def _pro_req_public(d: dict) -> dict:
+    return {
+        "id": d["id"], "child_name": d["child_name"], "parent_name": d["parent_name"],
+        "parent_email": d["parent_email"], "co_parent_name": d["co_parent_name"],
+        "co_parent_email": d.get("co_parent_email"), "professional_name": d.get("professional_name", ""),
+        "status": _pro_req_status(d), "created_at": d["created_at"], "expires_at": d.get("expires_at"),
+        "decided_at": d.get("decided_at"), "events": d.get("events", []),
+    }
+
+
+def _pro_email_wrap(inner: str) -> str:
+    return ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+            + inner + f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}.</p></td></tr></table>')
+
+
+async def _notify_parent(req: dict, subject: str, inner_html: str) -> None:
+    try:
+        await send_email(to=req["parent_email"], subject=f"{subject} - {EMAIL_FROM_NAME}", html=_pro_email_wrap(inner_html))
+    except Exception:
+        logger.warning(f"Parent notification not sent to {req['parent_email']}")
+
+
 @api.post("/joint/professional-requests")
 async def create_pro_request(body: ProRequestIn, user=Depends(get_current_user)):
     pro = await db.users.find_one({"email": body.professional_email.lower(), "role": "professional"})
     if not pro:
         raise HTTPException(status_code=404, detail="No professional account found with that email")
+    token = secrets.token_urlsafe(32)
+    now = datetime.now(timezone.utc)
     req = {
         "id": str(uuid.uuid4()),
         "parent_id": user["_id"],
@@ -1995,32 +2032,51 @@ async def create_pro_request(body: ProRequestIn, user=Depends(get_current_user))
         "co_parent_email": body.co_parent_email.lower() if body.co_parent_email else None,
         "child_name": body.child_name.strip(),
         "professional_id": pro["_id"],
+        "professional_email": pro["email"].lower(),
         "professional_name": pro.get("name", ""),
         "status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "token_hash": _hash_token(token),
+        "token_used_at": None,
+        "expires_at": (now + timedelta(hours=PRO_INVITE_TTL_HOURS)).isoformat(),
+        "events": [{"type": "sent", "at": now.isoformat(), "by": "parent"}],
+        "created_at": now.isoformat(),
     }
     await db.professional_requests.insert_one(req)
     try:
         await send_email(
             to=pro["email"],
             subject=f"Family violence assessment facilitation request - {EMAIL_FROM_NAME}",
-            html=(
-                '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+            html=_pro_email_wrap(
                 f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
-                f"<p><strong>{escape(user.get('name', 'A parent'))}</strong> has asked you to prepare a joint "
+                f"<p><strong>{escape(user.get('name', 'A parent'))}</strong> has asked you to facilitate a joint "
                 f"family violence co-parenting assessment regarding <strong>{escape(req['child_name'])}</strong>.</p>"
-                f"<p>Requesting parent: {escape(req['parent_name'])} ({escape(req['parent_email'])})."
-                + (f" Other parent: {escape(req['co_parent_name'])} ({escape(req['co_parent_email'])})." if req.get("co_parent_email") else " The other parent's details are collected privately when you prepare the assessment.")
-                + "</p>"
-                "<p>Both parents' individual responses remain confidential and are not shared between the "
-                "parties. You will see the completed comparison once both parents finish.</p>"
-                f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open your dashboard to prepare the assessment</a></p>'
-                "</td></tr></table>"
+                "<p>Full parent details are shown after you open the secure invitation while signed in with your "
+                f"verified professional account (<strong>{escape(pro['email'])}</strong>).</p>"
+                f'<p><a href="{app_url()}/accept-invite?token={token}" style="color:#5B2A86;font-weight:bold">Review this invitation</a></p>'
+                f"<p style=\"font-size:13px;color:#555\">This link is single-use and expires in {PRO_INVITE_TTL_HOURS} hours. "
+                "Please do not forward it — it is tied to your professional email address. You may accept, decline, "
+                "request more information, or report a conflict of interest.</p>"
             ),
         )
     except Exception:
         logger.warning(f"Professional request email not sent to {pro['email']}")
     return {"ok": True, "id": req["id"]}
+
+
+@api.get("/joint/professional-requests/lookup")
+async def lookup_pro_request(token: str, user=Depends(get_current_user)):
+    req = await db.professional_requests.find_one({"token_hash": _hash_token(token)}, {"_id": 0})
+    if not req:
+        raise HTTPException(status_code=404, detail="This invitation link is not valid")
+    if (user.get("email") or "").lower() != req.get("professional_email"):
+        raise HTTPException(status_code=403, detail="This invitation was sent to a different professional email address. Sign in with the invited account.")
+    status = _pro_req_status(req)
+    if status == "expired":
+        raise HTTPException(status_code=410, detail=f"This invitation expired after {PRO_INVITE_TTL_HOURS} hours. Ask the parent to send a new one.")
+    if req.get("token_used_at") or status != "pending":
+        raise HTTPException(status_code=410, detail="This invitation link has already been used")
+    return {"id": req["id"], "parent_name": req["parent_name"], "child_name": req["child_name"],
+            "created_at": req["created_at"], "expires_at": req["expires_at"], "status": status}
 
 
 @api.get("/joint/professional-requests")
@@ -2029,15 +2085,79 @@ async def list_pro_requests(user=Depends(get_current_user)):
         docs = await db.professional_requests.find({"professional_id": user["_id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
     else:
         docs = await db.professional_requests.find({"parent_id": user["_id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
-    return [
-        {
-            "id": d["id"], "child_name": d["child_name"], "parent_name": d["parent_name"],
-            "parent_email": d["parent_email"], "co_parent_name": d["co_parent_name"],
-            "co_parent_email": d.get("co_parent_email"), "professional_name": d.get("professional_name", ""),
-            "status": d["status"], "created_at": d["created_at"],
-        }
-        for d in docs
-    ]
+    return [_pro_req_public(d) for d in docs]
+
+
+class DecisionIn(BaseModel):
+    reason: str = ""
+
+
+async def _load_pending_pro_request(req_id: str, user: dict) -> dict:
+    require_approved_professional(user, "Only professional accounts can respond to invitations")
+    req = await db.professional_requests.find_one({"id": req_id, "professional_id": user["_id"]})
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+    status = _pro_req_status(req)
+    if status == "expired":
+        raise HTTPException(status_code=410, detail=f"This invitation expired after {PRO_INVITE_TTL_HOURS} hours")
+    if status != "pending":
+        raise HTTPException(status_code=400, detail="This invitation has already been answered")
+    return req
+
+
+async def _decide_pro_request(req: dict, new_status: str, event: str, reason: str) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    await db.professional_requests.update_one(
+        {"id": req["id"]},
+        {"$set": {"status": new_status, "decided_at": now, "token_used_at": now},
+         "$push": {"events": {"type": event, "at": now, "by": "professional", "note": reason[:500]}}},
+    )
+
+
+@api.post("/joint/professional-requests/{req_id}/decline")
+async def decline_pro_request(req_id: str, body: DecisionIn | None = None, user=Depends(get_current_user)):
+    req = await _load_pending_pro_request(req_id, user)
+    reason = (body.reason if body else "").strip()
+    await _decide_pro_request(req, "declined", "declined", reason)
+    await _notify_parent(req, "Professional unable to accept your request",
+        f"<p>Hi {escape(req['parent_name'] or 'there')},</p>"
+        f"<p><strong>{escape(user.get('name', 'The professional'))}</strong> is unable to facilitate the assessment you requested "
+        f"regarding <strong>{escape(req['child_name'])}</strong>.</p>"
+        + (f"<p><strong>Note from the professional:</strong> {escape(reason)}</p>" if reason else "")
+        + "<p>You may invite a different professional from your dashboard.</p>")
+    return {"ok": True, "status": "declined"}
+
+
+@api.post("/joint/professional-requests/{req_id}/request-info")
+async def request_info_pro_request(req_id: str, body: DecisionIn, user=Depends(get_current_user)):
+    req = await _load_pending_pro_request(req_id, user)
+    message = body.reason.strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Please describe what additional information you need")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.professional_requests.update_one(
+        {"id": req["id"]},
+        {"$push": {"events": {"type": "info_requested", "at": now, "by": "professional", "note": message[:1000]}}},
+    )
+    await _notify_parent(req, "A professional has a question about your request",
+        f"<p>Hi {escape(req['parent_name'] or 'there')},</p>"
+        f"<p><strong>{escape(user.get('name', 'The professional'))}</strong> needs more information before deciding on your "
+        f"request regarding <strong>{escape(req['child_name'])}</strong>:</p>"
+        f"<blockquote style=\"border-left:3px solid #5B2A86;padding-left:12px;color:#333\">{escape(message)}</blockquote>"
+        f"<p>Reply to this email or contact the professional directly. The invitation remains open until {escape(str(req['expires_at'])[:16].replace('T', ' '))} UTC.</p>")
+    return {"ok": True, "status": "pending"}
+
+
+@api.post("/joint/professional-requests/{req_id}/conflict")
+async def conflict_pro_request(req_id: str, body: DecisionIn | None = None, user=Depends(get_current_user)):
+    req = await _load_pending_pro_request(req_id, user)
+    await _decide_pro_request(req, "declined_conflict", "conflict_reported", (body.reason if body else "").strip())
+    await _notify_parent(req, "Professional unable to accept your request",
+        f"<p>Hi {escape(req['parent_name'] or 'there')},</p>"
+        f"<p><strong>{escape(user.get('name', 'The professional'))}</strong> is unable to facilitate the assessment you requested "
+        f"regarding <strong>{escape(req['child_name'])}</strong> because of a potential conflict of interest.</p>"
+        "<p>This is a routine professional safeguard. You may invite a different professional from your dashboard.</p>")
+    return {"ok": True, "status": "declined_conflict"}
 
 
 def _first_email(*candidates) -> str:
@@ -2085,11 +2205,7 @@ def _safety_case_doc(user: dict, req: dict, pa_email: str, pb_email: str, pb_nam
 @api.post("/joint/professional-requests/{req_id}/prepare")
 async def prepare_pro_request(req_id: str, body: PrepareIn | None = None, user=Depends(get_current_user)):
     require_approved_professional(user, "Only professional accounts can prepare assessments")
-    req = await db.professional_requests.find_one({"id": req_id, "professional_id": user["_id"]})
-    if not req:
-        raise HTTPException(status_code=404, detail="Request not found")
-    if req["status"] != "pending":
-        raise HTTPException(status_code=400, detail="This request has already been prepared")
+    req = await _load_pending_pro_request(req_id, user)
     pa_email, pb_email, pb_name = _resolve_prepare_parties(req, body)
     doc = _safety_case_doc(user, req, pa_email, pb_email, pb_name)
     rid = doc["id"]
@@ -2097,9 +2213,11 @@ async def prepare_pro_request(req_id: str, body: PrepareIn | None = None, user=D
     await db.joint_reports.insert_one(doc)
     await create_invitation(InviteSpec(report_id=rid, role="a", invitee_name=req["parent_name"], invitee_email=pa_email, inviter_name=user.get("name", "A professional"), child_name=req["child_name"], subject_label=doc["subject_label"], code=case_code, via_professional=True))
     await create_invitation(InviteSpec(report_id=rid, role="b", invitee_name=pb_name, invitee_email=pb_email, inviter_name=user.get("name", "A professional"), child_name=req["child_name"], subject_label=doc["subject_label"], code=case_code, via_professional=True))
+    now = datetime.now(timezone.utc).isoformat()
     await db.professional_requests.update_one(
         {"id": req_id},
-        {"$set": {"status": "prepared", "report_id": rid, "prepared_at": datetime.now(timezone.utc).isoformat()}},
+        {"$set": {"status": "prepared", "report_id": rid, "prepared_at": now, "decided_at": now, "token_used_at": now},
+         "$push": {"events": {"type": "accepted", "at": now, "by": "professional"}}},
     )
     return {"ok": True, "report_id": rid}
 

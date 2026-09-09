@@ -1,0 +1,38 @@
+{
+  "summary": "Tested Methodology page, landing links, and full Accept-Invite (professional) flow including tokenized invites. 1 clear frontend bug: after 'Request more info', the invite card is incorrectly removed from the pending list (backend still shows status=pending). All other flows (decline, conflict, accept, token valid/bad/wrong-email, expiry text, testids, mobile) work.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "AcceptInvite.jsx / InviteCard",
+        "issue": "After submitting 'Request more information', the card is removed from accept-list. Per spec, request-info leaves status='pending' on the backend, so the card MUST remain in the list. Root cause: onDone() -> done(id) unconditionally filters the request out for every action, including 'request-info'. Fix: in InviteCard.act, only call onDone(q.id, data.status) when path !== 'request-info' (or in done(), keep the request when returned status === 'pending' and just clear the panel).",
+        "selector": "[data-testid=\"accept-req-{id}\"] after [data-testid=\"info-btn-{id}\"] -> decision-submit-btn",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/methodology at 390px", "issues": ["2px horizontal overflow (very minor). Likely a stray full-width child; document.documentElement.scrollWidth - clientWidth = 2. Not user-visible but worth a quick audit."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/seed_accept_invite.py",
+    "/app/backend/tests/test_pro_invite_acceptance.py"
+  ],
+  "action_items": [
+    "Fix Request-more-info card removal: don't remove the pending card from accept-list after info submission (see AcceptInvite.jsx line ~42-45 and done()).",
+    "Investigate 2px horizontal overflow on /methodology at 390px viewport."
+  ],
+  "critical_code_review_comments": [
+    "AcceptInvite.done(id) unconditionally removes the request; it ignores the status returned by the backend. Prefer status-aware update: keep pending, remove on declined/declined_conflict/prepared.",
+    "InviteCard uses navigate() only on 'prepare' success — good. But mixed toast text and control-flow inside one act() function could be split for clarity."
+  ],
+  "updated_files": ["/app/backend/tests/seed_accept_invite.py"],
+  "success_rate": {"backend": "100% (pre-existing suite reported 159/159; seed script + endpoints exercised by UI ran without backend errors)", "frontend": "95% (1 bug in info flow; all other flows pass)"},
+  "test_credentials": "Seeded pro (approved): t_pro_77217c19@example.com / testpass123 ; other pro: t_pro_75dea079@example.com / testpass123. Token for known request: 8yIwF8UtBKBpD5Xi3IVQ8PEHNAwdcGVn_rqatGoacfQ. These fixtures were consumed during the run (decline/conflict/accept mutations persisted).",
+  "seed_data_creation": "seed_accept_invite.py creates a target pro + other pro + 5 pending professional-requests (accept/decline/conflict/info/token) + injects a known token_hash on the 'token' request via Mongo.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All frontend selectors under AcceptInvite/Methodology work as specified. If retesting after fix, re-run /app/backend/tests/seed_accept_invite.py to generate fresh pending requests (the seeded ones above have been mutated). Landing model-methodology-btn/footer-methodology-link both navigate to /methodology. Dashboard action-accept-invite href='/accept-invite' verified.",
+  "rca of the issue": "Request-more-info UI bug RCA: In /app/frontend/src/pages/AcceptInvite.jsx, InviteCard.act calls onDone(q.id, data.status) for every non-'prepare' path. AcceptInvite.done ignores the passed status and always removes the request via setRequests(rs => rs.filter(q => q.id !== id)). Backend correctly keeps status='pending' with events[-1].type='info_requested' (verified with test_request_info_keeps_pending). Reproduction: log in as approved pro with a pending request -> /accept-invite -> click info-btn -> type message -> submit -> card disappears; refreshing /accept-invite shows the request is back (still pending). Mitigation: change done(id, status) to only remove when status !== 'pending'; alternatively skip onDone for the 'request-info' path and just call setMode(null)."
+}

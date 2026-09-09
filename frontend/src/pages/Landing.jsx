@@ -154,6 +154,11 @@ export default function Landing() {
         <p className="mt-8 text-center font-script text-2xl text-brand-purple" data-testid="model-mantra">
           Reflect Individually. Understand Together. Align Around the Child. Build Agreement.
         </p>
+        <div className="mt-6 text-center">
+          <Link to="/methodology" data-testid="model-methodology-link">
+            <Button variant="outline" className="gap-2" data-testid="model-methodology-btn">Explore the Methodology <ArrowRight className="h-4 w-4" /></Button>
+          </Link>
+        </div>
       </section>
 
       <section id="report" className="bg-secondary/60 py-20" data-testid="report-section">
@@ -272,7 +277,7 @@ export default function Landing() {
             <Link to="/privacy" className="hover:text-foreground" data-testid="footer-privacy-link">Privacy Policy</Link>
             <Link to="/legal/terms" className="hover:text-foreground" data-testid="footer-terms-link">Terms of Use</Link>
             <Link to="/legal/professional-use" className="hover:text-foreground" data-testid="footer-pro-use-link">Professional-Use Agreement</Link>
-            <Link to="/legal/methodology" className="hover:text-foreground" data-testid="footer-methodology-link">Methodology</Link>
+            <Link to="/methodology" className="hover:text-foreground" data-testid="footer-methodology-link">Methodology</Link>
             <Link to="/legal/data-retention" className="hover:text-foreground" data-testid="footer-retention-link">Data Retention</Link>
             <Link to="/legal/accessibility" className="hover:text-foreground" data-testid="footer-accessibility-link">Accessibility</Link>
             <Link to="/legal/safety-resources" className="hover:text-foreground" data-testid="footer-safety-link">Safety Resources</Link>
