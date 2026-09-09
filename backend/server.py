@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-09.6"
+BUILD_ID = "2026-09-09.7"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -1127,11 +1127,29 @@ async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(ge
     return joint_public(doc, user)
 
 
+def _actor_label(doc: dict, user: dict) -> str:
+    if doc.get("created_by") == user["_id"] or doc.get("professional_id") == user["_id"]:
+        return "Assigned professional"
+    role = report_role(doc, user["_id"])
+    if role:
+        return f"Parent {'1' if role == 'a' else '2'}"
+    return "Shared professional"
+
+
+async def _log_report_access(doc: dict, user: dict, action: str, kind: str) -> None:
+    await db.access_events.insert_one({
+        "report_id": doc["id"], "action": action, "kind": kind,
+        "at": datetime.now(timezone.utc).isoformat(),
+        "by": user["_id"], "by_name": user.get("name", ""), "by_role": _actor_label(doc, user),
+    })
+
+
 @api.get("/joint/reports/{rid}/report")
 async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)
     if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
         raise HTTPException(status_code=400, detail="The Joint Report becomes available when both parents have completed their assessments")
+    await _log_report_access(doc, user, "Viewed report on screen", "view")
     if doc.get("kind") == "agreement":
         return generate_agreement(doc)
     return generate_joint_report(doc)
@@ -1142,6 +1160,7 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)
     if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
         raise HTTPException(status_code=400, detail="The Joint Report PDF becomes available when both parents have completed their assessments")
+    await _log_report_access(doc, user, "Downloaded PDF", "download")
     child = re.sub(r"[^a-z0-9-]", "", (doc.get("child_name") or "child").lower().replace(" ", "-")) or "child"
     if doc.get("kind") == "agreement":
         return Response(
@@ -1510,9 +1529,13 @@ async def report_activity(rid: str, user=Depends(get_current_user)):
     if report.get("created_by") != user["_id"]:
         raise HTTPException(status_code=403, detail="Only the assigned professional can view activity")
     invs = await db.invitations.find({"report_id": rid}, {"_id": 0, "token": 0}).to_list(20)
-    events = await db.access_events.find({"report_id": rid}, {"_id": 0}).sort("at", -1).to_list(200)
+    events = await db.access_events.find({"report_id": rid}, {"_id": 0}).sort("at", -1).to_list(300)
+    access_log = [e for e in events if e.get("kind") in ("view", "download")]
     return {
-        "invitations": invs, "access_events": events,
+        "invitations": invs, "access_events": [e for e in events if e.get("kind") not in ("view", "download")],
+        "access_log": access_log,
+        "download_count": sum(1 for e in access_log if e["kind"] == "download"),
+        "view_count": sum(1 for e in access_log if e["kind"] == "view"),
         "created_at": report.get("created_at"), "status": report.get("status"),
     }
 

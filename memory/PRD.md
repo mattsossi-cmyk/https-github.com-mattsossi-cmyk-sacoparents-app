@@ -406,5 +406,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Added to `SEEDED_PROFESSIONALS`: dralsmith@gmail.com, "Albert W. Smith, PhD", Psychologist, same office address, phone 210-854-8964; approved + credentials_verified + must_change_password; temp password env `ALSMITH_TEMP_PASSWORD` (backend/.env). Matt Sossi already existed with the supplied details (admin + approved/verified professional) — no change needed.
 - Preview login verified (must_change_password=true). Production: needs Deploy AND `ALSMITH_TEMP_PASSWORD` set in the production environment variables, else seed is skipped.
 
+## 2026-09-09 — Report access log (BUILD 2026-09-09.7; test_access_log.py)
+- `/joint/reports/{rid}/report` and `/pdf` now insert `access_events` with `kind` (view|download), `by`, `by_name`, `by_role` (Assigned professional / Parent 1 / Parent 2 / Shared professional). Activity endpoint returns `access_log`, `view_count`, `download_count`; legacy events stay in `access_events`.
+- ProWorkspace "Consent & Activity" gained a "Report Access Log" list (View/PDF badge, actor, role, timestamp, counts, empty state, "downloaded copies cannot be recalled" note). Screenshot-verified in preview.
+
+
 
 

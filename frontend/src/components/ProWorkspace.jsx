@@ -39,6 +39,31 @@ export function ProWorkspace({ rid }) {
             ))}
           </ul>
         )}
+        {activity && (
+          <div className="mt-6" data-testid="pro-access-log">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Report Access Log</h3>
+              <span className="text-xs text-muted-foreground" data-testid="pro-access-counts">{activity.view_count || 0} views · {activity.download_count || 0} downloads</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 mb-3">Who opened or downloaded the report, and when. Downloaded copies cannot be recalled.</p>
+            {(activity.access_log || []).length === 0 ? (
+              <p className="text-sm text-muted-foreground" data-testid="pro-access-empty">No one has viewed or downloaded this report yet.</p>
+            ) : (
+              <ul className="space-y-1.5 text-sm max-h-64 overflow-y-auto pr-1" data-testid="pro-access-list">
+                {activity.access_log.map((ev, i) => (
+                  <li key={i} className="flex items-center justify-between gap-3 border border-border rounded-md px-3 py-2" data-testid={`pro-access-event-${i}`}>
+                    <span className="min-w-0">
+                      <span className={`inline-block text-[10px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 mr-2 ${ev.kind === "download" ? "bg-brand-purple/10 text-brand-purple" : "bg-secondary text-muted-foreground"}`}>{ev.kind === "download" ? "PDF" : "View"}</span>
+                      <span className="font-medium">{ev.by_name || "Unknown"}</span>
+                      <span className="text-muted-foreground"> · {ev.by_role}</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground shrink-0">{String(ev.at).slice(0, 16).replace("T", " ")}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );
