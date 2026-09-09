@@ -418,6 +418,11 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - forgot-password now also stores `link_hash` (sha256 of `secrets.token_urlsafe(32)`) in the same `password_resets` doc; email has a "Reset my password" button → `/auth?mode=reset&rt=<token>`. reset-password accepts `{token,new_password}` OR `{email,code,new_password}`; same 15-min expiry; both consumed on success (delete_many by email). Email optional in `ResetIn`.
 - Auth.jsx: `rt` param → mode reset, shows `reset-link-info`, hides code input, posts token; navigates to /auth after success.
 
+## 2026-09-09 — PRODUCTION VERIFIED build 2026-09-09.7 (bundle main.6eb4c859.js)
+- Live: simplified landing (hero CTAs, four-steps, align-model, report-section, methodology button; no mobile overflow), /methodology + PDF (200), /accept-invite SPA, lookup endpoint auth-protected (401), sample PDF 200.
+- Not yet live: .8 (admin email-test, 15-min codes) and .9 (one-click reset link — prod reset-password still requires email+code, 422 on token body). Albert login probe → 401 (can't distinguish "no account" vs wrong password without prod admin access; ALSMITH_TEMP_PASSWORD must exist in prod env).
+
+
 
 
 
