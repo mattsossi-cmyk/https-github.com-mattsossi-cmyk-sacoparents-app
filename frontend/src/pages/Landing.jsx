@@ -157,30 +157,30 @@ export default function Landing() {
             SA CoParents Align
           </p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-purple leading-tight" data-testid="hero-heading">
-            Turn Parent Reflection Into Child-Focused Alignment
+            Professional Tools for Child-Focused Alignment
           </h1>
           <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-xl" data-testid="hero-subtext">
-            Invite parents to reflect separately. See where they agree. Identify where they differ.
-            Build the conversation around their child's needs.
+            Invite parents to complete separate reflections. SA CoParents Align helps identify areas of agreement,
+            differences in perspective, and issues that may need professional guidance.
           </p>
           <p className="mt-3 text-sm text-muted-foreground max-w-xl" data-testid="hero-audience">
             Built for mediators, attorneys, therapists, parenting professionals, and other child-focused practitioners.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link to="/auth?mode=register" data-testid="hero-invite-link">
-              <Button size="lg" className="gap-2" data-testid="hero-invite-btn">
+            <Link to="/joint/new" data-testid="hero-invite-link">
+              <Button size="lg" className="gap-2 uppercase tracking-wide" data-testid="hero-invite-btn">
                 Invite Parents <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link to="/auth" data-testid="hero-signin-link">
-              <Button size="lg" variant="outline" data-testid="hero-signin-btn">Professional Sign In</Button>
+              <Button size="lg" variant="outline" className="uppercase tracking-wide" data-testid="hero-signin-btn">Professional Sign In</Button>
             </Link>
             <Link to="/auth" data-testid="hero-accept-link">
               <Button size="lg" variant="ghost" data-testid="hero-accept-btn">Accept a Parent Invitation</Button>
             </Link>
           </div>
           <p className="mt-6 text-sm font-semibold tracking-wide text-brand-purple" data-testid="hero-journey">
-            You invite. Parents reflect. Align compares. You guide.
+            Professional invites → Parents reflect → Align compares → Professional guides
           </p>
           <p className="mt-6 font-script text-2xl text-brand-purple max-w-xl" data-testid="hero-philosophy">
             Parents Reflect. Professionals Align. Families Build Agreements.

@@ -371,3 +371,12 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Hero subtext: "Invite parents to reflect separately. See where they agree. Identify where they differ. Build the conversation around their child's needs." Primary CTA "Invite Parents" (→ register), then Sign In, then Accept Invitation (ghost). Tagline `hero-journey`: "You invite. Parents reflect. Align compares. You guide."
 - New `workflow-strip` (purple): Invite → Assess → Compare → Align → Guide + note that the professional connects the parents (no "send the other parent your code"). Step Two card copy updated. Architecture already professional-organized (professional-only invites) — no backend change.
 - iteration_31: landing 100%. Mobile header overflow fixed (nav CTA shows "Get Started" on <sm). PROD build 2026-09-08.4 live: Joy's account present (approved, verified, must_change_password), new bundle main.80bdcc09.js. Landing messaging (build .5) still needs deploy.
+
+## 2026-09-09 — Compare View (BUILD 2026-09-09.1)
+- `CompareView.jsx`: professional-only (detail.is_creator) side-by-side of alignment_map + differences with Agree/Partly/Differ count filters, "Both parents identified" list, neutral footnote. JointReport tabs `view-tab-compare` (default) / `view-tab-report`; parents see only the report document. No backend change (uses existing generate_joint_report output).
+- Preview ready fixture for pro1: report 4420edc0-a432-4eb8-b7f5-7ce2d2e7e8e6 (SA-EDU-934744). PROD build still 2026-09-08.4 (landing copy .5 and Compare .1 pending deploy).
+
+## 2026-09-09 — Professional-hub "Invite Parents" flow (BUILD 2026-09-09.2; pytest 152/152)
+- Landing top: H1 "Professional Tools for Child-Focused Alignment", user's subtext, CTAs INVITE PARENTS (→ /joint/new, protected) + PROFESSIONAL SIGN IN; journey line "Professional invites → Parents reflect → Align compares → Professional guides".
+- /joint/new for pros (isPro && !agreement): panels order child(Create Case: case ref + child) → invite(Parent 1/2 name+email) → subject(Choose Assessment: Co-Parenting, Communication, Educational, Medical, Psychological, Mediation, Complete Alignment[multi 5 subjects]) → "Send Invitations". PRO_ASSESSMENTS const. Parents keep old order. JointReport header PDF button icon-only on mobile.
+- Compare View iteration_32 passed (mobile overflow fixed here).

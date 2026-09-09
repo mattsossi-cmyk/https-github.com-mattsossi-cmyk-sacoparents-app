@@ -1,0 +1,33 @@
+{
+  "summary": "Frontend verification of new Compare View on Joint Report /joint/{id}. Seed report id 4420edc0-a432-4eb8-b7f5-7ce2d2e7e8e6 requested by main agent was NOT present in this environment (GET /api/joint/reports/{id} -> 404 'Joint report not found'). To validate the feature, I bootstrapped a fresh READY report with pro=approval.test.pro1@gmail.com, child='Vida', parents Ann/Jordan via /app/backend/tests/_setup_compare_case.py (report id 00c8b2ec-3c6c-480a-9cf0-1cf465e00acd, alignment case SA-EDU-800014). All UI/behavioural assertions PASSED: report-view-tabs render for creator only, view-tab-compare is default active (aria-selected=true) with compare-view visible and joint-report-document hidden; compare-summary sum equals 6 and equals compare-table row count when filter='all' (matches the 6-area alignment map); clicking compare-count-differ sets aria-pressed=true and hides other rows; clicking again toggles back to all 6 rows; compare-open-report-btn switches to Joint Report tab (joint-report-document visible, view-tab-report aria-selected=true, compare-view hidden); clicking view-tab-compare returns to compare view; joint-print-btn (Download PDF) remains in the header. Parent view (logged in as Ann fixture) shows NO report-view-tabs, NO compare-view, joint-report-document visible. Regression: /joint/dda358d8-874e-424d-bb4b-ff70df50dbbd (pending) still shows joint-status-card with 3 status rows and status-invitation-code, and does NOT render tabs or compare-view.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/joint/reports/4420edc0-a432-4eb8-b7f5-7ce2d2e7e8e6", "issue": "Requested seed report id from main agent does not exist in this preview DB (returns 404). Main agent likely expected persisted seed data from a prior session; environment appears to have been reset. Provide a persistent seed script or re-create the fixture."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "JointReport header on mobile 390x844", "issues": ["document.documentElement.scrollWidth = 431 (>390). Root cause is the sticky header row containing Dashboard link + logo + Download PDF button (joint-print-btn right-edge = 431px). The compare-view internal table properly scrolls inside its overflow-x:auto container (parent clientWidth=308, scrollWidth=413) — table itself is NOT the source of body overflow. Consider shrinking or icon-only Download PDF button on <sm, or wrapping/allowing header items to shrink."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/_setup_compare_case.py"],
+  "action_items": [
+    "If iteration expects a fixed seed report id (4420edc0-...) to be present, add an idempotent seed script or note that testers must bootstrap a fresh report each run.",
+    "Fix mobile horizontal overflow on /joint/{id} header (Download PDF button pushes body scrollWidth to 431 at 390px viewport). Compare-view table itself is fine."
+  ],
+  "critical_code_review_comments": [
+    "JointReport.jsx is ~380 lines and mixes status card, agreement doc, joint report doc, tabs, share, and workspace. Consider extracting AgreementDocument and JointReportDocument (Section rendering) into separate components.",
+    "CompareView aggregates status keys from a hardcoded STATUS map keyed by human-readable strings ('Strong alignment', 'Moderate alignment', 'Needs discussion'); if backend labels drift, all rows fall back to 'differ'. Consider using a stable key from the API (e.g., alignment_map[i].key) instead of matching on display text."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100% for feature assertions (mobile overflow is a related design issue, not a feature failure)"},
+  "test_credentials": "Pro: approval.test.pro1@gmail.com / TestPass2026! (works). Parent fixture password 'testpass123' works (casekit default). Requested seed report id 4420edc0-... does not exist in this env.",
+  "seed_data_creation": "Created fresh joint report via /app/backend/tests/_setup_compare_case.py: pro=approval.test.pro1@gmail.com, child='Vida', parents Ann <t_ann_62cedf20@example.com>/Jordan <t_jor_7d03c952@example.com>, both parents completed. Report id: 00c8b2ec-3c6c-480a-9cf0-1cf465e00acd (SA-EDU-800014, status ready). Note engine produced 6 agree / 0 partial / 0 differ for the crafted answers — enough to validate all filter/toggle/tab interactions.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Compare View UI works end-to-end with data-testids as specified: report-view-tabs, view-tab-compare, view-tab-report, compare-view, compare-count-{agree|partial|differ}, compare-row-{agree|partial|differ}, compare-agree-list, compare-table, compare-open-report-btn, joint-report-document, joint-print-btn. If retesting with the originally-specified id 4420edc0-... first check that record exists (GET /api/joint/reports/{id}); otherwise run /app/backend/tests/_setup_compare_case.py to bootstrap a fresh ready case with Ann/Jordan/Vida. Mobile 390 overflow is caused by the JointReport header (Download PDF button), not the compare-view.",
+  "rca of the issue": "Mobile scroll overflow: the header row `.max-w-4xl mx-auto px-6 py-4 flex items-center justify-between` contains Dashboard link (~90px), BrandLogo (~120px), and Download PDF button (~141px). Combined + gaps + horizontal padding (px-6 = 48px) exceeds 390px, pushing joint-print-btn's right edge to 431. The compare-view table is inside `overflow-x-auto` and scrolls correctly (parent cw 308 vs sw 413). Mitigation: on <sm, use px-4, hide the label ('Download PDF' -> icon only), or place the print button below the header."
+}

@@ -10,6 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
 
+const PRO_ASSESSMENTS = [
+  { key: "co_parenting", label: "Co-Parenting", hint: "Shared parenting priorities and routines" },
+  { key: "communication", label: "Communication", hint: "How parents exchange information" },
+  { key: "education", label: "Educational", hint: "School, homework and learning needs" },
+  { key: "medical", label: "Medical", hint: "Health care, appointments and decisions" },
+  { key: "psychological", label: "Psychological", hint: "Emotional wellbeing and support" },
+  { key: "mediation", label: "Mediation", hint: "Statement to prepare for mediation" },
+  { key: "complete", label: "Complete Alignment", hint: "All five core areas in one assessment", multi: ["co_parenting", "communication", "education", "medical", "psychological"] },
+];
+
+
 export default function JointNew() {
   const [subjects, setSubjects] = useState([]);
   const [connections, setConnections] = useState([]);
@@ -35,6 +46,11 @@ export default function JointNew() {
   const SAFETY_KEYS = ["safety", "risk", "safety_communication", "safeguards"];
   const activeSubjects = multiSubjects.length > 0 ? multiSubjects : subject ? [subject] : [];
   const isSafety = activeSubjects.length > 0 && activeSubjects.every((k) => SAFETY_KEYS.includes(k));
+  const panel = (isPro && !isAgreement ? ["child", "invite", "subject"] : ["subject", "child", "invite"])[step];
+  const pickAssessment = (s) => {
+    if (s.multi) { setMultiSubjects(s.multi); setSubject(s.multi[0]); }
+    else { setMultiSubjects([]); setSubject(s.key); }
+  };
 
   useEffect(() => {
     const kind = searchParams.get("kind");
@@ -45,16 +61,17 @@ export default function JointNew() {
     }
     const single = searchParams.get("subject");
     const multi = searchParams.get("subjects");
+    const pro = user?.role === "professional" || user?.role === "admin";
     if (multi) {
       const keys = multi.split(",").filter(Boolean);
       setMultiSubjects(keys);
       setSubject(keys[0]);
-      setStep(1);
+      if (!pro) setStep(1);
     } else if (single) {
       setSubject(single);
-      setStep(1);
+      if (!pro) setStep(1);
     }
-  }, [searchParams]);
+  }, [searchParams, user]);
 
   useEffect(() => {
     api.get("/joint/config").then((r) => setSubjects(r.data.subjects)).catch((e) => toast.error(formatApiError(e)));
@@ -195,11 +212,11 @@ export default function JointNew() {
           </div>
         ) : (
           <>
-            <h1 className="text-4xl font-semibold mb-2" data-testid="joint-new-heading">{isAgreement ? "Create a Co-Parenting Agreement" : "Create a Joint Report"}</h1>
-            <p className="text-muted-foreground mb-8">{isAgreement ? "Invite the other parent to propose terms for your joint co-parenting agreement. Each parent's proposals stay private until both are complete." : "One subject. One child. Both parents answer independently — answers stay private until both are complete."}</p>
+            <h1 className="text-4xl font-semibold mb-2" data-testid="joint-new-heading">{isAgreement ? "Create a Co-Parenting Agreement" : isPro ? "Invite Parents" : "Create a Joint Report"}</h1>
+            <p className="text-muted-foreground mb-8">{isAgreement ? "Invite the other parent to propose terms for your joint co-parenting agreement. Each parent's proposals stay private until both are complete." : isPro ? "Create the case, enter both parents, choose the assessment, and send two separate secure invitations. Parents never exchange codes — you are the hub." : "One subject. One child. Both parents answer independently — answers stay private until both are complete."}</p>
 
             <div className="flex items-center gap-2 mb-10" data-testid="joint-steps">
-              {["Subject", "Child", "Invite"].map((s, i) => (
+              {(isPro ? ["Create Case", "Invite Parents", "Choose Assessment"] : ["Subject", "Child", "Invite"]).map((s, i) => (
                 <div key={s} className="flex items-center gap-2 flex-1 last:flex-none">
                   <span className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold ${i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`} data-testid={`joint-step-${i}`}>{i + 1}</span>
                   <span className={`text-xs ${i === step ? "font-semibold" : "text-muted-foreground"}`}>{s}</span>
@@ -208,18 +225,19 @@ export default function JointNew() {
               ))}
             </div>
 
-            {step === 0 && (
+            {panel === "subject" && (
               <div data-testid="joint-step-subject">
-                <h2 className="text-2xl font-semibold mb-4">What would you like the parents to explore together?</h2>
+                <h2 className="text-2xl font-semibold mb-4">{isPro ? "Choose the assessment" : "What would you like the parents to explore together?"}</h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {subjects.map((s) => (
+                  {(isPro ? PRO_ASSESSMENTS.map((a) => ({ ...a, label: a.label })) : subjects).map((s) => (
                     <button
                       key={s.key}
-                      onClick={() => setSubject(s.key)}
-                      className={`text-left border rounded-lg px-4 py-3 text-sm font-medium transition-colors ${subject === s.key ? "border-primary bg-secondary/60" : "border-border bg-white hover:bg-muted"}`}
+                      onClick={() => pickAssessment(s)}
+                      className={`text-left border rounded-lg px-4 py-3 text-sm font-medium transition-colors ${(s.multi ? multiSubjects.length > 1 : subject === s.key && multiSubjects.length <= 1) ? "border-primary bg-secondary/60" : "border-border bg-white hover:bg-muted"}`}
                       data-testid={`subject-${s.key}`}
                     >
                       {s.label}
+                      {s.hint && <span className="block text-xs text-muted-foreground font-normal mt-0.5">{s.hint}</span>}
                     </button>
                   ))}
                 </div>
@@ -229,36 +247,52 @@ export default function JointNew() {
                     <Input id="custom-subject" className="h-12" value={customSubject} onChange={(e) => setCustomSubject(e.target.value)} placeholder="e.g. Summer travel plans" data-testid="custom-subject-input" />
                   </div>
                 )}
-                <div className="mt-8 flex justify-end">
-                  <Button onClick={() => setStep(1)} disabled={!subject || (subject === "custom" && !customSubject.trim())} className="gap-2" data-testid="subject-next-btn">
-                    Continue <ArrowRight className="h-4 w-4" />
-                  </Button>
+                <div className="mt-8 flex justify-between">
+                  {isPro ? <button type="button" onClick={() => setStep(1)} className="text-sm text-muted-foreground hover:text-foreground" data-testid="subject-back-btn">Back</button> : <span />}
+                  {isPro ? (
+                    <Button onClick={submit} disabled={activeSubjects.length === 0 || busy} className="gap-2 uppercase tracking-wide" data-testid="send-invitation-btn">
+                      {busy ? "Sending…" : "Send Invitations"} <Mail className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button onClick={() => setStep(1)} disabled={!subject || (subject === "custom" && !customSubject.trim())} className="gap-2" data-testid="subject-next-btn">
+                      Continue <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
 
-            {step === 1 && (
+            {panel === "child" && (
               <div data-testid="joint-step-child">
-                <h2 className="text-2xl font-semibold mb-4">Which child is this report about?</h2>
+                <h2 className="text-2xl font-semibold mb-4">{isPro ? "Create the case" : "Which child is this report about?"}</h2>
                 {multiSubjects.length > 1 && subjects.length > 0 && (
                   <p className="text-sm text-muted-foreground mb-4" data-testid="multi-subjects-line">
                     Subjects: {multiSubjects.map((k) => subjects.find((s) => s.key === k)?.label || k).join(" + ")}
                   </p>
                 )}
-                <div className="bg-white border border-border rounded-lg p-6 space-y-2">
-                  <Label htmlFor="joint-child">Child's first name or initials</Label>
-                  <Input id="joint-child" className="h-12" value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="e.g. Sam" data-testid="joint-child-input" />
+                <div className="bg-white border border-border rounded-lg p-6 space-y-5">
+                  {isPro && (
+                    <div className="space-y-2">
+                      <Label htmlFor="case-ref">Case name / number (private to you)</Label>
+                      <Input id="case-ref" className="h-12" value={caseRef} onChange={(e) => setCaseRef(e.target.value)} placeholder="e.g. Sossi v. — File #2026-114" data-testid="case-reference-input" />
+                      <p className="text-xs text-muted-foreground">Never shown to the parents. Align also assigns a public case code for the invitations.</p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="joint-child">Child's first name or initials</Label>
+                    <Input id="joint-child" className="h-12" value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="e.g. Sam" data-testid="joint-child-input" />
+                  </div>
                 </div>
                 <div className="mt-8 flex justify-between">
-                  <button type="button" onClick={() => setStep(0)} className="text-sm text-muted-foreground hover:text-foreground" data-testid="child-back-btn">Back</button>
-                  <Button onClick={() => setStep(2)} disabled={!childName.trim()} className="gap-2" data-testid="child-next-btn">
+                  {isPro ? <span /> : <button type="button" onClick={() => setStep(0)} className="text-sm text-muted-foreground hover:text-foreground" data-testid="child-back-btn">Back</button>}
+                  <Button onClick={() => setStep(isPro ? 1 : 2)} disabled={!childName.trim()} className="gap-2" data-testid="child-next-btn">
                     Continue <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             )}
 
-            {step === 2 && (
+            {panel === "invite" && (
               <div data-testid="joint-step-invite">
                 <h2 className="text-2xl font-semibold mb-4">{isPro ? "Invite both parents" : "Invite the other parent"}</h2>
                 {isSafety && !isPro && (
@@ -290,40 +324,39 @@ export default function JointNew() {
                   {isPro && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="pa-name">Parent A first name</Label>
+                        <Label htmlFor="pa-name">Parent 1 first name</Label>
                         <Input id="pa-name" className="h-12" value={paName} onChange={(e) => setPaName(e.target.value)} placeholder="e.g. Ann" data-testid="parent-a-invite-name-input" />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="pa-email">Parent A email</Label>
+                        <Label htmlFor="pa-email">Parent 1 email</Label>
                         <Input id="pa-email" type="email" className="h-12" value={paEmail} onChange={(e) => setPaEmail(e.target.value)} placeholder="ann@example.com" data-testid="parent-a-invite-email-input" />
                       </div>
                     </>
                   )}
                   <div className="space-y-2">
-                    <Label htmlFor="co-name">{isPro ? "Parent B first name" : "Co-parent's first name"}</Label>
+                    <Label htmlFor="co-name">{isPro ? "Parent 2 first name" : "Co-parent's first name"}</Label>
                     <Input id="co-name" className="h-12" value={coName} onChange={(e) => setCoName(e.target.value)} placeholder="e.g. Jordan" data-testid="co-parent-name-input" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="co-email">{isPro ? "Parent B email" : "Co-parent's email"}</Label>
+                    <Label htmlFor="co-email">{isPro ? "Parent 2 email" : "Co-parent's email"}</Label>
                     <Input id="co-email" type="email" className="h-12" value={coEmail} onChange={(e) => setCoEmail(e.target.value)} placeholder="jordan@example.com" data-testid="co-parent-email-input" />
                   </div>
-                  {isPro && (
-                    <div className="space-y-2">
-                      <Label htmlFor="case-ref">Private case reference (optional)</Label>
-                      <Input id="case-ref" className="h-12" value={caseRef} onChange={(e) => setCaseRef(e.target.value)} placeholder="e.g. Your file #2026-114" data-testid="case-reference-input" />
-                      <p className="text-xs text-muted-foreground">Only you can see this — it is never shown to the parents.</p>
-                    </div>
-                  )}
                   <p className="text-xs text-muted-foreground" data-testid="invite-privacy-note">
-                    Each parent keeps a separate login. Your co-parent receives an invitation code — never share your password.
+                    {isPro ? "Each parent receives their own secure link and completes the assessment privately. Parents never see each other's answers and never exchange codes." : "Each parent keeps a separate login. Your co-parent receives an invitation code — never share your password."}
                   </p>
                 </div>
                 <div className="mt-6" data-testid="jointnew-confidentiality"><ConfidentialityNotice /></div>
                 <div className="mt-8 flex justify-between">
-                  <button type="button" onClick={() => setStep(1)} className="text-sm text-muted-foreground hover:text-foreground" data-testid="invite-back-btn">Back</button>
-                  <Button onClick={submit} disabled={!coName.trim() || !coEmail.trim() || (isPro && (!paName.trim() || !paEmail.trim())) || (isSafety && !isPro && !mediatorEmail.trim()) || busy} className="gap-2" data-testid="send-invitation-btn">
-                    {busy ? "Sending…" : isPro ? "Send Both Invitations" : "Send Invitation"} <Mail className="h-4 w-4" />
-                  </Button>
+                  <button type="button" onClick={() => setStep(isPro ? 0 : 1)} className="text-sm text-muted-foreground hover:text-foreground" data-testid="invite-back-btn">Back</button>
+                  {isPro ? (
+                    <Button onClick={() => setStep(2)} disabled={!coName.trim() || !coEmail.trim() || !paName.trim() || !paEmail.trim()} className="gap-2" data-testid="invite-next-btn">
+                      Continue <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button onClick={submit} disabled={!coName.trim() || !coEmail.trim() || (isSafety && !mediatorEmail.trim()) || busy} className="gap-2" data-testid="send-invitation-btn">
+                      {busy ? "Sending…" : "Send Invitation"} <Mail className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

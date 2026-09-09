@@ -1,0 +1,19 @@
+{
+  "summary": "Frontend-only validation of Landing hero copy, 3-step Pro Invite wizard on /joint/new, mobile icon-only Download PDF on ready report, and dashboard/matters regression. All 22 assertions passed. Landing hero shows exact heading 'Professional Tools for Child-Focused Alignment', matching subtext, journey 'Professional invites → Parents reflect → Align compares → Professional guides', hero-invite-btn text 'Invite Parents' (logged out click redirects to /auth), and hero-signin-btn present. After login as approval.test.pro1@gmail.com, /joint/new heading is 'Invite Parents' with joint-steps labels ['Create Case','Invite Parents','Choose Assessment']. Step 1 renders case-reference-input and joint-child-input; child-next-btn disabled until child entered. Step 2 renders parent-a-invite-name/email + co-parent-name/email; invite-next-btn disabled until all four are filled. Step 3 renders all 7 assessment cards (co_parenting, communication, education, medical, psychological, mediation, complete). Selecting subject-complete (multi) enables send-invitation-btn; clicking produces 'Parent Links Ready' success card mentioning 'Customized Report: Co-Parenting + Communication + School / Education…' (case SA-ALN-722959). Repeated with single subject-education and success card labels the subject 'School / Education' (case SA-EDU-397631). Mobile 390x844 on ready report id 00c8b2ec-3c6c-480a-9cf0-1cf465e00acd: joint-print-btn 'Download PDF' span computed display=none (icon only), document.documentElement.scrollWidth=390 (no overflow). Compare tabs (report-view-tabs, view-tab-compare, view-tab-report) still present on ready report. Dashboard and /matters both load cleanly.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "JointNew.jsx: PRO_ASSESSMENTS list is hardcoded (7 items) while the parent flow uses /joint/config subjects. If backend subject taxonomy drifts, pro cards will diverge from parent cards. Consider driving both from the same config source.",
+    "JointNew.jsx submit(): when isAgreement, case_reference/subject/subjects are omitted (correct) but the same button is labelled 'Send Invitations' on step 3 — pro flow always POSTs /joint/reports/professional which is fine, but consider extracting the two submission branches for clarity."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "Pro: approval.test.pro1@gmail.com / TestPass2026! (works). Test parent emails used @example.com throwaways.",
+  "seed_data_creation": "Created 2 new pro cases: SA-ALN-722959 (multi: co_parenting+communication+education) child Vida, and SA-EDU-397631 (education) child Sam. Reused prior ready report 00c8b2ec-3c6c-480a-9cf0-1cf465e00acd for mobile header verification.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All iteration-33 acceptance criteria pass. hero-invite-btn now correctly redirects logged-out users to /auth via Protected route. The Pro wizard order is Create Case → Invite Parents → Choose Assessment, with correct data-testids. Mobile header PDF label is hidden via className 'hidden sm:inline' on the span, keeping scrollWidth at 390. Non-pro parent flow order (Subject → Child → Invite) preserved by the ternary in JointNew.jsx line ~49.",
+  "rca of the issue": "n/a — no failures observed."
+}

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { ProWorkspace } from "@/components/ProWorkspace";
+import { CompareView } from "@/components/CompareView";
 
 function Section({ num, title, children, testId }) {
   return (
@@ -27,6 +28,7 @@ export default function JointReport() {
   const [subjects, setSubjects] = useState([]);
   const [shareEmail, setShareEmail] = useState("");
   const [error, setError] = useState(null);
+  const [view, setView] = useState("compare");
 
   const load = () => {
     api.get(`/joint/reports/${id}`)
@@ -103,8 +105,8 @@ export default function JointReport() {
           <BrandLogo size="text-xl" />
           {ready && report && (
             <Button size="sm" className="gap-2" asChild data-testid="joint-print-btn">
-              <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${id}/pdf`} download>
-                <Printer className="h-4 w-4" /> Download PDF
+              <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${id}/pdf`} download aria-label="Download PDF">
+                <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Download PDF</span>
               </a>
             </Button>
           )}
@@ -219,7 +221,19 @@ export default function JointReport() {
           </div>
         )}
 
-        {ready && report && detail.kind !== "agreement" && (
+        {ready && report && detail.kind !== "agreement" && detail.is_creator && (
+          <div className="no-print flex gap-2 mb-4" role="tablist" data-testid="report-view-tabs">
+            {[["compare", "Compare"], ["report", "Joint Report"]].map(([k, label]) => (
+              <button key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setView(k)} className={`text-sm font-medium rounded-full px-4 py-2 border transition-colors ${view === k ? "bg-primary text-white border-primary" : "bg-white border-border hover:border-primary/50"}`} data-testid={`view-tab-${k}`}>{label}</button>
+            ))}
+          </div>
+        )}
+
+        {ready && report && detail.kind !== "agreement" && detail.is_creator && view === "compare" && (
+          <CompareView report={report} onOpenReport={() => setView("report")} />
+        )}
+
+        {ready && report && detail.kind !== "agreement" && (!detail.is_creator || view === "report") && (
           <div className="report-paper rounded-lg p-8 sm:p-12" data-testid="joint-report-document">
             <div className="text-center border-b border-border pb-8 mb-10">
               <BrandLogo size="text-xl" />
