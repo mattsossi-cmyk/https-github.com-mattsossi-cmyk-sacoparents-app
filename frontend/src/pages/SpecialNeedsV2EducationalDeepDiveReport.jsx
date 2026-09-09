@@ -17,7 +17,7 @@ import SignDownloadToggle from "../components/SignDownloadToggle";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Download, Loader2, RefreshCcw, Sparkles, Users,
+  ArrowLeft, Download, Loader2, Mail, RefreshCcw, Sparkles, Users,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 import { bandPillClass, bandBarClass } from "../lib/scoreBandStyles";
@@ -117,6 +117,17 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
     } finally { setBusy(false); }
   };
 
+  const emailReport = async () => {
+    setBusy(true);
+    try {
+      const res = await api.post("/edu-deep/report/email", {});
+      toast.success(`Report emailed to ${res.data?.sent_to || "your inbox"}.`);
+    } catch (err) {
+      logError("edu-deep email", err);
+      toast.error(err?.response?.data?.detail || "Could not email your report right now.");
+    } finally { setBusy(false); }
+  };
+
   if (loading) {
     return <AppShell><div className="p-10 text-sm text-[#4B4567]"><Loader2 className="animate-spin inline" size={14} /> Loading...</div></AppShell>;
   }
@@ -157,6 +168,10 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
             <button onClick={download} disabled={busy} data-testid="edu-deep-report-download"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
               {busy ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
+            </button>
+            <button onClick={emailReport} disabled={busy} data-testid="edu-deep-report-email"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
+              <Mail size={13} /> Email me the PDF
             </button>
             <button onClick={load} disabled={busy} data-testid="edu-deep-report-refresh"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#E5E0EE] text-[#3D1A78] hover:bg-[#EEE9F7]">

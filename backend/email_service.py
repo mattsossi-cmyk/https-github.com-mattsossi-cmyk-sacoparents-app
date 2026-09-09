@@ -3487,3 +3487,100 @@ def send_joint_alignment_release_confirmation(
         bcc=[valid_bcc] if valid_bcc else None,
         failure_message="Release confirmation delivery failed.",
     )
+
+
+_DEEP_DIVE_META = {
+    "educational": {
+        "label": "Educational Needs",
+        "filename": "Educational_Deep_Dive.pdf",
+        "subject": "Your Educational Needs deep-dive report",
+        "opener": (
+            "Your Educational Needs deep-dive report is attached "
+            "as a branded PDF."
+        ),
+    },
+    "medical": {
+        "label": "Medical Needs",
+        "filename": "Medical_Deep_Dive.pdf",
+        "subject": "Your Medical Needs deep-dive report",
+        "opener": (
+            "Your Medical Needs deep-dive report is attached as a "
+            "branded PDF."
+        ),
+    },
+    "psychological": {
+        "label": "Psychological / Emotional Needs",
+        "filename": "Psychological_Deep_Dive.pdf",
+        "subject": "Your Psychological / Emotional deep-dive report",
+        "opener": (
+            "Your Psychological / Emotional Needs deep-dive report "
+            "is attached as a branded PDF."
+        ),
+    },
+}
+
+
+def send_deep_dive_report_pdf(
+    *,
+    variant: str,
+    to_email: str,
+    user_name: Optional[str],
+    pdf_bytes: bytes,
+    pdf_filename: Optional[str] = None,
+) -> None:
+    """Email a parent their own deep-dive (Educational / Medical /
+    Psychological) report as an attached branded PDF. Neutral,
+    non-diagnostic copy — same tone as the main SNC report email.
+
+    `variant` must be one of `_DEEP_DIVE_META` keys.
+    """
+    meta = _DEEP_DIVE_META.get(variant)
+    if not meta:
+        raise EmailSendError(f"Unknown deep-dive variant: {variant!r}")
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    filename = pdf_filename or meta["filename"]
+
+    plain = (
+        f"{greeting}\n\n"
+        f"{meta['opener']}\n\n"
+        "It's a neutral, individualized summary you can keep for "
+        "yourself, share with your mediator, or bring to a family "
+        "professional. It does not diagnose, determine parental "
+        "fitness, or replace legal advice.\n\n"
+        "If your circumstances change, regenerate the report from the "
+        "SA CoParents app and any new information will be included.\n\n"
+        "- SA CoParents - sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">{greeting}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">Your <strong>{_html.escape(meta["label"])}'
+        f'</strong> deep-dive report is attached as a branded PDF.</p>'
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        'margin:0 0 22px 0;">'
+        "It's a neutral, individualized summary you can keep for "
+        "yourself, share with your mediator, or bring to a family "
+        "professional.</p>"
+        '<p style="font-size:12px;line-height:1.5;color:#857E9C;'
+        'margin:0 0 14px 0;">'
+        "This report does not diagnose, determine parental fitness, "
+        "or replace legal advice.</p>"
+    )
+    html = _branded_html(
+        headline=f"Your {meta['label']} deep-dive",
+        body_html=body_html,
+        cta_label="Open SA CoParents",
+        cta_url="https://sacoparentsapp.online",
+    )
+    _send(
+        to_email=to_email,
+        subject=meta["subject"],
+        html=html,
+        text=plain,
+        attachments=[(filename, pdf_bytes)],
+        failure_message=(
+            "Couldn't email your deep-dive report right now. "
+            "Please try again in a moment."
+        ),
+    )

@@ -27,6 +27,50 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-09 — Iter178 · Dual-Entry Landing + Deep-Dive Email PDFs
+
+**🔴 P0 — Dual-entry Landing hero**
+- New two-card hero on `/`: **Path A · I'm starting on my own**
+  (scrolls to existing SituationPicker under `#situation-picker`
+  anchor) and **Path B · I was invited by a professional**
+  (routes to `/join`). Existing SituationPicker preserved
+  verbatim so solo flow is unchanged.
+- Step 5 refresh: subtitle now reads
+  *"Complete Together, Separately"*, body copy expanded to
+  match user's brief verbatim, and a new `<Step5CoparentCtas />`
+  renders either:
+    * Solo default: two CTAs `Invite my co-parent` (→ dashboard)
+      + `Connect with a professional` (→ `/join`)
+    * Invited variant (`?prof=X` or `sessionStorage
+      invited_professional_name`): green
+      `✓ Connected to [Prof Name]` banner instead of CTAs.
+- `/join/:token` now writes the professional's name into
+  `sessionStorage.invited_professional_name` so the invited
+  state persists across the parent's login → landing bounce.
+
+**🟡 P1 — Email PDF for the three Deep Dives**
+- New shared helper `send_deep_dive_report_pdf(variant, ...)` in
+  `email_service.py` with per-variant subject / filename /
+  label (Educational / Medical / Psychological). Attaches the
+  branded PDF, neutral copy matching the SNC report email.
+- Three new endpoints — all mirroring the existing
+  `POST /snc2/report/email` guardrails:
+    * `POST /api/edu-deep/report/email`
+    * `POST /api/med-deep/report/email`
+    * `POST /api/psych-deep/report/email`
+  (403 for guest, 404 if no report cached, 502/503 on Resend
+  error, 200 with `{ok, sent_to, filename}`.)
+- Frontend: added **Email me the PDF** button next to the
+  existing Download button on each of the three deep-dive
+  report pages (Educational / Medical / Psychological), with
+  `data-testid`s matching the SNC pattern.
+- Coverage: `tests/test_iter178_deep_dive_email.py` (10 tests,
+  green): 3 auth guards + 3 no-report guards + 3 render tests
+  for the three variants (asserts subject / attachment
+  filename / label) + 1 unknown-variant safety check.
+
+
+## What's Implemented
 ### 2026-09-08 — Iter177 · Handed-Off Cases Section on Parent Dashboard
 
 **🟡 P2 — Live vs Handed-Off case grouping**

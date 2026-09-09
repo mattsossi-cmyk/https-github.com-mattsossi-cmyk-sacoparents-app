@@ -275,6 +275,50 @@ async def report_pdf(sign: bool = False, note: str = "",
                              headers={"Content-Disposition": f'attachment; filename="{fn}"'})
 
 
+class EmailReportIn(BaseModel):
+    to_email: Optional[str] = None
+
+
+@router.post("/report/email")
+async def report_email(
+    body: EmailReportIn,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Email the parent their own Medical deep-dive report."""
+    import email_service
+    if user.is_guest:
+        raise HTTPException(
+            status_code=403,
+            detail="Please claim an account before emailing your report.",
+        )
+    to_email = (body.to_email or user.email or "").strip().lower()
+    if not to_email:
+        raise HTTPException(status_code=400, detail="No email address on file.")
+    cached = await _cached(db, user.user_id)
+    if not cached:
+        raise HTTPException(status_code=404, detail="Generate the report first.")
+    pdf_bytes = build_deep_dive_pdf(report=cached.get("report") or {})
+    filename = f"Medication_Coordination_Deep_Dive_{_safe_filename(user.name or 'me')}.pdf"
+    try:
+        email_service.send_deep_dive_report_pdf(
+            variant="medical",
+            to_email=to_email,
+            user_name=user.name,
+            pdf_bytes=pdf_bytes,
+            pdf_filename=filename,
+        )
+    except email_service.EmailNotConfigured:
+        raise HTTPException(
+            status_code=503,
+            detail="Email delivery isn't configured on this environment.",
+        )
+    except email_service.EmailSendError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"ok": True, "sent_to": to_email, "filename": filename}
+
+
+
 class SectionCoachIn(BaseModel):
     force: Optional[bool] = False
 

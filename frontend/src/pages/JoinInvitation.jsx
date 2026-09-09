@@ -93,6 +93,21 @@ export default function JoinInvitation() {
     };
   }, [token]);
 
+  // Once the preview is available, stash the referring professional's
+  // name so the Landing page's Step 5 shows the "✓ Connected to …"
+  // banner instead of the solo CTAs even if the parent bounces back
+  // to `/` before finishing sign-in.
+  useEffect(() => {
+    if (preview?.professional?.name) {
+      try {
+        window.sessionStorage?.setItem(
+          "invited_professional_name",
+          preview.professional.name,
+        );
+      } catch { /* noop */ }
+    }
+  }, [preview]);
+
   // 2. Auto-accept when the parent is signed in and the preview loaded.
   useEffect(() => {
     if (!authToken || !preview || accepted || previewError) return;

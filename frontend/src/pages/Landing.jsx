@@ -495,9 +495,66 @@ function Hero() {
           explore options and resources for moving forward.
         </p>
 
-        {/* Primary action — the situation picker IS the CTA. Everything
-            else on this page derives from what the parent selects here. */}
-        <div className="mt-10">
+        {/* Primary path chooser — replaces a single generic CTA with
+            two clear parent journeys. "Starting on my own" reveals
+            the situation picker below (existing solo flow). "Invited
+            by a professional" routes to `/join` where the token
+            /code auto-connects the parent to the professional case
+            without ever asking them to type a case number. */}
+        <div
+          className="mt-10 grid gap-3 sm:grid-cols-2 max-w-3xl mx-auto"
+          data-testid="hero-dual-entry"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById("situation-picker");
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="group text-left rounded-3xl bg-white border-2 border-[#D6CFE8] hover:border-[#3D1A78] p-5 sm:p-6 transition shadow-sm"
+            data-testid="hero-solo-cta"
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              Path A
+            </div>
+            <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
+              I&rsquo;m starting on my own
+            </div>
+            <div className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
+              Reflect independently, at your own pace. Build a Foundation
+              Statement you can share when you&rsquo;re ready.
+            </div>
+            <div className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#3D1A78] group-hover:underline">
+              Choose your situation →
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => { window.location.href = "/join"; }}
+            className="group text-left rounded-3xl bg-white border-2 border-[#D6CFE8] hover:border-[#3D1A78] p-5 sm:p-6 transition shadow-sm"
+            data-testid="hero-invited-cta"
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              Path B
+            </div>
+            <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
+              I was invited by a professional
+            </div>
+            <div className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
+              Open the link your mediator or attorney emailed you — or
+              paste the code they gave you. We&rsquo;ll auto-connect the
+              rest.
+            </div>
+            <div className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#3D1A78] group-hover:underline">
+              Continue your invitation →
+            </div>
+          </button>
+        </div>
+
+        {/* Path A body — SituationPicker is the existing solo flow.
+            It sits under an anchor so the "starting on my own" CTA
+            above can scroll into view. */}
+        <div id="situation-picker" className="mt-10 scroll-mt-24">
           <SituationPicker />
         </div>
 
@@ -637,6 +694,57 @@ function ThreeReportsCover({ testid, number, title, body, accent, sampleHref, sa
 /* ============================================================
    SECTION — HOW IT WORKS
 ============================================================ */
+function Step5CoparentCtas() {
+  // Detect the invited-parent state: either the /join flow has
+  // stashed the professional name in sessionStorage, or the URL
+  // carries ?prof=NAME (readable link for professionals to share).
+  const [profName, setProfName] = React.useState(null);
+  React.useEffect(() => {
+    try {
+      const stored = window.sessionStorage?.getItem("invited_professional_name");
+      const qs = new URLSearchParams(window.location.search).get("prof");
+      const name = (qs || stored || "").trim();
+      if (name) setProfName(name);
+    } catch { /* noop */ }
+  }, []);
+
+  if (profName) {
+    return (
+      <div
+        className="mt-4 rounded-2xl border border-[#B7DEC6] bg-[#E1F3E8] p-3 text-[13px] text-[#186142]"
+        data-testid="how-step-5-invited-banner"
+      >
+        <div className="font-semibold flex items-center gap-1.5 mb-0.5">
+          ✓ Connected to {profName}
+        </div>
+        <div className="text-[12px] leading-relaxed">
+          Complete your reflection at your own pace — your professional
+          will use the completed assessments to generate a Joint
+          Alignment Report.
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-4 flex flex-wrap gap-2" data-testid="how-step-5-ctas">
+      <a
+        href="/dashboard"
+        className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2A0F5F] text-white px-3.5 py-1.5 text-[12px] font-semibold"
+        data-testid="how-step-5-invite-coparent"
+      >
+        Invite my co-parent →
+      </a>
+      <a
+        href="/join"
+        className="inline-flex items-center gap-1 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-3.5 py-1.5 text-[12px] font-semibold"
+        data-testid="how-step-5-connect-professional"
+      >
+        Connect with a professional →
+      </a>
+    </div>
+  );
+}
+
 function HowItWorks() {
   // Parent-friendly language on top, formal terminology as a small
   // subtitle for attorneys/mediators/therapists reviewing the same page.
@@ -674,9 +782,10 @@ function HowItWorks() {
     {
       n: "5",
       title: "Where Do We See Things the Same — and Differently?",
-      subtitle: "Joint Assessment",
+      subtitle: "Complete Together, Separately",
       icon: Users,
-      body: "If both parents participate, we identify areas of alignment as well as areas that may need more conversation.",
+      body: "Each parent completes their reflection independently. If you're working with a professional, your professional can invite both parents and use the completed assessments to generate a Joint Alignment Report.",
+      step5Ctas: true,
     },
     {
       n: "6",
@@ -744,6 +853,7 @@ function HowItWorks() {
                     {s.sampleLabel || "See a sample"} →
                   </Link>
                 )}
+                {s.step5Ctas && <Step5CoparentCtas />}
               </div>
             </div>
           ))}
