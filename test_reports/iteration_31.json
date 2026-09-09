@@ -1,0 +1,24 @@
+{
+  "summary": "Frontend-only verification of Landing page hero/workflow messaging update. All requested items pass at 1920x800 and 390x844: exact hero-heading, hero-subtext, hero-journey text; hero-invite-btn label 'Invite Parents' navigates to /auth?mode=register with register mode visible; hero-philosophy still present; workflow-strip renders 5 steps in order Invite→Assess→Compare→Align→Guide with body text; workflow-note present. Regression: nav-verify, footer, samples-section all render. Mobile: workflow-steps grid is 2 columns (163px 163px), hero-section itself does not overflow (right/scrollWidth = 390). Hero CTAs wrap correctly with rightmost at 277px (within 390 viewport).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Landing header (mobile 390px)", "issues": ["Pre-existing: header 'Create Professional Account' button (nav-get-started-btn width 236px) causes document scrollWidth 566 > clientWidth 390. Not part of the hero/workflow changes under test, but flagged as pre-existing horizontal overflow on mobile. Consider hiding nav CTAs on <sm or using shorter labels/icon-only on mobile."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": ["Optional: address pre-existing mobile header overflow caused by 'Create Professional Account' button (nav-get-started-btn) — hide or shorten label on <sm breakpoints."],
+  "critical_code_review_comments": [
+    "Landing.jsx is ~530 lines and still growing; consider extracting Hero, WorkflowStrip, Subjects, Applications into separate components for maintainability.",
+    "workflow-step body strings are inline in JSX; consider hoisting the array to a constant like other sections (FLOW_STEPS, CLARITY_POINTS) for consistency."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "n/a (logged-out only)",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Landing hero + workflow-strip verified for iteration 31. Hero section and workflow-steps do NOT overflow on 390px, but overall document overflows due to header's nav-get-started-btn (Create Professional Account) — pre-existing, unrelated to this iteration's scope."
+}

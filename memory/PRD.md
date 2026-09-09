@@ -366,3 +366,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `seed_professionals`: creates joy@bsossi.com (approved, verified, must_change_password) with password from env JOY_TEMP_PASSWORD (added to backend/.env). `POST /api/auth/change-password`; `ForcePasswordChange.jsx` modal on dashboard when must_change_password.
 - Both take effect in PRODUCTION on next Deploy (seed runs at startup). Prod admin password: user reset it today; agent cannot log in to prod admin anymore.
 - Dashboard header now shows name · email (`user-name` testid). iteration_30: 100% backend / 95% frontend (only note: header name, fixed).
+
+## 2026-09-09 — Landing: workflow-first messaging (BUILD 2026-09-08.5)
+- Hero subtext: "Invite parents to reflect separately. See where they agree. Identify where they differ. Build the conversation around their child's needs." Primary CTA "Invite Parents" (→ register), then Sign In, then Accept Invitation (ghost). Tagline `hero-journey`: "You invite. Parents reflect. Align compares. You guide."
+- New `workflow-strip` (purple): Invite → Assess → Compare → Align → Guide + note that the professional connects the parents (no "send the other parent your code"). Step Two card copy updated. Architecture already professional-organized (professional-only invites) — no backend change.
+- iteration_31: landing 100%. Mobile header overflow fixed (nav CTA shows "Get Started" on <sm). PROD build 2026-09-08.4 live: Joy's account present (approved, verified, must_change_password), new bundle main.80bdcc09.js. Landing messaging (build .5) still needs deploy.

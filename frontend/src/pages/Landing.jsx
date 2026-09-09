@@ -137,7 +137,7 @@ export default function Landing() {
             <Button variant="ghost" data-testid="nav-login-btn">Sign In</Button>
           </Link>
           <Link to="/auth?mode=register" data-testid="nav-get-started-link">
-            <Button data-testid="nav-get-started-btn">Create Professional Account</Button>
+            <Button data-testid="nav-get-started-btn"><span className="sm:hidden">Get Started</span><span className="hidden sm:inline">Create Professional Account</span></Button>
           </Link>
         </div>
       </header>
@@ -160,28 +160,55 @@ export default function Landing() {
             Turn Parent Reflection Into Child-Focused Alignment
           </h1>
           <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-xl" data-testid="hero-subtext">
-            Securely receive parent-authorized reports, understand where parents are aligned, identify
-            areas that need professional guidance, and help families build practical agreements around
-            their child's needs.
+            Invite parents to reflect separately. See where they agree. Identify where they differ.
+            Build the conversation around their child's needs.
           </p>
           <p className="mt-3 text-sm text-muted-foreground max-w-xl" data-testid="hero-audience">
             Built for mediators, attorneys, therapists, parenting professionals, and other child-focused practitioners.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link to="/auth" data-testid="hero-accept-link">
-              <Button size="lg" className="gap-2" data-testid="hero-accept-btn">
-                Accept a Parent Invitation <ArrowRight className="h-4 w-4" />
+            <Link to="/auth?mode=register" data-testid="hero-invite-link">
+              <Button size="lg" className="gap-2" data-testid="hero-invite-btn">
+                Invite Parents <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/auth?mode=register" data-testid="hero-cta-link">
-              <Button size="lg" variant="outline" data-testid="hero-cta-btn">Create Professional Account</Button>
-            </Link>
             <Link to="/auth" data-testid="hero-signin-link">
-              <Button size="lg" variant="ghost" data-testid="hero-signin-btn">Professional Sign In</Button>
+              <Button size="lg" variant="outline" data-testid="hero-signin-btn">Professional Sign In</Button>
+            </Link>
+            <Link to="/auth" data-testid="hero-accept-link">
+              <Button size="lg" variant="ghost" data-testid="hero-accept-btn">Accept a Parent Invitation</Button>
             </Link>
           </div>
-          <p className="mt-8 font-script text-2xl text-brand-purple max-w-xl" data-testid="hero-philosophy">
+          <p className="mt-6 text-sm font-semibold tracking-wide text-brand-purple" data-testid="hero-journey">
+            You invite. Parents reflect. Align compares. You guide.
+          </p>
+          <p className="mt-6 font-script text-2xl text-brand-purple max-w-xl" data-testid="hero-philosophy">
             Parents Reflect. Professionals Align. Families Build Agreements.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-brand-purple text-white py-12" data-testid="workflow-strip">
+        <div className="max-w-5xl mx-auto px-6">
+          <p className="text-xs uppercase tracking-widest font-bold text-white/70">The professional workflow</p>
+          <ol className="mt-5 grid grid-cols-2 md:grid-cols-5 gap-4" data-testid="workflow-steps">
+            {[
+              ["Invite", "You create the case and send each parent a private, secure invitation. Parents never have to exchange codes."],
+              ["Assess", "Each parent completes an individual reflection in the SA CoParents App — separately, in their own words."],
+              ["Compare", "Align lines up both perspectives and shows where they agree and where they differ, without blame."],
+              ["Align", "A neutral Joint Alignment Report frames shared priorities and differences around the child's needs."],
+              ["Guide", "You lead the next conversation, mediation, or agreement work with a clear, child-focused map."],
+            ].map(([title, body], i) => (
+              <li key={title} className="relative bg-white/10 rounded-lg p-4 border border-white/15" data-testid={`workflow-step-${title.toLowerCase()}`}>
+                <span className="text-xs font-bold text-white/60">0{i + 1}</span>
+                <p className="text-lg font-semibold mt-1">{title}</p>
+                <p className="text-xs text-white/80 mt-2 leading-relaxed">{body}</p>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-6 text-sm text-white/80 max-w-3xl" data-testid="workflow-note">
+            The professional organizes the process from start to finish: you connect the parents, so no one is asked to
+            "send the other parent your code."
           </p>
         </div>
       </section>
@@ -226,7 +253,7 @@ export default function Landing() {
             <div className="bg-white border-2 border-brand-purple rounded-xl p-6 text-center shadow-sm h-full" data-testid="step-two">
               <div className="h-12 w-12 rounded-full bg-brand-purple text-white font-extrabold flex items-center justify-center mx-auto mb-3 text-lg">2</div>
               <p className="font-bold text-brand-purple uppercase tracking-wide text-sm">Step Two — Professional Joint Report</p>
-              <p className="text-sm text-muted-foreground mt-2">An authorized professional uses Align to invite the parents, connect the completed assessments, and generate a structured Joint Alignment Report to guide mediation, counseling, parenting coordination, or other family-law processes.</p>
+              <p className="text-sm text-muted-foreground mt-2">You create the case and invite both parents. Align connects their completed assessments and generates a structured Joint Alignment Report to guide mediation, counseling, parenting coordination, or other family-law processes.</p>
               <p className="text-xs text-brand-purple mt-2 font-medium italic">You are here</p>
             </div>
           </div>
