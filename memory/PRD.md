@@ -410,6 +410,11 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `/joint/reports/{rid}/report` and `/pdf` now insert `access_events` with `kind` (view|download), `by`, `by_name`, `by_role` (Assigned professional / Parent 1 / Parent 2 / Shared professional). Activity endpoint returns `access_log`, `view_count`, `download_count`; legacy events stay in `access_events`.
 - ProWorkspace "Consent & Activity" gained a "Report Access Log" list (View/PDF badge, actor, role, timestamp, counts, empty state, "downloaded copies cannot be recalled" note). Screenshot-verified in preview.
 
+## 2026-09-09 — Verification-code delivery investigation (BUILD 2026-09-09.8)
+- User (Matt, production) reported reset code never arrives. Findings: prod + preview `/api/auth/forgot-password` return 200; provider accepted direct test to mattsossi@bsossi.com (202, ids 167b0908…, 37256e9e…). Send failures already surface as 502/503, so a 200 means the provider accepted → likely spam/filtering at recipient domain, or stale code (each new request replaces the previous one; my curl tests also invalidated his code).
+- Changes: reset code validity 10 → 15 min (server + Auth.jsx copy, "check spam", "new code replaces previous"); new admin-only `POST /api/admin/email-test` sends a delivery test to the admin's own inbox and returns provider id/build; button `admin-email-test-btn` in AdminProfessionals header. Code-review round: `is None` findings again false positives (unchanged); test_access_log.py split into fixture + parametrized tests (7 passing).
+
+
 
 
 

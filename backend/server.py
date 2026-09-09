@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-09.7"
+BUILD_ID = "2026-09-09.8"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -321,7 +321,7 @@ async def forgot_password(body: ForgotIn):
         await db.password_resets.insert_one({
             "email": email,
             "code_hash": hash_code(code),
-            "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10),
+            "expires_at": datetime.now(timezone.utc) + timedelta(minutes=15),
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
         name = user.get("name") or "there"
@@ -332,7 +332,7 @@ async def forgot_password(body: ForgotIn):
                 f'<p>Use this verification code to set a new password for your '
                 f'{escape(EMAIL_FROM_NAME)} account:</p>'
                 f'<p style="font-size:32px;font-weight:bold;letter-spacing:6px;margin:24px 0">{code}</p>'
-                f'<p>This code expires in 10 minutes. If you did not request a password reset, '
+                f'<p>This code expires in 15 minutes. If you did not request a password reset, '
                 f'you can ignore this email.</p>'
                 f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never '
                 f'ask for your password by email.</p></td></tr></table>')
@@ -1888,6 +1888,23 @@ class PrepareIn(BaseModel):
 @api.get("/professionals")
 async def list_professionals(user=Depends(get_current_user)):
     return await db.users.find({"role": "professional", "approved": {"$ne": False}}, {"_id": 0, "name": 1, "email": 1, "verification_level": 1}).sort("name", 1).to_list(5000)
+
+
+@api.post("/admin/email-test")
+async def admin_email_test(user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    sent_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    provider_id = await send_email(
+        to=user["email"],
+        subject=f"Delivery test - {EMAIL_FROM_NAME}",
+        html=_pro_email_wrap(
+            f"<p>Hi {escape(user.get('name') or 'there')},</p>"
+            f"<p>This is a delivery test sent from {escape(EMAIL_FROM_NAME)} at {sent_at}. "
+            "If you can read this, verification codes and invitations from this server can reach your inbox.</p>"
+            "<p>If it landed in spam or junk, please mark it as safe so future codes arrive promptly.</p>"),
+    )
+    return {"ok": True, "to": user["email"], "provider_id": provider_id, "sent_at": sent_at, "build": BUILD_ID}
 
 
 @api.get("/admin/professionals")

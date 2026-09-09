@@ -59,7 +59,7 @@ export default function Auth() {
         await api.post("/auth/forgot-password", { email });
         setMode("reset");
         setCooldown(60);
-        toast.success("Check your inbox — your 6-digit verification code is on its way (valid for 10 minutes).");
+        toast.success("Check your inbox (and spam folder) — your 6-digit verification code is on its way (valid for 15 minutes).");
         return;
       } else {
         await api.post("/auth/reset-password", { email, code: resetCode, new_password: newPassword });
@@ -194,7 +194,7 @@ export default function Auth() {
                 <div className="space-y-2">
                   <Label htmlFor="reset-code">Verification code</Label>
                   <Input id="reset-code" className="h-12 tracking-[0.3em] text-center text-lg" value={resetCode} onChange={(e) => setResetCode(e.target.value)} required maxLength={6} placeholder="6-digit code" data-testid="reset-code-input" />
-                  <p className="text-xs text-muted-foreground">Check your email for the code. It expires in 10 minutes.</p>
+                  <p className="text-xs text-muted-foreground">Check your email (including spam/junk) for the code. It expires in 15 minutes. Requesting a new code replaces the previous one.</p>
                   <p className="text-xs text-muted-foreground">
                     Didn't get it?{" "}
                     {cooldown > 0 ? (

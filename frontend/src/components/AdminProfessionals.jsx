@@ -9,6 +9,17 @@ export function AdminProfessionals() {
   const [pros, setPros] = useState([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState("");
+
+  const emailTest = async () => {
+    setTesting(true);
+    try {
+      const { data } = await api.post("/admin/email-test");
+      setTestResult(`Provider accepted the message for ${data.to} at ${data.sent_at} (id ${data.provider_id || "n/a"}, build ${data.build}). Check inbox and spam.`);
+      toast.success("Test email sent");
+    } catch (e) { setTestResult(""); toast.error(formatApiError(e)); } finally { setTesting(false); }
+  };
 
   useEffect(() => { api.get("/admin/professionals").then((r) => setPros(r.data)).catch(() => {}); }, []);
 
@@ -28,8 +39,12 @@ export function AdminProfessionals() {
     <section className="bg-white border border-border rounded-lg p-6 mb-6" data-testid="admin-professionals-section">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-lg font-semibold">Approved Professionals <span className="text-sm text-muted-foreground font-normal">({verifiedCount}/{pros.length} credentials verified)</span></h2>
-        <button onClick={() => setOpen((v) => !v)} className="text-sm font-medium text-primary hover:underline" data-testid="admin-professionals-toggle">{open ? "Hide" : "Manage credential verification"}</button>
+        <div className="flex items-center gap-3">
+          <Button size="sm" variant="outline" disabled={testing} onClick={emailTest} data-testid="admin-email-test-btn">{testing ? "Sending…" : "Send me a delivery test email"}</Button>
+          <button onClick={() => setOpen((v) => !v)} className="text-sm font-medium text-primary hover:underline" data-testid="admin-professionals-toggle">{open ? "Hide" : "Manage credential verification"}</button>
+        </div>
       </div>
+      {testResult && <p className="mt-2 text-xs text-muted-foreground" data-testid="admin-email-test-result">{testResult}</p>}
       {open && (
         <div className="mt-4">
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, organization or license" className="max-w-md" data-testid="admin-professionals-search" />
