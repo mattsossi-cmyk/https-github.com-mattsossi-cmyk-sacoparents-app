@@ -27,6 +27,53 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-09 — Iter181 · Landing Ecosystem Clarity + Individual→Joint Bridge
+
+**🟢 P2 — Ecosystem Flow Strip (new)**
+- `Landing.jsx :: EcosystemFlow` — new 3-node horizontal band placed
+  directly under the Hero: **For Parents (sacoparentsapp.online)** →
+  **For Professionals (sacoparentsalign.com)** → **Better Child-Focused
+  Agreements**. Nodes stack vertically on mobile with down-arrow
+  connectors so the ecosystem is legible before the parent scrolls
+  into the six-step journey.
+
+**🟢 P2 — Report Clarity + Individual→Joint Bridge**
+- `ThreeReportsStrip` retitled **"Individual Journey"** with the three
+  reports relabelled to their canonical names:
+  1. Co-Parenting Assessment Report
+  2. Foundation Statement
+  3. Child Needs Statement
+- New `IndividualToJointBridge` component sits directly after the
+  three-report strip. Copy: *"Want to compare perspectives? Invite
+  your co-parent — or connect with a mediator, attorney or therapist
+  — to move from individual reflection into joint alignment."*
+  followed by a **Joint Journey** card previewing the
+  *Joint Assessment → Joint Alignment Report* path. Resolves the prior
+  "3 reports or 4 reports?" ambiguity by making the pivot explicit.
+
+**🟢 P2 — Professional Connection Section**
+- New `ProfessionalConnection` component placed **directly after Step
+  6** in the six-step journey (`HowItWorks`). Copy: *"Working with a
+  mediator, attorney, therapist, or parenting professional? Your
+  professional can invite you to connect your completed SA CoParents
+  reflections with SA CoParents Align. Your individual reflection
+  remains yours. Align helps the professional identify areas of
+  shared understanding and differences that may need discussion."*
+- Two CTAs:
+  - **Primary:** *"I have a professional invitation"* → `/join`
+  - **Secondary:** *"Learn about SA CoParents Align"* → external
+    `https://sacoparentsalign.com` (`ArrowUpRight` icon, opens in
+    new tab with `noopener noreferrer`).
+- All new nodes carry `data-testid` attributes (`ecosystem-flow`,
+  `ecosystem-node-*`, `individual-to-joint-bridge`, `joint-journey-card`,
+  `professional-connection`, `professional-connection-invitation-cta`,
+  `professional-connection-align-cta`) for automated testing.
+
+**Page composition (final order):** Hero → EcosystemFlow →
+ThreeReportsStrip → IndividualToJointBridge → HowItWorks (Steps 1-6) →
+ProfessionalConnection → AlignmentPhilosophy → TrustSignals →
+HomepageFAQ → FinalCTA → Footer.
+
 ### 2026-09-09 — Iter180 · Auto-Focus + Sample Preview + Delivery Badge
 
 **🟢 P3 — Prof Preview Auto-Focus**

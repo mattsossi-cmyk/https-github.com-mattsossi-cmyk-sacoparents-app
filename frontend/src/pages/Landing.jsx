@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
+  ArrowDown,
+  ArrowUpRight,
   ShieldCheck,
   Facebook,
   Heart,
@@ -19,6 +21,8 @@ import {
   AlertTriangle,
   Scale,
   Handshake,
+  Briefcase,
+  Award,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
@@ -722,6 +726,110 @@ function Hero() {
 }
 
 /* ============================================================
+   ECOSYSTEM FLOW — compact 3-node horizontal strip showing the
+   relationship between the two sibling sites and the child-focused
+   outcome. Sits directly under the Hero so the ecosystem is
+   explicit before parents scroll into the six-step journey.
+============================================================ */
+function EcosystemFlow() {
+  return (
+    <section
+      id="ecosystem-flow"
+      className="relative py-12 sm:py-14 bg-[#FBFAFE] border-b border-[#EFE9F9]"
+      data-testid="ecosystem-flow"
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-8">
+          <Eyebrow>The SA CoParents Ecosystem</Eyebrow>
+          <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug">
+            Two sibling tools. One child-focused outcome.
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-4 md:gap-3">
+          <article
+            className="rounded-2xl border-2 border-[#3D1A78]/25 bg-white p-5 sm:p-6 flex flex-col"
+            data-testid="ecosystem-node-parents"
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              sacoparentsapp.online
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <Heart size={16} className="text-[#3D1A78]" />
+              <div className="font-serif text-lg text-[#1A1330]">For Parents</div>
+            </div>
+            <div className="mt-3 text-[13px] text-[#4B4567] leading-relaxed">
+              Reflect · Identify Needs · Build Foundation · Prepare
+            </div>
+          </article>
+
+          <div
+            className="hidden md:flex items-center justify-center text-[#3D1A78]"
+            aria-hidden
+          >
+            <ArrowRight size={20} strokeWidth={2.2} />
+          </div>
+          <div
+            className="md:hidden flex items-center justify-center text-[#3D1A78]"
+            aria-hidden
+          >
+            <ArrowDown size={18} strokeWidth={2.2} />
+          </div>
+
+          <article
+            className="rounded-2xl border-2 border-[#2DB5B5]/30 bg-white p-5 sm:p-6 flex flex-col"
+            data-testid="ecosystem-node-professionals"
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
+              sacoparentsalign.com
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <Briefcase size={16} className="text-[#0E7A7A]" />
+              <div className="font-serif text-lg text-[#1A1330]">For Professionals</div>
+            </div>
+            <div className="mt-3 text-[13px] text-[#4B4567] leading-relaxed">
+              Invite · Compare · Identify Alignment · Guide Conversation
+            </div>
+          </article>
+
+          <div
+            className="hidden md:flex items-center justify-center text-[#3D1A78]"
+            aria-hidden
+          >
+            <ArrowRight size={20} strokeWidth={2.2} />
+          </div>
+          <div
+            className="md:hidden flex items-center justify-center text-[#3D1A78]"
+            aria-hidden
+          >
+            <ArrowDown size={18} strokeWidth={2.2} />
+          </div>
+
+          <article
+            className="rounded-2xl border-2 border-[#B85B00]/30 bg-white p-5 sm:p-6 flex flex-col"
+            data-testid="ecosystem-node-result"
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B85B00]">
+              The Result
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <Award size={16} className="text-[#B85B00]" />
+              <div className="font-serif text-lg text-[#1A1330]">
+                Better Child-Focused Agreements
+              </div>
+            </div>
+            <div className="mt-3 text-[13px] text-[#4B4567] leading-relaxed">
+              Clearer priorities, shared understanding, healthier outcomes
+              for the child.
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
    THREE REPORTS STRIP — compact "at a glance" trio showing the
    three primary artefacts parents receive.
 ============================================================ */
@@ -729,42 +837,93 @@ function ThreeReportsStrip() {
   return (
     <section id="three-reports" className="relative py-14 sm:py-16 bg-white border-y border-[#EFE9F9]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <Eyebrow>Three core reports — plus specialized reports based on your family&rsquo;s needs</Eyebrow>
+        <Eyebrow>Individual Journey</Eyebrow>
         <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-2">
-          Real deliverables you can hand to a mediator, therapist, or attorney.
+          Every parent can create three core reports.
         </h2>
         <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-3xl mx-auto">
-          Every parent produces the three core reports below. Families using the
-          Special Needs pathway also receive additional individual, deep-dive,
-          and side-by-side comparison reports tailored to their situation.
+          Complete them on your own, at your own pace. Families using the
+          Special Needs pathway also receive additional individual and
+          deep-dive reports tailored to their situation.
         </p>
       </div>
       <div className="mt-8 grid md:grid-cols-3 gap-4 max-w-6xl mx-auto px-4 sm:px-6">
         <ThreeReportsCover
           testid="three-reports-situation"
           number="1"
-          title="Understand your co-parenting situation"
+          title="Co-Parenting Assessment Report"
           body="A private snapshot of how you and the other parent are actually communicating today — with concrete next steps."
           accent="#3D1A78"
           sampleHref="/api/insights/samples/sacoparents-coparenting-report.pdf"
-          sampleLabel="View sample Co-Parenting report (PDF)"
+          sampleLabel="View sample (PDF)"
         />
         <ThreeReportsCover
           testid="three-reports-foundation"
           number="2"
-          title="Create your Foundation Statement"
+          title="Foundation Statement"
           body="A one-page statement of your child-focused goals — the anchor you can return to whenever things get emotionally hot."
           accent="#2DB5B5"
           sampleHref="/api/insights/samples/sacoparents-foundation-statement.pdf"
-          sampleLabel="View sample Foundation Statement (PDF)"
+          sampleLabel="View sample (PDF)"
         />
         <ThreeReportsCover
           testid="three-reports-child-needs"
           number="3"
-          title="Prepare a Child Needs Statement for mediation"
+          title="Child Needs Statement"
           body="A structured, child-focused agenda you can bring straight into your mediation session or attorney meeting."
           accent="#B85B00"
         />
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   INDIVIDUAL → JOINT BRIDGE — the pivot moment. Signals clearly
+   that everything above is the solo path, and everything below
+   is what unlocks when a co-parent or professional connects.
+============================================================ */
+function IndividualToJointBridge() {
+  return (
+    <section
+      id="individual-to-joint-bridge"
+      className="relative py-16 sm:py-20 bg-gradient-to-b from-white via-[#F5F1FB] to-white"
+      data-testid="individual-to-joint-bridge"
+    >
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+        <div className="text-[11px] uppercase tracking-[0.28em] font-bold text-[#3D1A78] mb-3">
+          Ready to go further?
+        </div>
+        <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug">
+          Want to compare perspectives?
+        </h2>
+        <p className="mt-3 text-sm sm:text-base text-[#4B4567] leading-relaxed">
+          Invite your co-parent — or connect with a mediator, attorney or
+          therapist — to move from individual reflection into joint alignment.
+        </p>
+        <div className="mt-6 flex justify-center text-[#3D1A78]" aria-hidden>
+          <ArrowDown size={24} strokeWidth={2.2} />
+        </div>
+
+        <div
+          className="mt-6 rounded-3xl border-2 border-[#2DB5B5]/30 bg-white p-6 sm:p-8 text-left shadow-sm"
+          data-testid="joint-journey-card"
+        >
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
+            Joint Journey
+          </div>
+          <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-2 leading-tight">
+            Joint Assessment → Joint Alignment Report
+          </h3>
+          <p className="text-sm sm:text-base text-[#4B4567] mt-3 leading-relaxed">
+            Once both parents complete their reflections, the app (or a
+            connected professional using{" "}
+            <span className="font-semibold text-[#0E7A7A]">SA CoParents Align</span>)
+            can generate a Joint Alignment Report — a side-by-side view
+            of shared understanding, differences worth discussing, and
+            options for moving forward.
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -1008,6 +1167,74 @@ function HowItWorks() {
   );
 }
 
+
+/* ============================================================
+   PROFESSIONAL CONNECTION — sits directly after the six-step
+   parent journey so the ecosystem hand-off is explicit right
+   where a parent is deciding what to do next. Two clear CTAs:
+     - "I have a professional invitation"  → /join
+     - "Learn about SA CoParents Align"    → sacoparentsalign.com
+============================================================ */
+function ProfessionalConnection() {
+  return (
+    <section
+      id="professional-connection"
+      className="relative py-20 sm:py-24 bg-white border-t border-[#EFE9F9]"
+      data-testid="professional-connection"
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div
+          className="rounded-3xl border-2 border-[#2DB5B5]/30 bg-gradient-to-br from-white to-[#EEF6F6] p-6 sm:p-10"
+          data-testid="professional-connection-card"
+        >
+          <div className="flex items-start gap-3 mb-4">
+            <div className="shrink-0 w-11 h-11 rounded-2xl bg-[#2DB5B5]/15 grid place-items-center text-[#0E7A7A]">
+              <Briefcase size={20} strokeWidth={2.2} />
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
+                The Ecosystem Hand-off
+              </div>
+              <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug mt-1">
+                Working with a mediator, attorney, therapist, or parenting professional?
+              </h2>
+            </div>
+          </div>
+
+          <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed">
+            Your professional can invite you to connect your completed
+            SA CoParents reflections with{" "}
+            <span className="font-semibold text-[#0E7A7A]">SA CoParents Align</span>.
+            Your individual reflection remains yours. Align helps the
+            professional identify areas of shared understanding and
+            differences that may need discussion.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              to="/join"
+              className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] hover:bg-[#2A0F5F] text-white px-6 py-3 text-sm font-semibold shadow-sm transition-colors"
+              data-testid="professional-connection-invitation-cta"
+            >
+              I have a professional invitation
+              <ArrowRight size={16} />
+            </Link>
+            <a
+              href="https://sacoparentsalign.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#0E7A7A] text-[#0E7A7A] hover:bg-[#EEF6F6] px-6 py-3 text-sm font-semibold transition-colors"
+              data-testid="professional-connection-align-cta"
+            >
+              Learn about SA CoParents Align
+              <ArrowUpRight size={16} />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 /* ============================================================
    ALIGNMENT BEFORE AGREEMENT — the parent philosophy strip.
@@ -1364,20 +1591,30 @@ export default function Landing() {
     <EnterAppProvider>
       <div className="min-h-screen bg-[#F8F7FC]">
         <MarketingHeader />
-        {/* Iteration 80 — homepage tightened per user brief:
-            1. Promise + situation picker  (Hero — picker embeds the
-               recommended pathway inline once the parent selects).
-            2. What you receive             (ThreeReportsStrip — each
-               card carries a "See sample" link to the sample PDFs).
-            3. How it works                 (HowItWorks).
-            4. Trust, privacy, boundaries   (TrustSignals).
-            5. Final call to action         (FinalCTA).
-            TheProblem, ChildFocusedMediation, and SampleReports have
-            been retired — their key ideas already live inside the
-            situation picker, three-reports strip, and hero copy. */}
+        {/* Iteration 80 → refined:
+            1. Hero + situation picker + Path B card
+            2. EcosystemFlow — 3-node strip showing the two-site
+               relationship (sacoparentsapp ↔ sacoparentsalign) and
+               the child-focused result.
+            3. ThreeReportsStrip — "Individual Journey" trio: the
+               Co-Parenting Assessment Report, Foundation Statement,
+               and Child Needs Statement.
+            4. IndividualToJointBridge — pivot from solo → joint,
+               previewing the Joint Assessment / Joint Alignment
+               Report path.
+            5. HowItWorks — the six-step parent journey.
+            6. ProfessionalConnection — explicit hand-off card sitting
+               right after Step 6, with two CTAs: "I have a professional
+               invitation" (→ /join) and "Learn about SA CoParents
+               Align" (→ sacoparentsalign.com).
+            7. AlignmentPhilosophy → TrustSignals → HomepageFAQ →
+               FinalCTA close the page. */}
         <Hero />
+        <EcosystemFlow />
         <ThreeReportsStrip />
+        <IndividualToJointBridge />
         <HowItWorks />
+        <ProfessionalConnection />
         <AlignmentPhilosophy />
         <TrustSignals />
         <HomepageFAQ />
