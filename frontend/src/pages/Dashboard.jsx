@@ -12,6 +12,7 @@ import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AdminProfessionals } from "@/components/AdminProfessionals";
 import { ForcePasswordChange } from "@/components/ForcePasswordChange";
+import { ParentRequestStatus } from "@/components/ParentRequestStatus";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -527,6 +528,8 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {!isPro && <ParentRequestStatus requests={proRequests} />}
 
         {isPro && proRequests.length > 0 && (
           <div data-testid="pro-requests-section">

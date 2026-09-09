@@ -30,7 +30,7 @@ from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_pay
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
 from joint_engine import generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
-from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, verify_qr_png
+from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
 from email_utils import send_email, EMAIL_FROM_NAME, FIXTURE_EMAIL_RE
@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-09.4"
+BUILD_ID = "2026-09-09.5"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -1179,6 +1179,15 @@ async def sample_report_pdf(key: str):
         content=build_joint_pdf(report),
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="sample-{key}-report.pdf"'},
+    )
+
+
+@api.get("/methodology/pdf")
+async def methodology_pdf():
+    return Response(
+        content=build_methodology_pdf(app_url()),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="sa-coparents-align-methodology.pdf"'},
     )
 
 

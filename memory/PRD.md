@@ -396,3 +396,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `Methodology.jsx` at `/methodology` (public): AlignModel graphic, 4 steps, 10 pages, "what the model will not do", copy-link + print. Landing `model-methodology-btn` + footer link point to it (legal/methodology page kept).
 - PROD at time of work: 2026-09-09.2 (Invite Parents wave live; simplified landing .3 and this .4 pending Deploy).
 
+## 2026-09-09 — Parent request status + methodology PDF handout (BUILD 2026-09-09.5; pytest 160/160; iteration_36)
+- `ParentRequestStatus.jsx` on parent dashboard (`!isPro`): "My Facilitation Requests" with status labels (pending/prepared/declined/declined_conflict/expired) and latest professional message from `events` (info_requested question or decline note; conflict notes stay private).
+- `GET /api/methodology/pdf` (public, 1 page, `build_methodology_pdf` in pdf_report.py): stage row, 4 steps, 10 pages, principles, disclaimer, copyright footer. Methodology page: header "Download PDF" + "One-page handout (PDF)" buttons. Test `test_methodology_pdf.py`.
+- fpdf2 gotcha: `multi_cell` defaults new_x=RIGHT — always pass `new_x="LMARGIN", new_y="NEXT"` before another full-width cell, else "Not enough horizontal space" 500.
+- PROD still 2026-09-09.2 at time of work — user must Deploy.
+
+

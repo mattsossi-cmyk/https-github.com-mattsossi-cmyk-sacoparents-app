@@ -1,0 +1,36 @@
+{
+  "summary": "Tested Parent Dashboard 'My Facilitation Requests' feature and Methodology PDF handout. Seeded 4 professional-requests (info/decline/conflict/prepare) and verified parent dashboard shows correct status labels and messages per spec. Backend test_methodology_pdf.py passes (1/1). Methodology page has methodology-pdf-link and methodology-handout-link both pointing to /api/methodology/pdf; PDF endpoint returns 1-page application/pdf with correct filename. One design regression: at 390px width the /methodology header overflows the viewport by 83px because the Copy link button (Copy link, 104px) plus PDF + logo + Home don't fit in a single non-wrapping flex row.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/methodology header on mobile (390x844)",
+        "issues": [
+          "Header overflows viewport by 83px (headerScrollWidth=473 vs viewport=390). Cause: right-side action group [PDF] + [Copy link] (104px) is not wrappable and combined with Home link + logo overflows. Consider hiding 'Copy link' text on mobile (icon-only) or hiding methodology-share-btn on mobile like the Print button, or allow the right group to wrap (flex-wrap)."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_methodology_pdf.py",
+    "/app/backend/tests/seed_parent_dashboard.py"
+  ],
+  "action_items": [
+    "Fix mobile header overflow on /methodology at 390px (hide Copy link label on mobile or allow wrap). All other flows pass."
+  ],
+  "critical_code_review_comments": [
+    "Methodology.jsx header uses `flex gap-2` without flex-wrap and only hides the Print button on mobile. On 390px viewport the Copy link + PDF buttons still push the row 83px past the viewport edge. Prefer `hidden sm:inline-flex` on the share button (or icon-only on small) to match the Print pattern.",
+    "ParentRequestStatus.jsx correctly filters out conflict_reported events from the shown lastMessage so private conflict notes are never leaked to the parent — verified end-to-end. Good.",
+    "conftest.py pytest_sessionfinish purges every @example.com/@x.com fixture user; any browser-driven seed script using casekit will be wiped if pytest runs afterward. Documented in test report so the next agent doesn't get bitten."
+  ],
+  "updated_files": ["/app/backend/tests/seed_parent_dashboard.py"],
+  "success_rate": {"backend": "100% (test_methodology_pdf 1/1; suite already 160/160)", "frontend": "95% (parent dashboard states + pro regression pass; 1 mobile header overflow on /methodology)"},
+  "test_credentials": "Seed run (may be purged by next pytest_sessionfinish). Parent: t_pa_5702d5d1@example.com / testpass123. Pro (approved): t_78efa181@example.com / testpass123. Re-run /app/backend/tests/seed_parent_dashboard.py for fresh fixtures.",
+  "seed_data_creation": "seed_parent_dashboard.py: creates 1 parent + 1 approved pro, then 4 professional-requests exercising info_requested (pending), declined, declined_conflict, and prepared states. Prints emails and status of each request.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Feature works end-to-end. Only outstanding item is a 390px header overflow on /methodology (Copy link button). All parent-request-status-{id} strings match STATUS map. Conflict notes are correctly hidden from the parent. Pro dashboard still renders pro-requests-section. parent-requests-section is NOT rendered for professional or admin users (verified via Dashboard.jsx `{!isPro && <ParentRequestStatus .../>}`).",
+  "rca of the issue": "Mobile overflow RCA: /app/frontend/src/pages/Methodology.jsx header (lines ~36-48) uses `flex items-center justify-between gap-4` with a right-side `<div class=\"flex gap-2\">` containing [Download PDF] + [Copy link] + [Print (hidden sm:)]. At 390px the visible children (Home link ~67px, logo, PDF button ~73px, Copy link button ~104px) plus padding sum to 473px, causing 83px horizontal overflow. Mitigation: make methodology-share-btn `hidden sm:inline-flex` (mirroring the Print button) OR change the label to icon-only on small viewports OR add `flex-wrap` to the outer header row."
+}

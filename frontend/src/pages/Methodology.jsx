@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Link2, Printer, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Link2, Printer, ArrowRight, CheckCircle2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/Brand";
 import { AlignModel } from "@/components/AlignModel";
@@ -34,11 +34,14 @@ export default function Methodology() {
   return (
     <div className="min-h-screen bg-background" data-testid="methodology-page">
       <header className="no-print bg-white border-b border-border">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" data-testid="methodology-back-link"><ArrowLeft className="h-4 w-4" /> Home</Link>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2 sm:gap-4">
+          <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground shrink-0" data-testid="methodology-back-link"><ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Home</span></Link>
           <BrandLogo size="text-xl" />
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={share} className="gap-1.5" data-testid="methodology-share-btn"><Link2 className="h-4 w-4" /> Copy link</Button>
+          <div className="flex gap-1.5 sm:gap-2 shrink-0">
+            <a href={`${process.env.REACT_APP_BACKEND_URL}/api/methodology/pdf`} data-testid="methodology-pdf-link">
+              <Button size="sm" className="gap-1.5" data-testid="methodology-pdf-btn"><Download className="h-4 w-4" /> <span className="hidden sm:inline">Download PDF</span></Button>
+            </a>
+            <Button variant="outline" size="sm" onClick={share} className="gap-1.5" data-testid="methodology-share-btn"><Link2 className="h-4 w-4" /> <span className="hidden sm:inline">Copy link</span></Button>
             <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-1.5 hidden sm:inline-flex" data-testid="methodology-print-btn"><Printer className="h-4 w-4" /> Print</Button>
           </div>
         </div>
@@ -75,7 +78,8 @@ export default function Methodology() {
           <div>
             <h2 className="text-base md:text-lg font-bold uppercase tracking-widest text-brand-purple">The universal 10-page report</h2>
             <p className="mt-3 text-sm text-muted-foreground">Every Joint Alignment Report follows the same neutral structure, so parents, professionals, and courts always know where to look.</p>
-            <Link to="/samples/mediation" className="inline-block mt-4" data-testid="methodology-sample-link"><Button className="gap-2">View a Sample Report <ArrowRight className="h-4 w-4" /></Button></Link>
+            <Link to="/samples/mediation" className="inline-block mt-4 mr-2" data-testid="methodology-sample-link"><Button className="gap-2">View a Sample Report <ArrowRight className="h-4 w-4" /></Button></Link>
+            <a href={`${process.env.REACT_APP_BACKEND_URL}/api/methodology/pdf`} className="inline-block mt-4" data-testid="methodology-handout-link"><Button variant="outline" className="gap-2"><Download className="h-4 w-4" /> One-page handout (PDF)</Button></a>
           </div>
           <ol className="space-y-2">
             {PAGES.map((p, i) => (

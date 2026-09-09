@@ -528,3 +528,138 @@ def build_complete_pdf(r: dict) -> bytes:
 
     _philosophy_block(pdf, r["philosophy_heading"], r["philosophy_note"], r["philosophy"], size=18)
     return bytes(pdf.output())
+
+
+_METHOD_STAGES = [
+    ("Reflection", "Each parent reflects privately, in their own words."),
+    ("Comparison", "Align lines up both perspectives side by side."),
+    ("Alignment", "Shared ground and differences are named without blame."),
+    ("Options", "Neutral options and resources are offered around the child's needs."),
+    ("Agreement", "Alignment becomes the foundation for a workable agreement."),
+]
+
+_METHOD_STEPS = [
+    ("Create a Case", "The professional chooses the family and the issue to address."),
+    ("Invite Each Parent", "Each parent receives a private invitation and completes their reflection independently. Responses are never exchanged between parents."),
+    ("Generate Joint Alignment Report", "Align identifies shared understanding, differences in perspective, child needs, and subjects requiring discussion."),
+    ("Guide the Conversation", "The professional uses the report to move the parents from alignment toward agreement."),
+]
+
+_METHOD_PAGES = [
+    "Joint Alignment Overview", "Your Child at the Center", "Where You Align", "Where Your Perspectives Differ",
+    "What Might Your Child Need?", "Options & Resources", "Questions for Parent Conversation",
+    "Professional Conversation Guide", "Parent Action Plan", "Joint Alignment Summary",
+]
+
+_METHOD_PRINCIPLES = [
+    "Neutral language only: \"Both parents identified...\", \"The parents expressed different perspectives regarding...\"",
+    "No custody recommendation, diagnosis, finding of fact, or ranking of parents.",
+    "One parent's raw responses are never shown to the other parent.",
+    "Safety concerns are routed to the professional through a separate, safety-sensitive process.",
+    "If only one parent participates, the result is an individual reflection - never called a joint report.",
+]
+
+
+def _method_stage_row(pdf: FPDF) -> None:
+    n = len(_METHOD_STAGES)
+    gap = 3
+    w = (pdf.w - pdf.l_margin - pdf.r_margin - gap * (n - 1)) / n
+    y = pdf.get_y()
+    for i, (label, body) in enumerate(_METHOD_STAGES):
+        x = pdf.l_margin + i * (w + gap)
+        pdf.set_fill_color(245, 242, 250)
+        pdf.set_draw_color(220, 215, 230)
+        pdf.rect(x, y, w, 24, style="DF")
+        pdf.set_xy(x, y + 2)
+        pdf.set_font(FONT, "B", 8.5)
+        pdf.set_text_color(*PURPLE)
+        pdf.cell(w, 5, _s(label.upper()), align="C")
+        pdf.set_xy(x + 1.5, y + 8)
+        pdf.set_font(FONT, "", 7)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(w - 3, 3.4, _s(body), align="C")
+    pdf.set_xy(pdf.l_margin, y + 26)
+    pdf.set_font(FONT, "B", 8.5)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 5, "THE CHILD AT THE CENTER OF EVERY STAGE", align="C", new_x="LMARGIN", new_y="NEXT")
+
+
+def _method_steps_block(pdf: FPDF) -> None:
+    for i, (title, body) in enumerate(_METHOD_STEPS, 1):
+        y = pdf.get_y()
+        pdf.set_fill_color(*PURPLE)
+        pdf.ellipse(pdf.l_margin, y + 0.5, 6, 6, style="F")
+        pdf.set_xy(pdf.l_margin, y + 0.5)
+        pdf.set_font(FONT, "B", 8)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(6, 6, str(i), align="C")
+        pdf.set_xy(pdf.l_margin + 9, y)
+        pdf.set_font(FONT, "B", 9.5)
+        pdf.set_text_color(*DARK)
+        pdf.cell(0, 5, _s(title), new_x="LMARGIN", new_y="NEXT")
+        pdf.set_x(pdf.l_margin + 9)
+        pdf.set_font(FONT, "", 8.5)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(0, 4.2, _s(body))
+        pdf.ln(1.5)
+
+
+def _method_two_columns(pdf: FPDF) -> None:
+    top = pdf.get_y()
+    col_w = (pdf.w - pdf.l_margin - pdf.r_margin - 8) / 2
+    pdf.set_font(FONT, "B", 9.5)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(col_w, 6, "THE UNIVERSAL 10-PAGE REPORT", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 8.5)
+    pdf.set_text_color(*BODY)
+    for i, p in enumerate(_METHOD_PAGES, 1):
+        pdf.cell(col_w, 4.6, _s(f"{i:>2}.  {p}"), new_x="LMARGIN", new_y="NEXT")
+    left_end = pdf.get_y()
+    x2 = pdf.l_margin + col_w + 8
+    pdf.set_xy(x2, top)
+    pdf.set_font(FONT, "B", 9.5)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(col_w, 6, "WHAT THE MODEL WILL NOT DO", new_x="LEFT", new_y="NEXT")
+    for p in _METHOD_PRINCIPLES:
+        pdf.set_x(x2)
+        pdf.set_font(FONT, "", 8.5)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(col_w, 4.2, _s(f"-  {p}"))
+        pdf.ln(0.5)
+    pdf.set_y(max(left_end, pdf.get_y()))
+
+
+def build_methodology_pdf(site_url: str) -> bytes:
+    pdf = _new_pdf()
+    pdf.set_auto_page_break(auto=False)
+    pdf.set_font(FONT, "B", 11)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 6, "SA CoParents Align", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "B", 18)
+    pdf.set_text_color(*PURPLE)
+    pdf.multi_cell(0, 8, _s("The SA CoParents Align Model"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "B", 12)
+    pdf.multi_cell(0, 7, _s("Reflection → Comparison → Alignment → Options → Agreement"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 9)
+    pdf.set_text_color(*BODY)
+    pdf.multi_cell(0, 4.5, _s(
+        "A structured, child-centered methodology for organizing two parents' independent perspectives before a "
+        "mediation, counseling session, parenting-coordination meeting, or court-connected conference. Professionals "
+        "create the case and invite each parent; parents never exchange codes or see each other's responses."))
+    pdf.ln(4)
+    _method_stage_row(pdf)
+    pdf.ln(4)
+    pdf.set_font(FONT, "B", 9.5)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 6, "HOW A CASE MOVES THROUGH THE MODEL", new_x="LMARGIN", new_y="NEXT")
+    _method_steps_block(pdf)
+    pdf.ln(2)
+    _method_two_columns(pdf)
+    pdf.ln(4)
+    pdf.set_font(FONT, "I", 8)
+    pdf.set_text_color(*GRAY)
+    pdf.multi_cell(0, 4, _s(
+        "SA CoParents Align is an educational, organizational, and mediation-preparation platform. It does not replace "
+        "professional judgment, legal advice, psychological evaluation, safety assessment, or individualized case management. "
+        f"Learn more: {site_url}/methodology"))
+    return bytes(pdf.output())
