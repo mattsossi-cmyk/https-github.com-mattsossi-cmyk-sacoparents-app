@@ -27,6 +27,44 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-09 — Iter184 · Sample Joint Alignment PDF + Email-to-Coparent
+
+**🟢 P2 — Downloadable Sample PDF**
+- New `backend/joint_alignment_sample_pdf.py` — builds a single-page
+  US-Letter PDF from the SAME fictional dataset the React sample
+  page renders. Six neutral topics with agree/differ/incomplete
+  flags, agreed/differed/incomplete count cards, privacy reassurance
+  box, and a compact "Ready to build yours?" CTA block linking to
+  `sacoparentsapp.online`. Header and footer both carry a persistent
+  **"SAMPLE — fictional data, not a real case"** ribbon so the PDF
+  is unambiguous even if a mediator prints and forwards it.
+- New public route: `GET /api/insights/samples/joint-alignment-preview.pdf`
+  (added ABOVE the parameterised `/samples/{filename}` route so
+  FastAPI matches the literal path). Returns `application/pdf` with
+  a stable `Content-Disposition: inline; filename="sacoparents-
+  joint-alignment-sample.pdf"` so a browser Save-As matches the
+  "Email to my co-parent" pre-composed message.
+- Data lockstep: `test_iter183_joint_alignment_sample_pdf.py`
+  asserts the six topic titles + the {agree, differ, incomplete}
+  status set stay in sync so a frontend copy change without a
+  backend update fails the test.
+
+**🟢 P2 — Email-to-Coparent Share Strip**
+- New "Share this sample with your co-parent" strip inside the CTA
+  card on `JointAlignmentSamplePreview.jsx`. Two buttons:
+  - **Download sample PDF** (outline button) → `/api/insights/samples/
+    joint-alignment-preview.pdf` (`target="_blank"` so parents can
+    review it before saving).
+  - **Email to my co-parent** (teal solid) → `mailto:` with a
+    pre-composed subject and body. The body is neutral, personal,
+    non-adjudicative and includes both the web sample URL and the
+    PDF URL so the recipient can pick whichever format they prefer.
+- All new elements carry `data-testid` (`sample-preview-share-strip`,
+  `sample-preview-download-pdf`, `sample-preview-email-coparent`).
+
+**Regression:** 10/10 pass across `test_iter181`, `test_iter182`,
+and `test_iter183`.
+
 ### 2026-09-09 — Iter183 · Joint Alignment Sample Preview + Preferred Professionals Strip
 
 **🟢 P2 — Public Joint Alignment Sample Preview**

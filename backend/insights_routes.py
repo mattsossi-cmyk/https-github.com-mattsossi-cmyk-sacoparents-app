@@ -416,6 +416,33 @@ _ALLOWED_SAMPLE_PDFS = frozenset({
 })
 
 
+# ------------------ Dynamically-built public sample PDFs ------------------ #
+# Must sit ABOVE the `/samples/{filename}` parameterised route so FastAPI
+# matches the literal path first (route ordering, not method dispatch).
+
+@router.get("/samples/joint-alignment-preview.pdf")
+async def download_joint_alignment_sample_pdf():
+    """Serve the printable sample of the private Joint Alignment
+    Preview. Public — this is a marketing artefact a parent can email
+    to their co-parent before signing up. No PII, no real data.
+
+    Content is fixed so we allow aggressive caching.
+    """
+    from fastapi.responses import Response
+    from joint_alignment_sample_pdf import build_joint_alignment_sample_pdf
+    pdf_bytes = build_joint_alignment_sample_pdf()
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                'inline; filename="sacoparents-joint-alignment-sample.pdf"'
+            ),
+            "Cache-Control": "public, max-age=86400",
+        },
+    )
+
+
 @router.get("/samples/{filename}")
 async def download_sample_pdf(filename: str):
     """Whitelist-gated file server for the public sample PDFs the app

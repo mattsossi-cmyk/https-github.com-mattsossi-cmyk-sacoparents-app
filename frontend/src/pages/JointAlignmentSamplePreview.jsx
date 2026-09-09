@@ -27,7 +27,32 @@ import {
   Sparkles,
   Users,
   FileText,
+  Download,
+  Mail,
 } from "lucide-react";
+
+const BACKEND = process.env.REACT_APP_BACKEND_URL;
+const SAMPLE_PDF_PATH = "/api/insights/samples/joint-alignment-preview.pdf";
+const SAMPLE_PDF_URL = `${BACKEND}${SAMPLE_PDF_PATH}`;
+const SAMPLE_PAGE_URL = `${BACKEND}/samples/joint-alignment-preview`;
+
+// Pre-composed message a parent uses to email the sample to their
+// co-parent BEFORE either of them signs up. Keep the tone neutral,
+// personal, non-adjudicative — matches the platform guardrail.
+const COPARENT_EMAIL_SUBJECT = "Something I want to try before we sit down with a professional";
+const COPARENT_EMAIL_BODY = [
+  "Hi,",
+  "",
+  "I found a small tool that helps two co-parents each answer the same reflection questions independently — then shows a side-by-side of where we agree, where we differ, and where one of us hasn't finished yet. Nothing gets shared until we both say so.",
+  "",
+  "Here's what the joint preview would look like (this is a sample with fictional parents):",
+  `  Web: ${SAMPLE_PAGE_URL}`,
+  `  PDF: ${SAMPLE_PDF_URL}`,
+  "",
+  "If you want to try it, we'd each sign up separately at https://sacoparentsapp.online and one of us would invite the other.",
+  "",
+  "Thanks for considering,",
+].join("\n");
 
 // ---- Sample data (fictional, neutral). Never change the shape of
 // this without also updating the real /joint-alignment/{id}/preview
@@ -275,6 +300,40 @@ export default function JointAlignmentSamplePreview() {
             >
               <FileText size={14} /> See other sample reports
             </Link>
+          </div>
+
+          {/* Share-this-sample strip — download PDF + email co-parent.
+              Sits inside the CTA card because the whole point is to
+              hand this to someone who hasn't signed up yet. */}
+          <div
+            className="mt-6 pt-6 border-t border-[#EEE8F7]"
+            data-testid="sample-preview-share-strip"
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+              Share this sample with your co-parent
+            </div>
+            <p className="text-[13px] text-[#4B4567] leading-relaxed mb-3">
+              Some parents like to send this concept to their co-parent
+              first — before either of you signs up.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={SAMPLE_PDF_PATH}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-5 py-2.5 text-sm font-semibold transition-colors"
+                data-testid="sample-preview-download-pdf"
+              >
+                <Download size={14} /> Download sample PDF
+              </a>
+              <a
+                href={`mailto:?subject=${encodeURIComponent(COPARENT_EMAIL_SUBJECT)}&body=${encodeURIComponent(COPARENT_EMAIL_BODY)}`}
+                className="inline-flex items-center gap-2 rounded-full bg-[#0E7A7A] hover:bg-[#0A5E5E] text-white px-5 py-2.5 text-sm font-semibold transition-colors"
+                data-testid="sample-preview-email-coparent"
+              >
+                <Mail size={14} /> Email to my co-parent
+              </a>
+            </div>
           </div>
         </div>
 
