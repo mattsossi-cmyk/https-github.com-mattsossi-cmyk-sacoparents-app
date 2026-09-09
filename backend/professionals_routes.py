@@ -201,6 +201,73 @@ async def list_professionals(
     return {"professionals": professionals}
 
 
+# ---------------------- Public intro voice (marketing) ---------------------- #
+# Streams a shimmer-voiced explainer of what SA CoParents is + the
+# four-step Align workflow. Public — no auth — because the surface it
+# powers (/for-professionals) is a public marketing page. The audio is
+# cached globally per (script_sha, voice, model) so re-plays are free
+# after the first render.
+
+@router.get("/for-professionals/intro-audio/manifest")
+async def for_professionals_intro_manifest():
+    """Return the intro script + audio URL so the frontend can display
+    a transcript beside the player (accessibility + skimming)."""
+    from professionals_intro_voice import (
+        INTRO_SCRIPT,
+        DEFAULT_VOICE,
+        DEFAULT_MODEL,
+        SUPPORTED_VOICES,
+        SUPPORTED_MODELS,
+    )
+    audio_url = (
+        f"/api/for-professionals/intro-audio"
+        f"?voice={DEFAULT_VOICE}&model={DEFAULT_MODEL}"
+    )
+    return {
+        "transcript": INTRO_SCRIPT,
+        "audio_url": audio_url,
+        "voice": DEFAULT_VOICE,
+        "model": DEFAULT_MODEL,
+        "supported_voices": list(SUPPORTED_VOICES),
+        "supported_models": list(SUPPORTED_MODELS),
+    }
+
+
+@router.get("/for-professionals/intro-audio")
+async def for_professionals_intro_audio(
+    request: Request,
+    voice: Optional[str] = None,
+    model: Optional[str] = None,
+):
+    """Stream the shimmer-voiced intro as MP3. Public endpoint —
+    same audio served to every visitor of /for-professionals."""
+    from fastapi.responses import StreamingResponse
+    from io import BytesIO
+    from professionals_intro_voice import (
+        get_or_generate_intro_audio,
+        normalise_model,
+        normalise_voice,
+    )
+    db = request.app.state.db
+    v = normalise_voice(voice)
+    m = normalise_model(model)
+    try:
+        audio_bytes, cache_hit = await get_or_generate_intro_audio(
+            db, voice=v, model=m,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return StreamingResponse(
+        BytesIO(audio_bytes),
+        media_type="audio/mpeg",
+        headers={
+            # Public marketing asset — safe to cache in the browser + CDN.
+            "Cache-Control": "public, max-age=86400",
+            "X-Voice-Cache": "hit" if cache_hit else "miss",
+        },
+    )
+
+
 # =========================== admin editor =========================== #
 # Read-write directory management gated on `require_admin`.
 # Professionals cannot self-sign-up — every add / update passes

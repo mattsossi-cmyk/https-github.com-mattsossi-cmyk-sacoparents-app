@@ -27,6 +27,54 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-09 — Iter182 · Dashboard Ecosystem Strip + Align Workflow + Intro Audio
+
+**🟢 P2 — Dashboard Ecosystem Strip (compact)**
+- Extracted the 3-node ecosystem band from `Landing.jsx` into a shared
+  `frontend/src/components/EcosystemStrip.jsx` with a `variant` prop
+  (`default` → marketing size; `compact` → dashboard-appropriate).
+- Dashboard mounts `<EcosystemStrip variant="compact" />` directly
+  under the `FourCircleFrontDoor` so a returning parent sees the
+  pathway to their professional without scrolling.
+- Landing page now uses the same shared component — single source of
+  truth for the ecosystem language across both surfaces.
+
+**🟢 P2 — /for-professionals Align 4-Step Workflow**
+- New `for-pros-align-workflow` section between the hero and the FAQ
+  block. Renders four numbered step cards mirroring the same verbs
+  used on the Landing ecosystem strip:
+  1. **Invite** (Send icon)
+  2. **Compare** (GitCompare icon)
+  3. **Identify Alignment** (Target icon)
+  4. **Guide Conversation** (MessageCircle icon)
+- Copy is deliberately clinical-neutral (describes what the
+  **professional** does; no marketing fluff, no adjudicative claims)
+  matching the strict guardrail already enforced on the page.
+
+**🟢 P3 — Shimmer-Voiced Intro Audio**
+- New `backend/professionals_intro_voice.py` — mirrors the pattern
+  of `foundation_statement_voice.py` (same `emergentintegrations.llm.
+  openai.OpenAITextToSpeech` wrapper, same MongoDB-backed cache) but
+  uses a **global** cache (`professionals_intro_voice_cache`) keyed
+  on `(script_sha, voice, model)` since the marketing script is
+  identical for every visitor.
+- Fixed ~60-second clinical-neutral script explaining what SA
+  CoParents produces + the four-step Align workflow. Never fires the
+  TTS endpoint on page-load — the audio element uses `preload="none"`
+  and only fetches on the user's Play click.
+- New public routes:
+  - `GET /api/for-professionals/intro-audio/manifest` — returns the
+    transcript + audio URL + supported voices/models.
+  - `GET /api/for-professionals/intro-audio` — streams MP3 (browser +
+    CDN-cacheable, `Cache-Control: public, max-age=86400`,
+    `X-Voice-Cache: hit|miss`).
+- New `frontend/src/components/ProfessionalsIntroAudio.jsx` — Play /
+  Pause button, "Shimmer voice" chip, ~60-second runtime hint, and a
+  collapsible transcript for accessibility + skimmers.
+- 5 hermetic tests in `tests/test_iter181_professionals_intro_voice.py`
+  — all passing (manifest transcript keywords, public access, cache
+  key determinism, voice / model normalisation).
+
 ### 2026-09-09 — Iter181 · Landing Ecosystem Clarity + Individual→Joint Bridge
 
 **🟢 P2 — Ecosystem Flow Strip (new)**

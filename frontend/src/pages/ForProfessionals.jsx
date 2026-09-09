@@ -25,7 +25,43 @@ import {
   MessageSquare,
   BookOpen,
   Heart,
+  Send,
+  GitCompare,
+  Target,
+  MessageCircle,
 } from "lucide-react";
+import ProfessionalsIntroAudio from "../components/ProfessionalsIntroAudio";
+
+// The four-step Align workflow — mirrors the same 4-step framing used
+// on the Landing ecosystem strip so parents and professionals see the
+// exact same vocabulary across both sites. Clinical-neutral by design:
+// verbs describe what the PROFESSIONAL does, no marketing fluff.
+const ALIGN_WORKFLOW = [
+  {
+    key: "invite",
+    label: "Invite",
+    icon: Send,
+    body: "Send both parents a secure invitation link. Each parent gets their own private space to reflect.",
+  },
+  {
+    key: "compare",
+    label: "Compare",
+    icon: GitCompare,
+    body: "Each parent completes their reflection independently, in their own time. No shared answers, no adversarial framing.",
+  },
+  {
+    key: "identify-alignment",
+    label: "Identify Alignment",
+    icon: Target,
+    body: "Align generates a side-by-side view of shared understanding and differences worth discussing — nothing adjudicative.",
+  },
+  {
+    key: "guide-conversation",
+    label: "Guide Conversation",
+    icon: MessageCircle,
+    body: "Bring the Joint Alignment Report into your session and use it to focus the conversation on the child.",
+  },
+];
 
 const FAQS = [
   {
@@ -178,6 +214,68 @@ export default function ForProfessionals() {
               <Mail size={14} /> Contact us
             </a>
           </div>
+
+          {/* 60-second shimmer-voiced audio explainer. Lazy — never
+              fires the TTS endpoint until a visitor clicks Play. */}
+          <div className="mt-8 max-w-2xl">
+            <ProfessionalsIntroAudio />
+          </div>
+        </div>
+      </section>
+
+      {/* Four-step Align workflow — mirrors the exact language on
+          the Landing ecosystem strip so both sites use the same
+          vocabulary. Sits directly under the hero so a professional
+          scanning the page sees WHAT their workflow looks like before
+          the FAQ dives into policy detail. */}
+      <section
+        className="px-5 sm:px-8 py-14 sm:py-20 bg-white border-b border-[#E5E0EE]"
+        data-testid="for-pros-align-workflow"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="max-w-2xl">
+            <div className="eyebrow mb-2">Your workflow on SA CoParents Align</div>
+            <h2 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
+              Invite. Compare. Identify Alignment. Guide Conversation.
+            </h2>
+            <p className="mt-4 text-sm sm:text-base text-[#4B4567] leading-relaxed">
+              Four discrete steps. Same clinical-neutral language on
+              both sites — so parents and professionals see the same
+              framing whether they arrive from sacoparentsapp.online
+              or sacoparentsalign.com.
+            </p>
+          </div>
+
+          <ol
+            className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            data-testid="for-pros-align-workflow-steps"
+          >
+            {ALIGN_WORKFLOW.map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <li
+                  key={step.key}
+                  className="relative rounded-2xl border-2 border-[#E5E0EE] hover:border-[#3D1A78] bg-white p-5 transition-colors flex flex-col"
+                  data-testid={`for-pros-align-step-${step.key}`}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="shrink-0 w-10 h-10 rounded-2xl bg-[#3D1A78] text-white flex items-center justify-center">
+                      <Icon size={18} strokeWidth={2.2} />
+                    </div>
+                    <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                      Step {i + 1}
+                    </div>
+                  </div>
+                  <div className="font-serif text-lg text-[#1A1330] leading-tight">
+                    {step.label}
+                  </div>
+                  <p className="mt-2 text-[13px] text-[#4B4567] leading-relaxed">
+                    {step.body}
+                  </p>
+                </li>
+              );
+            })}
+          </ol>
         </div>
       </section>
 

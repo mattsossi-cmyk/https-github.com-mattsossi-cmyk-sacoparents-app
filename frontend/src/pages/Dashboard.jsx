@@ -29,6 +29,7 @@ import FourCircleFrontDoor from "../components/dashboard/FourCircleFrontDoor";
 import JointAlignmentRequests from "../components/dashboard/JointAlignmentRequests";
 import PersonalHomeStrip from "../components/dashboard/PersonalHomeStrip";
 import SituationPickerHero from "../components/dashboard/SituationPickerHero";
+import EcosystemStrip from "../components/EcosystemStrip";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { registerPushNotifications } from "../lib/native";
@@ -565,6 +566,15 @@ export default function Dashboard() {
             stressed parent's dashboard reduces to a clean 4-way
             picker. */}
         <FourCircleFrontDoor userName={user?.name} situationChoice={freshSituationChoice} />
+
+        {/* Compact ecosystem strip — mirrors the top of the marketing
+            Landing page so a returning parent sees the pathway to
+            their professional without any scroll. `variant="compact"`
+            shrinks typography + hides the strip header so it doesn't
+            compete with the primary Four-Circle Front Door. */}
+        <div className="mt-4" data-testid="dashboard-ecosystem-strip">
+          <EcosystemStrip variant="compact" />
+        </div>
 
         {/* Invite a Professional — parent-controlled report sharing. */}
         <div
