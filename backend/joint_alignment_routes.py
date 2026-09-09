@@ -1722,10 +1722,27 @@ async def get_invitation_preview(
     if _is_expired(expires_at):
         raise HTTPException(status_code=410, detail="Invitation expired")
 
+    # First-name-only personalization so the invited screen reads
+    # "Hi, Alex," instead of a generic hello. Extraction rule:
+    #   * take the first whitespace-separated token of `parent.name`
+    #   * fall back to the whole `parent.name` verbatim if that
+    #     token is empty
+    #   * cap at 30 chars so a pasted-full-name in an odd shape
+    #     can't blow up the UI
+    # Never falls back to the email local-part — an email prefix
+    # is often not a name.
+    raw_name = (parent.get("name") or "").strip()
+    invited_first_name: Optional[str] = None
+    if raw_name:
+        first_tok = raw_name.split()[0] if raw_name.split() else ""
+        candidate = first_tok or raw_name
+        invited_first_name = candidate[:30].strip() or None
+
     return {
         "case_id": case["case_id"],
         "assessment_type": case["assessment_type"],
         "professional_name": (case.get("professional") or {}).get("name"),
+        "invited_first_name": invited_first_name,
         "token_expires_at": _iso(expires_at),
         "already_accepted": bool(parent.get("accepted_at")),
         "assessment_completed": bool(parent.get("assessment_completed_at")),

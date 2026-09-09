@@ -12,7 +12,7 @@
  * disclaimer-stamped PDF as an artefact.
  */
 import { useEffect, useRef, useState } from "react";
-import { Loader2, X, Send, Download, ShieldCheck, History, RefreshCw, Ban, Eye } from "lucide-react";
+import { Loader2, X, Send, Download, ShieldCheck, History, RefreshCw, Ban, Eye, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
@@ -49,6 +49,7 @@ export default function FoundationStatementShareModal({
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [emailingMe, setEmailingMe] = useState(false);
   // Share-history state — loaded lazily when the History tab is
   // first opened, and reloaded after every successful send so the
   // list stays fresh.
@@ -129,6 +130,23 @@ export default function FoundationStatementShareModal({
       toast.error(String(detail));
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleEmailMe = async () => {
+    setEmailingMe(true);
+    try {
+      const res = await api.post("/mediation/foundation-statement/email-me", {});
+      toast.success(
+        `Foundation Statement emailed to ${res.data?.sent_to || "your inbox"}.`,
+      );
+      onClose();
+    } catch (err) {
+      logError("foundation email-me failed", err);
+      const detail = err?.response?.data?.detail || "Send failed.";
+      toast.error(String(detail));
+    } finally {
+      setEmailingMe(false);
     }
   };
 
@@ -398,11 +416,11 @@ export default function FoundationStatementShareModal({
               email, DM, or print. The PDF is stamped with a court-report
               disclaimer and today&rsquo;s timestamp.
             </p>
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                disabled={downloading}
+                disabled={downloading || emailingMe}
                 className="rounded-full border border-[#E5E0EE] text-[#4B4567] hover:bg-[#FAF8FD] px-4 py-2 text-sm font-semibold disabled:opacity-60"
                 data-testid="foundation-download-cancel"
               >
@@ -410,8 +428,21 @@ export default function FoundationStatementShareModal({
               </button>
               <button
                 type="button"
+                onClick={handleEmailMe}
+                disabled={downloading || emailingMe}
+                className="rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-4 py-2 text-sm font-semibold disabled:opacity-60 inline-flex items-center gap-1.5"
+                data-testid="foundation-email-me"
+              >
+                {emailingMe ? (
+                  <><Loader2 size={12} className="animate-spin" /> Sending…</>
+                ) : (
+                  <><Mail size={12} /> Email me the PDF</>
+                )}
+              </button>
+              <button
+                type="button"
                 onClick={handleDownload}
-                disabled={downloading}
+                disabled={downloading || emailingMe}
                 className="rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-4 py-2 text-sm font-semibold disabled:bg-[#C9C0DC] disabled:cursor-not-allowed inline-flex items-center gap-1.5"
                 data-testid="foundation-download-confirm"
               >

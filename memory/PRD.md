@@ -27,6 +27,49 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-09 — Iter179 · Foundation Email + Prof Personalization + Path B Deep Link
+
+**🟡 P2 — Foundation Statement email parity**
+- New backend endpoint `POST /api/mediation/foundation-statement/email-me`
+  (403 guest / 409 empty / 502-503 Resend / 200 with `{ok, sent_to,
+  filename}`), distinct from the existing `share` flow — this is a
+  personal receipt, no share history row written.
+- New helper `send_foundation_statement_pdf_to_me()` in
+  `email_service.py` with neutral, non-diagnostic copy matching
+  the deep-dive email pattern.
+- Frontend: **Email me the PDF** button added to the Download
+  tab of `FoundationStatementShareModal` alongside Download PDF.
+
+**🟡 P2 — Invitation preview personalization**
+- `GET /joint-alignment/invitation/{token}` now returns
+  `invited_first_name` — extracted from `parent.name` using
+  first-whitespace-token rule (falls back to verbatim for
+  single-token names, capped at 30 chars, never falls back to
+  the email local-part).
+- `JoinInvitation.jsx` renders **Hi, [First Name],** above the
+  "You've been invited" title when present.
+- Privacy guardrails: response still hides invitee email,
+  co-parent name, and full surname. Verified in
+  `test_preview_never_leaks_email_or_coparent_name`.
+
+**🟡 P2 — Path B inline deep link**
+- Landing hero Path B now expands inline on click into a card with:
+    * "I have a link from my email" hint block
+    * "I have an Alignment Code" input + Continue button
+    * Live format validation on blur (regex against `SA-XXXXXX`)
+      — client-side only since the backend endpoint requires JWT.
+      Soft-warning shown for malformed codes but Continue always
+      forwards to `/join?code=X` for the strict post-auth check.
+- `JoinCode.jsx` now reads `?code=` from the URL via
+  `useSearchParams` and pre-fills the input so the parent
+  doesn't retype after login.
+- Coverage: `tests/test_iter179_foundation_email_and_preview.py`
+  (7 tests, green): 4 for Foundation email (401, 409, response
+  shape, direct helper) + 3 for preview personalization
+  (first-token, verbatim single-token, no PII leak).
+
+
+## What's Implemented
 ### 2026-09-09 — Iter178 · Dual-Entry Landing + Deep-Dive Email PDFs
 
 **🔴 P0 — Dual-entry Landing hero**

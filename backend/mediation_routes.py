@@ -277,6 +277,69 @@ async def download_foundation_statement(
     )
 
 
+@router.post("/foundation-statement/email-me")
+async def email_foundation_statement_to_me(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+):
+    """Email the caller their OWN Foundation Statement as an attached
+    PDF — parity with the `/snc2/report/email`, `/edu-deep/report/email`,
+    `/med-deep/report/email`, and `/psych-deep/report/email` endpoints.
+
+    Distinct from `POST /foundation-statement/share`, which sends the
+    document to a THIRD PARTY and creates an audit-tracked share row.
+    This helper writes no history — it's a receipt for the parent.
+    """
+    from foundation_statement_pdf import (
+        build_foundation_statement_pdf,
+        foundation_statement_has_content,
+    )
+    import email_service
+
+    if current.is_guest:
+        raise HTTPException(
+            status_code=403,
+            detail="Please claim an account before emailing your Foundation Statement.",
+        )
+    to_email = (current.email or "").strip().lower()
+    if not to_email:
+        raise HTTPException(status_code=400, detail="No email address on file.")
+
+    db = request.app.state.db
+    reflection = await _load_reflection_for_current(db, current.user_id)
+    if not foundation_statement_has_content(reflection):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Your Foundation Statement is empty. Write at least one "
+                "prompt on /reflection before emailing it."
+            ),
+        )
+    pdf_bytes = build_foundation_statement_pdf(
+        author_name=_author_display_name(current),
+        reflection=reflection,
+    )
+    try:
+        email_service.send_foundation_statement_pdf_to_me(
+            to_email=to_email,
+            user_name=current.name,
+            pdf_bytes=pdf_bytes,
+        )
+    except email_service.EmailNotConfigured:
+        raise HTTPException(
+            status_code=503,
+            detail="Email delivery isn't configured on this environment.",
+        )
+    except email_service.EmailSendError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {
+        "ok": True,
+        "sent_to": to_email,
+        "filename": "foundation-statement.pdf",
+    }
+
+
+
 @router.post("/foundation-statement/share")
 async def share_foundation_statement(
     body: FoundationStatementShareBody,

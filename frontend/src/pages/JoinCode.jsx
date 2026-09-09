@@ -5,8 +5,8 @@
  * type the visible SA-XXXXXX code. Requires auth — the code alone is
  * never sufficient (email-match guard on the backend).
  */
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ShieldCheck,
   Loader2,
@@ -48,11 +48,20 @@ function getAuthToken() {
 
 export default function JoinCode() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [linked, setLinked] = useState(null);
   const [error, setError] = useState(null);
   const authToken = getAuthToken();
+
+  // Pre-fill the code input from `?code=` — the Landing page's Path B
+  // deep-link passes the code the parent typed there, so we don't
+  // make them retype it after login.
+  useEffect(() => {
+    const fromUrl = (searchParams.get("code") || "").trim();
+    if (fromUrl) setCode(fromUrl.toUpperCase());
+  }, [searchParams]);
 
   const submit = async (e) => {
     e.preventDefault();

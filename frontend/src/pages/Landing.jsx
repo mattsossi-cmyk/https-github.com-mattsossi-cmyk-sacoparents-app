@@ -449,6 +449,137 @@ function SituationPicker() {
 /* ============================================================
    SECTION 1 — HERO (tagline + situation picker embedded)
 ============================================================ */
+function PathBInvitedCard() {
+  const [expanded, setExpanded] = useState(false);
+  const [code, setCode] = useState("");
+  const [warning, setWarning] = useState(null);
+
+  // Format-only validation (regex against the visible SA-XXXXXX
+  // shape). Backend `/joint-alignment/manual-code` is JWT-required,
+  // so we can't do a true live lookup here without exposing an
+  // unauthenticated case-enumeration endpoint — the strict backend
+  // check runs after login on the /join page. This is best-effort
+  // "don't dead-end them at submit" UX, not a security guarantee.
+  const validateOnBlur = () => {
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) { setWarning(null); return; }
+    if (!/^SA-[A-Z0-9]{4,10}$/.test(trimmed)) {
+      setWarning(
+        "Alignment codes usually look like SA-ABC123. We'll still try — it's checked properly after you sign in.",
+      );
+    } else {
+      setWarning(null);
+    }
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    const trimmed = code.trim().toUpperCase();
+    if (trimmed) {
+      window.location.href = `/join?code=${encodeURIComponent(trimmed)}`;
+    } else {
+      window.location.href = "/join";
+    }
+  };
+
+  if (!expanded) {
+    return (
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="group text-left rounded-3xl bg-white border-2 border-[#D6CFE8] hover:border-[#3D1A78] p-5 sm:p-6 transition shadow-sm"
+        data-testid="hero-invited-cta"
+      >
+        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          Path B
+        </div>
+        <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
+          I was invited by a professional
+        </div>
+        <div className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
+          Open the link your mediator or attorney emailed you — or
+          paste the code they gave you. We&rsquo;ll auto-connect the
+          rest.
+        </div>
+        <div className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#3D1A78] group-hover:underline">
+          Continue your invitation →
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className="text-left rounded-3xl bg-white border-2 border-[#3D1A78] p-5 sm:p-6 shadow-sm"
+      data-testid="hero-invited-expanded"
+    >
+      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+        Path B
+      </div>
+      <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
+        I was invited by a professional
+      </div>
+      <div className="mt-4 space-y-3">
+        <div className="rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] p-3">
+          <div className="text-[12px] font-semibold text-[#3D1A78] mb-1">
+            I have a link from my email
+          </div>
+          <div className="text-[12px] text-[#4B4567] leading-relaxed">
+            Open the link your professional sent you — it auto-connects
+            everything.
+          </div>
+        </div>
+        <form onSubmit={submit} className="space-y-2">
+          <label
+            htmlFor="hero-path-b-code"
+            className="block text-[12px] font-semibold text-[#3D1A78]"
+          >
+            I have an Alignment Code
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <input
+              id="hero-path-b-code"
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onBlur={validateOnBlur}
+              placeholder="SA-ABC123"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck="false"
+              className="flex-1 min-w-[120px] rounded-full border border-[#D6CFE8] bg-white px-4 py-2 text-sm focus:border-[#3D1A78] focus:outline-none font-mono uppercase"
+              data-testid="hero-path-b-code-input"
+            />
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2A0F5F] text-white px-4 py-2 text-sm font-semibold"
+              data-testid="hero-path-b-continue"
+            >
+              Continue →
+            </button>
+          </div>
+          {warning && (
+            <div
+              className="text-[11px] text-[#8A5B00] bg-[#FFF6E5] border border-[#F0D9A1] rounded-lg px-2.5 py-1.5"
+              data-testid="hero-path-b-code-warning"
+            >
+              {warning}
+            </div>
+          )}
+        </form>
+        <button
+          type="button"
+          onClick={() => { setExpanded(false); setCode(""); setWarning(null); }}
+          className="text-[11px] text-[#857E9C] hover:text-[#1A1330] hover:underline"
+          data-testid="hero-path-b-collapse"
+        >
+          ← Back
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Hero() {
   const { enterGuest, loading: guestLoading, watchIntro } = useEnterApp();
   return (
@@ -498,9 +629,10 @@ function Hero() {
         {/* Primary path chooser — replaces a single generic CTA with
             two clear parent journeys. "Starting on my own" reveals
             the situation picker below (existing solo flow). "Invited
-            by a professional" routes to `/join` where the token
-            /code auto-connects the parent to the professional case
-            without ever asking them to type a case number. */}
+            by a professional" expands inline: either open the email
+            link, or paste the visible SA-XXXXXX Alignment Code and
+            we auto-forward to `/join?code=...` so the code is
+            pre-filled after login. */}
         <div
           className="mt-10 grid gap-3 sm:grid-cols-2 max-w-3xl mx-auto"
           data-testid="hero-dual-entry"
@@ -528,27 +660,8 @@ function Hero() {
               Choose your situation →
             </div>
           </button>
-          <button
-            type="button"
-            onClick={() => { window.location.href = "/join"; }}
-            className="group text-left rounded-3xl bg-white border-2 border-[#D6CFE8] hover:border-[#3D1A78] p-5 sm:p-6 transition shadow-sm"
-            data-testid="hero-invited-cta"
-          >
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
-              Path B
-            </div>
-            <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
-              I was invited by a professional
-            </div>
-            <div className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
-              Open the link your mediator or attorney emailed you — or
-              paste the code they gave you. We&rsquo;ll auto-connect the
-              rest.
-            </div>
-            <div className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#3D1A78] group-hover:underline">
-              Continue your invitation →
-            </div>
-          </button>
+
+          <PathBInvitedCard />
         </div>
 
         {/* Path A body — SituationPicker is the existing solo flow.

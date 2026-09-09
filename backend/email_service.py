@@ -3584,3 +3584,60 @@ def send_deep_dive_report_pdf(
             "Please try again in a moment."
         ),
     )
+
+def send_foundation_statement_pdf_to_me(
+    *,
+    to_email: str,
+    user_name: Optional[str],
+    pdf_bytes: bytes,
+) -> None:
+    """Email the parent their OWN Foundation Statement as a branded
+    PDF — parity with the SNC + deep-dive report emails. Neutral
+    tone; distinct from `send_foundation_statement_share()` which
+    is aimed at an external mediator recipient."""
+    greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    plain = (
+        f"{greeting}\n\n"
+        "Your Foundation Statement is attached as a branded PDF.\n\n"
+        "It's your starting point in your own words. Keep it for "
+        "yourself, share it when you're ready, or bring it to a "
+        "family professional. It does not diagnose, determine "
+        "parental fitness, or replace legal advice.\n\n"
+        "You can update it anytime from the SA CoParents Reflection "
+        "screen and regenerate a fresh PDF.\n\n"
+        "- SA CoParents - sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        f'margin:0 0 14px 0;">{greeting}</p>'
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        'margin:0 0 14px 0;">Your <strong>Foundation Statement</strong> '
+        "is attached as a branded PDF.</p>"
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        'margin:0 0 22px 0;">'
+        "It's your starting point in your own words. Keep it for "
+        "yourself, share when you're ready, or bring it to a family "
+        "professional.</p>"
+        '<p style="font-size:12px;line-height:1.5;color:#857E9C;'
+        'margin:0 0 14px 0;">'
+        "This document does not diagnose, determine parental "
+        "fitness, or replace legal advice.</p>"
+    )
+    html = _branded_html(
+        headline="Your Foundation Statement",
+        body_html=body_html,
+        cta_label="Open SA CoParents",
+        cta_url="https://sacoparentsapp.online",
+    )
+    _send(
+        to_email=to_email,
+        subject="Your Foundation Statement",
+        html=html,
+        text=plain,
+        attachments=[("foundation-statement.pdf", pdf_bytes)],
+        failure_message=(
+            "Couldn't email your Foundation Statement right now. "
+            "Please try again in a moment."
+        ),
+    )
+

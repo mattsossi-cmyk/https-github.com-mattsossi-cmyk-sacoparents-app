@@ -206,6 +206,14 @@ export default function JoinInvitation() {
 
           {!loading && preview && !previewError && (
             <>
+              {preview.invited_first_name && (
+                <p
+                  className="text-[#3D1A78] font-serif text-lg sm:text-xl mt-1 mb-1"
+                  data-testid="join-invitation-personal-hello"
+                >
+                  Hi, {preview.invited_first_name},
+                </p>
+              )}
               <h1
                 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mt-2"
                 data-testid="join-invitation-title"
