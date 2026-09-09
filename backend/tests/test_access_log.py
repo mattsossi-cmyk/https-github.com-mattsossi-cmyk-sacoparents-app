@@ -10,7 +10,7 @@ API = f"{BASE_URL}/api"
 
 
 @pytest.fixture(scope="module")
-def accessed_case():
+def accessed_case() -> dict:
     pro, pa, pb, d, _detail = completed_case(API)
     rid = d["id"]
     assert pro.get(f"{API}/joint/reports/{rid}/activity").json()["access_log"] == []
@@ -21,7 +21,7 @@ def accessed_case():
     return {"pro": pro, "pa": pa, "rid": rid, "activity": activity}
 
 
-def test_counts(accessed_case) -> None:
+def test_counts(accessed_case: dict) -> None:
     act = accessed_case["activity"]
     assert act["view_count"] == 1
     assert act["download_count"] == 2
@@ -33,7 +33,7 @@ def test_counts(accessed_case) -> None:
     (1, "Assigned professional", "Downloaded PDF"),
     (2, "Parent 1", "Viewed report on screen"),
 ])
-def test_actor_and_action(accessed_case, idx, role, action) -> None:
+def test_actor_and_action(accessed_case: dict, idx: int, role: str, action: str) -> None:
     ev = accessed_case["activity"]["access_log"][idx]
     assert ev["by_role"] == role
     assert ev["action"] == action
@@ -41,16 +41,16 @@ def test_actor_and_action(accessed_case, idx, role, action) -> None:
     assert ev["by"]
 
 
-def test_professional_name_recorded(accessed_case) -> None:
+def test_professional_name_recorded(accessed_case: dict) -> None:
     ev = accessed_case["activity"]["access_log"][1]
     assert ev["by_name"] == accessed_case["pro"].name
 
 
-def test_access_log_separate_from_other_events(accessed_case) -> None:
+def test_access_log_separate_from_other_events(accessed_case: dict) -> None:
     kinds = {e.get("kind") for e in accessed_case["activity"]["access_events"]}
     assert not kinds & {"view", "download"}
 
 
-def test_parents_cannot_read_activity(accessed_case) -> None:
+def test_parents_cannot_read_activity(accessed_case: dict) -> None:
     r = accessed_case["pa"].get(f"{API}/joint/reports/{accessed_case['rid']}/activity")
     assert r.status_code == 403

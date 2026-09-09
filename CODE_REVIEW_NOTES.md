@@ -49,3 +49,8 @@ No code change made. Fifth consecutive false-positive report for this rule — t
 - Every flagged line (server.py ×13, joint_engine.py:406, email_utils.py 57/61/85, 8 test lines) is `is None` / `is not None`.
   Verified with grep: zero comparisons of `is` against string/number literals exist in the codebase.
   `is None` is the PEP 8-mandated form; converting to `== None` would be a regression (E711). No changes made.
+
+## 2026-09-09 — Code review round 6
+- Removed ad-hoc helper tests/_setup_compare_case.py (0% type hints; unused). Added full type hints to tests/test_access_log.py (7 tests pass).
+- "is vs ==": same 17 production lines — all `is None`/`is not None` (the report itself says to keep these). Unchanged.
+- server.py import count / module split: deliberate decision not to refactor a 2,600-line working route file without a product reason; auth/email helpers already live in auth_utils.py / email_utils.py.
