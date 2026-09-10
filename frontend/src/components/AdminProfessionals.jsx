@@ -31,6 +31,17 @@ export function AdminProfessionals() {
     } catch (e) { toast.error(formatApiError(e)); }
   };
 
+  const revoke = async (p) => {
+    const reason = window.prompt(`Revoke SA CoParents approval for ${p.name}? Enter a brief reason (kept in the declined log):`);
+    if (reason === null) return;
+    if (!reason.trim()) { toast.error("A brief reason is required"); return; }
+    try {
+      await api.post(`/admin/revoke-professional/${p.id}`, { reason });
+      toast.success(`${p.name} removed from approved professionals`);
+      setPros((prev) => prev.filter((x) => x.id !== p.id));
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
+
   const needle = q.trim().toLowerCase();
   const shown = pros.filter((p) => !needle || [p.name, p.email, p.profile?.organization, p.profile?.license_number].some((v) => (v || "").toLowerCase().includes(needle)));
   const verifiedCount = pros.filter((p) => p.credentials_verified).length;
@@ -57,9 +68,12 @@ export function AdminProfessionals() {
                   <p className="text-xs text-muted-foreground">{p.email}</p>
                   <p className="text-xs text-muted-foreground mt-1">{[p.profile?.pro_role, p.profile?.organization, p.profile?.license_number ? `License ${p.profile.license_number}` : ""].filter(Boolean).join(" · ") || "No credential details provided"}</p>
                 </div>
-                <Button size="sm" variant={p.credentials_verified ? "outline" : "default"} onClick={() => toggle(p)} data-testid={`verify-pro-btn-${p.id}`}>
-                  {p.credentials_verified ? "Remove verification" : "Mark license verified"}
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                  <Button size="sm" variant={p.credentials_verified ? "outline" : "default"} onClick={() => toggle(p)} data-testid={`verify-pro-btn-${p.id}`}>
+                    {p.credentials_verified ? "Remove verification" : "Mark license verified"}
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => revoke(p)} data-testid={`revoke-pro-btn-${p.id}`}>Revoke approval</Button>
+                </div>
               </li>
             ))}
           </ul>

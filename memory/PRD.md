@@ -441,3 +441,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 
 
+
+## 2026-09-10 — Revoke professional approval (BUILD 2026-09-10.2; test_admin_revoke 1/1)
+- Owner: "Alamo Family Mediation" (panel.test.pro@gmail.com, a test fixture that had been approved) must not be an approved professional — approvals come only from SA CoParents. Preview DB: revoked (approved=false, declined, reason logged). Registration already defaults approved=false.
+- New `POST /api/admin/revoke-professional/{id}` {reason} (admin only, not self, 404 if not approved) → approved=false, declined log entry, verification_level=declined; removed from directory; pro loses approved-only endpoints. AdminProfessionals list: red "Revoke approval" button per row (prompt for reason). Production has its own DB — Matt must revoke Alamo there via the button after deploying .2.

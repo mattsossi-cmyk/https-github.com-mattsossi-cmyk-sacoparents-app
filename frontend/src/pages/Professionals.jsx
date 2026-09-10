@@ -14,12 +14,10 @@ import { useAuth } from "@/context/AuthContext";
 export function ProfessionalCard({ p, isMe, onRefer, compact = false }) {
   return (
     <div className="bg-white border border-border rounded-lg p-5 flex flex-col min-w-0 overflow-hidden" data-testid={`pro-card-${p.id}`}>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-2">
-        <div className="min-w-0">
-          <p className="font-semibold break-words" data-testid={`pro-name-${p.id}`}>{p.name}{isMe && <span className="ml-2 text-xs text-muted-foreground font-normal">(you)</span>}</p>
-          <p className="text-sm text-muted-foreground break-words">{[p.pro_role, p.organization].filter(Boolean).join(" · ") || "Professional"}</p>
-        </div>
-        {p.credentials_verified && <VerifiedBadge testId={`pro-verified-${p.id}`} className="shrink-0 self-start" />}
+      <div className="min-w-0">
+        <p className="font-semibold break-words" data-testid={`pro-name-${p.id}`}>{p.name}{isMe && <span className="ml-2 text-xs text-muted-foreground font-normal">(you)</span>}</p>
+        <p className="text-sm text-muted-foreground break-words">{[p.pro_role, p.organization].filter(Boolean).join(" · ") || "Professional"}</p>
+        {p.credentials_verified && <div className="mt-2"><VerifiedBadge testId={`pro-verified-${p.id}`} /></div>}
       </div>
       {!compact && (
         <ul className="mt-3 space-y-1 text-sm text-muted-foreground">

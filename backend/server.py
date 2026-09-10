@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.1"
+BUILD_ID = "2026-09-10.2"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -2111,6 +2111,27 @@ async def decline_professional(user_id: str, body: DeclineIn, user=Depends(get_c
             )
         except Exception:
             logger.warning(f"Decline email not sent to {pro['email']}")
+    return {"ok": True}
+
+
+@api.post("/admin/revoke-professional/{user_id}")
+async def revoke_professional(user_id: str, body: DeclineIn, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    if user_id == user["_id"]:
+        raise HTTPException(status_code=400, detail="You cannot revoke your own access")
+    reason = body.reason.strip()[:500]
+    if not reason:
+        raise HTTPException(status_code=400, detail="Please provide a brief reason for revoking approval")
+    now = datetime.now(timezone.utc).isoformat()
+    res = await db.users.update_one(
+        {"_id": user_id, "role": "professional", "approved": True},
+        {"$set": {"approved": False, "declined": True, "declined_reason": reason, "declined_at": now,
+                  "revoked_at": now, "revoked_by": user["_id"], "verification_level": "declined"}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Approved professional not found")
+    logger.info(f"Professional approval revoked for {user_id} by {user['_id']}: {reason}")
     return {"ok": True}
 
 
