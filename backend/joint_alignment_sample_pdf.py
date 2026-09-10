@@ -158,9 +158,13 @@ class _SamplePreviewPDF(FPDF):
         render_pdf_copyright(self)
 
 
-def _pill(pdf: FPDF, label: str, status: str) -> None:
+def _pill(pdf: FPDF, status: str) -> None:
     """Render a status pill (rounded-ish rectangle with tinted fill +
-    coloured label). Advances the cursor to the right of the pill."""
+    coloured label). Advances the cursor to the right of the pill.
+
+    The label text is looked up from `_STATUS_LABELS[status]` — the
+    caller doesn't pass it, keeping the wording in one place.
+    """
     fill, ink = _STATUS_COLORS.get(status, ((240, 240, 240), (50, 50, 50)))
     pdf.set_fill_color(*fill)
     pdf.set_text_color(*ink)
@@ -302,7 +306,7 @@ def build_joint_alignment_sample_pdf() -> bytes:
         pill_x = pdf.l_margin
         pill_y = pdf.get_y()
         pdf.set_xy(pill_x, pill_y)
-        _pill(pdf, topic["title"], topic["status"])
+        _pill(pdf, topic["status"])
 
         # Title (bold) on the same line, offset to sit after the pill.
         pdf.set_xy(pill_x + 32, pill_y - 0.2)

@@ -70,3 +70,11 @@ def test_sample_pdf_topics_stay_in_lockstep_with_frontend_copy():
     # Status coverage — one agree, one differ, one incomplete at minimum.
     statuses = {t["status"] for t in SAMPLE_TOPICS}
     assert {"agree", "differ", "incomplete"}.issubset(statuses)
+    # Notes must be Latin-1 safe. The FPDF renderer accepts em-dashes
+    # only with a Unicode-aware font, which we don't ship — so a stray
+    # em-dash in a note would render as "?" in the printed PDF. Guard
+    # against that: no em-dashes anywhere in the sample notes.
+    for topic in SAMPLE_TOPICS:
+        assert "\u2014" not in topic["note"], (
+            f"em-dash found in topic note: {topic!r}"
+        )

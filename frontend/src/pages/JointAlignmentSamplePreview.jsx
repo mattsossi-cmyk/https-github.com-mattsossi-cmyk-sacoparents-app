@@ -89,7 +89,7 @@ const SAMPLE_TOPICS = [
     title: "Handover timing on Fridays",
     section: "Transitions",
     status: "differ",
-    note: "Different preferred times — a small change to your plan may resolve this.",
+    note: "Different preferred times - a small change to your plan may resolve this.",
   },
   {
     key: "holidays",
@@ -103,7 +103,7 @@ const SAMPLE_TOPICS = [
     title: "Healthcare decisions",
     section: "Big-picture parenting",
     status: "incomplete",
-    note: "One of you didn't finish this section yet — mark it not done.",
+    note: "One of you didn't finish this section yet - mark it not done.",
   },
 ];
 

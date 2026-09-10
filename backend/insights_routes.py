@@ -471,17 +471,6 @@ async def download_sample_pdf(filename: str):
     )
 
 
-
-
-
-
-
-
-
-
-
-
-
 @router.post("/admin/weekly/regenerate")
 async def regenerate_weekly_insights(
     request: Request,
