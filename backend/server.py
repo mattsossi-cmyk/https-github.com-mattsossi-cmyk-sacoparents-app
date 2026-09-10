@@ -1928,6 +1928,30 @@ class ReferIn(BaseModel):
     report_id: str | None = None
 
 
+async def _referral_matter_line(user: dict, report_id: str | None) -> str:
+    if not report_id:
+        return ""
+    rep = await db.joint_reports.find_one({"id": report_id, "created_by": user["_id"]}, {"_id": 0, "case_code": 1, "subject_label": 1})
+    if not rep:
+        raise HTTPException(status_code=404, detail="Matter not found")
+    return f"<p><strong>Matter:</strong> {escape(rep.get('subject_label', 'Joint Report'))} — Alignment Case {escape(rep.get('case_code', ''))}</p>"
+
+
+def _referral_html(user: dict, colleague: dict, matter_line: str, message: str) -> str:
+    p = user.get("profile") or {}
+    contact = ", ".join(x for x in (user["email"], p.get("phone", "")) if x)
+    credentials = f" ({escape(p.get('pro_role'))}, {escape(p.get('organization'))})" if p.get("pro_role") and p.get("organization") else ""
+    quote = f"<blockquote style=\"border-left:3px solid #5B2A86;padding-left:12px;color:#333\">{escape(message)}</blockquote>" if message else ""
+    return _pro_email_wrap(
+        f"<p>Hi {escape(colleague.get('name') or 'there')},</p>"
+        f"<p><strong>{escape(user.get('name', 'A colleague'))}</strong>{credentials}"
+        " would like to refer a family matter to you through the SA CoParents Align professional directory.</p>"
+        + matter_line + quote
+        + f"<p>Reply directly to the referring professional: {escape(contact)}.</p>"
+        "<p style=\"font-size:13px;color:#555\">No parent information or report content is shared by this message. "
+        "Report access is granted only through the professional's secure case invitation.</p>")
+
+
 @api.post("/professionals/{pro_id}/refer")
 async def refer_to_professional(pro_id: str, body: ReferIn, user=Depends(get_current_user)):
     require_approved_professional(user, "Only approved professionals can refer cases")
@@ -1936,28 +1960,12 @@ async def refer_to_professional(pro_id: str, body: ReferIn, user=Depends(get_cur
     colleague = await db.users.find_one({"_id": pro_id, "role": {"$in": list(PRO_ROLES)}, "approved": True})
     if not colleague:
         raise HTTPException(status_code=404, detail="Professional not found")
-    matter_line = ""
-    if body.report_id:
-        rep = await db.joint_reports.find_one({"id": body.report_id, "created_by": user["_id"]}, {"_id": 0, "case_code": 1, "subject_label": 1})
-        if not rep:
-            raise HTTPException(status_code=404, detail="Matter not found")
-        matter_line = f"<p><strong>Matter:</strong> {escape(rep.get('subject_label', 'Joint Report'))} — Alignment Case {escape(rep.get('case_code', ''))}</p>"
+    matter_line = await _referral_matter_line(user, body.report_id)
     message = body.message.strip()
-    p = user.get("profile") or {}
-    contact = ", ".join(x for x in (user["email"], p.get("phone", "")) if x)
     await send_email(
         to=colleague["email"],
         subject=f"Case referral from {user.get('name', 'a colleague')} - {EMAIL_FROM_NAME}",
-        html=_pro_email_wrap(
-            f"<p>Hi {escape(colleague.get('name') or 'there')},</p>"
-            f"<p><strong>{escape(user.get('name', 'A colleague'))}</strong>"
-            + (f" ({escape(p.get('pro_role'))}, {escape(p.get('organization'))})" if p.get("pro_role") and p.get("organization") else "")
-            + " would like to refer a family matter to you through the SA CoParents Align professional directory.</p>"
-            + matter_line
-            + (f"<blockquote style=\"border-left:3px solid #5B2A86;padding-left:12px;color:#333\">{escape(message)}</blockquote>" if message else "")
-            + f"<p>Reply directly to the referring professional: {escape(contact)}.</p>"
-            "<p style=\"font-size:13px;color:#555\">No parent information or report content is shared by this message. "
-            "Report access is granted only through the professional's secure case invitation.</p>"),
+        html=_referral_html(user, colleague, matter_line, message),
         reply_to=user["email"],
     )
     now = datetime.now(timezone.utc).isoformat()

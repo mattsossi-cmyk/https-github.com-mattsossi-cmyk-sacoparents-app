@@ -54,3 +54,8 @@ No code change made. Fifth consecutive false-positive report for this rule — t
 - Removed ad-hoc helper tests/_setup_compare_case.py (0% type hints; unused). Added full type hints to tests/test_access_log.py (7 tests pass).
 - "is vs ==": same 17 production lines — all `is None`/`is not None` (the report itself says to keep these). Unchanged.
 - server.py import count / module split: deliberate decision not to refactor a 2,600-line working route file without a product reason; auth/email helpers already live in auth_utils.py / email_utils.py.
+
+## 2026-09-10 — Code review round 7
+- refer_to_professional complexity 11 → split into _referral_matter_line() and _referral_html(); directory tests 3/3.
+- "is vs ==" (server.py ×14, joint_engine.py, email_utils.py, 8 tests): `ruff --select F632` passes on the whole backend — all are `is None`/`is not None`. Unchanged (7th recurrence).
+- server.py module split: deliberately deferred (see round 6).
