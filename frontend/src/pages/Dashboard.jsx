@@ -14,6 +14,7 @@ import { AdminProfessionals } from "@/components/AdminProfessionals";
 import { ForcePasswordChange } from "@/components/ForcePasswordChange";
 import { ParentRequestStatus } from "@/components/ParentRequestStatus";
 import { ProfessionalsPreview } from "@/components/ProfessionalsPreview";
+import { CasesTable } from "@/components/CasesTable";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -416,7 +417,7 @@ export default function Dashboard() {
           <p className="font-semibold mb-1">Already invited?</p>
           <p className="text-sm text-muted-foreground mb-4">Enter the invitation code from your email to join a Joint Report.</p>
           <div className="flex gap-2 max-w-md">
-            <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. SA-EDU-482731" className="h-12 tracking-[0.2em] uppercase font-semibold" maxLength={16} data-testid="invitation-code-input" />
+            <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. SA-26-EDU-K7M4Q2" className="h-12 tracking-[0.2em] uppercase font-semibold" maxLength={16} data-testid="invitation-code-input" />
             <Button onClick={acceptCode} disabled={code.trim().length < 6 || busy} className="h-12" data-testid="accept-invitation-btn">Accept</Button>
           </div>
         </div>
@@ -442,6 +443,8 @@ export default function Dashboard() {
           ) : joints.length === 0 ? (
             <p className="text-sm text-muted-foreground" data-testid="joints-empty">No joint reports yet. Create one above to invite your co-parent.</p>
           ) : (
+            <>
+            {isPro && <CasesTable cases={joints} />}
             <div className="grid md:grid-cols-2 gap-4" data-testid="joints-grid">
               {joints.filter((j) => !j.archived).map((j) => {
                 const ready = j.status === "ready";
@@ -514,6 +517,7 @@ export default function Dashboard() {
                 );
               })}
             </div>
+            </>
           )}
         </div>
 

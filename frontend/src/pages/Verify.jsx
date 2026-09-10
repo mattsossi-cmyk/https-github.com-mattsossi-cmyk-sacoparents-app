@@ -37,7 +37,7 @@ export default function Verify() {
         <h1 className="text-4xl font-semibold" data-testid="verify-heading">Confirm Your Professional</h1>
         <p className="text-muted-foreground mt-3 max-w-xl">Received an invitation? Enter the case code from your email to confirm the professional who sent it holds an approved SA CoParents Align account and whether their license or credentials have been verified.</p>
         <form onSubmit={check} className="mt-8 flex gap-2 max-w-md" data-testid="verify-form">
-          <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. SA-EDU-482731" className="h-12 tracking-[0.2em] uppercase font-semibold" maxLength={20} data-testid="verify-code-input" />
+          <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. SA-26-EDU-K7M4Q2" className="h-12 tracking-[0.2em] uppercase font-semibold" maxLength={20} data-testid="verify-code-input" />
           <Button type="submit" disabled={code.trim().length < 6 || busy} className="h-12 gap-2" data-testid="verify-submit-btn"><Search className="h-4 w-4" /> {busy ? "Checking…" : "Check"}</Button>
         </form>
         {error && <p className="mt-4 text-sm text-destructive flex items-center gap-2" data-testid="verify-error"><AlertCircle className="h-4 w-4" /> {error}</p>}

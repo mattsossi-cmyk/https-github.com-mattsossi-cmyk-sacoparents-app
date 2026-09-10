@@ -273,9 +273,9 @@ export default function JointNew() {
                 <div className="bg-white border border-border rounded-lg p-6 space-y-5">
                   {isPro && (
                     <div className="space-y-2">
-                      <Label htmlFor="case-ref">Case name / number (private to you)</Label>
+                      <Label htmlFor="case-ref">Case name / reference (private to you)</Label>
                       <Input id="case-ref" className="h-12" value={caseRef} onChange={(e) => setCaseRef(e.target.value)} placeholder="e.g. Sossi v. — File #2026-114" data-testid="case-reference-input" />
-                      <p className="text-xs text-muted-foreground">Never shown to the parents. Align also assigns a public case code for the invitations.</p>
+                      <p className="text-xs text-muted-foreground">Never shown to the parents. Align assigns a master Case ID (SA-26-…) and a separate private invitation token for each parent.</p>
                     </div>
                   )}
                   <div className="space-y-2">

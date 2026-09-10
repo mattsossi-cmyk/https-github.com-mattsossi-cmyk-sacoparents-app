@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.2"
+BUILD_ID = "2026-09-10.3"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -737,9 +737,28 @@ SUBJECT_CODE_PREFIX = {
 }
 
 
+CASE_ID_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+CASE_STATUS_ORDER = ["DRAFT", "INVITED", "ONE_COMPLETE", "READY_FOR_ALIGNMENT", "REPORT_GENERATED", "CLOSED"]
+
+
 def new_case_code(subject, kind="joint_report"):
     prefix = "AGR" if kind == "agreement" else SUBJECT_CODE_PREFIX.get(subject, "ALN")
-    return f"SA-{prefix}-{secrets.randbelow(900000) + 100000}"
+    yy = datetime.now(timezone.utc).strftime("%y")
+    rand = "".join(secrets.choice(CASE_ID_ALPHABET) for _ in range(6))
+    return f"SA-{yy}-{prefix}-{rand}"
+
+
+def case_status(doc: dict) -> str:
+    if doc.get("closed_at"):
+        return "CLOSED"
+    if doc.get("report_generated_at"):
+        return "REPORT_GENERATED"
+    done = sum(1 for r in ("a", "b") if doc.get("responses", {}).get(r))
+    if done == 2:
+        return "READY_FOR_ALIGNMENT"
+    if done == 1:
+        return "ONE_COMPLETE"
+    return "INVITED" if doc.get("status") != "draft" else "DRAFT"
 
 
 def report_role(doc, user_id):
@@ -823,6 +842,7 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
         "kind": doc.get("kind", "joint_report"),
         "shared_with_me": uid in doc.get("shared_with", []),
         "case_code": doc.get("case_code"),
+        "case_status": case_status(doc),
         "archived": bool(doc.get("archived")),
         "participants": _participants_public(doc),
     }
@@ -1150,11 +1170,13 @@ def _actor_label(doc: dict, user: dict) -> str:
 
 
 async def _log_report_access(doc: dict, user: dict, action: str, kind: str) -> None:
+    now = datetime.now(timezone.utc).isoformat()
     await db.access_events.insert_one({
-        "report_id": doc["id"], "action": action, "kind": kind,
-        "at": datetime.now(timezone.utc).isoformat(),
+        "report_id": doc["id"], "action": action, "kind": kind, "at": now,
         "by": user["_id"], "by_name": user.get("name", ""), "by_role": _actor_label(doc, user),
     })
+    if not doc.get("report_generated_at"):
+        await db.joint_reports.update_one({"id": doc["id"], "report_generated_at": {"$exists": False}}, {"$set": {"report_generated_at": now}})
 
 
 @api.get("/joint/reports/{rid}/report")

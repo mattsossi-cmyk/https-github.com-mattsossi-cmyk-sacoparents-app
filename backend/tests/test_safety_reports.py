@@ -77,7 +77,7 @@ class TestFullSafetyCycle:
         rep = [x for x in pro.get(f"{API}/joint/reports").json() if x["id"] == rid][0]
         assert rep["is_safety"]
         assert set(rep["subjects"]) == {"safety", "risk", "safety_communication", "safeguards"}
-        assert rep.get("case_code", "").startswith("SA-SAF-")
+        assert rep.get("case_code", "").startswith("SA-") and "-SAF-" in rep.get("case_code", "")
         return pro, pa, pb, rid, rep["case_code"]
 
     def test_full_cycle_mediator_view_and_privacy(self) -> None:
@@ -136,4 +136,4 @@ class TestJointPublicShape:
         assert d["subjects"] == ["education"]
         assert not d["is_safety"]
         assert d["professional_name"]
-        assert d.get("case_code", "").startswith("SA-EDU-")
+        assert d.get("case_code", "").startswith("SA-") and "-EDU-" in d.get("case_code", "")

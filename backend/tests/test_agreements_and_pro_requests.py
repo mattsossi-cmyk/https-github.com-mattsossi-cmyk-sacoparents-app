@@ -35,7 +35,7 @@ def _agreement_setup(child="TEST_Kid"):
     }, headers=UA)
     assert r.status_code == 200, r.text
     d = r.json()
-    assert d.get("case_code", "").startswith("SA-AGR-")
+    assert d.get("case_code", "").startswith("SA-") and "-AGR-" in d.get("case_code", "")
     toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
     a = new_user(API, "parent", "Test Pa", email=ea, invite=toks["a"])
     b = new_user(API, "parent", "Test Pb", email=eb, invite=toks["b"])
@@ -108,7 +108,7 @@ def _pro_request(session, pro_email: str, co_parent_email: str, child: str = "TE
 def _assert_safety_listing(rep: dict) -> None:
     assert rep.get("is_safety")
     assert set(rep.get("subjects") or []) == {"safety", "risk", "safety_communication", "safeguards"}
-    assert rep.get("case_code", "").startswith("SA-SAF-")
+    assert rep.get("case_code", "").startswith("SA-") and "-SAF-" in rep.get("case_code", "")
 
 
 # ------------------- Config -------------------

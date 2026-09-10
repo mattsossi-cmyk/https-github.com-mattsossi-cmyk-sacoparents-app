@@ -98,7 +98,7 @@ class TestProfessionalInitiationGates:
 class TestProCreateAndInvite:
     def test_pro_create_returns_case_code_and_shared_code(self) -> None:
         pro, pa, pb, d = new_case(API, subject="education", child="TEST_Kid", case_reference="REF-1")
-        assert re.fullmatch(r"SA-EDU-\d{6}", d["case_code"])
+        assert re.fullmatch(r"SA-\d{2}-EDU-[A-Z2-9]{6}", d["case_code"])
         invs = d["invitations"]
         assert len(invs) == 2
         assert invs[0]["code"] == invs[1]["code"] == d["case_code"]
