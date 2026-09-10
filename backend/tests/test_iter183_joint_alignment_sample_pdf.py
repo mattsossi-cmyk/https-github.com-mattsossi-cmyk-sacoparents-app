@@ -27,9 +27,43 @@ def test_sample_pdf_is_public_and_valid():
     assert r.status_code == 200, r.text[:400]
     assert r.headers.get("content-type", "").startswith("application/pdf")
     assert r.content[:4] == b"%PDF", "response is not a real PDF"
-    # Marketing pages produce compact PDFs; guard against a 100-byte
-    # empty payload so we don't ship a broken artefact.
-    assert len(r.content) > 1500, f"pdf too small: {len(r.content)}"
+    # PDF now includes the scenario-match mini-quiz on page 2, so the
+    # baseline size floor is higher. Guards against shipping an empty
+    # payload OR silently dropping the quiz page.
+    assert len(r.content) > 4500, f"pdf too small: {len(r.content)}"
+
+
+def test_sample_pdf_has_two_pages_including_quiz():
+    """The PDF must ship BOTH the preview (page 1) AND the mini-quiz
+    (page 2). Guards against a regression that silently drops the
+    quiz `add_page()` call."""
+    import re
+    r = requests.get(
+        f"{BASE_URL}/api/insights/samples/joint-alignment-preview.pdf",
+        timeout=20,
+    )
+    assert r.status_code == 200
+    # /Type /Page (not /Pages) is the FPDF marker for a single page.
+    pages = len(re.findall(rb"/Type\s*/Page\b(?!s)", r.content))
+    assert pages == 2, f"expected 2 pages (preview + quiz), got {pages}"
+
+
+def test_quiz_prompts_are_neutral_and_have_three_answers():
+    """The mini-quiz must ship six prompts, each with the same three
+    canonical answer keys, and use Latin-1-safe copy."""
+    from joint_alignment_sample_pdf import QUIZ_PROMPTS
+    assert len(QUIZ_PROMPTS) == 6, (
+        f"expected six prompts, got {len(QUIZ_PROMPTS)}"
+    )
+    required_keys = {"prompt", "agree", "differ", "incomplete"}
+    for q in QUIZ_PROMPTS:
+        assert required_keys.issubset(q.keys()), q
+        for k in ("prompt", "agree", "differ", "incomplete"):
+            v = q[k]
+            assert isinstance(v, str) and v.strip(), q
+            # Latin-1 safe — no em-dashes (would render as "?" in the
+            # printed PDF because we don't ship a Unicode font).
+            assert "\u2014" not in v, f"em-dash in quiz field: {k!r}: {v!r}"
 
 
 def test_sample_pdf_response_has_download_filename():

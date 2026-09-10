@@ -27,6 +27,43 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-10 — Iter187 · Voice Picker + Sample PDF Mini-Quiz
+
+**🟢 P2 — Voice picker on `/for-professionals` intro audio**
+- `ProfessionalsIntroAudio.jsx` now renders a pill row above the Play
+  button letting a visitor toggle between **Shimmer** (default) /
+  **Nova** / **Alloy** / **Fable** (all four voices the backend
+  supports via `emergentintegrations.llm.openai.OpenAITextToSpeech`).
+- Audio URL rebuilt with `?voice=…` on every pick via `useMemo`;
+  side-effect `useEffect` calls `audio.load()` on src change so the
+  browser fetches the new file the next time Play is pressed.
+- Right-side chip auto-updates to reflect the current voice (e.g.,
+  "NOVA VOICE"); each pill uses `role="radio"` + `aria-checked` for
+  proper accessibility semantics.
+- Backend cache is keyed on `(voice, model)` so a re-play of the same
+  voice is served from Mongo without a second OpenAI call.
+- E2E verified: Nova/Alloy/Fable clicks each flip aria-checked, chip
+  label, and audio `src` (`?voice=nova&model=tts-1` etc).
+
+**🟢 P2 — Sample PDF mini-quiz (page 2)**
+- The public sample joint alignment PDF at
+  `/api/insights/samples/joint-alignment-preview.pdf` now ships a
+  **second page**: "Which scenario matches your family?" with six
+  neutral prompts (one per topic on page 1) each offering three
+  answer chips keyed to agree / differ / incomplete.
+- A "your rough result" legend at the bottom maps the score to a next
+  step in plain, non-adjudicative language:
+  - Mostly same/together → sample 1 scenario, short reflection may
+    be enough
+  - Mostly different/separately → sample 2 scenario, professional-
+    guided joint session likely to add most value
+  - Lots of "haven't tested it" → finish the reflection first
+- Copy is Latin-1 safe (no em-dashes) — enforced by pytest.
+- CTA at page bottom keeps the sacoparentsapp.online hyperlink.
+- PDF grew from ~3.5KB (1 page) to ~6.4KB (2 pages).
+
+**Regression:** 15/15 backend + 12/12 frontend tests pass.
+
 ### 2026-09-10 — Iter186 · Auth Cookie Migration + Two-Sample Toggle
 
 **🔴 P0 — CRITICAL FIX: Invited-parent flow (user-reported bug)**

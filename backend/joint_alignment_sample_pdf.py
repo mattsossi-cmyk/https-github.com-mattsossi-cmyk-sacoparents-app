@@ -471,7 +471,210 @@ def build_joint_alignment_sample_pdf(scenario: str = DEFAULT_SCENARIO) -> bytes:
         ln=1,
     )
 
+    # -------- PAGE 2 — "Which scenario matches your family?" mini-quiz --
+    _render_scenario_quiz_page(pdf, scenario=scenario)
+
     out = pdf.output(dest="S")
     if isinstance(out, str):
         return out.encode("latin-1", errors="replace")
     return bytes(out)
+
+
+# ---------------- Scenario-matching mini-quiz (page 2) ---------------- #
+# Six short prompts. Each prompt corresponds to one of the six topics on
+# page 1 and offers three answers keyed to agree / differ / incomplete.
+# Deliberately non-adjudicative: prompts describe SITUATIONS, not blame,
+# and the "next step" copy stays neutral either way.
+
+QUIZ_PROMPTS: List[Dict[str, str]] = [
+    {
+        "prompt": (
+            "1. School mornings at your two homes look..."
+        ),
+        "agree": "Roughly the same routine at both places.",
+        "differ": "Meaningfully different from home to home.",
+        "incomplete": "We haven't compared notes on it yet.",
+    },
+    {
+        "prompt": (
+            "2. Weeknight screen-time rules for the child..."
+        ),
+        "agree": "Both parents apply the same limit.",
+        "differ": "Each parent has their own limit.",
+        "incomplete": "One or both of us hasn't set one.",
+    },
+    {
+        "prompt": (
+            "3. Extracurricular activities (frequency and cost)..."
+        ),
+        "agree": "We agree on the current schedule.",
+        "differ": "We see the schedule differently.",
+        "incomplete": "It's an open question at the moment.",
+    },
+    {
+        "prompt": (
+            "4. Handovers on a typical week..."
+        ),
+        "agree": "Same preferred time and place for both of us.",
+        "differ": "Different preferred windows.",
+        "incomplete": "We handle it week-by-week.",
+    },
+    {
+        "prompt": (
+            "5. Winter holidays this year..."
+        ),
+        "agree": "Same view on how to split them.",
+        "differ": "Different plans in mind.",
+        "incomplete": "We haven't talked about it yet.",
+    },
+    {
+        "prompt": (
+            "6. Healthcare / big-picture decisions..."
+        ),
+        "agree": "We usually make them together.",
+        "differ": "We each decide separately in our own home.",
+        "incomplete": "We haven't tested this yet.",
+    },
+]
+
+
+def _render_scenario_quiz_page(pdf: FPDF, *, scenario: str) -> None:
+    """Add a second page with the six-prompt "which scenario matches
+    your family?" mini-quiz plus a scored-outcome legend. Never
+    changes the mainpage state; safe to call once at the end."""
+    pdf.add_page()
+
+    box_w = pdf.w - pdf.l_margin - pdf.r_margin
+
+    # Title
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(26, 19, 48)
+    pdf.multi_cell(
+        0,
+        7,
+        _safe("Which scenario matches your family?"),
+    )
+    pdf.ln(1)
+
+    # Intro paragraph
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(75, 69, 103)
+    pdf.multi_cell(
+        0,
+        4.6,
+        _safe(
+            "Six prompts. For each one, tick the answer that fits "
+            "your family today. Then count how many of each you "
+            "circled. This is a rough self-check - not a diagnosis - "
+            "designed to help you spot which sample above is closest "
+            "to your own picture."
+        ),
+    )
+    pdf.ln(2)
+
+    # Prompts
+    for q in QUIZ_PROMPTS:
+        prompt_y = pdf.get_y()
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(26, 19, 48)
+        pdf.multi_cell(0, 5, _safe(q["prompt"]))
+        pdf.ln(0.5)
+
+        for key in ("agree", "differ", "incomplete"):
+            _quiz_answer_row(pdf, status=key, text=q[key])
+        pdf.ln(1.5)
+
+    # Score / outcome legend
+    pdf.ln(3)
+    legend_y = pdf.get_y()
+    pdf.set_fill_color(245, 241, 251)
+    pdf.set_draw_color(214, 207, 232)
+    pdf.set_line_width(0.25)
+    pdf.rect(pdf.l_margin, legend_y, box_w, 40, style="FD")
+
+    pdf.set_xy(pdf.l_margin + 4, legend_y + 2)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_text_color(61, 26, 120)
+    pdf.cell(0, 5, _safe("Your rough result"), ln=1)
+
+    pdf.set_x(pdf.l_margin + 4)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(75, 69, 103)
+    pdf.multi_cell(
+        box_w - 8,
+        4,
+        _safe(
+            "- Mostly \"same / together\" answers -> your picture "
+            "probably looks like the 'Mostly agreed' sample on page 1. "
+            "A short reflection each may be enough to keep everyone "
+            "aligned.\n"
+            "- Mostly \"different / separately\" answers -> your "
+            "picture is closer to the 'Mostly differed' sample. A "
+            "professional-guided joint session is likely to add the "
+            "most value.\n"
+            "- A lot of \"haven't tested it\" answers -> your first "
+            "job is finishing the reflection together so you can "
+            "actually see where you stand."
+        ),
+    )
+
+    # Bottom CTA — same URL, keeps the "start on your own" pathway
+    # explicit even after the reader has flipped to the back page.
+    pdf.ln(6)
+    cta_y = pdf.get_y()
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_draw_color(214, 207, 232)
+    pdf.rect(pdf.l_margin, cta_y, box_w, 16, style="FD")
+    pdf.set_xy(pdf.l_margin + 4, cta_y + 2)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_text_color(26, 19, 48)
+    pdf.cell(0, 5, _safe("Ready to try it?"), ln=1)
+    pdf.set_xy(pdf.l_margin + 4, cta_y + 7)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(75, 69, 103)
+    pdf.multi_cell(
+        box_w - 8,
+        4,
+        _safe(
+            "Start at sacoparentsapp.online. If your co-parent shared "
+            "a code with you, use the 'I have an invitation' path."
+        ),
+    )
+    pdf.link(
+        pdf.l_margin + 24, cta_y + 7, 55, 4, "https://sacoparentsapp.online",
+    )
+
+
+def _quiz_answer_row(pdf: FPDF, *, status: str, text: str) -> None:
+    """Render one answer row for the mini-quiz: an empty tick box + the
+    status pill + the answer text. All three sit on the same baseline."""
+    fill, ink = _STATUS_COLORS[status]
+
+    row_y = pdf.get_y()
+    box_size = 3.2
+
+    # Tick box
+    pdf.set_draw_color(*ink)
+    pdf.set_line_width(0.25)
+    pdf.rect(pdf.l_margin + 2, row_y + 0.5, box_size, box_size, style="D")
+
+    # Status pill (compact)
+    pill_x = pdf.l_margin + 8
+    pill_w = 22
+    pdf.set_fill_color(*fill)
+    pdf.rect(pill_x, row_y, pill_w, 5, style="F")
+    pdf.set_xy(pill_x + 1.5, row_y + 0.9)
+    pdf.set_font("Helvetica", "B", 7)
+    pdf.set_text_color(*ink)
+    pdf.cell(pill_w - 3, 3, _safe(_STATUS_LABELS[status]), ln=0)
+
+    # Answer text
+    pdf.set_xy(pill_x + pill_w + 2, row_y - 0.4)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(50, 50, 50)
+    pdf.multi_cell(
+        pdf.w - pdf.r_margin - (pill_x + pill_w + 2),
+        4,
+        _safe(text),
+    )
+    pdf.set_text_color(0, 0, 0)

@@ -12,12 +12,22 @@
  *  * "Shimmer voice" chip near the player so mediators know it's
  *    intentionally warm/female — no surprise on Play.
  */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Pause, Volume2, Loader2 } from "lucide-react";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
+
+// Human-friendly labels for the 4 OpenAI voices the backend supports
+// (see `professionals_intro_voice.py::SUPPORTED_VOICES`). We keep the
+// labels short so the chip row fits mobile widths without wrapping.
+const VOICE_META = {
+  shimmer: { label: "Shimmer", hint: "Warm, female" },
+  nova: { label: "Nova", hint: "Bright, female" },
+  fable: { label: "Fable", hint: "Narrator, neutral" },
+  alloy: { label: "Alloy", hint: "Calm, male" },
+};
 
 export default function ProfessionalsIntroAudio() {
   const [manifest, setManifest] = useState(null);
@@ -26,6 +36,7 @@ export default function ProfessionalsIntroAudio() {
   const [playing, setPlaying] = useState(false);
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioError, setAudioError] = useState(null);
+  const [voice, setVoice] = useState("shimmer");
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -36,6 +47,9 @@ export default function ProfessionalsIntroAudio() {
       .then((r) => {
         if (cancelled) return;
         setManifest(r.data || null);
+        // Adopt the manifest-default voice on first load; user
+        // selection wins after that.
+        if (r.data?.voice) setVoice(r.data.voice);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -69,6 +83,41 @@ export default function ProfessionalsIntroAudio() {
     }
   };
 
+  // Build the audio URL from the currently-selected voice. Backend
+  // caches per (voice, model) so switching voices is a one-time cost
+  // per voice per environment. Hooks must sit above early returns.
+  const absoluteAudioUrl = useMemo(() => {
+    if (!manifest) return "";
+    const base = manifest.audio_url?.startsWith("http")
+      ? manifest.audio_url
+      : `${BACKEND}${manifest.audio_url}`;
+    try {
+      const u = new URL(base);
+      u.searchParams.set("voice", voice);
+      return u.toString();
+    } catch {
+      // Fallback if URL parsing chokes (extremely unlikely) — append
+      // manually.
+      const sep = base.includes("?") ? "&" : "?";
+      return `${base}${sep}voice=${encodeURIComponent(voice)}`;
+    }
+  }, [manifest, voice]);
+
+  // Reset play state whenever the voice changes so a mid-play switch
+  // doesn't leave the button stuck on "Pause".
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el) return;
+    el.pause();
+    setPlaying(false);
+    setAudioError(null);
+    try {
+      el.load();
+    } catch {
+      /* jsdom / older browsers — best-effort */
+    }
+  }, [absoluteAudioUrl]);
+
   if (loading) {
     return (
       <div
@@ -92,9 +141,10 @@ export default function ProfessionalsIntroAudio() {
     );
   }
 
-  const absoluteAudioUrl = manifest.audio_url?.startsWith("http")
-    ? manifest.audio_url
-    : `${BACKEND}${manifest.audio_url}`;
+  const supportedVoices =
+    manifest?.supported_voices?.length > 0
+      ? manifest.supported_voices
+      : Object.keys(VOICE_META);
 
   return (
     <div
@@ -117,8 +167,46 @@ export default function ProfessionalsIntroAudio() {
           className="inline-flex items-center gap-1 rounded-full bg-[#F5F1FB] text-[#3D1A78] text-[10px] uppercase tracking-[0.18em] font-bold px-2.5 py-1"
           data-testid="for-pros-intro-audio-voice-chip"
         >
-          Shimmer voice
+          {(VOICE_META[voice] || VOICE_META.shimmer).label} voice
         </span>
+      </div>
+
+      {/* Voice picker chip row — lets a visitor pick a tone they
+          prefer. Cached per voice on the backend so a re-play of the
+          same voice is instant. */}
+      <div
+        className="flex items-center gap-1.5 flex-wrap mb-3"
+        role="radiogroup"
+        aria-label="Audio intro voice"
+        data-testid="for-pros-intro-audio-voice-picker"
+      >
+        <span className="text-[11px] font-semibold text-[#857E9C] uppercase tracking-[0.14em] mr-1">
+          Voice
+        </span>
+        {supportedVoices.map((v) => {
+          const meta = VOICE_META[v];
+          if (!meta) return null;
+          const isActive = v === voice;
+          return (
+            <button
+              key={v}
+              type="button"
+              role="radio"
+              aria-checked={isActive}
+              onClick={() => setVoice(v)}
+              className={
+                "px-2.5 py-1 rounded-full text-[11px] font-semibold border transition " +
+                (isActive
+                  ? "bg-[#3D1A78] text-white border-[#3D1A78]"
+                  : "bg-white text-[#3D1A78] border-[#D6CFE8] hover:bg-[#F5F1FB]")
+              }
+              title={meta.hint}
+              data-testid={`for-pros-intro-audio-voice-${v}`}
+            >
+              {meta.label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
