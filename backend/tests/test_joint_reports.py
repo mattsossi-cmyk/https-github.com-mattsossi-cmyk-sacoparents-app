@@ -102,7 +102,7 @@ class TestProCreateAndInvite:
         invs = d["invitations"]
         assert len(invs) == 2
         assert invs[0]["code"] == invs[1]["code"] == d["case_code"]
-        assert all("/join/" in i["link"] for i in invs)
+        assert all("sacoparentsapp.online/?invite=" in i["link"] for i in invs)
         assert d["status"] == "pending_invite"
         assert d["professional_name"] == "Pro"
         assert d["case_reference"] == "REF-1"
@@ -141,7 +141,7 @@ class TestAccept:
         })
         d = r.json()
         code = d["case_code"]
-        toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
+        toks = {i["role"]: i["link"].split("invite=")[-1] for i in d["invitations"]}
 
         # Parent B registers with invite + accepts via the shared case code
         pb = new_user(API, "parent", "B", email=eb, invite=toks["b"])
@@ -167,7 +167,7 @@ class TestAccept:
             "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
         })
         inv_a = [i for i in r.json()["invitations"] if i["invitee_email"] == ea][0]
-        token = inv_a["link"].rsplit("/", 1)[-1]
+        token = inv_a["link"].split("invite=")[-1]
 
         r = requests.get(f"{API}/joint/invitations/lookup/{token}")
         assert r.status_code == 200
@@ -189,7 +189,7 @@ class TestAccept:
             "parent_a_name": "A", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:8]}@example.com",
             "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
         })
-        tok = r.json()["invitations"][0]["link"].rsplit("/", 1)[-1]
+        tok = r.json()["invitations"][0]["link"].split("invite=")[-1]
         # Different email than the invitation was sent to
         s = requests.Session()
         r = s.post(f"{API}/auth/register", json={
@@ -315,7 +315,7 @@ class TestInvitationManagement:
         d = r.json()
         rid = d["id"]
         inv = self._pending_inv(pro, rid, "a")
-        toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
+        toks = {i["role"]: i["link"].split("invite=")[-1] for i in d["invitations"]}
         pa = new_user(API, "parent", "A", email=ea, invite=toks["a"])
         pb_email = [i["invitee_email"] for i in d["invitations"] if i["role"] == "b"][0]
         pb = new_user(API, "parent", "B", email=pb_email, invite=toks["b"])
@@ -335,7 +335,7 @@ class TestInvitationManagement:
             "parent_b_name": "B", "parent_b_email": f"t_pb_{uuid.uuid4().hex[:8]}@example.com",
         })
         d = r.json()
-        toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
+        toks = {i["role"]: i["link"].split("invite=")[-1] for i in d["invitations"]}
         pa = new_user(API, "parent", "A", email=ea, invite=toks["a"])
         inv = self._pending_inv(pro, d["id"], "a")
         r = pro.post(f"{API}/joint/invitations/{inv['id']}/cancel")

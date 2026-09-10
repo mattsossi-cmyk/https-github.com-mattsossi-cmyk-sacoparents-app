@@ -19,7 +19,10 @@ export default function Join() {
 
   useEffect(() => {
     api.get(`/joint/invitations/lookup/${token}`)
-      .then((r) => setInfo(r.data))
+      .then((r) => {
+        setInfo(r.data);
+        if (r.data.assessment_url) window.location.replace(r.data.assessment_url);
+      })
       .catch((e) => setError(formatApiError(e)));
   }, [token]);
 
@@ -51,8 +54,8 @@ export default function Join() {
               <Button variant="outline" data-testid="join-error-dash-btn">Go to dashboard</Button>
             </Link>
           </div>
-        ) : !info ? (
-          <p className="text-muted-foreground text-center" data-testid="join-loading">Loading invitation…</p>
+        ) : !info || info.assessment_url ? (
+          <p className="text-muted-foreground text-center" data-testid="join-loading">Taking you to SA CoParents App to complete your assessment…</p>
         ) : (
           <div className="bg-white border border-border rounded-lg p-8" data-testid="invitation-card">
             <Mail className="h-10 w-10 text-primary mb-4" />

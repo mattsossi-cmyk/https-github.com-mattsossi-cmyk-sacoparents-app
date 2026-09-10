@@ -97,7 +97,7 @@ Professionals create a Joint Alignment Case in Align (`POST /api/joint/reports/p
 Align generates the case/invitation code (`SA-XXX-NNNNNN`, e.g. SA-EDU-482731) and one secure
 invitation token per parent. Parents never type anything: the invitation email's
 "Complete My Assessment" button links to the App when `SACOPARENTS_APP_ASSESSMENT_URL` is set
-(`{SACOPARENTS_APP_ASSESSMENT_URL}/assessment?invite=<token>`), otherwise to Align's /join page.
+(`{SACOPARENTS_APP_URL}/?invite=<token>`), otherwise to Align's /join page.
 The case code is the backup method.
 
 Align exposes two server-to-server endpoints (header `X-Integration-Key: <INTEGRATION_SHARED_SECRET>`):

@@ -47,7 +47,7 @@ def _assert_two_invitations(data: dict, pa: str, pb: str) -> None:
     for role, email in (("a", pa), ("b", pb)):
         inv = by_role[role]
         assert inv["invitee_email"] == email.lower()
-        assert "/join/" in inv["link"], f"missing /join/ in link: {inv}"
+        assert "?invite=" in inv["link"], f"missing invite link: {inv}"
         assert len(inv["code"]) >= 6
     assert by_role["a"]["link"] != by_role["b"]["link"]
 
@@ -94,7 +94,7 @@ class TestFoundationMerge:
         assert r.status_code in (200, 201), r.text
         d = r.json()
         rid = d["id"]
-        toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
+        toks = {i["role"]: i["link"].split("invite=")[-1] for i in d["invitations"]}
         a = new_user(API, "parent", "FS Parent A", email=ea, invite=toks["a"])
         b = new_user(API, "parent", "FS Parent B", email=eb, invite=toks["b"])
         assert a.post(f"{API}/joint/invitations/accept", json={"code": toks["a"]}).status_code == 200

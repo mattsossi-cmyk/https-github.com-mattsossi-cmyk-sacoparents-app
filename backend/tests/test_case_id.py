@@ -15,7 +15,8 @@ def test_case_id_format_and_distinct_parent_tokens() -> None:
     invs = d["invitations"]
     assert {i["role"] for i in invs} == {"a", "b"}
     assert invs[0]["link"] != invs[1]["link"]
-    assert invs[0]["link"].split("/join/")[1] != invs[1]["link"].split("/join/")[1]
+    assert invs[0]["link"].split("invite=")[1] != invs[1]["link"].split("invite=")[1]
+    assert all(i["link"].startswith("https://sacoparentsapp.online/?invite=") for i in invs)
     assert d["case_status"] == "INVITED"
 
 

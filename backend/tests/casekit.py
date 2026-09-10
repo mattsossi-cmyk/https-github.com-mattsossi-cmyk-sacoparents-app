@@ -70,7 +70,7 @@ def new_case(api: str, spec: CaseSpec | None = None, **overrides) -> tuple:
     r = pro.post(f"{api}/joint/reports/professional", json=payload)
     assert r.status_code == 200, f"pro create failed: {r.status_code} {r.text}"
     d = r.json()
-    toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
+    toks = {i["role"]: i["link"].split("invite=")[-1] for i in d["invitations"]}
     pa = new_user(api, "parent", "Parent A", email=ea, invite=toks["a"])
     pb = new_user(api, "parent", "Parent B", email=eb, invite=toks["b"])
     for s, tok in ((pa, toks["a"]), (pb, toks["b"])):

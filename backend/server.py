@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.3"
+BUILD_ID = "2026-09-10.4"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -50,7 +50,11 @@ WEBHOOK_CRON_SECRET = os.environ["WEBHOOK_CRON_SECRET"]
 
 EXTERNAL_APP_URL = os.environ["SACOPARENTS_APP_URL"].rstrip("/")
 INTEGRATION_SECRET = os.environ["INTEGRATION_SHARED_SECRET"]
-APP_ASSESSMENT_URL = os.environ.get("SACOPARENTS_APP_ASSESSMENT_URL", "").rstrip("/")
+APP_ASSESSMENT_URL = (os.environ.get("SACOPARENTS_APP_ASSESSMENT_URL") or EXTERNAL_APP_URL).rstrip("/")
+
+
+def invite_link(token: str) -> str:
+    return f"{APP_ASSESSMENT_URL}/?invite={token}"
 
 
 def set_auth_cookies(response: Response, user_id: str, email: str):
@@ -794,7 +798,7 @@ def _invitation_public(invitation: dict) -> dict:
     return {
         "id": invitation["id"],
         "code": invitation["code"],
-        "link": f"{app_url()}/join/{invitation['token']}",
+        "link": invite_link(invitation["token"]),
         "invitee_email": invitation["invitee_email"],
         "status": invitation["status"],
     }
@@ -873,7 +877,7 @@ class InviteSpec:
 
 
 def _invite_email_content(spec: InviteSpec, token: str) -> tuple[str, str]:
-    link = f"{APP_ASSESSMENT_URL}/assessment?invite={token}" if APP_ASSESSMENT_URL else f"{app_url()}/join/{token}"
+    link = invite_link(token)
     subject = "Invitation to Complete Your SA CoParents Assessment"
     closing = (
         "After both parents have completed the requested assessment, SA CoParents Align will prepare "
@@ -1029,7 +1033,7 @@ async def create_joint_report(body: JointReportIn, user=Depends(get_current_user
     inv = await create_invitation(InviteSpec(report_id=rid, role="b", invitee_name=body.co_parent_name, invitee_email=body.co_parent_email, inviter_name=user.get("name", "Your co-parent"), child_name=doc["child_name"], subject_label=label, code=case_code))
     if mediator:
         await _notify_mediator(mediator, user, doc, label)
-    return {**joint_public(doc, user), "invitation": {"id": inv["id"], "code": inv["code"], "link": f"{app_url()}/join/{inv['token']}", "invitee_email": inv["invitee_email"], "status": "pending"}}
+    return {**joint_public(doc, user), "invitation": {"id": inv["id"], "code": inv["code"], "link": invite_link(inv["token"]), "invitee_email": inv["invitee_email"], "status": "pending"}}
 
 
 @api.post("/joint/reports/professional")
@@ -1064,7 +1068,7 @@ async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_curre
     inv_a = await create_invitation(InviteSpec(report_id=rid, role="a", invitee_name=body.parent_a_name, invitee_email=body.parent_a_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label=label, code=case_code, via_professional=True))
     inv_b = await create_invitation(InviteSpec(report_id=rid, role="b", invitee_name=body.parent_b_name, invitee_email=body.parent_b_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label=label, code=case_code, via_professional=True))
     return {**joint_public(doc, user), "invitations": [
-        {"role": i["role"], "code": i["code"], "link": f"{app_url()}/join/{i['token']}", "invitee_email": i["invitee_email"], "invitee_name": i["invitee_name"], "status": "pending"}
+        {"role": i["role"], "code": i["code"], "link": invite_link(i["token"]), "invitee_email": i["invitee_email"], "invitee_name": i["invitee_name"], "status": "pending"}
         for i in (inv_a, inv_b)
     ]}
 
@@ -1349,6 +1353,7 @@ async def lookup_invitation(token: str):
         "child_name": report["child_name"] if report else "",
         "subject_label": report["subject_label"] if report else "",
         "professional_verified": bool(pro and pro.get("verification_level") == "credentials_verified"),
+        "assessment_url": invite_link(token),
     }
 
 
@@ -1902,8 +1907,8 @@ async def create_agreement(body: AgreementIn, user=Depends(get_current_user)):
     inv_a = await create_invitation(InviteSpec(report_id=rid, role="a", invitee_name=body.parent_a_name, invitee_email=pa_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label="Co-Parenting Agreement", code=case_code, via_professional=True))
     inv_b = await create_invitation(InviteSpec(report_id=rid, role="b", invitee_name=body.parent_b_name, invitee_email=pb_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label="Co-Parenting Agreement", code=case_code, via_professional=True))
     return {**joint_public(doc, user), "invitations": [
-        {"id": inv_a["id"], "role": "a", "code": inv_a["code"], "link": f"{app_url()}/join/{inv_a['token']}", "invitee_email": inv_a["invitee_email"], "email": inv_a["invitee_email"], "status": "pending"},
-        {"id": inv_b["id"], "role": "b", "code": inv_b["code"], "link": f"{app_url()}/join/{inv_b['token']}", "invitee_email": inv_b["invitee_email"], "email": inv_b["invitee_email"], "status": "pending"},
+        {"id": inv_a["id"], "role": "a", "code": inv_a["code"], "link": invite_link(inv_a["token"]), "invitee_email": inv_a["invitee_email"], "email": inv_a["invitee_email"], "status": "pending"},
+        {"id": inv_b["id"], "role": "b", "code": inv_b["code"], "link": invite_link(inv_b["token"]), "invitee_email": inv_b["invitee_email"], "email": inv_b["invitee_email"], "status": "pending"},
     ]}
 
 

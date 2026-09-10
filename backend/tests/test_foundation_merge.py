@@ -24,7 +24,7 @@ def _agreement(child="FS Kid"):
     })
     assert r.status_code == 200, r.text
     d = r.json()
-    toks = {i["role"]: i["link"].rsplit("/", 1)[-1] for i in d["invitations"]}
+    toks = {i["role"]: i["link"].split("invite=")[-1] for i in d["invitations"]}
     a = new_user(API, "parent", "A", email=ea, invite=toks["a"])
     b = new_user(API, "parent", "B", email=eb, invite=toks["b"])
     for s, tok in ((a, toks["a"]), (b, toks["b"])):

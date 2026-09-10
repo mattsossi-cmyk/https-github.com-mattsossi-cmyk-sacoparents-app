@@ -30,7 +30,7 @@ def _assert_two_parent_links(data: dict, pa: str, pb: str) -> None:
     for role, email in (("a", pa), ("b", pb)):
         inv = by_role[role]
         assert inv["invitee_email"] == email.lower()
-        assert "/join/" in inv["link"], f"missing join link: {inv}"
+        assert "?invite=" in inv["link"], f"missing invite link: {inv}"
         assert len(inv["code"]) >= 6
     # tokens/links must be unique per parent
     assert by_role["a"]["link"] != by_role["b"]["link"]
