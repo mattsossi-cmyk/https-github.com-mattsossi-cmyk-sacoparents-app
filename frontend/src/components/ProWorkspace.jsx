@@ -39,6 +39,22 @@ export function ProWorkspace({ rid }) {
             ))}
           </ul>
         )}
+        {activity && (activity.lifecycle || []).length > 0 && (
+          <div className="mt-6" data-testid="pro-lifecycle">
+            <h3 className="text-sm font-semibold">Case lifecycle</h3>
+            <ul className="mt-2 space-y-1.5 text-sm" data-testid="pro-lifecycle-list">
+              {activity.lifecycle.map((ev, i) => (
+                <li key={i} className="border border-border rounded-md px-3 py-2" data-testid={`pro-lifecycle-event-${i}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span><span className="font-medium">{ev.action}</span> <span className="text-muted-foreground">· {ev.by_name || "Unknown"} ({ev.by_role})</span></span>
+                    <span className="text-xs text-muted-foreground shrink-0">{String(ev.at).slice(0, 16).replace("T", " ")}</span>
+                  </div>
+                  {ev.note && <p className="text-xs text-muted-foreground mt-1 italic">“{ev.note}”</p>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {activity && (
           <div className="mt-6" data-testid="pro-access-log">
             <div className="flex items-center justify-between">

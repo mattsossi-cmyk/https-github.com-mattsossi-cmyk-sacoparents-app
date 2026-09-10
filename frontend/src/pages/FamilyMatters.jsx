@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Archive, ArchiveRestore, Search, CheckCircle2, Clock, ShieldAlert, AlertTriangle, StickyNote, RefreshCw, Lock } from "lucide-react";
+import { ArrowLeft, Archive, ArchiveRestore, Search, CheckCircle2, Clock, ShieldAlert, AlertTriangle, StickyNote, RefreshCw, Lock, FileDown } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
@@ -80,6 +80,11 @@ function MatterRow({ j, onToggle, onReissue, onClose }) {
       </div>
       <div className="flex gap-2 shrink-0">
         <Link to={`/joint/${j.id}`} data-testid={`matter-open-link-${j.id}`}><Button size="sm" variant={s.key === "ready" ? "default" : "outline"} data-testid={`matter-open-btn-${j.id}`}>{s.key === "ready" ? "View Report" : "Open"}</Button></Link>
+        {j.closed_at && (
+          <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${j.id}/closing-summary.pdf`} data-testid={`matter-closing-summary-link-${j.id}`}>
+            <Button size="sm" variant="outline" className="gap-1.5" data-testid={`matter-closing-summary-btn-${j.id}`}><FileDown className="h-3.5 w-3.5" /> Closing summary</Button>
+          </a>
+        )}
         <Button size="sm" variant="ghost" onClick={() => setShowNotes((v) => !v)} className="gap-1.5" data-testid={`matter-notes-btn-${j.id}`}><StickyNote className="h-3.5 w-3.5" /> Notes</Button>
         <Button size="sm" variant="ghost" onClick={() => onToggle(j)} className="gap-1.5" data-testid={`matter-archive-btn-${j.id}`}>
           {j.archived ? <><ArchiveRestore className="h-3.5 w-3.5" /> {j.closed_at ? "Reopen" : "Restore"}</> : <><Archive className="h-3.5 w-3.5" /> Archive</>}

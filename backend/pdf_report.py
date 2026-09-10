@@ -663,3 +663,57 @@ def build_methodology_pdf(site_url: str) -> bytes:
         "professional judgment, legal advice, psychological evaluation, safety assessment, or individualized case management. "
         f"Learn more: {site_url}/methodology"))
     return bytes(pdf.output())
+
+
+def _fmt_date(iso) -> str:
+    return str(iso or "")[:10] or "—"
+
+
+def build_closing_summary_pdf(r: dict) -> bytes:
+    """One-page case closing summary for the professional's file."""
+    pdf = _new_pdf()
+    pdf.set_auto_page_break(auto=False)
+    _title_header(pdf, "Case Closing Summary", [
+        f"Case ID: {r.get('case_code') or r.get('id', '')[:8]}",
+        f"Subject: {r.get('subject_label', 'Joint Alignment Report')}",
+        f"Professional: {r.get('professional_name', '')}",
+    ])
+    pdf.ln(4)
+    rows = [
+        ("Case opened", _fmt_date(r.get("created_at"))),
+        ("Case closed", _fmt_date(r.get("closed_at"))),
+        ("Closed by", r.get("closed_by_name") or r.get("professional_name", "")),
+        ("Professional reference", r.get("case_reference") or "—"),
+        ("Child", r.get("child_name", "")),
+    ]
+    for label, value in rows:
+        pdf.set_font(FONT, "B", 10)
+        pdf.set_text_color(*DARK)
+        pdf.cell(55, 6.5, _s(label))
+        pdf.set_font(FONT, "", 10)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(0, 6.5, _s(str(value)), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(3)
+    _section_title(pdf, 1, "Parent participation")
+    for role, label in (("a", "Parent A"), ("b", "Parent B")):
+        p = (r.get("participants") or {}).get(role) or {}
+        done = bool((r.get("responses") or {}).get(role))
+        status = f"Completed {_fmt_date((r.get('responses') or {}).get(role, {}).get('completed_at'))}" if done else ("Accepted, not completed" if p.get("accepted") else "Invited, not completed")
+        _body(pdf, f"{label}: {p.get('name') or '—'} — {status}")
+    pdf.ln(2)
+    _section_title(pdf, 2, "Joint Alignment Report")
+    generated = r.get("report_generated_at")
+    _body(pdf, f"Report first generated: {_fmt_date(generated)}" if generated else "No Joint Alignment Report was generated for this case.")
+    _body(pdf, f"Report views: {r.get('view_count', 0)}   PDF downloads: {r.get('download_count', 0)}")
+    pdf.ln(2)
+    _section_title(pdf, 3, "Closing note")
+    _body(pdf, r.get("closed_note") or "No closing note recorded.", italic=not r.get("closed_note"))
+    pdf.ln(2)
+    _section_title(pdf, 4, "Case timeline")
+    for ev in (r.get("lifecycle") or [])[:8]:
+        _body(pdf, f"{str(ev.get('at', ''))[:16].replace('T', ' ')} — {ev.get('action', '')} ({ev.get('by_name', '')})")
+    pdf.ln(3)
+    pdf.set_font(FONT, "I", 8)
+    pdf.set_text_color(*GRAY)
+    pdf.multi_cell(0, 4, _s("This summary records administrative case activity only. It contains no parent assessment responses and is not a finding, recommendation, or evaluation."))
+    return bytes(pdf.output())

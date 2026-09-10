@@ -30,7 +30,7 @@ from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_pay
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
 from joint_engine import generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
-from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, verify_qr_png
+from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
 from email_utils import send_email, send_email_detailed, EMAIL_FROM_NAME, FIXTURE_EMAIL_RE, RESEND_FROM_EMAIL
@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.7"
+BUILD_ID = "2026-09-10.8"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -1573,7 +1573,8 @@ async def report_activity(rid: str, user=Depends(get_current_user)):
     events = await db.access_events.find({"report_id": rid}, {"_id": 0}).sort("at", -1).to_list(300)
     access_log = [e for e in events if e.get("kind") in ("view", "download")]
     return {
-        "invitations": invs, "access_events": [e for e in events if e.get("kind") not in ("view", "download")],
+        "invitations": invs, "access_events": [e for e in events if e.get("kind") not in ("view", "download", "lifecycle")],
+        "lifecycle": [e for e in events if e.get("kind") == "lifecycle"],
         "access_log": access_log,
         "download_count": sum(1 for e in access_log if e["kind"] == "download"),
         "view_count": sum(1 for e in access_log if e["kind"] == "view"),
@@ -2218,7 +2219,32 @@ async def close_joint_report(rid: str, body: CloseIn, user=Depends(get_current_u
     else:
         updates = {"closed_at": None, "closed_by": None, "closed_note": "", "archived": False, "archived_at": None}
     await db.joint_reports.update_one({"id": rid}, {"$set": updates})
+    await db.access_events.insert_one({
+        "report_id": rid, "kind": "lifecycle", "action": "Case closed" if body.closed else "Case reopened",
+        "note": body.note.strip()[:500] if body.closed else "", "at": now,
+        "by": user["_id"], "by_name": user.get("name", ""), "by_role": _actor_label(doc, user),
+    })
     return {"ok": True, "closed": body.closed, "case_status": case_status({**doc, **updates})}
+
+
+@api.get("/joint/reports/{rid}/closing-summary.pdf")
+async def closing_summary_pdf(rid: str, user=Depends(get_current_user)):
+    doc = await db.joint_reports.find_one({"id": rid}, {"_id": 0})
+    if not doc or (doc.get("created_by") != user["_id"] and doc.get("professional_id") != user["_id"]):
+        raise HTTPException(status_code=404, detail="Report not found")
+    if not doc.get("closed_at"):
+        raise HTTPException(status_code=400, detail="Close the case first to generate its closing summary")
+    events = await db.access_events.find({"report_id": rid}, {"_id": 0}).sort("at", 1).to_list(500)
+    closer = await db.users.find_one({"_id": doc.get("closed_by")}, {"name": 1}) if doc.get("closed_by") else None
+    data = {
+        **doc, "subject_label": doc.get("subject_label", "Joint Alignment Report"), "professional_name": user.get("name", ""),
+        "closed_by_name": (closer or {}).get("name", ""),
+        "view_count": sum(1 for e in events if e.get("kind") == "view"),
+        "download_count": sum(1 for e in events if e.get("kind") == "download"),
+        "lifecycle": [e for e in events if e.get("kind") == "lifecycle"],
+    }
+    return Response(content=build_closing_summary_pdf(data), media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="closing-summary-{doc.get("case_code", rid[:8])}.pdf"'})
 
 
 PRO_INVITE_TTL_HOURS = 72

@@ -466,3 +466,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-09-10 — Close Case action (BUILD 2026-09-10.7; test_close_case 1/1)
 - `PATCH /api/joint/reports/{rid}/close` {closed, note}: sets closed_at/closed_by/closed_note + archived (hidden from active Cases table & dashboard cards); closed=false reopens. `case_status` → CLOSED; joint_public exposes `closed_at`. UI: "Close" link in Cases table row + "Close case" button on /matters rows (prompt for optional note); closed matters show "Closed" badge with "Reopen".
 - DNS check (dig): sacoparentsalign.com has NO SPF/DKIM/DMARC records yet; Resend key still invalid (sk_). Prod still 2026-09-10.2.
+
+## 2026-09-10 — Close/reopen audit trail + closing summary PDF (BUILD 2026-09-10.8; test_closing_summary 1/1)
+- Close/reopen now inserts `access_events` kind=lifecycle {action "Case closed"/"Case reopened", note, by, by_name, by_role}. Activity endpoint returns `lifecycle[]` (excluded from access_events). ProWorkspace "Case lifecycle" list under Consent & Activity.
+- `GET /api/joint/reports/{rid}/closing-summary.pdf` (owner; 400 unless closed): one page — case ID/subject/professional, opened/closed/closed-by/reference/child, parent participation, report generated + view/download counts, closing note, timeline, disclaimer. "Closing summary" button on closed matters in /matters.
+- Still blocked: valid Resend key (`re_`) not received; DNS records absent; prod on 2026-09-10.2.
