@@ -427,6 +427,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `/professionals` page (Professionals.jsx: search, cards, VerifiedBadge, contact links, "Refer a case" dialog w/ matter select). Dashboard: `ProfessionalsPreview` section "Available Professionals" (4 compact cards + Full directory) for approved pros, plus 5th primary action card `action-professionals`. Mobile overflow fix: grid-cols-1 base, min-w-0/overflow-hidden card, break-all email.
 
 
+## 2026-09-10 — PRODUCTION VERIFIED build 2026-09-09.9
+- Live: one-click reset link endpoint (token body → 400 not 422), admin email-test (401 unauth), 15-min codes. NOT live: .10 directory (`/api/professionals/directory` 404). Albert login probe still 401 (indeterminate). Preview test account approval.test.pro1 does not log in on prod (separate DB) — use Matt's prod account for prod UI checks.
+
+
 
 
 
