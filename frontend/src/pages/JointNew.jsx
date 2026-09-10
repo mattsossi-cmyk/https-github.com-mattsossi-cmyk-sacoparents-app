@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
+import { InvitationPreviewButton } from "@/components/InvitationPreview";
 
 const PRO_ASSESSMENTS = [
   { key: "co_parenting", label: "Co-Parenting", hint: "Shared parenting priorities and routines" },
@@ -250,9 +251,19 @@ export default function JointNew() {
                 <div className="mt-8 flex justify-between">
                   {isPro ? <button type="button" onClick={() => setStep(1)} className="text-sm text-muted-foreground hover:text-foreground" data-testid="subject-back-btn">Back</button> : <span />}
                   {isPro ? (
-                    <Button onClick={submit} disabled={activeSubjects.length === 0 || busy} className="gap-2 uppercase tracking-wide" data-testid="send-invitation-btn">
-                      {busy ? "Sending…" : "Send Invitations"} <Mail className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {!isAgreement && (
+                        <InvitationPreviewButton
+                          disabled={activeSubjects.length === 0 || busy}
+                          sending={busy}
+                          onSend={submit}
+                          payload={{ child_name: childName, subject: multiSubjects.length > 1 ? multiSubjects[0] : subject, subjects: multiSubjects.length > 1 ? multiSubjects : [], custom_subject: customSubject, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail }}
+                        />
+                      )}
+                      <Button onClick={submit} disabled={activeSubjects.length === 0 || busy} className="gap-2 uppercase tracking-wide" data-testid="send-invitation-btn">
+                        {busy ? "Sending…" : "Send Invitations"} <Mail className="h-4 w-4" />
+                      </Button>
+                    </div>
                   ) : (
                     <Button onClick={() => setStep(1)} disabled={!subject || (subject === "custom" && !customSubject.trim())} className="gap-2" data-testid="subject-next-btn">
                       Continue <ArrowRight className="h-4 w-4" />

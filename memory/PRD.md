@@ -454,3 +454,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-09-10 — Parent invitation links now route to sacoparentsapp.online (BUILD 2026-09-10.4)
 - Root cause: `SACOPARENTS_APP_ASSESSMENT_URL` unset → email/dashboard links fell back to Align `/join/<token>`. Fix: `APP_ASSESSMENT_URL` defaults to `SACOPARENTS_APP_URL`; new `invite_link(token)` = `{APP}/?invite=<token>` (App rewrites /assessment to /, dropping the query — root keeps it) used for invitation emails and every `link` field in API responses (create, list, pending, reissue, FV prepare). `/join/<token>` on Align now redirects to the App (lookup returns `assessment_url`; Join.jsx `window.location.replace`). Tests updated to extract token via `split("invite=")`.
+
+## 2026-09-10 — Invitation email preview (BUILD 2026-09-10.5; test_invitation_preview 2/2)
+- `POST /api/joint/invitations/preview` (approved pros): renders both parent invitation emails via `_invite_email_content` with placeholder token/case code — nothing stored or sent. `InvitationPreview.jsx` "Preview emails" button beside Send Invitations on wizard step 3: dialog with Parent A/B tabs, subject, iframe body, "Send Invitations" from the dialog.
+- PROD at check time: 2026-09-10.2 (revoke live; .3 Case IDs/.4 App links/.5 preview pending deploy). App-side ?invite= handling and custom sender domain: blocked on sibling project / owner answers.

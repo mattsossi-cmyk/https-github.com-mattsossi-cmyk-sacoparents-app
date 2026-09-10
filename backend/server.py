@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.4"
+BUILD_ID = "2026-09-10.5"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -1910,6 +1910,31 @@ async def create_agreement(body: AgreementIn, user=Depends(get_current_user)):
         {"id": inv_a["id"], "role": "a", "code": inv_a["code"], "link": invite_link(inv_a["token"]), "invitee_email": inv_a["invitee_email"], "email": inv_a["invitee_email"], "status": "pending"},
         {"id": inv_b["id"], "role": "b", "code": inv_b["code"], "link": invite_link(inv_b["token"]), "invitee_email": inv_b["invitee_email"], "email": inv_b["invitee_email"], "status": "pending"},
     ]}
+
+
+class InvitePreviewIn(BaseModel):
+    child_name: str
+    subject: str = ""
+    subjects: list[str] = []
+    custom_subject: str = ""
+    parent_a_name: str
+    parent_a_email: str = ""
+    parent_b_name: str
+    parent_b_email: str = ""
+
+
+@api.post("/joint/invitations/preview")
+async def preview_invitations(body: InvitePreviewIn, user=Depends(get_current_user)):
+    require_approved_professional(user, "Only approved professionals can preview invitations")
+    _subject, _keys, label = resolve_subjects(body.subject, body.subjects, body.custom_subject)
+    inviter = user.get("name", "A professional")
+    out = []
+    for role, name, email in (("a", body.parent_a_name, body.parent_a_email), ("b", body.parent_b_name, body.parent_b_email)):
+        spec = InviteSpec(report_id="preview", role=role, invitee_name=name.strip() or f"Parent {role.upper()}", invitee_email=email.strip().lower(),
+                          inviter_name=inviter, child_name=body.child_name.strip(), subject_label=label, code="SA-26-XXX-PREVIEW", via_professional=True)
+        subject, html = _invite_email_content(spec, "PREVIEW-TOKEN")
+        out.append({"role": role, "to": spec.invitee_email, "subject": subject, "html": html})
+    return {"previews": out}
 
 
 class ProRequestIn(BaseModel):
