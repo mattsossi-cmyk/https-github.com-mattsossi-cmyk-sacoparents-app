@@ -29,8 +29,8 @@ import {
 
 import AppShell from "../components/AppShell";
 import { toast } from "sonner";
-
-const API = process.env.REACT_APP_BACKEND_URL + "/api";
+import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 const ASSESSMENT_LABELS = {
   "co-parenting": "Co-Parenting Assessment",
@@ -50,17 +50,10 @@ const ASSESSMENT_ROUTES = {
   "special-needs": "/special-needs-v2",
 };
 
-function getToken() {
-  try {
-    return localStorage.getItem("token");
-  } catch {
-    return null;
-  }
-}
-
 export default function JoinInvitation() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [preview, setPreview] = useState(null);
   const [previewError, setPreviewError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -75,22 +68,30 @@ export default function JoinInvitation() {
   const autoFocusedRef = useRef(false);
   const [emailMismatch, setEmailMismatch] = useState(false);
 
-  const authToken = getToken();
+  // Auth is cookie-based (httpOnly + withCredentials); the presence
+  // of `user` on the AuthContext is the source of truth. Wait for
+  // the /auth/me probe to finish so we don't show the auth-wall for
+  // a signed-in parent during the first render tick.
+  const isSignedIn = !!user;
+  const authKnown = !authLoading;
 
   // 1. Fetch invitation preview (no auth required).
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const r = await fetch(`${API}/joint-alignment/invitation/${token}`);
-        const body = await r.json();
+        const r = await api.get(`/joint-alignment/invitation/${token}`);
         if (cancelled) return;
-        if (r.ok) setPreview(body);
-        else if (r.status === 410)
-          setPreviewError({ code: 410, msg: body.detail || "Invitation expired" });
-        else setPreviewError({ code: r.status, msg: body.detail || "Invitation not found" });
-      } catch (e) {
-        if (!cancelled) setPreviewError({ code: 0, msg: "Network error" });
+        setPreview(r.data);
+      } catch (err) {
+        if (cancelled) return;
+        const status = err?.response?.status ?? 0;
+        const detail = err?.response?.data?.detail || "";
+        if (status === 410)
+          setPreviewError({ code: 410, msg: detail || "Invitation expired" });
+        else if (status)
+          setPreviewError({ code: status, msg: detail || "Invitation not found" });
+        else setPreviewError({ code: 0, msg: "Network error" });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -133,7 +134,7 @@ export default function JoinInvitation() {
 
   // 2. Auto-accept when the parent is signed in and the preview loaded.
   useEffect(() => {
-    if (!authToken || !preview || accepted || previewError) return;
+    if (!authKnown || !isSignedIn || !preview || accepted || previewError) return;
     if (preview.already_accepted) {
       setAccepted(true);
       return;
@@ -141,31 +142,25 @@ export default function JoinInvitation() {
     (async () => {
       setAccepting(true);
       try {
-        const r = await fetch(
-          `${API}/joint-alignment/invitation/${token}/accept`,
-          {
-            method: "POST",
-            headers: { Authorization: `Bearer ${authToken}` },
-          }
-        );
-        const body = await r.json();
-        if (r.ok) {
-          setAccepted(true);
-          toast.success("Invitation linked to your account");
-        } else if (r.status === 403) {
+        // Session cookie is sent automatically via api.withCredentials.
+        await api.post(`/joint-alignment/invitation/${token}/accept`);
+        setAccepted(true);
+        toast.success("Invitation linked to your account");
+      } catch (err) {
+        const status = err?.response?.status ?? 0;
+        const detail = err?.response?.data?.detail || "";
+        if (status === 403) {
           setEmailMismatch(true);
-        } else if (r.status === 410) {
-          setPreviewError({ code: 410, msg: body.detail || "Invitation expired" });
+        } else if (status === 410) {
+          setPreviewError({ code: 410, msg: detail || "Invitation expired" });
         } else {
-          toast.error(body.detail || "Could not accept invitation");
+          toast.error(detail || "Could not accept invitation");
         }
-      } catch (e) {
-        toast.error("Network error");
       } finally {
         setAccepting(false);
       }
     })();
-  }, [authToken, preview, accepted, previewError, token]);
+  }, [authKnown, isSignedIn, preview, accepted, previewError, token]);
 
   const gotoAssessment = () => {
     if (!preview) return;
@@ -280,7 +275,7 @@ export default function JoinInvitation() {
               </div>
 
               {/* Auth wall */}
-              {!authToken && (
+              {authKnown && !isSignedIn && (
                 <div
                   className="mt-6 rounded-2xl border-2 border-[#3D1A78] bg-white p-5"
                   data-testid="join-invitation-auth-wall"
@@ -324,7 +319,7 @@ export default function JoinInvitation() {
               )}
 
               {/* Email mismatch */}
-              {authToken && emailMismatch && (
+              {isSignedIn && emailMismatch && (
                 <div
                   className="mt-6 rounded-2xl border-2 border-[#8F1D24] bg-[#FDECEC] p-5"
                   data-testid="join-invitation-email-mismatch"
@@ -342,7 +337,7 @@ export default function JoinInvitation() {
               )}
 
               {/* Accepting spinner */}
-              {authToken && accepting && !accepted && !emailMismatch && (
+              {isSignedIn && accepting && !accepted && !emailMismatch && (
                 <div
                   className="mt-6 flex items-center gap-3 text-[#4B4567]"
                   data-testid="join-invitation-accepting"
@@ -353,7 +348,7 @@ export default function JoinInvitation() {
               )}
 
               {/* Accepted */}
-              {authToken && accepted && (
+              {isSignedIn && accepted && (
                 <div
                   className="mt-6 rounded-2xl border-2 border-[#1E7A55] bg-[#F1F9F4] p-5"
                   data-testid="join-invitation-accepted"

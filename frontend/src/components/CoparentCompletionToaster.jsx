@@ -16,8 +16,9 @@
  */
 import React, { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
-const API = process.env.REACT_APP_BACKEND_URL + "/api";
 const POLL_MS = 60_000;
 const STORAGE_KEY = "coparentCompletionSeenAt";
 
@@ -46,14 +47,6 @@ function writeSeen(iso) {
   }
 }
 
-function getAuthToken() {
-  try {
-    return localStorage.getItem("token");
-  } catch {
-    return null;
-  }
-}
-
 function firstName(name) {
   return (name || "").trim().split(/\s+/)[0] || "Your co-parent";
 }
@@ -61,19 +54,16 @@ function firstName(name) {
 export default function CoparentCompletionToaster() {
   const bootedRef = useRef(false);
   const toastedRef = useRef(new Set());
-  const authToken = getAuthToken();
+  const { user } = useAuth();
+  const isSignedIn = !!user;
 
   const poll = useCallback(async () => {
-    const t = getAuthToken();
-    if (!t) return;
     try {
-      const r = await fetch(`${API}/joint-alignment/mine`, {
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      if (!r.ok) return;
-      const body = await r.json();
+      // Session cookie is auto-sent by api.withCredentials — a 401
+      // just means "not signed in yet" and lands in the catch.
+      const r = await api.get("/joint-alignment/mine");
       const events = [];
-      for (const c of body.cases || []) {
+      for (const c of r.data?.cases || []) {
         const completedAt = c?.coparent?.completed_at;
         if (!completedAt) continue;
         events.push({
@@ -154,12 +144,12 @@ export default function CoparentCompletionToaster() {
       );
       writeSeen(newestIso);
     } catch {
-      /* Network hiccup — retry on next tick */
+      /* Network hiccup or 401 — retry on next tick */
     }
   }, []);
 
   useEffect(() => {
-    if (!authToken) return;
+    if (!isSignedIn) return;
     // Small delay so the initial dashboard render isn't racing our
     // fetch burst.
     const boot = setTimeout(poll, 2500);
@@ -168,16 +158,16 @@ export default function CoparentCompletionToaster() {
       clearTimeout(boot);
       clearInterval(interval);
     };
-  }, [authToken, poll]);
+  }, [isSignedIn, poll]);
 
   // Re-poll on tab focus so a parent switching back from email gets
   // a toast without waiting for the next interval tick.
   useEffect(() => {
-    if (!authToken) return;
+    if (!isSignedIn) return;
     const onFocus = () => poll();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [authToken, poll]);
+  }, [isSignedIn, poll]);
 
   return null;
 }

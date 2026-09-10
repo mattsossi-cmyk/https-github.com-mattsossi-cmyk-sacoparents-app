@@ -22,8 +22,8 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
-
-const API = process.env.REACT_APP_BACKEND_URL + "/api";
+import { api } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
 
 const ASSESSMENT_LABELS = {
   "co-parenting": "Co-Parenting",
@@ -76,44 +76,35 @@ const STATUS_META = {
   },
 };
 
-function getAuthToken() {
-  try {
-    return localStorage.getItem("token");
-  } catch {
-    return null;
-  }
-}
-
 export default function JointAlignmentRequests() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [cases, setCases] = useState(null); // null = loading, [] = empty
   const [error, setError] = useState(null);
   const [handedOffOpen, setHandedOffOpen] = useState(false);
-  const authToken = getAuthToken();
+  const isSignedIn = !!user;
 
   useEffect(() => {
-    if (!authToken) {
+    if (!isSignedIn) {
       setCases([]);
       return;
     }
     let cancelled = false;
     (async () => {
       try {
-        const r = await fetch(`${API}/joint-alignment/mine`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
-        const body = await r.json();
+        const r = await api.get("/joint-alignment/mine");
         if (cancelled) return;
-        if (r.ok) setCases(body.cases || []);
-        else setError(body.detail || "Failed to load your cases");
-      } catch (e) {
-        if (!cancelled) setError("Network error");
+        setCases(r.data?.cases || []);
+      } catch (err) {
+        if (cancelled) return;
+        const detail = err?.response?.data?.detail || "";
+        setError(detail || "Failed to load your cases");
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [authToken]);
+  }, [isSignedIn]);
 
   // Split cases into "live" vs "handed off" buckets. A case is
   // handed off once execute-release has fired (`released_at` set on

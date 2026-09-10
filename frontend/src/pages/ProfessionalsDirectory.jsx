@@ -25,8 +25,8 @@ import {
 
 import AppShell from "../components/AppShell";
 import { toast } from "sonner";
-
-const API = process.env.REACT_APP_BACKEND_URL + "/api";
+import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 const ASSESSMENT_OPTIONS = [
   { value: "co-parenting", label: "Co-Parenting" },
@@ -37,17 +37,10 @@ const ASSESSMENT_OPTIONS = [
   { value: "special-needs", label: "Special Needs" },
 ];
 
-function getAuthToken() {
-  try {
-    return localStorage.getItem("token");
-  } catch {
-    return null;
-  }
-}
-
 export default function ProfessionalsDirectory() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const { user } = useAuth();
   const preselectedType = params.get("assessment") || "";
   const [professionals, setProfessionals] = useState(null);
   const [error, setError] = useState(null);
@@ -56,18 +49,19 @@ export default function ProfessionalsDirectory() {
   const [parentMessage, setParentMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(null);
+  const isSignedIn = !!user;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const r = await fetch(`${API}/professionals`);
-        const body = await r.json();
+        const r = await api.get("/professionals");
         if (cancelled) return;
-        if (r.ok) setProfessionals(body.professionals || []);
-        else setError(body.detail || "Failed to load professionals");
-      } catch (e) {
-        if (!cancelled) setError("Network error");
+        setProfessionals(r.data?.professionals || []);
+      } catch (err) {
+        if (cancelled) return;
+        const detail = err?.response?.data?.detail || "";
+        setError(detail || "Failed to load professionals");
       }
     })();
     return () => {
@@ -77,43 +71,29 @@ export default function ProfessionalsDirectory() {
 
   const submit = async (e) => {
     e.preventDefault();
-    const t = getAuthToken();
-    if (!t) {
-      navigate(
-        `/login?redirect=${encodeURIComponent("/professionals")}`
-      );
+    if (!isSignedIn) {
+      navigate(`/login?redirect=${encodeURIComponent("/professionals")}`);
       return;
     }
     if (!chosen || !assessmentType) return;
     setSending(true);
     try {
-      const r = await fetch(
-        `${API}/professionals/${chosen.professional_id}/send-alignment-code`,
+      const r = await api.post(
+        `/professionals/${chosen.professional_id}/send-alignment-code`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${t}`,
-          },
-          body: JSON.stringify({
-            assessment_type: assessmentType,
-            parent_message: parentMessage || null,
-          }),
+          assessment_type: assessmentType,
+          parent_message: parentMessage || null,
         }
       );
-      const body = await r.json();
-      if (r.ok) {
-        setSent(body);
-        if (body.delivered)
-          toast.success(`Alignment code sent to ${chosen.name}`);
-        else toast.warning(body.delivered_error || "Code minted — email delivery not confirmed");
-      } else if (r.status === 429) {
-        toast.error(body.detail);
-      } else {
-        toast.error(body.detail || "Could not send code");
-      }
-    } catch (e) {
-      toast.error("Network error");
+      setSent(r.data);
+      if (r.data?.delivered)
+        toast.success(`Alignment code sent to ${chosen.name}`);
+      else toast.warning(r.data?.delivered_error || "Code minted — email delivery not confirmed");
+    } catch (err) {
+      const status = err?.response?.status ?? 0;
+      const detail = err?.response?.data?.detail || "";
+      if (status === 429) toast.error(detail);
+      else toast.error(detail || "Could not send code");
     } finally {
       setSending(false);
     }

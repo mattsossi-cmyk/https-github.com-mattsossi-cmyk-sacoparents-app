@@ -27,31 +27,8 @@ import {
 
 import AppShell from "../components/AppShell";
 import { toast } from "sonner";
-
-const API = process.env.REACT_APP_BACKEND_URL + "/api";
-
-function getAuthToken() {
-  try {
-    return localStorage.getItem("token");
-  } catch {
-    return null;
-  }
-}
-
-const EMPTY_FORM = {
-  name: "",
-  credentials: "",
-  license: "",
-  email: "",
-  phone: "",
-  website: "",
-  address_lines_text: "",
-  city: "",
-  state: "",
-  bio: "",
-  sort_order: 100,
-  active: true,
-};
+import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 function toApiPayload(form) {
   return {
@@ -73,101 +50,93 @@ function toApiPayload(form) {
   };
 }
 
+const EMPTY_FORM = {
+  name: "",
+  credentials: "",
+  license: "",
+  email: "",
+  phone: "",
+  website: "",
+  address_lines_text: "",
+  city: "",
+  state: "",
+  bio: "",
+  sort_order: 100,
+  active: true,
+};
+
 export default function AdminProfessionalsEditor() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [professionals, setProfessionals] = useState(null);
   const [authError, setAuthError] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const authToken = getAuthToken();
+  const isSignedIn = !!user;
 
   const load = async () => {
-    if (!authToken) {
+    if (!isSignedIn) {
       setAuthError("Sign in with an admin account to manage professionals.");
       return;
     }
     try {
-      const r = await fetch(`${API}/admin/professionals`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      if (r.status === 403) {
+      const r = await api.get("/admin/professionals");
+      setProfessionals(r.data?.professionals || []);
+      setAuthError(null);
+    } catch (err) {
+      const status = err?.response?.status ?? 0;
+      if (status === 403) {
         setAuthError(
           "This dashboard is only available to authorized admins. If you should have access, contact mattsossi@bsossi.com."
         );
-        return;
-      }
-      if (!r.ok) {
+      } else if (status) {
         setAuthError("Failed to load the directory.");
-        return;
+      } else {
+        setAuthError("Network error.");
       }
-      const body = await r.json();
-      setProfessionals(body.professionals || []);
-      setAuthError(null);
-    } catch (e) {
-      setAuthError("Network error.");
     }
   };
 
   useEffect(() => {
+    if (authLoading) return;
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authLoading, isSignedIn]);
 
   const create = async (e) => {
     e.preventDefault();
-    if (!authToken) return;
+    if (!isSignedIn) return;
     setSaving(true);
     try {
-      const r = await fetch(`${API}/admin/professionals`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(toApiPayload(form)),
-      });
-      const body = await r.json();
-      if (r.ok) {
-        toast.success(`Added ${body.name}`);
-        setForm(EMPTY_FORM);
-        setAddOpen(false);
-        load();
-      } else {
-        toast.error(body.detail || "Could not add");
-      }
-    } catch (e) {
-      toast.error("Network error");
+      const r = await api.post("/admin/professionals", toApiPayload(form));
+      toast.success(`Added ${r.data?.name || "professional"}`);
+      setForm(EMPTY_FORM);
+      setAddOpen(false);
+      load();
+    } catch (err) {
+      const detail = err?.response?.data?.detail || "";
+      toast.error(detail || "Could not add");
     } finally {
       setSaving(false);
     }
   };
 
   const toggleActive = async (professional) => {
-    if (!authToken) return;
+    if (!isSignedIn) return;
     try {
-      const r = await fetch(
-        `${API}/admin/professionals/${professional.professional_id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({ active: !professional.active }),
-        }
+      const r = await api.patch(
+        `/admin/professionals/${professional.professional_id}`,
+        { active: !professional.active }
       );
-      const body = await r.json();
-      if (r.ok) {
-        toast.success(
-          body.active ? `${body.name} visible in directory` : `${body.name} hidden`
-        );
-        load();
-      } else {
-        toast.error(body.detail || "Could not update");
-      }
-    } catch (e) {
-      toast.error("Network error");
+      const data = r.data || {};
+      toast.success(
+        data.active ? `${data.name} visible in directory` : `${data.name} hidden`
+      );
+      load();
+    } catch (err) {
+      const detail = err?.response?.data?.detail || "";
+      toast.error(detail || "Could not update");
     }
   };
 

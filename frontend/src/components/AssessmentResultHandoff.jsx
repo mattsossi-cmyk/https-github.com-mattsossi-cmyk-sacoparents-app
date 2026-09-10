@@ -25,8 +25,8 @@ import {
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
-
-const API = process.env.REACT_APP_BACKEND_URL + "/api";
+import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 const ASSESSMENT_LABELS = {
   "co-parenting": "Co-Parenting",
@@ -37,31 +37,20 @@ const ASSESSMENT_LABELS = {
   "special-needs": "Special Needs",
 };
 
-function getAuthToken() {
-  try {
-    return localStorage.getItem("token");
-  } catch {
-    return null;
-  }
-}
-
 export default function AssessmentResultHandoff({ assessmentType }) {
   const [linkedCase, setLinkedCase] = useState(null); // null = unknown/none
-  const authToken = getAuthToken();
+  const { user } = useAuth();
+  const isSignedIn = !!user;
 
   useEffect(() => {
-    if (!authToken) return;
+    if (!isSignedIn) return;
     let cancelled = false;
     (async () => {
       try {
-        const r = await fetch(`${API}/joint-alignment/mine`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
-        if (!r.ok) return;
-        const body = await r.json();
+        const r = await api.get("/joint-alignment/mine");
         if (cancelled) return;
         // Find an active case for this lane where the parent is completed.
-        const match = (body.cases || []).find(
+        const match = (r.data?.cases || []).find(
           (c) =>
             c.assessment_type === assessmentType &&
             c.my_status === "completed" &&
@@ -76,7 +65,7 @@ export default function AssessmentResultHandoff({ assessmentType }) {
     return () => {
       cancelled = true;
     };
-  }, [authToken, assessmentType]);
+  }, [isSignedIn, assessmentType]);
 
   const label = ASSESSMENT_LABELS[assessmentType] || "assessment";
 

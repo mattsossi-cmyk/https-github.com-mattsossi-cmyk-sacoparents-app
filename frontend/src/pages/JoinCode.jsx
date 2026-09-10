@@ -17,8 +17,8 @@ import {
 
 import AppShell from "../components/AppShell";
 import { toast } from "sonner";
-
-const API = process.env.REACT_APP_BACKEND_URL + "/api";
+import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 const ASSESSMENT_LABELS = {
   "co-parenting": "Co-Parenting Assessment",
@@ -38,22 +38,15 @@ const ASSESSMENT_ROUTES = {
   "special-needs": "/special-needs-v2",
 };
 
-function getAuthToken() {
-  try {
-    return localStorage.getItem("token");
-  } catch {
-    return null;
-  }
-}
-
 export default function JoinCode() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [linked, setLinked] = useState(null);
   const [error, setError] = useState(null);
-  const authToken = getAuthToken();
+  const isSignedIn = !!user;
 
   // Pre-fill the code input from `?code=` — the Landing page's Path B
   // deep-link passes the code the parent typed there, so we don't
@@ -65,36 +58,25 @@ export default function JoinCode() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!authToken) {
+    if (!isSignedIn) {
       navigate(`/login?redirect=${encodeURIComponent("/join")}`);
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
-      const r = await fetch(`${API}/joint-alignment/manual-code`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({ code }),
-      });
-      const body = await r.json();
-      if (r.ok) {
-        setLinked(body);
-        toast.success("Alignment code linked");
-      } else if (r.status === 403) {
-        setError({ code: 403, msg: body.detail });
-      } else if (r.status === 404) {
-        setError({ code: 404, msg: "Case not found or expired" });
-      } else if (r.status === 409) {
-        setError({ code: 409, msg: body.detail });
-      } else {
-        setError({ code: r.status, msg: body.detail || "Something went wrong" });
-      }
+      // Session cookie sent automatically via api.withCredentials.
+      const r = await api.post("/joint-alignment/manual-code", { code });
+      setLinked(r.data);
+      toast.success("Alignment code linked");
     } catch (err) {
-      setError({ code: 0, msg: "Network error" });
+      const status = err?.response?.status ?? 0;
+      const detail = err?.response?.data?.detail || "";
+      if (status === 403) setError({ code: 403, msg: detail });
+      else if (status === 404) setError({ code: 404, msg: "Case not found or expired" });
+      else if (status === 409) setError({ code: 409, msg: detail });
+      else if (status) setError({ code: status, msg: detail || "Something went wrong" });
+      else setError({ code: 0, msg: "Network error" });
     } finally {
       setSubmitting(false);
     }
