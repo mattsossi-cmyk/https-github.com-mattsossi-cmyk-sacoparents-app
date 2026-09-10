@@ -471,3 +471,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Close/reopen now inserts `access_events` kind=lifecycle {action "Case closed"/"Case reopened", note, by, by_name, by_role}. Activity endpoint returns `lifecycle[]` (excluded from access_events). ProWorkspace "Case lifecycle" list under Consent & Activity.
 - `GET /api/joint/reports/{rid}/closing-summary.pdf` (owner; 400 unless closed): one page — case ID/subject/professional, opened/closed/closed-by/reference/child, parent participation, report generated + view/download counts, closing note, timeline, disclaimer. "Closing summary" button on closed matters in /matters.
 - Still blocked: valid Resend key (`re_`) not received; DNS records absent; prod on 2026-09-10.2.
+
+## 2026-09-10 — Valid Resend key installed (BUILD 2026-09-10.8)
+- RESEND_API_KEY replaced with owner's `re_…` key (send-only). Resend now returns **403 "domain is not verified"** (was 401). DNS check: sacoparentsalign.com has no DKIM (`resend._domainkey`), no `send.` MX/SPF, no `_dmarc`. Fallback (Emergent sender) delivered the live test (id 03de0927…). Once domain verified in Resend, no code change needed — sends switch automatically. Production env still needs RESEND_API_KEY/RESEND_FROM_EMAIL + Deploy.
