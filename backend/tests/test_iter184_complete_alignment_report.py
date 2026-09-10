@@ -130,6 +130,41 @@ def test_joint_endpoint_returns_404_for_unknown_case():
     assert r.status_code == 404, r.text
 
 
+def test_joint_seeded_demo_case_is_reachable_by_member():
+    """`SA-DEMO01` is seeded by `seed_joint_sample_case.py` — parent1@test.com
+    is on the case as parent A. This test asserts the joint JSON view
+    lists both parents by name and returns the neutral tri-state
+    (shared / one-side / not-yet) alignment map. The PDF variant must
+    render as a real `%PDF-` document."""
+    r = requests.get(
+        f"{BASE_URL}/api/complete-report/joint/SA-DEMO01",
+        headers=_auth_headers(),
+        timeout=15,
+    )
+    assert r.status_code == 200, r.text[:400]
+    data = r.json()
+    assert data["variant"] == "joint"
+    assert data["case_id"] == "SA-DEMO01"
+    assert data.get("parents") == ["Sam Parent", "Riley Parent"]
+    # Both parents completed Foundation → foundation must be shared.
+    lanes_by_id = {ln["id"]: ln for ln in data.get("lanes") or []}
+    assert lanes_by_id["foundation"]["status"] == "shared", lanes_by_id["foundation"]
+    # Communication is seeded only on Parent A → one-side.
+    assert lanes_by_id["communication"]["status"] == "one-side", lanes_by_id["communication"]
+    # Activities was not seeded → not-yet.
+    assert lanes_by_id["activities"]["status"] == "not-yet", lanes_by_id["activities"]
+
+    r_pdf = requests.get(
+        f"{BASE_URL}/api/complete-report/joint/SA-DEMO01.pdf",
+        headers=_auth_headers(),
+        timeout=15,
+    )
+    assert r_pdf.status_code == 200, r_pdf.text[:400]
+    assert r_pdf.headers.get("content-type") == "application/pdf"
+    assert r_pdf.content[:5] == b"%PDF-"
+    assert len(r_pdf.content) > 3000
+
+
 # ------------------------------ aggregator --------------------------------- #
 
 def test_aggregator_lanes_are_deterministic_and_have_metadata():

@@ -27,6 +27,58 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-10 — Iter185 · Joint Seed + Inline Mini-Quiz + Voice Preview
+
+**🟢 P2 — Joint Complete Alignment Report sample-case seed**
+- `seed_joint_sample_case.py` — idempotent seed producing case `SA-DEMO01`
+  with `parent1@test.com` and `parent2@test.com` both auto-accepted so
+  the joint variant of the Complete Alignment Report is exercisable
+  without waiting for real professional-created invitations.
+- Foundation Statement seeded for BOTH parents (produces "shared"
+  status on that lane); Communication seeded ONLY for parent A
+  (produces the "one-side" status neutral tri-state) — mirrors real
+  in-flight case shapes for a professional walkthrough.
+- Test credentials file updated with the case_id + re-seed command.
+- `test_iter184_complete_alignment_report.py` grows a new test
+  (`test_joint_seeded_demo_case_is_reachable_by_member`) asserting
+  the seeded case's alignment status map matches the intended shape.
+
+**🟢 P2 — Inline mini-quiz on `/samples/joint-alignment-preview`**
+- New `MiniQuiz.jsx` component embedded on the public sample page,
+  matching the 6-prompt "Which scenario matches your family?" quiz
+  that already ships as page 2 of the sample PDF. Copy kept in
+  LOCKSTEP with `joint_alignment_sample_pdf.py::QUIZ_PROMPTS`.
+- Tri-tone answer buttons (agree / differ / incomplete) with live
+  tally + outcome banner appearing after the first click. Copy
+  Summary button uses `navigator.clipboard`.
+- Zero server state — nothing typed here is persisted; explicitly
+  labelled as a self-check, not a diagnosis.
+
+**🟢 P2 — 3-second voice preview per ElevenLabs voice**
+- New backend endpoint `GET /api/for-professionals/intro-audio/preview`
+  serving a ~50KB / 3-4 second MP3 for each of the 4 curated voices.
+  Cache key includes a `preview` marker so payloads never collide
+  with the full 60-second intro.
+- `ProfessionalsIntroAudio.jsx` voice picker now renders a two-part
+  pill per voice — label click switches the intro voice, headphone
+  icon click plays the 3-second preview via a hidden secondary
+  `<audio>` element (does not disturb the main intro player state).
+- Manifest exposes `preview_url_base` so the frontend builds preview
+  URLs without hard-coding the path.
+
+**🟢 P2 — Bug fix: joint PDF route ordering**
+- Starlette's greedy `str` path converter was capturing `SA-DEMO01.pdf`
+  into the JSON view's `case_id` parameter, failing its regex → 422.
+- Fix: register the PDF route BEFORE the JSON route and accept an
+  optional `.pdf` suffix in the PDF route's regex, stripping it
+  server-side. Both variants now return 200 correctly.
+
+**Testing agent iteration_61:** 100% backend + 100% frontend, zero
+critical / zero minor issues, zero action items. Item 1 (Deploy)
+green-lit and dispatched to the deployer.
+
+
+## What's Implemented
 ### 2026-09-10 — Iter188 · Complete Alignment Report (unified 10-section)
 
 **🟢 P1 — New unified assessment report mirroring `sacoparentsalign.com`**

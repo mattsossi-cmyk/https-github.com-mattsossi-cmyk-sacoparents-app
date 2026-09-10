@@ -223,9 +223,14 @@ async def for_professionals_intro_manifest():
         f"/api/for-professionals/intro-audio"
         f"?voice={DEFAULT_VOICE}&model={DEFAULT_MODEL}"
     )
+    preview_url_base = (
+        f"/api/for-professionals/intro-audio/preview"
+        f"?model={DEFAULT_MODEL}"
+    )
     return {
         "transcript": INTRO_SCRIPT,
         "audio_url": audio_url,
+        "preview_url_base": preview_url_base,
         "voice": DEFAULT_VOICE,
         "model": DEFAULT_MODEL,
         "supported_voices": list(SUPPORTED_VOICES),
@@ -264,6 +269,45 @@ async def for_professionals_intro_audio(
             # Public marketing asset — safe to cache in the browser + CDN.
             "Cache-Control": "public, max-age=86400",
             "X-Voice-Cache": "hit" if cache_hit else "miss",
+        },
+    )
+
+
+@router.get("/for-professionals/intro-audio/preview")
+async def for_professionals_intro_audio_preview(
+    request: Request,
+    voice: Optional[str] = None,
+    model: Optional[str] = None,
+):
+    """~3-second voice-preview endpoint so a visitor can hear each
+    ElevenLabs voice before committing to the full 60-second intro.
+    Uses the same MongoDB cache collection as the full intro but with
+    a `preview` cache-key suffix, so first play per voice bills once
+    (~50KB of ElevenLabs characters) and every subsequent play is
+    served from cache."""
+    from fastapi.responses import StreamingResponse
+    from io import BytesIO
+    from professionals_intro_voice import (
+        get_or_generate_preview_audio,
+        normalise_model,
+        normalise_voice,
+    )
+    db = request.app.state.db
+    v = normalise_voice(voice)
+    m = normalise_model(model)
+    try:
+        audio_bytes, cache_hit = await get_or_generate_preview_audio(
+            db, voice=v, model=m,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return StreamingResponse(
+        BytesIO(audio_bytes),
+        media_type="audio/mpeg",
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            "X-Voice-Cache": "hit" if cache_hit else "miss",
+            "X-Voice-Kind": "preview",
         },
     )
 

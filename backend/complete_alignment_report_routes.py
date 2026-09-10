@@ -147,6 +147,46 @@ def _parent_display_name(parent: dict, fallback: str) -> str:
     return fallback
 
 
+@router.get("/complete-report/joint/{case_id}.pdf")
+async def complete_report_joint_pdf(
+    case_id: str = Path(..., pattern=r"^SA-[A-Z0-9]{4,10}(?:\.pdf)?$"),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    # This route MUST be registered before the sibling `/joint/{case_id}`
+    # JSON route — starlette's `str` path converter is greedy up to the
+    # next slash, so `/joint/SA-XX.pdf` would otherwise be captured by
+    # the JSON route with `case_id="SA-XX.pdf"` and fail its regex.
+    # Some starlette versions still hand us the `.pdf` suffix in the
+    # captured value; the regex above accepts both forms and we strip
+    # the suffix below.
+    if case_id.endswith(".pdf"):
+        case_id = case_id[:-4]
+    case = await _load_case_and_members(
+        db, case_id=case_id, caller_user_id=current.user_id,
+    )
+    a, b = case["parents"][0], case["parents"][1]
+    agg = await aggregate_for_case(
+        db,
+        parent_a_user_id=a["user_id"],
+        parent_b_user_id=b["user_id"],
+    )
+    names = [
+        _parent_display_name(a, "Parent A"),
+        _parent_display_name(b, "Parent B"),
+    ]
+    pdf_bytes = render_joint_pdf(agg, parents=names)
+    filename = f"SA-CoParents-Complete-Alignment-{case_id}.pdf"
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
 @router.get("/complete-report/joint/{case_id}")
 async def complete_report_joint(
     case_id: str = Path(..., pattern=r"^SA-[A-Z0-9]{4,10}$"),
@@ -171,34 +211,3 @@ async def complete_report_joint(
         ],
         **agg,
     }
-
-
-@router.get("/complete-report/joint/{case_id}.pdf")
-async def complete_report_joint_pdf(
-    case_id: str = Path(..., pattern=r"^SA-[A-Z0-9]{4,10}$"),
-    current: UserPublic = Depends(get_current_user),
-    db: AsyncIOMotorDatabase = Depends(get_db),
-):
-    case = await _load_case_and_members(
-        db, case_id=case_id, caller_user_id=current.user_id,
-    )
-    a, b = case["parents"][0], case["parents"][1]
-    agg = await aggregate_for_case(
-        db,
-        parent_a_user_id=a["user_id"],
-        parent_b_user_id=b["user_id"],
-    )
-    names = [
-        _parent_display_name(a, "Parent A"),
-        _parent_display_name(b, "Parent B"),
-    ]
-    pdf_bytes = render_joint_pdf(agg, parents=names)
-    filename = f"SA-CoParents-Complete-Alignment-{case_id}.pdf"
-    return StreamingResponse(
-        BytesIO(pdf_bytes),
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-            "Cache-Control": "private, no-store",
-        },
-    )

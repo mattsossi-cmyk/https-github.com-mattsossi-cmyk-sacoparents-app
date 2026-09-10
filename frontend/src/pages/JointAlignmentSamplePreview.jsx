@@ -31,6 +31,8 @@ import {
   Mail,
 } from "lucide-react";
 
+import MiniQuiz from "../components/MiniQuiz";
+
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
 const SAMPLE_PDF_PATH_BASE = "/api/insights/samples/joint-alignment-preview.pdf";
 const SAMPLE_PAGE_URL = `${BACKEND}/samples/joint-alignment-preview`;
@@ -447,6 +449,13 @@ export default function JointAlignmentSamplePreview() {
             </div>
           </div>
         </div>
+
+        {/* Inline mini-quiz — the same "Which scenario matches your
+            family?" self-check that ships on page 2 of the sample PDF.
+            Embedded here so a visitor can score their own picture
+            without downloading anything. Copy is kept in strict
+            lockstep with `joint_alignment_sample_pdf.QUIZ_PROMPTS`. */}
+        <MiniQuiz />
 
         {/* Small fine-print / attribution row */}
         <p

@@ -13,7 +13,7 @@
  *    intentionally warm/female — no surprise on Play.
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Play, Pause, Volume2, Loader2 } from "lucide-react";
+import { Play, Pause, Volume2, Loader2, Headphones } from "lucide-react";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -37,7 +37,13 @@ export default function ProfessionalsIntroAudio() {
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioError, setAudioError] = useState(null);
   const [voice, setVoice] = useState("rachel");
+  // `previewingVoice` = the voice whose ~3-second preview is currently
+  // streaming (null when no preview is active). Separate from `voice`
+  // so a visitor can preview one voice without committing to a full
+  // 60-second play.
+  const [previewingVoice, setPreviewingVoice] = useState(null);
   const audioRef = useRef(null);
+  const previewAudioRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +86,50 @@ export default function ProfessionalsIntroAudio() {
       setAudioError("Couldn't play the intro. Please try again.");
     } finally {
       setAudioLoading(false);
+    }
+  };
+
+  // Play a ~3-second preview of `v`. If a preview is already playing
+  // for the same voice we STOP it (toggle). If a different voice is
+  // previewing, we cancel that one and start the new preview.
+  const playPreview = async (v) => {
+    // Stop the main intro so previews don't overlap the full read.
+    const main = audioRef.current;
+    if (main) { try { main.pause(); } catch {} }
+    const prev = previewAudioRef.current;
+    if (!prev) return;
+    if (previewingVoice === v) {
+      try { prev.pause(); } catch {}
+      setPreviewingVoice(null);
+      return;
+    }
+    try {
+      prev.pause();
+    } catch {}
+    // The backend endpoint caches per-voice previews so first play
+    // per voice per environment is the only billable one.
+    const base = manifest?.preview_url_base
+      ? (manifest.preview_url_base.startsWith("http")
+          ? manifest.preview_url_base
+          : `${BACKEND}${manifest.preview_url_base}`)
+      : `${BACKEND}/api/for-professionals/intro-audio/preview`;
+    let previewUrl = base;
+    try {
+      const u = new URL(base);
+      u.searchParams.set("voice", v);
+      previewUrl = u.toString();
+    } catch {
+      const sep = base.includes("?") ? "&" : "?";
+      previewUrl = `${base}${sep}voice=${encodeURIComponent(v)}`;
+    }
+    setPreviewingVoice(v);
+    prev.src = previewUrl;
+    try {
+      prev.load();
+      await prev.play();
+    } catch (err) {
+      logError("intro voice preview failed", err);
+      setPreviewingVoice(null);
     }
   };
 
@@ -187,24 +237,52 @@ export default function ProfessionalsIntroAudio() {
           const meta = VOICE_META[v];
           if (!meta) return null;
           const isActive = v === voice;
+          const isPreviewing = previewingVoice === v;
           return (
-            <button
+            <span
               key={v}
-              type="button"
-              role="radio"
-              aria-checked={isActive}
-              onClick={() => setVoice(v)}
-              className={
-                "px-2.5 py-1 rounded-full text-[11px] font-semibold border transition " +
-                (isActive
-                  ? "bg-[#3D1A78] text-white border-[#3D1A78]"
-                  : "bg-white text-[#3D1A78] border-[#D6CFE8] hover:bg-[#F5F1FB]")
-              }
-              title={meta.hint}
-              data-testid={`for-pros-intro-audio-voice-${v}`}
+              className="inline-flex items-stretch rounded-full border border-[#D6CFE8] overflow-hidden"
+              data-testid={`for-pros-intro-audio-voice-chip-${v}`}
             >
-              {meta.label}
-            </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={isActive}
+                onClick={() => setVoice(v)}
+                className={
+                  "px-2.5 py-1 text-[11px] font-semibold transition " +
+                  (isActive
+                    ? "bg-[#3D1A78] text-white"
+                    : "bg-white text-[#3D1A78] hover:bg-[#F5F1FB]")
+                }
+                title={meta.hint}
+                data-testid={`for-pros-intro-audio-voice-${v}`}
+              >
+                {meta.label}
+              </button>
+              {/* 3-second preview button — separate from the label so a
+                  visitor can hear a voice WITHOUT committing to the full
+                  60-second play. Backend caches per-voice previews. */}
+              <button
+                type="button"
+                onClick={() => playPreview(v)}
+                className={
+                  "px-2 flex items-center justify-center border-l text-[10px] transition " +
+                  (isActive
+                    ? "border-white/40 bg-[#3D1A78] text-white hover:bg-[#2a0f5f]"
+                    : "border-[#D6CFE8] bg-white text-[#3D1A78] hover:bg-[#F5F1FB]")
+                }
+                title={`Preview ${meta.label} for 3 seconds`}
+                aria-label={`Preview ${meta.label} voice`}
+                data-testid={`for-pros-intro-audio-preview-${v}`}
+              >
+                {isPreviewing ? (
+                  <Loader2 size={11} className="animate-spin" />
+                ) : (
+                  <Headphones size={11} />
+                )}
+              </button>
+            </span>
           );
         })}
       </div>
@@ -258,6 +336,19 @@ export default function ProfessionalsIntroAudio() {
           setAudioError("Couldn't load the intro audio.");
         }}
         data-testid="for-pros-intro-audio-element"
+      />
+
+      {/* Hidden native audio element dedicated to ~3-second voice
+          previews. Keeping it separate from the main <audio> above
+          means clicking Preview never disturbs a queued full-play
+          position (browsers preserve currentTime per element). */}
+      <audio
+        ref={previewAudioRef}
+        preload="none"
+        onEnded={() => setPreviewingVoice(null)}
+        onError={() => setPreviewingVoice(null)}
+        onPause={() => setPreviewingVoice((cur) => (cur ? null : cur))}
+        data-testid="for-pros-intro-audio-preview-element"
       />
 
       <details

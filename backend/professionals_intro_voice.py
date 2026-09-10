@@ -93,6 +93,54 @@ _OUTPUT_FORMAT = "mp3_44100_128"
 _PROVIDER = "elevenlabs"
 _CACHE_COLLECTION = "professionals_intro_voice_cache"
 
+# Short preview script (~3-4 seconds of audio) so a visitor can hear
+# each ElevenLabs voice before committing to the full 60-second play.
+# Global, single-string so all four voices share the same cache
+# collection with a distinct `preview` marker. Latin-1 safe.
+PREVIEW_SCRIPT: str = "Hi, this is a short preview of the SA CoParents intro voice."
+
+
+def _preview_cache_key(*, voice: str, model: str) -> str:
+    payload = f"{_sha(PREVIEW_SCRIPT)}|{voice}|{model}|{RESPONSE_FORMAT}|{_PROVIDER}|preview"
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+async def get_or_generate_preview_audio(
+    db: AsyncIOMotorDatabase,
+    *,
+    voice: str,
+    model: str,
+) -> tuple[bytes, bool]:
+    """Return (audio_bytes, cache_hit) for the ~3-second voice preview.
+    Same MongoDB cache collection as the full intro but keyed with a
+    `preview` suffix so the payloads never collide.
+    """
+    key = _preview_cache_key(voice=voice, model=model)
+    cached = await _read_cached(db, key=key)
+    if cached is not None:
+        return cached, True
+    audio = await _elevenlabs_tts_bytes(text=PREVIEW_SCRIPT, voice=voice, model=model)
+    # Mark the cache entry as a preview so ops can distinguish payload
+    # sizes when auditing collection growth.
+    await db[_CACHE_COLLECTION].update_one(
+        {"key": key},
+        {
+            "$set": {
+                "audio": Binary(audio),
+                "voice": voice,
+                "model": model,
+                "provider": _PROVIDER,
+                "format": RESPONSE_FORMAT,
+                "script_sha": _sha(PREVIEW_SCRIPT),
+                "byte_size": len(audio),
+                "kind": "preview",
+                "cached_at": datetime.now(timezone.utc),
+            },
+        },
+        upsert=True,
+    )
+    return audio, False
+
 
 def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()

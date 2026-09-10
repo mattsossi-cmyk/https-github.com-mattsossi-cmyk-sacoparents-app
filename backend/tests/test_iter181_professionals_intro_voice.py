@@ -36,6 +36,10 @@ def test_manifest_returns_rachel_voice_and_workflow_transcript():
     assert data["voice"] == "rachel"
     assert data["model"] in ("eleven_multilingual_v2", "eleven_turbo_v2_5")
     assert "rachel" in data["supported_voices"]
+    # Preview URL base is exposed so the frontend chip row can build
+    # per-voice preview URLs without hard-coding the path.
+    assert "preview_url_base" in data
+    assert data["preview_url_base"].startswith("/api/for-professionals/intro-audio/preview")
     # All four curated voices exposed to the frontend picker.
     for expected in ("rachel", "adam", "bella", "antoni"):
         assert expected in data["supported_voices"], f"{expected!r} missing from supported_voices"
@@ -50,6 +54,45 @@ def test_manifest_returns_rachel_voice_and_workflow_transcript():
     # Neutrality check — the intro must never claim court admissibility.
     assert "adjudicative" not in transcript or "non-adjudicative" in transcript
     assert "court submission" in transcript  # explicit disclaimer surface
+
+
+def test_preview_endpoint_serves_audio_and_is_cache_sensitive():
+    """The /preview endpoint returns a short (~50KB) MP3 keyed per
+    voice. Second call with the same voice must be a cache-hit."""
+    r1 = requests.get(
+        f"{BASE_URL}/api/for-professionals/intro-audio/preview?voice=rachel",
+        timeout=30,
+    )
+    assert r1.status_code == 200, r1.text[:400]
+    assert r1.headers.get("content-type") == "audio/mpeg"
+    assert r1.headers.get("x-voice-kind") == "preview"
+    body = r1.content
+    assert body[:3] == b"ID3" or body[:2] == b"\xff\xfb" or len(body) > 1000, (
+        f"Unexpected preview payload header/size: {body[:8]!r} / {len(body)}"
+    )
+    # Second call — must be a cache hit.
+    r2 = requests.get(
+        f"{BASE_URL}/api/for-professionals/intro-audio/preview?voice=rachel",
+        timeout=15,
+    )
+    assert r2.status_code == 200
+    assert r2.headers.get("x-voice-cache") == "hit"
+    # Bad voice string falls back to the default, still 200.
+    r3 = requests.get(
+        f"{BASE_URL}/api/for-professionals/intro-audio/preview?voice=darth",
+        timeout=15,
+    )
+    assert r3.status_code == 200
+
+
+def test_preview_cache_key_isolates_from_full_intro():
+    """The preview cache key must NOT collide with the full-intro
+    cache key — swapping providers or scripts would otherwise
+    resurface a stale preview payload."""
+    from professionals_intro_voice import _cache_key, _preview_cache_key
+    intro_key = _cache_key(voice="rachel", model="eleven_multilingual_v2")
+    preview_key = _preview_cache_key(voice="rachel", model="eleven_multilingual_v2")
+    assert intro_key != preview_key
 
 
 def test_manifest_is_public_no_auth_required():
