@@ -431,6 +431,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Live: one-click reset link endpoint (token body → 400 not 422), admin email-test (401 unauth), 15-min codes. NOT live: .10 directory (`/api/professionals/directory` 404). Albert login probe still 401 (indeterminate). Preview test account approval.test.pro1 does not log in on prod (separate DB) — use Matt's prod account for prod UI checks.
 
 
+## 2026-09-10 — "Network error" on forgot-password (BUILD 2026-09-10.1)
+- Prod endpoint itself returned 200 in ~2s from curl. Root cause candidate: worst-case email send path was 3 attempts × 30s timeout + backoff (~96s) → proxy drops connection → axios "Network Error". Fixes: EMAIL_TIMEOUT_S=12, EMAIL_ATTEMPTS=2, explicit 504 on provider timeout; axios timeout 45s; formatApiError gives a clear connection/timeout message instead of raw "Network Error". Also: each request replaces the code and 60s cooldown → 429 on rapid retries.
+
+
 
 
 

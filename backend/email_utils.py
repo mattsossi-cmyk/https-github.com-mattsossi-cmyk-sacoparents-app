@@ -107,6 +107,8 @@ def _assert_safe_email(subject: str, html: str) -> None:
 
 
 FIXTURE_EMAIL_RE = re.compile(r"@(example\.com|x\.com|example\.org)$", re.I)
+EMAIL_TIMEOUT_S = 12
+EMAIL_ATTEMPTS = 2
 
 
 def _email_payload(to: str, subject: str, html: str, reply_to: str | None) -> dict:
@@ -118,7 +120,7 @@ def _email_payload(to: str, subject: str, html: str, reply_to: str | None) -> di
 
 
 async def _post_email(payload: dict) -> str | None:
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=EMAIL_TIMEOUT_S) as client:
         resp = await client.post(f"{EMAIL_BASE_URL}/api/v1/email/send", headers={"X-Email-Key": EMAIL_KEY}, json=payload)
     resp.raise_for_status()
     return resp.json().get("id")
@@ -130,7 +132,7 @@ def _send_failure(status: int | None) -> HTTPException:
     return HTTPException(status_code=502, detail="Failed to send email")
 
 
-async def _post_with_retry(payload: dict, attempts: int = 3) -> str | None:
+async def _post_with_retry(payload: dict, attempts: int = EMAIL_ATTEMPTS) -> str | None:
     last_status: int | None = None
     for attempt in range(attempts):
         try:
@@ -141,6 +143,9 @@ async def _post_with_retry(payload: dict, attempts: int = 3) -> str | None:
             if last_status != 429:
                 break
             await asyncio.sleep(2 * (attempt + 1))
+        except httpx.TimeoutException:
+            logger.error("Email send timed out")
+            raise HTTPException(status_code=504, detail="Our email service is slow to respond. Please try again in a moment.")
         except Exception as e:
             logger.error(f"Email send error: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to send email")
