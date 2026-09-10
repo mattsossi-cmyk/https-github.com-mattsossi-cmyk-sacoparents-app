@@ -15,7 +15,7 @@
  * loaded topics, no violence markers. `SAMPLE_CASE_META` explicitly
  * flags the data as fictional in every prominent surface.
  */
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -32,37 +32,22 @@ import {
 } from "lucide-react";
 
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
-const SAMPLE_PDF_PATH = "/api/insights/samples/joint-alignment-preview.pdf";
-const SAMPLE_PDF_URL = `${BACKEND}${SAMPLE_PDF_PATH}`;
+const SAMPLE_PDF_PATH_BASE = "/api/insights/samples/joint-alignment-preview.pdf";
 const SAMPLE_PAGE_URL = `${BACKEND}/samples/joint-alignment-preview`;
 
-// Pre-composed message a parent uses to email the sample to their
-// co-parent BEFORE either of them signs up. Keep the tone neutral,
-// personal, non-adjudicative — matches the platform guardrail.
-const COPARENT_EMAIL_SUBJECT = "Something I want to try before we sit down with a professional";
-const COPARENT_EMAIL_BODY = [
-  "Hi,",
-  "",
-  "I found a small tool that helps two co-parents each answer the same reflection questions independently — then shows a side-by-side of where we agree, where we differ, and where one of us hasn't finished yet. Nothing gets shared until we both say so.",
-  "",
-  "Here's what the joint preview would look like (this is a sample with fictional parents):",
-  `  Web: ${SAMPLE_PAGE_URL}`,
-  `  PDF: ${SAMPLE_PDF_URL}`,
-  "",
-  "If you want to try it, we'd each sign up separately at https://sacoparentsapp.online and one of us would invite the other.",
-  "",
-  "Thanks for considering,",
-].join("\n");
-
-// ---- Sample data (fictional, neutral). Never change the shape of
-// this without also updating the real /joint-alignment/{id}/preview
-// endpoint's response contract, so the two pages stay in lockstep.
+// ---- Sample data (fictional, neutral). Two scenarios so a hesitant
+// parent can peek at both a mostly-agreed picture AND a mostly-differ
+// picture. Both datasets stay in lockstep with the backend module
+// `joint_alignment_sample_pdf.py` — the pytest lockstep test asserts
+// the six topic titles match on the low-conflict variant; when you
+// change either dataset here, update the backend module in the same
+// commit.
 const SAMPLE_CASE_META = {
   parents: ["Alex", "Sam"],
   child: { name: "Rian", age: 8 },
 };
 
-const SAMPLE_TOPICS = [
+const SAMPLE_TOPICS_LOW = [
   {
     key: "school-routines",
     title: "School morning routines",
@@ -107,10 +92,64 @@ const SAMPLE_TOPICS = [
   },
 ];
 
-const SAMPLE_SUMMARY = {
-  agreed: SAMPLE_TOPICS.filter((t) => t.status === "agree").length,
-  differed: SAMPLE_TOPICS.filter((t) => t.status === "differ").length,
-  incomplete: SAMPLE_TOPICS.filter((t) => t.status === "incomplete").length,
+const SAMPLE_TOPICS_HIGH = [
+  {
+    key: "school-routines",
+    title: "School morning routines",
+    section: "Weekday transitions",
+    status: "differ",
+    note: "Different wake-up windows and drop-off preferences - a shared checklist may help align the day.",
+  },
+  {
+    key: "screen-time",
+    title: "Screen time on weeknights",
+    section: "Daily rhythms",
+    status: "differ",
+    note: "Two different weeknight limits are in place. Worth a shared rule so the child hears one answer.",
+  },
+  {
+    key: "extracurriculars",
+    title: "Extracurricular activities",
+    section: "Weekly commitments",
+    status: "differ",
+    note: "Different views on frequency and cost. A joint budget conversation may be the next step.",
+  },
+  {
+    key: "handovers",
+    title: "Handover timing on Fridays",
+    section: "Transitions",
+    status: "agree",
+    note: "Shared anchor: both prefer the same Friday handover window. Keep this as the stable point.",
+  },
+  {
+    key: "holidays",
+    title: "Winter holidays",
+    section: "Special occasions",
+    status: "differ",
+    note: "Different holiday plans. Revisit early so travel and family time can be coordinated.",
+  },
+  {
+    key: "healthcare",
+    title: "Healthcare decisions",
+    section: "Big-picture parenting",
+    status: "incomplete",
+    note: "One of you didn't finish this section yet - mark it not done.",
+  },
+];
+
+const SCENARIOS = {
+  "low-conflict": {
+    key: "low-conflict",
+    label: "Mostly agreed",
+    caption: "3 agreed · 2 differed · 1 incomplete",
+    topics: SAMPLE_TOPICS_LOW,
+  },
+  "high-conflict": {
+    key: "high-conflict",
+    label: "Mostly differed",
+    caption: "1 agreed · 4 differed · 1 incomplete",
+    topics: SAMPLE_TOPICS_HIGH,
+  },
 };
 
 const ALIGNMENT_META = {
@@ -130,6 +169,24 @@ const ALIGNMENT_META = {
     cls: "text-[#5C5471] bg-[#F1EEF4] border-[#DED8E5]",
   },
 };
+
+function buildCoparentEmailBody({ pdfUrl }) {
+  return [
+    "Hi,",
+    "",
+    "I found a small tool that helps two co-parents each answer the same reflection questions independently — then shows a side-by-side of where we agree, where we differ, and where one of us hasn't finished yet. Nothing gets shared until we both say so.",
+    "",
+    "Here's what the joint preview would look like (this is a sample with fictional parents):",
+    `  Web: ${SAMPLE_PAGE_URL}`,
+    `  PDF: ${pdfUrl}`,
+    "",
+    "If you want to try it, we'd each sign up separately at https://sacoparentsapp.online and one of us would invite the other.",
+    "",
+    "Thanks for considering,",
+  ].join("\n");
+}
+
+const COPARENT_EMAIL_SUBJECT = "Something I want to try before we sit down with a professional";
 
 function CountPill({ count, label, tone }) {
   return (
@@ -175,6 +232,21 @@ function TopicRow({ topic }) {
 }
 
 export default function JointAlignmentSamplePreview() {
+  const [scenarioKey, setScenarioKey] = useState("low-conflict");
+  const scenario = SCENARIOS[scenarioKey];
+  const summary = useMemo(
+    () => ({
+      agreed: scenario.topics.filter((t) => t.status === "agree").length,
+      differed: scenario.topics.filter((t) => t.status === "differ").length,
+      incomplete: scenario.topics.filter((t) => t.status === "incomplete").length,
+    }),
+    [scenario]
+  );
+
+  const pdfPathWithScenario = `${SAMPLE_PDF_PATH_BASE}?scenario=${scenarioKey}`;
+  const pdfUrlAbsolute = `${BACKEND}${pdfPathWithScenario}`;
+  const emailBody = buildCoparentEmailBody({ pdfUrl: pdfUrlAbsolute });
+
   return (
     <div
       className="min-h-screen bg-[#FAF8FD]"
@@ -217,6 +289,45 @@ export default function JointAlignmentSamplePreview() {
           actual answers are visible on this page.
         </p>
 
+        {/* Two-sample toggle — a hesitant parent may want to see what
+            a mostly-agreed picture looks like AND what a mostly-differ
+            picture looks like before inviting their co-parent. Both
+            variants keep the tone neutral and non-adjudicative. */}
+        <div
+          className="mt-6 rounded-2xl border border-[#D6CFE8] bg-white p-1 flex items-center gap-1 w-fit"
+          role="tablist"
+          aria-label="Sample scenario"
+          data-testid="sample-preview-scenario-toggle"
+        >
+          {Object.values(SCENARIOS).map((s) => {
+            const isActive = s.key === scenarioKey;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setScenarioKey(s.key)}
+                className={
+                  "px-4 py-2 rounded-xl text-[13px] font-semibold transition " +
+                  (isActive
+                    ? "bg-[#3D1A78] text-white shadow-sm"
+                    : "text-[#3D1A78] hover:bg-[#F5F1FB]")
+                }
+                data-testid={`sample-preview-scenario-${s.key}`}
+              >
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+        <p
+          className="mt-2 text-[12px] text-[#857E9C]"
+          data-testid="sample-preview-scenario-caption"
+        >
+          {scenario.caption}
+        </p>
+
         <div
           className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4 text-[13px] text-[#3D1A78]"
           data-testid="sample-preview-privacy-banner"
@@ -233,17 +344,17 @@ export default function JointAlignmentSamplePreview() {
         {/* Summary counts */}
         <div className="mt-6 flex flex-wrap gap-3" data-testid="sample-preview-summary">
           <CountPill
-            count={SAMPLE_SUMMARY.agreed}
+            count={summary.agreed}
             label="Agreed"
             tone="text-[#186142] bg-[#E1F3E8] border-[#B7DEC6]"
           />
           <CountPill
-            count={SAMPLE_SUMMARY.differed}
+            count={summary.differed}
             label="Differed"
             tone="text-[#8A5B00] bg-[#FFF6E5] border-[#F0D9A1]"
           />
           <CountPill
-            count={SAMPLE_SUMMARY.incomplete}
+            count={summary.incomplete}
             label="Incomplete"
             tone="text-[#5C5471] bg-[#F1EEF4] border-[#DED8E5]"
           />
@@ -257,7 +368,7 @@ export default function JointAlignmentSamplePreview() {
             </div>
           </div>
           <ul data-testid="sample-preview-topics">
-            {SAMPLE_TOPICS.map((topic) => (
+            {scenario.topics.map((topic) => (
               <TopicRow key={topic.key} topic={topic} />
             ))}
           </ul>
@@ -318,7 +429,7 @@ export default function JointAlignmentSamplePreview() {
             </p>
             <div className="flex flex-wrap gap-3">
               <a
-                href={SAMPLE_PDF_PATH}
+                href={pdfPathWithScenario}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-5 py-2.5 text-sm font-semibold transition-colors"
@@ -327,7 +438,7 @@ export default function JointAlignmentSamplePreview() {
                 <Download size={14} /> Download sample PDF
               </a>
               <a
-                href={`mailto:?subject=${encodeURIComponent(COPARENT_EMAIL_SUBJECT)}&body=${encodeURIComponent(COPARENT_EMAIL_BODY)}`}
+                href={`mailto:?subject=${encodeURIComponent(COPARENT_EMAIL_SUBJECT)}&body=${encodeURIComponent(emailBody)}`}
                 className="inline-flex items-center gap-2 rounded-full bg-[#0E7A7A] hover:bg-[#0A5E5E] text-white px-5 py-2.5 text-sm font-semibold transition-colors"
                 data-testid="sample-preview-email-coparent"
               >

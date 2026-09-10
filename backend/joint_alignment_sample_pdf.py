@@ -38,7 +38,10 @@ SAMPLE_META: Dict[str, object] = {
     "child": {"name": "Rian", "age": 8},
 }
 
-SAMPLE_TOPICS: List[Dict[str, str]] = [
+# LOW-CONFLICT scenario — the historical default. Three agrees, two
+# differs, one incomplete. Rendered when the visitor lands on the
+# sample preview without a scenario query-string.
+SAMPLE_TOPICS_LOW: List[Dict[str, str]] = [
     {
         "title": "School morning routines",
         "section": "Weekday transitions",
@@ -84,6 +87,92 @@ SAMPLE_TOPICS: List[Dict[str, str]] = [
     },
 ]
 
+# HIGH-CONFLICT scenario — a mostly-differ picture with one shared
+# anchor. Neutral, non-adjudicative language throughout: describes
+# discussion topics, never blames a parent or characterises either
+# side. Purposefully keeps ONE agree row so the resulting screen is
+# still a workable starting point for a professional.
+SAMPLE_TOPICS_HIGH: List[Dict[str, str]] = [
+    {
+        "title": "School morning routines",
+        "section": "Weekday transitions",
+        "status": "differ",
+        "note": (
+            "Different wake-up windows and drop-off preferences - "
+            "a shared checklist may help align the day."
+        ),
+    },
+    {
+        "title": "Screen time on weeknights",
+        "section": "Daily rhythms",
+        "status": "differ",
+        "note": (
+            "Two different weeknight limits are in place. Worth a "
+            "shared rule so the child hears one answer."
+        ),
+    },
+    {
+        "title": "Extracurricular activities",
+        "section": "Weekly commitments",
+        "status": "differ",
+        "note": (
+            "Different views on frequency and cost. A joint budget "
+            "conversation may be the next step."
+        ),
+    },
+    {
+        "title": "Handover timing on Fridays",
+        "section": "Transitions",
+        "status": "agree",
+        "note": (
+            "Shared anchor: both prefer the same Friday handover "
+            "window. Keep this as the stable point."
+        ),
+    },
+    {
+        "title": "Winter holidays",
+        "section": "Special occasions",
+        "status": "differ",
+        "note": (
+            "Different holiday plans. Revisit early so travel and "
+            "family time can be coordinated."
+        ),
+    },
+    {
+        "title": "Healthcare decisions",
+        "section": "Big-picture parenting",
+        "status": "incomplete",
+        "note": (
+            "One of you didn't finish this section yet - mark it not done."
+        ),
+    },
+]
+
+# Backwards-compatible alias. Existing callers, tests, and imports
+# continue to read `SAMPLE_TOPICS` as the low-conflict variant.
+SAMPLE_TOPICS: List[Dict[str, str]] = SAMPLE_TOPICS_LOW
+
+SCENARIOS: Dict[str, List[Dict[str, str]]] = {
+    "low-conflict": SAMPLE_TOPICS_LOW,
+    "high-conflict": SAMPLE_TOPICS_HIGH,
+}
+DEFAULT_SCENARIO = "low-conflict"
+
+SCENARIO_LABELS: Dict[str, str] = {
+    "low-conflict": "Mostly agreed with a couple of discussion points",
+    "high-conflict": "Mostly differences with one shared anchor",
+}
+
+
+def normalise_scenario(raw: object) -> str:
+    """Coerce ?scenario=... to a supported key; fall back to default
+    silently so a stray URL never 400s a marketing surface."""
+    if isinstance(raw, str):
+        v = raw.strip().lower()
+        if v in SCENARIOS:
+            return v
+    return DEFAULT_SCENARIO
+
 _STATUS_LABELS = {
     "agree": "You agree",
     "differ": "You differ",
@@ -99,9 +188,9 @@ _STATUS_COLORS = {
 }
 
 
-def _summary_counts() -> Dict[str, int]:
+def _summary_counts(topics: List[Dict[str, str]]) -> Dict[str, int]:
     counts = {"agreed": 0, "differed": 0, "incomplete": 0}
-    for t in SAMPLE_TOPICS:
+    for t in topics:
         s = t["status"]
         if s == "agree":
             counts["agreed"] += 1
@@ -197,9 +286,20 @@ def _count_card(pdf: FPDF, x: float, y: float, w: float, count: int, label: str,
     pdf.set_text_color(0, 0, 0)
 
 
-def build_joint_alignment_sample_pdf() -> bytes:
-    """Return the sample preview as PDF bytes. Fixed content — safe
-    to serve to every visitor and cache aggressively."""
+def build_joint_alignment_sample_pdf(scenario: str = DEFAULT_SCENARIO) -> bytes:
+    """Return the sample preview as PDF bytes.
+
+    `scenario` selects the topic dataset: ``low-conflict`` (default) shows
+    mostly-agreed rows with a couple of discussion points; ``high-conflict``
+    shows mostly-differ rows anchored by one shared area. Unknown values
+    fall back silently to the default so a stray URL never 500s the
+    marketing PDF.
+
+    Content is fixed per scenario, so callers can cache aggressively.
+    """
+    scenario = normalise_scenario(scenario)
+    topics = SCENARIOS[scenario]
+    counts = _summary_counts(topics)
     pdf = _SamplePreviewPDF(orientation="P", unit="mm", format="Letter")
     pdf.set_auto_page_break(auto=True, margin=18)
     pdf.set_left_margin(18)
@@ -214,7 +314,7 @@ def build_joint_alignment_sample_pdf() -> bytes:
     child = SAMPLE_META["child"]  # type: ignore[assignment]
     banner = (
         f"SAMPLE - Not real case data. {parents} with child "
-        f"{child['name']} (fictional)"  # type: ignore[index]
+        f"{child['name']} (fictional) - {SCENARIO_LABELS[scenario]}"  # type: ignore[index]
     )
     pdf.rect(pdf.l_margin, pdf.get_y(), pdf.w - pdf.l_margin - pdf.r_margin, 8, style="F")
     pdf.set_xy(pdf.l_margin + 3, pdf.get_y() + 2)
@@ -272,7 +372,6 @@ def build_joint_alignment_sample_pdf() -> bytes:
     pdf.ln(2)
 
     # Summary counts.
-    counts = _summary_counts()
     counts_row_y = pdf.get_y()
     total_w = pdf.w - pdf.l_margin - pdf.r_margin
     gap = 3
@@ -294,7 +393,7 @@ def build_joint_alignment_sample_pdf() -> bytes:
     pdf.set_y(strip_y + 8)
 
     # Topics.
-    for topic in SAMPLE_TOPICS:
+    for topic in topics:
         row_y = pdf.get_y()
         # Row background outline.
         pdf.set_draw_color(238, 232, 247)

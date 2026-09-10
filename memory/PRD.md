@@ -27,6 +27,50 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-10 — Iter186 · Auth Cookie Migration + Two-Sample Toggle
+
+**🔴 P0 — CRITICAL FIX: Invited-parent flow (user-reported bug)**
+- Parents clicking `/join/:token` from a professional's invitation
+  were never being routed to their assessment after signing in.
+- **Root cause:** 7 frontend files were checking a stale
+  `localStorage.getItem("token")` key that the app's cookie-based
+  `AuthContext` (httpOnly cookie + `withCredentials: true`) never
+  populates. `authToken` was always `null`, so the auto-accept + route
+  `useEffect` in `JoinInvitation.jsx` never fired, and every
+  `fetch(..., { headers: { Authorization: "Bearer null" }})` failed
+  silently.
+- **Files fixed** (all now use `useAuth().user` + `api` axios instance):
+  `pages/JoinInvitation.jsx`, `pages/JoinCode.jsx`,
+  `pages/ProfessionalsDirectory.jsx`,
+  `pages/AdminProfessionalsEditor.jsx`,
+  `components/dashboard/JointAlignmentRequests.jsx`,
+  `components/AssessmentResultHandoff.jsx`,
+  `components/CoparentCompletionToaster.jsx`.
+- E2E preview-verified: cookie login → 200,
+  `/api/joint-alignment/mine` returned 2 real cases for the parent.
+
+**🟢 P2 — Two-Sample Toggle on `/samples/joint-alignment-preview`**
+- Low-conflict ↔ high-conflict toggle so a hesitant parent can peek
+  at both scenarios before inviting their co-parent.
+- Backend `joint_alignment_sample_pdf.py` now exports
+  `SAMPLE_TOPICS_LOW`, `SAMPLE_TOPICS_HIGH`, and a `SCENARIOS` map;
+  `build_joint_alignment_sample_pdf(scenario)` accepts a
+  `low-conflict|high-conflict` key with silent fallback.
+- Public endpoint `GET /api/insights/samples/joint-alignment-preview.pdf`
+  accepts `?scenario=…` and returns a scenario-suffixed filename
+  (`sacoparents-joint-alignment-sample-{scenario}.pdf`). Unknown
+  scenarios fall back to the low-conflict default silently — no 400s.
+- Frontend renders a pill-style toggle with `aria-selected` state,
+  per-scenario summary caption, scenario-aware Download PDF href, and
+  a co-parent email body that auto-includes whichever scenario is
+  currently selected.
+- Both scenarios ship the SAME six topic titles with different
+  agree/differ/incomplete mixes; low emphasises shared understanding
+  (3/2/1), high emphasises differences with one shared anchor (1/4/1).
+  Notes are Latin-1 safe (no em-dashes) — enforced by test.
+
+**Regression:** 13/13 backend + 12/12 frontend tests pass.
+
 ### 2026-09-09 — Iter185 · Landing Smoke Render Test (jsdom)
 
 **🟢 P2 — Landing.jsx crash-fail regression test**

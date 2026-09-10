@@ -421,23 +421,30 @@ _ALLOWED_SAMPLE_PDFS = frozenset({
 # matches the literal path first (route ordering, not method dispatch).
 
 @router.get("/samples/joint-alignment-preview.pdf")
-async def download_joint_alignment_sample_pdf():
+async def download_joint_alignment_sample_pdf(scenario: str | None = None):
     """Serve the printable sample of the private Joint Alignment
     Preview. Public — this is a marketing artefact a parent can email
     to their co-parent before signing up. No PII, no real data.
 
-    Content is fixed so we allow aggressive caching.
+    `?scenario=low-conflict|high-conflict` selects the topic dataset
+    (defaults to low-conflict). Unknown values fall back silently so a
+    stray URL never 400s the download.
+
+    Content is fixed per scenario, so we cache aggressively per URL.
     """
     from fastapi.responses import Response
-    from joint_alignment_sample_pdf import build_joint_alignment_sample_pdf
-    pdf_bytes = build_joint_alignment_sample_pdf()
+    from joint_alignment_sample_pdf import (
+        build_joint_alignment_sample_pdf,
+        normalise_scenario,
+    )
+    scenario_key = normalise_scenario(scenario)
+    pdf_bytes = build_joint_alignment_sample_pdf(scenario_key)
+    filename = f"sacoparents-joint-alignment-sample-{scenario_key}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={
-            "Content-Disposition": (
-                'inline; filename="sacoparents-joint-alignment-sample.pdf"'
-            ),
+            "Content-Disposition": f'inline; filename="{filename}"',
             "Cache-Control": "public, max-age=86400",
         },
     )
