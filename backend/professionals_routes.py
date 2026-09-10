@@ -202,7 +202,7 @@ async def list_professionals(
 
 
 # ---------------------- Public intro voice (marketing) ---------------------- #
-# Streams a shimmer-voiced explainer of what SA CoParents is + the
+# Streams an ElevenLabs-voiced explainer of what SA CoParents is + the
 # four-step Align workflow. Public — no auth — because the surface it
 # powers (/for-professionals) is a public marketing page. The audio is
 # cached globally per (script_sha, voice, model) so re-plays are free
@@ -239,7 +239,7 @@ async def for_professionals_intro_audio(
     voice: Optional[str] = None,
     model: Optional[str] = None,
 ):
-    """Stream the shimmer-voiced intro as MP3. Public endpoint —
+    """Stream the ElevenLabs-voiced intro as MP3. Public endpoint —
     same audio served to every visitor of /for-professionals."""
     from fastapi.responses import StreamingResponse
     from io import BytesIO

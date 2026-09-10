@@ -1,5 +1,5 @@
 /**
- * ProfessionalsIntroAudio — shimmer-voiced audio explainer for the
+ * ProfessionalsIntroAudio — ElevenLabs-voiced audio explainer for the
  * /for-professionals page. Public asset (no auth required).
  *
  * UX:
@@ -9,7 +9,7 @@
  *    handed to a native <audio> element that only fetches on Play.
  *  * Transcript is always visible so a professional skimming the page
  *    can decide whether to listen without hitting Play.
- *  * "Shimmer voice" chip near the player so mediators know it's
+ *  * "Rachel voice" chip near the player so mediators know it's
  *    intentionally warm/female — no surprise on Play.
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -19,14 +19,14 @@ import { logError } from "../lib/logger";
 
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
 
-// Human-friendly labels for the 4 OpenAI voices the backend supports
+// Human-friendly labels for the 4 ElevenLabs voices the backend supports
 // (see `professionals_intro_voice.py::SUPPORTED_VOICES`). We keep the
 // labels short so the chip row fits mobile widths without wrapping.
 const VOICE_META = {
-  shimmer: { label: "Shimmer", hint: "Warm, female" },
-  nova: { label: "Nova", hint: "Bright, female" },
-  fable: { label: "Fable", hint: "Narrator, neutral" },
-  alloy: { label: "Alloy", hint: "Calm, male" },
+  rachel: { label: "Rachel", hint: "Calm, female" },
+  bella: { label: "Bella", hint: "Soft warmth, female" },
+  adam: { label: "Adam", hint: "Grounded, male" },
+  antoni: { label: "Antoni", hint: "Professional, male" },
 };
 
 export default function ProfessionalsIntroAudio() {
@@ -36,7 +36,7 @@ export default function ProfessionalsIntroAudio() {
   const [playing, setPlaying] = useState(false);
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioError, setAudioError] = useState(null);
-  const [voice, setVoice] = useState("shimmer");
+  const [voice, setVoice] = useState("rachel");
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -167,7 +167,7 @@ export default function ProfessionalsIntroAudio() {
           className="inline-flex items-center gap-1 rounded-full bg-[#F5F1FB] text-[#3D1A78] text-[10px] uppercase tracking-[0.18em] font-bold px-2.5 py-1"
           data-testid="for-pros-intro-audio-voice-chip"
         >
-          {(VOICE_META[voice] || VOICE_META.shimmer).label} voice
+          {(VOICE_META[voice] || VOICE_META.rachel).label} voice
         </span>
       </div>
 
@@ -231,7 +231,7 @@ export default function ProfessionalsIntroAudio() {
           className="text-xs text-[#857E9C]"
           data-testid="for-pros-intro-audio-runtime"
         >
-          ~60 seconds · OpenAI TTS
+          ~60 seconds · ElevenLabs
         </span>
       </div>
 

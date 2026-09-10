@@ -61,6 +61,7 @@ import ProfessionalJointAlignmentBulk from "@/pages/ProfessionalJointAlignmentBu
 import ProfessionalJointAlignmentBulkHistory from "@/pages/ProfessionalJointAlignmentBulkHistory";
 import JointAlignmentPreview from "@/pages/JointAlignmentPreview";
 import JointAlignmentSamplePreview from "@/pages/JointAlignmentSamplePreview";
+import CompleteAlignmentReport from "@/pages/CompleteAlignmentReport";
 import ShareWithProfessional from "@/pages/ShareWithProfessional";
 import SharedWithProfessionals from "@/pages/SharedWithProfessionals";
 import ForPortalEngineers from "@/pages/ForPortalEngineers";
@@ -149,6 +150,8 @@ function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/samples" element={<Samples />} />
         <Route path="/samples/joint-alignment-preview" element={<JointAlignmentSamplePreview />} />
+        <Route path="/complete-alignment-report" element={<ProtectedRoute><CompleteAlignmentReport /></ProtectedRoute>} />
+        <Route path="/complete-alignment-report/joint/:caseId" element={<ProtectedRoute><CompleteAlignmentReport /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/onboarding/what-do-you-need" element={<ProtectedRoute><OnboardingIntake /></ProtectedRoute>} />

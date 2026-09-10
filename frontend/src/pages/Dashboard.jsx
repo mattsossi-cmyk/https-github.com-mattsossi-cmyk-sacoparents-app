@@ -576,6 +576,60 @@ export default function Dashboard() {
           <EcosystemStrip variant="compact" />
         </div>
 
+        {/* Complete Alignment Report — new (2026-09) unified 10-section
+            report that stitches every completed reflection into one
+            artefact, mirroring the sacoparentsalign.com structure. Two
+            entry points: the individual variant (this parent's
+            reflections only) and a joint variant that unlocks once a
+            case has two accepted parents. Keeping the tile above the
+            "Invite a professional" card so a parent sees their most
+            complete report first, then decides who to share it with. */}
+        <div
+          className="mt-6 rounded-3xl border border-[#D6CFE8] bg-gradient-to-br from-[#FAF6FF] to-[#F1E7FA] p-5 sm:p-6"
+          data-testid="dashboard-complete-alignment-card"
+        >
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                One report. Ten sections. Every reflection.
+              </div>
+              <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-snug">
+                Complete Alignment Report
+              </h3>
+              <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed max-w-xl">
+                Every reflection you complete on SA CoParents — Foundation
+                Statement, Communication, Activities, Schedule, Child Needs,
+                Safety, Co-Parenting — stitched into one ten-section report
+                using the same structure as{" "}
+                <span className="font-semibold">sacoparentsalign.com</span>.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  to="/complete-alignment-report"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-4 py-2 text-sm font-semibold"
+                  data-testid="dashboard-complete-alignment-cta"
+                >
+                  My Complete Alignment Report <ChevronRight size={14} />
+                </Link>
+                <a
+                  href="https://sacoparentsalign.com/samples"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-4 py-2 text-sm font-semibold"
+                  data-testid="dashboard-complete-alignment-samples"
+                >
+                  See sample reports
+                </a>
+              </div>
+              <p className="text-[11px] text-[#857E9C] mt-3 italic">
+                For a joint (two-parent) Complete Alignment Report, your
+                mediator, attorney, or therapist creates the case on{" "}
+                sacoparentsalign.com and invites both parents.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Invite a Professional — parent-controlled report sharing. */}
         <div
           className="mt-6 rounded-3xl border border-[#D6CFE8] bg-gradient-to-br from-[#F5F1FB] to-[#EFE7FA] p-5 sm:p-6"

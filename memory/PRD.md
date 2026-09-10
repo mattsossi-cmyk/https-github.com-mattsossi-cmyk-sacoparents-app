@@ -27,6 +27,77 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-10 — Iter188 · Complete Alignment Report (unified 10-section)
+
+**🟢 P1 — New unified assessment report mirroring `sacoparentsalign.com`**
+Combines every reflection a parent has completed into a single 10-section
+report. The skeleton is identical to sacoparentsalign.com's universal
+Joint Alignment Report so a mediator trained on Align opens either the
+individual or joint variant and always knows where to look.
+
+- **Backend** (`complete_alignment_aggregator.py`) — READ-ONLY pull across
+  7 lanes keyed on `user_id`: Foundation (`prep_data`), Communication
+  (`communication_reflection`), Activities & Costs (`activities_reflection`),
+  Parenting Schedule (`parenting_schedule_reflection`), Child Needs
+  (`snc_v2_answers` + `snc2_reports`), Safety (`safety_assessments`),
+  Co-Parenting (`cp_reports`). Deterministic `LANES` order shared with
+  frontend + PDF. Two entry points: `aggregate_for_user()` and
+  `aggregate_for_case()` (joint = both parents on the same case).
+- **PDF** (`complete_alignment_report_pdf.py`) — FPDF2-based renderer
+  producing the 10 sections verbatim from sacoparentsalign.com:
+  01 Complete Alignment Overview · 02 Your Child at the Center ·
+  03 Where You Align (joint) / Your Reflection Summary (individual) ·
+  04 Where Your Perspectives Differ (joint) / Areas You've Explored
+  (individual) · 05 What Might Your Child Need? · 06 Options & Resources ·
+  07 Questions for Parent Conversation · 08 Professional Conversation
+  Guide · 09 Parent Action Plan · 10 Complete Alignment Summary.
+  Clinical guardrails baked in on every page ("Educational and
+  organizational tool - not a diagnosis or court submission" +
+  sacoparentsalign.com copyright footer).
+- **Routes** (`complete_alignment_report_routes.py`, mounted under `/api`):
+  * `GET /complete-report/mine` - JSON view for signed-in parent
+  * `GET /complete-report/mine.pdf` - individual PDF download
+  * `GET /complete-report/joint/{case_id}` - joint JSON (parent-or-professional
+    membership required; 404 for unknown/unauthorised to avoid case-id leak)
+  * `GET /complete-report/joint/{case_id}.pdf` - joint PDF download
+- **Frontend** (`CompleteAlignmentReport.jsx`) - live viewer that mirrors
+  the PDF skeleton. Uses `useAuth()` hook (not `localStorage`). Routes:
+  `/complete-alignment-report` and `/complete-alignment-report/joint/:caseId`.
+  Testids `complete-report-section-01..10`, `complete-report-lane-{id}`,
+  `complete-report-download-pdf`.
+- **Dashboard** - new tile `dashboard-complete-alignment-card` with primary
+  CTA to the individual viewer + secondary link to
+  `sacoparentsalign.com/samples`. Placed directly after the EcosystemStrip.
+- **Tests** - `test_iter184_complete_alignment_report.py` (8 pytest) covering
+  canonical lane order, PDF renders end-to-end (empty + populated + joint
+  variants), auth gating (401 no-token, 422 malformed case_id, 404 unknown).
+- **Testing agent verification (iter60)** - Backend 15/15 pytest green;
+  Frontend 100% pass on all 10 section testids, lane rows, PDF download,
+  dashboard tile presence, mobile 390px zero overflow.
+
+### 2026-09-10 — Iter187 · ElevenLabs TTS (replaces OpenAI TTS)
+
+**🟢 P2 — Professional intro audio migrated to ElevenLabs**
+- `professionals_intro_voice.py` rewritten to use the ElevenLabs Python
+  SDK (v2.67) instead of `emergentintegrations.llm.openai.OpenAITextToSpeech`.
+- Four curated voices: **Rachel** (default), **Adam**, **Bella**, **Antoni** -
+  ElevenLabs public-library voice IDs (`21m00Tcm4TlvDq8ikWAM`, etc.),
+  stable across plans, no cloning required.
+- Model: `eleven_multilingual_v2` (highest quality). Also supports
+  `eleven_turbo_v2_5` fallback.
+- Cache key extended with `provider='elevenlabs'` so any residual OpenAI
+  cache entries are auto-invalidated on first play. First-play verified:
+  ~1.09 MB MP3. Second play: `x-voice-cache: hit`.
+- `ELEVENLABS_API_KEY` added to `/app/backend/.env`.
+- `RESEND_API_KEY` rotated at the same time (user provided
+  `re_814Lr6Gh_...`). Production UI secret still needs manual rotation.
+- Frontend `ProfessionalsIntroAudio.jsx` labels updated: Rachel / Bella /
+  Adam / Antoni. Runtime label now reads "~60 seconds · ElevenLabs".
+- `test_iter181_professionals_intro_voice.py` rewritten for the new voice
+  set + provider (7 pytest, all green).
+
+
+## What's Implemented
 ### 2026-09-10 — Iter187 · Voice Picker + Sample PDF Mini-Quiz
 
 **🟢 P2 — Voice picker on `/for-professionals` intro audio**

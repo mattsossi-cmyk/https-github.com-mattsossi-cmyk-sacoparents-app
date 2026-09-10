@@ -216,7 +216,7 @@ export default function ForProfessionals() {
             </a>
           </div>
 
-          {/* 60-second shimmer-voiced audio explainer. Lazy — never
+          {/* 60-second ElevenLabs-voiced audio explainer. Lazy — never
               fires the TTS endpoint until a visitor clicks Play. */}
           <div className="mt-8 max-w-2xl">
             <ProfessionalsIntroAudio />
