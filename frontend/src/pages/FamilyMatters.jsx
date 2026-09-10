@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Archive, ArchiveRestore, Search, CheckCircle2, Clock, ShieldAlert, AlertTriangle, StickyNote, RefreshCw } from "lucide-react";
+import { ArrowLeft, Archive, ArchiveRestore, Search, CheckCircle2, Clock, ShieldAlert, AlertTriangle, StickyNote, RefreshCw, Lock } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
@@ -28,6 +28,7 @@ export function expiringInvites(j) {
 const daysLeft = (iso) => Math.ceil((new Date(iso).getTime() - Date.now()) / DAY);
 
 export function matterStatus(j) {
+  if (j.closed_at) return { key: "archived", label: "Closed" };
   if (j.archived) return { key: "archived", label: "Archived" };
   if (j.status === "ready") return { key: "ready", label: "Report Ready" };
   const a = j.participants?.a?.completed, b = j.participants?.b?.completed;
@@ -46,7 +47,7 @@ const badgeClass = {
   awaiting_parents: "bg-secondary text-foreground",
 };
 
-function MatterRow({ j, onToggle, onReissue }) {
+function MatterRow({ j, onToggle, onReissue, onClose }) {
   const s = matterStatus(j);
   const done = ["a", "b"].filter((r) => j.participants?.[r]?.completed).length;
   const [showNotes, setShowNotes] = useState(false);
@@ -81,8 +82,11 @@ function MatterRow({ j, onToggle, onReissue }) {
         <Link to={`/joint/${j.id}`} data-testid={`matter-open-link-${j.id}`}><Button size="sm" variant={s.key === "ready" ? "default" : "outline"} data-testid={`matter-open-btn-${j.id}`}>{s.key === "ready" ? "View Report" : "Open"}</Button></Link>
         <Button size="sm" variant="ghost" onClick={() => setShowNotes((v) => !v)} className="gap-1.5" data-testid={`matter-notes-btn-${j.id}`}><StickyNote className="h-3.5 w-3.5" /> Notes</Button>
         <Button size="sm" variant="ghost" onClick={() => onToggle(j)} className="gap-1.5" data-testid={`matter-archive-btn-${j.id}`}>
-          {j.archived ? <><ArchiveRestore className="h-3.5 w-3.5" /> Restore</> : <><Archive className="h-3.5 w-3.5" /> Archive</>}
+          {j.archived ? <><ArchiveRestore className="h-3.5 w-3.5" /> {j.closed_at ? "Reopen" : "Restore"}</> : <><Archive className="h-3.5 w-3.5" /> Archive</>}
         </Button>
+        {!j.closed_at && !j.archived && (
+          <Button size="sm" variant="ghost" onClick={() => onClose(j)} className="gap-1.5 text-muted-foreground" data-testid={`matter-close-btn-${j.id}`}><Lock className="h-3.5 w-3.5" /> Close case</Button>
+        )}
       </div>
     </div>
     {showNotes && <MatterNotes rid={j.id} />}
@@ -100,8 +104,23 @@ export default function FamilyMatters() {
 
   const toggle = async (j) => {
     try {
-      await api.patch(`/joint/reports/${j.id}/archive`, { archived: !j.archived });
-      toast.success(j.archived ? "Matter restored" : "Matter archived");
+      if (j.closed_at) {
+        await api.patch(`/joint/reports/${j.id}/close`, { closed: false });
+        toast.success("Case reopened");
+      } else {
+        await api.patch(`/joint/reports/${j.id}/archive`, { archived: !j.archived });
+        toast.success(j.archived ? "Matter restored" : "Matter archived");
+      }
+      load();
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
+
+  const closeCase = async (j) => {
+    const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);
+    if (note === null) return;
+    try {
+      await api.patch(`/joint/reports/${j.id}/close`, { closed: true, note });
+      toast.success("Case closed");
       load();
     } catch (e) { toast.error(formatApiError(e)); }
   };
@@ -162,7 +181,7 @@ export default function FamilyMatters() {
         ) : shown.length === 0 ? (
           <p className="text-sm text-muted-foreground bg-white border border-border rounded-lg p-6" data-testid="matters-empty">No family matters match this view.</p>
         ) : (
-          <ul className="space-y-3" data-testid="matters-list">{shown.map((j) => <MatterRow key={j.id} j={j} onToggle={toggle} onReissue={reissue} />)}</ul>
+          <ul className="space-y-3" data-testid="matters-list">{shown.map((j) => <MatterRow key={j.id} j={j} onToggle={toggle} onReissue={reissue} onClose={closeCase} />)}</ul>
         )}
         <NoteSearch />
       </main>

@@ -18,7 +18,7 @@ const ParentCell = ({ p, testId }) => (
   </span>
 );
 
-export const CasesTable = ({ cases }) => {
+export const CasesTable = ({ cases, onClose }) => {
   const rows = (cases || []).filter((j) => j.is_creator && !j.archived);
   if (rows.length === 0) return null;
   return (
@@ -49,6 +49,9 @@ export const CasesTable = ({ cases }) => {
                   <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${cls}`} data-testid={`case-row-status-${j.id}`}>{label}</span>
                   {j.case_status === "READY_FOR_ALIGNMENT" && (
                     <Link to={`/joint/${j.id}`} className="ml-2 text-xs font-medium text-primary hover:underline" data-testid={`case-row-generate-${j.id}`}>Generate report →</Link>
+                  )}
+                  {onClose && j.case_status !== "CLOSED" && (
+                    <button type="button" onClick={() => onClose(j)} className="ml-2 text-xs text-muted-foreground hover:text-foreground hover:underline" data-testid={`case-row-close-${j.id}`}>Close</button>
                   )}
                 </td>
               </tr>

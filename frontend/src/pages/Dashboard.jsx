@@ -444,7 +444,12 @@ export default function Dashboard() {
             <p className="text-sm text-muted-foreground" data-testid="joints-empty">No joint reports yet. Create one above to invite your co-parent.</p>
           ) : (
             <>
-            {isPro && <CasesTable cases={joints} />}
+            {isPro && <CasesTable cases={joints} onClose={async (j) => {
+              const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);
+              if (note === null) return;
+              try { await api.patch(`/joint/reports/${j.id}/close`, { closed: true, note }); toast.success("Case closed"); setJoints((prev) => prev.map((x) => (x.id === j.id ? { ...x, archived: true, closed_at: new Date().toISOString(), case_status: "CLOSED" } : x))); }
+              catch (e) { toast.error(formatApiError(e)); }
+            }} />}
             <div className="grid md:grid-cols-2 gap-4" data-testid="joints-grid">
               {joints.filter((j) => !j.archived).map((j) => {
                 const ready = j.status === "ready";

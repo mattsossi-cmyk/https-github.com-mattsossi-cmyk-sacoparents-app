@@ -462,3 +462,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-09-10 — Resend custom sender domain wiring (BUILD 2026-09-10.6)
 - backend/.env: RESEND_API_KEY, RESEND_FROM_EMAIL=noreply@sacoparentsalign.com (owner-supplied). email_utils: `_post_resend()` tries Resend first (`from: "SA CoParents Align <noreply@…>"`, reply_to), falls back to Emergent sender on any non-2xx/exception; `send_email_detailed()` returns (id, provider). Admin email-test reports which sender was used.
 - BLOCKER: supplied key `sk_…` → Resend 401 "API key is invalid" (real Resend keys start `re_`). Fallback verified working (provider=emergent). Also domain must be verified in Resend (SPF/DKIM DNS) or sends return 403 → fallback. Production env must also get RESEND_API_KEY/RESEND_FROM_EMAIL before deploy.
+
+## 2026-09-10 — Close Case action (BUILD 2026-09-10.7; test_close_case 1/1)
+- `PATCH /api/joint/reports/{rid}/close` {closed, note}: sets closed_at/closed_by/closed_note + archived (hidden from active Cases table & dashboard cards); closed=false reopens. `case_status` → CLOSED; joint_public exposes `closed_at`. UI: "Close" link in Cases table row + "Close case" button on /matters rows (prompt for optional note); closed matters show "Closed" badge with "Reopen".
+- DNS check (dig): sacoparentsalign.com has NO SPF/DKIM/DMARC records yet; Resend key still invalid (sk_). Prod still 2026-09-10.2.

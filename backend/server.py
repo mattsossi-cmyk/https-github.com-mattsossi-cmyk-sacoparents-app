@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.6"
+BUILD_ID = "2026-09-10.7"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -847,6 +847,7 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
         "shared_with_me": uid in doc.get("shared_with", []),
         "case_code": doc.get("case_code"),
         "case_status": case_status(doc),
+        "closed_at": doc.get("closed_at"),
         "archived": bool(doc.get("archived")),
         "participants": _participants_public(doc),
     }
@@ -2199,6 +2200,25 @@ async def archive_joint_report(rid: str, body: ArchiveIn, user=Depends(get_curre
         raise HTTPException(status_code=404, detail="Report not found")
     await db.joint_reports.update_one({"id": rid}, {"$set": {"archived": body.archived, "archived_at": datetime.now(timezone.utc).isoformat() if body.archived else None}})
     return {"ok": True, "archived": body.archived}
+
+
+class CloseIn(BaseModel):
+    closed: bool = True
+    note: str = ""
+
+
+@api.patch("/joint/reports/{rid}/close")
+async def close_joint_report(rid: str, body: CloseIn, user=Depends(get_current_user)):
+    doc = await db.joint_reports.find_one({"id": rid}, {"_id": 0})
+    if not doc or (doc.get("created_by") != user["_id"] and doc.get("professional_id") != user["_id"]):
+        raise HTTPException(status_code=404, detail="Report not found")
+    now = datetime.now(timezone.utc).isoformat()
+    if body.closed:
+        updates = {"closed_at": now, "closed_by": user["_id"], "closed_note": body.note.strip()[:500], "archived": True, "archived_at": now}
+    else:
+        updates = {"closed_at": None, "closed_by": None, "closed_note": "", "archived": False, "archived_at": None}
+    await db.joint_reports.update_one({"id": rid}, {"$set": updates})
+    return {"ok": True, "closed": body.closed, "case_status": case_status({**doc, **updates})}
 
 
 PRO_INVITE_TTL_HOURS = 72
