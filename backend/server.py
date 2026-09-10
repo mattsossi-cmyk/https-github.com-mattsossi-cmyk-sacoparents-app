@@ -223,7 +223,11 @@ if not cors_origins:
         "https://sacoparentsapp.online",
         "https://www.sacoparentsapp.online",
     ]
-    preview_origin = os.environ.get("REACT_APP_BACKEND_URL")
+    preview_origin = (
+        os.environ.get("PUBLIC_APP_URL")
+        or os.environ.get("PUBLIC_API_URL")
+        or os.environ.get("REACT_APP_BACKEND_URL")
+    )
     if preview_origin and preview_origin not in cors_origins:
         cors_origins.append(preview_origin)
 app.add_middleware(
