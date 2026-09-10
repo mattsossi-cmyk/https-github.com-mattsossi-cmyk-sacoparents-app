@@ -16,7 +16,7 @@ export function AdminProfessionals() {
     setTesting(true);
     try {
       const { data } = await api.post("/admin/email-test");
-      setTestResult(`Provider accepted the message for ${data.to} at ${data.sent_at} (id ${data.provider_id || "n/a"}, build ${data.build}). Check inbox and spam.`);
+      setTestResult(`Provider accepted the message for ${data.to} at ${data.sent_at} — sender: ${data.sender} (id ${data.provider_id || "n/a"}, build ${data.build}). Check inbox and spam.`);
       toast.success("Test email sent");
     } catch (e) { setTestResult(""); toast.error(formatApiError(e)); } finally { setTesting(false); }
   };

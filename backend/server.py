@@ -33,7 +33,7 @@ from joint_engine import generate_joint_report, generate_agreement, sample_media
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
-from email_utils import send_email, EMAIL_FROM_NAME, FIXTURE_EMAIL_RE
+from email_utils import send_email, send_email_detailed, EMAIL_FROM_NAME, FIXTURE_EMAIL_RE, RESEND_FROM_EMAIL
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.5"
+BUILD_ID = "2026-09-10.6"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -2030,7 +2030,7 @@ async def admin_email_test(user=Depends(get_current_user)):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     sent_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    provider_id = await send_email(
+    provider_id, provider = await send_email_detailed(
         to=user["email"],
         subject=f"Delivery test - {EMAIL_FROM_NAME}",
         html=_pro_email_wrap(
@@ -2039,7 +2039,8 @@ async def admin_email_test(user=Depends(get_current_user)):
             "If you can read this, verification codes and invitations from this server can reach your inbox.</p>"
             "<p>If it landed in spam or junk, please mark it as safe so future codes arrive promptly.</p>"),
     )
-    return {"ok": True, "to": user["email"], "provider_id": provider_id, "sent_at": sent_at, "build": BUILD_ID}
+    return {"ok": True, "to": user["email"], "provider_id": provider_id, "sent_at": sent_at, "build": BUILD_ID,
+            "sender": f"{RESEND_FROM_EMAIL} via Resend" if provider == "resend" else "default sender (Resend not active — check API key / domain verification)"}
 
 
 @api.get("/admin/professionals")

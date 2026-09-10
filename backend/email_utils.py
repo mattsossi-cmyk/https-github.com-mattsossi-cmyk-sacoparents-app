@@ -16,6 +16,8 @@ EMAIL_BASE_URL = "https://integrations.emergentagent.com"
 EMAIL_KEY = os.environ["EMERGENT_EMAIL_KEY"]
 EMAIL_FROM_NAME = os.environ["EMAIL_FROM_NAME"]
 EMAIL_REPLY_TO = os.environ.get("EMAIL_REPLY_TO")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "")
 
 _SHORTENERS = ("bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly", "goo.gl", "rebrand.ly")
 _CRED_ASK = ("reply with your password", "reply with the code", "send your password", "cvv",
@@ -152,9 +154,37 @@ async def _post_with_retry(payload: dict, attempts: int = EMAIL_ATTEMPTS) -> str
     raise _send_failure(last_status)
 
 
-async def send_email(*, to: str, subject: str, html: str, reply_to: str | None = None) -> str | None:
+async def _post_resend(to: str, subject: str, html: str, reply_to: str | None) -> str | None:
+    """Send via Resend from the custom domain. Returns provider id, or None if Resend is unusable (caller falls back)."""
+    if not (RESEND_API_KEY and RESEND_FROM_EMAIL):
+        return None
+    payload = {"from": f"{EMAIL_FROM_NAME} <{RESEND_FROM_EMAIL}>", "to": [to], "subject": subject, "html": html}
+    contact = reply_to or EMAIL_REPLY_TO
+    if contact:
+        payload["reply_to"] = contact
+    try:
+        async with httpx.AsyncClient(timeout=EMAIL_TIMEOUT_S) as client:
+            resp = await client.post("https://api.resend.com/emails", headers={"Authorization": f"Bearer {RESEND_API_KEY}"}, json=payload)
+        if resp.status_code < 300:
+            return resp.json().get("id")
+        logger.warning(f"Resend rejected message ({resp.status_code}); falling back to default sender")
+    except Exception as e:
+        logger.warning(f"Resend unavailable ({type(e).__name__}); falling back to default sender")
+    return None
+
+
+async def send_email_detailed(*, to: str, subject: str, html: str, reply_to: str | None = None) -> tuple[str | None, str]:
+    """Returns (provider_id, provider) where provider is 'resend', 'emergent' or 'skipped'."""
     _assert_safe_email(subject, html)
     if FIXTURE_EMAIL_RE.search(to):
         logger.info(f"Skipping email to fixture address {to}")
-        return None
-    return await _post_with_retry(_email_payload(to, subject, html, reply_to))
+        return None, "skipped"
+    resend_id = await _post_resend(to, subject, html, reply_to)
+    if resend_id:
+        return resend_id, "resend"
+    return await _post_with_retry(_email_payload(to, subject, html, reply_to)), "emergent"
+
+
+async def send_email(*, to: str, subject: str, html: str, reply_to: str | None = None) -> str | None:
+    provider_id, _provider = await send_email_detailed(to=to, subject=subject, html=html, reply_to=reply_to)
+    return provider_id

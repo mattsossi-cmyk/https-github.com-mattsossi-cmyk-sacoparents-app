@@ -458,3 +458,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-09-10 — Invitation email preview (BUILD 2026-09-10.5; test_invitation_preview 2/2)
 - `POST /api/joint/invitations/preview` (approved pros): renders both parent invitation emails via `_invite_email_content` with placeholder token/case code — nothing stored or sent. `InvitationPreview.jsx` "Preview emails" button beside Send Invitations on wizard step 3: dialog with Parent A/B tabs, subject, iframe body, "Send Invitations" from the dialog.
 - PROD at check time: 2026-09-10.2 (revoke live; .3 Case IDs/.4 App links/.5 preview pending deploy). App-side ?invite= handling and custom sender domain: blocked on sibling project / owner answers.
+
+## 2026-09-10 — Resend custom sender domain wiring (BUILD 2026-09-10.6)
+- backend/.env: RESEND_API_KEY, RESEND_FROM_EMAIL=noreply@sacoparentsalign.com (owner-supplied). email_utils: `_post_resend()` tries Resend first (`from: "SA CoParents Align <noreply@…>"`, reply_to), falls back to Emergent sender on any non-2xx/exception; `send_email_detailed()` returns (id, provider). Admin email-test reports which sender was used.
+- BLOCKER: supplied key `sk_…` → Resend 401 "API key is invalid" (real Resend keys start `re_`). Fallback verified working (provider=emergent). Also domain must be verified in Resend (SPF/DKIM DNS) or sends return 403 → fallback. Production env must also get RESEND_API_KEY/RESEND_FROM_EMAIL before deploy.
