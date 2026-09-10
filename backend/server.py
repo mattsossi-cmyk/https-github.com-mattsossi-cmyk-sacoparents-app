@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.8"
+BUILD_ID = "2026-09-10.9"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -1982,13 +1982,14 @@ class ReferIn(BaseModel):
     report_id: str | None = None
 
 
-async def _referral_matter_line(user: dict, report_id: str | None) -> str:
+async def _referral_matter_line(user: dict, report_id: str | None) -> tuple[str, str]:
     if not report_id:
-        return ""
+        return "", ""
     rep = await db.joint_reports.find_one({"id": report_id, "created_by": user["_id"]}, {"_id": 0, "case_code": 1, "subject_label": 1})
     if not rep:
         raise HTTPException(status_code=404, detail="Matter not found")
-    return f"<p><strong>Matter:</strong> {escape(rep.get('subject_label', 'Joint Report'))} — Alignment Case {escape(rep.get('case_code', ''))}</p>"
+    code = rep.get("case_code", "")
+    return f"<p><strong>Matter:</strong> {escape(rep.get('subject_label', 'Joint Report'))} — Alignment Case {escape(code)}</p>", code
 
 
 def _referral_html(user: dict, colleague: dict, matter_line: str, message: str) -> str:
@@ -2014,7 +2015,7 @@ async def refer_to_professional(pro_id: str, body: ReferIn, user=Depends(get_cur
     colleague = await db.users.find_one({"_id": pro_id, "role": {"$in": list(PRO_ROLES)}, "approved": True})
     if not colleague:
         raise HTTPException(status_code=404, detail="Professional not found")
-    matter_line = await _referral_matter_line(user, body.report_id)
+    matter_line, case_code = await _referral_matter_line(user, body.report_id)
     message = body.message.strip()
     await send_email(
         to=colleague["email"],
@@ -2023,8 +2024,54 @@ async def refer_to_professional(pro_id: str, body: ReferIn, user=Depends(get_cur
         reply_to=user["email"],
     )
     now = datetime.now(timezone.utc).isoformat()
-    await db.referrals.insert_one({"id": str(uuid.uuid4()), "from_id": user["_id"], "to_id": pro_id, "report_id": body.report_id, "message": message[:1000], "at": now})
+    await db.referrals.insert_one({"id": str(uuid.uuid4()), "from_id": user["_id"], "from_name": user.get("name", ""), "to_id": pro_id, "to_name": colleague.get("name", ""),
+                                   "report_id": body.report_id, "case_code": case_code, "message": message[:1000], "status": "pending", "at": now})
     return {"ok": True, "to": colleague.get("name", colleague["email"])}
+
+
+def _referral_public(r: dict) -> dict:
+    return {k: r.get(k) for k in ("id", "from_id", "from_name", "to_id", "to_name", "report_id", "case_code", "message", "status", "at", "responded_at", "response_note")}
+
+
+@api.get("/professionals/referrals")
+async def list_referrals(user=Depends(get_current_user)):
+    require_approved_professional(user, "Only approved professionals can view referrals")
+    received = await db.referrals.find({"to_id": user["_id"]}, {"_id": 0}).sort("at", -1).to_list(200)
+    sent = await db.referrals.find({"from_id": user["_id"]}, {"_id": 0}).sort("at", -1).to_list(200)
+    return {"received": [_referral_public(r) for r in received], "sent": [_referral_public(r) for r in sent]}
+
+
+class ReferralRespondIn(BaseModel):
+    accept: bool
+    note: str = ""
+
+
+@api.post("/professionals/referrals/{ref_id}/respond")
+async def respond_referral(ref_id: str, body: ReferralRespondIn, user=Depends(get_current_user)):
+    require_approved_professional(user, "Only approved professionals can respond to referrals")
+    ref = await db.referrals.find_one({"id": ref_id, "to_id": user["_id"]})
+    if not ref:
+        raise HTTPException(status_code=404, detail="Referral not found")
+    if ref.get("status", "pending") != "pending":
+        raise HTTPException(status_code=400, detail="This referral has already been answered")
+    now = datetime.now(timezone.utc).isoformat()
+    status = "accepted" if body.accept else "declined"
+    note = body.note.strip()[:500]
+    await db.referrals.update_one({"id": ref_id}, {"$set": {"status": status, "responded_at": now, "response_note": note}})
+    referrer = await db.users.find_one({"_id": ref["from_id"]}, {"email": 1, "name": 1})
+    if referrer:
+        await send_email(
+            to=referrer["email"],
+            subject=f"Referral {status} by {user.get('name', 'a colleague')} - {EMAIL_FROM_NAME}",
+            html=_pro_email_wrap(
+                f"<p>Hi {escape(referrer.get('name') or 'there')},</p>"
+                f"<p><strong>{escape(user.get('name', 'Your colleague'))}</strong> has <strong>{status}</strong> the case referral you sent"
+                + (f" regarding Alignment Case {escape(ref['case_code'])}" if ref.get("case_code") else "") + ".</p>"
+                + (f"<blockquote style=\"border-left:3px solid #5B2A86;padding-left:12px;color:#333\">{escape(note)}</blockquote>" if note else "")
+                + f"<p>Reply directly: {escape(user['email'])}.</p>"),
+            reply_to=user["email"],
+        )
+    return {"ok": True, "status": status}
 
 
 @api.post("/admin/email-test")

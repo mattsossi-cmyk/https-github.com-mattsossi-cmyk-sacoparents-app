@@ -474,3 +474,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-09-10 — Valid Resend key installed (BUILD 2026-09-10.8)
 - RESEND_API_KEY replaced with owner's `re_…` key (send-only). Resend now returns **403 "domain is not verified"** (was 401). DNS check: sacoparentsalign.com has no DKIM (`resend._domainkey`), no `send.` MX/SPF, no `_dmarc`. Fallback (Emergent sender) delivered the live test (id 03de0927…). Once domain verified in Resend, no code change needed — sends switch automatically. Production env still needs RESEND_API_KEY/RESEND_FROM_EMAIL + Deploy.
+
+## 2026-09-10 — Referral inbox + dashboard mobile polish (BUILD 2026-09-10.9; test_referral_inbox 1/1)
+- referrals now store from_name/to_name/case_code/status(pending|accepted|declined)/responded_at/response_note. `GET /api/professionals/referrals` → {received, sent}; `POST /api/professionals/referrals/{id}/respond` {accept, note} (recipient only, once) emails referrer. `ReferralInbox.jsx` on pro dashboard (Received/Sent tabs, Accept/Decline with optional note prompt, "N new" badge; hidden when empty).
+- Mobile: header px-4/gap tightened, verified badge hidden <sm, main overflow-x-hidden, tool cards min-w-0, long CTA buttons wrap, link-code row stacks.
+- Resend: DNS records now present (DKIM/MX/DMARC) but Resend still reports domain not verified (403) → click Verify in Resend; fallback sender in use. Deploy instructions given via support (Republish → Manage Publishes → Secrets → add RESEND_API_KEY/RESEND_FROM_EMAIL → Re-publish; no API/CLI). Prod still .2.
+- User asked about seed joint sample case / mini-quiz / ElevenLabs voice chips — clarification requested (latter two don't exist in Align; likely sibling App).
