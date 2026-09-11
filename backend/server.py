@@ -30,7 +30,7 @@ from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_pay
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
 from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
-from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, verify_qr_png
+from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, build_session_prep_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
 from email_utils import send_email, send_email_detailed, EMAIL_FROM_NAME, FIXTURE_EMAIL_RE, RESEND_FROM_EMAIL
@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.10"
+BUILD_ID = "2026-09-10.11"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -1252,6 +1252,22 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="joint-report-{child}.pdf"'},
+    )
+
+
+@api.get("/joint/reports/{rid}/session-prep.pdf")
+async def session_prep_pdf(rid: str, user=Depends(get_current_user)):
+    doc = await get_joint_report_doc(rid, user)
+    if doc.get("professional_id") != user["_id"] and user["_id"] not in doc.get("shared_with", []):
+        raise HTTPException(status_code=403, detail="The Session Prep Sheet is available to the case professional only")
+    if doc.get("kind") == "agreement" or not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
+        raise HTTPException(status_code=400, detail="The Session Prep Sheet becomes available when both parents have completed their assessments")
+    await _log_report_access(doc, user, "Downloaded Session Prep Sheet", "download")
+    code = re.sub(r"[^A-Za-z0-9-]", "", doc.get("case_code") or rid[:8])
+    return Response(
+        content=build_session_prep_pdf({**generate_joint_report(doc), "case_code": doc.get("case_code")}),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="session-prep-{code}.pdf"'},
     )
 
 

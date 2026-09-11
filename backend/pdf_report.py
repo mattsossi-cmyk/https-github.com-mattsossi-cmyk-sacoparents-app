@@ -669,6 +669,77 @@ def _fmt_date(iso) -> str:
     return str(iso or "")[:10] or "—"
 
 
+def _prep_heading(pdf: FPDF, text: str) -> None:
+    pdf.ln(2)
+    pdf.set_font(FONT, "B", 9.5)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 6, _s(text.upper()), new_x="LMARGIN", new_y="NEXT")
+
+
+def _prep_line(pdf: FPDF, text: str, size: float = 9, italic: bool = False) -> None:
+    pdf.set_x(pdf.l_margin + 3)
+    pdf.set_font(FONT, "I" if italic else "", size)
+    pdf.set_text_color(*BODY)
+    pdf.multi_cell(0, 4.6, _s(f"-  {text}" if not italic else text), new_x="LMARGIN", new_y="NEXT")
+
+
+def _prep_checkbox(pdf: FPDF, text: str) -> None:
+    pdf.set_x(pdf.l_margin + 3)
+    pdf.set_font(FONT, "", 9)
+    pdf.set_text_color(*BODY)
+    pdf.multi_cell(0, 5, _s(f"[  ]  {text}"), new_x="LMARGIN", new_y="NEXT")
+
+
+def build_session_prep_pdf(r: dict) -> bytes:
+    pdf = _new_pdf()
+    pdf.set_auto_page_break(auto=False)
+    pdf.set_font(FONT, "B", 11)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 6, "SA CoParents Align", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "B", 17)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 8, _s("Session Prep Sheet - Facilitator Agenda"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 9)
+    pdf.set_text_color(*GRAY)
+    meta = f"Case {r.get('case_code') or '-'}  |  {r['subject_label']}  |  Child: {r['child_name']}  |  {r['parent_a_name']} / {r['parent_b_name']}  |  {r['date']}"
+    pdf.multi_cell(0, 4.5, _s(meta), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "I", 8)
+    pdf.multi_cell(0, 4, _s("Private facilitator working document. Neutral by design: it organizes perspectives and never recommends custody or judges a parent."), new_x="LMARGIN", new_y="NEXT")
+
+    _prep_heading(pdf, "1. Open with shared ground (3-5 min)")
+    for s in r["alignment_statements"][:4]:
+        _prep_line(pdf, s)
+
+    _prep_heading(pdf, "2. Top differences to work through")
+    diffs = [d for d in r["differences"]][:3]
+    if not diffs:
+        _prep_line(pdf, "No significant differences identified - use the time to firm up options.", italic=True)
+    for d in diffs:
+        pdf.set_x(pdf.l_margin + 3)
+        pdf.set_font(FONT, "B", 9)
+        pdf.set_text_color(*DARK)
+        pdf.multi_cell(0, 4.6, _s(d["area"]), new_x="LMARGIN", new_y="NEXT")
+        _prep_line(pdf, d["reframe"], size=8.5, italic=True)
+
+    _prep_heading(pdf, "3. Opening questions")
+    for q in (r["conversation"][:3] + r["questions"][:2]):
+        _prep_line(pdf, q)
+
+    _prep_heading(pdf, "4. Options on the table")
+    for o in r["options"][:4]:
+        _prep_line(pdf, o)
+
+    _prep_heading(pdf, "5. Close - choose one or two next steps")
+    for s in r["next_steps"][:4]:
+        _prep_checkbox(pdf, s)
+
+    pdf.ln(3)
+    pdf.set_font(FONT, "I", 8)
+    pdf.set_text_color(*GRAY)
+    pdf.multi_cell(0, 4, _s(f'"{r["philosophy"]}"'), new_x="LMARGIN", new_y="NEXT")
+    return bytes(pdf.output())
+
+
 def _closing_kv_rows(pdf: FPDF, r: dict) -> None:
     rows = [
         ("Case opened", _fmt_date(r.get("created_at"))),

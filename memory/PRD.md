@@ -496,3 +496,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 Sample Walkthrough
 - components/SampleWalkthrough.jsx: 10-step guided tour on sample (is_demo) Joint Report page; banner + floating step card, scroll+highlight each jr-* section, localStorage dismissal. Desktop+mobile screenshot verified, no overflow.
+
+## 2026-06 Session Prep Sheet (build 2026-09-10.11)
+- GET /api/joint/reports/{rid}/session-prep.pdf (case pro / shared pro only, 403 for parents): one-page facilitator agenda (shared ground, top 3 differences w/ reframe, opening questions, options, next-step checkboxes). Logged as download in access log. Button "Session Prep Sheet" in JointReport header. tests/test_session_prep.py 3 passed; PDF visually verified single page.

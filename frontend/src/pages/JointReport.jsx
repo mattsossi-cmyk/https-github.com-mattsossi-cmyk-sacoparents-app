@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Printer, CheckCircle2, Circle, Share2 } from "lucide-react";
+import { ArrowLeft, Printer, CheckCircle2, Circle, Share2, ClipboardList } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
@@ -108,6 +108,13 @@ export default function JointReport() {
             <Button size="sm" className="gap-2" asChild data-testid="joint-print-btn">
               <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${id}/pdf`} download aria-label="Download PDF">
                 <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Download PDF</span>
+              </a>
+            </Button>
+          )}
+          {ready && report && detail.is_creator && detail.kind !== "agreement" && (
+            <Button size="sm" variant="outline" className="gap-2 ml-2" asChild data-testid="session-prep-btn">
+              <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${id}/session-prep.pdf`} download aria-label="Download Session Prep Sheet">
+                <ClipboardList className="h-4 w-4" /> <span className="hidden sm:inline">Session Prep Sheet</span>
               </a>
             </Button>
           )}
