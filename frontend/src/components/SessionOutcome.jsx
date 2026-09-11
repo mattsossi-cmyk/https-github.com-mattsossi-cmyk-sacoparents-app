@@ -8,16 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 export function SessionOutcome({ rid, steps, initial, onSaved }) {
   const [chosen, setChosen] = useState(initial?.chosen_steps || []);
   const [summary, setSummary] = useState(initial?.summary || "");
+  const [followUp, setFollowUp] = useState(initial?.follow_up_date || "");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { setChosen(initial?.chosen_steps || []); setSummary(initial?.summary || ""); }, [initial]);
+  useEffect(() => { setChosen(initial?.chosen_steps || []); setSummary(initial?.summary || ""); setFollowUp(initial?.follow_up_date || ""); }, [initial]);
 
   const toggle = (s) => setChosen((c) => (c.includes(s) ? c.filter((x) => x !== s) : [...c, s]));
   const save = async () => {
     setSaving(true);
     try {
-      const { data } = await api.put(`/joint/reports/${rid}/session-outcome`, { chosen_steps: chosen, summary });
-      toast.success("Session outcome saved to the case record");
+      const { data } = await api.put(`/joint/reports/${rid}/session-outcome`, { chosen_steps: chosen, summary, follow_up_date: followUp });
+      toast.success(followUp ? `Outcome saved — reminder email on ${followUp}` : "Session outcome saved to the case record");
       onSaved?.(data.session_outcome);
     } catch (e) { toast.error(formatApiError(e)); }
     finally { setSaving(false); }
@@ -45,6 +46,13 @@ export function SessionOutcome({ rid, steps, initial, onSaved }) {
         })}
       </ul>
       <Textarea value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="Optional: what the parents agreed to try before the next session…" className="mt-4 min-h-[80px]" data-testid="session-outcome-summary" />
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-sm" data-testid="session-outcome-followup-label">
+          <span className="text-muted-foreground">Check-in date</span>
+          <input type="date" value={followUp} onChange={(e) => setFollowUp(e.target.value)} className="h-9 rounded-md border border-input bg-white px-2 text-sm" data-testid="session-outcome-followup-date" />
+        </label>
+        <span className="text-xs text-muted-foreground">We'll email you a reminder that morning with the chosen steps.</span>
+      </div>
       <div className="mt-3 flex items-center gap-3">
         <Button size="sm" onClick={save} disabled={saving} data-testid="session-outcome-save-btn">{saving ? "Saving…" : "Save outcome"}</Button>
         <span className="text-xs text-muted-foreground" data-testid="session-outcome-count">{chosen.length} step{chosen.length === 1 ? "" : "s"} chosen</span>

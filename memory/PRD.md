@@ -505,3 +505,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 Outcome in Closing Summary (build 2026-09-10.13)
 - Closing Summary PDF now has section 3 "Session outcome" (chosen steps, summary, recorded by/date); sections renumbered (closing note 4, timeline 5, capped at 6 events to stay one page). tests/test_closing_outcome.py + test_closing_summary.py 9 passed; PDF visually verified single page.
+
+## 2026-06 Follow-Up Reminder (build 2026-09-10.14)
+- session_outcome.follow_up_date (YYYY-MM-DD, validated). New cron follow-up-reminder (daily 8am Central, .emergent/crons.yml, 4 crons total) -> POST /api/cron/follow-up-reminder -> run_follow_up_reminders(): emails pro once per date (follow_up_reminder_sent flag, reset when date changes), logs lifecycle event, skips closed cases. Frontend date input in SessionOutcome. tests/test_follow_up_reminder.py + test_session_outcome.py 7 passed; browser verified persistence.

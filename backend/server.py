@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.13"
+BUILD_ID = "2026-09-10.14"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -1525,6 +1525,7 @@ class NoteIn(BaseModel):
 class SessionOutcomeIn(BaseModel):
     chosen_steps: list[str] = []
     summary: str = ""
+    follow_up_date: str = ""
 
 
 @api.put("/joint/reports/{rid}/session-outcome")
@@ -1534,12 +1535,21 @@ async def save_session_outcome(rid: str, body: SessionOutcomeIn, user=Depends(ge
         raise HTTPException(status_code=403, detail="Only the assigned professional can record the session outcome")
     if not (report.get("responses", {}).get("a") and report.get("responses", {}).get("b")):
         raise HTTPException(status_code=400, detail="Record the outcome once both parents have completed and the session has taken place")
+    follow_up = body.follow_up_date.strip()
+    if follow_up and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", follow_up):
+        raise HTTPException(status_code=400, detail="Follow-up date must be YYYY-MM-DD")
     steps = [s.strip()[:200] for s in body.chosen_steps if s.strip()][:12]
     now = datetime.now(timezone.utc).isoformat()
-    outcome = {"chosen_steps": steps, "summary": body.summary.strip()[:2000], "recorded_at": now, "recorded_by": user.get("name", "")}
-    await db.joint_reports.update_one({"id": rid}, {"$set": {"session_outcome": outcome}})
+    outcome = {"chosen_steps": steps, "summary": body.summary.strip()[:2000], "follow_up_date": follow_up, "recorded_at": now, "recorded_by": user.get("name", "")}
+    prev = report.get("session_outcome") or {}
+    updates = {"session_outcome": outcome}
+    if follow_up != prev.get("follow_up_date"):
+        updates["follow_up_reminder_sent"] = None
+    await db.joint_reports.update_one({"id": rid}, {"$set": updates})
+    action = f"Session outcome recorded ({len(steps)} next step{'s' if len(steps) != 1 else ''} chosen"
+    action += f", follow-up {follow_up})" if follow_up else ")"
     await db.access_events.insert_one({
-        "report_id": rid, "kind": "lifecycle", "action": f"Session outcome recorded ({len(steps)} next step{'s' if len(steps) != 1 else ''} chosen)",
+        "report_id": rid, "kind": "lifecycle", "action": action,
         "at": now, "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Assigned professional",
     })
     return {"ok": True, "session_outcome": outcome}
@@ -2672,6 +2682,61 @@ async def cron_weekly_summary(request: Request):
         return ack
     asyncio.create_task(run_weekly_summaries())
     return ack
+
+
+@api.post("/cron/follow-up-reminder")
+async def cron_follow_up_reminder(request: Request):
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    ack = await _cron_accept(request, "follow-up-reminder")
+    if ack.get("duplicate"):
+        return ack
+    asyncio.create_task(run_follow_up_reminders())
+    return ack
+
+
+def _follow_up_html(name: str, report: dict, outcome: dict, link: str) -> str:
+    steps = "".join(f"<li>{escape(s)}</li>" for s in outcome.get("chosen_steps") or [])
+    child = (report.get("child_name") or "").strip()
+    child_ref = f"{child[0].upper()}." if child else "the child"
+    summary = f"<p><em>{escape(outcome['summary'])}</em></p>" if outcome.get("summary") else ""
+    return (
+        '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+        f"<p>Hi {escape(name)},</p>"
+        f"<p>Today is the follow-up date you set for case <strong>{escape(report.get('case_code') or report['id'])}</strong> "
+        f"({escape(report.get('subject_label', ''))}, matter for {escape(child_ref)}).</p>"
+        f"<p>Next steps the parents chose:</p><ul>{steps or '<li>None recorded</li>'}</ul>{summary}"
+        f'<p><a href="{link}" style="color:#5B2A86">Open the case</a></p>'
+        f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p>'
+        "</td></tr></table>"
+    )
+
+
+async def run_follow_up_reminders() -> None:
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    docs = await db.joint_reports.find(
+        {"session_outcome.follow_up_date": {"$lte": today, "$ne": ""}, "follow_up_reminder_sent": {"$in": [None]}, "closed_at": {"$exists": False}},
+        {"_id": 0},
+    ).to_list(500)
+    for report in docs:
+        pro = await db.users.find_one({"_id": report.get("created_by")}, {"name": 1, "email": 1})
+        if not pro or not pro.get("email"):
+            continue
+        outcome = report["session_outcome"]
+        try:
+            await send_email(
+                to=pro["email"],
+                subject=f"Follow-up today: case {report.get('case_code') or report['id'][:8]}",
+                html=_follow_up_html(pro.get("name", ""), report, outcome, f"{app_url()}/joint/{report['id']}"),
+            )
+        except Exception as exc:
+            logger.warning("follow-up reminder failed for %s: %s", report["id"], exc)
+            continue
+        now = datetime.now(timezone.utc).isoformat()
+        await db.joint_reports.update_one({"id": report["id"]}, {"$set": {"follow_up_reminder_sent": now}})
+        await db.access_events.insert_one({
+            "report_id": report["id"], "kind": "lifecycle", "action": f"Follow-up reminder emailed (due {outcome['follow_up_date']})",
+            "at": now, "by": "system", "by_name": "SA CoParents Align", "by_role": "System",
+        })
 
 
 def _matter_state(report: dict, pending: list, now: datetime) -> tuple[str, str]:
