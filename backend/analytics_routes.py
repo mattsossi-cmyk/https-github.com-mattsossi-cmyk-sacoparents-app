@@ -411,6 +411,69 @@ async def admin_overview(
     for sec in PREP_SECTIONS:
         funnel[sec] = await db.prep_data.count_documents({f"completed.{sec}": True})
 
+    # Consent analytics (iter187) — how many parents have toggled the
+    # Child Needs share-consent on their joint cases, and how many
+    # cases have BOTH parents opted in (i.e. how often the escape
+    # hatch actually unlocks section 5 in a joint report).
+    #   * `child_needs_share_consent_parents` counts distinct
+    #     parents-list ENTRIES with a truthy `child_needs_share_consent_at`
+    #     — a single parent on multiple cases counts once per case.
+    #   * `child_needs_share_consent_cases_both` counts cases where
+    #     BOTH parents on the case have consented. This is the number
+    #     that actually matters: it's how many joint reports currently
+    #     show Section 5 highlights.
+    consent_pipeline = [
+        {"$project": {
+            "_id": 0,
+            "a_in": {
+                "$cond": [
+                    {"$ifNull": [
+                        {"$getField": {"field": "child_needs_share_consent_at",
+                                        "input": {"$arrayElemAt": ["$parents", 0]}}},
+                        False,
+                    ]}, 1, 0,
+                ],
+            },
+            "b_in": {
+                "$cond": [
+                    {"$ifNull": [
+                        {"$getField": {"field": "child_needs_share_consent_at",
+                                        "input": {"$arrayElemAt": ["$parents", 1]}}},
+                        False,
+                    ]}, 1, 0,
+                ],
+            },
+        }},
+        {"$group": {
+            "_id": None,
+            "parents_consented": {"$sum": {"$add": ["$a_in", "$b_in"]}},
+            "cases_both_consented": {"$sum": {
+                "$cond": [{"$and": [{"$eq": ["$a_in", 1]}, {"$eq": ["$b_in", 1]}]}, 1, 0]
+            }},
+            "cases_total": {"$sum": 1},
+        }},
+    ]
+    consent_row = await db.joint_alignment_cases.aggregate(consent_pipeline).to_list(1)
+    if consent_row:
+        parents_consented = consent_row[0].get("parents_consented", 0)
+        cases_both = consent_row[0].get("cases_both_consented", 0)
+        cases_total = consent_row[0].get("cases_total", 0)
+    else:
+        parents_consented = cases_both = cases_total = 0
+    consent_analytics = {
+        "child_needs_share": {
+            "parents_consented": int(parents_consented),
+            "cases_both_consented": int(cases_both),
+            "cases_total": int(cases_total),
+            # Unlock rate = how many joint cases currently show
+            # Section 5 highlights, as a percentage of all joint
+            # cases with two accepted parents. 0 when denominator is 0.
+            "unlock_rate_pct": (
+                round((cases_both / cases_total) * 100) if cases_total else 0
+            ),
+        },
+    }
+
     # Guest → claim conversion: users whose user_id starts with "guest_"
     # would have had `is_guest` previously and now don't. Approximation:
     # count permanent users whose user_id starts with "guest_".
@@ -446,6 +509,7 @@ async def admin_overview(
             ),
         },
         "funnel": funnel,
+        "consent": consent_analytics,
     }
 
 
