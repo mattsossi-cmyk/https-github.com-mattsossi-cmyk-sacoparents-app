@@ -779,11 +779,23 @@ def _closing_sections(pdf: FPDF, r: dict) -> None:
     _body(pdf, f"Report first generated: {_fmt_date(generated)}" if generated else "No Joint Alignment Report was generated for this case.")
     _body(pdf, f"Report views: {r.get('view_count', 0)}   PDF downloads: {r.get('download_count', 0)}")
     pdf.ln(2)
-    _section_title(pdf, 3, "Closing note")
+    _section_title(pdf, 3, "Session outcome")
+    outcome = r.get("session_outcome") or {}
+    steps = outcome.get("chosen_steps") or []
+    if not steps and not outcome.get("summary"):
+        _body(pdf, "No session outcome was recorded.", italic=True)
+    for s in steps[:8]:
+        _bullet(pdf, s)
+    if outcome.get("summary"):
+        _body(pdf, outcome["summary"], italic=True)
+    if outcome.get("recorded_at"):
+        _label(pdf, f"Recorded {_fmt_date(outcome['recorded_at'])} by {outcome.get('recorded_by') or r.get('professional_name', '')}")
+    pdf.ln(2)
+    _section_title(pdf, 4, "Closing note")
     _body(pdf, r.get("closed_note") or "No closing note recorded.", italic=not r.get("closed_note"))
     pdf.ln(2)
-    _section_title(pdf, 4, "Case timeline")
-    for ev in (r.get("lifecycle") or [])[:8]:
+    _section_title(pdf, 5, "Case timeline")
+    for ev in (r.get("lifecycle") or [])[:6]:
         _body(pdf, f"{str(ev.get('at', ''))[:16].replace('T', ' ')} — {ev.get('action', '')} ({ev.get('by_name', '')})")
 
 

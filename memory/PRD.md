@@ -502,3 +502,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 Post-Session Outcome (build 2026-09-10.12)
 - PUT /api/joint/reports/{rid}/session-outcome {chosen_steps, summary} (creator only, both complete). Stored on joint_reports.session_outcome; lifecycle event logged; returned in detail for creator only. components/SessionOutcome.jsx in ProWorkspace (tick next steps + options, summary, save). tests/test_session_outcome.py 4 passed; browser verified.
+
+## 2026-06 Outcome in Closing Summary (build 2026-09-10.13)
+- Closing Summary PDF now has section 3 "Session outcome" (chosen steps, summary, recorded by/date); sections renumbered (closing note 4, timeline 5, capped at 6 events to stay one page). tests/test_closing_outcome.py + test_closing_summary.py 9 passed; PDF visually verified single page.
