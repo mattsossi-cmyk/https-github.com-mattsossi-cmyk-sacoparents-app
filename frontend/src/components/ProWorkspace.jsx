@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import api, { formatApiError } from "@/lib/api";
 import { MatterNotes } from "@/components/MatterNotes";
+import { SessionOutcome } from "@/components/SessionOutcome";
 
-export function ProWorkspace({ rid }) {
+export function ProWorkspace({ rid, steps, outcome, onOutcomeSaved }) {
   const [activity, setActivity] = useState(null);
 
   const load = () => {
@@ -13,6 +14,7 @@ export function ProWorkspace({ rid }) {
 
   return (
     <div className="no-print grid md:grid-cols-2 gap-6 mt-10" data-testid="pro-workspace">
+      {steps && <SessionOutcome rid={rid} steps={steps} initial={outcome} onSaved={(o) => { onOutcomeSaved?.(o); load(); }} />}
       <section className="bg-white border border-border rounded-lg p-6" data-testid="pro-notes-section">
         <h2 className="text-lg font-semibold" data-testid="pro-notes-heading">Professional Notes</h2>
         <MatterNotes rid={rid} />

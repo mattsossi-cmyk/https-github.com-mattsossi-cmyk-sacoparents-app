@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.11"
+BUILD_ID = "2026-09-10.12"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -854,6 +854,8 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
     }
     if doc.get("case_reference") and doc.get("created_by") == uid:
         out["case_reference"] = doc["case_reference"]
+    if doc.get("created_by") == uid:
+        out["session_outcome"] = doc.get("session_outcome")
     if role:
         my = doc.get("responses", {}).get(role)
         out["my_answers"] = my["answers"] if my else None
@@ -1518,6 +1520,29 @@ async def reminder_preview(iid: str, user=Depends(get_current_user)):
 
 class NoteIn(BaseModel):
     text: str
+
+
+class SessionOutcomeIn(BaseModel):
+    chosen_steps: list[str] = []
+    summary: str = ""
+
+
+@api.put("/joint/reports/{rid}/session-outcome")
+async def save_session_outcome(rid: str, body: SessionOutcomeIn, user=Depends(get_current_user)):
+    report = await get_joint_report_doc(rid, user)
+    if report.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the assigned professional can record the session outcome")
+    if not (report.get("responses", {}).get("a") and report.get("responses", {}).get("b")):
+        raise HTTPException(status_code=400, detail="Record the outcome once both parents have completed and the session has taken place")
+    steps = [s.strip()[:200] for s in body.chosen_steps if s.strip()][:12]
+    now = datetime.now(timezone.utc).isoformat()
+    outcome = {"chosen_steps": steps, "summary": body.summary.strip()[:2000], "recorded_at": now, "recorded_by": user.get("name", "")}
+    await db.joint_reports.update_one({"id": rid}, {"$set": {"session_outcome": outcome}})
+    await db.access_events.insert_one({
+        "report_id": rid, "kind": "lifecycle", "action": f"Session outcome recorded ({len(steps)} next step{'s' if len(steps) != 1 else ''} chosen)",
+        "at": now, "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Assigned professional",
+    })
+    return {"ok": True, "session_outcome": outcome}
 
 
 @api.post("/joint/reports/{rid}/notes")

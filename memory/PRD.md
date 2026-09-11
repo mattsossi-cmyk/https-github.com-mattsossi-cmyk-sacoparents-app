@@ -499,3 +499,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 Session Prep Sheet (build 2026-09-10.11)
 - GET /api/joint/reports/{rid}/session-prep.pdf (case pro / shared pro only, 403 for parents): one-page facilitator agenda (shared ground, top 3 differences w/ reframe, opening questions, options, next-step checkboxes). Logged as download in access log. Button "Session Prep Sheet" in JointReport header. tests/test_session_prep.py 3 passed; PDF visually verified single page.
+
+## 2026-06 Post-Session Outcome (build 2026-09-10.12)
+- PUT /api/joint/reports/{rid}/session-outcome {chosen_steps, summary} (creator only, both complete). Stored on joint_reports.session_outcome; lifecycle event logged; returned in detail for creator only. components/SessionOutcome.jsx in ProWorkspace (tick next steps + options, summary, save). tests/test_session_outcome.py 4 passed; browser verified.
