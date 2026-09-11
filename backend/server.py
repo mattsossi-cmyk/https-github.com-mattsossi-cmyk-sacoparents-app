@@ -149,8 +149,10 @@ async def _validate_registration(body: RegisterIn, email: str, role: str) -> Non
         inv = await db.invitations.find_one({"status": "pending", "invitee_email": email, "$or": [{"token": raw}, {"code": raw.upper()}]}) if raw else None
         if not inv:
             raise HTTPException(status_code=403, detail="Parent accounts are created through a secure invitation from a professional. Please use the link or case code in your invitation email.")
-    if role == "professional" and not body.agreements_accepted:
+    if role in ("professional", "judge") and not body.agreements_accepted:
         raise HTTPException(status_code=400, detail="Please accept the professional-use, confidentiality, privacy, and appropriate-use agreements to create a professional account.")
+    if role == "judge" and not body.organization.strip():
+        raise HTTPException(status_code=400, detail="Please enter your court so SA CoParents can verify the account.")
 
 
 def _professional_profile(body: RegisterIn) -> dict:
@@ -185,7 +187,7 @@ async def _notify_admin_new_professional(user: dict) -> None:
 @api.post("/auth/register")
 async def register(body: RegisterIn, response: Response):
     email = body.email.lower()
-    role = body.role if body.role in ("parent", "professional") else "professional"
+    role = body.role if body.role in ("parent", "professional", "judge") else "professional"
     await _validate_registration(body, email, role)
     uid = str(uuid.uuid4())
     user = {
@@ -193,16 +195,16 @@ async def register(body: RegisterIn, response: Response):
         "email": email,
         "name": body.name.strip(),
         "role": role,
-        "approved": role != "professional",
+        "approved": role == "parent",
         "password_hash": hash_password(body.password),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
-    if role == "professional":
+    if role in ("professional", "judge"):
         user["verification_level"] = "credentials_pending"
         user["agreements_accepted_at"] = user["created_at"]
         user["profile"] = _professional_profile(body)
     await db.users.insert_one(user)
-    if role == "professional" and not FIXTURE_EMAIL_RE.search(email):
+    if role in ("professional", "judge") and not FIXTURE_EMAIL_RE.search(email):
         await _notify_admin_new_professional(user)
     set_auth_cookies(response, uid, email)
     return public_user(user)
@@ -2270,6 +2272,47 @@ async def approve_professional(user_id: str, user=Depends(get_current_user)):
 
 class DeclineIn(BaseModel):
     reason: str = ""
+
+
+@api.get("/admin/judges")
+async def admin_list_judges(user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    docs = await db.users.find({"role": "judge", "declined": {"$ne": True}}, {"password_hash": 0}).sort("created_at", -1).to_list(300)
+    return [{**public_user(d), "created_at": d.get("created_at"), "declined": False} for d in docs]
+
+
+@api.post("/admin/judges/{user_id}/approve")
+async def admin_approve_judge(user_id: str, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    res = await db.users.update_one({"_id": user_id, "role": "judge"}, {"$set": {"approved": True, "verification_level": "credentials_verified", "declined": False}})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Court account not found")
+    j = await db.users.find_one({"_id": user_id}, {"password_hash": 0})
+    if not FIXTURE_EMAIL_RE.search(j["email"]):
+        try:
+            await send_email(to=j["email"], subject=f"Your court account is approved - {EMAIL_FROM_NAME}",
+                             html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                                   f"<p>Hi {escape(j.get('name', ''))},</p><p>Your SA CoParents Align court account has been approved. Court Packets addressed to {escape(j['email'])} now appear in your Court Dashboard.</p>"
+                                   f'<p><a href="{app_url()}/court-dashboard" style="color:#5B2A86">Open the Court Dashboard</a></p></td></tr></table>'))
+        except Exception:
+            logger.warning("judge approval email not sent")
+    return public_user(j)
+
+
+@api.post("/admin/judges/{user_id}/decline")
+async def admin_decline_judge(user_id: str, body: DeclineIn, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    reason = body.reason.strip()[:500]
+    if not reason:
+        raise HTTPException(status_code=400, detail="Please provide a brief reason")
+    res = await db.users.update_one({"_id": user_id, "role": "judge"}, {"$set": {"approved": False, "declined": True, "declined_reason": reason,
+                                                                                "declined_at": datetime.now(timezone.utc).isoformat(), "verification_level": "declined"}})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Court account not found")
+    return {"ok": True}
 
 
 @api.post("/admin/decline-professional/{user_id}")

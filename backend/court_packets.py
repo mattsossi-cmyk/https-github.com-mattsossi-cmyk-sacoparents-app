@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr
 
 from joint_engine import generate_agreement, generate_joint_report
-from pdf_report import build_agreement_pdf, build_closing_summary_pdf, build_court_cover_letter_pdf, build_joint_pdf, merge_pdfs
+from pdf_report import build_agreement_pdf, build_closing_summary_pdf, build_court_cover_letter_pdf, build_joint_pdf, build_transmittal_pdf, merge_pdfs
 
 PACKET_DAYS = 30
 SESSION_HOURS = 4
@@ -316,5 +316,101 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
             except Exception as exc:
                 logger.warning("court response email failed: %s", exc)
         return {"ok": True, "response": resp}
+
+    # ---------- judge account side ----------
+
+    async def judge_packet(pid: str, user: dict) -> dict:
+        if user.get("role") != "judge":
+            raise HTTPException(status_code=403, detail="Court accounts only")
+        if not user.get("approved"):
+            raise HTTPException(status_code=403, detail="Your court account is awaiting SA CoParents approval")
+        p = await db.court_packets.find_one({"id": pid, "judge_email": user["email"].lower()}, {"_id": 0})
+        if not p:
+            raise HTTPException(status_code=404, detail="Court Packet not found")
+        if state(p) != "active":
+            raise HTTPException(status_code=410, detail=f"This Court Packet is {state(p)}")
+        return p
+
+    async def packet_view(p: dict) -> dict:
+        docs = await packet_reports(p)
+        primary = next((d for d in docs if d["id"] == p["report_id"]), {})
+        return {**{k: p.get(k) for k in ("id", "judge_name", "court_name", "cause_number", "cover_letter", "attestation_text", "attested_at", "created_at", "expires_at", "responses", "status")},
+                "professional": await pro_profile(p["professional_id"]),
+                "reports": [report_json(d) for d in docs],
+                "session_outcome": primary.get("session_outcome") if p.get("include_session_outcome") else None}
+
+    async def record_response(p: dict, body: RespondIn) -> dict:
+        if body.kind not in ("acknowledged", "clarification"):
+            raise HTTPException(status_code=400, detail="Unknown response type")
+        msg = body.message.strip()[:2000]
+        if body.kind == "clarification" and not msg:
+            raise HTTPException(status_code=400, detail="Please describe what needs clarification")
+        now = _iso(_now())
+        resp = {"id": str(uuid.uuid4()), "kind": body.kind, "message": msg, "at": now, "by": p["judge_name"]}
+        await db.court_packets.update_one({"id": p["id"]}, {"$push": {"responses": resp}, "$set": {"status": "acknowledged" if body.kind == "acknowledged" else "clarification_requested"}})
+        label = "acknowledged receipt of" if body.kind == "acknowledged" else "requested clarification on"
+        await log(p["report_id"], f"{p['judge_name']} {label} the Court Packet", f"court:{p['id']}", p["judge_name"], "Court")
+        pro = await db.users.find_one({"_id": p["professional_id"]}, {"email": 1, "name": 1})
+        quote = f'<blockquote style="border-left:3px solid #5B2A86;padding-left:12px;color:#444">{escape(msg)}</blockquote>' if msg else ""
+        cause = f" for Cause No. {escape(p['cause_number'])}" if p.get("cause_number") else ""
+        if pro and pro.get("email"):
+            try:
+                await send_email(
+                    to=pro["email"], subject=f"Court response: {p['judge_name']} {label} your packet",
+                    html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                          f"<p>Hi {escape(pro.get('name', ''))},</p><p><strong>{escape(p['judge_name'])}</strong> ({escape(p.get('court_name') or 'court')}) {label} the Court Packet{cause}.</p>"
+                          f"{quote}"
+                          f'<p><a href="{app_url()}/joint/{p["report_id"]}" style="color:#5B2A86">Open the case</a></p>'
+                          f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>'))
+            except Exception as exc:
+                logger.warning("court response email failed: %s", exc)
+        return resp
+
+    @r.get("/court-dashboard/packets")
+    async def judge_dashboard(user=Depends(get_current_user)):
+        if user.get("role") != "judge":
+            raise HTTPException(status_code=403, detail="Court accounts only")
+        if not user.get("approved"):
+            return {"approved": False, "packets": []}
+        docs = await db.court_packets.find({"judge_email": user["email"].lower()}, {"_id": 0}).sort("created_at", -1).to_list(300)
+        out = []
+        for p in docs:
+            primary = await db.joint_reports.find_one({"id": p["report_id"]}, {"_id": 0, "case_code": 1, "subject_label": 1})
+            out.append({**public(p), "state": state(p), "professional_name": p.get("professional_name"), "case_code": (primary or {}).get("case_code"),
+                        "subject_label": (primary or {}).get("subject_label"), "report_count": len(p.get("report_ids") or [])})
+        return {"approved": True, "packets": out}
+
+    @r.get("/court-dashboard/packets/{pid}")
+    async def judge_view(pid: str, user=Depends(get_current_user)):
+        p = await judge_packet(pid, user)
+        now = _iso(_now())
+        await db.court_packets.update_one({"id": pid}, {"$set": {"status": p["status"] if p["status"] != "sent" else "opened", "last_opened_at": now}, "$inc": {"opened_count": 1}})
+        await log(p["report_id"], f"Court Packet opened by {p['judge_name']} (court account)", user["_id"], user.get("name", ""), "Court")
+        return await packet_view(p)
+
+    @r.get("/court-dashboard/packets/{pid}/pdf")
+    async def judge_pdf(pid: str, user=Depends(get_current_user)):
+        p = await judge_packet(pid, user)
+        await db.court_packets.update_one({"id": pid}, {"$inc": {"download_count": 1}})
+        await log(p["report_id"], f"Court Packet PDF downloaded by {p['judge_name']} (court account)", user["_id"], user.get("name", ""), "Court")
+        return Response(content=await combined_pdf(p), media_type="application/pdf",
+                        headers={"Content-Disposition": f'attachment; filename="court-packet-{re.sub(r"[^A-Za-z0-9-]", "", p.get("cause_number") or p["id"][:8])}.pdf"'})
+
+    @r.post("/court-dashboard/packets/{pid}/respond")
+    async def judge_respond(pid: str, body: RespondIn, user=Depends(get_current_user)):
+        p = await judge_packet(pid, user)
+        return {"ok": True, "response": await record_response(p, body)}
+
+    @r.get("/court-packets/{pid}/transmittal.pdf")
+    async def transmittal_pdf(pid: str, user=Depends(get_current_user)):
+        p = await own_packet(pid, user)
+        docs = await packet_reports(p)
+        events = await db.access_events.find({"report_id": p["report_id"], "kind": "court", "action": {"$regex": "Court Packet"}}, {"_id": 0}).sort("at", 1).to_list(200)
+        await log(p["report_id"], "Transmittal certificate downloaded", user["_id"], user.get("name", ""), "Assigned professional", kind="download")
+        data = {**p, "professional": await pro_profile(p["professional_id"]),
+                "enclosures": [f"{'Co-Parenting Agreement' if d.get('kind') == 'agreement' else 'Joint Alignment Report'} - {d.get('subject_label')} ({d.get('case_code')})" for d in docs],
+                "events": [e for e in events if p["judge_name"] in e["action"] or "sent" in e["action"] or "re-sent" in e["action"]]}
+        return Response(content=build_transmittal_pdf(data), media_type="application/pdf",
+                        headers={"Content-Disposition": f'attachment; filename="transmittal-{re.sub(r"[^A-Za-z0-9-]", "", p.get("cause_number") or p["id"][:8])}.pdf"'})
 
     return r
