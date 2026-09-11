@@ -514,3 +514,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 Full regression
 - Full backend suite: 207 passed. Testing agent iteration_38.json: 22/22 backend + all frontend criteria pass for sample case, walkthrough, prep sheet, outcome, follow-up cron, check-ins panel, closing summary. retest_needed=false. Preview build 2026-09-10.14 ready to publish.
+
+## 2026-06 Court Packets phase 1 (build 2026-09-11.1)
+- backend/court_packets.py (router mounted at /api): pro creates packet (judge name/email/court/cause, cover letter >=40 chars, extra own ready report_ids, include outcome/closing, attestation required) -> one-time link /court/<token> + separate 6-digit code emails; 30-day expiry; judge unlock (8 attempts) -> 4h access session (X-Court-Access header / ?access= for PDF); GET packet JSON, combined PDF (cover letter + report PDFs + closing summaries via pymupdf merge), respond acknowledged/clarification (emails pro); pro list/revoke/resend/pdf. All events logged to access_events kind=court.
+- Frontend: pages/CourtPacket.jsx (/court/:token), components/CourtReportView.jsx, CourtPacketPanel.jsx (in ProWorkspace). tests/test_court_packets.py 6 passed; full suite 220 passed (after fixing hardcoded build string in test_iteration_38_review). Desktop+mobile verified.
+- Phase 2 (not started): judge/court accounts with admin approval + Court Dashboard (user chose option c).

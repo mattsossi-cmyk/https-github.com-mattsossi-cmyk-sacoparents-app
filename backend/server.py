@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.14"
+BUILD_ID = "2026-09-11.1"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -2995,6 +2995,8 @@ async def api_health():
 
 
 app.include_router(api)
+from court_packets import build_router as _build_court_router  # noqa: E402
+app.include_router(_build_court_router(db, get_current_user, app_url, send_email, EMAIL_FROM_NAME, logger), prefix="/api")
 
 
 @app.get("/health")

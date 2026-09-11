@@ -669,6 +669,71 @@ def _fmt_date(iso) -> str:
     return str(iso or "")[:10] or "—"
 
 
+def build_court_cover_letter_pdf(p: dict) -> bytes:
+    """Professional's cover letter to the court + packet index (pages 1-2 of a Court Packet)."""
+    pro = p.get("professional") or {}
+    pdf = _new_pdf()
+    pdf.set_font(FONT, "B", 13)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 7, _s(pro.get("name") or "Professional"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 9.5)
+    pdf.set_text_color(*GRAY)
+    for line in [pro.get("pro_role"), pro.get("organization"),
+                 " · ".join(x for x in (pro.get("license_number") and f"License {pro['license_number']}", pro.get("phone"), pro.get("email")) if x),
+                 " ".join(x for x in (pro.get("city"), pro.get("state")) if x)]:
+        if line:
+            pdf.cell(0, 5, _s(line), new_x="LMARGIN", new_y="NEXT")
+    if pro.get("credentials_verified"):
+        pdf.set_font(FONT, "B", 8)
+        pdf.set_text_color(*TEAL)
+        pdf.cell(0, 5, "Credentials verified by SA CoParents", new_x="LMARGIN", new_y="NEXT")
+    y = pdf.get_y() + 3
+    pdf.set_draw_color(220, 215, 230)
+    pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
+    pdf.ln(8)
+    pdf.set_font(FONT, "", 10.5)
+    pdf.set_text_color(*BODY)
+    pdf.cell(0, 6, _s(_fmt_date(p.get("created_at"))), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    for line in [p.get("judge_name") and f"The Honorable {p['judge_name']}", p.get("court_name"), p.get("cause_number") and f"Re: Cause No. {p['cause_number']}"]:
+        if line:
+            pdf.cell(0, 6, _s(line), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+    _body(pdf, p.get("cover_letter") or "")
+    pdf.ln(4)
+    _label(pdf, "ENCLOSED IN THIS COURT PACKET")
+    for i, item in enumerate(p.get("index") or [], 1):
+        _bullet(pdf, f"{i}. {item}")
+    if p.get("session_outcome"):
+        so = p["session_outcome"]
+        pdf.ln(3)
+        _label(pdf, "SESSION OUTCOME RECORDED BY THE PROFESSIONAL")
+        for s in so.get("chosen_steps") or []:
+            _bullet(pdf, s)
+        if so.get("summary"):
+            _body(pdf, so["summary"], italic=True)
+    pdf.ln(4)
+    _label(pdf, "PROFESSIONAL ATTESTATION")
+    _body(pdf, p.get("attestation_text") or "", italic=True)
+    pdf.ln(6)
+    pdf.set_font(FONT, "I", 8)
+    pdf.set_text_color(*GRAY)
+    pdf.multi_cell(0, 4, _s(
+        "SA CoParents Align reports compare each parent's independently provided perspective. They are educational and "
+        "organizational documents prepared to support professional facilitation; they are not custody recommendations, "
+        "psychological evaluations, or findings of fact. Every opening and download of this packet is logged."), new_x="LMARGIN", new_y="NEXT")
+    return bytes(pdf.output())
+
+
+def merge_pdfs(parts: list[bytes]) -> bytes:
+    import pymupdf
+    out = pymupdf.open()
+    for b in parts:
+        with pymupdf.open(stream=b, filetype="pdf") as src:
+            out.insert_pdf(src)
+    return out.tobytes()
+
+
 def _prep_heading(pdf: FPDF, text: str) -> None:
     pdf.ln(2)
     pdf.set_font(FONT, "B", 9.5)

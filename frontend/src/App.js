@@ -22,6 +22,7 @@ import Professionals from "@/pages/Professionals";
 import Resources from "@/pages/Resources";
 import FamilyMatters from "@/pages/FamilyMatters";
 import Verify from "@/pages/Verify";
+import CourtPacket from "@/pages/CourtPacket";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -61,6 +62,7 @@ function App() {
             <Route path="/resources" element={<Resources />} />
             <Route path="/matters" element={<Protected><FamilyMatters /></Protected>} />
             <Route path="/verify" element={<Verify />} />
+            <Route path="/court/:token" element={<CourtPacket />} />
             <Route path="/methodology" element={<Methodology />} />
             <Route path="/professionals" element={<Protected><Professionals /></Protected>} />
             <Route path="*" element={<Navigate to="/" replace />} />

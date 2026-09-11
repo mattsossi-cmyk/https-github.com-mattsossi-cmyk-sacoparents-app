@@ -387,7 +387,7 @@ export default function JointReport() {
             </div>
           </div>
         )}
-        {detail.is_creator && <ProWorkspace rid={id} steps={ready && report && detail.kind !== "agreement" ? [...(report.next_steps || []), ...(report.options || [])] : null} outcome={detail.session_outcome} onOutcomeSaved={(o) => setDetail((d) => ({ ...d, session_outcome: o }))} />}
+        {detail.is_creator && <ProWorkspace rid={id} steps={ready && report && detail.kind !== "agreement" ? [...(report.next_steps || []), ...(report.options || [])] : null} outcome={detail.session_outcome} onOutcomeSaved={(o) => setDetail((d) => ({ ...d, session_outcome: o }))} courtReady={!!(ready && report && detail.kind !== "agreement")} />}
       </main>
     </div>
   );
