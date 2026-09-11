@@ -312,16 +312,17 @@ async def aggregate_for_case(
 #                 as "how the child sees me", "my part", "what I want
 #                 you to hear" — introspective content about the
 #                 relationship, ALWAYS private between co-parents.
-#
-# What deliberately does NOT live here:
 #   * `highlights` — Child Needs Statement short excerpts (top
-#                    priority, biggest worry, biggest hope). By
-#                    product design these ARE surfaced across the
-#                    joint view because they describe the CHILD, not
-#                    the co-parent relationship. If future policy
-#                    changes that, add "highlights" to this tuple.
+#                 priority, biggest worry, biggest hope). Stripped
+#                 in strict mode to match the platform's dominant
+#                 privacy pattern (every other cross-parent surface
+#                 is either flag-only or dual-consent gated). Future
+#                 relaxation should go through the explicit
+#                 dual-consent helper in `dual_consent.py`, not by
+#                 removing this entry.
 _JOINT_STRIPPED_LANE_FIELDS: tuple[str, ...] = (
     "prompts",
+    "highlights",
 )
 
 

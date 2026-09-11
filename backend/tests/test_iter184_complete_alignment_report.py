@@ -138,12 +138,17 @@ def test_joint_seeded_demo_case_never_leaks_foundation_prompts_to_other_parent()
     )
     assert r.status_code == 200, r.text[:400]
     data = r.json()
-    # 1) The scrubbed sub-objects must not carry `prompts` on any lane.
+    # 1) The scrubbed sub-objects must not carry `prompts` OR
+    #    `highlights` on any lane. Strict policy: same rule for
+    #    Foundation Statement prompts and Child Needs highlights.
     for side_key in ("parent_a", "parent_b"):
         side = data.get(side_key) or {}
         for lane in side.get("lanes") or []:
             assert "prompts" not in lane, (
                 f"HIGH: {side_key}.lanes[{lane.get('id')}] leaked Foundation prompts"
+            )
+            assert "highlights" not in lane, (
+                f"HIGH: {side_key}.lanes[{lane.get('id')}] leaked Child Needs highlights"
             )
     # 2) Sanity — a full-text search over the SERIALIZED response
     #    must not find parent B's known seeded free-text. The seed

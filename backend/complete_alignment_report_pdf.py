@@ -343,17 +343,30 @@ def _section_5_child_needs(pdf: FPDF, *, agg: Dict[str, Any], variant: str) -> N
         "never diagnostic and never predict what a court will decide."
     )
     if variant == "joint":
-        a_notes = _extract_child_needs_highlights(agg.get("parent_a"))
-        b_notes = _extract_child_needs_highlights(agg.get("parent_b"))
-        if not a_notes and not b_notes:
+        # STRICT PRIVACY: per aggregator policy, each parent's Child
+        # Needs Statement short-answers are stripped from the joint
+        # view (same rule as Foundation Statement prompts). The joint
+        # report surfaces alignment STATUS on this lane; each parent
+        # opens their OWN Complete Alignment Report for the excerpts.
+        a_cn = _lane_by_id(agg.get("parent_a") or {}, "child_needs") or {}
+        b_cn = _lane_by_id(agg.get("parent_b") or {}, "child_needs") or {}
+        if not a_cn.get("completed") and not b_cn.get("completed"):
             _body(pdf,
-                "Neither parent has completed the Child Needs Statement yet. When completed, "
-                "each parent's notes appear side-by-side here."
+                "Neither parent has completed the Child Needs Statement yet. When "
+                "completed, each parent's alignment status appears here."
             )
-        if a_notes:
-            _kv_row(pdf, f"{agg.get('parent_a', {}).get('child_name') or 'Parent A'} notes:", " / ".join(a_notes))
-        if b_notes:
-            _kv_row(pdf, f"{agg.get('parent_b', {}).get('child_name') or 'Parent B'} notes:", " / ".join(b_notes))
+        else:
+            statuses = []
+            if a_cn.get("completed"):
+                statuses.append(f"Parent A has completed the Child Needs Statement.")
+            if b_cn.get("completed"):
+                statuses.append(f"Parent B has completed the Child Needs Statement.")
+            _body(pdf, " ".join(statuses))
+            _body(pdf,
+                "Each parent's specific answers stay in their own Complete Alignment "
+                "Report. The professional can request them alongside this joint report "
+                "under explicit dual-consent."
+            )
     else:
         notes = _extract_child_needs_highlights(agg)
         if not notes:

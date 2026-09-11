@@ -462,12 +462,36 @@ function JointLaneList({ lanes, filter, empty }) {
 
 function ChildNeedsExcerpt({ data, variant }) {
   const childNeedsLane = (data?.lanes || []).find((l) => l.id === "child_needs");
-  const highlights = variant === "joint"
-    ? [
-        ...(data?.parent_a?.lanes?.find((l) => l.id === "child_needs")?.highlights || []),
-        ...(data?.parent_b?.lanes?.find((l) => l.id === "child_needs")?.highlights || []),
-      ]
-    : (childNeedsLane?.highlights || []);
+  if (variant === "joint") {
+    // STRICT PRIVACY: per aggregator policy the joint view does NOT
+    // surface either parent's Child Needs excerpts — same rule as
+    // Foundation Statement prompts. Highlights are stripped upstream
+    // in `_JOINT_STRIPPED_LANE_FIELDS`; we don't even attempt to read
+    // them here.
+    const aLane = (data?.parent_a?.lanes || []).find((l) => l.id === "child_needs");
+    const bLane = (data?.parent_b?.lanes || []).find((l) => l.id === "child_needs");
+    const aDone = !!aLane?.completed;
+    const bDone = !!bLane?.completed;
+    if (!aDone && !bDone) {
+      return (
+        <div className="text-sm text-[#4B4567] leading-relaxed">
+          Neither parent has completed the Child Needs Statement yet. Once done, each parent's alignment status appears here.
+        </div>
+      );
+    }
+    return (
+      <div className="text-sm text-[#4B4567] leading-relaxed space-y-2">
+        <div>
+          {aDone && <span className="mr-1">Parent A has completed the Child Needs Statement.</span>}
+          {bDone && <span>Parent B has completed the Child Needs Statement.</span>}
+        </div>
+        <div className="text-xs text-[#857E9C] italic">
+          Each parent's specific answers stay in their own Complete Alignment Report — request them alongside this joint report under explicit dual-consent.
+        </div>
+      </div>
+    );
+  }
+  const highlights = childNeedsLane?.highlights || [];
   if (highlights.length === 0) {
     return (
       <div className="text-sm text-[#4B4567] leading-relaxed">
