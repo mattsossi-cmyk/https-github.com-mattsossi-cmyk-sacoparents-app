@@ -27,6 +27,31 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-11 — Iter188 · Onboarding Nudge (Post-Child-Needs Consent Prompt)
+
+**🟢 P2 — Post-completion Child Needs share nudge**
+When a parent finishes their Child Needs Statement and lands on the
+report page, they now see a friendly card immediately below the
+"please review before sharing" notice: "Share these highlights with
+your co-parent's joint report?" — with a per-case toggle so they can
+grant consent while the context is freshest.
+
+- **New backend endpoint** `GET /api/complete-report/my-active-cases`
+  returns the caller's joint cases with `coparent_name`,
+  `my_consent_at`, and a boolean `coparent_has_consented` (never the
+  co-parent's raw timestamp). Cap 20, sorted most-recent-first.
+- **New frontend component** `ShareChildNeedsNudge.jsx`. Returns
+  null when the parent is on zero joint cases (no empty prompt).
+  Uses the existing `POST /complete-report/joint/{case_id}/consent/child-needs`
+  endpoint — no second consent surface, so all iter187 dual-consent
+  guarantees still apply.
+- **Wired** into `SpecialNeedsV2Report.jsx` between `ReportReviewNotice`
+  and the cache-header row.
+- **Tests** — 2 new pytest cases (endpoint shape + auth gate).
+  All 13 iter184 tests green.
+
+
+## What's Implemented
 ### 2026-09-11 — Iter187 · Dual-Consent Child Needs Share + Ops Hardening
 
 **🟢 P1 — Dual-consent gate on Child Needs highlights**

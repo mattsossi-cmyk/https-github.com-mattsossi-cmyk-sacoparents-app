@@ -23,6 +23,7 @@ import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 import EmailDeliveryBadge from "../components/EmailDeliveryBadge";
 import SignDownloadToggle from "../components/SignDownloadToggle";
+import ShareChildNeedsNudge from "../components/ShareChildNeedsNudge";
 
 const STATUS_COLOR = {
   "Strength":                          "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -164,6 +165,13 @@ export default function SpecialNeedsV2Report() {
         <p className="text-sm text-[#4B4567] mt-3 whitespace-pre-wrap max-w-3xl">{intro.body}</p>
 
         <ReportReviewNotice variant="individual" className="mt-5" />
+
+        {/* Post-completion nudge — offers a per-active-joint-case
+            toggle to share these highlights in the joint Complete
+            Alignment Report. Hides itself when the parent is on zero
+            joint cases. Uses the same consent endpoint as the joint
+            viewer, so opting in here or there writes the same flag. */}
+        <ShareChildNeedsNudge />
 
         {/* Cache header */}
         <div className="mt-6 rounded-3xl border border-[#E5E0EE] p-4 sm:p-5 bg-white flex flex-wrap items-center justify-between gap-3 shadow-sm" data-testid="snc2-report-cache-bar">

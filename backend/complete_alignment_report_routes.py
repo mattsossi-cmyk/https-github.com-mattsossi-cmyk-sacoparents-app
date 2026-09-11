@@ -154,6 +154,58 @@ def _parent_display_name(parent: dict, fallback: str) -> str:
     return fallback
 
 
+@router.get("/complete-report/my-active-cases")
+async def complete_report_my_active_cases(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """List the joint cases the caller is a parent on, together with
+    the caller's own Child Needs share-consent state per case.
+
+    Used by the post-completion onboarding nudge on the Child Needs
+    Statement report page — so a parent who just finished can toggle
+    "share these highlights" per case in one place, right when the
+    context is freshest.
+
+    Returns cases sorted most-recent-first, capped at 20. Never
+    exposes the co-parent's raw consent timestamp — only a boolean.
+    """
+    cursor = db[_CASES_COLL].find(
+        {"parents.user_id": current.user_id},
+        {"_id": 0, "case_id": 1, "parents": 1, "created_at": 1, "status": 1},
+    ).sort("created_at", -1).limit(20)
+    out: list[dict] = []
+    async for case in cursor:
+        parents = case.get("parents") or []
+        if len(parents) < 2:
+            continue
+        # Locate the caller's slot; skip cases where they're not on the
+        # parents list (defensive — the DB filter should have handled
+        # this but a race between token refresh + case invite could
+        # theoretically leak an unrelated case).
+        my_slot: int | None = None
+        for i, p in enumerate(parents[:2]):
+            if p.get("user_id") == current.user_id:
+                my_slot = i
+                break
+        if my_slot is None:
+            continue
+        other = parents[1 - my_slot]
+        coparent_name = (
+            (other.get("name") or "").strip()
+            or ((other.get("email") or "").split("@", 1)[0] if "@" in (other.get("email") or "") else None)
+            or "Your co-parent"
+        )
+        out.append({
+            "case_id": case["case_id"],
+            "coparent_name": coparent_name,
+            "status": case.get("status") or "active",
+            "my_consent_at": parents[my_slot].get(_CONSENT_KEY_CHILD_NEEDS),
+            "coparent_has_consented": bool(other.get(_CONSENT_KEY_CHILD_NEEDS)),
+        })
+    return {"cases": out}
+
+
 def _preserve_fields_for_case(case: dict) -> tuple[str, ...]:
     """Inspect the case document's parents-list for cross-parent-share
     consent flags. Returns the tuple of aggregator-lane-fields that

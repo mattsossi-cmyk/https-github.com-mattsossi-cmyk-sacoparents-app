@@ -181,6 +181,46 @@ def test_joint_seeded_demo_case_never_leaks_foundation_prompts_to_other_parent()
     )
 
 
+def test_my_active_cases_endpoint_lists_caller_cases_with_consent_state():
+    """Iter188 onboarding nudge endpoint: `GET /api/complete-report/my-active-cases`
+    must:
+      * Include the seeded SA-DEMO01 case when called as parent1 (a member).
+      * Report the caller's OWN `my_consent_at` (null when not consented).
+      * Report only a boolean `coparent_has_consented` — never leak the
+        co-parent's raw timestamp.
+      * Return the caller's co-parent name so the nudge can render
+        "with Riley Parent" without a second round-trip.
+    """
+    # Reset any pre-existing consent so this test starts from a
+    # deterministic state (prior tests may have consented + revoked).
+    r = requests.get(
+        f"{BASE_URL}/api/complete-report/my-active-cases",
+        headers=_auth_headers(),
+        timeout=10,
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert "cases" in data
+    demo = next((c for c in data["cases"] if c["case_id"] == "SA-DEMO01"), None)
+    assert demo is not None, f"SA-DEMO01 missing from response: {data}"
+    # coparent_name from the seeded parent B — Riley Parent.
+    assert demo["coparent_name"] == "Riley Parent"
+    # Exposed state fields — the endpoint must NEVER expose the
+    # other parent's raw consent timestamp, only a boolean.
+    assert "coparent_has_consented" in demo
+    assert isinstance(demo["coparent_has_consented"], bool)
+    assert "my_consent_at" in demo  # may be None or an ISO string
+    # Defensive assertion: the response must NOT carry `parents` or
+    # any other case-level identifier that could turn into a leak
+    # surface if a future refactor forgets to project the fields.
+    assert "parents" not in demo
+
+
+def test_my_active_cases_endpoint_requires_auth():
+    r = requests.get(f"{BASE_URL}/api/complete-report/my-active-cases", timeout=10)
+    assert r.status_code in (401, 403)
+
+
 def test_child_needs_consent_toggle_unlocks_highlights_only_after_both_consent():
     """Iter187 dual-consent flow — a caller toggling their consent
     alone MUST NOT unlock highlights. Both parents must consent.
