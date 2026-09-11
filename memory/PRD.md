@@ -484,3 +484,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-06 Deployment readiness
 - Deployment scan: PASS. Only finding was unquoted special-char TEMP_PASSWORD values in backend/.env (now quoted). Pasted deploy logs contained no errors (all /health 200).
 - Production still requires manual Deploy/Republish; ensure RESEND_*, INTEGRATION_SHARED_SECRET, WEBHOOK_CRON_SECRET, SACOPARENTS_APP_URL set in Manage Publishes.
+
+## 2026-06 Production verification
+- Live build 2026-09-10.9 confirmed at sacoparentsalign.com; directory/referrals endpoints protected (401); /join, /accept-invite, /professionals, methodology PDF live.
+- Authenticated prod checks blocked: preview test accounts do not exist in production DB (owner must verify or authorize a test pro account).
+- Resend: still 403 domain-not-verified; DNS shows send.*, resend._domainkey, _dmarc records all NXDOMAIN (not published).
