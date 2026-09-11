@@ -93,6 +93,18 @@ export default function Dashboard() {
 
   useEffect(load, []);
 
+  const [sampleLoading, setSampleLoading] = useState(false);
+  const loadSample = async () => {
+    setSampleLoading(true);
+    try {
+      const { data } = await api.post("/joint/reports/professional/sample");
+      toast.success(data.already_existed ? "Your sample case is already on your dashboard" : `Sample case ${data.case_code} added`);
+      load();
+    } catch (e) { toast.error(formatApiError(e)); }
+    finally { setSampleLoading(false); }
+  };
+
+
   const acceptCode = async () => {
     setBusy(true);
     try {
@@ -439,10 +451,15 @@ export default function Dashboard() {
 
         <div data-testid="joint-reports-section">
           <h2 className="text-2xl font-semibold mb-4">Joint Reports</h2>
+          {isPro && user?.approved !== false && !(joints || []).some((j) => j.is_demo && !j.archived) && (
+            <button type="button" onClick={loadSample} disabled={sampleLoading} className="mb-4 inline-flex items-center gap-2 rounded-full border border-dashed border-brand-purple/40 px-4 py-2 text-sm font-medium text-brand-purple hover:bg-brand-purple/5 disabled:opacity-60" data-testid="load-sample-case-btn">
+              {sampleLoading ? "Loading sample…" : "Load a sample case (fictional two-parent example)"}
+            </button>
+          )}
           {joints === null ? (
             <p className="text-muted-foreground" data-testid="joints-loading">Loading…</p>
           ) : joints.length === 0 ? (
-            <p className="text-sm text-muted-foreground" data-testid="joints-empty">No joint reports yet. Create one above to invite your co-parent.</p>
+            <p className="text-sm text-muted-foreground" data-testid="joints-empty">{isPro ? "No cases yet. Create one above, or load a sample case to explore a complete Joint Alignment Report." : "No joint reports yet. Create one above to invite your co-parent."}</p>
           ) : (
             <>
             {isPro && <CasesTable cases={joints} onClose={async (j) => {

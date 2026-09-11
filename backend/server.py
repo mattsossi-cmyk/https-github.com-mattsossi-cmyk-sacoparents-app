@@ -29,7 +29,7 @@ from pydantic import BaseModel, EmailStr
 from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
-from joint_engine import generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
+from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
@@ -41,7 +41,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-10.9"
+BUILD_ID = "2026-09-10.10"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -850,6 +850,7 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
         "closed_at": doc.get("closed_at"),
         "archived": bool(doc.get("archived")),
         "participants": _participants_public(doc),
+        "is_demo": bool(doc.get("is_demo")),
     }
     if doc.get("case_reference") and doc.get("created_by") == uid:
         out["case_reference"] = doc["case_reference"]
@@ -1072,6 +1073,44 @@ async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_curre
         {"role": i["role"], "code": i["code"], "link": invite_link(i["token"]), "invitee_email": i["invitee_email"], "invitee_name": i["invitee_name"], "status": "pending"}
         for i in (inv_a, inv_b)
     ]}
+
+
+@api.post("/joint/reports/professional/sample")
+async def create_sample_joint_case(user=Depends(get_current_user)):
+    require_approved_professional(user, "Only approved professional accounts can load a sample case")
+    existing = await db.joint_reports.find_one({"professional_id": user["_id"], "is_demo": True, "closed_at": {"$exists": False}}, {"_id": 0})
+    if existing:
+        return {**joint_public(existing, user), "already_existed": True}
+    sc = SAMPLE_SCENARIOS["communication"]
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "id": str(uuid.uuid4()),
+        "subject": sc["subject"],
+        "subjects": [sc["subject"]],
+        "subject_label": sc["label"],
+        "is_safety": False,
+        "is_demo": True,
+        "case_code": new_case_code(sc["subject"]),
+        "case_reference": "Sample case (fictional family)",
+        "child_name": sc["child"],
+        "created_by": user["_id"],
+        "creator_role": "professional",
+        "professional_id": user["_id"],
+        "professional_name": user.get("name", ""),
+        "shared_with": [],
+        "participants": {
+            "a": {"user_id": None, "name": sc["pa"], "email": ""},
+            "b": {"user_id": None, "name": sc["pb"], "email": ""},
+        },
+        "responses": {
+            "a": {"answers": sc["answers_a"], "completed_at": now},
+            "b": {"answers": sc["answers_b"], "completed_at": now},
+        },
+        "status": "ready",
+        "created_at": now,
+    }
+    await db.joint_reports.insert_one(doc)
+    return {**joint_public(doc, user), "already_existed": False}
 
 
 @api.get("/joint/reports")

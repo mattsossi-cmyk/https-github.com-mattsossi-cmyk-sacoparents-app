@@ -489,3 +489,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Live build 2026-09-10.9 confirmed at sacoparentsalign.com; directory/referrals endpoints protected (401); /join, /accept-invite, /professionals, methodology PDF live.
 - Authenticated prod checks blocked: preview test accounts do not exist in production DB (owner must verify or authorize a test pro account).
 - Resend: still 403 domain-not-verified; DNS shows send.*, resend._domainkey, _dmarc records all NXDOMAIN (not published).
+
+## 2026-06 Demo Sample Case (build 2026-09-10.10)
+- POST /api/joint/reports/professional/sample (approved pros): creates fictional Communication case (Robin/Jamie), both sides complete, READY_FOR_ALIGNMENT, is_demo=true, idempotent (one open sample per pro). Dashboard "Load a sample case" button + SAMPLE badge in CasesTable. tests/test_sample_case.py 4 passed; browser verified.
+- Prod live-check account align.livecheck still unapproved; Resend DNS: DKIM published, send.* SPF TXT + MX still missing.
