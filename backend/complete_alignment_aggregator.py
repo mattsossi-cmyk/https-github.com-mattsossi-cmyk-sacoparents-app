@@ -243,7 +243,11 @@ async def aggregate_for_user(
 
 
 async def aggregate_for_case(
-    db: AsyncIOMotorDatabase, *, parent_a_user_id: str, parent_b_user_id: str,
+    db: AsyncIOMotorDatabase,
+    *,
+    parent_a_user_id: str,
+    parent_b_user_id: str,
+    preserve_fields: tuple[str, ...] = (),
 ) -> Dict[str, Any]:
     """Joint variant — aggregate both parents and mark per-lane
     alignment status. Alignment status is:
@@ -256,12 +260,12 @@ async def aggregate_for_case(
     the conversation has raw material vs. where it doesn't yet.
 
     PRIVACY CONTRACT: The returned `parent_a` / `parent_b` sub-objects
-    MUST NOT leak either parent's raw free-text answers to the other.
-    We call the per-user aggregator (which contains the Foundation
-    Statement prompts + Child Needs highlights) and then run every
-    lane through `_scrub_for_joint_view` which drops any body-content
-    fields. Only lane-level completion metadata + neutral counts
-    survive into the joint payload.
+    MUST NOT leak either parent's raw free-text answers to the other
+    unless BOTH parents have EXPLICITLY consented. Consent is checked
+    by the caller (usually the route) and the specific field names
+    that both parents cleared are passed in via `preserve_fields`.
+    Anything not in `preserve_fields` is stripped through
+    `_scrub_for_joint_view`. Default = strip everything sensitive.
     """
     a = await aggregate_for_user(db, user_id=parent_a_user_id)
     b = await aggregate_for_user(db, user_id=parent_b_user_id)
@@ -297,8 +301,8 @@ async def aggregate_for_case(
             "total": len(LANES),
         },
         "child_name": a.get("child_name") or b.get("child_name"),
-        "parent_a": _scrub_for_joint_view(a),
-        "parent_b": _scrub_for_joint_view(b),
+        "parent_a": _scrub_for_joint_view(a, preserve_fields=preserve_fields),
+        "parent_b": _scrub_for_joint_view(b, preserve_fields=preserve_fields),
         "lanes": joint_lanes,
     }
 
@@ -326,26 +330,33 @@ _JOINT_STRIPPED_LANE_FIELDS: tuple[str, ...] = (
 )
 
 
-def _scrub_for_joint_view(user_agg: Dict[str, Any]) -> Dict[str, Any]:
+def _scrub_for_joint_view(
+    user_agg: Dict[str, Any],
+    *,
+    preserve_fields: tuple[str, ...] = (),
+) -> Dict[str, Any]:
     """Return a shallow copy of the per-user aggregate with every
-    lane's body-content fields removed. Preserves lane completion
-    metadata (`completed`, `updated_at`, `version`, etc.) so the
-    frontend can still say "parent A has completed 4/7 lanes" — but
-    never expose the answer bodies.
+    lane's body-content fields removed EXCEPT any listed in
+    `preserve_fields`. Preserves lane completion metadata
+    (`completed`, `updated_at`, `version`, etc.) so the frontend can
+    still say "parent A has completed 4/7 lanes" — but never expose
+    the answer bodies unless both parents have opted in.
 
     We defensively copy the top-level dict so the caller's original
     `aggregate_for_user` result is left untouched — this lets a
     future caller reuse the per-user aggregate for its own private
     view without accidentally serving the scrubbed lanes.
+
+    `preserve_fields` is the escape hatch used by the dual-consent
+    flow: when both parents have recorded a truthy
+    `child_needs_share_consent_at` on the case, the joint route
+    passes `("highlights",)` so section 5 can surface each parent's
+    excerpts.
     """
+    strip = tuple(f for f in _JOINT_STRIPPED_LANE_FIELDS if f not in preserve_fields)
     scrubbed = dict(user_agg)
     scrubbed["lanes"] = [
-        {k: v for k, v in lane.items() if k not in _JOINT_STRIPPED_LANE_FIELDS}
+        {k: v for k, v in lane.items() if k not in strip}
         for lane in (user_agg.get("lanes") or [])
     ]
-    # `child_name` on the top-level is a shared surface (both parents
-    # answer for the same child) — leave it. But the per-user
-    # `child_name` field on the foundation lane can carry a parent's
-    # unique name spelling; leaving it on the aggregate is intentional
-    # (already surfaced in section 2 of the report).
     return scrubbed

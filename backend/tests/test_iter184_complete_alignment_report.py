@@ -181,6 +181,116 @@ def test_joint_seeded_demo_case_never_leaks_foundation_prompts_to_other_parent()
     )
 
 
+def test_child_needs_consent_toggle_unlocks_highlights_only_after_both_consent():
+    """Iter187 dual-consent flow — a caller toggling their consent
+    alone MUST NOT unlock highlights. Both parents must consent.
+
+    We simulate this by:
+      1) Confirming initial joint view is scrubbed (no highlights).
+      2) POST /joint/SA-DEMO01/consent/child-needs as parent A → 200.
+      3) Re-fetching joint view — still no highlights (waiting for B).
+      4) POST as parent B (fresh login) → 200 + `unlocked: True`.
+      5) Re-fetching joint view — highlights preserved through scrub.
+      6) POST again as parent A → clears the flag (toggle-off).
+      7) Re-fetching → no highlights again.
+    """
+    import time
+    def _bearer_for(email: str) -> str:
+        r = requests.post(
+            f"{BASE_URL}/api/auth/login",
+            json={"email": email, "password": "TestPass123!"},
+            timeout=10,
+        )
+        assert r.status_code == 200, r.text
+        return r.json()["access_token"]
+
+    a_hdrs = {"Authorization": f"Bearer {_bearer_for('parent1@test.com')}"}
+    b_hdrs = {"Authorization": f"Bearer {_bearer_for('parent2@test.com')}"}
+
+    def _joint_json(hdrs):
+        rr = requests.get(f"{BASE_URL}/api/complete-report/joint/SA-DEMO01", headers=hdrs, timeout=10)
+        assert rr.status_code == 200, rr.text
+        return rr.json()
+
+    def _clear_consent(hdrs, current):
+        # POST toggles: if already consented, POST clears it. Called
+        # in setup + teardown so the test is isolated from prior runs.
+        if current:
+            requests.post(f"{BASE_URL}/api/complete-report/joint/SA-DEMO01/consent/child-needs", headers=hdrs, timeout=10)
+
+    # Setup — clear any leftover consents from a prior test run.
+    j = _joint_json(a_hdrs)
+    _clear_consent(a_hdrs, j.get("my_consent",{}).get("child_needs",{}).get("my_consent_at"))
+    j = _joint_json(b_hdrs)
+    _clear_consent(b_hdrs, j.get("my_consent",{}).get("child_needs",{}).get("my_consent_at"))
+
+    # 1) Initial state: neither has consented → no highlights leaked.
+    j = _joint_json(a_hdrs)
+    assert not j["my_consent"]["child_needs"]["unlocked"]
+    for lane in j["parent_a"]["lanes"]:
+        assert "highlights" not in lane
+    for lane in j["parent_b"]["lanes"]:
+        assert "highlights" not in lane
+
+    # 2) Parent A consents → still locked (waiting on B).
+    r = requests.post(
+        f"{BASE_URL}/api/complete-report/joint/SA-DEMO01/consent/child-needs",
+        headers=a_hdrs, timeout=10,
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["my_consent_at"]
+    assert r.json()["unlocked"] is False
+
+    # 3) Re-fetch — still scrubbed.
+    j = _joint_json(a_hdrs)
+    assert not j["my_consent"]["child_needs"]["unlocked"]
+    for lane in j["parent_a"]["lanes"]:
+        assert "highlights" not in lane, "Consent from A alone must not unlock A's own highlights on the JOINT view either"
+
+    # 4) Parent B consents → BOTH now consented, joint view unlocked.
+    time.sleep(0.05)  # small nudge for consent_iso monotonicity
+    r = requests.post(
+        f"{BASE_URL}/api/complete-report/joint/SA-DEMO01/consent/child-needs",
+        headers=b_hdrs, timeout=10,
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["unlocked"] is True
+
+    # 5) Re-fetch — highlights now preserved through the scrub.
+    j = _joint_json(a_hdrs)
+    assert j["my_consent"]["child_needs"]["unlocked"] is True
+    # Highlights field CAN now appear on child_needs lanes (contents
+    # depend on whether the parent seeded any).
+    for lane in j["parent_a"]["lanes"]:
+        if lane["id"] == "child_needs":
+            # The presence check is what matters — value may be [] if
+            # the parent hasn't seeded highlights, but the field key
+            # must be preserved through the scrub.
+            assert "highlights" in lane, "Section 5 unlock failed to preserve highlights key"
+
+    # 6) Parent A toggles off — clears the flag → joint view re-locks.
+    r = requests.post(
+        f"{BASE_URL}/api/complete-report/joint/SA-DEMO01/consent/child-needs",
+        headers=a_hdrs, timeout=10,
+    )
+    assert r.status_code == 200
+    assert r.json()["my_consent_at"] is None
+    assert r.json()["unlocked"] is False
+
+    # 7) Re-fetch — scrubbed again.
+    j = _joint_json(a_hdrs)
+    assert not j["my_consent"]["child_needs"]["unlocked"]
+    for lane in j["parent_a"]["lanes"]:
+        assert "highlights" not in lane
+    for lane in j["parent_b"]["lanes"]:
+        assert "highlights" not in lane
+
+    # Teardown — clear parent B's leftover consent so re-running the
+    # test suite starts from a clean slate.
+    j = _joint_json(b_hdrs)
+    _clear_consent(b_hdrs, j.get("my_consent",{}).get("child_needs",{}).get("my_consent_at"))
+
+
 def test_joint_endpoint_returns_404_for_unknown_case():
     # A well-formed but nonexistent case_id must 404 (never 403) so
     # we don't leak case existence to unauthorised callers.

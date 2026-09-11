@@ -49,12 +49,20 @@ from complete_alignment_report_pdf import (
     render_individual_pdf,
     render_joint_pdf,
 )
+from dual_consent import record_consent
 
 
 router = APIRouter(tags=["complete-alignment-report"])
 logger = logging.getLogger(__name__)
 
 _CASES_COLL = "joint_alignment_cases"
+
+# Cross-parent-share consent keys stored on the case's parents-list
+# entry. Adding a new consent key here is the ONLY way to unlock a
+# new cross-parent-share surface — the aggregator strips everything
+# by default, and the route only asks to preserve a field if BOTH
+# parents on the case have the matching consent-at timestamp set.
+_CONSENT_KEY_CHILD_NEEDS = "child_needs_share_consent_at"
 
 
 async def _resolve_parent_name(
@@ -146,6 +154,27 @@ def _parent_display_name(parent: dict, fallback: str) -> str:
     return fallback
 
 
+def _preserve_fields_for_case(case: dict) -> tuple[str, ...]:
+    """Inspect the case document's parents-list for cross-parent-share
+    consent flags. Returns the tuple of aggregator-lane-fields that
+    BOTH parents have opted-in to share; the aggregator strips
+    everything else.
+
+    Contract: this helper is the ONLY place a consent key is mapped
+    to an aggregator field. Adding a new key here + one line in the
+    aggregator's `_JOINT_STRIPPED_LANE_FIELDS` is all it takes to
+    plumb a new opt-in share surface.
+    """
+    parents = case.get("parents") or []
+    if len(parents) < 2:
+        return ()
+    a, b = parents[0], parents[1]
+    preserved: list[str] = []
+    if a.get(_CONSENT_KEY_CHILD_NEEDS) and b.get(_CONSENT_KEY_CHILD_NEEDS):
+        preserved.append("highlights")
+    return tuple(preserved)
+
+
 @router.get("/complete-report/joint/{case_id}.pdf")
 async def complete_report_joint_pdf(
     case_id: str = Path(..., pattern=r"^SA-[A-Z0-9]{4,10}(?:\.pdf)?$"),
@@ -169,6 +198,7 @@ async def complete_report_joint_pdf(
         db,
         parent_a_user_id=a["user_id"],
         parent_b_user_id=b["user_id"],
+        preserve_fields=_preserve_fields_for_case(case),
     )
     names = [
         _parent_display_name(a, "Parent A"),
@@ -196,11 +226,27 @@ async def complete_report_joint(
         db, case_id=case_id, caller_user_id=current.user_id,
     )
     a, b = case["parents"][0], case["parents"][1]
+    preserved = _preserve_fields_for_case(case)
     agg = await aggregate_for_case(
         db,
         parent_a_user_id=a["user_id"],
         parent_b_user_id=b["user_id"],
+        preserve_fields=preserved,
     )
+    # Surface the CALLER's per-lane consent state so the frontend
+    # toggle can render "on" / "waiting for co-parent" / "off"
+    # without a second round-trip. Only the caller's own flag is
+    # exposed — never the co-parent's timestamp values.
+    caller_is_a = current.user_id == a.get("user_id")
+    my_parent = a if caller_is_a else b
+    other_parent = b if caller_is_a else a
+    consent = {
+        "child_needs": {
+            "my_consent_at": my_parent.get(_CONSENT_KEY_CHILD_NEEDS),
+            "coparent_has_consented": bool(other_parent.get(_CONSENT_KEY_CHILD_NEEDS)),
+            "unlocked": "highlights" in preserved,
+        },
+    }
     return {
         "variant": "joint",
         "case_id": case_id,
@@ -208,5 +254,55 @@ async def complete_report_joint(
             _parent_display_name(a, "Parent A"),
             _parent_display_name(b, "Parent B"),
         ],
+        "my_consent": consent,
         **agg,
     }
+
+
+@router.post("/complete-report/joint/{case_id}/consent/child-needs")
+async def complete_report_toggle_child_needs_consent(
+    case_id: str = Path(..., pattern=r"^SA-[A-Z0-9]{4,10}$"),
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Toggle the caller's `child_needs_share_consent_at` flag on
+    this case. If the flag is currently set we CLEAR it (undo);
+    otherwise we record the current UTC ISO timestamp.
+
+    Returns the caller's own new state + whether the joint view is
+    now unlocked (both parents have consented). Never exposes the
+    co-parent's timestamp — only a boolean "have they also consented?"
+    """
+    from datetime import datetime, timezone as _tz
+    # Membership + acceptance gate (also raises 404 for non-members
+    # so case_id existence is never leaked).
+    await _load_case_and_members(
+        db, case_id=case_id, caller_user_id=current.user_id,
+    )
+    # Look up the caller's current flag so we can implement a toggle
+    # rather than a set-only endpoint.
+    case = await db[_CASES_COLL].find_one({"case_id": case_id}, {"parents": 1}) or {}
+    parents = case.get("parents") or []
+    my_current: str | None = None
+    for p in parents[:2]:
+        if p.get("user_id") == current.user_id:
+            my_current = p.get(_CONSENT_KEY_CHILD_NEEDS)
+            break
+    if my_current:
+        # Clear (revoke consent)
+        slot = 0 if parents[0].get("user_id") == current.user_id else 1
+        await db[_CASES_COLL].update_one(
+            {"case_id": case_id},
+            {"$unset": {f"parents.{slot}.{_CONSENT_KEY_CHILD_NEEDS}": ""}},
+        )
+        return {"my_consent_at": None, "unlocked": False}
+    # Record new consent
+    now_iso = datetime.now(_tz.utc).isoformat()
+    _, both = await record_consent(
+        db,
+        case_id=case_id,
+        caller_user_id=current.user_id,
+        consent_key=_CONSENT_KEY_CHILD_NEEDS,
+        consent_iso=now_iso,
+    )
+    return {"my_consent_at": now_iso, "unlocked": both}

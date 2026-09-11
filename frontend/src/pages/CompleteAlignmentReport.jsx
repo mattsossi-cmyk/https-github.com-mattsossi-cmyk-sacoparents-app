@@ -99,6 +99,10 @@ export default function CompleteAlignmentReport() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  // Consent-toggle in-flight guard — prevents the checkbox from
+  // firing twice on a fast double-click while the POST is still
+  // resolving. Cleared in the `.finally` below.
+  const [consentPending, setConsentPending] = useState(false);
 
   const variant = caseId ? "joint" : "individual";
   const jsonPath = caseId
@@ -170,6 +174,25 @@ export default function CompleteAlignmentReport() {
       alert("We couldn't download the PDF. Please try again in a moment.");
     } finally {
       setDownloading(false);
+    }
+  };
+
+  // Toggle the caller's Child Needs highlights share-consent on THIS
+  // joint case. Refetch the JSON view after so the unlocked/waiting
+  // state banner + (if newly unlocked) the highlights bodies flow
+  // through without a page reload.
+  const toggleChildNeedsConsent = async () => {
+    if (!caseId || consentPending) return;
+    setConsentPending(true);
+    try {
+      await api.post(`/complete-report/joint/${caseId}/consent/child-needs`);
+      const r = await api.get(jsonPath);
+      setData(r.data || null);
+    } catch (err) {
+      logError("child-needs consent toggle failed", err);
+      alert("We couldn't update your share preference. Please try again in a moment.");
+    } finally {
+      setConsentPending(false);
     }
   };
 
@@ -320,7 +343,12 @@ export default function CompleteAlignmentReport() {
 
             {/* 05 — Child Needs */}
             <Section n={SECTIONS[4].n} title={SECTIONS[4].title}>
-              <ChildNeedsExcerpt data={data} variant={variant} />
+              <ChildNeedsExcerpt
+                data={data}
+                variant={variant}
+                onToggleConsent={toggleChildNeedsConsent}
+                consentPending={consentPending}
+              />
             </Section>
 
             {/* 06 — Options */}
@@ -460,34 +488,103 @@ function JointLaneList({ lanes, filter, empty }) {
 }
 
 
-function ChildNeedsExcerpt({ data, variant }) {
+function ChildNeedsExcerpt({ data, variant, onToggleConsent, consentPending }) {
   const childNeedsLane = (data?.lanes || []).find((l) => l.id === "child_needs");
   if (variant === "joint") {
-    // STRICT PRIVACY: per aggregator policy the joint view does NOT
-    // surface either parent's Child Needs excerpts — same rule as
-    // Foundation Statement prompts. Highlights are stripped upstream
-    // in `_JOINT_STRIPPED_LANE_FIELDS`; we don't even attempt to read
-    // them here.
+    // PRIVACY: highlights are stripped from the joint payload UNLESS
+    // both parents have recorded `child_needs_share_consent_at` on the
+    // case. The route surfaces the caller's consent state on
+    // `data.my_consent.child_needs` so this component can render the
+    // right toggle without a second round-trip.
+    const consent = data?.my_consent?.child_needs || {};
+    const myConsentAt = consent.my_consent_at || null;
+    const coparentIn = !!consent.coparent_has_consented;
+    const unlocked = !!consent.unlocked;
     const aLane = (data?.parent_a?.lanes || []).find((l) => l.id === "child_needs");
     const bLane = (data?.parent_b?.lanes || []).find((l) => l.id === "child_needs");
     const aDone = !!aLane?.completed;
     const bDone = !!bLane?.completed;
-    if (!aDone && !bDone) {
-      return (
-        <div className="text-sm text-[#4B4567] leading-relaxed">
-          Neither parent has completed the Child Needs Statement yet. Once done, each parent's alignment status appears here.
-        </div>
-      );
-    }
+    const aHighlights = aLane?.highlights || [];
+    const bHighlights = bLane?.highlights || [];
+
     return (
-      <div className="text-sm text-[#4B4567] leading-relaxed space-y-2">
-        <div>
-          {aDone && <span className="mr-1">Parent A has completed the Child Needs Statement.</span>}
-          {bDone && <span>Parent B has completed the Child Needs Statement.</span>}
-        </div>
-        <div className="text-xs text-[#857E9C] italic">
-          Each parent's specific answers stay in their own Complete Alignment Report — request them alongside this joint report under explicit dual-consent.
-        </div>
+      <div className="text-sm text-[#4B4567] leading-relaxed space-y-3">
+        {(!aDone && !bDone) && (
+          <div>Neither parent has completed the Child Needs Statement yet. Once done, each parent's alignment status appears here.</div>
+        )}
+        {(aDone || bDone) && !unlocked && (
+          <div>
+            {aDone && <span className="mr-1">Parent A has completed the Child Needs Statement.</span>}
+            {bDone && <span>Parent B has completed the Child Needs Statement.</span>}
+          </div>
+        )}
+        {unlocked && (aHighlights.length > 0 || bHighlights.length > 0) && (
+          <div className="space-y-3">
+            {aHighlights.length > 0 && (
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                  {data?.parents?.[0] || "Parent A"} notes
+                </div>
+                <ul className="mt-1 list-disc list-inside space-y-1">
+                  {aHighlights.map((h, i) => <li key={`a-${i}`}>{h}</li>)}
+                </ul>
+              </div>
+            )}
+            {bHighlights.length > 0 && (
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                  {data?.parents?.[1] || "Parent B"} notes
+                </div>
+                <ul className="mt-1 list-disc list-inside space-y-1">
+                  {bHighlights.map((h, i) => <li key={`b-${i}`}>{h}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Consent toggle — only meaningful once THIS parent has
+            completed the Child Needs Statement themselves. Shows the
+            co-parent's status (has consented / hasn't yet) so the
+            user knows why the panel is still locked. */}
+        {(aDone || bDone) && (
+          <div className="rounded-2xl border border-[#E5E0EE] bg-[#FBF8FE] p-3 sm:p-4 text-xs sm:text-[13px] text-[#1A1330]">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!myConsentAt}
+                onChange={onToggleConsent}
+                disabled={!!consentPending}
+                className="mt-0.5 h-4 w-4 rounded border-[#3D1A78] text-[#3D1A78] focus:ring-[#3D1A78]"
+                data-testid="complete-report-child-needs-consent-toggle"
+              />
+              <span className="leading-relaxed">
+                <span className="font-semibold text-[#3D1A78]">
+                  Share my Child Needs highlights in this joint report
+                </span>
+                <br />
+                <span className="text-[#4B4567]">
+                  Off by default. When both parents toggle this on, section 5 unlocks and each parent's highlights appear in the joint view + PDF.
+                </span>
+                <br />
+                <span
+                  className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1 inline-block"
+                  data-testid="complete-report-child-needs-consent-status"
+                >
+                  {unlocked ? (
+                    <span className="text-[#1E6A42]">Both consented · unlocked</span>
+                  ) : myConsentAt && !coparentIn ? (
+                    <span className="text-[#AA6A00]">Waiting on co-parent</span>
+                  ) : !myConsentAt && coparentIn ? (
+                    <span className="text-[#AA6A00]">Co-parent has consented · your turn</span>
+                  ) : (
+                    <span className="text-[#857E9C]">Neither has consented yet</span>
+                  )}
+                </span>
+              </span>
+            </label>
+          </div>
+        )}
       </div>
     );
   }

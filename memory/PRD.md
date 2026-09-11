@@ -27,6 +27,54 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-11 — Iter187 · Dual-Consent Child Needs Share + Ops Hardening
+
+**🟢 P1 — Dual-consent gate on Child Needs highlights**
+Founder-approved strict policy (Iter186): parents' Child Needs excerpts
+are stripped from the joint Complete Alignment Report view by default.
+Iter187 adds the mechanically-enforceable ESCAPE HATCH so co-parents can
+selectively opt-in without a privacy incident.
+
+- `complete_alignment_aggregator.py::aggregate_for_case` now takes a
+  `preserve_fields` tuple. `_scrub_for_joint_view` allowlists any lane
+  field in that tuple through the scrub — everything else stays stripped.
+- `complete_alignment_report_routes.py::_preserve_fields_for_case`
+  inspects `parents[i].child_needs_share_consent_at` on the case doc.
+  Returns `("highlights",)` ONLY if BOTH parents' timestamps are set.
+- `POST /api/complete-report/joint/{case_id}/consent/child-needs`
+  idempotent toggle — records / clears the caller's own consent-at
+  timestamp. Returns `{my_consent_at, unlocked}` so the frontend can
+  show "Waiting on co-parent" / "Both consented · unlocked" without a
+  second round-trip.
+- `GET /api/complete-report/joint/{case_id}` now returns a
+  `my_consent.child_needs` sub-doc with the caller's own timestamp,
+  a boolean `coparent_has_consented`, and derived `unlocked`. Never
+  exposes the co-parent's raw timestamp value.
+- Frontend `CompleteAlignmentReport.jsx::ChildNeedsExcerpt` completely
+  rewritten. Renders a contextual checkbox + a live status pill
+  (`Neither has consented yet` / `Waiting on co-parent` / etc.).
+  When both consent, highlights render side-by-side labelled with each
+  parent's name.
+- Pytest `test_child_needs_consent_toggle_unlocks_highlights_only_after_both_consent`
+  covers the full 7-step flow (initial scrub → A consents → B consents
+  → unlock → A revokes → re-lock). Idempotent setup/teardown.
+
+**🟢 P2 — Reusable dual-consent helper**
+New `dual_consent.py` module: `require_dual_consent(case_id, caller_user_id, consent_key)`
++ `record_consent(...)`. Extracts the strict-gate pattern already used by
+`snc2_comparison_routes`. Any future cross-parent surface can enforce
+the strict privacy contract in one line — closes the "implicit consent"
+gap that produced the iter185 leak.
+
+**🟢 P2 — Admin-gated seed endpoint**
+`POST /api/admin/seed-demo-case` (gated on `ADMIN_EMAILS`) — runs
+`seed_joint_sample_case.run()` against the CURRENT env's Mongo. Lets
+the platform owner spin up `SA-DEMO01` on production without shell
+access. Idempotent, never destructive. Verified 403 for non-admin, 401
+for no-auth.
+
+
+## What's Implemented
 ### 2026-09-10 — Iter185 · Joint Seed + Inline Mini-Quiz + Voice Preview
 
 **🟢 P2 — Joint Complete Alignment Report sample-case seed**
