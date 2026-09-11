@@ -15,6 +15,7 @@ import { ForcePasswordChange } from "@/components/ForcePasswordChange";
 import { ParentRequestStatus } from "@/components/ParentRequestStatus";
 import { ProfessionalsPreview } from "@/components/ProfessionalsPreview";
 import { CasesTable } from "@/components/CasesTable";
+import { UpcomingCheckIns } from "@/components/UpcomingCheckIns";
 import { ReferralInbox } from "@/components/ReferralInbox";
 
 export default function Dashboard() {
@@ -462,6 +463,7 @@ export default function Dashboard() {
             <p className="text-sm text-muted-foreground" data-testid="joints-empty">{isPro ? "No cases yet. Create one above, or load a sample case to explore a complete Joint Alignment Report." : "No joint reports yet. Create one above to invite your co-parent."}</p>
           ) : (
             <>
+            {isPro && <UpcomingCheckIns cases={joints} />}
             {isPro && <CasesTable cases={joints} onClose={async (j) => {
               const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);
               if (note === null) return;

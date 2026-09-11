@@ -508,3 +508,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 Follow-Up Reminder (build 2026-09-10.14)
 - session_outcome.follow_up_date (YYYY-MM-DD, validated). New cron follow-up-reminder (daily 8am Central, .emergent/crons.yml, 4 crons total) -> POST /api/cron/follow-up-reminder -> run_follow_up_reminders(): emails pro once per date (follow_up_reminder_sent flag, reset when date changes), logs lifecycle event, skips closed cases. Frontend date input in SessionOutcome. tests/test_follow_up_reminder.py + test_session_outcome.py 7 passed; browser verified persistence.
+
+## 2026-06 Upcoming Check-Ins
+- components/UpcomingCheckIns.jsx on Dashboard above CasesTable: lists creator cases with session_outcome.follow_up_date within 7 days (or overdue), Today/Tomorrow/weekday chips, link to case. Frontend-only (data already in /joint/reports). Desktop + mobile screenshot verified.
