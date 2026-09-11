@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { ProWorkspace } from "@/components/ProWorkspace";
 import { CompareView } from "@/components/CompareView";
+import { SampleWalkthrough } from "@/components/SampleWalkthrough";
 
 function Section({ num, title, children, testId }) {
   return (
@@ -219,6 +220,10 @@ export default function JointReport() {
               <p className="mt-6 text-sm italic text-muted-foreground max-w-xl mx-auto">"{report.philosophy}"</p>
             </div>
           </div>
+        )}
+
+        {ready && report && detail.kind !== "agreement" && detail.is_creator && (
+          <SampleWalkthrough active={!!detail.is_demo} onStart={() => setView("report")} />
         )}
 
         {ready && report && detail.kind !== "agreement" && detail.is_creator && (

@@ -81,6 +81,14 @@
     border: 1px solid #E5E1D8;
 }
 
+.tour-highlight {
+    outline: 3px solid #E8B923;
+    outline-offset: 12px;
+    border-radius: 6px;
+    transition: outline-color 0.3s ease;
+}
+
+
 .report-page-enter {
     animation: pageFade 0.25s ease;
 }

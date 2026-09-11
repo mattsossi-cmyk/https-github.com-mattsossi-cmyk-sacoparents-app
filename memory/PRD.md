@@ -493,3 +493,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-06 Demo Sample Case (build 2026-09-10.10)
 - POST /api/joint/reports/professional/sample (approved pros): creates fictional Communication case (Robin/Jamie), both sides complete, READY_FOR_ALIGNMENT, is_demo=true, idempotent (one open sample per pro). Dashboard "Load a sample case" button + SAMPLE badge in CasesTable. tests/test_sample_case.py 4 passed; browser verified.
 - Prod live-check account align.livecheck still unapproved; Resend DNS: DKIM published, send.* SPF TXT + MX still missing.
+
+## 2026-06 Sample Walkthrough
+- components/SampleWalkthrough.jsx: 10-step guided tour on sample (is_demo) Joint Report page; banner + floating step card, scroll+highlight each jr-* section, localStorage dismissal. Desktop+mobile screenshot verified, no overflow.
