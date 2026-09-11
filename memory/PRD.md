@@ -511,3 +511,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 Upcoming Check-Ins
 - components/UpcomingCheckIns.jsx on Dashboard above CasesTable: lists creator cases with session_outcome.follow_up_date within 7 days (or overdue), Today/Tomorrow/weekday chips, link to case. Frontend-only (data already in /joint/reports). Desktop + mobile screenshot verified.
+
+## 2026-06 Full regression
+- Full backend suite: 207 passed. Testing agent iteration_38.json: 22/22 backend + all frontend criteria pass for sample case, walkthrough, prep sheet, outcome, follow-up cron, check-ins panel, closing summary. retest_needed=false. Preview build 2026-09-10.14 ready to publish.

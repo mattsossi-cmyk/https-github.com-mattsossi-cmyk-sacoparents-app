@@ -1,0 +1,34 @@
+{
+  "summary": "End-to-end test of the 8 new features (Demo Sample Case, Sample Walkthrough tour, Session Prep PDF, Post-Session Outcome, Follow-up cron, Upcoming Check-Ins panel, Closing Summary w/ outcome, /api/health build). Backend: ran the 5 feature pytest modules (15/15 PASS) plus a new /app/backend/tests/test_iteration_38_review.py covering health build='2026-09-10.14', session-outcome 400/401/403 error codes, cron auth (401 without secret, 200 with Bearer + {run_id}), and a full NEW-case → outcome → close → closing-summary.pdf flow verifying 'Session outcome' and chosen step text in the PDF (7/7 PASS). Existing sample case of approval.test.pro1 was preserved (not deleted or closed) per instructions. Frontend: logged in as approval.test.pro1, verified load-sample-case-btn is HIDDEN (sample already exists), SAMPLE badge (case-row-sample-<id>) present in cases-table, upcoming-checkins panel renders on dashboard above the cases table with count=1 and chip 'Tomorrow' after saving outcome, and no horizontal overflow at 390px (panel scrollWidth 356 ≤ 390). On the report page: sample-tour-banner + start button work, sample-tour-card advances Section 1→10 (progress data-testid confirmed), matching report section receives class 'tour-highlight', Back moves 10→9, last-step button label switches to 'Finish' and finishing closes the card, banner text becomes 'Sample case. Take the 10-step tour again any time.'. Session Prep: session-prep-btn is an <A> with href /api/joint/reports/<id>/session-prep.pdf; GET with pro cookies returns 200 application/pdf with Content-Disposition 'attachment; filename=\"session-prep-SA-…pdf\"'. Backend test confirms parent/non-creator gets 403. Session Outcome: session-outcome-step-0 & step-2 toggle to aria-pressed=true, summary + follow-up date (tomorrow) save, session-outcome-recorded shows 'Last saved …', session-outcome-count shows '2 steps chosen'; after reload, selections/summary/date persist; pro-lifecycle-list contains an entry with 'Session outcome recorded', '2 next steps chosen' and the follow-up date. Overall 22/22 executed backend tests pass and all frontend acceptance criteria met. One minor spec vs. implementation discrepancy noted (see below): there is no separate 'sample-tour-finish-btn' testid — the same 'sample-tour-next-btn' element flips its label to 'Finish' on the last step and triggers close/finish.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration_38_review.py",
+    "/app/backend/tests/test_sample_case.py",
+    "/app/backend/tests/test_session_prep.py",
+    "/app/backend/tests/test_session_outcome.py",
+    "/app/backend/tests/test_follow_up_reminder.py",
+    "/app/backend/tests/test_closing_outcome.py",
+    "/app/test_reports/pytest/iter38.xml"
+  ],
+  "action_items": [
+    "Optional / non-blocking: the review spec mentions a `data-testid=sample-tour-finish-btn` on the last step, but the current implementation reuses `sample-tour-next-btn` (label changes to 'Finish'). Behavior is correct and the review spec's UX requirement is satisfied. If you want future automation to target Finish separately, add data-testid=sample-tour-finish-btn to that same button on the last step (e.g. `data-testid={last ? 'sample-tour-finish-btn' : 'sample-tour-next-btn'}`)."
+  ],
+  "critical_code_review_comments": [
+    "SampleWalkthrough.jsx uses one merged button (sample-tour-next-btn) for both Next and Finish. Works, but keeping the same testid across two different actions makes E2E tests brittle. Consider dual testids as noted above."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration_38_review.py (NEW — 7 additional review-request checks)"
+  ],
+  "success_rate": {"backend": "100% (22/22)", "frontend": "100% (all acceptance criteria met)"},
+  "test_credentials": "approval.test.pro1@gmail.com / TestPass2026! — approved professional with existing SAMPLE case (preserved). New pro accounts created by casekit are auto-approved via _approve().",
+  "seed_data_creation": "No seed touched. casekit created ephemeral TEST_ users/cases for the backend flow tests. The pre-existing SAMPLE case belonging to approval.test.pro1 (id 7f03bb5a-d8e7-4e53-9eb9-d17136495957, code SA-26-COM-5Z4UZ3) was used read-mostly; the session-outcome for it was updated to {steps=[0,2], summary='Iter38 test summary …', follow_up_date=<tomorrow>} to exercise UpcomingCheckIns. Sample case was NOT closed or deleted.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 8 review features verified end-to-end. Preview REACT_APP_BACKEND_URL is https://align-report.preview.emergentagent.com and WEBHOOK_CRON_SECRET is present in backend/.env. Approved fixture pro approval.test.pro1@gmail.com has ONE open sample case (case_code SA-26-COM-5Z4UZ3). SessionOutcome for that sample now has steps [Continue Parent Discussion, Consult Teacher / School Counselor], follow_up_date = tomorrow, so Upcoming Check-Ins panel shows 1 item with chip 'Tomorrow'. If future testing resets it, re-save via PUT /api/joint/reports/<id>/session-outcome. Sample-tour-card uses a single button (sample-tour-next-btn) that becomes 'Finish' on the last section — no separate sample-tour-finish-btn testid exists.",
+  "rca of the issue": "N/A — no issues found."
+}
