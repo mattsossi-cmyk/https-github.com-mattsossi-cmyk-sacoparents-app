@@ -126,6 +126,12 @@ async def _upsert_demo_case(db, *, parent_a: dict, parent_b: dict) -> dict:
             "assessment_completed_at": now,
             "assessment_ref": None,
         })
+    # Fields that should NOT be rewritten on every re-seed. `created_at`
+    # in particular — a stable "first seeded on" timestamp lets ops
+    # audit when the sample case landed on any given environment.
+    set_on_insert = {
+        "created_at": now,
+    }
     case_doc = {
         "case_id": DEMO_CASE_ID,
         "assessment_type": "co-parenting",
@@ -142,15 +148,16 @@ async def _upsert_demo_case(db, *, parent_a: dict, parent_b: dict) -> dict:
         "reminder_note": None,
         "parents": parents_doc,
         "status": "completed",
-        "created_at": now,
         "case_expires_at": now + timedelta(days=365),
     }
     await db.joint_alignment_cases.update_one(
         {"case_id": DEMO_CASE_ID},
-        {"$set": case_doc},
+        {"$set": case_doc, "$setOnInsert": set_on_insert},
         upsert=True,
     )
-    return case_doc
+    # Re-read for return — includes whatever `created_at` MongoDB now
+    # holds (either the freshly-inserted value or the pre-existing one).
+    return await db.joint_alignment_cases.find_one({"case_id": DEMO_CASE_ID}) or case_doc
 
 
 async def run() -> dict:

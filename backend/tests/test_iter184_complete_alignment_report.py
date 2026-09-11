@@ -119,6 +119,63 @@ def test_joint_endpoint_rejects_bad_case_id_format():
     assert r.status_code == 422, r.text
 
 
+def test_joint_seeded_demo_case_never_leaks_foundation_prompts_to_other_parent():
+    """SECURITY REGRESSION (iter185 code review):
+    The joint JSON view must NOT echo either parent's Foundation
+    Statement free-text answers under `parent_a` or `parent_b`. Those
+    prompts are private-between-co-parents by product policy — the
+    joint report exists to surface alignment STATUS, not answer
+    bodies.
+
+    parent1@test.com is a member on `SA-DEMO01` so this test can hit
+    the joint endpoint end-to-end and assert the seeded parent B
+    ("Riley Parent") free-text NEVER appears anywhere in the response.
+    """
+    r = requests.get(
+        f"{BASE_URL}/api/complete-report/joint/SA-DEMO01",
+        headers=_auth_headers(),
+        timeout=15,
+    )
+    assert r.status_code == 200, r.text[:400]
+    data = r.json()
+    # 1) The scrubbed sub-objects must not carry `prompts` on any lane.
+    for side_key in ("parent_a", "parent_b"):
+        side = data.get(side_key) or {}
+        for lane in side.get("lanes") or []:
+            assert "prompts" not in lane, (
+                f"HIGH: {side_key}.lanes[{lane.get('id')}] leaked Foundation prompts"
+            )
+    # 2) Sanity — a full-text search over the SERIALIZED response
+    #    must not find parent B's known seeded free-text. The seed
+    #    script writes verbatim strings for parent B's Foundation.
+    parent_b_seeded_secrets = (
+        "From Rian's side the transitions are the hardest part of the week.",
+        "I sometimes rush to explain when a pause would land better.",
+        "A shared Sunday-evening 15-minute check-in that both of us keep.",
+        "I'd like more heads-up on schedule changes than 24 hours.",
+    )
+    body_text = r.text  # raw JSON string
+    for secret in parent_b_seeded_secrets:
+        assert secret not in body_text, (
+            f"HIGH: parent A can read parent B's Foundation Statement text: {secret!r}"
+        )
+    # 3) The Foundation individual view for parent A MUST still return
+    #    their OWN prompts — we didn't over-strip.
+    mine = requests.get(
+        f"{BASE_URL}/api/complete-report/mine",
+        headers=_auth_headers(),
+        timeout=10,
+    ).json()
+    my_foundation = next(
+        (ln for ln in (mine.get("lanes") or []) if ln.get("id") == "foundation"),
+        {},
+    )
+    assert my_foundation.get("prompts"), (
+        "Individual view must still surface the caller's own Foundation prompts "
+        "— the scrub is joint-only."
+    )
+
+
 def test_joint_endpoint_returns_404_for_unknown_case():
     # A well-formed but nonexistent case_id must 404 (never 403) so
     # we don't leak case existence to unauthorised callers.

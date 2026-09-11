@@ -24,9 +24,12 @@ import React, { useMemo, useState } from "react";
 import { RefreshCcw, ClipboardCheck, Check, Circle } from "lucide-react";
 
 // ---- Copy — LOCKSTEP with joint_alignment_sample_pdf.QUIZ_PROMPTS ----
+// The `...` ASCII ellipsis on each prompt is intentional — the PDF
+// module uses the same three-dot form (fpdf2 has to Latin-1 encode
+// so a Unicode `…` would decompose). Keep the strings identical.
 const QUIZ_PROMPTS = [
   {
-    prompt: "1. School mornings at your two homes look…",
+    prompt: "1. School mornings at your two homes look...",
     answers: {
       agree: "Roughly the same routine at both places.",
       differ: "Meaningfully different from home to home.",
@@ -34,7 +37,7 @@ const QUIZ_PROMPTS = [
     },
   },
   {
-    prompt: "2. Weeknight screen-time rules for the child…",
+    prompt: "2. Weeknight screen-time rules for the child...",
     answers: {
       agree: "Both parents apply the same limit.",
       differ: "Each parent has their own limit.",
@@ -42,7 +45,7 @@ const QUIZ_PROMPTS = [
     },
   },
   {
-    prompt: "3. Extracurricular activities (frequency and cost)…",
+    prompt: "3. Extracurricular activities (frequency and cost)...",
     answers: {
       agree: "We agree on the current schedule.",
       differ: "We see the schedule differently.",
@@ -50,7 +53,7 @@ const QUIZ_PROMPTS = [
     },
   },
   {
-    prompt: "4. Handovers on a typical week…",
+    prompt: "4. Handovers on a typical week...",
     answers: {
       agree: "Same preferred time and place for both of us.",
       differ: "Different preferred windows.",
@@ -58,7 +61,7 @@ const QUIZ_PROMPTS = [
     },
   },
   {
-    prompt: "5. Winter holidays this year…",
+    prompt: "5. Winter holidays this year...",
     answers: {
       agree: "Same view on how to split them.",
       differ: "Different plans in mind.",
@@ -66,7 +69,7 @@ const QUIZ_PROMPTS = [
     },
   },
   {
-    prompt: "6. Healthcare / big-picture decisions…",
+    prompt: "6. Healthcare / big-picture decisions...",
     answers: {
       agree: "We usually make them together.",
       differ: "We each decide separately in our own home.",

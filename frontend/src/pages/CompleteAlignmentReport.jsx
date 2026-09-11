@@ -13,12 +13,10 @@
  */
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Download, ArrowLeft, Loader2, FileText, CheckCircle2, Clock, Users } from "lucide-react";
+import { Download, ArrowLeft, Loader2, CheckCircle2, Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
-
-const BACKEND = process.env.REACT_APP_BACKEND_URL;
 
 // Section skeleton — kept in lockstep with the backend PDF builder.
 // The numeric titles echo the sacoparentsalign.com "one universal
