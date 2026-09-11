@@ -480,3 +480,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Mobile: header px-4/gap tightened, verified badge hidden <sm, main overflow-x-hidden, tool cards min-w-0, long CTA buttons wrap, link-code row stacks.
 - Resend: DNS records now present (DKIM/MX/DMARC) but Resend still reports domain not verified (403) → click Verify in Resend; fallback sender in use. Deploy instructions given via support (Republish → Manage Publishes → Secrets → add RESEND_API_KEY/RESEND_FROM_EMAIL → Re-publish; no API/CLI). Prod still .2.
 - User asked about seed joint sample case / mini-quiz / ElevenLabs voice chips — clarification requested (latter two don't exist in Align; likely sibling App).
+
+## 2026-06 Deployment readiness
+- Deployment scan: PASS. Only finding was unquoted special-char TEMP_PASSWORD values in backend/.env (now quoted). Pasted deploy logs contained no errors (all /health 200).
+- Production still requires manual Deploy/Republish; ensure RESEND_*, INTEGRATION_SHARED_SECRET, WEBHOOK_CRON_SECRET, SACOPARENTS_APP_URL set in Manage Publishes.
