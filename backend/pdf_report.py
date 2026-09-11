@@ -669,16 +669,7 @@ def _fmt_date(iso) -> str:
     return str(iso or "")[:10] or "—"
 
 
-def build_closing_summary_pdf(r: dict) -> bytes:
-    """One-page case closing summary for the professional's file."""
-    pdf = _new_pdf()
-    pdf.set_auto_page_break(auto=False)
-    _title_header(pdf, "Case Closing Summary", [
-        f"Case ID: {r.get('case_code') or r.get('id', '')[:8]}",
-        f"Subject: {r.get('subject_label', 'Joint Alignment Report')}",
-        f"Professional: {r.get('professional_name', '')}",
-    ])
-    pdf.ln(4)
+def _closing_kv_rows(pdf: FPDF, r: dict) -> None:
     rows = [
         ("Case opened", _fmt_date(r.get("created_at"))),
         ("Case closed", _fmt_date(r.get("closed_at"))),
@@ -693,13 +684,24 @@ def build_closing_summary_pdf(r: dict) -> bytes:
         pdf.set_font(FONT, "", 10)
         pdf.set_text_color(*BODY)
         pdf.multi_cell(0, 6.5, _s(str(value)), new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(3)
+
+
+def _participation_line(r: dict, role: str) -> str:
+    p = (r.get("participants") or {}).get(role) or {}
+    resp = (r.get("responses") or {}).get(role)
+    if resp:
+        status = f"Completed {_fmt_date(resp.get('completed_at'))}"
+    elif p.get("accepted"):
+        status = "Accepted, not completed"
+    else:
+        status = "Invited, not completed"
+    return f"Parent {role.upper()}: {p.get('name') or '—'} — {status}"
+
+
+def _closing_sections(pdf: FPDF, r: dict) -> None:
     _section_title(pdf, 1, "Parent participation")
-    for role, label in (("a", "Parent A"), ("b", "Parent B")):
-        p = (r.get("participants") or {}).get(role) or {}
-        done = bool((r.get("responses") or {}).get(role))
-        status = f"Completed {_fmt_date((r.get('responses') or {}).get(role, {}).get('completed_at'))}" if done else ("Accepted, not completed" if p.get("accepted") else "Invited, not completed")
-        _body(pdf, f"{label}: {p.get('name') or '—'} — {status}")
+    for role in ("a", "b"):
+        _body(pdf, _participation_line(r, role))
     pdf.ln(2)
     _section_title(pdf, 2, "Joint Alignment Report")
     generated = r.get("report_generated_at")
@@ -712,6 +714,21 @@ def build_closing_summary_pdf(r: dict) -> bytes:
     _section_title(pdf, 4, "Case timeline")
     for ev in (r.get("lifecycle") or [])[:8]:
         _body(pdf, f"{str(ev.get('at', ''))[:16].replace('T', ' ')} — {ev.get('action', '')} ({ev.get('by_name', '')})")
+
+
+def build_closing_summary_pdf(r: dict) -> bytes:
+    """One-page case closing summary for the professional's file."""
+    pdf = _new_pdf()
+    pdf.set_auto_page_break(auto=False)
+    _title_header(pdf, "Case Closing Summary", [
+        f"Case ID: {r.get('case_code') or r.get('id', '')[:8]}",
+        f"Subject: {r.get('subject_label', 'Joint Alignment Report')}",
+        f"Professional: {r.get('professional_name', '')}",
+    ])
+    pdf.ln(4)
+    _closing_kv_rows(pdf, r)
+    pdf.ln(3)
+    _closing_sections(pdf, r)
     pdf.ln(3)
     pdf.set_font(FONT, "I", 8)
     pdf.set_text_color(*GRAY)

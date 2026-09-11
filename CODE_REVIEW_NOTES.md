@@ -59,3 +59,9 @@ No code change made. Fifth consecutive false-positive report for this rule — t
 - refer_to_professional complexity 11 → split into _referral_matter_line() and _referral_html(); directory tests 3/3.
 - "is vs ==" (server.py ×14, joint_engine.py, email_utils.py, 8 tests): `ruff --select F632` passes on the whole backend — all are `is None`/`is not None`. Unchanged (7th recurrence).
 - server.py module split: deliberately deferred (see round 6).
+
+## 2026-09-10 — Code review round 8
+- build_closing_summary_pdf complexity 17 → split into _closing_kv_rows / _participation_line / _closing_sections. Tests pass.
+- test_referral_inbox and test_closing_summary split into module fixtures + focused/parametrized tests.
+- "is vs ==" (server.py ×13, joint_engine, email_utils, 8 tests): `ruff --select F632 .` → All checks passed; all `is None`. Unchanged (8th recurrence).
+- server.py import count / split: deferred (see round 6). Remaining test-complexity items (preview/close/revoke) are short linear tests; left as is.
