@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   TrendingUp,
   Send,
+  Handshake,
+  X,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
@@ -176,7 +178,11 @@ export default function AdminDashboard() {
     );
   }
 
-  const { users: U, engagement: E, magic_links: ML, funnel } = overview;
+  const { users: U, engagement: E, magic_links: ML, funnel, consent } = overview;
+  const CN = consent?.child_needs_share || null;
+  const nudge = CN?.nudge_dismisses || {
+    first_total: 0, permanent_total: 0, first_7d: 0, permanent_7d: 0,
+  };
   const top = funnel.child_goals || 1;
 
   return (
@@ -264,6 +270,89 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Consent adoption — Child-Needs share (iter189) */}
+        {CN && (
+          <div className="card-soft p-6" data-testid="admin-consent-tile">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="eyebrow flex items-center gap-2">
+                  <Handshake size={12} className="text-[#3D1A78]" />
+                  Consent adoption · Child Needs share
+                </div>
+                <div className="font-serif text-xl text-[#1A1330] mt-1">
+                  How often the joint Section 5 unlocks
+                </div>
+                <p className="text-xs text-[#857E9C] mt-1">
+                  Same numbers we ship in the Monday admin digest —
+                  aggregate only, never names or verbatim answers.
+                </p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div
+                className="rounded-2xl border border-[#E5E0EE] bg-[#FAF8FD] p-4"
+                data-testid="admin-consent-parents-tile"
+              >
+                <div className="eyebrow mb-2">Parents opted in</div>
+                <div className="font-serif text-3xl text-[#1A1330] leading-none">
+                  {CN.parents_consented}
+                </div>
+                <div className="text-xs text-[#857E9C] mt-1.5">
+                  Cumulative — across every joint case.
+                </div>
+              </div>
+              <div
+                className="rounded-2xl border border-[#E5E0EE] bg-[#FAF8FD] p-4"
+                data-testid="admin-consent-cases-tile"
+              >
+                <div className="eyebrow mb-2">Cases fully unlocked</div>
+                <div className="font-serif text-3xl text-[#1A1330] leading-none">
+                  {CN.cases_both_consented}
+                  <span className="text-[#857E9C] text-lg"> / {CN.cases_total}</span>
+                </div>
+                <div className="text-xs text-[#857E9C] mt-1.5">
+                  Section 5 visible on {CN.unlock_rate_pct}% of cases.
+                </div>
+              </div>
+              <div
+                className="rounded-2xl border border-[#E5E0EE] bg-[#FFFBF3] p-4"
+                data-testid="admin-nudge-first-tile"
+              >
+                <div className="eyebrow mb-2 flex items-center gap-1.5">
+                  <X size={11} /> Retry-hides
+                </div>
+                <div className="font-serif text-3xl text-[#1A1330] leading-none">
+                  {nudge.first_total}
+                </div>
+                <div className="text-xs text-[#857E9C] mt-1.5">
+                  Dismissed once · tile returns after 7d ·
+                  <span className="text-[#B6663B]"> +{nudge.first_7d} this week</span>
+                </div>
+              </div>
+              <div
+                className="rounded-2xl border border-[#E5E0EE] bg-[#FBF6FF] p-4"
+                data-testid="admin-nudge-permanent-tile"
+              >
+                <div className="eyebrow mb-2 flex items-center gap-1.5">
+                  <X size={11} /> Permanent hides
+                </div>
+                <div className="font-serif text-3xl text-[#1A1330] leading-none">
+                  {nudge.permanent_total}
+                </div>
+                <div className="text-xs text-[#857E9C] mt-1.5">
+                  Dismissed after the retry ·
+                  <span className="text-[#B6663B]"> +{nudge.permanent_7d} this week</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-[11px] text-[#857E9C] mt-4 italic">
+              Rising permanent-hides with flat opt-ins means the retry
+              cadence isn't converting hesitant parents. Consider
+              softening the nudge copy.
+            </p>
+          </div>
+        )}
 
         {/* Funnel + auth breakdown */}
         <div className="grid lg:grid-cols-2 gap-6">

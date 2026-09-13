@@ -460,6 +460,32 @@ async def admin_overview(
         cases_total = consent_row[0].get("cases_total", 0)
     else:
         parents_consented = cases_both = cases_total = 0
+
+    # Nudge dismiss telemetry (iter189) — how many parents hit the ✕
+    # on the SNCv2 report page nudge tile. Split into "first dismiss"
+    # (will get the 7-day retry) vs "retry dismiss" (permanent hide).
+    # Fires alongside the consent numbers so admins can spot friction:
+    # a growing `dismiss_permanent_count` with a flat consent count
+    # means the retry cadence isn't converting hesitant parents.
+    nudge_first = await db[
+        "child_needs_share_nudge_dismisses"
+    ].count_documents({"is_retry_dismissal": False})
+    nudge_permanent = await db[
+        "child_needs_share_nudge_dismisses"
+    ].count_documents({"is_retry_dismissal": True})
+    nudge_first_7d = await db[
+        "child_needs_share_nudge_dismisses"
+    ].count_documents({
+        "is_retry_dismissal": False,
+        "created_at": {"$gte": now - timedelta(days=7)},
+    })
+    nudge_permanent_7d = await db[
+        "child_needs_share_nudge_dismisses"
+    ].count_documents({
+        "is_retry_dismissal": True,
+        "created_at": {"$gte": now - timedelta(days=7)},
+    })
+
     consent_analytics = {
         "child_needs_share": {
             "parents_consented": int(parents_consented),
@@ -471,6 +497,12 @@ async def admin_overview(
             "unlock_rate_pct": (
                 round((cases_both / cases_total) * 100) if cases_total else 0
             ),
+            "nudge_dismisses": {
+                "first_total": int(nudge_first),
+                "permanent_total": int(nudge_permanent),
+                "first_7d": int(nudge_first_7d),
+                "permanent_7d": int(nudge_permanent_7d),
+            },
         },
     }
 

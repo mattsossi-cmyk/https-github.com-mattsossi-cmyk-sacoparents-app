@@ -124,14 +124,29 @@ export default function ShareChildNeedsNudge() {
     // Second dismiss (retry window already elapsed → tile came back
     // → parent dismissed AGAIN) → mark retried=true so it stays
     // hidden forever. First dismiss records the timestamp only.
+    const isRetryDismissal = !!(prev && prev.dismissedAt);
     const next = {
       ...dismissMap,
-      [caseId]: prev && prev.dismissedAt
+      [caseId]: isRetryDismissal
         ? { dismissedAt: new Date().toISOString(), retried: true }
         : { dismissedAt: new Date().toISOString(), retried: false },
     };
     setDismissMap(next);
     writeDismissState(next);
+    // Fire-and-forget analytics event so admins can see whether the
+    // retry cadence is converting hesitant parents (first_total vs
+    // permanent_total on /api/analytics/admin/overview).
+    api
+      .post(
+        `/complete-report/joint/${caseId}/nudge-dismiss`,
+        null,
+        { params: { is_retry_dismissal: isRetryDismissal } },
+      )
+      .catch((err) => {
+        // Non-fatal — the UI dismiss must still succeed even if the
+        // event write fails.
+        logError("share-child-needs nudge: dismiss event failed", err);
+      });
   };
 
   const clearDismiss = (caseId) => {

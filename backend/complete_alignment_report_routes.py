@@ -358,3 +358,44 @@ async def complete_report_toggle_child_needs_consent(
         consent_iso=now_iso,
     )
     return {"my_consent_at": now_iso, "unlocked": both}
+
+
+_NUDGE_DISMISS_COLL = "child_needs_share_nudge_dismisses"
+
+
+@router.post("/complete-report/joint/{case_id}/nudge-dismiss")
+async def complete_report_nudge_dismiss(
+    case_id: str = Path(..., pattern=r"^SA-[A-Z0-9]{4,10}$"),
+    is_retry_dismissal: bool = False,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Record a lightweight analytics event when a parent hits the ✕
+    on the Child-Needs share nudge tile.
+
+    Semantics — `is_retry_dismissal`:
+      * `false` (default) — the parent's FIRST dismiss on this case.
+        The tile hides for 7 days then reappears once (client-side).
+      * `true`  — the parent's SECOND dismiss (after the 7-day retry
+        tile came back). We honour their preference and hide it
+        permanently (client-side).
+
+    Records `{ user_id, case_id, is_retry_dismissal, created_at }`
+    on `child_needs_share_nudge_dismisses`. Fire-and-forget from the
+    frontend — a failed call must not block the UI dismiss. Membership
+    on the case is verified so a random user can't spray dismiss
+    events for cases they're not on.
+
+    No PII beyond `user_id` (already known). No verbatim answers.
+    """
+    from datetime import datetime, timezone as _tz
+    await _load_case_and_members(
+        db, case_id=case_id, caller_user_id=current.user_id,
+    )
+    await db[_NUDGE_DISMISS_COLL].insert_one({
+        "user_id": current.user_id,
+        "case_id": case_id,
+        "is_retry_dismissal": bool(is_retry_dismissal),
+        "created_at": datetime.now(_tz.utc),
+    })
+    return {"ok": True}

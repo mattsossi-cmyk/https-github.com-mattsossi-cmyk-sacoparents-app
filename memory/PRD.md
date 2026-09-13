@@ -27,6 +27,46 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-13 — Iter189b · Nudge Dismiss Analytics + Consent Dashboard Tile
+
+**🟢 P1 — Fire-and-forget dismiss event on `ShareChildNeedsNudge`**
+Every ✕ click on a case tile now records a lightweight event so
+admins can see whether the retry cadence actually converts hesitant
+parents. Fires the SAME time the localStorage dismiss is written,
+so first-time vs post-retry dismisses land in different buckets.
+
+- **New endpoint** `POST /api/complete-report/joint/{case_id}/nudge-dismiss?is_retry_dismissal=true|false`
+  - Membership-gated (same `_load_case_and_members` as the toggle
+    endpoint) so callers can't spray events for cases they're not on.
+  - 404 on unknown case (not 403) — preserves existence privacy.
+  - Writes `{ user_id, case_id, is_retry_dismissal, created_at }`
+    to a new `child_needs_share_nudge_dismisses` collection.
+  - No PII beyond `user_id` (already known); no verbatim answers.
+- **Frontend** — `ShareChildNeedsNudge.jsx::dismissCase` now fires
+  the endpoint in parallel with the localStorage write. Errors are
+  logged but non-fatal (dismiss must still succeed offline).
+
+**🟢 P1 — Consent Adoption tile on `/admin`**
+The AdminDashboard now surfaces the SAME numbers we ship in the
+Monday digest — so admins can check the pulse without waiting for
+Monday. Four sub-tiles: Parents opted in · Cases fully unlocked ·
+Retry-hides · Permanent hides — each with a 7-day delta.
+
+- **New response shape** `overview.consent.child_needs_share.nudge_dismisses`
+  - `first_total`, `permanent_total`, `first_7d`, `permanent_7d`.
+- **Copy hint** below the tile: "Rising permanent-hides with flat
+  opt-ins means the retry cadence isn't converting hesitant parents.
+  Consider softening the nudge copy." — directly actionable.
+- **data-testid** attributes: `admin-consent-tile`,
+  `admin-consent-parents-tile`, `admin-consent-cases-tile`,
+  `admin-nudge-first-tile`, `admin-nudge-permanent-tile`.
+
+**🧪 Pytest** `tests/test_iter189_nudge_dismiss_endpoint.py`
+- 6 tests: first dismiss, retry dismiss, auth required, 404 on
+  unknown case, 422 on malformed case_id, admin overview shape.
+- Combined with `test_iter189_consent_adoption_digest.py` = 15/15
+  pass in ~4s.
+
 ### 2026-09-13 — Iter189 · Consent Adoption Digest + Nudge Retry Cadence
 
 **🟢 P1 — Weekly admin digest for Child-Needs consent adoption**
