@@ -96,16 +96,6 @@ def test_history_limit_bounded_1_to_20():
 
 def test_save_appends_history_row_and_history_is_newest_first():
     hdrs = _admin_hdrs()
-    # Baseline count so we don't collide with other test runs.
-    r0 = requests.get(
-        f"{BASE_URL}/api/admin/nudge-copy/child-needs-share/history",
-        headers=hdrs,
-        params={"limit": 20},
-        timeout=10,
-    )
-    assert r0.status_code == 200, r0.text
-    before = len(r0.json().get("entries") or [])
-
     # Save two versions in quick succession.
     a_headline = _unique_headline("version A")
     b_headline = _unique_headline("version B")
@@ -132,11 +122,10 @@ def test_save_appends_history_row_and_history_is_newest_first():
     )
     assert r1.status_code == 200, r1.text
     entries = r1.json().get("entries") or []
-    assert len(entries) == before + 2, (
-        f"Expected {before + 2} entries after 2 saves; got {len(entries)}"
-    )
+    assert entries, "history endpoint returned no entries after 2 saves"
     # Newest-first: the two we just saved must be entries[0] and entries[1],
-    # with B (most recent) before A.
+    # with B (most recent) before A. Assert on ordering + content rather
+    # than raw count so the test tolerates accumulated rows from prior runs.
     assert entries[0]["headline"] == b_headline, entries[0]
     assert entries[1]["headline"] == a_headline, entries[1]
     # `updated_by` reflects the admin email.
@@ -145,6 +134,11 @@ def test_save_appends_history_row_and_history_is_newest_first():
     assert isinstance(entries[0]["updated_at"], str) and entries[0]["updated_at"]
     # Note field round-trips.
     assert entries[0]["note"] == "iter189e history test"
+    # Timestamps are strictly monotonic (B was saved after A).
+    assert entries[0]["updated_at"] > entries[1]["updated_at"], (
+        f"expected B after A by timestamp; got {entries[0]['updated_at']} "
+        f"<= {entries[1]['updated_at']}"
+    )
 
 
 def test_history_limit_defaults_to_five():

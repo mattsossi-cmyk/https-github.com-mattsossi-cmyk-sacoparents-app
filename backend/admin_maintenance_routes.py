@@ -29,8 +29,12 @@ Gating uses the existing `require_admin` dependency from
 from __future__ import annotations
 
 import logging
+import re
+from datetime import timedelta
+from typing import Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from analytics_routes import require_admin
 from auth import UserPublic
@@ -38,6 +42,94 @@ from auth import UserPublic
 
 router = APIRouter(tags=["admin-maintenance"])
 logger = logging.getLogger(__name__)
+
+# Reusable HTML fragment builders — kept module-level so `preview.html`
+# and `send-test` share the same visual language without duplication.
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _validate_recipient(to_email: str) -> str:
+    """Trim + regex-check a recipient email. Raises HTTP 422 on any
+    malformed input so the mailer never sees garbage."""
+    email = (to_email or "").strip()
+    if not _EMAIL_RE.match(email):
+        raise HTTPException(
+            status_code=422, detail="Recipient email is not a valid address.",
+        )
+    return email
+
+
+async def _current_digest_stats(
+    db: AsyncIOMotorDatabase,
+) -> Tuple[dict, str]:
+    """Load the joint-alignment cases and compute consent stats for
+    the current week. Shared by `preview.html` and `send-test` so
+    both routes render numbers from the exact same aggregation."""
+    from consent_adoption_digest import (
+        _compute_consent_stats,
+        _load_all_cases,
+        _now_utc,
+        _week_start,
+    )
+    now = _now_utc()
+    cases = await _load_all_cases(db)
+    stats = _compute_consent_stats(cases, now - timedelta(days=7))
+    return stats, _week_start(now)
+
+
+_PREVIEW_BANNER = (
+    '<div style="background:#FFF3D6;border-bottom:2px solid #E5B84E;'
+    'color:#7A4D0C;padding:14px 20px;font-family:sans-serif;font-size:14px;">'
+    '<strong>PREVIEW · not sent.</strong> '
+    'This is the exact HTML the Monday digest for {week_start} '
+    'would render right now. Hit '
+    '<code style="background:#FFE7A5;padding:1px 6px;border-radius:4px;">'
+    'POST /api/admin/consent-digest/run-now?dry_run=false</code> to send it real.'
+    '</div>'
+)
+
+_TEST_BANNER_HTML = (
+    '<div style="background:#FFF3D6;border:2px solid #E5B84E;'
+    'color:#7A4D0C;padding:14px 18px;border-radius:12px;'
+    'font-size:13px;line-height:1.5;margin:0 0 20px 0;">'
+    '<strong>[TEST]</strong> This is a preview of the SA CoParents '
+    'consent-adoption Monday digest sent by the app owner. It contains '
+    'aggregate telemetry only — no parent names or verbatim answers. '
+    'You can safely delete this email.'
+    '</div>'
+)
+
+_TEST_PLAIN_BANNER = (
+    "[TEST] SA CoParents · Consent-adoption Monday digest preview.\n"
+    "Aggregate telemetry only — no parent names or verbatim answers.\n"
+    "You can safely delete this email.\n\n"
+)
+
+
+def _inject_test_banner(html: str, banner: str) -> str:
+    """Insert a `<div>` right after the first `<body ...>` tag so the
+    banner is the first visible element in every mail client. Falls
+    back to a raw prefix if the marker is missing (defensive — the
+    branded HTML template always emits a `<body>`)."""
+    idx = html.lower().find("<body")
+    if idx == -1:
+        return banner + html
+    close = html.find(">", idx)
+    if close == -1:
+        return banner + html
+    return html[: close + 1] + banner + html[close + 1 :]
+
+
+def _wrap_as_test_digest(
+    subject: str, html: str, plain: str,
+) -> Tuple[str, str, str]:
+    """Take the real Monday digest triple and return the TEST variant
+    with `[TEST]` prefixes + banners. Pure fn — easy to unit-test."""
+    return (
+        f"[TEST] {subject}",
+        _inject_test_banner(html, _TEST_BANNER_HTML),
+        _TEST_PLAIN_BANNER + plain,
+    )
 
 
 @router.post("/admin/seed-demo-case")
@@ -121,44 +213,21 @@ async def admin_preview_consent_digest_html(
     """Render the digest HTML in the browser so admins can eyeball
     the layout against CURRENT live consent stats — without touching
     the mailer, without writing a dedupe row, without waiting for
-    Monday. Pure preview.
-
-    Same body an admin would receive on Monday morning; the top
-    "PREVIEW" banner tells them nothing was actually sent."""
-    from datetime import timedelta
-    from consent_adoption_digest import (
-        _admin_console_url,
-        _compute_consent_stats,
-        _load_all_cases,
-        _now_utc,
-        _week_start,
-    )
+    Monday. Pure preview."""
+    from consent_adoption_digest import _admin_console_url
     from email_service import build_admin_consent_adoption_digest_html
     from fastapi.responses import HTMLResponse
 
-    now = _now_utc()
-    cases = await _load_all_cases(request.app.state.db)
-    stats = _compute_consent_stats(cases, now - timedelta(days=7))
-    week_start = _week_start(now)
+    stats, week_start = await _current_digest_stats(request.app.state.db)
     _, html, _ = build_admin_consent_adoption_digest_html(
         stats=stats,
         week_start=week_start,
         console_url=_admin_console_url(),
     )
-
-    # Prepend a big yellow "PREVIEW" banner so a screenshot of this
-    # page can never be confused with a real digest.
-    banner = (
-        '<div style="background:#FFF3D6;border-bottom:2px solid #E5B84E;'
-        'color:#7A4D0C;padding:14px 20px;font-family:sans-serif;font-size:14px;">'
-        '<strong>PREVIEW · not sent.</strong> '
-        f'This is the exact HTML the Monday digest for {week_start} '
-        'would render right now. Hit '
-        '<code style="background:#FFE7A5;padding:1px 6px;border-radius:4px;">'
-        'POST /api/admin/consent-digest/run-now?dry_run=false</code> to send it real.'
-        '</div>'
+    return HTMLResponse(
+        _PREVIEW_BANNER.format(week_start=week_start) + html,
+        headers={"Cache-Control": "no-store"},
     )
-    return HTMLResponse(banner + html, headers={"Cache-Control": "no-store"})
 
 
 @router.post("/admin/consent-digest/send-test")
@@ -178,81 +247,22 @@ async def admin_send_test_consent_digest(
     Admin gated. Recipient email must look like a real address —
     same guard we use for real digest recipients.
     """
-    import re
-    from datetime import timedelta
-
-    from consent_adoption_digest import (
-        _admin_console_url,
-        _compute_consent_stats,
-        _load_all_cases,
-        _now_utc,
-        _week_start,
-    )
+    from consent_adoption_digest import _admin_console_url
     from email_service import (
         EmailNotConfigured,
         EmailSendError,
-        _branded_html,
         _send,
         build_admin_consent_adoption_digest_html,
     )
 
-    email = (to_email or "").strip()
-    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
-        raise HTTPException(
-            status_code=422, detail="Recipient email is not a valid address.",
-        )
-
-    now = _now_utc()
-    cases = await _load_all_cases(request.app.state.db)
-    stats = _compute_consent_stats(cases, now - timedelta(days=7))
-    week_start = _week_start(now)
+    email = _validate_recipient(to_email)
+    stats, week_start = await _current_digest_stats(request.app.state.db)
     real_subject, real_html, real_plain = build_admin_consent_adoption_digest_html(
         stats=stats,
         week_start=week_start,
         console_url=_admin_console_url(),
     )
-    # Prepend a bright TEST banner to the HTML body inside the branded
-    # shell. We rebuild the branded HTML via `_branded_html` so the
-    # banner lives INSIDE the outer layout (not outside), and screenshots
-    # can't crop it away.
-    test_banner_html = (
-        '<div style="background:#FFF3D6;border:2px solid #E5B84E;'
-        'color:#7A4D0C;padding:14px 18px;border-radius:12px;'
-        'font-size:13px;line-height:1.5;margin:0 0 20px 0;">'
-        '<strong>[TEST]</strong> This is a preview of the SA CoParents '
-        'consent-adoption Monday digest sent by the app owner. It contains '
-        'aggregate telemetry only — no parent names or verbatim answers. '
-        'You can safely delete this email.'
-        '</div>'
-    )
-    # Extract the body_html section from build_admin_...html by rebuilding
-    # it via the same helper. To keep this simple, we prepend the banner
-    # to the final `html` string. `_branded_html`'s output already wraps
-    # everything in a table cell — the banner ends up first-child of the
-    # body which is visually correct on every mail client we care about.
-    html = real_html.replace("<body", "<body", 1)  # noop, keep as-is
-    # Insert banner right after the first `<body>` tag so it lands at the
-    # top of the visible email content. Fall back to a plain prefix if
-    # the `<body>` marker isn't found (shouldn't happen but defensive).
-    body_marker = "<body"
-    idx = html.lower().find(body_marker)
-    if idx != -1:
-        # Find the end of the `<body ...>` tag.
-        close = html.find(">", idx)
-        if close != -1:
-            html = html[: close + 1] + test_banner_html + html[close + 1 :]
-        else:
-            html = test_banner_html + html
-    else:
-        html = test_banner_html + html
-
-    plain = (
-        "[TEST] SA CoParents · Consent-adoption Monday digest preview.\n"
-        "Aggregate telemetry only — no parent names or verbatim answers.\n"
-        "You can safely delete this email.\n\n"
-        f"{real_plain}"
-    )
-    subject = f"[TEST] {real_subject}"
+    subject, html, plain = _wrap_as_test_digest(real_subject, real_html, real_plain)
 
     try:
         _send(
