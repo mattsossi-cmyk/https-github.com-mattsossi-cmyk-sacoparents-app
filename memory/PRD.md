@@ -27,7 +27,41 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
-### 2026-09-13 — Iter189g · Diff Highlighter + Auto-Open Preview
+### 2026-09-13 — Iter189g · Word-Level Diff Highlighting
+
+**🟢 P2 — LCS word-level diff on the Restore preview**
+The Diff Card now highlights only the *changed words* instead of
+formatting the whole string. Shared vocabulary stays visually
+quiet so admins see the delta at a glance.
+
+- **Algorithm**: classic O(n·m) LCS dynamic programming inline in
+  `AdminNudgeCopy.jsx::wordDiff` (~30 lines, no new deps). Splits
+  on `/(\s+)/` so whitespace tokens are preserved without their own
+  highlighting. Fine for the input sizes (headline max 25 tokens,
+  subhead max ~120 tokens).
+- **Rendering**: new `DiffText` component renders one `<span>` per
+  token. Removed words on the current side get red strikethrough
+  + red-tinted background. Added words on the incoming side get
+  bold + purple underline + purple-tinted background. Unchanged
+  words are muted so the diff pops.
+- **Legend row** below the two panels tells admins what the styling
+  means (removed = red strike; added = bold+underline+purple).
+- **Compares against current EDITOR state** not the server-side
+  live copy — if the admin typed manual edits before clicking
+  Restore, those edits are what the diff highlights against.
+- **Memoized** via `useMemo` so the diff only recomputes when
+  `pendingRestore` or the relevant textarea changes.
+
+Direct algorithm verification via Node.js:
+  - `"Would you like to send these highlights to your co-parent?"`
+    vs `"Share these highlights with your co-parent?"`
+    → shared `these highlights`, `your co-parent?` untouched; only
+    the actual delta highlighted on each side.
+  - Identical strings → zero false positives.
+  - Empty current → every incoming word marked added.
+  - Word-order changes → detected correctly.
+
+### 2026-09-13 — Iter189g (part 1) · Diff Highlighter + Auto-Open Preview
 
 **🟢 P2 — Two-step Restore with visual diff card**
 Clicking Restore on any history row no longer clobbers the

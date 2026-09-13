@@ -71,6 +71,100 @@ function relativeTime(iso) {
   return `${y}y ago`;
 }
 
+/**
+ * Word-level diff between two strings. Returns two aligned token
+ * arrays annotated with `removed` / `added` flags.
+ *
+ * Uses classic O(n*m) LCS dynamic programming. Fine for our inputs —
+ * headline is 6-120 chars (~1-25 tokens), subhead is 10-600 chars
+ * (~2-120 tokens). Whitespace is preserved as its own tokens so
+ * `wordDiff("hi world", "hi there world")` renders correctly without
+ * collapsing spaces.
+ *
+ * Returns:
+ *   {
+ *     current:  [{ text, removed: bool }, …]   // for the "before" side
+ *     incoming: [{ text, added:   bool }, …]   // for the "after"  side
+ *   }
+ */
+function wordDiff(a, b) {
+  const toksA = (a || "").split(/(\s+)/);
+  const toksB = (b || "").split(/(\s+)/);
+  const m = toksA.length;
+  const n = toksB.length;
+  const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (toksA[i - 1] === toksB[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+  const current = [];
+  const incoming = [];
+  let i = m;
+  let j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && toksA[i - 1] === toksB[j - 1]) {
+      current.unshift({ text: toksA[i - 1], removed: false });
+      incoming.unshift({ text: toksB[j - 1], added: false });
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      incoming.unshift({ text: toksB[j - 1], added: true });
+      j--;
+    } else {
+      current.unshift({ text: toksA[i - 1], removed: true });
+      i--;
+    }
+  }
+  return { current, incoming };
+}
+
+/**
+ * Render one side of a word diff. `side` is either "current" (dimmed
+ * base + red strikethrough on removed tokens) or "incoming" (normal
+ * base + bold+underline on added tokens). We render one <span> per
+ * token so pure-whitespace tokens keep their layout without adding
+ * visual highlight.
+ */
+function DiffText({ tokens, side, className = "" }) {
+  const baseCurrent = "text-[#857E9C] leading-relaxed";
+  const baseIncoming = "text-[#4B4567] leading-relaxed";
+  const base = side === "current" ? baseCurrent : baseIncoming;
+  return (
+    <p className={`${base} ${className}`}>
+      {tokens.map((tok, i) => {
+        const isWhitespace = /^\s+$/.test(tok.text);
+        if (isWhitespace) return <span key={i}>{tok.text}</span>;
+        if (side === "current" && tok.removed) {
+          return (
+            <span
+              key={i}
+              className="line-through decoration-[#C43C3C] decoration-2 text-[#8A4747] bg-[#FBEAEA] rounded px-0.5"
+            >
+              {tok.text}
+            </span>
+          );
+        }
+        if (side === "incoming" && tok.added) {
+          return (
+            <span
+              key={i}
+              className="font-bold text-[#1A1330] bg-[#EADDF7] rounded px-0.5 underline decoration-[#3D1A78] decoration-2 underline-offset-2"
+            >
+              {tok.text}
+            </span>
+          );
+        }
+        return <span key={i}>{tok.text}</span>;
+      })}
+    </p>
+  );
+}
+
 export default function AdminNudgeCopy() {
   const { user, loading } = useAuth();
   const [headline, setHeadline] = useState("");
@@ -235,6 +329,20 @@ export default function AdminNudgeCopy() {
     setPendingRestore(null);
   };
 
+  // Word-level diffs for the Diff card. Only computed when a restore
+  // is staged — the memo shortcuts otherwise. Both sides reference
+  // the CURRENT editor values (headline/subhead), so if the admin
+  // typed manual edits before clicking Restore, those edits are what
+  // the diff highlights against — not the stale server-side copy.
+  const headlineDiff = useMemo(() => {
+    if (!pendingRestore) return null;
+    return wordDiff(headline, pendingRestore.headline);
+  }, [pendingRestore, headline]);
+  const subheadDiff = useMemo(() => {
+    if (!pendingRestore) return null;
+    return wordDiff(subhead, pendingRestore.subhead);
+  }, [pendingRestore, subhead]);
+
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
 
@@ -343,15 +451,27 @@ export default function AdminNudgeCopy() {
                 <div className="eyebrow mb-2 text-[#857E9C]">
                   Current headline
                 </div>
-                <p className="text-sm text-[#857E9C] line-through decoration-[#B6A3D6] leading-relaxed">
-                  {headline || <span className="italic">(empty)</span>}
-                </p>
+                {headline ? (
+                  <DiffText
+                    tokens={headlineDiff?.current || []}
+                    side="current"
+                    className="text-sm"
+                  />
+                ) : (
+                  <p className="text-sm text-[#857E9C] italic">(empty)</p>
+                )}
                 <div className="eyebrow mt-4 mb-2 text-[#857E9C]">
                   Current subhead
                 </div>
-                <p className="text-[13px] text-[#857E9C] line-through decoration-[#B6A3D6] leading-relaxed whitespace-pre-line">
-                  {subhead || <span className="italic">(empty)</span>}
-                </p>
+                {subhead ? (
+                  <DiffText
+                    tokens={subheadDiff?.current || []}
+                    side="current"
+                    className="text-[13px] whitespace-pre-line"
+                  />
+                ) : (
+                  <p className="text-[13px] text-[#857E9C] italic">(empty)</p>
+                )}
               </div>
               <div
                 className="rounded-2xl bg-[#F5EFFB] border-2 border-[#3D1A78] p-4"
@@ -360,18 +480,37 @@ export default function AdminNudgeCopy() {
                 <div className="eyebrow mb-2 text-[#3D1A78]">
                   Incoming headline
                 </div>
-                <p className="text-sm font-bold text-[#1A1330] leading-relaxed">
-                  {pendingRestore.headline}
-                </p>
+                <DiffText
+                  tokens={headlineDiff?.incoming || []}
+                  side="incoming"
+                  className="text-sm"
+                />
                 <div className="eyebrow mt-4 mb-2 text-[#3D1A78]">
                   Incoming subhead
                 </div>
-                <p className="text-[13px] font-semibold text-[#1A1330] leading-relaxed whitespace-pre-line">
-                  {pendingRestore.subhead}
-                </p>
+                <DiffText
+                  tokens={subheadDiff?.incoming || []}
+                  side="incoming"
+                  className="text-[13px] whitespace-pre-line"
+                />
               </div>
             </div>
-            <div className="mt-3 text-[11px] text-[#857E9C] italic">
+            <div className="mt-3 text-[11px] text-[#857E9C] italic flex flex-wrap gap-x-3 gap-y-1">
+              <span>
+                <span className="line-through decoration-[#C43C3C] decoration-2 text-[#8A4747] bg-[#FBEAEA] rounded px-0.5 not-italic">
+                  removed
+                </span>{" "}
+                on the current side
+              </span>
+              <span>·</span>
+              <span>
+                <span className="font-bold text-[#1A1330] bg-[#EADDF7] rounded px-0.5 underline decoration-[#3D1A78] decoration-2 underline-offset-2 not-italic">
+                  added
+                </span>{" "}
+                on the incoming side
+              </span>
+            </div>
+            <div className="mt-2 text-[11px] text-[#857E9C] italic">
               Restore note will be pre-filled:{" "}
               <span className="text-[#3D1A78] font-semibold not-italic">
                 {pendingRestore.reason}
