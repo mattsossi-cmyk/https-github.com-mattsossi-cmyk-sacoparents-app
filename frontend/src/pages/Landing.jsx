@@ -47,10 +47,10 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background" data-testid="landing-page">
       <header className="no-print max-w-6xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between gap-3">
-        <div data-testid="brand" className="min-w-0 shrink">
-          <BrandLogo sub="Professional Joint Reports for Co-Parenting Matters" />
+        <div data-testid="brand" className="shrink-0">
+          <BrandLogo sub="For Professionals" />
         </div>
-        <nav className="hidden lg:flex items-center gap-6 text-sm font-medium" data-testid="main-nav">
+        <nav className="hidden lg:flex items-center gap-6 text-sm font-medium whitespace-nowrap ml-8" data-testid="main-nav">
           <a href="#how-it-works" className="text-muted-foreground hover:text-foreground" data-testid="nav-how-it-works">How It Works</a>
           <a href="#report" className="text-muted-foreground hover:text-foreground" data-testid="nav-joint-reports">The Report</a>
           <a href="#subjects" className="text-muted-foreground hover:text-foreground" data-testid="nav-applications">Subjects</a>

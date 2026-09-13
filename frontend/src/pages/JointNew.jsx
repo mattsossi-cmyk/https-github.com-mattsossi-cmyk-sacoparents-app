@@ -39,6 +39,7 @@ export default function JointNew() {
   const [paEmail, setPaEmail] = useState("");
   const [mediatorEmail, setMediatorEmail] = useState("");
   const [caseRef, setCaseRef] = useState("");
+  const [referral, setReferral] = useState(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -77,7 +78,21 @@ export default function JointNew() {
   useEffect(() => {
     api.get("/joint/config").then((r) => setSubjects(r.data.subjects)).catch((e) => toast.error(formatApiError(e)));
     api.get("/joint/connections").then((r) => setConnections(r.data)).catch(() => {});
-  }, []);
+    const refId = searchParams.get("referral");
+    if (refId) {
+      api.get(`/professional/court-referrals/${refId}`).then((r) => {
+        const x = r.data;
+        setReferral(x);
+        if (x.subject) setSubject(x.subject);
+        if (x.parent_a_name) setPaName(x.parent_a_name);
+        if (x.parent_a_email) setPaEmail(x.parent_a_email);
+        if (x.parent_b_name) setCoName(x.parent_b_name);
+        if (x.parent_b_email) setCoEmail(x.parent_b_email);
+        if (x.child_initials) setChildName(x.child_initials);
+        setCaseRef(`Cause No. ${x.cause_number}`);
+      }).catch((e) => toast.error(formatApiError(e)));
+    }
+  }, [searchParams]);
 
   const pickConnection = (email) => {
     const c = connections.find((x) => x.other_email === email);
@@ -102,7 +117,7 @@ export default function JointNew() {
       const url = isAgreement ? "/joint/agreements" : "/joint/reports/professional";
       const body = isAgreement
         ? { child_name: childName, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail }
-        : { ...base, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail, case_reference: caseRef };
+        : { ...base, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail, case_reference: caseRef, court_referral_id: referral?.id || "" };
       const { data } = await api.post(url, body);
       toast.success("Invitations sent — private share links are ready below");
       setCreated(data);
@@ -135,6 +150,11 @@ export default function JointNew() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-10">
+        {referral && (
+          <div className="mb-6 rounded-lg border border-brand-purple/30 bg-brand-purple/5 px-4 py-3 text-sm" data-testid="referral-banner">
+            <span className="font-semibold text-brand-purple">Court referral</span> · Cause No. {referral.cause_number} · {referral.court_name || "court"} · {referral.judge_name}. Parties pre-filled where the court provided them; the Joint Report and your Professional Statement return to this court.
+          </div>
+        )}
         {created && created.invitations ? (
           <div className="bg-white border border-border rounded-lg p-8" data-testid="pro-invitations-card">
             <div className="text-center mb-8">

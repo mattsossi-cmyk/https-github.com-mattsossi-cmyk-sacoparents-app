@@ -1,0 +1,54 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Gavel } from "lucide-react";
+import api, { formatApiError } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+
+export function CourtReferralsInbox() {
+  const [refs, setRefs] = useState(null);
+  const navigate = useNavigate();
+  const load = () => { api.get("/professional/court-referrals").then((r) => setRefs(r.data)).catch(() => setRefs([])); };
+  useEffect(() => { load(); }, []);
+
+  const accept = async (x) => {
+    try { const { data } = await api.post(`/professional/court-referrals/${x.id}/accept`); toast.success("Referral accepted — invite both parents to open the case"); navigate(data.next); }
+    catch (e) { toast.error(formatApiError(e)); }
+  };
+  const decline = async (x) => {
+    const reason = window.prompt(`Decline the referral for Cause No. ${x.cause_number}? Give the court a brief reason:`);
+    if (reason === null) return;
+    try { await api.post(`/professional/court-referrals/${x.id}/decline`, { reason }); toast.success("Referral declined — the court has been notified"); load(); }
+    catch (e) { toast.error(formatApiError(e)); }
+  };
+
+  const pending = (refs || []).filter((x) => x.status === "pending");
+  if (!refs || refs.length === 0) return null;
+  return (
+    <section className="bg-white border border-border rounded-lg p-6 mb-6" data-testid="court-referrals-inbox">
+      <h2 className="text-lg font-semibold flex items-center gap-2"><Gavel className="h-4 w-4" /> Court Referrals {pending.length > 0 && <span className="rounded-full bg-align-yellow px-2 py-0.5 text-xs font-bold text-yellow-950" data-testid="court-referrals-pending-count">{pending.length} new</span>}</h2>
+      <p className="text-sm text-muted-foreground mt-1">Matters a court has referred to you. Accepting opens the case wizard pre-filled; you then invite both parents.</p>
+      <ul className="mt-4 divide-y divide-border" data-testid="court-referrals-list">
+        {refs.map((x) => (
+          <li key={x.id} className="py-3 flex flex-wrap items-start justify-between gap-3" data-testid={`court-referral-${x.id}`}>
+            <div className="min-w-0 text-sm">
+              <p className="font-semibold">Cause No. {x.cause_number} <span className="ml-1 font-normal text-muted-foreground">· {x.court_name || "court"} · {x.judge_name}</span></p>
+              <p className="text-xs text-muted-foreground mt-0.5">{[x.child_initials && `Child ${x.child_initials}`, x.parent_a_name, x.parent_b_name, `referred ${x.created_at?.slice(0, 10)}`].filter(Boolean).join(" · ")}</p>
+              {x.note && <p className="mt-1 text-xs italic text-muted-foreground">"{x.note}"</p>}
+            </div>
+            <div className="flex items-center gap-2">
+              {x.status === "pending" ? (<>
+                <Button size="sm" onClick={() => accept(x)} data-testid={`court-referral-accept-${x.id}`}>Accept</Button>
+                <Button size="sm" variant="outline" onClick={() => decline(x)} data-testid={`court-referral-decline-${x.id}`}>Decline</Button>
+              </>) : x.status === "accepted" && !x.case_id ? (
+                <Button size="sm" variant="outline" onClick={() => navigate(`/joint/new?referral=${x.id}`)} data-testid={`court-referral-continue-${x.id}`}>Invite parents</Button>
+              ) : (
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${x.status === "declined" ? "bg-red-50 text-red-700" : x.status === "submitted" ? "bg-brand-purple/10 text-brand-purple" : "bg-align-green/15 text-green-900"}`} data-testid={`court-referral-status-${x.id}`}>{x.status === "submitted" ? "Submitted to court" : x.status}</span>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

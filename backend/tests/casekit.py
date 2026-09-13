@@ -102,3 +102,17 @@ def completed_case(api: str, subject: str = "education", **kwargs) -> tuple:
     detail = pro.get(f"{api}/joint/reports/{rid}").json()
     assert detail["status"] == "ready", detail["status"]
     return pro, pa, pb, d, detail
+
+
+
+def complete_both(api: str, pro: requests.Session, rid: str, invitations: list) -> tuple:
+    """Given a pro-created case's invitations, register both parents, accept, and complete. Returns (pa, pb)."""
+    toks = {i["role"]: i["link"].split("invite=")[-1] for i in invitations}
+    emails = {i["role"]: i["invitee_email"] for i in invitations}
+    sessions = {}
+    for role in ("a", "b"):
+        s = new_user(api, "parent", f"Parent {role.upper()}", email=emails[role], invite=toks[role])
+        assert s.post(f"{api}/joint/invitations/accept", json={"code": toks[role]}).json().get("ok")
+        fill(api, s, rid, "alpha" if role == "a" else "beta")
+        sessions[role] = s
+    return sessions["a"], sessions["b"]

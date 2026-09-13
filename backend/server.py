@@ -30,6 +30,8 @@ from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_pay
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
 from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
+from court_workflow import court_stage
+from urllib.parse import quote
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, build_session_prep_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
@@ -41,7 +43,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-11.2"
+BUILD_ID = "2026-09-11.6"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -151,7 +153,7 @@ async def _validate_registration(body: RegisterIn, email: str, role: str) -> Non
             raise HTTPException(status_code=403, detail="Parent accounts are created through a secure invitation from a professional. Please use the link or case code in your invitation email.")
     if role in ("professional", "judge") and not body.agreements_accepted:
         raise HTTPException(status_code=400, detail="Please accept the professional-use, confidentiality, privacy, and appropriate-use agreements to create a professional account.")
-    if role == "judge" and not body.organization.strip():
+    if role == "judge" and not body.organization.strip() and not await db.court_invites.find_one({"email": email}, {"_id": 1}):
         raise HTTPException(status_code=400, detail="Please enter your court so SA CoParents can verify the account.")
 
 
@@ -203,6 +205,15 @@ async def register(body: RegisterIn, response: Response):
         user["verification_level"] = "credentials_pending"
         user["agreements_accepted_at"] = user["created_at"]
         user["profile"] = _professional_profile(body)
+    if role == "judge":
+        inv = await db.court_invites.find_one({"email": email})
+        if inv:
+            user["approved"] = True
+            user["verification_level"] = "credentials_verified"
+            user["invited_by"] = inv.get("invited_by")
+            if not user["profile"].get("organization"):
+                user["profile"]["organization"] = inv.get("court_name", "")
+            await db.court_invites.update_one({"email": email}, {"$set": {"status": "registered", "registered_at": user["created_at"]}})
     await db.users.insert_one(user)
     if role in ("professional", "judge") and not FIXTURE_EMAIL_RE.search(email):
         await _notify_admin_new_professional(user)
@@ -704,6 +715,7 @@ class ProJointReportIn(BaseModel):
     parent_b_name: str
     parent_b_email: EmailStr
     case_reference: str = ""
+    court_referral_id: str = ""
 
 
 class JointResponsesIn(BaseModel):
@@ -858,6 +870,9 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
         out["case_reference"] = doc["case_reference"]
     if doc.get("created_by") == uid:
         out["session_outcome"] = doc.get("session_outcome")
+        out["court"] = doc.get("court")
+        out["court_stage"] = court_stage(doc)
+        out["court_submissions"] = doc.get("court_submissions") or []
     if role:
         my = doc.get("responses", {}).get(role)
         out["my_answers"] = my["answers"] if my else None
@@ -1070,6 +1085,15 @@ async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_curre
         "status": "pending_invite",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
+    if body.court_referral_id:
+        ref = await db.court_referrals.find_one({"id": body.court_referral_id, "professional_id": user["_id"], "status": {"$in": ["accepted", "pending"]}}, {"_id": 0})
+        if not ref:
+            raise HTTPException(status_code=404, detail="Court referral not found")
+        doc["court_referral_id"] = ref["id"]
+        doc["court"] = {k: ref.get(k, "") for k in ("judge_id", "judge_name", "judge_email", "court_name", "cause_number")}
+        if not doc["case_reference"]:
+            doc["case_reference"] = f"Cause No. {ref['cause_number']}"
+        await db.court_referrals.update_one({"id": ref["id"]}, {"$set": {"status": "accepted", "case_id": rid, "responded_at": ref.get("responded_at") or doc["created_at"]}})
     await db.joint_reports.insert_one(doc)
     inv_a = await create_invitation(InviteSpec(report_id=rid, role="a", invitee_name=body.parent_a_name, invitee_email=body.parent_a_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label=label, code=case_code, via_professional=True))
     inv_b = await create_invitation(InviteSpec(report_id=rid, role="b", invitee_name=body.parent_b_name, invitee_email=body.parent_b_email, inviter_name=user.get("name", "A professional"), child_name=doc["child_name"], subject_label=label, code=case_code, via_professional=True))
@@ -1251,7 +1275,7 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
             media_type="application/pdf",
             headers={"Content-Disposition": f'attachment; filename="coparenting-agreement-{child}.pdf"'},
         )
-    pdf_bytes = build_joint_pdf({**generate_joint_report(doc), "professional": await _report_professional(doc), "verify": _verify_info(doc)})
+    pdf_bytes = build_joint_pdf({**generate_joint_report(doc), "is_sample": bool(doc.get("is_demo")), "professional": await _report_professional(doc), "verify": _verify_info(doc)})
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -2274,6 +2298,45 @@ class DeclineIn(BaseModel):
     reason: str = ""
 
 
+class JudgeInviteIn(BaseModel):
+    name: str
+    email: EmailStr
+    court_name: str = ""
+
+
+@api.post("/admin/judges/invite")
+async def admin_invite_judge(body: JudgeInviteIn, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    email = body.email.lower()
+    if await db.users.find_one({"email": email}, {"_id": 1}):
+        raise HTTPException(status_code=400, detail="An account with that email already exists")
+    now = datetime.now(timezone.utc).isoformat()
+    inv = {"id": str(uuid.uuid4()), "name": body.name.strip()[:120], "email": email, "court_name": body.court_name.strip()[:160], "invited_by": user["_id"],
+           "invited_by_name": user.get("name", ""), "created_at": now, "status": "sent"}
+    await db.court_invites.update_one({"email": email}, {"$set": inv}, upsert=True)
+    link = f"{app_url()}/auth?mode=register&court=1&email={quote(email)}"
+    await send_email(
+        to=email, subject=f"Invitation to the SA CoParents Align court portal - {inv['court_name'] or 'court access'}",
+        html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+              f"<p>Dear {escape(inv['name'])},</p>"
+              f"<p>{escape(user.get('name', 'SA CoParents'))} has invited you to the SA CoParents Align court portal{' for ' + escape(inv['court_name']) if inv['court_name'] else ''}. "
+              "From your Court Dashboard you can refer co-parenting matters to approved professionals and receive the Joint Alignment Report together with the professional's "
+              "Assessment Statement when they are submitted - read-only, timestamped and logged.</p>"
+              f'<p><a href="{link}" style="color:#5B2A86">Create your court account</a></p>'
+              "<p>Because this invitation was issued by SA CoParents, your account is activated as soon as you register with this email address.</p>"
+              f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}.</p></td></tr></table>'))
+    return {"ok": True, "invite": {k: inv[k] for k in ("id", "name", "email", "court_name", "created_at", "status")}, "link": link}
+
+
+@api.get("/admin/judges/invites")
+async def admin_list_judge_invites(user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    docs = await db.court_invites.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return docs
+
+
 @api.get("/admin/judges")
 async def admin_list_judges(user=Depends(get_current_user)):
     if user.get("role") != "admin":
@@ -3040,6 +3103,15 @@ async def api_health():
 app.include_router(api)
 from court_packets import build_router as _build_court_router  # noqa: E402
 app.include_router(_build_court_router(db, get_current_user, app_url, send_email, EMAIL_FROM_NAME, logger), prefix="/api")
+from court_workflow import build_router as _build_workflow_router  # noqa: E402
+
+
+async def _log_lifecycle(rid: str, action: str, user: dict) -> None:
+    await db.access_events.insert_one({"report_id": rid, "kind": "lifecycle", "action": action, "at": datetime.now(timezone.utc).isoformat(),
+                                       "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Assigned professional"})
+
+
+app.include_router(_build_workflow_router(db, get_current_user, app_url, send_email, EMAIL_FROM_NAME, logger, _log_lifecycle), prefix="/api")
 
 
 @app.get("/health")

@@ -6,6 +6,9 @@ import { useAuth } from "@/context/AuthContext";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { PacketViewer } from "@/components/PacketViewer";
+import { ReferCaseForm } from "@/components/ReferCaseForm";
+import { CaseProgress } from "@/components/CaseProgress";
+import { CourtStatusSummary } from "@/components/CourtStatusSummary";
 
 const STATUS = {
   sent: ["New", "bg-align-yellow/30 text-yellow-900"],
@@ -18,11 +21,16 @@ const STATUS = {
 export default function CourtDashboard() {
   const { user, logout } = useAuth();
   const [data, setData] = useState(null);
+  const [refs, setRefs] = useState([]);
+  const [showRefer, setShowRefer] = useState(false);
   const [active, setActive] = useState(null);
   const [packet, setPacket] = useState(null);
 
-  const load = () => api.get("/court-dashboard/packets").then((r) => setData(r.data)).catch(() => setData({ approved: false, packets: [] }));
-  useEffect(load, []);
+  const load = () => {
+    api.get("/court-dashboard/packets").then((r) => setData(r.data)).catch(() => setData({ approved: false, packets: [] }));
+    api.get("/court-dashboard/referrals").then((r) => setRefs(r.data)).catch(() => setRefs([]));
+  };
+  useEffect(() => { load(); }, []);
 
   const open = (p) => {
     setActive(p.id); setPacket(null);
@@ -43,9 +51,33 @@ export default function CourtDashboard() {
           </>
         ) : (
           <>
-            <p className="text-xs uppercase tracking-widest text-accent font-semibold flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Court Dashboard</p>
-            <h1 className="text-3xl font-semibold mt-1">Court Packets addressed to you</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Packets sent to {user?.email}. Read-only; every opening is logged for the sending professional.</p>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-accent font-semibold flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Court Dashboard</p>
+                <h1 className="text-3xl font-semibold mt-1">Referrals and submissions</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Signed in as {user?.email}. Read-only; every opening is logged for the sending professional.</p>
+              </div>
+              {data?.approved && <Button onClick={() => setShowRefer((v) => !v)} className="bg-brand-purple hover:bg-brand-purple/90 text-white" data-testid="refer-case-toggle-btn">{showRefer ? "Close" : "Refer Case to Professional"}</Button>}
+            </div>
+            {data?.approved && showRefer && <div className="mt-6"><ReferCaseForm defaultCourt={user?.profile?.organization} onCreated={() => { setShowRefer(false); load(); }} /></div>}
+            {data?.approved && refs.length > 0 && (
+              <section className="mt-8" data-testid="court-referrals-section">
+                <h2 className="text-lg font-semibold">Your referrals</h2>
+                <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-white">
+                  {refs.map((x) => (
+                    <li key={x.id} className="px-5 py-4" data-testid={`court-referral-row-${x.id}`}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-semibold">Cause No. {x.cause_number} <span className="ml-2 text-sm font-normal text-muted-foreground">→ {x.professional_name}{x.case_code ? ` · ${x.case_code}` : ""}</span></p>
+                        <span className="text-xs text-muted-foreground">{x.status === "declined" ? `Declined: ${x.decline_reason}` : `referred ${x.created_at?.slice(0, 10)}`}</span>
+                      </div>
+                      <CaseProgress stage={x.stage} />
+                      <CourtStatusSummary referralId={x.id} summary={x.status_summary} onRefreshed={(s) => setRefs((rs) => rs.map((y) => (y.id === x.id ? { ...y, status_summary: s } : y)))} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            <h2 className="mt-10 text-lg font-semibold">Court Packets addressed to you</h2>
             {data === null ? <p className="mt-8 text-muted-foreground">Loading…</p> : !data.approved ? (
               <div className="mt-8 rounded-lg border border-align-yellow/60 bg-align-yellow/10 p-5 text-sm" data-testid="court-pending-approval"><Clock className="h-4 w-4 inline mr-1.5" /> Your court account is awaiting verification by SA CoParents. You'll receive an email when it's approved; packets addressed to your email will then appear here.</div>
             ) : data.packets.length === 0 ? (

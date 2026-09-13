@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AdminProfessionals } from "@/components/AdminProfessionals";
+import { AdminJudges } from "@/components/AdminJudges";
+import { CourtReferralsInbox } from "@/components/CourtReferralsInbox";
 import { ForcePasswordChange } from "@/components/ForcePasswordChange";
 import { ParentRequestStatus } from "@/components/ParentRequestStatus";
 import { ProfessionalsPreview } from "@/components/ProfessionalsPreview";
@@ -333,6 +335,7 @@ export default function Dashboard() {
         )}
 
         {user?.role === "admin" && <AdminProfessionals />}
+        {user?.role === "admin" && <AdminJudges />}
 
         {isPro && (
           <section data-testid="circle-nav-section">
@@ -463,6 +466,7 @@ export default function Dashboard() {
             <p className="text-sm text-muted-foreground" data-testid="joints-empty">{isPro ? "No cases yet. Create one above, or load a sample case to explore a complete Joint Alignment Report." : "No joint reports yet. Create one above to invite your co-parent."}</p>
           ) : (
             <>
+            {isPro && <CourtReferralsInbox />}
             {isPro && <UpcomingCheckIns cases={joints} />}
             {isPro && <CasesTable cases={joints} onClose={async (j) => {
               const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);

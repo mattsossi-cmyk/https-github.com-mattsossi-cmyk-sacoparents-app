@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Gavel, Download, RefreshCw, Ban } from "lucide-react";
+import { Gavel, Download, RefreshCw, Ban, FileCheck2 } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,7 +106,8 @@ export function CourtPacketPanel({ rid, ready }) {
                   <div className="text-sm"><span className="font-semibold">{p.judge_name}</span> · {p.court_name || "court"}{p.cause_number ? ` · No. ${p.cause_number}` : ""}<div className="text-xs text-muted-foreground">Sent {p.created_at?.slice(0, 10)} · expires {p.expires_at?.slice(0, 10)} · {p.opened_count || 0} opens · {p.download_count || 0} downloads · {p.report_ids?.length || 1} report{p.report_ids?.length === 1 ? "" : "s"}</div></div>
                   <div className="flex items-center gap-2">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${cls}`} data-testid={`court-packet-status-${p.id}`}>{label}</span>
-                    <Button size="sm" variant="outline" asChild data-testid={`court-packet-pdf-${p.id}`}><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-packets/${p.id}/pdf`} download><Download className="h-3.5 w-3.5" /></a></Button>
+                    <Button size="sm" variant="outline" asChild data-testid={`court-packet-pdf-${p.id}`}><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-packets/${p.id}/pdf`} download title="Download combined packet PDF"><Download className="h-3.5 w-3.5" /></a></Button>
+                    <Button size="sm" variant="outline" asChild data-testid={`court-packet-transmittal-${p.id}`}><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-packets/${p.id}/transmittal.pdf`} download title="Download Certificate of Transmittal"><FileCheck2 className="h-3.5 w-3.5" /><span className="ml-1 hidden sm:inline text-xs">Transmittal</span></a></Button>
                     {p.status !== "revoked" && <>
                       <Button size="sm" variant="outline" onClick={() => act(p.id, "resend")} data-testid={`court-packet-resend-${p.id}`}><RefreshCw className="h-3.5 w-3.5" /></Button>
                       <Button size="sm" variant="outline" className="text-destructive" onClick={() => window.confirm("Revoke the court's access to this packet?") && act(p.id, "revoke")} data-testid={`court-packet-revoke-${p.id}`}><Ban className="h-3.5 w-3.5" /></Button>

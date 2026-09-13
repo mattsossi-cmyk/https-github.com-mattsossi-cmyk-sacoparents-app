@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { CheckCircle2, Circle } from "lucide-react";
+import { CaseProgress } from "@/components/CaseProgress";
 
 const STATUS_LABEL = {
   DRAFT: ["Draft", "bg-secondary text-muted-foreground"],
@@ -42,6 +43,8 @@ export const CasesTable = ({ cases, onClose }) => {
                   <Link to={`/joint/${j.id}`} className="font-semibold tracking-wider text-brand-purple hover:underline" data-testid={`case-row-code-${j.id}`}>{j.case_code || j.id.slice(0, 8)}</Link>
                   {j.is_demo && <span className="ml-2 rounded-full bg-align-yellow/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-yellow-900" data-testid={`case-row-sample-${j.id}`}>Sample</span>}
                   {j.case_reference && <div className="text-xs text-muted-foreground truncate max-w-[12rem]">{j.case_reference}</div>}
+                  {j.court?.judge_email && <div className="text-[11px] font-semibold text-brand-purple truncate max-w-[14rem]" data-testid={`case-row-court-${j.id}`}>{j.court.court_name || "Court"} · {j.court.judge_name}</div>}
+                  {j.court_stage && <div className="w-44"><CaseProgress stage={j.court_stage} compact /></div>}
                 </td>
                 <td className="px-4 py-2.5">{j.subject_label}</td>
                 <td className="px-4 py-2.5"><ParentCell p={j.participants?.a} testId={`case-row-a-${j.id}`} /></td>

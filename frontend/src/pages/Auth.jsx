@@ -14,11 +14,12 @@ export default function Auth() {
   const next = search.get("next") || "";
   const inviteToken = next.startsWith("/join/") ? next.slice("/join/".length) : "";
   const isParentFlow = Boolean(inviteToken);
-  const role = isParentFlow ? "parent" : "professional";
+  const [isCourt, setIsCourt] = useState(search.get("court") === "1");
+  const role = isParentFlow ? "parent" : isCourt ? "judge" : "professional";
   const resetToken = search.get("rt") || "";
   const [mode, setMode] = useState(search.get("mode") === "register" ? "register" : resetToken ? "reset" : "login");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(search.get("email") || "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [profile, setProfile] = useState({ phone: "", organization: "", pro_role: "", city: "", state: "", license_number: "", website: "" });
@@ -112,8 +113,14 @@ export default function Auth() {
           )}
 
           <h1 className="text-3xl font-semibold mb-6" data-testid="auth-heading">
-            {mode === "login" ? "Welcome back" : mode === "register" ? (isParentFlow ? "Create your parent account" : "Create your professional account") : mode === "forgot" ? "Reset your password" : resetToken ? "Set a new password" : "Enter your code"}
+            {mode === "login" ? "Welcome back" : mode === "register" ? (isParentFlow ? "Create your parent account" : isCourt ? "Create your court account" : "Create your professional account") : mode === "forgot" ? "Reset your password" : resetToken ? "Set a new password" : "Enter your code"}
           </h1>
+          {mode === "register" && !isParentFlow && (
+            <div className="flex gap-2 mb-6" role="tablist" data-testid="account-type-tabs">
+              <button type="button" onClick={() => setIsCourt(false)} className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${!isCourt ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"}`} data-testid="account-type-professional">Family professional</button>
+              <button type="button" onClick={() => setIsCourt(true)} className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${isCourt ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"}`} data-testid="account-type-court">Judge / court staff</button>
+            </div>
+          )}
 
           <form onSubmit={submit} className="space-y-5" data-testid="auth-form">
             {mode === "register" && (
@@ -130,15 +137,15 @@ export default function Auth() {
                     <Input id="phone" className="h-12" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} data-testid="phone-input" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="organization">Organization</Label>
-                    <Input id="organization" className="h-12" value={profile.organization} onChange={(e) => setProfile({ ...profile, organization: e.target.value })} data-testid="organization-input" />
+                    <Label htmlFor="organization">{isCourt ? "Court (e.g. 285th District Court, Bexar County)" : "Organization"}</Label>
+                    <Input id="organization" className="h-12" value={profile.organization} onChange={(e) => setProfile({ ...profile, organization: e.target.value })} required={isCourt} data-testid="organization-input" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="pro-role">Professional role</Label>
+                  <Label htmlFor="pro-role">{isCourt ? "Court role" : "Professional role"}</Label>
                   <select id="pro-role" className="w-full h-12 rounded-md border border-input bg-white px-3 text-sm" value={profile.pro_role} onChange={(e) => setProfile({ ...profile, pro_role: e.target.value })} data-testid="pro-role-select">
                     <option value="">Choose your role…</option>
-                    {["Mediator", "Attorney", "Therapist or counselor", "Parenting facilitator or coordinator", "Amicus attorney", "Child advocate", "Educational professional", "Medical professional", "Other approved professional"].map((r) => (
+                    {(isCourt ? ["Judge", "Associate judge", "Court coordinator", "Staff attorney / briefing attorney", "Other court staff"] : ["Mediator", "Attorney", "Therapist or counselor", "Parenting facilitator or coordinator", "Amicus attorney", "Child advocate", "Educational professional", "Medical professional", "Other approved professional"]).map((r) => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </select>
@@ -232,7 +239,7 @@ export default function Auth() {
             )}
             {mode === "register" && <ConfidentialityNotice variant={isParentFlow ? "parent" : "professional"} />}
             <Button type="submit" className="w-full h-12" disabled={busy || (mode === "register" && !isParentFlow && !agreed)} data-testid="auth-submit-btn">
-              {busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? (isParentFlow ? "Create parent account" : "Create professional account") : mode === "forgot" ? "Send verification code" : "Reset password"}
+              {busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? (isParentFlow ? "Create parent account" : isCourt ? "Create court account" : "Create professional account") : mode === "forgot" ? "Send verification code" : "Reset password"}
             </Button>
             {(mode === "forgot" || mode === "reset") && (
               <button type="button" onClick={() => setMode("login")} className="w-full text-center text-sm text-muted-foreground hover:text-foreground" data-testid="back-to-login-btn">

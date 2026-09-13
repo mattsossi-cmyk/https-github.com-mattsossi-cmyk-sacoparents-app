@@ -788,6 +788,61 @@ def build_transmittal_pdf(p: dict) -> bytes:
     return bytes(pdf.output())
 
 
+def build_professional_statement_pdf(p: dict) -> bytes:
+    """Professional Assessment Statement on letterhead (submitted to court alongside the Joint Report)."""
+    pro = p.get("professional") or {}
+    st = p.get("statement") or {}
+    court = p.get("court") or {}
+    pdf = _new_pdf()
+    pdf.set_font(FONT, "B", 13)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 7, _s(pro.get("name") or "Professional"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 9.5)
+    pdf.set_text_color(*GRAY)
+    for line in [" · ".join(x for x in (pro.get("pro_role"), pro.get("organization")) if x),
+                 " · ".join(x for x in (pro.get("license_number") and f"License {pro['license_number']}", pro.get("phone"), pro.get("email")) if x)]:
+        if line:
+            pdf.cell(0, 5, _s(line), new_x="LMARGIN", new_y="NEXT")
+    if pro.get("credentials_verified"):
+        pdf.set_font(FONT, "B", 8)
+        pdf.set_text_color(*TEAL)
+        pdf.cell(0, 5, "Credentials verified by SA CoParents", new_x="LMARGIN", new_y="NEXT")
+    y = pdf.get_y() + 3
+    pdf.set_draw_color(220, 215, 230)
+    pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
+    pdf.ln(8)
+    pdf.set_font(FONT, "B", 16)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 8, "Professional Assessment Statement", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 9.5)
+    pdf.set_text_color(*GRAY)
+    meta = [p.get("date"), court.get("court_name"), court.get("cause_number") and f"Cause No. {court['cause_number']}", p.get("case_code") and f"Align case {p['case_code']}",
+            p.get("subject_label"), st.get("version") and f"Statement v{st['version']}"]
+    pdf.multi_cell(0, 4.5, _s("  |  ".join(str(m) for m in meta if m)), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+    for key, title in (("role_basis", "1. Role and basis of involvement"), ("process_summary", "2. Process completed by the parents"),
+                       ("observations", "3. Observations of alignment and differences"), ("safety_considerations", "4. Safety considerations"),
+                       ("next_steps", "5. Recommended next steps for facilitation")):
+        if not st.get(key) and key == "safety_considerations":
+            continue
+        _label(pdf, title.upper())
+        _body(pdf, st.get(key) or "-")
+        pdf.ln(2)
+    pdf.ln(2)
+    _label(pdf, "PROFESSIONAL ATTESTATION")
+    _body(pdf, p.get("attestation_text") or "", italic=True)
+    pdf.ln(6)
+    pdf.set_font(FONT, "", 10)
+    pdf.set_text_color(*BODY)
+    pdf.cell(0, 6, _s(f"Respectfully submitted,  {pro.get('name', '')}"), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+    pdf.set_font(FONT, "I", 8)
+    pdf.set_text_color(*GRAY)
+    pdf.multi_cell(0, 4, _s("This statement describes the facilitation process and the professional's observations. It is not a custody evaluation and makes no recommendation "
+                            "regarding conservatorship or possession. Prepared through SA CoParents Align; the accompanying Joint Alignment Report compares each parent's independently provided perspective."), new_x="LMARGIN", new_y="NEXT")
+    return bytes(pdf.output())
+
+
 def merge_pdfs(parts: list[bytes]) -> bytes:
     import pymupdf
     out = pymupdf.open()

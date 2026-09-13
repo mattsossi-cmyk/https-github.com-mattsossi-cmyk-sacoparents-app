@@ -63,7 +63,7 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
         return {k: p.get(k) for k in (
             "id", "report_id", "judge_name", "judge_email", "court_name", "cause_number", "cover_letter", "report_ids",
             "include_session_outcome", "include_closing_summary", "status", "created_at", "expires_at", "revoked_at",
-            "responses", "opened_count", "download_count", "last_opened_at")}
+            "responses", "opened_count", "download_count", "last_opened_at", "submission_version", "frozen", "superseded", "sha256")}
 
     async def log(report_id: str, action: str, by: str, by_name: str, by_role: str, kind: str = "court") -> None:
         await db.access_events.insert_one({"report_id": report_id, "kind": kind, "action": action, "at": _iso(_now()),
@@ -86,6 +86,10 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
                 "subject_label": doc.get("subject_label"), "is_safety": bool(doc.get("is_safety")), "report": rep}
 
     async def combined_pdf(p: dict) -> bytes:
+        if p.get("frozen"):
+            frozen = await db.court_frozen_pdfs.find_one({"packet_id": p["id"]}, {"pdf": 1})
+            if frozen:
+                return bytes(frozen["pdf"])
         docs = await packet_reports(p)
         pro = await pro_profile(p["professional_id"])
         primary = next((d for d in docs if d["id"] == p["report_id"]), docs[0] if docs else {})
@@ -334,7 +338,8 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
     async def packet_view(p: dict) -> dict:
         docs = await packet_reports(p)
         primary = next((d for d in docs if d["id"] == p["report_id"]), {})
-        return {**{k: p.get(k) for k in ("id", "judge_name", "court_name", "cause_number", "cover_letter", "attestation_text", "attested_at", "created_at", "expires_at", "responses", "status")},
+        return {**{k: p.get(k) for k in ("id", "judge_name", "court_name", "cause_number", "cover_letter", "attestation_text", "attested_at", "created_at", "expires_at", "responses", "status",
+                                         "statement", "submission_version", "frozen", "sha256", "superseded")},
                 "professional": await pro_profile(p["professional_id"]),
                 "reports": [report_json(d) for d in docs],
                 "session_outcome": primary.get("session_outcome") if p.get("include_session_outcome") else None}

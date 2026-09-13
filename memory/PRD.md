@@ -523,3 +523,13 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-06 PDF copyright
 - All PDFs (via _JointPDF.footer) now stamp "© 2026 sacoparentsalign.com · SA CoParents Align. All rights reserved. · Page N" on every page; _new_pdf sets author/creator/subject metadata; merge_pdfs sets metadata on merged Court Packet. Verified across 7 PDF types; test_methodology_pdf updated. Build 2026-09-11.2.
 - DNS incident: apex A + www records missing at Squarespace (Resend edit overwrote); user instructed to re-add Emergent A records + www CNAME, move Resend MX from @ to send, re-verify domain, republish.
+
+## 2026-06 Judge accounts + transmittal (build 2026-09-11.3)
+- role "judge": register via /auth?mode=register&court=1 (account-type tabs; court required), approved=false; admin endpoints GET /admin/judges, POST /admin/judges/{id}/approve|decline; AdminJudges panel on admin dashboard. Judge routes: GET /court-dashboard/packets (approved gate), GET/.../{pid}, /pdf, POST /respond (email match, logged). Protected route redirects role judge -> /court-dashboard (pages/CourtDashboard.jsx); PacketViewer.jsx shared with token flow. GET /court-packets/{pid}/transmittal.pdf one-page Certificate of Transmittal + button in CourtPacketPanel. tests/test_judge_accounts.py 6 + test_court_packets 6 passed; browser: judge register -> pending dashboard OK.
+
+## PENDING SEND: court invite for Judge Nicole Garza <NICOLE.GARZA@bexar.org>, 37th District Court — send from Admin > Court Accounts (POST /api/admin/judges/invite) once production DNS is restored and republished.
+
+## 2026-06 Court workflow (build 2026-09-11.6)
+- backend/court_workflow.py: court_referrals (judge -> pro), accept/decline, case creation via court_referral_id (JointNew ?referral=), 7-stage court_stage in joint_public, Professional Statement (draft/ready, custody-language block, letterhead PDF), submit-to-court (frozen combined PDF in court_frozen_pdfs w/ SHA-256, versioned packets, superseded flag, lifecycle audit, judge email), judge referrals list w/ rule-based status summary (signature-based Outdated, refresh endpoint). Admin invite judge (court_invites -> auto-approved registration). Landing tagline "For Professionals"; sample-case PDF watermark SAMPLE REPORT.
+- Tests: test_court_workflow 6, test_judge_invite 2, judge accounts 6, court packets 6 pass; testing agent iteration_39.json full E2E pass. Deployment scan PASS.
+- STATUS: DNS restored (A 34.57.15.54, www CNAME), Resend domain VERIFIED (branded test send 200 to owner). Production still on 2026-09-10.9 -> user must Republish. Then send court invite to Judge Nicole Garza <NICOLE.GARZA@bexar.org>, 37th District Court via Admin > Court Accounts.
