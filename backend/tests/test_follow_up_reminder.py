@@ -12,12 +12,12 @@ API = f"{BASE_URL}/api"
 CRON_HEADERS = {"Authorization": f"Bearer {os.environ['WEBHOOK_CRON_SECRET']}", "Content-Type": "application/json"}
 
 
-def _db():
+def _db() -> pymongo.database.Database:
     return pymongo.MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
 
 
 @pytest.fixture(scope="module")
-def case_with_followup():
+def case_with_followup() -> tuple:
     pro, _pa, _pb, d, _detail = completed_case(API)
     rid = d["id"]
     r = pro.put(f"{API}/joint/reports/{rid}/session-outcome", json={"chosen_steps": ["Continue Parent Discussion"], "summary": "x", "follow_up_date": "2026-01-05"})

@@ -1,0 +1,30 @@
+{
+  "summary": "Post-refactor regression pass for the SA CoParents Align court features (PacketService + sub-routers in court_packets.py, _shared/_judge_routes/_pro_routes split in court_workflow.py, _letterhead/_contact_line helpers in pdf_report.py, truthiness asserts). Backend: full court test suite (test_court_packets.py, test_court_workflow.py, test_judge_accounts.py, test_judge_invite.py) + test_iteration_40_review.py spot checks = 24/24 PASSED against preview URL in 14.6s. This exercises every acceptance path called out in the review: pro creates packet (attest+cover ≥40 chars) -> /court/<token>; unlock wrong/right code; preview state active/revoked; X-Court-Access GET view; PDF ≥3 pages; clarification respond 400/200; download_count/opened_count increments; revoke -> 410 unlock; transmittal single page contains 'Certificate of Transmittal'; approved-judge referral flow -> pro accept -> /joint/new?referral; POST professional with court_referral_id -> court_stage.index 2; PUT professional-statement custody-language -> 400, neutral -> stage index 5; submit-to-court attest false -> 400, true -> version 1 + sha256 (frozen true); judge GET packets sha256 matches; refresh-summary -> current_status 'Ready for court review' outdated false; acknowledge -> outdated true; decline empty -> 400, with reason -> 200 status declined stage label 'Declined'. GET /api/health.build='2026-09-11.7' (starts with '2026-09-11' ✓). PDF footer spot-check: build_court_cover_letter_pdf and build_transmittal_pdf both render '© 2026 sacoparentsalign.com' on every page (verified via pypdf). Frontend Playwright smoke: judge t_uij_1789308136@example.com (re-seeded this run; the DB no longer had it from iter39) lands on /court-dashboard, refer-case-toggle-btn opens refer-case-form, court-summary-refresh-<id> refreshes the court-status-summary. Pro approval.test.pro1@gmail.com lands on /dashboard with cases-table, court-referrals-inbox, and case-progress rendered — no console errors beyond the expected pre-login /api/auth/me 401s. professional-statement-section / court-packet-panel could not be exercised via the browser this run because approval.test.pro1 currently has 0 court-referred joint reports in Mongo (the iter39 court case d0ebba15-… has been cleaned since), but the underlying render is fully covered by the passing pytest suites and the refactor is backend-only. No regressions detected.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_court_packets.py",
+    "/app/backend/tests/test_court_workflow.py",
+    "/app/backend/tests/test_judge_accounts.py",
+    "/app/backend/tests/test_judge_invite.py",
+    "/app/backend/tests/test_iteration_40_review.py",
+    "/app/test_reports/pytest/iter41.xml"
+  ],
+  "action_items": [
+    "(Still open from iter39, non-blocking) Seeded admin login mattsossi@bsossi.com / CoParents2026! returns 401 — seed_admin is not idempotently refreshing password_hash; either fix seed_admin to overwrite the hash on boot when the env password no longer verifies, or update /app/memory/test_credentials.md."
+  ],
+  "critical_code_review_comments": [
+    "court_packets.py PacketService + _pro_routes/_link_routes/_judge_routes decomposition is clean and passes all 8 packet tests; behaviour identical to pre-refactor.",
+    "court_workflow.py build_router split into _shared/_judge_routes/_pro_routes plus build_status_summary/court_stage helpers passes all 6 workflow tests including custody-language block, stage index transitions, outdated summary chip, and decline path.",
+    "pdf_report.py _letterhead/_contact_line dedup verified — every rendered PDF page still contains '© 2026 sacoparentsalign.com' footer.",
+    "Truthiness assertions (is True/False -> truthy) still exercise the same conditions; test_court_packets/test_court_workflow/test_judge_* all green."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (24/24)", "frontend": "100% of exercised smoke steps (judge dashboard + pro dashboard testids and no console errors)"},
+  "test_credentials": "Approved judge: t_uij_1789308136@example.com / testpass123 — DID NOT exist at start of run; re-registered and approved via Mongo. Approved pro: approval.test.pro1@gmail.com / TestPass2026! (existing, credentials verified). Admin seed mattsossi@bsossi.com / CoParents2026! STILL 401 (same regression as iter39).",
+  "seed_data_creation": "Re-created judge t_uij_1789308136@example.com (approved=true). Created one fresh referral (cause 2026-CI-af5f7) targeting approval.test.pro1 to enable court-status-summary refresh in the judge smoke — pro did not accept it, so no side effects on the SAMPLE case. approval.test.pro1's SAMPLE case (SA-26-COM-5Z4UZ3) was NOT touched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Refactor pass verified — no regressions. All 24 court/judge backend tests + 5 iter-40 spot checks pass. Frontend smoke green for judge and pro dashboards. Build tag now '2026-09-11.7'. Note that the historical iter39 court case (d0ebba15-…) has been cleaned from the DB — if you need a live court case for approval.test.pro1 you must create one via the workflow (pro accepts a fresh referral, POST /api/joint/reports/professional with court_referral_id, complete_both, PUT professional-statement, POST submit-to-court). Admin seed login remains broken (401) — fallback: register a professional and set role=admin,approved=true in Mongo.",
+  "rca of the issue": "n/a — no functional regression detected. The two environmental caveats are: (1) iter39 seed data (judge account, court case) has been cleaned from Mongo — this is environment drift, not a code regression; and (2) the admin seed 401 first reported in iter39 is still present and needs main-agent attention on seed_admin idempotency."
+}

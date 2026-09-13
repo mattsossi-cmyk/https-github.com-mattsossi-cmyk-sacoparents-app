@@ -13,12 +13,12 @@ API = f"{BASE_URL}/api"
 LETTER = "Your Honor, I facilitated a structured co-parenting alignment process for this family. The enclosed report compares each parent's independent perspective."
 
 
-def _db():
+def _db() -> pymongo.database.Database:
     return pymongo.MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
 
 
 @pytest.fixture(scope="module")
-def sent():
+def sent() -> tuple:
     pro, pa, _pb, d, _detail = completed_case(API)
     rid = d["id"]
     r = pro.post(f"{API}/joint/reports/{rid}/court-packets", json={

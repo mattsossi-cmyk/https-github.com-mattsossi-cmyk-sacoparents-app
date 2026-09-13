@@ -13,11 +13,11 @@ API = f"{BASE_URL}/api"
 LETTER = "Your Honor, I facilitated a structured co-parenting alignment process for this family. The enclosed report compares each parent's independent perspective."
 
 
-def _db():
+def _db() -> pymongo.database.Database:
     return pymongo.MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
 
 
-def _admin():
+def _admin() -> requests.Session:
     s = requests.Session()
     email = f"t_adminfix_{uuid.uuid4().hex[:8]}@example.com"
     r = s.post(f"{API}/auth/register", json={"name": "Fixture Admin", "email": email, "password": "testpass123", "role": "professional", "agreements_accepted": True})
@@ -27,13 +27,13 @@ def _admin():
 
 
 @pytest.fixture(scope="module")
-def setup():
+def setup() -> tuple:
     judge_email = f"t_judge_{uuid.uuid4().hex[:8]}@example.com"
     judge = requests.Session()
     reg = judge.post(f"{API}/auth/register", json={"name": "Judge Fixture", "email": judge_email, "password": "testpass123", "role": "judge",
                                                   "agreements_accepted": True, "organization": "285th District Court", "pro_role": "Judge"})
     assert reg.status_code == 200, reg.text
-    assert reg.json()["role"] == "judge" and reg.json()["approved"] is False
+    assert reg.json()["role"] == "judge" and not reg.json()["approved"]
     pro, _pa, _pb, d, _detail = completed_case(API)
     rid = d["id"]
     p = pro.post(f"{API}/joint/reports/{rid}/court-packets", json={"judge_name": "Judge Fixture", "judge_email": judge_email, "court_name": "285th District Court",
@@ -50,7 +50,7 @@ def test_judge_requires_court_and_agreements() -> None:
 def test_unapproved_judge_sees_pending_and_cannot_open(setup) -> None:
     judge, _jid, _pro, _rid, p = setup
     dash = judge.get(f"{API}/court-dashboard/packets").json()
-    assert dash["approved"] is False and dash["packets"] == []
+    assert not dash["approved"] and dash["packets"] == []
     assert judge.get(f"{API}/court-dashboard/packets/{p['id']}").status_code == 403
 
 
@@ -60,9 +60,9 @@ def test_admin_approves_then_judge_sees_and_opens(setup) -> None:
     lst = admin.get(f"{API}/admin/judges").json()
     assert any(j["id"] == jid and not j["approved"] for j in lst)
     ap = admin.post(f"{API}/admin/judges/{jid}/approve")
-    assert ap.status_code == 200 and ap.json()["approved"] is True
+    assert ap.status_code == 200 and ap.json()["approved"]
     dash = judge.get(f"{API}/court-dashboard/packets").json()
-    assert dash["approved"] is True and [x["id"] for x in dash["packets"]] == [p["id"]]
+    assert dash["approved"] and [x["id"] for x in dash["packets"]] == [p["id"]]
     assert dash["packets"][0]["state"] == "active" and dash["packets"][0]["cause_number"] == "2026-CI-00777"
     view = judge.get(f"{API}/court-dashboard/packets/{p['id']}")
     assert view.status_code == 200 and view.json()["cover_letter"] == LETTER and len(view.json()["reports"]) == 1

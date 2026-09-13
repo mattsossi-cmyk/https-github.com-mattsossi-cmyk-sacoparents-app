@@ -10,7 +10,7 @@ API = f"{BASE_URL}/api"
 
 
 @pytest.fixture(scope="module")
-def ready():
+def ready() -> tuple:
     pro, pa, _pb, d, _detail = completed_case(API)
     return pro, pa, d["id"]
 

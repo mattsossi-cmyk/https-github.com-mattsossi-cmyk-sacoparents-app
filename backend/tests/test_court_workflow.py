@@ -14,11 +14,11 @@ STMT = {"role_basis": "Court-referred parenting facilitator.", "process_summary"
         "observations": "Parents align on schedule consistency; differ on communication channel.", "safety_considerations": "", "next_steps": "Two facilitated sessions."}
 
 
-def _db():
+def _db() -> pymongo.database.Database:
     return pymongo.MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
 
 
-def _judge():
+def _judge() -> requests.Session:
     s = requests.Session()
     e = f"t_wjudge_{uuid.uuid4().hex[:8]}@example.com"
     r = s.post(f"{API}/auth/register", json={"name": "Judge Flow", "email": e, "password": "testpass123", "role": "judge", "agreements_accepted": True, "organization": "285th District Court", "pro_role": "Judge"})
@@ -28,7 +28,7 @@ def _judge():
 
 
 @pytest.fixture(scope="module")
-def flow():
+def flow() -> tuple:
     judge = _judge()
     pro = new_user(API, "professional", "Referred Pro")
     me = pro.get(f"{API}/auth/me").json()
@@ -88,7 +88,7 @@ def test_submit_freezes_and_judge_sees(flow) -> None:
     assert s["version"] == 1 and len(s["sha256"]) == 64 and sub.json()["stage"]["index"] == 6
     dash = judge.get(f"{API}/court-dashboard/packets").json()
     pk = [p for p in dash["packets"] if p["id"] == s["packet_id"]]
-    assert pk and pk[0]["submission_version"] == 1 and pk[0]["frozen"] is True
+    assert pk and pk[0]["submission_version"] == 1 and pk[0]["frozen"]
     view = judge.get(f"{API}/court-dashboard/packets/{s['packet_id']}")
     assert view.status_code == 200 and view.json()["statement"]["observations"] == STMT["observations"] and len(view.json()["reports"]) == 1
     pdf = judge.get(f"{API}/court-dashboard/packets/{s['packet_id']}/pdf")
@@ -99,7 +99,7 @@ def test_submit_freezes_and_judge_sees(flow) -> None:
     sub2 = pro.post(f"{API}/joint/reports/{rid}/submit-to-court", json={"attest": True}).json()["submission"]
     assert sub2["version"] == 2
     dash2 = {p["id"]: p for p in judge.get(f"{API}/court-dashboard/packets").json()["packets"]}
-    assert dash2[s["packet_id"]]["superseded"] is True and dash2[sub2["packet_id"]].get("superseded") is not True
+    assert dash2[s["packet_id"]]["superseded"] and dash2[sub2["packet_id"]].get("superseded") is not True
     act = pro.get(f"{API}/joint/reports/{rid}/activity").json()
     assert sum(1 for e in act["lifecycle"] if "Submitted Joint Report" in e["action"]) == 2
     assert judge.get(f"{API}/court-dashboard/referrals").json()[0]["status"] == "submitted"
@@ -109,12 +109,12 @@ def test_status_summary_and_outdated(flow) -> None:
     judge, pro, ref = flow
     s = judge.post(f"{API}/court-dashboard/referrals/{ref['id']}/refresh-summary").json()
     assert s["current_status"] == "Ready for court review" and "Both parents completed" in s["parents"]
-    assert s["professional_statement"].startswith("Submitted (version 2") and s["outdated"] is False
+    assert s["professional_statement"].startswith("Submitted (version 2") and not s["outdated"]
     assert "not a legal conclusion" in s["disclaimer"]
-    assert judge.get(f"{API}/court-dashboard/referrals").json()[0]["status_summary"]["outdated"] is False
+    assert not judge.get(f"{API}/court-dashboard/referrals").json()[0]["status_summary"]["outdated"]
     # underlying change -> outdated
     judge.post(f"{API}/court-dashboard/packets/{[p for p in judge.get(f'{API}/court-dashboard/packets').json()['packets'] if not p.get('superseded')][0]['id']}/respond", json={"kind": "acknowledged"})
-    assert judge.get(f"{API}/court-dashboard/referrals").json()[0]["status_summary"]["outdated"] is True
+    assert judge.get(f"{API}/court-dashboard/referrals").json()[0]["status_summary"]["outdated"]
     # summary never contains raw answers
     raw = _db().joint_reports.find_one({"id": ref["case_id"]}, {"responses": 1})["responses"]["a"]["answers"]
     blob = " ".join(str(v) for v in s.values())

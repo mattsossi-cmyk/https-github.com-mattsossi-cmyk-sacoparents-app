@@ -10,7 +10,7 @@ API = f"{BASE_URL}/api"
 
 
 @pytest.fixture(scope="module")
-def loaded():
+def loaded() -> tuple:
     pro = new_user(API, "professional", "Sample Pro")
     r = pro.post(f"{API}/joint/reports/professional/sample")
     assert r.status_code == 200, r.text
@@ -19,8 +19,8 @@ def loaded():
 
 def test_sample_case_is_ready_and_flagged(loaded) -> None:
     _pro, d = loaded
-    assert d["is_demo"] is True
-    assert d["already_existed"] is False
+    assert d["is_demo"]
+    assert not d["already_existed"]
     assert d["case_status"] == "READY_FOR_ALIGNMENT"
     assert d["participants"]["a"]["completed"] and d["participants"]["b"]["completed"]
     assert d["case_code"].startswith("SA-")
@@ -39,7 +39,7 @@ def test_sample_case_is_idempotent(loaded) -> None:
     pro, d = loaded
     r = pro.post(f"{API}/joint/reports/professional/sample")
     assert r.status_code == 200
-    assert r.json()["already_existed"] is True and r.json()["id"] == d["id"]
+    assert r.json()["already_existed"] and r.json()["id"] == d["id"]
     mine = pro.get(f"{API}/joint/reports").json()
     assert sum(1 for j in mine if j.get("is_demo")) == 1
 

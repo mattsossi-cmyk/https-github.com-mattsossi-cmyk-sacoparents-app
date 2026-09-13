@@ -61,7 +61,7 @@ def test_cron_endpoint_with_secret_returns_ok() -> None:
                       json={"run_id": str(uuid.uuid4())},
                       headers={"Authorization": f"Bearer {CRON_SECRET}"})
     assert r.status_code == 200
-    assert r.json().get("ok") is True
+    assert r.json().get("ok")
 
 
 def test_full_new_case_close_and_closing_pdf_contains_outcome() -> None:

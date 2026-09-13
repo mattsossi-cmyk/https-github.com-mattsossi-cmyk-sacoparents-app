@@ -8,7 +8,7 @@ from html import escape
 
 from bson import Binary
 from fastapi import APIRouter, Depends, HTTPException, Response
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from joint_engine import generate_joint_report
 from pdf_report import build_joint_pdf, build_professional_statement_pdf, merge_pdfs
@@ -33,22 +33,21 @@ def _sha(b: bytes) -> str:
 
 def court_stage(doc: dict) -> dict:
     """Derive the 7-step court workflow stage from existing case data."""
+    stage = {"index": _stage_index(doc), "steps": STAGES, "court_referred": bool(doc.get("court_referral_id"))}
+    return {**stage, "label": STAGES[stage["index"]]}
+
+
+def _stage_index(doc: dict) -> int:
     both = bool(doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b"))
     if doc.get("court_submissions"):
-        idx = 6
-    elif (doc.get("professional_statement") or {}).get("status") == "ready" and both:
-        idx = 5
-    elif both and doc.get("report_generated_at"):
-        idx = 4
-    elif both:
-        idx = 3
-    elif doc.get("status") not in (None, "draft") or doc.get("responses"):
-        idx = 2
-    elif doc.get("court_referral_id"):
-        idx = 1
-    else:
-        idx = 2
-    return {"index": idx, "label": STAGES[idx], "steps": STAGES, "court_referred": bool(doc.get("court_referral_id"))}
+        return 6
+    if both and (doc.get("professional_statement") or {}).get("status") == "ready":
+        return 5
+    if both:
+        return 4 if doc.get("report_generated_at") else 3
+    if doc.get("status") not in (None, "draft") or doc.get("responses"):
+        return 2
+    return 1 if doc.get("court_referral_id") else 2
 
 
 class ReferralIn(BaseModel):
@@ -91,45 +90,78 @@ def _stage_signature(ref: dict, case: dict | None, packets: list) -> str:
                      ((case or {}).get("professional_statement") or {}).get("status", "none"), ",".join(sorted(p.get("status", "") for p in packets))])
 
 
-def build_status_summary(ref: dict, case: dict | None, packets: list) -> dict:
-    """Rule-based, court-facing snapshot. Uses only stage/audit facts the court is authorized to see."""
-    stage = court_stage(case) if case else {"index": 0, "label": STAGES[0]}
-    idx = stage["index"]
-    both = bool(case and case.get("responses", {}).get("a") and case.get("responses", {}).get("b"))
-    done = sum(1 for k in ("a", "b") if case and case.get("responses", {}).get(k)) if case else 0
-    stmt = (case or {}).get("professional_statement") or {}
-    subs = (case or {}).get("court_submissions") or []
-    latest_resp = max((x for p in packets for x in p.get("responses") or []), key=lambda x: x.get("at", ""), default=None)
-    if ref.get("status") == "declined":
-        current, prof, outstanding, nxt = "Referral declined", f"Declined the referral{': ' + ref['decline_reason'] if ref.get('decline_reason') else ''}.", "Re-referral to another professional.", "Refer the matter to another approved professional."
-    elif ref.get("status") == "pending":
-        current, prof, outstanding, nxt = "Awaiting professional acceptance", "Referral sent; not yet accepted.", "Professional acceptance.", "None until the professional responds; consider a follow-up if no response within 5 business days."
-    elif idx >= 6:
-        current, prof, outstanding, nxt = "Ready for court review", "Referral accepted; documents submitted.", "Court review.", "Review the Joint Alignment Report and Professional Assessment Statement."
-    elif idx == 5:
-        current, prof, outstanding, nxt = "Submission pending", "Referral accepted; Professional Statement marked ready.", "Professional submission to the court.", "None; submission expected shortly."
-    elif idx >= 3:
-        current, prof, outstanding, nxt = "Assessments complete; professional review in progress", "Referral accepted; reviewing the Joint Report.", "Professional Assessment Statement and submission.", "None; await submission."
-    else:
-        current, prof, outstanding, nxt = "In progress with the professional", "Referral accepted; case opened.", "Parent assessments and professional review.", "None; await submission."
-    parents = ("Both parents completed the ordered assessments." if both else f"{done} of 2 parents completed the assessment." if case and case.get("status") != "draft" else "Parents not yet invited." if case else "Case not yet opened.")
-    joint = ("100% complete and professionally reviewed." if idx >= 5 else "Complete; under professional review." if idx == 4 else "Complete; report pending professional review." if both else f"{done * 50}% complete." if case else "Not started.")
-    statement = (f"Submitted (version {subs[-1]['version']}, {subs[-1]['submitted_at'][:10]})." if subs else "Ready; not yet submitted." if stmt.get("status") == "ready" else "In draft." if stmt else "Not started.")
+HEADLINES = {
+    "declined": ("Referral declined", "Declined the referral{reason}.", "Re-referral to another professional.", "Refer the matter to another approved professional."),
+    "pending": ("Awaiting professional acceptance", "Referral sent; not yet accepted.", "Professional acceptance.", "None until the professional responds; consider a follow-up if no response within 5 business days."),
+    6: ("Ready for court review", "Referral accepted; documents submitted.", "Court review.", "Review the Joint Alignment Report and Professional Assessment Statement."),
+    5: ("Submission pending", "Referral accepted; Professional Statement marked ready.", "Professional submission to the court.", "None; submission expected shortly."),
+    3: ("Assessments complete; professional review in progress", "Referral accepted; reviewing the Joint Report.", "Professional Assessment Statement and submission.", "None; await submission."),
+    0: ("In progress with the professional", "Referral accepted; case opened.", "Parent assessments and professional review.", "None; await submission."),
+}
+
+
+def _headline(ref: dict, idx: int) -> tuple:
+    if ref.get("status") in ("declined", "pending"):
+        h = HEADLINES[ref["status"]]
+        reason = f": {ref['decline_reason']}" if ref.get("decline_reason") else ""
+        return (h[0], h[1].format(reason=reason), h[2], h[3])
+    return HEADLINES[6 if idx >= 6 else 5 if idx == 5 else 3 if idx >= 3 else 0]
+
+
+def _parents_line(case: dict | None, both: bool, done: int) -> str:
+    if not case:
+        return "Case not yet opened."
+    if both:
+        return "Both parents completed the ordered assessments."
+    return f"{done} of 2 parents completed the assessment." if case.get("status") != "draft" else "Parents not yet invited."
+
+
+def _joint_line(case: dict | None, idx: int, both: bool, done: int) -> str:
+    if idx >= 5:
+        return "100% complete and professionally reviewed."
+    if idx == 4:
+        return "Complete; under professional review."
+    if both:
+        return "Complete; report pending professional review."
+    return f"{done * 50}% complete." if case else "Not started."
+
+
+def _statement_line(stmt: dict, subs: list) -> str:
+    if subs:
+        return f"Submitted (version {subs[-1]['version']}, {subs[-1]['submitted_at'][:10]})."
+    return "Ready; not yet submitted." if stmt.get("status") == "ready" else "In draft." if stmt else "Not started."
+
+
+def _communication_line(ref: dict, subs: list, latest_resp: dict | None) -> str:
     if subs:
         comm = f"Final reports submitted to the court portal on {subs[-1]['submitted_at'][:10]}."
         if latest_resp:
             comm += f" Court {'acknowledged receipt' if latest_resp['kind'] == 'acknowledged' else 'requested clarification'} on {latest_resp['at'][:10]}."
-    elif ref.get("responded_at"):
-        comm = f"Professional {ref['status']} the referral on {ref['responded_at'][:10]}."
-    else:
-        comm = f"Referral sent on {ref.get('created_at', '')[:10]}."
-    return {"current_status": current, "professional": prof, "parents": parents, "joint_assessment": joint, "professional_statement": statement,
-            "recent_communication": comm, "outstanding": outstanding, "next_action": nxt, "stage_label": stage["label"],
+        return comm
+    if ref.get("responded_at"):
+        return f"Professional {ref['status']} the referral on {ref['responded_at'][:10]}."
+    return f"Referral sent on {ref.get('created_at', '')[:10]}."
+
+
+def build_status_summary(ref: dict, case: dict | None, packets: list) -> dict:
+    """Rule-based, court-facing snapshot. Uses only stage/audit facts the court is authorized to see."""
+    stage = court_stage(case) if case else {"index": 0, "label": STAGES[0]}
+    idx = stage["index"]
+    responses = (case or {}).get("responses", {})
+    done = sum(1 for k in ("a", "b") if responses.get(k))
+    both = done == 2
+    stmt = (case or {}).get("professional_statement") or {}
+    subs = (case or {}).get("court_submissions") or []
+    latest_resp = max((x for p in packets for x in p.get("responses") or []), key=lambda x: x.get("at", ""), default=None)
+    current, prof, outstanding, nxt = _headline(ref, idx)
+    return {"current_status": current, "professional": prof, "parents": _parents_line(case, both, done), "joint_assessment": _joint_line(case, idx, both, done),
+            "professional_statement": _statement_line(stmt, subs), "recent_communication": _communication_line(ref, subs, latest_resp),
+            "outstanding": outstanding, "next_action": nxt, "stage_label": stage["label"],
             "generated_at": _iso(_now()), "signature": _stage_signature(ref, case, packets), "disclaimer": SUMMARY_DISCLAIMER}
 
 
-def build_router(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event) -> APIRouter:
-    r = APIRouter()
+def _shared(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event) -> dict:
+    """Helpers shared by the judge and professional route groups."""
 
     def referral_public(x: dict) -> dict:
         return {k: x.get(k) for k in ("id", "judge_name", "judge_email", "court_name", "cause_number", "subject", "child_initials", "parent_a_name", "parent_a_email",
@@ -151,6 +183,12 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
         return {"name": u.get("name", ""), "email": u.get("email", ""), "credentials_verified": u.get("verification_level") == "credentials_verified",
                 **{k: prof.get(k, "") for k in ("pro_role", "organization", "license_number", "phone", "city", "state")}}
 
+    return {'referral_public': referral_public, 'require_judge': require_judge, 'require_pro': require_pro, 'pro_profile': pro_profile}
+
+
+def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h) -> APIRouter:
+    r = APIRouter()
+    referral_public, require_judge = h["referral_public"], h["require_judge"]
     # ---------- judge: refer ----------
 
     @r.get("/court-dashboard/professionals")
@@ -220,6 +258,12 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
                                                "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Court"})
         return {**summary, "outdated": False}
 
+    return r
+
+
+def _pro_routes(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h) -> APIRouter:
+    r = APIRouter()
+    referral_public, require_pro, pro_profile = h['referral_public'], h['require_pro'], h['pro_profile']
     # ---------- professional: referral inbox ----------
 
     @r.get("/professional/court-referrals")
@@ -361,4 +405,13 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
             logger.warning("submission email failed: %s", exc)
         return {"submission": sub, "stage": court_stage({**doc, "court_submissions": [sub]})}
 
+    return r
+
+
+def build_router(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event) -> APIRouter:
+    args = (db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event)
+    h = _shared(*args)
+    r = APIRouter()
+    r.include_router(_judge_routes(*args, h))
+    r.include_router(_pro_routes(*args, h))
     return r

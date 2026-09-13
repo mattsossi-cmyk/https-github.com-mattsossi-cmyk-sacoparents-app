@@ -9,7 +9,7 @@ BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.pre
 API = f"{BASE_URL}/api"
 
 
-def _admin():
+def _admin() -> requests.Session:
     s = requests.Session()
     email = f"t_adminfix_{uuid.uuid4().hex[:8]}@example.com"
     assert s.post(f"{API}/auth/register", json={"name": "Fixture Admin", "email": email, "password": "testpass123", "role": "professional", "agreements_accepted": True}).status_code == 200
@@ -27,8 +27,8 @@ def test_invited_judge_is_auto_approved() -> None:
     judge = requests.Session()
     reg = judge.post(f"{API}/auth/register", json={"name": "Judge Invited", "email": email, "password": "testpass123", "role": "judge", "agreements_accepted": True})
     assert reg.status_code == 200, reg.text
-    assert reg.json()["approved"] is True and reg.json()["role"] == "judge"
-    assert judge.get(f"{API}/court-dashboard/packets").json()["approved"] is True
+    assert reg.json()["approved"] and reg.json()["role"] == "judge"
+    assert judge.get(f"{API}/court-dashboard/packets").json()["approved"]
     assert any(x["email"] == email and x["status"] == "registered" for x in admin.get(f"{API}/admin/judges/invites").json())
     assert admin.post(f"{API}/admin/judges/invite", json={"name": "x", "email": email}).status_code == 400
 

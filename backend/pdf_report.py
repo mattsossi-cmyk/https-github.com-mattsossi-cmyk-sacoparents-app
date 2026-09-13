@@ -673,18 +673,14 @@ def _fmt_date(iso) -> str:
     return str(iso or "")[:10] or "—"
 
 
-def build_court_cover_letter_pdf(p: dict) -> bytes:
-    """Professional's cover letter to the court + packet index (pages 1-2 of a Court Packet)."""
-    pro = p.get("professional") or {}
-    pdf = _new_pdf()
+def _letterhead(pdf: FPDF, pro: dict, lines: list) -> None:
+    """Professional letterhead block: name, role/org, license/contact, verified badge, rule."""
     pdf.set_font(FONT, "B", 13)
     pdf.set_text_color(*PURPLE)
     pdf.cell(0, 7, _s(pro.get("name") or "Professional"), new_x="LMARGIN", new_y="NEXT")
     pdf.set_font(FONT, "", 9.5)
     pdf.set_text_color(*GRAY)
-    for line in [pro.get("pro_role"), pro.get("organization"),
-                 " · ".join(x for x in (pro.get("license_number") and f"License {pro['license_number']}", pro.get("phone"), pro.get("email")) if x),
-                 " ".join(x for x in (pro.get("city"), pro.get("state")) if x)]:
+    for line in lines:
         if line:
             pdf.cell(0, 5, _s(line), new_x="LMARGIN", new_y="NEXT")
     if pro.get("credentials_verified"):
@@ -695,6 +691,23 @@ def build_court_cover_letter_pdf(p: dict) -> bytes:
     pdf.set_draw_color(220, 215, 230)
     pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
     pdf.ln(8)
+
+
+def _contact_line(pro: dict) -> str:
+    return " · ".join(x for x in (pro.get("license_number") and f"License {pro['license_number']}", pro.get("phone"), pro.get("email")) if x)
+
+
+def _footnote(pdf: FPDF, text: str) -> None:
+    pdf.set_font(FONT, "I", 8)
+    pdf.set_text_color(*GRAY)
+    pdf.multi_cell(0, 4, _s(text), new_x="LMARGIN", new_y="NEXT")
+
+
+def build_court_cover_letter_pdf(p: dict) -> bytes:
+    """Professional's cover letter to the court + packet index (pages 1-2 of a Court Packet)."""
+    pro = p.get("professional") or {}
+    pdf = _new_pdf()
+    _letterhead(pdf, pro, [pro.get("pro_role"), pro.get("organization"), _contact_line(pro), " ".join(x for x in (pro.get("city"), pro.get("state")) if x)])
     pdf.set_font(FONT, "", 10.5)
     pdf.set_text_color(*BODY)
     pdf.cell(0, 6, _s(_fmt_date(p.get("created_at"))), new_x="LMARGIN", new_y="NEXT")
@@ -794,23 +807,7 @@ def build_professional_statement_pdf(p: dict) -> bytes:
     st = p.get("statement") or {}
     court = p.get("court") or {}
     pdf = _new_pdf()
-    pdf.set_font(FONT, "B", 13)
-    pdf.set_text_color(*PURPLE)
-    pdf.cell(0, 7, _s(pro.get("name") or "Professional"), new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font(FONT, "", 9.5)
-    pdf.set_text_color(*GRAY)
-    for line in [" · ".join(x for x in (pro.get("pro_role"), pro.get("organization")) if x),
-                 " · ".join(x for x in (pro.get("license_number") and f"License {pro['license_number']}", pro.get("phone"), pro.get("email")) if x)]:
-        if line:
-            pdf.cell(0, 5, _s(line), new_x="LMARGIN", new_y="NEXT")
-    if pro.get("credentials_verified"):
-        pdf.set_font(FONT, "B", 8)
-        pdf.set_text_color(*TEAL)
-        pdf.cell(0, 5, "Credentials verified by SA CoParents", new_x="LMARGIN", new_y="NEXT")
-    y = pdf.get_y() + 3
-    pdf.set_draw_color(220, 215, 230)
-    pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
-    pdf.ln(8)
+    _letterhead(pdf, pro, [" · ".join(x for x in (pro.get("pro_role"), pro.get("organization")) if x), _contact_line(pro)])
     pdf.set_font(FONT, "B", 16)
     pdf.set_text_color(*PURPLE)
     pdf.cell(0, 8, "Professional Assessment Statement", new_x="LMARGIN", new_y="NEXT")
