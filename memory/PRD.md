@@ -26,6 +26,38 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-13 — Iter189i · Snapshot Export (Download PNG)
+
+**🟢 P2 — Download PNG button on the Mobile preview frame**
+Admins can snapshot the iPhone-framed preview and drop it straight
+into Slack when discussing copy variants with the team.
+
+- **Library**: `html-to-image@1.11.13` (~11 kB gzip, modern
+  foreignObject-based rasterizer, works with Tailwind + gradients).
+- **Trigger**: `Download PNG` pill button (Camera icon) rendered
+  next to the Desktop/Mobile toggle. Only surfaces while
+  `viewportMode === "mobile"` because Desktop mode is just a card —
+  not a shareable artefact.
+- **Ref target**: an inner `mx-auto` wrapper (width fixed at
+  `414px`) that contains the phone bezel + notch + status bar +
+  nudge card + the "iPhone · 390px viewport" caption. All rendered
+  as one polished artefact.
+- **Options**: `pixelRatio: 1` (standard resolution per user
+  choice — small file, good for Slack), `backgroundColor: '#F6F4FA'`
+  (soft page tone so the bezel doesn't float on transparency in
+  light-theme Slack), `cacheBust: true`.
+- **Filename**: `sacoparents-nudge-preview-YYYY-MM-DD.png` so
+  multiple exports don't clobber each other in a Slack thread.
+- **Toast**: success ("Downloaded — ready to drop into Slack.")
+  and error ("Could not export the preview. Try again in a
+  moment.") via `sonner`.
+- **Testid**: `admin-nudge-copy-preview-download-png`.
+- **Verified end-to-end**: real Playwright click triggered the
+  download, PNG dimensions 414×771px, 175 kB — captures phone
+  bezel, notch, status bar, nudge card, and caption. Existing
+  `wordDiff.test.js` (6/6) still passes.
+
+
 ### 2026-09-13 — Iter189h · Mobile Preview Frame
 
 **🟢 P1 — iPhone-shaped preview at 390px in `/admin/nudge-copy`**

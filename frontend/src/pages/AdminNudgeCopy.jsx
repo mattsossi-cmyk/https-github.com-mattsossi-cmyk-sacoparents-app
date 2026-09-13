@@ -12,14 +12,15 @@
  * Copy limits mirror the Pydantic validator (6-120, 10-600) so a
  * client-side counter shows the same guardrails the server enforces.
  */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
-import { Users, RotateCcw, Save, ShieldCheck, History, CornerUpLeft, Check, X as XIcon, Monitor, Smartphone } from "lucide-react";
+import { Users, RotateCcw, Save, ShieldCheck, History, CornerUpLeft, Check, X as XIcon, Monitor, Smartphone, Camera } from "lucide-react";
+import { toPng } from "html-to-image";
 import { wordDiff } from "../utils/wordDiff";
 
 const HEADLINE_MIN = 6;
@@ -137,6 +138,41 @@ export default function AdminNudgeCopy() {
   // so admins can eyeball line breaks + button wrap on small screens
   // without leaving the editor.
   const [viewportMode, setViewportMode] = useState("desktop");
+  const [downloadingPng, setDownloadingPng] = useState(false);
+  // Ref on the outer wrapper of the iPhone frame + caption so
+  // html-to-image can rasterize the phone chrome + the "iPhone ·
+  // 390px viewport" label together into a single PNG that reads as
+  // one polished artefact in Slack.
+  const mobileFrameRef = useRef(null);
+
+  const handleDownloadPng = async () => {
+    if (!mobileFrameRef.current) return;
+    setDownloadingPng(true);
+    try {
+      const dataUrl = await toPng(mobileFrameRef.current, {
+        // Bake a soft page-tone background so the phone bezel does
+        // not look like it's floating on a checkerboard when Slack
+        // renders the PNG on a light theme.
+        backgroundColor: "#F6F4FA",
+        cacheBust: true,
+        pixelRatio: 1,
+      });
+      // Trigger a native download with a dated filename so admins
+      // can drop multiple exports into a Slack thread without
+      // clobbering the previous one.
+      const link = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10);
+      link.download = `sacoparents-nudge-preview-${stamp}.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Downloaded — ready to drop into Slack.");
+    } catch (err) {
+      logError("admin-nudge-copy: png export failed", err);
+      toast.error("Could not export the preview. Try again in a moment.");
+    } finally {
+      setDownloadingPng(false);
+    }
+  };
 
   const load = () =>
     api
@@ -584,41 +620,58 @@ export default function AdminNudgeCopy() {
               {/* Desktop / Mobile viewport toggle. Segmented control
                   — the active pill has the purple fill, the inactive
                   pill is white with a subtle border. Buttons are the
-                  same width for a stable click target. */}
-              <div
-                className="inline-flex rounded-full bg-white border border-[#D6CFE8] p-0.5 shadow-sm"
-                role="group"
-                aria-label="Preview viewport"
-                data-testid="admin-nudge-copy-preview-frame-toggle"
-              >
-                <button
-                  type="button"
-                  onClick={() => setViewportMode("desktop")}
-                  aria-pressed={viewportMode === "desktop"}
-                  data-testid="admin-nudge-copy-preview-desktop"
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
-                    viewportMode === "desktop"
-                      ? "bg-[#3D1A78] text-white"
-                      : "text-[#4B4567] hover:bg-[#F5EFFB]"
-                  }`}
+                  same width for a stable click target. The Download
+                  PNG action lives next to the toggle and only surfaces
+                  in Mobile mode (Desktop mode is not a shareable
+                  artefact — it's just a card). */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {viewportMode === "mobile" && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadPng}
+                    disabled={downloadingPng}
+                    data-testid="admin-nudge-copy-preview-download-png"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#3D1A78]/25 text-[11px] font-bold uppercase tracking-[0.12em] text-[#3D1A78] hover:bg-[#F5EFFB] disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Camera size={12} />
+                    {downloadingPng ? "Saving…" : "Download PNG"}
+                  </button>
+                )}
+                <div
+                  className="inline-flex rounded-full bg-white border border-[#D6CFE8] p-0.5 shadow-sm"
+                  role="group"
+                  aria-label="Preview viewport"
+                  data-testid="admin-nudge-copy-preview-frame-toggle"
                 >
-                  <Monitor size={12} />
-                  Desktop
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewportMode("mobile")}
-                  aria-pressed={viewportMode === "mobile"}
-                  data-testid="admin-nudge-copy-preview-mobile"
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
-                    viewportMode === "mobile"
-                      ? "bg-[#3D1A78] text-white"
-                      : "text-[#4B4567] hover:bg-[#F5EFFB]"
-                  }`}
-                >
-                  <Smartphone size={12} />
-                  Mobile
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewportMode("desktop")}
+                    aria-pressed={viewportMode === "desktop"}
+                    data-testid="admin-nudge-copy-preview-desktop"
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                      viewportMode === "desktop"
+                        ? "bg-[#3D1A78] text-white"
+                        : "text-[#4B4567] hover:bg-[#F5EFFB]"
+                    }`}
+                  >
+                    <Monitor size={12} />
+                    Desktop
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewportMode("mobile")}
+                    aria-pressed={viewportMode === "mobile"}
+                    data-testid="admin-nudge-copy-preview-mobile"
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                      viewportMode === "mobile"
+                        ? "bg-[#3D1A78] text-white"
+                        : "text-[#4B4567] hover:bg-[#F5EFFB]"
+                    }`}
+                  >
+                    <Smartphone size={12} />
+                    Mobile
+                  </button>
+                </div>
               </div>
             </div>
             {viewportMode === "mobile" ? (
@@ -639,7 +692,7 @@ export default function AdminNudgeCopy() {
                 className="overflow-x-auto -mx-2 px-2"
                 data-testid="admin-nudge-copy-preview-mobile-frame"
               >
-                <div className="mx-auto" style={{ width: "418px" }}>
+                <div ref={mobileFrameRef} className="mx-auto" style={{ width: "414px" }}>
                   <div className="relative rounded-[3rem] bg-[#1A1330] p-3 shadow-2xl">
                   {/* Dynamic Island / notch — visual anchor so the
                       frame reads as a phone at a glance. */}
