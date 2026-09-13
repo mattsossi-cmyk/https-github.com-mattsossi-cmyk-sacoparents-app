@@ -184,9 +184,23 @@ export default function AdminNudgeCopy() {
   };
 
   const handleRestore = (entry) => {
+    // Prompt for a fresh audit-trail note so the next save row
+    // captures WHY the admin rolled back. Falls back to the prior
+    // note when the admin dismisses or leaves it blank, so the
+    // history row is never blank on a restore.
+    const suggested = entry.note
+      ? `Reverting from: ${entry.note}`
+      : "Reverting to prior wording";
+    const reason = window.prompt(
+      `Restore this version?\n\n` +
+        `Headline: ${entry.headline}\n\n` +
+        `Add a note explaining why (kept on the next save's audit trail):`,
+      suggested,
+    );
+    if (reason === null) return; // Cancel → no state change
     setHeadline(entry.headline || "");
     setSubhead(entry.subhead || "");
-    setNote(entry.note || "");
+    setNote((reason || "").trim() || entry.note || suggested);
     toast.info(
       "Loaded prior version into the editor — click Save to activate.",
     );

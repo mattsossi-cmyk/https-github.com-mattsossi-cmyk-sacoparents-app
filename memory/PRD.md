@@ -27,6 +27,22 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-13 — Iter189f · Restore Note Prompt
+
+**🟢 P3 — Prompt-on-Restore for a clean audit trail**
+Clicking "Restore" on any history row now shows a `window.prompt`
+asking why the admin is reverting. The reason auto-populates the
+Note field so the next Save's history row carries a clear
+"reverting because…" attribution. Prefilled suggestion is
+`Reverting from: <prior note>` when the older entry had a note,
+or `Reverting to prior wording` otherwise. Cancel = no state
+change. Empty accept falls back to the prior note or the
+suggestion so the note field is never blank on a restore.
+
+- Frontend-only change to `AdminNudgeCopy.jsx::handleRestore`.
+- No new backend endpoint or DB migration.
+- Existing 31 iter189 tests still pass unchanged.
+
 ### 2026-09-13 — Iter189e · Copy History + One-Click Restore
 
 **🟢 P2 — Append-only nudge-copy revision log**
