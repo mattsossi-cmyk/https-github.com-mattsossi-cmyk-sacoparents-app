@@ -295,6 +295,8 @@ async def startup_log():
     asyncio.create_task(parent_share_digest_loop(app))
     from access_expiring_sweep import access_expiring_sweep_loop
     asyncio.create_task(access_expiring_sweep_loop(app))
+    from consent_adoption_digest import consent_adoption_digest_loop
+    asyncio.create_task(consent_adoption_digest_loop(app))
 
 
 @app.on_event("shutdown")

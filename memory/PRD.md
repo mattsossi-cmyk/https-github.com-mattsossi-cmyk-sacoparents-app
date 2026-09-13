@@ -27,6 +27,56 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-13 — Iter189 · Consent Adoption Digest + Nudge Retry Cadence
+
+**🟢 P1 — Weekly admin digest for Child-Needs consent adoption**
+Every Monday morning (America/Chicago 09-11), a rollup email lands
+in every `ADMIN_EMAILS` recipient's inbox summarising Child-Needs
+share-consent adoption: cumulative parents opted in, cases where
+both parents have unlocked Section 5, unlock rate %, plus 7-day
+deltas so friction shows up in-inbox before it becomes a support
+ticket. Aggregate telemetry only — no parent names or verbatim
+answers ever ship.
+
+- **New sweep** `/app/backend/consent_adoption_digest.py`
+  - `_compute_consent_stats()` — pure fn used by the digest and
+    testable in isolation. Mirrors the aggregation in
+    `analytics_routes.py` and adds 7-day deltas.
+  - `send_consent_adoption_digest()` — Monday-only send window
+    (Chicago 09-11), dedupes per `(admin_email, ISO-week)` via
+    `consent_adoption_digest_sends` collection, short-circuits with
+    `no_baseline_activity` when nobody has consented yet (skips the
+    "0/0 unlocked" inbox noise before feature has data).
+  - `consent_adoption_digest_loop()` — idle no-op unless
+    `CONSENT_ADOPTION_DIGEST_ENABLED=1` (safe to always register).
+- **New email template** `email_service.send_admin_consent_adoption_digest`
+  - Branded HTML + plain-text with 2-tile stat grid, "this week"
+    delta pill, aggregate-only reassurance in the footer.
+- **New admin route** `POST /api/admin/consent-digest/run-now`
+  - `dry_run=true` (default) records the dedupe row + returns stats
+    without sending. `dry_run=false` emails all `ADMIN_EMAILS` real.
+  - Bypasses the Monday send window so admins can smoke-test.
+- **Wired into `server.py`** startup — the loop registers alongside
+  the other Monday sweeps and idles silently by default.
+
+**🟢 P2 — Nudge retry cadence on `ShareChildNeedsNudge`**
+Case tiles now carry a per-tile ✕ dismiss. A dismissed tile hides
+for exactly 7 days, then reappears **once** so hesitant parents
+get a gentle second chance. If they dismiss it a second time we
+honour that and hide it permanently (`retried=true`). Granting
+consent (checking the box) clears the dismissal entirely so the
+retry cycle resets cleanly. State lives in localStorage under
+`snc2.childNeedsShareNudge.dismissed` — no server round-trip, no
+privacy footprint.
+
+**🧪 Pytest** `tests/test_iter189_consent_adoption_digest.py`
+- 9 tests: pure-fn stat computation (both/one/none consent cases +
+  7-day deltas), send window (Monday CT only), week-start
+  Monday-rollback, dry-run + dedupe write, second-admin dispatches
+  after first is deduped, outside-window skip, no-recipients skip,
+  no-baseline-activity skip (hermetic via ephemeral DB).
+- All 9 pass in <1s.
+
 ### 2026-09-11 — Iter188 · Onboarding Nudge (Post-Child-Needs Consent Prompt)
 
 **🟢 P2 — Post-completion Child Needs share nudge**

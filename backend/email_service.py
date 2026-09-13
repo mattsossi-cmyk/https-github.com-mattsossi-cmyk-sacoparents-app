@@ -1259,6 +1259,123 @@ def send_weekly_case_analytics_email(
     )
 
 
+def send_admin_consent_adoption_digest(
+    *,
+    to_email: str,
+    stats: dict,
+    week_start: str,
+    console_url: str,
+) -> None:
+    """Monday-morning admin digest summarising Child-Needs share-consent
+    adoption. Aggregate rollup only — never surfaces individual parent
+    identity or verbatim answers.
+
+    Signals surfaced (see `consent_adoption_digest.py::_compute_consent_stats`):
+      * `parents_consented`            – total opt-ins across all cases
+      * `cases_both_consented`         – cases where BOTH parents unlocked
+      * `unlock_rate_pct`              – % of joint cases with Section 5 unlocked
+      * `parents_consented_delta_7d`   – new opt-ins this week
+      * `cases_both_delta_7d`          – newly-unlocked cases this week
+    """
+    parents_total = int(stats.get("parents_consented", 0))
+    both_total = int(stats.get("cases_both_consented", 0))
+    cases_total = int(stats.get("cases_total", 0))
+    unlock_pct = int(stats.get("unlock_rate_pct", 0))
+    parents_delta = int(stats.get("parents_consented_delta_7d", 0))
+    both_delta = int(stats.get("cases_both_delta_7d", 0))
+
+    delta_line = (
+        f"+{parents_delta} parents · +{both_delta} newly-unlocked cases"
+        if (parents_delta or both_delta)
+        else "No new opt-ins this week"
+    )
+
+    plain = (
+        "Hi,\n\n"
+        f"SA CoParents · Child-Needs share-consent digest ({week_start})\n\n"
+        "THIS WEEK\n"
+        f"  * {delta_line}\n\n"
+        "OVERALL\n"
+        f"  * Parents opted in: {parents_total}\n"
+        f"  * Cases where BOTH parents unlocked Section 5: "
+        f"{both_total} of {cases_total} ({unlock_pct}%)\n\n"
+        "This is aggregate telemetry only — no parent names or verbatim "
+        "answers are ever included.\n\n"
+        f"Open the console: {console_url}\n\n"
+        "— SA CoParents · sacoparentsapp.online\n"
+    )
+
+    def _tile(label: str, value: str, hint: str) -> str:
+        return (
+            f'<td style="padding:14px 12px;border:1px solid #E5E0EE;'
+            f'border-radius:12px;background:#FAF8FD;vertical-align:top;'
+            f'width:50%;">'
+            f'<div style="font-size:10px;letter-spacing:0.14em;'
+            f'text-transform:uppercase;color:#4B4567;font-weight:700;">'
+            f'{label}</div>'
+            f'<div style="font-family:Georgia,serif;font-size:24px;'
+            f'color:#1A1330;margin:6px 0 2px 0;">{value}</div>'
+            f'<div style="font-size:11px;color:#857E9C;line-height:1.35;">'
+            f'{hint}</div>'
+            f'</td>'
+        )
+
+    week_pill = (
+        f'<div style="background:#F5F1FB;border:1px solid #D6CFE8;'
+        f'border-radius:16px;padding:14px 16px;margin:0 0 18px 0;'
+        f'font-size:14px;color:#1A1330;">'
+        f'<strong>This week:</strong> {delta_line}'
+        f'</div>'
+    )
+
+    tile_table = (
+        '<table role="presentation" cellspacing="8" cellpadding="0" '
+        'style="border-collapse:separate;border-spacing:8px;width:100%;">'
+        f'<tr>{_tile("Parents opted in", str(parents_total), "Cumulative — across every joint case.")}'
+        f'{_tile("Cases fully unlocked", f"{both_total} / {cases_total}", f"Section 5 visible on {unlock_pct}% of cases.")}</tr>'
+        '</table>'
+    )
+
+    body_html = (
+        '<p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;'
+        f'color:#3D1A78;font-weight:700;margin:0 0 4px 0;">'
+        f'Consent adoption · week of {week_start}</p>'
+        '<p style="font-family:Georgia,serif;font-size:20px;line-height:1.4;'
+        'color:#1A1330;margin:0 0 22px 0;">'
+        'Child-Needs share-consent snapshot</p>'
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;'
+        'margin:0 0 18px 0;">'
+        'Here\'s where parents landed on the "share my Child-Needs '
+        'highlights with my co-parent" toggle. Aggregate only — no parent '
+        'names, no verbatim answers.</p>'
+        f'{week_pill}'
+        f'{tile_table}'
+        '<p style="font-size:12px;color:#857E9C;line-height:1.5;'
+        'margin:22px 0 0 0;">'
+        'Reply STOP to opt out. This digest ships aggregate telemetry '
+        'only — individual answers stay private per our dual-consent '
+        'guarantee.</p>'
+    )
+
+    html = _branded_html(
+        headline="Consent-adoption snapshot",
+        body_html=body_html,
+        cta_label="Open the admin console",
+        cta_url=console_url,
+    )
+
+    _send(
+        to_email=to_email,
+        subject=(
+            f"SA CoParents · Consent adoption ({week_start}) · "
+            f"{both_total}/{cases_total} unlocked"
+        ),
+        html=html,
+        text=plain,
+        failure_message="Could not send the consent adoption digest.",
+    )
+
+
 
 
 def send_post_event_survey(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:

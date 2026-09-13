@@ -8,6 +8,11 @@ Currently exposes:
         environment's Mongo binding. Produces `SA-DEMO01` with both
         parents auto-accepted. Idempotent — safe to hit repeatedly.
         Requires the caller to be listed in `ADMIN_EMAILS`.
+  * POST /admin/consent-digest/run-now
+        Force-runs the Monday-morning Child-Needs consent adoption
+        digest right now. Defaults to `dry_run=True` (computes stats
+        + records dedupe row, no email sent). Pass `?dry_run=false`
+        to actually email every `ADMIN_EMAILS` recipient.
 
 Gating uses the existing `require_admin` dependency from
 `analytics_routes` so we don't introduce a second admin taxonomy.
@@ -64,3 +69,36 @@ async def admin_seed_demo_case(
             "Alignment Report at /complete-alignment-report/joint/SA-DEMO01."
         ),
     }
+
+
+@router.post("/admin/consent-digest/run-now")
+async def admin_run_consent_digest(
+    request: Request,
+    dry_run: bool = True,
+    _admin: UserPublic = Depends(require_admin),
+):
+    """Force-run the Child-Needs consent adoption digest **right now**,
+    bypassing the Monday-morning send window.
+
+    Defaults to `dry_run=True` — the digest is computed and the send
+    is dedupe-recorded, but no email is actually dispatched. Pass
+    `?dry_run=false` to send the real digest to every `ADMIN_EMAILS`
+    recipient.
+
+    Idempotent per (admin_email, ISO week): a second call in the same
+    week returns `already_sent_this_week` for each admin instead of
+    double-emailing.
+    """
+    try:
+        from consent_adoption_digest import send_consent_adoption_digest
+        result = await send_consent_adoption_digest(
+            request.app.state.db,
+            dry_run=bool(dry_run),
+            force_window=True,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Admin run consent digest failed")
+        raise HTTPException(
+            status_code=500, detail=f"Digest run failed: {exc}"
+        ) from exc
+    return result

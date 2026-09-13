@@ -17,17 +17,79 @@
  *
  * If the parent is on ZERO active joint cases, the whole component
  * returns null so the report page doesn't sprout an empty prompt.
+ *
+ * Retry cadence (iter189):
+ *   Each case tile carries a per-user ✕ dismiss. A dismissed tile
+ *   hides for exactly 7 days, then reappears ONCE. If the parent
+ *   dismisses it again, we honour that and hide it permanently.
+ *   State lives in localStorage under `snc2.childNeedsShareNudge.dismissed`
+ *   as `{ [caseId]: { dismissedAt: ISO, retried: boolean } }`.
+ *   Granting consent (checking the box) clears the dismissal entirely
+ *   — the parent has engaged, no more nudging needed.
+ *   If a case's consent is REVOKED (my_consent_at becomes null on
+ *   the server), the dismiss state is NOT auto-restored — the tile
+ *   simply comes back in the nudge; the parent can re-dismiss it
+ *   and the 7-day cycle starts fresh.
  */
-import React, { useEffect, useState } from "react";
-import { Users, Check, Loader2 } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Users, Check, Loader2, X } from "lucide-react";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
+
+
+const DISMISS_STORAGE_KEY = "snc2.childNeedsShareNudge.dismissed";
+const DISMISS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function readDismissState() {
+  try {
+    const raw = localStorage.getItem(DISMISS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (err) {
+    // localStorage disabled / private mode / parse error — treat as
+    // "nothing dismissed yet" so the nudge still surfaces.
+    logError("ShareChildNeedsNudge: could not read dismiss state", err);
+    return {};
+  }
+}
+
+function writeDismissState(next) {
+  try {
+    localStorage.setItem(DISMISS_STORAGE_KEY, JSON.stringify(next));
+  } catch (err) {
+    // Storage full or private mode — the dismiss just won't survive
+    // reload. Non-fatal.
+    logError("ShareChildNeedsNudge: could not persist dismiss state", err);
+  }
+}
+
+/**
+ * Returns true iff a case tile should be HIDDEN right now given its
+ * dismiss record. Semantics:
+ *   - no record       → show
+ *   - first dismiss + within 7 days → HIDE
+ *   - first dismiss + > 7 days      → SHOW (retry)
+ *   - second dismiss  → HIDE permanently (retried=true)
+ */
+function isDismissed(record, nowMs) {
+  if (!record || !record.dismissedAt) return false;
+  const dismissedMs = Date.parse(record.dismissedAt);
+  if (Number.isNaN(dismissedMs)) return false;
+  if (record.retried) return true;
+  return nowMs - dismissedMs < DISMISS_TTL_MS;
+}
 
 
 export default function ShareChildNeedsNudge() {
   const [cases, setCases] = useState(null); // null = loading, [] = none, [...] = list
   const [pendingCaseId, setPendingCaseId] = useState(null);
   const [error, setError] = useState(null);
+  // Local mirror of localStorage so setState re-renders the list. We
+  // hydrate once on mount — the SNCv2 report page isn't visited
+  // simultaneously in two tabs, so cross-tab sync isn't worth the
+  // storage-event plumbing.
+  const [dismissMap, setDismissMap] = useState(() => readDismissState());
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +109,39 @@ export default function ShareChildNeedsNudge() {
     };
   }, []);
 
+  const nowMs = Date.now();
+
+  // Filter cases through the dismiss map — but track whether each
+  // hidden tile is on its "retry" cool-down (so the parent's Q1
+  // grant-clears semantic still applies if they later re-toggle).
+  const visibleCases = useMemo(() => {
+    if (!cases) return null;
+    return cases.filter((c) => !isDismissed(dismissMap[c.case_id], nowMs));
+  }, [cases, dismissMap, nowMs]);
+
+  const dismissCase = (caseId) => {
+    const prev = dismissMap[caseId];
+    // Second dismiss (retry window already elapsed → tile came back
+    // → parent dismissed AGAIN) → mark retried=true so it stays
+    // hidden forever. First dismiss records the timestamp only.
+    const next = {
+      ...dismissMap,
+      [caseId]: prev && prev.dismissedAt
+        ? { dismissedAt: new Date().toISOString(), retried: true }
+        : { dismissedAt: new Date().toISOString(), retried: false },
+    };
+    setDismissMap(next);
+    writeDismissState(next);
+  };
+
+  const clearDismiss = (caseId) => {
+    if (!dismissMap[caseId]) return;
+    const next = { ...dismissMap };
+    delete next[caseId];
+    setDismissMap(next);
+    writeDismissState(next);
+  };
+
   const toggleCase = async (caseId) => {
     setPendingCaseId(caseId);
     setError(null);
@@ -59,6 +154,9 @@ export default function ShareChildNeedsNudge() {
           c.case_id === caseId ? { ...c, my_consent_at: newConsentAt } : c
         )
       );
+      // Q1: granting consent clears any prior dismissal for this
+      // case, so the retry cycle resets cleanly.
+      if (newConsentAt) clearDismiss(caseId);
     } catch (err) {
       logError("share-child-needs nudge: toggle failed", err);
       setError("We couldn't save your preference. Please try again in a moment.");
@@ -73,6 +171,9 @@ export default function ShareChildNeedsNudge() {
   // will see the same toggle inside the joint viewer if they're
   // added to a case later.
   if (cases.length === 0) return null;
+  // Every visible case has been dismissed (either mid-cool-down or
+  // permanently). Whole component hides.
+  if (visibleCases && visibleCases.length === 0) return null;
 
   return (
     <section
@@ -107,7 +208,7 @@ export default function ShareChildNeedsNudge() {
         className="mt-4 space-y-2"
         data-testid="child-needs-share-nudge-cases"
       >
-        {cases.map((c) => {
+        {(visibleCases || []).map((c) => {
           const isOn = !!c.my_consent_at;
           const isPending = pendingCaseId === c.case_id;
           const status = isOn
@@ -120,10 +221,10 @@ export default function ShareChildNeedsNudge() {
           return (
             <li
               key={c.case_id}
-              className="rounded-2xl border border-[#EEE8F7] bg-white p-3 sm:p-4 flex items-start gap-3"
+              className="relative rounded-2xl border border-[#EEE8F7] bg-white p-3 sm:p-4 flex items-start gap-3"
               data-testid={`child-needs-share-nudge-case-${c.case_id}`}
             >
-              <label className="flex items-start gap-3 cursor-pointer flex-1">
+              <label className="flex items-start gap-3 cursor-pointer flex-1 pr-6">
                 <input
                   type="checkbox"
                   checked={isOn}
@@ -159,6 +260,15 @@ export default function ShareChildNeedsNudge() {
               {isPending && (
                 <Loader2 size={14} className="animate-spin text-[#3D1A78] mt-1.5" />
               )}
+              <button
+                type="button"
+                onClick={() => dismissCase(c.case_id)}
+                aria-label={`Hide this share prompt for ${c.case_id}`}
+                data-testid={`child-needs-share-nudge-dismiss-${c.case_id}`}
+                className="absolute top-2 right-2 inline-flex items-center justify-center w-6 h-6 rounded-full text-[#857E9C] hover:bg-[#F1EBFA] hover:text-[#3D1A78] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
+              >
+                <X size={12} />
+              </button>
             </li>
           );
         })}
