@@ -19,7 +19,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
-import { Users, RotateCcw, Save, ShieldCheck } from "lucide-react";
+import { Users, RotateCcw, Save, ShieldCheck, History, CornerUpLeft } from "lucide-react";
 
 const HEADLINE_MIN = 6;
 const HEADLINE_MAX = 120;
@@ -46,6 +46,31 @@ function CharCounter({ value, min, max, testid }) {
   );
 }
 
+/**
+ * Relative time formatter for the history list. "3d ago", "12h ago",
+ * "just now". Falls back to the raw ISO if parsing fails so the row
+ * still surfaces something usable.
+ */
+function relativeTime(iso) {
+  if (!iso) return "—";
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return iso;
+  const diff = Date.now() - t;
+  if (diff < 0) return "just now";
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d ago`;
+  const mo = Math.floor(d / 30);
+  if (mo < 12) return `${mo}mo ago`;
+  const y = Math.floor(mo / 12);
+  return `${y}y ago`;
+}
+
 export default function AdminNudgeCopy() {
   const { user, loading } = useAuth();
   const [headline, setHeadline] = useState("");
@@ -55,6 +80,8 @@ export default function AdminNudgeCopy() {
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [forbidden, setForbidden] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   const load = () =>
     api
@@ -68,9 +95,25 @@ export default function AdminNudgeCopy() {
         logError("admin-nudge-copy: fetch failed", err);
       });
 
+  const loadHistory = () =>
+    api
+      .get("/admin/nudge-copy/child-needs-share/history", { params: { limit: 5 } })
+      .then((r) => {
+        setHistory(r.data?.entries || []);
+        setHistoryLoaded(true);
+      })
+      .catch((err) => {
+        // Non-fatal — if admin gating fails here it also fails on
+        // save, so let the save path own the "forbidden" transition.
+        logError("admin-nudge-copy: fetch history failed", err);
+        setHistory([]);
+        setHistoryLoaded(true);
+      });
+
   useEffect(() => {
     if (!user) return;
     load();
+    loadHistory();
   }, [user]);
 
   const canSave = useMemo(() => {
@@ -97,6 +140,9 @@ export default function AdminNudgeCopy() {
       setSubhead(r.data?.subhead || "");
       setIsDefault(!!r.data?.is_default);
       toast.success("Nudge copy updated — live for parents now.");
+      // Refresh the history list so the freshly-saved row appears at
+      // the top with a proper timestamp + updated_by attribution.
+      loadHistory();
     } catch (err) {
       const status = err?.response?.status;
       if (status === 403) {
@@ -135,6 +181,19 @@ export default function AdminNudgeCopy() {
     } finally {
       setResetting(false);
     }
+  };
+
+  const handleRestore = (entry) => {
+    setHeadline(entry.headline || "");
+    setSubhead(entry.subhead || "");
+    setNote(entry.note || "");
+    toast.info(
+      "Loaded prior version into the editor — click Save to activate.",
+    );
+    // Scroll editor into view so it's obvious the textareas changed.
+    try {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (_) { /* ignore */ }
   };
 
   if (loading) return null;
@@ -340,6 +399,76 @@ export default function AdminNudgeCopy() {
               </p>
             </section>
           </div>
+        </div>
+
+        {/* Recent versions — restore-only, no in-place edit. */}
+        <div
+          className="card-soft p-6"
+          data-testid="admin-nudge-copy-history"
+        >
+          <div className="flex items-center justify-between mb-3 gap-3">
+            <div className="eyebrow flex items-center gap-2">
+              <History size={12} className="text-[#3D1A78]" />
+              Recent versions
+            </div>
+            <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+              Last {history.length || 0} of 5
+            </span>
+          </div>
+          {!historyLoaded ? (
+            <p className="text-sm text-[#857E9C] animate-pulse">
+              Loading revision log…
+            </p>
+          ) : history.length === 0 ? (
+            <p
+              className="text-sm text-[#857E9C] italic"
+              data-testid="admin-nudge-copy-history-empty"
+            >
+              No custom versions saved yet. Your first Save will appear
+              here as version 1 with a Restore button.
+            </p>
+          ) : (
+            <ol className="space-y-3" data-testid="admin-nudge-copy-history-list">
+              {history.map((entry, idx) => (
+                <li
+                  key={`${entry.updated_at}-${idx}`}
+                  className="rounded-2xl border border-[#EEE8F7] bg-white p-4 flex items-start gap-3"
+                  data-testid={`admin-nudge-copy-history-item-${idx}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-semibold text-[#1A1330] truncate">
+                      {entry.headline}
+                    </div>
+                    <div className="text-[12px] text-[#4B4567] mt-1 line-clamp-2">
+                      {entry.subhead}
+                    </div>
+                    {entry.note && (
+                      <div className="text-[11px] text-[#857E9C] mt-1 italic truncate">
+                        Note: {entry.note}
+                      </div>
+                    )}
+                    <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C] mt-2 flex flex-wrap gap-x-3 gap-y-0.5">
+                      <span>{relativeTime(entry.updated_at)}</span>
+                      <span>· {entry.updated_by}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRestore(entry)}
+                    data-testid={`admin-nudge-copy-history-restore-${idx}`}
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#3D1A78]/25 text-xs font-semibold text-[#3D1A78] hover:bg-[#F5EFFB]"
+                  >
+                    <CornerUpLeft size={12} />
+                    Restore
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
+          <p className="text-[11px] text-[#857E9C] italic mt-3 leading-relaxed">
+            Restore loads a prior version into the editor without
+            saving. Click Save once you've reviewed it to make it live.
+          </p>
         </div>
       </div>
     </AppShell>

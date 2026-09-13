@@ -27,6 +27,44 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-13 — Iter189e · Copy History + One-Click Restore
+
+**🟢 P2 — Append-only nudge-copy revision log**
+Every admin save writes to a new `nudge_copy_history` collection
+so an unsuccessful copy experiment can be undone without retyping.
+Reset clears the live override but preserves the log — an admin
+who resets and regrets it can still restore a prior version.
+
+- New endpoint `GET /api/admin/nudge-copy/child-needs-share/history?limit=5`
+  - Admin-gated (surfaces `updated_by` email).
+  - `limit` bounded to 1-20 by Pydantic query param, defaults to 5.
+  - Returns entries newest-first.
+- `POST /api/admin/nudge-copy/child-needs-share` now appends a
+  history row on every successful save (no truncation, append-only).
+- `/reset` endpoint intentionally does NOT touch the history log.
+
+**🟢 P2 — Recent versions panel on `/admin/nudge-copy`**
+Below the editor + preview grid, a "Recent versions" card lists
+the last 5 revisions with:
+  - Truncated headline + 2-line subhead preview
+  - Optional audit note
+  - Relative timestamp (`3d ago`, `12h ago`, `just now`)
+  - `updated_by` admin email
+  - Small "Restore" button that populates the editor textareas
+    without saving — admin still clicks Save to activate.
+- Empty state ("No custom versions saved yet…") when the log is
+  empty so an admin's first save is clearly attributed as v1.
+- Save action refreshes the history list so the new row appears
+  at the top with proper timestamp + attribution.
+- Restore auto-scrolls the page to the editor so the textarea
+  update is obvious.
+
+**🧪 Pytest** `tests/test_iter189e_nudge_copy_history.py`
+- 5 tests: admin gate on read, `limit` bounds (1-20 → 422), save
+  appends exactly one row + newest-first ordering, default `limit=5`
+  caps returned rows, reset preserves history rows.
+- Combined suite (`test_iter189_*` × 5 files) = 31/31 pass in ~16s.
+
 ### 2026-09-13 — Iter189d · Copy Editor UI + Test-Recipient Digest
 
 **🟢 P1 — `/admin/nudge-copy` editor page**
