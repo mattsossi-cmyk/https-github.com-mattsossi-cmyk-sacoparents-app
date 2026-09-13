@@ -26,6 +26,35 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-13 — Iter189h · Mobile Preview Frame
+
+**🟢 P1 — iPhone-shaped preview at 390px in `/admin/nudge-copy`**
+Live preview now supports Desktop / Mobile viewport modes via a
+segmented toggle above the preview column.
+
+- **Frame**: pure-CSS iPhone chrome — 418px outer bezel (dark
+  `#1A1330`, rounded-[3rem], p-3, shadow-2xl), Dynamic-Island
+  notch (h-6 w-28 rounded-full bg-black), fake iOS status bar
+  ("9:41" · "•••"), and a 390 × 720 inner screen. No image assets.
+- **Toggle**: segmented pill above the preview
+  (`admin-nudge-copy-preview-frame-toggle`) with
+  `admin-nudge-copy-preview-desktop` (default, active on load)
+  and `admin-nudge-copy-preview-mobile` buttons. Uses `Monitor` /
+  `Smartphone` icons from lucide-react.
+- **Layout safety**: preview column has `min-w-0` so the 418px
+  phone frame does not widen its grid column at narrow admin
+  viewports. Frame wrapper has `overflow-x-auto -mx-2 px-2` so
+  it scrolls horizontally on very small admin screens (like the
+  admin's own phone) instead of forcing horizontal page overflow.
+- **Preview parity**: both modes render the same nudge markup so
+  edits stay in perfect sync — desktop keeps the responsive
+  `sm:` variants; mobile hard-codes the small-screen spacing
+  because the container is fixed at 390px.
+- **Verified**: 1920×1080 (Desktop toggle no overflow; Mobile
+  toggle no overflow) and 390×844 (both toggles no overflow).
+  Existing `wordDiff.test.js` still passes.
+
+
 ## What's Implemented
 ### 2026-09-13 — Iter189g · Word-Level Diff Highlighting
 

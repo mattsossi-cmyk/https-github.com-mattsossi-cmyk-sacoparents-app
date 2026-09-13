@@ -19,7 +19,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
-import { Users, RotateCcw, Save, ShieldCheck, History, CornerUpLeft, Check, X as XIcon } from "lucide-react";
+import { Users, RotateCcw, Save, ShieldCheck, History, CornerUpLeft, Check, X as XIcon, Monitor, Smartphone } from "lucide-react";
 import { wordDiff } from "../utils/wordDiff";
 
 const HEADLINE_MIN = 6;
@@ -131,6 +131,12 @@ export default function AdminNudgeCopy() {
   // (bold), and the admin explicitly clicks Apply to load into the
   // textareas. Prevents accidental clobbering of unsaved edits.
   const [pendingRestore, setPendingRestore] = useState(null);
+  // Preview viewport toggle. "desktop" (default) renders the nudge at
+  // the column's natural width — matches what parents on laptop/tablet
+  // see. "mobile" wraps the same card in a 390px iPhone-shaped chrome
+  // so admins can eyeball line breaks + button wrap on small screens
+  // without leaving the editor.
+  const [viewportMode, setViewportMode] = useState("desktop");
 
   const load = () =>
     api
@@ -567,54 +573,180 @@ export default function AdminNudgeCopy() {
           </div>
 
           {/* Live preview — mimics ShareChildNeedsNudge.jsx */}
-          <div>
-            <div className="eyebrow mb-2 flex items-center gap-2">
-              Live preview
-              <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
-                (as parents see it)
-              </span>
+          <div className="min-w-0">
+            <div className="mb-2 flex items-center justify-between gap-2 flex-wrap">
+              <div className="eyebrow flex items-center gap-2">
+                Live preview
+                <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+                  (as parents see it)
+                </span>
+              </div>
+              {/* Desktop / Mobile viewport toggle. Segmented control
+                  — the active pill has the purple fill, the inactive
+                  pill is white with a subtle border. Buttons are the
+                  same width for a stable click target. */}
+              <div
+                className="inline-flex rounded-full bg-white border border-[#D6CFE8] p-0.5 shadow-sm"
+                role="group"
+                aria-label="Preview viewport"
+                data-testid="admin-nudge-copy-preview-frame-toggle"
+              >
+                <button
+                  type="button"
+                  onClick={() => setViewportMode("desktop")}
+                  aria-pressed={viewportMode === "desktop"}
+                  data-testid="admin-nudge-copy-preview-desktop"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                    viewportMode === "desktop"
+                      ? "bg-[#3D1A78] text-white"
+                      : "text-[#4B4567] hover:bg-[#F5EFFB]"
+                  }`}
+                >
+                  <Monitor size={12} />
+                  Desktop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewportMode("mobile")}
+                  aria-pressed={viewportMode === "mobile"}
+                  data-testid="admin-nudge-copy-preview-mobile"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                    viewportMode === "mobile"
+                      ? "bg-[#3D1A78] text-white"
+                      : "text-[#4B4567] hover:bg-[#F5EFFB]"
+                  }`}
+                >
+                  <Smartphone size={12} />
+                  Mobile
+                </button>
+              </div>
             </div>
-            <section
-              className="rounded-3xl border-2 border-[#D6CFE8] bg-gradient-to-br from-[#FAF6FF] to-[#F1E7FA] p-5 sm:p-6"
-              data-testid="admin-nudge-copy-preview"
-            >
-              <div className="flex items-start gap-3">
-                <div className="rounded-full bg-white/70 p-2 mt-0.5 shrink-0">
-                  <Users size={16} className="text-[#3D1A78]" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
-                    Optional · you're in control
+            {viewportMode === "mobile" ? (
+              // iPhone-shaped frame at 390px viewport width. Pure CSS
+              // — no image assets. The outer div is the phone bezel
+              // (dark, rounded, subtle shadow). The inner scroll area
+              // simulates the phone screen and is exactly 390px so
+              // Tailwind's `sm:` breakpoints inside the nudge card
+              // resolve to their mobile variants (identical to what a
+              // real iPhone renders).
+              //
+              // `overflow-x-auto` on the wrapper lets the 418px frame
+              // stay side-by-side with the editor at desktop widths,
+              // and on very narrow admin screens (like the admin's own
+              // phone) the frame scrolls horizontally instead of
+              // widening the grid column.
+              <div
+                className="overflow-x-auto -mx-2 px-2"
+                data-testid="admin-nudge-copy-preview-mobile-frame"
+              >
+                <div className="mx-auto" style={{ width: "418px" }}>
+                  <div className="relative rounded-[3rem] bg-[#1A1330] p-3 shadow-2xl">
+                  {/* Dynamic Island / notch — visual anchor so the
+                      frame reads as a phone at a glance. */}
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 h-6 w-28 rounded-full bg-black z-10" />
+                  <div
+                    className="rounded-[2.25rem] bg-[#FAF6FF] overflow-hidden"
+                    style={{ width: "390px", height: "720px" }}
+                  >
+                    {/* Fake iOS status bar so the phone illusion holds. */}
+                    <div className="h-11 flex items-end justify-between px-6 pb-1 text-[11px] font-semibold text-[#1A1330]">
+                      <span>9:41</span>
+                      <span className="opacity-0">·</span>
+                      <span className="tracking-tight">•••</span>
+                    </div>
+                    <div className="h-[calc(720px-2.75rem)] overflow-y-auto px-4 pb-8">
+                      <section
+                        className="rounded-3xl border-2 border-[#D6CFE8] bg-gradient-to-br from-[#FAF6FF] to-[#F1E7FA] p-5"
+                        data-testid="admin-nudge-copy-preview"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="rounded-full bg-white/70 p-2 mt-0.5 shrink-0">
+                            <Users size={16} className="text-[#3D1A78]" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                              Optional · you're in control
+                            </div>
+                            <h3
+                              className="font-serif text-lg text-[#1A1330] mt-1 leading-snug"
+                              data-testid="admin-nudge-copy-preview-headline"
+                            >
+                              {headline || <span className="text-[#857E9C] italic">Headline will appear here</span>}
+                            </h3>
+                            <p
+                              className="text-sm text-[#4B4567] mt-2 leading-relaxed whitespace-pre-line"
+                              data-testid="admin-nudge-copy-preview-subhead"
+                            >
+                              {subhead || <span className="text-[#857E9C] italic">Subhead will appear here</span>}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-4 rounded-2xl border border-[#EEE8F7] bg-white p-3">
+                          <div className="text-[13px] font-semibold text-[#1A1330]">
+                            SA-DEMO01
+                            <span className="text-[#4B4567] font-normal"> · with Riley Parent</span>
+                          </div>
+                          <div className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1 text-[#857E9C]">
+                            Neither has consented yet
+                          </div>
+                        </div>
+                        <p className="mt-3 text-[11px] text-[#857E9C] italic leading-relaxed">
+                          Educational and organizational — not a diagnosis, not a court
+                          submission. You can change this any time from the joint report
+                          page.
+                        </p>
+                      </section>
+                    </div>
                   </div>
-                  <h3
-                    className="font-serif text-lg sm:text-xl text-[#1A1330] mt-1 leading-snug"
-                    data-testid="admin-nudge-copy-preview-headline"
-                  >
-                    {headline || <span className="text-[#857E9C] italic">Headline will appear here</span>}
-                  </h3>
-                  <p
-                    className="text-sm text-[#4B4567] mt-2 leading-relaxed whitespace-pre-line"
-                    data-testid="admin-nudge-copy-preview-subhead"
-                  >
-                    {subhead || <span className="text-[#857E9C] italic">Subhead will appear here</span>}
-                  </p>
+                </div>
+                <p className="text-center text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C] mt-3">
+                  iPhone · 390px viewport
+                </p>
                 </div>
               </div>
-              <div className="mt-4 rounded-2xl border border-[#EEE8F7] bg-white p-3 sm:p-4">
-                <div className="text-[13px] font-semibold text-[#1A1330]">
-                  SA-DEMO01
-                  <span className="text-[#4B4567] font-normal"> · with Riley Parent</span>
+            ) : (
+              <section
+                className="rounded-3xl border-2 border-[#D6CFE8] bg-gradient-to-br from-[#FAF6FF] to-[#F1E7FA] p-5 sm:p-6"
+                data-testid="admin-nudge-copy-preview"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-white/70 p-2 mt-0.5 shrink-0">
+                    <Users size={16} className="text-[#3D1A78]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                      Optional · you're in control
+                    </div>
+                    <h3
+                      className="font-serif text-lg sm:text-xl text-[#1A1330] mt-1 leading-snug"
+                      data-testid="admin-nudge-copy-preview-headline"
+                    >
+                      {headline || <span className="text-[#857E9C] italic">Headline will appear here</span>}
+                    </h3>
+                    <p
+                      className="text-sm text-[#4B4567] mt-2 leading-relaxed whitespace-pre-line"
+                      data-testid="admin-nudge-copy-preview-subhead"
+                    >
+                      {subhead || <span className="text-[#857E9C] italic">Subhead will appear here</span>}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1 text-[#857E9C]">
-                  Neither has consented yet
+                <div className="mt-4 rounded-2xl border border-[#EEE8F7] bg-white p-3 sm:p-4">
+                  <div className="text-[13px] font-semibold text-[#1A1330]">
+                    SA-DEMO01
+                    <span className="text-[#4B4567] font-normal"> · with Riley Parent</span>
+                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1 text-[#857E9C]">
+                    Neither has consented yet
+                  </div>
                 </div>
-              </div>
-              <p className="mt-3 text-[11px] text-[#857E9C] italic leading-relaxed">
-                Educational and organizational — not a diagnosis, not a court
-                submission. You can change this any time from the joint report
-                page.
-              </p>
-            </section>
+                <p className="mt-3 text-[11px] text-[#857E9C] italic leading-relaxed">
+                  Educational and organizational — not a diagnosis, not a court
+                  submission. You can change this any time from the joint report
+                  page.
+                </p>
+              </section>
+            )}
           </div>
         </div>
 
