@@ -18,5 +18,5 @@ def test_methodology_pdf_is_one_page_handout() -> None:
     reader = PdfReader(BytesIO(r.content))
     assert len(reader.pages) == 1
     text = reader.pages[0].extract_text()
-    for needle in ("Align Model", "REFLECTION", "AGREEMENT", "Joint Alignment Summary", "Copyright 2026 SA CoParents"):
+    for needle in ("Align Model", "REFLECTION", "AGREEMENT", "Joint Alignment Summary", "2026 sacoparentsalign.com"):
         assert needle in text, needle

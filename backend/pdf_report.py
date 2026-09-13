@@ -47,7 +47,7 @@ class _JointPDF(FPDF):
         self.set_y(-14)
         self.set_font(FONT, "I", 8)
         self.set_text_color(*GRAY)
-        self.cell(0, 8, _s(f"Copyright 2026 SA CoParents. All Rights Reserved. - sacoparentsalign.com - Page {self.page_no()}"), align="C")
+        self.cell(0, 8, _s(f"© 2026 sacoparentsalign.com · SA CoParents Align. All rights reserved. · Page {self.page_no()}"), align="C")
 
 
 def verify_qr_png(url: str) -> bytes:
@@ -80,6 +80,9 @@ def _new_pdf() -> FPDF:
         pdf.add_font("dejavu", "BI", str(_FONT_DIR / "DejaVuSans-BoldOblique.ttf"))
     pdf.set_margins(18, 18, 18)
     pdf.set_auto_page_break(auto=True, margin=18)
+    pdf.set_author("SA CoParents Align · sacoparentsalign.com")
+    pdf.set_creator("sacoparentsalign.com")
+    pdf.set_subject("© 2026 sacoparentsalign.com · SA CoParents Align. All rights reserved.")
     pdf.add_page()
     return pdf
 
@@ -791,6 +794,8 @@ def merge_pdfs(parts: list[bytes]) -> bytes:
     for b in parts:
         with pymupdf.open(stream=b, filetype="pdf") as src:
             out.insert_pdf(src)
+    out.set_metadata({"author": "SA CoParents Align · sacoparentsalign.com", "creator": "sacoparentsalign.com", "producer": "sacoparentsalign.com",
+                      "subject": "© 2026 sacoparentsalign.com · SA CoParents Align. All rights reserved.", "title": "Court Packet"})
     return out.tobytes()
 
 
