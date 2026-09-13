@@ -224,8 +224,12 @@ async def admin_preview_consent_digest_html(
         week_start=week_start,
         console_url=_admin_console_url(),
     )
+    # Inject the banner INSIDE `<body>` (same pattern as `send-test`)
+    # rather than before the doctype, so it lives inside the rendered
+    # page shell not above it.
+    banner = _PREVIEW_BANNER.format(week_start=week_start)
     return HTMLResponse(
-        _PREVIEW_BANNER.format(week_start=week_start) + html,
+        _inject_test_banner(html, banner),
         headers={"Cache-Control": "no-store"},
     )
 

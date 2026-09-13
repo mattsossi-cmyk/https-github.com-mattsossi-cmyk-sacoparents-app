@@ -120,11 +120,18 @@ def _compute_consent_stats(cases: List[Dict[str, Any]], week_ago: datetime) -> D
       cases_total               — cases in the collection
       parents_consented_delta_7d — parent slots that consented in the
                                    last 7 days (by `child_needs_share_consent_at`)
-      cases_both_delta_7d       — cases where BOTH parents' consent
-                                  timestamps fall in the last 7 days
-                                  (i.e. the case transitioned to
-                                  both-consented this week)
+      cases_both_delta_7d       — cases where the case's MOST RECENT of
+                                  the two consent timestamps landed in
+                                  the last 7 days — i.e. the case
+                                  transitioned to both-consented this
+                                  week.
       unlock_rate_pct           — cases_both_consented / cases_total
+
+    We only look at the first two parent slots per case so the numbers
+    stay in lockstep with `analytics_routes.py`'s
+    `$arrayElemAt: ['$parents', 0]` / `['$parents', 1]` aggregation.
+    Every joint case in practice has exactly two parents; the slice is
+    defensive against hypothetical malformed docs.
     """
     parents_consented = 0
     cases_both_consented = 0
@@ -133,9 +140,7 @@ def _compute_consent_stats(cases: List[Dict[str, Any]], week_ago: datetime) -> D
     cases_total = len(cases)
 
     for c in cases:
-        parents = c.get("parents") or []
-        # Guard against unexpected shapes — a 1-parent or 3-parent doc
-        # just contributes what it has.
+        parents = (c.get("parents") or [])[:2]
         consent_times = [
             _as_aware_utc(p.get("child_needs_share_consent_at"))
             for p in parents
@@ -146,9 +151,7 @@ def _compute_consent_stats(cases: List[Dict[str, Any]], week_ago: datetime) -> D
                 if ts >= week_ago:
                     parents_consented_delta += 1
         # A case counts as "both consented" iff there are ≥ 2 parent
-        # slots AND every slot has a truthy consent timestamp. We only
-        # look at the first two slots to stay consistent with the
-        # analytics_routes.py aggregation (`arrayElemAt` 0 & 1).
+        # slots AND every slot has a truthy consent timestamp.
         if len(parents) >= 2 and consent_times[0] and consent_times[1]:
             cases_both_consented += 1
             most_recent = max(consent_times[0], consent_times[1])

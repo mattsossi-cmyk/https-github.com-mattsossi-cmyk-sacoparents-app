@@ -20,6 +20,7 @@ import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
 import { Users, RotateCcw, Save, ShieldCheck, History, CornerUpLeft, Check, X as XIcon } from "lucide-react";
+import { wordDiff } from "../utils/wordDiff";
 
 const HEADLINE_MIN = 6;
 const HEADLINE_MAX = 120;
@@ -69,58 +70,6 @@ function relativeTime(iso) {
   if (mo < 12) return `${mo}mo ago`;
   const y = Math.floor(mo / 12);
   return `${y}y ago`;
-}
-
-/**
- * Word-level diff between two strings. Returns two aligned token
- * arrays annotated with `removed` / `added` flags.
- *
- * Uses classic O(n*m) LCS dynamic programming. Fine for our inputs —
- * headline is 6-120 chars (~1-25 tokens), subhead is 10-600 chars
- * (~2-120 tokens). Whitespace is preserved as its own tokens so
- * `wordDiff("hi world", "hi there world")` renders correctly without
- * collapsing spaces.
- *
- * Returns:
- *   {
- *     current:  [{ text, removed: bool }, …]   // for the "before" side
- *     incoming: [{ text, added:   bool }, …]   // for the "after"  side
- *   }
- */
-function wordDiff(a, b) {
-  const toksA = (a || "").split(/(\s+)/);
-  const toksB = (b || "").split(/(\s+)/);
-  const m = toksA.length;
-  const n = toksB.length;
-  const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      if (toksA[i - 1] === toksB[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1;
-      } else {
-        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-      }
-    }
-  }
-  const current = [];
-  const incoming = [];
-  let i = m;
-  let j = n;
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && toksA[i - 1] === toksB[j - 1]) {
-      current.unshift({ text: toksA[i - 1], removed: false });
-      incoming.unshift({ text: toksB[j - 1], added: false });
-      i--;
-      j--;
-    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      incoming.unshift({ text: toksB[j - 1], added: true });
-      j--;
-    } else {
-      current.unshift({ text: toksA[i - 1], removed: true });
-      i--;
-    }
-  }
-  return { current, incoming };
 }
 
 /**
