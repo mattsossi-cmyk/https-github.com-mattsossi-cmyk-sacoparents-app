@@ -5,6 +5,7 @@ import { MatterNotes } from "@/components/MatterNotes";
 import { SessionOutcome } from "@/components/SessionOutcome";
 import { CourtPacketPanel } from "@/components/CourtPacketPanel";
 import { ProfessionalStatement } from "@/components/ProfessionalStatement";
+import { CommunicationsLog } from "@/components/CommunicationsLog";
 
 export function ProWorkspace({ rid, steps, outcome, onOutcomeSaved, courtReady }) {
   const [activity, setActivity] = useState(null);
@@ -23,6 +24,8 @@ export function ProWorkspace({ rid, steps, outcome, onOutcomeSaved, courtReady }
         <h2 className="text-lg font-semibold" data-testid="pro-notes-heading">Professional Notes</h2>
         <MatterNotes rid={rid} />
       </section>
+
+      <CommunicationsLog url={`/joint/reports/${rid}/communications`} />
 
       <section className="bg-white border border-border rounded-lg p-6" data-testid="pro-activity-section">
         <h2 className="text-lg font-semibold" data-testid="pro-activity-heading">Consent &amp; Activity</h2>

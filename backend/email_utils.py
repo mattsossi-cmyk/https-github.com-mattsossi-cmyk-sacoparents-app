@@ -173,18 +173,37 @@ async def _post_resend(to: str, subject: str, html: str, reply_to: str | None) -
     return None
 
 
-async def send_email_detailed(*, to: str, subject: str, html: str, reply_to: str | None = None) -> tuple[str | None, str]:
+_COMM_LOGGER = None
+
+
+def set_comm_logger(fn) -> None:
+    """Register async fn(record: dict) that persists a per-case communications entry."""
+    global _COMM_LOGGER
+    _COMM_LOGGER = fn
+
+
+async def send_email_detailed(*, to: str, subject: str, html: str, reply_to: str | None = None,
+                              case_id: str | None = None, kind: str = "", to_role: str = "") -> tuple[str | None, str]:
     """Returns (provider_id, provider) where provider is 'resend', 'emergent' or 'skipped'."""
     _assert_safe_email(subject, html)
     if FIXTURE_EMAIL_RE.search(to):
         logger.info(f"Skipping email to fixture address {to}")
-        return None, "skipped"
-    resend_id = await _post_resend(to, subject, html, reply_to)
-    if resend_id:
-        return resend_id, "resend"
-    return await _post_with_retry(_email_payload(to, subject, html, reply_to)), "emergent"
+        provider_id, provider = None, "skipped"
+    else:
+        resend_id = await _post_resend(to, subject, html, reply_to)
+        if resend_id:
+            provider_id, provider = resend_id, "resend"
+        else:
+            provider_id, provider = await _post_with_retry(_email_payload(to, subject, html, reply_to)), "emergent"
+    if case_id and _COMM_LOGGER:
+        try:
+            await _COMM_LOGGER({"case_id": case_id, "kind": kind or "email", "to": to, "to_role": to_role, "subject": subject, "provider": provider, "provider_id": provider_id})
+        except Exception as exc:
+            logger.warning("communications log failed: %s", exc)
+    return provider_id, provider
 
 
-async def send_email(*, to: str, subject: str, html: str, reply_to: str | None = None) -> str | None:
-    provider_id, _provider = await send_email_detailed(to=to, subject=subject, html=html, reply_to=reply_to)
+async def send_email(*, to: str, subject: str, html: str, reply_to: str | None = None,
+                     case_id: str | None = None, kind: str = "", to_role: str = "") -> str | None:
+    provider_id, _provider = await send_email_detailed(to=to, subject=subject, html=html, reply_to=reply_to, case_id=case_id, kind=kind, to_role=to_role)
     return provider_id

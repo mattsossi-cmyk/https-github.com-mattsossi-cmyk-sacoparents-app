@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CaseProgress } from "@/components/CaseProgress";
 import { CourtStatusSummary } from "@/components/CourtStatusSummary";
+import { CommunicationsLog } from "@/components/CommunicationsLog";
 
 const Field = ({ label, children, testId }) => (
   <div className="min-w-0" data-testid={testId}>
@@ -69,7 +70,8 @@ export function CourtCaseCard({ x, packets, onOpenPacket, onUpdate }) {
           )}
         </Field>
         <Field label="Professional Communications & Audit" testId={`court-field-audit-${x.id}`}>
-          <span className="text-muted-foreground">{x.submissions ? `${x.submissions} submission version${x.submissions === 1 ? "" : "s"} on record. ` : ""}Every opening, acknowledgement, and clarification request is logged; open a packet to view its audit history.</span>
+          <span className="text-muted-foreground">{x.submissions ? `${x.submissions} submission version${x.submissions === 1 ? "" : "s"} on record. ` : ""}Open a packet to view its audit history.</span>
+          <div className="mt-2"><CommunicationsLog url={`/court-dashboard/referrals/${x.id}/communications`} title="Court-facing notices" compact /></div>
         </Field>
       </div>
     </li>

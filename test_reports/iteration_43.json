@@ -1,0 +1,31 @@
+{
+  "summary": "Iteration 43 — Case Communications Log feature verified end-to-end. Backend pytest (26/26 PASSED in 13.3s): tests/test_communications_log.py (2), tests/test_hearing_reminder.py (5), tests/test_court_workflow.py (6), tests/test_court_packets.py (6), tests/test_sample_case.py (4), tests/test_follow_up_reminder.py (3). Frontend Playwright: (1) Pro (approval.test.pro1@gmail.com) created a new case via POST /api/joint/reports/professional with pa.log.*@example.com and pb.log.*@example.com, then opened /joint/{rid}: communications-log renders, communications-list has exactly 2 communication-<id> rows, both kind 'Parent invitation', to_role 'Parent A' and 'Parent B', masked emails 'pa…@example.com' and 'pb…@example.com', provider=skipped shown as 'not delivered (test address)'. (2) Judge (judge.ui.preview@sacoparentsalign.com) created a new referral 2026-CI-LOGF3F6 through the Refer Case to Professional UI (professional=Approval Test Pro): the compact CommunicationsLog inside CourtCaseCard renders under 'Professional Communications & Audit' with title 'Court-facing notices' and one row 'Court referral … Professional ap…@gmail.com'. API GET /api/court-dashboard/referrals/{ref}/communications returns [{kind:'court_referral', to_role:'Professional', to:'approval.test.pro1@gmail.com', provider:'resend', subject:'Court referral from Judge UI Preview - Cause No. 2026-CI-LOGF3F6'}]. (3) Access control: covered by pytest — other pro gets 403/404 on /api/joint/reports/{rid}/communications; pro gets 403 on /api/court-dashboard/referrals/{ref}/communications. Pre-existing referrals from iter42 (2026-CI-UIc39b, 2026-CI-UI001) correctly show communications-empty ('Nothing sent yet.') because logging began with this build.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_communications_log.py",
+    "/app/backend/tests/test_hearing_reminder.py",
+    "/app/backend/tests/test_court_workflow.py",
+    "/app/backend/tests/test_court_packets.py",
+    "/app/backend/tests/test_sample_case.py",
+    "/app/backend/tests/test_follow_up_reminder.py",
+    "/app/test_reports/pytest/iter43.xml"
+  ],
+  "action_items": [
+    "(Carry-over) Seeded admin login mattsossi@bsossi.com / CoParents2026! still returns 401 in preview — seed_admin idempotency of password_hash on boot (non-blocking; iter39/41/42 note)."
+  ],
+  "critical_code_review_comments": [
+    "CommunicationsLog.jsx is clean and minimal (39 lines): single api.get on url prop, correct empty/loading/list states, all required data-testids present (communications-log, communications-loading, communications-empty, communications-list, communication-<id>). Email masking uses first-2-chars + '…@' + domain, matching product spec.",
+    "COURT_COMM_KINDS filter on server.py correctly restricts judge endpoint to court-facing kinds only — pytest verifies invitations do NOT leak to judge (only court_referral was returned for a fresh referral).",
+    "Response schema is exactly {id, at, kind, to, to_role, subject, provider} with no MongoDB _id leaked — pytest assertion `set(c) == {...}` passes.",
+    "Compact variant in CourtCaseCard uses title='Court-facing notices' — clear separation from the pro-side full log inside ProWorkspace."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (26/26)", "frontend": "100% of exercised flows (pro case create + comms log, judge new referral + compact court-facing notices)"},
+  "test_credentials": "Used approval.test.pro1@gmail.com / TestPass2026! and judge.ui.preview@sacoparentsalign.com / testpass123 — both work.",
+  "seed_data_creation": "Pro-created 1 case (child TEST_UI_Kid, pa.log.05e884@example.com / pb.log.283415@example.com) rid=3418c5d5-…; judge-created 1 referral 2026-CI-LOGF3F6 → Approval Test Pro. Both are visible in respective dashboards; safe to purge by cause_number prefix '2026-CI-LOG' and child_name 'TEST_UI_Kid'.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Full communications-log feature (pro + judge) validated. All 6 required regression pytest files pass. Pre-existing referrals correctly show empty logs (matches build note). No frontend or backend defects found this iteration.",
+  "rca of the issue": "n/a — no defects."
+}

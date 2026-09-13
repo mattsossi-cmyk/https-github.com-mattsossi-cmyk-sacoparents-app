@@ -35,7 +35,7 @@ from urllib.parse import quote
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, build_session_prep_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
-from email_utils import send_email, send_email_detailed, EMAIL_FROM_NAME, FIXTURE_EMAIL_RE, RESEND_FROM_EMAIL
+from email_utils import send_email, send_email_detailed, set_comm_logger, EMAIL_FROM_NAME, FIXTURE_EMAIL_RE, RESEND_FROM_EMAIL
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -46,6 +46,14 @@ api = APIRouter(prefix="/api")
 BUILD_ID = "2026-09-11.7"
 
 logger = logging.getLogger(__name__)
+
+
+async def _log_communication(rec: dict) -> None:
+    await db.communications.insert_one({"id": str(uuid.uuid4()), "at": datetime.now(timezone.utc).isoformat(), **rec})
+
+
+set_comm_logger(_log_communication)
+
 logging.basicConfig(level=logging.INFO)
 
 WEBHOOK_CRON_SECRET = os.environ["WEBHOOK_CRON_SECRET"]
@@ -935,7 +943,7 @@ def _invite_email_content(spec: InviteSpec, token: str) -> tuple[str, str]:
 
 async def send_invite_email(spec: InviteSpec, token: str):
     subject, html = _invite_email_content(spec, token)
-    await send_email(to=spec.invitee_email, subject=subject, html=html)
+    await send_email(to=spec.invitee_email, subject=subject, html=html, case_id=spec.report_id, kind="invitation", to_role=f"Parent {spec.role.upper()}")
 
 
 async def create_invitation(spec: InviteSpec):
@@ -1680,6 +1688,34 @@ async def search_professional_notes(q: str = "", user=Depends(get_current_user))
     return out
 
 
+COURT_COMM_KINDS = ("court_referral", "court_referral_declined", "court_submission", "hearing_date", "hearing_reminder", "court_packet", "court_packet_code", "court_response")
+
+
+def _comm_public(c: dict) -> dict:
+    return {k: c.get(k) for k in ("id", "at", "kind", "to", "to_role", "subject", "provider")}
+
+
+@api.get("/joint/reports/{rid}/communications")
+async def case_communications(rid: str, user=Depends(get_current_user)):
+    report = await get_joint_report_doc(rid, user)
+    if report.get("created_by") != user["_id"] and report.get("professional_id") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the case professional can view the communications log")
+    docs = await db.communications.find({"case_id": rid}, {"_id": 0}).sort("at", -1).to_list(500)
+    return [_comm_public(c) for c in docs]
+
+
+@api.get("/court-dashboard/referrals/{ref_id}/communications")
+async def court_referral_communications(ref_id: str, user=Depends(get_current_user)):
+    if user.get("role") != "judge" or not user.get("approved"):
+        raise HTTPException(status_code=403, detail="Court accounts only")
+    ref = await db.court_referrals.find_one({"id": ref_id, "judge_id": user["_id"]}, {"_id": 0})
+    if not ref:
+        raise HTTPException(status_code=404, detail="Referral not found")
+    ids = [ref_id] + ([ref["case_id"]] if ref.get("case_id") else [])
+    docs = await db.communications.find({"case_id": {"$in": ids}, "kind": {"$in": list(COURT_COMM_KINDS)}}, {"_id": 0}).sort("at", -1).to_list(200)
+    return [_comm_public(c) for c in docs]
+
+
 @api.get("/joint/reports/{rid}/activity")
 async def report_activity(rid: str, user=Depends(get_current_user)):
     report = await get_joint_report_doc(rid, user)
@@ -1807,6 +1843,7 @@ async def _notify_case_ready(report: dict) -> None:
         await send_email(
             to=notify["email"],
             subject=f"Joint Alignment Report ready - {report.get('case_code') or report['id']} - {EMAIL_FROM_NAME}",
+            case_id=report["id"], kind="report_ready", to_role="Professional",
             html=(
                 '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
                 f"<p>Hi {escape(notify.get('name') or 'there')},</p>"
@@ -2843,6 +2880,7 @@ async def run_follow_up_reminders() -> None:
                 to=pro["email"],
                 subject=f"Follow-up today: case {report.get('case_code') or report['id'][:8]}",
                 html=_follow_up_html(pro.get("name", ""), report, outcome, f"{app_url()}/joint/{report['id']}"),
+                case_id=report["id"], kind="follow_up_reminder", to_role="Professional",
             )
         except Exception as exc:
             logger.warning("follow-up reminder failed for %s: %s", report["id"], exc)
@@ -3036,6 +3074,7 @@ async def _send_ready_notifications(doc: dict, now: datetime) -> None:
                 to=p["email"],
                 subject=f"Your Joint Report is ready - {EMAIL_FROM_NAME}",
                 html=_ready_email_html(p.get("name") or "there", child, label, link),
+                case_id=doc["id"], kind="report_ready", to_role=f"Parent {side.upper()}",
             )
             updates[side] = now.isoformat()
         except Exception:
@@ -3086,6 +3125,7 @@ async def _send_completion_nudge(doc: dict, now: datetime) -> None:
             to=other["email"],
             subject=f"Your co-parent has completed their half - {EMAIL_FROM_NAME}",
             html=_nudge_email_html(done.get("name") or "Your co-parent", other.get("name") or "there", child, label, link),
+            case_id=doc["id"], kind="completion_nudge", to_role=f"Parent {side.upper()}",
         )
         await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"nudges.{side}": now.isoformat()}})
     except Exception:

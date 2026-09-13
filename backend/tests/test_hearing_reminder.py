@@ -71,7 +71,7 @@ def test_runner_emails_both_once_and_skips_submitted(flow) -> None:
     _judge_s, _pro, ref, _ = flow
     sent: list[str] = []
 
-    async def fake_send(to: str, subject: str, html: str) -> None:
+    async def fake_send(to: str, subject: str, html: str, **_: object) -> None:
         sent.append(f"{to}|{subject}")
 
     class _DB:

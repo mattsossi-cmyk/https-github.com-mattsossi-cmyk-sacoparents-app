@@ -545,3 +545,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Hearing date: ReferralIn.hearing_date; PATCH /api/court-dashboard/referrals/{id}/hearing-date (judge only); shown in pro inbox; cron POST /api/cron/hearing-reminder (daily 8am CT, .emergent/crons.yml) emails pro + judge once, 7 days before, if not submitted. Tests: backend/tests/test_hearing_reminder.py.
 - Judge Garza invite: NOT sent — requires production admin login (owner-reset password unknown to agent) and the judge's email is not in this context. Owner: live Admin → Judges → Invite Judge.
 - Backlog: republish; live court check after publish; Communications / AI Case Summaries / Account-Org settings pages (linked tools currently omitted as they don't exist); C901 split of _pro_routes (optional).
+
+## 2026-09-13 — Case Communications Log (iteration 43)
+- email_utils.send_email(_detailed) accepts case_id/kind/to_role and calls a registered logger -> db.communications. All invitation, nudge, report-ready, follow-up, court referral/decline/submission, hearing, court packet/code/response emails are tagged.
+- GET /api/joint/reports/{rid}/communications (case pro only); GET /api/court-dashboard/referrals/{id}/communications (owning judge; court-facing kinds only, never parent emails).
+- UI: CommunicationsLog in ProWorkspace (/joint/{rid}); compact "Court-facing notices" in judge Court Case card. Tests: backend/tests/test_communications_log.py.
+- Production still on 2026-09-11.7 at check time — user must Republish; Judge Garza invite still pending on user (needs live admin login).

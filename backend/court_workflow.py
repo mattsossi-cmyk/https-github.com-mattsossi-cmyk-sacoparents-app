@@ -230,7 +230,7 @@ def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, lo
                "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "professional_id": pro["_id"], "professional_name": pro.get("name", ""), "status": "pending", "created_at": _iso(now)}
         await db.court_referrals.insert_one(ref)
         try:
-            await send_email(to=pro["email"], subject=f"Court referral from {user.get('name', 'the court')} - Cause No. {ref['cause_number']}",
+            await send_email(to=pro["email"], case_id=ref["id"], kind="court_referral", to_role="Professional", subject=f"Court referral from {user.get('name', 'the court')} - Cause No. {ref['cause_number']}",
                              html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
                                    f"<p>Hi {escape(pro.get('name', ''))},</p><p><strong>{escape(ref['judge_name'])}</strong> ({escape(ref['court_name'] or 'court')}) has referred a co-parenting matter to you "
                                    f"(Cause No. {escape(ref['cause_number'])}). Accept it in your dashboard to invite both parents; the Joint Report and your Professional Statement return to the court through Align.</p>"
@@ -287,7 +287,7 @@ def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, lo
         pro = await db.users.find_one({"_id": x["professional_id"]}, {"name": 1, "email": 1})
         if pro and pro.get("email") and hd:
             try:
-                await send_email(to=pro["email"], subject=f"Hearing date set - Cause No. {x['cause_number']}",
+                await send_email(to=pro["email"], case_id=x.get("case_id") or x["id"], kind="hearing_date", to_role="Professional", subject=f"Hearing date set - Cause No. {x['cause_number']}",
                                  html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
                                        f"<p>Hi {escape(pro.get('name', ''))},</p><p>{escape(user.get('name', 'The court'))} has set the hearing for Cause No. {escape(x['cause_number'])} on <strong>{hd}</strong>. "
                                        "Align will remind you one week before if the Joint Report and Professional Statement have not yet been submitted.</p>"
@@ -315,11 +315,11 @@ async def run_hearing_reminders(db, send_email, app_url, email_from_name, logger
         head = '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
         try:
             if pro.get("email"):
-                await send_email(to=pro["email"], subject=f"Hearing in {days} days - Cause No. {x['cause_number']} not yet submitted",
+                await send_email(to=pro["email"], case_id=x.get("case_id") or x["id"], kind="hearing_reminder", to_role="Professional", subject=f"Hearing in {days} days - Cause No. {x['cause_number']} not yet submitted",
                                  html=(head + f"<p>Hi {escape(pro.get('name', ''))},</p><p>The hearing for Cause No. {cause} ({escape(x.get('court_name') or 'court')}) is on <strong>{x['hearing_date']}</strong>. "
                                        "The Joint Alignment Report and Professional Assessment Statement have not yet been submitted to the court.</p>"
                                        f'<p><a href="{app_url()}/dashboard#court-referrals" style="color:#5B2A86">Open Court-Referred Cases</a></p>' + foot))
-            await send_email(to=x["judge_email"], subject=f"Hearing in {days} days - Cause No. {x['cause_number']} awaiting submission",
+            await send_email(to=x["judge_email"], case_id=x.get("case_id") or x["id"], kind="hearing_reminder", to_role="Court", subject=f"Hearing in {days} days - Cause No. {x['cause_number']} awaiting submission",
                              html=(head + f"<p>Your Honor,</p><p>The hearing for Cause No. {cause} is on <strong>{x['hearing_date']}</strong>. The referred professional, {escape(x.get('professional_name', ''))}, "
                                    "has not yet submitted the Joint Alignment Report and Professional Assessment Statement. The professional has been reminded as well.</p>"
                                    f'<p><a href="{app_url()}/court-dashboard" style="color:#5B2A86">Open Court Dashboard</a></p>' + foot))
@@ -374,7 +374,7 @@ def _pro_routes(db, get_current_user, app_url, send_email, email_from_name, logg
             raise HTTPException(status_code=400, detail="Please give the court a brief reason")
         await db.court_referrals.update_one({"id": ref_id}, {"$set": {"status": "declined", "decline_reason": reason, "responded_at": _iso(_now())}})
         try:
-            await send_email(to=x["judge_email"], subject=f"Referral declined - Cause No. {x['cause_number']}",
+            await send_email(to=x["judge_email"], case_id=x["id"], kind="court_referral_declined", to_role="Court", subject=f"Referral declined - Cause No. {x['cause_number']}",
                              html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
                                    f"<p>Your Honor,</p><p>{escape(user.get('name', ''))} is unable to accept the referral for Cause No. {escape(x['cause_number'])}.</p>"
                                    f"<blockquote style=\"border-left:3px solid #5B2A86;padding-left:12px;color:#444\">{escape(reason)}</blockquote>"
@@ -469,7 +469,7 @@ def _pro_routes(db, get_current_user, app_url, send_email, email_from_name, logg
         if doc.get("court_referral_id"):
             await db.court_referrals.update_one({"id": doc["court_referral_id"]}, {"$set": {"status": "submitted", "submitted_at": _iso(now)}})
         try:
-            await send_email(to=court["judge_email"], subject=f"Submission received - Cause No. {court.get('cause_number', '')} (v{version})",
+            await send_email(to=court["judge_email"], case_id=doc["id"], kind="court_submission", to_role="Court", subject=f"Submission received - Cause No. {court.get('cause_number', '')} (v{version})",
                              html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
                                    f"<p>Your Honor,</p><p>{escape(user.get('name', ''))} has submitted the Joint Alignment Report and Professional Assessment Statement for Cause No. {escape(court.get('cause_number', ''))}"
                                    f" (version {version}). Both documents are locked and hash-sealed; open them in your Court Dashboard.</p>"

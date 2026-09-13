@@ -205,9 +205,10 @@ class PacketService:
 
     # ---- notifications ----
 
-    async def _mail(self, to: str, subject: str, body_html: str) -> None:
+    async def _mail(self, to: str, subject: str, body_html: str, case_id: str = "", kind: str = "court_packet", to_role: str = "Court") -> None:
         try:
-            await self.send_email(to=to, subject=subject, html=EMAIL_WRAP.format(body_html + f'<p style="font-size:12px;color:#888">Sent by {escape(self.from_name)}.</p>'))
+            await self.send_email(to=to, subject=subject, html=EMAIL_WRAP.format(body_html + f'<p style="font-size:12px;color:#888">Sent by {escape(self.from_name)}.</p>'),
+                                  case_id=case_id or None, kind=kind, to_role=to_role)
         except Exception as exc:
             self.logger.warning("court packet email failed: %s", exc)
 
@@ -217,10 +218,10 @@ class PacketService:
         await self._mail(p["judge_email"], f"Court Packet from {pro_name} - {p.get('cause_number') or p.get('court_name') or 'SA CoParents Align'}",
                          f"<p>Your Honor,</p><p>{escape(pro_name)} has prepared a Court Packet for your review through SA CoParents Align{cause}. It contains the professional's cover letter "
                          "and the co-parenting alignment report(s) for the matter. Access is read-only, logged, and expires in 30 days.</p>"
-                         f'<p><a href="{link}" style="color:#5B2A86">Open the Court Packet</a></p><p>A separate email contains your 6-digit access code.</p>')
+                         f'<p><a href="{link}" style="color:#5B2A86">Open the Court Packet</a></p><p>A separate email contains your 6-digit access code.</p>', case_id=p["report_id"])
         await self._mail(p["judge_email"], "Your Court Packet access code",
                          f"<p>Your access code for the Court Packet from {escape(pro_name)}:</p><p style=\"font-size:28px;letter-spacing:6px;font-weight:bold\">{code}</p>"
-                         "<p>Enter it on the packet page that was sent to you in a separate email. The code stays valid until the packet expires.</p>")
+                         "<p>Enter it on the packet page that was sent to you in a separate email. The code stays valid until the packet expires.</p>", case_id=p["report_id"], kind="court_packet_code")
 
     async def record_response(self, p: dict, body: RespondIn, by: str | None = None, by_name: str | None = None) -> dict:
         if body.kind not in ("acknowledged", "clarification"):
@@ -239,7 +240,7 @@ class PacketService:
             cause = f" for Cause No. {escape(p['cause_number'])}" if p.get("cause_number") else ""
             await self._mail(pro["email"], f"Court response: {p['judge_name']} {label} your packet",
                              f"<p>Hi {escape(pro.get('name', ''))},</p><p><strong>{escape(p['judge_name'])}</strong> ({escape(p.get('court_name') or 'court')}) {label} the Court Packet{cause}.</p>{quote}"
-                             f'<p><a href="{self.app_url()}/joint/{p["report_id"]}" style="color:#5B2A86">Open the case</a></p>')
+                             f'<p><a href="{self.app_url()}/joint/{p["report_id"]}" style="color:#5B2A86">Open the case</a></p>', case_id=p["report_id"], kind="court_response", to_role="Professional")
         return resp
 
     async def transmittal(self, p: dict, user: dict) -> bytes:
