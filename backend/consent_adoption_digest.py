@@ -384,7 +384,7 @@ async def _mirror_to_slack(
             f"Emailed to {admin_email} — aggregate only, no verbatim answers."
         ),
     }
-    import asyncio, urllib.request, json as _json
+    import urllib.request, json as _json
     def _post():
         req = urllib.request.Request(
             webhook,

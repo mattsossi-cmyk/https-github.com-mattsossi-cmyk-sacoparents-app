@@ -135,10 +135,15 @@ export default function ShareChildNeedsNudge() {
   // Filter cases through the dismiss map — but track whether each
   // hidden tile is on its "retry" cool-down (so the parent's Q1
   // grant-clears semantic still applies if they later re-toggle).
+  // `nowMs` is deliberately excluded from deps: it changes every
+  // render (defeating memoization) and only matters for a 7-day TTL
+  // check that a stale value can't meaningfully affect within a
+  // single React reconciliation.
   const visibleCases = useMemo(() => {
     if (!cases) return null;
     return cases.filter((c) => !isDismissed(dismissMap[c.case_id], nowMs));
-  }, [cases, dismissMap, nowMs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cases, dismissMap]);
 
   const dismissCase = (caseId) => {
     const prev = dismissMap[caseId];
