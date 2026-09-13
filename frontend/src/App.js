@@ -76,6 +76,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminSurveys from "@/pages/AdminSurveys";
 import AdminInsights from "@/pages/AdminInsights";
+import AdminNudgeCopy from "@/pages/AdminNudgeCopy";
 import PostEventSurvey from "@/pages/PostEventSurvey";
 import InviteAccept from "@/pages/InviteAccept";
 import ForgotPassword from "@/pages/ForgotPassword";
@@ -587,6 +588,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <AdminInsights />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/nudge-copy"
+          element={
+            <ProtectedRoute>
+              <AdminNudgeCopy />
             </ProtectedRoute>
           }
         />

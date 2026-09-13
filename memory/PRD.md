@@ -27,6 +27,47 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-13 — Iter189d · Copy Editor UI + Test-Recipient Digest
+
+**🟢 P1 — `/admin/nudge-copy` editor page**
+Two textareas (headline + subhead) with live character counters
+that mirror the Pydantic 6-120 / 10-600 guardrails; a "Note" field
+for the audit trail; and a live-preview card on the right that
+renders the nudge exactly as parents see it on the SNCv2 report
+page. Save writes via `POST /api/admin/nudge-copy/child-needs-share`
+and immediately reflects in the preview + on the "showing defaults"
+vs "custom override active" badge. Revert-to-defaults button calls
+`.../reset` with a confirm dialog.
+
+- New route: `/admin/nudge-copy` (React Router, protected)
+- New component: `/app/frontend/src/pages/AdminNudgeCopy.jsx`
+- Wired from AdminDashboard tile via a new "Edit nudge copy" link
+  and the friction copy at the bottom of the consent tile.
+- Uses only the existing endpoints from iter189c — zero new backend
+  routes.
+
+**🟢 P1 — Test-recipient digest send**
+`POST /api/admin/consent-digest/send-test?to_email=you@example.com`
+sends the exact Monday HTML to any email address with a `[TEST]`
+subject prefix and a yellow banner injected at the top of the
+body so it can't be mistaken for a real send. Never touches the
+Monday dedupe row — verified by pytest that no
+`consent_adoption_digest_sends` insert happens.
+
+- Rebuilt via the same `build_admin_consent_adoption_digest_html`
+  helper so preview / test / real send stay in lockstep.
+- Rejects malformed recipients (regex + Pydantic-style validation)
+  before hitting the mailer.
+- Frontend surface on the consent tile — small email input +
+  "Send test" button that fires the endpoint and toasts the result.
+
+**🧪 Pytest** `tests/test_iter189d_send_test_digest.py`
+- 4 tests: admin gate (401/403), invalid email rejection (422),
+  valid recipient accepted (200/502/503 depending on mailer avail),
+  and the crucial regression: **no dedupe row is written by the
+  test send** — Monday's real digest is never blocked.
+- Combined suite (`test_iter189_*` × 4 files) = 26/26 pass in ~11s.
+
 ### 2026-09-13 — Iter189c · Digest Preview + Weekly Sparkline + Copy Config + Slack Mirror
 
 **🟢 P1 — In-browser digest preview**

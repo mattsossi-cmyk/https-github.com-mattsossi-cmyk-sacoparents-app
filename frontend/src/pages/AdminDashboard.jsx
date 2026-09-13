@@ -16,6 +16,7 @@ import {
   Handshake,
   X,
   Eye,
+  Pencil,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
@@ -77,6 +78,77 @@ function Stat({ icon: Icon, label, value, hint, accent = "purple", testid }) {
       </div>
       <div className="font-serif text-3xl text-[#1A1330] leading-none">{value}</div>
       {hint && <div className="text-xs text-[#857E9C] mt-1.5">{hint}</div>}
+    </div>
+  );
+}
+
+/**
+ * Send-test digest input — POSTs to /admin/consent-digest/send-test
+ * with an arbitrary recipient. Backend prepends [TEST] to subject +
+ * a banner in the HTML so it's never confused with a real send.
+ */
+function SendTestDigestForm() {
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const looksValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+
+  const handleSend = async () => {
+    setSending(true);
+    try {
+      const r = await api.post(
+        "/admin/consent-digest/send-test",
+        null,
+        { params: { to_email: email } },
+      );
+      toast.success(
+        `Test digest sent to ${r.data?.to_email || email}. Check your inbox.`,
+      );
+      setEmail("");
+    } catch (err) {
+      logError("send-test digest failed", err);
+      const msg =
+        err?.response?.data?.detail ||
+        "Could not send the test digest right now.";
+      toast.error(typeof msg === "string" ? msg : "Send failed.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div
+      className="mt-4 rounded-2xl border border-[#E5E0EE] bg-[#FCFAFF] p-4"
+      data-testid="admin-consent-send-test"
+    >
+      <div className="eyebrow mb-2 flex items-center gap-2">
+        <Send size={11} /> Send test digest to any inbox
+      </div>
+      <p className="text-[11px] text-[#857E9C] leading-relaxed mb-2">
+        Ships the exact Monday HTML (with a "TEST" banner) to a
+        one-off address so you can eyeball the render on your phone.
+        Bypasses the Monday dedupe — never affects the real send.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="flex-1 rounded-full border border-[#D6CFE8] bg-white px-4 py-2 text-sm text-[#1A1330] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
+          data-testid="admin-consent-send-test-email"
+        />
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={!looksValid || sending}
+          data-testid="admin-consent-send-test-submit"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-[#3D1A78] text-white text-sm font-semibold hover:bg-[#2B0F60] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Send size={13} />
+          {sending ? "Sending…" : "Send test"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -329,7 +401,7 @@ export default function AdminDashboard() {
         {/* Consent adoption — Child-Needs share (iter189) */}
         {CN && (
           <div className="card-soft p-6" data-testid="admin-consent-tile">
-            <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <div>
                 <div className="eyebrow flex items-center gap-2">
                   <Handshake size={12} className="text-[#3D1A78]" />
@@ -343,16 +415,26 @@ export default function AdminDashboard() {
                   aggregate only, never names or verbatim answers.
                 </p>
               </div>
-              <a
-                href={`${process.env.REACT_APP_BACKEND_URL}/api/admin/consent-digest/preview.html`}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="admin-consent-preview-digest-link"
-                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#3D1A78]/25 text-xs font-semibold text-[#3D1A78] hover:bg-[#F5EFFB]"
-              >
-                <Eye size={12} />
-                Preview digest
-              </a>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/admin/nudge-copy"
+                  data-testid="admin-consent-edit-copy-link"
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#3D1A78]/25 text-xs font-semibold text-[#3D1A78] hover:bg-[#F5EFFB]"
+                >
+                  <Pencil size={12} />
+                  Edit nudge copy
+                </Link>
+                <a
+                  href={`${process.env.REACT_APP_BACKEND_URL}/api/admin/consent-digest/preview.html`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="admin-consent-preview-digest-link"
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#3D1A78]/25 text-xs font-semibold text-[#3D1A78] hover:bg-[#F5EFFB]"
+                >
+                  <Eye size={12} />
+                  Preview digest
+                </a>
+              </div>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div
@@ -416,14 +498,16 @@ export default function AdminDashboard() {
               <div className="eyebrow mb-1">Last 4 weeks · dismiss trend</div>
               <DismissSparkline series={nudge.weekly_4w} />
             </div>
+            <SendTestDigestForm />
             <p className="text-[11px] text-[#857E9C] mt-4 italic">
               Rising permanent-hides with flat opt-ins means the retry
-              cadence isn't converting hesitant parents. Consider
-              softening the nudge copy via{" "}
-              <code className="not-italic bg-[#F5EFFB] px-1.5 py-0.5 rounded text-[10px]">
-                POST /api/admin/nudge-copy/child-needs-share
-              </code>
-              .
+              cadence isn't converting hesitant parents.{" "}
+              <Link
+                to="/admin/nudge-copy"
+                className="text-[#3D1A78] font-semibold hover:underline"
+              >
+                Try softer copy →
+              </Link>
             </p>
           </div>
         )}

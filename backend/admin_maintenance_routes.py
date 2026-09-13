@@ -17,6 +17,11 @@ Currently exposes:
         Renders the digest HTML (exactly what would land in the
         Monday inbox) against CURRENT live consent stats. Does NOT
         touch the mailer or write a dedupe row — pure preview.
+  * POST /admin/consent-digest/send-test?to_email=you@example.com
+        Actually SENDS the digest to an arbitrary recipient with a
+        `[TEST]` subject prefix + banner. Bypasses the Monday dedupe
+        row so it doesn't affect the real send. Use for eyeballing
+        the mobile inbox render before Monday.
 
 Gating uses the existing `require_admin` dependency from
 `analytics_routes` so we don't introduce a second admin taxonomy.
@@ -154,3 +159,114 @@ async def admin_preview_consent_digest_html(
         '</div>'
     )
     return HTMLResponse(banner + html, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/admin/consent-digest/send-test")
+async def admin_send_test_consent_digest(
+    request: Request,
+    to_email: str,
+    _admin: UserPublic = Depends(require_admin),
+):
+    """Send the Monday digest to an arbitrary email address (typically
+    the admin's personal inbox on their phone) so they can eyeball
+    the mobile render before Monday.
+
+    Never touches the Monday dedupe row — this is a one-off
+    send-and-forget. Subject prefixed with `[TEST]` and body carries
+    a big banner so it can't be mistaken for a real digest.
+
+    Admin gated. Recipient email must look like a real address —
+    same guard we use for real digest recipients.
+    """
+    import re
+    from datetime import timedelta
+
+    from consent_adoption_digest import (
+        _admin_console_url,
+        _compute_consent_stats,
+        _load_all_cases,
+        _now_utc,
+        _week_start,
+    )
+    from email_service import (
+        EmailNotConfigured,
+        EmailSendError,
+        _branded_html,
+        _send,
+        build_admin_consent_adoption_digest_html,
+    )
+
+    email = (to_email or "").strip()
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        raise HTTPException(
+            status_code=422, detail="Recipient email is not a valid address.",
+        )
+
+    now = _now_utc()
+    cases = await _load_all_cases(request.app.state.db)
+    stats = _compute_consent_stats(cases, now - timedelta(days=7))
+    week_start = _week_start(now)
+    real_subject, real_html, real_plain = build_admin_consent_adoption_digest_html(
+        stats=stats,
+        week_start=week_start,
+        console_url=_admin_console_url(),
+    )
+    # Prepend a bright TEST banner to the HTML body inside the branded
+    # shell. We rebuild the branded HTML via `_branded_html` so the
+    # banner lives INSIDE the outer layout (not outside), and screenshots
+    # can't crop it away.
+    test_banner_html = (
+        '<div style="background:#FFF3D6;border:2px solid #E5B84E;'
+        'color:#7A4D0C;padding:14px 18px;border-radius:12px;'
+        'font-size:13px;line-height:1.5;margin:0 0 20px 0;">'
+        '<strong>[TEST]</strong> This is a preview of the SA CoParents '
+        'consent-adoption Monday digest sent by the app owner. It contains '
+        'aggregate telemetry only — no parent names or verbatim answers. '
+        'You can safely delete this email.'
+        '</div>'
+    )
+    # Extract the body_html section from build_admin_...html by rebuilding
+    # it via the same helper. To keep this simple, we prepend the banner
+    # to the final `html` string. `_branded_html`'s output already wraps
+    # everything in a table cell — the banner ends up first-child of the
+    # body which is visually correct on every mail client we care about.
+    html = real_html.replace("<body", "<body", 1)  # noop, keep as-is
+    # Insert banner right after the first `<body>` tag so it lands at the
+    # top of the visible email content. Fall back to a plain prefix if
+    # the `<body>` marker isn't found (shouldn't happen but defensive).
+    body_marker = "<body"
+    idx = html.lower().find(body_marker)
+    if idx != -1:
+        # Find the end of the `<body ...>` tag.
+        close = html.find(">", idx)
+        if close != -1:
+            html = html[: close + 1] + test_banner_html + html[close + 1 :]
+        else:
+            html = test_banner_html + html
+    else:
+        html = test_banner_html + html
+
+    plain = (
+        "[TEST] SA CoParents · Consent-adoption Monday digest preview.\n"
+        "Aggregate telemetry only — no parent names or verbatim answers.\n"
+        "You can safely delete this email.\n\n"
+        f"{real_plain}"
+    )
+    subject = f"[TEST] {real_subject}"
+
+    try:
+        _send(
+            to_email=email,
+            subject=subject,
+            html=html,
+            text=plain,
+            failure_message="Could not send the test digest right now.",
+        )
+    except EmailNotConfigured as exc:
+        raise HTTPException(
+            status_code=503, detail="Email service is not configured.",
+        ) from exc
+    except EmailSendError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return {"ok": True, "to_email": email, "week_start": week_start}
