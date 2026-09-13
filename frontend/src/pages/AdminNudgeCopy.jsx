@@ -19,7 +19,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
-import { Users, RotateCcw, Save, ShieldCheck, History, CornerUpLeft } from "lucide-react";
+import { Users, RotateCcw, Save, ShieldCheck, History, CornerUpLeft, Check, X as XIcon } from "lucide-react";
 
 const HEADLINE_MIN = 6;
 const HEADLINE_MAX = 120;
@@ -82,6 +82,12 @@ export default function AdminNudgeCopy() {
   const [forbidden, setForbidden] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  // Two-step Restore: clicking a history row's Restore button sets
+  // `pendingRestore = { headline, subhead, reason }`. That surfaces
+  // a diff card above the editor showing current (dimmed) vs incoming
+  // (bold), and the admin explicitly clicks Apply to load into the
+  // textareas. Prevents accidental clobbering of unsaved edits.
+  const [pendingRestore, setPendingRestore] = useState(null);
 
   const load = () =>
     api
@@ -198,16 +204,35 @@ export default function AdminNudgeCopy() {
       suggested,
     );
     if (reason === null) return; // Cancel → no state change
-    setHeadline(entry.headline || "");
-    setSubhead(entry.subhead || "");
-    setNote((reason || "").trim() || entry.note || suggested);
+    // Stage the restore so the admin sees a diff (current vs incoming)
+    // before the textareas are clobbered. They confirm via Apply.
+    setPendingRestore({
+      headline: entry.headline || "",
+      subhead: entry.subhead || "",
+      reason: (reason || "").trim() || entry.note || suggested,
+    });
     toast.info(
-      "Loaded prior version into the editor — click Save to activate.",
+      "Loaded prior version — review the diff below and click Apply.",
     );
-    // Scroll editor into view so it's obvious the textareas changed.
+    // Scroll editor into view so the diff card is obvious.
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (_) { /* ignore */ }
+  };
+
+  const applyPendingRestore = () => {
+    if (!pendingRestore) return;
+    setHeadline(pendingRestore.headline);
+    setSubhead(pendingRestore.subhead);
+    setNote(pendingRestore.reason);
+    setPendingRestore(null);
+    toast.success(
+      "Loaded into the editor. Click Save to make it live for parents.",
+    );
+  };
+
+  const cancelPendingRestore = () => {
+    setPendingRestore(null);
   };
 
   if (loading) return null;
@@ -264,6 +289,96 @@ export default function AdminNudgeCopy() {
             </p>
           </div>
         </div>
+
+        {/* Diff card — visible only while a Restore is pending. Lets
+            the admin eyeball the delta before clobbering unsaved edits. */}
+        {pendingRestore && (
+          <div
+            className="card-soft border-2 border-[#3D1A78] p-6"
+            data-testid="admin-nudge-copy-diff"
+            role="dialog"
+            aria-labelledby="admin-nudge-copy-diff-heading"
+          >
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+              <div>
+                <div className="eyebrow text-[#3D1A78]">Restore preview</div>
+                <h2
+                  id="admin-nudge-copy-diff-heading"
+                  className="font-serif text-xl text-[#1A1330] mt-1"
+                >
+                  Compare before you apply
+                </h2>
+                <p className="text-xs text-[#857E9C] mt-1">
+                  Grey = what's in the editor now. Purple = incoming version.
+                  Nothing is saved until you click Apply <em>then</em> Save.
+                </p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={cancelPendingRestore}
+                  data-testid="admin-nudge-copy-diff-cancel"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-[#3D1A78]/25 text-[#3D1A78] text-sm font-semibold hover:bg-[#F5EFFB]"
+                >
+                  <XIcon size={14} />
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={applyPendingRestore}
+                  data-testid="admin-nudge-copy-diff-apply"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#3D1A78] text-white text-sm font-semibold hover:bg-[#2B0F60]"
+                >
+                  <Check size={14} />
+                  Apply to editor
+                </button>
+              </div>
+            </div>
+            {/* Headline diff */}
+            <div className="grid sm:grid-cols-2 gap-3 sm:gap-5">
+              <div
+                className="rounded-2xl bg-[#F6F4FA] border border-[#EEE8F7] p-4"
+                data-testid="admin-nudge-copy-diff-current"
+              >
+                <div className="eyebrow mb-2 text-[#857E9C]">
+                  Current headline
+                </div>
+                <p className="text-sm text-[#857E9C] line-through decoration-[#B6A3D6] leading-relaxed">
+                  {headline || <span className="italic">(empty)</span>}
+                </p>
+                <div className="eyebrow mt-4 mb-2 text-[#857E9C]">
+                  Current subhead
+                </div>
+                <p className="text-[13px] text-[#857E9C] line-through decoration-[#B6A3D6] leading-relaxed whitespace-pre-line">
+                  {subhead || <span className="italic">(empty)</span>}
+                </p>
+              </div>
+              <div
+                className="rounded-2xl bg-[#F5EFFB] border-2 border-[#3D1A78] p-4"
+                data-testid="admin-nudge-copy-diff-incoming"
+              >
+                <div className="eyebrow mb-2 text-[#3D1A78]">
+                  Incoming headline
+                </div>
+                <p className="text-sm font-bold text-[#1A1330] leading-relaxed">
+                  {pendingRestore.headline}
+                </p>
+                <div className="eyebrow mt-4 mb-2 text-[#3D1A78]">
+                  Incoming subhead
+                </div>
+                <p className="text-[13px] font-semibold text-[#1A1330] leading-relaxed whitespace-pre-line">
+                  {pendingRestore.subhead}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 text-[11px] text-[#857E9C] italic">
+              Restore note will be pre-filled:{" "}
+              <span className="text-[#3D1A78] font-semibold not-italic">
+                {pendingRestore.reason}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Editor */}

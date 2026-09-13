@@ -27,6 +27,40 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-13 — Iter189g · Diff Highlighter + Auto-Open Preview
+
+**🟢 P2 — Two-step Restore with visual diff card**
+Clicking Restore on any history row no longer clobbers the
+editor immediately. Instead we surface a bordered "Restore
+preview · Compare before you apply" card between the page
+header and the editor grid:
+  * **Current side** (grey, strikethrough) — what's in the editor now
+  * **Incoming side** (bold, thick purple border) — the restored version
+  * **Apply** loads the values into the textareas + pre-fills the
+    Note with the audit reason
+  * **Cancel** dismisses the diff card, editor state untouched
+  * Restore note preview shown below the diff so admins see the
+    exact string that'll land on the next Save's audit trail
+
+- `pendingRestore` state in `AdminNudgeCopy.jsx` gates the swap.
+- `applyPendingRestore` + `cancelPendingRestore` handlers make
+  the intent explicit — accidental clicks no longer discard
+  unsaved edits.
+- Verified end-to-end via Playwright: diff card renders, all 4
+  subcomponents (`current`, `incoming`, `cancel`, `apply`)
+  visible with proper `data-testid` hooks.
+
+**🟢 P2 — Auto-open `/preview.html` after send-test**
+After a successful `POST /admin/consent-digest/send-test`, we
+`window.open` the digest preview HTML in a new tab so admins
+can compare inbox render vs source side-by-side without a
+second click. Popup-blocker safe — falls back silently and
+the toast tells the admin the preview was opened. The "Preview
+digest" button on the tile is still one click away either way.
+
+- Frontend-only change in `AdminDashboard.jsx::SendTestDigestForm`.
+- Uses `noopener,noreferrer` for security.
+
 ### 2026-09-13 — Iter189f · Restore Note Prompt
 
 **🟢 P3 — Prompt-on-Restore for a clean audit trail**

@@ -102,9 +102,20 @@ function SendTestDigestForm() {
         { params: { to_email: email } },
       );
       toast.success(
-        `Test digest sent to ${r.data?.to_email || email}. Check your inbox.`,
+        `Test digest sent to ${r.data?.to_email || email}. Opened /preview.html for side-by-side compare.`,
       );
       setEmail("");
+      // Auto-open the preview so admin can compare inbox render vs
+      // source HTML side-by-side without a second click. If a popup
+      // blocker eats it, the toast tells them what happened + the
+      // "Preview digest" button on the tile is still one click away.
+      try {
+        window.open(
+          `${process.env.REACT_APP_BACKEND_URL}/api/admin/consent-digest/preview.html`,
+          "_blank",
+          "noopener,noreferrer",
+        );
+      } catch (_) { /* popup blocker — user can still click Preview digest */ }
     } catch (err) {
       logError("send-test digest failed", err);
       const msg =
