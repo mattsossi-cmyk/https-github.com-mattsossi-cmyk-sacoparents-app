@@ -536,3 +536,12 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 Code-quality refactor (build 2026-09-11.7)
 - court_packets.py: PacketService class + _pro_routes/_link_routes/_judge_routes (build_router complexity 106 -> trivial). court_workflow.py: _shared/_judge_routes/_pro_routes; build_status_summary -> HEADLINES table + line helpers; court_stage -> _stage_index guard clauses. pdf_report.py: _letterhead/_contact_line/_footnote shared. Tests: "is True/False" asserts -> truthiness; type hints added to test fns/fixtures; hardcoded build strings relaxed. Ruff F632/F821 clean. Full suite 249 passed; testing agent iteration_41 regression 24/24 + frontend smoke pass.
+
+## 2026-09-13 — Navigation/hierarchy pass (iteration 42, all tests passed)
+- Production confirmed LIVE at sacoparentsalign.com + www, build 2026-09-11.7 (same as preview at the time). New work below is NOT yet republished.
+- Homepage: hero "Better Information. Stronger Decisions. Brighter Futures."; "Two ways a case begins" (Option 1 not court-ordered: pro invites parents; Option 2 court-ordered: court invites pro); 6-step journey; separate 8-step "For Courts" pathway (#for-courts); nav trimmed.
+- Pro Dashboard: 4 primary tiles (Manage a Case | Invite Parents | Review Joint Reports | Court-Referred Cases) with live counts; Tools pill row; "Your Cases" (real only); Court-Referred Cases panel always visible; separate "Sample Reports" section; legacy tools (app link, joint agreement, FV contact, invite code) under collapsed "More tools". Circle diagram + Available Professionals removed from dashboard.
+- Judge portal: Court Cases cards with labeled fields (Assigned Professional, Current Status, Hearing Date (editable), Joint Assessment Status, AI Status Summary, Final Reports & Statements, Communications & Audit).
+- Hearing date: ReferralIn.hearing_date; PATCH /api/court-dashboard/referrals/{id}/hearing-date (judge only); shown in pro inbox; cron POST /api/cron/hearing-reminder (daily 8am CT, .emergent/crons.yml) emails pro + judge once, 7 days before, if not submitted. Tests: backend/tests/test_hearing_reminder.py.
+- Judge Garza invite: NOT sent — requires production admin login (owner-reset password unknown to agent) and the judge's email is not in this context. Owner: live Admin → Judges → Invite Judge.
+- Backlog: republish; live court check after publish; Communications / AI Case Summaries / Account-Org settings pages (linked tools currently omitted as they don't exist); C901 split of _pro_routes (optional).

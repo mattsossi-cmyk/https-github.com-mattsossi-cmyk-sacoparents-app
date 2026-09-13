@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-const EMPTY = { professional_id: "", cause_number: "", court_name: "", child_initials: "", parent_a_name: "", parent_a_email: "", parent_b_name: "", parent_b_email: "", note: "", subject: "communication" };
+const EMPTY = { professional_id: "", cause_number: "", court_name: "", child_initials: "", parent_a_name: "", parent_a_email: "", parent_b_name: "", parent_b_email: "", note: "", subject: "communication", hearing_date: "" };
 
 export function ReferCaseForm({ defaultCourt, onCreated }) {
   const [pros, setPros] = useState([]);
@@ -43,8 +43,9 @@ export function ReferCaseForm({ defaultCourt, onCreated }) {
         <Input placeholder="Parent A email (optional)" value={form.parent_a_email} onChange={set("parent_a_email")} data-testid="refer-parent-a-email" />
         <Input placeholder="Parent B name (optional)" value={form.parent_b_name} onChange={set("parent_b_name")} data-testid="refer-parent-b-name" />
         <Input placeholder="Parent B email (optional)" value={form.parent_b_email} onChange={set("parent_b_email")} data-testid="refer-parent-b-email" />
+        <label className="flex items-center gap-2 text-sm text-muted-foreground sm:col-span-2"><span className="shrink-0">Hearing date (optional — reminders go out one week before if not yet submitted)</span><Input type="date" value={form.hearing_date} onChange={set("hearing_date")} className="h-10 max-w-[200px]" data-testid="refer-hearing-date" /></label>
       </div>
-      <Textarea placeholder="Note to the professional (scope, deadlines, hearing date)…" value={form.note} onChange={set("note")} className="mt-3 min-h-[70px]" data-testid="refer-note" />
+      <Textarea placeholder="Note to the professional (scope, deadlines)…" value={form.note} onChange={set("note")} className="mt-3 min-h-[70px]" data-testid="refer-note" />
       <div className="mt-4">
         <div className="flex items-center justify-between gap-3"><p className="text-sm font-medium">Choose an approved professional *</p><Input placeholder="Search name, role, city…" value={q} onChange={(e) => setQ(e.target.value)} className="h-8 max-w-[220px] text-xs" data-testid="refer-pro-search" /></div>
         <ul className="mt-2 max-h-56 overflow-y-auto divide-y divide-border rounded-md border border-border" data-testid="refer-pro-list">

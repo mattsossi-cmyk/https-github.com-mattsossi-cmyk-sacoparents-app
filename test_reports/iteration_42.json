@@ -1,0 +1,27 @@
+{
+  "summary": "Iteration 42: Verified homepage restructure, Professional dashboard restructure, and Judge portal + hearing-date feature. Backend: pytest tests/test_hearing_reminder.py + tests/test_court_workflow.py = 11/11 PASSED against preview URL (6.7s). Covers hearing_date store/visibility to pro & judge, invalid date -> 400, judge can PATCH, pro PATCH -> 403, run_hearing_reminders emails both pro + judge once (deduped via hearing_reminder_sent) and skips submitted, cron endpoint /api/cron/hearing-reminder -> 200 with Bearer WEBHOOK_CRON_SECRET & 401 without, plus full court workflow (referral -> accept -> court-case -> statement (custody-language 400) -> submit-to-court (attest false 400 / true -> version 1 sha256 frozen), version 2 supersedes v1, status_summary current_status 'Ready for court review' + outdated flag after acknowledge, decline w/o reason 400, parent blocked 403). Frontend Playwright: (a) Homepage / — H1 'Better Information. Stronger Decisions. Brighter Futures.', hero-journey present, four-steps-list has exactly 6 children, court-pathway-section rendered with 8 court-step-* items, nav-for-courts href=#for-courts, 0 console errors, no horizontal overflow at 390px. (b) Pro dashboard (approval.test.pro1@gmail.com) — primary-actions-grid + tile-manage-case/invite-parents/review-reports/court-cases all present, tile-court-cases-count='2 new', secondary-tools visible, joint-reports-section 'Your Cases' contains ZERO case-row-sample-* rows, sample-reports-section contains the SAMPLE case-row (case-row-sample-7f03bb5a-…), court-referrals-inbox visible, more-tools is a <details> element collapsed by default (open=null) and after expanding shows ext-linked-block, agreement-tools-grid, fv-contact-card, enter-code-card, circle-nav-section is NOT rendered, mobile 390 has no horizontal overflow. Only console error is the expected pre-login /api/auth/me 401. (c) Judge portal (judge.ui.preview@sacoparentsalign.com) — refer-case form contains data-testid='refer-hearing-date'; created referral 2026-CI-UI<rand> with Albert W. Smith and hearing date; court-referral-row-<id> rendered with hearing-value-<id>='2026-09-23', court-field-pro-<id>/court-field-status-<id>/court-field-hearing-<id>/court-field-joint-<id>/court-field-submissions-<id>/court-field-audit-<id> labels present; hearing-edit-btn-<id> opens inline date input + Save/Cancel; save updates the value and re-renders. Pro inbox shows court-referral-hearing-<id> with 'Hearing 2026-10-20 · reminder one week before if not yet submitted' for the referral with a hearing date. Note: review request wrote testids as 'court-field-pro/status/hearing' but the implementation uses '-<id>' suffix (court-field-pro-<id>, etc.) — this is consistent across CourtCaseCard.jsx and works with prefix selectors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_hearing_reminder.py",
+    "/app/backend/tests/test_court_workflow.py",
+    "/app/test_reports/pytest/iter42.xml"
+  ],
+  "action_items": [
+    "(Carry-over from iter39/41, non-blocking) Seeded admin login mattsossi@bsossi.com / CoParents2026! still returns 401 — seed_admin not idempotently refreshing password_hash on boot."
+  ],
+  "critical_code_review_comments": [
+    "Homepage restructure clean: hero H1, hero-journey, four-steps-list (6 items), court-pathway-section with 8 court-step-* items, nav-for-courts anchor to #for-courts — all render with 0 console errors on desktop 1920 and mobile 390 with no horizontal overflow.",
+    "Dashboard PrimaryTiles + SecondaryTools + SampleReports separation is correct: sample rows are strictly in sample-reports-section, real cases in joint-reports-section, circle diagram removed, legacy tools collapsed under <details data-testid='more-tools'>.",
+    "CourtCaseCard.jsx uses id-suffixed testids (court-field-pro-<id>, hearing-value-<id>, hearing-edit-btn-<id>) — main-agent's review-request phrasing dropped the suffix; this is only a documentation ambiguity, the implementation is correct and consistent.",
+    "Hearing reminder dedup via court_referrals.hearing_reminder_sent — second run correctly returns 0 as verified by test_runner_emails_both_once_and_skips_submitted."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100% of exercised flows (homepage, pro dashboard, judge portal + hearing date edit, pro inbox hearing chip)"},
+  "test_credentials": "Used approval.test.pro1@gmail.com / TestPass2026! and judge.ui.preview@sacoparentsalign.com / testpass123 — both work. WEBHOOK_CRON_SECRET from backend/.env verified.",
+  "seed_data_creation": "Created 2 fresh referrals from judge.ui.preview: 2026-CI-UI<rand> (Albert W. Smith, hearing 2026-09-23) and 2026-CI-UI001 (Approval Test Pro, hearing 2026-10-20). The latter surfaces the court-referral-hearing chip in approval.test.pro1's inbox. Neither referral was accepted, so no downstream case pollution.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All iter42 acceptance criteria met. If you need to remove the two UI-created referrals, delete from court_referrals collection by cause_number prefix 2026-CI-UI. Admin-seed 401 is unchanged from iter39/41 and remains the only outstanding item.",
+  "rca of the issue": "n/a — no regressions detected."
+}

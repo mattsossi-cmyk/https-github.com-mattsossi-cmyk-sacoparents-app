@@ -30,3 +30,11 @@ crons:
     method: POST
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     enabled: true
+  - name: hearing-reminder
+    description: "Daily 8am Central reminder to the professional and judge one week before a court hearing when the referral has not yet been submitted"
+    cron: "0 8 * * *"
+    timezone: "America/Chicago"
+    endpoint: "{{BASE_URL}}/api/cron/hearing-reminder"
+    method: POST
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    enabled: true

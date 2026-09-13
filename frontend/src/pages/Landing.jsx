@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Users, ShieldAlert, HeartPulse, GraduationCap, Brain, Scale, MessagesSquare,
-  ArrowRight, FolderPlus, Mail, FileText, MessageCircle, Lock, CheckCircle2,
+  ArrowRight, FolderPlus, Mail, FileText, Lock, CheckCircle2, Eye, ClipboardCheck, Send, Gavel,
 } from "lucide-react";
 import { BrandLogo } from "@/components/Brand";
 import { SampleCard } from "@/components/SampleCard";
@@ -19,10 +19,17 @@ const PAGES = [
 ];
 
 const STEPS = [
-  { n: 1, key: "create", icon: FolderPlus, title: "Create a Case", body: "Choose the family and the issue you want to address." },
-  { n: 2, key: "invite", icon: Mail, title: "Invite Each Parent", body: "Each parent receives a private invitation and completes their reflection independently." },
-  { n: 3, key: "report", icon: FileText, title: "Generate Joint Alignment Report", body: "Align identifies shared understanding, differences in perspective, child needs, and subjects requiring discussion." },
-  { n: 4, key: "guide", icon: MessageCircle, title: "Guide the Conversation", body: "The professional uses the report to help move the parents from alignment toward agreement." },
+  { n: 1, key: "create", icon: FolderPlus, title: "Create or Receive a Case", body: "Open a case yourself, or accept a matter referred to you by a court." },
+  { n: 2, key: "invite", icon: Mail, title: "Invite Parents", body: "Each parent receives a private invitation and completes their assessment independently." },
+  { n: 3, key: "monitor", icon: Eye, title: "Monitor Assessments", body: "Track each parent's progress without seeing the other parent's answers." },
+  { n: 4, key: "report", icon: FileText, title: "Review Joint Reports", body: "Align organizes shared ground, differences, child needs, and subjects for discussion." },
+  { n: 5, key: "statement", icon: ClipboardCheck, title: "Prepare Professional Statement", body: "Record your neutral professional assessment alongside the Joint Report." },
+  { n: 6, key: "submit", icon: Send, title: "Share / Submit Authorized Reports", body: "Release authorized reports to parents, counsel, or the court — frozen, timestamped, and logged." },
+];
+
+const COURT_STEPS = [
+  "Court Refers Case", "Professional Accepts", "Professional Invites Parents", "Parents Complete Assessments",
+  "Joint Report Created", "Professional Reviews", "Professional Statement Created", "Professional Sends Reports to Court",
 ];
 
 const SUBJECTS = [
@@ -52,10 +59,9 @@ export default function Landing() {
         </div>
         <nav className="hidden lg:flex items-center gap-6 text-sm font-medium whitespace-nowrap ml-8" data-testid="main-nav">
           <a href="#how-it-works" className="text-muted-foreground hover:text-foreground" data-testid="nav-how-it-works">How It Works</a>
-          <a href="#report" className="text-muted-foreground hover:text-foreground" data-testid="nav-joint-reports">The Report</a>
-          <a href="#subjects" className="text-muted-foreground hover:text-foreground" data-testid="nav-applications">Subjects</a>
+          <a href="#for-courts" className="text-muted-foreground hover:text-foreground" data-testid="nav-for-courts">For Courts</a>
           <Link to="/samples" className="text-muted-foreground hover:text-foreground" data-testid="nav-sample-report">Sample Reports</Link>
-          <Link to="/resources" className="text-muted-foreground hover:text-foreground" data-testid="nav-resources">Professional Resources</Link>
+          <Link to="/resources" className="text-muted-foreground hover:text-foreground" data-testid="nav-resources">Resources</Link>
           <Link to="/verify" className="text-muted-foreground hover:text-foreground" data-testid="nav-verify">Verify a Professional</Link>
         </nav>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -79,13 +85,13 @@ export default function Landing() {
           />
         </div>
         <div className="md:order-last min-w-0">
-          <p className="text-sm uppercase tracking-widest text-primary font-bold mb-4" data-testid="hero-eyebrow">SA CoParents Align</p>
+          <p className="text-sm uppercase tracking-widest text-primary font-bold mb-4" data-testid="hero-eyebrow">SA CoParents Align · The professional side of the SA CoParents system</p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-purple leading-tight" data-testid="hero-heading">
-            Professional Tools for Child-Focused Alignment
+            Better Information. Stronger Decisions. Brighter Futures.
           </h1>
           <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-xl" data-testid="hero-subtext">
-            Create a case, invite each parent to reflect privately, and receive a neutral Joint Alignment Report
-            that shows where they agree, where they differ, and what their child needs next.
+            A professional platform that turns individual parent assessments into organized joint reports,
+            professional insights, and child-focused pathways forward.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row sm:items-start gap-4">
             <Link to="/auth?mode=register" data-testid="hero-create-account-link" className="group">
@@ -102,18 +108,19 @@ export default function Landing() {
             Have an invitation? <Link to="/auth" className="text-primary font-medium hover:underline" data-testid="hero-accept-link">Accept Invitation</Link>
           </p>
           <p className="mt-6 text-sm font-semibold tracking-wide text-brand-purple" data-testid="hero-journey">
-            Create Case → Invite Parents → Compare Perspectives → Build Alignment → Work Toward Agreement
+            Create or Receive a Case → Invite Parents → Monitor Assessments → Review Joint Reports → Prepare Professional Statement → Share/Submit Authorized Reports
           </p>
         </div>
       </section>
 
       <section id="how-it-works" className="bg-brand-purple text-white py-16" data-testid="four-steps">
         <div className="max-w-6xl mx-auto px-6">
-          <p className="text-xs uppercase tracking-widest font-bold text-white/70">How it works</p>
-          <h2 className="mt-2 text-base md:text-lg text-white/90 max-w-2xl" data-testid="four-steps-heading">
-            The first professional journey, in four steps.
+          <p className="text-xs uppercase tracking-widest font-bold text-white/70">How it works · Two ways a case begins</p>
+          <h2 className="mt-2 text-base md:text-lg text-white/90 max-w-3xl" data-testid="four-steps-heading">
+            <span className="font-semibold">Option 1 — Not court-ordered:</span> the professional opens the case and invites both parents.{" "}
+            <span className="font-semibold">Option 2 — Court-ordered:</span> the court sends the professional an invitation to create the reports. Either way, the same six steps follow.
           </h2>
-          <ol className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4" data-testid="four-steps-list">
+          <ol className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="four-steps-list">
             {STEPS.map((s, i) => (
               <li key={s.key} className="relative bg-white/10 rounded-xl p-5 border border-white/15 hover:bg-white/15 transition-colors duration-200" data-testid={`step-${s.key}`}>
                 <div className="flex items-center justify-between">
@@ -122,7 +129,7 @@ export default function Landing() {
                 </div>
                 <p className="mt-4 text-sm font-extrabold uppercase tracking-wide">{s.title}</p>
                 <p className="mt-2 text-sm text-white/85 leading-relaxed">{s.body}</p>
-                {i < STEPS.length - 1 && (
+                {i < STEPS.length - 1 && i % 3 !== 2 && (
                   <ArrowRight className="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60 z-10" />
                 )}
               </li>
@@ -136,6 +143,25 @@ export default function Landing() {
               <Button size="lg" variant="outline" className="bg-transparent text-white border-white/50 hover:bg-white/10 hover:text-white" data-testid="steps-samples-btn">See a Sample Report</Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section id="for-courts" className="border-b border-border bg-white py-16" data-testid="court-pathway-section">
+        <div className="max-w-6xl mx-auto px-6">
+          <p className="text-xs uppercase tracking-widest font-bold text-brand-purple flex items-center gap-2"><Gavel className="h-4 w-4" /> For court-referred cases</p>
+          <h2 className="mt-2 text-base md:text-lg text-muted-foreground max-w-2xl" data-testid="court-pathway-heading">
+            A separate, procedural pathway. The professional is the bridge between the court and the parents; judges receive only authorized, frozen submissions.
+          </h2>
+          <ol className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="court-pathway-list">
+            {COURT_STEPS.map((t, i) => (
+              <li key={t} className="relative rounded-lg border border-brand-purple/25 bg-secondary/40 px-4 py-3 text-sm font-semibold text-brand-purple" data-testid={`court-step-${i + 1}`}>
+                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-purple text-xs text-white">{i + 1}</span>{t}
+              </li>
+            ))}
+          </ol>
+          <p className="mt-6 text-sm text-muted-foreground" data-testid="court-pathway-note">
+            Court accounts are invitation-only. <Link to="/auth?mode=register&court=1" className="text-primary font-medium hover:underline" data-testid="court-register-link">Register a court account</Link> · <Link to="/verify" className="text-primary font-medium hover:underline">Verify a professional</Link>
+          </p>
         </div>
       </section>
 

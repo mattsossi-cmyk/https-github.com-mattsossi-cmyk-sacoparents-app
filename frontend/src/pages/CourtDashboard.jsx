@@ -7,8 +7,7 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { PacketViewer } from "@/components/PacketViewer";
 import { ReferCaseForm } from "@/components/ReferCaseForm";
-import { CaseProgress } from "@/components/CaseProgress";
-import { CourtStatusSummary } from "@/components/CourtStatusSummary";
+import { CourtCaseCard } from "@/components/CourtCaseCard";
 
 const STATUS = {
   sent: ["New", "bg-align-yellow/30 text-yellow-900"],
@@ -62,17 +61,11 @@ export default function CourtDashboard() {
             {data?.approved && showRefer && <div className="mt-6"><ReferCaseForm defaultCourt={user?.profile?.organization} onCreated={() => { setShowRefer(false); load(); }} /></div>}
             {data?.approved && refs.length > 0 && (
               <section className="mt-8" data-testid="court-referrals-section">
-                <h2 className="text-lg font-semibold">Your referrals</h2>
+                <h2 className="text-lg font-semibold">Court Cases</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Each case shows the assigned professional, current status, hearing date, AI status summary, and final submissions.</p>
                 <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-white">
                   {refs.map((x) => (
-                    <li key={x.id} className="px-5 py-4" data-testid={`court-referral-row-${x.id}`}>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-semibold">Cause No. {x.cause_number} <span className="ml-2 text-sm font-normal text-muted-foreground">→ {x.professional_name}{x.case_code ? ` · ${x.case_code}` : ""}</span></p>
-                        <span className="text-xs text-muted-foreground">{x.status === "declined" ? `Declined: ${x.decline_reason}` : `referred ${x.created_at?.slice(0, 10)}`}</span>
-                      </div>
-                      <CaseProgress stage={x.stage} />
-                      <CourtStatusSummary referralId={x.id} summary={x.status_summary} onRefreshed={(s) => setRefs((rs) => rs.map((y) => (y.id === x.id ? { ...y, status_summary: s } : y)))} />
-                    </li>
+                    <CourtCaseCard key={x.id} x={x} packets={data.packets} onOpenPacket={open} onUpdate={(y) => setRefs((rs) => rs.map((r) => (r.id === y.id ? y : r)))} />
                   ))}
                 </ul>
               </section>

@@ -30,7 +30,7 @@ from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_pay
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
 from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
-from court_workflow import court_stage
+from court_workflow import court_stage, run_hearing_reminders
 from urllib.parse import quote
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, build_session_prep_pdf, verify_qr_png
 from complete_engine import build_complete_report
@@ -2797,6 +2797,16 @@ async def cron_follow_up_reminder(request: Request):
     if ack.get("duplicate"):
         return ack
     asyncio.create_task(run_follow_up_reminders())
+    return ack
+
+
+@api.post("/cron/hearing-reminder")
+async def cron_hearing_reminder(request: Request):
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    ack = await _cron_accept(request, "hearing-reminder")
+    if ack.get("duplicate"):
+        return ack
+    asyncio.create_task(run_hearing_reminders(db, send_email, app_url, EMAIL_FROM_NAME, logger))
     return ack
 
 

@@ -3,7 +3,7 @@ import hashlib
 import re
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from html import escape
 
 from bson import Binary
@@ -61,6 +61,21 @@ class ReferralIn(BaseModel):
     parent_b_name: str = ""
     parent_b_email: str = ""
     note: str = ""
+    hearing_date: str = ""
+
+
+class HearingDateIn(BaseModel):
+    hearing_date: str = ""
+
+
+def _valid_date(s: str) -> str:
+    s = (s or "").strip()
+    if not s:
+        return ""
+    try:
+        return date.fromisoformat(s).isoformat()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Hearing date must be YYYY-MM-DD")
 
 
 class DeclineIn(BaseModel):
@@ -165,7 +180,7 @@ def _shared(db, get_current_user, app_url, send_email, email_from_name, logger, 
 
     def referral_public(x: dict) -> dict:
         return {k: x.get(k) for k in ("id", "judge_name", "judge_email", "court_name", "cause_number", "subject", "child_initials", "parent_a_name", "parent_a_email",
-                                      "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at")}
+                                      "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at", "hearing_date")}
 
     async def require_judge(user: dict) -> None:
         if user.get("role") != "judge":
@@ -212,7 +227,7 @@ def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, lo
                "court_name": body.court_name.strip()[:160] or (user.get("profile") or {}).get("organization", ""), "cause_number": body.cause_number.strip()[:80],
                "subject": body.subject or "communication", "child_initials": body.child_initials.strip()[:10], "parent_a_name": body.parent_a_name.strip()[:120],
                "parent_a_email": body.parent_a_email.strip().lower()[:200], "parent_b_name": body.parent_b_name.strip()[:120], "parent_b_email": body.parent_b_email.strip().lower()[:200],
-               "note": body.note.strip()[:2000], "professional_id": pro["_id"], "professional_name": pro.get("name", ""), "status": "pending", "created_at": _iso(now)}
+               "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "professional_id": pro["_id"], "professional_name": pro.get("name", ""), "status": "pending", "created_at": _iso(now)}
         await db.court_referrals.insert_one(ref)
         try:
             await send_email(to=pro["email"], subject=f"Court referral from {user.get('name', 'the court')} - Cause No. {ref['cause_number']}",
@@ -258,7 +273,66 @@ def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, lo
                                                "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Court"})
         return {**summary, "outdated": False}
 
+    @r.patch("/court-dashboard/referrals/{ref_id}/hearing-date")
+    async def set_hearing_date(ref_id: str, body: HearingDateIn, user=Depends(get_current_user)):
+        await require_judge(user)
+        x = await db.court_referrals.find_one({"id": ref_id, "judge_id": user["_id"]}, {"_id": 0})
+        if not x:
+            raise HTTPException(status_code=404, detail="Referral not found")
+        hd = _valid_date(body.hearing_date)
+        await db.court_referrals.update_one({"id": ref_id}, {"$set": {"hearing_date": hd}, "$unset": {"hearing_reminder_sent": ""}})
+        if x.get("case_id"):
+            await db.access_events.insert_one({"report_id": x["case_id"], "kind": "court", "action": f"Hearing date {'set to ' + hd if hd else 'cleared'} by {user.get('name', '')}",
+                                               "at": _iso(_now()), "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Court"})
+        pro = await db.users.find_one({"_id": x["professional_id"]}, {"name": 1, "email": 1})
+        if pro and pro.get("email") and hd:
+            try:
+                await send_email(to=pro["email"], subject=f"Hearing date set - Cause No. {x['cause_number']}",
+                                 html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                                       f"<p>Hi {escape(pro.get('name', ''))},</p><p>{escape(user.get('name', 'The court'))} has set the hearing for Cause No. {escape(x['cause_number'])} on <strong>{hd}</strong>. "
+                                       "Align will remind you one week before if the Joint Report and Professional Statement have not yet been submitted.</p>"
+                                       f'<p><a href="{app_url()}/dashboard#court-referrals" style="color:#5B2A86">Open Court-Referred Cases</a></p>'
+                                       f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>'))
+            except Exception as exc:
+                logger.warning("hearing date email failed: %s", exc)
+        return {"ok": True, "hearing_date": hd}
+
     return r
+
+
+async def run_hearing_reminders(db, send_email, app_url, email_from_name, logger, today: date | None = None) -> int:
+    """Email professional + judge 7 days before a hearing when the referral is not yet submitted."""
+    today = today or _now().date()
+    cutoff = (today + timedelta(days=7)).isoformat()
+    refs = await db.court_referrals.find({"hearing_date": {"$gt": "", "$lte": cutoff, "$gte": today.isoformat()}, "status": {"$in": ["pending", "accepted"]},
+                                          "hearing_reminder_sent": {"$in": [None]}}, {"_id": 0}).to_list(500)
+    sent = 0
+    for x in refs:
+        pro = await db.users.find_one({"_id": x["professional_id"]}, {"name": 1, "email": 1}) or {}
+        days = (date.fromisoformat(x["hearing_date"]) - today).days
+        cause = escape(x["cause_number"])
+        foot = f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>'
+        head = '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+        try:
+            if pro.get("email"):
+                await send_email(to=pro["email"], subject=f"Hearing in {days} days - Cause No. {x['cause_number']} not yet submitted",
+                                 html=(head + f"<p>Hi {escape(pro.get('name', ''))},</p><p>The hearing for Cause No. {cause} ({escape(x.get('court_name') or 'court')}) is on <strong>{x['hearing_date']}</strong>. "
+                                       "The Joint Alignment Report and Professional Assessment Statement have not yet been submitted to the court.</p>"
+                                       f'<p><a href="{app_url()}/dashboard#court-referrals" style="color:#5B2A86">Open Court-Referred Cases</a></p>' + foot))
+            await send_email(to=x["judge_email"], subject=f"Hearing in {days} days - Cause No. {x['cause_number']} awaiting submission",
+                             html=(head + f"<p>Your Honor,</p><p>The hearing for Cause No. {cause} is on <strong>{x['hearing_date']}</strong>. The referred professional, {escape(x.get('professional_name', ''))}, "
+                                   "has not yet submitted the Joint Alignment Report and Professional Assessment Statement. The professional has been reminded as well.</p>"
+                                   f'<p><a href="{app_url()}/court-dashboard" style="color:#5B2A86">Open Court Dashboard</a></p>' + foot))
+        except Exception as exc:
+            logger.warning("hearing reminder failed for %s: %s", x["id"], exc)
+            continue
+        now = _iso(_now())
+        await db.court_referrals.update_one({"id": x["id"]}, {"$set": {"hearing_reminder_sent": now}})
+        if x.get("case_id"):
+            await db.access_events.insert_one({"report_id": x["case_id"], "kind": "lifecycle", "action": f"Hearing reminder emailed (hearing {x['hearing_date']})",
+                                               "at": now, "by": "system", "by_name": "SA CoParents Align", "by_role": "System"})
+        sent += 1
+    return sent
 
 
 def _pro_routes(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h) -> APIRouter:

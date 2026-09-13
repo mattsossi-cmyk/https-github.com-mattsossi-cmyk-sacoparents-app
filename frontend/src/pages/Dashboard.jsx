@@ -4,7 +4,9 @@ import { toast } from "sonner";
 import { Trash2, CheckCircle2, Circle, Mail, Scale, ShieldAlert, Link2, Unlink } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
-import { CircleNav } from "@/components/CircleNav";
+import { PrimaryTiles } from "@/components/dashboard/PrimaryTiles";
+import { SecondaryTools } from "@/components/dashboard/SecondaryTools";
+import { SampleReports } from "@/components/dashboard/SampleReports";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +17,6 @@ import { AdminJudges } from "@/components/AdminJudges";
 import { CourtReferralsInbox } from "@/components/CourtReferralsInbox";
 import { ForcePasswordChange } from "@/components/ForcePasswordChange";
 import { ParentRequestStatus } from "@/components/ParentRequestStatus";
-import { ProfessionalsPreview } from "@/components/ProfessionalsPreview";
 import { CasesTable } from "@/components/CasesTable";
 import { UpcomingCheckIns } from "@/components/UpcomingCheckIns";
 import { ReferralInbox } from "@/components/ReferralInbox";
@@ -39,6 +40,23 @@ export default function Dashboard() {
   const [pendingPros, setPendingPros] = useState([]);
   const [declinedPros, setDeclinedPros] = useState([]);
   const [showDeclined, setShowDeclined] = useState(false);
+  const [courtRefs, setCourtRefs] = useState(null);
+  const loadCourtRefs = () => api.get("/professional/court-referrals").then((r) => setCourtRefs(r.data)).catch(() => setCourtRefs([]));
+  useEffect(() => { if (isPro) loadCourtRefs(); }, [isPro]);
+
+  const realCases = (joints || []).filter((j) => j.is_creator && !j.archived && !j.is_demo);
+  const readyCount = realCases.filter((j) => j.case_status === "READY_FOR_ALIGNMENT" || j.case_status === "REPORT_GENERATED").length;
+  const pendingReferrals = (courtRefs || []).filter((x) => x.status === "pending").length;
+
+  const closeCase = async (j) => {
+    const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);
+    if (note === null) return;
+    try {
+      await api.patch(`/joint/reports/${j.id}/close`, { closed: true, note });
+      toast.success("Case closed");
+      setJoints((prev) => prev.map((x) => (x.id === j.id ? { ...x, archived: true, closed_at: new Date().toISOString(), case_status: "CLOSED" } : x)));
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -215,134 +233,8 @@ export default function Dashboard() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background" data-testid="dashboard-page">
-      {user?.must_change_password && <ForcePasswordChange onDone={refresh} />}
-      <header className="bg-white border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-          <Link to="/" data-testid="dash-brand-link" className="min-w-0 shrink">
-            <BrandLogo />
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <span className="text-sm hidden sm:block" data-testid="user-email"><span className="font-medium" data-testid="user-name">{user?.name}</span>{user?.name ? <span className="text-muted-foreground"> · {user?.email}</span> : <span className="text-muted-foreground">{user?.email}</span>}</span>
-            {user?.credentials_verified && <span className="hidden sm:inline-flex"><VerifiedBadge /></span>}
-            <Button variant="outline" size="sm" onClick={async () => { await logout(); navigate("/"); }} data-testid="logout-btn">
-              Sign out
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-12 overflow-x-hidden">
-        <div>
-          <h1 className="text-4xl font-semibold" data-testid="dash-heading">Dashboard</h1>
-          <p className="text-muted-foreground mt-2" data-testid="dash-subtext">Your individual assessments come from sacoparentsapp.online. Invite your co-parent to explore one issue together.</p>
-        </div>
-
-        {isPro && (
-          <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="primary-actions-grid">
-            <Link to="/accept-invite" className="bg-white border-2 border-primary/40 rounded-lg p-5 hover:border-primary transition-colors" data-testid="action-accept-invite">
-              <p className="font-semibold">Accept a Parent Invitation</p>
-              <p className="text-xs text-muted-foreground mt-1">Review and accept secure invitations from parents.</p>
-            </Link>
-            <Link to="/matters" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-family-matters">
-              <p className="font-semibold">My Family Matters</p>
-              <p className="text-xs text-muted-foreground mt-1">Track participation and matter status.</p>
-            </Link>
-            <Link to="/joint/new" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-invite-parents">
-              <p className="font-semibold">Invite Parents to Participate</p>
-              <p className="text-xs text-muted-foreground mt-1">Create a family matter and invite both parents separately.</p>
-            </Link>
-            <a href="#joint-reports-list" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-joint-reports">
-              <p className="font-semibold">Joint Alignment Reports</p>
-              <p className="text-xs text-muted-foreground mt-1">Reports ready to generate or review.</p>
-            </a>
-            <Link to="/professionals" className="bg-white border border-border rounded-lg p-5 hover:border-primary/50 transition-colors" data-testid="action-professionals">
-              <p className="font-semibold">Professional Directory</p>
-              <p className="text-xs text-muted-foreground mt-1">Find colleagues and refer a case.</p>
-            </Link>
-          </section>
-        )}
-
-        {isPro && user?.approved === false && (
-          <div className="bg-align-yellow/10 border border-align-yellow/40 rounded-lg p-5 mb-6" data-testid="approval-pending-banner">
-            <p className="font-semibold">Your professional account is pending approval</p>
-            <p className="text-sm text-muted-foreground mt-1">SA CoParents reviews new professional accounts before they can create Professional Alignment Cases. You'll receive an email once approved.</p>
-          </div>
-        )}
-
-        {user?.role === "admin" && (
-          <section className="bg-white border-2 border-align-yellow/50 rounded-lg p-6 mb-6" data-testid="admin-approvals-section">
-            <h2 className="text-lg font-semibold">Pending Professional Approvals</h2>
-            {pendingPros.length === 0 ? (
-              <p className="text-sm text-muted-foreground mt-2" data-testid="admin-approvals-empty">No professionals awaiting approval.</p>
-            ) : (
-              <ul className="mt-3 space-y-2" data-testid="admin-approvals-list">
-                {pendingPros.map((p) => (
-                  <li key={p.id} className="flex items-start justify-between gap-3 border border-border rounded-md px-4 py-3" data-testid={`pending-pro-${p.id}`}>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.email}{p.profile?.phone ? ` · ${p.profile.phone}` : ""}</p>
-                      <dl className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-1 text-xs">
-                        <div data-testid={`pending-pro-role-${p.id}`}><dt className="text-muted-foreground">Role</dt><dd className="font-medium">{p.profile?.pro_role || "Not provided"}</dd></div>
-                        <div data-testid={`pending-pro-org-${p.id}`}><dt className="text-muted-foreground">Organization</dt><dd className="font-medium">{p.profile?.organization || "Not provided"}{(p.profile?.city || p.profile?.state) ? ` (${[p.profile.city, p.profile.state].filter(Boolean).join(", ")})` : ""}</dd></div>
-                        <div data-testid={`pending-pro-license-${p.id}`}><dt className="text-muted-foreground">License / Credential</dt><dd className="font-medium">{p.profile?.license_number || "Not provided"}</dd></div>
-                      </dl>
-                      {p.profile?.website && <a href={p.profile.website} target="_blank" rel="noreferrer" className="text-xs text-align-teal underline mt-1 inline-block" data-testid={`pending-pro-website-${p.id}`}>{p.profile.website}</a>}
-                      {p.created_at && <p className="text-[11px] text-muted-foreground mt-1">Registered {new Date(p.created_at).toLocaleDateString()}</p>}
-                    </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => approvePro(p.id)} data-testid={`approve-pro-btn-${p.id}`}>Approve</Button>
-                        <Button size="sm" variant="outline" className="text-destructive border-destructive/40" onClick={() => { setDeclining(declining === p.id ? null : p.id); setDeclineReason(""); }} data-testid={`decline-pro-btn-${p.id}`}>Decline</Button>
-                      </div>
-                      {declining === p.id && (
-                        <div className="flex gap-2 w-72" data-testid={`decline-form-${p.id}`}>
-                          <Input value={declineReason} onChange={(e) => setDeclineReason(e.target.value)} placeholder="Brief reason (sent to applicant)" maxLength={500} data-testid={`decline-reason-input-${p.id}`} />
-                          <Button size="sm" variant="destructive" disabled={!declineReason.trim()} onClick={() => declinePro(p.id)} data-testid={`decline-confirm-btn-${p.id}`}>Confirm</Button>
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="mt-5 border-t border-border pt-4" data-testid="declined-log-section">
-              <button onClick={() => setShowDeclined((v) => !v)} className="text-sm font-medium text-primary hover:underline" data-testid="declined-log-toggle">
-                {showDeclined ? "Hide" : "Show"} declined registrations ({declinedPros.length})
-              </button>
-              {showDeclined && (
-                declinedPros.length === 0 ? (
-                  <p className="text-xs text-muted-foreground mt-2" data-testid="declined-log-empty">No declined registrations.</p>
-                ) : (
-                  <ul className="mt-3 space-y-2" data-testid="declined-log-list">
-                    {declinedPros.map((p) => (
-                      <li key={p.id} className="flex items-start justify-between gap-3 border border-border rounded-md px-4 py-3 bg-muted/30" data-testid={`declined-pro-${p.id}`}>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium">{p.name} <span className="text-muted-foreground font-normal">· {p.email}</span></p>
-                          <p className="text-xs text-muted-foreground">{[p.profile?.pro_role, p.profile?.organization, p.profile?.license_number].filter(Boolean).join(" · ") || "No profile details"}</p>
-                          <p className="text-xs mt-1" data-testid={`declined-reason-${p.id}`}><span className="text-muted-foreground">Reason:</span> {p.declined_reason}</p>
-                          {p.declined_at && <p className="text-[11px] text-muted-foreground mt-0.5">Declined {new Date(p.declined_at).toLocaleDateString()}</p>}
-                        </div>
-                        <Button size="sm" variant="outline" onClick={() => reconsiderPro(p)} data-testid={`reconsider-pro-btn-${p.id}`}>Reconsider</Button>
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-            </div>
-          </section>
-        )}
-
-        {user?.role === "admin" && <AdminProfessionals />}
-        {user?.role === "admin" && <AdminJudges />}
-
-        {isPro && (
-          <section data-testid="circle-nav-section">
-            <CircleNav isPro={isPro} />
-          </section>
-        )}
-
+  const legacyTools = (
+    <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0" data-testid="tools-grid">
           <div className="bg-white border border-border rounded-lg p-6 min-w-0" data-testid="individual-tools-card">
             <p className="text-xs uppercase tracking-widest text-brand-teal font-bold">Individual Assessments</p>
@@ -438,6 +330,112 @@ export default function Dashboard() {
             <Button onClick={acceptCode} disabled={code.trim().length < 6 || busy} className="h-12" data-testid="accept-invitation-btn">Accept</Button>
           </div>
         </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-background" data-testid="dashboard-page">
+      {user?.must_change_password && <ForcePasswordChange onDone={refresh} />}
+      <header className="bg-white border-b border-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <Link to="/" data-testid="dash-brand-link" className="min-w-0 shrink">
+            <BrandLogo />
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <span className="text-sm hidden sm:block" data-testid="user-email"><span className="font-medium" data-testid="user-name">{user?.name}</span>{user?.name ? <span className="text-muted-foreground"> · {user?.email}</span> : <span className="text-muted-foreground">{user?.email}</span>}</span>
+            {user?.credentials_verified && <span className="hidden sm:inline-flex"><VerifiedBadge /></span>}
+            <Button variant="outline" size="sm" onClick={async () => { await logout(); navigate("/"); }} data-testid="logout-btn">
+              Sign out
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-12 overflow-x-hidden">
+        <div>
+          <h1 className="text-4xl font-semibold" data-testid="dash-heading">Dashboard</h1>
+          <p className="text-muted-foreground mt-2" data-testid="dash-subtext">{isPro ? "Choose what you want to accomplish. Create or Receive a Case → Invite Parents → Monitor Assessments → Review Joint Reports → Prepare Professional Statement → Share/Submit Authorized Reports." : "Joint reports are initiated by your professional. Use your invitation link or case code to take part."}</p>
+        </div>
+
+        {isPro && (
+          <>
+            <PrimaryTiles activeCount={realCases.length} readyCount={readyCount} referralCount={pendingReferrals} />
+            <SecondaryTools />
+          </>
+        )}
+
+        {isPro && user?.approved === false && (
+          <div className="bg-align-yellow/10 border border-align-yellow/40 rounded-lg p-5 mb-6" data-testid="approval-pending-banner">
+            <p className="font-semibold">Your professional account is pending approval</p>
+            <p className="text-sm text-muted-foreground mt-1">SA CoParents reviews new professional accounts before they can create Professional Alignment Cases. You'll receive an email once approved.</p>
+          </div>
+        )}
+
+        {user?.role === "admin" && (
+          <section className="bg-white border-2 border-align-yellow/50 rounded-lg p-6 mb-6" data-testid="admin-approvals-section">
+            <h2 className="text-lg font-semibold">Pending Professional Approvals</h2>
+            {pendingPros.length === 0 ? (
+              <p className="text-sm text-muted-foreground mt-2" data-testid="admin-approvals-empty">No professionals awaiting approval.</p>
+            ) : (
+              <ul className="mt-3 space-y-2" data-testid="admin-approvals-list">
+                {pendingPros.map((p) => (
+                  <li key={p.id} className="flex items-start justify-between gap-3 border border-border rounded-md px-4 py-3" data-testid={`pending-pro-${p.id}`}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.email}{p.profile?.phone ? ` · ${p.profile.phone}` : ""}</p>
+                      <dl className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+                        <div data-testid={`pending-pro-role-${p.id}`}><dt className="text-muted-foreground">Role</dt><dd className="font-medium">{p.profile?.pro_role || "Not provided"}</dd></div>
+                        <div data-testid={`pending-pro-org-${p.id}`}><dt className="text-muted-foreground">Organization</dt><dd className="font-medium">{p.profile?.organization || "Not provided"}{(p.profile?.city || p.profile?.state) ? ` (${[p.profile.city, p.profile.state].filter(Boolean).join(", ")})` : ""}</dd></div>
+                        <div data-testid={`pending-pro-license-${p.id}`}><dt className="text-muted-foreground">License / Credential</dt><dd className="font-medium">{p.profile?.license_number || "Not provided"}</dd></div>
+                      </dl>
+                      {p.profile?.website && <a href={p.profile.website} target="_blank" rel="noreferrer" className="text-xs text-align-teal underline mt-1 inline-block" data-testid={`pending-pro-website-${p.id}`}>{p.profile.website}</a>}
+                      {p.created_at && <p className="text-[11px] text-muted-foreground mt-1">Registered {new Date(p.created_at).toLocaleDateString()}</p>}
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => approvePro(p.id)} data-testid={`approve-pro-btn-${p.id}`}>Approve</Button>
+                        <Button size="sm" variant="outline" className="text-destructive border-destructive/40" onClick={() => { setDeclining(declining === p.id ? null : p.id); setDeclineReason(""); }} data-testid={`decline-pro-btn-${p.id}`}>Decline</Button>
+                      </div>
+                      {declining === p.id && (
+                        <div className="flex gap-2 w-72" data-testid={`decline-form-${p.id}`}>
+                          <Input value={declineReason} onChange={(e) => setDeclineReason(e.target.value)} placeholder="Brief reason (sent to applicant)" maxLength={500} data-testid={`decline-reason-input-${p.id}`} />
+                          <Button size="sm" variant="destructive" disabled={!declineReason.trim()} onClick={() => declinePro(p.id)} data-testid={`decline-confirm-btn-${p.id}`}>Confirm</Button>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-5 border-t border-border pt-4" data-testid="declined-log-section">
+              <button onClick={() => setShowDeclined((v) => !v)} className="text-sm font-medium text-primary hover:underline" data-testid="declined-log-toggle">
+                {showDeclined ? "Hide" : "Show"} declined registrations ({declinedPros.length})
+              </button>
+              {showDeclined && (
+                declinedPros.length === 0 ? (
+                  <p className="text-xs text-muted-foreground mt-2" data-testid="declined-log-empty">No declined registrations.</p>
+                ) : (
+                  <ul className="mt-3 space-y-2" data-testid="declined-log-list">
+                    {declinedPros.map((p) => (
+                      <li key={p.id} className="flex items-start justify-between gap-3 border border-border rounded-md px-4 py-3 bg-muted/30" data-testid={`declined-pro-${p.id}`}>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">{p.name} <span className="text-muted-foreground font-normal">· {p.email}</span></p>
+                          <p className="text-xs text-muted-foreground">{[p.profile?.pro_role, p.profile?.organization, p.profile?.license_number].filter(Boolean).join(" · ") || "No profile details"}</p>
+                          <p className="text-xs mt-1" data-testid={`declined-reason-${p.id}`}><span className="text-muted-foreground">Reason:</span> {p.declined_reason}</p>
+                          {p.declined_at && <p className="text-[11px] text-muted-foreground mt-0.5">Declined {new Date(p.declined_at).toLocaleDateString()}</p>}
+                        </div>
+                        <Button size="sm" variant="outline" onClick={() => reconsiderPro(p)} data-testid={`reconsider-pro-btn-${p.id}`}>Reconsider</Button>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              )}
+            </div>
+          </section>
+        )}
+
+        {user?.role === "admin" && <AdminProfessionals />}
+        {user?.role === "admin" && <AdminJudges />}
 
         {connections.length > 0 && (
           <div data-testid="connections-section">
@@ -453,27 +451,46 @@ export default function Dashboard() {
           </div>
         )}
 
+        {isPro && (
+          <>
+            <section id="cases" className="scroll-mt-6" data-testid="joint-reports-section">
+              <h2 className="text-2xl font-semibold mb-4">Your Cases</h2>
+              {joints === null ? (
+                <p className="text-muted-foreground" data-testid="joints-loading">Loading…</p>
+              ) : realCases.length === 0 ? (
+                <p className="text-sm text-muted-foreground" data-testid="joints-empty">No client cases yet. Use <Link to="/joint/new" className="text-primary underline">Invite Parents</Link> to open your first case.</p>
+              ) : (
+                <>
+                  <UpcomingCheckIns cases={realCases} />
+                  <CasesTable cases={realCases} onClose={closeCase} />
+                </>
+              )}
+            </section>
+            <CourtReferralsInbox refs={courtRefs} onChange={loadCourtRefs} alwaysShow />
+            {user?.approved !== false && <SampleReports cases={joints} onLoadSample={loadSample} loading={sampleLoading} canLoad />}
+          </>
+        )}
+
+        {isPro && (
+          <details className="rounded-lg border border-border bg-white" data-testid="more-tools">
+            <summary className="cursor-pointer select-none px-6 py-4 text-sm font-semibold" data-testid="more-tools-toggle">More tools — app account link, joint agreements, family violence pathway, invitation codes</summary>
+            <div className="border-t border-border p-6 space-y-6">
+              {legacyTools}
+            </div>
+          </details>
+        )}
+
+        {!isPro && legacyTools}
+
+        {!isPro && (
         <div data-testid="joint-reports-section">
           <h2 className="text-2xl font-semibold mb-4">Joint Reports</h2>
-          {isPro && user?.approved !== false && !(joints || []).some((j) => j.is_demo && !j.archived) && (
-            <button type="button" onClick={loadSample} disabled={sampleLoading} className="mb-4 inline-flex items-center gap-2 rounded-full border border-dashed border-brand-purple/40 px-4 py-2 text-sm font-medium text-brand-purple hover:bg-brand-purple/5 disabled:opacity-60" data-testid="load-sample-case-btn">
-              {sampleLoading ? "Loading sample…" : "Load a sample case (fictional two-parent example)"}
-            </button>
-          )}
           {joints === null ? (
             <p className="text-muted-foreground" data-testid="joints-loading">Loading…</p>
           ) : joints.length === 0 ? (
-            <p className="text-sm text-muted-foreground" data-testid="joints-empty">{isPro ? "No cases yet. Create one above, or load a sample case to explore a complete Joint Alignment Report." : "No joint reports yet. Create one above to invite your co-parent."}</p>
+            <p className="text-sm text-muted-foreground" data-testid="joints-empty">No joint reports yet. Use your invitation link or case code above.</p>
           ) : (
             <>
-            {isPro && <CourtReferralsInbox />}
-            {isPro && <UpcomingCheckIns cases={joints} />}
-            {isPro && <CasesTable cases={joints} onClose={async (j) => {
-              const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);
-              if (note === null) return;
-              try { await api.patch(`/joint/reports/${j.id}/close`, { closed: true, note }); toast.success("Case closed"); setJoints((prev) => prev.map((x) => (x.id === j.id ? { ...x, archived: true, closed_at: new Date().toISOString(), case_status: "CLOSED" } : x))); }
-              catch (e) { toast.error(formatApiError(e)); }
-            }} />}
             <div className="grid md:grid-cols-2 gap-4" data-testid="joints-grid">
               {joints.filter((j) => !j.archived).map((j) => {
                 const ready = j.status === "ready";
@@ -549,6 +566,7 @@ export default function Dashboard() {
             </>
           )}
         </div>
+        )}
 
         {isPro && (joints || []).some((j) => j.shared_with_me) && (
           <div className="mb-10" data-testid="shared-with-me-section">
@@ -570,8 +588,6 @@ export default function Dashboard() {
         {!isPro && <ParentRequestStatus requests={proRequests} />}
 
         {isPro && user?.approved !== false && <ReferralInbox />}
-
-        {isPro && user?.approved !== false && <ProfessionalsPreview userId={user?.id} />}
 
         {isPro && proRequests.length > 0 && (
           <div data-testid="pro-requests-section">
