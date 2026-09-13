@@ -27,6 +27,63 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 ## What's Implemented
+### 2026-09-13 — Iter189c · Digest Preview + Weekly Sparkline + Copy Config + Slack Mirror
+
+**🟢 P1 — In-browser digest preview**
+`GET /api/admin/consent-digest/preview.html` renders the exact HTML
+that would land in an admin's inbox on Monday, against CURRENT
+live consent stats. Yellow "PREVIEW · not sent" banner prevents
+screenshots from being confused with a real send. Does NOT touch
+the mailer or write a dedupe row.
+
+- Refactored the digest body into a pure builder
+  `email_service.build_admin_consent_adoption_digest_html(stats,
+  week_start, console_url) -> (subject, html, plain)` — the real
+  send + preview endpoint both use this single source of truth.
+- Preview button ("Preview digest") added to the Consent Adoption
+  tile on `/admin` (opens in new tab).
+- `Cache-Control: no-store` header prevents CDN caching of an old
+  preview.
+
+**🟢 P2 — 4-week retention sparkline on the admin tile**
+`overview.consent.child_needs_share.nudge_dismisses.weekly_4w`
+now returns 4 ISO-week buckets (oldest-first) with `{week_start,
+first, permanent}` counts. Admin dashboard draws a tiny inline
+SVG sparkline (ochre = retry-hides, plum = permanent) directly
+under the tile grid. Falls back to "No dismisses in the last 4
+weeks — nothing to plot yet." when every bucket is 0.
+
+**🟢 P2 — Admin-editable nudge copy (soft A/B override)**
+Not a full A/B framework — a manual override. Admin can tweak the
+headline + subhead without cutting a build:
+
+- `GET  /api/public/nudge-copy/child-needs-share` — public read.
+- `POST /api/admin/nudge-copy/child-needs-share` — admin update.
+- `POST /api/admin/nudge-copy/child-needs-share/reset` — revert
+  to hardcoded defaults in one click.
+- Payload validated by Pydantic (`headline` 6-120 chars, `subhead`
+  10-600 chars) so an oversized string can't blow up the layout.
+- `ShareChildNeedsNudge.jsx` fetches on mount, falls back to
+  hardcoded defaults on any error so a backend hiccup never blanks
+  the nudge.
+- Copy stored in `nudge_copy_config` singleton with `updated_by`
+  audit trail.
+
+**🟢 P2 — Slack mirror on Monday digest**
+When `SLACK_DIGEST_WEBHOOK_URL` is set, every successful email
+dispatch also posts a compact summary to the Slack webhook (same
+numbers, no verbatim answers). Wrapped so a Slack failure NEVER
+blocks the email path. Uses `urllib.request` in an executor —
+zero new dependencies.
+
+**🧪 Pytest** `tests/test_iter189c_preview_and_copy_and_sparkline.py`
+- 7 tests: preview requires admin, preview renders banner + digest
+  body + no-store cache header, public copy returns defaults, admin
+  can update + reset, oversized headline rejected (422), non-admin
+  write rejected (403), weekly_4w has exactly 4 buckets ordered
+  oldest-first.
+- Combined suite (`test_iter189_*` × 3 files) = 22/22 pass in ~8s.
+
 ### 2026-09-13 — Iter189b · Nudge Dismiss Analytics + Consent Dashboard Tile
 
 **🟢 P1 — Fire-and-forget dismiss event on `ShareChildNeedsNudge`**

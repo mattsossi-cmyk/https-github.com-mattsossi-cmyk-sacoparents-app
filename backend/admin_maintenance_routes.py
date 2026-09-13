@@ -13,6 +13,10 @@ Currently exposes:
         digest right now. Defaults to `dry_run=True` (computes stats
         + records dedupe row, no email sent). Pass `?dry_run=false`
         to actually email every `ADMIN_EMAILS` recipient.
+  * GET /admin/consent-digest/preview.html
+        Renders the digest HTML (exactly what would land in the
+        Monday inbox) against CURRENT live consent stats. Does NOT
+        touch the mailer or write a dedupe row — pure preview.
 
 Gating uses the existing `require_admin` dependency from
 `analytics_routes` so we don't introduce a second admin taxonomy.
@@ -102,3 +106,51 @@ async def admin_run_consent_digest(
             status_code=500, detail=f"Digest run failed: {exc}"
         ) from exc
     return result
+
+
+@router.get("/admin/consent-digest/preview.html")
+async def admin_preview_consent_digest_html(
+    request: Request,
+    _admin: UserPublic = Depends(require_admin),
+):
+    """Render the digest HTML in the browser so admins can eyeball
+    the layout against CURRENT live consent stats — without touching
+    the mailer, without writing a dedupe row, without waiting for
+    Monday. Pure preview.
+
+    Same body an admin would receive on Monday morning; the top
+    "PREVIEW" banner tells them nothing was actually sent."""
+    from datetime import timedelta
+    from consent_adoption_digest import (
+        _admin_console_url,
+        _compute_consent_stats,
+        _load_all_cases,
+        _now_utc,
+        _week_start,
+    )
+    from email_service import build_admin_consent_adoption_digest_html
+    from fastapi.responses import HTMLResponse
+
+    now = _now_utc()
+    cases = await _load_all_cases(request.app.state.db)
+    stats = _compute_consent_stats(cases, now - timedelta(days=7))
+    week_start = _week_start(now)
+    _, html, _ = build_admin_consent_adoption_digest_html(
+        stats=stats,
+        week_start=week_start,
+        console_url=_admin_console_url(),
+    )
+
+    # Prepend a big yellow "PREVIEW" banner so a screenshot of this
+    # page can never be confused with a real digest.
+    banner = (
+        '<div style="background:#FFF3D6;border-bottom:2px solid #E5B84E;'
+        'color:#7A4D0C;padding:14px 20px;font-family:sans-serif;font-size:14px;">'
+        '<strong>PREVIEW · not sent.</strong> '
+        f'This is the exact HTML the Monday digest for {week_start} '
+        'would render right now. Hit '
+        '<code style="background:#FFE7A5;padding:1px 6px;border-radius:4px;">'
+        'POST /api/admin/consent-digest/run-now?dry_run=false</code> to send it real.'
+        '</div>'
+    )
+    return HTMLResponse(banner + html, headers={"Cache-Control": "no-store"})

@@ -15,6 +15,7 @@ import {
   Send,
   Handshake,
   X,
+  Eye,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
@@ -106,6 +107,60 @@ function SignupChart({ series }) {
           title={`${d.date}: ${d.count}`}
         />
       ))}
+    </div>
+  );
+}
+
+/**
+ * Tiny two-line sparkline for the 4-week nudge-dismiss retention
+ * trend. Ochre = first-dismiss (will retry in 7d), Plum = permanent.
+ * Falls back to a "no data yet" muted line when every bucket is 0
+ * so the tile doesn't render an empty SVG.
+ */
+function DismissSparkline({ series }) {
+  const rows = series || [];
+  const empty = rows.every((r) => r.first === 0 && r.permanent === 0);
+  const w = 120;
+  const h = 32;
+  if (empty) {
+    return (
+      <div
+        className="text-[10px] text-[#857E9C] italic mt-1"
+        data-testid="admin-nudge-sparkline-empty"
+      >
+        No dismisses in the last 4 weeks — nothing to plot yet.
+      </div>
+    );
+  }
+  const max = Math.max(
+    1,
+    ...rows.map((r) => Math.max(r.first || 0, r.permanent || 0))
+  );
+  const step = rows.length > 1 ? w / (rows.length - 1) : w;
+  const toPath = (key) =>
+    rows
+      .map((r, i) => {
+        const x = i * step;
+        const y = h - ((r[key] || 0) / max) * h;
+        return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(" ");
+  return (
+    <div className="mt-2 flex items-end gap-2" data-testid="admin-nudge-sparkline">
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        width={w}
+        height={h}
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path d={toPath("first")} fill="none" stroke="#B6663B" strokeWidth={1.75} />
+        <path d={toPath("permanent")} fill="none" stroke="#3D1A78" strokeWidth={1.75} />
+      </svg>
+      <div className="text-[9px] uppercase tracking-[0.14em] font-bold text-[#857E9C] leading-tight">
+        <div className="text-[#B6663B]">— retry-hides</div>
+        <div className="text-[#3D1A78]">— permanent</div>
+      </div>
     </div>
   );
 }
@@ -274,7 +329,7 @@ export default function AdminDashboard() {
         {/* Consent adoption — Child-Needs share (iter189) */}
         {CN && (
           <div className="card-soft p-6" data-testid="admin-consent-tile">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 gap-3">
               <div>
                 <div className="eyebrow flex items-center gap-2">
                   <Handshake size={12} className="text-[#3D1A78]" />
@@ -288,6 +343,16 @@ export default function AdminDashboard() {
                   aggregate only, never names or verbatim answers.
                 </p>
               </div>
+              <a
+                href={`${process.env.REACT_APP_BACKEND_URL}/api/admin/consent-digest/preview.html`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="admin-consent-preview-digest-link"
+                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#3D1A78]/25 text-xs font-semibold text-[#3D1A78] hover:bg-[#F5EFFB]"
+              >
+                <Eye size={12} />
+                Preview digest
+              </a>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div
@@ -346,10 +411,19 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+            {/* 4-week retention sparkline */}
+            <div className="mt-4 rounded-2xl border border-[#E5E0EE] bg-white p-4">
+              <div className="eyebrow mb-1">Last 4 weeks · dismiss trend</div>
+              <DismissSparkline series={nudge.weekly_4w} />
+            </div>
             <p className="text-[11px] text-[#857E9C] mt-4 italic">
               Rising permanent-hides with flat opt-ins means the retry
               cadence isn't converting hesitant parents. Consider
-              softening the nudge copy.
+              softening the nudge copy via{" "}
+              <code className="not-italic bg-[#F5EFFB] px-1.5 py-0.5 rounded text-[10px]">
+                POST /api/admin/nudge-copy/child-needs-share
+              </code>
+              .
             </p>
           </div>
         )}

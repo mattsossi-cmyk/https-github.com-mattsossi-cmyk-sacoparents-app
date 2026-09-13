@@ -1259,24 +1259,16 @@ def send_weekly_case_analytics_email(
     )
 
 
-def send_admin_consent_adoption_digest(
+def build_admin_consent_adoption_digest_html(
     *,
-    to_email: str,
     stats: dict,
     week_start: str,
     console_url: str,
-) -> None:
-    """Monday-morning admin digest summarising Child-Needs share-consent
-    adoption. Aggregate rollup only — never surfaces individual parent
-    identity or verbatim answers.
-
-    Signals surfaced (see `consent_adoption_digest.py::_compute_consent_stats`):
-      * `parents_consented`            – total opt-ins across all cases
-      * `cases_both_consented`         – cases where BOTH parents unlocked
-      * `unlock_rate_pct`              – % of joint cases with Section 5 unlocked
-      * `parents_consented_delta_7d`   – new opt-ins this week
-      * `cases_both_delta_7d`          – newly-unlocked cases this week
-    """
+) -> tuple[str, str, str]:
+    """Pure builder — returns `(subject, html, plain)` for the digest.
+    Extracted so the preview route can render the exact same body an
+    admin would receive on Monday, without touching the mailer or
+    burning a dedupe row."""
     parents_total = int(stats.get("parents_consented", 0))
     both_total = int(stats.get("cases_both_consented", 0))
     cases_total = int(stats.get("cases_total", 0))
@@ -1363,13 +1355,37 @@ def send_admin_consent_adoption_digest(
         cta_label="Open the admin console",
         cta_url=console_url,
     )
+    subject = (
+        f"SA CoParents · Consent adoption ({week_start}) · "
+        f"{both_total}/{cases_total} unlocked"
+    )
+    return subject, html, plain
 
+
+def send_admin_consent_adoption_digest(
+    *,
+    to_email: str,
+    stats: dict,
+    week_start: str,
+    console_url: str,
+) -> None:
+    """Monday-morning admin digest summarising Child-Needs share-consent
+    adoption. Aggregate rollup only — never surfaces individual parent
+    identity or verbatim answers.
+
+    Signals surfaced (see `consent_adoption_digest.py::_compute_consent_stats`):
+      * `parents_consented`            – total opt-ins across all cases
+      * `cases_both_consented`         – cases where BOTH parents unlocked
+      * `unlock_rate_pct`              – % of joint cases with Section 5 unlocked
+      * `parents_consented_delta_7d`   – new opt-ins this week
+      * `cases_both_delta_7d`          – newly-unlocked cases this week
+    """
+    subject, html, plain = build_admin_consent_adoption_digest_html(
+        stats=stats, week_start=week_start, console_url=console_url,
+    )
     _send(
         to_email=to_email,
-        subject=(
-            f"SA CoParents · Consent adoption ({week_start}) · "
-            f"{both_total}/{cases_total} unlocked"
-        ),
+        subject=subject,
         html=html,
         text=plain,
         failure_message="Could not send the consent adoption digest.",

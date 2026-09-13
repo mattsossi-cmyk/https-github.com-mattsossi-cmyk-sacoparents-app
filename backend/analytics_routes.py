@@ -486,6 +486,34 @@ async def admin_overview(
         "created_at": {"$gte": now - timedelta(days=7)},
     })
 
+    # 4-week retention sparkline (iter189b) — one bucket per ISO
+    # week, oldest-first, so the admin tile can draw a trend line.
+    # We compute in Python rather than an $group aggregation because
+    # 4 rows × ~2 count-documents is cheap and easier to test-audit.
+    weekly_series = []
+    for weeks_back in range(3, -1, -1):
+        # Bucket end (exclusive) = `now - weeks_back * 7d`,
+        # bucket start          = bucket end - 7d.
+        end = now - timedelta(days=weeks_back * 7)
+        start = end - timedelta(days=7)
+        first_in_bucket = await db[
+            "child_needs_share_nudge_dismisses"
+        ].count_documents({
+            "is_retry_dismissal": False,
+            "created_at": {"$gte": start, "$lt": end},
+        })
+        perm_in_bucket = await db[
+            "child_needs_share_nudge_dismisses"
+        ].count_documents({
+            "is_retry_dismissal": True,
+            "created_at": {"$gte": start, "$lt": end},
+        })
+        weekly_series.append({
+            "week_start": start.date().isoformat(),
+            "first": int(first_in_bucket),
+            "permanent": int(perm_in_bucket),
+        })
+
     consent_analytics = {
         "child_needs_share": {
             "parents_consented": int(parents_consented),
@@ -502,6 +530,7 @@ async def admin_overview(
                 "permanent_total": int(nudge_permanent),
                 "first_7d": int(nudge_first_7d),
                 "permanent_7d": int(nudge_permanent_7d),
+                "weekly_4w": weekly_series,
             },
         },
     }

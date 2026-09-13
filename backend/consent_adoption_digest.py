@@ -341,7 +341,59 @@ async def _dispatch_one(
         db, admin_email=admin_email, week_start=week_start,
         dry_run=False, reason="sent", stats=stats,
     )
+    # Best-effort Slack mirror — one webhook post per successful admin
+    # dispatch. Wrapped so a Slack failure NEVER blocks the email path.
+    try:
+        await _mirror_to_slack(admin_email=admin_email, stats=stats, week_start=week_start)
+    except Exception:  # noqa: BLE001
+        log.exception("consent adoption digest: slack mirror failed")
+
     return {**base, "sent": True, "stats": stats}
+
+
+def _slack_webhook_url() -> Optional[str]:
+    url = (os.environ.get("SLACK_DIGEST_WEBHOOK_URL") or "").strip()
+    return url or None
+
+
+async def _mirror_to_slack(
+    *,
+    admin_email: str,
+    stats: Dict[str, Any],
+    week_start: str,
+) -> None:
+    """Post a compact Block-Kit summary of the digest to Slack. No-op
+    if `SLACK_DIGEST_WEBHOOK_URL` is not set. Runs in an executor so
+    the sweep loop's event loop isn't blocked on Slack's roundtrip."""
+    webhook = _slack_webhook_url()
+    if not webhook:
+        return
+    parents = int(stats.get("parents_consented", 0))
+    both = int(stats.get("cases_both_consented", 0))
+    total = int(stats.get("cases_total", 0))
+    unlock_pct = int(stats.get("unlock_rate_pct", 0))
+    delta_parents = int(stats.get("parents_consented_delta_7d", 0))
+    delta_both = int(stats.get("cases_both_delta_7d", 0))
+
+    payload = {
+        "text": (
+            f"*SA CoParents · Consent adoption ({week_start})*\n"
+            f"• {parents} parents opted in\n"
+            f"• {both}/{total} cases fully unlocked ({unlock_pct}%)\n"
+            f"• +{delta_parents} parents · +{delta_both} newly-unlocked this week\n"
+            f"Emailed to {admin_email} — aggregate only, no verbatim answers."
+        ),
+    }
+    import asyncio, urllib.request, json as _json
+    def _post():
+        req = urllib.request.Request(
+            webhook,
+            data=_json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            _ = resp.read()
+    await asyncio.get_running_loop().run_in_executor(None, _post)
 
 
 # ---------------------------------------------------------------------------

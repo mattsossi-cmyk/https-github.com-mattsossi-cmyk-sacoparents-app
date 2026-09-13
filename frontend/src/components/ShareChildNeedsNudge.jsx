@@ -85,6 +85,14 @@ export default function ShareChildNeedsNudge() {
   const [cases, setCases] = useState(null); // null = loading, [] = none, [...] = list
   const [pendingCaseId, setPendingCaseId] = useState(null);
   const [error, setError] = useState(null);
+  // Editable microcopy — fetched from `/public/nudge-copy/child-needs-share`.
+  // Falls back to the hardcoded defaults on any error so a backend
+  // hiccup can never blank out the nudge card.
+  const [copy, setCopy] = useState({
+    headline: "Share these highlights with your co-parent's joint report?",
+    subhead:
+      "By default your Child Needs highlights stay private. If you toggle this on for a case, section 5 of the joint Complete Alignment Report only surfaces your highlights *after* your co-parent also toggles it on. You can revoke anytime.",
+  });
   // Local mirror of localStorage so setState re-renders the list. We
   // hydrate once on mount — the SNCv2 report page isn't visited
   // simultaneously in two tabs, so cross-tab sync isn't worth the
@@ -103,6 +111,19 @@ export default function ShareChildNeedsNudge() {
         logError("share-child-needs nudge: fetch cases failed", err);
         // Silent fail — the nudge is optional; don't block the page.
         setCases([]);
+      });
+    // Fetch admin-editable copy — non-blocking, silent fallback.
+    api
+      .get("/public/nudge-copy/child-needs-share")
+      .then((r) => {
+        if (cancelled) return;
+        const h = r.data?.headline;
+        const s = r.data?.subhead;
+        if (h && s) setCopy({ headline: h, subhead: s });
+      })
+      .catch((err) => {
+        // Non-fatal — we already have the defaults in state.
+        logError("share-child-needs nudge: fetch copy failed", err);
       });
     return () => {
       cancelled = true;
@@ -208,13 +229,10 @@ export default function ShareChildNeedsNudge() {
             id="child-needs-share-nudge-heading"
             className="font-serif text-lg sm:text-xl text-[#1A1330] mt-1 leading-snug"
           >
-            Share these highlights with your co-parent's joint report?
+            {copy.headline}
           </h3>
           <p className="text-sm text-[#4B4567] mt-2 leading-relaxed">
-            By default your Child Needs highlights stay private. If you
-            toggle this on for a case, section 5 of the joint Complete
-            Alignment Report only surfaces your highlights <em>after</em>{" "}
-            your co-parent also toggles it on. You can revoke anytime.
+            {copy.subhead}
           </p>
         </div>
       </div>

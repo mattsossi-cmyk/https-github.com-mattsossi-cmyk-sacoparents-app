@@ -69,6 +69,7 @@ from activities_costs_routes import router as activities_costs_router  # noqa: E
 from parent_professional_invitations import router as parent_professional_invitations_router  # noqa: E402
 from complete_alignment_report_routes import router as complete_alignment_report_router  # noqa: E402
 from admin_maintenance_routes import router as admin_maintenance_router  # noqa: E402
+from nudge_copy_routes import router as nudge_copy_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -208,6 +209,7 @@ api_router.include_router(activities_costs_router)
 api_router.include_router(parent_professional_invitations_router)
 api_router.include_router(complete_alignment_report_router)
 api_router.include_router(admin_maintenance_router)
+api_router.include_router(nudge_copy_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.
