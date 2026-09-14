@@ -551,3 +551,18 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - GET /api/joint/reports/{rid}/communications (case pro only); GET /api/court-dashboard/referrals/{id}/communications (owning judge; court-facing kinds only, never parent emails).
 - UI: CommunicationsLog in ProWorkspace (/joint/{rid}); compact "Court-facing notices" in judge Court Case card. Tests: backend/tests/test_communications_log.py.
 - Production still on 2026-09-11.7 at check time — user must Republish; Judge Garza invite still pending on user (needs live admin login).
+
+## 2026-09-14 — Export, overdue alerts, judge-picked report types, tile rename
+- Dashboard tiles: Manage a Case | Judge Referrals | Review Joint Reports | Submit to Court (red OVERDUE state).
+- GET /api/joint/reports/{rid}/communications.pdf — Communications Log exhibit (copyright footer/metadata). UI export button in CommunicationsLog.
+- referral.overdue (hearing ≤7 days, not submitted) — red flags on judge card, pro inbox, dashboard tile.
+- Judge picks requested_reports (co_parenting, communication, education, medical, psychological, mediation, complete, agreement, family_violence) in ReferCaseForm; stored on referral; shown to pro (inbox chips, /joint/new banner, subjects preselected) and judge card. REPORT_TYPES in court_workflow.py.
+- Tests: backend/tests/test_comms_export_overdue.py. Production still needs Republish; Judge Garza invite pending on user.
+
+## 2026-09-14 — Redefined Co-Parenting Agreement (v2) + judge report-type trim
+- joint_data.AGREEMENT_SECTIONS: 10 sections (Foundation, Transitions, Communication, Education, Medical, Psychological, Activities, Major Decisions, Managing Differences, Review) each with shared goal, main question, 3–5 follow-ups (keys section__fk), and role mapping (comm/decision/review).
+- Parent form (JointAssessment) shows follow-ups after the main answer; only main answers required.
+- generate_agreement → per section: Shared Goal, Current Alignment, Specific Agreements, Communication Method, Decision Process, Review Trigger, Issues Still Requiring Resolution; summary 3 groups; status labels. Rule-based drafting + AI (agreement_ai.py, gpt-5.4-mini via EMERGENT_LLM_KEY, item verdicts agreed/open, cached in doc.agreement_ai by answers signature; disputed items never become clauses).
+- New PDF layout (At a Glance + numbered sections), AgreementDocument.jsx UI. Old 8-term agreements not supported (user OK).
+- Court Refer form report types: co_parenting, education, medical, psychological, agreement, family_violence only.
+- Tests: tests/test_agreement_v2.py; legacy test_agreements_and_pro_requests updated to 10 keys.

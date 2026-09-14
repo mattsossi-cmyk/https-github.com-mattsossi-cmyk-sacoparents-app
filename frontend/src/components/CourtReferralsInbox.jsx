@@ -39,7 +39,13 @@ export function CourtReferralsInbox({ refs: external, onChange, alwaysShow = fal
             <div className="min-w-0 text-sm">
               <p className="font-semibold">Cause No. {x.cause_number} <span className="ml-1 font-normal text-muted-foreground">· {x.court_name || "court"} · {x.judge_name}</span></p>
               <p className="text-xs text-muted-foreground mt-0.5">{[x.child_initials && `Child ${x.child_initials}`, x.parent_a_name, x.parent_b_name, `referred ${x.created_at?.slice(0, 10)}`].filter(Boolean).join(" · ")}</p>
-              {x.hearing_date && <p className="mt-0.5 text-xs font-semibold text-brand-purple" data-testid={`court-referral-hearing-${x.id}`}>Hearing {x.hearing_date}{x.status !== "submitted" && " · reminder one week before if not yet submitted"}</p>}
+              {x.hearing_date && <p className={`mt-0.5 text-xs font-semibold ${x.overdue ? "text-red-700" : "text-brand-purple"}`} data-testid={`court-referral-hearing-${x.id}`}>{x.overdue ? "⚠ OVERDUE · " : ""}Hearing {x.hearing_date}{x.overdue ? " — within 7 days and nothing submitted" : x.status !== "submitted" ? " · reminder one week before if not yet submitted" : ""}</p>}
+              {(x.requested_reports || []).length > 0 && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1" data-testid={`court-referral-reports-${x.id}`}>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Court requests:</span>
+                  {x.requested_reports.map((r) => <span key={r.key} className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-brand-purple">{r.label}</span>)}
+                </div>
+              )}
               {x.note && <p className="mt-1 text-xs italic text-muted-foreground">"{x.note}"</p>}
             </div>
             <div className="flex items-center gap-2">

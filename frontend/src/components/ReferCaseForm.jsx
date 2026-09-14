@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-const EMPTY = { professional_id: "", cause_number: "", court_name: "", child_initials: "", parent_a_name: "", parent_a_email: "", parent_b_name: "", parent_b_email: "", note: "", subject: "communication", hearing_date: "" };
+const EMPTY = { professional_id: "", cause_number: "", court_name: "", child_initials: "", parent_a_name: "", parent_a_email: "", parent_b_name: "", parent_b_email: "", note: "", subject: "co_parenting", hearing_date: "", requested_reports: ["co_parenting"] };
+
+const REPORT_TYPES = [
+  ["co_parenting", "Co-Parenting Joint Report"], ["education", "Educational Joint Report"], ["medical", "Medical Joint Report"],
+  ["psychological", "Psychological Joint Report"], ["agreement", "Co-Parenting Agreement"], ["family_violence", "Family Violence / Safety Assessment"],
+];
 
 export function ReferCaseForm({ defaultCourt, onCreated }) {
   const [pros, setPros] = useState([]);
@@ -28,6 +33,11 @@ export function ReferCaseForm({ defaultCourt, onCreated }) {
 
   const shown = pros.filter((p) => !q || `${p.name} ${p.pro_role} ${p.organization} ${p.city}`.toLowerCase().includes(q.toLowerCase()));
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const toggleReport = (k) => setForm((f) => {
+    const next = f.requested_reports.includes(k) ? f.requested_reports.filter((x) => x !== k) : [...f.requested_reports, k];
+    const first = next.find((x) => !["agreement", "family_violence"].includes(x)) || (next.includes("family_violence") ? "safety" : "co_parenting");
+    return { ...f, requested_reports: next, subject: first };
+  });
   return (
     <section className="bg-white border-2 border-brand-purple/30 rounded-xl p-6" data-testid="refer-case-form">
       <h2 className="text-lg font-semibold flex items-center gap-2"><Send className="h-4 w-4 text-brand-purple" /> Refer Case to Professional</h2>
@@ -36,9 +46,18 @@ export function ReferCaseForm({ defaultCourt, onCreated }) {
         <Input placeholder="Cause number *" value={form.cause_number} onChange={set("cause_number")} data-testid="refer-cause-number" />
         <Input placeholder="Court" value={form.court_name} onChange={set("court_name")} data-testid="refer-court-name" />
         <Input placeholder="Child initials (e.g. E.T.)" value={form.child_initials} onChange={set("child_initials")} data-testid="refer-child-initials" />
-        <select className="h-10 rounded-md border border-input bg-white px-3 text-sm" value={form.subject} onChange={set("subject")} data-testid="refer-subject">
-          {[["communication", "Communication"], ["scheduling", "Scheduling & transitions"], ["decision_making", "Decision-making"], ["safety", "Safety-focused"], ["co_parenting", "General co-parenting"]].map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-        </select>
+        <fieldset className="sm:col-span-2 rounded-md border border-input bg-white p-3" data-testid="refer-report-types">
+          <legend className="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Reports requested from the professional</legend>
+          <div className="grid gap-1.5 sm:grid-cols-3">
+            {REPORT_TYPES.map(([k, l]) => (
+              <label key={k} className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={form.requested_reports.includes(k)} onChange={() => toggleReport(k)} data-testid={`refer-report-${k}`} />
+                {l}
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">The professional sends the matching assessments to both parents and returns each Joint Report with a Professional Statement.</p>
+        </fieldset>
         <Input placeholder="Parent A name (optional)" value={form.parent_a_name} onChange={set("parent_a_name")} data-testid="refer-parent-a-name" />
         <Input placeholder="Parent A email (optional)" value={form.parent_a_email} onChange={set("parent_a_email")} data-testid="refer-parent-a-email" />
         <Input placeholder="Parent B name (optional)" value={form.parent_b_name} onChange={set("parent_b_name")} data-testid="refer-parent-b-name" />
@@ -60,7 +79,7 @@ export function ReferCaseForm({ defaultCourt, onCreated }) {
           ))}
         </ul>
       </div>
-      <Button onClick={send} disabled={busy || !form.professional_id || !form.cause_number.trim()} className="mt-4 bg-brand-purple hover:bg-brand-purple/90 text-white" data-testid="refer-submit-btn">{busy ? "Sending…" : "Send referral"}</Button>
+      <Button onClick={send} disabled={busy || !form.professional_id || !form.cause_number.trim() || form.requested_reports.length === 0} className="mt-4 bg-brand-purple hover:bg-brand-purple/90 text-white" data-testid="refer-submit-btn">{busy ? "Sending…" : "Send referral"}</Button>
     </section>
   );
 }

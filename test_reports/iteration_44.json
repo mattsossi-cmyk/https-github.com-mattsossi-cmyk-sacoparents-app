@@ -1,0 +1,30 @@
+{
+  "summary": "Iteration 44 — Verified all new features: dashboard tile rename+overdue, Refer Case requested_reports checkboxes, overdue flag on referrals, Communications PDF export, and referral prefill on /joint/new. Backend pytest 22/22 PASSED in 15.1s across test_comms_export_overdue.py, test_communications_log.py, test_hearing_reminder.py, test_court_workflow.py, test_court_packets.py. Frontend Playwright end-to-end: (1) Judge (judge.ui.preview) opened Refer Case form → all 9 report checkboxes present (refer-report-co_parenting/communication/education/medical/psychological/mediation/complete/agreement/family_violence), co_parenting default checked, submit disabled with 0 checked. Selected Complete + Agreement + Family Violence, hearing +3d, professional 'Approval Test Pro', submitted → new card court-referral-row-a863037b… has class 'border-l-red-500', overdue badge court-overdue-<id> renders 'Hearing within 7 days — nothing submitted', court-field-requested-<id> shows exactly the three requested labels. (2) Pro (approval.test.pro1) dashboard tiles: tile-manage-case '5 active', tile-court-cases '4 new', tile-review-reports (no count), tile-submit-court '1 OVERDUE' with red border+red pill badge (danger=true). Inbox: court-referral-reports-<id> chips = 'Court requests: Complete Alignment Report (all five core areas) · Co-Parenting Agreement · Family Violence / Safety Assessment'; court-referral-hearing-<id> = '⚠ OVERDUE · Hearing 2026-09-17 — within 7 days and nothing submitted'. (3) Accept → landed at /joint/new?referral=<id>: banner referral-requested-reports shows all three labels + 'first pre-selected'; referral-agreement-link present; subjects Co-Parenting+Communication+School/Education+Medical Care+Psychological (5-subject Complete pre-selection) rendered above wizard step 1. (4) Communications PDF button: on /joint/<rid> for the pro-created case (rid=3418c5d5…), communications-export-btn href = REACT_APP_BACKEND_URL + '/api/joint/reports/3418c5d5…/communications.pdf'. (5) API bogus requested_reports 400 covered by pytest test_requested_reports_on_referral; PDF footer '2026 sacoparentsalign.com' + 'Case Communications Log' + 'Parent invitation' covered by pytest test_communications_pdf_has_footer_and_rows. Also confirmed 403 for other pro on the PDF endpoint (pytest).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_comms_export_overdue.py",
+    "/app/backend/tests/test_communications_log.py",
+    "/app/backend/tests/test_hearing_reminder.py",
+    "/app/backend/tests/test_court_workflow.py",
+    "/app/backend/tests/test_court_packets.py",
+    "/app/test_reports/pytest/iter44.xml"
+  ],
+  "action_items": [
+    "(Carry-over, non-blocking) Seeded admin login mattsossi@bsossi.com fails in preview (401); seed_admin idempotency of password_hash noted in iter39/41/42/43."
+  ],
+  "critical_code_review_comments": [
+    "ReferCaseForm.jsx: toggleReport auto-derives `subject` from selection with a sensible fallback (safety when family_violence, else co_parenting). Clean and testable.",
+    "PrimaryTiles.jsx correctly switches tile-submit-court to danger mode (red border+red pill labeled OVERDUE) when overdueCount>0, aligning with product spec.",
+    "CourtCaseCard uses border-l-red-500 + court-overdue-<id> badge on overdue rows — matches judge-side spec.",
+    "Backend court_workflow.py referral_public exposes overdue boolean; PDF endpoint enforces creator-only access (403/404 for others) as validated by pytest."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (22/22)", "frontend": "100% of exercised flows (9 checkboxes, submit gating, judge card overdue+requested, pro tiles/chips/OVERDUE, accept→prefill, comms-export-btn href)"},
+  "test_credentials": "Used judge.ui.preview@sacoparentsalign.com / testpass123 and approval.test.pro1@gmail.com / TestPass2026! — both work.",
+  "seed_data_creation": "Judge-created 1 court referral 2026-CI-U4976 to Approval Test Pro (hearing 3 days out, requested_reports=[complete,agreement,family_violence]), then pro accepted it → new joint report id auto-created from /joint/new page (form not submitted). Safe to identify by cause number prefix '2026-CI-U49'.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All iteration 44 features verified end-to-end with real judge + pro accounts. No defects found. If future iterations touch referral flow, note that toggleReport in ReferCaseForm auto-updates `subject`; watch for edge case where all report types with implicit subjects are selected (agreement/family_violence/complete) — code falls back to 'safety' or 'co_parenting'.",
+  "rca of the issue": "n/a — no defects."
+}

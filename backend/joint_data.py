@@ -259,22 +259,84 @@ SAFETY_PURPOSE = (
     "from professional assistance. Individual responses are not shared between the parties."
 )
 
-AGREEMENT_AREAS = [
-    ("parenting_schedule", "Parenting Schedule", "What parenting schedule arrangement do you propose?"),
-    ("holidays", "Holidays & Special Days", "What arrangement do you propose for holidays and special days?"),
-    ("decision_making", "Decision-Making", "What arrangement do you propose for major decisions about the child?"),
-    ("communication", "Parent Communication", "What arrangement do you propose for communication between the parents?"),
-    ("exchanges", "Exchanges & Transportation", "What arrangement do you propose for exchanges and transportation?"),
-    ("expenses", "Child-Related Expenses", "What arrangement do you propose for child-related expenses?"),
-    ("information_sharing", "Information Sharing", "What arrangement do you propose for sharing school, medical, and activity information?"),
-    ("dispute_resolution", "Dispute Resolution", "What arrangement do you propose for resolving future disagreements?"),
+AGREEMENT_SECTIONS = [
+    {"key": "foundation", "label": "Our Child-Focused Foundation", "num": 1,
+     "goal": "Name the goals, needs, concerns, and shared priorities that every other section serves.",
+     "question": "What are your most important goals and concerns for your child, and what do you believe you and the other parent already share as priorities?",
+     "follow_ups": [("needs", "What three things does your child need most from both homes right now?"), ("concern", "What is your single biggest concern for your child, stated without blame?"),
+                    ("priority", "Which priority do you believe both parents already share?")],
+     "comm": None, "decision": None, "review": None},
+    {"key": "transitions", "label": "Parenting-Time Transitions", "num": 2,
+     "goal": "Make pickups and drop-offs predictable and low-stress for the child.",
+     "question": "What arrangement do you propose for pickups, drop-offs, lateness, schedule changes, belongings, and the child's contact with the other parent between visits?",
+     "follow_ups": [("where", "Where and at what time should exchanges normally happen?"), ("late", "How much notice is expected when a parent will be late, and how is it communicated?"),
+                    ("changes", "How far in advance should a schedule change be requested, and through what method?"), ("belongings", "How will the child's belongings, medication, and school items travel between homes?"),
+                    ("contact", "How and when may the child contact the other parent during parenting time?")],
+     "comm": "late", "decision": "changes", "review": None},
+    {"key": "communication", "label": "Communication", "num": 3,
+     "goal": "Exchange child-related information reliably, respectfully, and within clear boundaries.",
+     "question": "What arrangement do you propose for how, when, and through what method the parents communicate about the child?",
+     "follow_ups": [("method", "Which method is used for routine matters (app, email, text, phone)?"), ("response", "What response time is reasonable for routine messages? For urgent ones?"),
+                    ("emergency", "What counts as an emergency, and how is it communicated?"), ("tone", "Which principles will both parents follow (e.g., brief, informative, friendly, firm)?"),
+                    ("boundaries", "What topics or times are off-limits, and what happens if a message crosses that line?")],
+     "comm": "method", "decision": "boundaries", "review": None},
+    {"key": "education", "label": "Education", "num": 4,
+     "goal": "Keep both parents informed and involved so school stays stable for the child.",
+     "question": "What arrangement do you propose for school information, meetings, homework, tutoring, and educational decisions?",
+     "follow_ups": [("records", "Will both parents have access to school records and portals? Who sets that up?"), ("share", "Within how many days must significant school information be shared, and how?"),
+                    ("meetings", "Which meetings (parent-teacher, ARD/IEP, conferences) may both parents attend, and how are they scheduled?"), ("homework", "How is homework and tutoring handled in each home?"),
+                    ("disagree", "If the parents disagree about an educational question, who is consulted first (teacher, counselor, educational professional)?")],
+     "comm": "share", "decision": "disagree", "review": None},
+    {"key": "medical", "label": "Medical Needs", "num": 5,
+     "goal": "Ensure the child receives consistent care and both parents have the information they need.",
+     "question": "What arrangement do you propose for appointments, medication, insurance, records, emergencies, and sharing medical information?",
+     "follow_ups": [("schedule", "Who schedules routine appointments, and how is the other parent informed?"), ("medication", "How is medication shared, tracked, and communicated between homes?"),
+                    ("insurance", "Who carries insurance, and how are uncovered costs shared?"), ("records", "How quickly is medical information (diagnoses, prescriptions, visits) shared, and by what method?"),
+                    ("emergency", "In a medical emergency, who is called first and how quickly is the other parent notified?")],
+     "comm": "records", "decision": "schedule", "review": None},
+    {"key": "psychological", "label": "Psychological / Emotional Needs", "num": 6,
+     "goal": "Support the child's emotional wellbeing with continuity between homes.",
+     "question": "What arrangement do you propose for counseling, appointments, professional recommendations, the child's privacy, and continuity between homes?",
+     "follow_ups": [("counseling", "Should the child have a counselor or therapist? How is one chosen?"), ("appointments", "Who takes the child to appointments and how does the other parent stay informed?"),
+                    ("recommendations", "How will the parents respond to a counselor's recommendations they don't both agree with?"), ("privacy", "What will each parent keep private about the child's sessions?"),
+                    ("continuity", "Which routines or supports stay the same in both homes?")],
+     "comm": "appointments", "decision": "recommendations", "review": None},
+    {"key": "activities", "label": "Activities & Special Events", "num": 7,
+     "goal": "Let the child enjoy activities and milestones without adult conflict.",
+     "question": "What arrangement do you propose for extracurricular activities, transportation, expenses, attendance, and scheduling conflicts?",
+     "follow_ups": [("enroll", "How is a new activity agreed before the child is enrolled?"), ("transport", "Who transports the child to activities that fall on each parent's time?"),
+                    ("expenses", "How are activity costs shared, and how are receipts exchanged?"), ("attendance", "May both parents attend games, performances, and events? Any ground rules?"),
+                    ("conflicts", "When an activity conflicts with parenting time, what happens?")],
+     "comm": "expenses", "decision": "conflicts", "review": None},
+    {"key": "decisions", "label": "Major Parenting Decisions", "num": 8,
+     "goal": "Reach major decisions through a predictable process rather than a standoff.",
+     "question": "What process do you propose for raising a major decision, gathering information, considering options, attempting agreement, and using a professional resource when appropriate?",
+     "follow_ups": [("raise", "How is a major decision raised, and how much time does the other parent have to respond?"), ("information", "What information will be gathered before either parent decides?"),
+                    ("options", "How will options be laid out and compared?"), ("professional", "When will a professional (pediatrician, teacher, counselor, mediator) be consulted?")],
+     "comm": "raise", "decision": "professional", "review": None},
+    {"key": "differences", "label": "Managing Differences", "num": 9,
+     "goal": "Agree in advance on the escalation pathway so disagreements do not reach the child.",
+     "question": "What escalation pathway do you propose when the parents disagree: parent discussion, SA CoParents reflection and communication tools, professional consultation, mediation, or another agreed process?",
+     "follow_ups": [("first", "What is the first step when you disagree, and how long is spent there?"), ("tools", "Which SA CoParents tools will you use before escalating?"),
+                    ("professional", "Which professional is consulted next, and who arranges it?"), ("mediation", "When does an unresolved issue go to mediation or another agreed process?")],
+     "comm": "first", "decision": "mediation", "review": None},
+    {"key": "review", "label": "Review & Adjustment", "num": 10,
+     "goal": "Keep the agreement alive as the child grows and circumstances change.",
+     "question": "When and how should this agreement be revisited — when circumstances materially change, when your child's developmental needs change, or when a section isn't working as intended?",
+     "follow_ups": [("schedule", "How often will the parents review the agreement together?"), ("triggers", "Which specific changes (school change, move, new partner, health) trigger an early review?"),
+                    ("notworking", "If a section is not working, who raises it and how?")],
+     "comm": None, "decision": "notworking", "review": "triggers"},
 ]
 
+AGREEMENT_AREAS = [(s["key"], s["label"], s["question"]) for s in AGREEMENT_SECTIONS]
+
 AGREEMENT_PURPOSE = (
-    "This document brings together both parents' independently proposed terms for a co-parenting "
-    "agreement. Terms where the parents' proposals align are ready to be formalized. Terms marked "
-    "for discussion are candidates for parent conversation or mediation before finalizing. "
-    "This document is not legal advice and does not determine which parent is right or wrong."
+    "This Co-Parenting Agreement brings together both parents' independently proposed terms and follow-up "
+    "answers. Each section moves from a shared goal, through what the parents already align on, to specific "
+    "commitments, the communication method, the decision process, and when the section should be reviewed. "
+    "Where the parents' answers materially differ, the item is listed as still requiring resolution rather than "
+    "presented as agreement. This document is not legal advice, is not a custody order, and does not determine "
+    "which parent is right or wrong."
 )
 
 AGREEMENT_CONFIDENTIALITY = (

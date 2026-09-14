@@ -83,7 +83,10 @@ export default function JointNew() {
       api.get(`/professional/court-referrals/${refId}`).then((r) => {
         const x = r.data;
         setReferral(x);
-        if (x.subject) setSubject(x.subject);
+        const first = (x.requested_reports || []).find((r) => r.subjects.length > 0);
+        if (first && first.subjects.length > 1) { setMultiSubjects(first.subjects); setSubject(first.subjects[0]); }
+        else if (first) setSubject(first.subjects[0]);
+        else if (x.subject) setSubject(x.subject);
         if (x.parent_a_name) setPaName(x.parent_a_name);
         if (x.parent_a_email) setPaEmail(x.parent_a_email);
         if (x.parent_b_name) setCoName(x.parent_b_name);
@@ -153,6 +156,13 @@ export default function JointNew() {
         {referral && (
           <div className="mb-6 rounded-lg border border-brand-purple/30 bg-brand-purple/5 px-4 py-3 text-sm" data-testid="referral-banner">
             <span className="font-semibold text-brand-purple">Court referral</span> · Cause No. {referral.cause_number} · {referral.court_name || "court"} · {referral.judge_name}. Parties pre-filled where the court provided them; the Joint Report and your Professional Statement return to this court.
+            {(referral.requested_reports || []).length > 0 && (
+              <p className="mt-2" data-testid="referral-requested-reports">
+                <span className="font-semibold">Court requests:</span> {referral.requested_reports.map((r) => r.label).join(" · ")}.
+                {referral.requested_reports.length > 1 && " The first is pre-selected below; create the remaining reports from the case afterwards."}
+                {referral.requested_reports.some((r) => r.key === "agreement") && <> Co-Parenting Agreement: <Link to={`/joint/new?kind=agreement`} className="text-primary underline" data-testid="referral-agreement-link">create it here</Link> after the joint report.</>}
+              </p>
+            )}
           </div>
         )}
         {created && created.invitations ? (

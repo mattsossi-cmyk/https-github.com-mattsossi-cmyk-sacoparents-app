@@ -25,7 +25,7 @@ export function ProWorkspace({ rid, steps, outcome, onOutcomeSaved, courtReady }
         <MatterNotes rid={rid} />
       </section>
 
-      <CommunicationsLog url={`/joint/reports/${rid}/communications`} />
+      <CommunicationsLog url={`/joint/reports/${rid}/communications`} exportHref={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${rid}/communications.pdf`} />
 
       <section className="bg-white border border-border rounded-lg p-6" data-testid="pro-activity-section">
         <h2 className="text-lg font-semibold" data-testid="pro-activity-heading">Consent &amp; Activity</h2>

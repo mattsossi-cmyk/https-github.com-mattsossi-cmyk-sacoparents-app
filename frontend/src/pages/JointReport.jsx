@@ -7,6 +7,7 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
+import { AgreementDocument } from "@/components/AgreementDocument";
 import { ProWorkspace } from "@/components/ProWorkspace";
 import { CompareView } from "@/components/CompareView";
 import { SampleWalkthrough } from "@/components/SampleWalkthrough";
@@ -171,63 +172,7 @@ export default function JointReport() {
           )}
         </div>
 
-        {ready && report && detail.kind === "agreement" && (
-          <div className="report-paper rounded-lg p-8 sm:p-12" data-testid="agreement-document">
-            <div className="text-center border-b border-border pb-8 mb-10">
-              <BrandLogo size="text-xl" />
-              <h1 className="text-4xl font-extrabold text-brand-purple mt-4" data-testid="agreement-title">{report.report_title}</h1>
-              <div className="mt-4 text-sm text-muted-foreground space-y-1">
-                <p>Child: <strong className="text-foreground">{report.child_name}</strong></p>
-                <p>Parents: {report.parent_a_name} / {report.parent_b_name}</p>
-                <p>{report.date}</p>
-              </div>
-            </div>
-
-            <p className="text-muted-foreground leading-relaxed mb-4" data-testid="agreement-purpose">{report.purpose}</p>
-            <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-10 text-xs text-muted-foreground" data-testid="agreement-confidentiality">{report.confidentiality_note}</div>
-
-            <h2 className="text-2xl font-semibold mb-6" data-testid="agreement-terms-heading">Proposed Terms</h2>
-            <div className="space-y-6 mb-10">
-              {report.terms.map((t) => (
-                <div key={t.key} className="border border-border rounded-lg p-5" data-testid={`agreement-term-${t.key}`}>
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <p className="font-semibold">{t.label}</p>
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${t.status === "Likely aligned" ? "bg-align-green/15 text-align-green" : t.status === "Close" ? "bg-align-yellow/20 text-yellow-700" : "bg-align-blue/15 text-align-blue"}`} data-testid={`agreement-status-${t.key}`}>{t.status}</span>
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="bg-muted/40 rounded-md p-4">
-                      <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-2">{report.parent_a_name}'s Proposal</p>
-                      <p className="text-sm leading-relaxed">{t.parent_a}</p>
-                    </div>
-                    <div className="bg-muted/40 rounded-md p-4">
-                      <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-2">{report.parent_b_name}'s Proposal</p>
-                      <p className="text-sm leading-relaxed">{t.parent_b}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-sm italic text-muted-foreground mb-10" data-testid="agreement-next-note">{report.next_note}</p>
-
-            <div className="grid sm:grid-cols-2 gap-6 mb-10" data-testid="agreement-signatures">
-              {[report.parent_a_name, report.parent_b_name].map((name, i) => (
-                <div key={i} className="border border-border rounded-lg p-5" data-testid={`signature-block-${i}`}>
-                  <p className="font-semibold mb-4">{name}</p>
-                  <p className="text-xs text-muted-foreground mb-1">Signature</p>
-                  <div className="worksheet-line mb-4" />
-                  <p className="text-xs text-muted-foreground mb-1">Date</p>
-                  <div className="worksheet-line" />
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center border-t border-border pt-10">
-              <h3 className="font-display text-4xl sm:text-5xl font-bold text-align-purple" data-testid="agreement-philosophy">{report.philosophy_heading}</h3>
-              <p className="mt-6 text-sm italic text-muted-foreground max-w-xl mx-auto">"{report.philosophy}"</p>
-            </div>
-          </div>
-        )}
+        {ready && report && detail.kind === "agreement" && <AgreementDocument report={report} />}
 
         {ready && report && detail.kind !== "agreement" && detail.is_creator && (
           <SampleWalkthrough active={!!detail.is_demo} onStart={() => setView("report")} />

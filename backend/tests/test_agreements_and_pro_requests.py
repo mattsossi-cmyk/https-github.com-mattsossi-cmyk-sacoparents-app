@@ -13,10 +13,7 @@ BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.pre
 API = f"{BASE_URL}/api"
 UA = {"User-Agent": "Mozilla/5.0 (pytest agreement suite)"}
 
-AGREEMENT_KEYS = [
-    "parenting_schedule", "holidays", "decision_making", "communication",
-    "exchanges", "expenses", "information_sharing", "dispute_resolution",
-]
+AGREEMENT_KEYS = ["foundation", "transitions", "communication", "education", "medical", "psychological", "activities", "decisions", "differences", "review"]
 
 
 def _pro(prefix="p"):
@@ -47,26 +44,8 @@ def _agreement_setup(child="TEST_Kid"):
 
 def _agreement_answers(prefix, aligned=True):
     if aligned:
-        return {
-            "parenting_schedule": "week on week off schedule with midweek dinner visit",
-            "holidays": "alternate holidays annually and share birthdays equally",
-            "decision_making": "joint legal decision making for major decisions like school and medical",
-            "communication": "written communication weekly via co-parenting app only",
-            "exchanges": "exchanges at school or neutral public location on friday",
-            "expenses": "share child expenses proportional to income through app",
-            "information_sharing": "share school medical activity information within 24 hours",
-            "dispute_resolution": "attempt mediation before court for any disputes",
-        }
-    return {
-        "parenting_schedule": f"{prefix} unique schedule proposal alpha",
-        "holidays": f"{prefix} unique holiday plan beta",
-        "decision_making": f"{prefix} unique decisionmaking gamma",
-        "communication": f"{prefix} unique communication delta",
-        "exchanges": f"{prefix} unique exchange epsilon",
-        "expenses": f"{prefix} unique expenses zeta",
-        "information_sharing": f"{prefix} unique info eta",
-        "dispute_resolution": f"{prefix} unique dispute theta",
-    }
+        return {k: f"shared child focused arrangement for {k} with written notice through the coparenting app within 24 hours" for k in AGREEMENT_KEYS}
+    return {k: f"{prefix} unique {k} proposal {i}" for i, k in enumerate(AGREEMENT_KEYS)}
 
 
 def _submit_agreement(session, rid: str, side: str, aligned: bool = True) -> None:
@@ -75,14 +54,14 @@ def _submit_agreement(session, rid: str, side: str, aligned: bool = True) -> Non
 
 
 def _assert_agreement_report(data: dict) -> None:
-    assert data["report_title"] == "Joint Co-Parenting Agreement"
+    assert data["report_title"] == "SA CoParents Co-Parenting Agreement"
     assert data.get("purpose")
     assert data.get("confidentiality_note")
     _assert_agreement_terms(data["terms"])
 
 
 def _assert_agreement_terms(terms: list) -> None:
-    assert len(terms) == 8
+    assert len(terms) == 10
     assert [t["key"] for t in terms] == AGREEMENT_KEYS
     for t in terms:
         assert t["parent_a"] and t["parent_b"]
@@ -113,7 +92,7 @@ def _assert_safety_listing(rep: dict) -> None:
 
 # ------------------- Config -------------------
 class TestJointConfig:
-    def test_config_returns_8_agreement_areas(self) -> None:
+    def test_config_returns_10_agreement_areas(self) -> None:
         r = requests.get(f"{API}/joint/config", headers=UA)
         assert r.status_code == 200
         keys = [a["key"] for a in r.json()["agreement_areas"]]

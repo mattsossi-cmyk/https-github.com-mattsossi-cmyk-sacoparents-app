@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, timezone
 
-from joint_data import QUESTIONS, NEXT_STEPS, merged_subject_config, SAFETY_CONFIDENTIALITY, SAFETY_PURPOSE, AGREEMENT_AREAS, AGREEMENT_PURPOSE, AGREEMENT_CONFIDENTIALITY
+from joint_data import QUESTIONS, NEXT_STEPS, merged_subject_config, SAFETY_CONFIDENTIALITY, SAFETY_PURPOSE, AGREEMENT_AREAS, AGREEMENT_SECTIONS, AGREEMENT_PURPOSE, AGREEMENT_CONFIDENTIALITY
 
 STOPWORDS = set(
     "the a an and or of to in for with on at is are was were be been being this that these those "
@@ -186,12 +186,43 @@ def _agreement_term(key: str, label: str, ra: dict, rb: dict) -> dict:
     return {"key": key, "label": label, "parent_a": ra.get(key, ""), "parent_b": rb.get(key, ""), "status": status}
 
 
-def _foundation_entries(doc: dict, pa: str, pb: str) -> list:
-    entries = []
-    for side, name in (("a", pa), ("b", pb)):
-        for s in (doc["responses"].get(side) or {}).get("foundation") or []:
-            entries.append({"parent": name, "title": s.get("title", "Foundation Statement"), "content": s.get("content", "")})
-    return entries
+def _norm(t: str) -> str:
+    return re.sub(r"\s+", " ", (t or "").strip().lower())
+
+
+def _pair_agrees(a: str, b: str) -> bool:
+    if not a or not b:
+        return False
+    return _norm(a) == _norm(b) or len(shared_terms(a, b)) >= 2
+
+
+def _rule_section(sec: dict, ra: dict, rb: dict) -> dict:
+    """Rule-based draft: matching follow-up answers become clauses, differing ones become open issues."""
+    specific, open_issues, roles = [], [], {"communication_method": None, "decision_process": None, "review_trigger": None}
+    for fk, prompt in sec["follow_ups"]:
+        a, b = ra.get(f"{sec['key']}__{fk}", ""), rb.get(f"{sec['key']}__{fk}", "")
+        short = prompt.rstrip("?")
+        if not a and not b:
+            continue
+        if _pair_agrees(a, b):
+            clause = f"{short}: {a.strip()}"
+            specific.append(clause)
+            for role, rk in (("communication_method", sec.get("comm")), ("decision_process", sec.get("decision")), ("review_trigger", sec.get("review"))):
+                if rk == fk:
+                    roles[role] = a.strip()
+        elif a and b:
+            open_issues.append(f"{short} — the parents' answers differ and need discussion.")
+        else:
+            open_issues.append(f"{short} — only one parent answered; confirm together.")
+    return {"specific": specific, "open_issues": open_issues, **roles}
+
+
+def _section_status(alignment: list, specific: list, open_issues: list) -> str:
+    if open_issues and not specific:
+        return "Requires resolution"
+    if open_issues:
+        return "Partly agreed"
+    return "Agreed" if specific or len(alignment) >= 2 else "Aligned in principle"
 
 
 def generate_agreement(doc: dict) -> dict:
@@ -200,24 +231,57 @@ def generate_agreement(doc: dict) -> dict:
     pb = doc["participants"]["b"].get("name") or "Parent B"
     ra = doc["responses"]["a"]["answers"]
     rb = doc["responses"]["b"]["answers"]
+    ai = (doc.get("agreement_ai") or {}).get("sections") or {}
+
+    sections = []
+    for sec in AGREEMENT_SECTIONS:
+        k = sec["key"]
+        common = shared_terms(ra.get(k, ""), rb.get(k, ""))
+        rule = _rule_section(sec, ra, rb)
+        drafted = ai.get(k) if isinstance(ai.get(k), dict) else None
+        merged = {**rule, **{kk: vv for kk, vv in drafted.items() if vv or kk in ("specific", "open_issues")}} if drafted else rule
+        if drafted:
+            merged["specific"] = [c for c in merged["specific"] if c not in merged["open_issues"]]
+        alignment = [f"Both parents' proposals point the same direction — shared themes: {', '.join(common[:5])}."] if common else []
+        sections.append({
+            "key": k, "num": sec["num"], "label": sec["label"], "shared_goal": sec["goal"],
+            "current_alignment": alignment, "parent_a": ra.get(k, ""), "parent_b": rb.get(k, ""),
+            "specific_agreements": merged.get("specific") or [], "open_issues": merged.get("open_issues") or [],
+            "communication_method": merged.get("communication_method"), "decision_process": merged.get("decision_process"), "review_trigger": merged.get("review_trigger"),
+            "status": _section_status(alignment, merged.get("specific") or [], merged.get("open_issues") or []),
+        })
 
     return {
-        "report_title": "Joint Co-Parenting Agreement",
-        "child_name": child,
-        "parent_a_name": pa,
-        "parent_b_name": pb,
+        "report_title": "SA CoParents Co-Parenting Agreement",
+        "child_name": child, "parent_a_name": pa, "parent_b_name": pb,
         "date": datetime.now(timezone.utc).strftime("%B %d, %Y"),
-        "purpose": AGREEMENT_PURPOSE,
-        "confidentiality_note": AGREEMENT_CONFIDENTIALITY,
-        "terms": [_agreement_term(key, label, ra, rb) for key, label, _question in AGREEMENT_AREAS],
+        "purpose": AGREEMENT_PURPOSE, "confidentiality_note": AGREEMENT_CONFIDENTIALITY,
+        "ai_drafted": bool(ai),
+        "sections": sections,
+        "summary": {
+            "alignment": [f"{s['label']}: {a}" for s in sections for a in s["current_alignment"]],
+            "specific": [f"{s['label']}: {c}" for s in sections for c in s["specific_agreements"]],
+            "resolution": [f"{s['label']}: {o}" for s in sections for o in s["open_issues"]],
+        },
+        "terms": [_agreement_term(key, label, ra, rb) for key, label, _q in AGREEMENT_AREAS],
         "foundation_statements": _foundation_entries(doc, pa, pb),
         "next_note": (
-            "Areas marked 'Needs discussion' are candidates for parent conversation or mediation "
-            "before finalizing. Consider having an appropriate professional review any final agreement."
+            "Items under 'Issues Still Requiring Resolution' are not agreements. They are candidates for parent conversation, "
+            "SA CoParents reflection tools, professional consultation, or mediation before this document is finalized. "
+            "Consider having an appropriate professional review any final agreement."
         ),
+        "method_note": "Reflection → Alignment → Specific Action → Agreement",
         "philosophy_heading": "Alignment Before Agreement",
         "philosophy": "We value the parenting system by how well it supports the child, not by how friendly the adults appear.",
     }
+
+
+def _foundation_entries(doc: dict, pa: str, pb: str) -> list:
+    entries = []
+    for side, name in (("a", pa), ("b", pb)):
+        for s in (doc["responses"].get(side) or {}).get("foundation") or []:
+            entries.append({"parent": name, "title": s.get("title", "Foundation Statement"), "content": s.get("content", "")})
+    return entries
 
 
 SAMPLE_MEDIATION_PURPOSE = (

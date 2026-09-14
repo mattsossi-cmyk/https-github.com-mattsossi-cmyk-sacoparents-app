@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, AlertTriangle } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +48,7 @@ export function CourtCaseCard({ x, packets, onOpenPacket, onUpdate }) {
   const submitted = x.status === "submitted";
   const mine = (packets || []).filter((p) => p.cause_number && p.cause_number === x.cause_number);
   return (
-    <li className="px-5 py-5 space-y-4" data-testid={`court-referral-row-${x.id}`}>
+    <li className={`px-5 py-5 space-y-4 ${x.overdue ? "border-l-4 border-l-red-500" : ""}`} data-testid={`court-referral-row-${x.id}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-lg font-semibold">Cause No. {x.cause_number}{x.case_code && <span className="ml-2 text-sm font-normal tracking-wider text-muted-foreground">{x.case_code}</span>}</p>
         <span className="text-xs text-muted-foreground">referred {x.created_at?.slice(0, 10)}</span>
@@ -56,8 +56,13 @@ export function CourtCaseCard({ x, packets, onOpenPacket, onUpdate }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Field label="Assigned Professional" testId={`court-field-pro-${x.id}`}><span className="font-medium">{x.professional_name}</span>{x.status === "pending" && <span className="ml-1 text-xs text-muted-foreground">(awaiting acceptance)</span>}{x.status === "declined" && <span className="ml-1 text-xs text-red-700">Declined: {x.decline_reason}</span>}</Field>
         <Field label="Current Status" testId={`court-field-status-${x.id}`}><span className="font-medium">{stage.label || x.status}</span></Field>
-        <Field label="Hearing Date" testId={`court-field-hearing-${x.id}`}><HearingDate x={x} onSaved={(hd) => onUpdate({ ...x, hearing_date: hd })} /></Field>
-        <Field label="Joint Assessment Status" testId={`court-field-joint-${x.id}`}>{(stage.index ?? 0) >= 3 ? "Both parents complete" : (stage.index ?? 0) >= 2 ? "Parents invited — in progress" : "Not started"}</Field>
+        <Field label="Hearing Date" testId={`court-field-hearing-${x.id}`}>
+          <HearingDate x={x} onSaved={(hd) => onUpdate({ ...x, hearing_date: hd })} />
+          {x.overdue && <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700" data-testid={`court-overdue-${x.id}`}><AlertTriangle className="h-3.5 w-3.5" /> Hearing within 7 days — nothing submitted</p>}
+        </Field>
+        <Field label="Joint Assessment Status" testId={`court-field-joint-${x.id}`}>{(stage.index ?? 0) >= 3 ? "Both parents complete" : (stage.index ?? 0) >= 2 ? "Parents invited — in progress" : "Not started"}
+          {(x.requested_reports || []).length > 0 && <p className="mt-1 text-xs text-muted-foreground" data-testid={`court-field-requested-${x.id}`}>Requested: {x.requested_reports.map((r) => r.label).join(" · ")}</p>}
+        </Field>
       </div>
       <CaseProgress stage={stage} />
       <CourtStatusSummary referralId={x.id} summary={x.status_summary} onRefreshed={(s) => onUpdate({ ...x, status_summary: s })} />

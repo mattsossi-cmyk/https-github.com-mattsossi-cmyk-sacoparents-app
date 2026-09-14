@@ -62,6 +62,24 @@ class ReferralIn(BaseModel):
     parent_b_email: str = ""
     note: str = ""
     hearing_date: str = ""
+    requested_reports: list[str] = []
+
+
+REPORT_TYPES = {
+    "co_parenting": ("Co-Parenting Joint Report", ["co_parenting"]),
+    "education": ("Educational Joint Report", ["education"]),
+    "medical": ("Medical Joint Report", ["medical"]),
+    "psychological": ("Psychological Joint Report", ["psychological"]),
+    "agreement": ("Co-Parenting Agreement", []),
+    "family_violence": ("Family Violence / Safety Assessment", ["safety", "risk", "safety_communication", "safeguards"]),
+}
+
+
+def _valid_reports(keys: list[str]) -> list[str]:
+    bad = [k for k in keys if k not in REPORT_TYPES]
+    if bad:
+        raise HTTPException(status_code=400, detail=f"Unknown report type: {', '.join(bad)}")
+    return list(dict.fromkeys(keys))
 
 
 class HearingDateIn(BaseModel):
@@ -175,12 +193,26 @@ def build_status_summary(ref: dict, case: dict | None, packets: list) -> dict:
             "generated_at": _iso(_now()), "signature": _stage_signature(ref, case, packets), "disclaimer": SUMMARY_DISCLAIMER}
 
 
+def hearing_overdue(x: dict, today: date | None = None) -> bool:
+    """True when the hearing is within 7 days (or past) and the referral has not been submitted."""
+    hd = x.get("hearing_date")
+    if not hd or x.get("status") not in ("pending", "accepted"):
+        return False
+    try:
+        return (date.fromisoformat(hd) - (today or _now().date())).days <= 7
+    except ValueError:
+        return False
+
+
 def _shared(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event) -> dict:
     """Helpers shared by the judge and professional route groups."""
 
     def referral_public(x: dict) -> dict:
-        return {k: x.get(k) for k in ("id", "judge_name", "judge_email", "court_name", "cause_number", "subject", "child_initials", "parent_a_name", "parent_a_email",
-                                      "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at", "hearing_date")}
+        out = {k: x.get(k) for k in ("id", "judge_name", "judge_email", "court_name", "cause_number", "subject", "child_initials", "parent_a_name", "parent_a_email",
+                                     "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at", "hearing_date")}
+        out["overdue"] = hearing_overdue(x)
+        out["requested_reports"] = [{"key": k, "label": REPORT_TYPES[k][0], "subjects": REPORT_TYPES[k][1]} for k in (x.get("requested_reports") or []) if k in REPORT_TYPES]
+        return out
 
     async def require_judge(user: dict) -> None:
         if user.get("role") != "judge":
@@ -227,7 +259,7 @@ def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, lo
                "court_name": body.court_name.strip()[:160] or (user.get("profile") or {}).get("organization", ""), "cause_number": body.cause_number.strip()[:80],
                "subject": body.subject or "communication", "child_initials": body.child_initials.strip()[:10], "parent_a_name": body.parent_a_name.strip()[:120],
                "parent_a_email": body.parent_a_email.strip().lower()[:200], "parent_b_name": body.parent_b_name.strip()[:120], "parent_b_email": body.parent_b_email.strip().lower()[:200],
-               "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "professional_id": pro["_id"], "professional_name": pro.get("name", ""), "status": "pending", "created_at": _iso(now)}
+               "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "requested_reports": _valid_reports(body.requested_reports), "professional_id": pro["_id"], "professional_name": pro.get("name", ""), "status": "pending", "created_at": _iso(now)}
         await db.court_referrals.insert_one(ref)
         try:
             await send_email(to=pro["email"], case_id=ref["id"], kind="court_referral", to_role="Professional", subject=f"Court referral from {user.get('name', 'the court')} - Cause No. {ref['cause_number']}",

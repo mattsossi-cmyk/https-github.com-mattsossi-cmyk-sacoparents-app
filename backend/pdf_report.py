@@ -323,6 +323,59 @@ def _agreement_signatures(pdf: FPDF, r: dict) -> None:
         pdf.ln(8)
 
 
+def _agreement_bullets(pdf: FPDF, title: str, items: list, color: tuple, empty: str | None = None) -> None:
+    pdf.set_font(FONT, "B", 9)
+    pdf.set_text_color(*color)
+    pdf.cell(0, 5.5, _s(title), new_x="LMARGIN", new_y="NEXT")
+    if not items:
+        if empty:
+            _body(pdf, empty, italic=True, indent=4)
+        return
+    for it in items:
+        pdf.set_x(pdf.l_margin + 4)
+        pdf.set_font(FONT, "", 9.5)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(0, 5, _s(f"• {it}"), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
+
+
+def _agreement_section(pdf: FPDF, s: dict, r: dict) -> None:
+    status_colors = {"Agreed": GREEN, "Partly agreed": YELLOW, "Aligned in principle": TEAL, "Requires resolution": BLUE}
+    if pdf.get_y() > pdf.h - 70:
+        pdf.add_page()
+    pdf.set_font(FONT, "B", 12.5)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(130, 7, _s(f"{s['num']}. {s['label']}"))
+    pdf.set_font(FONT, "B", 9)
+    pdf.set_text_color(*status_colors.get(s["status"], BLUE))
+    pdf.cell(0, 7, _s(s["status"]), align="R", new_x="LMARGIN", new_y="NEXT")
+    _label(pdf, "Shared Goal")
+    _body(pdf, s["shared_goal"], indent=4)
+    _agreement_bullets(pdf, "Current Alignment", s["current_alignment"], GREEN, empty="The parents' general proposals use different language; see the items below.")
+    _agreement_bullets(pdf, "Specific Agreements", s["specific_agreements"], PURPLE, empty="No specific commitments could be confirmed from both parents' answers yet.")
+    for title, key in (("Communication Method", "communication_method"), ("Decision Process", "decision_process"), ("Review Trigger", "review_trigger")):
+        if s.get(key):
+            _label(pdf, title)
+            _body(pdf, s[key], indent=4)
+    _agreement_bullets(pdf, "Issues Still Requiring Resolution", s["open_issues"], BLUE)
+    pdf.set_draw_color(225, 220, 235)
+    y = pdf.get_y() + 1
+    pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
+    pdf.ln(5)
+
+
+def _agreement_summary(pdf: FPDF, r: dict) -> None:
+    pdf.set_font(FONT, "B", 13)
+    pdf.set_text_color(*DARK)
+    pdf.cell(0, 8, "At a Glance", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
+    sm = r["summary"]
+    _agreement_bullets(pdf, f"Areas of Alignment ({len(sm['alignment'])})", sm["alignment"][:12], GREEN, empty="None identified yet.")
+    _agreement_bullets(pdf, f"Specific Agreements ({len(sm['specific'])})", sm["specific"][:16], PURPLE, empty="None confirmed yet.")
+    _agreement_bullets(pdf, f"Issues Still Requiring Resolution ({len(sm['resolution'])})", sm["resolution"][:16], BLUE, empty="None — every answered item is aligned.")
+    pdf.ln(4)
+
+
 def build_agreement_pdf(r: dict) -> bytes:
     pdf = _new_pdf()
     _title_header(pdf, r["report_title"], [
@@ -330,13 +383,19 @@ def build_agreement_pdf(r: dict) -> bytes:
         f"Parents: {r['parent_a_name']} / {r['parent_b_name']}",
         r["date"],
     ])
-
     _body(pdf, r["purpose"])
     pdf.ln(2)
     _body(pdf, r["confidentiality_note"], italic=True)
+    pdf.ln(1)
+    _body(pdf, r.get("method_note", ""), italic=True)
     pdf.ln(4)
 
-    _agreement_terms(pdf, r)
+    if r.get("sections"):
+        _agreement_summary(pdf, r)
+        for s in r["sections"]:
+            _agreement_section(pdf, s, r)
+    else:
+        _agreement_terms(pdf, r)
 
     _body(pdf, r["next_note"], italic=True)
     pdf.ln(8)
@@ -870,6 +929,50 @@ def _prep_checkbox(pdf: FPDF, text: str) -> None:
     pdf.set_font(FONT, "", 9)
     pdf.set_text_color(*BODY)
     pdf.multi_cell(0, 5, _s(f"[  ]  {text}"), new_x="LMARGIN", new_y="NEXT")
+
+
+def build_communications_log_pdf(r: dict) -> bytes:
+    """Exhibit: chronological list of every email/notice sent for a case."""
+    pdf = _new_pdf()
+    pdf.set_font(FONT, "B", 11)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 6, "SA CoParents Align", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "B", 17)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 8, _s("Case Communications Log"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 9)
+    pdf.set_text_color(*GRAY)
+    meta = f"Case {r.get('case_code') or '-'}  |  {r.get('subject_label') or ''}  |  Child: {r.get('child_name') or ''}  |  Prepared by {r.get('professional_name') or 'Professional'}  |  Generated {r['generated']}"
+    pdf.multi_cell(0, 4.5, _s(meta), new_x="LMARGIN", new_y="NEXT")
+    _footnote(pdf, "System-generated record of every email, reminder, and court notice sent through SA CoParents Align for this case. Message bodies are not reproduced; recipient addresses are partially masked.")
+    pdf.ln(3)
+    widths = (34, 40, 66, 34)
+    pdf.set_font(FONT, "B", 8.5)
+    pdf.set_fill_color(240, 236, 246)
+    pdf.set_text_color(*PURPLE)
+    for w, h in zip(widths, ("Sent (UTC)", "Type", "Subject", "Recipient")):
+        pdf.cell(w, 6, h, border="B", fill=True)
+    pdf.ln(6)
+    pdf.set_font(FONT, "", 8.5)
+    pdf.set_text_color(*BODY)
+    if not r["items"]:
+        _prep_line(pdf, "No communications have been sent for this case.", italic=True)
+    for c in r["items"]:
+        if pdf.get_y() > pdf.h - 30:
+            pdf.add_page()
+        x0, y0 = pdf.get_x(), pdf.get_y()
+        cells = (c["at"][:16].replace("T", " "), c["kind_label"], c["subject"], f"{c['to_role']} {c['to_masked']}".strip())
+        bottom = y0
+        x = x0
+        for w, t in zip(widths, cells):
+            pdf.set_xy(x, y0)
+            pdf.multi_cell(w, 4.2, _s(t), border=0, new_x="RIGHT", new_y="TOP", max_line_height=4.2)
+            bottom = max(bottom, pdf.get_y())
+            x += w
+        pdf.set_xy(x0, bottom + 1.2)
+        pdf.set_draw_color(230, 226, 238)
+        pdf.line(x0, pdf.get_y() - 0.6, x0 + sum(widths), pdf.get_y() - 0.6)
+    return bytes(pdf.output())
 
 
 def build_session_prep_pdf(r: dict) -> bytes:

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Mail } from "lucide-react";
+import { Mail, Download } from "lucide-react";
 import api from "@/lib/api";
 
 const KIND_LABEL = {
@@ -10,12 +10,17 @@ const KIND_LABEL = {
 
 const mask = (e) => (e && e.includes("@") ? `${e.slice(0, 2)}…@${e.split("@")[1]}` : e || "");
 
-export function CommunicationsLog({ url, title = "Communications Log", compact = false }) {
+export function CommunicationsLog({ url, title = "Communications Log", compact = false, exportHref }) {
   const [items, setItems] = useState(null);
   useEffect(() => { api.get(url).then((r) => setItems(r.data)).catch(() => setItems([])); }, [url]);
   return (
     <section className={compact ? "" : "bg-white border border-border rounded-lg p-6"} data-testid="communications-log">
-      <h2 className={compact ? "text-sm font-semibold flex items-center gap-2" : "text-lg font-semibold flex items-center gap-2"}><Mail className="h-4 w-4" /> {title}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className={compact ? "text-sm font-semibold flex items-center gap-2" : "text-lg font-semibold flex items-center gap-2"}><Mail className="h-4 w-4" /> {title}</h2>
+        {exportHref && items && items.length > 0 && (
+          <a href={exportHref} className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-medium hover:border-brand-purple hover:text-brand-purple" data-testid="communications-export-btn"><Download className="h-3.5 w-3.5" /> Export PDF exhibit</a>
+        )}
+      </div>
       {!compact && <p className="text-xs text-muted-foreground mt-1">Every email, reminder, and court notice sent for this case, in one timeline. Recipient addresses are masked.</p>}
       {items === null ? (
         <p className="mt-3 text-sm text-muted-foreground" data-testid="communications-loading">Loading…</p>

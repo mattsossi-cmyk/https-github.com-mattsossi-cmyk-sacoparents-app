@@ -47,6 +47,8 @@ export default function Dashboard() {
   const realCases = (joints || []).filter((j) => j.is_creator && !j.archived && !j.is_demo);
   const readyCount = realCases.filter((j) => j.case_status === "READY_FOR_ALIGNMENT" || j.case_status === "REPORT_GENERATED").length;
   const pendingReferrals = (courtRefs || []).filter((x) => x.status === "pending").length;
+  const awaitingSubmit = (courtRefs || []).filter((x) => x.status === "accepted").length;
+  const overdueCount = (courtRefs || []).filter((x) => x.overdue).length;
 
   const closeCase = async (j) => {
     const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);
@@ -359,7 +361,7 @@ export default function Dashboard() {
 
         {isPro && (
           <>
-            <PrimaryTiles activeCount={realCases.length} readyCount={readyCount} referralCount={pendingReferrals} />
+            <PrimaryTiles activeCount={realCases.length} readyCount={readyCount} referralCount={pendingReferrals} submitCount={awaitingSubmit} overdueCount={overdueCount} />
             <SecondaryTools />
           </>
         )}

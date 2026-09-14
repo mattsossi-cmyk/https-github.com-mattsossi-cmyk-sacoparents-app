@@ -28,11 +28,12 @@ from pydantic import BaseModel, EmailStr
 
 from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
 from report_engine import generate_report
-from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS
+from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS, AGREEMENT_SECTIONS
+from agreement_ai import draft_agreement_clauses, answers_signature
 from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
 from court_workflow import court_stage, run_hearing_reminders
 from urllib.parse import quote
-from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, build_session_prep_pdf, verify_qr_png
+from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, build_session_prep_pdf, build_communications_log_pdf, verify_qr_png
 from complete_engine import build_complete_report
 from auth_utils import JWT_ALGORITHM, jwt_secret, hash_password, verify_password, create_access_token, create_refresh_token
 from email_utils import send_email, send_email_detailed, set_comm_logger, EMAIL_FROM_NAME, FIXTURE_EMAIL_RE, RESEND_FROM_EMAIL
@@ -978,6 +979,8 @@ async def joint_config():
         "questions": [{"key": k, "area": a, "question": q} for k, a, q in QUESTIONS],
         "confidentiality_notice": CONFIDENTIALITY_NOTICE,
         "agreement_areas": [{"key": k, "label": l, "question": q} for k, l, q in AGREEMENT_AREAS],
+        "agreement_sections": [{"key": s["key"], "num": s["num"], "label": s["label"], "goal": s["goal"], "question": s["question"],
+                                "follow_ups": [{"key": f"{s['key']}__{fk}", "prompt": p} for fk, p in s["follow_ups"]]} for s in AGREEMENT_SECTIONS],
     }
 
 
@@ -1214,14 +1217,43 @@ def _foundation_payload(body: JointResponsesIn) -> list:
 
 
 def _validated_answers(doc: dict, body: JointResponsesIn) -> dict:
-    valid = {k for k, _, _ in AGREEMENT_AREAS} if doc.get("kind") == "agreement" else {k for k, _, _ in QUESTIONS}
+    if doc.get("kind") == "agreement":
+        required = {s["key"] for s in AGREEMENT_SECTIONS}
+        optional = {f"{s['key']}__{fk}" for s in AGREEMENT_SECTIONS for fk, _p in s["follow_ups"]}
+        answers = {k: (body.answers.get(k) or "").strip()[:3000] for k in required}
+        if any(not v for v in answers.values()):
+            raise HTTPException(status_code=400, detail="Please answer the main question in every section")
+        answers.update({k: (body.answers.get(k) or "").strip()[:2000] for k in optional if (body.answers.get(k) or "").strip()})
+        payload = {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}
+        if body.foundation:
+            payload["foundation"] = _foundation_payload(body)
+        return payload
+    valid = {k for k, _, _ in QUESTIONS}
     answers = {k: (body.answers.get(k) or "").strip() for k in valid}
     if any(not v for v in answers.values()):
         raise HTTPException(status_code=400, detail="Please answer all questions")
-    payload = {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}
-    if doc.get("kind") == "agreement" and body.foundation:
-        payload["foundation"] = _foundation_payload(body)
-    return payload
+    return {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}
+
+
+async def ensure_agreement_ai(doc: dict) -> dict:
+    """Draft concrete clauses once per answer-set with gpt-5.4-mini; cached on the case. Rule-based output is used when unavailable."""
+    if doc.get("kind") != "agreement" or not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
+        return doc
+    sig = answers_signature(doc)
+    cached = doc.get("agreement_ai") or {}
+    if cached.get("signature") == sig:
+        return doc
+    ra, rb = doc["responses"]["a"]["answers"], doc["responses"]["b"]["answers"]
+    payload = [{"key": s["key"], "label": s["label"], "shared_goal": s["goal"], "parent_a_proposal": ra.get(s["key"], ""), "parent_b_proposal": rb.get(s["key"], ""),
+                "follow_ups": [{"id": f"{s['key']}__{fk}", "question": p, "parent_a": ra.get(f"{s['key']}__{fk}", ""), "parent_b": rb.get(f"{s['key']}__{fk}", "")} for fk, p in s["follow_ups"]
+                               if ra.get(f"{s['key']}__{fk}") or rb.get(f"{s['key']}__{fk}")]}
+               for s in AGREEMENT_SECTIONS]
+    sections = await draft_agreement_clauses(payload, doc["id"])
+    if sections is None:
+        return doc
+    ai = {"signature": sig, "sections": sections, "model": "gpt-5.4-mini", "at": datetime.now(timezone.utc).isoformat()}
+    await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {"agreement_ai": ai}})
+    return {**doc, "agreement_ai": ai}
 
 
 @api.put("/joint/reports/{rid}/responses")
@@ -1266,7 +1298,7 @@ async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=400, detail="The Joint Report becomes available when both parents have completed their assessments")
     await _log_report_access(doc, user, "Viewed report on screen", "view")
     if doc.get("kind") == "agreement":
-        return generate_agreement(doc)
+        return generate_agreement(await ensure_agreement_ai(doc))
     return generate_joint_report(doc)
 
 
@@ -1279,7 +1311,7 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
     child = re.sub(r"[^a-z0-9-]", "", (doc.get("child_name") or "child").lower().replace(" ", "-")) or "child"
     if doc.get("kind") == "agreement":
         return Response(
-            content=build_agreement_pdf(generate_agreement(doc)),
+            content=build_agreement_pdf(generate_agreement(await ensure_agreement_ai(doc))),
             media_type="application/pdf",
             headers={"Content-Disposition": f'attachment; filename="coparenting-agreement-{child}.pdf"'},
         )
@@ -1714,6 +1746,32 @@ async def court_referral_communications(ref_id: str, user=Depends(get_current_us
     ids = [ref_id] + ([ref["case_id"]] if ref.get("case_id") else [])
     docs = await db.communications.find({"case_id": {"$in": ids}, "kind": {"$in": list(COURT_COMM_KINDS)}}, {"_id": 0}).sort("at", -1).to_list(200)
     return [_comm_public(c) for c in docs]
+
+
+COMM_KIND_LABELS = {
+    "invitation": "Parent invitation", "completion_nudge": "Completion nudge", "report_ready": "Report ready notice", "follow_up_reminder": "Follow-up reminder",
+    "court_referral": "Court referral", "court_referral_declined": "Referral declined", "court_submission": "Submission to court", "hearing_date": "Hearing date notice",
+    "hearing_reminder": "Hearing reminder", "court_packet": "Court Packet sent", "court_packet_code": "Court Packet access code", "court_response": "Court response",
+}
+
+
+def _mask_email(e: str) -> str:
+    return f"{e[:2]}…@{e.split('@', 1)[1]}" if e and "@" in e else (e or "")
+
+
+@api.get("/joint/reports/{rid}/communications.pdf")
+async def case_communications_pdf(rid: str, user=Depends(get_current_user)):
+    report = await get_joint_report_doc(rid, user)
+    if report.get("created_by") != user["_id"] and report.get("professional_id") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the case professional can export the communications log")
+    docs = await db.communications.find({"case_id": rid}, {"_id": 0}).sort("at", 1).to_list(1000)
+    items = [{"at": c.get("at", ""), "kind_label": COMM_KIND_LABELS.get(c.get("kind"), c.get("kind") or "Email"), "subject": c.get("subject", ""),
+              "to_role": c.get("to_role") or "", "to_masked": _mask_email(c.get("to", ""))} for c in docs]
+    await _log_report_access(report, user, "Downloaded Communications Log", "download")
+    code = re.sub(r"[^A-Za-z0-9-]", "", report.get("case_code") or rid[:8])
+    pdf = build_communications_log_pdf({"case_code": report.get("case_code"), "subject_label": report.get("subject_label"), "child_name": report.get("child_name"),
+                                        "professional_name": user.get("name"), "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "items": items})
+    return Response(content=pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="communications-log-{code}.pdf"'})
 
 
 @api.get("/joint/reports/{rid}/activity")
