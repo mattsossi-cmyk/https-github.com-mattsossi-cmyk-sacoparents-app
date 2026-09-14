@@ -9,7 +9,11 @@ import { CaseProgress } from "@/components/CaseProgress";
 const FIELDS = [
   ["role_basis", "Role and basis of involvement", "How you came to facilitate this matter (court referral, appointment, parties' agreement) and your professional role."],
   ["process_summary", "Process completed by the parents", "What each parent completed independently and how the Joint Alignment Report was produced."],
-  ["observations", "Observations of alignment and differences", "Neutral observations from the report and any facilitated conversation. Use both parents' own framing where possible."],
+  ["alignment_areas", "Areas of Alignment", "Where the parents' independently provided perspectives align, in neutral terms."],
+  ["further_attention", "Areas Requiring Further Attention", "Subjects that may benefit from additional professional attention. No findings about either parent."],
+  ["resources_considered", "Resources / Interventions Considered", "Structures, resources or interventions considered during the process."],
+  ["current_status", "Current Status", "Where the matter stands today (assessments, sessions, agreement work)."],
+  ["observations", "Professional Observations", "Neutral observations from the report and any facilitated conversation. Use both parents' own framing where possible."],
   ["safety_considerations", "Safety considerations (optional)", "Any safety-related process notes in neutral language. Leave blank if none."],
   ["next_steps", "Recommended next steps for facilitation", "Facilitation steps only — no recommendations about conservatorship or possession."],
 ];
@@ -58,7 +62,21 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
         {court?.judge_email && <div className="text-right text-xs text-muted-foreground" data-testid="statement-court-info"><p className="font-semibold text-foreground">{court.court_name || "Court"}</p><p>Cause No. {court.cause_number} · {court.judge_name}</p></div>}
       </div>
       <CaseProgress stage={data.stage} />
-      <div className="mt-5 grid gap-4">
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm"><span className="font-medium">Role</span>
+          <select value={st.role || ""} onChange={(e) => setSt({ ...st, role: e.target.value })} className="mt-1.5 h-10 w-full rounded-md border border-input bg-white px-3 text-sm" data-testid="statement-role">
+            <option value="">Select…</option>{(data.roles || []).map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </label>
+        <fieldset className="text-sm" data-testid="statement-materials"><legend className="font-medium">Materials Reviewed</legend>
+          <div className="mt-1.5 grid grid-cols-2 gap-1">
+            {(data.materials || []).map((m) => (
+              <label key={m} className="flex items-center gap-2 text-xs"><input type="checkbox" checked={(st.materials_reviewed || []).includes(m)} onChange={() => setSt({ ...st, materials_reviewed: (st.materials_reviewed || []).includes(m) ? st.materials_reviewed.filter((x) => x !== m) : [...(st.materials_reviewed || []), m] })} data-testid={`statement-material-${m.replace(/\W+/g, "-").toLowerCase()}`} />{m}</label>
+            ))}
+          </div>
+        </fieldset>
+      </div>
+      <div className="mt-4 grid gap-4">
         {FIELDS.map(([k, label, hint]) => (
           <label key={k} className="block text-sm">
             <span className="font-medium">{label}</span>

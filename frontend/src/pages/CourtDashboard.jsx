@@ -7,7 +7,6 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { PacketViewer } from "@/components/PacketViewer";
 import { ReferCaseForm } from "@/components/ReferCaseForm";
-import { CourtCaseCard } from "@/components/CourtCaseCard";
 
 const STATUS = {
   sent: ["New", "bg-align-yellow/30 text-yellow-900"],
@@ -52,8 +51,8 @@ export default function CourtDashboard() {
           <>
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-widest text-accent font-semibold flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Court Dashboard</p>
-                <h1 className="text-3xl font-semibold mt-1">Referrals and submissions</h1>
+                <p className="text-xs uppercase tracking-widest text-accent font-semibold flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Judicial Portal</p>
+                <h1 className="text-3xl font-semibold mt-1">Court-Referred Cases</h1>
                 <p className="mt-1 text-sm text-muted-foreground">Signed in as {user?.email}. Read-only; every opening is logged for the sending professional.</p>
               </div>
               {data?.approved && <Button onClick={() => setShowRefer((v) => !v)} className="bg-brand-purple hover:bg-brand-purple/90 text-white" data-testid="refer-case-toggle-btn">{showRefer ? "Close" : "Refer Case to Professional"}</Button>}
@@ -61,13 +60,30 @@ export default function CourtDashboard() {
             {data?.approved && showRefer && <div className="mt-6"><ReferCaseForm defaultCourt={user?.profile?.organization} onCreated={() => { setShowRefer(false); load(); }} /></div>}
             {data?.approved && refs.length > 0 && (
               <section className="mt-8" data-testid="court-referrals-section">
-                <h2 className="text-lg font-semibold">Court Cases</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Each case shows the assigned professional, current status, hearing date, AI status summary, and final submissions.</p>
-                <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-white">
-                  {refs.map((x) => (
-                    <CourtCaseCard key={x.id} x={x} packets={data.packets} onOpenPacket={open} onUpdate={(y) => setRefs((rs) => rs.map((r) => (r.id === y.id ? y : r)))} />
-                  ))}
-                </ul>
+                <h2 className="text-lg font-semibold">Court-Referred Cases</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Completion status, authorized Joint Reports, Professional Statements, and court–professional communication. Raw parent answers are never shown.</p>
+                <div className="mt-3 overflow-x-auto rounded-lg border border-border bg-white">
+                  <table className="w-full text-sm" data-testid="court-cases-table">
+                    <thead className="bg-secondary/50 text-left text-xs uppercase tracking-wider text-muted-foreground"><tr>{["Case", "Professional", "Parents", "Assessments", "Joint Report", "Prof. Statement", "Hearing", ""].map((h) => <th key={h} className="px-3 py-2 font-semibold">{h}</th>)}</tr></thead>
+                    <tbody className="divide-y divide-border">
+                      {refs.map((x) => {
+                        const idx = x.stage?.index ?? 0; const done = x.parents_done ?? 0;
+                        return (
+                          <tr key={x.id} className={x.overdue ? "bg-red-50/40" : ""} data-testid={`court-case-row-${x.id}`}>
+                            <td className="px-3 py-2"><p className="font-semibold">{x.cause_number}</p><p className="font-mono text-[11px] text-muted-foreground">{x.case_code || "—"}</p></td>
+                            <td className="px-3 py-2">{x.professional_name}{x.status === "pending" && <span className="block text-[11px] text-muted-foreground">awaiting acceptance</span>}{x.status === "declined" && <span className="block text-[11px] text-red-700">declined</span>}</td>
+                            <td className="px-3 py-2" data-testid={`court-case-parents-${x.id}`}>{x.case_id ? `${done}/2` : "—"}</td>
+                            <td className="px-3 py-2">{done === 2 ? "Complete" : x.case_id ? "Pending" : "—"}</td>
+                            <td className="px-3 py-2">{idx >= 6 ? "Submitted" : idx >= 4 ? "Ready" : "—"}</td>
+                            <td className="px-3 py-2">{idx >= 6 ? "Submitted" : x.statement_status === "ready" ? "Ready" : x.statement_status === "draft" ? "Pending" : "—"}</td>
+                            <td className={`px-3 py-2 ${x.overdue ? "font-semibold text-red-700" : ""}`}>{x.hearing_date || "—"}</td>
+                            <td className="px-3 py-2 text-right"><Button size="sm" variant="outline" asChild data-testid={`court-review-case-${x.id}`}><Link to={`/court/case/${x.id}`}>Review Case</Link></Button></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </section>
             )}
             <h2 className="mt-10 text-lg font-semibold">Court Packets addressed to you</h2>

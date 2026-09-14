@@ -343,3 +343,24 @@ AGREEMENT_CONFIDENTIALITY = (
     "Each parent's proposals remain private until both have submitted. This combined document "
     "becomes visible to both parents only when complete."
 )
+
+
+SUBJECT_CODE_PREFIX = {
+    "communication": "COM", "schedule": "SCH", "education": "EDU", "medical": "MED",
+    "psychological": "PSY", "activities": "ACT", "transitions": "TRA", "decision_making": "DEC",
+    "holidays": "HOL", "technology": "TEC", "routine": "ROU", "co_parenting": "COP",
+    "child_needs": "CHD", "special_needs": "SPN", "safety": "SAF", "risk": "RSK",
+    "safety_communication": "SCO", "safeguards": "SGR", "mediation": "MDN", "custom": "CUS",
+    "multi": "ALN",
+}
+CASE_ID_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+
+def new_case_code(subject: str, kind: str = "joint_report") -> str:
+    """Immutable SA CoParents Case ID: SA-YY-PFX-XXXXXX (non-sequential, unambiguous alphabet)."""
+    import secrets
+    from datetime import datetime, timezone
+    prefix = "AGR" if kind == "agreement" else SUBJECT_CODE_PREFIX.get(subject, "ALN")
+    yy = datetime.now(timezone.utc).strftime("%y")
+    rand = "".join(secrets.choice(CASE_ID_ALPHABET) for _ in range(6))
+    return f"SA-{yy}-{prefix}-{rand}"

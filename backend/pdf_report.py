@@ -873,16 +873,22 @@ def build_professional_statement_pdf(p: dict) -> bytes:
     pdf.set_font(FONT, "", 9.5)
     pdf.set_text_color(*GRAY)
     meta = [p.get("date"), court.get("court_name"), court.get("cause_number") and f"Cause No. {court['cause_number']}", p.get("case_code") and f"Align case {p['case_code']}",
-            p.get("subject_label"), st.get("version") and f"Statement v{st['version']}"]
+            p.get("subject_label"), st.get("role") and f"Role: {st['role']}", st.get("version") and f"Statement v{st['version']}"]
     pdf.multi_cell(0, 4.5, _s("  |  ".join(str(m) for m in meta if m)), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
     for key, title in (("role_basis", "1. Role and basis of involvement"), ("process_summary", "2. Process completed by the parents"),
-                       ("observations", "3. Observations of alignment and differences"), ("safety_considerations", "4. Safety considerations"),
-                       ("next_steps", "5. Recommended next steps for facilitation")):
-        if not st.get(key) and key == "safety_considerations":
+                       ("alignment_areas", "3. Areas of alignment"), ("further_attention", "4. Areas requiring further attention"),
+                       ("resources_considered", "5. Resources / interventions considered"), ("current_status", "6. Current status"),
+                       ("observations", "7. Professional observations"), ("safety_considerations", "8. Safety considerations"),
+                       ("next_steps", "9. Recommended next steps for facilitation")):
+        if not st.get(key) and key in ("safety_considerations", "alignment_areas", "further_attention", "resources_considered", "current_status"):
             continue
         _label(pdf, title.upper())
         _body(pdf, st.get(key) or "-")
+        pdf.ln(2)
+    if st.get("materials_reviewed"):
+        _label(pdf, "MATERIALS REVIEWED")
+        _body(pdf, " · ".join(st["materials_reviewed"]))
         pdf.ln(2)
     pdf.ln(2)
     _label(pdf, "PROFESSIONAL ATTESTATION")

@@ -4,9 +4,11 @@ import { toast } from "sonner";
 import { Gavel } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { CourtThread } from "@/components/CourtThread";
 
 export function CourtReferralsInbox({ refs: external, onChange, alwaysShow = false }) {
   const [internal, setInternal] = useState(null);
+  const [openThread, setOpenThread] = useState(null);
   const refs = external !== undefined ? external : internal;
   const navigate = useNavigate();
   const load = () => {
@@ -47,6 +49,11 @@ export function CourtReferralsInbox({ refs: external, onChange, alwaysShow = fal
                 </div>
               )}
               {x.note && <p className="mt-1 text-xs italic text-muted-foreground">"{x.note}"</p>}
+              {x.case_code && <p className="mt-1 text-[11px] font-mono text-muted-foreground" data-testid={`court-referral-caseid-${x.id}`}>Case ID {x.case_code}</p>}
+              {x.status !== "pending" && x.status !== "declined" && (
+                <button type="button" onClick={() => setOpenThread((t) => (t === x.id ? null : x.id))} className="mt-2 text-xs font-medium text-primary hover:underline" data-testid={`court-referral-thread-toggle-${x.id}`}>{openThread === x.id ? "Hide court communication" : "Court communication"}</button>
+              )}
+              {openThread === x.id && <div className="mt-2"><CourtThread baseUrl={`/professional/court-referrals/${x.id}`} side="professional" /></div>}
             </div>
             <div className="flex items-center gap-2">
               {x.status === "pending" ? (<>

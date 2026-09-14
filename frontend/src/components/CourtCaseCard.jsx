@@ -15,7 +15,7 @@ const Field = ({ label, children, testId }) => (
   </div>
 );
 
-function HearingDate({ x, onSaved }) {
+export function HearingDate({ x, onSaved }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(x.hearing_date || "");
   const [busy, setBusy] = useState(false);

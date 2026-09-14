@@ -566,3 +566,11 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - New PDF layout (At a Glance + numbered sections), AgreementDocument.jsx UI. Old 8-term agreements not supported (user OK).
 - Court Refer form report types: co_parenting, education, medical, psychological, agreement, family_violence only.
 - Tests: tests/test_agreement_v2.py; legacy test_agreements_and_pro_requests updated to 10 keys.
+
+## 2026-09-14 — Three-layer architecture: Judicial Portal, court–professional communication, Case ID at referral
+- Homepage: two portal doors (Professionals / Courts), model strip Parent Reflection → … → Court Review (when needed); header [Professional Sign In] [Judicial Portal].
+- Judicial Dashboard = table (Case/ID, Professional, Parents n/2, Assessments, Joint Report, Prof. Statement, Hearing) + Review Case → /court/case/:refId (pages/CourtCase.jsx) with 5 sections: Case Status checklist, AI Court Summary (+counts, disclaimer), Joint Assessment Report (submitted only; Alignment/Difference/Child-Focused/Options), Professional Statement (frozen, role + materials), Court–Professional Communication.
+- Backend: GET /api/court-dashboard/cases/{refId} (court_workflow.judge_case); court_messages.py: GET/POST judge + pro message endpoints, emails (kind court_message), AI communication_summary (gpt-5.4-mini, rule fallback) stored on referral.
+- Case ID: referral gets case_code at creation (joint_data.new_case_code, moved from server.py); case creation from referral reuses it.
+- Statement: role (STATEMENT_ROLES), materials_reviewed (STATEMENT_MATERIALS fixed list + Other), alignment_areas, further_attention, resources_considered, current_status; PDF updated. App.js judge redirect allows /court/case/*.
+- Tests: tests/test_judicial_portal.py. CourtCaseCard.jsx now only exports HearingDate (card replaced by table).

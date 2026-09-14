@@ -28,7 +28,7 @@ from pydantic import BaseModel, EmailStr
 
 from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
 from report_engine import generate_report
-from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS, AGREEMENT_SECTIONS
+from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS, AGREEMENT_SECTIONS, new_case_code
 from agreement_ai import draft_agreement_clauses, answers_signature
 from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
 from court_workflow import court_stage, run_hearing_reminders
@@ -754,25 +754,7 @@ def new_code():
     return "".join(secrets.choice(alphabet) for _ in range(6))
 
 
-SUBJECT_CODE_PREFIX = {
-    "communication": "COM", "schedule": "SCH", "education": "EDU", "medical": "MED",
-    "psychological": "PSY", "activities": "ACT", "transitions": "TRA", "decision_making": "DEC",
-    "holidays": "HOL", "technology": "TEC", "routine": "ROU", "co_parenting": "COP",
-    "child_needs": "CHD", "special_needs": "SPN", "safety": "SAF", "risk": "RSK",
-    "safety_communication": "SCO", "safeguards": "SGR", "mediation": "MDN", "custom": "CUS",
-    "multi": "ALN",
-}
-
-
-CASE_ID_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 CASE_STATUS_ORDER = ["DRAFT", "INVITED", "ONE_COMPLETE", "READY_FOR_ALIGNMENT", "REPORT_GENERATED", "CLOSED"]
-
-
-def new_case_code(subject, kind="joint_report"):
-    prefix = "AGR" if kind == "agreement" else SUBJECT_CODE_PREFIX.get(subject, "ALN")
-    yy = datetime.now(timezone.utc).strftime("%y")
-    rand = "".join(secrets.choice(CASE_ID_ALPHABET) for _ in range(6))
-    return f"SA-{yy}-{prefix}-{rand}"
 
 
 def case_status(doc: dict) -> str:
@@ -1074,6 +1056,10 @@ async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_curre
     subject, subject_keys, label = resolve_subjects(body.subject, body.subjects, body.custom_subject)
     rid = str(uuid.uuid4())
     case_code = new_case_code(subject)
+    if body.court_referral_id:
+        pre = await db.court_referrals.find_one({"id": body.court_referral_id, "professional_id": user["_id"]}, {"case_code": 1, "case_id": 1})
+        if pre and pre.get("case_code") and not pre.get("case_id"):
+            case_code = pre["case_code"]
     doc = {
         "id": rid,
         "subject": subject,
@@ -1720,7 +1706,7 @@ async def search_professional_notes(q: str = "", user=Depends(get_current_user))
     return out
 
 
-COURT_COMM_KINDS = ("court_referral", "court_referral_declined", "court_submission", "hearing_date", "hearing_reminder", "court_packet", "court_packet_code", "court_response")
+COURT_COMM_KINDS = ("court_referral", "court_referral_declined", "court_submission", "hearing_date", "hearing_reminder", "court_packet", "court_packet_code", "court_response", "court_message")
 
 
 def _comm_public(c: dict) -> dict:
@@ -1751,7 +1737,7 @@ async def court_referral_communications(ref_id: str, user=Depends(get_current_us
 COMM_KIND_LABELS = {
     "invitation": "Parent invitation", "completion_nudge": "Completion nudge", "report_ready": "Report ready notice", "follow_up_reminder": "Follow-up reminder",
     "court_referral": "Court referral", "court_referral_declined": "Referral declined", "court_submission": "Submission to court", "hearing_date": "Hearing date notice",
-    "hearing_reminder": "Hearing reminder", "court_packet": "Court Packet sent", "court_packet_code": "Court Packet access code", "court_response": "Court response",
+    "hearing_reminder": "Hearing reminder", "court_packet": "Court Packet sent", "court_packet_code": "Court Packet access code", "court_response": "Court response", "court_message": "Court–professional message",
 }
 
 

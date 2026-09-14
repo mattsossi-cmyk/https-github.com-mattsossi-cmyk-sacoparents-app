@@ -10,11 +10,14 @@ from bson import Binary
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
+from joint_data import new_case_code
 from joint_engine import generate_joint_report
 from pdf_report import build_joint_pdf, build_professional_statement_pdf, merge_pdfs
 
 STAGES = ["Court Referral", "Accepted", "Parents Invited", "Assessments Complete", "Joint Report Ready", "Professional Statement Ready", "Submitted to Court"]
-STATEMENT_FIELDS = ("role_basis", "process_summary", "observations", "safety_considerations", "next_steps")
+STATEMENT_FIELDS = ("role_basis", "process_summary", "observations", "safety_considerations", "next_steps", "alignment_areas", "further_attention", "resources_considered", "current_status")
+STATEMENT_ROLES = ("Mediator", "Therapist", "Parenting Facilitator", "Parenting Coordinator", "Amicus Attorney", "Attorney", "Other")
+STATEMENT_MATERIALS = ("Parent A Assessment", "Parent B Assessment", "Joint Report", "Educational Assessment", "Medical Assessment", "Psychological Assessment", "Co-Parenting Agreement", "Safety Assessment", "Other")
 STATEMENT_ATTESTATION = ("I attest that this Professional Assessment Statement reflects my professional observations of the facilitation process, "
                          "that it contains no recommendation regarding conservatorship or possession, and that I have authority to submit it to the court.")
 
@@ -106,7 +109,17 @@ class StatementIn(BaseModel):
     observations: str = ""
     safety_considerations: str = ""
     next_steps: str = ""
+    alignment_areas: str = ""
+    further_attention: str = ""
+    resources_considered: str = ""
+    current_status: str = ""
+    role: str = ""
+    materials_reviewed: list[str] = []
     status: str = "draft"
+
+
+class CourtMessageIn(BaseModel):
+    text: str
 
 
 class SubmitIn(BaseModel):
@@ -209,7 +222,7 @@ def _shared(db, get_current_user, app_url, send_email, email_from_name, logger, 
 
     def referral_public(x: dict) -> dict:
         out = {k: x.get(k) for k in ("id", "judge_name", "judge_email", "court_name", "cause_number", "subject", "child_initials", "parent_a_name", "parent_a_email",
-                                     "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at", "hearing_date")}
+                                     "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at", "hearing_date", "case_code", "communication_summary")}
         out["overdue"] = hearing_overdue(x)
         out["requested_reports"] = [{"key": k, "label": REPORT_TYPES[k][0], "subjects": REPORT_TYPES[k][1]} for k in (x.get("requested_reports") or []) if k in REPORT_TYPES]
         return out
@@ -259,7 +272,8 @@ def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, lo
                "court_name": body.court_name.strip()[:160] or (user.get("profile") or {}).get("organization", ""), "cause_number": body.cause_number.strip()[:80],
                "subject": body.subject or "communication", "child_initials": body.child_initials.strip()[:10], "parent_a_name": body.parent_a_name.strip()[:120],
                "parent_a_email": body.parent_a_email.strip().lower()[:200], "parent_b_name": body.parent_b_name.strip()[:120], "parent_b_email": body.parent_b_email.strip().lower()[:200],
-               "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "requested_reports": _valid_reports(body.requested_reports), "professional_id": pro["_id"], "professional_name": pro.get("name", ""), "status": "pending", "created_at": _iso(now)}
+               "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "requested_reports": _valid_reports(body.requested_reports), "professional_id": pro["_id"], "professional_name": pro.get("name", ""), "status": "pending", "created_at": _iso(now),
+               "case_code": new_case_code(next((REPORT_TYPES[k][1][0] for k in _valid_reports(body.requested_reports) if REPORT_TYPES[k][1]), "co_parenting"))}
         await db.court_referrals.insert_one(ref)
         try:
             await send_email(to=pro["email"], case_id=ref["id"], kind="court_referral", to_role="Professional", subject=f"Court referral from {user.get('name', 'the court')} - Cause No. {ref['cause_number']}",
@@ -284,6 +298,8 @@ def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, lo
             if case:
                 item["case_code"] = case.get("case_code")
                 item["submissions"] = len(case.get("court_submissions") or [])
+                item["parents_done"] = sum(1 for k in ("a", "b") if case.get("responses", {}).get(k))
+                item["statement_status"] = (case.get("professional_statement") or {}).get("status")
             saved = x.get("status_summary")
             sig = _stage_signature(x, case, packets)
             item["status_summary"] = {**saved, "outdated": saved.get("signature") != sig} if saved else None
@@ -304,6 +320,37 @@ def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, lo
             await db.access_events.insert_one({"report_id": case["id"], "kind": "court", "action": f"Court status summary refreshed by {user.get('name', '')}", "at": summary["generated_at"],
                                                "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Court"})
         return {**summary, "outdated": False}
+
+    @r.get("/court-dashboard/cases/{ref_id}")
+    async def judge_case(ref_id: str, user=Depends(get_current_user)):
+        """Judicial case view: procedural status, authorized (submitted) reports and statement only. Never raw parent answers."""
+        await require_judge(user)
+        x = await db.court_referrals.find_one({"id": ref_id, "judge_id": user["_id"]}, {"_id": 0})
+        if not x:
+            raise HTTPException(status_code=404, detail="Referral not found")
+        case = await db.joint_reports.find_one({"id": x["case_id"]}, {"_id": 0}) if x.get("case_id") else None
+        packets = await db.court_packets.find({"report_id": x["case_id"], "submission_version": {"$exists": True}}, {"_id": 0, "token_hash": 0, "code_hash": 0, "sessions": 0}).sort("submission_version", -1).to_list(50) if x.get("case_id") else []
+        stage = court_stage(case) if case else {"index": 0, "label": STAGES[0], "steps": STAGES}
+        responses = (case or {}).get("responses", {})
+        done = [bool(responses.get("a")), bool(responses.get("b"))]
+        checklist = [("Court referral sent", True), ("Professional accepted", x["status"] in ("accepted", "submitted")), ("Parents invited", stage["index"] >= 2),
+                     ("Parent A completed assessment", done[0]), ("Parent B completed assessment", done[1]), ("Joint Report generated", stage["index"] >= 4),
+                     ("Professional Statement ready", stage["index"] >= 5), ("Submitted to court", stage["index"] >= 6)]
+        submitted = bool(packets)
+        reports, counts, statement = [], None, None
+        if case and submitted:
+            rep = generate_joint_report(case)
+            counts = {"alignment_areas": len(rep.get("alignment_statements") or []), "discussion_areas": len(rep.get("differences") or []), "completion_pct": 100}
+            reports.append({"key": case.get("subject"), "label": case.get("subject_label"), "case_code": case.get("case_code"), "version": packets[0]["submission_version"],
+                            "alignment": rep.get("alignment_statements") or [], "differences": [f"Parents expressed different perspectives regarding {d.get('area', '').lower()}." for d in (rep.get("differences") or []) if isinstance(d, dict)],
+                            "child_focused": rep.get("child_needs") or [], "options": rep.get("options") or [], "packet_id": packets[0]["id"]})
+            statement = {**(packets[0].get("statement") or {}), "professional_name": packets[0].get("professional_name"), "submitted_at": packets[0].get("created_at"), "packet_id": packets[0]["id"]}
+        elif case:
+            counts = {"alignment_areas": None, "discussion_areas": None, "completion_pct": int(sum(done) / 2 * 100)}
+        return {"referral": referral_public(x), "case_code": x.get("case_code") or (case or {}).get("case_code"), "stage": stage, "checklist": [{"label": l, "done": d} for l, d in checklist],
+                "parents_invited": 2 if case else 0, "parents_participating": sum(done), "status_summary": x.get("status_summary"), "counts": counts,
+                "reports": reports, "statement": statement, "submissions": [{"version": p["submission_version"], "packet_id": p["id"], "at": p["created_at"], "sha256": p.get("sha256"), "superseded": p.get("superseded", False)} for p in packets],
+                "communication_summary": x.get("communication_summary"), "disclaimer": SUMMARY_DISCLAIMER}
 
     @r.patch("/court-dashboard/referrals/{ref_id}/hearing-date")
     async def set_hearing_date(ref_id: str, body: HearingDateIn, user=Depends(get_current_user)):
@@ -426,7 +473,8 @@ def _pro_routes(db, get_current_user, app_url, send_email, email_from_name, logg
     @r.get("/joint/reports/{rid}/professional-statement")
     async def get_statement(rid: str, user=Depends(get_current_user)):
         doc = await own_case(rid, user)
-        return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft"}, "attestation_text": STATEMENT_ATTESTATION,
+        return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
+                "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS,
                 "court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
 
     @r.put("/joint/reports/{rid}/professional-statement")
@@ -434,9 +482,11 @@ def _pro_routes(db, get_current_user, app_url, send_email, email_from_name, logg
         doc = await own_case(rid, user)
         status = body.status if body.status in ("draft", "ready") else "draft"
         st = {k: getattr(body, k).strip()[:5000] for k in STATEMENT_FIELDS}
+        st["role"] = body.role.strip()[:80]
+        st["materials_reviewed"] = [m for m in body.materials_reviewed if m in STATEMENT_MATERIALS][:20]
         if status == "ready" and not all(st[k] for k in ("role_basis", "process_summary", "observations", "next_steps")):
             raise HTTPException(status_code=400, detail="Complete role, process, observations and next steps before marking the statement ready")
-        banned = re.search(r"\b(should (be awarded|have|get) (sole|primary|joint) (custody|conservatorship)|award(ed)? custody|recommend(s|ed)? (sole|primary) (custody|conservatorship))\b", " ".join(st.values()), re.I)
+        banned = re.search(r"\b(should (be awarded|have|get) (sole|primary|joint) (custody|conservatorship)|award(ed)? custody|recommend(s|ed)? (sole|primary) (custody|conservatorship))\b", " ".join(st[k] for k in STATEMENT_FIELDS), re.I)
         if banned:
             raise HTTPException(status_code=400, detail="The statement must not recommend custody or conservatorship outcomes. Please rephrase as facilitation observations.")
         st.update({"status": status, "updated_at": _iso(_now()), "updated_by": user.get("name", ""), "version": ((doc.get("professional_statement") or {}).get("version") or 0) + 1})
@@ -520,4 +570,6 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
     r = APIRouter()
     r.include_router(_judge_routes(*args, h))
     r.include_router(_pro_routes(*args, h))
+    from court_messages import build_router as build_messages
+    r.include_router(build_messages(db, get_current_user, app_url, send_email, email_from_name, h["require_judge"], h["require_pro"]))
     return r

@@ -24,6 +24,7 @@ import FamilyMatters from "@/pages/FamilyMatters";
 import Verify from "@/pages/Verify";
 import CourtPacket from "@/pages/CourtPacket";
 import CourtDashboard from "@/pages/CourtDashboard";
+import CourtCase from "@/pages/CourtCase";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -35,7 +36,7 @@ function Protected({ children }) {
     );
   }
   if (!user) return <Navigate to="/auth" replace />;
-  if (user.role === "judge" && window.location.pathname !== "/court-dashboard") return <Navigate to="/court-dashboard" replace />;
+  if (user.role === "judge" && !/^\/(court-dashboard|court\/case\/)/.test(window.location.pathname)) return <Navigate to="/court-dashboard" replace />;
   return children;
 }
 
@@ -49,6 +50,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
             <Route path="/court-dashboard" element={<Protected><CourtDashboard /></Protected>} />
+            <Route path="/court/case/:refId" element={<Protected><CourtCase /></Protected>} />
             <Route path="/report/:id" element={<Protected><ReportView /></Protected>} />
             <Route path="/join/:token" element={<Join />} />
             <Route path="/joint/new" element={<Protected><JointNew /></Protected>} />

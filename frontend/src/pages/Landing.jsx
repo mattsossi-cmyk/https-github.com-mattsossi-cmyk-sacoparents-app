@@ -66,10 +66,10 @@ export default function Landing() {
         </nav>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Link to="/auth" data-testid="nav-login-link" className="hidden sm:block">
-            <Button variant="ghost" data-testid="nav-login-btn">Sign In</Button>
+            <Button variant="ghost" data-testid="nav-login-btn">Professional Sign In</Button>
           </Link>
-          <Link to="/auth?mode=register" data-testid="nav-get-started-link">
-            <Button size="sm" className="sm:h-9 sm:px-4" data-testid="nav-get-started-btn"><span className="sm:hidden">Get Started</span><span className="hidden sm:inline">Create Professional Account</span></Button>
+          <Link to="/auth?court=1" data-testid="nav-judicial-link">
+            <Button size="sm" variant="outline" className="sm:h-9 sm:px-4 border-brand-purple/40 text-brand-purple" data-testid="nav-judicial-btn"><Gavel className="h-4 w-4 mr-1.5" /> Judicial Portal</Button>
           </Link>
         </div>
       </header>
@@ -85,30 +85,36 @@ export default function Landing() {
           />
         </div>
         <div className="md:order-last min-w-0">
-          <p className="text-sm uppercase tracking-widest text-primary font-bold mb-4" data-testid="hero-eyebrow">SA CoParents Align · The professional side of the SA CoParents system</p>
+          <p className="text-sm uppercase tracking-widest text-primary font-bold mb-4" data-testid="hero-eyebrow">SA CoParents Align · Professional &amp; Court Tools for Child-Focused Family Resolution</p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-purple leading-tight" data-testid="hero-heading">
-            Better Information. Stronger Decisions. Brighter Futures.
+            Turning Individual Perspectives Into Child-Focused Alignment
           </h1>
           <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-xl" data-testid="hero-subtext">
-            A professional platform that turns individual parent assessments into organized joint reports,
-            professional insights, and child-focused pathways forward.
+            For professionals and courts working with parents experiencing separation, divorce, and co-parenting conflict.
+            Better Information. Stronger Decisions. Brighter Futures.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row sm:items-start gap-4">
-            <Link to="/auth?mode=register" data-testid="hero-create-account-link" className="group">
-              <Button size="lg" className="h-auto w-full sm:w-auto py-3 px-6 flex-col items-start gap-0.5 uppercase tracking-wide whitespace-normal text-left" data-testid="hero-create-account-btn">
-                <span className="flex items-center gap-2">Create a Free Professional Account <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
-                <span className="text-[11px] font-normal normal-case tracking-normal opacity-85">Start a case and invite parents</span>
-              </Button>
-            </Link>
-            <Link to="/auth" data-testid="hero-signin-link">
-              <Button size="lg" variant="outline" className="h-auto py-3 uppercase tracking-wide" data-testid="hero-signin-btn">Professional Sign In</Button>
-            </Link>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2" data-testid="portal-doors">
+            <div className="rounded-xl border-2 border-brand-purple/30 bg-white p-5" data-testid="portal-professionals">
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-purple">Professionals</p>
+              <p className="mt-1 text-lg font-semibold">Manage Cases</p>
+              <ul className="mt-2 space-y-0.5 text-sm text-muted-foreground">{["Invite parents.", "Assign assessments.", "Generate Joint Reports.", "Identify alignment and differences.", "Prepare Professional Statements."].map((t) => <li key={t}>{t}</li>)}</ul>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link to="/auth" data-testid="hero-signin-link"><Button size="sm" data-testid="hero-signin-btn">Professional Portal <ArrowRight className="h-4 w-4 ml-1" /></Button></Link>
+                <Link to="/auth?mode=register" data-testid="hero-create-account-link"><Button size="sm" variant="ghost" data-testid="hero-create-account-btn">Create a free account</Button></Link>
+              </div>
+            </div>
+            <div className="rounded-xl border-2 border-border bg-secondary/40 p-5" data-testid="portal-courts">
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-purple flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Courts</p>
+              <p className="mt-1 text-lg font-semibold">Review Referred Cases</p>
+              <ul className="mt-2 space-y-0.5 text-sm text-muted-foreground">{["Track assessment completion.", "Review Joint Reports.", "Read Professional Statements.", "View case-status summaries.", "Communicate with assigned professionals."].map((t) => <li key={t}>{t}</li>)}</ul>
+              <div className="mt-4"><Link to="/auth?court=1" data-testid="hero-judicial-link"><Button size="sm" variant="outline" className="border-brand-purple/40 text-brand-purple" data-testid="hero-judicial-btn">Judicial Portal <ArrowRight className="h-4 w-4 ml-1" /></Button></Link></div>
+            </div>
           </div>
           <p className="mt-5 text-sm text-muted-foreground" data-testid="hero-accept-line">
             Have an invitation? <Link to="/auth" className="text-primary font-medium hover:underline" data-testid="hero-accept-link">Accept Invitation</Link>
           </p>
           <p className="mt-6 text-sm font-semibold tracking-wide text-brand-purple" data-testid="hero-journey">
-            Create or Receive a Case → Invite Parents → Monitor Assessments → Review Joint Reports → Prepare Professional Statement → Share/Submit Authorized Reports
+            Parent Reflection → Shared Understanding → Professional Alignment → Options &amp; Resources → Agreement → Court Review (when needed)
           </p>
         </div>
       </section>
