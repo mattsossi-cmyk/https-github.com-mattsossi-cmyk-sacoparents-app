@@ -585,3 +585,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Ctx dataclass replaces 8-arg court route factories; _judge_case_routes decomposed (_judge_row, _load_judge_referral, _case_and_packets, _court_event, _email_hearing_set): 26→~8. court_packets _pro_routes split (case packet routes / packet admin routes) + _assert_packet_allowed. run_hearing_reminders restored after an accidental drop (import error caught, fixed, verified).
 - "Undefined variable" + `is` findings: false positives again (ruff F821/F823/F811 clean; only `is None`). Remaining C901 12-13 on two factories is inherent to nested handlers.
 - Focused court suites 26 passed; deployment_agent PASS. Awaiting user Republish (agent cannot deploy).
+
+## 2026-09-14 — Judge Weekly Digest
+- judge_digest.py: run_judge_digests(db, send_email, app_url, from_name, logger) → one email per approved judge with open referrals: table of Cause No./Case ID, professional, stage, hearing date (OVERDUE flag), unanswered court messages ("Unanswered since …"), procedural disclaimer. Kind judge_digest.
+- POST /api/cron/judge-digest; .emergent/crons.yml "judge-digest" Monday 07:00 America/Chicago (6 crons total). Tests: tests/test_judge_digest.py.

@@ -32,6 +32,7 @@ from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALIT
 from agreement_ai import draft_agreement_clauses, answers_signature
 from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
 from court_workflow import court_stage, run_hearing_reminders
+from judge_digest import run_judge_digests
 from urllib.parse import quote
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, build_session_prep_pdf, build_communications_log_pdf, verify_qr_png
 from complete_engine import build_complete_report
@@ -2868,6 +2869,16 @@ async def cron_weekly_summary(request: Request):
     if ack.get("duplicate"):
         return ack
     asyncio.create_task(run_weekly_summaries())
+    return ack
+
+
+@api.post("/cron/judge-digest")
+async def cron_judge_digest(request: Request):
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    ack = await _cron_accept(request, "judge-digest")
+    if ack.get("duplicate"):
+        return ack
+    asyncio.create_task(run_judge_digests(db, send_email, app_url, EMAIL_FROM_NAME, logger))
     return ack
 
 
