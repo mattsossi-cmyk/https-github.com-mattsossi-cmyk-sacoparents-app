@@ -170,7 +170,7 @@ def test_share_link_full_roundtrip(app_and_state):
     res2 = client.get(f"/api/joint-agreement/shared/{token}")
     assert res2.status_code == 200, res2.text
     joint = res2.json()
-    assert joint["report_type"] == "joint_coparenting_agreement_draft"
+    assert joint["report_type"] == "joint_alignment_report"
     assert joint["parent_a_name"] == "Alex Parent"
     assert joint["parent_b_name"] == "Blake Parent"
     assert joint["shared_by_name"] == "Alex Parent"

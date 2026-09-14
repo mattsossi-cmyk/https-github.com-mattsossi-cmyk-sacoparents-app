@@ -273,7 +273,7 @@ export default function JointAgreement() {
       <AppShell>
         <div className="max-w-2xl mx-auto p-8" data-testid="joint-agreement-error">
           <h1 className="font-serif text-3xl text-[#1A1330] mb-4">
-            Joint Co-Parenting Agreement Draft
+            Step One — Alignment Before Agreement
           </h1>
           <p className="text-[#4B4567] leading-relaxed mb-6">{msg}</p>
           <div className="flex flex-wrap gap-2">
@@ -375,7 +375,7 @@ export default function JointAgreement() {
         </div>
 
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
-          Joint Alignment Agreement
+          {d.report_subtitle || "Joint Alignment Report"}
         </div>
         <h1
           className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1 leading-tight"
@@ -387,9 +387,13 @@ export default function JointAgreement() {
           className="mt-2 text-xs text-[#4B4567] max-w-2xl leading-relaxed"
           data-testid="joint-agreement-parent-facing-subline"
         >
-          This is your <strong>Joint Alignment Agreement</strong> — a neutral
-          draft you and your co-parent can hand to your mediator or attorney
-          as a starting point.
+          {d.report_tagline || (
+            <>
+              This is your <strong>Joint Alignment Report</strong> — a neutral
+              map of where you already agree, where you still differ, and what
+              your child needs next.
+            </>
+          )}
         </p>
         <div className="mt-2 text-sm text-[#4B4567]" data-testid="joint-agreement-parents">
           {parentA} <span className="text-[#857E9C] mx-1">·</span> {parentB}

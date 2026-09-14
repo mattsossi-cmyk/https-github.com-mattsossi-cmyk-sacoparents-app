@@ -36,16 +36,17 @@ from typing import Any, Dict, List, Optional, Tuple
 # ---------------------------------------------------------------------------
 
 DISCLAIMER = (
-    "This Joint Co-Parenting Agreement Draft is a DRAFT FOR DISCUSSION "
-    "compiled from both parents' individual agreement drafts. It is not a "
-    "signed agreement, a court order, a legal document, or a custody "
-    "recommendation. Both parents remain responsible for reviewing each "
-    "clause with their own professionals before adopting anything. The "
-    "purpose of this document is to make it easy to see where the parents "
-    "already converge, and where a mediator or attorney could help bridge "
-    "the remaining gaps. Use of SA CoParents does not by itself create an "
-    "attorney-client, therapist-patient, mediator-client, or other "
-    "privileged relationship."
+    "This Joint Alignment Report is a NEUTRAL MAP compiled from both "
+    "parents' individual agreement drafts. It is not a signed "
+    "agreement, a court order, a legal document, or a custody "
+    "recommendation. Both parents remain responsible for reviewing "
+    "each clause with their own professionals before adopting "
+    "anything. The purpose of this document is to make it easy to "
+    "see where the parents already converge, and where a mediator or "
+    "attorney could help bridge the remaining gaps. Use of SA "
+    "CoParents does not by itself create an attorney-client, "
+    "therapist-patient, mediator-client, or other privileged "
+    "relationship."
 )
 
 NEUTRAL_LANGUAGE_NOTE = (
@@ -427,6 +428,256 @@ def _next_conversation_questions(
     return questions
 
 
+# ---------------------------------------------------------------------------
+# Alignment-report derived blocks — Iter190 · repositions the artefact as the
+# "Step One — Alignment Before Agreement" report modelled after
+# sacoparentsalign.com. These are ADDITIVE fields on the payload; existing
+# consumers keep reading `sections` / `parent_view` unchanged.
+# ---------------------------------------------------------------------------
+
+
+# Static neutral titles the alignment report always surfaces. Kept in
+# lockstep with `joint_agreement_pdf.py::_ALIGNMENT_SECTION_TITLES` so the
+# PDF and any consumer show the same section headers.
+_ALIGNMENT_MAP_TOPICS: List[Tuple[str, str]] = [
+    ("shared_goals",        "Shared child-centered goals"),
+    ("communication",       "Communication"),
+    ("child_needs",         "Child's needs"),
+    ("household_rules",     "Household rhythms"),
+    ("priority_items",      "Priority topics"),
+    ("open_for_discussion", "Still open for discussion"),
+]
+
+
+def _alignment_bucket_for_ratio(both: int, total: int) -> str:
+    """Map a "both/total" ratio into the neutral 3-bucket alignment
+    score used on the report (mirrors sacoparentsalign's Strong /
+    Moderate / Needs discussion colour band). Any section with zero
+    clauses is treated as 'not_enough_data' — the PDF row-renderer
+    surfaces that explicitly so a blank section does not read as
+    strong alignment."""
+    if total <= 0:
+        return "not_enough_data"
+    ratio = both / total
+    if ratio >= 0.66:
+        return "strong"
+    if ratio >= 0.33:
+        return "moderate"
+    return "needs_discussion"
+
+
+def _build_alignment_map(sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Produce one alignment-map row per merged section, in the
+    canonical order the PDF renders. Consumers get {topic, key,
+    alignment, both_count, total_count} — enough to draw either a
+    coloured strip (PDF) or a table row (frontend)."""
+    by_key = {s.get("key"): s for s in sections or []}
+    rows: List[Dict[str, Any]] = []
+    for key, topic in _ALIGNMENT_MAP_TOPICS:
+        sec = by_key.get(key) or {}
+        counts = sec.get("counts") or {}
+        both = int(counts.get("both_proposed", 0))
+        a_only = int(counts.get("parent_a_only", 0))
+        b_only = int(counts.get("parent_b_only", 0))
+        total = both + a_only + b_only
+        rows.append({
+            "key":         key,
+            "topic":       topic,
+            "alignment":   _alignment_bucket_for_ratio(both, total),
+            "both_count":  both,
+            "total_count": total,
+        })
+    return rows
+
+
+# Neutral child-focused defaults surfaced when a merged section is
+# empty of clauses — the alignment report never leaves the page blank.
+# Modelled on sacoparentsalign's condensed sample bullet list.
+_DEFAULT_CHILD_NEEDS: List[str] = [
+    "Predictable co-parenting structure",
+    "Consistent expectations between homes",
+    "Reliable information sharing",
+    "Clear parenting roles",
+    "Reduced child exposure to disagreement",
+]
+
+
+def _child_identified_needs(sections: List[Dict[str, Any]]) -> List[str]:
+    """Derive a bullet list of the child's identified needs from the
+    merged clauses. Order of precedence:
+
+      1. `child_needs` section's `both_proposed` area labels
+      2. `priority_items` section's `both_proposed` area labels
+      3. `_DEFAULT_CHILD_NEEDS` fallback
+
+    Deduplicated case-insensitively, capped at 8 bullets so the PDF
+    never wraps into a two-page bullet list.
+    """
+    seen: set = set()
+    needs: List[str] = []
+
+    def _push(label: str) -> None:
+        text = (label or "").strip()
+        if not text:
+            return
+        key = text.lower()
+        if key in seen:
+            return
+        seen.add(key)
+        needs.append(text)
+
+    by_key = {s.get("key"): s for s in sections or []}
+    for section_key in ("child_needs", "priority_items"):
+        sec = by_key.get(section_key) or {}
+        for row in sec.get("both_proposed") or []:
+            _push(row.get("area") or _clause_short_text(row, "either"))
+        if len(needs) >= 8:
+            return needs[:8]
+
+    # Backfill from the neutral defaults so the section is never sparse
+    # — a single derived bullet plus 4 defaults reads better than a
+    # single lonely bullet on the PDF.
+    for default in _DEFAULT_CHILD_NEEDS:
+        if len(needs) >= 5:
+            break
+        _push(default)
+    return needs[:8]
+
+
+def _potential_alignment_pairs(
+    sections: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Cross-compare `parent_a_only` vs `parent_b_only` clauses for
+    NEAR-matches (similarity 0.30-0.60, i.e. below the `_SIMILARITY_MATCH`
+    merge threshold but not entirely unrelated). These are candidate
+    'potential alignment' rows — parents said something related but not
+    close enough to auto-merge, so a mediator's time is well spent
+    surfacing them.
+
+    Returns at most 6 rows. Never crosses the strict-merge threshold —
+    that's the `both_proposed` bucket's job."""
+    out: List[Dict[str, Any]] = []
+    _POTENTIAL_MIN = 0.30
+    for sec in sections or []:
+        a_items = sec.get("parent_a_only") or []
+        b_items = sec.get("parent_b_only") or []
+        if not a_items or not b_items:
+            continue
+        # Greedy pairing — each b_item can only anchor one row so a
+        # single loose match doesn't spawn duplicates.
+        used_b: set = set()
+        for a_row in a_items:
+            a_text = (a_row.get("text") or "").strip()
+            if not a_text:
+                continue
+            best_j, best_score = -1, 0.0
+            for j, b_row in enumerate(b_items):
+                if j in used_b:
+                    continue
+                b_text = (b_row.get("text") or "").strip()
+                score = _similar(a_text, b_text)
+                if score > best_score:
+                    best_score = score
+                    best_j = j
+            if best_j >= 0 and _POTENTIAL_MIN <= best_score < _SIMILARITY_MATCH:
+                used_b.add(best_j)
+                b_row = b_items[best_j]
+                out.append({
+                    "section":       sec.get("key") or "",
+                    "section_title": sec.get("title") or "",
+                    "topic":         a_row.get("area") or b_row.get("area") or sec.get("title") or "",
+                    "parent_a_text": a_text,
+                    "parent_b_text": (b_row.get("text") or "").strip(),
+                    "similarity":    round(best_score, 2),
+                })
+            if len(out) >= 6:
+                return out
+        if len(out) >= 6:
+            break
+    return out
+
+
+# Neutral next-step suggestions — mirrors sacoparentsalign's closing
+# section. Kept as a static list so parents get the same options
+# regardless of how much data flowed in.
+_POSSIBLE_NEXT_STEPS: List[Dict[str, str]] = [
+    {
+        "title": "Continue Parent Discussion",
+        "detail": (
+            "Bring the 'both proposed' clauses to your next check-in and "
+            "adopt them as a starting point."
+        ),
+    },
+    {
+        "title": "Discuss With Mediator",
+        "detail": (
+            "Use the 'where perspectives differ' section as the agenda "
+            "for a facilitated conversation."
+        ),
+    },
+    {
+        "title": "Consult Teacher / School Counselor",
+        "detail": (
+            "If the alignment map flags educational needs, loop in your "
+            "child's school for context."
+        ),
+    },
+    {
+        "title": "Consult Child's Professional",
+        "detail": (
+            "When behavioural, medical, or therapy topics need "
+            "coordination, invite the professional into the conversation."
+        ),
+    },
+    {
+        "title": "Develop Written Parenting Protocol",
+        "detail": (
+            "Turn the shared clauses into a written protocol both "
+            "parents can reference between homes."
+        ),
+    },
+    {
+        "title": "Create Another Joint Report",
+        "detail": (
+            "Re-run the assessment in 6-12 weeks to see how alignment "
+            "evolves."
+        ),
+    },
+]
+
+
+def _build_alignment_report_view(
+    sections: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Bundle the four alignment-report specific blocks in a single
+    payload key so `joint_agreement_pdf.py` and any consumer can render
+    the sacoparentsalign 10-section flow without re-computing them."""
+    return {
+        "purpose_note": (
+            "This report shows how SA CoParents compares the "
+            "independently provided perspectives of both parents. It "
+            "identifies areas of alignment, differences in perspective, "
+            "the child's identified needs, and neutral options for "
+            "professional-guided discussion. It is not designed to "
+            "determine which parent is right or wrong."
+        ),
+        "alignment_map":          _build_alignment_map(sections),
+        "child_identified_needs": _child_identified_needs(sections),
+        "potential_alignment":    _potential_alignment_pairs(sections),
+        "possible_next_steps":    list(_POSSIBLE_NEXT_STEPS),
+        "closing_quote": (
+            "We value the parenting system by how well it supports the "
+            "child, not by how friendly the adults appear."
+        ),
+        "closing_line": (
+            "You don't have to see everything the same way to begin "
+            "working toward meeting your child's needs."
+        ),
+    }
+
+
+
+
 def _build_agreement_parent_view(
     sections: List[Dict[str, Any]],
     parent_a_name: str,
@@ -549,8 +800,13 @@ def build_joint_agreement(
     ]
 
     return {
-        "report_type":         "joint_coparenting_agreement_draft",
-        "report_title":        "Joint Co-Parenting Agreement Draft",
+        "report_type":         "joint_alignment_report",
+        "report_title":        "Step One - Alignment Before Agreement",
+        "report_subtitle":     "Joint Alignment Report",
+        "report_tagline":      (
+            "A neutral map of where you already agree, where you still "
+            "differ, and what your child needs next."
+        ),
         "share_id":            share_id,
         "parent_a_name":       parent_a_name,
         "parent_b_name":       parent_b_name,
@@ -567,6 +823,7 @@ def build_joint_agreement(
         "parent_view":         _build_agreement_parent_view(
             sections, parent_a_name, parent_b_name,
         ),
+        "alignment_report":    _build_alignment_report_view(sections),
         "summary":             _convergence_summary(sections),
         "closing_notes": {
             "parent_a": str(agreement_a.get("closing_note") or "").strip(),

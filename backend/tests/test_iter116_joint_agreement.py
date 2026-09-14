@@ -247,7 +247,10 @@ class TestMergerShape:
         body = r.json()
         assert body["not_a_final_agreement"] is True
         d = body["disclaimer"].lower()
-        assert "draft for discussion" in d
+        # Iter190 reframed the artefact as the Joint Alignment Report — the
+        # disclaimer now leads with "neutral map" rather than "draft for
+        # discussion", but the same three legal caveats are preserved.
+        assert "neutral map" in d
         assert "not a signed agreement" in d
         assert "custody" in d  # "not a custody recommendation"
 

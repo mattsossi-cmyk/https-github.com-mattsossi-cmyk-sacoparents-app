@@ -26,6 +26,87 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-14 — Iter190 · Joint Alignment Report Refactor
+
+**🟢 P0 — "Step One - Alignment Before Agreement" 10-section flow**
+Retitled and restructured the Joint Co-Parenting Agreement Draft to
+match sacoparentsalign.com's Joint Alignment Report. Same underlying
+merger algorithm; new framing + new PDF flow + new derived data
+blocks. Kept fully backward-compatible so consumers reading
+`sections` / `parent_view` / `summary` are unaffected.
+
+- **Framing** (`joint_agreement.py`):
+  - `report_type` → `"joint_alignment_report"` (was `"joint_coparenting_agreement_draft"`)
+  - `report_title` → `"Step One - Alignment Before Agreement"`
+  - New `report_subtitle` → `"Joint Alignment Report"`
+  - New `report_tagline` → neutral one-liner surfaced on frontend + PDF cover
+  - `DISCLAIMER` reframed as "NEUTRAL MAP" while keeping the three
+    legal caveats (not signed, not a court order, not custody advice)
+- **Derived data** (new `alignment_report` payload block):
+  - `alignment_map` — one row per merged section with `alignment`
+    band (`strong` / `moderate` / `needs_discussion` / `not_enough_data`),
+    both_count, total_count. Threshold arithmetic: ≥0.66 strong,
+    ≥0.33 moderate, else needs_discussion.
+  - `child_identified_needs` — derived from `child_needs` and
+    `priority_items` `both_proposed` clauses, backfilled with 5
+    SA CoParents neutral defaults so the section never renders sparse.
+  - `potential_alignment` — near-miss pairs (similarity 0.30-0.60,
+    below the 0.60 merge threshold) that a mediator's time is best
+    spent surfacing. Greedy pairing, max 6 rows.
+  - `possible_next_steps` — static 6-item list of neutral next steps
+    (Continue Parent Discussion / Discuss With Mediator / etc.).
+  - `closing_quote` + `closing_line` — powers the thematic closing page.
+- **PDF flow** (`joint_agreement_pdf.py`):
+  - Cover page: new title + subtitle + tagline + at-a-glance summary
+  - Court-report disclaimer (unchanged)
+  - §1 Purpose of This Report (framed as Step One)
+  - §2 What Both Parents Agree About
+  - §3 Where the Parents See Things Differently (side-by-side)
+  - §4 Child's Identified Needs (bullet list)
+  - §5 Alignment Map (colour-coded rows — green/amber/red/grey +
+    both/total count in muted grey, legend row underneath)
+  - §6 Areas for Conversation
+  - §7 Options and Resources
+  - §8 Potential Areas of Alignment (near-miss pairs)
+  - §9 Questions for the Parents
+  - §10 Possible Next Steps
+  - Closing page: "Alignment Before Agreement" — thematic title,
+    line, pull-quote with brand-purple left rule, SA CoParents
+    tagline strip
+  - Appendix A: Detailed Item Breakdown (kept for attorneys/mediators)
+  - PDF running-header text updated to match new framing
+  - **15 pages rendered** on a realistic fixture; every §1..§10
+    heading + closing page + appendix land as expected.
+- **Frontend** (`JointAgreement.jsx`, `JointAgreementShared.jsx`):
+  - Error-state H1 → `"Step One — Alignment Before Agreement"`
+  - Report H1 auto-flows from `d.report_title`
+  - Eyebrow reads `d.report_subtitle || "Joint Alignment Report"`
+  - Subline reads `d.report_tagline` with fallback copy
+  - Shared-page provenance banner reframed as "Joint Alignment Report"
+- **Tests**:
+  - New `tests/test_iter190_alignment_report_structure.py` — 14
+    tests locking payload contract (`alignment_report` keys,
+    canonical section order, band vocabulary, threshold arithmetic)
+    + PDF contract (every §1..§10 heading, closing page, appendix
+    still present, new header framing). All pass.
+  - Updated `tests/test_iter116_joint_agreement.py::test_disclaimer_present`
+    from "draft for discussion" → "neutral map" phrase to match the
+    reframed disclaimer.
+  - Updated `tests/test_iter123_joint_agreement_share_link.py`
+    `report_type` assertion → `"joint_alignment_report"`.
+  - Updated `tests/test_iter126...` fixture `report_title`.
+  - Full regression: **170 passed / 4 skipped** across the joint /
+    agreement / alignment surface. Only pre-existing iter184 demo-case
+    failures remain (unrelated to this change).
+
+**Deferred to Phase 2:**
+- Free-text reflection prompts (Primary Need / What's Working / etc.)
+  — would require a new questionnaire + data migration.
+- Multiple subjects (Communication / Medical / Safety / etc.) —
+  currently one General Co-Parenting subject.
+- `/samples/co_parenting/pdf` public sample of the alignment report.
+
+
 ### 2026-09-13 — Iter189i · Snapshot Export (Download PNG)
 
 **🟢 P2 — Download PNG button on the Mobile preview frame**

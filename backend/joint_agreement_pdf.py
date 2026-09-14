@@ -1,4 +1,7 @@
-"""PDF renderer for the Joint Co-Parenting Agreement Draft.
+"""PDF renderer for the Joint Alignment Report ("Step One - Alignment
+Before Agreement"). Historically titled the Joint Co-Parenting Agreement
+Draft; retitled in Iter190 to match sacoparentsalign.com's neutral
+alignment-report framing while keeping the same underlying payload.
 
 Layout:
   * Cover page: title, both parents' names, source-agreement IDs, and a
@@ -58,7 +61,7 @@ class _JointAgreementPDF(FPDF):
         self.set_text_color(*TEXT_DARK)
         self.set_font("Helvetica", "B", 11)
         self.set_xy(32, 5)
-        self.cell(0, 5, "Joint Co-Parenting Agreement Draft", ln=1)
+        self.cell(0, 5, "Step One - Alignment Before Agreement", ln=1)
         self.set_font("Helvetica", "", 8.5)
         self.set_text_color(*TEXT_MID)
         self.set_x(32)
@@ -101,6 +104,268 @@ _BUCKET_ACCENTS: Dict[str, tuple] = {
     "options_to_consider":               (61, 26, 120),  # purple
     "questions_for_next_conversation":   (15, 111, 111), # teal
 }
+
+
+# ---------------------------------------------------------------------------
+# Iter190 — Alignment Report section-flow renderers. Mirrors the
+# sacoparentsalign.com 10-section layout: numbered section headings +
+# colour-coded Alignment Map + neutral closing page. Kept alongside the
+# 5-bucket Parent View renderers because Appendix A still uses those.
+# ---------------------------------------------------------------------------
+
+# Neutral SA CoParents brand palette for the Alignment Map colour bands.
+# Chosen from the existing palette (OK / WARN / DANGER) so the map reads
+# the same way as every other rating table across the platform.
+_ALIGNMENT_BAND_COLOURS: Dict[str, tuple] = {
+    "strong":            OK,        # green — Strong alignment
+    "moderate":          WARN,      # amber — Moderate alignment
+    "needs_discussion":  DANGER,    # red   — Needs discussion
+    "not_enough_data":   TEXT_MID,  # grey  — Not enough data yet
+}
+
+_ALIGNMENT_BAND_LABELS: Dict[str, str] = {
+    "strong":            "Strong alignment",
+    "moderate":          "Moderate alignment",
+    "needs_discussion":  "Needs discussion",
+    "not_enough_data":   "Not enough data yet",
+}
+
+
+def _numbered_section_heading(
+    pdf: "_JointAgreementPDF", number: int, title: str, description: str = "",
+):
+    """Consistent numbered section heading used across every §1..§10
+    heading. Bold purple number + bold dark title + optional italic
+    description on the next line. Never crosses a page break mid-heading
+    — the caller controls whether to add_page() first."""
+    pdf.set_x(LEFT_M)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.set_text_color(61, 26, 120)  # brand purple
+    pdf.cell(11, 7, f"{number}.")
+    pdf.set_text_color(*TEXT_DARK)
+    pdf.cell(0, 7, title, ln=1)
+    if description:
+        pdf.set_x(LEFT_M)
+        pdf.set_font("Helvetica", "I", 8.8)
+        pdf.set_text_color(*TEXT_MID)
+        pdf.multi_cell(CONTENT_W, 4.4, description)
+        pdf.set_text_color(*TEXT_DARK)
+    pdf.ln(1.5)
+
+
+def _render_alignment_map(
+    pdf: "_JointAgreementPDF", rows: List[Dict[str, Any]],
+):
+    """Render the colour-coded Alignment Map — one row per merged
+    section with a coloured strip, the topic label, the alignment band
+    name, and a small "both/total" count in muted grey so professionals
+    can see the underlying evidence at a glance."""
+    if not rows:
+        pdf.set_x(LEFT_M)
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(*TEXT_MID)
+        pdf.multi_cell(
+            CONTENT_W, 4.5,
+            "No merged sections yet — the alignment map appears once "
+            "both parents have submitted a draft.",
+        )
+        pdf.set_text_color(*TEXT_DARK)
+        return
+
+    row_h = 8
+    strip_w = 4
+    for row in rows:
+        band = row.get("alignment") or "not_enough_data"
+        colour = _ALIGNMENT_BAND_COLOURS.get(band, TEXT_MID)
+        label = _ALIGNMENT_BAND_LABELS.get(band, band.replace("_", " ").title())
+        topic = row.get("topic") or row.get("key") or "-"
+        both = int(row.get("both_count") or 0)
+        total = int(row.get("total_count") or 0)
+
+        y_top = pdf.get_y()
+        # Coloured strip on the left.
+        pdf.set_fill_color(*colour)
+        pdf.rect(LEFT_M, y_top, strip_w, row_h - 1, "F")
+
+        # Topic label — bold, dark, centred vertically in the row.
+        pdf.set_xy(LEFT_M + strip_w + 3, y_top + 0.5)
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*TEXT_DARK)
+        pdf.cell(CONTENT_W * 0.55, row_h - 1, topic)
+
+        # Alignment band label — coloured to match the strip.
+        pdf.set_xy(LEFT_M + strip_w + 3 + CONTENT_W * 0.55, y_top + 0.5)
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_text_color(*colour)
+        pdf.cell(CONTENT_W * 0.25, row_h - 1, label)
+
+        # Both/total count — small, muted grey.
+        pdf.set_xy(LEFT_M + strip_w + 3 + CONTENT_W * 0.80, y_top + 0.5)
+        pdf.set_font("Helvetica", "", 8.5)
+        pdf.set_text_color(*TEXT_MID)
+        count_txt = f"{both} / {total}" if total else "-"
+        pdf.cell(CONTENT_W * 0.20, row_h - 1, count_txt, align="R")
+
+        pdf.set_text_color(*TEXT_DARK)
+        pdf.set_y(y_top + row_h)
+
+    # Legend row under the map — matches sacoparentsalign's colour key.
+    pdf.ln(2)
+    pdf.set_x(LEFT_M)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(*TEXT_MID)
+    pdf.multi_cell(
+        CONTENT_W, 4.2,
+        "Colour key: green = Strong alignment - amber = Moderate - "
+        "red = Needs discussion - grey = Not enough data yet. Counts "
+        "show shared clauses / total clauses in the section.",
+    )
+    pdf.set_text_color(*TEXT_DARK)
+
+
+def _render_bullet_list(
+    pdf: "_JointAgreementPDF", bullets: List[str],
+):
+    """Simple neutral bullet list used by §4 Child's Identified Needs
+    and §10 Possible Next Steps title-only variants."""
+    if not bullets:
+        pdf.set_x(LEFT_M)
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(*TEXT_MID)
+        pdf.multi_cell(CONTENT_W, 4.5, "(none)")
+        pdf.set_text_color(*TEXT_DARK)
+        return
+    pdf.set_font("Helvetica", "", 9.5)
+    pdf.set_text_color(*TEXT_DARK)
+    for b in bullets:
+        text = (b or "").strip()
+        if not text:
+            continue
+        pdf.set_x(LEFT_M)
+        pdf.multi_cell(CONTENT_W, 4.6, "- " + text)
+        pdf.ln(0.3)
+
+
+def _render_potential_alignment(
+    pdf: "_JointAgreementPDF", pairs: List[Dict[str, Any]],
+    parent_a: str, parent_b: str,
+):
+    """§8 Potential Areas of Alignment. Renders near-miss pairs — one
+    two-column strip per row so a mediator can see how close the
+    parents already are on each topic."""
+    if not pairs:
+        pdf.set_x(LEFT_M)
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(*TEXT_MID)
+        pdf.multi_cell(
+            CONTENT_W, 4.5,
+            "No near-match clauses in the current draft. When both "
+            "parents propose something related-but-not-identical, it "
+            "surfaces here as a candidate for a short conversation.",
+        )
+        pdf.set_text_color(*TEXT_DARK)
+        return
+
+    col_w = (CONTENT_W - 4) / 2
+    for row in pairs:
+        topic = (row.get("topic") or "").strip()
+        a_text = (row.get("parent_a_text") or "").strip()
+        b_text = (row.get("parent_b_text") or "").strip()
+        if topic:
+            pdf.set_x(LEFT_M)
+            pdf.set_font("Helvetica", "B", 8.5)
+            pdf.set_text_color(*TEXT_MID)
+            pdf.cell(0, 4.2, topic, ln=1)
+            pdf.set_text_color(*TEXT_DARK)
+        # Two-column strip labelled with parent names.
+        y_top = pdf.get_y()
+        pdf.set_font("Helvetica", "B", 7.5)
+        pdf.set_text_color(61, 26, 120)
+        pdf.set_xy(LEFT_M, y_top)
+        pdf.cell(col_w, 4, parent_a)
+        pdf.set_text_color(15, 111, 111)
+        pdf.set_xy(LEFT_M + col_w + 4, y_top)
+        pdf.cell(col_w, 4, parent_b)
+        pdf.ln(4.3)
+        pdf.set_font("Helvetica", "", 8.7)
+        pdf.set_text_color(*TEXT_DARK)
+        a_y = pdf.get_y()
+        pdf.set_xy(LEFT_M, a_y)
+        pdf.multi_cell(col_w, 4.3, a_text or "-")
+        end_a = pdf.get_y()
+        pdf.set_xy(LEFT_M + col_w + 4, a_y)
+        pdf.multi_cell(col_w, 4.3, b_text or "-")
+        end_b = pdf.get_y()
+        pdf.set_y(max(end_a, end_b))
+        pdf.ln(1)
+
+
+def _render_next_steps(
+    pdf: "_JointAgreementPDF", steps: List[Dict[str, str]],
+):
+    """§10 Possible Next Steps. Title + one-line detail per step so
+    parents can pick the ones that fit. Neutral, non-prescriptive."""
+    if not steps:
+        _render_bullet_list(pdf, [])
+        return
+    for step in steps:
+        title = (step.get("title") or "").strip()
+        detail = (step.get("detail") or "").strip()
+        pdf.set_x(LEFT_M)
+        pdf.set_font("Helvetica", "B", 9.5)
+        pdf.set_text_color(61, 26, 120)
+        pdf.cell(0, 4.4, title, ln=1)
+        pdf.set_text_color(*TEXT_DARK)
+        if detail:
+            pdf.set_x(LEFT_M)
+            pdf.set_font("Helvetica", "", 8.8)
+            pdf.multi_cell(CONTENT_W, 4.3, detail)
+        pdf.ln(0.5)
+
+
+def _render_alignment_before_agreement_closing(
+    pdf: "_JointAgreementPDF", alignment_report: Dict[str, Any],
+):
+    """Closing page — mirrors sacoparentsalign's thematic Page 3.
+    Large title, one-line takeaway, a pull-quote, and the SA CoParents
+    tagline strip. Kept simple so the visual weight lands on the words."""
+    pdf.add_page()
+    pdf.ln(30)
+    pdf.set_x(LEFT_M)
+    pdf.set_font("Helvetica", "B", 22)
+    pdf.set_text_color(61, 26, 120)
+    pdf.multi_cell(CONTENT_W, 10, "Alignment Before Agreement")
+    pdf.set_text_color(*TEXT_DARK)
+    pdf.ln(4)
+    line = (alignment_report or {}).get("closing_line") or ""
+    if line:
+        pdf.set_x(LEFT_M)
+        pdf.set_font("Helvetica", "", 12)
+        pdf.set_text_color(*TEXT_MID)
+        pdf.multi_cell(CONTENT_W, 6, line)
+        pdf.set_text_color(*TEXT_DARK)
+    quote = (alignment_report or {}).get("closing_quote") or ""
+    if quote:
+        pdf.ln(6)
+        # Pull-quote treatment — italic + left rule + dark text.
+        y_top = pdf.get_y()
+        pdf.set_draw_color(61, 26, 120)
+        pdf.set_line_width(0.8)
+        pdf.line(LEFT_M, y_top, LEFT_M, y_top + 20)
+        pdf.set_xy(LEFT_M + 4, y_top)
+        pdf.set_font("Helvetica", "I", 12)
+        pdf.multi_cell(CONTENT_W - 4, 6, f'"{quote}"')
+    # SA CoParents brand strip at the bottom.
+    pdf.ln(10)
+    pdf.set_x(LEFT_M)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_text_color(61, 26, 120)
+    pdf.cell(0, 5, ORG_NAME, ln=1)
+    pdf.set_x(LEFT_M)
+    pdf.set_font("Helvetica", "I", 9)
+    pdf.set_text_color(*TEXT_MID)
+    pdf.multi_cell(CONTENT_W, 4.5, ORG_TAGLINE)
+    pdf.set_text_color(*TEXT_DARK)
 
 
 def _bucket_header(pdf: _JointAgreementPDF, title: str, description: str,
@@ -403,11 +668,22 @@ def _cover_page(pdf: _JointAgreementPDF, payload: Dict[str, Any]):
     pdf.set_xy(LEFT_M, 72)
     pdf.set_font("Helvetica", "B", 20)
     pdf.multi_cell(CONTENT_W, 8, payload.get("report_title") or "")
-    pdf.ln(2)
-    pdf.set_font("Helvetica", "", 10)
+    pdf.ln(1)
+    subtitle = payload.get("report_subtitle") or ""
+    if subtitle:
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.set_text_color(61, 26, 120)
+        pdf.set_x(LEFT_M)
+        pdf.cell(0, 6, subtitle, ln=1)
+        pdf.set_text_color(*TEXT_DARK)
+    pdf.ln(1)
+    tagline = payload.get("report_tagline") or (
+        "Draft compiled from both parents' individual drafts"
+    )
+    pdf.set_font("Helvetica", "I", 10)
     pdf.set_text_color(*TEXT_MID)
     pdf.set_x(LEFT_M)
-    pdf.cell(0, 5, "Draft compiled from both parents' individual drafts", ln=1)
+    pdf.multi_cell(CONTENT_W, 5, tagline)
     pdf.set_text_color(*TEXT_DARK)
 
     # Parents.
@@ -470,13 +746,22 @@ def _cover_page(pdf: _JointAgreementPDF, payload: Dict[str, Any]):
 
 
 def build_joint_agreement_pdf(payload: Dict[str, Any]) -> bytes:
-    """Render the joint agreement PDF and return raw bytes.
+    """Render the Joint Alignment Report PDF and return raw bytes.
 
-    Layout mirrors the on-screen JointAgreement page:
-      * Cover page (title, parents, disclaimer, at-a-glance summary)
-      * 5-bucket Parent View (matches JointAgreementParentView.jsx)
-      * Appendix A - Detailed Item Breakdown (the original section
-        row-strip layout, kept for professional review)
+    Iter190 flow — mirrors sacoparentsalign.com's 10-section Joint
+    Alignment Report:
+
+      * Cover page (title framed as "Step One - Alignment Before
+        Agreement", parents, at-a-glance summary, disclaimer).
+      * Court-report disclaimer page — six-bullet caveats block.
+      * SS1..SS10 Alignment Report body — Purpose / What Both Agree /
+        Where Perspectives Differ / Child's Identified Needs /
+        Alignment Map (colour-coded) / Areas for Conversation /
+        Options and Resources / Potential Alignment / Questions for
+        the Parents / Possible Next Steps.
+      * Closing thematic page: "Alignment Before Agreement" quote.
+      * Appendix A - Detailed Item Breakdown (kept for attorneys /
+        mediators who want to see every clause verbatim per section).
     """
     now = datetime.now(timezone.utc).strftime("%B %d, %Y")
     pdf = _JointAgreementPDF(
@@ -492,7 +777,7 @@ def build_joint_agreement_pdf(payload: Dict[str, Any]) -> bytes:
 
     # Court-report disclaimer — six-bullet block on its own page right
     # after the cover so the "what this document is / is not" caveats
-    # are unmissable before the Parent View bucket layout.
+    # are unmissable before the section flow.
     pdf.add_page()
     author_label = " & ".join(
         n for n in (payload.get("parent_a_name"), payload.get("parent_b_name")) if n
@@ -504,32 +789,119 @@ def build_joint_agreement_pdf(payload: Dict[str, Any]) -> bytes:
     )
 
     # ------------------------------------------------------------------
-    # Parent View (5 buckets) - primary body of the PDF from this
-    # iteration onwards. Falls back gracefully if the payload predates
-    # the parent-view build (older cached payloads).
+    # Alignment Report body — 10 numbered sections + closing page.
+    # Every section calls `add_page()` explicitly so the numbered
+    # heading + body always land on a fresh page. This mirrors the
+    # sacoparentsalign layout where each section is its own visual
+    # unit rather than a continuous scroll.
     # ------------------------------------------------------------------
+    alignment_report = payload.get("alignment_report") or {}
     parent_view = payload.get("parent_view") or {}
-    if parent_view:
-        pdf.add_page()
-        pdf.set_font("Helvetica", "B", 15)
-        pdf.set_text_color(*TEXT_DARK)
-        pdf.set_x(LEFT_M)
-        pdf.cell(0, 7, "Parent View", ln=1)
-        pdf.set_font("Helvetica", "I", 9)
-        pdf.set_text_color(*TEXT_MID)
-        pdf.set_x(LEFT_M)
-        pdf.multi_cell(
-            CONTENT_W, 4.5,
-            "A parent-friendly walkthrough of your merged draft, grouped "
-            "into five buckets. The complete side-by-side layout follows "
-            "in Appendix A.",
-        )
-        pdf.set_text_color(*TEXT_DARK)
-        pdf.ln(2)
-        _render_parent_view(pdf, parent_view, parent_a, parent_b)
+
+    # SS1 Purpose of This Report
+    pdf.add_page()
+    _numbered_section_heading(
+        pdf, 1, "Purpose of This Report",
+        "Framed as Step One - Alignment Before Agreement.",
+    )
+    _body(
+        pdf,
+        alignment_report.get("purpose_note") or (
+            "This report shows how SA CoParents compares the "
+            "independently provided perspectives of both parents."
+        ),
+        size=10,
+    )
+
+    # SS2 What Both Parents Agree About
+    pdf.add_page()
+    both_bucket = parent_view.get("what_you_both_proposed") or {}
+    _numbered_section_heading(
+        pdf, 2, "What Both Parents Agree About",
+        both_bucket.get("description") or "",
+    )
+    _render_both_proposed_bucket(pdf, both_bucket)
+
+    # SS3 Where the Parents See Things Differently
+    pdf.add_page()
+    diff_bucket = parent_view.get("where_you_have_different_ideas") or {}
+    _numbered_section_heading(
+        pdf, 3, "Where the Parents See Things Differently",
+        diff_bucket.get("description") or "",
+    )
+    _render_different_ideas_bucket(pdf, diff_bucket, parent_a, parent_b)
+
+    # SS4 Child's Identified Needs
+    pdf.add_page()
+    _numbered_section_heading(
+        pdf, 4, "Child's Identified Needs",
+        "The neutral, child-focused needs surfaced by both parents' "
+        "drafts. Backfilled with SA CoParents defaults so the section "
+        "is never blank.",
+    )
+    _render_bullet_list(pdf, alignment_report.get("child_identified_needs") or [])
+
+    # SS5 Alignment Map — colour-coded per section.
+    pdf.add_page()
+    _numbered_section_heading(
+        pdf, 5, "Alignment Map",
+        "Colour-coded overview across every merged section. Green = "
+        "Strong. Amber = Moderate. Red = Needs discussion.",
+    )
+    _render_alignment_map(pdf, alignment_report.get("alignment_map") or [])
+
+    # SS6 Areas for Conversation
+    pdf.add_page()
+    refine_bucket = parent_view.get("may_need_refinement") or {}
+    _numbered_section_heading(
+        pdf, 6, "Areas for Conversation",
+        refine_bucket.get("description") or "",
+    )
+    _render_refinement_bucket(pdf, refine_bucket)
+
+    # SS7 Options and Resources
+    pdf.add_page()
+    options_bucket = parent_view.get("options_to_consider") or {}
+    _numbered_section_heading(
+        pdf, 7, "Options and Resources",
+        options_bucket.get("description") or "",
+    )
+    _render_options_bucket(pdf, options_bucket)
+
+    # SS8 Potential Areas of Alignment
+    pdf.add_page()
+    _numbered_section_heading(
+        pdf, 8, "Potential Areas of Alignment",
+        "Clauses each parent wrote separately that are close in spirit "
+        "but not yet identical. Candidates for a short conversation.",
+    )
+    _render_potential_alignment(
+        pdf, alignment_report.get("potential_alignment") or [], parent_a, parent_b,
+    )
+
+    # SS9 Questions for the Parents
+    pdf.add_page()
+    questions_bucket = parent_view.get("questions_for_next_conversation") or {}
+    _numbered_section_heading(
+        pdf, 9, "Questions for the Parents",
+        questions_bucket.get("description") or "",
+    )
+    _render_questions_bucket(pdf, questions_bucket)
+
+    # SS10 Possible Next Steps
+    pdf.add_page()
+    _numbered_section_heading(
+        pdf, 10, "Possible Next Steps",
+        "Neutral, non-prescriptive options for the next conversation or "
+        "next professional touchpoint.",
+    )
+    _render_next_steps(pdf, alignment_report.get("possible_next_steps") or [])
+
+    # Closing thematic page — "Alignment Before Agreement".
+    _render_alignment_before_agreement_closing(pdf, alignment_report)
 
     # ------------------------------------------------------------------
-    # Appendix A - Detailed Item Breakdown (the original row-strip).
+    # Appendix A - Detailed Item Breakdown (kept for professionals).
     # ------------------------------------------------------------------
     pdf.add_page()
     pdf.set_font("Helvetica", "B", 15)
@@ -564,19 +936,6 @@ def build_joint_agreement_pdf(payload: Dict[str, Any]) -> bytes:
         _bucket(pdf, f"{parent_b} only", section.get("parent_b_only") or [], WARN,
                 parent_a=parent_a, parent_b=parent_b, mode="b")
         pdf.ln(2)
-
-    # Next-step callout at the very end.
-    next_step = payload.get("next_step") or ""
-    if next_step:
-        pdf.ln(3)
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(*INFO)
-        pdf.set_x(LEFT_M)
-        pdf.cell(0, 5, "SUGGESTED NEXT STEP", ln=1)
-        pdf.set_text_color(*TEXT_DARK)
-        pdf.set_font("Helvetica", "", 9.5)
-        pdf.set_x(LEFT_M)
-        pdf.multi_cell(CONTENT_W, 4.5, next_step)
 
     out = pdf.output(dest="S")
     if isinstance(out, str):

@@ -299,7 +299,7 @@ def test_joint_agreement_pdf_bucket_renderers_handle_empty_payload():
     from joint_agreement_pdf import build_joint_agreement_pdf
 
     minimal_payload = {
-        "report_title": "Joint Co-Parenting Agreement Draft",
+        "report_title": "Step One - Alignment Before Agreement",
         "share_id": "sh_test",
         "parent_a_name": "Alex",
         "parent_b_name": "Blake",
