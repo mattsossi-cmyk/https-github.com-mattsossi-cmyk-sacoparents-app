@@ -580,3 +580,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - court_workflow.py: _judge_routes split into _judge_routes + _judge_case_routes; judge_case → pure helpers (judicial_case_payload, _case_checklist, _court_report_view, _submitted_material); _pro_routes split into _pro_routes + _pro_statement_routes; validated_statement / assert_submittable extracted. C901: 57→14, 39→12.
 - court_messages.py: notify/load_ref/thread_view extracted; judge/pro registration split. 19→13.
 - server.py module split (31 imports) deferred: high-risk, no functional gain; not requested by user beyond report.
+
+## 2026-09-14 — Code-quality pass #3 + deployment readiness
+- Ctx dataclass replaces 8-arg court route factories; _judge_case_routes decomposed (_judge_row, _load_judge_referral, _case_and_packets, _court_event, _email_hearing_set): 26→~8. court_packets _pro_routes split (case packet routes / packet admin routes) + _assert_packet_allowed. run_hearing_reminders restored after an accidental drop (import error caught, fixed, verified).
+- "Undefined variable" + `is` findings: false positives again (ruff F821/F823/F811 clean; only `is None`). Remaining C901 12-13 on two factories is inherent to nested handlers.
+- Focused court suites 26 passed; deployment_agent PASS. Awaiting user Republish (agent cannot deploy).

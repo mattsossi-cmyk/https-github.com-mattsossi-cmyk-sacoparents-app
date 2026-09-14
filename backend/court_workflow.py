@@ -3,6 +3,7 @@ import hashlib
 import re
 import secrets
 import uuid
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from html import escape
 
@@ -289,6 +290,70 @@ def judicial_case_payload(x: dict, case: dict | None, packets: list, referral_pu
             "communication_summary": x.get("communication_summary"), "disclaimer": SUMMARY_DISCLAIMER}
 
 
+@dataclass(frozen=True)
+class Ctx:
+    """Dependencies shared by every court route factory (replaces 8 positional arguments)."""
+    db: object
+    get_current_user: object
+    app_url: object
+    send_email: object
+    email_from_name: str
+    logger: object
+    log_report_event: object
+    h: dict = field(default_factory=dict)
+
+
+async def _load_judge_referral(db, ref_id: str, user: dict) -> dict:
+    x = await db.court_referrals.find_one({"id": ref_id, "judge_id": user["_id"]}, {"_id": 0})
+    if not x:
+        raise HTTPException(status_code=404, detail="Referral not found")
+    return x
+
+
+async def _case_and_packets(db, x: dict, submitted_only: bool = False) -> tuple[dict | None, list]:
+    if not x.get("case_id"):
+        return None, []
+    case = await db.joint_reports.find_one({"id": x["case_id"]}, {"_id": 0})
+    if submitted_only:
+        packets = await db.court_packets.find({"report_id": x["case_id"], "submission_version": {"$exists": True}}, {"_id": 0, "token_hash": 0, "code_hash": 0, "sessions": 0}).sort("submission_version", -1).to_list(50)
+    else:
+        packets = await db.court_packets.find({"report_id": x["case_id"]}, {"_id": 0, "responses": 1, "status": 1}).to_list(50)
+    return case, packets
+
+
+def _judge_row(x: dict, case: dict | None, packets: list, referral_public) -> dict:
+    """One row of the Judicial Dashboard table."""
+    stage = court_stage(case) if case else {"index": 0, "label": "Declined" if x["status"] == "declined" else STAGES[0], "steps": STAGES}
+    item = {**referral_public(x), "stage": stage}
+    if case:
+        item.update({"case_code": case.get("case_code"), "submissions": len(case.get("court_submissions") or []),
+                     "parents_done": sum(1 for k in ("a", "b") if case.get("responses", {}).get(k)),
+                     "statement_status": (case.get("professional_statement") or {}).get("status")})
+    saved = x.get("status_summary")
+    item["status_summary"] = {**saved, "outdated": saved.get("signature") != _stage_signature(x, case, packets)} if saved else None
+    return item
+
+
+async def _court_event(db, case_id: str | None, action: str, user: dict, at: str | None = None) -> None:
+    if case_id:
+        await db.access_events.insert_one({"report_id": case_id, "kind": "court", "action": action, "at": at or _iso(_now()), "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Court"})
+
+
+async def _email_hearing_set(c: "Ctx", x: dict, user: dict, hd: str) -> None:
+    pro = await c.db.users.find_one({"_id": x["professional_id"]}, {"name": 1, "email": 1})
+    if not (pro and pro.get("email") and hd):
+        return
+    try:
+        await c.send_email(to=pro["email"], case_id=x.get("case_id") or x["id"], kind="hearing_date", to_role="Professional", subject=f"Hearing date set - Cause No. {x['cause_number']}",
+                           html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                                 f"<p>Hi {escape(pro.get('name', ''))},</p><p>{escape(user.get('name', 'The court'))} has set the hearing for Cause No. {escape(x['cause_number'])} on <strong>{hd}</strong>. "
+                                 "Align will remind you one week before if the Joint Report and Professional Statement have not yet been submitted.</p>"
+                                 f'<p><a href="{c.app_url()}/dashboard#court-referrals" style="color:#5B2A86">Open Court-Referred Cases</a></p>'
+                                 f'<p style="font-size:12px;color:#888">Sent by {escape(c.email_from_name)}.</p></td></tr></table>'))
+    except Exception as exc:
+        c.logger.warning("hearing date email failed: %s", exc)
+
+
 def _shared(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event) -> dict:
     """Helpers shared by the judge and professional route groups."""
 
@@ -318,7 +383,8 @@ def _shared(db, get_current_user, app_url, send_email, email_from_name, logger, 
     return {'referral_public': referral_public, 'require_judge': require_judge, 'require_pro': require_pro, 'pro_profile': pro_profile}
 
 
-def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h) -> APIRouter:
+def _judge_routes(c: Ctx) -> APIRouter:
+    db, get_current_user, app_url, send_email, email_from_name, logger, h = c.db, c.get_current_user, c.app_url, c.send_email, c.email_from_name, c.logger, c.h
     r = APIRouter()
     referral_public, require_judge = h["referral_public"], h["require_judge"]
     # ---------- judge: refer ----------
@@ -361,79 +427,42 @@ def _judge_routes(db, get_current_user, app_url, send_email, email_from_name, lo
     return r
 
 
-def _judge_case_routes(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h) -> APIRouter:
+def _judge_case_routes(c: Ctx) -> APIRouter:
     """Judge: list referrals, judicial case view, AI status summary, hearing date."""
-    r = APIRouter()
-    referral_public, require_judge = h["referral_public"], h["require_judge"]
+    r, db, get_current_user = APIRouter(), c.db, c.get_current_user
+    referral_public, require_judge = c.h["referral_public"], c.h["require_judge"]
 
     @r.get("/court-dashboard/referrals")
     async def judge_referrals(user=Depends(get_current_user)):
         await require_judge(user)
         refs = await db.court_referrals.find({"judge_id": user["_id"]}, {"_id": 0}).sort("created_at", -1).to_list(300)
-        out = []
-        for x in refs:
-            case = await db.joint_reports.find_one({"id": x["case_id"]}, {"_id": 0}) if x.get("case_id") else None
-            packets = await db.court_packets.find({"report_id": x["case_id"]}, {"_id": 0, "responses": 1, "status": 1}).to_list(50) if x.get("case_id") else []
-            item = {**referral_public(x), "stage": court_stage(case) if case else {"index": 0, "label": "Declined" if x["status"] == "declined" else STAGES[0], "steps": STAGES}}
-            if case:
-                item["case_code"] = case.get("case_code")
-                item["submissions"] = len(case.get("court_submissions") or [])
-                item["parents_done"] = sum(1 for k in ("a", "b") if case.get("responses", {}).get(k))
-                item["statement_status"] = (case.get("professional_statement") or {}).get("status")
-            saved = x.get("status_summary")
-            sig = _stage_signature(x, case, packets)
-            item["status_summary"] = {**saved, "outdated": saved.get("signature") != sig} if saved else None
-            out.append(item)
-        return out
+        return [_judge_row(x, *await _case_and_packets(db, x), referral_public) for x in refs]
 
     @r.post("/court-dashboard/referrals/{ref_id}/refresh-summary")
     async def refresh_summary(ref_id: str, user=Depends(get_current_user)):
         await require_judge(user)
-        x = await db.court_referrals.find_one({"id": ref_id, "judge_id": user["_id"]}, {"_id": 0})
-        if not x:
-            raise HTTPException(status_code=404, detail="Referral not found")
-        case = await db.joint_reports.find_one({"id": x["case_id"]}, {"_id": 0}) if x.get("case_id") else None
-        packets = await db.court_packets.find({"report_id": x["case_id"]}, {"_id": 0, "responses": 1, "status": 1}).to_list(50) if x.get("case_id") else []
+        x = await _load_judge_referral(db, ref_id, user)
+        case, packets = await _case_and_packets(db, x)
         summary = build_status_summary(x, case, packets)
         await db.court_referrals.update_one({"id": ref_id}, {"$set": {"status_summary": summary}})
-        if case:
-            await db.access_events.insert_one({"report_id": case["id"], "kind": "court", "action": f"Court status summary refreshed by {user.get('name', '')}", "at": summary["generated_at"],
-                                               "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Court"})
+        await _court_event(db, x.get("case_id"), f"Court status summary refreshed by {user.get('name', '')}", user, summary["generated_at"])
         return {**summary, "outdated": False}
 
     @r.get("/court-dashboard/cases/{ref_id}")
     async def judge_case(ref_id: str, user=Depends(get_current_user)):
-        """Judicial case view: procedural status, authorized (submitted) reports and statement only. Never raw parent answers."""
         await require_judge(user)
-        x = await db.court_referrals.find_one({"id": ref_id, "judge_id": user["_id"]}, {"_id": 0})
-        if not x:
-            raise HTTPException(status_code=404, detail="Referral not found")
-        case = await db.joint_reports.find_one({"id": x["case_id"]}, {"_id": 0}) if x.get("case_id") else None
-        packets = await db.court_packets.find({"report_id": x["case_id"], "submission_version": {"$exists": True}}, {"_id": 0, "token_hash": 0, "code_hash": 0, "sessions": 0}).sort("submission_version", -1).to_list(50) if x.get("case_id") else []
+        x = await _load_judge_referral(db, ref_id, user)
+        case, packets = await _case_and_packets(db, x, submitted_only=True)
         return judicial_case_payload(x, case, packets, referral_public)
 
     @r.patch("/court-dashboard/referrals/{ref_id}/hearing-date")
     async def set_hearing_date(ref_id: str, body: HearingDateIn, user=Depends(get_current_user)):
         await require_judge(user)
-        x = await db.court_referrals.find_one({"id": ref_id, "judge_id": user["_id"]}, {"_id": 0})
-        if not x:
-            raise HTTPException(status_code=404, detail="Referral not found")
+        x = await _load_judge_referral(db, ref_id, user)
         hd = _valid_date(body.hearing_date)
         await db.court_referrals.update_one({"id": ref_id}, {"$set": {"hearing_date": hd}, "$unset": {"hearing_reminder_sent": ""}})
-        if x.get("case_id"):
-            await db.access_events.insert_one({"report_id": x["case_id"], "kind": "court", "action": f"Hearing date {'set to ' + hd if hd else 'cleared'} by {user.get('name', '')}",
-                                               "at": _iso(_now()), "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Court"})
-        pro = await db.users.find_one({"_id": x["professional_id"]}, {"name": 1, "email": 1})
-        if pro and pro.get("email") and hd:
-            try:
-                await send_email(to=pro["email"], case_id=x.get("case_id") or x["id"], kind="hearing_date", to_role="Professional", subject=f"Hearing date set - Cause No. {x['cause_number']}",
-                                 html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                                       f"<p>Hi {escape(pro.get('name', ''))},</p><p>{escape(user.get('name', 'The court'))} has set the hearing for Cause No. {escape(x['cause_number'])} on <strong>{hd}</strong>. "
-                                       "Align will remind you one week before if the Joint Report and Professional Statement have not yet been submitted.</p>"
-                                       f'<p><a href="{app_url()}/dashboard#court-referrals" style="color:#5B2A86">Open Court-Referred Cases</a></p>'
-                                       f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>'))
-            except Exception as exc:
-                logger.warning("hearing date email failed: %s", exc)
+        await _court_event(db, x.get("case_id"), f"Hearing date {'set to ' + hd if hd else 'cleared'} by {user.get('name', '')}", user)
+        await _email_hearing_set(c, x, user, hd)
         return {"ok": True, "hearing_date": hd}
 
     return r
@@ -474,7 +503,8 @@ async def run_hearing_reminders(db, send_email, app_url, email_from_name, logger
     return sent
 
 
-def _pro_routes(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h) -> APIRouter:
+def _pro_routes(c: Ctx) -> APIRouter:
+    db, get_current_user, app_url, send_email, logger, h = c.db, c.get_current_user, c.app_url, c.send_email, c.logger, c.h
     r = APIRouter()
     referral_public, require_pro = h['referral_public'], h['require_pro']
     # ---------- professional: referral inbox ----------
@@ -525,8 +555,9 @@ def _pro_routes(db, get_current_user, app_url, send_email, email_from_name, logg
     return r
 
 
-def _pro_statement_routes(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h) -> APIRouter:
+def _pro_statement_routes(c: Ctx) -> APIRouter:
     """Professional: Professional Assessment Statement + frozen submission to court."""
+    db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h = c.db, c.get_current_user, c.app_url, c.send_email, c.email_from_name, c.logger, c.log_report_event, c.h
     r = APIRouter()
     require_pro, pro_profile = h['require_pro'], h['pro_profile']
 
@@ -617,11 +648,11 @@ def _pro_statement_routes(db, get_current_user, app_url, send_email, email_from_
 
 
 def build_router(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event) -> APIRouter:
-    args = (db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event)
-    h = _shared(*args)
+    h = _shared(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event)
+    c = Ctx(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h)
     r = APIRouter()
     for factory in (_judge_routes, _judge_case_routes, _pro_routes, _pro_statement_routes):
-        r.include_router(factory(*args, h))
+        r.include_router(factory(c))
     from court_messages import build_router as build_messages
     r.include_router(build_messages(db, get_current_user, app_url, send_email, email_from_name, h["require_judge"], h["require_pro"]))
     return r

@@ -251,15 +251,38 @@ class PacketService:
                                       "events": [e for e in events if p["judge_name"] in e["action"] or "sent" in e["action"] or "re-sent" in e["action"]]})
 
 
+async def _own_report(db, rid: str, user: dict) -> dict:
+    doc = await db.joint_reports.find_one({"id": rid, "professional_id": user["_id"]}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return doc
+
+
+def _assert_packet_allowed(doc: dict, body: PacketIn, user: dict) -> None:
+    if not user.get("approved", True):
+        raise HTTPException(status_code=403, detail="Only approved professionals can send Court Packets")
+    if not _ready(doc):
+        raise HTTPException(status_code=400, detail="The Joint Report must be complete before it can be sent to a court")
+    if not body.attest:
+        raise HTTPException(status_code=400, detail="You must attest to your authority to release these materials")
+    if len(body.cover_letter.strip()) < 40:
+        raise HTTPException(status_code=400, detail="Please write a cover letter of at least a few sentences")
+
+
 def _pro_routes(svc: PacketService, get_current_user) -> APIRouter:
+    r = APIRouter()
+    r.include_router(_pro_case_packet_routes(svc, get_current_user))
+    r.include_router(_pro_packet_admin_routes(svc, get_current_user))
+    return r
+
+
+def _pro_case_packet_routes(svc: PacketService, get_current_user) -> APIRouter:
+    """Per-case: packet options, create, list."""
     r = APIRouter()
     db = svc.db
 
     async def own_report(rid: str, user: dict) -> dict:
-        doc = await db.joint_reports.find_one({"id": rid, "professional_id": user["_id"]}, {"_id": 0})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Report not found")
-        return doc
+        return await _own_report(db, rid, user)
 
     @r.get("/joint/reports/{rid}/court-packets/options")
     async def packet_options(rid: str, user=Depends(get_current_user)):
@@ -273,14 +296,7 @@ def _pro_routes(svc: PacketService, get_current_user) -> APIRouter:
     @r.post("/joint/reports/{rid}/court-packets")
     async def create_packet(rid: str, body: PacketIn, user=Depends(get_current_user)):
         doc = await own_report(rid, user)
-        if not user.get("approved", True):
-            raise HTTPException(status_code=403, detail="Only approved professionals can send Court Packets")
-        if not _ready(doc):
-            raise HTTPException(status_code=400, detail="The Joint Report must be complete before it can be sent to a court")
-        if not body.attest:
-            raise HTTPException(status_code=400, detail="You must attest to your authority to release these materials")
-        if len(body.cover_letter.strip()) < 40:
-            raise HTTPException(status_code=400, detail="Please write a cover letter of at least a few sentences")
+        _assert_packet_allowed(doc, body, user)
         ids = list(dict.fromkeys([rid] + [i for i in body.report_ids if i]))
         if await db.joint_reports.count_documents({"id": {"$in": ids}, "professional_id": user["_id"]}) != len(ids):
             raise HTTPException(status_code=403, detail="You can only include reports from your own cases")
@@ -295,6 +311,14 @@ def _pro_routes(svc: PacketService, get_current_user) -> APIRouter:
     async def list_packets(rid: str, user=Depends(get_current_user)):
         await own_report(rid, user)
         return [public(p) for p in await db.court_packets.find({"report_id": rid}, {"_id": 0}).sort("created_at", -1).to_list(50)]
+
+    return r
+
+
+def _pro_packet_admin_routes(svc: PacketService, get_current_user) -> APIRouter:
+    """Per-packet: revoke, resend, PDFs."""
+    r = APIRouter()
+    db = svc.db
 
     @r.post("/court-packets/{pid}/revoke")
     async def revoke_packet(pid: str, user=Depends(get_current_user)):
