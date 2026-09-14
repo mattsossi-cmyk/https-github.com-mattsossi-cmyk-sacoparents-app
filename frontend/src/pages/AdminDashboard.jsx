@@ -17,6 +17,8 @@ import {
   X,
   Eye,
   Pencil,
+  Bell,
+  MousePointerClick,
 } from "lucide-react";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
@@ -248,11 +250,167 @@ function DismissSparkline({ series }) {
   );
 }
 
+/**
+ * Reflection-reminder analytics tile (iter195). Renders open + click
+ * rates from `GET /api/admin/alignment-reflections/analytics` so ops
+ * can prove the 3-day nudge lifts `waiting_on_coparent` → `ready`.
+ *
+ * Contract (see `alignment_reflection_analytics.compute_reminder_analytics`):
+ *   { total:    { sent, opened, clicked, open_rate, click_rate,
+ *                 click_through_open },
+ *     subjects: [{ subject, sent, opened, clicked, open_rate,
+ *                  click_rate, click_through_open }, ...] }
+ *
+ * When `data` is null (endpoint failed) the tile hides entirely —
+ * we NEVER blank the surrounding admin dashboard.
+ */
+function ReminderAnalyticsTile({ data }) {
+  if (!data) return null;
+  const total = data.total || {
+    sent: 0, opened: 0, clicked: 0,
+    open_rate: 0, click_rate: 0, click_through_open: 0,
+  };
+  const subjects = Array.isArray(data.subjects) ? data.subjects : [];
+  const empty = (total.sent || 0) === 0;
+  return (
+    <div className="card-soft p-6" data-testid="admin-reminder-analytics-tile">
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div>
+          <div className="eyebrow flex items-center gap-2">
+            <Bell size={12} className="text-[#3D1A78]" />
+            Reflection reminders · Open + click rates
+          </div>
+          <div className="font-serif text-xl text-[#1A1330] mt-1">
+            Does the 3-day nudge lift completion?
+          </div>
+          <p className="text-xs text-[#857E9C] mt-1">
+            Aggregated from the reminder collection — same numbers as
+            <code className="mx-1 px-1 py-0.5 rounded bg-[#F5EFFB] text-[10px] text-[#3D1A78]">
+              /api/admin/alignment-reflections/analytics
+            </code>
+            . First-touch attribution, per subject.
+          </p>
+        </div>
+      </div>
+
+      {empty ? (
+        <div
+          className="rounded-2xl border border-dashed border-[#E5E0EE] bg-[#FAF8FD] p-6 text-center"
+          data-testid="admin-reminder-analytics-empty"
+        >
+          <p className="text-sm text-[#4B4567] font-medium">
+            No 3-day reminders sent yet
+          </p>
+          <p className="text-xs text-[#857E9C] mt-1">
+            Numbers appear here once the reminder sweep finds a
+            reflection that&rsquo;s been idle for 3&nbsp;days.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Totals strip */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="admin-reminder-totals">
+            <div className="rounded-2xl border border-[#E5E0EE] bg-[#FAF8FD] p-4" data-testid="admin-reminder-total-sent">
+              <div className="eyebrow mb-2 flex items-center gap-1.5">
+                <Send size={11} /> Sent
+              </div>
+              <div className="font-serif text-3xl text-[#1A1330] leading-none">
+                {total.sent}
+              </div>
+              <div className="text-xs text-[#857E9C] mt-1.5">
+                Total reminder emails delivered.
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#E5E0EE] bg-[#FBF6FF] p-4" data-testid="admin-reminder-total-opens">
+              <div className="eyebrow mb-2 flex items-center gap-1.5">
+                <Eye size={11} /> Opens
+              </div>
+              <div className="font-serif text-3xl text-[#1A1330] leading-none">
+                {total.opened}
+                <span className="text-[#857E9C] text-lg"> · {total.open_rate}%</span>
+              </div>
+              <div className="text-xs text-[#857E9C] mt-1.5">
+                First-touch pixel opens.
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#E5E0EE] bg-[#FFFBF3] p-4" data-testid="admin-reminder-total-clicks">
+              <div className="eyebrow mb-2 flex items-center gap-1.5">
+                <MousePointerClick size={11} /> Clicks
+              </div>
+              <div className="font-serif text-3xl text-[#1A1330] leading-none">
+                {total.clicked}
+                <span className="text-[#857E9C] text-lg"> · {total.click_rate}%</span>
+              </div>
+              <div className="text-xs text-[#857E9C] mt-1.5">
+                Redirect-tracked link clicks.
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#E5E0EE] bg-[#F0FBFB] p-4" data-testid="admin-reminder-total-cto">
+              <div className="eyebrow mb-2 flex items-center gap-1.5">
+                <TrendingUp size={11} /> CTR of opens
+              </div>
+              <div className="font-serif text-3xl text-[#1A1330] leading-none">
+                {total.click_through_open}%
+              </div>
+              <div className="text-xs text-[#857E9C] mt-1.5">
+                Clicks &divide; opens — engagement quality.
+              </div>
+            </div>
+          </div>
+
+          {/* Per-subject rows */}
+          <div className="mt-5 rounded-2xl border border-[#E5E0EE] bg-white overflow-hidden">
+            <div className="grid grid-cols-12 px-4 py-2.5 text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C] bg-[#FAF8FD] border-b border-[#E5E0EE]">
+              <div className="col-span-4">Subject</div>
+              <div className="col-span-2 text-right">Sent</div>
+              <div className="col-span-2 text-right">Open rate</div>
+              <div className="col-span-2 text-right">Click rate</div>
+              <div className="col-span-2 text-right">CTR of opens</div>
+            </div>
+            <ul data-testid="admin-reminder-subjects">
+              {subjects.map((s) => (
+                <li
+                  key={s.subject}
+                  className="grid grid-cols-12 px-4 py-3 text-sm border-b border-[#F0EBF7] last:border-b-0"
+                  data-testid={`admin-reminder-subject-${s.subject}`}
+                >
+                  <div className="col-span-4 text-[#1A1330] font-medium capitalize">
+                    {String(s.subject).replaceAll("_", " ")}
+                  </div>
+                  <div className="col-span-2 text-right text-[#4B4567] tabular-nums">
+                    {s.sent}
+                  </div>
+                  <div className="col-span-2 text-right text-[#4B4567] tabular-nums">
+                    {s.open_rate}%{" "}
+                    <span className="text-[#857E9C] text-xs">({s.opened})</span>
+                  </div>
+                  <div className="col-span-2 text-right text-[#4B4567] tabular-nums">
+                    {s.click_rate}%{" "}
+                    <span className="text-[#857E9C] text-xs">({s.clicked})</span>
+                  </div>
+                  <div className="col-span-2 text-right text-[#4B4567] tabular-nums">
+                    {s.click_through_open}%
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="text-[11px] text-[#857E9C] mt-4 italic">
+            A CTR-of-opens below 25% usually means the email body copy
+            isn&rsquo;t clarifying <em>why</em> the reminder came now.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
   const [overview, setOverview] = useState(null);
   const [recentUsers, setRecentUsers] = useState([]);
   const [signups, setSignups] = useState([]);
+  const [reminderAnalytics, setReminderAnalytics] = useState(null);
   const [err, setErr] = useState(null);
 
   useEffect(() => {
@@ -274,6 +432,16 @@ export default function AdminDashboard() {
         } else {
           setErr("Could not load admin analytics.");
         }
+      });
+
+    // Reminder analytics is loaded on its own — a failure here must
+    // never blank the whole admin dashboard (the tile just hides).
+    api
+      .get("/admin/alignment-reflections/analytics")
+      .then((r) => setReminderAnalytics(r.data || null))
+      .catch((e) => {
+        logError("admin reminder analytics failed", e);
+        setReminderAnalytics(null);
       });
   }, [user]);
 
@@ -522,6 +690,11 @@ export default function AdminDashboard() {
             </p>
           </div>
         )}
+
+        {/* Reflection reminder analytics — Iter195. Sits directly
+            below the Consent Adoption tile so open/click rates are
+            visible without cURLing `/api/admin/alignment-reflections/analytics`. */}
+        <ReminderAnalyticsTile data={reminderAnalytics} />
 
         {/* Funnel + auth breakdown */}
         <div className="grid lg:grid-cols-2 gap-6">

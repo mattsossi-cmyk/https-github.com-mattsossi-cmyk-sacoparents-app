@@ -26,6 +26,30 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-14 — Iter195 · Admin dashboard reminder-analytics tile
+
+**🟢 P1 — Surface `compute_reminder_analytics()` on `/admin`**
+- New `ReminderAnalyticsTile` React component in
+  `AdminDashboard.jsx`, placed directly below the Consent
+  Adoption tile so ops can eyeball reminder open + click rates
+  without cURLing `/api/admin/alignment-reflections/analytics`.
+- Renders a totals strip (Sent · Opens % · Clicks % · CTR of
+  opens %) and a per-subject table with sent / open rate /
+  click rate / CTR-of-opens for every subject the sweep has
+  emailed. Empty-state (0 sent) prints an inline note.
+- Fetches on mount alongside the other admin analytics calls
+  but with an isolated `.catch()` — a failure here NEVER
+  blanks the surrounding dashboard, the tile just hides.
+- New test: `test_iter195_admin_reminder_analytics_tile.py`
+  locks the endpoint contract (auth-gated, zeroed shape on
+  empty DB, per-subject rows carry the four numbers the JSX
+  reads). All 3 tests pass.
+- Verified live at `/admin` (desktop 1920 + mobile 390):
+  totals + per-subject table render with real reminder data
+  (Co Parenting: 3 sent · 66.7% open · 33.3% click · 50% CTR;
+  Communication: 1 sent · 0/0/0). No horizontal overflow from
+  the new tile at 390px.
+
 ### 2026-09-14 — Iter194 · Cron + Analytics + Sample Personalisation
 
 **🟢 P1 — Reminder scheduler cronned**
