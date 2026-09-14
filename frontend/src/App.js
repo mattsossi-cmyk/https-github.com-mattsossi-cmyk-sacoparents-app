@@ -48,6 +48,7 @@ import CommunicationAlignment from "@/pages/CommunicationAlignment";
 import ParentingScheduleReflection from "@/pages/ParentingScheduleReflection";
 import ParentingScheduleAlignment from "@/pages/ParentingScheduleAlignment";
 import ActivitiesReflection from "@/pages/ActivitiesReflection";
+import AlignmentReflection from "@/pages/AlignmentReflection";
 import ActivitiesAlignment from "@/pages/ActivitiesAlignment";
 import Samples from "@/pages/Samples";
 import JoinInvitation from "@/pages/JoinInvitation";
@@ -179,6 +180,7 @@ function AppRoutes() {
         <Route path="/schedule/alignment" element={<ParentingScheduleAlignment />} />
         <Route path="/activities/reflection" element={<ActivitiesReflection />} />
         <Route path="/activities/alignment" element={<ActivitiesAlignment />} />
+        <Route path="/alignment/reflect/:subject" element={<ProtectedRoute><AlignmentReflection /></ProtectedRoute>} />
         <Route path="/join" element={<JoinCode />} />
         <Route path="/join/sample-preview" element={<JoinInvitationSamplePreview />} />
         <Route path="/join/:token" element={<JoinInvitation />} />

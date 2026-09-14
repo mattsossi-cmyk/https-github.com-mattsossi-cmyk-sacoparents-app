@@ -53,6 +53,32 @@ async def _load_latest_agreement(
     )
 
 
+async def _load_reflection_answers(
+    db: AsyncIOMotorDatabase, user_id: str,
+    subject: str = "co_parenting",
+) -> Dict[str, str]:
+    """Iter191: fetch a parent's saved free-text reflection answers so
+    the joint agreement payload can surface "Both parents mentioned X"
+    bullets on §2 of the alignment report. Returns `{}` when the parent
+    has not submitted — the merger then falls back to clause-only
+    analysis without leaking that either parent opted in or out.
+
+    Wrapped in try/except because some legacy test fixtures stub `db`
+    with a minimal object that lacks the alignment_reflections
+    collection — reflections are purely additive, so a lookup failure
+    should never break the joint-agreement contract."""
+    try:
+        doc = await db["alignment_reflections"].find_one(
+            {"user_id": user_id, "subject": subject}, {"_id": 0},
+        )
+    except (KeyError, AttributeError, TypeError):
+        return {}
+    if not doc:
+        return {}
+    answers = doc.get("answers") or {}
+    return {k: (v or "") for k, v in answers.items() if isinstance(v, str)}
+
+
 async def _assemble_joint_agreement(
     db: AsyncIOMotorDatabase, share: Dict[str, Any], caller_id: str, share_id: str,
 ) -> Dict[str, Any]:
@@ -83,12 +109,20 @@ async def _assemble_joint_agreement(
             "ready.",
         )
 
+    # Iter191: pull reflection answers for both parents (optional).
+    # Empty dicts are safe — build_joint_agreement only emits
+    # reflection_analysis when BOTH sides have non-empty answers.
+    reflections_a = await _load_reflection_answers(db, caller_id)
+    reflections_b = await _load_reflection_answers(db, other_id)
+
     return build_joint_agreement(
         share_id=share_id,
         parent_a_name=parent_a_name,
         parent_b_name=parent_b_name,
         agreement_a=agr_a,
         agreement_b=agr_b,
+        reflections_a=reflections_a,
+        reflections_b=reflections_b,
     )
 
 

@@ -26,6 +26,76 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-14 — Iter191 · Free-Text Reflection Prompts (Phase 1)
+
+**🟢 P1 — Six sacoparentsalign-style prompts for General Co-Parenting**
+Parents can now write free-text reflections on 6 prompts (Primary
+Need / What's Working / Concerns / Desired Improvements / Options /
+Other Parent's Likely Concerns). When both parents complete the
+reflection, the Joint Alignment Report gains verbatim "Both parents
+mentioned 'consistent, expectations' when describing..." bullets on
+§2 and per-prompt side-by-side quotes on §3.
+
+- **Backend**:
+  - New `alignment_reflection_questions.py` — locks the 6 prompt IDs,
+    labels, help text, placeholders, and 600-char limits.
+  - New `alignment_reflection_analysis.py` — deterministic keyword
+    overlap engine. Stopword-filtered token intersection; short
+    answers (<=3 words) surface verbatim; child's name is stripped so
+    "Both parents mentioned 'maya'" never happens.
+  - New `alignment_reflection_routes.py` mounted at
+    `/api/alignment-reflection`:
+    - `GET /schema/{subject}` (public, no auth)
+    - `GET /{subject}/mine` (caller's saved answers)
+    - `PUT /{subject}` (upsert; unknown prompt IDs dropped server-side
+      to prevent client-side prompt spoofing)
+    - `POST /{subject}/compare` (dual-consent — returns
+      `waiting_on_coparent` until BOTH have saved; 409 if the caller
+      has not answered)
+  - `joint_agreement.build_joint_agreement` gains optional
+    `reflections_a` / `reflections_b` / `child_name` params. When
+    both sides submit, the alignment_report payload gains a
+    `reflection_analysis` block. Dual-consent guardrail: NEVER
+    emitted when only one parent has answered.
+  - `joint_agreement_routes` fetches both parents' reflections
+    alongside their agreement drafts and pipes them through.
+  - `joint_agreement_pdf` renders two new bullets:
+    - §2 "Shared themes from your reflection prompts" — verbatim
+      "Both parents mentioned 'X' when describing..." bullets
+    - §3 "Reflection quotes — in each parent's own words" — two-
+      column strip with each parent's verbatim answer (capped at
+      320 chars per side to avoid pushing §4 off the page)
+- **Frontend**:
+  - New `AlignmentReflection.jsx` at `/alignment/reflect/:subject`
+    (JWT-gated). Six textarea cards with label, prompt, help hint,
+    live character counter, autosave 800ms after the last keystroke,
+    Ctrl-S also saves. Progress pill ("N of 6 answered") + explicit
+    Save button + last-saved timestamp.
+  - Route added to `App.js`. Testids on every field and button so
+    Playwright / testing-agent can drive the form.
+- **Data model**: new `alignment_reflections` Mongo collection with
+  `{user_id, email, subject, answers:{prompt_id: str}, updated_at,
+  created_at}`. Answers are stored verbatim and truncated to 600
+  chars server-side per prompt.
+- **Tests**: `tests/test_iter191_alignment_reflection.py` — 17
+  tests covering (1) question bank contract, (2) analysis engine
+  behaviour spec (overlap, short-answer verbatim, empty-safe, child-
+  name stripping, differ-row scaffolding), (3) API CRUD, (4)
+  compare dual-consent (waiting / 409 / ready states), (5)
+  `build_joint_agreement` reflection wiring, (6) PDF rendering of
+  shared bullets + verbatim quotes. All pass. Wider joint/alignment
+  regression: 186/187 passing (unrelated iter183 test-ordering flake).
+
+**Deferred to Phase 2**:
+- Multi-subject reports (Communication / Medical / Educational /
+  Safety) — same 6-prompt shape, new subject definitions in the
+  questions module + subject picker on the frontend.
+- Safety-sensitive routing — never joint-share Safety reflections
+  without dual-consent, mirroring sacoparentsalign's guardrail.
+- `/samples/co_parenting/pdf` public sample with fictional reflection
+  data.
+
+
 ### 2026-09-14 — Iter190 · Joint Alignment Report Refactor
 
 **🟢 P0 — "Step One - Alignment Before Agreement" 10-section flow**

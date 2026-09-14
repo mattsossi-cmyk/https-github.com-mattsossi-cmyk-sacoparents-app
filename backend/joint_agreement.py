@@ -648,11 +648,24 @@ _POSSIBLE_NEXT_STEPS: List[Dict[str, str]] = [
 
 def _build_alignment_report_view(
     sections: List[Dict[str, Any]],
+    reflections_a: Optional[Dict[str, str]] = None,
+    reflections_b: Optional[Dict[str, str]] = None,
+    *,
+    parent_a_name: str = "Parent A",
+    parent_b_name: str = "Parent B",
+    child_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Bundle the four alignment-report specific blocks in a single
     payload key so `joint_agreement_pdf.py` and any consumer can render
-    the sacoparentsalign 10-section flow without re-computing them."""
-    return {
+    the sacoparentsalign 10-section flow without re-computing them.
+
+    When both `reflections_a` and `reflections_b` are non-empty, the
+    result gains a `reflection_analysis` block with sacoparentsalign
+    "Both parents mentioned 'X'" bullets + a per-prompt two-column
+    diff of the verbatim answers. The reflection_analysis is ONLY
+    emitted when both parents have submitted — never when only one
+    parent has answered."""
+    view = {
         "purpose_note": (
             "This report shows how SA CoParents compares the "
             "independently provided perspectives of both parents. It "
@@ -674,6 +687,26 @@ def _build_alignment_report_view(
             "working toward meeting your child's needs."
         ),
     }
+    # Only emit the reflection analysis when BOTH parents have
+    # submitted at least one answer — never leak one parent's
+    # free-text response to the co-parent unless the reciprocal
+    # side has also submitted. This mirrors the alignment_reflection
+    # `compare` endpoint's dual-consent guardrail.
+    ra_has = bool(reflections_a and any((v or "").strip() for v in reflections_a.values()))
+    rb_has = bool(reflections_b and any((v or "").strip() for v in reflections_b.values()))
+    if ra_has and rb_has:
+        # Lazy import: keep the joint_agreement module free of a hard
+        # dep on the reflection engine so the merger keeps working
+        # even in environments where reflections are opted out.
+        from alignment_reflection_analysis import analyse_reflections
+        view["reflection_analysis"] = analyse_reflections(
+            reflections_a or {},
+            reflections_b or {},
+            parent_a_name=parent_a_name,
+            parent_b_name=parent_b_name,
+            child_name=child_name,
+        )
+    return view
 
 
 
@@ -746,6 +779,9 @@ def build_joint_agreement(
     parent_b_name: str,
     agreement_a: Dict[str, Any],
     agreement_b: Dict[str, Any],
+    reflections_a: Optional[Dict[str, str]] = None,
+    reflections_b: Optional[Dict[str, str]] = None,
+    child_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Merge two individual agreement drafts into a joint draft.
 
@@ -759,6 +795,13 @@ def build_joint_agreement(
       * open_for_discussion     — topics each parent explicitly flagged
                                   as still-open. Rendered as PROPOSED
                                   topics rather than agreed clauses.
+
+    Optional Iter191 reflection params: when BOTH `reflections_a` and
+    `reflections_b` carry the six sacoparentsalign free-text prompts,
+    the alignment_report block gains `reflection_analysis` with the
+    "Both parents mentioned 'X'" bullets + per-prompt verbatim quotes.
+    Never emitted when only one parent has submitted — see
+    `_build_alignment_report_view` for the dual-consent guardrail.
     """
     sections: List[Dict[str, Any]] = [
         _merge_section(
@@ -823,7 +866,14 @@ def build_joint_agreement(
         "parent_view":         _build_agreement_parent_view(
             sections, parent_a_name, parent_b_name,
         ),
-        "alignment_report":    _build_alignment_report_view(sections),
+        "alignment_report":    _build_alignment_report_view(
+            sections,
+            reflections_a=reflections_a,
+            reflections_b=reflections_b,
+            parent_a_name=parent_a_name,
+            parent_b_name=parent_b_name,
+            child_name=child_name,
+        ),
         "summary":             _convergence_summary(sections),
         "closing_notes": {
             "parent_a": str(agreement_a.get("closing_note") or "").strip(),

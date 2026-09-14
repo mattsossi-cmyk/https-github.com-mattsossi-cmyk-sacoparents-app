@@ -323,6 +323,90 @@ def _render_next_steps(
         pdf.ln(0.5)
 
 
+def _render_reflection_shared_bullets(
+    pdf: "_JointAgreementPDF", analysis: Dict[str, Any],
+):
+    """§2 companion — verbatim "Both parents mentioned 'X'" bullets
+    from the sacoparentsalign free-text reflection prompts. Renders
+    NOTHING when both parents have not completed the reflection
+    (analysis dict is empty). Never leaks a single parent's quotes."""
+    both = (analysis or {}).get("both_parents_mentioned") or []
+    if not both:
+        return
+    pdf.ln(3)
+    pdf.set_x(LEFT_M)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_text_color(31, 92, 59)
+    pdf.cell(0, 5, "Shared themes from your reflection prompts", ln=1)
+    pdf.set_text_color(*TEXT_DARK)
+    pdf.set_font("Helvetica", "", 9)
+    for row in both:
+        label = (row.get("prompt_label") or "").strip()
+        phrase = (row.get("shared_phrase") or "").strip()
+        if not label or not phrase:
+            continue
+        pdf.set_x(LEFT_M)
+        pdf.multi_cell(
+            CONTENT_W, 4.5,
+            f"- Both parents mentioned \"{phrase}\" when describing "
+            f"{label.lower()}.",
+        )
+        pdf.ln(0.3)
+
+
+def _render_reflection_verbatim_quotes(
+    pdf: "_JointAgreementPDF", analysis: Dict[str, Any],
+):
+    """§3 companion — verbatim per-prompt quotes in a two-column
+    strip so a mediator can compare each parent's tone side by side.
+    Renders NOTHING when reflections were not submitted by both
+    parents. Truncates each quote to 320 chars so a long answer does
+    not push §4 off the page."""
+    diffs = (analysis or {}).get("perspectives_differ") or []
+    if not diffs:
+        return
+    pdf.ln(3)
+    pdf.set_x(LEFT_M)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_text_color(138, 91, 0)
+    pdf.cell(0, 5, "Reflection quotes - in each parent's own words", ln=1)
+    pdf.set_text_color(*TEXT_DARK)
+    col_w = (CONTENT_W - 4) / 2
+    for row in diffs:
+        label = (row.get("prompt_label") or "").strip()
+        a_q = (row.get("parent_a_quote") or "").strip()[:320]
+        b_q = (row.get("parent_b_quote") or "").strip()[:320]
+        parent_a_display = (row.get("parent_a_name") or "Parent A").strip()
+        parent_b_display = (row.get("parent_b_name") or "Parent B").strip()
+        if not (a_q or b_q):
+            continue
+        pdf.set_x(LEFT_M)
+        pdf.set_font("Helvetica", "B", 8.5)
+        pdf.set_text_color(*TEXT_MID)
+        pdf.cell(0, 4.2, label, ln=1)
+        # Two-column strip labelled with parent names.
+        y_top = pdf.get_y()
+        pdf.set_font("Helvetica", "B", 7.5)
+        pdf.set_text_color(61, 26, 120)
+        pdf.set_xy(LEFT_M, y_top)
+        pdf.cell(col_w, 4, parent_a_display)
+        pdf.set_text_color(15, 111, 111)
+        pdf.set_xy(LEFT_M + col_w + 4, y_top)
+        pdf.cell(col_w, 4, parent_b_display)
+        pdf.ln(4.3)
+        pdf.set_font("Helvetica", "I", 8.5)
+        pdf.set_text_color(*TEXT_DARK)
+        a_y = pdf.get_y()
+        pdf.set_xy(LEFT_M, a_y)
+        pdf.multi_cell(col_w, 4.3, f'"{a_q}"' if a_q else "(no answer)")
+        end_a = pdf.get_y()
+        pdf.set_xy(LEFT_M + col_w + 4, a_y)
+        pdf.multi_cell(col_w, 4.3, f'"{b_q}"' if b_q else "(no answer)")
+        end_b = pdf.get_y()
+        pdf.set_y(max(end_a, end_b))
+        pdf.ln(1)
+
+
 def _render_alignment_before_agreement_closing(
     pdf: "_JointAgreementPDF", alignment_report: Dict[str, Any],
 ):
@@ -821,6 +905,15 @@ def build_joint_agreement_pdf(payload: Dict[str, Any]) -> bytes:
         both_bucket.get("description") or "",
     )
     _render_both_proposed_bucket(pdf, both_bucket)
+    # Iter191: When both parents completed the sacoparentsalign
+    # free-text reflection, surface the shared-phrase bullets on the
+    # same page so mediators see the KEYWORD alignment right next to
+    # the CLAUSE alignment. Falls through cleanly when reflections
+    # were not submitted.
+    reflection_analysis = (payload.get("alignment_report") or {}).get(
+        "reflection_analysis"
+    ) or {}
+    _render_reflection_shared_bullets(pdf, reflection_analysis)
 
     # SS3 Where the Parents See Things Differently
     pdf.add_page()
@@ -830,6 +923,8 @@ def build_joint_agreement_pdf(payload: Dict[str, Any]) -> bytes:
         diff_bucket.get("description") or "",
     )
     _render_different_ideas_bucket(pdf, diff_bucket, parent_a, parent_b)
+    # Iter191: verbatim two-column quotes from the reflection prompts.
+    _render_reflection_verbatim_quotes(pdf, reflection_analysis)
 
     # SS4 Child's Identified Needs
     pdf.add_page()
