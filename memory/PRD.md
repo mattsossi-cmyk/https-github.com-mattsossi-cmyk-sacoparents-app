@@ -26,6 +26,68 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-14 — Iter193 · Dashboard tile + Sample landing + Reminder sweep
+
+**🟢 P1 — Alignment Reflections dashboard tile**
+- New backend `GET /api/alignment-reflection/my-progress` — one
+  round-trip returns every subject's answered/total/updated_at.
+- New `AlignmentReflectionsCard.jsx` component — 5-row subject list
+  with per-subject progress bar + "Complete" badge when
+  answered ≥ total. Safety row carries a red "DUAL-CONSENT" pill.
+  Two CTAs at the bottom: "Open subject picker" + "Preview the
+  sample report" (links to the new landing page).
+- Slotted into `Dashboard.jsx` above the "Complete Alignment Report"
+  tile so parents see the reflection funnel before the finished
+  artefact.
+
+**🟢 P2 — Public `/samples/co-parenting` marketing landing page**
+- New `SampleCoParentingLanding.jsx` — public, no auth. Hero,
+  three-highlight explainer, embedded PDF iframe preview
+  (17-page sample rendered by the existing insights route), soft
+  "Sign in" + "Start your own" CTAs. Bottom purple CTA card with
+  a downloadable "share the sample with a co-parent" button and a
+  safety-sensitive footer note. Renders cleanly at 1920 and 390
+  viewports.
+- Route added to `App.js` — `/samples/co-parenting`, unauthenticated.
+
+**🟡 P1 — Reflection Reminder Sweep**
+- New `alignment_reflection_reminder.py` — pure Python
+  `send_reflection_reminders(db, stale_days=3, dry_run=True)` that:
+  * Finds every reflection with `updated_at ≤ now - stale_days`.
+  * Excludes safety-sensitive subjects (never nudges on Safety).
+  * Excludes reflections with no completed answers (blank-save
+    guard).
+  * Resolves co-parents via ACTIVE `snc2_shares` / `compare_shares`
+    (both share shapes handled).
+  * Skips when the co-parent has ALREADY started that subject.
+  * Skips when a reminder was already sent for the
+    (target, coparent, subject) triple — idempotent.
+  * Sends via the standard `email_service._send` path (Virtru →
+    Resend fallback). Neutral copy that never names WHO completed
+    first, keeps focus on the child.
+  * Records every send in the new `alignment_reflection_reminders`
+    collection.
+  * Returns a structured `{ sent, skipped, candidate_count,
+    sent_count, dry_run }` payload for admin inspection.
+- New admin route `POST /api/admin/alignment-reflections/send-reminders`
+  (dry_run defaults to True). Deployment ops owns cadence — no
+  self-scheduling.
+
+**Tests** (`tests/test_iter193_dashboard_sample_reminder.py`) —
+**7 tests all passing**:
+- `/my-progress` returns all 5 subjects in locked order, reflects
+  saved answers, requires auth.
+- Reminder sweep finds stale reflection + skips safety.
+- Sweep skips when co-parent has already started that subject.
+- Sweep is idempotent — a second call after a real send finds
+  "already_sent" and skips.
+- Admin reminder route requires admin (403 for regular users).
+
+**Cross-iteration regression**: **55 tests passing** across
+iter190 / iter191 / iter192 / iter193 (Joint Alignment Report full
+stack). Frontend renders clean at desktop + mobile viewports.
+
+
 ### 2026-09-14 — Iter192 · Multi-Subject Reports + Sample PDF
 
 **🟢 P1 — 5 subjects with subject-scoped prompts + safety-sensitive routing**

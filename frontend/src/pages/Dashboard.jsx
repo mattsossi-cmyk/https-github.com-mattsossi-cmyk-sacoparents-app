@@ -17,6 +17,7 @@ import PathwayReportCard from "../components/PathwayReportCard";
 import PathwayReviewerCommentsCard from "../components/PathwayReviewerCommentsCard";
 import ProgressDashboardCard from "../components/ProgressDashboardCard";
 import PublicMilestoneWall from "../components/PublicMilestoneWall";
+import AlignmentReflectionsCard from "../components/AlignmentReflectionsCard";
 import WeeklyEmailPreview from "../components/WeeklyEmailPreview";
 import LearningCenterCard from "../components/LearningCenterCard";
 import YourReportsCard from "../components/YourReportsCard";
@@ -575,6 +576,11 @@ export default function Dashboard() {
         <div className="mt-4" data-testid="dashboard-ecosystem-strip">
           <EcosystemStrip variant="compact" />
         </div>
+
+        {/* Alignment Reflections — Iter193 · surfaces the 5 subject
+            reflections with per-subject "N of 6 answered" progress so
+            parents finish more subjects before losing momentum. */}
+        <AlignmentReflectionsCard />
 
         {/* Complete Alignment Report — new (2026-09) unified 10-section
             report that stitches every completed reflection into one

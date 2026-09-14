@@ -284,3 +284,29 @@ async def admin_send_test_consent_digest(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return {"ok": True, "to_email": email, "week_start": week_start}
+
+
+
+@router.post("/admin/alignment-reflections/send-reminders")
+async def admin_send_reflection_reminders(
+    request: Request,
+    dry_run: bool = True,
+    stale_days: int = 3,
+    _admin: UserPublic = Depends(require_admin),
+):
+    """Trigger the reflection reminder sweep (Iter193). Defaults to
+    `dry_run=True` — admins should always preview the candidate list
+    before firing emails. Pass `?dry_run=false` to actually send.
+
+    Guardrails baked into the sweep itself: safety-sensitive subjects
+    are excluded, one reminder per (target_user, coparent_user,
+    subject), reflections with no completed answers are skipped.
+    """
+    from alignment_reflection_reminder import send_reflection_reminders
+
+    result = await send_reflection_reminders(
+        request.app.state.db,
+        stale_days=max(0, int(stale_days)),
+        dry_run=bool(dry_run),
+    )
+    return result

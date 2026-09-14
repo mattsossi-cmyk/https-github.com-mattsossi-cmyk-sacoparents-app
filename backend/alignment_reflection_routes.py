@@ -145,6 +145,36 @@ async def list_subjects():
     }
 
 
+@router.get("/alignment-reflection/my-progress")
+async def get_my_progress(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Iter193 · one-shot per-subject progress payload for the
+    dashboard tile. Avoids the frontend making 5 parallel `/mine`
+    calls on every dashboard load — one round-trip returns the
+    answered/total/updated_at for every registered subject."""
+    docs = await db[_COLL].find(
+        {"user_id": current.user_id}
+    ).to_list(length=None)
+    by_subject = {(d.get("subject") or ""): d for d in docs}
+    subjects_out = []
+    for meta in SUBJECTS.values():
+        subject_id = meta["id"]
+        doc = by_subject.get(subject_id)
+        answers = (doc.get("answers") if doc else {}) or {}
+        answered = sum(1 for v in answers.values() if (v or "").strip())
+        subjects_out.append({
+            "id":         subject_id,
+            "label":      meta["label"],
+            "sensitive":  meta.get("sensitive", False),
+            "answered":   answered,
+            "total":      len(meta["prompts"]),
+            "updated_at": _iso(doc.get("updated_at")) if doc else None,
+        })
+    return {"subjects": subjects_out}
+
+
 @router.get("/alignment-reflection/schema/{subject}")
 async def get_schema(subject: str):
     """Public prompt schema for a subject — no auth required so the
