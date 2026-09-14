@@ -63,10 +63,21 @@ async def _load_reflection_answers(
     has not submitted — the merger then falls back to clause-only
     analysis without leaking that either parent opted in or out.
 
+    Iter192 safety guard: safety-sensitive subjects are NEVER loaded
+    through this path — Safety reflections require an explicit
+    dual-consent ceremony on the `/api/alignment-reflection/{safety}/compare`
+    endpoint and never auto-merge into the joint agreement.
+
     Wrapped in try/except because some legacy test fixtures stub `db`
     with a minimal object that lacks the alignment_reflections
     collection — reflections are purely additive, so a lookup failure
     should never break the joint-agreement contract."""
+    try:
+        from alignment_reflection_questions import is_sensitive_subject
+        if is_sensitive_subject(subject):
+            return {}
+    except Exception:  # noqa: BLE001
+        pass
     try:
         doc = await db["alignment_reflections"].find_one(
             {"user_id": user_id, "subject": subject}, {"_id": 0},

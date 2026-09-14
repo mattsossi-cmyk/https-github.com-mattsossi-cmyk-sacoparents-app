@@ -26,6 +26,73 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-14 — Iter192 · Multi-Subject Reports + Sample PDF
+
+**🟢 P1 — 5 subjects with subject-scoped prompts + safety-sensitive routing**
+Reflection-prompt engine now covers **General Co-Parenting** +
+**Communication** + **Medical** + **Educational** + **Safety** on
+top of the same 6-prompt shape.
+
+- **Questions module** (`alignment_reflection_questions.py`):
+  - New `_prompts()` helper generates subject-scoped label / prompt /
+    placeholder / help text while keeping the 6 prompt IDs stable so
+    the analysis engine stays subject-agnostic.
+  - `SUBJECTS` registry gains 4 new entries. Safety is marked
+    `sensitive: True`; every other subject is `sensitive: False`.
+  - New `is_sensitive_subject()` helper.
+- **Routes** (`alignment_reflection_routes.py`):
+  - New `GET /alignment-reflection/subjects` (public) — subject picker
+    payload including `sensitive` flag and prompt count per subject.
+  - `POST /{subject}/compare` for **Safety** now returns **HTTP 428
+    Precondition Required** unless the request body explicitly sets
+    `safety_dual_consent_acknowledged: true`. The flag never
+    persists — every safety compare is a fresh deliberate ceremony.
+- **Joint-agreement guard** (`joint_agreement_routes.py`):
+  - `_load_reflection_answers` short-circuits when the requested
+    subject is sensitive — Safety reflections are NEVER auto-merged
+    into the joint agreement / alignment report, even if a caller
+    accidentally passes `subject="safety"`.
+- **Frontend**:
+  - New `AlignmentSubjects.jsx` page at `/alignment/subjects` — hero
+    + 5-card grid + safety-sensitive footer + sample-PDF preview link.
+    Safety card gets the red "DUAL-CONSENT ONLY" badge and a red
+    accent gradient. Renders cleanly at 1920 and 390 viewports.
+  - Route added to `App.js` (JWT-gated).
+
+**🟢 P2 — Public sample PDF at `/api/insights/samples/co-parenting-alignment-report.pdf`**
+
+- New `coparenting_alignment_sample.py` — fictional Alex R. + Sam R.
+  co-parenting Maya (age 9). Populates all 5 merged sections + all 6
+  reflection prompts with realistic partial-overlap answers so the
+  sample surfaces a genuine mix of Strong / Moderate / Needs
+  discussion + real "Both parents mentioned 'consistent, expectations'"
+  bullets.
+- Sample PDF is rendered through the SAME `build_joint_agreement_pdf`
+  code path a real merger uses — any future PDF change flows
+  automatically. Output: **17 pages, ~1 MB**, cache-controlled
+  `max-age=86400`.
+- Route added to `insights_routes.py` next to the existing
+  `/samples/joint-alignment-preview.pdf`. Verified live via curl on
+  the preview URL.
+
+**Tests** (`tests/test_iter192_multi_subject_and_sample_pdf.py`) —
+**17 new tests**, all passing:
+- Subject registry order + 6-prompt-ID lock across all 5 subjects
+- Only Safety is sensitive; Safety blurb mentions dual-consent
+- `/subjects` endpoint exposes every subject + `sensitive` flag
+- Schema endpoint works for every new subject
+- Safety `/compare` returns 428 without the dual-consent flag, 200 with
+- Non-sensitive subjects DO NOT require the safety flag
+- `_load_reflection_answers` refuses to load Safety even given a fake
+  DB that would raise on access (safety guard runs BEFORE the DB call)
+- Sample PDF module produces valid `%PDF-` bytes, correct size, all
+  10 section headings + reflection-driven blocks present
+- Route serves PDF bytes with cache headers, no auth required
+
+**Full regression**: **204 passed / 4 skipped** across joint /
+agreement / alignment / iter191 / iter192 test surface.
+
+
 ### 2026-09-14 — Iter191 · Free-Text Reflection Prompts (Phase 1)
 
 **🟢 P1 — Six sacoparentsalign-style prompts for General Co-Parenting**

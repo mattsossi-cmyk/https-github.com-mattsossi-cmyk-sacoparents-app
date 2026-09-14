@@ -420,6 +420,33 @@ _ALLOWED_SAMPLE_PDFS = frozenset({
 # Must sit ABOVE the `/samples/{filename}` parameterised route so FastAPI
 # matches the literal path first (route ordering, not method dispatch).
 
+@router.get("/samples/co-parenting-alignment-report.pdf")
+async def download_coparenting_alignment_sample_pdf():
+    """Public sample of the full Joint Alignment Report (Step One -
+    Alignment Before Agreement) using the co-parenting subject.
+
+    Uses fictional but realistic reflection data — Alex R. + Sam R.
+    co-parenting a 9-year-old named Maya. No PII. Rendered through
+    the SAME `build_joint_agreement_pdf` code path a real case uses,
+    so any future PDF tweak automatically flows to this sample.
+
+    Cached aggressively per URL — the sample is byte-identical every
+    request until the fixture module is redeployed."""
+    from fastapi.responses import Response
+    from coparenting_alignment_sample import build_sample_pdf_bytes
+
+    pdf_bytes = build_sample_pdf_bytes()
+    filename = "sacoparents-alignment-report-sample.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "public, max-age=86400",
+        },
+    )
+
+
 @router.get("/samples/joint-alignment-preview.pdf")
 async def download_joint_alignment_sample_pdf(scenario: str | None = None):
     """Serve the printable sample of the private Joint Alignment

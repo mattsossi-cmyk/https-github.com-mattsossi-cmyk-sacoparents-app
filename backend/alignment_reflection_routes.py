@@ -35,7 +35,9 @@ from auth import UserPublic, get_current_user, get_db
 from alignment_reflection_questions import (
     SUBJECTS,
     SUBJECT_CO_PARENTING,
+    SUBJECT_SAFETY,
     is_known_subject,
+    is_sensitive_subject,
     prompts_for,
     prompt_ids_for,
 )
@@ -104,6 +106,11 @@ class SavePayload(BaseModel):
 
 class CompareRequest(BaseModel):
     coparent_email: str
+    # Iter192: safety-sensitive subjects require an explicit
+    # dual-consent flag on every compare request. The flag is
+    # transient — it never persists, so a Safety compare is a
+    # deliberate ceremony every time.
+    safety_dual_consent_acknowledged: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +124,25 @@ def _require_subject(subject: str) -> str:
             detail=f"Unknown alignment reflection subject: {subject}",
         )
     return subject
+
+
+@router.get("/alignment-reflection/subjects")
+async def list_subjects():
+    """Public subject picker payload — every subject with its label,
+    blurb, and `sensitive` flag so the frontend can render the safety
+    disclosure banner where needed."""
+    return {
+        "subjects": [
+            {
+                "id":        meta["id"],
+                "label":     meta["label"],
+                "blurb":     meta["blurb"],
+                "sensitive": meta.get("sensitive", False),
+                "prompt_count": len(meta["prompts"]),
+            }
+            for meta in SUBJECTS.values()
+        ],
+    }
 
 
 @router.get("/alignment-reflection/schema/{subject}")
@@ -188,6 +214,23 @@ async def compare(
     _require_subject(subject)
     if not (body.coparent_email or "").strip():
         raise HTTPException(status_code=400, detail="coparent_email required")
+
+    # Iter192 · safety-sensitive routing. Safety reflections carry
+    # extra weight — physical/emotional-safety topics can escalate a
+    # low-conflict co-parenting relationship if surfaced carelessly.
+    # Both parents must EXPLICITLY acknowledge dual-consent on every
+    # compare request; the flag is never persisted so the ceremony is
+    # deliberate each time.
+    if is_sensitive_subject(subject) and not body.safety_dual_consent_acknowledged:
+        raise HTTPException(
+            status_code=428,  # Precondition Required — matches the "consent required" HTTP semantics.
+            detail=(
+                "This subject is safety-sensitive. Set "
+                "`safety_dual_consent_acknowledged` to true after "
+                "confirming BOTH parents have opted in — Safety "
+                "reflections are never shared without dual-consent."
+            ),
+        )
 
     coparent = await db.users.find_one(
         {"email": body.coparent_email.lower().strip()},
