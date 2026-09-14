@@ -26,6 +26,78 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-14 — Iter194 · Cron + Analytics + Sample Personalisation
+
+**🟢 P1 — Reminder scheduler cronned**
+- New `alignment_reflection_reminder_loop(app)` — daily sweep,
+  registered from `server.py::startup_log` alongside the existing
+  weekly / consent-adoption loops.
+- Gated behind `ALIGNMENT_REFLECTION_REMINDER_ENABLED=1`. When
+  unset, the loop logs a single info line and idles — safe to
+  register on every deploy. Verified in the boot log:
+  `alignment_reflection_reminder_loop: ALIGNMENT_REFLECTION_REMINDER_ENABLED
+  not set; loop idle`.
+- Sweep interval defaults to 86400s; override via
+  `ALIGNMENT_REFLECTION_REMINDER_SWEEP_SECONDS`.
+- Boot-time offset of 600s so the reminder sweep doesn't collide
+  with the Monday-morning consent digest sweep.
+
+**🟢 P1 — Reminder analytics (open + click tracking)**
+- New `alignment_reflection_analytics.py`:
+  - `GET /api/insights/track/reminder-open/{rid}.gif` — 1x1
+    transparent GIF, marks `opened_at` on the reminder row.
+    First-touch wins; second open never overwrites the first.
+  - `GET /api/insights/track/reminder-click/{rid}` — 302 redirect
+    to `/alignment/reflect/{subject}`, marks `clicked_at`.
+  - Both endpoints ALWAYS return 200/302 — bad rids fall through
+    to safe defaults (subject picker for click, blank pixel for
+    open) so a stale email link never dead-ends the co-parent.
+  - `compute_reminder_analytics(db)` aggregates per-subject
+    open/click rates + a total row. Percentages rounded to 1dp.
+- Reminder module rewritten to record the reminder FIRST, embed
+  the `_id` in the pixel + click-wrapper URLs, then send. If send
+  fails, the placeholder row is rolled back so the next sweep can
+  retry. HTML email carries the pixel; plain-text keeps a direct
+  URL as fallback.
+- New admin route `GET /api/admin/alignment-reflections/analytics`.
+
+**🟢 P2 — Sample PDF personalisation for mediators**
+- `coparenting_alignment_sample.build_sample_pdf_bytes(firm=..,
+  primary_color=..)` — optional branding kwargs.
+- Public route `/api/insights/samples/co-parenting-alignment-report.pdf`
+  gains `?firm=` and `?primary_color=` query params.
+  Invalid colours are silently dropped so a bad URL still returns
+  a valid PDF. Branded variants get `Cache-Control: no-store`;
+  unbranded stays cached 24h.
+- New cover-page footer strip renders "PREPARED FOR / <Firm
+  name>" in the branded accent colour. `_hex_to_rgb` helper
+  handles #RGB and #RRGGBB, falls back to SA CoParents purple.
+- `SampleCoParentingLanding.jsx` gains an inline mediator form:
+  firm-name input, color picker + hex field, "Preview branded
+  PDF" / "Reset" buttons. Once applied, a share URL row appears
+  with a "Copy URL" button; the iframe + download button both
+  update to use the branded URL.
+
+**Tests** (`tests/test_iter194_cron_analytics_branding.py`) —
+**13 new tests, all passing**:
+- Scheduler loop imports cleanly + idles when env flag off; server
+  registers the loop task at startup.
+- Tracker pixel marks opened_at + returns real GIF89a bytes.
+- Tracker pixel is first-touch only (second open doesn't overwrite).
+- Tracker click 302-redirects with correct location + marks clicked_at.
+- Both tracker endpoints handle malformed rids gracefully.
+- Analytics aggregation computes correct per-subject rates.
+- Sample PDF renders firm branding on cover; unbranded variant
+  does NOT include the "PREPARED FOR" block.
+- Invalid `primary_color` is silently dropped.
+- Route honours branding params, sets no-store cache for branded,
+  keeps 24h cache for unbranded.
+- Reminder email HTML includes the tracking pixel + click wrapper.
+
+**Cross-iteration regression**: **68 tests passing** across
+iter190 → iter194 (full Joint Alignment Report + Reflections stack).
+
+
 ### 2026-09-14 — Iter193 · Dashboard tile + Sample landing + Reminder sweep
 
 **🟢 P1 — Alignment Reflections dashboard tile**

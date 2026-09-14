@@ -310,3 +310,16 @@ async def admin_send_reflection_reminders(
         dry_run=bool(dry_run),
     )
     return result
+
+
+@router.get("/admin/alignment-reflections/analytics")
+async def admin_alignment_reflection_analytics(
+    request: Request,
+    _admin: UserPublic = Depends(require_admin),
+):
+    """Iter194 · aggregate open / click rates on the reminder emails
+    so we can prove the sweep lifts the `waiting_on_coparent` →
+    `ready` conversion. Per-subject rows + a total summary."""
+    from alignment_reflection_analytics import compute_reminder_analytics
+    return await compute_reminder_analytics(request.app.state.db)
+

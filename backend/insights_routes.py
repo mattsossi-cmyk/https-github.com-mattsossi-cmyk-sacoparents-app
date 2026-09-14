@@ -421,28 +421,43 @@ _ALLOWED_SAMPLE_PDFS = frozenset({
 # matches the literal path first (route ordering, not method dispatch).
 
 @router.get("/samples/co-parenting-alignment-report.pdf")
-async def download_coparenting_alignment_sample_pdf():
+async def download_coparenting_alignment_sample_pdf(
+    firm: str | None = None,
+    primary_color: str | None = None,
+):
     """Public sample of the full Joint Alignment Report (Step One -
     Alignment Before Agreement) using the co-parenting subject.
+
+    Iter194 · optional `?firm=Acme+Legal+LLP&primary_color=%233d1a78`
+    query params let mediators pre-fill the sample with their own
+    firm name and accent colour for use as a branded lead magnet.
+    Both are optional and validated; unknown / malformed values are
+    silently dropped so a bad URL still returns a valid PDF.
 
     Uses fictional but realistic reflection data — Alex R. + Sam R.
     co-parenting a 9-year-old named Maya. No PII. Rendered through
     the SAME `build_joint_agreement_pdf` code path a real case uses,
     so any future PDF tweak automatically flows to this sample.
 
-    Cached aggressively per URL — the sample is byte-identical every
-    request until the fixture module is redeployed."""
+    Cache-Control differs based on branding — the unbranded sample
+    is cached 24h, branded variants get no-store because a mediator
+    tweaking the URL should see updates instantly."""
     from fastapi.responses import Response
     from coparenting_alignment_sample import build_sample_pdf_bytes
 
-    pdf_bytes = build_sample_pdf_bytes()
-    filename = "sacoparents-alignment-report-sample.pdf"
+    pdf_bytes = build_sample_pdf_bytes(firm=firm, primary_color=primary_color)
+    if firm or primary_color:
+        filename = "sacoparents-alignment-report-branded-sample.pdf"
+        cache_control = "no-store"
+    else:
+        filename = "sacoparents-alignment-report-sample.pdf"
+        cache_control = "public, max-age=86400"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'inline; filename="{filename}"',
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": cache_control,
         },
     )
 

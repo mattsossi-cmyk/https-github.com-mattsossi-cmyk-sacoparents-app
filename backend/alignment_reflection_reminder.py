@@ -65,12 +65,22 @@ def _reflection_reminder_email_html(
     *,
     coparent_display: str,
     subject_label: str,
-    reflect_url: str,
+    click_url: str,
+    open_pixel_url: Optional[str] = None,
 ) -> str:
     """Neutral reminder body — never names WHO completed the
     reflection (removes the emotional 'they beat me to it' pressure).
     Focuses on the child + the format ("Ten neutral sections. Your
-    voice.")."""
+    voice.").
+
+    Optional `open_pixel_url` embeds a transparent 1x1 tracker so
+    analytics can compute open rate. `click_url` wraps the CTA in a
+    tracked redirect."""
+    pixel_tag = (
+        f'<img src="{open_pixel_url}" alt="" width="1" height="1" '
+        f'style="display:block;border:0" />'
+        if open_pixel_url else ""
+    )
     return f"""
     <p>Hi,</p>
     <p>
@@ -85,7 +95,7 @@ def _reflection_reminder_email_html(
       {coparent_display} until you save your answers.
     </p>
     <p>
-      <a href="{reflect_url}" style="display:inline-block;background:#3D1A78;color:#fff;padding:10px 18px;border-radius:9999px;text-decoration:none;font-weight:600">
+      <a href="{click_url}" style="display:inline-block;background:#3D1A78;color:#fff;padding:10px 18px;border-radius:9999px;text-decoration:none;font-weight:600">
         Finish the {subject_label} reflection
       </a>
     </p>
@@ -93,6 +103,7 @@ def _reflection_reminder_email_html(
       Ten neutral sections. Your voice. Your child. Alignment before
       agreement.
     </p>
+    {pixel_tag}
     """
 
 
@@ -100,7 +111,7 @@ def _reflection_reminder_email_text(
     *,
     coparent_display: str,
     subject_label: str,
-    reflect_url: str,
+    click_url: str,
 ) -> str:
     return (
         f"Hi,\n\n"
@@ -111,7 +122,7 @@ def _reflection_reminder_email_text(
         f"There's no rush — take it at your own pace. The prompts take "
         f"about ten minutes to complete. Nothing is shared with "
         f"{coparent_display} until you save your answers.\n\n"
-        f"Finish here: {reflect_url}\n\n"
+        f"Finish here: {click_url}\n\n"
         f"Ten neutral sections. Your voice. Your child. "
         f"Alignment before agreement.\n"
     )
@@ -200,14 +211,31 @@ async def _reminder_already_sent(
 async def _record_reminder(
     db: AsyncIOMotorDatabase,
     *, target_id: str, target_email: str, coparent_id: str, subject: str,
-) -> None:
-    await db[REMINDER_COLL].insert_one({
+) -> Any:
+    """Iter194 · returns the inserted ObjectId so the caller can
+    embed it in the tracking pixel + click wrapper URLs."""
+    doc = {
         "target_user_id":   target_id,
         "target_email":     target_email,
         "coparent_user_id": coparent_id,
         "subject":          subject,
         "sent_at":          datetime.now(timezone.utc),
-    })
+    }
+    res = await db[REMINDER_COLL].insert_one(doc)
+    return res.inserted_id
+
+
+def _api_base_url() -> str:
+    """Public API base for the tracking pixel / click wrapper. The
+    reminder email lives OUTSIDE the SPA — needs a fully-qualified
+    URL, not a relative path."""
+    api = (
+        os.environ.get("PUBLIC_API_URL")
+        or os.environ.get("REACT_APP_BACKEND_URL")
+        or os.environ.get("PUBLIC_APP_URL")
+        or "https://sacoparents.com"
+    )
+    return api.rstrip("/")
 
 
 async def send_reflection_reminders(
@@ -317,16 +345,6 @@ async def send_reflection_reminders(
 
             subject_label = SUBJECTS[subject]["label"]
             reflect_url = _reflect_url(subject)
-            html = _reflection_reminder_email_html(
-                coparent_display=parent_display,
-                subject_label=subject_label,
-                reflect_url=reflect_url,
-            )
-            text = _reflection_reminder_email_text(
-                coparent_display=parent_display,
-                subject_label=subject_label,
-                reflect_url=reflect_url,
-            )
 
             if dry_run:
                 sent.append({
@@ -337,6 +355,39 @@ async def send_reflection_reminders(
                     "triggered_by":    parent_id,
                 })
                 continue
+
+            # Iter194 · record the reminder FIRST so we have the
+            # `_id` to embed in the pixel + click-wrapper URLs. If the
+            # subsequent send fails we clean up the placeholder row so
+            # a future sweep can retry.
+            reminder_id = await _record_reminder(
+                db,
+                target_id=coparent_id,
+                target_email=coparent_user["email"],
+                coparent_id=parent_id,
+                subject=subject,
+            )
+
+            api_base = _api_base_url()
+            from alignment_reflection_analytics import build_reminder_url
+            click_url = build_reminder_url(
+                api_base=api_base, rid=str(reminder_id), kind="click",
+            )
+            open_pixel_url = build_reminder_url(
+                api_base=api_base, rid=str(reminder_id), kind="open",
+            )
+
+            html = _reflection_reminder_email_html(
+                coparent_display=parent_display,
+                subject_label=subject_label,
+                click_url=click_url,
+                open_pixel_url=open_pixel_url,
+            )
+            text = _reflection_reminder_email_text(
+                coparent_display=parent_display,
+                subject_label=subject_label,
+                click_url=reflect_url,  # plain-text falls back to direct URL
+            )
 
             # Send via the shared email service. Late import keeps this
             # module importable in worker / CI environments that don't
@@ -355,24 +406,22 @@ async def send_reflection_reminders(
                         "Could not deliver the alignment-reflection reminder."
                     ),
                 )
-                await _record_reminder(
-                    db,
-                    target_id=coparent_id,
-                    target_email=coparent_user["email"],
-                    coparent_id=parent_id,
-                    subject=subject,
-                )
                 sent.append({
                     "to":            coparent_user["email"],
                     "subject":       subject,
                     "coparent_id":   coparent_id,
                     "triggered_by":  parent_id,
+                    "reminder_id":   str(reminder_id),
                 })
             except Exception as e:  # noqa: BLE001
                 logger.warning(
                     "reflection reminder send failed for %s / %s: %s",
                     coparent_user.get("email"), subject, e,
                 )
+                # Roll back the placeholder row so the next sweep can
+                # retry this triple — otherwise the "already_sent"
+                # guard would freeze a failed reminder forever.
+                await db[REMINDER_COLL].delete_one({"_id": reminder_id})
                 skipped.append({
                     "reason":         "send_failed",
                     "target_user_id": coparent_id,
@@ -387,3 +436,50 @@ async def send_reflection_reminders(
         "sent_count":      len(sent),
         "dry_run":         dry_run,
     }
+
+
+# ---------------------------------------------------------------------------
+# Scheduler loop — Iter194 · long-running background sweep that
+# `server.py::startup_log` registers as an `asyncio.create_task`.
+# Gated behind `ALIGNMENT_REFLECTION_REMINDER_ENABLED=1` — idle
+# no-op otherwise so a rollback is a single env-flag flip.
+# ---------------------------------------------------------------------------
+
+_SWEEP_INTERVAL_S = int(
+    os.environ.get("ALIGNMENT_REFLECTION_REMINDER_SWEEP_SECONDS", "86400")
+)  # daily by default
+
+
+def _enabled() -> bool:
+    return os.environ.get("ALIGNMENT_REFLECTION_REMINDER_ENABLED", "").lower() in (
+        "1", "true", "yes", "on",
+    )
+
+
+async def alignment_reflection_reminder_loop(app) -> None:
+    """Daily sweep. Idle no-op until
+    `ALIGNMENT_REFLECTION_REMINDER_ENABLED=1` is set — safe to
+    register unconditionally at startup."""
+    import asyncio  # local import so the module is import-safe in test envs.
+    if not _enabled():
+        logger.info(
+            "alignment_reflection_reminder_loop: "
+            "ALIGNMENT_REFLECTION_REMINDER_ENABLED not set; loop idle",
+        )
+        while True:
+            await asyncio.sleep(3600)
+    # Offset from the other Monday sweeps so we don't all fire at once.
+    await asyncio.sleep(600)
+    while True:
+        try:
+            result = await send_reflection_reminders(app.state.db, dry_run=False)
+            logger.info(
+                "alignment reflection reminder sweep: sent=%d skipped=%d",
+                result.get("sent_count", 0),
+                len(result.get("skipped", [])),
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "alignment reflection reminder sweep failed; will retry."
+            )
+        await asyncio.sleep(_SWEEP_INTERVAL_S)

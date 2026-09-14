@@ -16,7 +16,7 @@ Sample rules:
 """
 from __future__ import annotations
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 
 SAMPLE_PARENT_A_NAME = "Alex R."
@@ -215,14 +215,22 @@ def sample_fixture() -> Tuple[
     )
 
 
-def build_sample_payload() -> Dict[str, Any]:
+def build_sample_payload(
+    *, firm: Optional[str] = None, primary_color: Optional[str] = None,
+) -> Dict[str, Any]:
     """Assemble the full alignment-report payload the PDF renderer
     consumes. Wraps `joint_agreement.build_joint_agreement` so the
     sample uses EXACTLY the same code path a real merger uses — any
-    future PDF change is guaranteed to flow through here."""
+    future PDF change is guaranteed to flow through here.
+
+    Iter194 · optional `firm` / `primary_color` params let mediators
+    pre-fill the sample with their own branding for lead-magnet use.
+    The `firm` name lands on the cover-page footer strip; the primary
+    colour recolours the SA CoParents accents. Both are optional —
+    the un-branded sample stays the canonical output."""
     from joint_agreement import build_joint_agreement
     share_id, a_name, b_name, child, agr_a, agr_b, refl_a, refl_b = sample_fixture()
-    return build_joint_agreement(
+    payload = build_joint_agreement(
         share_id=share_id,
         parent_a_name=a_name,
         parent_b_name=b_name,
@@ -232,11 +240,39 @@ def build_sample_payload() -> Dict[str, Any]:
         reflections_b=refl_b,
         child_name=child,
     )
+    # Additive branding block. Consumers that don't render firm /
+    # primary_color keep behaving identically.
+    if firm or primary_color:
+        payload["branding"] = {
+            "firm":          (firm or "").strip()[:80] or None,
+            "primary_color": _sanitise_color(primary_color),
+        }
+    return payload
 
 
-def build_sample_pdf_bytes() -> bytes:
+def _sanitise_color(color: Optional[str]) -> Optional[str]:
+    """Accept only a 3- or 6-char hex color (with or without leading
+    #). Anything else is silently dropped — a bad query string must
+    never blow up the PDF."""
+    if not color:
+        return None
+    val = color.strip().lstrip("#")
+    if len(val) not in (3, 6):
+        return None
+    try:
+        int(val, 16)
+    except ValueError:
+        return None
+    return "#" + val.lower()
+
+
+def build_sample_pdf_bytes(
+    *, firm: Optional[str] = None, primary_color: Optional[str] = None,
+) -> bytes:
     """One-call helper for the route: build the payload and render
     the PDF. Kept side-effect free so it's safe to warm up at import
-    time if needed."""
+    time if needed. Optional branding params flow through to the PDF."""
     from joint_agreement_pdf import build_joint_agreement_pdf
-    return build_joint_agreement_pdf(build_sample_payload())
+    return build_joint_agreement_pdf(
+        build_sample_payload(firm=firm, primary_color=primary_color)
+    )

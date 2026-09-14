@@ -11,16 +11,25 @@
  * Public: no auth required. Lives outside the AppShell to keep the
  * marketing surface distinct from the authenticated product.
  */
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight, Download, FileText, Users, MessageSquareText, Handshake,
-  ShieldCheck,
+  ShieldCheck, Sparkles,
 } from "lucide-react";
 
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const SAMPLE_URL = `${API}/api/insights/samples/co-parenting-alignment-report.pdf`;
+
+
+function brandedSampleUrl({ firm, color }) {
+  const params = new URLSearchParams();
+  if ((firm || "").trim()) params.set("firm", firm.trim());
+  if ((color || "").trim()) params.set("primary_color", color.trim());
+  const qs = params.toString();
+  return qs ? `${SAMPLE_URL}?${qs}` : SAMPLE_URL;
+}
 
 
 function Highlight({ Icon, title, body }) {
@@ -37,6 +46,32 @@ function Highlight({ Icon, title, body }) {
 
 
 export default function SampleCoParentingLanding() {
+  // Iter194 · optional firm branding preview so mediators can
+  // eyeball a lead-magnet version before copying the URL.
+  const [firm, setFirm] = useState("");
+  const [color, setColor] = useState("");
+  const [applied, setApplied] = useState({ firm: "", color: "" });
+  const previewUrl = brandedSampleUrl(applied);
+  const rawShareUrl = brandedSampleUrl({ firm, color });
+  const isBranded = Boolean(applied.firm || applied.color);
+
+  const applyBranding = () => {
+    setApplied({ firm, color });
+  };
+  const clearBranding = () => {
+    setFirm("");
+    setColor("");
+    setApplied({ firm: "", color: "" });
+  };
+  const copyShareUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(rawShareUrl);
+    } catch {
+      // Best-effort copy — the input right below the button is the
+      // visible fallback.
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-gradient-to-b from-[#FAF6FF] via-white to-[#F5EFFB]"
@@ -86,8 +121,12 @@ export default function SampleCoParentingLanding() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href={SAMPLE_URL}
-              download="sacoparents-alignment-report-sample.pdf"
+              href={previewUrl}
+              download={
+                isBranded
+                  ? "sacoparents-alignment-report-branded-sample.pdf"
+                  : "sacoparents-alignment-report-sample.pdf"
+              }
               className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-5 py-2.5 text-sm font-semibold"
               data-testid="sample-coparenting-download-btn"
             >
@@ -136,6 +175,101 @@ export default function SampleCoParentingLanding() {
         </div>
       </section>
 
+      {/* Iter194 · mediator branding form — optional, tucked between
+          highlights and the preview iframe so mediators can generate
+          a lead-magnet URL without leaving the page. */}
+      <section
+        className="max-w-6xl mx-auto px-4 sm:px-6 pb-8"
+        data-testid="sample-coparenting-branding"
+      >
+        <div className="rounded-3xl border border-[#D6CFE8] bg-white p-5 sm:p-6">
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <Sparkles size={12} /> For mediators · Brand this sample
+          </div>
+          <h3 className="mt-2 font-serif text-xl text-[#1A1330]">
+            Send it under your firm's name.
+          </h3>
+          <p className="mt-1 text-sm text-[#4B4567] max-w-2xl leading-relaxed">
+            Add your firm name and (optionally) a brand colour. We render
+            a fresh PDF on the fly — no upload, no login, no PII on the
+            document besides the fictional Alex &amp; Sam. Copy the URL
+            and drop it into your intake sequence.
+          </p>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-[1fr,180px,auto,auto] gap-3">
+            <input
+              type="text"
+              value={firm}
+              maxLength={80}
+              onChange={(e) => setFirm(e.target.value)}
+              placeholder="Firm name — e.g. Acme Family Mediation LLP"
+              className="rounded-full border border-[#D6CFE8] px-4 py-2.5 text-sm text-[#1A1330] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/25"
+              data-testid="sample-coparenting-firm-input"
+            />
+            <div className="flex items-center gap-2 rounded-full border border-[#D6CFE8] px-3 py-1">
+              <label className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C] shrink-0">
+                Accent
+              </label>
+              <input
+                type="color"
+                value={color || "#3d1a78"}
+                onChange={(e) => setColor(e.target.value)}
+                className="h-8 w-10 rounded cursor-pointer bg-transparent"
+                data-testid="sample-coparenting-color-input"
+              />
+              <input
+                type="text"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="#3D1A78"
+                maxLength={7}
+                className="w-20 text-xs bg-transparent focus:outline-none"
+                data-testid="sample-coparenting-color-hex"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={applyBranding}
+              disabled={!firm.trim() && !color.trim()}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-4 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="sample-coparenting-branding-apply"
+            >
+              Preview branded PDF
+            </button>
+            <button
+              type="button"
+              onClick={clearBranding}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5EFFB] px-4 py-2.5 text-sm font-semibold"
+              data-testid="sample-coparenting-branding-clear"
+            >
+              Reset
+            </button>
+          </div>
+          {isBranded && (
+            <div
+              className="mt-4 flex items-center gap-2 rounded-2xl bg-[#F5EFFB] p-3"
+              data-testid="sample-coparenting-branding-share"
+            >
+              <input
+                type="text"
+                readOnly
+                value={rawShareUrl}
+                onFocus={(e) => e.currentTarget.select()}
+                className="flex-1 min-w-0 bg-transparent text-xs text-[#3D1A78] font-mono focus:outline-none"
+                data-testid="sample-coparenting-branding-share-url"
+              />
+              <button
+                type="button"
+                onClick={copyShareUrl}
+                className="rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] shrink-0 hover:bg-[#EDE3FA]"
+                data-testid="sample-coparenting-branding-share-copy"
+              >
+                Copy URL
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Embedded PDF preview — most browsers render inline, others get
           the download prompt via the iframe fallback. */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
@@ -143,9 +277,12 @@ export default function SampleCoParentingLanding() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEE8F7] bg-[#FAF6FF]">
             <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
               <FileText size={12} /> Preview · 17-page sample
+              {isBranded && (
+                <span className="text-[#1F5C3B]">· branded</span>
+              )}
             </div>
             <a
-              href={SAMPLE_URL}
+              href={previewUrl}
               target="_blank"
               rel="noreferrer"
               className="text-xs font-semibold text-[#3D1A78] hover:underline inline-flex items-center gap-1"
@@ -155,7 +292,7 @@ export default function SampleCoParentingLanding() {
             </a>
           </div>
           <iframe
-            src={SAMPLE_URL}
+            src={previewUrl}
             title="SA CoParents · Joint Alignment Report sample"
             className="w-full"
             style={{ height: "820px" }}

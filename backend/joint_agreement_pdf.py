@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fpdf import FPDF
 
@@ -729,6 +729,23 @@ def _bucket(
             pdf.ln(0.3)
 
 
+def _hex_to_rgb(hex_color: Optional[str]) -> Optional[tuple]:
+    """Convert a #RRGGBB or #RGB hex string to an (r, g, b) tuple.
+    Returns None for empty / invalid inputs so the cover-page
+    branding block can fall back to the SA CoParents purple."""
+    if not hex_color:
+        return None
+    val = hex_color.strip().lstrip("#")
+    if len(val) == 3:
+        val = "".join(c * 2 for c in val)
+    if len(val) != 6:
+        return None
+    try:
+        return (int(val[0:2], 16), int(val[2:4], 16), int(val[4:6], 16))
+    except ValueError:
+        return None
+
+
 def _cover_page(pdf: _JointAgreementPDF, payload: Dict[str, Any]):
     pdf._is_cover = True
     pdf.add_page()
@@ -825,6 +842,26 @@ def _cover_page(pdf: _JointAgreementPDF, payload: Dict[str, Any]):
         f"- {summary.get('parent_b_only', 0)} clauses proposed by "
         f"{payload.get('parent_b_name') or 'Parent B'} only\n"
         f"- Convergence: {summary.get('converged_pct', 0)}%")
+
+    # Iter194 · optional firm branding strip. Rendered as a soft
+    # bottom-of-cover footer so the un-branded sample stays visually
+    # identical when no branding was supplied.
+    branding = payload.get("branding") or {}
+    firm = (branding.get("firm") or "").strip()
+    if firm:
+        pdf.ln(6)
+        primary = _hex_to_rgb(branding.get("primary_color")) or (61, 26, 120)
+        y = pdf.get_y()
+        pdf.set_fill_color(*primary)
+        pdf.rect(LEFT_M, y, CONTENT_W, 12, "F")
+        pdf.set_xy(LEFT_M + 4, y + 2)
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(0, 4, "PREPARED FOR", ln=1)
+        pdf.set_xy(LEFT_M + 4, y + 6)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(0, 5, firm[:80], ln=1)
+        pdf.set_text_color(*TEXT_DARK)
 
     pdf._is_cover = False
 
