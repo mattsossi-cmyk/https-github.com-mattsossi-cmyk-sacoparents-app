@@ -574,3 +574,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Case ID: referral gets case_code at creation (joint_data.new_case_code, moved from server.py); case creation from referral reuses it.
 - Statement: role (STATEMENT_ROLES), materials_reviewed (STATEMENT_MATERIALS fixed list + Other), alignment_areas, further_attention, resources_considered, current_status; PDF updated. App.js judge redirect allows /court/case/*.
 - Tests: tests/test_judicial_portal.py. CourtCaseCard.jsx now only exports HearingDate (card replaced by table).
+
+## 2026-09-14 — Code-quality pass #2
+- Report items "undefined variable" and 12× `is` misuse were false positives (ruff F821/F823 clean; all `is None`/`is not None`). Kept as-is.
+- court_workflow.py: _judge_routes split into _judge_routes + _judge_case_routes; judge_case → pure helpers (judicial_case_payload, _case_checklist, _court_report_view, _submitted_material); _pro_routes split into _pro_routes + _pro_statement_routes; validated_statement / assert_submittable extracted. C901: 57→14, 39→12.
+- court_messages.py: notify/load_ref/thread_view extracted; judge/pro registration split. 19→13.
+- server.py module split (31 imports) deferred: high-risk, no functional gain; not requested by user beyond report.

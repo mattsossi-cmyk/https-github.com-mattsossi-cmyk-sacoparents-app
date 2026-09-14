@@ -24,8 +24,7 @@ UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chr
 HDRS = {"User-Agent": UA}
 
 ANSWER_KEYS = ["needs_most", "working_well", "concerns", "improve", "options", "other_parent"]
-AREA_KEYS = ["parenting_schedule", "holidays", "decision_making", "communication",
-             "exchanges", "expenses", "information_sharing", "dispute_resolution"]
+AREA_KEYS = ["foundation", "transitions", "communication", "education", "medical", "psychological", "activities", "decisions", "differences", "review"]
 
 
 def _answers(theme: str = "general") -> dict:
@@ -186,11 +185,11 @@ class TestCoreRegression:
         r = requests.get(f"{PROD}/health", headers=HDRS, timeout=15)
         assert r.status_code == 200
 
-    def test_config_has_8_agreement_areas(self) -> None:
+    def test_config_has_10_agreement_areas(self) -> None:
         r = requests.get(f"{PROD_API}/joint/config", headers=HDRS, timeout=15)
         assert r.status_code == 200
         d = r.json()
-        assert len(d.get("agreement_areas", [])) == 8
+        assert len(d.get("agreement_areas", [])) == 10
 
     def test_cron_completion_nudge_requires_auth(self) -> None:
         r = requests.post(f"{PROD}/api/cron/completion-nudge", headers=HDRS, timeout=15)

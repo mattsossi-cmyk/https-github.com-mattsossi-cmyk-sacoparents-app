@@ -9,8 +9,7 @@ from casekit import new_user
 
 BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
-AREA_KEYS = ["parenting_schedule", "holidays", "decision_making", "communication",
-             "exchanges", "expenses", "information_sharing", "dispute_resolution"]
+AREA_KEYS = ["foundation", "transitions", "communication", "education", "medical", "psychological", "activities", "decisions", "differences", "review"]
 
 
 def _agreement(child="FS Kid"):
