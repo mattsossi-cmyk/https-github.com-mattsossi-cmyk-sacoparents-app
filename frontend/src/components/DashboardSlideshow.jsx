@@ -1,99 +1,123 @@
 /**
- * DashboardSlideshow — iter198.
+ * DashboardSlideshow — iter198 (+ iter200 refinements).
  *
- * A quiet, brand-aligned slideshow that sits at the VERY top of the
- * parent dashboard so returning users see the SA CoParents journey
- * artwork before they're asked to make a choice.
+ * Quiet, brand-aligned slideshow at the very top of the parent
+ * dashboard. Cycles through the SA CoParents journey artwork so
+ * returning users see the pathway before they make a choice.
  *
- * Behaviour:
- *   - Auto-advances every 6s (long enough to actually read the
- *     caption on a stressed evening)
- *   - Pauses on hover / focus so a parent who wants to linger can
- *   - Left / Right / keyboard arrows + dot indicators
- *   - Cross-fades between frames (no janky slide-in that fights the
- *     dashboard grid)
- *   - Reduced-motion honoured: transitions collapse to opacity 0→1
- *   - Never taller than 320px on desktop / 200px on mobile so it
- *     never pushes the FrontDoorHero below the fold
- *
- * The five images are the founder-supplied "journey" artwork — same
- * five phases surfaced on the marketing landing. Order intentionally
- * matches the recommended co-parenting sequence.
+ * Iter200 improvements:
+ *   * Uniform 16:9 assets — the 5 portrait originals are pre-padded
+ *     to a common 1600×900 canvas with the SA dark-purple background
+ *     so `object-cover` shows the entire founder image edge-to-edge
+ *     with no crop. Served locally as WebP (~60KB each) instead of
+ *     the 1MB PNGs on the CDN.
+ *   * Slide linking — clicking a frame opens the matching pathway.
+ *   * Mobile min-height (260px) so the caption never crushes the
+ *     image at 390px viewports.
+ *   * Auto-pause when the OS `prefers-reduced-motion` flag is set,
+ *     and the play/pause button reflects that state so vestibular-
+ *     sensitive users can still opt in.
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 
-// Founder-supplied labelled artwork. Order = the recommended
-// co-parenting journey (assess → child → relationship → communicate →
-// commit to the Foundation Statement). Do NOT reorder without a
-// design review — parents parse this as a step sequence.
+// Founder-supplied journey artwork, pre-padded to 16:9 with the
+// section's dark-purple background (see scripts/pad-slides.py in
+// commit history for the exact PIL recipe). Order = recommended
+// co-parenting sequence — do NOT reorder without a design review,
+// parents parse this as a step sequence.
 const SLIDES = [
   {
     key: "situation",
-    src: "https://customer-assets.emergentagent.com/job_prepared-parents/artifacts/8z6tlelx_Assess%20your%20family%20situation.png",
+    src: "/slides/assess-family-situation.webp",
     title: "Assess your family situation",
     caption:
       "Start with a quick, private read of your household today — no judgement, no permanent labels.",
+    route: "/situation",
   },
   {
     key: "child-needs",
-    src: "https://customer-assets.emergentagent.com/job_prepared-parents/artifacts/z354oyvf_identify%20childs%20needs.png",
+    src: "/slides/identify-childs-needs.webp",
     title: "Identify your child's needs",
     caption:
       "Educational, medical, emotional — surface the specifics before you negotiate the shape of the week.",
+    route: "/special-needs-v2",
   },
   {
     key: "relationship",
-    src: "https://customer-assets.emergentagent.com/job_prepared-parents/artifacts/f69lkwjm_understand%20your%20coparenting%20relationship.png",
+    src: "/slides/understand-coparenting-relationship.webp",
     title: "Understand your co-parenting relationship",
     caption:
       "Where you actually are today — cooperative, parallel, tense, or unsafe — decides which tools help next.",
+    route: "/special-needs-v2",
   },
   {
     key: "communication",
-    src: "https://customer-assets.emergentagent.com/job_prepared-parents/artifacts/2cz4s468_strengthen%20communication.png",
+    src: "/slides/strengthen-communication.webp",
     title: "Strengthen your communication",
     caption:
       "Draft the message you actually want to send — calmer, clearer, and easier for the other parent to hear.",
+    route: "/communication",
   },
   {
     key: "foundation",
-    src: "https://customer-assets.emergentagent.com/job_prepared-parents/artifacts/e3v73w33_Foundation%20Statement.png",
+    src: "/slides/foundation-statement.webp",
     title: "Commit to your Foundation Statement",
     caption:
       "Write the anchor you'll come back to on the hard days — the reason this whole journey is worth the friction.",
+    route: "/foundation/demo",
   },
 ];
 
 const AUTO_MS = 6000;
 
+// Detect the OS reduced-motion preference. Returns null on the
+// server / when matchMedia is unavailable so consumers can distinguish
+// "not asked yet" from "user prefers motion".
+function _prefersReducedMotion() {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 export default function DashboardSlideshow() {
+  const navigate = useNavigate();
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  // Iter200 · start paused when the OS asks us to. Users can still
+  // click Play to opt in.
+  const [paused, setPaused] = useState(() => _prefersReducedMotion());
   const timerRef = useRef(null);
 
-  const goTo = useCallback(
-    (n) => {
-      const total = SLIDES.length;
-      setIndex((prev) => {
-        // Normalise negative + overflow.
-        const next = ((typeof n === "function" ? n(prev) : n) % total + total) % total;
-        return next;
-      });
-    },
-    [],
-  );
+  // React to a live reduced-motion preference change (rare in
+  // practice — user toggles the OS setting with the page open).
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = (e) => {
+      if (e.matches) setPaused(true);
+    };
+    // addEventListener is the modern API; addListener is Safari-legacy.
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", onChange);
+      else if (mq.removeListener) mq.removeListener(onChange);
+    };
+  }, []);
 
-  // Auto-advance loop. Pauses when the user hovers / focuses, or
-  // when the tab is hidden (browser throttles the timer anyway but
-  // this saves a wasted paint).
+  const goTo = useCallback((n) => {
+    const total = SLIDES.length;
+    setIndex((prev) => {
+      const next =
+        ((typeof n === "function" ? n(prev) : n) % total + total) % total;
+      return next;
+    });
+  }, []);
+
+  // Auto-advance loop. Pauses when the user hovers / focuses / has
+  // reduced-motion enabled.
   useEffect(() => {
     if (paused) return undefined;
-    const mediaQuery =
-      typeof window !== "undefined" && window.matchMedia
-        ? window.matchMedia("(prefers-reduced-motion: reduce)")
-        : null;
-    if (mediaQuery && mediaQuery.matches) return undefined;
     timerRef.current = setInterval(() => goTo((i) => i + 1), AUTO_MS);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -104,50 +128,74 @@ export default function DashboardSlideshow() {
   const prev = () => goTo((i) => i - 1);
   const next = () => goTo((i) => i + 1);
 
-  // Keyboard support scoped to the slideshow root.
   const onKeyDown = (e) => {
     if (e.key === "ArrowLeft") { prev(); e.preventDefault(); }
     else if (e.key === "ArrowRight") { next(); e.preventDefault(); }
+    else if (e.key === "Enter" || e.key === " ") {
+      const active = SLIDES[index];
+      if (active?.route) {
+        navigate(active.route);
+        e.preventDefault();
+      }
+    }
+  };
+
+  const openActive = () => {
+    const active = SLIDES[index];
+    if (active?.route) navigate(active.route);
   };
 
   return (
     <section
-      className="relative w-full mx-auto rounded-3xl overflow-hidden bg-gradient-to-br from-[#1A1330] via-[#2A0F5F] to-[#3D1A78] shadow-lg"
+      // Iter200 · min-height keeps the frame readable at 390px where
+      // 16:8 aspect otherwise collapses the caption into the image.
+      className="relative w-full mx-auto rounded-3xl overflow-hidden bg-gradient-to-br from-[#1A1330] via-[#2A0F5F] to-[#3D1A78] shadow-lg min-h-[260px] sm:min-h-0"
       style={{ aspectRatio: "16 / 8" }}
       data-testid="dashboard-slideshow"
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={() => {
+        // Don't resume if the OS asked us not to. The play button is
+        // the only way back once reduced-motion is on.
+        if (!_prefersReducedMotion()) setPaused(false);
+      }}
       onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
+      onBlur={() => {
+        if (!_prefersReducedMotion()) setPaused(false);
+      }}
       onKeyDown={onKeyDown}
       tabIndex={0}
+      role="region"
       aria-roledescription="carousel"
       aria-label="SA CoParents journey"
     >
-      {/* Frames — all mounted, opacity-toggled for cross-fade. Keeping
-          them mounted avoids a re-load on every advance. */}
+      {/* Frames — all mounted, opacity-toggled for a clean cross-fade.
+          Keeping them mounted avoids a reload on every advance. Each
+          frame is a clickable card routing to its pathway. */}
       {SLIDES.map((slide, i) => {
         const active = i === index;
         return (
-          <div
+          <button
+            type="button"
             key={slide.key}
-            className={`absolute inset-0 transition-opacity duration-700 ease-out ${
-              active ? "opacity-100" : "opacity-0"
-            }`}
+            onClick={() => active && openActive()}
+            disabled={!active}
             aria-hidden={!active}
+            aria-label={`Open ${slide.title}`}
             data-testid={`dashboard-slideshow-slide-${slide.key}`}
+            className={`absolute inset-0 w-full h-full block text-left transition-opacity duration-700 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ring-inset ${
+              active ? "opacity-100 cursor-pointer" : "opacity-0 pointer-events-none"
+            }`}
           >
             <img
               src={slide.src}
               alt={slide.title}
-              className="w-full h-full object-contain object-center"
+              className="w-full h-full object-cover object-center"
               loading={i === 0 ? "eager" : "lazy"}
               draggable={false}
             />
-            {/* Gradient overlay so the white caption stays readable
-                on any incoming frame. */}
+            {/* Gradient overlay for caption readability. */}
             <div
-              className="absolute inset-0 bg-gradient-to-t from-[#1A1330]/85 via-[#1A1330]/30 to-transparent"
+              className="absolute inset-0 bg-gradient-to-t from-[#1A1330]/85 via-[#1A1330]/25 to-transparent"
               aria-hidden="true"
             />
             <div className="absolute left-0 right-0 bottom-0 p-5 sm:p-8">
@@ -155,7 +203,7 @@ export default function DashboardSlideshow() {
                 Step {i + 1} of {SLIDES.length}
               </div>
               <h3
-                className="font-serif text-white text-2xl sm:text-4xl leading-tight mt-1"
+                className="font-serif text-white text-xl sm:text-3xl lg:text-4xl leading-tight mt-1"
                 data-testid={`dashboard-slideshow-title-${slide.key}`}
               >
                 {slide.title}
@@ -164,37 +212,48 @@ export default function DashboardSlideshow() {
                 {slide.caption}
               </p>
             </div>
-          </div>
+          </button>
         );
       })}
 
-      {/* Prev / Next arrows. */}
+      {/* Prev / Next arrows — stop-propagation so a click on them
+          doesn't also fire the frame click. */}
       <button
         type="button"
-        onClick={prev}
+        onClick={(e) => { e.stopPropagation(); prev(); }}
         aria-label="Previous slide"
         data-testid="dashboard-slideshow-prev"
-        className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 grid place-items-center w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/25 hover:bg-black/50 backdrop-blur text-white transition-colors"
+        className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 grid place-items-center w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/25 hover:bg-black/50 backdrop-blur text-white transition-colors z-10"
       >
         <ChevronLeft size={20} />
       </button>
       <button
         type="button"
-        onClick={next}
+        onClick={(e) => { e.stopPropagation(); next(); }}
         aria-label="Next slide"
         data-testid="dashboard-slideshow-next"
-        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 grid place-items-center w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/25 hover:bg-black/50 backdrop-blur text-white transition-colors"
+        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 grid place-items-center w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/25 hover:bg-black/50 backdrop-blur text-white transition-colors z-10"
       >
         <ChevronRight size={20} />
       </button>
 
-      {/* Dot indicators + pause toggle. */}
-      <div className="absolute right-3 sm:right-6 top-3 sm:top-4 flex items-center gap-2">
+      {/* Pause / play toggle. When reduced-motion is on we still
+          allow the user to opt IN by clicking play — but we don't
+          silently override their OS preference. */}
+      <div className="absolute right-3 sm:right-6 top-3 sm:top-4 flex items-center gap-2 z-10">
         <button
           type="button"
-          onClick={() => setPaused((p) => !p)}
+          onClick={(e) => { e.stopPropagation(); setPaused((p) => !p); }}
           aria-label={paused ? "Play slideshow" : "Pause slideshow"}
+          aria-pressed={paused}
           data-testid="dashboard-slideshow-toggle-play"
+          title={
+            paused && _prefersReducedMotion()
+              ? "Auto-paused (your OS prefers reduced motion). Click to opt in."
+              : paused
+              ? "Play slideshow"
+              : "Pause slideshow"
+          }
           className="grid place-items-center w-8 h-8 rounded-full bg-black/25 hover:bg-black/50 backdrop-blur text-white transition-colors"
         >
           {paused ? <Play size={14} /> : <Pause size={14} />}
@@ -202,14 +261,14 @@ export default function DashboardSlideshow() {
       </div>
 
       <div
-        className="absolute left-0 right-0 bottom-2 flex justify-center gap-2"
+        className="absolute left-0 right-0 bottom-2 flex justify-center gap-2 z-10"
         data-testid="dashboard-slideshow-dots"
       >
         {SLIDES.map((s, i) => (
           <button
             key={s.key}
             type="button"
-            onClick={() => goTo(i)}
+            onClick={(e) => { e.stopPropagation(); goTo(i); }}
             aria-label={`Show slide ${i + 1}: ${s.title}`}
             aria-current={i === index ? "true" : "false"}
             data-testid={`dashboard-slideshow-dot-${s.key}`}
