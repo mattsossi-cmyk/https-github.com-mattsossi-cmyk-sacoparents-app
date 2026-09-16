@@ -173,6 +173,35 @@ def test_build_case_assigned_steps_rejects_unknown_type():
     assert exc.value.status_code == 400
 
 
+def test_create_case_response_echoes_assigned_steps(client):
+    """POST /professional/joint-alignment/cases MUST echo the
+    persisted `assigned_steps` array in its response so clients
+    don't need to round-trip to see what was stored. Contract parity
+    with GET /joint-alignment/case/{id}."""
+    from server import app
+    _mock_admin(app, user_id="u-prof-196", email="prof-196@t.local")
+    body = {
+        "assessment_type": "co-parenting",
+        "parents": [
+            {"email": f"iter196-a-{os.getpid()}@example.com", "name": "P A"},
+            {"email": f"iter196-b-{os.getpid()}@example.com", "name": "P B"},
+        ],
+        "assigned_steps": [
+            {"assessment_type": "educational", "required": False},
+            {"assessment_type": "medical", "required": True},
+        ],
+    }
+    r = client.post("/api/professional/joint-alignment/cases", json=body)
+    assert r.status_code == 200, r.text
+    payload = r.json()
+    assert "assigned_steps" in payload
+    at_list = [s["assessment_type"] for s in payload["assigned_steps"]]
+    assert at_list == ["co-parenting", "educational", "medical"]
+    required = {s["assessment_type"]: s["required"] for s in payload["assigned_steps"]}
+    assert required == {"co-parenting": True, "educational": False, "medical": True}
+    app.dependency_overrides.clear()
+
+
 # ---------------------------------------------------------------------------
 # /joint-alignment/case/{case_id} — caller-scoped view.
 # ---------------------------------------------------------------------------

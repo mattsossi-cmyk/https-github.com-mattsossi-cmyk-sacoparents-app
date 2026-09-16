@@ -26,7 +26,77 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-16 — Iter196 · Front Door restructure + multi-assessment case model
+
+**🟢 P0 — Simplified opening dashboard**
+- New `FrontDoorHero` component (`/app/frontend/src/components/FrontDoorHero.jsx`)
+  mounted at the top of `/dashboard`. Two large decisive cards:
+  **Starting on My Own → /situation** (purple) and **Court Ordered / Referred
+  → /join** (teal). Plus a small "Already started? Continue My Assessment →"
+  strip and a persistent amber "Were you ordered or referred?" banner
+  linking to `/join`.
+- Existing `FourCircleFrontDoor` still renders below the hero for parents
+  who've already picked their path — nothing lost, just no longer the
+  first thing every parent has to parse.
+- The `<details id="more-tools">` "Explore all tools" block anchors the
+  hero's "Continue My Assessment" button.
+
+**🟢 P0 — /situation topic picker**
+- New public route `/situation` (`/app/frontend/src/pages/Situation.jsx`)
+  showing the four founder-spec topics: Co-Parenting, Communication,
+  My Child's Needs, Safety / Family Violence — each routing directly
+  into the appropriate pathway.
+
+**🟢 P0 — /case/:caseId scoped court-ordered view**
+- New protected route `/case/:caseId` (`/app/frontend/src/pages/CaseView.jsx`)
+  showing ONLY the assessments assigned to the parent, split into two
+  sections: **Required by Your Referral** (green pill when complete)
+  and **Optional — Recommended by Your Professional** (teal). Legacy
+  "Additional SA CoParents Tools" collapsed by default.
+- Fetches `GET /api/joint-alignment/case/{case_id}` — new endpoint
+  that returns a caller-scoped view: `me.steps` with per-step
+  required/label/status/completed_at, plus the case-wide
+  `assigned_steps` and public parent presence signals.
+- Never surfaces co-parent answers — only their name + presence.
+- Graceful error states for 403 (not on case), 404 (missing/expired),
+  and network errors.
+
+**🟢 P0 — Multi-assessment case model (backwards-compatible)**
+- Case documents now persist an `assigned_steps: [{assessment_type,
+  required}]` list. Primary lane is ALWAYS the first entry, always
+  required; extras are validated + deduped via `_build_case_assigned_steps`.
+- Legacy cases (no `assigned_steps` field) still work: `_normalise_assigned_steps`
+  synthesises a one-item list from the top-level `assessment_type`
+  on read, so downstream consumers see one consistent shape.
+- `_case_public_shape` now exposes `assigned_steps` with human-friendly
+  labels (`_ASSESSMENT_LABELS`) and per-parent status per step.
+- `CreateCaseResponse` echoes `assigned_steps` so professional clients
+  don't have to round-trip after creating a bundle.
+
+**🟢 P0 — Professional multi-step assignment UI**
+- New `AdditionalStepsPicker` component inside
+  `/app/frontend/src/pages/ProfessionalJointAlignmentNew.jsx`.
+  Under the primary assessment_type select, a professional can now
+  check extra assessments and tag each **Required** or **Optional**
+  via pill toggles. Payload includes `assigned_steps` when present.
+
+**🟢 P0 — Court-ordered case badge**
+- New `CourtOrderedCaseBadge` component reads
+  `localStorage.sacoparents_court_ordered_case_id` (set by JoinCode
+  after a successful manual-code link) and renders a persistent
+  teal chip on the dashboard with a one-tap "Open case" link to
+  `/case/:caseId`. Dismissible.
+
+**Tests**: `/app/backend/tests/test_iter196_front_door_multi_step_case.py`
+locks 10 cases (legacy compat, dedupe, unknown-type 400, /case/{id}
+403/404/200, `me.steps` shape, POST response echo). All pass.
+
+**Testing agent**: 14/14 backend + all frontend flows verified,
+100% success rate. Only minor note (progress label semantics) —
+non-blocking. No SAST/CORS drift.
+
 ### 2026-09-14 — Iter195 · Admin dashboard reminder-analytics tile
+
 
 **🟢 P1 — Surface `compute_reminder_analytics()` on `/admin`**
 - New `ReminderAnalyticsTile` React component in

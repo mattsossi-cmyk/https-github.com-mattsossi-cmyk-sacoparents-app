@@ -231,6 +231,12 @@ class CreateCaseResponse(BaseModel):
     case_expires_at: str
     parents: List[CreateCaseParentResponse]
     email_deliveries: Optional[List[Dict[str, Any]]] = None
+    # Iter196 · normalised list of every assessment assigned on this
+    # case (primary lane always first, required=True). Matches the
+    # shape returned by `GET /joint-alignment/case/{case_id}` so
+    # professional-side clients don't have to round-trip to see
+    # what was actually persisted after the bundle was applied.
+    assigned_steps: Optional[List[Dict[str, Any]]] = None
 
 
 class ManualCodeRequest(BaseModel):
@@ -766,6 +772,10 @@ async def _create_and_invite_case(
         case_expires_at=_iso(case_exp),
         parents=parent_response_rows,
         email_deliveries=email_status,
+        # Iter196 · echo the persisted bundle so professional-side
+        # clients see exactly what was stored (primary lane first,
+        # extras deduped, unknown types already rejected upstream).
+        assigned_steps=case_doc["assigned_steps"],
     )
 
 

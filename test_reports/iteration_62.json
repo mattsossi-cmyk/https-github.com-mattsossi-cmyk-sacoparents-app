@@ -1,0 +1,39 @@
+{
+  "summary": "Iter196 Front Door + multi-step case + professional additional-steps picker verified end-to-end. Backend 9/9 unit tests + 5/5 live smoke tests pass against public REACT_APP_BACKEND_URL. Frontend Playwright verified dashboard FrontDoorHero, /situation topic picker with all 4 tiles and cross-links, /case/:caseId page (SA-DEMO01 renders 4 step rows + progress + additional-tools; SA-999999 renders not-found), court-ordered badge via localStorage, and professional /professional/joint-alignment/new with pj-additional-steps + educational toggle showing/hiding required/optional pills. Legal disclaimer modal pre-dismissed via localStorage key sac_legal_ack_v1 to prevent click interception.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/professional/joint-alignment/cases", "issue": "Success response does not echo `assigned_steps` in the create payload. Data is persisted correctly (GET /api/joint-alignment/case/{id} returns the full assigned_steps list with correct ordering), but the create-response omission means clients must round-trip to see the bundle. Consider including assigned_steps in the POST response for consistency with the case GET shape."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard", "issues": ["Legal disclaimer modal covers the entire viewport on first visit and intercepts clicks on FrontDoorHero cards until acknowledged; not a defect per spec but any smoke test must dismiss it (localStorage.sac_legal_ack_v1 = {version:'v1'}) or use force=True clicks."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter196_front_door_multi_step_case.py",
+    "/app/backend/tests/test_iter196_live_smoke.py",
+    "/app/test_reports/pytest/iter196.xml",
+    "/app/test_reports/pytest/iter196_live.xml"
+  ],
+  "action_items": [
+    "(Optional) Have POST /api/professional/joint-alignment/cases include the normalised assigned_steps array in its response to match GET /api/joint-alignment/case/{id}."
+  ],
+  "critical_code_review_comments": [
+    "Backend joint_alignment_routes.py is now large (>2000 lines) — consider extracting assigned-steps normalisation + case-shape helpers into a dedicated module for maintainability.",
+    "POST /professional/joint-alignment/cases response shape and GET /joint-alignment/case/{id} response shape diverge in whether assigned_steps is included; align them for a consistent client contract.",
+    "Frontend CaseView progress text 'N of M steps completed' is caller-scoped (me.steps) while the visible list can include unrelated steps; consider clarifying the label (e.g., 'Your progress: N of M required') so users don't confuse global vs personal counts."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter196_live_smoke.py (new — 5 live-endpoint smoke tests)"
+  ],
+  "success_rate": {"backend": "100% (14/14 - 9 unit + 5 live)", "frontend": "100% of specified flows"},
+  "test_credentials": "parent1@test.com / TestPass123! (SA-DEMO01 member + demo prof); parent2@test.com / TestPass123!; mattsossi@bsossi.com / AdminPass123! (admin)",
+  "seed_data_creation": "None; used pre-seeded SA-DEMO01. Live-smoke professional case creation used fresh uuid-based emails per run (no cleanup required — case tokens time out).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Legal disclaimer modal (component LegalAcknowledgment.jsx, STORAGE_KEY=sac_legal_ack_v1, VERSION=v1) intercepts clicks on first visit — pre-set the key in localStorage or use force=True clicks. FrontDoorHero, Situation, CaseView, CourtOrderedCaseBadge, and ProfessionalJointAlignmentNew additional-steps picker all work as spec'd. The known iter194 analytics test failure (JWT_SECRET load-order) is intentionally deferred and not related to iter196. Progress label shows caller-scoped 'N of M' — SA-DEMO01 renders '1 of 1' for parent1 since only the co-parenting step is required for that parent even though 4 step rows are visible."
+}
