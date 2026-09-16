@@ -112,8 +112,8 @@ export default function DashboardSlideshow() {
 
   return (
     <section
-      className="relative w-full rounded-3xl overflow-hidden bg-gradient-to-br from-[#1A1330] via-[#2A0F5F] to-[#3D1A78] shadow-lg"
-      style={{ aspectRatio: "16 / 6" }}
+      className="relative w-full mx-auto rounded-3xl overflow-hidden bg-gradient-to-br from-[#1A1330] via-[#2A0F5F] to-[#3D1A78] shadow-lg"
+      style={{ aspectRatio: "16 / 8" }}
       data-testid="dashboard-slideshow"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -140,7 +140,7 @@ export default function DashboardSlideshow() {
             <img
               src={slide.src}
               alt={slide.title}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-contain object-center"
               loading={i === 0 ? "eager" : "lazy"}
               draggable={false}
             />
