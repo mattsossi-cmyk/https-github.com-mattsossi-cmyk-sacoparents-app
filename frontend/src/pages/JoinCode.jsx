@@ -68,6 +68,14 @@ export default function JoinCode() {
       // Session cookie sent automatically via api.withCredentials.
       const r = await api.post("/joint-alignment/manual-code", { code });
       setLinked(r.data);
+      // Iter196 · remember the court-ordered case so `/dashboard`
+      // can surface a "Continue your court-ordered case" badge and
+      // deep-link back into the scoped `/case/:caseId` view.
+      try {
+        localStorage.setItem("sacoparents_court_ordered_case_id", r.data.case_id);
+      } catch (lsErr) {
+        /* private-browsing mode — best-effort only */
+      }
       toast.success("Alignment code linked");
     } catch (err) {
       const status = err?.response?.status ?? 0;
@@ -180,20 +188,21 @@ export default function JoinCode() {
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() =>
-                    navigate(ASSESSMENT_ROUTES[linked.assessment_type] || "/dashboard")
-                  }
+                  onClick={() => navigate(`/case/${linked.case_id}`)}
+                  data-testid="join-code-open-case"
                   className="inline-flex items-center gap-2 rounded-full bg-[#3D1A78] text-white px-5 py-2.5 text-sm font-semibold hover:bg-[#2A0F5F] transition"
                 >
-                  Start My Assessment
+                  Open My Case
                   <ArrowRight size={14} />
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() =>
+                    navigate(ASSESSMENT_ROUTES[linked.assessment_type] || "/dashboard")
+                  }
                   className="rounded-full border border-[#E5E0EE] text-[#3D1A78] px-5 py-2.5 text-sm font-semibold hover:border-[#3D1A78] transition"
                 >
-                  Go to my dashboard
+                  Start My Assessment
                 </button>
               </div>
             </div>

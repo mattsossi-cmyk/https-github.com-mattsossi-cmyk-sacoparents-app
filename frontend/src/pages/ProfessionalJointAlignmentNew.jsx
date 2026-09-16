@@ -53,7 +53,152 @@ const EMPTY_FORM = {
   parent2_name: "",
   align_case_reference: "",
   reminder_note: "",
+  // Iter196 · optional bundle of ADDITIONAL assessments to assign
+  // beyond the primary `assessment_type`. Shape:
+  //   { assessment_type: string, required: boolean }
+  // The primary lane is always required on the backend, so it's
+  // never repeated here.
+  additional_steps: [],
 };
+
+/**
+ * AdditionalStepsPicker (iter196) — a compact accordion that lets
+ * a professional bundle EXTRA assessments onto a case beyond the
+ * primary lane. Each extra assessment can be tagged Required or
+ * Optional. The primary lane is filtered out to prevent duplicates.
+ *
+ * Never exposes any parent-side data — this is purely case-config UI.
+ */
+function AdditionalStepsPicker({ primary, steps, onChange }) {
+  const [open, setOpen] = React.useState((steps || []).length > 0);
+  const available = ASSESSMENT_OPTIONS.filter((o) => o.value !== primary);
+  // Map from assessment_type → { required } for O(1) lookup + easy
+  // toggling. The picker is the single source of truth for the
+  // ordering — we keep the ASSESSMENT_OPTIONS order stable.
+  const selected = React.useMemo(() => {
+    const m = new Map();
+    (steps || []).forEach((s) => {
+      if (s?.assessment_type) m.set(s.assessment_type, { required: !!s.required });
+    });
+    return m;
+  }, [steps]);
+
+  const toggle = (assessment_type) => {
+    const next = new Map(selected);
+    if (next.has(assessment_type)) {
+      next.delete(assessment_type);
+    } else {
+      next.set(assessment_type, { required: true });
+    }
+    onChange(
+      Array.from(next.entries()).map(([at, v]) => ({
+        assessment_type: at,
+        required: !!v.required,
+      })),
+    );
+  };
+
+  const setRequired = (assessment_type, required) => {
+    if (!selected.has(assessment_type)) return;
+    const next = new Map(selected);
+    next.set(assessment_type, { required });
+    onChange(
+      Array.from(next.entries()).map(([at, v]) => ({
+        assessment_type: at,
+        required: !!v.required,
+      })),
+    );
+  };
+
+  return (
+    <div
+      className="rounded-2xl border border-[#E5E0EE] bg-[#FAF8FD] p-3"
+      data-testid="pj-additional-steps"
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        data-testid="pj-additional-steps-toggle"
+        className="w-full flex items-center justify-between gap-2 text-left"
+      >
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
+            Additional assessments (optional)
+          </div>
+          <div className="text-xs text-[#4B4567] mt-0.5">
+            Bundle extra assessments — mark each as Required or Optional
+            for the parents.{" "}
+            {selected.size > 0 && (
+              <strong className="text-[#3D1A78]">
+                {selected.size} added
+              </strong>
+            )}
+          </div>
+        </div>
+        <span className="text-[#3D1A78] text-sm font-bold">
+          {open ? "Hide" : "Add"}
+        </span>
+      </button>
+      {open && (
+        <ul
+          className="mt-3 space-y-2"
+          data-testid="pj-additional-steps-list"
+        >
+          {available.map((opt) => {
+            const isSelected = selected.has(opt.value);
+            const required = isSelected ? selected.get(opt.value).required : true;
+            return (
+              <li
+                key={opt.value}
+                className={`rounded-xl border ${isSelected ? "border-[#3D1A78] bg-white" : "border-[#E5E0EE] bg-white"} px-3 py-2 flex items-center justify-between gap-3 flex-wrap`}
+                data-testid={`pj-additional-step-${opt.value}`}
+              >
+                <label className="flex items-center gap-2 text-sm text-[#1A1330] min-w-0 flex-1">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggle(opt.value)}
+                    data-testid={`pj-additional-step-${opt.value}-toggle`}
+                    className="accent-[#3D1A78]"
+                  />
+                  <span className="truncate">{opt.label}</span>
+                </label>
+                {isSelected && (
+                  <div className="flex items-center gap-1 shrink-0" data-testid={`pj-additional-step-${opt.value}-required-group`}>
+                    <button
+                      type="button"
+                      onClick={() => setRequired(opt.value, true)}
+                      data-testid={`pj-additional-step-${opt.value}-required`}
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition ${
+                        required
+                          ? "bg-[#3D1A78] text-white border-[#3D1A78]"
+                          : "text-[#3D1A78] border-[#D6CFE8] hover:border-[#3D1A78]"
+                      }`}
+                    >
+                      Required
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRequired(opt.value, false)}
+                      data-testid={`pj-additional-step-${opt.value}-optional`}
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition ${
+                        !required
+                          ? "bg-[#0E7A7A] text-white border-[#0E7A7A]"
+                          : "text-[#0E7A7A] border-[#B7E0E0] hover:border-[#0E7A7A]"
+                      }`}
+                    >
+                      Optional
+                    </button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function ProfessionalJointAlignmentNew() {
   const navigate = useNavigate();
@@ -98,6 +243,19 @@ export default function ProfessionalJointAlignmentNew() {
       }
       if (form.reminder_note.trim()) {
         payload.reminder_note = form.reminder_note.trim();
+      }
+      // Iter196 · surface any additional-step selections. Skip
+      // rows that duplicate the primary lane — the backend already
+      // dedupes, but no reason to send noise.
+      const primary = form.assessment_type;
+      const cleanAdditional = (form.additional_steps || [])
+        .filter((s) => s.assessment_type && s.assessment_type !== primary)
+        .map((s) => ({
+          assessment_type: s.assessment_type,
+          required: !!s.required,
+        }));
+      if (cleanAdditional.length) {
+        payload.assigned_steps = cleanAdditional;
       }
       const r = await api.post("/professional/joint-alignment/cases", payload);
       setResult(r.data);
@@ -278,6 +436,18 @@ export default function ProfessionalJointAlignmentNew() {
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Iter196 · additional assessment bundle. Optional — a
+                  professional can tag extra lanes as required or
+                  optional and the parent's /case/:caseId view will
+                  render them under the correct section. */}
+              <div className="sm:col-span-2">
+                <AdditionalStepsPicker
+                  primary={form.assessment_type}
+                  steps={form.additional_steps}
+                  onChange={(next) => update({ additional_steps: next })}
+                />
               </div>
 
               <div>

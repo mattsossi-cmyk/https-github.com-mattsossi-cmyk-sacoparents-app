@@ -27,6 +27,8 @@ import AlignReportCTA from "../components/AlignReportCTA";
 import NewCommentToaster from "../components/NewCommentToaster";
 import CoparentCompletionToaster from "../components/CoparentCompletionToaster";
 import FourCircleFrontDoor from "../components/dashboard/FourCircleFrontDoor";
+import FrontDoorHero from "../components/FrontDoorHero";
+import CourtOrderedCaseBadge from "../components/CourtOrderedCaseBadge";
 import JointAlignmentRequests from "../components/dashboard/JointAlignmentRequests";
 import PersonalHomeStrip from "../components/dashboard/PersonalHomeStrip";
 import SituationPickerHero from "../components/dashboard/SituationPickerHero";
@@ -556,6 +558,20 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Iter196 · FrontDoorHero — the primary two-question opener.
+            Every parent (solo or court-ordered) hits this first. Below
+            it, the existing FourCircleFrontDoor stays visible for
+            parents who've already picked their path — they don't need
+            to re-answer "how did you arrive". A slim "Continue your
+            court-ordered case" badge appears between the two when the
+            parent has linked a case via /join. */}
+        <FrontDoorHero showContinue continueRoute="#more-tools" />
+
+        {/* If the parent has already linked a court-ordered case,
+            surface a persistent chip so they can jump back into the
+            scoped `/case/:caseId` view from any dashboard visit. */}
+        <CourtOrderedCaseBadge />
+
         {/* NEW (2026-03-04) — Four-Circle Front Door.
             The founder's chosen dashboard root: four pathways with the
             same six-step process underneath. Child Needs reveals its
@@ -685,6 +701,7 @@ export default function Dashboard() {
             stays uncontested. */}
         <details
           className="mt-6 group"
+          id="more-tools"
           data-testid="dashboard-explore-all-tools"
         >
           <summary

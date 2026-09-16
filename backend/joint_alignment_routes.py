@@ -237,6 +237,99 @@ class ManualCodeRequest(BaseModel):
     code: str = Field(..., min_length=1, max_length=32)
 
 
+class AssignedStep(BaseModel):
+    """Iter196 · one row in a case's `assigned_steps` list. Enables
+    a professional to bundle multiple assessments (e.g. Co-Parenting
+    + Educational + Foundation Statement) into a single case and mark
+    which are required for the parent to complete vs. optional.
+
+    Backwards-compatibility: cases created before iter196 have no
+    `assigned_steps` field on the case document. `_normalise_assigned_steps`
+    derives a single-item list from the legacy `assessment_type` on
+    read so every downstream consumer sees the same shape.
+    """
+    assessment_type: str
+    required: bool = True
+
+
+class AssignedStepPublic(BaseModel):
+    """Response shape — adds derived per-parent completion status."""
+    assessment_type: str
+    required: bool
+    label: str
+    # Two parallel lists, indexed the same as `parents` in the case.
+    # Values: "invited" | "in_progress" | "completed".
+    parent_statuses: List[str] = Field(default_factory=list)
+
+
+# Human-friendly labels for the response — kept centrally so both the
+# `/case/{id}` API and the frontend consume the same source of truth.
+_ASSESSMENT_LABELS = {
+    "co-parenting":  "Co-Parenting Assessment",
+    "communication": "Communication Assessment",
+    "educational":   "Educational Needs Assessment",
+    "medical":       "Medical Needs Assessment",
+    "psychological": "Psychological / Emotional Needs Assessment",
+    "special-needs": "Special Needs Assessment",
+}
+
+
+def _normalise_assigned_steps(case: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Return the list of assigned steps for a case. Legacy cases (no
+    `assigned_steps` field) get a one-item list synthesised from the
+    top-level `assessment_type`. Never returns an empty list — every
+    case has at least one required step."""
+    steps = case.get("assigned_steps") or []
+    if not steps:
+        return [{
+            "assessment_type": case.get("assessment_type") or "co-parenting",
+            "required": True,
+        }]
+    normalised: List[Dict[str, Any]] = []
+    for s in steps:
+        at = s.get("assessment_type") if isinstance(s, dict) else None
+        if not at:
+            continue
+        normalised.append({
+            "assessment_type": at,
+            "required": bool(s.get("required", True)),
+        })
+    if not normalised:
+        # Fall through — mis-shaped doc still gets the safe default.
+        return [{
+            "assessment_type": case.get("assessment_type") or "co-parenting",
+            "required": True,
+        }]
+    return normalised
+
+
+def _build_case_assigned_steps(
+    *,
+    primary: str,
+    extra: Optional[List["AssignedStep"]],
+) -> List[Dict[str, Any]]:
+    """Build the persisted `assigned_steps` array for a newly-minted
+    case. The primary `assessment_type` is ALWAYS the first entry and
+    always required. Extra steps are validated and appended, skipping
+    duplicates (a professional adding the primary again via `extra`
+    is silently deduped, never doubled)."""
+    out: List[Dict[str, Any]] = [
+        {"assessment_type": primary, "required": True},
+    ]
+    seen = {primary}
+    for step in extra or []:
+        at = (step.assessment_type or "").strip()
+        if not at or at in seen:
+            continue
+        _validate_assessment_type(at)
+        out.append({
+            "assessment_type": at,
+            "required": bool(step.required),
+        })
+        seen.add(at)
+    return out
+
+
 # ------------------------------- helpers ------------------------------- #
 
 def _normalise_case_id(raw: str) -> str:
@@ -271,16 +364,48 @@ def _parent_public_shape(p: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _case_public_shape(case: Dict[str, Any]) -> Dict[str, Any]:
+    parents = case.get("parents") or []
+    steps = _normalise_assigned_steps(case)
+    # Derive per-step per-parent status. Legacy cases only track a
+    # single `assessment_completed_at` per parent — treat that as
+    # completion of the first (canonical) step and leave the others
+    # as `in_progress` for accepted parents. Cases created after
+    # iter196 use per-step maps in `parents[i].step_completions`.
+    steps_public: List[Dict[str, Any]] = []
+    for step_idx, step in enumerate(steps):
+        at = step["assessment_type"]
+        per_parent: List[str] = []
+        for p in parents:
+            completions = p.get("step_completions") or {}
+            step_done = completions.get(at) if isinstance(completions, dict) else None
+            # Legacy fallback: the first step inherits the top-level
+            # `assessment_completed_at`. Downstream steps stay
+            # in-progress until per-step tracking is used.
+            if step_idx == 0 and not step_done and p.get("assessment_completed_at"):
+                step_done = p.get("assessment_completed_at")
+            if step_done:
+                per_parent.append("completed")
+            elif p.get("accepted_at"):
+                per_parent.append("in_progress")
+            else:
+                per_parent.append("invited")
+        steps_public.append({
+            "assessment_type": at,
+            "required": bool(step.get("required", True)),
+            "label": _ASSESSMENT_LABELS.get(at, at.replace("-", " ").title()),
+            "parent_statuses": per_parent,
+        })
     return {
         "case_id": case["case_id"],
         "assessment_type": case["assessment_type"],
+        "assigned_steps": steps_public,
         "status": _derived_status(case),
         "professional": {
             "name": (case.get("professional") or {}).get("name"),
             # id + email deliberately withheld — those are Align-side identifiers
         },
         "align_case_reference": case.get("align_case_reference"),
-        "parents": [_parent_public_shape(p) for p in (case.get("parents") or [])],
+        "parents": [_parent_public_shape(p) for p in parents],
         "created_at": _iso(case.get("created_at")),
         "case_expires_at": _iso(case.get("case_expires_at")),
         # Terminal-state fields — set once `POST .../execute-release`
@@ -473,6 +598,12 @@ class ProfessionalCreateCaseRequest(BaseModel):
     professional_email: Optional[EmailStr] = Field(default=None)
     align_case_reference: Optional[str] = Field(default=None, max_length=128)
     reminder_note: Optional[str] = Field(default=None, max_length=240)
+    # Iter196 · optional bundle of additional assessments the
+    # professional wants BOTH parents to complete. `assessment_type`
+    # above stays the *primary* (always required) step; each entry
+    # here adds a further step tagged required or optional. Empty /
+    # missing → the case has a single required step (legacy behaviour).
+    assigned_steps: Optional[List[AssignedStep]] = None
 
 
 @router.post(
@@ -569,6 +700,17 @@ async def _create_and_invite_case(
     case_doc = {
         "case_id": case_id,
         "assessment_type": assessment_type,
+        # Iter196 · normalized list of assessments assigned on this
+        # case. The primary `assessment_type` above is ALWAYS the
+        # first entry (required=True); any extra items the caller
+        # supplied via `assigned_steps` are appended, deduped, and
+        # validated. Legacy cases without this field still work — the
+        # public shape's `_normalise_assigned_steps` synthesizes a
+        # single-item list on read.
+        "assigned_steps": _build_case_assigned_steps(
+            primary=assessment_type,
+            extra=body.assigned_steps,
+        ),
         "professional": {
             # Track the app-user who minted the case so we can list
             # cases-I-created without leaking cross-professional data.
@@ -1861,6 +2003,75 @@ async def manual_code(
     )
     fresh = await db[_CASES_COLL].find_one({"case_id": case["case_id"]})
     return _case_public_shape(fresh)
+
+
+@router.get("/joint-alignment/case/{case_id}")
+async def get_case_for_parent(
+    case_id: str,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Iter196 · fetches a single case scoped to the calling parent.
+    Powers the `/case/:caseId` court-ordered dashboard where a parent
+    sees ONLY the assessments assigned to them (required vs optional)
+    without the marketing / tools soup.
+
+    Gating: the caller MUST be one of the two parents on the case
+    (matched by user_id OR email). Never surfaces the co-parent's
+    answers — only public presence signals (name, status timestamps).
+    A parent who's on the case but hasn't accepted yet still gets the
+    case shape so the /case/:caseId page can render the "accept your
+    invitation first" state.
+    """
+    canonical = _normalise_case_id(case_id) or case_id.strip().upper()
+    case = await db[_CASES_COLL].find_one({"case_id": canonical})
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found or expired")
+
+    parents = case.get("parents") or []
+    me = next(
+        (
+            p
+            for p in parents
+            if p.get("user_id") == current.user_id
+            or (p.get("email") or "").lower() == (current.email or "").lower()
+        ),
+        None,
+    )
+    if not me:
+        raise HTTPException(
+            status_code=403,
+            detail="This case is not linked to your SA CoParents account.",
+        )
+
+    shape = _case_public_shape(case)
+    # Adds a caller-specific view on top of the public shape so the
+    # frontend doesn't have to duplicate the parent-lookup logic.
+    my_completions = me.get("step_completions") or {}
+    my_step_status: List[Dict[str, Any]] = []
+    for step in shape["assigned_steps"]:
+        at = step["assessment_type"]
+        completed_at = my_completions.get(at)
+        # Legacy: if the top-level completion timestamp is set and this
+        # is the primary step, treat it as done for the parent.
+        if not completed_at and at == case.get("assessment_type"):
+            completed_at = me.get("assessment_completed_at")
+        my_step_status.append({
+            "assessment_type": at,
+            "label": step["label"],
+            "required": step["required"],
+            "status": "completed" if completed_at else (
+                "in_progress" if me.get("accepted_at") else "invited"
+            ),
+            "completed_at": _iso(completed_at) if completed_at else None,
+        })
+    shape["me"] = {
+        "email": me.get("email"),
+        "name": me.get("name"),
+        "accepted_at": _iso(me.get("accepted_at")),
+        "steps": my_step_status,
+    }
+    return shape
 
 
 @router.get("/joint-alignment/mine")

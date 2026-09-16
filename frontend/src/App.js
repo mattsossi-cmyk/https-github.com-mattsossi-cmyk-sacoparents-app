@@ -56,6 +56,8 @@ import Samples from "@/pages/Samples";
 import JoinInvitation from "@/pages/JoinInvitation";
 import JoinInvitationSamplePreview from "@/pages/JoinInvitationSamplePreview";
 import JoinCode from "@/pages/JoinCode";
+import Situation from "@/pages/Situation";
+import CaseView from "@/pages/CaseView";
 import ProfessionalsDirectory from "@/pages/ProfessionalsDirectory";
 import ForProfessionals from "@/pages/ForProfessionals";
 import ProfessionalJointAlignmentNew from "@/pages/ProfessionalJointAlignmentNew";
@@ -188,6 +190,8 @@ function AppRoutes() {
         <Route path="/join" element={<JoinCode />} />
         <Route path="/join/sample-preview" element={<JoinInvitationSamplePreview />} />
         <Route path="/join/:token" element={<JoinInvitation />} />
+        <Route path="/situation" element={<Situation />} />
+        <Route path="/case/:caseId" element={<ProtectedRoute><CaseView /></ProtectedRoute>} />
         <Route path="/professionals" element={<ProfessionalsDirectory />} />
         <Route path="/for-professionals" element={<ForProfessionals />} />
         <Route
