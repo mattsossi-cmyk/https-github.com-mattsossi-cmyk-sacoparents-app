@@ -29,6 +29,7 @@ import CoparentCompletionToaster from "../components/CoparentCompletionToaster";
 import FourCircleFrontDoor from "../components/dashboard/FourCircleFrontDoor";
 import FrontDoorHero from "../components/FrontDoorHero";
 import CourtOrderedCaseBadge from "../components/CourtOrderedCaseBadge";
+import DashboardSlideshow from "../components/DashboardSlideshow";
 import JointAlignmentRequests from "../components/dashboard/JointAlignmentRequests";
 import PersonalHomeStrip from "../components/dashboard/PersonalHomeStrip";
 import SituationPickerHero from "../components/dashboard/SituationPickerHero";
@@ -557,6 +558,14 @@ export default function Dashboard() {
             </button>
           </div>
         )}
+
+        {/* Iter198 · Dashboard slideshow — the five founder-supplied
+            journey images at the very top. Cross-fades every 6s,
+            pauses on hover / focus, keyboard-navigable. Never taller
+            than 16:6 so the FrontDoorHero stays close to the fold. */}
+        <div className="mb-6">
+          <DashboardSlideshow />
+        </div>
 
         {/* Iter196 · FrontDoorHero — the primary two-question opener.
             Every parent (solo or court-ordered) hits this first. Below
