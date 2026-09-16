@@ -26,6 +26,50 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-16 — Iter197 · Bundle templates, case completion nudges, deep-link recovery
+
+**🟢 P1 — Professional bundle templates**
+- New module `/app/backend/professional_bundle_templates.py`
+  (mounted under `/api`). Owner-scoped CRUD:
+  `GET /professional/bundle-templates`, `POST /professional/bundle-templates`,
+  `DELETE /professional/bundle-templates/{id}`.
+- 25-template cap per user, unknown assessment_type → 400,
+  duplicates dedupe silently, ownership-mismatch → 404 (never
+  confirms existence).
+- Frontend `BundleTemplatesPanel` in `ProfessionalJointAlignmentNew.jsx`
+  lists saved templates with Apply + Trash buttons. Below the
+  additional-steps picker a "Save this bundle for reuse" prompt
+  surfaces once at least one extra step is added.
+
+**🟢 P1 — Case completion nudge sweep**
+- New module `/app/backend/case_completion_nudge.py` with pure-async
+  `send_case_completion_nudges(db)` + env-gated
+  `case_completion_nudge_loop(app)` (idle unless
+  `CASE_COMPLETION_NUDGE_ENABLED=1`). Registered on server startup.
+- 5-day grace period from `accepted_at`, filters to REQUIRED steps
+  the parent hasn't completed, dedupes per (case_id, parent_email)
+  via `case_completion_nudges` collection. Legacy top-level
+  `assessment_completed_at` counts as primary-lane completion.
+- Email body lists exact incomplete assessments and deep-links to
+  `/case/:caseId`. Never mentions the co-parent's status.
+
+**🟢 P1 — Deep-link recovery**
+- `ProtectedRoute` gained a `requireRealUser` prop. Applied to
+  `/case/:caseId`. Unauth visitors now redirect to
+  `/login?redirect=<current-path>` instead of getting silently
+  promoted to a guest session (guests 403 on case lookups anyway).
+- `Login.jsx` reads `?redirect=…`, allows same-origin relative
+  paths only (`_safeRedirect` rejects absolute + protocol-relative
+  URLs), and routes both password + demo sign-in to the target.
+- Verified end-to-end: cookie-cleared visit to `/case/SA-DEMO01`
+  → `/login?redirect=%2Fcase%2FSA-DEMO01` → post-login land on
+  `/case/SA-DEMO01` (confirmed via smoke test).
+
+**Tests**: `/app/backend/tests/test_iter197_bundles_nudge_deeplink.py`
+locks 13 cases (owner scoping, dedupe, 25-cap, unknown-type 400,
+5-day grace, single-shot nudge, required-only filter, env gate,
+loop registration, safe-redirect helper). All pass.
+
 ### 2026-09-16 — Iter196 · Front Door restructure + multi-assessment case model
 
 **🟢 P0 — Simplified opening dashboard**

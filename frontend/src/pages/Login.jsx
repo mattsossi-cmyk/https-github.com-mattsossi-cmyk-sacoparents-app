@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import { toast } from "sonner";
@@ -11,9 +11,27 @@ import { toast } from "sonner";
  * with no account. A collapsed section still exposes email + password
  * sign-in (used by the admin account and returning users who prefer it),
  * but it's intentionally out of the way.
+ *
+ * Iter197 · honours a `?redirect=<path>` query param so deep-link
+ * recovery (e.g. an expired-cookie parent tapping their `/case/:caseId`
+ * email link) lands them back on the page they were headed to instead
+ * of the generic `/dashboard`. Only same-origin relative paths are
+ * followed — never redirect to an off-site URL.
  */
+function _safeRedirect(target) {
+  if (!target) return null;
+  const t = String(target).trim();
+  // Same-origin relative paths only. Reject empty, protocol-relative,
+  // and absolute URLs so a phishing crafted `?redirect=//evil.com/…`
+  // never bounces the parent off the app.
+  if (!t.startsWith("/") || t.startsWith("//")) return null;
+  return t;
+}
+
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = _safeRedirect(searchParams.get("redirect")) || "/dashboard";
   const { login, startGuest } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +46,7 @@ export default function Login() {
     try {
       await startGuest();
       toast.success("Welcome — you're in demo mode.");
-      navigate("/dashboard");
+      navigate(redirectTo);
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Could not start demo mode.");
     } finally {
@@ -42,7 +60,7 @@ export default function Login() {
     try {
       await login(email, password);
       toast.success("Welcome back.");
-      navigate("/dashboard");
+      navigate(redirectTo);
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Could not sign in.");
     } finally {

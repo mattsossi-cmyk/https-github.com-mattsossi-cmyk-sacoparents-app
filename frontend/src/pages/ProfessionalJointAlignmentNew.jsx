@@ -28,6 +28,9 @@ import {
   Send,
   AlertTriangle,
   ShieldCheck,
+  Bookmark,
+  Trash2,
+  Plus,
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
@@ -62,13 +65,83 @@ const EMPTY_FORM = {
 };
 
 /**
- * AdditionalStepsPicker (iter196) — a compact accordion that lets
- * a professional bundle EXTRA assessments onto a case beyond the
- * primary lane. Each extra assessment can be tagged Required or
- * Optional. The primary lane is filtered out to prevent duplicates.
- *
- * Never exposes any parent-side data — this is purely case-config UI.
+ * BundleTemplatesPanel (iter197) — one-click reuse of a saved
+ * assessment bundle. Lists the caller's templates with an Apply
+ * button and a small delete icon. Hidden when there are no
+ * templates and nothing is loading — a professional who never
+ * saves a bundle should never see empty state.
  */
+function BundleTemplatesPanel({ templates, loading, onApply, onDelete }) {
+  if (!loading && (!templates || templates.length === 0)) return null;
+  return (
+    <div
+      className="rounded-2xl border border-[#B7E0E0] bg-[#F0FBFB] p-3"
+      data-testid="pj-bundle-templates-panel"
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <Bookmark size={13} className="text-[#0E7A7A]" />
+        <span className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#0E7A7A]">
+          Apply a saved bundle
+        </span>
+        {loading && (
+          <Loader2 size={12} className="animate-spin text-[#0E7A7A] ml-1" />
+        )}
+      </div>
+      {templates && templates.length > 0 && (
+        <ul
+          className="space-y-2"
+          data-testid="pj-bundle-templates-list"
+        >
+          {templates.map((tpl) => {
+            const stepCount = 1 + (tpl.extra_steps?.length || 0);
+            const reqCount = 1 + (tpl.extra_steps?.filter((s) => s.required).length || 0);
+            return (
+              <li
+                key={tpl.id}
+                className="rounded-xl border border-[#B7E0E0] bg-white px-3 py-2 flex items-center justify-between gap-3 flex-wrap"
+                data-testid={`pj-bundle-template-${tpl.id}`}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-sm text-[#1A1330] truncate">
+                    {tpl.name}
+                  </div>
+                  <div className="text-[11px] text-[#4B4567] mt-0.5">
+                    {stepCount} step{stepCount !== 1 ? "s" : ""} · {reqCount} required
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onApply(tpl)}
+                    data-testid={`pj-bundle-template-${tpl.id}-apply`}
+                    className="inline-flex items-center gap-1 rounded-full bg-[#0E7A7A] hover:bg-[#0B5F5F] text-white px-3 py-1 text-xs font-semibold"
+                  >
+                    Apply
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(`Delete bundle "${tpl.name}"?`)) {
+                        onDelete(tpl.id);
+                      }
+                    }}
+                    data-testid={`pj-bundle-template-${tpl.id}-delete`}
+                    aria-label="Delete bundle"
+                    className="w-7 h-7 rounded-full text-[#0E7A7A] hover:bg-[#E4F3F3] grid place-items-center"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+
 function AdditionalStepsPicker({ primary, steps, onChange }) {
   const [open, setOpen] = React.useState((steps || []).length > 0);
   const available = ASSESSMENT_OPTIONS.filter((o) => o.value !== primary);
@@ -207,6 +280,18 @@ export default function ProfessionalJointAlignmentNew() {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [myCases, setMyCases] = useState(null);
+  // Iter197 · Bundle templates — saved by this professional.
+  const [templates, setTemplates] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+
+  const refreshTemplates = React.useCallback(() => {
+    setTemplatesLoading(true);
+    api
+      .get("/professional/bundle-templates")
+      .then((r) => setTemplates(r.data?.templates || []))
+      .catch((err) => logError("Failed to list bundle templates:", err))
+      .finally(() => setTemplatesLoading(false));
+  }, []);
 
   useEffect(() => {
     // Prefetch the caller's earlier in-app cases so the sidebar
@@ -214,7 +299,60 @@ export default function ProfessionalJointAlignmentNew() {
     api.get("/professional/joint-alignment/cases-i-created")
       .then((r) => setMyCases(r.data?.cases || []))
       .catch((err) => logError("Failed to list cases-i-created:", err));
-  }, []);
+    refreshTemplates();
+  }, [refreshTemplates]);
+
+  // Apply a saved bundle: replaces the primary lane + additional_steps
+  // wholesale so the professional sees exactly the bundle they saved.
+  const applyTemplate = (tpl) => {
+    if (!tpl) return;
+    update({
+      assessment_type: tpl.primary_assessment_type,
+      additional_steps: (tpl.extra_steps || []).map((s) => ({
+        assessment_type: s.assessment_type,
+        required: !!s.required,
+      })),
+    });
+    toast.success(`Applied bundle: ${tpl.name}`);
+  };
+
+  const saveCurrentAsTemplate = async () => {
+    const name = window.prompt(
+      "Name this bundle so you can apply it later:",
+      "",
+    );
+    if (!name || !name.trim()) return;
+    const primary = form.assessment_type;
+    const extras = (form.additional_steps || [])
+      .filter((s) => s.assessment_type && s.assessment_type !== primary)
+      .map((s) => ({
+        assessment_type: s.assessment_type,
+        required: !!s.required,
+      }));
+    try {
+      await api.post("/professional/bundle-templates", {
+        name: name.trim().slice(0, 120),
+        primary_assessment_type: primary,
+        extra_steps: extras,
+      });
+      toast.success("Bundle saved");
+      refreshTemplates();
+    } catch (err) {
+      const detail = err?.response?.data?.detail || err?.message || "Save failed";
+      toast.error(String(detail));
+    }
+  };
+
+  const deleteTemplate = async (id) => {
+    try {
+      await api.delete(`/professional/bundle-templates/${encodeURIComponent(id)}`);
+      toast.success("Bundle deleted");
+      refreshTemplates();
+    } catch (err) {
+      const detail = err?.response?.data?.detail || err?.message || "Delete failed";
+      toast.error(String(detail));
+    }
+  };
 
   const update = (patch) => setForm((f) => ({ ...f, ...patch }));
 
@@ -438,6 +576,16 @@ export default function ProfessionalJointAlignmentNew() {
                 </select>
               </div>
 
+              {/* Iter197 · Bundle templates — apply/manage saved bundles. */}
+              <div className="sm:col-span-2">
+                <BundleTemplatesPanel
+                  templates={templates}
+                  loading={templatesLoading}
+                  onApply={applyTemplate}
+                  onDelete={deleteTemplate}
+                />
+              </div>
+
               {/* Iter196 · additional assessment bundle. Optional — a
                   professional can tag extra lanes as required or
                   optional and the parent's /case/:caseId view will
@@ -448,6 +596,23 @@ export default function ProfessionalJointAlignmentNew() {
                   steps={form.additional_steps}
                   onChange={(next) => update({ additional_steps: next })}
                 />
+                {/* Iter197 · Save current selection as a reusable
+                    bundle. Only surfaced when the professional has
+                    added at least one extra step — a bundle of just
+                    the primary lane provides no reuse value. */}
+                {(form.additional_steps || []).length > 0 && (
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={saveCurrentAsTemplate}
+                      data-testid="pj-save-bundle-btn"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3D1A78] hover:underline"
+                    >
+                      <Bookmark size={12} />
+                      Save this bundle for reuse
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div>

@@ -191,7 +191,7 @@ function AppRoutes() {
         <Route path="/join/sample-preview" element={<JoinInvitationSamplePreview />} />
         <Route path="/join/:token" element={<JoinInvitation />} />
         <Route path="/situation" element={<Situation />} />
-        <Route path="/case/:caseId" element={<ProtectedRoute><CaseView /></ProtectedRoute>} />
+        <Route path="/case/:caseId" element={<ProtectedRoute requireRealUser><CaseView /></ProtectedRoute>} />
         <Route path="/professionals" element={<ProfessionalsDirectory />} />
         <Route path="/for-professionals" element={<ForProfessionals />} />
         <Route

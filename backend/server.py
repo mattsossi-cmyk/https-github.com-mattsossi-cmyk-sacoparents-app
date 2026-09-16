@@ -72,6 +72,7 @@ from admin_maintenance_routes import router as admin_maintenance_router  # noqa:
 from nudge_copy_routes import router as nudge_copy_router  # noqa: E402
 from alignment_reflection_routes import router as alignment_reflection_router  # noqa: E402
 from alignment_reflection_analytics import router as alignment_reflection_analytics_router  # noqa: E402
+from professional_bundle_templates import router as professional_bundle_templates_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -214,6 +215,7 @@ api_router.include_router(admin_maintenance_router)
 api_router.include_router(nudge_copy_router)
 api_router.include_router(alignment_reflection_router)
 api_router.include_router(alignment_reflection_analytics_router)
+api_router.include_router(professional_bundle_templates_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.
@@ -305,6 +307,8 @@ async def startup_log():
     asyncio.create_task(consent_adoption_digest_loop(app))
     from alignment_reflection_reminder import alignment_reflection_reminder_loop
     asyncio.create_task(alignment_reflection_reminder_loop(app))
+    from case_completion_nudge import case_completion_nudge_loop
+    asyncio.create_task(case_completion_nudge_loop(app))
 
 
 @app.on_event("shutdown")

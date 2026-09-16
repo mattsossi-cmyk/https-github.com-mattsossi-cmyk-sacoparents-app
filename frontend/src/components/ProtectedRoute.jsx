@@ -1,28 +1,35 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 
 /**
- * Protected route — but never asks the user to "sign in".
+ * Protected route — usually silent guest-bootstrap.
  *
- * If there is no active session, we silently start a guest (demo) session so
- * the visitor lands directly inside the app and can save their work. This is
- * the SACOParents product promise: every page is reachable in demo mode,
- * nobody is forced to create an account just to try the prep wizard.
+ * Default behavior: if there is no active session, silently start a
+ * guest (demo) session so the visitor lands directly inside the app
+ * and can save their work. This is the SACOParents product promise.
  *
- * The guest session is created via POST /api/auth/guest which sets an
- * httpOnly cookie and returns the user — `startGuest` updates the auth
- * context so the protected children render on the next pass.
+ * Iter197 · Court-ordered case deep-link recovery.
+ * Pass `requireRealUser` on routes that MUST be the parent's real
+ * account (e.g. `/case/:caseId` — a guest identity would 403 on the
+ * case lookup anyway). For those, redirect to
+ * `/login?redirect=<current-path>` so an expired-cookie parent
+ * signing back in lands right back on the page they came for.
  */
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children, requireRealUser = false }) {
   const { user, loading, startGuest } = useAuth();
+  const location = useLocation();
   const [bootstrapping, setBootstrapping] = useState(false);
   const [bootstrapError, setBootstrapError] = useState(null);
   const attemptedRef = useRef(false);
 
+  const shouldGuestBootstrap = !requireRealUser;
+
   useEffect(() => {
     if (loading) return;
     if (user) return;
+    if (!shouldGuestBootstrap) return;
     if (attemptedRef.current) return;
     attemptedRef.current = true;
     setBootstrapping(true);
@@ -35,7 +42,16 @@ export default function ProtectedRoute({ children }) {
         );
       })
       .finally(() => setBootstrapping(false));
-  }, [user, loading, startGuest]);
+  }, [user, loading, startGuest, shouldGuestBootstrap]);
+
+  // Deep-link recovery: signed-out visitor on a real-user route →
+  // bounce to /login carrying the target path so the post-login
+  // navigate lands them right back here. `location.pathname` +
+  // `search` preserves any query params the invite link carried.
+  if (!loading && !user && !shouldGuestBootstrap) {
+    const target = `${location.pathname}${location.search || ""}`;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(target)}`} replace />;
+  }
 
   if (loading || bootstrapping || (!user && !bootstrapError)) {
     return (
