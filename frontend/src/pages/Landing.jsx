@@ -788,7 +788,7 @@ function IndividualToJointBridge() {
     >
       <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
         <div className="text-[11px] uppercase tracking-[0.28em] font-bold text-[#3D1A78] mb-3">
-          Ready to go further?
+          When you&rsquo;re ready to go further &mdash; no concerns about family violence
         </div>
         <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug">
           Want to compare perspectives?
