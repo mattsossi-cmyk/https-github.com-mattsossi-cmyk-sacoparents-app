@@ -82,6 +82,7 @@ import AdminUsers from "@/pages/AdminUsers";
 import AdminSurveys from "@/pages/AdminSurveys";
 import AdminInsights from "@/pages/AdminInsights";
 import AdminNudgeCopy from "@/pages/AdminNudgeCopy";
+import AdminBridgeCopy from "@/pages/AdminBridgeCopy";
 import PostEventSurvey from "@/pages/PostEventSurvey";
 import InviteAccept from "@/pages/InviteAccept";
 import ForgotPassword from "@/pages/ForgotPassword";
@@ -606,6 +607,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <AdminNudgeCopy />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/bridge-copy"
+          element={
+            <ProtectedRoute>
+              <AdminBridgeCopy />
             </ProtectedRoute>
           }
         />

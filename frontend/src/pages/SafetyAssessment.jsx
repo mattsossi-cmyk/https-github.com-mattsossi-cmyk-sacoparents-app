@@ -908,8 +908,11 @@ export default function SafetyAssessment() {
                 className="mt-6 rounded-3xl border-2 border-[#3D1A78] bg-gradient-to-br from-[#F8F5FF] to-white p-6 sm:p-8"
                 data-testid="safety-companion-cta"
               >
-                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
-                  Complete the picture · Dimensions 2, 3 &amp; 4
+                <div
+                  className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2"
+                  data-testid="safety-companion-cta-eyebrow"
+                >
+                  When you&rsquo;re ready to go further &mdash; no concerns about family violence
                 </div>
                 <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mb-2">
                   Your safety result cleared — want to run the other three
@@ -968,6 +971,50 @@ export default function SafetyAssessment() {
                   completed — designed for a mediator, parent facilitator ad litem,
                   or trial court.
                 </p>
+              </div>
+            )}
+
+            {/* Iter199 · Concerned-variant CTA — level 1/2 result. We
+                deliberately do NOT surface joint tools here; the parent
+                needs individual, private, safe paths first. Mirrors the
+                Landing bridge "safe-path-card" and shares the same
+                eyebrow copy so both surfaces speak the same language. */}
+            {result?.result?.level != null && result.result.level < 3 && (
+              <div
+                className="mt-6 rounded-3xl border-2 border-[#B45F13]/40 bg-[#FFF6EA] p-6 sm:p-8"
+                data-testid="safety-concerned-cta"
+              >
+                <div
+                  className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B45F13] mb-2"
+                  data-testid="safety-concerned-cta-eyebrow"
+                >
+                  When you&rsquo;re ready, on your own timeline &mdash; safe paths for when family violence is present
+                </div>
+                <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mb-2">
+                  Keep working on your own &mdash; safely, at your pace.
+                </h3>
+                <p className="text-sm text-[#4B4567] leading-relaxed mb-4">
+                  Joint tools aren&rsquo;t the next step for you right now.
+                  Continue building your private reflection, keep a
+                  co-parenting journal, and connect with a
+                  domestic-violence advocate whenever it feels right.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    to="/safety"
+                    data-testid="safety-concerned-cta-safety-link"
+                    className="inline-flex items-center gap-2 rounded-full bg-[#B45F13] hover:bg-[#8A4610] text-white px-5 py-2.5 text-sm font-semibold transition-colors"
+                  >
+                    Open my safety plan <ArrowRight size={14} />
+                  </Link>
+                  <Link
+                    to="/journal"
+                    data-testid="safety-concerned-cta-journal-link"
+                    className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#B45F13] text-[#B45F13] hover:bg-[#FFEEDA] px-5 py-2.5 text-sm font-semibold"
+                  >
+                    Open my private journal
+                  </Link>
+                </div>
               </div>
             )}
 

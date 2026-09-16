@@ -26,6 +26,63 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-16 — Iter199 · Two-variant bridge copy + safety-level personalisation + CTR A/B
+
+**🟢 P1 — Mirror eyebrow into Safety Assessment cleared companion CTA**
+- `/safety-assessment` "level ≥ 3" companion CTA now shows the same
+  eyebrow as the Landing bridge: **"When you're ready to go further —
+  no concerns about family violence"** (SafetyAssessment.jsx). Same
+  language on both surfaces.
+
+**🟢 P1 — Safety-Concerned variant on Landing + Safety Assessment**
+- New "safe-path" card renders when the parent's most recent Safety
+  level is 1 or 2. Eyebrow: **"When you're ready, on your own
+  timeline — safe paths for when family violence is present"**.
+- Routes to individual-only tools (safety plan + journal). Never
+  surfaces joint-report CTAs to a concerned parent.
+- Landing bridge: `data-testid="safe-path-card"` replaces the Joint
+  Journey card. Safety Assessment: `data-testid="safety-concerned-cta"`
+  renders when `result.level < 3`.
+
+**🟢 P1 — Personalise by safety result client-side**
+- New hook `useSafetyLevel()` (`/app/frontend/src/hooks/useSafetyLevel.js`)
+  fetches `/api/safety-assessment/me` once (module-scoped cache),
+  returns `{ level, status }` where `status ∈ {cleared, concerned,
+  unknown}`. Never throws — endpoint failure resolves to `unknown`
+  and consumers default to the historical baseline (cleared).
+- `IndividualToJointBridge` component consumes the hook + renders
+  the correct variant. `<section data-variant="cleared|concerned">`
+  attribute makes the switch easy to assert in tests.
+
+**🟢 P1 — Configurable via existing nudge-copy API + CTR tracking**
+- New backend routes on the existing nudge-copy router:
+  * `GET /api/public/nudge-copy/individual-to-joint-bridge`
+    (public, no auth, two-variant payload with baked-in defaults)
+  * `POST /api/admin/nudge-copy/individual-to-joint-bridge`
+    (admin — merges cleared/concerned overrides + appends history
+    per variant)
+  * `POST /api/public/nudge-copy/individual-to-joint-bridge/track`
+    (public, 204, writes `{variant, event, target}` to
+    `nudge_copy_events` — no user_id association, anonymous only)
+  * `GET /api/admin/nudge-copy/individual-to-joint-bridge/analytics`
+    (admin — per-variant impressions/clicks/CTR roll-up)
+- Frontend `useJointBridgeCopy()` hook fetches copy + exposes
+  `trackImpression(variant)` (deduped per mount) and
+  `trackClick(variant, target)`.
+- Same-origin `cta_route` validator on the Pydantic model rejects
+  `//evil.example.com/...` and any non-`/` path so a compromised
+  admin can't redirect parents off-site.
+- New admin editor page `/admin/bridge-copy`
+  (`/app/frontend/src/pages/AdminBridgeCopy.jsx`) — two-variant
+  editor with a live CTR analytics tile on top. Linked from the
+  Admin Dashboard Consent tile CTA row.
+
+**Tests**: `test_iter199_bridge_copy_variants.py` locks 12 cases
+(defaults, single-variant update, off-site CTA rejection, history
+row per variant, 204 track, unknown-variant 422, per-variant CTR
+math, admin-analytics 401, frontend hook contract, Safety
+Assessment testids). All pass.
+
 ### 2026-09-16 — Iter197 · Bundle templates, case completion nudges, deep-link recovery
 
 **🟢 P1 — Professional bundle templates**

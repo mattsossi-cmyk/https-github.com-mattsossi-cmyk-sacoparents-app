@@ -34,7 +34,7 @@ array + hash(user_id) → variant selection on top of this schema.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -255,3 +255,255 @@ async def get_child_needs_share_nudge_copy_history(
             updated_by=row.get("updated_by") or "",
         ))
     return NudgeCopyHistoryResponse(entries=entries)
+
+
+# ---------------------------------------------------------------------------
+# Iter199 · Individual → Joint bridge — variant copy + CTR tracking.
+#
+# The Landing "When you're ready to go further" bridge section (and its
+# mirror inside the Safety Assessment cleared companion CTA) supports
+# TWO variants — chosen client-side based on the caller's most recent
+# safety-screen level:
+#
+#   cleared    (level 3/4) → "no concerns about family violence" copy
+#   concerned  (level 1/2) → "safe paths for when family violence is
+#                             present" — routes to individual-only tools
+#
+# Both variants sit under a single config row keyed by
+# `individual_to_joint_bridge`. Impressions and clicks are recorded in
+# `nudge_copy_events` so ops can measure whether the new copy lifts
+# "See sample joint preview" CTR vs. the baseline.
+# ---------------------------------------------------------------------------
+
+_KEY_JOINT_BRIDGE = "individual_to_joint_bridge"
+_EVENTS_COLL = "nudge_copy_events"
+_VARIANT_KEYS = ("cleared", "concerned")
+
+_DEFAULTS_JOINT_BRIDGE = {
+    "cleared": {
+        "eyebrow": "When you're ready to go further — no concerns about family violence",
+        "headline": "Want to compare perspectives?",
+        "body": (
+            "Invite your co-parent — or connect with a mediator, "
+            "attorney or therapist — to move from individual reflection "
+            "into joint alignment."
+        ),
+        "cta_label": "See a sample joint preview",
+        "cta_route": "/samples",
+    },
+    "concerned": {
+        "eyebrow": "When you're ready, on your own timeline — safe paths for when family violence is present",
+        "headline": "Keep working on your own — safely, at your pace.",
+        "body": (
+            "Joint tools aren't the next step for you right now. Continue "
+            "building your private reflection, journal, and safety plan — "
+            "and connect with a domestic-violence advocate whenever it "
+            "feels right."
+        ),
+        "cta_label": "See safe individual paths",
+        "cta_route": "/safety",
+    },
+}
+
+
+class BridgeVariant(BaseModel):
+    """Configurable copy for ONE variant of the Individual→Joint
+    bridge. `cta_route` is a same-origin path — validated to prevent
+    a malicious admin from setting an off-site redirect."""
+    eyebrow: str = Field(..., min_length=6, max_length=180)
+    headline: str = Field(..., min_length=6, max_length=180)
+    body: str = Field(..., min_length=10, max_length=600)
+    cta_label: str = Field(..., min_length=2, max_length=80)
+    cta_route: str = Field(..., min_length=1, max_length=120)
+
+    @field_validator("cta_route")
+    @classmethod
+    def _same_origin(cls, v: str) -> str:
+        v = (v or "").strip()
+        if not v.startswith("/") or v.startswith("//"):
+            raise ValueError("cta_route must be a same-origin relative path (start with '/')")
+        return v
+
+    @field_validator("eyebrow", "headline", "body", "cta_label")
+    @classmethod
+    def _strip(cls, v: str) -> str:
+        v = (v or "").strip()
+        if not v:
+            raise ValueError("must not be blank")
+        return v
+
+
+class JointBridgePublic(BaseModel):
+    cleared: BridgeVariant
+    concerned: BridgeVariant
+    is_default: bool
+
+
+class JointBridgeUpdate(BaseModel):
+    """Admin update body — either variant can be omitted so ops can
+    tweak one lane without re-typing the other."""
+    cleared: Optional[BridgeVariant] = None
+    concerned: Optional[BridgeVariant] = None
+    note: Optional[str] = Field(default=None, max_length=200)
+
+
+class NudgeEventPayload(BaseModel):
+    variant: str  # 'cleared' or 'concerned' — validated below
+    event: str    # 'impression' | 'click'
+    target: Optional[str] = Field(default=None, max_length=120)
+
+    @field_validator("variant")
+    @classmethod
+    def _known_variant(cls, v: str) -> str:
+        if v not in _VARIANT_KEYS:
+            raise ValueError(f"variant must be one of {_VARIANT_KEYS}")
+        return v
+
+    @field_validator("event")
+    @classmethod
+    def _known_event(cls, v: str) -> str:
+        if v not in ("impression", "click"):
+            raise ValueError("event must be 'impression' or 'click'")
+        return v
+
+
+async def _resolve_bridge(db: AsyncIOMotorDatabase) -> JointBridgePublic:
+    row = await db[_COLL].find_one({"key": _KEY_JOINT_BRIDGE}, {"_id": 0})
+    is_default = True
+    variants = {k: dict(v) for k, v in _DEFAULTS_JOINT_BRIDGE.items()}
+    if row and isinstance(row.get("variants"), dict):
+        for v_key in _VARIANT_KEYS:
+            override = row["variants"].get(v_key)
+            if isinstance(override, dict) and override.get("headline"):
+                variants[v_key] = {
+                    "eyebrow": override.get("eyebrow") or variants[v_key]["eyebrow"],
+                    "headline": override.get("headline") or variants[v_key]["headline"],
+                    "body": override.get("body") or variants[v_key]["body"],
+                    "cta_label": override.get("cta_label") or variants[v_key]["cta_label"],
+                    "cta_route": override.get("cta_route") or variants[v_key]["cta_route"],
+                }
+                is_default = False
+    return JointBridgePublic(
+        cleared=BridgeVariant(**variants["cleared"]),
+        concerned=BridgeVariant(**variants["concerned"]),
+        is_default=is_default,
+    )
+
+
+@router.get("/public/nudge-copy/individual-to-joint-bridge",
+            response_model=JointBridgePublic)
+async def get_joint_bridge_copy(db: AsyncIOMotorDatabase = Depends(_get_db)):
+    """Public read. Cache-Control no-store so an admin tweak is live
+    on next page load. The frontend picks the variant client-side
+    from the parent's most recent safety level (>=3 → cleared)."""
+    from fastapi.responses import JSONResponse
+    copy = await _resolve_bridge(db)
+    return JSONResponse(copy.model_dump(), headers={"Cache-Control": "no-store"})
+
+
+@router.post("/admin/nudge-copy/individual-to-joint-bridge",
+             response_model=JointBridgePublic)
+async def update_joint_bridge_copy(
+    body: JointBridgeUpdate,
+    db: AsyncIOMotorDatabase = Depends(_get_db),
+    admin: UserPublic = Depends(require_admin),
+):
+    """Admin write. Merges the submitted variants over the existing
+    config so ops can update one lane at a time. Every save appends a
+    history row per variant for restore + audit."""
+    if body.cleared is None and body.concerned is None:
+        raise HTTPException(
+            status_code=400,
+            detail="At least one variant (cleared or concerned) must be provided.",
+        )
+    row = await db[_COLL].find_one({"key": _KEY_JOINT_BRIDGE}) or {}
+    variants = dict(row.get("variants") or {})
+    now = _now()
+    for v_key, override in (("cleared", body.cleared), ("concerned", body.concerned)):
+        if override is None:
+            continue
+        variants[v_key] = override.model_dump()
+        # Append a history row per updated variant.
+        await db[_HISTORY_COLL].insert_one({
+            "key": _KEY_JOINT_BRIDGE,
+            "variant": v_key,
+            "headline": override.headline,
+            "subhead": override.body,
+            "eyebrow": override.eyebrow,
+            "cta_label": override.cta_label,
+            "cta_route": override.cta_route,
+            "note": body.note,
+            "updated_at": now,
+            "updated_by": (admin.email or admin.user_id or "unknown"),
+        })
+    await db[_COLL].update_one(
+        {"key": _KEY_JOINT_BRIDGE},
+        {"$set": {
+            "key": _KEY_JOINT_BRIDGE,
+            "variants": variants,
+            "updated_at": now,
+            "updated_by": (admin.email or admin.user_id or "unknown"),
+        }},
+        upsert=True,
+    )
+    return await _resolve_bridge(db)
+
+
+@router.post("/public/nudge-copy/individual-to-joint-bridge/track",
+             status_code=204)
+async def track_bridge_event(
+    body: NudgeEventPayload,
+    request: Request,
+    db: AsyncIOMotorDatabase = Depends(_get_db),
+):
+    """Anonymous impression + click logger. Public because the copy
+    itself is public. We deliberately do NOT associate the event with
+    a `user_id` — parents on the marketing page haven't consented to
+    per-user tracking. Analytics rollups aggregate anonymously.
+
+    Fire-and-forget shape: the client doesn't wait on this beyond a
+    204, and a failure never blocks the CTA."""
+    await db[_EVENTS_COLL].insert_one({
+        "key": _KEY_JOINT_BRIDGE,
+        "variant": body.variant,
+        "event": body.event,
+        "target": body.target,
+        "created_at": _now(),
+    })
+    return None
+
+
+@router.get("/admin/nudge-copy/individual-to-joint-bridge/analytics")
+async def bridge_analytics(
+    db: AsyncIOMotorDatabase = Depends(_get_db),
+    _admin: UserPublic = Depends(require_admin),
+):
+    """Ops metric: per-variant impression + click counts and CTR.
+    Same-day cohort — the collection is small so we return the
+    all-time roll-up. Ops can slice by date later if it matters."""
+    pipeline = [
+        {"$match": {"key": _KEY_JOINT_BRIDGE}},
+        {"$group": {
+            "_id": {"variant": "$variant", "event": "$event"},
+            "count": {"$sum": 1},
+        }},
+    ]
+    rows = [r async for r in db[_EVENTS_COLL].aggregate(pipeline)]
+    per: Dict[str, Dict[str, int]] = {v: {"impressions": 0, "clicks": 0} for v in _VARIANT_KEYS}
+    for r in rows:
+        v = (r["_id"] or {}).get("variant")
+        e = (r["_id"] or {}).get("event")
+        if v in per and e in ("impression", "click"):
+            per[v]["impressions" if e == "impression" else "clicks"] += r["count"]
+    out = {}
+    for v_key, counts in per.items():
+        imp = counts["impressions"]
+        clk = counts["clicks"]
+        ctr = round((clk / imp) * 100, 1) if imp > 0 else 0.0
+        out[v_key] = {
+            "impressions": imp,
+            "clicks": clk,
+            "ctr": ctr,
+        }
+    return {"variants": out}
+

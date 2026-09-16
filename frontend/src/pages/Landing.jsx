@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useSafetyLevel } from "../hooks/useSafetyLevel";
+import { useJointBridgeCopy } from "../hooks/useJointBridgeCopy";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -780,55 +782,126 @@ function ThreeReportsStrip() {
    is what unlocks when a co-parent or professional connects.
 ============================================================ */
 function IndividualToJointBridge() {
+  // Iter199 · personalise the bridge copy by the parent's most recent
+  // Safety Assessment level, and A/B-track impressions + clicks so
+  // ops can compare CTR of the new "no concerns"/"safe paths" copy
+  // vs the baseline. Both variants are ADMIN-editable via
+  // /admin/nudge-copy (see nudge_copy_routes._KEY_JOINT_BRIDGE).
+  const { status } = useSafetyLevel();
+  const { copy, trackImpression, trackClick } = useJointBridgeCopy();
+  // Neutral default when we don't know the parent's level (guest,
+  // never taken the screen, endpoint 5xx) is the CLEARED variant —
+  // the historical baseline. "concerned" is only shown when we're
+  // confident, so a false positive never hides joint tools from a
+  // safe parent.
+  const variantKey = status === "concerned" ? "concerned" : "cleared";
+  const variant = copy[variantKey];
+
+  React.useEffect(() => {
+    trackImpression(variantKey);
+  }, [variantKey, trackImpression]);
+
   return (
     <section
       id="individual-to-joint-bridge"
       className="relative py-16 sm:py-20 bg-gradient-to-b from-white via-[#F5F1FB] to-white"
       data-testid="individual-to-joint-bridge"
+      data-variant={variantKey}
     >
       <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-        <div className="text-[11px] uppercase tracking-[0.28em] font-bold text-[#3D1A78] mb-3">
-          When you&rsquo;re ready to go further &mdash; no concerns about family violence
+        <div
+          className="text-[11px] uppercase tracking-[0.28em] font-bold text-[#3D1A78] mb-3"
+          data-testid="joint-bridge-eyebrow"
+        >
+          {variant.eyebrow}
         </div>
-        <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug">
-          Want to compare perspectives?
+        <h2
+          className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug"
+          data-testid="joint-bridge-headline"
+        >
+          {variant.headline}
         </h2>
-        <p className="mt-3 text-sm sm:text-base text-[#4B4567] leading-relaxed">
-          Invite your co-parent — or connect with a mediator, attorney or
-          therapist — to move from individual reflection into joint alignment.
+        <p
+          className="mt-3 text-sm sm:text-base text-[#4B4567] leading-relaxed"
+          data-testid="joint-bridge-body"
+        >
+          {variant.body}
         </p>
         <div className="mt-6 flex justify-center text-[#3D1A78]" aria-hidden>
           <ArrowDown size={24} strokeWidth={2.2} />
         </div>
 
-        <div
-          className="mt-6 rounded-3xl border-2 border-[#2DB5B5]/30 bg-white p-6 sm:p-8 text-left shadow-sm"
-          data-testid="joint-journey-card"
-        >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
-            Joint Journey
+        {variantKey === "cleared" ? (
+          <div
+            className="mt-6 rounded-3xl border-2 border-[#2DB5B5]/30 bg-white p-6 sm:p-8 text-left shadow-sm"
+            data-testid="joint-journey-card"
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
+              Joint Journey
+            </div>
+            <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-2 leading-tight">
+              Joint Assessment → Joint Alignment Report
+            </h3>
+            <p className="text-sm sm:text-base text-[#4B4567] mt-3 leading-relaxed">
+              Once both parents complete their reflections, the app (or a
+              connected professional using{" "}
+              <span className="font-semibold text-[#0E7A7A]">SA CoParents Align</span>)
+              can generate a Joint Alignment Report — a side-by-side view
+              of shared understanding, differences worth discussing, and
+              options for moving forward.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link
+                to="/samples/joint-alignment-preview"
+                onClick={() => trackClick(variantKey, "sample-joint-preview")}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0E7A7A] hover:underline"
+                data-testid="joint-journey-see-sample"
+              >
+                {variant.cta_label} <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
-          <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-2 leading-tight">
-            Joint Assessment → Joint Alignment Report
-          </h3>
-          <p className="text-sm sm:text-base text-[#4B4567] mt-3 leading-relaxed">
-            Once both parents complete their reflections, the app (or a
-            connected professional using{" "}
-            <span className="font-semibold text-[#0E7A7A]">SA CoParents Align</span>)
-            can generate a Joint Alignment Report — a side-by-side view
-            of shared understanding, differences worth discussing, and
-            options for moving forward.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Link
-              to="/samples/joint-alignment-preview"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0E7A7A] hover:underline"
-              data-testid="joint-journey-see-sample"
-            >
-              See a sample joint preview <ArrowRight size={14} />
-            </Link>
+        ) : (
+          // Safety-concerned variant — the joint journey is intentionally
+          // NOT shown. Route the parent to individual-only safe paths
+          // (safety plan, journal, resources) instead so we never
+          // pressure a parent who screened concerned into cooperative
+          // tools they aren't ready for.
+          <div
+            className="mt-6 rounded-3xl border-2 border-[#B45F13]/40 bg-[#FFF6EA] p-6 sm:p-8 text-left shadow-sm"
+            data-testid="safe-path-card"
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B45F13]">
+              Safe Paths
+            </div>
+            <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-2 leading-tight">
+              Individual-only tools that don&rsquo;t require the other parent
+            </h3>
+            <p className="text-sm sm:text-base text-[#4B4567] mt-3 leading-relaxed">
+              Continue your private reflection, keep a co-parenting journal,
+              build a safety plan, and connect with a domestic-violence
+              advocate. Joint tools remain here for whenever &mdash; and only
+              if &mdash; it&rsquo;s ever safe to invite the other parent.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link
+                to={variant.cta_route || "/safety"}
+                onClick={() => trackClick(variantKey, "safe-individual-paths")}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#B45F13] hover:underline"
+                data-testid="safe-path-cta"
+              >
+                {variant.cta_label} <ArrowRight size={14} />
+              </Link>
+              <Link
+                to="/journal"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#3D1A78] hover:underline"
+                data-testid="safe-path-journal"
+              >
+                Open my private journal <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

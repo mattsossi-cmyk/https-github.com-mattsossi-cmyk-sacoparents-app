@@ -603,6 +603,14 @@ export default function AdminDashboard() {
                   <Pencil size={12} />
                   Edit nudge copy
                 </Link>
+                <Link
+                  to="/admin/bridge-copy"
+                  data-testid="admin-bridge-copy-link"
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#3D1A78]/25 text-xs font-semibold text-[#3D1A78] hover:bg-[#F5EFFB]"
+                >
+                  <Pencil size={12} />
+                  Edit bridge copy · A/B
+                </Link>
                 <a
                   href={`${process.env.REACT_APP_BACKEND_URL}/api/admin/consent-digest/preview.html`}
                   target="_blank"
