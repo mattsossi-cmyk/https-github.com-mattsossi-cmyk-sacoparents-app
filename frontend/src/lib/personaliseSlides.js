@@ -1,32 +1,39 @@
 /**
- * personaliseSlides — iter201.
+ * personaliseSlides — iter201 (+ iter202 hides).
  *
- * Pure function (no React, no side effects) that reorders the
- * DashboardSlideshow slides based on the parent's most-recent
+ * Pure function (no React, no side effects) that filters + reorders
+ * the DashboardSlideshow slides based on the parent's most-recent
  * situation choice + whether they've linked a court-ordered case.
  *
  * The base order is the recommended co-parenting sequence (Assess
- * → Child → Relationship → Communicate → Foundation). We only
- * rotate ONE slide to the front — never hide slides — so a Path B
- * parent still sees the full journey, just starting at a stage
- * that matches where they are.
+ * → Child → Relationship → Communicate → Foundation). We apply two
+ * transforms so the opening frame matches where the parent actually
+ * is:
  *
- * Rules:
- *   1. Court-ordered parents (linked a case) start with Foundation
- *      Statement — they've already committed to alignment work; the
- *      Foundation Statement is the anchor they'll come back to.
- *   2. Situation "safety" or "high-conflict" → start with
- *      "Assess family situation" (already default) — clarity + a
- *      private read before anything else.
- *   3. Situation "special-needs" → start with "Identify child's
- *      needs" — child-specific needs are the driving concern.
- *   4. Situation "mediation" → start with "Strengthen communication"
- *      — mediation prep is communication-heavy.
- *   5. Situation "cooperate" / "difficult" / unknown → default order.
+ *   Hide rules (iter202):
+ *     * Situation "safety" → hide `communication` + `foundation`
+ *       (joint-oriented tools are inappropriate when family violence
+ *        is present — parent sees Situation · Child Needs ·
+ *        Relationship only)
+ *     * Court-ordered (case linked) → hide `situation` (Assess your
+ *       family situation) — a parent under a court order didn't come
+ *       to explore, they came to comply; showing them the
+ *       exploratory frame first would be tone-deaf
  *
- * Kept intentionally small: rotate-to-front, no hiding, no shuffling.
- * A future iteration can hide slides based on completion, but that
- * couples with progress state — decoupled here on purpose.
+ *   Rotate-to-front rules:
+ *     1. Court-ordered → Foundation Statement first
+ *     2. Situation "special-needs" → Identify child's needs first
+ *     3. Situation "mediation" → Strengthen communication first
+ *     4. Situation "safety" / "high-conflict" / "cooperate" /
+ *        "difficult" / unknown → default order (Assess situation
+ *        first — or Child Needs if situation slide is hidden)
+ *
+ *   Edge cases:
+ *     * safety + court-ordered simultaneously → hides win in both
+ *       axes (result: child-needs + relationship only, no rotation
+ *       target left to apply)
+ *     * rotation target hidden → no rotation, the filtered list
+ *       renders in its natural order
  */
 
 /** Rotate the entry with matching `key` to index 0, preserving the
@@ -43,23 +50,46 @@ export function rotateToFront(slides, targetKey) {
   return copy;
 }
 
-export function personaliseSlides(baseSlides, { courtOrdered, situation } = {}) {
-  // Court-ordered wins — a parent who's linked a case has committed
-  // to alignment work; anchor them at Foundation Statement.
-  if (courtOrdered) return rotateToFront(baseSlides, "foundation");
-
-  switch (situation) {
-    case "special-needs":
-      return rotateToFront(baseSlides, "child-needs");
-    case "mediation":
-      return rotateToFront(baseSlides, "communication");
-    // safety / high-conflict / cooperate / difficult all default to
-    // "Assess your family situation" first — same as base order.
-    case "safety":
-    case "high-conflict":
-    case "cooperate":
-    case "difficult":
-    default:
-      return baseSlides;
+/** Iter202 · slide keys to REMOVE from the base list given the
+ * parent's situation + court-ordered flag. Exposed so tests + the
+ * component can inspect the rule set in isolation.
+ */
+export function hiddenSlideKeys({ courtOrdered, situation } = {}) {
+  const hidden = new Set();
+  if (situation === "safety") {
+    // Joint-oriented tools shouldn't be surfaced when family violence
+    // is present. Keeps Situation · Child Needs · Relationship —
+    // enough to guide a parent toward the safety pathway without
+    // ever showing "invite the other parent" copy.
+    hidden.add("communication");
+    hidden.add("foundation");
   }
+  if (courtOrdered) {
+    // Court-referred parents skipped the "how are you arriving"
+    // question by definition — they know why they're here.
+    hidden.add("situation");
+  }
+  return hidden;
+}
+
+function _rotationTarget({ courtOrdered, situation }) {
+  if (courtOrdered) return "foundation";
+  switch (situation) {
+    case "special-needs":  return "child-needs";
+    case "mediation":      return "communication";
+    default:               return null; // fall through to natural order
+  }
+}
+
+export function personaliseSlides(baseSlides, opts = {}) {
+  const hidden = hiddenSlideKeys(opts);
+  const filtered = baseSlides.filter((s) => !hidden.has(s.key));
+  const target = _rotationTarget(opts);
+  // If the intended rotation target was filtered out (e.g. safety +
+  // court-ordered both apply → foundation is hidden), skip rotation
+  // so the list renders in its natural post-filter order.
+  if (target && filtered.some((s) => s.key === target)) {
+    return rotateToFront(filtered, target);
+  }
+  return filtered;
 }

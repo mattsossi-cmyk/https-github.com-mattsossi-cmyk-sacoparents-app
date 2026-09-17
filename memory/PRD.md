@@ -26,6 +26,36 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-17 — Iter202 · Slide-hide rules (safety + court-ordered)
+
+**🟢 P1 — Hide inappropriate slides per situation**
+- Extended `personaliseSlides.js` with `hiddenSlideKeys()` helper.
+  Rules:
+    * `situation="safety"` → hide **communication** + **foundation**
+      slides (joint-oriented tools inappropriate when family
+      violence present)
+    * `courtOrdered=true`  → hide **situation** slide (they didn't
+      come to explore, they came to comply)
+- Edge case: `safety` + `courtOrdered` both fire → three slides
+  hidden (situation, communication, foundation), and since the
+  rotation target `foundation` was hidden, rotation is skipped.
+  Result: `child-needs · relationship` only.
+- DashboardSlideshow's Step counter + dot count already use
+  `SLIDES.length` dynamically, so the UI adapts automatically to
+  any subset (2 / 3 / 4 / 5 slides).
+
+**Tests**: `test_iter201_slide_personalisation.py` extended with 5
+new cases covering the safety hide, court-ordered hide,
+safety+court edge case, `hiddenSlideKeys()` contract, and a
+no-hides regression (every other situation returns full 5).
+All 12 pass.
+
+Verified end-to-end at desktop:
+  A) safety-only → 3 slides
+  B) court-only  → 4 slides (foundation first)
+  C) both        → 2 slides, no rotation
+  D) mediation   → 5 slides (communication first)
+
 ### 2026-09-17 — Iter201 · Personalised slide order + progress ring overlay
 
 **🟢 P1 — Slide order personalisation**
