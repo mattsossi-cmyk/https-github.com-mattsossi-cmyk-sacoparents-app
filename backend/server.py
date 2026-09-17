@@ -637,6 +637,18 @@ SEEDED_PROFESSIONALS = [
 ]
 
 
+async def seed_auto_approvals():
+    """Approve accounts listed in AUTO_APPROVE_EMAILS (comma-separated) at startup; idempotent, env-driven, no HTTP surface."""
+    emails = [e.strip().lower() for e in os.environ.get("AUTO_APPROVE_EMAILS", "").split(",") if e.strip()]
+    if not emails:
+        return
+    now = datetime.now(timezone.utc).isoformat()
+    res = await db.users.update_many({"email": {"$in": emails}, "role": {"$in": ["professional", "judge"]}},
+                                     {"$set": {"approved": True, "declined": False, "verification_level": "credentials_verified", "credentials_verified_at": now, "auto_approved_at": now}})
+    await db.login_attempts.delete_many({"identifier": {"$regex": "(" + "|".join(re.escape(f":{e}") for e in emails) + ")$"}})
+    logger.info("AUTO_APPROVE_EMAILS: %s account(s) approved", res.modified_count)
+
+
 async def seed_admin():
     admin_email = os.environ.get("ADMIN_EMAIL")
     admin_password = os.environ.get("ADMIN_PASSWORD")
@@ -653,12 +665,13 @@ async def seed_admin():
             "password_hash": hash_password(admin_password),
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-    elif not existing.get("password_reset_by_user") and not verify_password(admin_password, existing["password_hash"]):
+    elif (os.environ.get("ADMIN_PASSWORD_RESYNC") == "1" or not existing.get("password_reset_by_user")) and not verify_password(admin_password, existing["password_hash"]):
         await db.users.update_one(
             {"email": admin_email.lower()},
-            {"$set": {"password_hash": hash_password(admin_password)}},
+            {"$set": {"password_hash": hash_password(admin_password)}, "$unset": {"password_reset_by_user": ""}},
         )
         await db.login_attempts.delete_many({"identifier": {"$regex": f":{admin_email.lower()}$"}})
+        logger.info("Admin password re-synced from ADMIN_PASSWORD env")
     if not (existing or {}).get("profile", {}).get("pro_role"):
         await db.users.update_one(
             {"email": admin_email.lower()},
@@ -700,6 +713,7 @@ async def startup():
     await db.invitations.create_index("token")
     await db.account_links.create_index("user_id", unique=True)
     await seed_admin()
+    await seed_auto_approvals()
     await seed_professionals()
 
 
