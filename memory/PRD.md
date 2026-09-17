@@ -26,6 +26,53 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-17 — Iter201 · Personalised slide order + progress ring overlay
+
+**🟢 P1 — Slide order personalisation**
+- New pure helper `/app/frontend/src/lib/personaliseSlides.js` — no
+  React, no side effects, fully unit-tested. Given the base 5-slide
+  sequence and `{ courtOrdered, situation }`, rotates ONE slide to
+  the front (never hides, never shuffles):
+    * courtOrdered=true         → Foundation Statement first
+    * situation="special-needs" → Identify child's needs first
+    * situation="mediation"     → Strengthen communication first
+    * else (safety, high-conflict, cooperate, difficult, unknown)
+                                → default order (Assess situation first)
+- `DashboardSlideshow` reads `localStorage.sacoparents_situation_choice_v1`
+  and `localStorage.sacoparents_court_ordered_case_id` on mount and
+  memoises the personalised sequence for the session so a re-render
+  never shuffles under an active viewer.
+- Verified live end-to-end: (a) default → "Assess your family
+  situation" first, (b) case linked → "Commit to your Foundation
+  Statement" first, (c) special-needs → "Identify your child's
+  needs" first.
+
+**🟢 P1 — Progress ring overlay per slide**
+- New `useSlideProgress()` hook (`/app/frontend/src/hooks/useSlideProgress.js`)
+  fetches `/api/dashboard/progress` + `/api/safety-assessment/me`
+  once per session (module-scoped cache) and returns a boolean map
+  keyed by slide key. Never throws — endpoint failure resolves to
+  all-false so a missing progress endpoint doesn't fill the ring
+  with false positives.
+- New `ProgressRing` component inside `DashboardSlideshow.jsx`
+  renders in the top-left of each frame:
+    * `done=true`  → filled green (#186142) with white checkmark
+    * `done=false` → soft white outline with a small dot
+  Screen-reader label describes state. Pointer events pass through
+  to the frame click.
+- Mapping (documented in the hook):
+    situation      → any recorded Safety Assessment
+    child-needs    → dashboard/progress.child_needs_identified
+    relationship   → dashboard/progress.foundation_completed
+    communication  → dashboard/progress.communication_readiness ≥ 50
+    foundation     → dashboard/progress.foundation_completed
+
+**Tests**: `test_iter201_slide_personalisation.py` runs the pure JS
+helper via `node --input-type=module` and locks 7 cases (default,
+court-ordered wins over situation, each situation branch, safety
+falls through to default, rotate-idempotency, base-set preservation).
+All pass.
+
 ### 2026-09-16 — Iter199 · Two-variant bridge copy + safety-level personalisation + CTR A/B
 
 **🟢 P1 — Mirror eyebrow into Safety Assessment cleared companion CTA**

@@ -18,16 +18,23 @@
  *     and the play/pause button reflects that state so vestibular-
  *     sensitive users can still opt in.
  */
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play, Check } from "lucide-react";
+import { personaliseSlides } from "../lib/personaliseSlides";
+import { useSlideProgress } from "../hooks/useSlideProgress";
 
 // Founder-supplied journey artwork, pre-padded to 16:9 with the
 // section's dark-purple background (see scripts/pad-slides.py in
 // commit history for the exact PIL recipe). Order = recommended
 // co-parenting sequence — do NOT reorder without a design review,
 // parents parse this as a step sequence.
-const SLIDES = [
+//
+// Iter201 · this list is the BASELINE. `personaliseSlides()`
+// rotates one slide to the front based on the parent's situation
+// choice + court-ordered case link. Adding a slide here
+// automatically shows it in personalised orderings too.
+const BASE_SLIDES = [
   {
     key: "situation",
     src: "/slides/assess-family-situation.webp",
@@ -88,6 +95,26 @@ export default function DashboardSlideshow() {
   const [paused, setPaused] = useState(() => _prefersReducedMotion());
   const timerRef = useRef(null);
 
+  // Iter201 · personalise slide order. Reads localStorage synchronously
+  // on mount so the first paint already reflects the parent's stage.
+  // Memoised so a re-render (e.g. progress fetch resolves) doesn't
+  // shuffle the sequence out from under an active viewer.
+  const SLIDES = useMemo(() => {
+    let situation = null;
+    let courtOrdered = false;
+    try {
+      situation = localStorage.getItem("sacoparents_situation_choice_v1") || null;
+      courtOrdered = !!localStorage.getItem("sacoparents_court_ordered_case_id");
+    } catch {
+      /* private-browsing — best-effort only */
+    }
+    return personaliseSlides(BASE_SLIDES, { courtOrdered, situation });
+  }, []);
+
+  // Iter201 · completion flags for the small green ring on each frame.
+  // Hook is safe to call unconditionally — it caches per session.
+  const progress = useSlideProgress();
+
   // React to a live reduced-motion preference change (rare in
   // practice — user toggles the OS setting with the page open).
   useEffect(() => {
@@ -112,7 +139,7 @@ export default function DashboardSlideshow() {
         ((typeof n === "function" ? n(prev) : n) % total + total) % total;
       return next;
     });
-  }, []);
+  }, [SLIDES.length]);
 
   // Auto-advance loop. Pauses when the user hovers / focuses / has
   // reduced-motion enabled.
@@ -198,6 +225,13 @@ export default function DashboardSlideshow() {
               className="absolute inset-0 bg-gradient-to-t from-[#1A1330]/85 via-[#1A1330]/25 to-transparent"
               aria-hidden="true"
             />
+            {/* Iter201 · progress ring at the top-left of each frame.
+                Green with a checkmark when the underlying assessment
+                is done, soft white outline when still open. */}
+            <ProgressRing
+              done={!!progress[slide.key]}
+              testid={`dashboard-slideshow-ring-${slide.key}`}
+            />
             <div className="absolute left-0 right-0 bottom-0 p-5 sm:p-8">
               <div className="text-[10px] uppercase tracking-[0.28em] font-bold text-white/70">
                 Step {i + 1} of {SLIDES.length}
@@ -281,5 +315,43 @@ export default function DashboardSlideshow() {
         ))}
       </div>
     </section>
+  );
+}
+
+/**
+ * ProgressRing (iter201) — small circular badge in the top-left of
+ * each slideshow frame.
+ *   * `done=true`  → filled green ring with a white checkmark
+ *   * `done=false` → soft white outline (subtle, non-blocking)
+ * SVG-only, no external icons for the ring itself so it stays crisp
+ * on every viewport. Never captures pointer events — the frame's
+ * click stays intact.
+ */
+function ProgressRing({ done, testid }) {
+  return (
+    <div
+      className="absolute top-4 left-4 sm:top-5 sm:left-5 pointer-events-none"
+      data-testid={testid}
+      data-done={done ? "true" : "false"}
+    >
+      <div
+        className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full grid place-items-center transition-all shadow-md ${
+          done
+            ? "bg-[#186142] border-2 border-[#3AAE7A]"
+            : "bg-white/10 backdrop-blur border-2 border-white/40"
+        }`}
+        aria-hidden="true"
+      >
+        {done ? (
+          <Check size={16} className="text-white" strokeWidth={3} />
+        ) : (
+          <span className="w-2 h-2 rounded-full bg-white/60" />
+        )}
+      </div>
+      {/* Screen-reader label — the visual ring is decorative. */}
+      <span className="sr-only">
+        {done ? "Assessment completed" : "Not started yet"}
+      </span>
+    </div>
   );
 }
