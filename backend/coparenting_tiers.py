@@ -1,4 +1,4 @@
-"""Co-Parenting Dynamic Scale (1-10) → tier library used ONLY in the professional/legal report."""
+"""Co-Parenting Ability Level (1-10 scale) → tier library used ONLY in the Professional Report (professional + court)."""
 from joint_engine import generate_joint_report
 
 TIERS = {
@@ -33,6 +33,7 @@ TIERS = {
         "tools": ["Shared Google / Apple Calendar: synchronization of activities and appointments.", "Splitwise or Zelle: direct reimbursement of shared child-related expenses."],
         "resources": ["Family Enrichment Workshops (San Antonio): joint parenting-skills seminars.", "SA CoParents community events and child-advocacy programs."]},
 }
+LIBRARY_KEYS = ("techniques", "tools", "resources")
 
 
 def tier_for(score: int) -> dict:
@@ -41,25 +42,56 @@ def tier_for(score: int) -> dict:
     return {**t, "score": score}
 
 
-def suggested_score(case: dict) -> dict:
-    """Neutral, data-derived suggestion from the joint assessment: alignment ratio and safety flags. Professional may override."""
+def _complete(case: dict) -> bool:
+    return bool(case.get("responses", {}).get("a") and case.get("responses", {}).get("b")) and case.get("kind", "joint_report") == "joint_report"
+
+
+def joint_findings(case: dict) -> dict | None:
+    """Neutral findings infused from the Joint Report: alignment, differences (area only), child-focused considerations, subject options."""
+    if not _complete(case):
+        return None
     rep = generate_joint_report(case)
-    aligned = len(rep.get("alignment_statements") or [])
-    differing = len(rep.get("differences") or [])
+    diffs = [d.get("area", "") for d in (rep.get("differences") or []) if isinstance(d, dict)]
+    return {"subject_label": rep.get("subject_label"), "alignment": rep.get("alignment_statements") or [],
+            "differences": [f"Parents expressed different perspectives regarding {a.lower()}." for a in diffs],
+            "child_focused": rep.get("child_needs") or [], "alignment_map": rep.get("alignment_map") or [],
+            "subject_options": (rep.get("options") or []) if diffs else [], "is_safety": bool(case.get("is_safety"))}
+
+
+def suggested_score(case: dict) -> dict | None:
+    """Data-derived suggestion: alignment ratio, number of differences, safety flag and communication-area alignment. Professional may override."""
+    f = joint_findings(case)
+    if not f:
+        return None
+    aligned, differing = len(f["alignment"]), len(f["differences"])
     total = aligned + differing
     ratio = aligned / total if total else 0.5
     score = round(2 + ratio * 8)
-    if case.get("is_safety"):
+    notes = [f"{aligned} aligned and {differing} differing area{'s' if differing != 1 else ''} in the Joint Report"]
+    if differing >= 4:
+        score -= 1
+        notes.append("four or more differing areas")
+    comm = [r for r in f["alignment_map"] if "communicat" in str(r.get("area", "")).lower() or "communicat" in str(f.get("subject_label", "")).lower()]
+    if comm and all(r.get("status") == "Needs discussion" for r in comm):
+        score -= 1
+        notes.append("communication areas need discussion")
+    if f["is_safety"]:
         score = min(score, 3)
-    rationale = f"{aligned} aligned and {differing} differing subject area{'s' if differing != 1 else ''} in the Joint Report" + ("; safety-focused assessment caps the suggestion at Level 3." if case.get("is_safety") else ".")
-    return {"score": max(1, min(10, score)), "aligned": aligned, "differing": differing, "rationale": rationale}
+        notes.append("safety-focused assessment caps the suggestion at Level 3")
+    score = max(1, min(10, score))
+    return {"score": score, "aligned": aligned, "differing": differing, "label": tier_for(score)["label"], "rationale": "; ".join(notes) + ". Neutral, data-derived; not a finding about either parent."}
 
 
-def framework_block(score: int, chosen: dict | None = None) -> dict:
-    """Final block stored in the statement: tier + the items the professional kept (defaults to all)."""
+def framework_block(score: int, chosen: dict | None = None, custom: dict | None = None, subject_options: list | None = None) -> dict:
+    """Block stored in the Professional Report: level + kept library items + professional's own additions + subject options."""
     t = tier_for(score)
-    chosen = chosen or {}
-    pick = lambda k: [i for i in t[k] if i in (chosen.get(k) or t[k])]  # noqa: E731
-    return {"score": t["score"], "tier_key": t["key"], "label": t["label"], "color": t["color"], "safety_alert": t["safety_alert"],
-            "framework_title": t["framework_title"], "framework": t["framework"],
-            "techniques": pick("techniques"), "tools": pick("tools"), "resources": pick("resources")}
+    chosen, custom = chosen or {}, custom or {}
+    out = {"score": t["score"], "tier_key": t["key"], "label": t["label"], "color": t["color"], "safety_alert": t["safety_alert"],
+           "framework_title": t["framework_title"], "framework": t["framework"]}
+    for k in LIBRARY_KEYS:
+        kept = [i for i in t[k] if k not in chosen or i in chosen[k]]
+        extra = [str(x).strip()[:300] for x in (custom.get(k) or []) if str(x).strip()][:10]
+        out[k] = kept + extra
+    opts = subject_options or []
+    out["subject_options"] = [o for o in opts if "subject_options" not in chosen or o in chosen["subject_options"]]
+    return out

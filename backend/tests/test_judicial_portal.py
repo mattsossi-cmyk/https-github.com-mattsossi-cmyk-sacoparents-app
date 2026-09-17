@@ -105,4 +105,30 @@ def test_framework_from_dynamic_scale_in_statement_and_pdf() -> None:
     pdf = pro.get(f"{API}/joint/reports/{case['id']}/professional-statement.pdf")
     assert pdf.status_code == 200
     text = "".join(pg.get_text() for pg in fitz.open(stream=io.BytesIO(pdf.content), filetype="pdf"))
-    assert "CO-PARENTING DYNAMIC SCALE" in text and "Score 5 / 10" in text and "24-Hour Cooling-Off Rule" in text
+    assert "CO-PARENTING ABILITY LEVEL" in text and "Level 5 / 10" in text and "24-Hour Cooling-Off Rule" in text and "Professional Report" in text
+    assert "CONFLICT-MANAGEMENT TECHNIQUES" in text and "OPTIONS & RESOURCES" in text
+
+
+def test_professional_report_infuses_joint_findings_and_hides_options_from_parents() -> None:
+    import io
+    import fitz
+    from casekit import completed_case
+    pro, pa, _pb, case = completed_case(API, "education")[:4]
+    rid = case["id"]
+    rep = pa.get(f"{API}/joint/reports/{rid}/report").json()
+    assert "options" not in rep and rep["alignment_map"]
+    cfg = pro.get(f"{API}/joint/reports/{rid}/professional-statement").json()
+    f = cfg["findings"]
+    assert f is not None and cfg["suggested_score"]["score"] >= 1 and "Level" in cfg["suggested_score"]["label"]
+    assert all(d.startswith("Parents expressed different perspectives") for d in f["differences"])
+    assert (cfg["subject_options"] == []) == (len(f["differences"]) == 0)
+    body = {"role": "Mediator", "role_basis": "Agreement of the parties", "process_summary": "Both parents completed the education assessment.", "observations": "Neutral.",
+            "next_steps": "One facilitated session.", "dynamic_score": cfg["suggested_score"]["score"], "framework_custom": {"resources": ["Local parenting class (Tuesdays)"]}, "status": "ready"}
+    st = pro.put(f"{API}/joint/reports/{rid}/professional-statement", json=body).json()["statement"]
+    assert "Local parenting class (Tuesdays)" in st["framework"]["resources"] and st["framework"]["subject_options"] == cfg["subject_options"]
+    text = "".join(pg.get_text() for pg in fitz.open(stream=io.BytesIO(pro.get(f"{API}/joint/reports/{rid}/professional-statement.pdf").content), filetype="pdf"))
+    assert "JOINT ASSESSMENT FINDINGS" in text and "Local parenting class" in text and "CASE & REFERRAL" in text
+    for c in (pa, _pb):
+        assert c.get(f"{API}/joint/reports/{rid}/professional-statement").status_code == 404
+    joint_pdf = "".join(pg.get_text() for pg in fitz.open(stream=io.BytesIO(pa.get(f"{API}/joint/reports/{rid}/pdf").content), filetype="pdf"))
+    assert "Options and Resources" not in joint_pdf

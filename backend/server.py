@@ -1286,7 +1286,9 @@ async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
     await _log_report_access(doc, user, "Viewed report on screen", "view")
     if doc.get("kind") == "agreement":
         return generate_agreement(await ensure_agreement_ai(doc))
-    return generate_joint_report(doc)
+    rep = generate_joint_report(doc)
+    rep.pop("options", None)  # options/resources live only in the Professional Report
+    return rep
 
 
 @api.get("/joint/reports/{rid}/pdf")
@@ -1328,7 +1330,7 @@ async def session_prep_pdf(rid: str, user=Depends(get_current_user)):
 
 @api.get("/joint/sample/mediation")
 async def sample_mediation():
-    return sample_mediation_report()
+    return {k: v for k, v in sample_mediation_report().items() if k != "options"}
 
 
 @api.get("/joint/sample/mediation/pdf")
@@ -1350,6 +1352,7 @@ async def sample_report_json(key: str):
     report = sample_report(key)
     if report is None:
         raise HTTPException(status_code=404, detail="Unknown sample report")
+    report.pop("options", None)
     return report
 
 

@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from joint_data import new_case_code
 from joint_engine import generate_joint_report
-from coparenting_tiers import TIERS, framework_block, suggested_score, tier_for
+from coparenting_tiers import TIERS, framework_block, joint_findings, suggested_score, tier_for
 from pdf_report import build_joint_pdf, build_professional_statement_pdf, merge_pdfs
 
 STAGES = ["Court Referral", "Accepted", "Parents Invited", "Assessments Complete", "Joint Report Ready", "Professional Statement Ready", "Submitted to Court"]
@@ -119,6 +119,7 @@ class StatementIn(BaseModel):
     materials_reviewed: list[str] = []
     dynamic_score: int = 0
     framework_choices: dict = {}
+    framework_custom: dict = {}
     status: str = "draft"
 
 
@@ -231,7 +232,8 @@ def validated_statement(body: StatementIn, doc: dict) -> dict:
     st["role"] = body.role.strip()[:80]
     st["materials_reviewed"] = [m for m in body.materials_reviewed if m in STATEMENT_MATERIALS][:20]
     if body.dynamic_score:
-        st["framework"] = framework_block(body.dynamic_score, body.framework_choices)
+        findings = joint_findings(doc)
+        st["framework"] = framework_block(body.dynamic_score, body.framework_choices, body.framework_custom, (findings or {}).get("subject_options"))
     if status == "ready" and not all(st[k] for k in ("role_basis", "process_summary", "observations", "next_steps")):
         raise HTTPException(status_code=400, detail="Complete role, process, observations and next steps before marking the statement ready")
     if BANNED_STATEMENT_RE.search(" ".join(st[k] for k in STATEMENT_FIELDS)):
@@ -268,7 +270,7 @@ def _court_report_view(case: dict, packet: dict) -> dict:
     return {"key": case.get("subject"), "label": case.get("subject_label"), "case_code": case.get("case_code"), "version": packet["submission_version"], "packet_id": packet["id"],
             "alignment": rep.get("alignment_statements") or [],
             "differences": [f"Parents expressed different perspectives regarding {d.get('area', '').lower()}." for d in (rep.get("differences") or []) if isinstance(d, dict)],
-            "child_focused": rep.get("child_needs") or [], "options": rep.get("options") or []}
+            "child_focused": rep.get("child_needs") or []}
 
 
 def _submitted_material(case: dict | None, packets: list, done: list) -> tuple[list, dict | None, dict | None]:
@@ -577,10 +579,10 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
     @r.get("/joint/reports/{rid}/professional-statement")
     async def get_statement(rid: str, user=Depends(get_current_user)):
         doc = await own_case(rid, user)
-        complete = bool(doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b"))
-        suggestion = suggested_score(doc) if complete and doc.get("kind", "joint_report") == "joint_report" else None
+        findings = joint_findings(doc)
         return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
-                "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggestion, "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
+                "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
+                "findings": findings, "subject_options": (findings or {}).get("subject_options") or [],
                 "court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
 
     @r.put("/joint/reports/{rid}/professional-statement")
@@ -594,7 +596,7 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
 
     async def statement_pdf_bytes(doc: dict) -> bytes:
         st = doc.get("professional_statement") or {}
-        return build_professional_statement_pdf({"professional": await pro_profile(doc["professional_id"]), "statement": st, "court": doc.get("court") or {},
+        return build_professional_statement_pdf({"professional": await pro_profile(doc["professional_id"]), "statement": st, "court": doc.get("court") or {}, "findings": joint_findings(doc),
                                                  "case_code": doc.get("case_code"), "subject_label": doc.get("subject_label"), "child_name": doc.get("child_name"),
                                                  "attestation_text": STATEMENT_ATTESTATION, "date": _iso(_now())[:10]})
 

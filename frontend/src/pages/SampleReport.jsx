@@ -142,16 +142,7 @@ export default function SampleReport({ fixedKey }) {
             </ul>
           </Section>
 
-          <Section num={5} title="Options and Resources" testId="sr-options">
-            <p className="text-sm text-muted-foreground mb-3">Neutral options — SA CoParents does not decide; it builds options:</p>
-            <ul className="space-y-2" data-testid="sr-options-list">
-              {report.options.map((o, i) => (
-                <li key={i} className="border border-border rounded-md px-4 py-3 text-sm" data-testid={`sr-option-${i}`}>{o}</li>
-              ))}
-            </ul>
-          </Section>
-
-          <Section num={6} title="Possible Next Steps" testId="sr-next-steps">
+          <Section num={5} title="Possible Next Steps" testId="sr-next-steps">
             <div className="grid sm:grid-cols-2 gap-3" data-testid="sr-next-steps-list">
               {report.next_steps.map((s, i) => (
                 <div key={i} className="border border-border rounded-md px-4 py-3 text-sm font-medium" data-testid={`sr-next-step-${i}`}>{s}</div>

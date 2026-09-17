@@ -57,8 +57,8 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
     <section className="bg-white border border-border rounded-lg p-6 md:col-span-2" data-testid="professional-statement-section">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2"><FileSignature className="h-4 w-4" /> Professional Assessment Statement</h2>
-          <p className="text-sm text-muted-foreground mt-1">Your letterhead statement to accompany the Joint Report. Neutral facilitation language only; the system blocks custody recommendations.</p>
+          <h2 className="text-lg font-semibold flex items-center gap-2"><FileSignature className="h-4 w-4" /> Professional Report</h2>
+          <p className="text-sm text-muted-foreground mt-1">The single professional/legal deliverable: joint assessment findings, Co-Parenting Ability Level, options & resources and your statement. Visible to you and the court only — never to the parents. The system blocks custody recommendations.</p>
         </div>
         {court?.judge_email && <div className="text-right text-xs text-muted-foreground" data-testid="statement-court-info"><p className="font-semibold text-foreground">{court.court_name || "Court"}</p><p>Cause No. {court.cause_number} · {court.judge_name}</p></div>}
       </div>
@@ -77,7 +77,19 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
           </div>
         </fieldset>
       </div>
-      <FrameworkPanel st={st} setSt={setSt} suggestion={data.suggested_score} tiers={data.tiers} />
+      {data.findings && (
+        <div className="mt-5 rounded-lg border border-border bg-secondary/30 p-4" data-testid="statement-findings">
+          <p className="text-sm font-semibold">Joint Assessment Findings <span className="text-xs font-normal text-muted-foreground">— infused automatically into the Professional Report</span></p>
+          <div className="mt-2 grid gap-3 sm:grid-cols-3 text-xs">
+            {[["alignment", "Areas of alignment"], ["differences", "Differences in perspective"], ["child_focused", "Child-focused considerations"]].map(([k, t]) => (
+              <div key={k} data-testid={`statement-findings-${k}`}><p className="font-bold uppercase tracking-widest text-muted-foreground">{t} ({data.findings[k].length})</p>
+                <ul className="mt-1 space-y-1">{data.findings[k].slice(0, 6).map((x, i) => <li key={i} className="pl-3 relative before:absolute before:left-0 before:content-['•']">{x}</li>)}{data.findings[k].length === 0 && <li className="italic">None identified.</li>}</ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <FrameworkPanel st={st} setSt={setSt} suggestion={data.suggested_score} tiers={data.tiers} subjectOptions={data.subject_options || []} />
       <div className="mt-4 grid gap-4">
         {FIELDS.map(([k, label, hint]) => (
           <label key={k} className="block text-sm">
@@ -90,7 +102,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button size="sm" variant="outline" onClick={() => save("draft")} disabled={busy} data-testid="statement-save-draft-btn">Save draft</Button>
         <Button size="sm" onClick={() => save("ready")} disabled={busy} data-testid="statement-mark-ready-btn">{ready ? "Update & keep ready" : "Mark statement ready"}</Button>
-        {st.version && <Button size="sm" variant="ghost" asChild data-testid="statement-pdf-btn"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${rid}/professional-statement.pdf`} download><Download className="h-4 w-4 mr-1" /> Statement PDF</a></Button>}
+        {st.version && <Button size="sm" variant="ghost" asChild data-testid="statement-pdf-btn"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${rid}/professional-statement.pdf`} download><Download className="h-4 w-4 mr-1" /> Professional Report PDF</a></Button>}
         {st.updated_at && <span className="text-xs text-muted-foreground" data-testid="statement-status">{ready ? "Ready" : "Draft"} · v{st.version} · saved {st.updated_at.slice(0, 16).replace("T", " ")}</span>}
       </div>
 
@@ -111,7 +123,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
           )}
         </div>
       ) : (
-        <p className="mt-6 text-xs text-muted-foreground" data-testid="submit-not-court-case">This case was not referred by a court. To share with a judge, use Court Packets below.</p>
+        <p className="mt-6 text-xs text-muted-foreground" data-testid="submit-not-court-case">This case was not referred by a court. Your Professional Report PDF is available above for your own file; to share with a judge, use Court Packets below.</p>
       )}
     </section>
   );

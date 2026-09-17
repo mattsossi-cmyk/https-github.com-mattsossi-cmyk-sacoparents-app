@@ -19,7 +19,7 @@ def _assert_full_report(rep: dict) -> None:
     assert rep["subject_label"] == "School / Education"
     assert rep["child_name"] == "Sam"
     assert len(rep["alignment_map"]) == 6
-    assert len(rep["options"]) == 3
+    assert "options" not in rep  # options/resources live only in the Professional Report
     assert len(rep["next_steps"]) == 6
     assert rep["philosophy_heading"] == "Alignment Before Agreement"
     assert len(rep["alignment_statements"]) >= 1

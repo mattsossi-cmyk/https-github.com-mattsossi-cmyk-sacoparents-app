@@ -294,22 +294,13 @@ export default function JointReport() {
               </ul>
             </Section>
 
-            <Section num={7} title="Options and Resources" testId="jr-options">
-              <p className="text-sm text-muted-foreground mb-3">Neutral options — SA CoParents does not decide; it builds options:</p>
-              <ul className="space-y-2" data-testid="jr-options-list">
-                {report.options.map((o, i) => (
-                  <li key={i} className="border border-border rounded-md px-4 py-3 text-sm" data-testid={`jr-option-${i}`}>{o}</li>
-                ))}
-              </ul>
-            </Section>
-
-            <Section num={8} title="Potential Areas of Alignment" testId="jr-paragraph">
+            <Section num={7} title="Potential Areas of Alignment" testId="jr-paragraph">
               <div className="bg-secondary/50 border-l-4 border-accent rounded-r-lg p-5">
                 <p className="font-display text-lg italic leading-relaxed">{report.alignment_paragraph}</p>
               </div>
             </Section>
 
-            <Section num={9} title="Questions for the Parents" testId="jr-questions">
+            <Section num={8} title="Questions for the Parents" testId="jr-questions">
               <ul className="space-y-2" data-testid="jr-questions-list">
                 {report.questions.map((q, i) => (
                   <li key={i} className="border-l-4 border-align-blue rounded-r-lg bg-muted/40 p-4 font-display text-lg italic" data-testid={`jr-question-${i}`}>{q}</li>
@@ -317,7 +308,7 @@ export default function JointReport() {
               </ul>
             </Section>
 
-            <Section num={10} title="Possible Next Steps" testId="jr-next-steps">
+            <Section num={9} title="Possible Next Steps" testId="jr-next-steps">
               <div className="grid sm:grid-cols-2 gap-3" data-testid="jr-next-steps-list">
                 {report.next_steps.map((s, i) => (
                   <div key={i} className="border border-border rounded-md px-4 py-3 text-sm font-medium" data-testid={`jr-next-step-${i}`}>{s}</div>

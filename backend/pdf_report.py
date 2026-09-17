@@ -239,16 +239,12 @@ def _joint_back_sections(pdf: FPDF, r: dict) -> None:
     _section_title(pdf, 6, "Areas for Conversation")
     for q in r["conversation"]:
         _bullet(pdf, q)
-    _section_title(pdf, 7, "Options and Resources")
-    _body(pdf, "Neutral options - SA CoParents does not decide; it builds options.", italic=True)
-    for o in r["options"]:
-        _bullet(pdf, o)
-    _section_title(pdf, 8, "Potential Areas of Alignment")
+    _section_title(pdf, 7, "Potential Areas of Alignment")
     _body(pdf, r["alignment_paragraph"], italic=True)
-    _section_title(pdf, 9, "Questions for the Parents")
+    _section_title(pdf, 8, "Questions for the Parents")
     for q in r["questions"]:
         _bullet(pdf, q)
-    _section_title(pdf, 10, "Possible Next Steps")
+    _section_title(pdf, 9, "Possible Next Steps")
     for step in r["next_steps"]:
         _bullet(pdf, step)
 
@@ -860,29 +856,54 @@ def build_transmittal_pdf(p: dict) -> bytes:
     return bytes(pdf.output())
 
 
+def _stmt_text(pdf: FPDF, title: str, text: str | None, required: bool = False) -> None:
+    if not text and not required:
+        return
+    _label(pdf, title.upper())
+    _body(pdf, text or "-")
+    pdf.ln(2)
+
+
+def _stmt_list(pdf: FPDF, title: str, items: list, empty: str | None = None) -> None:
+    if not items and not empty:
+        return
+    _label(pdf, title.upper())
+    for item in items:
+        _body(pdf, f"• {item}", indent=4)
+    if not items:
+        _body(pdf, empty, italic=True)
+    pdf.ln(2)
+
+
+def _statement_findings(pdf: FPDF, f: dict) -> None:
+    """Joint assessment findings infused from the Joint Report (neutral; no per-parent text)."""
+    _label(pdf, "4. JOINT ASSESSMENT FINDINGS")
+    _body(pdf, f"Drawn from the Joint Alignment Report ({f.get('subject_label') or 'joint assessment'}). Differences are listed by area only; neither parent's individual responses appear here.", italic=True)
+    _stmt_list(pdf, "Areas of alignment", f.get("alignment") or [], "None identified.")
+    _stmt_list(pdf, "Differences in perspective", f.get("differences") or [], "None identified.")
+    _stmt_list(pdf, "Child-focused considerations", f.get("child_focused") or [])
+
+
 def _statement_framework(pdf: FPDF, fw: dict) -> None:
-    """Options, resources and conflict-management techniques calibrated to the Co-Parenting Dynamic Scale."""
+    """Co-Parenting Ability Level + options, resources and conflict-management techniques (professional/court only)."""
     if pdf.get_y() > pdf.h - 80:
         pdf.add_page()
-    _label(pdf, "CO-PARENTING DYNAMIC SCALE & RECOMMENDED FRAMEWORK")
+    _label(pdf, "5. CO-PARENTING ABILITY LEVEL")
     pdf.set_font(FONT, "B", 10)
     pdf.set_text_color(*PURPLE)
-    pdf.cell(0, 6, _s(f"Score {fw['score']} / 10 — {fw['label']}"), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, _s(f"Level {fw['score']} / 10 — {fw['label']}"), new_x="LMARGIN", new_y="NEXT")
     if fw.get("safety_alert"):
         _body(pdf, "High-Conflict / Safety Protocols Active: direct verbal interaction should be eliminated; child-welfare communication through structured digital mediums only.", italic=True)
     _body(pdf, f"{fw['framework_title']}. {fw['framework']}")
-    for title, key in (("Communication & Conflict-Resolution Techniques", "techniques"), ("Recommended Tools & Platforms", "tools"), ("Options & Resources", "resources")):
-        if fw.get(key):
-            pdf.ln(1)
-            _label(pdf, title.upper())
-            for item in fw[key]:
-                _body(pdf, f"• {item}", indent=4)
-    _body(pdf, "Framework, options and resources are provided to the professional and court only; they are not findings about either parent.", italic=True)
+    pdf.ln(2)
+    _stmt_list(pdf, "6. Options & resources", (fw.get("subject_options") or []) + (fw.get("resources") or []) + (fw.get("tools") or []), "None selected.")
+    _stmt_list(pdf, "7. Conflict-management techniques", fw.get("techniques") or [], "None selected.")
+    _body(pdf, "Level, options and resources are calibrated to the assessed co-parenting dynamic and provided to the professional and court only; they are not findings about either parent.", italic=True)
     pdf.ln(2)
 
 
 def build_professional_statement_pdf(p: dict) -> bytes:
-    """Professional Assessment Statement on letterhead (submitted to court alongside the Joint Report)."""
+    """Professional Report (Professional Assessment Statement) on letterhead — the single professional/court deliverable."""
     pro = p.get("professional") or {}
     st = p.get("statement") or {}
     court = p.get("court") or {}
@@ -890,30 +911,39 @@ def build_professional_statement_pdf(p: dict) -> bytes:
     _letterhead(pdf, pro, [" · ".join(x for x in (pro.get("pro_role"), pro.get("organization")) if x), _contact_line(pro)])
     pdf.set_font(FONT, "B", 16)
     pdf.set_text_color(*PURPLE)
-    pdf.cell(0, 8, "Professional Assessment Statement", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, "Professional Report", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font(FONT, "", 9.5)
     pdf.set_text_color(*GRAY)
-    meta = [p.get("date"), court.get("court_name"), court.get("cause_number") and f"Cause No. {court['cause_number']}", p.get("case_code") and f"Align case {p['case_code']}",
-            p.get("subject_label"), st.get("role") and f"Role: {st['role']}", st.get("version") and f"Statement v{st['version']}"]
-    pdf.multi_cell(0, 4.5, _s("  |  ".join(str(m) for m in meta if m)), new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(4)
-    for key, title in (("role_basis", "1. Role and basis of involvement"), ("process_summary", "2. Process completed by the parents"),
-                       ("alignment_areas", "3. Areas of alignment"), ("further_attention", "4. Areas requiring further attention"),
-                       ("resources_considered", "5. Resources / interventions considered"), ("current_status", "6. Current status"),
-                       ("observations", "7. Professional observations"), ("safety_considerations", "8. Safety considerations"),
-                       ("next_steps", "9. Recommended next steps for facilitation")):
-        if not st.get(key) and key in ("safety_considerations", "alignment_areas", "further_attention", "resources_considered", "current_status"):
+    pdf.cell(0, 5, "Professional Assessment Statement with Joint Assessment Findings", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(3)
+    _label(pdf, "1. CASE & REFERRAL")
+    rows = [("Date", p.get("date")), ("Court", court.get("court_name")), ("Cause number", court.get("cause_number")), ("Presiding", court.get("judge_name") and f"The Honorable {court['judge_name']}"),
+            ("Align case", p.get("case_code")), ("Subject", p.get("subject_label")), ("Child", (p.get("child_name") or "")[:1] and f"{p['child_name'][0]}."), ("Professional role", st.get("role")),
+            ("Report version", st.get("version") and f"v{st['version']}")]
+    for k, v in rows:
+        if not v:
             continue
-        _label(pdf, title.upper())
-        _body(pdf, st.get(key) or "-")
-        pdf.ln(2)
-    if st.get("materials_reviewed"):
-        _label(pdf, "MATERIALS REVIEWED")
-        _body(pdf, " · ".join(st["materials_reviewed"]))
-        pdf.ln(2)
+        pdf.set_font(FONT, "B", 9.5)
+        pdf.set_text_color(*DARK)
+        pdf.cell(38, 5.5, _s(k))
+        pdf.set_font(FONT, "", 9.5)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(0, 5.5, _s(str(v)), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    _stmt_text(pdf, "Role and basis of involvement", st.get("role_basis"), required=True)
+    _stmt_text(pdf, "2. Materials reviewed", " · ".join(st.get("materials_reviewed") or []) or None, required=True)
+    _stmt_text(pdf, "3. Process completed by the parents", st.get("process_summary"), required=True)
+    if p.get("findings"):
+        _statement_findings(pdf, p["findings"])
     if st.get("framework"):
         _statement_framework(pdf, st["framework"])
-    pdf.ln(2)
+    _stmt_text(pdf, "Resources / interventions considered by the professional", st.get("resources_considered"))
+    _stmt_text(pdf, "8. Current status", st.get("current_status"))
+    _stmt_text(pdf, "9. Professional observations", st.get("observations"), required=True)
+    _stmt_text(pdf, "Areas of alignment (professional's summary)", st.get("alignment_areas"))
+    _stmt_text(pdf, "Areas requiring further attention", st.get("further_attention"))
+    _stmt_text(pdf, "Safety considerations", st.get("safety_considerations"))
+    _stmt_text(pdf, "10. Recommended next steps for facilitation", st.get("next_steps"), required=True)
     _label(pdf, "PROFESSIONAL ATTESTATION")
     _body(pdf, p.get("attestation_text") or "", italic=True)
     pdf.ln(6)
@@ -923,8 +953,8 @@ def build_professional_statement_pdf(p: dict) -> bytes:
     pdf.ln(4)
     pdf.set_font(FONT, "I", 8)
     pdf.set_text_color(*GRAY)
-    pdf.multi_cell(0, 4, _s("This statement describes the facilitation process and the professional's observations. It is not a custody evaluation and makes no recommendation "
-                            "regarding conservatorship or possession. Prepared through SA CoParents Align; the accompanying Joint Alignment Report compares each parent's independently provided perspective."), new_x="LMARGIN", new_y="NEXT")
+    pdf.multi_cell(0, 4, _s("This Professional Report describes the facilitation process, the joint assessment findings and the professional's observations. It is not a custody evaluation and makes no recommendation "
+                            "regarding conservatorship or possession. It is prepared for the professional and the court only and is not shared with the parents. Prepared through SA CoParents Align."), new_x="LMARGIN", new_y="NEXT")
     return bytes(pdf.output())
 
 
