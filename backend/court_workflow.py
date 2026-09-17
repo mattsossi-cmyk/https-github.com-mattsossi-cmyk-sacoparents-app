@@ -120,6 +120,7 @@ class StatementIn(BaseModel):
     dynamic_score: int = 0
     framework_choices: dict = {}
     framework_custom: dict = {}
+    level_change_note: str = ""
     status: str = "draft"
 
 
@@ -237,9 +238,14 @@ def validated_statement(body: StatementIn, doc: dict, library: dict | None = Non
         st["framework_choices"] = {k: [str(x) for x in v][:50] for k, v in body.framework_choices.items() if isinstance(v, list)}
         st["framework_custom"] = {k: [str(x).strip()[:300] for x in v if str(x).strip()][:10] for k, v in body.framework_custom.items() if isinstance(v, list)}
         st["framework"] = framework_block(st["dynamic_score"], st["framework_choices"], st["framework_custom"], (findings or {}).get("subject_options"), library)
+    st["level_change_note"] = body.level_change_note.strip()[:300]
+    prev = (doc.get("court_submissions") or [{}])[-1].get("level_score")
+    st["level_changed_from"] = prev if prev and st.get("dynamic_score") and prev != st["dynamic_score"] else None
+    if status == "ready" and st["level_changed_from"] and not st["level_change_note"]:
+        raise HTTPException(status_code=400, detail=f"The Ability Level changed from {prev} to {st['dynamic_score']} since the last submission. Add a neutral one-line reason for the court.")
     if status == "ready" and not all(st[k] for k in ("role_basis", "process_summary", "observations", "next_steps")):
         raise HTTPException(status_code=400, detail="Complete role, process, observations and next steps before marking the statement ready")
-    if BANNED_STATEMENT_RE.search(" ".join(st[k] for k in STATEMENT_FIELDS)):
+    if BANNED_STATEMENT_RE.search(" ".join(st[k] for k in STATEMENT_FIELDS) + " " + st["level_change_note"]):
         raise HTTPException(status_code=400, detail="The statement must not recommend custody or conservatorship outcomes. Please rephrase as facilitation observations.")
     st.update({"status": status, "updated_at": _iso(_now()), "version": ((doc.get("professional_statement") or {}).get("version") or 0) + 1})
     return st
@@ -579,16 +585,38 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
 
     # ---------- professional statement ----------
 
+    def org_key(user: dict) -> str:
+        return ((user.get("profile") or {}).get("organization") or "").strip().lower()
+
+    async def org_library(user: dict) -> dict:
+        key = org_key(user)
+        d = await db.org_libraries.find_one({"key": key}, {"_id": 0}) if key else None
+        return clean_library((d or {}).get("library") or {})
+
+    async def effective_library(user: dict) -> dict:
+        own, org = clean_library(user.get("resource_library") or {}), await org_library(user)
+        return {k: list(dict.fromkeys(own[k] + org[k])) for k in own}
+
     @r.get("/me/resource-library")
     async def get_library(user=Depends(get_current_user)):
         require_pro(user)
-        return clean_library(user.get("resource_library") or {})
+        return {**clean_library(user.get("resource_library") or {}), "organization": (user.get("profile") or {}).get("organization") or "", "org_library": await org_library(user)}
 
     @r.put("/me/resource-library")
     async def put_library(body: dict, user=Depends(get_current_user)):
         require_pro(user)
         lib = clean_library(body)
         await db.users.update_one({"_id": user["_id"]}, {"$set": {"resource_library": lib}})
+        return lib
+
+    @r.put("/org/resource-library")
+    async def put_org_library(body: dict, user=Depends(get_current_user)):
+        require_pro(user)
+        key = org_key(user)
+        if not key:
+            raise HTTPException(status_code=400, detail="Add an organization to your professional profile to share a library")
+        lib = clean_library(body)
+        await db.org_libraries.update_one({"key": key}, {"$set": {"key": key, "name": (user.get("profile") or {}).get("organization"), "library": lib, "updated_by": user.get("name", ""), "updated_at": _iso(_now())}}, upsert=True)
         return lib
 
     @r.get("/joint/reports/{rid}/professional-statement")
@@ -598,12 +626,13 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
                 "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
                 "findings": findings, "subject_options": (findings or {}).get("subject_options") or [], "library": clean_library(user.get("resource_library") or {}),
+                "org_library": await org_library(user), "organization": (user.get("profile") or {}).get("organization") or "",
                 "court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
 
     @r.put("/joint/reports/{rid}/professional-statement")
     async def save_statement(rid: str, body: StatementIn, user=Depends(get_current_user)):
         doc = await own_case(rid, user)
-        st = {**validated_statement(body, doc, clean_library(user.get("resource_library") or {})), "updated_by": user.get("name", "")}
+        st = {**validated_statement(body, doc, await effective_library(user)), "updated_by": user.get("name", "")}
         status = st["status"]
         await db.joint_reports.update_one({"id": rid}, {"$set": {"professional_statement": st}})
         await log_report_event(rid, f"Professional Statement {'marked ready' if status == 'ready' else 'draft saved'} (v{st['version']})", user)
@@ -612,7 +641,7 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
     async def statement_pdf_bytes(doc: dict) -> bytes:
         st = doc.get("professional_statement") or {}
         subs = doc.get("court_submissions") or []
-        hist = [{"version": s["version"], "at": s.get("submitted_at"), "score": s.get("level_score"), "label": s.get("level_label")} for s in subs]
+        hist = [{"version": s["version"], "at": s.get("submitted_at"), "score": s.get("level_score"), "label": s.get("level_label"), "note": s.get("level_change_note"), "changed_from": s.get("level_changed_from")} for s in subs]
         return build_professional_statement_pdf({"professional": await pro_profile(doc["professional_id"]), "statement": st, "court": doc.get("court") or {}, "findings": joint_findings(doc), "level_history": hist,
                                                  "case_code": doc.get("case_code"), "subject_label": doc.get("subject_label"), "child_name": doc.get("child_name"),
                                                  "attestation_text": STATEMENT_ATTESTATION, "date": _iso(_now())[:10]})
@@ -655,7 +684,8 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         await db.court_packets.insert_one(packet)
         sub = {"version": version, "packet_id": pid, "submitted_at": _iso(now), "submitted_by": user.get("name", ""), "sha256": _sha(combined),
                "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf), "statement_version": st.get("version"), "judge_name": court.get("judge_name", ""), "court_name": court.get("court_name", ""),
-               "level_score": (st.get("framework") or {}).get("score"), "level_label": (st.get("framework") or {}).get("label")}
+               "level_score": (st.get("framework") or {}).get("score"), "level_label": (st.get("framework") or {}).get("label"),
+               "level_change_note": st.get("level_change_note") or "", "level_changed_from": st.get("level_changed_from")}
         await db.joint_reports.update_one({"id": rid}, {"$push": {"court_submissions": sub}, "$set": {"report_generated_at": doc.get("report_generated_at") or _iso(now)}})
         await log_report_event(rid, f"Submitted Joint Report + Professional Statement to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
         if doc.get("court_referral_id"):

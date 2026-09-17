@@ -107,7 +107,7 @@ export default function CourtCase() {
                         {d.level_history.filter((h) => h.score).map((h, i, arr) => (
                           <li key={h.version} className="flex items-center gap-2 text-xs" data-testid={`court-level-history-${h.version}`}>
                             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: h.color }}>{h.score}</span>
-                            <span><span className="font-semibold">v{h.version}</span> · {h.at?.slice(0, 10)}{h.superseded ? " · superseded" : ""}</span>
+                            <span><span className="font-semibold">v{h.version}</span> · {h.at?.slice(0, 10)}{h.superseded ? " · superseded" : ""}{h.changed_from && h.note && <span className="block max-w-xs text-[11px] italic text-muted-foreground" data-testid={`court-level-note-${h.version}`}>From Level {h.changed_from}: {h.note}</span>}</span>
                             {i < arr.length - 1 && <span className="text-muted-foreground">→</span>}
                           </li>
                         ))}

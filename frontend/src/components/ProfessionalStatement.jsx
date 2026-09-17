@@ -89,7 +89,8 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
           </div>
         </div>
       )}
-      <FrameworkPanel st={st} setSt={setSt} suggestion={data.suggested_score} tiers={data.tiers} subjectOptions={data.subject_options || []} library={data.library || {}} onLibraryChange={(lib) => setData((x) => ({ ...x, library: lib }))} />
+      <FrameworkPanel st={st} setSt={setSt} suggestion={data.suggested_score} tiers={data.tiers} subjectOptions={data.subject_options || []} library={data.library || {}} orgLibrary={data.org_library || {}} organization={data.organization || ""}
+        onLibraryChange={(lib) => setData((x) => ({ ...x, library: lib }))} onOrgLibraryChange={(lib) => setData((x) => ({ ...x, org_library: lib }))} lastSubmittedScore={(data.submissions || []).slice(-1)[0]?.level_score} />
       <div className="mt-4 grid gap-4">
         {FIELDS.map(([k, label, hint]) => (
           <label key={k} className="block text-sm">

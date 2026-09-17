@@ -108,5 +108,7 @@ def level_history(packets: list) -> list[dict]:
     rows = []
     for p in sorted(packets, key=lambda p: p.get("submission_version") or 0):
         fw = (p.get("statement") or {}).get("framework") or {}
-        rows.append({"version": p.get("submission_version"), "at": p.get("created_at"), "score": fw.get("score"), "label": fw.get("label"), "color": fw.get("color"), "superseded": p.get("superseded", False)})
+        st = p.get("statement") or {}
+        rows.append({"version": p.get("submission_version"), "at": p.get("created_at"), "score": fw.get("score"), "label": fw.get("label"), "color": fw.get("color"), "superseded": p.get("superseded", False),
+                     "note": st.get("level_change_note") or "", "changed_from": st.get("level_changed_from")})
     return rows

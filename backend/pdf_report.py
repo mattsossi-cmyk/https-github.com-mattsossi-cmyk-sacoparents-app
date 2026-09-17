@@ -895,6 +895,8 @@ def _statement_framework(pdf: FPDF, fw: dict) -> None:
     if fw.get("safety_alert"):
         _body(pdf, "High-Conflict / Safety Protocols Active: direct verbal interaction should be eliminated; child-welfare communication through structured digital mediums only.", italic=True)
     _body(pdf, f"{fw['framework_title']}. {fw['framework']}")
+    if fw.get("level_change_note"):
+        _body(pdf, f"Change since last submission: {fw['level_change_note']}", italic=True)
     pdf.ln(2)
     _stmt_list(pdf, "6. Options & resources", (fw.get("subject_options") or []) + (fw.get("resources") or []) + (fw.get("tools") or []), "None selected.")
     _stmt_list(pdf, "7. Conflict-management techniques", fw.get("techniques") or [], "None selected.")
@@ -909,7 +911,7 @@ def _statement_level_history(pdf: FPDF, hist: list) -> None:
         return
     _label(pdf, "ABILITY LEVEL HISTORY (SUBMITTED VERSIONS)")
     for h in rows:
-        _body(pdf, f"• Version {h.get('version')} — {str(h.get('at') or '')[:10]}: Level {h['score']} / 10 — {h.get('label', '')}", indent=4)
+        _body(pdf, f"• Version {h.get('version')} — {str(h.get('at') or '')[:10]}: Level {h['score']} / 10 — {h.get('label', '')}" + (f" (changed from Level {h['changed_from']}: {h['note']})" if h.get("changed_from") and h.get("note") else ""), indent=4)
     pdf.ln(2)
 
 
@@ -947,7 +949,7 @@ def build_professional_statement_pdf(p: dict) -> bytes:
     if p.get("findings"):
         _statement_findings(pdf, p["findings"])
     if st.get("framework"):
-        _statement_framework(pdf, st["framework"])
+        _statement_framework(pdf, {**st["framework"], "level_change_note": (f"Level {st['level_changed_from']} → {st['framework']['score']}: {st['level_change_note']}" if st.get("level_changed_from") and st.get("level_change_note") else "")})
         _statement_level_history(pdf, p.get("level_history") or [])
     _stmt_text(pdf, "Resources / interventions considered by the professional", st.get("resources_considered"))
     _stmt_text(pdf, "8. Current status", st.get("current_status"))

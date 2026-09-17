@@ -144,3 +144,38 @@ def test_professional_report_infuses_joint_findings_and_hides_options_from_paren
     assert pa.get(f"{API}/me/resource-library").status_code == 403
     joint_pdf = "".join(pg.get_text() for pg in fitz.open(stream=io.BytesIO(pa.get(f"{API}/joint/reports/{rid}/pdf").content), filetype="pdf"))
     assert "Options and Resources" not in joint_pdf
+
+
+def test_level_change_note_and_org_library() -> None:
+    from casekit import complete_both
+    judge, pro, ref, case = _flow()
+    rid = case["id"]
+    complete_both(API, pro, rid, case["invitations"])
+    db = pymongo.MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
+    me = pro.get(f"{API}/auth/me").json()
+    org = f"Org {uuid.uuid4().hex[:6]}"
+    db.users.update_one({"_id": me["id"]}, {"$set": {"profile.organization": org}})
+    # org library shared with a colleague in the same organization
+    assert pro.put(f"{API}/org/resource-library", json={"resources": ["Shared county mediation clinic"]}).json()["resources"] == ["Shared county mediation clinic"]
+    colleague = new_user(API, "professional", "Colleague")
+    cid = colleague.get(f"{API}/auth/me").json()["id"]
+    db.users.update_one({"_id": cid}, {"$set": {"profile.organization": org.upper()}})
+    lib = colleague.get(f"{API}/me/resource-library").json()
+    assert lib["org_library"]["resources"] == ["Shared county mediation clinic"] and lib["organization"] == org.upper()
+    stranger = new_user(API, "professional", "Stranger")
+    assert stranger.put(f"{API}/org/resource-library", json={"resources": ["x"]}).status_code == 400
+    base = {"role": "Mediator", "role_basis": "Court referral", "process_summary": "x", "observations": "y", "next_steps": "z", "status": "ready"}
+    st = pro.put(f"{API}/joint/reports/{rid}/professional-statement", json={**base, "dynamic_score": 3}).json()["statement"]
+    assert "Shared county mediation clinic" in st["framework"]["resources"] and st["level_changed_from"] is None
+    assert pro.post(f"{API}/joint/reports/{rid}/submit-to-court", json={"attest": True}).status_code == 200
+    # level change without a note is blocked when marking ready
+    r = pro.put(f"{API}/joint/reports/{rid}/professional-statement", json={**base, "dynamic_score": 6})
+    assert r.status_code == 400 and "changed from 3 to 6" in r.json()["detail"]
+    st = pro.put(f"{API}/joint/reports/{rid}/professional-statement", json={**base, "dynamic_score": 6, "level_change_note": "Parents completed two facilitated sessions; written-only scheduling in use."}).json()["statement"]
+    assert st["level_changed_from"] == 3
+    sub = pro.post(f"{API}/joint/reports/{rid}/submit-to-court", json={"attest": True}).json()["submission"]
+    assert sub["level_changed_from"] == 3 and sub["level_change_note"].startswith("Parents completed")
+    hist = judge.get(f"{API}/court-dashboard/cases/{ref['id']}").json()["level_history"]
+    assert [(h["version"], h["score"], h["changed_from"]) for h in hist] == [(1, 3, None), (2, 6, 3)] and hist[1]["note"].startswith("Parents completed")
+    # same level again → no note required
+    assert pro.put(f"{API}/joint/reports/{rid}/professional-statement", json={**base, "dynamic_score": 6}).status_code == 200
