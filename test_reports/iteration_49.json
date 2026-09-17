@@ -1,0 +1,28 @@
+{
+  "summary": "Iteration 49 — Frontend-only verification of the two new features on top of iterations 47/48: (1) Level Change Note in FrameworkPanel and (2) Organization resource library with 'ORG' vs 'MY LIBRARY' framework badges. Seeded a complete court-referred flow via /app/backend/tests/seed_iter49.py (judge referral → pro accept → both parents complete → statement ready score 3 → submit-to-court v1; pro's profile.organization set to 'Alamo Test Org'; colleague pro created with same org lowercased; stranger pro with no org). Extra completed cases for colleague and stranger were created via /app/backend/tests/seed_iter49_extra.py. Drove every scenario through the preview URL with Playwright. Scenario A (level change): opened /joint/{rid} as the pro — no level-change-note-box initially; moved framework-slider to score 6 → box appeared with 'Level changed from 3 to 6'; clicking statement-mark-ready-btn returned a 400 and the visible error toast contained 'changed from 3 to 6'; filling level-change-note then Mark ready → success; ticking submit-attest and clicking submit-to-court-btn (dialog auto-accepted) surfaced 'version 2' in the UI and court-submissions-list shows submission-level-2 = 'Level 6/10'. Judge check: logged in as the judge and opened /court/case/{refId} → court-level-history-2 is present and court-level-note-2 reads 'From Level 3: Parents completed two facilitated sessions; written-only scheduling in use.'. Scenario B (org library): resource-library-toggle → resource-library-tab-org → org-library-note mentions 'Alamo Test Org'; adding 'Shared county clinic' via org-library-input-resources + org-library-add-resources produced the 'Organization library saved' toast; framework-group-resources listed the item with framework-library-badge-resources='ORG'. Adding 'My private class' via resource-library-tab-mine produced a MY LIBRARY badge alongside the ORG one. Colleague (org 'alamo test org', lowercase) on their own ready case sees 'Shared county clinic' with ORG badge and org-library-note case-insensitively references the org. Stranger (no org) sees org-library-missing under the org tab and no 'Shared county clinic' in the framework. Regression: /samples/education loaded (2670 chars body), landing / renders (contains 'Align'). Total 22/22 assertions passed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/seed_iter49.py",
+    "/app/backend/tests/seed_iter49_extra.py",
+    "/app/backend/tests/test_judicial_portal.py",
+    "/app/backend/tests/casekit.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FrameworkPanel: levelChanged uses `lastSubmittedScore && lastSubmittedScore !== score` — if the very first submission had score === 0 the note box would never trigger, but dynamic_score validation guarantees >=1 so acceptable.",
+    "ResourceLibrary: LibraryEditor's inputs are keyed only by group; typing in one input while switching tabs preserves the drafts state which is fine, and the enter-key add path is wired.",
+    "CourtCase renders court-level-note-{v} only when both `h.changed_from` and `h.note` are truthy — matches the spec (only shown for level changes)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/seed_iter49.py",
+    "/app/backend/tests/seed_iter49_extra.py"
+  ],
+  "success_rate": {"backend": "N/A (frontend-only per request)", "frontend": "100% (22/22 assertions)"},
+  "test_credentials": "Pro: t_ad6483b1@example.com / testpass123 (rid 032f1182-9f88-49c6-9e92-db597a586020, refId 9f0ab745-24de-4cc5-a31b-5483c8776d43, cause 2026-CI-Pca64, org 'Alamo Test Org'). Judge: t_pjudge_102533b5@example.com / testpass123. Colleague (org 'alamo test org' lowercase): t_2bc1fe43@example.com / testpass123 (rid 35ea7e7f-1718-41a3-88fb-f1788d26390b). Stranger (no org): t_dce2e321@example.com / testpass123 (rid 7c9b3656-d0cc-4f8a-b5a9-aea4c0a7e66c).",
+  "seed_data_creation": "seed_iter49.py seeds the primary court-referred case with the initial v1 submission at score 3 and sets orgs on pro + colleague. seed_iter49_extra.py adds ready cases for colleague and stranger so their FrameworkPanel/ResourceLibrary can be exercised. Both scripts print JSON with credentials + IDs.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Feature is stable end-to-end. To re-seed: run python /app/backend/tests/seed_iter49.py then COLLEAGUE=<col> STRANGER=<str> python /app/backend/tests/seed_iter49_extra.py using the emails from the first script's output. All spec'd data-testids are wired: framework-slider, framework-score, level-change-note-box, level-change-note, statement-mark-ready-btn, submit-attest, submit-to-court-btn, court-submissions-list, submission-level-{v}, court-level-history-{v}, court-level-note-{v}, resource-library-toggle, resource-library-tab-mine/org, org-library-note, org-library-missing, org-library-input-*, org-library-add-*, org-library-item-*, framework-group-*, framework-library-badge-*.",
+  "rca of the issue": "N/A — no defects found this iteration."
+}
