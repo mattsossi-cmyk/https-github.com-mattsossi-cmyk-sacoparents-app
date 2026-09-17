@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
+import { ResourceLibrary } from "@/components/ResourceLibrary";
 
 const GROUPS = [["subject_options", "Options for the assessed subject", "Infused from the Joint Report — shown only when the parents differ on this subject"],
   ["resources", "Options & Resources", "Classes, counseling, mediation, facilitators"], ["tools", "Tools & Platforms", ""], ["techniques", "Conflict-Management Techniques", ""]];
@@ -15,12 +16,13 @@ function AddOwn({ onAdd, k }) {
   );
 }
 
-export function FrameworkPanel({ st, setSt, suggestion, tiers, subjectOptions = [] }) {
+export function FrameworkPanel({ st, setSt, suggestion, tiers, subjectOptions = [], library = {}, onLibraryChange }) {
   const score = st.dynamic_score || suggestion?.score || 5;
   const tier = (tiers || []).find((t) => score >= t.range[0] && score <= t.range[1]) || tiers?.[0];
   const choices = st.framework_choices || {};
   const custom = st.framework_custom || {};
-  const lib = (k) => (k === "subject_options" ? subjectOptions : tier?.[k] || []);
+  const lib = (k) => (k === "subject_options" ? subjectOptions : [...(tier?.[k] || []), ...(library[k] || []).filter((i) => !(tier?.[k] || []).includes(i))]);
+  const isMine = (k, item) => (library[k] || []).includes(item) && !(tier?.[k] || []).includes(item);
   const on = (k, item) => !(k in choices) || choices[k].includes(item);
   const toggle = (k, item) => {
     const cur = k in choices ? choices[k] : lib(k);
@@ -48,7 +50,7 @@ export function FrameworkPanel({ st, setSt, suggestion, tiers, subjectOptions = 
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{label} <span className="font-normal normal-case">— untick anything that doesn't apply{hint ? `. ${hint}` : ""}</span></p>
           <ul className="mt-1 space-y-1">
             {lib(k).map((item) => (
-              <li key={item} className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={on(k, item)} onChange={() => toggle(k, item)} data-testid={`framework-item-${k}`} /><span>{item}</span></li>
+              <li key={item} className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={on(k, item)} onChange={() => toggle(k, item)} data-testid={`framework-item-${k}`} />{isMine(k, item) && <span className="mt-0.5 rounded bg-align-green/15 px-1 text-[10px] font-bold text-align-green" data-testid={`framework-library-badge-${k}`}>MY LIBRARY</span>}<span>{item}</span></li>
             ))}
             {(custom[k] || []).map((item, i) => (
               <li key={`c${i}`} className="flex items-start gap-2 text-sm" data-testid={`framework-custom-item-${k}`}><span className="mt-0.5 rounded bg-brand-purple/10 px-1 text-[10px] font-bold text-brand-purple">OWN</span><span className="flex-1">{item}</span><button type="button" onClick={() => removeCustom(k, i)} aria-label="Remove" data-testid={`framework-custom-remove-${k}`}><X className="h-3.5 w-3.5 text-muted-foreground" /></button></li>
@@ -57,6 +59,7 @@ export function FrameworkPanel({ st, setSt, suggestion, tiers, subjectOptions = 
           {k !== "subject_options" && <AddOwn k={k} onAdd={(t) => addCustom(k, t)} />}
         </div>
       ))}
+      {onLibraryChange && <ResourceLibrary library={library} onChange={onLibraryChange} />}
     </div>
   );
 }

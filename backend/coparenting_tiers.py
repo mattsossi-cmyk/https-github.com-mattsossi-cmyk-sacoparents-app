@@ -82,16 +82,31 @@ def suggested_score(case: dict) -> dict | None:
     return {"score": score, "aligned": aligned, "differing": differing, "label": tier_for(score)["label"], "rationale": "; ".join(notes) + ". Neutral, data-derived; not a finding about either parent."}
 
 
-def framework_block(score: int, chosen: dict | None = None, custom: dict | None = None, subject_options: list | None = None) -> dict:
-    """Block stored in the Professional Report: level + kept library items + professional's own additions + subject options."""
+def framework_block(score: int, chosen: dict | None = None, custom: dict | None = None, subject_options: list | None = None, library: dict | None = None) -> dict:
+    """Block stored in the Professional Report: level + kept library items (tier + professional's saved library) + own additions + subject options."""
     t = tier_for(score)
-    chosen, custom = chosen or {}, custom or {}
+    chosen, custom, library = chosen or {}, custom or {}, library or {}
     out = {"score": t["score"], "tier_key": t["key"], "label": t["label"], "color": t["color"], "safety_alert": t["safety_alert"],
            "framework_title": t["framework_title"], "framework": t["framework"]}
     for k in LIBRARY_KEYS:
-        kept = [i for i in t[k] if k not in chosen or i in chosen[k]]
+        pool = t[k] + [i for i in (library.get(k) or []) if i not in t[k]]
+        kept = [i for i in pool if k not in chosen or i in chosen[k]]
         extra = [str(x).strip()[:300] for x in (custom.get(k) or []) if str(x).strip()][:10]
         out[k] = kept + extra
     opts = subject_options or []
     out["subject_options"] = [o for o in opts if "subject_options" not in chosen or o in chosen["subject_options"]]
     return out
+
+
+def clean_library(raw: dict) -> dict:
+    """Professional's personal saved resources/tools/techniques (stored on the user)."""
+    return {k: list(dict.fromkeys(str(x).strip()[:300] for x in (raw.get(k) or []) if str(x).strip()))[:40] for k in LIBRARY_KEYS}
+
+
+def level_history(packets: list) -> list[dict]:
+    """Ability Level per submitted version (oldest first) — shows how the assessed dynamic evolved."""
+    rows = []
+    for p in sorted(packets, key=lambda p: p.get("submission_version") or 0):
+        fw = (p.get("statement") or {}).get("framework") or {}
+        rows.append({"version": p.get("submission_version"), "at": p.get("created_at"), "score": fw.get("score"), "label": fw.get("label"), "color": fw.get("color"), "superseded": p.get("superseded", False)})
+    return rows

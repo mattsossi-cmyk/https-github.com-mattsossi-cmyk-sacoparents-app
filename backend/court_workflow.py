@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from joint_data import new_case_code
 from joint_engine import generate_joint_report
-from coparenting_tiers import TIERS, framework_block, joint_findings, suggested_score, tier_for
+from coparenting_tiers import TIERS, clean_library, framework_block, joint_findings, level_history, suggested_score, tier_for
 from pdf_report import build_joint_pdf, build_professional_statement_pdf, merge_pdfs
 
 STAGES = ["Court Referral", "Accepted", "Parents Invited", "Assessments Complete", "Joint Report Ready", "Professional Statement Ready", "Submitted to Court"]
@@ -225,7 +225,7 @@ def hearing_overdue(x: dict, today: date | None = None) -> bool:
 BANNED_STATEMENT_RE = re.compile(r"\b(should (be awarded|have|get) (sole|primary|joint) (custody|conservatorship)|award(ed)? custody|recommend(s|ed)? (sole|primary) (custody|conservatorship))\b", re.I)
 
 
-def validated_statement(body: StatementIn, doc: dict) -> dict:
+def validated_statement(body: StatementIn, doc: dict, library: dict | None = None) -> dict:
     """Normalize + validate a Professional Statement payload; blocks custody recommendations."""
     status = body.status if body.status in ("draft", "ready") else "draft"
     st = {k: getattr(body, k).strip()[:5000] for k in STATEMENT_FIELDS}
@@ -236,7 +236,7 @@ def validated_statement(body: StatementIn, doc: dict) -> dict:
         st["dynamic_score"] = max(1, min(10, int(body.dynamic_score)))
         st["framework_choices"] = {k: [str(x) for x in v][:50] for k, v in body.framework_choices.items() if isinstance(v, list)}
         st["framework_custom"] = {k: [str(x).strip()[:300] for x in v if str(x).strip()][:10] for k, v in body.framework_custom.items() if isinstance(v, list)}
-        st["framework"] = framework_block(st["dynamic_score"], st["framework_choices"], st["framework_custom"], (findings or {}).get("subject_options"))
+        st["framework"] = framework_block(st["dynamic_score"], st["framework_choices"], st["framework_custom"], (findings or {}).get("subject_options"), library)
     if status == "ready" and not all(st[k] for k in ("role_basis", "process_summary", "observations", "next_steps")):
         raise HTTPException(status_code=400, detail="Complete role, process, observations and next steps before marking the statement ready")
     if BANNED_STATEMENT_RE.search(" ".join(st[k] for k in STATEMENT_FIELDS)):
@@ -295,7 +295,7 @@ def judicial_case_payload(x: dict, case: dict | None, packets: list, referral_pu
     reports, counts, statement = _submitted_material(case, packets, done)
     return {"referral": referral_public(x), "case_code": x.get("case_code") or (case or {}).get("case_code"), "stage": stage, "checklist": _case_checklist(x, stage, done),
             "parents_invited": 2 if case else 0, "parents_participating": sum(done), "status_summary": x.get("status_summary"), "counts": counts,
-            "reports": reports, "statement": statement,
+            "reports": reports, "statement": statement, "level_history": level_history(packets),
             "submissions": [{"version": p["submission_version"], "packet_id": p["id"], "at": p["created_at"], "sha256": p.get("sha256"), "superseded": p.get("superseded", False)} for p in packets],
             "communication_summary": x.get("communication_summary"), "disclaimer": SUMMARY_DISCLAIMER}
 
@@ -579,19 +579,31 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
 
     # ---------- professional statement ----------
 
+    @r.get("/me/resource-library")
+    async def get_library(user=Depends(get_current_user)):
+        require_pro(user)
+        return clean_library(user.get("resource_library") or {})
+
+    @r.put("/me/resource-library")
+    async def put_library(body: dict, user=Depends(get_current_user)):
+        require_pro(user)
+        lib = clean_library(body)
+        await db.users.update_one({"_id": user["_id"]}, {"$set": {"resource_library": lib}})
+        return lib
+
     @r.get("/joint/reports/{rid}/professional-statement")
     async def get_statement(rid: str, user=Depends(get_current_user)):
         doc = await own_case(rid, user)
         findings = joint_findings(doc)
         return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
                 "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
-                "findings": findings, "subject_options": (findings or {}).get("subject_options") or [],
+                "findings": findings, "subject_options": (findings or {}).get("subject_options") or [], "library": clean_library(user.get("resource_library") or {}),
                 "court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
 
     @r.put("/joint/reports/{rid}/professional-statement")
     async def save_statement(rid: str, body: StatementIn, user=Depends(get_current_user)):
         doc = await own_case(rid, user)
-        st = {**validated_statement(body, doc), "updated_by": user.get("name", "")}
+        st = {**validated_statement(body, doc, clean_library(user.get("resource_library") or {})), "updated_by": user.get("name", "")}
         status = st["status"]
         await db.joint_reports.update_one({"id": rid}, {"$set": {"professional_statement": st}})
         await log_report_event(rid, f"Professional Statement {'marked ready' if status == 'ready' else 'draft saved'} (v{st['version']})", user)
@@ -599,7 +611,9 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
 
     async def statement_pdf_bytes(doc: dict) -> bytes:
         st = doc.get("professional_statement") or {}
-        return build_professional_statement_pdf({"professional": await pro_profile(doc["professional_id"]), "statement": st, "court": doc.get("court") or {}, "findings": joint_findings(doc),
+        subs = doc.get("court_submissions") or []
+        hist = [{"version": s["version"], "at": s.get("submitted_at"), "score": s.get("level_score"), "label": s.get("level_label")} for s in subs]
+        return build_professional_statement_pdf({"professional": await pro_profile(doc["professional_id"]), "statement": st, "court": doc.get("court") or {}, "findings": joint_findings(doc), "level_history": hist,
                                                  "case_code": doc.get("case_code"), "subject_label": doc.get("subject_label"), "child_name": doc.get("child_name"),
                                                  "attestation_text": STATEMENT_ATTESTATION, "date": _iso(_now())[:10]})
 
@@ -640,7 +654,8 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
                   "frozen": True, "sha256": _sha(combined), "created_at": _iso(now), "expires_at": _iso(now + timedelta(days=3650))}
         await db.court_packets.insert_one(packet)
         sub = {"version": version, "packet_id": pid, "submitted_at": _iso(now), "submitted_by": user.get("name", ""), "sha256": _sha(combined),
-               "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf), "statement_version": st.get("version"), "judge_name": court.get("judge_name", ""), "court_name": court.get("court_name", "")}
+               "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf), "statement_version": st.get("version"), "judge_name": court.get("judge_name", ""), "court_name": court.get("court_name", ""),
+               "level_score": (st.get("framework") or {}).get("score"), "level_label": (st.get("framework") or {}).get("label")}
         await db.joint_reports.update_one({"id": rid}, {"$push": {"court_submissions": sub}, "$set": {"report_generated_at": doc.get("report_generated_at") or _iso(now)}})
         await log_report_event(rid, f"Submitted Joint Report + Professional Statement to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
         if doc.get("court_referral_id"):

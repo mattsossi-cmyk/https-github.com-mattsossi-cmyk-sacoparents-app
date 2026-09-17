@@ -100,6 +100,21 @@ export default function CourtCase() {
                       ))}
                     </div>
                   )}
+                  {d.level_history?.filter((h) => h.score).length > 0 && (
+                    <div className="rounded-lg border border-border p-4" data-testid="court-level-history">
+                      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ability Level across submitted versions</p>
+                      <ol className="mt-2 flex flex-wrap items-center gap-2">
+                        {d.level_history.filter((h) => h.score).map((h, i, arr) => (
+                          <li key={h.version} className="flex items-center gap-2 text-xs" data-testid={`court-level-history-${h.version}`}>
+                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: h.color }}>{h.score}</span>
+                            <span><span className="font-semibold">v{h.version}</span> · {h.at?.slice(0, 10)}{h.superseded ? " · superseded" : ""}</span>
+                            {i < arr.length - 1 && <span className="text-muted-foreground">→</span>}
+                          </li>
+                        ))}
+                      </ol>
+                      <p className="mt-2 text-[11px] text-muted-foreground">Level changes reflect the professional's assessment of the co-parenting dynamic over time; they are not findings about either parent.</p>
+                    </div>
+                  )}
                 </div>
               )}
               {d.submissions.length > 0 && <ul className="mt-4 space-y-1 text-xs text-muted-foreground" data-testid="court-case-submissions">{d.submissions.map((s) => <li key={s.version}>Version {s.version} · {s.at?.slice(0, 16).replace("T", " ")} · SHA-256 {s.sha256?.slice(0, 16)}…{s.superseded ? " · superseded" : ""}</li>)}</ul>}

@@ -89,7 +89,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
           </div>
         </div>
       )}
-      <FrameworkPanel st={st} setSt={setSt} suggestion={data.suggested_score} tiers={data.tiers} subjectOptions={data.subject_options || []} />
+      <FrameworkPanel st={st} setSt={setSt} suggestion={data.suggested_score} tiers={data.tiers} subjectOptions={data.subject_options || []} library={data.library || {}} onLibraryChange={(lib) => setData((x) => ({ ...x, library: lib }))} />
       <div className="mt-4 grid gap-4">
         {FIELDS.map(([k, label, hint]) => (
           <label key={k} className="block text-sm">
@@ -118,7 +118,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
           {!submittable && <p className="mt-2 text-xs text-muted-foreground" data-testid="submit-blocked-reason">{!canSubmit ? "Both parents must complete their assessments first." : !ready ? "Mark the Professional Statement ready to enable submission." : ""}</p>}
           {subs.length > 0 && (
             <ul className="mt-4 space-y-1.5 text-sm" data-testid="court-submissions-list">
-              {subs.map((s) => <li key={s.version} className="flex flex-wrap items-center gap-2 rounded-md bg-white px-3 py-2 border border-border"><ShieldCheck className="h-4 w-4 text-align-green" /><span className="font-semibold">Version {s.version}</span><span className="text-muted-foreground">submitted {s.submitted_at?.slice(0, 16).replace("T", " ")} to {s.court_name || "court"}</span><code className="ml-auto text-[11px] text-muted-foreground">SHA-256 {s.sha256?.slice(0, 16)}…</code></li>)}
+              {subs.map((s) => <li key={s.version} className="flex flex-wrap items-center gap-2 rounded-md bg-white px-3 py-2 border border-border"><ShieldCheck className="h-4 w-4 text-align-green" /><span className="font-semibold">Version {s.version}</span><span className="text-muted-foreground">submitted {s.submitted_at?.slice(0, 16).replace("T", " ")} to {s.court_name || "court"}</span>{s.level_score && <span className="rounded-full bg-brand-purple/10 px-2 py-0.5 text-xs font-semibold text-brand-purple" data-testid={`submission-level-${s.version}`}>Level {s.level_score}/10</span>}<code className="ml-auto text-[11px] text-muted-foreground">SHA-256 {s.sha256?.slice(0, 16)}…</code></li>)}
             </ul>
           )}
         </div>

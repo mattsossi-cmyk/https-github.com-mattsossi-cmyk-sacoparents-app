@@ -902,6 +902,17 @@ def _statement_framework(pdf: FPDF, fw: dict) -> None:
     pdf.ln(2)
 
 
+def _statement_level_history(pdf: FPDF, hist: list) -> None:
+    """Prior submitted versions' Ability Levels (progress over time)."""
+    rows = [h for h in hist if h.get("score")]
+    if not rows:
+        return
+    _label(pdf, "ABILITY LEVEL HISTORY (SUBMITTED VERSIONS)")
+    for h in rows:
+        _body(pdf, f"• Version {h.get('version')} — {str(h.get('at') or '')[:10]}: Level {h['score']} / 10 — {h.get('label', '')}", indent=4)
+    pdf.ln(2)
+
+
 def build_professional_statement_pdf(p: dict) -> bytes:
     """Professional Report (Professional Assessment Statement) on letterhead — the single professional/court deliverable."""
     pro = p.get("professional") or {}
@@ -937,6 +948,7 @@ def build_professional_statement_pdf(p: dict) -> bytes:
         _statement_findings(pdf, p["findings"])
     if st.get("framework"):
         _statement_framework(pdf, st["framework"])
+        _statement_level_history(pdf, p.get("level_history") or [])
     _stmt_text(pdf, "Resources / interventions considered by the professional", st.get("resources_considered"))
     _stmt_text(pdf, "8. Current status", st.get("current_status"))
     _stmt_text(pdf, "9. Professional observations", st.get("observations"), required=True)

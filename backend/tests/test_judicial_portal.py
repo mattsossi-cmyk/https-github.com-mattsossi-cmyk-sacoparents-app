@@ -133,5 +133,14 @@ def test_professional_report_infuses_joint_findings_and_hides_options_from_paren
     assert "JOINT ASSESSMENT FINDINGS" in text and "Local parenting class" in text and "CASE & REFERRAL" in text
     for c in (pa, _pb):
         assert c.get(f"{API}/joint/reports/{rid}/professional-statement").status_code == 404
+    # personal resource library auto-appears in the framework and can be unticked
+    lib = pro.put(f"{API}/me/resource-library", json={"resources": ["Westside Family Center (Tuesdays)", " "], "tools": [], "bogus": ["x"]}).json()
+    assert lib == {"resources": ["Westside Family Center (Tuesdays)"], "tools": [], "techniques": []}
+    assert pro.get(f"{API}/joint/reports/{rid}/professional-statement").json()["library"] == lib
+    st2 = pro.put(f"{API}/joint/reports/{rid}/professional-statement", json={**body, "framework_custom": {}}).json()["statement"]
+    assert "Westside Family Center (Tuesdays)" in st2["framework"]["resources"]
+    st3 = pro.put(f"{API}/joint/reports/{rid}/professional-statement", json={**body, "framework_custom": {}, "framework_choices": {"resources": []}}).json()["statement"]
+    assert st3["framework"]["resources"] == []
+    assert pa.get(f"{API}/me/resource-library").status_code == 403
     joint_pdf = "".join(pg.get_text() for pg in fitz.open(stream=io.BytesIO(pa.get(f"{API}/joint/reports/{rid}/pdf").content), filetype="pdf"))
     assert "Options and Resources" not in joint_pdf
