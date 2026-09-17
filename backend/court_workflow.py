@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from joint_data import new_case_code
 from joint_engine import generate_joint_report
+from coparenting_tiers import TIERS, framework_block, suggested_score, tier_for
 from pdf_report import build_joint_pdf, build_professional_statement_pdf, merge_pdfs
 
 STAGES = ["Court Referral", "Accepted", "Parents Invited", "Assessments Complete", "Joint Report Ready", "Professional Statement Ready", "Submitted to Court"]
@@ -116,6 +117,8 @@ class StatementIn(BaseModel):
     current_status: str = ""
     role: str = ""
     materials_reviewed: list[str] = []
+    dynamic_score: int = 0
+    framework_choices: dict = {}
     status: str = "draft"
 
 
@@ -227,6 +230,8 @@ def validated_statement(body: StatementIn, doc: dict) -> dict:
     st = {k: getattr(body, k).strip()[:5000] for k in STATEMENT_FIELDS}
     st["role"] = body.role.strip()[:80]
     st["materials_reviewed"] = [m for m in body.materials_reviewed if m in STATEMENT_MATERIALS][:20]
+    if body.dynamic_score:
+        st["framework"] = framework_block(body.dynamic_score, body.framework_choices)
     if status == "ready" and not all(st[k] for k in ("role_basis", "process_summary", "observations", "next_steps")):
         raise HTTPException(status_code=400, detail="Complete role, process, observations and next steps before marking the statement ready")
     if BANNED_STATEMENT_RE.search(" ".join(st[k] for k in STATEMENT_FIELDS)):
@@ -572,8 +577,10 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
     @r.get("/joint/reports/{rid}/professional-statement")
     async def get_statement(rid: str, user=Depends(get_current_user)):
         doc = await own_case(rid, user)
+        complete = bool(doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b"))
+        suggestion = suggested_score(doc) if complete and doc.get("kind", "joint_report") == "joint_report" else None
         return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
-                "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS,
+                "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggestion, "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
                 "court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
 
     @r.put("/joint/reports/{rid}/professional-statement")

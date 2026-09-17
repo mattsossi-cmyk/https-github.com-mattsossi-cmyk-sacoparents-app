@@ -860,6 +860,27 @@ def build_transmittal_pdf(p: dict) -> bytes:
     return bytes(pdf.output())
 
 
+def _statement_framework(pdf: FPDF, fw: dict) -> None:
+    """Options, resources and conflict-management techniques calibrated to the Co-Parenting Dynamic Scale."""
+    if pdf.get_y() > pdf.h - 80:
+        pdf.add_page()
+    _label(pdf, "CO-PARENTING DYNAMIC SCALE & RECOMMENDED FRAMEWORK")
+    pdf.set_font(FONT, "B", 10)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 6, _s(f"Score {fw['score']} / 10 — {fw['label']}"), new_x="LMARGIN", new_y="NEXT")
+    if fw.get("safety_alert"):
+        _body(pdf, "High-Conflict / Safety Protocols Active: direct verbal interaction should be eliminated; child-welfare communication through structured digital mediums only.", italic=True)
+    _body(pdf, f"{fw['framework_title']}. {fw['framework']}")
+    for title, key in (("Communication & Conflict-Resolution Techniques", "techniques"), ("Recommended Tools & Platforms", "tools"), ("Options & Resources", "resources")):
+        if fw.get(key):
+            pdf.ln(1)
+            _label(pdf, title.upper())
+            for item in fw[key]:
+                _body(pdf, f"• {item}", indent=4)
+    _body(pdf, "Framework, options and resources are provided to the professional and court only; they are not findings about either parent.", italic=True)
+    pdf.ln(2)
+
+
 def build_professional_statement_pdf(p: dict) -> bytes:
     """Professional Assessment Statement on letterhead (submitted to court alongside the Joint Report)."""
     pro = p.get("professional") or {}
@@ -890,6 +911,8 @@ def build_professional_statement_pdf(p: dict) -> bytes:
         _label(pdf, "MATERIALS REVIEWED")
         _body(pdf, " · ".join(st["materials_reviewed"]))
         pdf.ln(2)
+    if st.get("framework"):
+        _statement_framework(pdf, st["framework"])
     pdf.ln(2)
     _label(pdf, "PROFESSIONAL ATTESTATION")
     _body(pdf, p.get("attestation_text") or "", italic=True)

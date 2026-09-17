@@ -5,6 +5,7 @@ import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CaseProgress } from "@/components/CaseProgress";
+import { FrameworkPanel } from "@/components/FrameworkPanel";
 
 const FIELDS = [
   ["role_basis", "Role and basis of involvement", "How you came to facilitate this matter (court referral, appointment, parties' agreement) and your professional role."],
@@ -76,6 +77,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
           </div>
         </fieldset>
       </div>
+      <FrameworkPanel st={st} setSt={setSt} suggestion={data.suggested_score} tiers={data.tiers} />
       <div className="mt-4 grid gap-4">
         {FIELDS.map(([k, label, hint]) => (
           <label key={k} className="block text-sm">

@@ -91,6 +91,16 @@ export default function CourtCase() {
                   <p><span className="text-muted-foreground">Professional:</span> <strong>{d.statement.professional_name}</strong>{d.statement.role && <> · <span className="text-muted-foreground">Role:</span> {d.statement.role}</>} · submitted {d.statement.submitted_at?.slice(0, 10)}</p>
                   {d.statement.materials_reviewed?.length > 0 && <p data-testid="court-statement-materials"><span className="text-muted-foreground">Materials reviewed:</span> {d.statement.materials_reviewed.join(" · ")}</p>}
                   {STMT.filter(([k]) => d.statement[k]).map(([k, t]) => <div key={k}><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t}</p><p className="leading-relaxed whitespace-pre-wrap">{d.statement[k]}</p></div>)}
+                  {d.statement.framework && (
+                    <div className="rounded-lg border border-border p-4" data-testid="court-statement-framework">
+                      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Co-Parenting Dynamic Scale & Recommended Framework</p>
+                      <p className="mt-1 inline-block rounded-full px-3 py-1 text-xs font-semibold text-white" style={{ background: d.statement.framework.color }}>Score {d.statement.framework.score}/10 — {d.statement.framework.label}</p>
+                      <p className="mt-2"><strong>{d.statement.framework.framework_title}.</strong> {d.statement.framework.framework}</p>
+                      {[["techniques", "Techniques"], ["tools", "Tools"], ["resources", "Options & Resources"]].map(([k, t]) => d.statement.framework[k]?.length > 0 && (
+                        <div key={k} className="mt-2"><p className="text-xs font-semibold">{t}</p><ul className="list-disc pl-5 text-xs">{d.statement.framework[k].map((i) => <li key={i}>{i}</li>)}</ul></div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               {d.submissions.length > 0 && <ul className="mt-4 space-y-1 text-xs text-muted-foreground" data-testid="court-case-submissions">{d.submissions.map((s) => <li key={s.version}>Version {s.version} · {s.at?.slice(0, 16).replace("T", " ")} · SHA-256 {s.sha256?.slice(0, 16)}…{s.superseded ? " · superseded" : ""}</li>)}</ul>}

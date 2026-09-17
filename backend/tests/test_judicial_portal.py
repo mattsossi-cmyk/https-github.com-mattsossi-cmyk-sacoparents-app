@@ -82,3 +82,27 @@ def test_statement_role_and_materials_persist() -> None:
     assert r.status_code == 200, r.text
     st = r.json()["statement"]
     assert st["role"] == "Mediator" and st["materials_reviewed"] == ["Parent A Assessment", "Joint Report"] and st["alignment_areas"] == "School stability"
+
+
+def test_framework_from_dynamic_scale_in_statement_and_pdf() -> None:
+    import io
+    import fitz
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+    from coparenting_tiers import tier_for, framework_block
+
+    assert tier_for(1)["key"] == "high_risk" and tier_for(6)["key"] == "moderate" and tier_for(10)["key"] == "collaborative"
+    fb = framework_block(2, {"techniques": [tier_for(2)["techniques"][0]]})
+    assert len(fb["techniques"]) == 1 and fb["safety_alert"] is True and len(fb["resources"]) == 4
+
+    _judge_s, pro, _ref, case = _flow()
+    cfg = pro.get(f"{API}/joint/reports/{case['id']}/professional-statement").json()
+    assert len(cfg["tiers"]) == 3 and cfg["suggested_score"] is None  # parents not done yet
+    body = {"role": "Mediator", "role_basis": "Court referral", "process_summary": "x", "observations": "y", "next_steps": "z", "dynamic_score": 5,
+            "framework_choices": {"tools": [tier_for(5)["tools"][0]]}, "status": "draft"}
+    st = pro.put(f"{API}/joint/reports/{case['id']}/professional-statement", json=body).json()["statement"]
+    assert st["framework"]["label"].startswith("Level 4-6") and st["framework"]["tools"] == [tier_for(5)["tools"][0]] and len(st["framework"]["techniques"]) == 4
+    pdf = pro.get(f"{API}/joint/reports/{case['id']}/professional-statement.pdf")
+    assert pdf.status_code == 200
+    text = "".join(pg.get_text() for pg in fitz.open(stream=io.BytesIO(pdf.content), filetype="pdf"))
+    assert "CO-PARENTING DYNAMIC SCALE" in text and "Score 5 / 10" in text and "24-Hour Cooling-Off Rule" in text

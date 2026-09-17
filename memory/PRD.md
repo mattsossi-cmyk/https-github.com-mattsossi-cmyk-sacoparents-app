@@ -589,3 +589,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-09-14 — Judge Weekly Digest
 - judge_digest.py: run_judge_digests(db, send_email, app_url, from_name, logger) → one email per approved judge with open referrals: table of Cause No./Case ID, professional, stage, hearing date (OVERDUE flag), unanswered court messages ("Unanswered since …"), procedural disclaimer. Kind judge_digest.
 - POST /api/cron/judge-digest; .emergent/crons.yml "judge-digest" Monday 07:00 America/Chicago (6 crons total). Tests: tests/test_judge_digest.py.
+
+## 2026-09-14 — Co-Parenting Dynamic Scale → professional-only Options/Resources/Techniques
+- coparenting_tiers.py: 1–10 scale, 3 tiers (1-3 High Risk/IPV, 4-6 Moderate, 7-10 Collaborative) with framework, techniques (BIFF, cooling-off, third-party transfers…), tools (AppClose/OFW…), San Antonio resources; suggested_score(case) from Joint Report alignment ratio (safety cases capped at 3); framework_block(score, choices).
+- StatementIn.dynamic_score + framework_choices → statement.framework; GET statement returns suggested_score + tiers. Statement PDF section "CO-PARENTING DYNAMIC SCALE & RECOMMENDED FRAMEWORK"; judicial case page shows it (court-statement-framework). Parent-facing Joint Report unchanged.
+- UI: components/FrameworkPanel.jsx (slider, tier badge, safety alert, untick items) inside ProfessionalStatement. Test in tests/test_judicial_portal.py.
