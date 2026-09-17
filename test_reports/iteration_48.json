@@ -1,0 +1,24 @@
+{
+  "summary": "Iteration 48 — Frontend-only verification of two new features on top of iteration_47: (1) Resource Library Editor in FrameworkPanel and (2) Level History for court submissions. Seeded two live scenarios via casekit + backend API (see /app/backend/tests/seed_iter48.py) and drove them through the preview URL with Playwright. Scenario A (pro-owned ready case, rid 82dd6f77): logged in the pro at /joint/{rid}, framework-panel rendered, resource-library-toggle expanded revealing all 3 groups (resources/tools/techniques). Typed 'Westside Family Center' + click resource-library-add-resources → toast 'Library saved' appeared, resource-library-item-resources count=1. Same text appeared inside framework-group-resources at index 2 with a MY LIBRARY badge and the checkbox auto-checked. Unticked it, clicked statement-save-draft-btn, reloaded — library item still present (count=1) AND the Westside checkbox stayed unticked (checked=False) after reload — confirms the iteration_47 persistence bug (dynamic_score/framework_choices/framework_custom) is fixed. Removing via resource-library-remove-resources cleared it from both the library (count=0) and the framework checklist. Scenario B (court-referred case with two submitted versions, refId d390ade4, rid 2f012119; scores 3 then 6): logged in as judge → /court/case/{refId} → court-ability-level pill reads 'Level 6/10 — Level 4-6: Moderate Conflict / Low Trust', court-level-history is visible, court-level-history-1 shows score 3 with 'superseded', court-level-history-2 shows score 6 with no superseded flag. Logged in as the pro → /joint/{rid} → court-submissions-list shows submission-level-1 'Level 3/10' and submission-level-2 'Level 6/10'. Public regression: /samples/education body contains no 'Options and Resources'/'Options & Resources' string; landing / renders (SA CoParents Align hero). All spec'd data-testids resolve; every check passed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/seed_iter48.py",
+    "/app/backend/tests/test_judicial_portal.py",
+    "/app/backend/tests/casekit.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FrameworkPanel.jsx cleanly separates library items (with MY LIBRARY badge and framework-library-badge-{k} testid) from tier defaults and custom items (OWN badge); iteration_47 reload-persistence bug is confirmed fixed — dynamic_score, framework_choices and framework_custom round-trip through GET /professional-statement.",
+    "CourtCase.jsx level history only renders entries where score is present (h.score truthy) — score=0 would be hidden; not an issue today because dynamic_score is required to submit but worth noting if future submissions may omit score.",
+    "ResourceLibrary.jsx uses items array index as React key which is fine for append/remove but would cause stale renders if reordering is added later."
+  ],
+  "updated_files": ["/app/backend/tests/seed_iter48.py"],
+  "success_rate": {"backend": "N/A (not in scope this iteration)", "frontend": "100% (all scenario A + B + public regression checks passed)"},
+  "test_credentials": "Scenario A pro: t_41a8017f@example.com / testpass123 (rid 82dd6f77-cfc0-4aca-a623-68dfce1b3fa0). Scenario B judge: t_pjudge_fb400f3e@example.com / testpass123 (refId d390ade4-a494-47f5-afe9-bb217a3d9c1d, cause 2026-CI-Pa57c). Scenario B pro: t_75f5b836@example.com / testpass123 (rid 2f012119-88db-4158-ac6f-86f0f5b659b0). Conftest purges @example.com on next pytest run.",
+  "seed_data_creation": "Two seeded cases via /app/backend/tests/seed_iter48.py: (A) one pro-owned ready education case for the Resource Library UI test; (B) one court-referred case with two ready+submit cycles at dynamic_score 3 then 6 for the Level History UI test.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Both features are stable in the UI and match the spec's data-testids. The iteration_47 persistence bug (framework state lost on reload) is verified fixed as a side effect: after Save draft + reload the untick state on library items is preserved. If you re-test, run /app/backend/tests/seed_iter48.py to freshly seed both scenarios (it prints the credentials + IDs). Public /samples/education and landing page are also confirmed clean of the parent-facing 'Options & Resources' block.",
+  "rca of the issue": "N/A — no issues found this iteration."
+}

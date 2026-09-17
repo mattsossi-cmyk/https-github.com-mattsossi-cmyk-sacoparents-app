@@ -45,7 +45,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-11.7"
+BUILD_ID = "2026-09-17.1"
 
 logger = logging.getLogger(__name__)
 
