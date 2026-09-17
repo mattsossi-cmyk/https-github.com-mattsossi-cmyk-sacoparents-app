@@ -233,7 +233,10 @@ def validated_statement(body: StatementIn, doc: dict) -> dict:
     st["materials_reviewed"] = [m for m in body.materials_reviewed if m in STATEMENT_MATERIALS][:20]
     if body.dynamic_score:
         findings = joint_findings(doc)
-        st["framework"] = framework_block(body.dynamic_score, body.framework_choices, body.framework_custom, (findings or {}).get("subject_options"))
+        st["dynamic_score"] = max(1, min(10, int(body.dynamic_score)))
+        st["framework_choices"] = {k: [str(x) for x in v][:50] for k, v in body.framework_choices.items() if isinstance(v, list)}
+        st["framework_custom"] = {k: [str(x).strip()[:300] for x in v if str(x).strip()][:10] for k, v in body.framework_custom.items() if isinstance(v, list)}
+        st["framework"] = framework_block(st["dynamic_score"], st["framework_choices"], st["framework_custom"], (findings or {}).get("subject_options"))
     if status == "ready" and not all(st[k] for k in ("role_basis", "process_summary", "observations", "next_steps")):
         raise HTTPException(status_code=400, detail="Complete role, process, observations and next steps before marking the statement ready")
     if BANNED_STATEMENT_RE.search(" ".join(st[k] for k in STATEMENT_FIELDS)):
