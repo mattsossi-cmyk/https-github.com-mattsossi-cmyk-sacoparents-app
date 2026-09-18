@@ -26,6 +26,84 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-18 — Iter204 · Empty-State CTAs + Bundle Download + Sample Deep-Dives + Re-seed Shares
+
+Iteration_65 · **backend 100% (13/13 passed, 1 skipped) · frontend 100% (previous iter_64)**.
+
+**🔴 P0 — Bundle Download (ZIP of every completed PDF)**
+- New module `/app/backend/bundle_routes.py`. Endpoint
+  `GET /api/bundle/my-completed.zip` streams a `zipfile.ZipFile` into a
+  `Response` (application/zip) with `Content-Disposition: attachment`.
+- **Design**: in-process `httpx.ASGITransport` fans out to 8 static PDF
+  routes + 1 lookup-first Safety Assessment. Forwards the caller's
+  `Authorization` header + cookies verbatim so every builder sees the
+  same auth state the parent would. Any sub-endpoint that replies
+  404/409 is silently skipped and noted in a plain-text `MANIFEST.txt`
+  at the ZIP root.
+- **Readiness gate**: each catalog entry carries a `readiness_signal`
+  bool. Two endpoints (`/pathway-report/preview/pdf` and
+  `/complete-report/mine.pdf`) render placeholder PDFs even for a
+  brand-new user, so their presence alone must NOT suppress the 409
+  empty-state — flagged `False`. When `readiness_hits == 0` the
+  endpoint returns HTTP 409 with a friendly nudge; the shared
+  `downloadPdf` frontend helper turns that into a sonner toast with an
+  "Open my dashboard" action button.
+- **Frontend**: new `BundleDownloadButton` mounted inside
+  `YourReportsCard.jsx` below the report list. Full-width purple→teal
+  gradient, descriptive helper caption, uses `fetchPdfWithGracefulFailure`.
+  Testids: `your-reports-bundle-download-btn`, `your-reports-bundle-download`.
+- **Verified**: parent1 → 5 PDFs + MANIFEST (2MB ZIP). Fresh throwaway
+  parent → HTTP 409 with the friendly message. Parent1 vs parent2
+  bundles are byte-different (auth propagation confirmed).
+
+**🔴 P0 — Empty-State CTAs (finish migration to `downloadPdf` helper)**
+- Migrated 4 additional PDF-download pages from ad-hoc
+  `fetch(${API}...)` + generic toast → `fetchPdfWithGracefulFailure`
+  from `/app/frontend/src/lib/pdf.js`:
+    * `CompleteAlignmentReport.jsx` (individual + joint variants)
+    * `JointAgreement.jsx`
+    * `JointProfessionalReport.jsx`
+    * `PathwayReport.jsx`
+- Extended `EMPTY_STATE_ROUTES` in `pdf.js` with 5 new prefixes so
+  every migrated page's 404/409 produces a friendly toast + action
+  button linking to the correct next assessment (or
+  `/summary?tab=agreement` / `/safety-assessment` / `/dashboard`).
+- Wrapper preserves the existing behaviour on 200 (blob → click
+  download) and adds structured handling for 401/403/network errors
+  via a compact toast fallback.
+
+**🟠 P1 — Re-seed active deep-dive Compare shares (already done)**
+- `/app/backend/seed_deep_dive_shares.py` — standalone idempotent
+  script that revokes existing shares and creates one active share per
+  pathway (edu/med/psych) between `parent1@test.com` and
+  `parent2@test.com` with stable share_ids so QA / testing_agent can
+  hit `GET /api/{edu|med|psych}-deep/compare/{share_id}/pdf` reliably.
+
+**🟠 P1 — Sample Deep-Dive PDFs for Landing Tier-2 (already done)**
+- `/app/backend/deep_dive_samples.py` builds public sample PDFs for
+  Educational / Medical / Psychological deep-dive reports using the
+  same `build_deep_dive_report` + `build_deep_dive_pdf` pipeline the
+  real endpoints use.
+- Routes: `GET /api/insights/samples/deep-dive-{pathway}.pdf` — public,
+  no auth, 24h Cache-Control. Adds parity for the 4-card Tier-2 strip
+  on the Landing page (previously only Tier-1 Core Reports had
+  "View sample (PDF)" links).
+
+**Tests**: `/app/backend/tests/test_bundle_iter204.py` — 13 new tests
+(unauth 401, parent1 200 + valid PDFs, manifest lists skipped, fresh
+parent 409, parent1 vs parent2 different bytes, all 8 PDF endpoints
+respond, safety-assessment lookup chain). All pass.
+
+**Documented next-step for platform ops** (unchanged from iter203):
+custom domain wire-up for `sacoparents.com`, prod seed demo,
+`CONSENT_ADOPTION_DIGEST_ENABLED=1` env.
+
+**Deferred / intentionally not touched**: SAST warnings, CORS
+deployment-scan warning, `test_iter194_cron_analytics_branding.py`
+env-load flake.
+
+
+
 ### 2026-09-18 — Iter203 · Landing Ecosystem Clarity Refactor + Slideshow Image Fix
 
 Feedback source: user reviewed the live sacoparentsapp.online and requested an
