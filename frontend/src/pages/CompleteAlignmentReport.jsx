@@ -16,6 +16,7 @@ import { Link, useParams } from "react-router-dom";
 import { Download, ArrowLeft, Loader2, CheckCircle2, Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
+import { downloadPdf as fetchPdfWithGracefulFailure } from "../lib/pdf";
 import { logError } from "../lib/logger";
 
 // Section skeleton — kept in lockstep with the backend PDF builder.
@@ -155,23 +156,13 @@ export default function CompleteAlignmentReport() {
   const downloadPdf = async () => {
     setDownloading(true);
     try {
-      // Use axios blob so the auth cookie/bearer flow the app already
-      // handles for the JSON view is applied to the PDF request too.
-      const r = await api.get(pdfPath, { responseType: "blob" });
-      const blob = new Blob([r.data], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = caseId
+      const filename = caseId
         ? `SA-CoParents-Complete-Alignment-${caseId}.pdf`
         : "SA-CoParents-Complete-Alignment-Report.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      logError("complete-report pdf failed", err);
-      alert("We couldn't download the PDF. Please try again in a moment.");
+      await fetchPdfWithGracefulFailure(pdfPath, {
+        filename,
+        testid: "complete-report-download",
+      });
     } finally {
       setDownloading(false);
     }

@@ -30,6 +30,7 @@ import JointReportParentView from "../components/joint/JointReportParentView";
 import RecentlySharedWith from "../components/joint/RecentlySharedWith";
 import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import { api, API } from "../lib/api";
+import { downloadPdf as fetchPdfWithGracefulFailure } from "../lib/pdf";
 import { logError } from "../lib/logger";
 
 const ALIGNMENT_STYLE = {
@@ -328,23 +329,13 @@ export default function JointProfessionalReport() {
     if (!shareId) return;
     setDownloading(true);
     try {
-      const res = await fetch(
-        `${API}/joint-professional-report/${encodeURIComponent(shareId)}/pdf`,
-        { credentials: "include" },
+      await fetchPdfWithGracefulFailure(
+        `/joint-professional-report/${encodeURIComponent(shareId)}/pdf`,
+        {
+          filename: `joint-professional-report-${shareId.slice(0, 10)}.pdf`,
+          testid: "joint-report-download",
+        },
       );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `joint-professional-report-${shareId.slice(0, 10)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      logError("joint report pdf", err);
-      toast.error("Could not download PDF. Please try again.");
     } finally {
       setDownloading(false);
     }

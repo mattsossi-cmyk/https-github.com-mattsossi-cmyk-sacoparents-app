@@ -899,6 +899,7 @@ function ThreeReportsStrip() {
       label: "Educational",
       body: "IEP · school communication · academic goals",
       route: "/special-needs-v2/educational-deep-dive",
+      sampleHref: "/api/insights/samples/deep-dive-educational.pdf",
       accent: "#2563EB",
     },
     {
@@ -906,6 +907,7 @@ function ThreeReportsStrip() {
       label: "Medical",
       body: "Diagnoses · medication · care coordination",
       route: "/special-needs-v2/medical-deep-dive",
+      sampleHref: "/api/insights/samples/deep-dive-medical.pdf",
       accent: "#DC2626",
     },
     {
@@ -913,6 +915,7 @@ function ThreeReportsStrip() {
       label: "Psychological",
       body: "Therapy · anxiety · behavioural support",
       route: "/special-needs-v2/psychological-deep-dive",
+      sampleHref: "/api/insights/samples/deep-dive-psychological.pdf",
       accent: "#7C3AED",
     },
     {
@@ -920,6 +923,7 @@ function ThreeReportsStrip() {
       label: "Special Needs (7-domain)",
       body: "Multi-domain evaluation with consistency-between-homes score",
       route: "/special-needs-v2",
+      sampleHref: null, // 7-domain sample is handled by the SpecialNeedsV2 page itself
       accent: "#B85B00",
     },
   ];
@@ -984,25 +988,37 @@ function ThreeReportsStrip() {
           data-testid="focused-assessments-tier"
         >
           {focusedAssessments.map((fa) => (
-            <Link
+            <div
               key={fa.key}
-              to={fa.route}
-              className="group rounded-2xl border border-[#E5E0EE] bg-white p-5 hover:border-[#3D1A78] hover:shadow-md transition-all block"
+              className="group rounded-2xl border border-[#E5E0EE] bg-white p-5 hover:border-[#3D1A78] hover:shadow-md transition-all flex flex-col"
               data-testid={`focused-assessment-${fa.key}`}
             >
-              <div
-                className="text-[11px] uppercase tracking-[0.18em] font-bold mb-2"
-                style={{ color: fa.accent }}
-              >
-                {fa.label}
-              </div>
-              <p className="text-sm text-[#4B4567] leading-snug">
-                {fa.body}
-              </p>
-              <div className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78] group-hover:underline">
-                Learn more <ArrowRight size={12} />
-              </div>
-            </Link>
+              <Link to={fa.route} className="flex-1 block">
+                <div
+                  className="text-[11px] uppercase tracking-[0.18em] font-bold mb-2"
+                  style={{ color: fa.accent }}
+                >
+                  {fa.label}
+                </div>
+                <p className="text-sm text-[#4B4567] leading-snug">
+                  {fa.body}
+                </p>
+                <div className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78] group-hover:underline">
+                  Learn more <ArrowRight size={12} />
+                </div>
+              </Link>
+              {fa.sampleHref && (
+                <a
+                  href={fa.sampleHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78]/80 hover:text-[#3D1A78] hover:underline self-start"
+                  data-testid={`focused-assessment-${fa.key}-sample`}
+                >
+                  View sample (PDF) <ArrowUpRight size={11} />
+                </a>
+              )}
+            </div>
           ))}
         </div>
       </div>

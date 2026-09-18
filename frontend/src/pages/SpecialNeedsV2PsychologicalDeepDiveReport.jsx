@@ -16,6 +16,7 @@ import CourtReportDisclaimer from "../components/CourtReportDisclaimer";
 import SignDownloadToggle from "../components/SignDownloadToggle";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { downloadPdf } from "../lib/pdf";
 import {
   ArrowLeft, Download, Loader2, Mail, RefreshCcw, Sparkles, Users, FileText,
 } from "lucide-react";

@@ -17,6 +17,7 @@ import AppShell from "../components/AppShell";
 import PathwayEndCTA from "../components/PathwayEndCTA";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { downloadPdf } from "../lib/pdf";
 import { Download, RefreshCcw, Loader2, ArrowLeft, FileText, ShieldAlert, Users, Mail } from "lucide-react";
 import { logError } from "../lib/logger";
 import ReportReviewNotice from "../components/ReportReviewNotice";
@@ -86,21 +87,20 @@ export default function SpecialNeedsV2Report() {
     catch (err) { logError("snc2 regen", err); toast.error(err?.response?.data?.detail || "Regenerate failed."); }
     finally { setBusy(false); }
   };
-  const downloadPdf = async () => {
+  const downloadPdfFn = async () => {
     setBusy(true);
-    try {
-      const params = signOnDownload
-        ? { sign: true, ...(signNote.trim() ? { note: signNote.trim() } : {}) }
-        : {};
-      const res = await api.get("/snc2/report/pdf", { responseType: "blob", params });
-      const objUrl = URL.createObjectURL(res.data);
-      const a = document.createElement("a");
-      a.href = objUrl; a.download = "Special_Needs_Report.pdf";
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(objUrl), 2000);
-      if (signOnDownload) toast.success("Signed & downloaded.");
-    } catch (err) { logError("snc2 pdf", err); toast.error(err?.response?.data?.detail || "Could not download the PDF."); }
-    finally { setBusy(false); }
+    const params = signOnDownload
+      ? { sign: true, ...(signNote.trim() ? { note: signNote.trim() } : {}) }
+      : undefined;
+    await downloadPdf("/snc2/report/pdf", {
+      filename: "Special_Needs_Report.pdf",
+      params,
+      testid: "snc2-report-pdf",
+      onSuccess: () => {
+        if (signOnDownload) toast.success("Signed & downloaded.");
+      },
+    });
+    setBusy(false);
   };
   const emailReport = async () => {
     setBusy(true);
@@ -184,7 +184,7 @@ export default function SpecialNeedsV2Report() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
               <Users size={13} /> Co-Parent Compare
             </Link>
-            <button onClick={downloadPdf} disabled={busy} data-testid="snc2-report-download-pdf"
+            <button onClick={downloadPdfFn} disabled={busy} data-testid="snc2-report-download-pdf"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#3D1A78] text-white hover:brightness-110 disabled:opacity-60">
               {busy ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Download PDF
             </button>

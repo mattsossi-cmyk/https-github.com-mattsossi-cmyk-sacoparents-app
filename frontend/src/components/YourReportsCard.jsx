@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText, Users, GraduationCap, Brain, Pill, Loader2,
-  ArrowRight, CheckCircle2, Circle,
+  ArrowRight, CheckCircle2, Circle, Download,
 } from "lucide-react";
+import { downloadPdf as fetchPdfWithGracefulFailure } from "../lib/pdf";
 
 /**
  * YourReportsCard — one of the three above-the-fold blocks on the new
@@ -223,6 +224,56 @@ export default function YourReportsCard({
           />
         ))}
       </div>
+
+      <BundleDownloadButton readyCount={readyCount} />
     </section>
+  );
+}
+
+
+/**
+ * BundleDownloadButton — one-click "Download everything I've completed"
+ * ZIP. Silently skips any endpoint that returns 404/409 (assessments
+ * the parent hasn't finished yet); the backend's manifest tells the
+ * parent exactly what's inside. When the parent has literally
+ * nothing ready, the backend 409's and the shared `downloadPdf`
+ * helper turns that into a friendly toast with a dashboard action.
+ */
+function BundleDownloadButton({ readyCount }) {
+  const [downloading, setDownloading] = useState(false);
+  const onClick = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      await fetchPdfWithGracefulFailure("/bundle/my-completed.zip", {
+        filename: `sacoparents-my-reports-${new Date().toISOString().slice(0, 10)}.zip`,
+        testid: "your-reports-bundle-download",
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+  const label = readyCount > 0
+    ? `Download everything I've completed (ZIP)`
+    : `Download everything I've completed (ZIP)`;
+  return (
+    <div className="mt-4 pt-4 border-t border-[#E5E0EE]">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={downloading}
+        data-testid="your-reports-bundle-download-btn"
+        className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-sm font-semibold px-4 py-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:hover:translate-y-0"
+      >
+        {downloading
+          ? <Loader2 size={14} className="animate-spin" />
+          : <Download size={14} />}
+        {downloading ? "Preparing your bundle…" : label}
+      </button>
+      <p className="mt-2 text-[11px] text-[#857E9C] leading-relaxed text-center">
+        One ZIP with every PDF you've completed and a plain-text manifest —
+        nothing is added for assessments you haven't finished yet.
+      </p>
+    </div>
   );
 }

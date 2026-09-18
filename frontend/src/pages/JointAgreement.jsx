@@ -26,6 +26,7 @@ import RefreshDraftModal from "../components/joint/RefreshDraftModal";
 import AgreementShareLinkModal from "../components/joint/AgreementShareLinkModal";
 import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import { api, API } from "../lib/api";
+import { downloadPdf as fetchPdfWithGracefulFailure } from "../lib/pdf";
 import { logError } from "../lib/logger";
 
 
@@ -109,23 +110,13 @@ export default function JointAgreement() {
     if (!shareId) return;
     setDownloading(true);
     try {
-      const res = await fetch(
-        `${API}/joint-agreement/${encodeURIComponent(shareId)}/pdf`,
-        { credentials: "include" },
+      await fetchPdfWithGracefulFailure(
+        `/joint-agreement/${encodeURIComponent(shareId)}/pdf`,
+        {
+          filename: `joint-coparenting-agreement-${shareId.slice(0, 10)}.pdf`,
+          testid: "joint-agreement-download",
+        },
       );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `joint-coparenting-agreement-${shareId.slice(0, 10)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      logError("joint agreement pdf", err);
-      toast.error("Could not download PDF. Please try again.");
     } finally {
       setDownloading(false);
     }

@@ -73,6 +73,7 @@ from nudge_copy_routes import router as nudge_copy_router  # noqa: E402
 from alignment_reflection_routes import router as alignment_reflection_router  # noqa: E402
 from alignment_reflection_analytics import router as alignment_reflection_analytics_router  # noqa: E402
 from professional_bundle_templates import router as professional_bundle_templates_router  # noqa: E402
+from bundle_routes import router as bundle_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -216,6 +217,7 @@ api_router.include_router(nudge_copy_router)
 api_router.include_router(alignment_reflection_router)
 api_router.include_router(alignment_reflection_analytics_router)
 api_router.include_router(professional_bundle_templates_router)
+api_router.include_router(bundle_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.

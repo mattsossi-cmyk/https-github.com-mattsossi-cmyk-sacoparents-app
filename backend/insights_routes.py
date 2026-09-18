@@ -492,6 +492,38 @@ async def download_joint_alignment_sample_pdf(scenario: str | None = None):
     )
 
 
+@router.get("/samples/deep-dive-{pathway}.pdf")
+async def download_deep_dive_sample_pdf(pathway: str):
+    """Public sample PDFs for the Educational / Medical / Psychological
+    deep-dive reports. Iter204 — gives the landing page's Tier-2
+    "When your child needs more support" cards feature-parity with the
+    Core Report cards, all of which already had a "View sample (PDF)"
+    link.
+
+    Uses a fictional persona (Sam Rivera / 9-year-old Alex) rendered
+    through the same `build_deep_dive_report` + `build_deep_dive_pdf`
+    pipeline the real endpoints use, so any future report tweak
+    automatically flows into these samples too.
+    """
+    from fastapi.responses import Response
+    from deep_dive_samples import PATHWAY_BUILDERS
+
+    builder = PATHWAY_BUILDERS.get(pathway.lower())
+    if not builder:
+        raise HTTPException(status_code=404, detail="Unknown deep-dive pathway.")
+
+    pdf_bytes = builder()
+    filename = f"sacoparents-deep-dive-{pathway.lower()}-sample.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "public, max-age=86400",
+        },
+    )
+
+
 @router.get("/samples/{filename}")
 async def download_sample_pdf(filename: str):
     """Whitelist-gated file server for the public sample PDFs the app

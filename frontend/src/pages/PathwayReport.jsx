@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import AppShell from "../components/AppShell";
 import PathwayEmailDialog from "../components/PathwayEmailDialog";
 import { api } from "../lib/api";
+import { downloadPdf as fetchPdfWithGracefulFailure } from "../lib/pdf";
 import { logError } from "../lib/logger";
 
 const LEVEL_META = {
@@ -89,17 +90,11 @@ export default function PathwayReport() {
       const path = shareId
         ? `/pathway-report/dual/${encodeURIComponent(shareId)}/pdf`
         : "/pathway-report/preview/pdf";
-      const res = await api.get(path, { responseType: "blob" });
-      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = shareId ? `pathway-report-${shareId}.pdf` : "pathway-report-preview.pdf";
-      document.body.appendChild(a); a.click();
-      URL.revokeObjectURL(url); a.remove();
-      toast.success("Pathway report downloaded.");
-    } catch (err) {
-      logError("pathway report pdf", err);
-      toast.error(err?.response?.data?.detail || "Couldn't build the PDF right now.");
+      const ok = await fetchPdfWithGracefulFailure(path, {
+        filename: shareId ? `pathway-report-${shareId}.pdf` : "pathway-report-preview.pdf",
+        testid: "pathway-report-download",
+      });
+      if (ok) toast.success("Pathway report downloaded.");
     } finally {
       setDownloading(false);
     }

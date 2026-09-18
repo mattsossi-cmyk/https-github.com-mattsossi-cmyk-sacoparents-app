@@ -16,6 +16,7 @@ import CourtReportDisclaimer from "../components/CourtReportDisclaimer";
 import SignDownloadToggle from "../components/SignDownloadToggle";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { downloadPdf } from "../lib/pdf";
 import {
   ArrowLeft, Download, Loader2, Mail, RefreshCcw, Sparkles, Users,
 } from "lucide-react";
@@ -103,21 +104,18 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
 
   const download = async () => {
     setBusy(true);
-    try {
-      const params = signOnDownload
-        ? { sign: true, ...(signNote.trim() ? { note: signNote.trim() } : {}) }
-        : {};
-      const res = await api.get("/edu-deep/report/pdf", { responseType: "blob", params });
-      const objUrl = URL.createObjectURL(res.data);
-      const a = document.createElement("a");
-      a.href = objUrl; a.download = "Educational_Assessment_Report.pdf";
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(objUrl), 2000);
-      if (signOnDownload) toast.success("Signed & downloaded.");
-    } catch (err) {
-      logError("edu-deep pdf", err);
-      toast.error(err?.response?.data?.detail || "Could not download the PDF.");
-    } finally { setBusy(false); }
+    const params = signOnDownload
+      ? { sign: true, ...(signNote.trim() ? { note: signNote.trim() } : {}) }
+      : undefined;
+    await downloadPdf("/edu-deep/report/pdf", {
+      filename: "Educational_Assessment_Report.pdf",
+      params,
+      testid: "edu-deep-report-pdf",
+      onSuccess: () => {
+        if (signOnDownload) toast.success("Signed & downloaded.");
+      },
+    });
+    setBusy(false);
   };
 
   const emailReport = async () => {
