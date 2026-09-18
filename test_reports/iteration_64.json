@@ -1,0 +1,42 @@
+{
+  "summary": "Iter204 — verified Bundle Download (ZIP) endpoint + empty-state CTA pattern. Backend pytest: 12 passed / 1 failed / 1 skipped (safety-assessment skip, no /me record). Frontend: bundle button end-to-end works — clicking downloads a valid application/zip response (HTTP 200) with the correct purple→teal gradient, full-width layout, and descriptive helper text. Regression smoke on /login, /special-needs-v2, /dashboard all render without console errors. One backend concern: fresh throwaway parent receives HTTP 200 (with 2 always-available preview PDFs) rather than the expected HTTP 409, because /api/pathway-report/preview/pdf and /api/complete-report/mine.pdf always produce a placeholder PDF even for brand-new users.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/bundle/my-completed.zip",
+        "issue": "Bundle NEVER returns 409 for a freshly registered user because /api/pathway-report/preview/pdf and /api/complete-report/mine.pdf always emit a placeholder PDF regardless of assessment state. Test expected 409 with a friendly nudge; observed 200 with a 2-file ZIP (pathway preview + complete alignment). Suggest: (a) exclude those two 'always-on' endpoints from the 'included' count when deciding 409, OR (b) have those endpoints return 409 when the user has no substantive data. The 409 code path in bundle_routes.py is currently unreachable for any authenticated user."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/dashboard @ 390x844 (mobile)", "issues": ["Document has 12px horizontal overflow. Bundle button itself is well-sized (316px in 390px viewport); the overflow appears to be pre-existing decorative blur elements, not introduced by the bundle button."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_bundle_iter204.py",
+    "/app/test_reports/pytest/iter204_bundle.xml"
+  ],
+  "action_items": [
+    "Fix bundle 409 path: either exclude pathway-preview + complete-report/mine from the 'ready' count or have those endpoints refuse when the user has no meaningful data. Currently a brand-new parent still gets a 2-file ZIP.",
+    "(Optional) Investigate 12px horizontal overflow on /dashboard mobile viewport (likely pre-existing decorative blur)."
+  ],
+  "critical_code_review_comments": [
+    "bundle_routes.py line 326: `if not included` will NEVER be true in practice because pathway-report/preview and complete-report/mine.pdf are hard-coded 200 responders. The friendly 409 empty-state toast on the frontend for the bundle button is therefore dead UX code.",
+    "bundle_routes.py forwards Authorization header + cookies correctly via ASGITransport — verified parent1 vs parent2 bundles are byte-different (auth propagation confirmed).",
+    "pdf.js empty-state toast pattern is clean; EMPTY_STATE_ROUTES ordering places specific prefixes before generic ones as documented — passes review."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_bundle_iter204.py (new)"
+  ],
+  "success_rate": {"backend": "92% (12/13 non-skipped passed)", "frontend": "100% on tested surfaces"},
+  "test_credentials": "parent1@test.com / TestPass123! and parent2@test.com / TestPass123! both work (from /app/memory/test_credentials.md).",
+  "seed_data_creation": "Registered throwaway users TEST_bundle_* and TEST_toast_* via /api/auth/register for empty-state testing. No teardown (JWT users, harmless).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Bundle button lives inside dashboard <details data-testid=... > with summary 'Explore all tools' — must click the summary before asserting [data-testid=your-reports-bundle-download-btn]. Bundle endpoint takes ~5-8s for a full parent1 fetch (in-process ASGI of 9 sub-PDFs). Legal modal STORAGE_KEY = 'sac_legal_ack_v1' but requires JSON payload {version:'v1', at:...} not just a truthy scalar. Login flow requires clicking [data-testid=login-show-email-toggle] first before the email/password inputs render.",
+  "rca of the issue": "Bundle 409 unreachable: The _STATIC_ENDPOINTS catalog in bundle_routes.py (lines 64-105) includes /api/pathway-report/preview/pdf and /api/complete-report/mine.pdf. Both endpoints return valid PDF bytes even for a freshly-registered user (they render generic 'no data yet' placeholder PDFs, not 404/409). Because at least these two PDFs always end up in `included`, `if not included` at line 326 is never truthy → 409 branch dead. Fix options: (1) partition the catalog into 'always-on' vs 'gated', only count gated toward the readiness gate, (2) make those endpoints themselves return 409 when the user has no substantive data, (3) treat placeholder PDFs (identifiable by output length or a header) as 'not ready'."
+}

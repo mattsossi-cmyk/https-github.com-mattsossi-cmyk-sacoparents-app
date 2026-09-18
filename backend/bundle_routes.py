@@ -55,52 +55,74 @@ router = APIRouter(prefix="/bundle", tags=["bundle"])
 # `filename` is the name that lands inside the ZIP. `label` is the
 # human-readable name printed in the manifest.
 #
+# `readiness_signal` (default True) — whether landing this endpoint in
+# the ZIP counts as evidence the parent has actually done something
+# meaningful. Two endpoints (`/pathway-report/preview/pdf` and
+# `/complete-report/mine.pdf`) render placeholder PDFs even for a
+# brand-new user, so including them alone shouldn't stop the friendly
+# 409 empty-state response. Flagging them `False` keeps them in the
+# ZIP when other content IS present, without letting them mask an
+# otherwise-empty bundle.
+#
 # `id_from` is optional — when set, the bundler first hits that JSON
 # endpoint to pull the parent's owned artefact IDs (from `id_field`),
 # then substitutes {id} into `path` for each ID discovered. This
 # powers the Safety Assessment (`/me` returns the latest assessment
 # object) without hard-coding IDs on the client.
 # --------------------------------------------------------------------- #
-_STATIC_ENDPOINTS: List[Dict[str, str]] = [
+_STATIC_ENDPOINTS: List[Dict[str, Any]] = [
     {
         "path": "/api/mediation/foundation-statement.pdf",
         "filename": "01-foundation-statement.pdf",
         "label": "Foundation Statement",
+        "readiness_signal": True,
     },
     {
         "path": "/api/coparenting/report/pdf",
         "filename": "02-coparenting-assessment.pdf",
         "label": "Co-Parenting Assessment",
+        "readiness_signal": True,
     },
     {
         "path": "/api/snc2/report/pdf",
         "filename": "03-child-needs-statement.pdf",
         "label": "Child Needs Statement",
+        "readiness_signal": True,
     },
     {
         "path": "/api/edu-deep/report/pdf",
         "filename": "04-educational-deep-dive.pdf",
         "label": "Educational Deep-Dive",
+        "readiness_signal": True,
     },
     {
         "path": "/api/med-deep/report/pdf",
         "filename": "05-medical-deep-dive.pdf",
         "label": "Medical Deep-Dive",
+        "readiness_signal": True,
     },
     {
         "path": "/api/psych-deep/report/pdf",
         "filename": "06-psychological-deep-dive.pdf",
         "label": "Psychological Deep-Dive",
+        "readiness_signal": True,
     },
     {
+        # Placeholder PDF renders even for a brand-new parent — useful
+        # to include if they've done other work, but its presence alone
+        # does NOT count as "the parent has completed anything".
         "path": "/api/pathway-report/preview/pdf",
         "filename": "07-pathway-report-preview.pdf",
         "label": "Dispute Resolution Pathway Report (preview)",
+        "readiness_signal": False,
     },
     {
+        # Same story as pathway-preview — renders a placeholder even
+        # with zero reflection data.
         "path": "/api/complete-report/mine.pdf",
         "filename": "08-complete-alignment-report.pdf",
         "label": "Complete Alignment Report (individual)",
+        "readiness_signal": False,
     },
 ]
 
@@ -115,6 +137,7 @@ _LOOKUP_ENDPOINTS: List[Dict[str, Any]] = [
         "pdf_path_template": "/api/safety-assessment/{id}/pdf",
         "filename": "09-safety-assessment.pdf",
         "label": "Safety Assessment",
+        "readiness_signal": True,
     },
 ]
 
@@ -259,6 +282,12 @@ async def download_my_completed_bundle(
     transport = httpx.ASGITransport(app=request.app)
     included: List[Dict[str, str]] = []
     skipped: List[Dict[str, str]] = []
+    # Only entries flagged `readiness_signal=True` count toward the
+    # "did the parent complete anything meaningful?" gate. Two static
+    # endpoints (pathway-preview, complete-report/mine) render
+    # placeholder PDFs even for a brand-new user, so their presence
+    # alone must NOT suppress the 409 empty-state response.
+    readiness_hits = 0
 
     buf = io.BytesIO()
     zf = zipfile.ZipFile(buf, mode="w", compression=zipfile.ZIP_DEFLATED)
@@ -277,6 +306,8 @@ async def download_my_completed_bundle(
                 included.append(
                     {"label": entry["label"], "filename": entry["filename"]},
                 )
+                if entry.get("readiness_signal", True):
+                    readiness_hits += 1
             else:
                 skipped.append(
                     {
@@ -311,6 +342,8 @@ async def download_my_completed_bundle(
                 included.append(
                     {"label": entry["label"], "filename": entry["filename"]},
                 )
+                if entry.get("readiness_signal", True):
+                    readiness_hits += 1
             else:
                 skipped.append(
                     {
@@ -323,7 +356,7 @@ async def download_my_completed_bundle(
     _write_manifest(zf, parent_name, included, skipped)
     zf.close()
 
-    if not included:
+    if readiness_hits == 0:
         raise HTTPException(
             status_code=409,
             detail=(
