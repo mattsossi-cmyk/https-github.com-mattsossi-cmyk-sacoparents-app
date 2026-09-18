@@ -26,6 +26,76 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-18 — Iter203 · Landing Ecosystem Clarity Refactor + Slideshow Image Fix
+
+Feedback source: user reviewed the live sacoparentsapp.online and requested an
+8-point structural/UX refactor to make the parent app read as a peer of Align
+(not a sub-product), simplify the opener, and make the report hierarchy
+explicit.
+
+**🔴 P0 — Immediate content fixes**
+- `GlobalCopyright.jsx`: changed the site-wide copyright line from
+  "© 2026 sacoparentsalign.com" → **"© 2026 SA CoParents"** so the parent
+  site no longer reads as a sub-product of Align.
+- `Landing.jsx` Step 5 subtitle: renamed from "Complete Together, Separately"
+  → **"Two Parents. Two Perspectives."** with updated body copy: *"Each parent
+  completes their assessment separately. When appropriate, the perspectives
+  can then be compared to identify areas of alignment and differences that
+  need discussion."*
+- New `NotAVerdictStatement` component: extracted the *"Not a verdict on
+  who's right"* principle out of Step 6's body (where it was buried) into a
+  standalone dark-purple hero block mounted between the Three Reports and
+  Individual-to-Joint sections. Headline: **"SA CoParents doesn't decide
+  which parent is right."** Selector: `[data-testid="not-a-verdict-statement"]`.
+
+**🟠 P1 — Structural clarity**
+- 6→4 situation picker: collapsed the flat 6-choice grid into 4 parent-needs
+  groups (Co-Parenting, Communication, My Child's Needs, Safety). Underlying
+  6-leaf routing preserved via `SITUATION_LEAVES` map; the Communication tile
+  opens a lightweight sub-choice card (`situation-group-communication-subchoices`)
+  with Communication-is-difficult and Ongoing-high-conflict leaves — the
+  high-conflict clinical safety-adjacent path is fully preserved (safety
+  banner still fires on that leaf). *"Preparing for mediation or court"* pulled
+  out of the tile grid entirely — now a separate destination link
+  (`situation-mediation-destination`) below the picker so it reads as a
+  process choice, not a fifth substantive assessment category.
+- Two-tier reports hierarchy: rewrote `ThreeReportsStrip` into two clearly
+  labeled tiers. Tier 1 = "CORE REPORTS · INDIVIDUAL JOURNEY" (Co-Parenting
+  Assessment, Foundation Statement, Child Needs Statement — unchanged). Tier
+  2 = "WHEN YOUR CHILD NEEDS MORE SUPPORT" — 4 focused-assessment cards
+  (Educational, Medical, Psychological, Special Needs 7-domain) inside
+  `[data-testid="focused-assessments-tier"]`, each linking to its deep-dive
+  route. Removes the ambiguity between "Child Needs Statement" and "Special
+  Needs Assessment".
+
+**🟡 P2 — Ecosystem story polish**
+- New `EcosystemFlow` component mounted between `ProfessionalConnection` and
+  `AlignmentPhilosophy`. Single vertical diagram with 4 stacked tiers
+  connected by downward arrows: Individual Parent → Two Parents (Joint
+  Alignment Report) → Professional (SA CoParents Align Review) → Next Step
+  (mediation / agreement / therapy / educational-medical-psychological
+  resource / other appropriate process). Selectors: `[data-testid="full-ecosystem-flow"]`,
+  `[data-testid="ecosystem-tier-{individual|two-parents|professional|next-step}"]`.
+
+**Slideshow image fix (parallel with P0-P2)**
+- Root cause: the 5 WebPs in `/app/frontend/public/slides/` were 1600x900
+  landscape canvases with 499px + 500px hard-edge dark-navy pillar boxes
+  padding a 601x900 portrait art strip. When rendered with `object-cover
+  object-center` in the 16:8 slideshow frame the pillar boxes dominated the
+  visible area, so parents read the frame as "no image".
+- Fix: batch-cropped all 5 WebPs to the actual art bounds (`crop(499, 0,
+  1101, 900)` → 602x900 portrait) via PIL. Filenames preserved. Switched
+  `DashboardSlideshow.jsx` from `object-cover` → `object-contain` so the
+  frame's dark-purple gradient background now serves as the natural (soft)
+  pillar backdrop — no more hard-edge pillar seams.
+- Originals backed up to `/tmp/slides_backup/` in case the founder wants to
+  revert.
+
+**Testing** — frontend-only verification via testing agent (iteration_63):
+51/52 assertions passed (98%). Zero UI bugs. Zero regressions on Path B,
+reset flow, or existing situation-picker safety guardrails.
+
+
 ### 2026-09-17 — Iter202 · Slide-hide rules (safety + court-ordered)
 
 **🟢 P1 — Hide inappropriate slides per situation**
