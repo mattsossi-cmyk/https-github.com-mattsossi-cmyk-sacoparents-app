@@ -257,12 +257,24 @@ function MarketingFooter() {
 ============================================================ */
 /* ============================================================
    SITUATION-FIRST OPENING
-   6 situation choices → routed to the safest & most relevant next step.
-   Coercive-control / safety pickers go DIRECTLY to the Safety Screen
-   with NO cooperation messaging shown first.
+   Iteration 203 — collapsed 6 flat choices into 4 parent-needs
+   groups. High-conflict + communication-is-difficult now share a
+   single "Communication" tile but expand to a sub-choice card so
+   the underlying clinical routing (safety-adjacent path for
+   high-conflict) is fully preserved. "Preparing for mediation or
+   court" moved out of the tile grid entirely — now a destination
+   link rendered beneath the picker so it reads as a process
+   choice, not a fifth substantive assessment category.
+
+   Coercive-control / safety pickers still go DIRECTLY to the
+   Safety Screen with NO cooperation messaging shown first.
 ============================================================ */
-const SITUATIONS = [
-  {
+
+// Leaf definitions — the 6 original routes preserved verbatim so
+// no downstream analytics / focus keys break. UI now composes
+// these into the 4 group tiles below.
+const SITUATION_LEAVES = {
+  cooperate: {
     key: "cooperate",
     label: "We generally cooperate",
     icon: <Handshake />,
@@ -276,7 +288,7 @@ const SITUATIONS = [
       icon: <Scale size={20} />,
     },
   },
-  {
+  difficult: {
     key: "difficult",
     label: "Communication is difficult",
     icon: <MessageCircle />,
@@ -290,7 +302,7 @@ const SITUATIONS = [
       icon: <MessageCircle size={20} />,
     },
   },
-  {
+  "high-conflict": {
     key: "high-conflict",
     label: "We experience ongoing high conflict",
     icon: <AlertTriangle />,
@@ -305,7 +317,7 @@ const SITUATIONS = [
       safetyBanner: "If you are in immediate danger, call 911. Suicide & Crisis Lifeline: 988. National Domestic Violence Hotline: 1-800-799-SAFE.",
     },
   },
-  {
+  safety: {
     key: "safety",
     label: "I have safety or family-violence concerns",
     icon: <ShieldCheck />,
@@ -320,7 +332,7 @@ const SITUATIONS = [
       safetyBanner: "If you are in immediate danger, call 911. Suicide & Crisis Lifeline: 988. National Domestic Violence Hotline: 1-800-799-SAFE.",
     },
   },
-  {
+  "special-needs": {
     key: "special-needs",
     label: "Our child has unique educational, psychological or medical needs",
     icon: <Baby />,
@@ -334,7 +346,7 @@ const SITUATIONS = [
       icon: <Baby size={20} />,
     },
   },
-  {
+  mediation: {
     key: "mediation",
     label: "I am preparing for mediation or court",
     icon: <Scale />,
@@ -348,7 +360,49 @@ const SITUATIONS = [
       icon: <Scale size={20} />,
     },
   },
+};
+
+// Four parent-needs groups. `subChoices` lets Communication open a
+// two-option card so we don't merge the high-conflict clinical
+// path with the ordinary communication-is-difficult path.
+const SITUATION_GROUPS = [
+  {
+    key: "co-parenting",
+    label: "Co-Parenting",
+    sublabel: "How are we parenting together?",
+    icon: <Handshake />,
+    leaf: SITUATION_LEAVES.cooperate,
+  },
+  {
+    key: "communication",
+    label: "Communication",
+    sublabel: "How can we communicate more effectively?",
+    icon: <MessageCircle />,
+    subChoices: [
+      SITUATION_LEAVES.difficult,
+      SITUATION_LEAVES["high-conflict"],
+    ],
+  },
+  {
+    key: "child-needs",
+    label: "My Child's Needs",
+    sublabel: "Educational · Medical · Psychological",
+    icon: <Baby />,
+    leaf: SITUATION_LEAVES["special-needs"],
+  },
+  {
+    key: "safety",
+    label: "Safety",
+    sublabel: "Do I need a different communication or parenting pathway?",
+    icon: <ShieldCheck />,
+    leaf: SITUATION_LEAVES.safety,
+  },
 ];
+
+// Mediation is a destination/process choice, not a substantive
+// assessment category — pulled out of the tile grid and rendered
+// as a distinct link below the picker.
+const MEDIATION_DESTINATION = SITUATION_LEAVES.mediation;
 
 const TONE_STYLES = {
   cooperative: { border: "border-[#3D1A78]/25", bg: "bg-white", chipBg: "bg-[#EFE9F9]", chipText: "text-[#3D1A78]", cta: "bg-[#3D1A78] hover:bg-[#2D0F63]" },
@@ -358,15 +412,91 @@ const TONE_STYLES = {
 
 function SituationPicker() {
   const { enterWithFocus, loading } = useEnterApp();
-  const [picked, setPicked] = useState(null);
+  const [expandedGroup, setExpandedGroup] = useState(null); // group with subChoices open
+  const [picked, setPicked] = useState(null);                // final leaf chosen
 
-  const choose = (s) => setPicked(s);
-  const reset = () => setPicked(null);
+  const chooseGroup = (g) => {
+    if (g.leaf) {
+      setPicked(g.leaf);
+      setExpandedGroup(null);
+      return;
+    }
+    setExpandedGroup(g);
+  };
+  const chooseLeaf = (leaf) => {
+    setPicked(leaf);
+    setExpandedGroup(null);
+  };
+  const resetAll = () => {
+    setPicked(null);
+    setExpandedGroup(null);
+  };
   const proceed = () => {
     if (!picked) return;
     enterWithFocus({ focus: picked.focus, route: picked.route });
   };
+  const proceedMediation = () => {
+    enterWithFocus({
+      focus: MEDIATION_DESTINATION.focus,
+      route: MEDIATION_DESTINATION.route,
+    });
+  };
 
+  // STATE 1 — a group is expanded (sub-choice card shown).
+  if (expandedGroup) {
+    return (
+      <div
+        id="situation-picker"
+        className="rounded-3xl border border-[#E5E0EE] bg-white/85 backdrop-blur-sm p-6 sm:p-8 shadow-sm max-w-3xl mx-auto fade-up"
+        data-testid={`situation-group-${expandedGroup.key}-subchoices`}
+      >
+        <button
+          onClick={() => setExpandedGroup(null)}
+          className="text-xs font-semibold text-[#3D1A78] hover:underline mb-3"
+          data-testid="situation-subchoice-back"
+        >
+          ← Back to all situations
+        </button>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="shrink-0 w-11 h-11 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center">
+            {expandedGroup.icon}
+          </div>
+          <div>
+            <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug">
+              {expandedGroup.label}
+            </h2>
+            <p className="text-sm text-[#4B4567] leading-snug">
+              {expandedGroup.sublabel}
+            </p>
+          </div>
+        </div>
+        <p className="text-sm text-[#4B4567] mt-3">
+          Which of these fits your current situation more closely? The
+          routing behind each option is different — high conflict starts
+          with a private safety check first.
+        </p>
+        <div className="mt-5 grid sm:grid-cols-2 gap-2.5">
+          {expandedGroup.subChoices.map((leaf) => (
+            <button
+              key={leaf.key}
+              onClick={() => chooseLeaf(leaf)}
+              className="group text-left rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-center gap-3"
+              data-testid={`situation-${leaf.key}`}
+            >
+              <div className="shrink-0 w-9 h-9 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center group-hover:bg-[#3D1A78] group-hover:text-white transition-colors">
+                {leaf.icon}
+              </div>
+              <span className="text-sm sm:text-[15px] text-[#1A1330] leading-snug">
+                {leaf.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // STATE 2 — initial 4-tile group picker.
   if (!picked) {
     return (
       <div
@@ -385,24 +515,48 @@ function SituationPicker() {
           safest and most relevant starting point.
         </p>
         <div className="mt-5 grid sm:grid-cols-2 gap-2.5">
-          {SITUATIONS.map((s) => (
+          {SITUATION_GROUPS.map((g) => (
             <button
-              key={s.key}
-              onClick={() => choose(s)}
-              className="group text-left rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-center gap-3"
-              data-testid={`situation-${s.key}`}
+              key={g.key}
+              onClick={() => chooseGroup(g)}
+              className="group text-left rounded-2xl border border-[#E5E0EE] bg-white p-4 hover:border-[#3D1A78] hover:bg-[#F7F4FC] transition-colors flex items-start gap-3"
+              data-testid={`situation-group-${g.key}`}
             >
               <div className="shrink-0 w-9 h-9 rounded-full bg-[#EFE9F9] text-[#3D1A78] flex items-center justify-center group-hover:bg-[#3D1A78] group-hover:text-white transition-colors">
-                {s.icon}
+                {g.icon}
               </div>
-              <span className="text-sm sm:text-[15px] text-[#1A1330] leading-snug">{s.label}</span>
+              <div className="min-w-0">
+                <div className="text-[15px] font-semibold text-[#1A1330] leading-snug">
+                  {g.label}
+                </div>
+                <div className="text-xs sm:text-[13px] text-[#4B4567] leading-snug mt-0.5">
+                  {g.sublabel}
+                </div>
+              </div>
             </button>
           ))}
+        </div>
+        {/* Mediation is a destination, not a substantive category —
+            rendered as a distinct link below the tile grid. */}
+        <div className="mt-5 pt-5 border-t border-[#E5E0EE] text-center">
+          <p className="text-xs uppercase tracking-[0.16em] font-bold text-[#857E9C] mb-1.5">
+            Preparing for mediation or court?
+          </p>
+          <button
+            onClick={proceedMediation}
+            disabled={loading}
+            className="inline-flex items-center gap-1 text-sm font-semibold text-[#3D1A78] hover:underline disabled:opacity-60"
+            data-testid="situation-mediation-destination"
+          >
+            Start the Mediation Readiness Assessment
+            <ArrowRight size={14} />
+          </button>
         </div>
       </div>
     );
   }
 
+  // STATE 3 — leaf picked, show the routed result card.
   const tone = TONE_STYLES[picked.result.tone] || TONE_STYLES.cooperative;
   return (
     <div
@@ -441,7 +595,7 @@ function SituationPicker() {
           {!loading && <ArrowRight size={16} />}
         </button>
         <button
-          onClick={reset}
+          onClick={resetAll}
           className="text-sm text-[#4B4567] hover:text-[#3D1A78] hover:underline"
           data-testid="situation-picker-reset"
         >
@@ -728,21 +882,59 @@ function Hero() {
 }
 
 /* ============================================================
-   THREE REPORTS STRIP — compact "at a glance" trio showing the
-   three primary artefacts parents receive.
+   THREE REPORTS STRIP — Iteration 203: made the report hierarchy
+   explicit. Two labeled tiers:
+     Tier 1 — CORE REPORTS every parent gets
+     Tier 2 — WHEN YOUR CHILD NEEDS MORE SUPPORT
+              (Educational / Medical / Psychological / Special Needs)
+   Reason: on the previous single-tier layout parents wondered
+   whether "Child Needs Statement" and "Special Needs Assessment"
+   were the same thing. Splitting them into two labeled tiers
+   fixes that ambiguity.
 ============================================================ */
 function ThreeReportsStrip() {
+  const focusedAssessments = [
+    {
+      key: "educational",
+      label: "Educational",
+      body: "IEP · school communication · academic goals",
+      route: "/special-needs-v2/educational-deep-dive",
+      accent: "#2563EB",
+    },
+    {
+      key: "medical",
+      label: "Medical",
+      body: "Diagnoses · medication · care coordination",
+      route: "/special-needs-v2/medical-deep-dive",
+      accent: "#DC2626",
+    },
+    {
+      key: "psychological",
+      label: "Psychological",
+      body: "Therapy · anxiety · behavioural support",
+      route: "/special-needs-v2/psychological-deep-dive",
+      accent: "#7C3AED",
+    },
+    {
+      key: "special-needs",
+      label: "Special Needs (7-domain)",
+      body: "Multi-domain evaluation with consistency-between-homes score",
+      route: "/special-needs-v2",
+      accent: "#B85B00",
+    },
+  ];
+
   return (
     <section id="three-reports" className="relative py-14 sm:py-16 bg-white border-y border-[#EFE9F9]">
+      {/* ---------- Tier 1 · CORE REPORTS ---------- */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <Eyebrow>Individual Journey</Eyebrow>
+        <Eyebrow>Core Reports · Individual Journey</Eyebrow>
         <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-2">
           Every parent can create three core reports.
         </h2>
         <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-3xl mx-auto">
-          Complete them on your own, at your own pace. Families using the
-          Special Needs pathway also receive additional individual and
-          deep-dive reports tailored to their situation.
+          Complete them on your own, at your own pace. These three anchor
+          your reflection and stay with you across the whole journey.
         </p>
       </div>
       <div className="mt-8 grid md:grid-cols-3 gap-4 max-w-6xl mx-auto px-4 sm:px-6">
@@ -771,6 +963,86 @@ function ThreeReportsStrip() {
           body="A structured, child-focused agenda you can bring straight into your mediation session or attorney meeting."
           accent="#B85B00"
         />
+      </div>
+
+      {/* ---------- Tier 2 · FOCUSED ASSESSMENTS ---------- */}
+      <div className="mt-16 max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-3xl mx-auto">
+          <Eyebrow>When Your Child Needs More Support</Eyebrow>
+          <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-tight mt-2">
+            Focused assessments for specific needs.
+          </h3>
+          <p className="text-sm sm:text-base text-[#4B4567] mt-3">
+            Use these alongside the three core reports when a specific
+            area of your child's life needs deeper attention. Each one
+            produces its own individual and (when both parents complete
+            it) joint alignment report.
+          </p>
+        </div>
+        <div
+          className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
+          data-testid="focused-assessments-tier"
+        >
+          {focusedAssessments.map((fa) => (
+            <Link
+              key={fa.key}
+              to={fa.route}
+              className="group rounded-2xl border border-[#E5E0EE] bg-white p-5 hover:border-[#3D1A78] hover:shadow-md transition-all block"
+              data-testid={`focused-assessment-${fa.key}`}
+            >
+              <div
+                className="text-[11px] uppercase tracking-[0.18em] font-bold mb-2"
+                style={{ color: fa.accent }}
+              >
+                {fa.label}
+              </div>
+              <p className="text-sm text-[#4B4567] leading-snug">
+                {fa.body}
+              </p>
+              <div className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78] group-hover:underline">
+                Learn more <ArrowRight size={12} />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   NOT-A-VERDICT STATEMENT — a single, prominent visual block
+   that captures the philosophy of the entire product. Pulled up
+   out of Step 6's body copy (previously buried on the six-step
+   grid) so it reads as a first-class principle, not a footnote.
+
+   Reasoning: parents and referring professionals sometimes fear
+   the tool will "score" one parent against the other. This block
+   says out loud that it doesn't — and separates the parent app
+   conceptually from a custody evaluation.
+============================================================ */
+function NotAVerdictStatement() {
+  return (
+    <section
+      id="not-a-verdict"
+      className="relative py-16 sm:py-20 bg-gradient-to-br from-[#1A1330] via-[#2A0F5F] to-[#3D1A78]"
+      data-testid="not-a-verdict-statement"
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+        <div className="inline-flex w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/10 backdrop-blur border border-white/20 items-center justify-center mb-6">
+          <Scale size={26} className="text-white" strokeWidth={1.75} />
+        </div>
+        <p
+          className="font-serif text-2xl sm:text-3xl lg:text-4xl text-white leading-snug"
+          data-testid="not-a-verdict-headline"
+        >
+          SA CoParents doesn't decide which parent is right.
+        </p>
+        <p className="mt-5 text-base sm:text-lg text-white/85 leading-relaxed max-w-2xl mx-auto">
+          It helps identify what the child needs, where parents align,
+          where they see things differently, and what options may help
+          them move forward.
+        </p>
       </div>
     </section>
   );
@@ -1046,9 +1318,9 @@ function HowItWorks() {
     {
       n: "5",
       title: "Where Do We See Things the Same — and Differently?",
-      subtitle: "Complete Together, Separately",
+      subtitle: "Two Parents. Two Perspectives.",
       icon: Users,
-      body: "Each parent completes their reflection independently. If you're working with a professional, your professional can invite both parents and use the completed assessments to generate a Joint Alignment Report.",
+      body: "Each parent completes their assessment separately. When appropriate, the perspectives can then be compared to identify areas of alignment and differences that need discussion. If you're working with a professional, your professional can invite both parents and use the completed assessments to generate a Joint Alignment Report.",
       step5Ctas: true,
     },
     {
@@ -1056,7 +1328,7 @@ function HowItWorks() {
       title: "Your Family's Next-Step Guide",
       subtitle: "Joint Alignment Report",
       icon: FileText,
-      body: "Not a verdict on who's right — options, resources, and questions you can take into mediation or a conversation with a professional.",
+      body: "Options, resources, and questions you can take into mediation or a conversation with a professional.",
     },
   ];
   return (
@@ -1209,6 +1481,146 @@ function ProfessionalConnection() {
             </a>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   ECOSYSTEM FLOW — Iteration 203. A single vertical diagram that
+   tells the whole SA CoParents story end-to-end. Sits between the
+   professional-connection card and the alignment-philosophy strip
+   so the reader has just been told they can connect to Align —
+   this section shows exactly what that connection looks like.
+
+   Four stacked tiers:
+     1. INDIVIDUAL PARENT   — Assessment → Foundation → Child Needs
+     2. TWO PARENTS         — Joint Alignment Report (the bridge)
+     3. PROFESSIONAL        — Review → Options & Resources → Report
+     4. NEXT STEP           — Mediation / Agreement / Therapy / etc.
+
+   Each tier connects to the next with a downward arrow so parents
+   read this as a sequence, not four unrelated boxes.
+============================================================ */
+function EcosystemFlow() {
+  const tiers = [
+    {
+      key: "individual",
+      eyebrow: "Individual Parent",
+      title: "Private reflection, in your own words.",
+      chips: ["Assessment", "Foundation Statement", "Child Needs"],
+      accent: "#3D1A78",
+      bg: "bg-[#F7F4FC]",
+      border: "border-[#3D1A78]/20",
+    },
+    {
+      key: "two-parents",
+      eyebrow: "Two Parents",
+      title: "Joint Alignment Report.",
+      chips: [
+        "Where you align",
+        "Where you see things differently",
+        "Questions worth discussing",
+      ],
+      accent: "#2DB5B5",
+      bg: "bg-[#EEF6F6]",
+      border: "border-[#2DB5B5]/30",
+    },
+    {
+      key: "professional",
+      eyebrow: "Professional",
+      title: "SA CoParents Align — Professional Review.",
+      chips: [
+        "Interpret through a professional lens",
+        "Options & Resources",
+        "Professional Report",
+      ],
+      accent: "#0E7A7A",
+      bg: "bg-[#E6F0F7]",
+      border: "border-[#0E7A7A]/30",
+    },
+    {
+      key: "next-step",
+      eyebrow: "Next Step",
+      title: "A concrete, child-focused pathway.",
+      chips: [
+        "Child-focused mediation",
+        "Co-parenting agreement",
+        "Therapeutic support",
+        "Educational / medical / psychological resource",
+        "Other appropriate process",
+      ],
+      accent: "#B85B00",
+      bg: "bg-[#FFF6EA]",
+      border: "border-[#B85B00]/30",
+    },
+  ];
+
+  return (
+    <section
+      id="full-ecosystem-flow"
+      className="relative py-24 sm:py-28 bg-white"
+      data-testid="full-ecosystem-flow"
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <Eyebrow>The Full Ecosystem</Eyebrow>
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight mt-2">
+            From private reflection to a concrete next step.
+          </h2>
+          <p className="mt-5 text-sm sm:text-base text-[#4B4567] leading-relaxed">
+            SA CoParents and SA CoParents Align are sibling tools. The
+            individual reflection stays with each parent. Align is where a
+            professional (with consent) helps interpret shared and different
+            perspectives into practical options and resources.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {tiers.map((tier, i) => (
+            <React.Fragment key={tier.key}>
+              <div
+                className={`rounded-2xl border-2 ${tier.border} ${tier.bg} p-5 sm:p-7`}
+                data-testid={`ecosystem-tier-${tier.key}`}
+              >
+                <div
+                  className="text-[10px] uppercase tracking-[0.22em] font-bold"
+                  style={{ color: tier.accent }}
+                >
+                  {tier.eyebrow}
+                </div>
+                <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug mt-1">
+                  {tier.title}
+                </h3>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {tier.chips.map((chip) => (
+                    <span
+                      key={chip}
+                      className="inline-flex items-center rounded-full bg-white border border-[#E5E0EE] px-3 py-1 text-[12px] sm:text-[13px] font-semibold text-[#1A1330]"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {i < tiers.length - 1 && (
+                <div
+                  className="flex justify-center py-1"
+                  aria-hidden="true"
+                  data-testid={`full-ecosystem-flow-arrow-${i}`}
+                >
+                  <ArrowDown size={22} className="text-[#3D1A78]/40" />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
+        <p className="text-center text-xs sm:text-sm text-[#857E9C] mt-10 max-w-xl mx-auto leading-relaxed">
+          Not a verdict on which parent is right — a structured way to
+          identify what your child needs and what options may help you
+          move forward together, separately, or with professional support.
+        </p>
       </div>
     </section>
   );
@@ -1590,9 +2002,11 @@ export default function Landing() {
         <Hero />
         <EcosystemStrip />
         <ThreeReportsStrip />
+        <NotAVerdictStatement />
         <IndividualToJointBridge />
         <HowItWorks />
         <ProfessionalConnection />
+        <EcosystemFlow />
         <AlignmentPhilosophy />
         <TrustSignals />
         <HomepageFAQ />

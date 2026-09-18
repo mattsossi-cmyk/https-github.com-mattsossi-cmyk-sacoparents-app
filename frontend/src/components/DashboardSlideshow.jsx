@@ -216,7 +216,7 @@ export default function DashboardSlideshow() {
             <img
               src={slide.src}
               alt={slide.title}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-contain object-center"
               loading={i === 0 ? "eager" : "lazy"}
               draggable={false}
             />

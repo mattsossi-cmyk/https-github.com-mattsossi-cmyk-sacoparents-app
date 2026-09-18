@@ -16,7 +16,7 @@ export default function GlobalCopyright() {
       data-testid="global-copyright"
     >
       <span className="text-[11px] text-[#857E9C]">
-        © {year} sacoparentsalign.com · All rights reserved.
+        © {year} SA CoParents · All rights reserved.
       </span>
     </div>
   );
