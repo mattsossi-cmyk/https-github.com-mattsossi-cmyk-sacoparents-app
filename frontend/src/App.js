@@ -52,6 +52,7 @@ function App() {
             <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
             <Route path="/court-dashboard" element={<Protected><CourtDashboard /></Protected>} />
             <Route path="/court/case/:refId" element={<Protected><CourtCase /></Protected>} />
+            <Route path="/court/sample" element={<CourtCase sample />} />
             <Route path="/report/:id" element={<Protected><ReportView /></Protected>} />
             <Route path="/join/:token" element={<Join />} />
             <Route path="/joint/new" element={<Protected><JointNew /></Protected>} />

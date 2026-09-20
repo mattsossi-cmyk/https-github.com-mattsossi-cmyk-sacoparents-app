@@ -30,20 +30,25 @@ const STMT = [["role_basis", "Role and basis of involvement"], ["process_summary
   ["partial_alignment", "Partial alignment / potential areas for agreement"], ["alignment_summary", "Professional alignment summary"],
   ["resources_considered", "Resources / Interventions Considered"], ["current_status", "Current Status"], ["observations", "Professional Observations"], ["safety_considerations", "Safety considerations"], ["next_steps", "Recommended next steps"]];
 
-export default function CourtCase() {
+export default function CourtCase({ sample = false }) {
   const { refId } = useParams();
   const { user, logout } = useAuth();
   const [d, setD] = useState(null);
   const [err, setErr] = useState(null);
-  const load = () => api.get(`/court-dashboard/cases/${refId}`).then((r) => setD(r.data)).catch((e) => setErr(e?.response?.data?.detail || "Not found"));
-  useEffect(() => { load(); }, [refId]);
+  const load = () => api.get(sample ? "/court-dashboard/sample-case" : `/court-dashboard/cases/${refId}`).then((r) => setD(r.data)).catch((e) => setErr(e?.response?.data?.detail || "Not found"));
+  useEffect(() => { load(); }, [refId, sample]);
   const ref = d?.referral;
-  const pdf = (pid) => `${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${pid}/pdf`;
+  const pdf = (pid) => (sample ? `${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-professional-report/pdf` : `${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${pid}/pdf`);
   return (
-    <div className="min-h-screen bg-background" data-testid="court-case-page">
-      <header className="border-b border-border bg-white"><div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between gap-3"><BrandLogo size="text-xl" /><div className="flex items-center gap-3 text-sm"><span className="text-xs font-bold uppercase tracking-widest text-brand-purple hidden sm:inline">Judicial Portal</span><span className="text-muted-foreground hidden sm:inline">{user?.name}</span><Button size="sm" variant="ghost" onClick={logout} data-testid="court-logout-btn">Sign out</Button></div></div></header>
+    <div className="min-h-screen bg-background" data-testid={sample ? "court-sample-page" : "court-case-page"}>
+      <header className="border-b border-border bg-white"><div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between gap-3"><BrandLogo size="text-xl" /><div className="flex items-center gap-3 text-sm"><span className="text-xs font-bold uppercase tracking-widest text-brand-purple hidden sm:inline">Judicial Portal{sample ? " · Sample" : ""}</span>{sample ? <Button size="sm" asChild data-testid="court-sample-register-btn"><Link to="/auth?court=1">Court sign-in / register</Link></Button> : <><span className="text-muted-foreground hidden sm:inline">{user?.name}</span><Button size="sm" variant="ghost" onClick={logout} data-testid="court-logout-btn">Sign out</Button></>}</div></div></header>
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
-        <Link to="/court-dashboard" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground" data-testid="court-case-back"><ArrowLeft className="h-4 w-4" /> Court-referred cases</Link>
+        {sample ? (
+          <div className="rounded-lg border-2 border-accent/40 bg-accent/5 p-4 text-sm" data-testid="court-sample-banner">
+            <p className="font-semibold">Read-only sample — fictional case, professional and court.</p>
+            <p className="text-muted-foreground mt-1">This is exactly what a judge sees after a professional's authorized submission. Judges never see raw parent responses, private journals or draft material, and no custody, credibility or legal determination is made. <Link to="/samples" className="text-brand-purple underline" data-testid="court-sample-back">Back to Sample Reports</Link></p>
+          </div>
+        ) : <Link to="/court-dashboard" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground" data-testid="court-case-back"><ArrowLeft className="h-4 w-4" /> Court-referred cases</Link>}
         {err && <p className="text-red-700" data-testid="court-case-error">{err}</p>}
         {d && ref && (
           <>
@@ -57,7 +62,7 @@ export default function CourtCase() {
                 <div><p className="text-xs text-muted-foreground">Parents Invited</p><p className="font-semibold">{d.parents_invited}</p></div>
                 <div><p className="text-xs text-muted-foreground">Parents Participating</p><p className="font-semibold" data-testid="court-case-participating">{d.parents_participating}</p></div>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm"><span className="text-xs text-muted-foreground">Hearing date:</span><HearingDate x={ref} onSaved={(hd) => setD((x) => ({ ...x, referral: { ...x.referral, hearing_date: hd } }))} />{ref.overdue && <span className="text-xs font-bold text-red-700" data-testid="court-case-overdue">Within 7 days — nothing submitted</span>}</div>
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm"><span className="text-xs text-muted-foreground">Hearing date:</span>{sample ? <span className="font-semibold" data-testid="court-sample-hearing">{ref.hearing_date}</span> : <HearingDate x={ref} onSaved={(hd) => setD((x) => ({ ...x, referral: { ...x.referral, hearing_date: hd } }))} />}{ref.overdue && <span className="text-xs font-bold text-red-700" data-testid="court-case-overdue">Within 7 days — nothing submitted</span>}</div>
             </div>
 
             <Section n={1} title="Case Status" testId="court-case-checklist">
@@ -65,7 +70,7 @@ export default function CourtCase() {
             </Section>
 
             <Section n={2} title="AI Court Summary" testId="court-case-ai">
-              <CourtStatusSummary referralId={ref.id} summary={d.status_summary} onRefreshed={(s) => setD((x) => ({ ...x, status_summary: s }))} />
+              <CourtStatusSummary referralId={ref.id} summary={d.status_summary} readOnly={sample} onRefreshed={(s) => setD((x) => ({ ...x, status_summary: s }))} />
               <div className="mt-4 grid grid-cols-3 gap-3">
                 <Stat label="Alignment Areas" value={d.counts?.alignment_areas} testId="court-stat-alignment" />
                 <Stat label="Discussion Areas" value={d.counts?.discussion_areas} testId="court-stat-discussion" />
@@ -122,7 +127,7 @@ export default function CourtCase() {
             </Section>
 
             <Section n={5} title="Court–Professional Communication" testId="court-case-thread">
-              <CourtThread baseUrl={`/court-dashboard/cases/${ref.id}`} side="court" />
+              {sample ? <p className="text-sm text-muted-foreground" data-testid="court-sample-thread-note">In a live case this is a case-specific, timestamped message thread between the court and the assigned professional, with an AI-neutral summary of open requests. Disabled in the sample.</p> : <CourtThread baseUrl={`/court-dashboard/cases/${ref.id}`} side="court" />}
             </Section>
           </>
         )}

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { SAMPLE_REPORTS } from "@/lib/samples";
 import { SampleCard } from "@/components/SampleCard";
+import { SampleEmailForm } from "@/components/SampleEmailForm";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 
@@ -35,10 +36,20 @@ export default function Samples() {
             <h3 className="text-lg font-bold mt-1">Sample Professional Report</h3>
             <p className="text-sm text-muted-foreground mt-1">The single legal deliverable submitted to the court: Joint Report findings infused, Co-Parenting Ability Level, Parent Alignment, options &amp; resources, conflict-management techniques, roadmap and attestation. Fictional data.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 sm:justify-end">
             <Link to="/samples/professional-report" data-testid="sample-view-link-professional-report"><Button variant="outline">View</Button></Link>
             <Button asChild data-testid="sample-pdf-link-professional-report"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-professional-report/pdf`} download>Sample PDF</a></Button>
+            <SampleEmailForm endpoint="/joint/sample-professional-report/email" label="Sample Professional Report" idPrefix="sample-pro" />
           </div>
+        </div>
+
+        <div className="mb-8 rounded-lg border border-border bg-white p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-testid="sample-card-judicial-preview">
+          <div className="flex-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-accent">For courts &amp; judges</p>
+            <h3 className="text-lg font-bold mt-1">Sample Judicial Case Page</h3>
+            <p className="text-sm text-muted-foreground mt-1">A read-only preview of exactly what a judge receives in the Judicial Portal after a professional's authorized submission: procedural status, neutral court summary, authorized Joint Report findings, the Professional Report and the Ability Level history. Fictional data.</p>
+          </div>
+          <Link to="/court/sample" data-testid="sample-view-link-judicial-preview"><Button variant="outline">Preview the Judicial Portal</Button></Link>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="samples-grid">

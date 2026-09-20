@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 const LINES = [["current_status", "Current Status"], ["professional", "Professional"], ["parents", "Parents"], ["joint_assessment", "Joint Assessment"],
   ["professional_statement", "Professional Statement"], ["recent_communication", "Recent Communication"], ["outstanding", "Outstanding"], ["next_action", "Next Court-Facing Action"]];
 
-export function CourtStatusSummary({ referralId, summary, onRefreshed }) {
+export function CourtStatusSummary({ referralId, summary, onRefreshed, readOnly = false }) {
   const [busy, setBusy] = useState(false);
   const refresh = async () => {
     setBusy(true);
@@ -21,7 +21,7 @@ export function CourtStatusSummary({ referralId, summary, onRefreshed }) {
         <p className="text-xs font-semibold uppercase tracking-widest text-accent flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> AI Current Status Summary
           {summary?.outdated && <span className="ml-1 rounded-full bg-align-yellow/40 px-2 py-0.5 text-[10px] font-bold text-yellow-950" data-testid={`court-summary-outdated-${referralId}`}>Outdated</span>}
         </p>
-        <Button size="sm" variant="outline" onClick={refresh} disabled={busy} className="h-7 text-xs gap-1" data-testid={`court-summary-refresh-${referralId}`}><RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} /> {summary ? "Refresh" : "Generate"} status summary</Button>
+        {!readOnly && <Button size="sm" variant="outline" onClick={refresh} disabled={busy} className="h-7 text-xs gap-1" data-testid={`court-summary-refresh-${referralId}`}><RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} /> {summary ? "Refresh" : "Generate"} status summary</Button>}
       </div>
       {summary ? (
         <>

@@ -4,6 +4,7 @@ import { ArrowLeft, Download, Gavel, Lock } from "lucide-react";
 import api from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
+import { SampleEmailForm } from "@/components/SampleEmailForm";
 
 const Sec = ({ n, title, children, testId }) => (
   <section className="bg-white border border-border rounded-lg p-6" data-testid={testId}>
@@ -28,6 +29,7 @@ export default function SampleProfessionalReport() {
         <Button size="sm" asChild data-testid="sample-pro-pdf-btn"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Download Sample PDF</span><span className="sm:hidden">Sample PDF</span></a></Button>
       </div></header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-5">
+        <div className="flex justify-end"><SampleEmailForm endpoint="/joint/sample-professional-report/email" label="Sample Professional Report" idPrefix="sample-pro-page" /></div>
         <div className="rounded-lg border-2 border-brand-purple/30 bg-brand-purple/5 p-6">
           <p className="text-xs font-bold uppercase tracking-widest text-brand-purple flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Legal · Professional &amp; Court only</p>
           <h1 className="text-3xl sm:text-4xl font-extrabold mt-1" data-testid="sample-pro-title">Sample Professional Report</h1>

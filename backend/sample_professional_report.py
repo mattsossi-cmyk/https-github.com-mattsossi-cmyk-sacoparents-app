@@ -39,3 +39,26 @@ def sample_professional_report() -> dict:
                                  "regarding conservatorship or possession, and that I have authority to submit it to the court."),
             "sections": ["1. Case & Referral", "2. Materials Reviewed", "3. Process Completed by the Parents", "4. Joint Assessment Findings", "5. Co-Parenting Ability Level",
                          "6. Parent Alignment — Based on Joint Report", "7. Conflict Management — Approaches to Conflict", "8. Roadmap", "9. Professional Summary"]}
+
+
+def sample_judicial_case() -> dict:
+    """Read-only, fictional judicial case page payload (same shape as /court-dashboard/cases/{id}) so courts can preview the portal."""
+    r = sample_professional_report()
+    f, st = r["findings"], r["statement"]
+    steps = ["Court Referral", "Accepted", "Parents Invited", "Assessments Complete", "Joint Report Ready", "Professional Statement Ready", "Submitted to Court"]
+    ref = {"id": "sample", "judge_name": "[Presiding Judge]", "court_name": r["court"]["court_name"], "cause_number": r["court"]["cause_number"], "subject": "education", "child_initials": "S.",
+           "professional_name": r["professional"]["name"], "status": "submitted", "created_at": "2026-07-30T14:00:00Z", "responded_at": "2026-07-31T09:10:00Z", "hearing_date": "2026-10-15",
+           "case_code": r["case_code"], "overdue": False, "requested_reports": [{"key": "education", "label": "Educational Needs", "subjects": ["education"]}]}
+    checklist = [{"label": x, "done": True} for x in ("Court referral sent", "Professional accepted", "Parents invited", "Parent A completed assessment", "Parent B completed assessment",
+                                                     "Joint Report generated", "Professional Statement ready", "Submitted to court")]
+    summary = {"current_status": "Ready for court review", "professional": "Referral accepted; documents submitted (version 2).", "parents": "Both parents completed the ordered assessments.",
+               "joint_assessment": "100% complete and professionally reviewed.", "professional_statement": "Submitted (version 2, 2026-09-16).",
+               "recent_communication": "Final reports submitted to the court portal on 2026-09-16.", "outstanding": "Court review.", "next_action": "Review the Joint Alignment Report and Professional Report.",
+               "stage_label": steps[6], "generated_at": "2026-09-16T16:00:00Z", "signature": "sample",
+               "disclaimer": "Procedural status summary generated from authorized case-status records only. It is not a legal conclusion, credibility determination, or judicial recommendation."}
+    report = {"key": "education", "label": f["subject_label"], "case_code": r["case_code"], "version": 2, "packet_id": "sample", "alignment": f["alignment"], "differences": f["differences"], "child_focused": f["child_focused"]}
+    statement = {**st, "professional_name": r["professional"]["name"], "submitted_at": "2026-09-16T16:00:00Z", "packet_id": "sample"}
+    subs = [{"version": h["version"], "packet_id": "sample", "at": h["at"] + "T16:00:00Z", "sha256": "0" * 64, "superseded": h["superseded"]} for h in r["level_history"]]
+    return {"is_sample": True, "referral": ref, "case_code": r["case_code"], "stage": {"index": 6, "steps": steps, "court_referred": True, "label": steps[6]}, "checklist": checklist,
+            "parents_invited": 2, "parents_participating": 2, "status_summary": summary, "counts": {"alignment_areas": len(f["alignment"]), "discussion_areas": len(f["differences"]), "completion_pct": 100},
+            "reports": [report], "statement": statement, "level_history": r["level_history"], "submissions": subs, "communication_summary": None, "disclaimer": summary["disclaimer"]}

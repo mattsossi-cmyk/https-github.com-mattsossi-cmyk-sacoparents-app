@@ -33,7 +33,7 @@ from agreement_ai import draft_agreement_clauses, answers_signature
 from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
 from court_workflow import court_stage, run_hearing_reminders
 from judge_digest import run_judge_digests
-from sample_professional_report import sample_professional_report
+from sample_professional_report import sample_judicial_case, sample_professional_report
 from urllib.parse import quote
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, build_session_prep_pdf, build_communications_log_pdf, verify_qr_png
 from complete_engine import build_complete_report
@@ -1362,6 +1362,10 @@ async def list_sample_reports():
     return sample_list()
 
 
+class EmailSampleIn(BaseModel):
+    email: EmailStr
+
+
 @api.get("/joint/sample-professional-report")
 async def sample_professional_report_json():
     return sample_professional_report()
@@ -1372,6 +1376,25 @@ async def sample_professional_report_pdf():
     from pdf_report import build_professional_statement_pdf
     return Response(content=build_professional_statement_pdf(sample_professional_report()), media_type="application/pdf",
                     headers={"Content-Disposition": 'attachment; filename="sample-professional-report.pdf"'})
+
+
+@api.post("/joint/sample-professional-report/email")
+async def email_sample_professional_report(body: EmailSampleIn):
+    await send_email(
+        to=str(body.email).lower(),
+        subject=f"Sample Professional Report (legal) - {EMAIL_FROM_NAME}",
+        html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+              "<p>Hello,</p><p>Here is the sample <strong>Professional Report</strong> from SA CoParents Align — the single legal deliverable a professional submits to the court, "
+              "with the parents' Joint Report findings infused, the Co-Parenting Ability Level, Parent Alignment, options and resources, and conflict-management techniques.</p>"
+              f'<p><a href="{app_url()}/samples/professional-report" style="color:#5B2A86">View the sample online</a></p>'
+              f'<p><a href="{app_url()}/api/joint/sample-professional-report/pdf" style="color:#5B2A86">Download the sample PDF</a></p>'
+              f'<p style="font-size:12px;color:#888">Sample uses fictional data. Sent by {escape(EMAIL_FROM_NAME)} via the public sample-sharing form.</p></td></tr></table>'))
+    return {"ok": True}
+
+
+@api.get("/court-dashboard/sample-case")
+async def judicial_sample_case():
+    return sample_judicial_case()
 
 
 @api.get("/joint/sample/{key}")
@@ -1403,9 +1426,6 @@ async def methodology_pdf():
         headers={"Content-Disposition": 'attachment; filename="sa-coparents-align-methodology.pdf"'},
     )
 
-
-class EmailSampleIn(BaseModel):
-    email: EmailStr
 
 
 @api.post("/joint/sample/{key}/email")
