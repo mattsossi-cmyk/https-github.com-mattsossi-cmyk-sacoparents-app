@@ -3272,6 +3272,8 @@ async def _log_lifecycle(rid: str, action: str, user: dict) -> None:
 app.include_router(_build_workflow_router(db, get_current_user, app_url, send_email, EMAIL_FROM_NAME, logger, _log_lifecycle), prefix="/api")
 from legal_report import build_router as _build_legal_router  # noqa: E402
 app.include_router(_build_legal_router(db, get_current_user, _log_lifecycle), prefix="/api")
+from legal_lens import build_router as _build_lens_router  # noqa: E402
+app.include_router(_build_lens_router(db, get_current_user, _log_lifecycle), prefix="/api")
 
 
 @app.get("/health")

@@ -18,6 +18,8 @@ import Samples from "@/pages/Samples";
 import SampleProfessionalReport from "@/pages/SampleProfessionalReport";
 import LegalReport from "@/pages/LegalReport";
 import LegalReportSample from "@/pages/LegalReportSample";
+import LegalLensReport from "@/pages/LegalLensReport";
+import ProfessionalReportHome from "@/pages/ProfessionalReportHome";
 import Legal from "@/pages/Legal";
 import AcceptInvite from "@/pages/AcceptInvite";
 import Methodology from "@/pages/Methodology";
@@ -62,6 +64,8 @@ function App() {
             <Route path="/joint/:id/legal-report" element={<Protected><LegalReport /></Protected>} />
             <Route path="/joint/:id/legal-report/sample" element={<Protected><LegalReportSample /></Protected>} />
             <Route path="/samples/legal-report" element={<LegalReportSample />} />
+            <Route path="/professional-report" element={<Protected><ProfessionalReportHome /></Protected>} />
+            <Route path="/cases/:id/professional-report" element={<Protected><LegalLensReport /></Protected>} />
             <Route path="/joint/:id" element={<Protected><JointReport /></Protected>} />
             <Route path="/hub" element={<Protected><Hub /></Protected>} />
             <Route path="/hub/complete" element={<Protected><CompleteReport /></Protected>} />
