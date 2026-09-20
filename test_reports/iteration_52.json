@@ -1,0 +1,19 @@
+{
+  "summary": "Frontend-only test of (1) Sample Professional Report 'Email me' feature and (2) public /court/sample judicial preview, plus judge regression. All acceptance criteria verified. On /samples: sample-card-professional-report shows View, Sample PDF and sample-pro-email-btn; clicking opens sample-pro-email-form; invalid email 'nope' is blocked by native validation (checkValidity()=false); valid throwaway 'qa.sample.test@example.com' → backend POST /api/joint/sample-professional-report/email returned 200 {ok:true} and form closed (success). sample-card-judicial-preview present; sample-view-link-judicial-preview navigates to /court/sample. /court/sample renders court-sample-page with court-sample-banner, header court-sample-register-btn links to /auth?court=1 and no court-logout-btn. All required sections OK: court-case-checklist (8 items, all 8 checked with text-align-green), court-case-ai present with NO court-summary-refresh-sample, court-case-reports without 'Options / Resources' text, court-case-statement titled 'Professional Report' with court-ability-level='Level 6/10 — Level 4-6: Moderate Conflict / Low Trust', court-level-history with court-level-history-1 (score 4, superseded) and court-level-history-2 (score 6) + court-level-note-2 ('From Level 4: Parents completed one facilitated session…'), court-case-thread shows court-sample-thread-note with no composer, court-sample-hearing = 2026-10-15. court-report-pdf link points to /api/joint/sample-professional-report/pdf; direct GET returned 200 application/pdf. Mobile 390px: no horizontal overflow (iw=sw=bw=390). /samples/professional-report: sample-pro-page-email-btn opens sample-pro-page-email-form. Judge regression: seeded judge (testpass123) + referral via helpers, logged in through /auth?court=1, opened /court/case/{refId} → court-case-page loaded with court-case-back, court-logout-btn, court-summary-refresh-{refId} all present and NO court-sample-banner.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Minor: SampleEmailForm shows no aria-live/toast success confirmation was not detected in DOM inspection (Sonner toasts likely rendered in a portal outside queried scope); backend 200 response and form auto-close indicate success path works. No fix needed but consider a persistent inline success message for accessibility.",
+    "Minor: On /court/sample the level-history label shows text like '4v1 · 2026-08-12 · superseded' — the score badge visually merges with 'v1' text (no space between the round badge and version). Cosmetic only."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100%"},
+  "test_credentials": "Judge seeded ad-hoc: t_pjudge_e8dd7f6b@example.com / testpass123 (approved via mongo). Sample pages public — no login.",
+  "seed_data_creation": "Created one judge account and one court referral (ref bb9efa90-2e0e-4429-8e61-dbb5fbb8156a) for regression only; nothing else persisted.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "New public routes verified: /court/sample (CourtCase sample={true}) and email flows via SampleEmailForm on /samples and /samples/professional-report. Backend endpoints /api/joint/sample-professional-report/email and /api/court-dashboard/sample-case working. PDF endpoint /api/joint/sample-professional-report/pdf returns application/pdf 200. Judge regression flow (login through /auth?court=1 → /court/case/{refId}) unaffected.",
+  "rca of the issue": "N/A — no issues found."
+}
