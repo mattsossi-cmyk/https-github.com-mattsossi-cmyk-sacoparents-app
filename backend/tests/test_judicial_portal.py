@@ -131,6 +131,9 @@ def test_professional_report_infuses_joint_findings_and_hides_options_from_paren
     assert "Local parenting class (Tuesdays)" in st["framework"]["resources"] and st["framework"]["subject_options"] == cfg["subject_options"]
     text = "".join(pg.get_text() for pg in fitz.open(stream=io.BytesIO(pro.get(f"{API}/joint/reports/{rid}/professional-statement.pdf").content), filetype="pdf"))
     assert "JOINT ASSESSMENT FINDINGS" in text and "Local parenting class" in text and "CASE & REFERRAL" in text
+    assert "6. PARENT ALIGNMENT" in text and "7. CONFLICT MANAGEMENT" in text and "8. ROADMAP" in text and "9. PROFESSIONAL SUMMARY" in text
+    st_pa = pro.put(f"{API}/joint/reports/{rid}/professional-statement", json={**body, "partial_alignment": "Both value routine.", "alignment_summary": "Aligned on routine; differ on tutoring."}).json()["statement"]
+    assert st_pa["partial_alignment"] == "Both value routine." and st_pa["alignment_summary"].startswith("Aligned")
     for c in (pa, _pb):
         assert c.get(f"{API}/joint/reports/{rid}/professional-statement").status_code == 404
     # personal resource library auto-appears in the framework and can be unticked

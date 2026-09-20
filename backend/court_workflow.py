@@ -9,7 +9,7 @@ from html import escape
 
 from bson import Binary
 from fastapi import APIRouter, Depends, HTTPException, Response
-from pydantic import BaseModel
+from pydantic import AliasChoices, BaseModel, Field
 
 from joint_data import new_case_code
 from joint_engine import generate_joint_report
@@ -17,7 +17,7 @@ from coparenting_tiers import TIERS, clean_library, framework_block, joint_findi
 from pdf_report import build_joint_pdf, build_professional_statement_pdf, merge_pdfs
 
 STAGES = ["Court Referral", "Accepted", "Parents Invited", "Assessments Complete", "Joint Report Ready", "Professional Statement Ready", "Submitted to Court"]
-STATEMENT_FIELDS = ("role_basis", "process_summary", "observations", "safety_considerations", "next_steps", "alignment_areas", "further_attention", "resources_considered", "current_status")
+STATEMENT_FIELDS = ("role_basis", "process_summary", "observations", "safety_considerations", "next_steps", "alignment_areas", "further_attention", "partial_alignment", "alignment_summary", "resources_considered", "current_status")
 STATEMENT_ROLES = ("Mediator", "Therapist", "Parenting Facilitator", "Parenting Coordinator", "Amicus Attorney", "Attorney", "Other")
 STATEMENT_MATERIALS = ("Parent A Assessment", "Parent B Assessment", "Joint Report", "Educational Assessment", "Medical Assessment", "Psychological Assessment", "Co-Parenting Agreement", "Safety Assessment", "Other")
 STATEMENT_ATTESTATION = ("I attest that this Professional Assessment Statement reflects my professional observations of the facilitation process, "
@@ -106,13 +106,17 @@ class DeclineIn(BaseModel):
 
 
 class StatementIn(BaseModel):
+    """Professional Report fields. The v8 'Legal Lens' template's camelCase names are accepted as aliases."""
+    model_config = {"populate_by_name": True}
     role_basis: str = ""
     process_summary: str = ""
     observations: str = ""
     safety_considerations: str = ""
     next_steps: str = ""
-    alignment_areas: str = ""
-    further_attention: str = ""
+    alignment_areas: str = Field("", validation_alias=AliasChoices("alignment_areas", "alignmentAgreements"))
+    further_attention: str = Field("", validation_alias=AliasChoices("further_attention", "alignmentDisagreements"))
+    partial_alignment: str = Field("", validation_alias=AliasChoices("partial_alignment", "partialAlignment"))
+    alignment_summary: str = Field("", validation_alias=AliasChoices("alignment_summary", "alignmentSummary"))
     resources_considered: str = ""
     current_status: str = ""
     role: str = ""

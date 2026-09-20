@@ -8,15 +8,17 @@ import { CaseProgress } from "@/components/CaseProgress";
 import { FrameworkPanel } from "@/components/FrameworkPanel";
 
 const FIELDS = [
-  ["role_basis", "Role and basis of involvement", "How you came to facilitate this matter (court referral, appointment, parties' agreement) and your professional role."],
-  ["process_summary", "Process completed by the parents", "What each parent completed independently and how the Joint Alignment Report was produced."],
-  ["alignment_areas", "Areas of Alignment", "Where the parents' independently provided perspectives align, in neutral terms."],
-  ["further_attention", "Areas Requiring Further Attention", "Subjects that may benefit from additional professional attention. No findings about either parent."],
-  ["resources_considered", "Resources / Interventions Considered", "Structures, resources or interventions considered during the process."],
-  ["current_status", "Current Status", "Where the matter stands today (assessments, sessions, agreement work)."],
-  ["observations", "Professional Observations", "Neutral observations from the report and any facilitated conversation. Use both parents' own framing where possible."],
-  ["safety_considerations", "Safety considerations (optional)", "Any safety-related process notes in neutral language. Leave blank if none."],
-  ["next_steps", "Recommended next steps for facilitation", "Facilitation steps only — no recommendations about conservatorship or possession."],
+  ["role_basis", "Role and basis of involvement", "How you came to facilitate this matter (court referral, appointment, parties' agreement) and your professional role.", "1. Case, role & process"],
+  ["process_summary", "Process completed by the parents", "What each parent completed independently and how the Joint Alignment Report was produced.", "1. Case, role & process"],
+  ["alignment_areas", "Where the Parents Agree / Are Aligned", "Shared priorities, agreements, common child-focused goals, parenting practices, schedules, educational or medical decisions, communication expectations and other areas of alignment reflected in the Joint Report.", "6. Parent Alignment — Based on Joint Report"],
+  ["further_attention", "Where the Parents Do Not Agree / Are Not Aligned", "Unresolved issues, differing priorities or positions, parenting-plan disagreements, communication concerns, educational or medical differences and other areas of non-alignment reflected in the Joint Report.", "6. Parent Alignment — Based on Joint Report"],
+  ["partial_alignment", "Partial Alignment / Potential Areas for Agreement", "Areas where the parents share some common ground and further discussion, professional guidance or mediation may help produce agreement.", "6. Parent Alignment — Based on Joint Report"],
+  ["alignment_summary", "Professional Alignment Summary", "Summarize the significant areas of agreement and disagreement, their relationship to the child's needs, and issues that may need further resolution.", "6. Parent Alignment — Based on Joint Report"],
+  ["resources_considered", "Resources / Interventions Considered", "Structures, resources or interventions considered during the process.", "7. Conflict Management"],
+  ["safety_considerations", "Safety considerations (optional)", "Any safety-related process notes in neutral language. Leave blank if none.", "7. Conflict Management"],
+  ["current_status", "Current Status", "Where the matter stands today (assessments, sessions, agreement work).", "8. Roadmap"],
+  ["next_steps", "Recommended next steps for facilitation", "Facilitation steps only — no recommendations about conservatorship or possession.", "8. Roadmap"],
+  ["observations", "Professional Observations", "Neutral observations from the report and any facilitated conversation. Use both parents' own framing where possible.", "9. Professional Summary"],
 ];
 
 export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
@@ -92,12 +94,15 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
       <FrameworkPanel st={st} setSt={setSt} suggestion={data.suggested_score} tiers={data.tiers} subjectOptions={data.subject_options || []} library={data.library || {}} orgLibrary={data.org_library || {}} organization={data.organization || ""}
         onLibraryChange={(lib) => setData((x) => ({ ...x, library: lib }))} onOrgLibraryChange={(lib) => setData((x) => ({ ...x, org_library: lib }))} lastSubmittedScore={(data.submissions || []).slice(-1)[0]?.level_score} />
       <div className="mt-4 grid gap-4">
-        {FIELDS.map(([k, label, hint]) => (
-          <label key={k} className="block text-sm">
-            <span className="font-medium">{label}</span>
-            <span className="block text-xs text-muted-foreground">{hint}</span>
-            <Textarea value={st[k] || ""} onChange={(e) => setSt({ ...st, [k]: e.target.value })} className="mt-1.5 min-h-[88px]" disabled={subs.length > 0 && ready && false} data-testid={`statement-${k}`} />
-          </label>
+        {FIELDS.map(([k, label, hint, group], i) => (
+          <div key={k}>
+            {FIELDS[i - 1]?.[3] !== group && <p className="mb-2 mt-2 text-xs font-bold uppercase tracking-widest text-brand-purple" data-testid={`statement-group-${group.split(".")[0]}`}>{group}{group.startsWith("6.") && <span className="block font-normal normal-case tracking-normal text-muted-foreground">Use the Joint Assessment Findings above to identify where the parents are aligned, where they are not, and which unresolved issues may need additional professional support or conflict-management intervention.</span>}</p>}
+            <label className="block text-sm">
+              <span className="font-medium">{label}</span>
+              <span className="block text-xs text-muted-foreground">{hint}</span>
+              <Textarea value={st[k] || ""} onChange={(e) => setSt({ ...st, [k]: e.target.value })} className="mt-1.5 min-h-[88px]" data-testid={`statement-${k}`} />
+            </label>
+          </div>
         ))}
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">

@@ -26,7 +26,8 @@ const List = ({ title, items, empty }) => (
   </div>
 );
 
-const STMT = [["role_basis", "Role and basis of involvement"], ["process_summary", "Process completed"], ["alignment_areas", "Areas of Alignment"], ["further_attention", "Areas Requiring Further Attention"],
+const STMT = [["role_basis", "Role and basis of involvement"], ["process_summary", "Process completed"], ["alignment_areas", "Where the parents agree / are aligned"], ["further_attention", "Where the parents do not agree / are not aligned"],
+  ["partial_alignment", "Partial alignment / potential areas for agreement"], ["alignment_summary", "Professional alignment summary"],
   ["resources_considered", "Resources / Interventions Considered"], ["current_status", "Current Status"], ["observations", "Professional Observations"], ["safety_considerations", "Safety considerations"], ["next_steps", "Recommended next steps"]];
 
 export default function CourtCase() {
