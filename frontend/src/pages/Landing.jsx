@@ -910,151 +910,6 @@ function HeroBottom() {
 }
 
 /* ============================================================
-   THREE REPORTS STRIP — Iteration 203: made the report hierarchy
-   explicit. Two labeled tiers:
-     Tier 1 — CORE REPORTS every parent gets
-     Tier 2 — WHEN YOUR CHILD NEEDS MORE SUPPORT
-              (Educational / Medical / Psychological / Special Needs)
-   Reason: on the previous single-tier layout parents wondered
-   whether "Child Needs Statement" and "Special Needs Assessment"
-   were the same thing. Splitting them into two labeled tiers
-   fixes that ambiguity.
-============================================================ */
-function ThreeReportsStrip() {
-  const focusedAssessments = [
-    {
-      key: "educational",
-      label: "Educational",
-      body: "IEP · school communication · academic goals",
-      route: "/special-needs-v2/educational-deep-dive",
-      sampleHref: "/api/insights/samples/deep-dive-educational.pdf",
-      accent: "#2563EB",
-    },
-    {
-      key: "medical",
-      label: "Medical",
-      body: "Diagnoses · medication · care coordination",
-      route: "/special-needs-v2/medical-deep-dive",
-      sampleHref: "/api/insights/samples/deep-dive-medical.pdf",
-      accent: "#DC2626",
-    },
-    {
-      key: "psychological",
-      label: "Psychological",
-      body: "Therapy · anxiety · behavioural support",
-      route: "/special-needs-v2/psychological-deep-dive",
-      sampleHref: "/api/insights/samples/deep-dive-psychological.pdf",
-      accent: "#7C3AED",
-    },
-    {
-      key: "special-needs",
-      label: "Special Needs (7-domain)",
-      body: "Multi-domain evaluation with consistency-between-homes score",
-      route: "/special-needs-v2",
-      sampleHref: null, // 7-domain sample is handled by the SpecialNeedsV2 page itself
-      accent: "#B85B00",
-    },
-  ];
-
-  return (
-    <section id="three-reports" className="relative py-14 sm:py-16 bg-white border-y border-[#EFE9F9]">
-      {/* ---------- Tier 1 · CORE REPORTS ---------- */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <Eyebrow>Core Reports · Individual Journey</Eyebrow>
-        <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-2">
-          Every parent can create three core reports.
-        </h2>
-        <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-3xl mx-auto">
-          Complete them on your own, at your own pace. These three anchor
-          your reflection and stay with you across the whole journey.
-        </p>
-      </div>
-      <div className="mt-8 grid md:grid-cols-3 gap-4 max-w-6xl mx-auto px-4 sm:px-6">
-        <ThreeReportsCover
-          testid="three-reports-situation"
-          number="1"
-          title="Co-Parenting Assessment Report"
-          body="A private snapshot of how you and the other parent are actually communicating today — with concrete next steps."
-          accent="#3D1A78"
-          sampleHref="/api/insights/samples/sacoparents-coparenting-report.pdf"
-          sampleLabel="View sample (PDF)"
-        />
-        <ThreeReportsCover
-          testid="three-reports-foundation"
-          number="2"
-          title="Foundation Statement"
-          body="A one-page statement of your child-focused goals — the anchor you can return to whenever things get emotionally hot."
-          accent="#2DB5B5"
-          sampleHref="/api/insights/samples/sacoparents-foundation-statement.pdf"
-          sampleLabel="View sample (PDF)"
-        />
-        <ThreeReportsCover
-          testid="three-reports-child-needs"
-          number="3"
-          title="Child Needs Statement"
-          body="A structured, child-focused agenda you can bring straight into your mediation session or attorney meeting."
-          accent="#B85B00"
-        />
-      </div>
-
-      {/* ---------- Tier 2 · FOCUSED ASSESSMENTS ---------- */}
-      <div className="mt-16 max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-3xl mx-auto">
-          <Eyebrow>When Your Child Needs More Support</Eyebrow>
-          <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-tight mt-2">
-            Focused assessments for specific needs.
-          </h3>
-          <p className="text-sm sm:text-base text-[#4B4567] mt-3">
-            Use these alongside the three core reports when a specific
-            area of your child's life needs deeper attention. Each one
-            produces its own individual and (when both parents complete
-            it) joint alignment report.
-          </p>
-        </div>
-        <div
-          className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
-          data-testid="focused-assessments-tier"
-        >
-          {focusedAssessments.map((fa) => (
-            <div
-              key={fa.key}
-              className="group rounded-2xl border border-[#E5E0EE] bg-white p-5 hover:border-[#3D1A78] hover:shadow-md transition-all flex flex-col"
-              data-testid={`focused-assessment-${fa.key}`}
-            >
-              <Link to={fa.route} className="flex-1 block">
-                <div
-                  className="text-[11px] uppercase tracking-[0.18em] font-bold mb-2"
-                  style={{ color: fa.accent }}
-                >
-                  {fa.label}
-                </div>
-                <p className="text-sm text-[#4B4567] leading-snug">
-                  {fa.body}
-                </p>
-                <div className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78] group-hover:underline">
-                  Learn more <ArrowRight size={12} />
-                </div>
-              </Link>
-              {fa.sampleHref && (
-                <a
-                  href={fa.sampleHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78]/80 hover:text-[#3D1A78] hover:underline self-start"
-                  data-testid={`focused-assessment-${fa.key}-sample`}
-                >
-                  View sample (PDF) <ArrowUpRight size={11} />
-                </a>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
    NOT-A-VERDICT STATEMENT — a single, prominent visual block
    that captures the philosophy of the entire product. Pulled up
    out of Step 6's body copy (previously buried on the six-step
@@ -1220,54 +1075,6 @@ function IndividualToJointBridge() {
         )}
       </div>
     </section>
-  );
-}
-
-function ThreeReportsCover({ testid, number, title, body, accent, sampleHref, sampleLabel }) {
-  return (
-    <article
-      data-testid={testid}
-      className="rounded-2xl border border-[#E5E0EE] bg-gradient-to-br from-white to-[#F7F4FC] p-6 sm:p-7 relative overflow-hidden hover:shadow-md transition-shadow flex flex-col"
-    >
-      <div
-        className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center font-serif text-lg font-semibold text-white"
-        style={{ backgroundColor: accent }}
-      >
-        {number}
-      </div>
-      <div className="mb-3">
-        <FileText size={20} style={{ color: accent }} />
-      </div>
-      <h3 className="font-serif text-lg text-[#1A1330] leading-snug pr-10">
-        {title}
-      </h3>
-      <p className="text-sm text-[#4B4567] mt-3 leading-relaxed">{body}</p>
-      <div className="mt-4 text-[11px] uppercase tracking-[0.14em] font-bold" style={{ color: accent }}>
-        Downloadable PDF · shareable
-      </div>
-      <div className="mt-auto pt-4">
-        {sampleHref ? (
-          <a
-            data-testid={`${testid}-sample-link`}
-            href={sampleHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold rounded-full px-3.5 py-1.5 border transition-colors"
-            style={{ color: accent, borderColor: accent, backgroundColor: "rgba(255,255,255,0.6)" }}
-          >
-            {sampleLabel}
-            <span aria-hidden>→</span>
-          </a>
-        ) : (
-          <span
-            data-testid={`${testid}-sample-placeholder`}
-            className="inline-flex items-center gap-1.5 text-xs italic text-[#857E9C]"
-          >
-            {sampleLabel}
-          </span>
-        )}
-      </div>
-    </article>
   );
 }
 
@@ -2030,24 +1837,20 @@ export default function Landing() {
             2. EcosystemFlow — 3-node strip showing the two-site
                relationship (sacoparentsapp ↔ sacoparentsalign) and
                the child-focused result.
-            3. ThreeReportsStrip — "Individual Journey" trio: the
-               Co-Parenting Assessment Report, Foundation Statement,
-               and Child Needs Statement.
-            4. IndividualToJointBridge — pivot from solo → joint,
+            3. IndividualToJointBridge — pivot from solo → joint,
                previewing the Joint Assessment / Joint Alignment
                Report path.
-            5. HowItWorks — the six-step parent journey.
-            6. ProfessionalConnection — explicit hand-off card sitting
+            4. HowItWorks — the six-step parent journey.
+            5. ProfessionalConnection — explicit hand-off card sitting
                right after Step 6, with two CTAs: "I have a professional
                invitation" (→ /join) and "Learn about SA CoParents
                Align" (→ sacoparentsalign.com).
-            7. AlignmentPhilosophy → TrustSignals → HomepageFAQ →
+            6. AlignmentPhilosophy → TrustSignals → HomepageFAQ →
                FinalCTA close the page. */}
         <HeroTop />
         <CoachDemoSection />
         <HeroBottom />
         <EcosystemStrip />
-        <ThreeReportsStrip />
         <NotAVerdictStatement />
         <IndividualToJointBridge />
         <HowItWorks />
