@@ -16,6 +16,7 @@ import html as _html
 import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import quote as _url_quote
 
 import resend
 
@@ -466,26 +467,56 @@ def send_password_reset_code(
     code: str,
     user_name: Optional[str] = None,
 ) -> None:
-    """Send a 6-digit password-reset code (in-app entry, no link)."""
+    """Send a 6-digit password-reset code + a one-click reset link.
+
+    The link pre-fills the code + email on the /forgot-password page
+    so the parent doesn't have to copy/paste. The 6-digit code is also
+    kept visible in case they'd rather type it manually (or the email
+    client stripped the link).
+    """
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
+    # Build the deep-link. PUBLIC_APP_URL is the canonical prod origin;
+    # if unset in dev, we still fall back to the marketing domain so
+    # emails render sensibly during local testing.
+    base = (os.environ.get("PUBLIC_APP_URL") or "https://sacoparentsapp.online").rstrip("/")
+    reset_url = (
+        f"{base}/forgot-password?"
+        f"email={_url_quote(to_email)}&code={_url_quote(code)}"
+    )
     plain = (
         f"{greeting}\n\n"
         "Someone (probably you) asked to reset the password on your SA CoParents "
-        "account. Enter this 6-digit code in the app to choose a new password:\n\n"
+        "account. Click this link to choose a new password:\n\n"
+        f"    {reset_url}\n\n"
+        "Or, if the link doesn't work, open the app and enter this 6-digit code:\n\n"
         f"    {code}\n\n"
-        "It expires in 15 minutes and can only be used once. If you didn't request "
-        "this, you can safely ignore this email — your password hasn't changed.\n\n"
+        "The link and code both expire in 15 minutes and can only be used once. "
+        "If you didn't request this, you can safely ignore this email — your "
+        "password hasn't changed.\n\n"
         "— SA CoParents · sacoparentsapp.online\n"
     )
+    safe_url = _html.escape(reset_url, quote=True)
     body_html = (
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 24px 0;">'
-        f"{greeting} Enter this 6-digit code in the app to choose a new password. "
-        f"It expires in <strong>15 minutes</strong> and can only be used once.</p>"
-        f'<div style="text-align:center;margin:24px 0 32px;">'
+        f"{greeting} Click the button below to choose a new password. "
+        f"The link expires in <strong>15 minutes</strong> and can only be used once.</p>"
+        f'<div style="text-align:center;margin:24px 0 24px;">'
+        f'<a href="{safe_url}" '
+        f'style="display:inline-block;background:#3D1A78;color:#ffffff;text-decoration:none;'
+        f'font-size:15px;font-weight:600;padding:14px 28px;border-radius:12px;'
+        f'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;">'
+        f'Reset my password</a></div>'
+        f'<p style="font-size:13px;line-height:1.55;color:#4B4567;margin:0 0 12px 0;text-align:center;">'
+        f"Or enter this 6-digit code in the app:</p>"
+        f'<div style="text-align:center;margin:0 0 28px;">'
         f'<div style="display:inline-block;font-family:-apple-system,SFMono-Regular,Menlo,monospace;'
         f'letter-spacing:0.6em;font-size:34px;font-weight:800;color:#1A1330;background:#F1EEF7;'
         f'border:1px solid #E5E0EE;border-radius:16px;padding:18px 30px 18px 36px;">{_html.escape(code)}</div></div>'
-        f'<p style="font-size:12px;color:#857E9C;margin:0;">Didn\'t request this? You can safely ignore this email — your password hasn\'t changed.</p>'
+        f'<p style="font-size:12px;color:#857E9C;margin:0 0 6px 0;word-break:break-all;">'
+        f"If the button doesn't work, copy this link into your browser:<br/>"
+        f'<a href="{safe_url}" style="color:#3D1A78;">{safe_url}</a></p>'
+        f'<p style="font-size:12px;color:#857E9C;margin:14px 0 0 0;">'
+        f"Didn't request this? You can safely ignore this email — your password hasn't changed.</p>"
     )
     html = _branded_html(
         headline="Reset your password",

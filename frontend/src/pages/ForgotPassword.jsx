@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, MailCheck, KeyRound } from "lucide-react";
 
@@ -24,12 +24,29 @@ import PasswordStrengthMeter, {
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const { checkAuth } = useAuth();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [requesting, setRequesting] = useState(false);
   const [confirming, setConfirming] = useState(false);
+
+  // One-click deep-link from the reset email: /forgot-password?email=X&code=Y
+  // Pre-fills both fields and jumps straight to the "set new password"
+  // step so the parent doesn't have to re-type the code.
+  useEffect(() => {
+    const emailFromUrl = (searchParams.get("email") || "").trim();
+    const codeFromUrl = (searchParams.get("code") || "").replace(/\D/g, "").slice(0, 6);
+    if (emailFromUrl && codeFromUrl.length === 6) {
+      setEmail(emailFromUrl);
+      setCode(codeFromUrl);
+      setStep("code");
+    }
+  // Intentionally run once at mount — subsequent state changes shouldn't
+  // reset the flow if the parent has already moved past step 1.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const requestCode = async (e) => {
     e?.preventDefault?.();
