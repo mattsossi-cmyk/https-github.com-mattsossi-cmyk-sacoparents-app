@@ -26,7 +26,6 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { markOrientationSeen } from "./Orientation";
-import EcosystemStrip from "../components/EcosystemStrip";
 import CoachDemoSection from "../components/CoachDemoSection";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
@@ -1205,146 +1204,6 @@ function ProfessionalConnection() {
 }
 
 /* ============================================================
-   ECOSYSTEM FLOW — Iteration 203. A single vertical diagram that
-   tells the whole SA CoParents story end-to-end. Sits between the
-   professional-connection card and the alignment-philosophy strip
-   so the reader has just been told they can connect to Align —
-   this section shows exactly what that connection looks like.
-
-   Four stacked tiers:
-     1. INDIVIDUAL PARENT   — Assessment → Foundation → Child Needs
-     2. TWO PARENTS         — Joint Alignment Report (the bridge)
-     3. PROFESSIONAL        — Review → Options & Resources → Report
-     4. NEXT STEP           — Mediation / Agreement / Therapy / etc.
-
-   Each tier connects to the next with a downward arrow so parents
-   read this as a sequence, not four unrelated boxes.
-============================================================ */
-function EcosystemFlow() {
-  const tiers = [
-    {
-      key: "individual",
-      eyebrow: "Individual Parent",
-      title: "Private reflection, in your own words.",
-      chips: ["Assessment", "Foundation Statement", "Child Needs"],
-      accent: "#3D1A78",
-      bg: "bg-[#F7F4FC]",
-      border: "border-[#3D1A78]/20",
-    },
-    {
-      key: "two-parents",
-      eyebrow: "Two Parents",
-      title: "Joint Alignment Report.",
-      chips: [
-        "Where you align",
-        "Where you see things differently",
-        "Questions worth discussing",
-      ],
-      accent: "#2DB5B5",
-      bg: "bg-[#EEF6F6]",
-      border: "border-[#2DB5B5]/30",
-    },
-    {
-      key: "professional",
-      eyebrow: "Professional",
-      title: "SA CoParents Align — Professional Review.",
-      chips: [
-        "Interpret through a professional lens",
-        "Options & Resources",
-        "Professional Report",
-      ],
-      accent: "#0E7A7A",
-      bg: "bg-[#E6F0F7]",
-      border: "border-[#0E7A7A]/30",
-    },
-    {
-      key: "next-step",
-      eyebrow: "Next Step",
-      title: "A concrete, child-focused pathway.",
-      chips: [
-        "Child-focused mediation",
-        "Co-parenting agreement",
-        "Therapeutic support",
-        "Educational / medical / psychological resource",
-        "Other appropriate process",
-      ],
-      accent: "#B85B00",
-      bg: "bg-[#FFF6EA]",
-      border: "border-[#B85B00]/30",
-    },
-  ];
-
-  return (
-    <section
-      id="full-ecosystem-flow"
-      className="relative py-24 sm:py-28 bg-white"
-      data-testid="full-ecosystem-flow"
-    >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <Eyebrow>The Full Ecosystem</Eyebrow>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight mt-2">
-            From private reflection to a concrete next step.
-          </h2>
-          <p className="mt-5 text-sm sm:text-base text-[#4B4567] leading-relaxed">
-            SA CoParents and SA CoParents Align are sibling tools. The
-            individual reflection stays with each parent. Align is where a
-            professional (with consent) helps interpret shared and different
-            perspectives into practical options and resources.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {tiers.map((tier, i) => (
-            <React.Fragment key={tier.key}>
-              <div
-                className={`rounded-2xl border-2 ${tier.border} ${tier.bg} p-5 sm:p-7`}
-                data-testid={`ecosystem-tier-${tier.key}`}
-              >
-                <div
-                  className="text-[10px] uppercase tracking-[0.22em] font-bold"
-                  style={{ color: tier.accent }}
-                >
-                  {tier.eyebrow}
-                </div>
-                <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug mt-1">
-                  {tier.title}
-                </h3>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {tier.chips.map((chip) => (
-                    <span
-                      key={chip}
-                      className="inline-flex items-center rounded-full bg-white border border-[#E5E0EE] px-3 py-1 text-[12px] sm:text-[13px] font-semibold text-[#1A1330]"
-                    >
-                      {chip}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              {i < tiers.length - 1 && (
-                <div
-                  className="flex justify-center py-1"
-                  aria-hidden="true"
-                  data-testid={`full-ecosystem-flow-arrow-${i}`}
-                >
-                  <ArrowDown size={22} className="text-[#3D1A78]/40" />
-                </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
-        <p className="text-center text-xs sm:text-sm text-[#857E9C] mt-10 max-w-xl mx-auto leading-relaxed">
-          Not a verdict on which parent is right — a structured way to
-          identify what your child needs and what options may help you
-          move forward together, separately, or with professional support.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
    ALIGNMENT BEFORE AGREEMENT — the parent philosophy strip.
    Sits between "How it works" and the trust signals so the reader
    understands the guiding idea before they see the credentials.
@@ -1701,24 +1560,19 @@ export default function Landing() {
         <MarketingHeader />
         {/* Iteration 80 → refined:
             1. Hero + situation picker + Path B card
-            2. EcosystemFlow — 3-node strip showing the two-site
-               relationship (sacoparentsapp ↔ sacoparentsalign) and
-               the child-focused result.
-            3. HowItWorks — the six-step parent journey.
-            4. ProfessionalConnection — explicit hand-off card sitting
+            2. HowItWorks — the six-step parent journey.
+            3. ProfessionalConnection — explicit hand-off card sitting
                right after Step 6, with two CTAs: "I have a professional
                invitation" (→ /join) and "Learn about SA CoParents
                Align" (→ sacoparentsalign.com).
-            5. AlignmentPhilosophy → TrustSignals → HomepageFAQ →
+            4. AlignmentPhilosophy → TrustSignals → HomepageFAQ →
                FinalCTA close the page. */}
         <HeroTop />
         <CoachDemoSection />
         <HeroBottom />
-        <EcosystemStrip />
         <NotAVerdictStatement />
         <HowItWorks />
         <ProfessionalConnection />
-        <EcosystemFlow />
         <AlignmentPhilosophy />
         <TrustSignals />
         <HomepageFAQ />
