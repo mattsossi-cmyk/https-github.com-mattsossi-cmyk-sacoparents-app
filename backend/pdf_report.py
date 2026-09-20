@@ -918,13 +918,15 @@ def build_professional_statement_pdf(p: dict) -> bytes:
     st = p.get("statement") or {}
     court = p.get("court") or {}
     pdf = _new_pdf()
+    if p.get("is_sample"):
+        pdf.watermark_text = "SAMPLE REPORT"
     _letterhead(pdf, pro, [" · ".join(x for x in (pro.get("pro_role"), pro.get("organization")) if x), _contact_line(pro)])
     pdf.set_font(FONT, "B", 16)
     pdf.set_text_color(*PURPLE)
     pdf.cell(0, 8, "Professional Report", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font(FONT, "", 9.5)
     pdf.set_text_color(*GRAY)
-    pdf.cell(0, 5, "Professional Assessment Statement with Joint Assessment Findings", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 5, "Professional Assessment Statement with Joint Assessment Findings" + (" — SAMPLE, fictional data" if p.get("is_sample") else ""), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
     _label(pdf, "1. CASE & REFERRAL")
     rows = [("Date", p.get("date")), ("Court", court.get("court_name")), ("Cause number", court.get("cause_number")), ("Presiding", court.get("judge_name") and f"The Honorable {court['judge_name']}"),

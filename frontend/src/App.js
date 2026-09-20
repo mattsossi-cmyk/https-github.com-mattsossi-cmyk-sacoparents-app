@@ -15,6 +15,7 @@ import CompleteReport from "@/pages/CompleteReport";
 import Privacy from "@/pages/Privacy";
 import SampleReport from "@/pages/SampleReport";
 import Samples from "@/pages/Samples";
+import SampleProfessionalReport from "@/pages/SampleProfessionalReport";
 import Legal from "@/pages/Legal";
 import AcceptInvite from "@/pages/AcceptInvite";
 import Methodology from "@/pages/Methodology";
@@ -61,6 +62,7 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/sample-mediation" element={<SampleReport fixedKey="mediation" />} />
             <Route path="/samples" element={<Samples />} />
+            <Route path="/samples/professional-report" element={<SampleProfessionalReport />} />
             <Route path="/samples/:key" element={<SampleReport />} />
             <Route path="/legal/:page" element={<Legal />} />
             <Route path="/accept-invite" element={<Protected><AcceptInvite /></Protected>} />

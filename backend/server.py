@@ -33,6 +33,7 @@ from agreement_ai import draft_agreement_clauses, answers_signature
 from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
 from court_workflow import court_stage, run_hearing_reminders
 from judge_digest import run_judge_digests
+from sample_professional_report import sample_professional_report
 from urllib.parse import quote
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_complete_pdf, build_methodology_pdf, build_closing_summary_pdf, build_session_prep_pdf, build_communications_log_pdf, verify_qr_png
 from complete_engine import build_complete_report
@@ -1359,6 +1360,18 @@ async def sample_mediation_pdf():
 @api.get("/joint/samples")
 async def list_sample_reports():
     return sample_list()
+
+
+@api.get("/joint/sample-professional-report")
+async def sample_professional_report_json():
+    return sample_professional_report()
+
+
+@api.get("/joint/sample-professional-report/pdf")
+async def sample_professional_report_pdf():
+    from pdf_report import build_professional_statement_pdf
+    return Response(content=build_professional_statement_pdf(sample_professional_report()), media_type="application/pdf",
+                    headers={"Content-Disposition": 'attachment; filename="sample-professional-report.pdf"'})
 
 
 @api.get("/joint/sample/{key}")

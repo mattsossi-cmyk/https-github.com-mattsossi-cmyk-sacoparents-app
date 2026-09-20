@@ -29,6 +29,18 @@ export default function Samples() {
           </p>
         </div>
 
+        <div className="mb-8 rounded-lg border-2 border-brand-purple/40 bg-white p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-testid="sample-card-professional-report">
+          <div className="flex-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-purple">Legal · Professional &amp; Court only</p>
+            <h3 className="text-lg font-bold mt-1">Sample Professional Report</h3>
+            <p className="text-sm text-muted-foreground mt-1">The single legal deliverable submitted to the court: Joint Report findings infused, Co-Parenting Ability Level, Parent Alignment, options &amp; resources, conflict-management techniques, roadmap and attestation. Fictional data.</p>
+          </div>
+          <div className="flex gap-2">
+            <Link to="/samples/professional-report" data-testid="sample-view-link-professional-report"><Button variant="outline">View</Button></Link>
+            <Button asChild data-testid="sample-pdf-link-professional-report"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-professional-report/pdf`} download>Sample PDF</a></Button>
+          </div>
+        </div>
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="samples-grid">
           {SAMPLE_REPORTS.map((s) => (
             <SampleCard key={s.key} s={s} />
