@@ -37,7 +37,6 @@ export default function Samples() {
             <p className="text-sm text-muted-foreground mt-1">The single legal deliverable submitted to the court: Joint Report findings infused, Co-Parenting Ability Level, Parent Alignment, options &amp; resources, conflict-management techniques, roadmap and attestation. Fictional data.</p>
           </div>
           <div className="flex flex-wrap gap-2 sm:justify-end">
-            <Link to="/samples/legal-report" data-testid="sample-view-link-legal-report"><Button variant="outline">Legal Report sample</Button></Link>
             <Link to="/samples/professional-report" data-testid="sample-view-link-professional-report"><Button variant="outline">View</Button></Link>
             <Button asChild data-testid="sample-pdf-link-professional-report"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-professional-report/pdf`} download>Sample PDF</a></Button>
             <SampleEmailForm endpoint="/joint/sample-professional-report/email" label="Sample Professional Report" idPrefix="sample-pro" />

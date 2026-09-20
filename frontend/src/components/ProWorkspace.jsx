@@ -5,7 +5,6 @@ import { MatterNotes } from "@/components/MatterNotes";
 import { SessionOutcome } from "@/components/SessionOutcome";
 import { CourtPacketPanel } from "@/components/CourtPacketPanel";
 import { ProfessionalStatement } from "@/components/ProfessionalStatement";
-import { ProfessionalLegalReportCard } from "@/components/ProfessionalLegalReportCard";
 import { LegalLensCard } from "@/components/LegalLensCard";
 import { CommunicationsLog } from "@/components/CommunicationsLog";
 
@@ -21,7 +20,6 @@ export function ProWorkspace({ rid, steps, outcome, onOutcomeSaved, courtReady }
     <div className="no-print grid md:grid-cols-2 gap-6 mt-10" data-testid="pro-workspace">
       {steps && <SessionOutcome rid={rid} steps={steps} initial={outcome} onSaved={(o) => { onOutcomeSaved?.(o); load(); }} />}
       {courtReady !== undefined && <LegalLensCard rid={rid} />}
-      {courtReady !== undefined && <ProfessionalLegalReportCard rid={rid} />}
       {courtReady !== undefined && <ProfessionalStatement rid={rid} canSubmit={courtReady} />}
       {courtReady !== undefined && <CourtPacketPanel rid={rid} ready={courtReady} />}
       <section className="bg-white border border-border rounded-lg p-6" data-testid="pro-notes-section">

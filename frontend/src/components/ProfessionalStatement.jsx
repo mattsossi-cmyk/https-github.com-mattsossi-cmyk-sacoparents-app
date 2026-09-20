@@ -115,10 +115,10 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
 
       {court?.judge_email ? (
         <div className="mt-8 rounded-xl border-2 border-brand-purple/30 bg-brand-purple/5 p-5" data-testid="submit-to-court-box">
-          {st.legal_status === "finalized" && st.professional_certified && (
+          {["final", "submitted_to_court"].includes(data.legal_lens?.status) && (
             <label className="mb-3 flex items-start gap-2 text-sm cursor-pointer rounded-md border border-border bg-white p-3" data-testid="submit-include-legal-label">
               <input type="checkbox" checked={includeLegal} onChange={(e) => setIncludeLegal(e.target.checked)} className="mt-1" disabled={!submittable} data-testid="submit-include-legal" />
-              <span>Also attach the finalized <strong>Professional Legal Report</strong> (v{st.legal_version}, certified by {st.professional_certified_name}). The judge receives it alongside the Joint Report and Professional Statement, hash-sealed in the same frozen packet.</span>
+              <span>Also attach the finalized <strong>Legal Lens Review and Report to Court</strong>{data.legal_lens.signature_name && <> (signed by {data.legal_lens.signature_name})</>}. The judge receives it alongside the Joint Report and Professional Statement, hash-sealed in the same frozen packet.</span>
             </label>
           )}
 

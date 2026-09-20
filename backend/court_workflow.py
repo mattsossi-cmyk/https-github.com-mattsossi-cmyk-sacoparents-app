@@ -629,7 +629,9 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
     async def get_statement(rid: str, user=Depends(get_current_user)):
         doc = await own_case(rid, user)
         findings = joint_findings(doc)
+        lens = await db.professional_reports.find_one({"case_id": rid}, {"_id": 0, "status": 1, "signature_name": 1})
         return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
+                "legal_lens": {"status": (lens or {}).get("status", "not_started"), "signature_name": (lens or {}).get("signature_name", "")},
                 "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
                 "findings": findings, "subject_options": (findings or {}).get("subject_options") or [], "library": clean_library(user.get("resource_library") or {}),
                 "org_library": await org_library(user), "organization": (user.get("profile") or {}).get("organization") or "",
@@ -645,14 +647,18 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         return {"statement": st, "stage": court_stage({**doc, "professional_statement": st})}
 
     async def legal_pdf_bytes(doc: dict) -> bytes:
-        """Finalized Professional Legal Report PDF for attachment to a frozen court submission."""
-        from legal_report import build_payload
-        from pdf_report import build_legal_report_pdf
-        st = doc.get("professional_statement") or {}
-        if st.get("legal_status") != "finalized" or not st.get("professional_certified"):
-            raise HTTPException(status_code=400, detail="Finalize and certify the Professional Legal Report before attaching it to a court submission")
-        pro = await pro_profile(doc["professional_id"])
-        return build_legal_report_pdf({**build_payload(doc, 0), "professional": pro, "date": _iso(_now())[:10]})
+        """Finalized Legal Lens Review and Report to Court PDF for attachment to a frozen court submission."""
+        from legal_lens import classify_individual, classify_joint, readiness
+        from pdf_report import build_legal_lens_pdf
+        rep = await db.professional_reports.find_one({"case_id": doc["id"]}, {"_id": 0})
+        if not rep or rep.get("status") not in ("final", "submitted_to_court"):
+            raise HTTPException(status_code=400, detail="Finalize the Legal Lens Review and Report to Court before attaching it to a court submission")
+        view = {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")), "joint": classify_joint(rep.get("joint_rating"))},
+                "notes": {"tagline": "SA CoParents — Starting With Alignment, Ending With Agreement", "safety": "Safety findings may alter or override ordinary co-parenting, mediation, communication, or joint-process recommendations.",
+                          "rating": "The rating does not automatically determine the process. Safety screening, professional judgment, court orders, and the specific needs of the child remain controlling considerations."},
+                "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
+        await db.professional_reports.update_one({"case_id": doc["id"]}, {"$set": {"status": "submitted_to_court", "updated_at": _iso(_now())}})
+        return build_legal_lens_pdf(view)
 
 
     async def statement_pdf_bytes(doc: dict) -> bytes:
@@ -688,7 +694,7 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         version = len(doc.get("court_submissions") or []) + 1
         now = _now()
         pid = str(uuid.uuid4())
-        legal_meta = {"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": (doc.get("professional_statement") or {}).get("legal_version") if legal_pdf else None}
+        legal_meta = {"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None}
         await db.court_frozen_pdfs.insert_one({"packet_id": pid, "report_id": rid, "version": version, "pdf": Binary(combined), "sha256": _sha(combined),
                                                "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf), "created_at": _iso(now), **legal_meta,
                                                **({"legal_pdf": Binary(legal_pdf)} if legal_pdf else {})})

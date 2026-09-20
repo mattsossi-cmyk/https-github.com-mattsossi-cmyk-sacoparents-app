@@ -1,5 +1,5 @@
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Landing from "@/pages/Landing";
@@ -16,10 +16,13 @@ import Privacy from "@/pages/Privacy";
 import SampleReport from "@/pages/SampleReport";
 import Samples from "@/pages/Samples";
 import SampleProfessionalReport from "@/pages/SampleProfessionalReport";
-import LegalReport from "@/pages/LegalReport";
-import LegalReportSample from "@/pages/LegalReportSample";
 import LegalLensReport from "@/pages/LegalLensReport";
 import ProfessionalReportHome from "@/pages/ProfessionalReportHome";
+
+function LegalLensRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/cases/${id}/professional-report`} replace />;
+}
 import Legal from "@/pages/Legal";
 import AcceptInvite from "@/pages/AcceptInvite";
 import Methodology from "@/pages/Methodology";
@@ -61,9 +64,9 @@ function App() {
             <Route path="/join/:token" element={<Join />} />
             <Route path="/joint/new" element={<Protected><JointNew /></Protected>} />
             <Route path="/joint/:id/assess" element={<Protected><JointAssessment /></Protected>} />
-            <Route path="/joint/:id/legal-report" element={<Protected><LegalReport /></Protected>} />
-            <Route path="/joint/:id/legal-report/sample" element={<Protected><LegalReportSample /></Protected>} />
-            <Route path="/samples/legal-report" element={<LegalReportSample />} />
+            <Route path="/joint/:id/legal-report" element={<Protected><LegalLensRedirect /></Protected>} />
+            <Route path="/joint/:id/legal-report/sample" element={<Protected><LegalLensRedirect /></Protected>} />
+            <Route path="/samples/legal-report" element={<Navigate to="/samples/professional-report" replace />} />
             <Route path="/professional-report" element={<Protected><ProfessionalReportHome /></Protected>} />
             <Route path="/cases/:id/professional-report" element={<Protected><LegalLensReport /></Protected>} />
             <Route path="/joint/:id" element={<Protected><JointReport /></Protected>} />
