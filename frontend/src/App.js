@@ -16,6 +16,7 @@ import Privacy from "@/pages/Privacy";
 import SampleReport from "@/pages/SampleReport";
 import Samples from "@/pages/Samples";
 import SampleProfessionalReport from "@/pages/SampleProfessionalReport";
+import SampleLegalLensReport from "@/pages/SampleLegalLensReport";
 import LegalLensReport from "@/pages/LegalLensReport";
 import ProfessionalReportHome from "@/pages/ProfessionalReportHome";
 
@@ -76,6 +77,7 @@ function App() {
             <Route path="/sample-mediation" element={<SampleReport fixedKey="mediation" />} />
             <Route path="/samples" element={<Samples />} />
             <Route path="/samples/professional-report" element={<SampleProfessionalReport />} />
+            <Route path="/samples/legal-lens-report" element={<SampleLegalLensReport />} />
             <Route path="/samples/:key" element={<SampleReport />} />
             <Route path="/legal/:page" element={<Legal />} />
             <Route path="/accept-invite" element={<Protected><AcceptInvite /></Protected>} />

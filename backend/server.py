@@ -1395,6 +1395,34 @@ async def email_sample_professional_report(body: EmailSampleIn):
     return {"ok": True}
 
 
+@api.get("/joint/sample-legal-lens")
+async def sample_legal_lens_json():
+    from sample_legal_lens import sample_legal_lens
+    return sample_legal_lens()
+
+
+@api.get("/joint/sample-legal-lens/pdf")
+async def sample_legal_lens_pdf():
+    from pdf_report import build_legal_lens_pdf
+    from sample_legal_lens import sample_legal_lens
+    return Response(content=build_legal_lens_pdf(sample_legal_lens()), media_type="application/pdf",
+                    headers={"Content-Disposition": 'attachment; filename="sample-legal-lens-report.pdf"'})
+
+
+@api.post("/joint/sample-legal-lens/email")
+async def email_sample_legal_lens(body: EmailSampleIn):
+    await send_email(
+        to=str(body.email).lower(),
+        subject=f"Sample Legal Lens Review and Report to Court - {EMAIL_FROM_NAME}",
+        html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+              "<p>Hello,</p><p>Here is the sample <strong>SA CoParents Legal Lens Review and Report to Court</strong> from SA CoParents Align — a fully completed, fictional example "
+              "of the professional legal report: Safety First, individual and joint co-parenting ratings, resources, Parent Alignment, Conflict Management, Roadmap and Professional Summary.</p>"
+              f'<p><a href="{app_url()}/samples/legal-lens-report" style="color:#5B2A86">View the sample online</a></p>'
+              f'<p><a href="{app_url()}/api/joint/sample-legal-lens/pdf" style="color:#5B2A86">Download the sample PDF</a></p>'
+              f'<p style="font-size:12px;color:#888">Sample uses fictional data. Sent by {escape(EMAIL_FROM_NAME)} via the public sample-sharing form.</p></td></tr></table>'))
+    return {"ok": True}
+
+
 @api.get("/court-dashboard/sample-case")
 async def judicial_sample_case():
     return sample_judicial_case()

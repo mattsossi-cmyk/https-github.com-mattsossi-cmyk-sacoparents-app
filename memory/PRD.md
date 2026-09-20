@@ -647,3 +647,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - ProWorkspace shows only LegalLensCard ("Professional Legal Report · LEGAL LENS"); /joint/:id/legal-report(+/sample) → redirect to /cases/:id/professional-report; /samples/legal-report → /samples/professional-report; Samples card link removed. Old legal_report.py routes remain (unused by UI).
 - Court attachment now uses Legal Lens: court_workflow.legal_pdf_bytes builds build_legal_lens_pdf when professional_reports.status ∈ {final, submitted_to_court} (else 400 "Finalize the Legal Lens…"), sets status submitted_to_court; get_statement returns legal_lens {status, signature_name}; ProfessionalStatement checkbox keyed on it; legal_version = submission version. test_legal_report.py 3/3.
 - iteration_55 (consolidation + court attachment) all pass. Removed orphaned UI files (ProfessionalLegalReportCard, LegalReport, LegalReportSample, LegalReportDiff). Production still 2026-09-17.1 — Republish pending.
+
+## 2026-06 — Sample Legal Lens Report (agent-tested, preview only)
+- Public fictional finalized Legal Lens Review: GET /api/joint/sample-legal-lens (+ /pdf, POST /email); page /samples/legal-lens-report; card on /samples (data-testid sample-card-legal-lens).
+- Files: backend/sample_legal_lens.py, frontend/src/pages/SampleLegalLensReport.jsx; reuses build_legal_lens_pdf.
+- Verified: JSON + 5-page PDF (no DRAFT watermark), desktop/mobile render. Not user-confirmed, not republished to production.

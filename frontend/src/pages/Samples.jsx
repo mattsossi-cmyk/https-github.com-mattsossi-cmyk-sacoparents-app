@@ -43,6 +43,19 @@ export default function Samples() {
           </div>
         </div>
 
+        <div className="mb-8 rounded-lg border-2 border-brand-purple/40 bg-white p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-testid="sample-card-legal-lens">
+          <div className="flex-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-purple">Legal · Professional &amp; Court only</p>
+            <h3 className="text-lg font-bold mt-1">Sample Legal Lens Review and Report to Court</h3>
+            <p className="text-sm text-muted-foreground mt-1">A fully completed, finalized example of the professional legal report: Safety First, individual and joint co-parenting ratings (1–10), resources, Parent Alignment, Conflict Management, Roadmap and Professional Summary. Fictional data.</p>
+          </div>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <Link to="/samples/legal-lens-report" data-testid="sample-view-link-legal-lens"><Button variant="outline">View</Button></Link>
+            <Button asChild data-testid="sample-pdf-link-legal-lens"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-legal-lens/pdf`} download>Sample PDF</a></Button>
+            <SampleEmailForm endpoint="/joint/sample-legal-lens/email" label="Sample Legal Lens Report" idPrefix="sample-lens" />
+          </div>
+        </div>
+
         <div className="mb-8 rounded-lg border border-border bg-white p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-testid="sample-card-judicial-preview">
           <div className="flex-1">
             <p className="text-xs font-bold uppercase tracking-widest text-accent">For courts &amp; judges</p>
