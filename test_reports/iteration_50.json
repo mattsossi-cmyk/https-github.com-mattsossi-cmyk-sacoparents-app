@@ -1,0 +1,36 @@
+{
+  "summary": "Frontend-only tests for the new Sample Professional Report page. All required test-ids, sections, content assertions, PDF endpoint, and navigation flows pass. One real UI bug found: horizontal overflow on mobile 390px caused by the header's 'Download Sample PDF' button (whitespace-nowrap) combined with the back link + logo in a justify-between row.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "SampleProfessionalReport header",
+        "issue": "Horizontal overflow at 390px mobile width. scrollWidth=485, clientWidth=390. The header row (Sample Reports back link + BrandLogo + Download Sample PDF button) does not wrap because the Button contains 'Download Sample PDF' with whitespace-nowrap. Overflowing element identified: a[data-testid=sample-pro-pdf-btn] with right=485.",
+        "selector": "[data-testid=\"sample-pro-pdf-btn\"]",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/samples/professional-report (mobile 390px)",
+        "issues": ["Header row overflows viewport horizontally by ~95px due to non-wrapping PDF download button label."]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix mobile horizontal overflow on /samples/professional-report: shorten the header PDF button label on small screens (e.g., hide the text and keep only the download icon on <sm, or use text 'PDF' on mobile), OR allow header items to wrap (flex-wrap) so no element overflows the 390px viewport."
+  ],
+  "critical_code_review_comments": [
+    "SampleProfessionalReport.jsx uses process.env.REACT_APP_BACKEND_URL directly for the PDF href which is correct, but the same URL is duplicated in Samples.jsx — consider a small shared helper.",
+    "Console shows 401 errors from /api/auth/me on public pages (expected for unauthenticated user); AuthContext could suppress that noise on public routes."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a", "frontend": "95%" },
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Verified: /samples renders sample-card-professional-report above samples-grid (7 grid cards preserved); View link navigates to /samples/professional-report; sample-pro-title == 'Sample Professional Report'; s1..s9 all visible; sample-pro-level = 'Level 6/10 — Level 4-6: Moderate Conflict / Low Trust'; sample-pro-history contains both v1 score 4 with 'superseded' and v2 score 6 with 'From Level 4:' note; s4 lists alignment/differences/child-focused; s6 has agree / do not agree / partial / summary fields; s7 shows Options & resources, 'Northside ISD Reading Intervention Program', and 'Conflict-management techniques'; sample-pro-pdf-btn href = https://align-report.preview.emergentagent.com/api/joint/sample-professional-report/pdf and GET returns 200 application/pdf; sample-pro-register-btn navigates to /auth?mode=register; regression /samples/education and landing / load fine, no 'Options and Resources' on education. Outstanding issue: mobile overflow on /samples/professional-report at 390px (only the PDF button in header).",
+  "rca of the issue": "Header uses flex row with items-center justify-between gap-3 wrapping three items: back link, BrandLogo, and a shadcn Button containing 'Download Sample PDF' text with whitespace-nowrap. At 390px, the combined intrinsic widths exceed viewport so the outermost container's overflow leaks. Fixes: (a) responsive label — show icon only on <sm and full text on sm+; (b) apply flex-wrap or truncate the label; (c) reduce button padding on mobile."
+}

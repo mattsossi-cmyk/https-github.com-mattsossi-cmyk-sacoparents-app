@@ -22,10 +22,10 @@ export default function SampleProfessionalReport() {
   const st = d.statement, fw = st.framework, f = d.findings;
   return (
     <div className="min-h-screen bg-background" data-testid="sample-pro-report-page">
-      <header className="bg-white border-b border-border"><div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between gap-3">
-        <Link to="/samples" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" data-testid="sample-pro-back"><ArrowLeft className="h-4 w-4" /> Sample Reports</Link>
-        <BrandLogo size="text-xl" />
-        <Button size="sm" asChild data-testid="sample-pro-pdf-btn"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> Download Sample PDF</a></Button>
+      <header className="bg-white border-b border-border"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
+        <Link to="/samples" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground shrink-0" data-testid="sample-pro-back"><ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Sample Reports</span><span className="sm:hidden">Back</span></Link>
+        <div className="hidden sm:block"><BrandLogo size="text-xl" /></div>
+        <Button size="sm" asChild data-testid="sample-pro-pdf-btn"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Download Sample PDF</span><span className="sm:hidden">Sample PDF</span></a></Button>
       </div></header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-5">
         <div className="rounded-lg border-2 border-brand-purple/30 bg-brand-purple/5 p-6">
