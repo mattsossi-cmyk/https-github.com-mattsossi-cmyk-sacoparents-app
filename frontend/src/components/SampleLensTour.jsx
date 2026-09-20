@@ -1,0 +1,73 @@
+import { useEffect, useState } from "react";
+import { Compass, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const KEY = "sa-lens-sample-tour-seen";
+export const TOUR_STEPS = [
+  { id: "sample-lens-s1", title: "Case Information", tip: "Prefilled from the case: matter, court, cause number, professional, parent names and report date. The professional only confirms or corrects — nothing is re-typed." },
+  { id: "sample-lens-s2", title: "Safety First", tip: "Mark whether each parent's Family Violence screening was Received / Not Received / Not Applicable, then decide if a joint process is appropriate and record safeguards. This section only documents receipt and safeguards — it never states that an allegation is true." },
+  { id: "sample-lens-s3", title: "Parent A — Individual Assessment", tip: "Slide the 1–10 rating; the band label and typical strengths/gaps appear automatically. Strengths and struggles prefill from Parent A's own answers and are labeled PARENT-REPORTED INFORMATION. Tick individual resources and add a provider." },
+  { id: "sample-lens-s4", title: "Parent B — Individual Assessment", tip: "Same process for Parent B. Ratings are independent — a lower rating describes the co-parenting context, not fitness, credibility or 'which parent is right'." },
+  { id: "sample-lens-s5", title: "Joint Co-Parenting Assessment", tip: "The joint rating is suggested from the Joint Report and shows a mode (e.g. Emerging Cooperative). Where the parents do well / struggle together prefills from the shared alignment and differences." },
+  { id: "sample-lens-s6", title: "Joint Resources", tip: "Choose from the fixed joint resource list (Children in the Middle, Co-Parenting Agreement, facilitation, mediation types…) and name one provider. Resources are visible to the professional and court only — never to parents." },
+  { id: "sample-lens-s7", title: "Parent Alignment", tip: "Agreements and disagreements prefill line-by-line from the Joint Report; partial alignment lists areas of common ground. The professional writes the alignment summary in neutral language — required before finalizing." },
+  { id: "sample-lens-s8", title: "Conflict Management", tip: "Select approaches (court hearing, facilitation, traditional or child-centered mediation). Neutral guidance appears based on the joint rating; the rationale explains the recommended structure without legal conclusions." },
+  { id: "sample-lens-s9", title: "Roadmap", tip: "Short-term (30–90 days) and long-term (6–12 months) goals — concrete, dated and measurable. Both are required fields." },
+  { id: "sample-lens-s10", title: "Professional Summary & Finalize", tip: "Write the summary, set the next review date, sign and add your title. Finalizing locks the report; only a finalized report can be explicitly included in a frozen court submission." },
+];
+
+const rectOf = (id) => document.querySelector(`[data-testid="${id}"]`)?.getBoundingClientRect();
+
+export const SampleLensTour = ({ onDone }) => {
+  const [i, setI] = useState(0);
+  const [rect, setRect] = useState(null);
+  const step = TOUR_STEPS[i];
+
+  useEffect(() => {
+    const el = document.querySelector(`[data-testid="${step.id}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const update = () => setRect(rectOf(step.id));
+    const t = setTimeout(update, 450);
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => { clearTimeout(t); window.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
+  }, [step.id]);
+
+  const finish = () => { localStorage.setItem(KEY, "1"); onDone(); };
+  const pad = 8;
+  return (
+    <div className="fixed inset-0 z-50" data-testid="lens-tour-overlay">
+      {rect && <div className="absolute rounded-xl ring-4 ring-brand-purple pointer-events-none transition-all duration-300"
+        style={{ top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2, boxShadow: "0 0 0 9999px rgba(20,10,40,0.6)" }} />}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-xl rounded-xl bg-white p-5 shadow-2xl" data-testid="lens-tour-card">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-purple" data-testid="lens-tour-progress">Step {i + 1} of {TOUR_STEPS.length} · How this section was filled in</p>
+            <h3 className="text-lg font-bold mt-0.5" data-testid="lens-tour-title">{step.title}</h3>
+          </div>
+          <button onClick={finish} aria-label="Close tour" className="text-muted-foreground hover:text-foreground" data-testid="lens-tour-close"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="text-sm leading-relaxed mt-2" data-testid="lens-tour-tip">{step.tip}</p>
+        <div className="mt-4 flex items-center justify-between gap-2">
+          <Button variant="ghost" size="sm" onClick={finish} data-testid="lens-tour-skip">Skip tour</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={i === 0} onClick={() => setI(i - 1)} data-testid="lens-tour-back">Back</Button>
+            {i < TOUR_STEPS.length - 1
+              ? <Button size="sm" onClick={() => setI(i + 1)} data-testid="lens-tour-next">Next</Button>
+              : <Button size="sm" onClick={finish} data-testid="lens-tour-finish">Finish</Button>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const useSampleLensTour = (ready) => {
+  const [open, setOpen] = useState(false);
+  useEffect(() => { if (ready && !localStorage.getItem(KEY)) setOpen(true); }, [ready]);
+  return { open, start: () => setOpen(true), close: () => setOpen(false) };
+};
+
+export const StartTourButton = ({ onClick }) => (
+  <Button variant="outline" size="sm" onClick={onClick} data-testid="lens-tour-start-btn"><Compass className="h-4 w-4 mr-1" /> Start tour</Button>
+);

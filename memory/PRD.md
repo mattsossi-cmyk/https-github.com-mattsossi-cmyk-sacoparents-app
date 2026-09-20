@@ -652,3 +652,4 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Public fictional finalized Legal Lens Review: GET /api/joint/sample-legal-lens (+ /pdf, POST /email); page /samples/legal-lens-report; card on /samples (data-testid sample-card-legal-lens).
 - Files: backend/sample_legal_lens.py, frontend/src/pages/SampleLegalLensReport.jsx; reuses build_legal_lens_pdf.
 - Verified: JSON + 5-page PDF (no DRAFT watermark), desktop/mobile render. Not user-confirmed, not republished to production.
+- Guided spotlight tour on sample Legal Lens page: components/SampleLensTour.jsx (10 steps, auto-start once via localStorage key sa-lens-sample-tour-seen, "Start tour" replay, data-testids lens-tour-*). Screenshot-verified desktop+mobile.
