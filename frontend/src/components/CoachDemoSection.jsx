@@ -197,29 +197,72 @@ export default function CoachDemoSection() {
             >
               {isEmpty && (
                 <div className="flex-1 flex items-center justify-center text-center py-8">
-                  <div className="max-w-md">
+                  <div className="max-w-md w-full">
                     <div className="text-[14.5px] font-semibold text-[#1A1330] mb-2">
-                      Pick a real scenario to see the Coach in action
+                      Pick a scenario or write your own
                     </div>
                     <p className="text-[13px] text-[#4B4567] leading-relaxed">
-                      Tap any starter on the left (or scroll down on mobile) —
-                      the Coach will help you pause, get grounded, and draft
+                      Tap a starter on the left (or scroll down on mobile) —
+                      or describe your own situation below in your own words.
+                      The Coach will help you pause, get grounded, and draft
                       the actual reply.
                     </p>
-                    {/* Mobile starter list */}
-                    <div className="md:hidden mt-5 flex flex-col gap-2">
-                      {starters.map((s) => (
-                        <button
-                          key={s.id}
-                          type="button"
+
+                    {/* Custom-prompt slot — first message the visitor writes */}
+                    <form
+                      onSubmit={(e) => { e.preventDefault(); send(composer); }}
+                      className="mt-5 text-left"
+                      data-testid="coach-demo-empty-composer"
+                    >
+                      <label className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#857E9C]">
+                        Or in your own words
+                      </label>
+                      <div className="mt-2 relative">
+                        <textarea
+                          rows={3}
+                          value={composer}
+                          onChange={(e) => setComposer(e.target.value.slice(0, MAX_USER_MESSAGE_LEN))}
+                          placeholder="e.g. My co-parent keeps changing plans last-minute and my daughter is left waiting…"
                           disabled={pending}
-                          onClick={() => startWith(s.prompt)}
-                          data-testid={`coach-demo-starter-mobile-${s.id}`}
-                          className="text-left text-[12.5px] leading-snug text-[#3D1A78] bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5"
-                        >
-                          {s.label}
-                        </button>
-                      ))}
+                          data-testid="coach-demo-empty-input"
+                          className="w-full resize-none rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3 text-[13.5px] text-[#1A1330] placeholder:text-[#857E9C]/70 focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
+                        />
+                        <div className="absolute bottom-1.5 right-3 text-[10px] text-[#857E9C]">
+                          {remaining} chars left
+                        </div>
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={pending || !composer.trim()}
+                        data-testid="coach-demo-empty-send-btn"
+                        className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-[13px] font-semibold px-4 py-2.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+                      >
+                        {pending
+                          ? <Loader2 size={14} className="animate-spin" />
+                          : <ArrowRight size={14} />}
+                        Ask the Coach
+                      </button>
+                    </form>
+
+                    {/* Mobile starter list */}
+                    <div className="md:hidden mt-6">
+                      <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#857E9C] mb-2">
+                        Or try one
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {starters.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            disabled={pending}
+                            onClick={() => startWith(s.prompt)}
+                            data-testid={`coach-demo-starter-mobile-${s.id}`}
+                            className="text-left text-[12.5px] leading-snug text-[#3D1A78] bg-white rounded-xl border border-[#E5E0EE] px-3 py-2.5"
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -312,8 +355,116 @@ export default function CoachDemoSection() {
           signed-in experience. This demo is capped at {MAX_TURNS / 2} exchanges;
           create a free account to keep going and save your conversations.
         </div>
+
+        {/* Before / After social-proof strip */}
+        <BeforeAfterStrip />
       </div>
     </section>
+  );
+}
+
+
+/**
+ * BeforeAfterStrip — three anonymized "message → Coach reframe" cards
+ * that live under the demo panel to socially prove the tone shift the
+ * Coach reliably produces. These are illustrative examples (not
+ * verbatim user reviews), so we frame them honestly as
+ * "Real-world reframes" rather than as testimonials.
+ *
+ * Each card intentionally leads with the raw, activated draft so a
+ * visitor scanning the strip feels the contrast in one glance:
+ * blaming, reactive, second-person → brief, informative, friendly,
+ * firm, child-centered.
+ */
+const BEFORE_AFTER_EXAMPLES = [
+  {
+    scenario: "Late pickup, third week in a row",
+    before:
+      "Are you serious right now?? You're 40 mins late AGAIN. She's the one sitting at school wondering if you forgot her. Grow up.",
+    after:
+      "Just checking in — Ava has been waiting at pickup past 4:30 the last three Fridays. Could we lock in a 4:00 handoff going forward so she isn't left wondering? Happy to swap contacts with the after-care lead if that helps on your side.",
+  },
+  {
+    scenario: "New partner introduced without a heads-up",
+    before:
+      "So I heard from Leo that Jenna was there this weekend. Really? You couldn't even give me a heads-up before introducing our kid to your new girlfriend?",
+    after:
+      "Leo mentioned meeting Jenna this weekend and I want to make sure we're on the same page. Could we agree that new adults in either home get a quick heads-up before they meet the kids? Not a veto — just a heads-up so they aren't caught off guard.",
+  },
+  {
+    scenario: "Last-minute weekend cancel",
+    before:
+      "Cancelling an hour before pickup? Nice. She was already packed. This is exactly the kind of stuff that makes her not trust you.",
+    after:
+      "Thanks for letting me know. Ava was already packed for this weekend, so this landed hard for her. Going forward, could you give me 24 hrs notice if a weekend needs to shift? I'll break the news to her tonight and we can talk about a make-up weekend when you're able.",
+  },
+];
+
+
+function BeforeAfterStrip() {
+  return (
+    <div className="mt-14 sm:mt-20" data-testid="coach-demo-before-after-strip">
+      <div className="text-center max-w-xl mx-auto mb-8">
+        <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1 text-[11px] font-semibold tracking-[0.14em] uppercase text-[#3D1A78] shadow-sm">
+          Real-world reframes
+        </div>
+        <h3 className="mt-3 font-serif text-2xl sm:text-3xl leading-tight text-[#1A1330]">
+          See the tone shift
+        </h3>
+        <p className="mt-2 text-[13px] sm:text-[14px] text-[#4B4567] leading-relaxed">
+          Three anonymized situations we hear a lot — the raw draft on the
+          left, the Coach-refined version on the right.
+        </p>
+      </div>
+      <div className="grid gap-5 md:grid-cols-3">
+        {BEFORE_AFTER_EXAMPLES.map((ex, i) => (
+          <article
+            key={i}
+            data-testid={`coach-demo-before-after-card-${i}`}
+            className="rounded-3xl bg-white/85 backdrop-blur border border-[#E5E0EE] shadow-[0_18px_44px_-28px_rgba(61,26,120,0.35)] overflow-hidden flex flex-col"
+          >
+            <div className="px-5 pt-5 pb-3 border-b border-[#EFEBF7] bg-gradient-to-b from-white to-[#FBFAFF]">
+              <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#857E9C]">
+                Scenario
+              </div>
+              <div className="mt-1 text-[13px] font-semibold text-[#1A1330] leading-snug">
+                {ex.scenario}
+              </div>
+            </div>
+
+            <div className="p-5 flex flex-col gap-4 flex-1">
+              {/* Before */}
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#C2554A]" />
+                  <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#C2554A]">
+                    Draft (activated)
+                  </span>
+                </div>
+                <div className="rounded-2xl bg-[#FDF2F0] border border-[#F4CFC7] text-[12.5px] leading-relaxed text-[#5A2318] px-3.5 py-2.5">
+                  {ex.before}
+                </div>
+              </div>
+              {/* After */}
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#2DB5B5]" />
+                  <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#2DB5B5]">
+                    Coach-refined
+                  </span>
+                </div>
+                <div className="rounded-2xl bg-[#EDF9F9] border border-[#B6E4E4] text-[12.5px] leading-relaxed text-[#1A5555] px-3.5 py-2.5">
+                  {ex.after}
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+      <p className="mt-6 text-center text-[11px] text-[#857E9C] italic max-w-xl mx-auto">
+        Illustrative examples · names changed · no real messages included.
+      </p>
+    </div>
   );
 }
 

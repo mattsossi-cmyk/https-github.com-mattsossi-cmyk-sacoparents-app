@@ -26,6 +26,40 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-20 — Iter206 · Coach Demo · Custom Prompt Slot + Before-After Strip
+
+Follow-on polish to iter205's Landing-page Coach demo.
+
+**🟢 Custom Prompt Slot (empty-state composer)**
+- Empty state no longer forces visitors to pick one of the 4 starters;
+  a full-width textarea labelled "Or in your own words" now sits in
+  the chat viewport with a purple→teal "Ask the Coach" button.
+  Placeholder: "e.g. My co-parent keeps changing plans last-minute
+  and my daughter is left waiting…". Same 600-char cap + rate limits
+  as the follow-up composer.
+- Mobile empty state gets both: the custom textarea at the top, then
+  an "Or try one" starter list beneath it.
+- Testids: `coach-demo-empty-composer`, `coach-demo-empty-input`,
+  `coach-demo-empty-send-btn`.
+
+**🟢 Before / After Strip (social proof of tone)**
+- New `<BeforeAfterStrip />` under the demo panel, three
+  side-by-side cards on desktop and stacked on mobile.
+- Each card: scenario title (e.g. "Late pickup, third week in a
+  row") + a warm-red "Draft (activated)" bubble (the raw activated
+  message a parent might otherwise send) + a soothing-teal
+  "Coach-refined" bubble (the BIFF-style rewrite).
+- Framed honestly as "Real-world reframes / See the tone shift" +
+  footer "Illustrative examples · names changed · no real messages
+  included." — deliberately NOT presented as user testimonials.
+- Testid: `coach-demo-before-after-strip`,
+  `coach-demo-before-after-card-{0..2}`.
+- Content is in a `BEFORE_AFTER_EXAMPLES` constant at the top of
+  CoachDemoSection.jsx — easy to swap in real user-approved
+  examples later without touching layout.
+
+
+
 ### 2026-09-20 — Iter205 · Landing Page Communication Coach Live Demo
 
 **🟢 Feature — Interactive AI Coach preview on Landing**
