@@ -41,6 +41,52 @@ def sample_professional_report() -> dict:
                          "6. Parent Alignment — Based on Joint Report", "7. Conflict Management — Approaches to Conflict", "8. Roadmap", "9. Professional Summary"]}
 
 
+def sample_legal_report() -> dict:
+    """Fictional Professional Legal Report sample (Jordan Taylor, J.D. · SAMPLE-2026-001)."""
+    from legal_ai import AI_LABEL
+    from legal_report import CERTIFICATION, OPTIONS_LIBRARY, PATHS, PURPOSE, SAFETY_NOTICE
+    pa = {"label": "PARENT-REPORTED INFORMATION", "items": [
+        {"heading": "Child-focused priorities", "text": "Parent A reports that Child A needs a predictable weekday routine and consistent homework expectations in both homes."},
+        {"heading": "Areas the parent believes are working", "text": "Parent A reports that weekend exchanges occur on time and that both parents attend Child A's soccer games."},
+        {"heading": "Primary parenting concerns", "text": "Parent A reports difficulty obtaining timely responses concerning school-related decisions and reports uncertainty about who communicates with the teacher."},
+        {"heading": "Goals for resolution", "text": "Parent A would like a written protocol for school communication and a shared calendar for activities."},
+        {"heading": "Options the parent would consider", "text": "Parent A reports willingness to use a co-parenting app and to attend a co-parenting education class."}]}
+    pb = {"label": "PARENT-REPORTED INFORMATION", "items": [
+        {"heading": "Child-focused priorities", "text": "Parent B reports that Child A needs more downtime after school and less pressure around grades."},
+        {"heading": "Areas the parent believes are working", "text": "Parent B reports that the exchange schedule is stable and that Child A enjoys time in both homes."},
+        {"heading": "Primary parenting concerns", "text": "Parent B reports receiving school messages late and reports concern that schedule changes are requested on short notice."},
+        {"heading": "Goals for resolution", "text": "Parent B would like a 48-hour notice expectation for schedule changes and both parents copied on teacher emails."},
+        {"heading": "Options the parent would consider", "text": "Parent B reports willingness to use written communication through an app and to try child-focused mediation for the tutoring question."}]}
+    joint = {"available": True, "alignment": ["Both parents mentioned \"routine, homework\" when describing the child's primary need.", "Both parents mentioned \"soccer, exchanges\" when describing what is working."],
+             "differences": ["Parents expressed different perspectives regarding concerns.", "Parents expressed different perspectives regarding desired improvements."],
+             "unresolved": ["Concerns remains an open area for discussion.", "Desired Improvements remains an open area for discussion."],
+             "shared_priorities": ["A predictable weekday routine across both homes.", "One clear channel for school communication."],
+             "potential_agreement": ["Options You Would Consider: the parents share some common ground; further discussion may produce agreement."], "note": ""}
+    lens = {"observations": f"{AI_LABEL}. Parent-reported information reflects shared priorities around routine and school communication, with differences limited to notice periods for schedule changes and the pace of academic support. Neither parent's account is verified fact.",
+            "further_attention": f"{AI_LABEL}. School-communication protocol (who contacts the teacher, how both parents are copied) and a notice expectation for schedule changes.",
+            "alignment_areas": f"{AI_LABEL}. Stable exchange schedule; joint attendance at activities; agreement that homework precedes screen time.",
+            "partial_alignment": f"{AI_LABEL}. Both parents state willingness to use written communication through an app and to attend education or mediation; a tutoring decision keyed to the next progress report appears achievable.",
+            "procedural_considerations": f"{AI_LABEL}. Records reviewed are listed in Section 3. No court order concerning communication was entered in the case record; no option is stated as legally required.",
+            "professional_comments": "Reviewed and edited by the professional. The parents' willingness to use written communication is consistent across both assessments."}
+    st = {**lens, "role": "Parent Facilitator", "legal_status": "finalized", "legal_version": 1, "professional_certified": True, "professional_certified_name": "Jordan Taylor, J.D.", "professional_certified_date": "2026-09-16",
+          "certification": {"title": "Parent Facilitator", "bar_number": "00000000 (fictional)", "organization": "Taylor Family Resolution (fictional)", "email": "", "phone": ""}, "finalized_at": "2026-09-16T17:00:00Z",
+          "options_resources": ["SA CoParents Communication Builder", "BIFF communication principles", "Structured written communication", "OurFamilyWizard", "Co-Parenting Education", "Child-Focused Mediation"], "options_custom": [],
+          "conflict_resolution_paths": ["Structured Communication", "Child-Focused Mediation", "Parent Facilitation / Coordination"],
+          "conflict_resolution_explanation": "A structured written-communication protocol addresses the school-communication and notice concerns both parents reported; child-focused mediation is suited to the single open tutoring question; facilitation continues to support implementation.",
+          "legal_draft": {"parent_a_summary": pa, "parent_b_summary": pb, "joint": joint, "generated_at": "2026-09-15T15:00:00Z", "safety_notice": False,
+                          "child_focused_summary": [{"topic": "Parenting schedule", "text": "Exchange schedule reported stable by both parents; notice period for changes is an open item."},
+                                                    {"topic": "Education", "text": "Both parents prioritize reading progress; tutoring timing differs."}, {"topic": "Communication concerning the child", "text": "Both parents request one clear teacher-communication channel."},
+                                                    {"topic": "Extracurricular activities", "text": "Both parents attend soccer; shared calendar requested."}],
+                          "communication_summary": [{"pattern": "Communication methods", "text": "Text messages and occasional calls; both parents report willingness to move to an app."},
+                                                    {"pattern": "Communication breakdown", "text": "Both parents report delayed school information; each attributes delay to the other's channel."},
+                                                    {"pattern": "Ability to make joint decisions", "text": "2 aligned and 2 differing area(s) reported."}, {"pattern": "Areas where structure may assist", "text": "School communication; notice period for schedule changes."}]}}
+    return {"is_sample": True, "status": "finalized", "report": st, "purpose": PURPOSE, "safety_notice_text": "", "certification_text": CERTIFICATION, "options_library": OPTIONS_LIBRARY, "paths": PATHS, "ai_label": AI_LABEL,
+            "information_reviewed": ["Parent A Co-Parenting Assessment", "Parent B Co-Parenting Assessment", "Parent A Foundation Statement", "Parent B Foundation Statement", "Joint Co-Parenting Assessment", "Joint Report", "Educational Assessment", "Professional Notes"],
+            "availability": [], "versions": [{"version": 1, "finalized_at": "2026-09-16T17:00:00Z", "professional_name": "Jordan Taylor, J.D."}],
+            "professional": {"name": "Jordan Taylor, J.D.", "pro_role": "Parent Facilitator", "organization": "Taylor Family Resolution (fictional)", "city": "San Antonio", "state": "TX"},
+            "case": {"id": "sample", "case_code": "SAMPLE-2026-001", "child_name": "Child A, age 9", "subject_label": "Educational Needs", "parent_a": "Parent A", "parent_b": "Parent B", "court": {}}, "date": "2026-09-16", "safety_notice_default": SAFETY_NOTICE}
+
+
 def sample_judicial_case() -> dict:
     """Read-only, fictional judicial case page payload (same shape as /court-dashboard/cases/{id}) so courts can preview the portal."""
     r = sample_professional_report()

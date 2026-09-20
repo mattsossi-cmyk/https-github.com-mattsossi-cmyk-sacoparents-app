@@ -180,6 +180,15 @@ export default function JointAssessment() {
           )}
         </div>
 
+        {detail.kind !== "agreement" && (
+          <div className="bg-white border-2 border-brand-green rounded-lg p-5 mb-8" data-testid="foundation-card">
+            <p className="font-semibold text-brand-green">Foundation Statement (optional)</p>
+            <p className="text-sm text-muted-foreground mt-1 mb-3">In your own words: what matters most to you for {detail.child_name} in this co-parenting relationship, and what you hope this process achieves. Never shown to the other parent; included only in your professional's report as parent-reported information.</p>
+            <Textarea className="min-h-[110px]" value={foundation?.[0]?.content || ""} onChange={(e) => setFoundation(e.target.value.trim() ? [{ title: "Foundation Statement", content: e.target.value }] : null)} data-testid="foundation-text" />
+            {link?.linked && !foundation && <Button variant="outline" size="sm" onClick={doFoundation} disabled={busy} className="gap-2 mt-3" data-testid="pull-foundation-btn"><Download className="h-4 w-4" /> {busy ? "Loading…" : "Pull in my Foundation Statement from sacoparentsapp.online"}</Button>}
+          </div>
+        )}
+
         {detail.kind === "agreement" && (
           <div className="bg-white border-2 border-brand-green rounded-lg p-5 mb-8" data-testid="foundation-card">
             <p className="font-semibold text-brand-green">Foundation Statements</p>

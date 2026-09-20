@@ -1014,6 +1014,124 @@ def _prep_checkbox(pdf: FPDF, text: str) -> None:
     pdf.multi_cell(0, 5, _s(f"[  ]  {text}"), new_x="LMARGIN", new_y="NEXT")
 
 
+def _legal_kv(pdf: FPDF, rows: list) -> None:
+    for k, v in rows:
+        if not v:
+            continue
+        pdf.set_font(FONT, "B", 9.5)
+        pdf.set_text_color(*DARK)
+        pdf.cell(42, 5.5, _s(k))
+        pdf.set_font(FONT, "", 9.5)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(0, 5.5, _s(str(v)), new_x="LMARGIN", new_y="NEXT")
+
+
+def _legal_parent(pdf: FPDF, title: str, summary: dict) -> None:
+    _label(pdf, title.upper())
+    _body(pdf, summary.get("label", "PARENT-REPORTED INFORMATION"), italic=True)
+    for it in summary.get("items") or []:
+        pdf.set_font(FONT, "B", 9.5)
+        pdf.set_text_color(*DARK)
+        pdf.multi_cell(0, 5, _s(it["heading"]), new_x="LMARGIN", new_y="NEXT")
+        _body(pdf, it["text"], indent=4)
+    pdf.ln(2)
+
+
+LENS_PDF = (("Professional observations", "observations"), ("Issues requiring attention", "further_attention"), ("Areas of existing agreement", "alignment_areas"),
+            ("Areas appropriate for further agreement building", "partial_alignment"), ("Procedural considerations", "procedural_considerations"), ("Other professional comments", "professional_comments"))
+
+
+def _legal_status(p: dict, st: dict) -> str:
+    if p.get("is_sample"):
+        return "SAMPLE ONLY"
+    return {"finalized": f"Finalized · Version {st.get('legal_version', 1)}", "professional_review": "Professional Review"}.get(st.get("legal_status"), "Draft")
+
+
+def _legal_generated(pdf: FPDF, d: dict, case: dict) -> None:
+    j = d.get("joint") or {}
+    _label(pdf, "4. INDIVIDUAL PARENT ASSESSMENT SUMMARY")
+    _body(pdf, "Parent-reported information. Disputed statements are not presented as established facts.", italic=True)
+    _legal_parent(pdf, f"Parent A — {case.get('parent_a') or ''}", d.get("parent_a_summary") or {})
+    _legal_parent(pdf, f"Parent B — {case.get('parent_b') or ''}", d.get("parent_b_summary") or {})
+    _label(pdf, "5. JOINT ASSESSMENT FINDINGS")
+    if not j.get("available"):
+        _body(pdf, j.get("note") or "No completed Joint Assessment was available at the time this draft was generated.", italic=True)
+    for title, key in (("Areas of alignment", "alignment"), ("Areas of difference", "differences"), ("Unresolved issues", "unresolved"), ("Shared child-focused priorities", "shared_priorities"), ("Potential areas for agreement", "potential_agreement")):
+        if j.get("available"):
+            _stmt_list(pdf, title, j.get(key) or [], "None identified.")
+    _label(pdf, "6. CHILD-FOCUSED ISSUES")
+    for it in d.get("child_focused_summary") or []:
+        _body(pdf, f"• {it['topic']}: {it['text']}", indent=4)
+    if not d.get("child_focused_summary"):
+        _body(pdf, "No child-specific subjects were available in the case records.", italic=True)
+    pdf.ln(2)
+    _label(pdf, "7. COMMUNICATION AND CONFLICT PATTERNS")
+    for it in d.get("communication_summary") or []:
+        _body(pdf, f"• {it['pattern']}: {it['text']}", indent=4)
+    pdf.ln(2)
+
+
+def build_legal_report_pdf(p: dict) -> bytes:
+    """Professional Legal Report (12 sections). Watermarked DRAFT until certified; SAMPLE for the fictional sample."""
+    st, case, pro = p["report"], p["case"], p.get("professional") or {}
+    d = st.get("legal_draft") or {}
+    pdf = _new_pdf()
+    if p.get("is_sample"):
+        pdf.watermark_text = "SAMPLE"
+    elif not st.get("professional_certified") or st.get("legal_status") != "finalized":
+        pdf.watermark_text = "DRAFT - NOT CERTIFIED"
+    _letterhead(pdf, pro, [" · ".join(x for x in (pro.get("pro_role"), pro.get("organization")) if x), _contact_line(pro)])
+    pdf.set_font(FONT, "B", 16)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 8, "Professional Legal Report", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 9.5)
+    pdf.set_text_color(*GRAY)
+    status = _legal_status(p, st)
+    pdf.cell(0, 5, _s(f"SA CoParents Align · Legal Lens · Report status: {status}"), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(3)
+    _label(pdf, "1. CASE INFORMATION")
+    court = case.get("court") or {}
+    child = case.get("child_name") if p.get("is_sample") else ((case.get("child_name") or "")[:1] and f"{case['child_name'][0]}.")
+    _legal_kv(pdf, [("Case ID", case.get("case_code")), ("Court case number", court.get("cause_number")), ("Court", court.get("court_name")), ("Professional", pro.get("name")), ("Professional role", st.get("role") or pro.get("pro_role")),
+                    ("Parent A", case.get("parent_a")), ("Parent B", case.get("parent_b")), ("Children", child), ("Date generated", (d.get("generated_at") or p.get("date") or "")[:10]), ("Report status", status)])
+    pdf.ln(2)
+    _label(pdf, "2. PURPOSE OF REPORT")
+    _body(pdf, p.get("purpose", ""))
+    pdf.ln(2)
+    _stmt_list(pdf, "3. Information reviewed", p.get("information_reviewed") or [], "No records were available.")
+    _legal_generated(pdf, d, case)
+    if pdf.get_y() > pdf.h - 70:
+        pdf.add_page()
+    _label(pdf, "8. PROFESSIONAL LEGAL LENS")
+    _body(pdf, "The following section is reserved for the reviewing professional's independent observations and analysis.", italic=True)
+    for title, key in LENS_PDF:
+        _stmt_text(pdf, title, st.get(key))
+    if st.get("framework"):
+        _body(pdf, f"Co-Parenting Ability Level: {st['framework'].get('score')}/10 — {st['framework'].get('label')}", italic=True)
+        pdf.ln(1)
+    _stmt_list(pdf, "9. Options and resources", (st.get("options_resources") or []) + (st.get("options_custom") or []), "None selected by the professional.")
+    _body(pdf, "Options are identified for professional consideration only; none is stated to be legally required unless an entered court order provides otherwise.", italic=True)
+    pdf.ln(2)
+    _stmt_list(pdf, "10. Possible conflict-resolution path", st.get("conflict_resolution_paths") or [], "Not yet selected.")
+    _stmt_text(pdf, "Professional explanation", st.get("conflict_resolution_explanation"))
+    if d.get("safety_notice"):
+        _label(pdf, "11. SAFETY CONSIDERATIONS")
+        _body(pdf, p.get("safety_notice_text") or "", italic=True)
+        pdf.ln(2)
+    _label(pdf, "12. PROFESSIONAL STATEMENT AND CERTIFICATION")
+    _body(pdf, p.get("certification_text", ""), italic=True)
+    if st.get("professional_certified"):
+        c = st.get("certification") or {}
+        _legal_kv(pdf, [("Certified by", st.get("professional_certified_name")), ("Date", st.get("professional_certified_date")), ("Title", c.get("title")), ("Bar number", c.get("bar_number")),
+                        ("Firm / organization", c.get("organization")), ("Email", c.get("email")), ("Phone", c.get("phone")), ("Finalized", (st.get("finalized_at") or "")[:19].replace("T", " ") + " UTC"), ("Version", st.get("legal_version"))])
+    else:
+        _body(pdf, "NOT YET CERTIFIED — DRAFT. Professional review and certification are required before this report is final.", italic=True)
+    pdf.ln(2)
+    _body(pdf, "Parent-reported statements remain identified as parent-reported information. This report makes no custody recommendation, credibility finding or legal conclusion. Prepared through SA CoParents Align.", italic=True)
+    return bytes(pdf.output())
+
+
+
 def build_communications_log_pdf(r: dict) -> bytes:
     """Exhibit: chronological list of every email/notice sent for a case."""
     pdf = _new_pdf()

@@ -1234,7 +1234,10 @@ def _validated_answers(doc: dict, body: JointResponsesIn) -> dict:
     answers = {k: (body.answers.get(k) or "").strip() for k in valid}
     if any(not v for v in answers.values()):
         raise HTTPException(status_code=400, detail="Please answer all questions")
-    return {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}
+    payload = {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}
+    if body.foundation:
+        payload["foundation"] = _foundation_payload(body)
+    return payload
 
 
 async def ensure_agreement_ai(doc: dict) -> dict:
@@ -3267,6 +3270,8 @@ async def _log_lifecycle(rid: str, action: str, user: dict) -> None:
 
 
 app.include_router(_build_workflow_router(db, get_current_user, app_url, send_email, EMAIL_FROM_NAME, logger, _log_lifecycle), prefix="/api")
+from legal_report import build_router as _build_legal_router  # noqa: E402
+app.include_router(_build_legal_router(db, get_current_user, _log_lifecycle), prefix="/api")
 
 
 @app.get("/health")
