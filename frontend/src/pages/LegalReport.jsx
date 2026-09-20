@@ -71,7 +71,7 @@ export default function LegalReport() {
             <Sec n={8} title="Professional Legal Lens" testId="legal-lens-section">
               <p className="italic text-muted-foreground">The following section is reserved for the reviewing professional's independent observations and analysis.</p>
               {st.ai_generated_content && <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900" data-testid="legal-ai-label">{d.ai_label} · source: {st.ai_generated_content.source === "ai" ? "AI (GPT-5.4 mini)" : "rule-based system draft"} · {st.ai_generated_content.generated_at?.slice(0, 16).replace("T", " ")}</p>}
-              {LENS.map(([k, t]) => <label key={k} className="block"><span className="text-sm font-medium">{t}</span><Textarea value={st[k] || ""} onChange={(e) => setSt({ ...st, [k]: e.target.value })} className="mt-1 min-h-[96px]" data-testid={`legal-lens-${k}`} /></label>)}
+              {LENS.map(([k, t]) => <label key={k} className="block"><span className="text-sm font-medium">{t}</span>{k === "professional_comments" && <span className="block text-xs text-muted-foreground">Your own words only — never AI-prefilled.</span>}<Textarea value={st[k] || ""} onChange={(e) => setSt({ ...st, [k]: e.target.value })} className="mt-1 min-h-[96px]" data-testid={`legal-lens-${k}`} /></label>)}
             </Sec>
             <Sec n={9} title="Options and Resources" testId="legal-options-section">
               <p className="text-xs text-muted-foreground">Identify options for consideration. None is stated as legally required unless an entered court order provides otherwise.</p>
