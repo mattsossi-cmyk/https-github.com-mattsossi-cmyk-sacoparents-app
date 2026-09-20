@@ -1,0 +1,25 @@
+{
+  "summary": "Frontend-only verification of the SA CoParents Align consolidation: the 'Legal Lens Review and Report to Court' is now the single Professional Legal Report; the older 12-section report UI is gone; the ProfessionalStatement submit block gains a 'submit-include-legal' checkbox only once the Legal Lens report is final/submitted; submitting attaches the Legal Lens PDF to the frozen packet and the judge page exposes it. All acceptance criteria pass.\n\n(1) Pro on /joint/{rid}: exactly one legal-lens-card renders (LEGAL LENS badge, title 'Professional Legal Report'); zero legal-report-card in the DOM. The orphaned component file /app/frontend/src/components/ProfessionalLegalReportCard.jsx still exists on disk but is not imported anywhere (grep-clean) so it never mounts — safe to delete.\n\n(2) Filling ProfessionalStatement (role Mediator, role_basis, process_summary, observations, next_steps, dynamic-score slider set to 5 via native input setter) and clicking statement-mark-ready-btn does NOT reveal submit-include-legal while lens status is still Draft. Confirmed absent (count=0).\n\n(3) legal-lens-prepare-btn → /cases/{rid}/professional-report builder. Filling lens-signature_name='QA Court Pro' + lens-professional_summary + clicking lens-finalize-btn flips lens-status to 'Final'.\n\n(4) Back on /joint/{rid} submit-include-legal is now present (count=1). Ticking submit-include-legal + submit-attest, clicking submit-to-court-btn (confirm dialog auto-accepted) → submission succeeds. Reload builder → lens-status shows 'Submitted to Court'.\n\n(5) Judge login (t_pjudge_*@example.com, testpass123) → /court/case/{refId}: court-legal-report block renders ('LEGAL LENS Professional Legal Report v1 — certified, attached to this frozen submission SHA-256 56ccd1e2…'); court-legal-report-pdf link → GET /api/court-dashboard/packets/{packet_id}/legal-report.pdf → HTTP 200, content-type application/pdf, 48594 bytes.\n\n(6) Pro redirects: /joint/{rid}/legal-report → /cases/{rid}/professional-report; /joint/{rid}/legal-report/sample → /cases/{rid}/professional-report.\n\n(7) Public redirect (no auth): /samples/legal-report → /samples/professional-report.\n\n(8) /samples page has no sample-view-link-legal-report; the top card is sample-view-link-professional-report only.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/seed_iter55.py"],
+  "action_items": [
+    "Optional cleanup: /app/frontend/src/components/ProfessionalLegalReportCard.jsx is now orphaned (no importers). Safe to delete to prevent future regression re-introducing legal-report-card."
+  ],
+  "critical_code_review_comments": [
+    "CourtCase.jsx line 101: <Button asChild ...><a ...></a></Button> renders the anchor itself carrying data-testid='court-legal-report-pdf'. Tests must query the testid directly (not 'testid a'). Fine at runtime — noted for regression stability.",
+    "ProfessionalStatement submit block gates submit-include-legal on data.legal_lens?.status in ['final','submitted_to_court'] — matches the spec. After submission the checkbox stays visible (status becomes submitted_to_court); consider auto-checking + disabling it once the lens has already been attached to a frozen packet so a subsequent version submission cannot accidentally omit it.",
+    "ProfessionalLegalReportCard.jsx should be removed from the repo; grep shows zero importers so the file is dead code but still shipped in the JS bundle if webpack picks it up via some barrel export."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100% of acceptance criteria"},
+  "test_credentials": "casekit pro=t_df04aaee@example.com / testpass123; judge=t_pjudge_16818f50@example.com / testpass123; rid=9855cd9f-872d-4154-8c69-e55782ad0831; case_code=SA-26-EDU-YRRQF3; referral_id=14d97bbe-5894-4955-8f84-69d327794807.",
+  "seed_data_creation": "/app/backend/tests/seed_iter55.py — creates approved judge + approved pro, judge referrals -> pro accepts -> pro creates joint case (subject=education) -> both parents auto-register/accept via invite tokens -> fill() with themes 'alpha'/'beta' -> report status=ready. Seed persisted to /tmp/iter55_seed.json.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Auth testids are 'email-input' and 'password-input' (NOT 'auth-email' as prior iter_54 note incorrectly stated); submit is 'auth-submit-btn'. Judge case URL uses referral_id, not case_code: /court/case/{refId}. court-legal-report-pdf is on the <a> element directly — select the testid, don't chain ' a'. Legal Lens redirects are Navigate-based (SPA) so page.url reflects the new path after the goto/networkidle. To submit-to-court in Playwright, register page.on('dialog', d: d.accept()) BEFORE clicking submit-to-court-btn (window.confirm gate)."
+}
