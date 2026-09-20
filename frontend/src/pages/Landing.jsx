@@ -755,10 +755,9 @@ function PathBInvitedCard() {
   );
 }
 
-function Hero() {
-  const { enterGuest, loading: guestLoading, watchIntro } = useEnterApp();
+function HeroTop() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#F8F7FC] via-[#EFE9F9] to-[#E4F1F1] pt-28 sm:pt-32 pb-16 sm:pb-20">
+    <section className="relative overflow-hidden bg-gradient-to-br from-[#F8F7FC] via-[#EFE9F9] to-[#E4F1F1] pt-28 sm:pt-32 pb-10 sm:pb-14">
       <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-[#D4C5F0]/40 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-32 w-[30rem] h-[30rem] rounded-full bg-[#A8DCDC]/40 blur-3xl pointer-events-none" />
 
@@ -791,8 +790,22 @@ function Hero() {
           <br />
           Create Better <span className="text-[#3D1A78]">Agreements.</span>
         </h1>
+      </div>
+    </section>
+  );
+}
+
+
+function HeroBottom() {
+  const { enterGuest, loading: guestLoading, watchIntro } = useEnterApp();
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-br from-[#E4F1F1] via-[#EFE9F9] to-[#F8F7FC] pt-10 sm:pt-14 pb-16 sm:pb-20">
+      <div className="absolute -top-24 -right-32 w-[24rem] h-[24rem] rounded-full bg-[#A8DCDC]/30 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -left-32 w-[28rem] h-[28rem] rounded-full bg-[#D4C5F0]/40 blur-3xl pointer-events-none" />
+
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center fade-up">
         <p
-          className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] mt-8 leading-relaxed"
+          className="max-w-2xl mx-auto text-base sm:text-lg text-[#4B4567] leading-relaxed"
           data-testid="hero-supporting-copy"
         >
           SA CoParents helps parents independently identify their child&rsquo;s
@@ -2016,7 +2029,9 @@ export default function Landing() {
                Align" (→ sacoparentsalign.com).
             7. AlignmentPhilosophy → TrustSignals → HomepageFAQ →
                FinalCTA close the page. */}
-        <Hero />
+        <HeroTop />
+        <CoachDemoSection />
+        <HeroBottom />
         <EcosystemStrip />
         <ThreeReportsStrip />
         <NotAVerdictStatement />
@@ -2024,7 +2039,6 @@ export default function Landing() {
         <HowItWorks />
         <ProfessionalConnection />
         <EcosystemFlow />
-        <CoachDemoSection />
         <AlignmentPhilosophy />
         <TrustSignals />
         <HomepageFAQ />
