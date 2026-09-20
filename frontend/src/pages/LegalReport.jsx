@@ -7,6 +7,7 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { LegalGeneratedSections, LegalReadOnlyTail, Sec } from "@/components/LegalReportSections";
+import { LegalReportDiff } from "@/components/LegalReportDiff";
 
 const LENS = [["observations", "Professional Observations"], ["further_attention", "Issues Requiring Attention"], ["alignment_areas", "Areas of Existing Agreement"],
   ["partial_alignment", "Areas Appropriate for Further Agreement Building"], ["procedural_considerations", "Procedural Considerations"], ["professional_comments", "Other Professional Comments"]];
@@ -98,6 +99,8 @@ export default function LegalReport() {
             <LegalGeneratedSections data={d} /><LegalReadOnlyTail data={d} />
           </div>
         )}
+
+        {started && d.versions?.length > 0 && <LegalReportDiff rid={id} versions={d.versions} />}
 
         {started && (
           <div className="sticky bottom-3 rounded-lg border border-border bg-white/95 backdrop-blur p-3 flex flex-wrap gap-2" data-testid="legal-actions">

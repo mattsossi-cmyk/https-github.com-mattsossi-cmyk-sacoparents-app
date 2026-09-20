@@ -160,6 +160,53 @@ class GenerateIn(BaseModel):
     regenerate: bool = False
 
 
+DIFF_FIELDS = [("observations", "Professional Observations"), ("further_attention", "Issues Requiring Attention"), ("alignment_areas", "Areas of Existing Agreement"),
+               ("partial_alignment", "Areas Appropriate for Further Agreement Building"), ("procedural_considerations", "Procedural Considerations"), ("professional_comments", "Other Professional Comments"),
+               ("conflict_resolution_explanation", "Professional Explanation"), ("options_resources", "Options and Resources"), ("options_custom", "Own options"), ("conflict_resolution_paths", "Conflict-Resolution Paths")]
+
+
+def _text_diff(a: str, b: str) -> list[dict]:
+    """Word-level diff segments: [{op: equal|insert|delete, text}]."""
+    import difflib
+    wa, wb = a.split(), b.split()
+    out = []
+    for op, i1, i2, j1, j2 in difflib.SequenceMatcher(a=wa, b=wb, autojunk=False).get_opcodes():
+        if op == "equal":
+            out.append({"op": "equal", "text": " ".join(wa[i1:i2])})
+        else:
+            if i2 > i1:
+                out.append({"op": "delete", "text": " ".join(wa[i1:i2])})
+            if j2 > j1:
+                out.append({"op": "insert", "text": " ".join(wb[j1:j2])})
+    return out
+
+
+def report_diff(old: dict, new: dict) -> list[dict]:
+    rows = []
+    for key, label in DIFF_FIELDS:
+        a, b = old.get(key), new.get(key)
+        if isinstance(a, list) or isinstance(b, list):
+            a, b = a or [], b or []
+            if a != b:
+                rows.append({"key": key, "label": label, "kind": "list", "added": [x for x in b if x not in a], "removed": [x for x in a if x not in b]})
+        else:
+            a, b = str(a or ""), str(b or "")
+            if a != b:
+                rows.append({"key": key, "label": label, "kind": "text", "segments": _text_diff(a, b)})
+    return rows
+
+
+def build_payload(doc: dict, notes: int) -> dict:
+    st = doc.get("professional_statement") or {}
+    return {"report": st, "status": st.get("legal_status") or ("draft" if st.get("legal_draft") else "not_started"), "availability": availability(doc, notes),
+            "information_reviewed": information_reviewed(doc, notes), "purpose": PURPOSE, "safety_notice_text": SAFETY_NOTICE if (st.get("legal_draft") or {}).get("safety_notice") else "",
+            "certification_text": CERTIFICATION, "options_library": OPTIONS_LIBRARY, "paths": PATHS, "ai_label": AI_LABEL,
+            "versions": [{k: v for k, v in s.items() if k != "report"} for s in (doc.get("legal_report_versions") or [])],
+            "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label"),
+                     "parent_a": (doc.get("participants") or {}).get("a", {}).get("name") or "Parent A", "parent_b": (doc.get("participants") or {}).get("b", {}).get("name") or "Parent B",
+                     "court": doc.get("court") or {}}}
+
+
 def build_router(db, get_current_user, log_event) -> APIRouter:
     r = APIRouter()
 
@@ -178,13 +225,7 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
         return await db.professional_notes.count_documents({"report_id": rid, "author_id": user["_id"]})
 
     def payload(doc: dict, notes: int) -> dict:
-        st = doc.get("professional_statement") or {}
-        return {"report": st, "status": st.get("legal_status") or ("draft" if st.get("legal_draft") else "not_started"), "availability": availability(doc, notes),
-                "information_reviewed": information_reviewed(doc, notes), "purpose": PURPOSE, "safety_notice_text": SAFETY_NOTICE if (st.get("legal_draft") or {}).get("safety_notice") else "",
-                "certification_text": CERTIFICATION, "options_library": OPTIONS_LIBRARY, "paths": PATHS, "ai_label": AI_LABEL, "versions": doc.get("legal_report_versions") or [],
-                "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label"),
-                         "parent_a": (doc.get("participants") or {}).get("a", {}).get("name") or "Parent A", "parent_b": (doc.get("participants") or {}).get("b", {}).get("name") or "Parent B",
-                         "court": doc.get("court") or {}}}
+        return build_payload(doc, notes)
 
     @r.get("/cases/{rid}/professional-legal-report")
     async def get_report(rid: str, user=Depends(get_current_user)):
@@ -278,6 +319,18 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
         data = {**payload(doc, await notes_count(rid, user)), "professional": {"name": pro.get("name", ""), **(pro.get("profile") or {})}, "date": _now()[:10]}
         return Response(content=build_legal_report_pdf(data), media_type="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="professional-legal-report-{doc.get("case_code") or rid}.pdf"'})
+
+    @r.get("/professional-legal-reports/{rid}/diff")
+    async def diff(rid: str, from_version: int = 0, to_version: int = 0, user=Depends(get_current_user)):
+        """Compare finalized versions (to_version=0 → current working copy)."""
+        doc = await own_case(rid, user)
+        versions = {v["version"]: v for v in (doc.get("legal_report_versions") or [])}
+        if from_version not in versions:
+            raise HTTPException(status_code=404, detail="Version not found")
+        old = versions[from_version]["report"]
+        new = versions[to_version]["report"] if to_version else (doc.get("professional_statement") or {})
+        return {"from_version": from_version, "to_version": to_version or "current", "from_finalized_at": versions[from_version]["finalized_at"],
+                "to_finalized_at": versions[to_version]["finalized_at"] if to_version else None, "changes": report_diff(old, new)}
 
     @r.get("/professional-legal-report/sample")
     async def sample():

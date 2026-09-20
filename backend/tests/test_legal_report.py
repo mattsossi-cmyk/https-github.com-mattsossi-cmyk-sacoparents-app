@@ -41,7 +41,12 @@ def test_legal_report_flow() -> None:
     # edits after finalization never overwrite silently: a new version is created on the next finalize
     assert pro.patch(f"{API}/professional-legal-reports/{rid}", json={"fields": {"professional_comments": "Updated."}}).json()["status"] == "professional_review"
     f2 = pro.post(f"{API}/professional-legal-reports/{rid}/finalize", json={"certified": True, "certified_name": "Test Pro, J.D.", "certified_date": "2026-09-21"}).json()
-    assert f2["report"]["legal_version"] == 2 and [v["version"] for v in f2["versions"]] == [1, 2]
+    assert f2["report"]["legal_version"] == 2 and [v["version"] for v in f2["versions"]] == [1, 2] and "report" not in f2["versions"][0]
+    diff = pro.get(f"{API}/professional-legal-reports/{rid}/diff", params={"from_version": 1, "to_version": 2}).json()
+    pc = next(c for c in diff["changes"] if c["key"] == "professional_comments")
+    assert pc["kind"] == "text" and any(s["op"] == "insert" and "Updated." in s["text"] for s in pc["segments"]) and any(s["op"] == "delete" for s in pc["segments"])
+    assert pro.get(f"{API}/professional-legal-reports/{rid}/diff", params={"from_version": 2, "to_version": 0}).json()["changes"] == []
+    assert pro.get(f"{API}/professional-legal-reports/{rid}/diff", params={"from_version": 9}).status_code == 404
     for c in (pa, pb):
         assert c.get(f"{API}/professional-legal-reports/{rid}/pdf").status_code == 403
     events = pro.get(f"{API}/joint/reports/{rid}/activity").json()["lifecycle"]

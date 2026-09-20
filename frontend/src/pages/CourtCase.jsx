@@ -95,6 +95,13 @@ export default function CourtCase({ sample = false }) {
                 <div className="space-y-3 text-sm">
                   <p><span className="text-muted-foreground">Professional:</span> <strong>{d.statement.professional_name}</strong>{d.statement.role && <> · <span className="text-muted-foreground">Role:</span> {d.statement.role}</>} · submitted {d.statement.submitted_at?.slice(0, 10)}</p>
                   {d.statement.materials_reviewed?.length > 0 && <p data-testid="court-statement-materials"><span className="text-muted-foreground">Materials reviewed:</span> {d.statement.materials_reviewed.join(" · ")}</p>}
+                  {d.statement.legal_report_included && (
+                    <div className="rounded-md border-2 border-brand-purple/30 bg-brand-purple/5 p-3 flex flex-wrap items-center justify-between gap-2" data-testid="court-legal-report">
+                      <p><span className="rounded-full bg-brand-purple/10 px-2 py-0.5 text-[10px] font-bold tracking-widest text-brand-purple mr-2">LEGAL LENS</span><strong>Professional Legal Report</strong> v{d.statement.legal_version} — certified, attached to this frozen submission{d.statement.legal_sha256 && <code className="ml-2 text-[11px] text-muted-foreground">SHA-256 {d.statement.legal_sha256.slice(0, 16)}…</code>}</p>
+                      {!sample && <Button size="sm" variant="outline" asChild data-testid="court-legal-report-pdf"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${d.statement.packet_id}/legal-report.pdf`} download><Download className="h-4 w-4 mr-1" /> Legal Report PDF</a></Button>}
+                    </div>
+                  )}
+
                   {STMT.filter(([k]) => d.statement[k]).map(([k, t]) => <div key={k}><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t}</p><p className="leading-relaxed whitespace-pre-wrap">{d.statement[k]}</p></div>)}
                   {d.statement.framework && (
                     <div className="rounded-lg border border-border p-4" data-testid="court-statement-framework">

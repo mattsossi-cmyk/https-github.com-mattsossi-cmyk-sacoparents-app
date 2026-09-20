@@ -134,6 +134,7 @@ class CourtMessageIn(BaseModel):
 
 class SubmitIn(BaseModel):
     attest: bool = False
+    include_legal_report: bool = False
 
 
 SUMMARY_DISCLAIMER = ("Procedural status summary generated from authorized case-status records only. It does not draw on private parent journals, raw assessment answers, "
@@ -290,7 +291,8 @@ def _submitted_material(case: dict | None, packets: list, done: list) -> tuple[l
     if case and packets:
         report = _court_report_view(case, packets[0])
         counts = {"alignment_areas": len(report["alignment"]), "discussion_areas": len(report["differences"]), "completion_pct": 100}
-        statement = {**(packets[0].get("statement") or {}), "professional_name": packets[0].get("professional_name"), "submitted_at": packets[0].get("created_at"), "packet_id": packets[0]["id"]}
+        statement = {**(packets[0].get("statement") or {}), "professional_name": packets[0].get("professional_name"), "submitted_at": packets[0].get("created_at"), "packet_id": packets[0]["id"],
+                     "legal_report_included": packets[0].get("legal_report_included", False), "legal_version": packets[0].get("legal_version"), "legal_sha256": packets[0].get("legal_sha256", "")}
         return [report], counts, statement
     if case:
         return [], {"alignment_areas": None, "discussion_areas": None, "completion_pct": int(sum(done) / 2 * 100)}, None
@@ -642,6 +644,17 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         await log_report_event(rid, f"Professional Statement {'marked ready' if status == 'ready' else 'draft saved'} (v{st['version']})", user)
         return {"statement": st, "stage": court_stage({**doc, "professional_statement": st})}
 
+    async def legal_pdf_bytes(doc: dict) -> bytes:
+        """Finalized Professional Legal Report PDF for attachment to a frozen court submission."""
+        from legal_report import build_payload
+        from pdf_report import build_legal_report_pdf
+        st = doc.get("professional_statement") or {}
+        if st.get("legal_status") != "finalized" or not st.get("professional_certified"):
+            raise HTTPException(status_code=400, detail="Finalize and certify the Professional Legal Report before attaching it to a court submission")
+        pro = await pro_profile(doc["professional_id"])
+        return build_legal_report_pdf({**build_payload(doc, 0), "professional": pro, "date": _iso(_now())[:10]})
+
+
     async def statement_pdf_bytes(doc: dict) -> bytes:
         st = doc.get("professional_statement") or {}
         subs = doc.get("court_submissions") or []
@@ -670,12 +683,15 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         joint_pdf = build_joint_pdf({**rep, "professional": {"name": pro["name"], "credentials_verified": pro["credentials_verified"]},
                                      "verify": {"case_code": doc.get("case_code"), "url": f"{app_url()}/verify?code={doc.get('case_code')}"}})
         stmt_pdf = await statement_pdf_bytes(doc)
-        combined = merge_pdfs([stmt_pdf, joint_pdf])
+        legal_pdf = await legal_pdf_bytes(doc) if body.include_legal_report else None
+        combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []))
         version = len(doc.get("court_submissions") or []) + 1
         now = _now()
         pid = str(uuid.uuid4())
+        legal_meta = {"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": (doc.get("professional_statement") or {}).get("legal_version") if legal_pdf else None}
         await db.court_frozen_pdfs.insert_one({"packet_id": pid, "report_id": rid, "version": version, "pdf": Binary(combined), "sha256": _sha(combined),
-                                               "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf), "created_at": _iso(now)})
+                                               "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf), "created_at": _iso(now), **legal_meta,
+                                               **({"legal_pdf": Binary(legal_pdf)} if legal_pdf else {})})
         if version > 1:
             await db.court_packets.update_many({"report_id": rid, "submission_version": {"$exists": True}}, {"$set": {"superseded": True}})
         st = doc["professional_statement"]
@@ -684,14 +700,16 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
                   "cover_letter": st.get("process_summary", ""), "statement": st, "report_ids": [rid], "include_session_outcome": False, "include_closing_summary": False,
                   "attestation_text": STATEMENT_ATTESTATION, "attested_at": _iso(now), "token_hash": hashlib.sha256(secrets.token_bytes(32)).hexdigest(), "code_hash": "",
                   "code_attempts": 0, "sessions": [], "status": "sent", "responses": [], "opened_count": 0, "download_count": 0, "submission_version": version,
-                  "frozen": True, "sha256": _sha(combined), "created_at": _iso(now), "expires_at": _iso(now + timedelta(days=3650))}
+                  "frozen": True, "sha256": _sha(combined), "created_at": _iso(now), "expires_at": _iso(now + timedelta(days=3650)), **legal_meta}
         await db.court_packets.insert_one(packet)
-        sub = {"version": version, "packet_id": pid, "submitted_at": _iso(now), "submitted_by": user.get("name", ""), "sha256": _sha(combined),
+        sub = {"version": version, "packet_id": pid, "submitted_at": _iso(now), "submitted_by": user.get("name", ""), "sha256": _sha(combined), **legal_meta,
                "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf), "statement_version": st.get("version"), "judge_name": court.get("judge_name", ""), "court_name": court.get("court_name", ""),
                "level_score": (st.get("framework") or {}).get("score"), "level_label": (st.get("framework") or {}).get("label"),
                "level_change_note": st.get("level_change_note") or "", "level_changed_from": st.get("level_changed_from")}
         await db.joint_reports.update_one({"id": rid}, {"$push": {"court_submissions": sub}, "$set": {"report_generated_at": doc.get("report_generated_at") or _iso(now)}})
-        await log_report_event(rid, f"Submitted Joint Report + Professional Statement to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
+        await log_report_event(rid, f"Submitted Joint Report + Professional Statement{' + Professional Legal Report' if legal_pdf else ''} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
+        if legal_pdf:
+            await log_report_event(rid, "LEGAL_REPORT_SHARED", user)
         if doc.get("court_referral_id"):
             await db.court_referrals.update_one({"id": doc["court_referral_id"]}, {"$set": {"status": "submitted", "submitted_at": _iso(now)}})
         try:

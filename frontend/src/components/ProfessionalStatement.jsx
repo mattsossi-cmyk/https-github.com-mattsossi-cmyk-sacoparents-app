@@ -26,6 +26,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
   const [st, setSt] = useState({});
   const [busy, setBusy] = useState(false);
   const [attest, setAttest] = useState(false);
+  const [includeLegal, setIncludeLegal] = useState(false);
 
   const load = () => { api.get(`/joint/reports/${rid}/professional-statement`).then((r) => { setData(r.data); setSt(r.data.statement); onStageChange?.(r.data.stage); }).catch(() => {}); };
   useEffect(() => { load(); }, [rid]);
@@ -43,7 +44,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
     if (!window.confirm("Submit the Joint Report and Professional Statement to the court? Both documents will be locked, timestamped and placed in the Judge Portal.")) return;
     setBusy(true);
     try {
-      const { data: d } = await api.post(`/joint/reports/${rid}/submit-to-court`, { attest });
+      const { data: d } = await api.post(`/joint/reports/${rid}/submit-to-court`, { attest, include_legal_report: includeLegal });
       toast.success(`Submitted to court — version ${d.submission.version} locked`);
       setAttest(false); load();
     } catch (e) { toast.error(formatApiError(e)); }
@@ -114,6 +115,13 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
 
       {court?.judge_email ? (
         <div className="mt-8 rounded-xl border-2 border-brand-purple/30 bg-brand-purple/5 p-5" data-testid="submit-to-court-box">
+          {st.legal_status === "finalized" && st.professional_certified && (
+            <label className="mb-3 flex items-start gap-2 text-sm cursor-pointer rounded-md border border-border bg-white p-3" data-testid="submit-include-legal-label">
+              <input type="checkbox" checked={includeLegal} onChange={(e) => setIncludeLegal(e.target.checked)} className="mt-1" disabled={!submittable} data-testid="submit-include-legal" />
+              <span>Also attach the finalized <strong>Professional Legal Report</strong> (v{st.legal_version}, certified by {st.professional_certified_name}). The judge receives it alongside the Joint Report and Professional Statement, hash-sealed in the same frozen packet.</span>
+            </label>
+          )}
+
           <label className="flex items-start gap-2 text-sm cursor-pointer" data-testid="submit-attest-label">
             <input type="checkbox" checked={attest} onChange={(e) => setAttest(e.target.checked)} className="mt-1" disabled={!submittable} data-testid="submit-attest" />
             <span>{data.attestation_text}</span>

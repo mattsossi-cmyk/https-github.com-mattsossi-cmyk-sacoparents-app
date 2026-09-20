@@ -424,6 +424,15 @@ def _judge_routes(svc: PacketService, get_current_user) -> APIRouter:
         await svc.log_court(p, f"Court Packet opened by {p['judge_name']} (court account)", user["_id"], user.get("name", ""))
         return await svc.view(p)
 
+    @r.get("/court-dashboard/packets/{pid}/legal-report.pdf")
+    async def judge_legal_pdf(pid: str, user=Depends(get_current_user)):
+        p = await svc.for_judge(pid, user)
+        frozen = await db.court_frozen_pdfs.find_one({"packet_id": pid, "legal_pdf": {"$exists": True}}, {"legal_pdf": 1})
+        if not frozen:
+            raise HTTPException(status_code=404, detail="No Professional Legal Report was attached to this submission")
+        await svc.log_court(p, f"Professional Legal Report PDF downloaded by {p['judge_name']} (court account)", user["_id"], user.get("name", ""))
+        return _pdf_response(bytes(frozen["legal_pdf"]), f"professional-legal-report-{_safe_name(p)}.pdf")
+
     @r.get("/court-dashboard/packets/{pid}/pdf")
     async def judge_pdf(pid: str, user=Depends(get_current_user)):
         p = await svc.for_judge(pid, user)
