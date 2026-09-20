@@ -1,0 +1,15 @@
+{
+  "summary": "Retested /samples/professional-report header overflow fix. At 390x844: no horizontal overflow (innerWidth=390, docScrollWidth=390, bodyScrollWidth=390, zero overflowing elements). Header shows 'Back' link and 'Sample PDF' button as expected. All sample-pro-s1..s9 sections and sample-pro-title render. At 1920x800: header correctly shows 'Sample Reports' back link, 'SA CoParents' logo, and 'Download Sample PDF'. Fix verified.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Mobile overflow on /samples/professional-report resolved. Header responsive rules working: hides logo <sm, uses 'Back' and 'Sample PDF' labels. Desktop unchanged.",
+  "rca of the issue": "Previously header used long labels and full-size logo causing >390px content width. Fix hides logo on mobile and shortens labels; verified with scrollWidth==innerWidth and no element bounding right exceeds viewport."
+}
