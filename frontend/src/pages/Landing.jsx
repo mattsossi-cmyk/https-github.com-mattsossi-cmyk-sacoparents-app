@@ -821,8 +821,22 @@ function HeroBottom() {
             link, or paste the visible SA-XXXXXX Alignment Code and
             we auto-forward to `/join?code=...` so the code is
             pre-filled after login. */}
+        <div className="mt-14 text-center" data-testid="find-your-path-label">
+          <div className="inline-flex items-center gap-2">
+            <span className="hidden sm:inline-block h-px w-10 bg-[#3D1A78]/40" />
+            <span className="font-serif text-xl sm:text-2xl font-bold tracking-[0.16em] uppercase text-[#3D1A78]">
+              Find your path
+            </span>
+            <span className="hidden sm:inline-block h-px w-10 bg-[#3D1A78]/40" />
+          </div>
+          <p className="mt-2 text-[13px] sm:text-sm text-[#4B4567] max-w-lg mx-auto">
+            Two ways to begin — starting on your own, or picking up
+            an invitation from a professional.
+          </p>
+        </div>
+
         <div
-          className="mt-10 grid gap-3 sm:grid-cols-2 max-w-3xl mx-auto"
+          className="mt-6 grid gap-3 sm:grid-cols-2 max-w-3xl mx-auto"
           data-testid="hero-dual-entry"
         >
           <button
