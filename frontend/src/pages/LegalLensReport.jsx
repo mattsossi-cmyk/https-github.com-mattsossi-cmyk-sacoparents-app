@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Circle, Download, Eye, FileCheck2, Save } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Download, Eye, FileCheck2, Save, Sparkles } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,19 @@ export default function LegalLensReport() {
   const [rep, setRep] = useState({});
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [model, setModel] = useState("gemini");
+  const [aiInfo, setAiInfo] = useState(null);
+  const aiDraft = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.post(`/cases/${id}/professional-report/ai-draft`, { fields: rep, model });
+      const empty = Object.keys(data.fields).filter((k) => !(rep[k] || "").trim());
+      const keys = empty.length ? empty : Object.keys(data.fields);
+      setRep((r) => ({ ...r, ...Object.fromEntries(keys.map((k) => [k, data.fields[k]])) }));
+      setAiInfo(data);
+      toast.success(`${data.model}${data.source === "rule_based" ? " unavailable — rule-based" : ""} draft filled ${keys.length} section${keys.length === 1 ? "" : "s"}. Review and edit before finalizing.`);
+    } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
+  };
   const set = (k, val) => setRep((r) => ({ ...r, [k]: val }));
   const apply = (data) => { setV(data); setRep(data.report); };
   useEffect(() => { api.get(`/cases/${id}/professional-report`).then((r) => apply(r.data)).catch((e) => toast.error(formatApiError(e))); }, [id]);
@@ -51,15 +64,20 @@ export default function LegalLensReport() {
   if (!v) return <div className="min-h-screen bg-white" data-testid="lens-loading" />;
   const { classification: cls, library: lib, notes, readiness } = v;
   const pdf = `${process.env.REACT_APP_BACKEND_URL}/api/cases/${id}/professional-report/pdf`;
-  const actions = (
-    <div className="flex flex-wrap gap-2" data-testid="lens-actions">
+  const actions = (top) => (
+    <div className="flex flex-wrap gap-2" data-testid={top ? "lens-actions" : "lens-actions-bottom"}>
       <Button variant="outline" size="sm" onClick={() => save()} disabled={busy} data-testid="lens-save-btn"><Save className="h-4 w-4 mr-1" /> Save Draft</Button>
       <Button variant="outline" size="sm" onClick={async () => { await save(); setPreview(!preview); }} disabled={busy} data-testid="lens-preview-btn"><Eye className="h-4 w-4 mr-1" /> {preview ? "Back to Editor" : "Preview Report"}</Button>
       <Button variant="outline" size="sm" asChild data-testid="lens-pdf-btn"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> Generate PDF</a></Button>
       <Button size="sm" onClick={() => save("final")} disabled={busy || !rep.signature_name} data-testid="lens-finalize-btn"><FileCheck2 className="h-4 w-4 mr-1" /> Finalize Report</Button>
       <select value={rep.status} onChange={(e) => save(e.target.value)} className="h-9 rounded-md border border-input bg-white px-2 text-sm" data-testid="lens-status-select">{lib.statuses.map((s) => <option key={s} value={s}>{STATUS[s]}</option>)}</select>
+      {top && rep.status !== "final" && rep.status !== "submitted_to_court" && <span className="flex items-center gap-1 rounded-md border border-brand-purple/30 bg-brand-purple/5 px-2" data-testid="lens-ai-block">
+        <select value={model} onChange={(e) => setModel(e.target.value)} className="h-7 rounded-md border border-input bg-white px-1 text-xs" data-testid="lens-ai-model-select">{(lib.ai_models || []).map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}</select>
+        <Button variant="ghost" size="sm" onClick={aiDraft} disabled={busy} data-testid="lens-ai-draft-btn"><Sparkles className="h-4 w-4 mr-1" /> AI-assist draft</Button>
+      </span>}
     </div>
   );
+  const aiNotice = aiInfo && <p className="rounded-md border-l-4 border-amber-500 bg-amber-50 p-2 text-xs" data-testid="lens-ai-notice"><strong>{aiInfo.label}</strong> — generated with {aiInfo.model}{aiInfo.source === "rule_based" ? " (model unavailable; rule-based text used)" : ""}. The professional must review, edit and certify every AI-assisted section before finalizing. AI text makes no legal conclusion or custody recommendation.</p>;
   return (
     <div className="min-h-screen bg-white" data-testid="lens-page">
       <header className="border-b border-border"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="lens-back"><ArrowLeft className="h-4 w-4" /> Back to Case</Link><BrandLogo size="text-xl" /><span className="rounded-full bg-brand-purple/10 px-3 py-1 text-xs font-semibold text-brand-purple" data-testid="lens-status">{STATUS[rep.status]}</span></div></header>
@@ -67,7 +85,8 @@ export default function LegalLensReport() {
         <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-purple" data-testid="lens-title">SA CoParents Legal Lens Review and Report to Court</h1>
         <ol className="flex flex-wrap gap-1 text-[11px]" data-testid="lens-steps">{STEPS.map((s, i) => <li key={s} className="rounded-full border border-brand-purple/30 px-2 py-0.5 text-brand-purple">{i + 1}. {s}</li>)}</ol>
         <ul className="flex flex-wrap gap-3 text-xs" data-testid="lens-readiness">{readiness.map((r) => <li key={r.key} className="flex items-center gap-1">{r.done ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4 text-muted-foreground" />}{r.label}{r.na && !r.done ? " (N/A)" : ""}</li>)}</ul>
-        {actions}
+        {actions(true)}
+        {aiNotice}
         {preview ? <iframe title="Report preview" src={pdf} className="h-[80vh] w-full rounded-lg border border-border" data-testid="lens-preview-frame" /> : (
           <>
             <Sec n={1} title="Case Information" id="case"><div className="grid gap-3 sm:grid-cols-3">{[["matter_name", "Case / Matter Name"], ["court_county", "Court / County"], ["cause_number", "Cause Number"], ["professional_role", "Professional Role"], ["parent_a_name", "Parent A Name"], ["parent_b_name", "Parent B Name"]].map(([k, l]) => <Field key={k} label={l} value={rep[k]} onChange={(val) => set(k, val)} id={k} />)}<label className="block text-sm"><span className="font-medium">Case ID</span><input readOnly value={v.case.case_code || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-case-id" /></label><label className="block text-sm"><span className="font-medium">Professional Name</span><input readOnly value={rep.professional_name || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-professional-name" /></label><Field label="Report Date" type="date" value={rep.report_date} onChange={(val) => set("report_date", val)} id="report_date" /></div></Sec>
@@ -106,7 +125,7 @@ export default function LegalLensReport() {
               <div className="grid gap-3 sm:grid-cols-3"><Field label="Next Review / Reassessment Date" type="date" value={rep.next_review_date} onChange={(val) => set("next_review_date", val)} id="next_review_date" /><Field label="Professional Signature Name" value={rep.signature_name} onChange={(val) => set("signature_name", val)} id="signature_name" /><Field label="Professional Title" value={rep.professional_title} onChange={(val) => set("professional_title", val)} id="professional_title" /></div>
               {rep.finalized_at && <p className="text-xs text-align-green font-semibold" data-testid="lens-finalized">Date finalized: {rep.finalized_at.slice(0, 10)}</p>}
             </Sec>
-            {actions}
+            {actions(false)}
           </>
         )}
         <p className="text-center text-xs text-brand-purple font-semibold">{notes.tagline}</p>

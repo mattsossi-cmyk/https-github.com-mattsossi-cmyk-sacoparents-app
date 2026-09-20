@@ -41,6 +41,60 @@ def rule_based_lens(draft: dict) -> dict:
     }
 
 
+MODELS = {"gemini": ("gemini", "gemini-3.1-pro-preview", "Gemini 3.1 Pro"), "openai": ("openai", "gpt-5.4-mini", "GPT-5.4 Mini")}
+DEFAULT_MODEL = "gemini"
+LENS_REPORT_KEYS = ("joint_notes", "alignment_summary", "conflict_management_rationale", "short_term_goals", "long_term_goals", "professional_summary")
+LENS_REPORT_SYSTEM = SYSTEM.split("Return ONLY JSON")[0] + (
+    "You are drafting narrative sections of the SA CoParents Legal Lens Review and Report to Court from the structured report data provided (ratings, classifications, "
+    "prefilled strengths/gaps, alignment lists, selected resources and conflict-management options). Ratings describe the co-parenting context, never fitness or credibility. "
+    "Return ONLY JSON with keys: joint_notes, alignment_summary, conflict_management_rationale, short_term_goals, long_term_goals, professional_summary. "
+    "short_term_goals and long_term_goals are newline-separated concrete goals (3-4 lines each); other values are 3-5 sentences.")
+
+
+def _label(v: str) -> str:
+    return v if v.lower().startswith("ai-assisted draft") else f"{AI_LABEL}. {v}"
+
+
+def rule_based_lens_report(rep: dict, cls: dict) -> dict:
+    j = cls.get("joint") or {}
+    lbl = f"joint rating {rep.get('joint_rating')} ({j.get('label')}, {j.get('mode')})" if j else "no joint rating entered yet"
+    opts = ", ".join(rep.get("conflict_management_options") or []) or "no conflict-management approach selected yet"
+    return {k: _label(v) for k, v in {
+        "joint_notes": f"The Joint Report reflects {lbl}. Areas where the parents do well together: {rep.get('joint_strengths') or 'not yet recorded'}. Areas of difficulty: {rep.get('joint_gaps') or 'not yet recorded'}. These statements are parent-reported and are not verified findings.",
+        "alignment_summary": f"Aligned areas: {rep.get('alignment_agreements') or 'none recorded'}. Non-aligned areas: {rep.get('alignment_disagreements') or 'none recorded'}. Partial alignment: {rep.get('partial_alignment') or 'none recorded'}. This summary does not determine which parent's position is correct.",
+        "conflict_management_rationale": f"Selected approaches: {opts}. Neutral guidance for this rating band suggests: {', '.join(j.get('guidance') or []) or 'enter a joint rating for guidance'}. Safety screening, court orders and the child's needs remain controlling.",
+        "short_term_goals": "Adopt a single written communication channel with a defined response window.\nComplete the selected individual resources.\nSchedule the first session of the selected conflict-management approach.",
+        "long_term_goals": "Reach a written co-parenting agreement on the non-aligned areas.\nMaintain or improve the joint co-parenting rating at reassessment.\nReduce court involvement in routine decisions.",
+        "professional_summary": f"This report documents review of both individual assessments, family violence screenings ({rep.get('fv_a_received') or 'pending'} / {rep.get('fv_b_received') or 'pending'}) and the Joint Report, with individual ratings {rep.get('parent_a_rating') or '–'} and {rep.get('parent_b_rating') or '–'} and {lbl}. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.",
+    }.items()}
+
+
+async def draft_lens_report(rep: dict, cls: dict, session_id: str, model: str = DEFAULT_MODEL) -> tuple[dict, str, str]:
+    """Drafts Legal Lens narrative fields. Returns (fields, source 'ai'|'rule_based', model label)."""
+    provider, name, label = MODELS.get(model) or MODELS[DEFAULT_MODEL]
+    fallback = rule_based_lens_report(rep, cls)
+    key = os.environ.get("EMERGENT_LLM_KEY")
+    if not key:
+        return fallback, "rule_based", label
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        chat = LlmChat(api_key=key, session_id=f"legal-lens-report-{session_id}", system_message=LENS_REPORT_SYSTEM).with_model(provider, name)
+        skip = ("id", "case_id", "professional_id", "joint_report_id", "parent_a_assessment_id", "parent_b_assessment_id", "created_at", "updated_at", "signature_name")
+        payload = {"report": {k: v for k, v in rep.items() if k not in skip and v not in ("", None, [])}, "classification": cls}
+        text = (await chat.send_message(UserMessage(text=json.dumps(payload, ensure_ascii=False)))).strip()
+        if text.startswith("```"):
+            text = text.strip("`").split("\n", 1)[1] if "\n" in text else text.strip("`")
+            text = text.removeprefix("json").strip()
+        data = json.loads(text)
+        out = {k: _label(str(data.get(k, "")).strip()) for k in LENS_REPORT_KEYS if str(data.get(k, "")).strip()}
+        if len(out) < len(LENS_REPORT_KEYS):
+            return {**fallback, **out}, "ai", label
+        return out, "ai", label
+    except Exception as exc:
+        logger.warning("legal lens report AI drafting unavailable (%s): %s", name, exc)
+        return fallback, "rule_based", label
+
+
 async def draft_lens(draft: dict, session_id: str) -> tuple[dict, str]:
     """Returns (lens_fields, source) where source is 'ai' or 'rule_based'."""
     fallback = rule_based_lens(draft)

@@ -53,6 +53,7 @@ TEXT_FIELDS = ("matter_name", "court_county", "cause_number", "professional_role
 LIST_FIELDS = ("parent_a_resources", "parent_b_resources", "joint_resources", "conflict_management_options")
 DICT_FIELDS = ("parent_a_provider", "parent_b_provider", "joint_provider")
 INT_FIELDS = ("parent_a_rating", "parent_b_rating", "joint_rating")
+AI_MODELS = [{"key": "gemini", "label": "Gemini 3.1 Pro"}, {"key": "openai", "label": "GPT-5.4 Mini"}]
 
 
 def classify_individual(rating) -> dict | None:
@@ -115,6 +116,11 @@ class ReportIn(BaseModel):
     status: str | None = None
 
 
+class AiDraftIn(BaseModel):
+    fields: dict = {}
+    model: str = "gemini"
+
+
 def build_router(db, get_current_user, log_event) -> APIRouter:
     r = APIRouter()
 
@@ -130,7 +136,7 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
     def view(rep: dict, doc: dict) -> dict:
         return {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
                 "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": INDIVIDUAL_RESOURCES, "joint_resources": JOINT_RESOURCES, "conflict_options": CONFLICT_OPTIONS,
-                "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE},
+                "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE},
                 "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
 
     async def get_or_create(doc: dict, user: dict) -> dict:
@@ -186,6 +192,16 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
         await db.professional_reports.update_one({"case_id": rid}, {"$set": upd})
         await log_event(rid, "LEGAL_LENS_REPORT_FINALIZED" if body.status == "final" else "LEGAL_LENS_REPORT_SAVED", user)
         return view({**rep, **upd}, doc)
+
+    @r.post("/cases/{rid}/professional-report/ai-draft")
+    async def ai_draft(rid: str, body: AiDraftIn, user=Depends(get_current_user)):
+        from legal_ai import draft_lens_report
+        doc = await own_case(rid, user)
+        rep = {**(await get_or_create(doc, user)), **{k: v for k, v in body.fields.items() if k in TEXT_FIELDS or k in LIST_FIELDS or k in INT_FIELDS}}
+        cls = view(rep, doc)["classification"]
+        fields, source, label = await draft_lens_report(rep, cls, rid, body.model)
+        await log_event(rid, "LEGAL_LENS_AI_DRAFT", user)
+        return {"fields": fields, "source": source, "model": label, "label": "AI-Assisted Draft — Professional Review Required"}
 
     @r.get("/cases/{rid}/professional-report/pdf")
     async def report_pdf(rid: str, user=Depends(get_current_user)):
