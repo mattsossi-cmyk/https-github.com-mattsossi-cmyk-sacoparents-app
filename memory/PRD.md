@@ -26,6 +26,37 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-09-20 — Iter205 · Landing Page Communication Coach Live Demo
+
+**🟢 Feature — Interactive AI Coach preview on Landing**
+
+- New backend module `/app/backend/coach_demo_routes.py` — public,
+  unauthenticated slice of the real Coach.
+    * `GET  /api/coach/demo/starters` — 4 curated marketing-friendly
+      prompts (last-minute visit cancel, new-partner heads-up, chronic
+      lateness, pre-mediation anxiety).
+    * `POST /api/coach/demo/reply` — calls the SAME
+      `ai_service.generate_coach_reply` used by the signed-in Coach at
+      `/coach`; passes `history=[]` (stateless demo).
+- **Rate limits (in-memory sliding window):** 10 msgs / IP / hour,
+  400 msgs / platform / hour, 6 turns max per transcript, 600-char
+  user message cap. Zero DB writes.
+- **Frontend:** new `<CoachDemoSection />` (`/app/frontend/src/components/CoachDemoSection.jsx`)
+  mounted on Landing between `<EcosystemFlow />` and `<AlignmentPhilosophy />`.
+  Two-column desktop layout (starters rail + chat viewport), single
+  column on mobile. Real-time chat bubbles with `react-markdown`
+  rendering of Claude's BIFF-structured replies. Follow-up chips
+  clickable to continue the exchange. On safety_flag → sign-up CTA
+  card (routes to `/register`) instead of composer. On cap → same
+  CTA. "Nothing here is saved" copy + Lock icon prominent in the
+  header.
+- **Verified live:** cold-hit reply ~4 s; markdown bold in brand
+  purple; zero horizontal overflow at 1920px and 390px viewports;
+  starters + composer + follow-ups + sign-up CTA all render;
+  suggested_followups + safety_flag both propagate to the UI.
+
+
+
 ### 2026-09-18 — Iter204 · Empty-State CTAs + Bundle Download + Sample Deep-Dives + Re-seed Shares
 
 Iteration_65 · **backend 100% (13/13 passed, 1 skipped) · frontend 100% (previous iter_64)**.

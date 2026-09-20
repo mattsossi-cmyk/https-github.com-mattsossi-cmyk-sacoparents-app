@@ -29,6 +29,7 @@ import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { markOrientationSeen } from "./Orientation";
 import EcosystemStrip from "../components/EcosystemStrip";
+import CoachDemoSection from "../components/CoachDemoSection";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
@@ -2023,6 +2024,7 @@ export default function Landing() {
         <HowItWorks />
         <ProfessionalConnection />
         <EcosystemFlow />
+        <CoachDemoSection />
         <AlignmentPhilosophy />
         <TrustSignals />
         <HomepageFAQ />
