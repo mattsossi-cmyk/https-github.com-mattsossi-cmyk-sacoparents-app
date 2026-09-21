@@ -127,17 +127,34 @@ class AiDraftIn(BaseModel):
     model: str = "gemini"
 
 
+def _clean_text(v) -> str:
+    return str(v or "")[:8000]
+
+
+def _clean_list(v):
+    return [str(x)[:200] for x in v][:30] if isinstance(v, list) else None
+
+
+def _clean_dict(v):
+    return {f: str(v.get(f, ""))[:300] for f in ("name", "specialty", "contact")} if isinstance(v, dict) else None
+
+
+def _clean_int(v):
+    return max(1, min(10, int(v))) if v not in (None, "", 0) else None
+
+
+_CLEANERS = [(TEXT_FIELDS, _clean_text), (LIST_FIELDS, _clean_list), (DICT_FIELDS, _clean_dict), (INT_FIELDS, _clean_int)]
+
+
 def sanitize_fields(fields: dict) -> dict:
     upd = {}
     for k, v in fields.items():
-        if k in TEXT_FIELDS:
-            upd[k] = str(v or "")[:8000]
-        elif k in LIST_FIELDS and isinstance(v, list):
-            upd[k] = [str(x)[:200] for x in v][:30]
-        elif k in DICT_FIELDS and isinstance(v, dict):
-            upd[k] = {f: str(v.get(f, ""))[:300] for f in ("name", "specialty", "contact")}
-        elif k in INT_FIELDS:
-            upd[k] = max(1, min(10, int(v))) if v not in (None, "", 0) else None
+        cleaner = next((fn for keys, fn in _CLEANERS if k in keys), None)
+        if cleaner is None:
+            continue
+        cleaned = cleaner(v)
+        if cleaned is not None or cleaner is _clean_int:
+            upd[k] = cleaned
     return upd
 
 

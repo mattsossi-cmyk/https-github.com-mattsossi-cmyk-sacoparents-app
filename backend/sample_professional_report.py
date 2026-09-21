@@ -44,7 +44,7 @@ def sample_professional_report() -> dict:
 def sample_legal_report() -> dict:
     """Fictional Professional Legal Report sample (Jordan Taylor, J.D. · SAMPLE-2026-001)."""
     from legal_ai import AI_LABEL
-    from legal_report import CERTIFICATION, OPTIONS_LIBRARY, PATHS, PURPOSE, SAFETY_NOTICE
+    from legal_common import CERTIFICATION, OPTIONS_LIBRARY, PATHS, PURPOSE, SAFETY_NOTICE
     pa = {"label": "PARENT-REPORTED INFORMATION", "items": [
         {"heading": "Child-focused priorities", "text": "Parent A reports that Child A needs a predictable weekday routine and consistent homework expectations in both homes."},
         {"heading": "Areas the parent believes are working", "text": "Parent A reports that weekend exchanges occur on time and that both parents attend Child A's soccer games."},

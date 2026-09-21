@@ -225,6 +225,27 @@ def _section_status(alignment: list, specific: list, open_issues: list) -> str:
     return "Agreed" if specific or len(alignment) >= 2 else "Aligned in principle"
 
 
+def _agreement_section(sec: dict, ra: dict, rb: dict, ai: dict) -> dict:
+    k = sec["key"]
+    common = shared_terms(ra.get(k, ""), rb.get(k, ""))
+    rule = _rule_section(sec, ra, rb)
+    drafted = ai.get(k) if isinstance(ai.get(k), dict) else None
+    merged = {**rule, **{kk: vv for kk, vv in drafted.items() if vv or kk in ("specific", "open_issues")}} if drafted else rule
+    if drafted:
+        merged["specific"] = [c for c in merged["specific"] if c not in merged["open_issues"]]
+    alignment = [f"Both parents' proposals point the same direction — shared themes: {', '.join(common[:5])}."] if common else []
+    specific, open_issues = merged.get("specific") or [], merged.get("open_issues") or []
+    return {"key": k, "num": sec["num"], "label": sec["label"], "shared_goal": sec["goal"], "current_alignment": alignment, "parent_a": ra.get(k, ""), "parent_b": rb.get(k, ""),
+            "specific_agreements": specific, "open_issues": open_issues, "communication_method": merged.get("communication_method"), "decision_process": merged.get("decision_process"),
+            "review_trigger": merged.get("review_trigger"), "status": _section_status(alignment, specific, open_issues)}
+
+
+def _agreement_summary(sections: list) -> dict:
+    return {"alignment": [f"{s['label']}: {a}" for s in sections for a in s["current_alignment"]],
+            "specific": [f"{s['label']}: {c}" for s in sections for c in s["specific_agreements"]],
+            "resolution": [f"{s['label']}: {o}" for s in sections for o in s["open_issues"]]}
+
+
 def generate_agreement(doc: dict) -> dict:
     child = doc.get("child_name") or "the child"
     pa = doc["participants"]["a"].get("name") or "Parent A"
@@ -232,25 +253,7 @@ def generate_agreement(doc: dict) -> dict:
     ra = doc["responses"]["a"]["answers"]
     rb = doc["responses"]["b"]["answers"]
     ai = (doc.get("agreement_ai") or {}).get("sections") or {}
-
-    sections = []
-    for sec in AGREEMENT_SECTIONS:
-        k = sec["key"]
-        common = shared_terms(ra.get(k, ""), rb.get(k, ""))
-        rule = _rule_section(sec, ra, rb)
-        drafted = ai.get(k) if isinstance(ai.get(k), dict) else None
-        merged = {**rule, **{kk: vv for kk, vv in drafted.items() if vv or kk in ("specific", "open_issues")}} if drafted else rule
-        if drafted:
-            merged["specific"] = [c for c in merged["specific"] if c not in merged["open_issues"]]
-        alignment = [f"Both parents' proposals point the same direction — shared themes: {', '.join(common[:5])}."] if common else []
-        sections.append({
-            "key": k, "num": sec["num"], "label": sec["label"], "shared_goal": sec["goal"],
-            "current_alignment": alignment, "parent_a": ra.get(k, ""), "parent_b": rb.get(k, ""),
-            "specific_agreements": merged.get("specific") or [], "open_issues": merged.get("open_issues") or [],
-            "communication_method": merged.get("communication_method"), "decision_process": merged.get("decision_process"), "review_trigger": merged.get("review_trigger"),
-            "status": _section_status(alignment, merged.get("specific") or [], merged.get("open_issues") or []),
-        })
-
+    sections = [_agreement_section(sec, ra, rb, ai) for sec in AGREEMENT_SECTIONS]
     return {
         "report_title": "SA CoParents Co-Parenting Agreement",
         "child_name": child, "parent_a_name": pa, "parent_b_name": pb,
@@ -258,11 +261,7 @@ def generate_agreement(doc: dict) -> dict:
         "purpose": AGREEMENT_PURPOSE, "confidentiality_note": AGREEMENT_CONFIDENTIALITY,
         "ai_drafted": bool(ai),
         "sections": sections,
-        "summary": {
-            "alignment": [f"{s['label']}: {a}" for s in sections for a in s["current_alignment"]],
-            "specific": [f"{s['label']}: {c}" for s in sections for c in s["specific_agreements"]],
-            "resolution": [f"{s['label']}: {o}" for s in sections for o in s["open_issues"]],
-        },
+        "summary": _agreement_summary(sections),
         "terms": [_agreement_term(key, label, ra, rb) for key, label, _q in AGREEMENT_AREAS],
         "foundation_statements": _foundation_entries(doc, pa, pb),
         "next_note": (

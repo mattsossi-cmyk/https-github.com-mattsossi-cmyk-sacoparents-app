@@ -231,6 +231,21 @@ def hearing_overdue(x: dict, today: date | None = None) -> bool:
 BANNED_STATEMENT_RE = re.compile(r"\b(should (be awarded|have|get) (sole|primary|joint) (custody|conservatorship)|award(ed)? custody|recommend(s|ed)? (sole|primary) (custody|conservatorship))\b", re.I)
 
 
+def _framework_fields(body: StatementIn, doc: dict, library: dict | None) -> dict:
+    score = max(1, min(10, int(body.dynamic_score)))
+    choices = {k: [str(x) for x in v][:50] for k, v in body.framework_choices.items() if isinstance(v, list)}
+    custom = {k: [str(x).strip()[:300] for x in v if str(x).strip()][:10] for k, v in body.framework_custom.items() if isinstance(v, list)}
+    return {"dynamic_score": score, "framework_choices": choices, "framework_custom": custom,
+            "framework": framework_block(score, choices, custom, (joint_findings(doc) or {}).get("subject_options"), library)}
+
+
+def _assert_statement_ready(st: dict, prev) -> None:
+    if st["level_changed_from"] and not st["level_change_note"]:
+        raise HTTPException(status_code=400, detail=f"The Ability Level changed from {prev} to {st['dynamic_score']} since the last submission. Add a neutral one-line reason for the court.")
+    if not all(st[k] for k in ("role_basis", "process_summary", "observations", "next_steps")):
+        raise HTTPException(status_code=400, detail="Complete role, process, observations and next steps before marking the statement ready")
+
+
 def validated_statement(body: StatementIn, doc: dict, library: dict | None = None) -> dict:
     """Normalize + validate a Professional Statement payload; blocks custody recommendations."""
     status = body.status if body.status in ("draft", "ready") else "draft"
@@ -238,18 +253,12 @@ def validated_statement(body: StatementIn, doc: dict, library: dict | None = Non
     st["role"] = body.role.strip()[:80]
     st["materials_reviewed"] = [m for m in body.materials_reviewed if m in STATEMENT_MATERIALS][:20]
     if body.dynamic_score:
-        findings = joint_findings(doc)
-        st["dynamic_score"] = max(1, min(10, int(body.dynamic_score)))
-        st["framework_choices"] = {k: [str(x) for x in v][:50] for k, v in body.framework_choices.items() if isinstance(v, list)}
-        st["framework_custom"] = {k: [str(x).strip()[:300] for x in v if str(x).strip()][:10] for k, v in body.framework_custom.items() if isinstance(v, list)}
-        st["framework"] = framework_block(st["dynamic_score"], st["framework_choices"], st["framework_custom"], (findings or {}).get("subject_options"), library)
+        st.update(_framework_fields(body, doc, library))
     st["level_change_note"] = body.level_change_note.strip()[:300]
     prev = (doc.get("court_submissions") or [{}])[-1].get("level_score")
     st["level_changed_from"] = prev if prev and st.get("dynamic_score") and prev != st["dynamic_score"] else None
-    if status == "ready" and st["level_changed_from"] and not st["level_change_note"]:
-        raise HTTPException(status_code=400, detail=f"The Ability Level changed from {prev} to {st['dynamic_score']} since the last submission. Add a neutral one-line reason for the court.")
-    if status == "ready" and not all(st[k] for k in ("role_basis", "process_summary", "observations", "next_steps")):
-        raise HTTPException(status_code=400, detail="Complete role, process, observations and next steps before marking the statement ready")
+    if status == "ready":
+        _assert_statement_ready(st, prev)
     if BANNED_STATEMENT_RE.search(" ".join(st[k] for k in STATEMENT_FIELDS) + " " + st["level_change_note"]):
         raise HTTPException(status_code=400, detail="The statement must not recommend custody or conservatorship outcomes. Please rephrase as facilitation observations.")
     st.update({"status": status, "updated_at": _iso(_now()), "version": ((doc.get("professional_statement") or {}).get("version") or 0) + 1})
@@ -577,31 +586,58 @@ def _pro_routes(c: Ctx) -> APIRouter:
     return r
 
 
-def _pro_statement_routes(c: Ctx) -> APIRouter:
-    """Professional: Professional Assessment Statement + frozen submission to court."""
-    db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h = c.db, c.get_current_user, c.app_url, c.send_email, c.email_from_name, c.logger, c.log_report_event, c.h
+def _org_key(user: dict) -> str:
+    return ((user.get("profile") or {}).get("organization") or "").strip().lower()
+
+
+async def _legal_pdf_bytes(db, doc: dict) -> bytes:
+    """Finalized Legal Lens Review and Report to Court PDF for attachment to a frozen court submission."""
+    from legal_lens import classify_individual, classify_joint, readiness
+    from pdf_report import build_legal_lens_pdf
+    rep = await db.professional_reports.find_one({"case_id": doc["id"]}, {"_id": 0})
+    if not rep or rep.get("status") not in ("final", "submitted_to_court"):
+        raise HTTPException(status_code=400, detail="Finalize the Legal Lens Review and Report to Court before attaching it to a court submission")
+    view = {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")), "joint": classify_joint(rep.get("joint_rating"))},
+            "notes": {"tagline": "SA CoParents — Starting With Alignment, Ending With Agreement", "safety": "Safety findings may alter or override ordinary co-parenting, mediation, communication, or joint-process recommendations.",
+                      "rating": "The rating does not automatically determine the process. Safety screening, professional judgment, court orders, and the specific needs of the child remain controlling considerations."},
+            "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
+    await db.professional_reports.update_one({"case_id": doc["id"]}, {"$set": {"status": "submitted_to_court", "updated_at": _iso(_now())}})
+    return build_legal_lens_pdf(view)
+
+
+def _frozen_packet(pid: str, rid: str, user: dict, court: dict, st: dict, version: int, now: datetime, sha: str, legal_meta: dict) -> dict:
+    return {"id": pid, "report_id": rid, "professional_id": user["_id"], "professional_name": user.get("name", ""), "judge_name": court.get("judge_name", ""),
+            "judge_email": court["judge_email"], "court_name": court.get("court_name", ""), "cause_number": court.get("cause_number", ""),
+            "cover_letter": st.get("process_summary", ""), "statement": st, "report_ids": [rid], "include_session_outcome": False, "include_closing_summary": False,
+            "attestation_text": STATEMENT_ATTESTATION, "attested_at": _iso(now), "token_hash": hashlib.sha256(secrets.token_bytes(32)).hexdigest(), "code_hash": "",
+            "code_attempts": 0, "sessions": [], "status": "sent", "responses": [], "opened_count": 0, "download_count": 0, "submission_version": version,
+            "frozen": True, "sha256": sha, "created_at": _iso(now), "expires_at": _iso(now + timedelta(days=3650)), **legal_meta}
+
+
+def _submission_record(pid: str, user: dict, court: dict, st: dict, version: int, now: datetime, shas: dict, legal_meta: dict) -> dict:
+    fw = st.get("framework") or {}
+    return {"version": version, "packet_id": pid, "submitted_at": _iso(now), "submitted_by": user.get("name", ""), **shas, **legal_meta,
+            "statement_version": st.get("version"), "judge_name": court.get("judge_name", ""), "court_name": court.get("court_name", ""),
+            "level_score": fw.get("score"), "level_label": fw.get("label"), "level_change_note": st.get("level_change_note") or "", "level_changed_from": st.get("level_changed_from")}
+
+
+def _submission_email_html(user: dict, court: dict, version: int, app_url, email_from_name: str) -> str:
+    return ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+            f"<p>Your Honor,</p><p>{escape(user.get('name', ''))} has submitted the Joint Alignment Report and Professional Assessment Statement for Cause No. {escape(court.get('cause_number', ''))}"
+            f" (version {version}). Both documents are locked and hash-sealed; open them in your Court Dashboard.</p>"
+            f'<p><a href="{app_url()}/court-dashboard" style="color:#5B2A86">Open the Court Dashboard</a></p>'
+            f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>')
+
+
+def _library_routes(c: Ctx) -> APIRouter:
+    """Professional: personal + organization resource libraries."""
+    db, get_current_user, require_pro = c.db, c.get_current_user, c.h['require_pro']
     r = APIRouter()
-    require_pro, pro_profile = h['require_pro'], h['pro_profile']
-
-    async def own_case(rid: str, user: dict) -> dict:
-        doc = await db.joint_reports.find_one({"id": rid, "professional_id": user["_id"]}, {"_id": 0})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Case not found")
-        return doc
-
-    # ---------- professional statement ----------
-
-    def org_key(user: dict) -> str:
-        return ((user.get("profile") or {}).get("organization") or "").strip().lower()
 
     async def org_library(user: dict) -> dict:
-        key = org_key(user)
+        key = _org_key(user)
         d = await db.org_libraries.find_one({"key": key}, {"_id": 0}) if key else None
         return clean_library((d or {}).get("library") or {})
-
-    async def effective_library(user: dict) -> dict:
-        own, org = clean_library(user.get("resource_library") or {}), await org_library(user)
-        return {k: list(dict.fromkeys(own[k] + org[k])) for k in own}
 
     @r.get("/me/resource-library")
     async def get_library(user=Depends(get_current_user)):
@@ -618,12 +654,36 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
     @r.put("/org/resource-library")
     async def put_org_library(body: dict, user=Depends(get_current_user)):
         require_pro(user)
-        key = org_key(user)
+        key = _org_key(user)
         if not key:
             raise HTTPException(status_code=400, detail="Add an organization to your professional profile to share a library")
         lib = clean_library(body)
         await db.org_libraries.update_one({"key": key}, {"$set": {"key": key, "name": (user.get("profile") or {}).get("organization"), "library": lib, "updated_by": user.get("name", ""), "updated_at": _iso(_now())}}, upsert=True)
         return lib
+
+    return r
+
+
+def _pro_statement_routes(c: Ctx) -> APIRouter:
+    """Professional: Professional Assessment Statement + frozen submission to court."""
+    db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h = c.db, c.get_current_user, c.app_url, c.send_email, c.email_from_name, c.logger, c.log_report_event, c.h
+    r = APIRouter()
+    require_pro, pro_profile = h['require_pro'], h['pro_profile']
+
+    async def own_case(rid: str, user: dict) -> dict:
+        doc = await db.joint_reports.find_one({"id": rid, "professional_id": user["_id"]}, {"_id": 0})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Case not found")
+        return doc
+
+    async def org_library(user: dict) -> dict:
+        key = _org_key(user)
+        d = await db.org_libraries.find_one({"key": key}, {"_id": 0}) if key else None
+        return clean_library((d or {}).get("library") or {})
+
+    async def effective_library(user: dict) -> dict:
+        own, org = clean_library(user.get("resource_library") or {}), await org_library(user)
+        return {k: list(dict.fromkeys(own[k] + org[k])) for k in own}
 
     @r.get("/joint/reports/{rid}/professional-statement")
     async def get_statement(rid: str, user=Depends(get_current_user)):
@@ -645,21 +705,6 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         await db.joint_reports.update_one({"id": rid}, {"$set": {"professional_statement": st}})
         await log_report_event(rid, f"Professional Statement {'marked ready' if status == 'ready' else 'draft saved'} (v{st['version']})", user)
         return {"statement": st, "stage": court_stage({**doc, "professional_statement": st})}
-
-    async def legal_pdf_bytes(doc: dict) -> bytes:
-        """Finalized Legal Lens Review and Report to Court PDF for attachment to a frozen court submission."""
-        from legal_lens import classify_individual, classify_joint, readiness
-        from pdf_report import build_legal_lens_pdf
-        rep = await db.professional_reports.find_one({"case_id": doc["id"]}, {"_id": 0})
-        if not rep or rep.get("status") not in ("final", "submitted_to_court"):
-            raise HTTPException(status_code=400, detail="Finalize the Legal Lens Review and Report to Court before attaching it to a court submission")
-        view = {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")), "joint": classify_joint(rep.get("joint_rating"))},
-                "notes": {"tagline": "SA CoParents — Starting With Alignment, Ending With Agreement", "safety": "Safety findings may alter or override ordinary co-parenting, mediation, communication, or joint-process recommendations.",
-                          "rating": "The rating does not automatically determine the process. Safety screening, professional judgment, court orders, and the specific needs of the child remain controlling considerations."},
-                "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
-        await db.professional_reports.update_one({"case_id": doc["id"]}, {"$set": {"status": "submitted_to_court", "updated_at": _iso(_now())}})
-        return build_legal_lens_pdf(view)
-
 
     async def statement_pdf_bytes(doc: dict) -> bytes:
         st = doc.get("professional_statement") or {}
@@ -689,29 +734,20 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         joint_pdf = build_joint_pdf({**rep, "professional": {"name": pro["name"], "credentials_verified": pro["credentials_verified"]},
                                      "verify": {"case_code": doc.get("case_code"), "url": f"{app_url()}/verify?code={doc.get('case_code')}"}})
         stmt_pdf = await statement_pdf_bytes(doc)
-        legal_pdf = await legal_pdf_bytes(doc) if body.include_legal_report else None
+        legal_pdf = await _legal_pdf_bytes(db, doc) if body.include_legal_report else None
         combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []))
         version = len(doc.get("court_submissions") or []) + 1
         now = _now()
         pid = str(uuid.uuid4())
         legal_meta = {"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None}
-        await db.court_frozen_pdfs.insert_one({"packet_id": pid, "report_id": rid, "version": version, "pdf": Binary(combined), "sha256": _sha(combined),
-                                               "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf), "created_at": _iso(now), **legal_meta,
+        shas = {"sha256": _sha(combined), "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf)}
+        await db.court_frozen_pdfs.insert_one({"packet_id": pid, "report_id": rid, "version": version, "pdf": Binary(combined), **shas, "created_at": _iso(now), **legal_meta,
                                                **({"legal_pdf": Binary(legal_pdf)} if legal_pdf else {})})
         if version > 1:
             await db.court_packets.update_many({"report_id": rid, "submission_version": {"$exists": True}}, {"$set": {"superseded": True}})
         st = doc["professional_statement"]
-        packet = {"id": pid, "report_id": rid, "professional_id": user["_id"], "professional_name": user.get("name", ""), "judge_name": court.get("judge_name", ""),
-                  "judge_email": court["judge_email"], "court_name": court.get("court_name", ""), "cause_number": court.get("cause_number", ""),
-                  "cover_letter": st.get("process_summary", ""), "statement": st, "report_ids": [rid], "include_session_outcome": False, "include_closing_summary": False,
-                  "attestation_text": STATEMENT_ATTESTATION, "attested_at": _iso(now), "token_hash": hashlib.sha256(secrets.token_bytes(32)).hexdigest(), "code_hash": "",
-                  "code_attempts": 0, "sessions": [], "status": "sent", "responses": [], "opened_count": 0, "download_count": 0, "submission_version": version,
-                  "frozen": True, "sha256": _sha(combined), "created_at": _iso(now), "expires_at": _iso(now + timedelta(days=3650)), **legal_meta}
-        await db.court_packets.insert_one(packet)
-        sub = {"version": version, "packet_id": pid, "submitted_at": _iso(now), "submitted_by": user.get("name", ""), "sha256": _sha(combined), **legal_meta,
-               "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf), "statement_version": st.get("version"), "judge_name": court.get("judge_name", ""), "court_name": court.get("court_name", ""),
-               "level_score": (st.get("framework") or {}).get("score"), "level_label": (st.get("framework") or {}).get("label"),
-               "level_change_note": st.get("level_change_note") or "", "level_changed_from": st.get("level_changed_from")}
+        await db.court_packets.insert_one(_frozen_packet(pid, rid, user, court, st, version, now, shas["sha256"], legal_meta))
+        sub = _submission_record(pid, user, court, st, version, now, shas, legal_meta)
         await db.joint_reports.update_one({"id": rid}, {"$push": {"court_submissions": sub}, "$set": {"report_generated_at": doc.get("report_generated_at") or _iso(now)}})
         await log_report_event(rid, f"Submitted Joint Report + Professional Statement{' + Professional Legal Report' if legal_pdf else ''} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
         if legal_pdf:
@@ -720,11 +756,7 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
             await db.court_referrals.update_one({"id": doc["court_referral_id"]}, {"$set": {"status": "submitted", "submitted_at": _iso(now)}})
         try:
             await send_email(to=court["judge_email"], case_id=doc["id"], kind="court_submission", to_role="Court", subject=f"Submission received - Cause No. {court.get('cause_number', '')} (v{version})",
-                             html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                                   f"<p>Your Honor,</p><p>{escape(user.get('name', ''))} has submitted the Joint Alignment Report and Professional Assessment Statement for Cause No. {escape(court.get('cause_number', ''))}"
-                                   f" (version {version}). Both documents are locked and hash-sealed; open them in your Court Dashboard.</p>"
-                                   f'<p><a href="{app_url()}/court-dashboard" style="color:#5B2A86">Open the Court Dashboard</a></p>'
-                                   f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>'))
+                             html=_submission_email_html(user, court, version, app_url, email_from_name))
         except Exception as exc:
             logger.warning("submission email failed: %s", exc)
         return {"submission": sub, "stage": court_stage({**doc, "court_submissions": [sub]})}
@@ -736,7 +768,7 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
     h = _shared(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event)
     c = Ctx(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h)
     r = APIRouter()
-    for factory in (_judge_routes, _judge_case_routes, _pro_routes, _pro_statement_routes):
+    for factory in (_judge_routes, _judge_case_routes, _pro_routes, _library_routes, _pro_statement_routes):
         r.include_router(factory(c))
     from court_messages import build_router as build_messages
     r.include_router(build_messages(db, get_current_user, app_url, send_email, email_from_name, h["require_judge"], h["require_pro"]))
