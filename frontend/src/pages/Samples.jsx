@@ -33,26 +33,14 @@ export default function Samples() {
         <div className="mb-8 rounded-lg border-2 border-brand-purple/40 bg-white p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-testid="sample-card-professional-report">
           <div className="flex-1">
             <p className="text-xs font-bold uppercase tracking-widest text-brand-purple">Legal · Professional &amp; Court only</p>
-            <h3 className="text-lg font-bold mt-1">Sample Professional Report</h3>
-            <p className="text-sm text-muted-foreground mt-1">The single legal deliverable submitted to the court: Joint Report findings infused, Co-Parenting Ability Level, Parent Alignment, options &amp; resources, conflict-management techniques, roadmap and attestation. Fictional data.</p>
+            <h3 className="text-lg font-bold mt-1">Sample Professional Report — Legal Lens Review and Report to Court</h3>
+            <p className="text-sm text-muted-foreground mt-1">The single legal deliverable submitted to the court, fully completed and finalized: Case Information, Safety First, individual and joint co-parenting ratings (1–10), resources, Parent Alignment, Conflict Management, Roadmap and Professional Summary. Fictional data.</p>
           </div>
           <div className="flex flex-wrap gap-2 sm:justify-end">
-            <Link to="/samples/professional-report" data-testid="sample-view-link-professional-report"><Button variant="outline">View</Button></Link>
-            <Button asChild data-testid="sample-pdf-link-professional-report"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-professional-report/pdf`} download>Sample PDF</a></Button>
-            <SampleEmailForm endpoint="/joint/sample-professional-report/email" label="Sample Professional Report" idPrefix="sample-pro" />
-          </div>
-        </div>
-
-        <div className="mb-8 rounded-lg border-2 border-brand-purple/40 bg-white p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-testid="sample-card-legal-lens">
-          <div className="flex-1">
-            <p className="text-xs font-bold uppercase tracking-widest text-brand-purple">Legal · Professional &amp; Court only</p>
-            <h3 className="text-lg font-bold mt-1">Sample Legal Lens Review and Report to Court</h3>
-            <p className="text-sm text-muted-foreground mt-1">A fully completed, finalized example of the professional legal report: Safety First, individual and joint co-parenting ratings (1–10), resources, Parent Alignment, Conflict Management, Roadmap and Professional Summary. Fictional data.</p>
-          </div>
-          <div className="flex flex-wrap gap-2 sm:justify-end">
-            <Link to="/samples/legal-lens-report" data-testid="sample-view-link-legal-lens"><Button variant="outline">View</Button></Link>
-            <Button asChild data-testid="sample-pdf-link-legal-lens"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-legal-lens/pdf`} download>Sample PDF</a></Button>
-            <SampleEmailForm endpoint="/joint/sample-legal-lens/email" label="Sample Legal Lens Report" idPrefix="sample-lens" />
+            <Link to="/samples/legal-lens-report" data-testid="sample-view-link-professional-report"><Button variant="outline">View</Button></Link>
+            <Button variant="outline" asChild data-testid="sample-viewpdf-link-professional-report"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-legal-lens/pdf?inline=1`} target="_blank" rel="noopener noreferrer">View PDF</a></Button>
+            <Button asChild data-testid="sample-pdf-link-professional-report"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-legal-lens/pdf`} download>Download PDF</a></Button>
+            <SampleEmailForm endpoint="/joint/sample-legal-lens/email" label="Sample Professional Report" idPrefix="sample-pro" />
           </div>
         </div>
 

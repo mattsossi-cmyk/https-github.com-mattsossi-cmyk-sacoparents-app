@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Download, Gavel, Lock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Download, Eye, Gavel, Lock, ShieldCheck } from "lucide-react";
 import api from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
@@ -48,14 +48,17 @@ export default function SampleLegalLensReport() {
       <header className="bg-white border-b border-border"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
         <Link to="/samples" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground shrink-0" data-testid="sample-lens-back"><ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Sample Reports</span><span className="sm:hidden">Back</span></Link>
         <div className="hidden sm:block"><BrandLogo size="text-xl" /></div>
-        <Button size="sm" asChild data-testid="sample-lens-pdf-btn"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Download Sample PDF</span><span className="sm:hidden">Sample PDF</span></a></Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" asChild data-testid="sample-lens-viewpdf-btn"><a href={`${pdf}?inline=1`} target="_blank" rel="noopener noreferrer"><Eye className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">View PDF</span><span className="sm:hidden">PDF</span></a></Button>
+          <Button size="sm" asChild data-testid="sample-lens-pdf-btn"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Download PDF</span><span className="sm:hidden">Save</span></a></Button>
+        </div>
       </div></header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-5">
         {tour.open && <SampleLensTour onDone={tour.close} />}
         <div className="flex justify-end gap-2"><StartTourButton onClick={tour.start} /><SampleEmailForm endpoint="/joint/sample-legal-lens/email" label="Sample Legal Lens Report" idPrefix="sample-lens-page" /></div>
         <div className="rounded-lg border-2 border-brand-purple/30 bg-brand-purple/5 p-6">
           <p className="text-xs font-bold uppercase tracking-widest text-brand-purple flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Legal · Professional &amp; Court only</p>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mt-1" data-testid="sample-lens-title">SA CoParents Legal Lens Review and Report to Court</h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold mt-1" data-testid="sample-lens-title">Sample Professional Report — Legal Lens Review and Report to Court</h1>
           <p className="text-sm text-muted-foreground mt-2" data-testid="sample-lens-note">A fully completed, <strong>fictional</strong> example of the professional legal report as it reads when finalized. Parents never see this report. It contains no custody recommendation, credibility finding, diagnosis or legal conclusion.</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-4 text-sm">
             <div><p className="text-xs text-muted-foreground">Court</p><p className="font-semibold">{rep.court_county}</p></div>

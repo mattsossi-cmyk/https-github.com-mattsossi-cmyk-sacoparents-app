@@ -1391,8 +1391,8 @@ async def email_sample_professional_report(body: EmailSampleIn):
         html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
               "<p>Hello,</p><p>Here is the sample <strong>Professional Report</strong> from SA CoParents Align — the single legal deliverable a professional submits to the court, "
               "with the parents' Joint Report findings infused, the Co-Parenting Ability Level, Parent Alignment, options and resources, and conflict-management techniques.</p>"
-              f'<p><a href="{app_url()}/samples/professional-report" style="color:#5B2A86">View the sample online</a></p>'
-              f'<p><a href="{app_url()}/api/joint/sample-professional-report/pdf" style="color:#5B2A86">Download the sample PDF</a></p>'
+              f'<p><a href="{app_url()}/samples/legal-lens-report" style="color:#5B2A86">View the sample online</a></p>'
+              f'<p><a href="{app_url()}/api/joint/sample-legal-lens/pdf" style="color:#5B2A86">Download the sample PDF</a></p>'
               f'<p style="font-size:12px;color:#888">Sample uses fictional data. Sent by {escape(EMAIL_FROM_NAME)} via the public sample-sharing form.</p></td></tr></table>'))
     return {"ok": True}
 
@@ -1404,11 +1404,12 @@ async def sample_legal_lens_json():
 
 
 @api.get("/joint/sample-legal-lens/pdf")
-async def sample_legal_lens_pdf():
+async def sample_legal_lens_pdf(inline: int = 0):
     from pdf_report import build_legal_lens_pdf
     from sample_legal_lens import sample_legal_lens
+    disposition = "inline" if inline else "attachment"
     return Response(content=build_legal_lens_pdf(sample_legal_lens()), media_type="application/pdf",
-                    headers={"Content-Disposition": 'attachment; filename="sample-legal-lens-report.pdf"'})
+                    headers={"Content-Disposition": f'{disposition}; filename="sample-professional-report-legal-lens.pdf"'})
 
 
 @api.post("/joint/sample-legal-lens/email")

@@ -15,7 +15,6 @@ import CompleteReport from "@/pages/CompleteReport";
 import Privacy from "@/pages/Privacy";
 import SampleReport from "@/pages/SampleReport";
 import Samples from "@/pages/Samples";
-import SampleProfessionalReport from "@/pages/SampleProfessionalReport";
 import SampleLegalLensReport from "@/pages/SampleLegalLensReport";
 import LegalLensReport from "@/pages/LegalLensReport";
 import ProfessionalReportHome from "@/pages/ProfessionalReportHome";
@@ -67,7 +66,7 @@ function App() {
             <Route path="/joint/:id/assess" element={<Protected><JointAssessment /></Protected>} />
             <Route path="/joint/:id/legal-report" element={<Protected><LegalLensRedirect /></Protected>} />
             <Route path="/joint/:id/legal-report/sample" element={<Protected><LegalLensRedirect /></Protected>} />
-            <Route path="/samples/legal-report" element={<Navigate to="/samples/professional-report" replace />} />
+            <Route path="/samples/legal-report" element={<Navigate to="/samples/legal-lens-report" replace />} />
             <Route path="/professional-report" element={<Protected><ProfessionalReportHome /></Protected>} />
             <Route path="/cases/:id/professional-report" element={<Protected><LegalLensReport /></Protected>} />
             <Route path="/joint/:id" element={<Protected><JointReport /></Protected>} />
@@ -76,7 +75,7 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/sample-mediation" element={<SampleReport fixedKey="mediation" />} />
             <Route path="/samples" element={<Samples />} />
-            <Route path="/samples/professional-report" element={<SampleProfessionalReport />} />
+            <Route path="/samples/professional-report" element={<Navigate to="/samples/legal-lens-report" replace />} />
             <Route path="/samples/legal-lens-report" element={<SampleLegalLensReport />} />
             <Route path="/samples/:key" element={<SampleReport />} />
             <Route path="/legal/:page" element={<Legal />} />

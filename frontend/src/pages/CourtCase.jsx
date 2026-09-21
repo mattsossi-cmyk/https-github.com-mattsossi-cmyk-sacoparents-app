@@ -38,7 +38,7 @@ export default function CourtCase({ sample = false }) {
   const load = () => api.get(sample ? "/court-dashboard/sample-case" : `/court-dashboard/cases/${refId}`).then((r) => setD(r.data)).catch((e) => setErr(e?.response?.data?.detail || "Not found"));
   useEffect(() => { load(); }, [refId, sample]);
   const ref = d?.referral;
-  const pdf = (pid) => (sample ? `${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-professional-report/pdf` : `${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${pid}/pdf`);
+  const pdf = (pid) => (sample ? `${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-legal-lens/pdf?inline=1` : `${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${pid}/pdf`);
   return (
     <div className="min-h-screen bg-background" data-testid={sample ? "court-sample-page" : "court-case-page"}>
       <header className="border-b border-border bg-white"><div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between gap-3"><BrandLogo size="text-xl" /><div className="flex items-center gap-3 text-sm"><span className="text-xs font-bold uppercase tracking-widest text-brand-purple hidden sm:inline">Judicial Portal{sample ? " · Sample" : ""}</span>{sample ? <Button size="sm" asChild data-testid="court-sample-register-btn"><Link to="/auth?court=1">Court sign-in / register</Link></Button> : <><span className="text-muted-foreground hidden sm:inline">{user?.name}</span><Button size="sm" variant="ghost" onClick={logout} data-testid="court-logout-btn">Sign out</Button></>}</div></div></header>
