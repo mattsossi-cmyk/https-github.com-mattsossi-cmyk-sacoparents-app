@@ -41,10 +41,16 @@ JOINT_BANDS = [
     (9, 10, "Child-Centered Partnership", "Unified Partnership", ["fluid communication", "active support for child's relationship with both parents", "shared problem-solving"],
      ["few meaningful co-parenting difficulties"], ["direct collaboration", "shared planning", "mediation only when needed for significant disputes"]),
 ]
-INDIVIDUAL_RESOURCES = ["Foundation Statement", "BIFF Communication Method", "SA CoParents AI Conversation Builder", "Individual Counseling / Coaching",
-                        "Kelly Bernstein — Child-Focused Options Provider", "Kassandra Levay — Education Specialist", "Additional Counselor / Provider"]
-JOINT_RESOURCES = ["Brad Craig — Children in the Middle", "Kelly Bernstein — Child-Focused Options Provider", "Kassandra Levay — Education Specialist", "Co-Parenting Agreement",
-                   "Parent Facilitation / Coordination", "Traditional Mediation", "Child-Centered Mediation", "Additional Expert / Provider"]
+INDIVIDUAL_BASE = ["Foundation Statement", "BIFF Communication Method", "SA CoParents AI Conversation Builder", "Individual Counseling / Coaching"]
+JOINT_BASE = ["Co-Parenting Agreement", "Parent Facilitation / Coordination", "Traditional Mediation", "Child-Centered Mediation"]
+INDIVIDUAL_RESOURCES = [*INDIVIDUAL_BASE, "Kelly Bernstein — Child-Focused Options Provider", "Kassandra Levay — Education Specialist", "Additional Counselor / Provider"]
+JOINT_RESOURCES = ["Brad Craig — Children in the Middle", "Kelly Bernstein — Child-Focused Options Provider", "Kassandra Levay — Education Specialist", *JOINT_BASE, "Additional Expert / Provider"]
+
+
+def resource_lists(providers: list[dict]) -> tuple[list[str], list[str]]:
+    ind = [p["label"] for p in providers if "individual" in p["lists"]]
+    joint = [p["label"] for p in providers if "joint" in p["lists"]]
+    return [*INDIVIDUAL_BASE, *ind, "Additional Counselor / Provider"], [*joint, *JOINT_BASE, "Additional Expert / Provider"]
 CONFLICT_OPTIONS = ["Further Court Hearing", "Parent Facilitation", "Traditional Mediation", "Child-Centered Mediation"]
 TEXT_FIELDS = ("matter_name", "court_county", "cause_number", "professional_role", "report_date", "parent_a_name", "parent_b_name", "joint_process_appropriate", "safety_notes",
                "parent_a_strengths", "parent_a_gaps", "parent_a_notes", "parent_b_strengths", "parent_b_gaps", "parent_b_notes", "joint_strengths", "joint_gaps", "joint_notes",
@@ -133,9 +139,12 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
             raise HTTPException(status_code=404, detail="Case not found")
         return doc
 
-    def view(rep: dict, doc: dict) -> dict:
+    async def view(rep: dict, doc: dict) -> dict:
+        from providers import active_providers
+        provs = await active_providers(db)
+        ind, joint = resource_lists(provs)
         return {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
-                "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": INDIVIDUAL_RESOURCES, "joint_resources": JOINT_RESOURCES, "conflict_options": CONFLICT_OPTIONS,
+                "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
                 "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE},
                 "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
 
@@ -156,7 +165,7 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
     @r.get("/cases/{rid}/professional-report")
     async def get_report(rid: str, user=Depends(get_current_user)):
         doc = await own_case(rid, user)
-        return view(await get_or_create(doc, user), doc)
+        return await view(await get_or_create(doc, user), doc)
 
     @r.get("/cases/{rid}/professional-report/readiness")
     async def get_readiness(rid: str, user=Depends(get_current_user)):
@@ -188,20 +197,28 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
             upd["status"] = body.status
             if body.status == "final" and not rep.get("finalized_at"):
                 upd["finalized_at"] = datetime.now(timezone.utc).isoformat()
+                merged = {**rep, **upd}
+                upd["ai_review"] = {k: {"model": d["model"], "drafted_at": d["at"], "edited": (merged.get(k) or "").strip() != d["text"].strip()} for k, d in (rep.get("ai_drafts") or {}).items()}
         upd["updated_at"] = datetime.now(timezone.utc).isoformat()
         await db.professional_reports.update_one({"case_id": rid}, {"$set": upd})
         await log_event(rid, "LEGAL_LENS_REPORT_FINALIZED" if body.status == "final" else "LEGAL_LENS_REPORT_SAVED", user)
-        return view({**rep, **upd}, doc)
+        if upd.get("ai_review"):
+            n_ed = sum(1 for x in upd["ai_review"].values() if x["edited"])
+            await log_event(rid, f"LEGAL_LENS_AI_DISCLOSURE: {len(upd['ai_review'])} AI-assisted section(s), {n_ed} edited by professional before certification", user)
+        return await view({**rep, **upd}, doc)
 
     @r.post("/cases/{rid}/professional-report/ai-draft")
     async def ai_draft(rid: str, body: AiDraftIn, user=Depends(get_current_user)):
         from legal_ai import draft_lens_report
         doc = await own_case(rid, user)
         rep = {**(await get_or_create(doc, user)), **{k: v for k, v in body.fields.items() if k in TEXT_FIELDS or k in LIST_FIELDS or k in INT_FIELDS}}
-        cls = view(rep, doc)["classification"]
+        cls = (await view(rep, doc))["classification"]
         fields, source, label = await draft_lens_report(rep, cls, rid, body.model)
-        await log_event(rid, "LEGAL_LENS_AI_DRAFT", user)
-        return {"fields": fields, "source": source, "model": label, "label": "AI-Assisted Draft — Professional Review Required"}
+        now = datetime.now(timezone.utc).isoformat()
+        drafts = {**(rep.get("ai_drafts") or {}), **{k: {"text": v, "model": label if source == "ai" else f"{label} (rule-based fallback)", "at": now} for k, v in fields.items()}}
+        await db.professional_reports.update_one({"case_id": rid}, {"$set": {"ai_drafts": drafts}})
+        await log_event(rid, f"LEGAL_LENS_AI_DRAFT ({label}, {len(fields)} sections)", user)
+        return {"fields": fields, "source": source, "model": label, "label": "AI-Assisted Draft — Professional Review Required", "ai_drafts": drafts}
 
     @r.get("/cases/{rid}/professional-report/pdf")
     async def report_pdf(rid: str, user=Depends(get_current_user)):
@@ -209,7 +226,7 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
         doc = await own_case(rid, user)
         rep = await get_or_create(doc, user)
         await log_event(rid, "LEGAL_LENS_REPORT_EXPORTED", user)
-        return Response(content=build_legal_lens_pdf(view(rep, doc)), media_type="application/pdf",
+        return Response(content=build_legal_lens_pdf(await view(rep, doc)), media_type="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="legal-lens-report-{doc.get("case_code") or rid}.pdf"'})
 
     @r.get("/professional-report/cases")

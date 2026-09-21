@@ -714,6 +714,8 @@ async def startup():
     await db.invitations.create_index("token")
     await db.account_links.create_index("user_id", unique=True)
     await seed_admin()
+    from providers import seed_providers
+    await seed_providers(db)
     await seed_auto_approvals()
     await seed_professionals()
 
@@ -3302,6 +3304,8 @@ from legal_report import build_router as _build_legal_router  # noqa: E402
 app.include_router(_build_legal_router(db, get_current_user, _log_lifecycle), prefix="/api")
 from legal_lens import build_router as _build_lens_router  # noqa: E402
 app.include_router(_build_lens_router(db, get_current_user, _log_lifecycle), prefix="/api")
+from providers import build_router as _build_providers_router  # noqa: E402
+app.include_router(_build_providers_router(db, get_current_user), prefix="/api")
 
 
 @app.get("/health")

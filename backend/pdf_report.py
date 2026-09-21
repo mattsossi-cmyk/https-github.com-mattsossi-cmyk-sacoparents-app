@@ -1109,11 +1109,32 @@ def build_legal_lens_pdf(v: dict) -> bytes:
     _stmt_text(pdf, "Professional summary", rep.get("professional_summary"), required=True)
     _legal_kv(pdf, [("Next review / reassessment", rep.get("next_review_date")), ("Professional signature", rep.get("signature_name")), ("Title", rep.get("professional_title")),
                     ("Date finalized", (rep.get("finalized_at") or "")[:10])])
+    _lens_ai_appendix(pdf, rep)
     pdf.ln(3)
     pdf.set_font(FONT, "B", 10)
     pdf.set_text_color(*PURPLE)
     pdf.cell(0, 6, _s(notes["tagline"]), align="C", new_x="LMARGIN", new_y="NEXT")
     return bytes(pdf.output())
+
+
+LENS_FIELD_TITLES = {"joint_notes": "Professional joint assessment notes", "alignment_summary": "Professional alignment summary", "conflict_management_rationale": "Conflict management rationale",
+                     "short_term_goals": "Short-term goals", "long_term_goals": "Long-term goals", "professional_summary": "Professional summary"}
+
+
+def _lens_ai_appendix(pdf: FPDF, rep: dict) -> None:
+    drafts = rep.get("ai_drafts") or {}
+    if not drafts:
+        return
+    review = rep.get("ai_review") or {}
+    _lens_heading(pdf, "Appendix — AI-Assisted Drafting Disclosure")
+    _body(pdf, "The sections listed below were initially drafted with an AI drafting aid at the professional's request. The professional reviewed each section and remains solely "
+               "responsible for its content. AI text makes no legal conclusion, credibility finding, diagnosis or custody recommendation.", italic=True)
+    rows = []
+    for k, d in drafts.items():
+        rv = review.get(k)
+        state = ("Edited by professional" if rv["edited"] else "Accepted without edits") if rv else "Under professional review"
+        rows.append((LENS_FIELD_TITLES.get(k, k), f"{d.get('model', '')} · drafted {str(d.get('at', ''))[:10]} · {state}"))
+    _legal_kv(pdf, rows)
 
 
 def _legal_parent(pdf: FPDF, title: str, summary: dict) -> None:

@@ -6,6 +6,7 @@ import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { AiDraftComparison } from "@/components/AiDraftComparison";
 
 const STEPS = ["Case Information", "Safety First", "Parent A Individual Assessment", "Parent A Resources", "Parent B Individual Assessment", "Parent B Resources", "Joint Co-Parenting Assessment", "Joint Resources", "Parent Alignment", "Conflict Management", "Roadmap", "Professional Summary", "Generate PDF"];
 const STATUS = { draft: "Draft", under_review: "Under Review", final: "Final", submitted_to_court: "Submitted to Court" };
@@ -17,9 +18,16 @@ const Provider = ({ value = {}, onChange, id }) => <div className="grid gap-2 sm
 const Band = ({ cls, joint }) => cls ? <div className="rounded-md border border-brand-purple/30 bg-white p-3 text-sm" data-testid="lens-band"><p className="font-semibold text-brand-purple">{cls.range}: {cls.label}{joint && <span className="ml-2 rounded-full bg-brand-purple/10 px-2 py-0.5 text-xs">Mode: {cls.mode}</span>}</p><div className="mt-2 grid gap-3 sm:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{joint ? "Strengths may include" : "Where this level may do well"}</p><ul className="list-disc pl-4">{cls.strengths.map((s) => <li key={s}>{s}</li>)}</ul></div><div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Possible gaps</p><ul className="list-disc pl-4">{cls.gaps.map((s) => <li key={s}>{s}</li>)}</ul></div></div></div> : <p className="text-xs italic text-muted-foreground">Enter a 1–10 rating to see the automatic classification.</p>;
 const Rating = ({ label, value, onChange, id }) => <label className="flex items-center gap-3 text-sm"><span className="font-medium">{label}</span><input type="range" min="1" max="10" value={value || 5} onChange={(e) => onChange(Number(e.target.value))} className="flex-1 accent-brand-purple" data-testid={`lens-${id}`} /><span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-purple text-sm font-bold text-white" data-testid={`lens-${id}-value`}>{value || "–"}</span></label>;
 
+const withProvider = (lib, prev, next, current) => {
+  const added = next.find((x) => !prev.includes(x));
+  const p = added && (lib.providers || []).find((q) => q.label === added);
+  return p ? { name: p.name, specialty: p.specialty, contact: p.contact } : current;
+};
+
 function ParentBlock({ role, n, rep, cls, lib, set }) {
   const name = rep[`parent_${role}_name`] || `Parent ${role.toUpperCase()}`;
   const res = rep[`parent_${role}_resources`] || [];
+  const pick = (v) => { set(`parent_${role}_provider`, withProvider(lib, res, v, rep[`parent_${role}_provider`])); set(`parent_${role}_resources`, v); };
   return (
     <>
       <Sec n={n} title={`Individual Assessment — ${name}`} id={`parent-${role}`}>
@@ -30,8 +38,8 @@ function ParentBlock({ role, n, rep, cls, lib, set }) {
         <Field big label="Professional Notes" value={rep[`parent_${role}_notes`]} onChange={(v) => set(`parent_${role}_notes`, v)} id={`parent-${role}-notes`} />
       </Sec>
       <Sec n={`${n}b`} title={`${name} Individual Resources`} id={`parent-${role}-resources`}>
-        <Checks options={lib.individual_resources} value={res} onChange={(v) => set(`parent_${role}_resources`, v)} id={`parent-${role}-resource`} />
-        {res.includes("Additional Counselor / Provider") && <Provider value={rep[`parent_${role}_provider`]} onChange={(v) => set(`parent_${role}_provider`, v)} id={`parent-${role}-provider`} />}
+        <Checks options={lib.individual_resources} value={res} onChange={pick} id={`parent-${role}-resource`} />
+        {(res.includes("Additional Counselor / Provider") || rep[`parent_${role}_provider`]?.name) && <Provider value={rep[`parent_${role}_provider`]} onChange={(v) => set(`parent_${role}_provider`, v)} id={`parent-${role}-provider`} />}
       </Sec>
     </>
   );
@@ -53,6 +61,7 @@ export default function LegalLensReport() {
       const keys = empty.length ? empty : Object.keys(data.fields);
       setRep((r) => ({ ...r, ...Object.fromEntries(keys.map((k) => [k, data.fields[k]])) }));
       setAiInfo(data);
+      setRep((r) => ({ ...r, ai_drafts: data.ai_drafts }));
       toast.success(`${data.model}${data.source === "rule_based" ? " unavailable — rule-based" : ""} draft filled ${keys.length} section${keys.length === 1 ? "" : "s"}. Review and edit before finalizing.`);
     } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
   };
@@ -87,6 +96,7 @@ export default function LegalLensReport() {
         <ul className="flex flex-wrap gap-3 text-xs" data-testid="lens-readiness">{readiness.map((r) => <li key={r.key} className="flex items-center gap-1">{r.done ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4 text-muted-foreground" />}{r.label}{r.na && !r.done ? " (N/A)" : ""}</li>)}</ul>
         {actions(true)}
         {aiNotice}
+        <AiDraftComparison drafts={rep.ai_drafts} rep={rep} />
         {preview ? <iframe title="Report preview" src={pdf} className="h-[80vh] w-full rounded-lg border border-border" data-testid="lens-preview-frame" /> : (
           <>
             <Sec n={1} title="Case Information" id="case"><div className="grid gap-3 sm:grid-cols-3">{[["matter_name", "Case / Matter Name"], ["court_county", "Court / County"], ["cause_number", "Cause Number"], ["professional_role", "Professional Role"], ["parent_a_name", "Parent A Name"], ["parent_b_name", "Parent B Name"]].map(([k, l]) => <Field key={k} label={l} value={rep[k]} onChange={(val) => set(k, val)} id={k} />)}<label className="block text-sm"><span className="font-medium">Case ID</span><input readOnly value={v.case.case_code || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-case-id" /></label><label className="block text-sm"><span className="font-medium">Professional Name</span><input readOnly value={rep.professional_name || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-professional-name" /></label><Field label="Report Date" type="date" value={rep.report_date} onChange={(val) => set("report_date", val)} id="report_date" /></div></Sec>
@@ -106,7 +116,7 @@ export default function LegalLensReport() {
               <Field big label="Where the Parents Struggle Together" value={rep.joint_gaps} onChange={(val) => set("joint_gaps", val)} id="joint_gaps" />
               <Field big label="Professional Joint Assessment Notes" value={rep.joint_notes} onChange={(val) => set("joint_notes", val)} id="joint_notes" />
             </Sec>
-            <Sec n={6} title="Joint Resources" id="joint-resources"><Checks options={lib.joint_resources} value={rep.joint_resources} onChange={(val) => set("joint_resources", val)} id="joint-resource" />{(rep.joint_resources || []).includes("Additional Expert / Provider") && <Provider value={rep.joint_provider} onChange={(val) => set("joint_provider", val)} id="joint-provider" />}</Sec>
+            <Sec n={6} title="Joint Resources" id="joint-resources"><Checks options={lib.joint_resources} value={rep.joint_resources} onChange={(val) => { set("joint_provider", withProvider(lib, rep.joint_resources || [], val, rep.joint_provider)); set("joint_resources", val); }} id="joint-resource" />{((rep.joint_resources || []).includes("Additional Expert / Provider") || rep.joint_provider?.name) && <Provider value={rep.joint_provider} onChange={(val) => set("joint_provider", val)} id="joint-provider" />}</Sec>
             <Sec n={7} title="Parent Alignment — Based on Joint Report" id="alignment">
               <Field big label="Where the Parents Agree / Are Aligned (e.g., child's school, medical treatment, extracurricular activities, parenting schedule, communication expectations, child-focused goals, shared priorities)" value={rep.alignment_agreements} onChange={(val) => set("alignment_agreements", val)} id="alignment_agreements" />
               <Field big label="Where the Parents Do Not Agree / Are Not Aligned (e.g., schedule changes, communication, transportation, medical decisions, school decisions, parenting-plan issues, household expectations)" value={rep.alignment_disagreements} onChange={(val) => set("alignment_disagreements", val)} id="alignment_disagreements" />

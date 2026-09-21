@@ -14,6 +14,7 @@ import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AdminProfessionals } from "@/components/AdminProfessionals";
 import { AdminJudges } from "@/components/AdminJudges";
+import { AdminProviders } from "@/components/AdminProviders";
 import { CourtReferralsInbox } from "@/components/CourtReferralsInbox";
 import { ForcePasswordChange } from "@/components/ForcePasswordChange";
 import { ParentRequestStatus } from "@/components/ParentRequestStatus";
@@ -438,6 +439,7 @@ export default function Dashboard() {
 
         {user?.role === "admin" && <AdminProfessionals />}
         {user?.role === "admin" && <AdminJudges />}
+        {user?.role === "admin" && <AdminProviders />}
 
         {connections.length > 0 && (
           <div data-testid="connections-section">
