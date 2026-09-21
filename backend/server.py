@@ -46,7 +46,7 @@ db = client[os.environ["DB_NAME"]]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-BUILD_ID = "2026-09-20.1"
+BUILD_ID = "2026-09-21.1"
 
 logger = logging.getLogger(__name__)
 
@@ -426,7 +426,7 @@ async def reset_password(body: ResetIn):
         raise HTTPException(status_code=400, detail="Invalid or expired verification code")
     if not token and doc["code_hash"] != hash_code(body.code.strip()):
         raise HTTPException(status_code=400, detail="Invalid or expired verification code")
-    await db.users.update_one({"email": email}, {"$set": {"password_hash": hash_password(body.new_password), "password_reset_by_user": True}, "$unset": {"must_change_password": ""}})
+    await db.users.update_one({"email": email}, {"$set": {"password_hash": hash_password(body.new_password), "password_reset_by_user": True}, "$unset": {"must_change_password": "", "invite_pending": ""}})
     await db.password_resets.delete_many({"email": email})
     await db.login_attempts.delete_many({"identifier": {"$regex": f":{re.escape(email)}$"}})
     return {"ok": True}
@@ -2378,7 +2378,77 @@ async def list_approved_professionals(user=Depends(get_current_user)):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     docs = await db.users.find({"role": "professional", "approved": True}, {"password_hash": 0}).sort("name", 1).to_list(500)
-    return [{**public_user(u), "profile": u.get("profile", {}), "credentials_verified_at": u.get("credentials_verified_at", "")} for u in docs]
+    return [{**public_user(u), "profile": u.get("profile", {}), "credentials_verified_at": u.get("credentials_verified_at", ""), "invite_pending": bool(u.get("invite_pending"))} for u in docs]
+
+
+PROFESSIONS = ("Mediator", "Parenting Facilitator", "Parenting Coordinator", "Attorney", "Counselor / Therapist", "Custody Evaluator", "Other")
+
+
+class AdminAddProIn(BaseModel):
+    name: str
+    email: EmailStr
+    profession: str
+    degrees: str = ""
+    phone: str = ""
+    organization: str = ""
+
+
+@api.post("/admin/professionals")
+async def admin_add_professional(body: AdminAddProIn, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    name, email = body.name.strip()[:120], body.email.lower()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    if body.profession not in PROFESSIONS:
+        raise HTTPException(status_code=400, detail="Choose a profession from the list")
+    if await db.users.find_one({"email": email}):
+        raise HTTPException(status_code=409, detail="An account with this email already exists")
+    now = datetime.now(timezone.utc)
+    doc = {"_id": str(uuid.uuid4()), "email": email, "name": name, "role": "professional", "approved": True, "verification_level": "credentials_pending",
+           "password_hash": hash_password(secrets.token_urlsafe(32)), "created_at": now.isoformat(), "created_by_admin": user["_id"], "invite_pending": True,
+           "profile": {"pro_role": body.profession, "degrees": body.degrees.strip()[:200], "phone": body.phone.strip()[:40], "organization": body.organization.strip()[:160],
+                       "city": "", "state": "", "license_number": "", "website": ""}}
+    await db.users.insert_one(doc)
+    link_token = secrets.token_urlsafe(32)
+    await db.password_resets.insert_one({"email": email, "code_hash": hash_code(secrets.token_urlsafe(16)), "link_hash": hash_code(link_token), "invite": True,
+                                         "expires_at": now + timedelta(days=7), "created_at": now.isoformat()})
+    url = f"{app_url()}/auth?mode=reset&rt={link_token}"
+    html = (f'<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif"><p>Hi {escape(name)},</p>'
+            f'<p>{escape(user.get("name") or "The SA CoParents Align administrator")} has created your approved professional account on <strong>{escape(EMAIL_FROM_NAME)}</strong> '
+            f'({escape(body.profession)}{", " + escape(body.degrees.strip()) if body.degrees.strip() else ""}).</p>'
+            f'<p>Set your password to activate your account:</p>'
+            f'<p style="margin:16px 0"><a href="{url}" style="background:#5B2A86;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block">Set my password</a></p>'
+            f'<p>This link expires in 7 days. Your login email is <strong>{escape(email)}</strong>.</p>'
+            f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p></td></tr></table>')
+    try:
+        await send_email(to=email, subject=f"Your {EMAIL_FROM_NAME} professional account is ready", html=html)
+        sent = True
+    except HTTPException:
+        logger.warning(f"Invite email not sent for {email}")
+        sent = False
+    return {**public_user(doc), "profile": doc["profile"], "invite_pending": True, "invite_sent": sent}
+
+
+@api.post("/admin/professionals/{user_id}/resend-invite")
+async def admin_resend_invite(user_id: str, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    target = await db.users.find_one({"_id": user_id, "role": "professional", "invite_pending": True})
+    if not target:
+        raise HTTPException(status_code=404, detail="No pending invitation for this professional")
+    now = datetime.now(timezone.utc)
+    link_token = secrets.token_urlsafe(32)
+    await db.password_resets.delete_many({"email": target["email"]})
+    await db.password_resets.insert_one({"email": target["email"], "code_hash": hash_code(secrets.token_urlsafe(16)), "link_hash": hash_code(link_token), "invite": True,
+                                         "expires_at": now + timedelta(days=7), "created_at": now.isoformat()})
+    url = f"{app_url()}/auth?mode=reset&rt={link_token}"
+    await send_email(to=target["email"], subject=f"Reminder: set your {EMAIL_FROM_NAME} password",
+                     html=(f'<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif"><p>Hi {escape(target.get("name") or "there")},</p>'
+                           f'<p>Your approved professional account on {escape(EMAIL_FROM_NAME)} is waiting for you. Set your password to activate it:</p>'
+                           f'<p style="margin:16px 0"><a href="{url}" style="background:#5B2A86;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block">Set my password</a></p>'
+                           f'<p>This link expires in 7 days.</p></td></tr></table>'))
+    return {"ok": True}
 
 
 class VerifyIn(BaseModel):

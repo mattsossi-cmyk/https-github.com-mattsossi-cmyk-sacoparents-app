@@ -5,8 +5,8 @@ import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const EMPTY = { name: "", specialty: "", organization: "", phone: "", email: "", website: "", lists: ["individual", "joint"], active: true };
-const FIELDS = [["name", "Name *"], ["specialty", "Specialty"], ["organization", "Organization"], ["phone", "Phone"], ["email", "Email"], ["website", "Website"]];
+const EMPTY = { name: "", degrees: "", specialty: "", organization: "", phone: "", email: "", website: "", lists: ["individual", "joint"], active: true };
+const FIELDS = [["name", "Name *"], ["degrees", "Degrees / credentials (e.g. LPC, JD)"], ["specialty", "Specialty"], ["organization", "Organization"], ["phone", "Phone"], ["email", "Email"], ["website", "Website"]];
 
 function ProviderForm({ value, onChange, onSave, onCancel, saving }) {
   const toggle = (l) => onChange({ ...value, lists: value.lists.includes(l) ? value.lists.filter((x) => x !== l) : [...value.lists, l] });
@@ -54,7 +54,7 @@ export function AdminProviders() {
             {edit?.id === p.id ? <ProviderForm value={edit} onChange={setEdit} onSave={save} onCancel={() => setEdit(null)} saving={saving} /> : (
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex-1 min-w-[200px]">
-                  <p className="font-semibold">{p.name}{!p.active && <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs font-normal">inactive</span>}</p>
+                  <p className="font-semibold">{p.name}{p.degrees && <span className="font-normal">, {p.degrees}</span>}{!p.active && <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs font-normal">inactive</span>}</p>
                   <p className="text-sm text-muted-foreground">{[p.specialty, p.organization, p.phone, p.email, p.website].filter(Boolean).join(" · ") || "No details yet"}</p>
                   <p className="text-xs text-brand-purple mt-0.5">Lists: {(p.lists || []).join(", ")}</p>
                 </div>

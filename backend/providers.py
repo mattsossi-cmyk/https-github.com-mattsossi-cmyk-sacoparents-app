@@ -20,12 +20,14 @@ class ProviderIn(BaseModel):
     phone: str = ""
     email: str = ""
     website: str = ""
+    degrees: str = ""
     lists: list[str] = ["individual", "joint"]
     active: bool = True
 
 
 def label(p: dict) -> str:
-    return f"{p['name']} — {p['specialty']}" if p.get("specialty") else p["name"]
+    base = f"{p['name']}, {p['degrees']}" if p.get("degrees") else p["name"]
+    return f"{base} — {p['specialty']}" if p.get("specialty") else base
 
 
 def contact(p: dict) -> str:
@@ -33,7 +35,7 @@ def contact(p: dict) -> str:
 
 
 def public(p: dict) -> dict:
-    return {"id": p["id"], "label": label(p), "name": p["name"], "specialty": p.get("specialty", ""), "contact": contact(p), "lists": p.get("lists") or []}
+    return {"id": p["id"], "label": label(p), "name": f"{p['name']}, {p['degrees']}" if p.get("degrees") else p["name"], "specialty": p.get("specialty", ""), "contact": contact(p), "lists": p.get("lists") or []}
 
 
 async def seed_providers(db) -> None:
