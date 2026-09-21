@@ -11,13 +11,6 @@ import { SAMPLE_REPORTS } from "@/lib/samples";
 
 const POSTER_IMG = "/align-hero-simple.jpg";
 
-const PAGES = [
-  "Joint Alignment Overview", "Your Child at the Center", "Where You Align",
-  "Where Your Perspectives Differ", "What Might Your Child Need?", "Options & Resources",
-  "Questions for Parent Conversation", "Professional Conversation Guide",
-  "Parent Action Plan", "Joint Alignment Summary",
-];
-
 const STEPS = [
   { n: 1, key: "create", icon: FolderPlus, title: "Create or Receive a Case", body: "Open a case yourself, or accept a matter referred to you by a court." },
   { n: 2, key: "invite", icon: Mail, title: "Invite Parents", body: "Each parent receives a private invitation and completes their assessment independently." },
@@ -193,43 +186,10 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="report" className="bg-secondary/60 py-20" data-testid="report-section">
-        <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-[1fr_1.2fr] gap-12 items-start">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-primary font-bold">The Joint Alignment Report</p>
-            <h2 className="mt-2 text-3xl md:text-4xl font-semibold" data-testid="report-heading">One universal 10-page report. Every case, every subject.</h2>
-            <p className="mt-4 text-base md:text-lg text-muted-foreground">
-              Parents and professionals always know where to look. Each report follows the same neutral structure
-              from the Joint Alignment Overview through the Parent Action Plan and Joint Alignment Summary.
-            </p>
-            <p className="mt-4 text-sm font-medium" data-testid="report-note">
-              The report does not decide which parent is right or wrong. It gives the professional an organized,
-              child-focused starting point for the next conversation.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/samples/mediation" data-testid="report-sample-link">
-                <Button className="gap-2" data-testid="report-sample-btn">View a Sample Report <ArrowRight className="h-4 w-4" /></Button>
-              </Link>
-              <Link to="/samples" data-testid="report-all-samples-link">
-                <Button variant="outline" data-testid="report-all-samples-btn">All Sample Reports</Button>
-              </Link>
-            </div>
-          </div>
-          <ol className="grid sm:grid-cols-2 gap-2.5" data-testid="report-pages">
-            {PAGES.map((p, i) => (
-              <li key={p} className="flex items-center gap-3 bg-white border border-border rounded-lg px-4 py-3 text-sm" data-testid={`page-chip-${i}`}>
-                <span className="h-7 w-7 shrink-0 rounded-full bg-brand-purple/10 text-brand-purple text-xs font-bold flex items-center justify-center">{i + 1}</span>
-                <span className="font-medium">{p}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
       <section id="samples" className="max-w-6xl mx-auto px-6 py-20" data-testid="samples-section">
         <h2 className="text-3xl md:text-4xl font-semibold" data-testid="samples-heading">Sample Reports for Professionals</h2>
         <p className="mt-3 text-muted-foreground max-w-2xl" data-testid="samples-subtext">
-          Condensed previews using fictional data. Every completed report follows the full 10-page structure above.
+          Condensed previews using fictional data. Every completed report follows the same neutral 10-page structure.
         </p>
         <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="samples-grid">
           {SAMPLE_REPORTS.slice(0, 3).map((s) => <SampleCard key={s.key} s={s} />)}
