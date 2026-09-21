@@ -1503,54 +1503,6 @@ function HomepageFAQ() {
 }
 
 /* ============================================================
-   SECTION — FINAL CTA
-============================================================ */
-function FinalCTA() {
-  return (
-    <section className="relative py-24 sm:py-32 bg-gradient-to-br from-[#F8F7FC] via-[#EFE9F9] to-[#E4F1F1] overflow-hidden">
-      <div className="absolute -top-32 -right-32 w-[28rem] h-[28rem] rounded-full bg-[#D4C5F0]/30 blur-3xl" />
-      <div className="absolute -bottom-40 -left-32 w-[30rem] h-[30rem] rounded-full bg-[#A8DCDC]/30 blur-3xl" />
-
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
-        <Eyebrow>Take the First Step</Eyebrow>
-        <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#1A1330] leading-tight">
-          Your Children Deserve Parents
-          <br className="hidden sm:block" /> Who Can Work Together
-        </h2>
-        <p className="text-base text-[#4B4567] mt-6 max-w-2xl mx-auto leading-relaxed">
-          Every step toward healthier communication creates a stronger
-          foundation for your children.
-        </p>
-
-        <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-10 leading-snug">
-          Discover Your Co-Parenting Strengths and Growth Opportunities
-        </h3>
-        <p className="text-sm sm:text-base text-[#4B4567] mt-3 max-w-xl mx-auto">
-          Take the first step toward healthier communication, stronger
-          cooperation, and better outcomes for your children.
-        </p>
-
-        {/* Single primary action — one recommendation, one next action.
-            The prior secondary "Learn more" scrolled to a section that
-            no longer exists post-iter80; the new FAQ above this CTA
-            covers that job. */}
-        <div className="mt-9 flex items-center justify-center">
-          <PrimaryCTA testid="final-primary-cta">Let&rsquo;s Start With You And Your Children</PrimaryCTA>
-        </div>
-
-        <div className="mt-16 inline-flex items-center gap-2 text-xs text-[#3D1A78] font-medium tracking-wide">
-          <Sparkles size={14} />
-          <span>
-            From Conflict to Cooperation. From Disagreement to Understanding.
-            From Parenting Apart to Raising Children Together.
-          </span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ============================================================
    PAGE
 ============================================================ */
 export default function Landing() {
@@ -1576,7 +1528,6 @@ export default function Landing() {
         <AlignmentPhilosophy />
         <TrustSignals />
         <HomepageFAQ />
-        <FinalCTA />
         <MarketingFooter />
       </div>
     </EnterAppProvider>

@@ -118,9 +118,31 @@ export default function CoachDemoSection() {
   const isEmpty = transcript.length === 0;
   const remaining = useMemo(() => MAX_USER_MESSAGE_LEN - composer.length, [composer]);
 
+  /**
+   * Called by the "Try the Coach now" CTA in the section header.
+   * Scrolls the composer into view (matters most on mobile where the
+   * chat panel sits well below the fold) and focuses whichever
+   * textarea is currently rendered — the empty-state one before the
+   * first exchange, the follow-up composer afterwards.
+   */
+  const focusFirstInput = () => {
+    // Defer to next tick so the scroll can start before focus fires;
+    // otherwise mobile Safari steals focus back to the button.
+    setTimeout(() => {
+      const target =
+        document.querySelector('[data-testid="coach-demo-empty-input"]') ||
+        document.querySelector('[data-testid="coach-demo-input"]');
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        try { target.focus({ preventScroll: true }); } catch { /* noop */ }
+      }
+    }, 40);
+  };
+
   return (
     <section
       data-testid="coach-demo-section"
+      id="coach-demo-section"
       className="relative py-16 sm:py-24"
       style={{
         background:
@@ -142,6 +164,20 @@ export default function CoachDemoSection() {
             pause, get grounded, and draft a message you won't regret.
             Pick a real scenario below — the Coach responds live.
           </p>
+          {/* Primary CTA — jumps the visitor straight to the composer
+              on mobile (where the panel sits well below the fold) and
+              auto-focuses the textarea so the first keystroke lands
+              exactly where it should. */}
+          <div className="mt-7 flex justify-center">
+            <button
+              type="button"
+              onClick={focusFirstInput}
+              data-testid="coach-demo-try-cta"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-sm sm:text-base font-semibold px-6 py-3 shadow-[0_10px_28px_-12px_rgba(61,26,120,0.55)] hover:shadow-[0_14px_36px_-14px_rgba(61,26,120,0.7)] hover:-translate-y-0.5 transition-all"
+            >
+              <Sparkles size={14} /> Try the Coach now
+            </button>
+          </div>
         </div>
 
         {/* Panel */}
