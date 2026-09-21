@@ -9,7 +9,7 @@ LISTS = ("individual", "joint")
 SEED = [
     {"name": "Kelly Bernstein", "degrees": "MS, LCDC, LPC", "specialty": "Child-Focused Options Provider", "organization": "", "phone": "(210) 265-1952", "email": "", "website": "https://www.kellybernsteinlpc.com/", "lists": ["individual", "joint"]},
     {"name": "Kassandra Levay", "degrees": "", "specialty": "Education Specialist", "organization": "", "phone": "", "email": "", "website": "", "lists": ["individual", "joint"]},
-    {"name": "Brad Craig", "degrees": "", "specialty": "Children in the Middle", "organization": "", "phone": "Toll-Free (800) 239-3971 · Local (817) 658-6013", "email": "", "website": "", "lists": ["joint"]},
+    {"name": "Brad Craig", "degrees": "", "specialty": "Children in the Middle", "organization": "", "phone": "Toll-Free (800) 239-3971 · Local (817) 658-6013", "email": "brad@betweentwohomes.com", "website": "https://www.betweentwohomes.com/", "lists": ["joint"]},
 ]
 
 
