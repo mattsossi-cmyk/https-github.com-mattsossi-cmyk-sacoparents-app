@@ -127,6 +127,49 @@ class AiDraftIn(BaseModel):
     model: str = "gemini"
 
 
+def sanitize_fields(fields: dict) -> dict:
+    upd = {}
+    for k, v in fields.items():
+        if k in TEXT_FIELDS:
+            upd[k] = str(v or "")[:8000]
+        elif k in LIST_FIELDS and isinstance(v, list):
+            upd[k] = [str(x)[:200] for x in v][:30]
+        elif k in DICT_FIELDS and isinstance(v, dict):
+            upd[k] = {f: str(v.get(f, ""))[:300] for f in ("name", "specialty", "contact")}
+        elif k in INT_FIELDS:
+            upd[k] = max(1, min(10, int(v))) if v not in (None, "", 0) else None
+    return upd
+
+
+def apply_status(rep: dict, upd: dict, status: str) -> None:
+    if status not in STATUSES:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    if status in ("final", "submitted_to_court") and not (upd.get("signature_name") or rep.get("signature_name")):
+        raise HTTPException(status_code=400, detail="Professional Signature Name is required to finalize")
+    upd["status"] = status
+    if status == "final" and not rep.get("finalized_at"):
+        upd["finalized_at"] = datetime.now(timezone.utc).isoformat()
+        merged = {**rep, **upd}
+        upd["ai_review"] = {k: {"model": d["model"], "drafted_at": d["at"], "edited": (merged.get(k) or "").strip() != d["text"].strip()} for k, d in (rep.get("ai_drafts") or {}).items()}
+
+
+def ai_disclosure_line(ai_review: dict) -> str:
+    n_ed = sum(1 for x in ai_review.values() if x["edited"])
+    return f"LEGAL_LENS_AI_DISCLOSURE: {len(ai_review)} AI-assisted section(s), {n_ed} edited by professional before certification"
+
+
+def merge_drafts(rep: dict, fields: dict, label: str, source: str) -> dict:
+    now = datetime.now(timezone.utc).isoformat()
+    model = label if source == "ai" else f"{label} (rule-based fallback)"
+    return {**(rep.get("ai_drafts") or {}), **{k: {"text": v, "model": model, "at": now} for k, v in fields.items()}}
+
+
+def case_summary(d: dict, status: str) -> dict:
+    parts = d.get("participants") or {}
+    return {"id": d["id"], "case_code": d.get("case_code"), "child_name": d.get("child_name"), "subject_label": d.get("subject_label"), "status": status,
+            "parent_a": parts.get("a", {}).get("name"), "parent_b": parts.get("b", {}).get("name"), "readiness": readiness(d)}
+
+
 def build_router(db, get_current_user, log_event) -> APIRouter:
     r = APIRouter()
 
@@ -177,45 +220,24 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
     async def save_report(rid: str, body: ReportIn, user=Depends(get_current_user)):
         doc = await own_case(rid, user)
         rep = await get_or_create(doc, user)
-        if rep["status"] == "submitted_to_court" and body.status != "submitted_to_court":
-            pass
-        upd = {}
-        for k, v in body.fields.items():
-            if k in TEXT_FIELDS:
-                upd[k] = str(v or "")[:8000]
-            elif k in LIST_FIELDS and isinstance(v, list):
-                upd[k] = [str(x)[:200] for x in v][:30]
-            elif k in DICT_FIELDS and isinstance(v, dict):
-                upd[k] = {f: str(v.get(f, ""))[:300] for f in ("name", "specialty", "contact")}
-            elif k in INT_FIELDS:
-                upd[k] = max(1, min(10, int(v))) if v not in (None, "", 0) else None
+        upd = sanitize_fields(body.fields)
         if body.status:
-            if body.status not in STATUSES:
-                raise HTTPException(status_code=400, detail="Invalid status")
-            if body.status in ("final", "submitted_to_court") and not (upd.get("signature_name") or rep.get("signature_name")):
-                raise HTTPException(status_code=400, detail="Professional Signature Name is required to finalize")
-            upd["status"] = body.status
-            if body.status == "final" and not rep.get("finalized_at"):
-                upd["finalized_at"] = datetime.now(timezone.utc).isoformat()
-                merged = {**rep, **upd}
-                upd["ai_review"] = {k: {"model": d["model"], "drafted_at": d["at"], "edited": (merged.get(k) or "").strip() != d["text"].strip()} for k, d in (rep.get("ai_drafts") or {}).items()}
+            apply_status(rep, upd, body.status)
         upd["updated_at"] = datetime.now(timezone.utc).isoformat()
         await db.professional_reports.update_one({"case_id": rid}, {"$set": upd})
         await log_event(rid, "LEGAL_LENS_REPORT_FINALIZED" if body.status == "final" else "LEGAL_LENS_REPORT_SAVED", user)
         if upd.get("ai_review"):
-            n_ed = sum(1 for x in upd["ai_review"].values() if x["edited"])
-            await log_event(rid, f"LEGAL_LENS_AI_DISCLOSURE: {len(upd['ai_review'])} AI-assisted section(s), {n_ed} edited by professional before certification", user)
+            await log_event(rid, ai_disclosure_line(upd["ai_review"]), user)
         return await view({**rep, **upd}, doc)
 
     @r.post("/cases/{rid}/professional-report/ai-draft")
     async def ai_draft(rid: str, body: AiDraftIn, user=Depends(get_current_user)):
         from legal_ai import draft_lens_report
         doc = await own_case(rid, user)
-        rep = {**(await get_or_create(doc, user)), **{k: v for k, v in body.fields.items() if k in TEXT_FIELDS or k in LIST_FIELDS or k in INT_FIELDS}}
+        rep = {**(await get_or_create(doc, user)), **sanitize_fields({k: v for k, v in body.fields.items() if k not in DICT_FIELDS})}
         cls = (await view(rep, doc))["classification"]
         fields, source, label = await draft_lens_report(rep, cls, rid, body.model)
-        now = datetime.now(timezone.utc).isoformat()
-        drafts = {**(rep.get("ai_drafts") or {}), **{k: {"text": v, "model": label if source == "ai" else f"{label} (rule-based fallback)", "at": now} for k, v in fields.items()}}
+        drafts = merge_drafts(rep, fields, label, source)
         await db.professional_reports.update_one({"case_id": rid}, {"$set": {"ai_drafts": drafts}})
         await log_event(rid, f"LEGAL_LENS_AI_DRAFT ({label}, {len(fields)} sections)", user)
         return {"fields": fields, "source": source, "model": label, "label": "AI-Assisted Draft — Professional Review Required", "ai_drafts": drafts}
@@ -235,7 +257,6 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
             raise HTTPException(status_code=403, detail="Approved professional access required.")
         docs = await db.joint_reports.find({"professional_id": user["_id"], "kind": {"$ne": "agreement"}}, {"_id": 0, "id": 1, "case_code": 1, "child_name": 1, "subject_label": 1, "participants": 1, "responses": 1, "subjects": 1, "subject": 1, "created_at": 1}).sort("created_at", -1).to_list(200)
         reps = {x["case_id"]: x["status"] for x in await db.professional_reports.find({"professional_id": user["_id"]}, {"_id": 0, "case_id": 1, "status": 1}).to_list(500)}
-        return [{"id": d["id"], "case_code": d.get("case_code"), "child_name": d.get("child_name"), "subject_label": d.get("subject_label"), "status": reps.get(d["id"], "not_started"),
-                 "parent_a": (d.get("participants") or {}).get("a", {}).get("name"), "parent_b": (d.get("participants") or {}).get("b", {}).get("name"), "readiness": readiness(d)} for d in docs]
+        return [case_summary(d, reps.get(d["id"], "not_started")) for d in docs]
 
     return r

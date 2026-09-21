@@ -55,17 +55,22 @@ def _label(v: str) -> str:
     return v if v.lower().startswith("ai-assisted draft") else f"{AI_LABEL}. {v}"
 
 
+def _v(rep: dict, key: str, default: str = "not yet recorded") -> str:
+    return str(rep.get(key) or default)
+
+
 def rule_based_lens_report(rep: dict, cls: dict) -> dict:
     j = cls.get("joint") or {}
     lbl = f"joint rating {rep.get('joint_rating')} ({j.get('label')}, {j.get('mode')})" if j else "no joint rating entered yet"
     opts = ", ".join(rep.get("conflict_management_options") or []) or "no conflict-management approach selected yet"
+    guidance = ", ".join(j.get("guidance") or []) or "enter a joint rating for guidance"
     return {k: _label(v) for k, v in {
-        "joint_notes": f"The Joint Report reflects {lbl}. Areas where the parents do well together: {rep.get('joint_strengths') or 'not yet recorded'}. Areas of difficulty: {rep.get('joint_gaps') or 'not yet recorded'}. These statements are parent-reported and are not verified findings.",
-        "alignment_summary": f"Aligned areas: {rep.get('alignment_agreements') or 'none recorded'}. Non-aligned areas: {rep.get('alignment_disagreements') or 'none recorded'}. Partial alignment: {rep.get('partial_alignment') or 'none recorded'}. This summary does not determine which parent's position is correct.",
-        "conflict_management_rationale": f"Selected approaches: {opts}. Neutral guidance for this rating band suggests: {', '.join(j.get('guidance') or []) or 'enter a joint rating for guidance'}. Safety screening, court orders and the child's needs remain controlling.",
+        "joint_notes": f"The Joint Report reflects {lbl}. Areas where the parents do well together: {_v(rep, 'joint_strengths')}. Areas of difficulty: {_v(rep, 'joint_gaps')}. These statements are parent-reported and are not verified findings.",
+        "alignment_summary": f"Aligned areas: {_v(rep, 'alignment_agreements', 'none recorded')}. Non-aligned areas: {_v(rep, 'alignment_disagreements', 'none recorded')}. Partial alignment: {_v(rep, 'partial_alignment', 'none recorded')}. This summary does not determine which parent's position is correct.",
+        "conflict_management_rationale": f"Selected approaches: {opts}. Neutral guidance for this rating band suggests: {guidance}. Safety screening, court orders and the child's needs remain controlling.",
         "short_term_goals": "Adopt a single written communication channel with a defined response window.\nComplete the selected individual resources.\nSchedule the first session of the selected conflict-management approach.",
         "long_term_goals": "Reach a written co-parenting agreement on the non-aligned areas.\nMaintain or improve the joint co-parenting rating at reassessment.\nReduce court involvement in routine decisions.",
-        "professional_summary": f"This report documents review of both individual assessments, family violence screenings ({rep.get('fv_a_received') or 'pending'} / {rep.get('fv_b_received') or 'pending'}) and the Joint Report, with individual ratings {rep.get('parent_a_rating') or '–'} and {rep.get('parent_b_rating') or '–'} and {lbl}. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.",
+        "professional_summary": f"This report documents review of both individual assessments, family violence screenings ({_v(rep, 'fv_a_received', 'pending')} / {_v(rep, 'fv_b_received', 'pending')}) and the Joint Report, with individual ratings {_v(rep, 'parent_a_rating', '–')} and {_v(rep, 'parent_b_rating', '–')} and {lbl}. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.",
     }.items()}
 
 
