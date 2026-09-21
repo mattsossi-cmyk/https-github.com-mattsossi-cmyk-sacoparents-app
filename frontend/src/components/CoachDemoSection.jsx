@@ -168,14 +168,14 @@ export default function CoachDemoSection() {
               on mobile (where the panel sits well below the fold) and
               auto-focuses the textarea so the first keystroke lands
               exactly where it should. */}
-          <div className="mt-7 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <button
               type="button"
               onClick={focusFirstInput}
               data-testid="coach-demo-try-cta"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-sm sm:text-base font-semibold px-6 py-3 shadow-[0_10px_28px_-12px_rgba(61,26,120,0.55)] hover:shadow-[0_14px_36px_-14px_rgba(61,26,120,0.7)] hover:-translate-y-0.5 transition-all"
+              className="inline-flex items-center justify-center gap-2.5 rounded-full bg-[#3D1A78] hover:bg-[#4B2094] text-white text-base sm:text-lg font-semibold px-9 sm:px-11 py-4 sm:py-4.5 shadow-[0_14px_36px_-14px_rgba(61,26,120,0.7)] hover:shadow-[0_18px_44px_-16px_rgba(61,26,120,0.85)] hover:-translate-y-0.5 transition-all"
             >
-              <Sparkles size={14} /> Try the Coach now
+              <Sparkles size={18} /> Try the Coach now
             </button>
           </div>
         </div>
