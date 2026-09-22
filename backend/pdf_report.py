@@ -1057,9 +1057,9 @@ def _lens_resources(pdf: FPDF, title: str, items: list, provider: dict | None) -
     pdf.ln(1)
 
 
-def _lens_table(pdf: FPDF, headers: list, rows: list, widths: list, active: set | None = None) -> None:
-    pdf.set_font(FONT, "", 8)
-    with pdf.table(col_widths=widths, text_align="LEFT", line_height=4.2, headings_style=FontFace(emphasis="BOLD", color=PURPLE, fill_color=(243, 238, 250)), borders_layout="ALL") as table:
+def _lens_table(pdf: FPDF, headers: list, rows: list, widths: list, active: set | None = None, compact: bool = False) -> None:
+    pdf.set_font(FONT, "", 7.5 if compact else 8)
+    with pdf.table(col_widths=widths, text_align="LEFT", line_height=3.6 if compact else 4.2, headings_style=FontFace(emphasis="BOLD", color=PURPLE, fill_color=(243, 238, 250)), borders_layout="ALL") as table:
         hdr = table.row()
         for h in headers:
             hdr.cell(_s(h))
@@ -1119,14 +1119,15 @@ def _lens_individual_scale(pdf: FPDF, scale: list, cls: dict | None, rep: dict, 
         hit = bool(cls) and cls["row"] == i
         if hit:
             active.add(i)
-        rows.append([f"{r['lo']} – {r['hi']}", f"{r['label']} ({r['mode']})", r["well"][role], r["poor"][role], f"{name.upper()} (L{rating})" + (f"\nGrowth areas:\n{growth}" if growth else "") if hit else ""])
-    _lens_table(pdf, ["Score", "Dynamic & Mode", "Where This Parent Does Well (Strengths)", "Where This Parent Does Poorly (Challenges)", "Placement & Growth Areas"], rows, [14, 30, 45, 45, 40], active)
+        rows.append([f"{r['lo']} – {r['hi']}", f"{r['label']} ({r['mode']})", r["well"][role], r["poor"][role], f"{name.upper()} (L{rating})" + (f"\n{growth}" if growth else "") if hit else ""])
+    _lens_table(pdf, ["Score", "Dynamic & Mode", "Where This Parent Does Well (Strengths)", "Where This Parent Does Poorly (Challenges)", "Placement & Growth Areas"], rows, [12, 28, 38, 38, 58], active, compact=True)
 
 
 def _lens_scale(pdf: FPDF, scale: list, cls: dict, rep: dict) -> None:
     _lens_individual_scale(pdf, scale, cls.get("parent_a"), rep, "a")
     _lens_individual_scale(pdf, scale, cls.get("parent_b"), rep, "b")
     j = cls.get("joint")
+    pdf.add_page()
     _lens_subhead(pdf, "Joint Co-Parenting Dynamic" + (f" (Rated: Level {rep.get('joint_rating')})" if rep.get("joint_rating") else ""))
     rows, active = [], set()
     for i, r in enumerate(scale):
@@ -1181,6 +1182,7 @@ def build_legal_lens_pdf(v: dict) -> bytes:
     _stmt_text(pdf, "Where the parents do well together", rep.get("joint_strengths"))
     _stmt_text(pdf, "Where the parents struggle together", rep.get("joint_gaps"))
     _stmt_text(pdf, "Summary", rep.get("joint_notes"), required=True)
+    pdf.add_page()
     _lens_heading(pdf, "3. Comprehensive 1–10 Co-Parenting Scale: Individual Parents, then Joint")
     _lens_scale(pdf, SCALE_TABLE, cls, rep)
     _lens_heading(pdf, "4. Post-Rating Roadmap: Short-Term & Long-Term Goals")
