@@ -9,6 +9,16 @@ export function GrowthList({ items = [], testId }) {
   return <ul className="space-y-1" data-testid={testId}>{items.map((g, i) => <li key={i} className="flex items-start gap-2">{g.met ? <CheckCircle2 className="h-4 w-4 shrink-0 text-align-green" /> : <Circle className="h-4 w-4 shrink-0 text-muted-foreground" />}<span className={g.met ? "" : "text-muted-foreground"}>{g.text}{g.met && <span className="ml-1 text-[10px] font-semibold text-align-green">MET</span>}</span></li>)}</ul>;
 }
 
+export function GrowthProgress({ met = 0, total = 0, testId }) {
+  const pct = total ? Math.round((met / total) * 100) : 0;
+  return (
+    <div className="mt-1 mb-2" data-testid={testId} role="progressbar" aria-valuenow={met} aria-valuemin={0} aria-valuemax={total}>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-secondary"><div className="h-full rounded-full bg-align-green transition-[width] duration-500" style={{ width: `${pct}%` }} /></div>
+      <p className="mt-1 text-[11px] text-muted-foreground">{total ? `${met} of ${total} growth areas met (${pct}%)` : "No growth areas recorded"}</p>
+    </div>
+  );
+}
+
 export function CourtLegalSummary({ s }) {
   if (!s) return null;
   const names = s.parent_names || {};
@@ -37,7 +47,7 @@ export function CourtLegalSummary({ s }) {
       </Block>
       <Block title="Key Growth Areas — progress at reassessment" testId="court-legal-growth">
         <div className="grid gap-3 sm:grid-cols-2">
-          {["a", "b"].map((r) => <div key={r}><p className="font-semibold">{names[r] || `Parent ${r.toUpperCase()}`} <span className="text-xs text-muted-foreground">({(s.growth?.[r] || []).filter((g) => g.met).length} of {(s.growth?.[r] || []).length} met)</span></p><GrowthList items={s.growth?.[r]} testId={`court-legal-growth-${r}`} /></div>)}
+          {["a", "b"].map((r) => { const items = s.growth?.[r] || []; const met = items.filter((g) => g.met).length; return <div key={r}><p className="font-semibold">{names[r] || `Parent ${r.toUpperCase()}`} <span className="text-xs text-muted-foreground">({met} of {items.length} met)</span></p><GrowthProgress met={met} total={items.length} testId={`court-legal-growth-progress-${r}`} /><GrowthList items={items} testId={`court-legal-growth-${r}`} /></div>; })}
         </div>
       </Block>
       <Block title="Conflict Resolution Pathway" testId="court-legal-pathway">

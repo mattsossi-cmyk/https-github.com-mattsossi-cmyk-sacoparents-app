@@ -673,3 +673,4 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Section 3 of the Legal Lens report now renders three tables: Parent A individual, Parent B individual (Strengths / Challenges per band, placement column includes Key Growth Areas + MET status), then Joint table.
 - Applied to: professional editor, sample report + tour tip, PDF (`_lens_individual_scale`), judge court view (`court_summary` now freezes `scale_table` + `placement`; `CourtLegalSummary` renders tables when present).
 - Verified: sample PDF contains new headings; legal_report + court_workflow tests 9 passed; sample & /court/sample render all three tables. Not user-confirmed; not republished.
+- 2026-09-22: Growth progress bars (`GrowthProgress` in CourtLegalSummary.jsx) added to judge growth block (`court-legal-growth-progress-{a,b}`) and professional GrowthTracker (`lens-growth-progress-{role}`). Verified on /court/sample: 1 of 3 (33%) / 2 of 3 (67%). Awaiting republish.

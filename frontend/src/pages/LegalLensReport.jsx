@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiDraftComparison } from "@/components/AiDraftComparison";
 import { ScaleTable, PathwayList } from "@/components/LensScale";
+import { GrowthProgress } from "@/components/CourtLegalSummary";
 
 const STEPS = ["Case Information", "Safety First", "Individual Breakdown (Parent A, Parent B, Joint)", "1–10 Co-Parenting Scale", "Roadmap", "Resource & Support Options", "Regular Reassessments", "Conflict Resolution Pathways", "Certification & PDF"];
 const STATUS = { draft: "Draft", under_review: "Under Review", final: "Final", submitted_to_court: "Submitted to Court" };
@@ -26,6 +27,7 @@ function GrowthTracker({ role, rep, set }) {
   return (
     <div className="rounded-md border border-align-green/40 bg-align-green/5 p-3" data-testid={`lens-growth-tracker-${role}`}>
       <p className="text-xs font-bold uppercase tracking-widest text-align-green">Met at reassessment — {met} of {lines.length}</p>
+      <GrowthProgress met={met} total={lines.length} testId={`lens-growth-progress-${role}`} />
       <ul className="mt-1 space-y-1">{lines.map((l, i) => <li key={l}><label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={!!status[l]} onChange={() => toggle(l)} data-testid={`lens-growth-met-${role}-${i}`} /><span className={status[l] ? "line-through decoration-align-green/60" : ""}>{l}</span></label></li>)}</ul>
       <p className="mt-1 text-[11px] text-muted-foreground">Tick a goal once it is consistently observed; the met/total count is frozen with each court submission so the level history shows what actually improved.</p>
     </div>
