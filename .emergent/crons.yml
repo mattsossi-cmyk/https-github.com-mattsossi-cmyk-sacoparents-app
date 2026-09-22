@@ -15,7 +15,7 @@ crons:
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     enabled: true
   - name: weekly-summary
-    description: "Monday 8am Central caseload overview email to professionals covering every active family matter"
+    description: "Monday 8am Central: caseload overview email to professionals plus the Judicial Portal digest to each judge"
     cron: "0 8 * * 1"
     timezone: "America/Chicago"
     endpoint: "{{BASE_URL}}/api/cron/weekly-summary"
@@ -35,14 +35,6 @@ crons:
     cron: "0 8 * * *"
     timezone: "America/Chicago"
     endpoint: "{{BASE_URL}}/api/cron/hearing-reminder"
-    method: POST
-    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
-    enabled: true
-  - name: judge-digest
-    description: "Monday 7am Central Judicial Portal digest to each judge: every referred case's stage, hearing date, and unanswered court messages"
-    cron: "0 7 * * 1"
-    timezone: "America/Chicago"
-    endpoint: "{{BASE_URL}}/api/cron/judge-digest"
     method: POST
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     enabled: true

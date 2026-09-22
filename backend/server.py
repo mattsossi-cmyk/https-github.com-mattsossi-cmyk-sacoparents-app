@@ -3023,6 +3023,7 @@ async def cron_weekly_summary(request: Request):
     if ack.get("duplicate"):
         return ack
     asyncio.create_task(run_weekly_summaries())
+    asyncio.create_task(run_judge_digests(db, send_email, app_url, EMAIL_FROM_NAME, logger))
     return ack
 
 
