@@ -1072,6 +1072,7 @@ def _lens_table(pdf: FPDF, headers: list, rows: list, widths: list, active: set 
 
 
 def _lens_parent(pdf: FPDF, name: str, rep: dict, role: str, cls: dict | None) -> None:
+    from legal_lens import growth_lines
     rating = rep.get(f"parent_{role}_rating")
     pdf.set_font(FONT, "B", 10.5)
     pdf.set_text_color(*TEAL)
@@ -1080,7 +1081,7 @@ def _lens_parent(pdf: FPDF, name: str, rep: dict, role: str, cls: dict | None) -
         _body(pdf, f"Band {cls['range']} — {cls['label']}", italic=True)
     _stmt_text(pdf, "What's Working Well (Strengths)", rep.get(f"parent_{role}_strengths"), required=True)
     _stmt_text(pdf, "Real-World Example (Gaps)", rep.get(f"parent_{role}_gaps"), required=True)
-    _stmt_list(pdf, "Key Growth Areas", [g.strip() for g in (rep.get(f"parent_{role}_growth") or "").split("\n") if g.strip()], "Not yet entered.")
+    _stmt_list(pdf, "Key Growth Areas", [f"{g['text']}{'  [MET at reassessment]' if g['met'] else ''}" for g in growth_lines(rep, role)], "Not yet entered.")
     _stmt_text(pdf, "Professional notes (PARENT-REPORTED INFORMATION summarized by the professional)", rep.get(f"parent_{role}_notes"))
 
 

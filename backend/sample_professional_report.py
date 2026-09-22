@@ -87,6 +87,14 @@ def sample_legal_report() -> dict:
             "case": {"id": "sample", "case_code": "SAMPLE-2026-001", "child_name": "Child A, age 9", "subject_label": "Educational Needs", "parent_a": "Parent A", "parent_b": "Parent B", "court": {}}, "date": "2026-09-16", "safety_notice_default": SAFETY_NOTICE}
 
 
+def _sample_legal_summary() -> dict:
+    from legal_lens import court_summary
+    from sample_legal_lens import sample_legal_lens
+    rep = {**sample_legal_lens()["report"], "growth_status": {"a": {"Focus on sending calm, strictly factual messages instead of reactive replies.": True},
+                                                            "b": {"Focus on being consistently on time for all scheduled transitions.": True, "Keep written messages brief, clear, and non-repetitive.": True}}}
+    return court_summary(rep)
+
+
 def sample_judicial_case() -> dict:
     """Read-only, fictional judicial case page payload (same shape as /court-dashboard/cases/{id}) so courts can preview the portal."""
     r = sample_professional_report()
@@ -103,7 +111,8 @@ def sample_judicial_case() -> dict:
                "stage_label": steps[6], "generated_at": "2026-09-16T16:00:00Z", "signature": "sample",
                "disclaimer": "Procedural status summary generated from authorized case-status records only. It is not a legal conclusion, credibility determination, or judicial recommendation."}
     report = {"key": "education", "label": f["subject_label"], "case_code": r["case_code"], "version": 2, "packet_id": "sample", "alignment": f["alignment"], "differences": f["differences"], "child_focused": f["child_focused"]}
-    statement = {**st, "professional_name": r["professional"]["name"], "submitted_at": "2026-09-16T16:00:00Z", "packet_id": "sample"}
+    statement = {**st, "professional_name": r["professional"]["name"], "submitted_at": "2026-09-16T16:00:00Z", "packet_id": "sample", "legal_report_included": True, "legal_version": 2,
+                 "legal_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "legal_summary": _sample_legal_summary()}
     subs = [{"version": h["version"], "packet_id": "sample", "at": h["at"] + "T16:00:00Z", "sha256": "0" * 64, "superseded": h["superseded"]} for h in r["level_history"]]
     return {"is_sample": True, "referral": ref, "case_code": r["case_code"], "stage": {"index": 6, "steps": steps, "court_referred": True, "label": steps[6]}, "checklist": checklist,
             "parents_invited": 2, "parents_participating": 2, "status_summary": summary, "counts": {"alignment_areas": len(f["alignment"]), "discussion_areas": len(f["differences"]), "completion_pct": 100},

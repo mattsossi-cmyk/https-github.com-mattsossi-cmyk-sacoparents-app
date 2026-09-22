@@ -110,5 +110,13 @@ def level_history(packets: list) -> list[dict]:
         fw = (p.get("statement") or {}).get("framework") or {}
         st = p.get("statement") or {}
         rows.append({"version": p.get("submission_version"), "at": p.get("created_at"), "score": fw.get("score"), "label": fw.get("label"), "color": fw.get("color"), "superseded": p.get("superseded", False),
-                     "note": st.get("level_change_note") or "", "changed_from": st.get("level_changed_from")})
+                     "note": st.get("level_change_note") or "", "changed_from": st.get("level_changed_from"), "growth": _growth_progress(p.get("legal_summary"))})
     return rows
+
+
+def _growth_progress(summary: dict | None) -> dict | None:
+    """Met / total Key Growth Areas per parent from the frozen Professional Evaluation Report snapshot."""
+    if not summary or not summary.get("growth"):
+        return None
+    g = summary["growth"]
+    return {role: {"met": sum(1 for x in g.get(role) or [] if x.get("met")), "total": len(g.get(role) or []), "items": g.get(role) or []} for role in ("a", "b")}

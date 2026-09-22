@@ -17,6 +17,21 @@ const Radio = ({ label, options, value, onChange, id }) => <div><p className="te
 const Rating = ({ label, value, onChange, id }) => <label className="flex items-center gap-3 text-sm"><span className="font-medium">{label}</span><input type="range" min="1" max="10" value={value || 5} onChange={(e) => onChange(Number(e.target.value))} className="flex-1 accent-brand-purple" data-testid={`lens-${id}`} /><span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-purple text-sm font-bold text-white" data-testid={`lens-${id}-value`}>{value || "–"}</span></label>;
 const Band = ({ cls, joint }) => cls ? <p className="text-xs text-brand-purple font-semibold" data-testid="lens-band">Band {cls.range}: {cls.label}{joint && <span className="ml-2 rounded-full bg-brand-purple/10 px-2 py-0.5">Operating Dynamic: {cls.mode} Mode</span>}</p> : <p className="text-xs italic text-muted-foreground">Enter a 1–10 rating to see the automatic classification.</p>;
 
+function GrowthTracker({ role, rep, set }) {
+  const lines = (rep[`parent_${role}_growth`] || "").split("\n").map((s) => s.trim()).filter(Boolean);
+  if (!lines.length) return null;
+  const status = (rep.growth_status || {})[role] || {};
+  const met = lines.filter((l) => status[l]).length;
+  const toggle = (l) => set("growth_status", { ...(rep.growth_status || {}), [role]: { ...status, [l]: !status[l] } });
+  return (
+    <div className="rounded-md border border-align-green/40 bg-align-green/5 p-3" data-testid={`lens-growth-tracker-${role}`}>
+      <p className="text-xs font-bold uppercase tracking-widest text-align-green">Met at reassessment — {met} of {lines.length}</p>
+      <ul className="mt-1 space-y-1">{lines.map((l, i) => <li key={l}><label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={!!status[l]} onChange={() => toggle(l)} data-testid={`lens-growth-met-${role}-${i}`} /><span className={status[l] ? "line-through decoration-align-green/60" : ""}>{l}</span></label></li>)}</ul>
+      <p className="mt-1 text-[11px] text-muted-foreground">Tick a goal once it is consistently observed; the met/total count is frozen with each court submission so the level history shows what actually improved.</p>
+    </div>
+  );
+}
+
 function ParentBlock({ role, rep, cls, set }) {
   const name = rep[`parent_${role}_name`] || `Parent ${role.toUpperCase()}`;
   return (
@@ -26,6 +41,7 @@ function ParentBlock({ role, rep, cls, set }) {
       <Field big label="What's Working Well (Strengths)" value={rep[`parent_${role}_strengths`]} onChange={(v) => set(`parent_${role}_strengths`, v)} id={`parent-${role}-strengths`} />
       <Field big label="Real-World Example (Gaps)" value={rep[`parent_${role}_gaps`]} onChange={(v) => set(`parent_${role}_gaps`, v)} id={`parent-${role}-gaps`} />
       <Field big label="Key Growth Areas" hint="One per line — three focused, behavioral goals (e.g. “Focus on sending calm, strictly factual messages…”)." value={rep[`parent_${role}_growth`]} onChange={(v) => set(`parent_${role}_growth`, v)} id={`parent-${role}-growth`} />
+      <GrowthTracker role={role} rep={rep} set={set} />
       <Field big label="Professional Notes (PARENT-REPORTED INFORMATION summarized by the professional)" value={rep[`parent_${role}_notes`]} onChange={(v) => set(`parent_${role}_notes`, v)} id={`parent-${role}-notes`} />
     </div>
   );

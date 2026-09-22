@@ -112,6 +112,28 @@ DICT_FIELDS = ("parent_a_provider", "parent_b_provider", "joint_provider")
 INT_FIELDS = ("parent_a_rating", "parent_b_rating", "joint_rating")
 ROWS_FIELDS = ("resource_rows",)
 RISK_FIELDS = ("risk_screening",)
+GROWTH_FIELDS = ("growth_status",)
+
+
+def growth_lines(rep: dict, role: str) -> list[dict]:
+    """Key Growth Areas for a parent with met-at-reassessment flags."""
+    status = (rep.get("growth_status") or {}).get(role) or {}
+    return [{"text": g.strip(), "met": bool(status.get(g.strip()))} for g in (rep.get(f"parent_{role}_growth") or "").split("\n") if g.strip()]
+
+
+def court_summary(rep: dict) -> dict:
+    """Court-safe snapshot of the Professional Evaluation Report frozen with a submission (no parent-reported notes)."""
+    a, b, j = classify_individual(rep.get("parent_a_rating")), classify_individual(rep.get("parent_b_rating")), classify_joint(rep.get("joint_rating"))
+    risk = rep.get("risk_screening") or {}
+    chosen = rep.get("conflict_pathway") or ((j or {}).get("pathway") or {}).get("key")
+    return {"ratings": {"parent_a": {"score": rep.get("parent_a_rating"), "label": (a or {}).get("label")}, "parent_b": {"score": rep.get("parent_b_rating"), "label": (b or {}).get("label")},
+                        "joint": {"score": rep.get("joint_rating"), "label": (j or {}).get("label"), "mode": (j or {}).get("mode")}},
+            "risk_screening": [{"label": lbl, "level": risk.get(k, {}).get("level", "Not assessed"), "note": risk.get(k, {}).get("note", "")} for k, lbl, _ in RISK_CATEGORIES],
+            "fv_received": {"a": rep.get("fv_a_received"), "b": rep.get("fv_b_received")}, "joint_process_appropriate": rep.get("joint_process_appropriate"), "safety_takeaway": rep.get("safety_takeaway"),
+            "growth": {"a": growth_lines(rep, "a"), "b": growth_lines(rep, "b")}, "parent_names": {"a": rep.get("parent_a_name"), "b": rep.get("parent_b_name")},
+            "pathway": next((p["name"] for p in PATHWAYS if p["key"] == chosen), None), "pathway_rationale": rep.get("conflict_management_rationale"),
+            "short_term_goals": [g.strip() for g in (rep.get("short_term_goals") or "").split("\n") if g.strip()], "long_term_goals": [g.strip() for g in (rep.get("long_term_goals") or "").split("\n") if g.strip()],
+            "resources": rep.get("resource_rows") or [], "reassess_interval": rep.get("reassess_interval"), "next_review_date": rep.get("next_review_date"), "finalized_at": rep.get("finalized_at")}
 AI_MODELS = [{"key": "gemini", "label": "Gemini 3.1 Pro"}, {"key": "openai", "label": "GPT-5.4 Mini"}]
 
 
@@ -223,7 +245,13 @@ def _clean_risk(v):
     return {k: {"level": (d.get("level") if d.get("level") in RISK_LEVELS else "Not assessed"), "note": str(d.get("note", ""))[:600]} for k, d in v.items() if k in keys and isinstance(d, dict)}
 
 
-_CLEANERS = [(TEXT_FIELDS, _clean_text), (LIST_FIELDS, _clean_list), (DICT_FIELDS, _clean_dict), (INT_FIELDS, _clean_int), (ROWS_FIELDS, _clean_rows), (RISK_FIELDS, _clean_risk)]
+def _clean_growth(v):
+    if not isinstance(v, dict):
+        return None
+    return {role: {str(t)[:300]: bool(m) for t, m in d.items()} for role, d in v.items() if role in ("a", "b") and isinstance(d, dict)}
+
+
+_CLEANERS = [(TEXT_FIELDS, _clean_text), (LIST_FIELDS, _clean_list), (DICT_FIELDS, _clean_dict), (INT_FIELDS, _clean_int), (ROWS_FIELDS, _clean_rows), (RISK_FIELDS, _clean_risk), (GROWTH_FIELDS, _clean_growth)]
 
 
 def sanitize_fields(fields: dict) -> dict:

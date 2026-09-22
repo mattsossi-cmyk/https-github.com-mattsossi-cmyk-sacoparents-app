@@ -64,19 +64,26 @@ def test_legal_report_attached_to_court_submission() -> None:
     base = {"role": "Mediator", "role_basis": "Court referral", "process_summary": "x", "observations": "y", "next_steps": "z", "status": "ready", "dynamic_score": 5}
     pro.put(f"{API}/joint/reports/{rid}/professional-statement", json=base)
     r = pro.post(f"{API}/joint/reports/{rid}/submit-to-court", json={"attest": True, "include_legal_report": True})
-    assert r.status_code == 400 and "Finalize the Legal Lens" in r.json()["detail"]
+    assert r.status_code == 400 and "Finalize the Professional Evaluation Report" in r.json()["detail"]
     pro.get(f"{API}/cases/{rid}/professional-report")
-    assert pro.put(f"{API}/cases/{rid}/professional-report", json={"fields": {"signature_name": "Court Pro, J.D.", "professional_summary": "sum", "joint_rating": 6}, "status": "final"}).json()["report"]["status"] == "final"
+    growth = "Focus on calm messages.\nFocus on timely handoffs."
+    fields = {"signature_name": "Court Pro, J.D.", "professional_summary": "sum", "joint_rating": 6, "parent_a_growth": growth, "parent_b_growth": growth,
+              "growth_status": {"a": {"Focus on calm messages.": True}, "b": {}}, "risk_screening": {"hostility": {"level": "Moderate Risk", "note": "n"}}}
+    assert pro.put(f"{API}/cases/{rid}/professional-report", json={"fields": fields, "status": "final"}).json()["report"]["status"] == "final"
     assert pro.get(f"{API}/joint/reports/{rid}/professional-statement").json()["legal_lens"]["status"] == "final"
     sub = pro.post(f"{API}/joint/reports/{rid}/submit-to-court", json={"attest": True, "include_legal_report": True}).json()["submission"]
     assert sub["legal_report_included"] and len(sub["legal_sha256"]) == 64
     assert pro.get(f"{API}/cases/{rid}/professional-report").json()["report"]["status"] == "submitted_to_court"
     view = judge.get(f"{API}/court-dashboard/cases/{ref['id']}").json()
     assert view["statement"]["legal_report_included"]
+    ls = view["statement"]["legal_summary"]
+    assert ls["ratings"]["joint"]["score"] == 6 and ls["pathway"] == "Traditional Mediation"
+    assert [g["met"] for g in ls["growth"]["a"]] == [True, False] and ls["risk_screening"][2]["level"] == "Moderate Risk"
+    assert "parent_a_notes" not in ls and view["level_history"][-1]["growth"]["a"] == {"met": 1, "total": 2, "items": ls["growth"]["a"]}
     lp = judge.get(f"{API}/court-dashboard/packets/{sub['packet_id']}/legal-report.pdf")
     assert lp.status_code == 200 and lp.headers["content-type"].startswith("application/pdf")
     text = "".join(pg.get_text() for pg in pymupdf.open(stream=io.BytesIO(lp.content), filetype="pdf"))
-    assert "Legal Lens Review" in text and "Court Pro, J.D." in text and "Starting With Alignment" in text and "DRAFT" not in text
+    assert "Professional Evaluation Report" in text and "Court Pro, J.D." in text and "MET at reassessment" in text and "Starting With Alignment" in text and "DRAFT" not in text
     db = pymongo.MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
     assert db.access_events.count_documents({"report_id": rid, "action": "LEGAL_REPORT_SHARED"}) == 1
     sub2 = pro.post(f"{API}/joint/reports/{rid}/submit-to-court", json={"attest": True}).json()["submission"]

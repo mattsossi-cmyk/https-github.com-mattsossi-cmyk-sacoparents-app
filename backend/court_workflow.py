@@ -301,7 +301,8 @@ def _submitted_material(case: dict | None, packets: list, done: list) -> tuple[l
         report = _court_report_view(case, packets[0])
         counts = {"alignment_areas": len(report["alignment"]), "discussion_areas": len(report["differences"]), "completion_pct": 100}
         statement = {**(packets[0].get("statement") or {}), "professional_name": packets[0].get("professional_name"), "submitted_at": packets[0].get("created_at"), "packet_id": packets[0]["id"],
-                     "legal_report_included": packets[0].get("legal_report_included", False), "legal_version": packets[0].get("legal_version"), "legal_sha256": packets[0].get("legal_sha256", "")}
+                     "legal_report_included": packets[0].get("legal_report_included", False), "legal_version": packets[0].get("legal_version"), "legal_sha256": packets[0].get("legal_sha256", ""),
+                     "legal_summary": packets[0].get("legal_summary")}
         return [report], counts, statement
     if case:
         return [], {"alignment_areas": None, "discussion_areas": None, "completion_pct": int(sum(done) / 2 * 100)}, None
@@ -590,19 +591,21 @@ def _org_key(user: dict) -> str:
     return ((user.get("profile") or {}).get("organization") or "").strip().lower()
 
 
-async def _legal_pdf_bytes(db, doc: dict) -> bytes:
-    """Finalized Legal Lens Review and Report to Court PDF for attachment to a frozen court submission."""
-    from legal_lens import classify_individual, classify_joint, readiness
+async def _legal_pdf_bytes(db, doc: dict) -> tuple[bytes, dict]:
+    """Finalized Professional Evaluation Report PDF + court-safe summary snapshot for a frozen court submission."""
+    from legal_lens import classify_individual, classify_joint, court_summary, readiness
+    from legal_lens import INTRO_TEXT, SAFETY_ALERT
     from pdf_report import build_legal_lens_pdf
     rep = await db.professional_reports.find_one({"case_id": doc["id"]}, {"_id": 0})
     if not rep or rep.get("status") not in ("final", "submitted_to_court"):
-        raise HTTPException(status_code=400, detail="Finalize the Legal Lens Review and Report to Court before attaching it to a court submission")
+        raise HTTPException(status_code=400, detail="Finalize the Professional Evaluation Report before attaching it to a court submission")
     view = {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")), "joint": classify_joint(rep.get("joint_rating"))},
             "notes": {"tagline": "SA CoParents — Starting With Alignment, Ending With Agreement", "safety": "Safety findings may alter or override ordinary co-parenting, mediation, communication, or joint-process recommendations.",
-                      "rating": "The rating does not automatically determine the process. Safety screening, professional judgment, court orders, and the specific needs of the child remain controlling considerations."},
+                      "rating": "The rating does not automatically determine the process. Safety screening, professional judgment, court orders, and the specific needs of the child remain controlling considerations.",
+                      "alert": SAFETY_ALERT, "intro": INTRO_TEXT},
             "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
     await db.professional_reports.update_one({"case_id": doc["id"]}, {"$set": {"status": "submitted_to_court", "updated_at": _iso(_now())}})
-    return build_legal_lens_pdf(view)
+    return build_legal_lens_pdf(view), court_summary(rep)
 
 
 def _frozen_packet(pid: str, rid: str, user: dict, court: dict, st: dict, version: int, now: datetime, sha: str, legal_meta: dict) -> dict:
@@ -734,12 +737,12 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         joint_pdf = build_joint_pdf({**rep, "professional": {"name": pro["name"], "credentials_verified": pro["credentials_verified"]},
                                      "verify": {"case_code": doc.get("case_code"), "url": f"{app_url()}/verify?code={doc.get('case_code')}"}})
         stmt_pdf = await statement_pdf_bytes(doc)
-        legal_pdf = await _legal_pdf_bytes(db, doc) if body.include_legal_report else None
+        legal_pdf, legal_summary = (await _legal_pdf_bytes(db, doc)) if body.include_legal_report else (None, None)
         combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []))
         version = len(doc.get("court_submissions") or []) + 1
         now = _now()
         pid = str(uuid.uuid4())
-        legal_meta = {"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None}
+        legal_meta = {"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None, "legal_summary": legal_summary}
         shas = {"sha256": _sha(combined), "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf)}
         await db.court_frozen_pdfs.insert_one({"packet_id": pid, "report_id": rid, "version": version, "pdf": Binary(combined), **shas, "created_at": _iso(now), **legal_meta,
                                                **({"legal_pdf": Binary(legal_pdf)} if legal_pdf else {})})

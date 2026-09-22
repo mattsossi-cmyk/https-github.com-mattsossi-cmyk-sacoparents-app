@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CourtStatusSummary } from "@/components/CourtStatusSummary";
 import { CourtThread } from "@/components/CourtThread";
 import { HearingDate } from "@/components/CourtCaseCard";
+import { CourtLegalSummary } from "@/components/CourtLegalSummary";
 
 const Section = ({ n, title, children, testId }) => (
   <section className="rounded-lg border border-border bg-white p-6" data-testid={testId}>
@@ -26,9 +27,10 @@ const List = ({ title, items, empty }) => (
   </div>
 );
 
-const STMT = [["role_basis", "Role and basis of involvement"], ["process_summary", "Process completed"], ["alignment_areas", "Where the parents agree / are aligned"], ["further_attention", "Where the parents do not agree / are not aligned"],
+const STMT_ALL = [["role_basis", "Role and basis of involvement"], ["process_summary", "Process completed"], ["alignment_areas", "Where the parents agree / are aligned"], ["further_attention", "Where the parents do not agree / are not aligned"],
   ["partial_alignment", "Partial alignment / potential areas for agreement"], ["alignment_summary", "Professional alignment summary"],
   ["resources_considered", "Resources / Interventions Considered"], ["current_status", "Current Status"], ["observations", "Professional Observations"], ["safety_considerations", "Safety considerations"], ["next_steps", "Recommended next steps"]];
+const ALIGNMENT_KEYS = ["alignment_areas", "further_attention", "partial_alignment", "alignment_summary"];
 
 export default function CourtCase({ sample = false }) {
   const { refId } = useParams();
@@ -97,12 +99,13 @@ export default function CourtCase({ sample = false }) {
                   {d.statement.materials_reviewed?.length > 0 && <p data-testid="court-statement-materials"><span className="text-muted-foreground">Materials reviewed:</span> {d.statement.materials_reviewed.join(" · ")}</p>}
                   {d.statement.legal_report_included && (
                     <div className="rounded-md border-2 border-brand-purple/30 bg-brand-purple/5 p-3 flex flex-wrap items-center justify-between gap-2" data-testid="court-legal-report">
-                      <p><span className="rounded-full bg-brand-purple/10 px-2 py-0.5 text-[10px] font-bold tracking-widest text-brand-purple mr-2">LEGAL LENS</span><strong>Professional Legal Report</strong> v{d.statement.legal_version} — certified, attached to this frozen submission{d.statement.legal_sha256 && <code className="ml-2 text-[11px] text-muted-foreground">SHA-256 {d.statement.legal_sha256.slice(0, 16)}…</code>}</p>
-                      {!sample && <Button size="sm" variant="outline" asChild data-testid="court-legal-report-pdf"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${d.statement.packet_id}/legal-report.pdf`} download><Download className="h-4 w-4 mr-1" /> Legal Report PDF</a></Button>}
+                      <p><span className="rounded-full bg-brand-purple/10 px-2 py-0.5 text-[10px] font-bold tracking-widest text-brand-purple mr-2">EVALUATION REPORT</span><strong>Professional Evaluation Report</strong> v{d.statement.legal_version} — certified, attached to this frozen submission{d.statement.legal_sha256 && <code className="ml-2 text-[11px] text-muted-foreground">SHA-256 {d.statement.legal_sha256.slice(0, 16)}…</code>}</p>
+                      {!sample && <Button size="sm" variant="outline" asChild data-testid="court-legal-report-pdf"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${d.statement.packet_id}/legal-report.pdf`} download><Download className="h-4 w-4 mr-1" /> Evaluation Report PDF</a></Button>}
                     </div>
                   )}
+                  <CourtLegalSummary s={d.statement.legal_summary} />
 
-                  {STMT.filter(([k]) => d.statement[k]).map(([k, t]) => <div key={k}><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t}</p><p className="leading-relaxed whitespace-pre-wrap">{d.statement[k]}</p></div>)}
+                  {STMT_ALL.filter(([k]) => d.statement[k] && !(d.statement.legal_summary && ALIGNMENT_KEYS.includes(k))).map(([k, t]) => <div key={k}><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t}</p><p className="leading-relaxed whitespace-pre-wrap">{d.statement[k]}</p></div>)}
                   {d.statement.framework && (
                     <div className="rounded-lg border border-border p-4" data-testid="court-statement-framework">
                       <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Co-Parenting Ability Level</p>
@@ -120,7 +123,7 @@ export default function CourtCase({ sample = false }) {
                         {d.level_history.filter((h) => h.score).map((h, i, arr) => (
                           <li key={h.version} className="flex items-center gap-2 text-xs" data-testid={`court-level-history-${h.version}`}>
                             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: h.color }}>{h.score}</span>
-                            <span><span className="font-semibold">v{h.version}</span> · {h.at?.slice(0, 10)}{h.superseded ? " · superseded" : ""}{h.changed_from && h.note && <span className="block max-w-xs text-[11px] italic text-muted-foreground" data-testid={`court-level-note-${h.version}`}>From Level {h.changed_from}: {h.note}</span>}</span>
+                            <span><span className="font-semibold">v{h.version}</span> · {h.at?.slice(0, 10)}{h.superseded ? " · superseded" : ""}{h.changed_from && h.note && <span className="block max-w-xs text-[11px] italic text-muted-foreground" data-testid={`court-level-note-${h.version}`}>From Level {h.changed_from}: {h.note}</span>}{h.growth && <span className="block text-[11px] text-align-green font-semibold" data-testid={`court-level-growth-${h.version}`}>Growth areas met: A {h.growth.a.met}/{h.growth.a.total} · B {h.growth.b.met}/{h.growth.b.total}</span>}</span>
                             {i < arr.length - 1 && <span className="text-muted-foreground">→</span>}
                           </li>
                         ))}
