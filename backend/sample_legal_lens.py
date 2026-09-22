@@ -22,6 +22,8 @@ _REPORT = {
     "parent_b_rating": 4, "parent_b_strengths": "Very involved in the child's activities and eager to show up for school events.",
     "parent_b_gaps": "Runs 15–20 minutes late for drop-offs/pickups and sends multiple follow-up texts if Parent A doesn't reply right away. Relies on Parent A to pass along info rather than checking school portals independently.",
     "parent_b_growth": "Focus on being consistently on time for all scheduled transitions.\nKeep written messages brief, clear, and non-repetitive.\nLog into school and medical accounts directly to stay informed independently.",
+    "growth_status": {"a": {"Focus on sending calm, strictly factual messages instead of reactive replies.": True},
+                      "b": {"Focus on being consistently on time for all scheduled transitions.": True, "Keep written messages brief, clear, and non-repetitive.": True}},
     "parent_b_notes": "",
     "joint_rating": 4, "joint_strengths": "Both parents honor basic custody schedules and keep record portals updated.",
     "joint_gaps": "Physical transitions and direct messaging.",

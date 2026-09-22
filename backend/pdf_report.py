@@ -1071,6 +1071,22 @@ def _lens_table(pdf: FPDF, headers: list, rows: list, widths: list, active: set 
     pdf.ln(2)
 
 
+def _growth_bar(pdf: FPDF, met: int, total: int) -> None:
+    if not total:
+        return
+    x, y, w = pdf.get_x() + 4, pdf.get_y() + 1, 90
+    pdf.set_fill_color(230, 230, 236)
+    pdf.rect(x, y, w, 3, style="F")
+    pdf.set_fill_color(*GREEN)
+    if met:
+        pdf.rect(x, y, w * met / total, 3, style="F")
+    pdf.set_xy(x + w + 3, y - 1.5)
+    pdf.set_font(FONT, "", 8)
+    pdf.set_text_color(*GREEN)
+    pdf.cell(0, 5, _s(f"{met} of {total} growth areas met ({round(met / total * 100)}%)"), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
+
+
 def _lens_parent(pdf: FPDF, name: str, rep: dict, role: str, cls: dict | None) -> None:
     from legal_lens import growth_lines
     rating = rep.get(f"parent_{role}_rating")
@@ -1081,7 +1097,9 @@ def _lens_parent(pdf: FPDF, name: str, rep: dict, role: str, cls: dict | None) -
         _body(pdf, f"Band {cls['range']} — {cls['label']}", italic=True)
     _stmt_text(pdf, "What's Working Well (Strengths)", rep.get(f"parent_{role}_strengths"), required=True)
     _stmt_text(pdf, "Real-World Example (Gaps)", rep.get(f"parent_{role}_gaps"), required=True)
-    _stmt_list(pdf, "Key Growth Areas", [f"{g['text']}{'  [MET at reassessment]' if g['met'] else ''}" for g in growth_lines(rep, role)], "Not yet entered.")
+    growth = growth_lines(rep, role)
+    _stmt_list(pdf, "Key Growth Areas", [f"{g['text']}{'  [MET at reassessment]' if g['met'] else ''}" for g in growth], "Not yet entered.")
+    _growth_bar(pdf, sum(1 for g in growth if g["met"]), len(growth))
     _stmt_text(pdf, "Professional notes (PARENT-REPORTED INFORMATION summarized by the professional)", rep.get(f"parent_{role}_notes"))
 
 

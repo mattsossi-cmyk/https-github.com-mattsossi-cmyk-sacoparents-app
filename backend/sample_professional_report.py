@@ -92,8 +92,7 @@ def sample_legal_report() -> dict:
 def _sample_legal_summary() -> dict:
     from legal_lens import court_summary
     from sample_legal_lens import sample_legal_lens
-    rep = {**sample_legal_lens()["report"], "growth_status": {"a": {"Focus on sending calm, strictly factual messages instead of reactive replies.": True},
-                                                            "b": {"Focus on being consistently on time for all scheduled transitions.": True, "Keep written messages brief, clear, and non-repetitive.": True}}}
+    rep = sample_legal_lens()["report"]
     return court_summary(rep)
 
 
