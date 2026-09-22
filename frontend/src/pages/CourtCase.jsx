@@ -9,6 +9,7 @@ import { CourtStatusSummary } from "@/components/CourtStatusSummary";
 import { CourtThread } from "@/components/CourtThread";
 import { HearingDate } from "@/components/CourtCaseCard";
 import { CourtLegalSummary } from "@/components/CourtLegalSummary";
+import { ScoreTrendChart } from "@/components/ScoreTrendChart";
 
 const Section = ({ n, title, children, testId }) => (
   <section className="rounded-lg border border-border bg-white p-6" data-testid={testId}>
@@ -117,6 +118,8 @@ export default function CourtCase({ sample = false }) {
                     </div>
                   )}
                   {d.level_history?.filter((h) => h.score).length > 0 && (
+                    <>
+                    <ScoreTrendChart history={d.level_history} names={{ a: d.statement?.legal_summary?.parent_names?.a, b: d.statement?.legal_summary?.parent_names?.b }} />
                     <div className="rounded-lg border border-border p-4" data-testid="court-level-history">
                       <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ability Level across submitted versions</p>
                       <ol className="mt-2 flex flex-wrap items-center gap-2">
@@ -130,6 +133,7 @@ export default function CourtCase({ sample = false }) {
                       </ol>
                       <p className="mt-2 text-[11px] text-muted-foreground">Level changes reflect the professional's assessment of the co-parenting dynamic over time; they are not findings about either parent.</p>
                     </div>
+                    </>
                   )}
                 </div>
               )}

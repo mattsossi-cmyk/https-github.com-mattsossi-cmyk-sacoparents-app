@@ -31,8 +31,10 @@ def sample_professional_report() -> dict:
     statement = {**STATEMENT_TEXT, "role": "Parenting Facilitator", "materials_reviewed": ["Parent A Assessment", "Parent B Assessment", "Joint Report", "Educational Assessment"],
                  "dynamic_score": score, "framework": fw, "status": "ready", "version": 2, "level_changed_from": 4,
                  "level_change_note": "Parents completed one facilitated session and adopted written-only scheduling through a shared homework log."}
-    history = [{"version": 1, "at": "2026-08-12", "score": 4, "label": "Level 4-6: Moderate Conflict / Low Trust", "color": "#d97706", "superseded": True, "note": "", "changed_from": None},
-               {"version": 2, "at": "2026-09-16", "score": 6, "label": fw["label"], "color": fw["color"], "superseded": False, "note": statement["level_change_note"], "changed_from": 4}]
+    history = [{"version": 1, "at": "2026-08-12", "score": 4, "label": "Level 4-6: Moderate Conflict / Low Trust", "color": "#d97706", "superseded": True, "note": "", "changed_from": None,
+                "ratings": {"parent_a": 3, "parent_b": 4, "joint": 3}, "growth": None},
+               {"version": 2, "at": "2026-09-16", "score": 6, "label": fw["label"], "color": fw["color"], "superseded": False, "note": statement["level_change_note"], "changed_from": 4,
+                "ratings": {"parent_a": 4, "parent_b": 4, "joint": 4}, "growth": {"a": {"met": 1, "total": 3, "items": []}, "b": {"met": 2, "total": 3, "items": []}}}]
     return {"is_sample": True, "title": "Sample Professional Report (Legal) — fictional data", "professional": SAMPLE_PRO, "court": SAMPLE_COURT, "case_code": "SA-26-EDU-000000",
             "subject_label": sc["label"], "child_name": sc["child"], "statement": statement, "findings": findings, "suggested_score": suggestion, "level_history": history, "date": "2026-09-16",
             "attestation_text": ("I attest that this Professional Report reflects my professional observations of the facilitation process, that it contains no recommendation "

@@ -1,6 +1,7 @@
 """Legal Lens Review and Report to Court — professional report builder (collection: professional_reports)."""
 import uuid
 from datetime import datetime, timezone
+from html import escape
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
@@ -293,6 +294,37 @@ def case_summary(d: dict, status: str) -> dict:
     parts = d.get("participants") or {}
     return {"id": d["id"], "case_code": d.get("case_code"), "child_name": d.get("child_name"), "subject_label": d.get("subject_label"), "status": status,
             "parent_a": parts.get("a", {}).get("name"), "parent_b": parts.get("b", {}).get("name"), "readiness": readiness(d)}
+
+
+async def run_reassessment_reminders(db, send_email, app_url, email_from_name, logger, today=None) -> int:
+    """Email the professional on a report's next_review_date so Key Growth Areas are re-checked; once per date."""
+    today_s = (today or datetime.now(timezone.utc).date()).isoformat()
+    reps = await db.professional_reports.find({"next_review_date": {"$gt": "", "$lte": today_s}, "status": {"$in": ["final", "submitted_to_court"]},
+                                               "$or": [{"reassess_reminder_for": {"$exists": False}}, {"reassess_reminder_for": {"$ne": "$next_review_date"}}]}, {"_id": 0}).to_list(500)
+    sent = 0
+    for rep in reps:
+        if rep.get("reassess_reminder_for") == rep["next_review_date"]:
+            continue
+        case = await db.joint_reports.find_one({"id": rep["case_id"]}, {"_id": 0, "case_code": 1, "child_name": 1, "professional_id": 1})
+        pro = await db.users.find_one({"_id": rep.get("professional_id") or (case or {}).get("professional_id")}, {"name": 1, "email": 1}) or {}
+        if not pro.get("email"):
+            continue
+        open_goals = sum(1 for r in ("a", "b") for g in growth_lines(rep, r) if not g["met"])
+        try:
+            await send_email(to=pro["email"], case_id=rep["case_id"], kind="reassessment_reminder", to_role="Professional",
+                             subject=f"Reassessment due - Case {(case or {}).get('case_code') or ''}",
+                             html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                                   f"<p>Hi {escape(pro.get('name', ''))},</p><p>The next review date (<strong>{rep['next_review_date']}</strong>) for the Professional Evaluation Report in case "
+                                   f"<strong>{escape((case or {}).get('case_code') or '')}</strong> has arrived. {open_goals} Key Growth Area{'s are' if open_goals != 1 else ' is'} not yet marked as met.</p>"
+                                   "<p>Re-check each parent's growth areas, update the 1–10 ratings, set the next review date, and submit a new version if the court should see the progress.</p>"
+                                   f'<p><a href="{app_url()}/cases/{rep["case_id"]}/professional-report" style="background:#5B2A86;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block">Open the report</a></p>'
+                                   f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>'))
+        except Exception as exc:
+            logger.warning("reassessment reminder failed for %s: %s", rep["case_id"], exc)
+            continue
+        await db.professional_reports.update_one({"case_id": rep["case_id"]}, {"$set": {"reassess_reminder_for": rep["next_review_date"], "reassess_reminder_sent_at": datetime.now(timezone.utc).isoformat()}})
+        sent += 1
+    return sent
 
 
 def build_router(db, get_current_user, log_event) -> APIRouter:

@@ -110,8 +110,17 @@ def level_history(packets: list) -> list[dict]:
         fw = (p.get("statement") or {}).get("framework") or {}
         st = p.get("statement") or {}
         rows.append({"version": p.get("submission_version"), "at": p.get("created_at"), "score": fw.get("score"), "label": fw.get("label"), "color": fw.get("color"), "superseded": p.get("superseded", False),
-                     "note": st.get("level_change_note") or "", "changed_from": st.get("level_changed_from"), "growth": _growth_progress(p.get("legal_summary"))})
+                     "note": st.get("level_change_note") or "", "changed_from": st.get("level_changed_from"), "growth": _growth_progress(p.get("legal_summary")),
+                     "ratings": _ratings(p.get("legal_summary"))})
     return rows
+
+
+def _ratings(summary: dict | None) -> dict | None:
+    """Individual + joint 1–10 ratings frozen with a submission (for the score trend chart)."""
+    if not summary or not summary.get("ratings"):
+        return None
+    r = summary["ratings"]
+    return {"parent_a": (r.get("parent_a") or {}).get("score"), "parent_b": (r.get("parent_b") or {}).get("score"), "joint": (r.get("joint") or {}).get("score")}
 
 
 def _growth_progress(summary: dict | None) -> dict | None:

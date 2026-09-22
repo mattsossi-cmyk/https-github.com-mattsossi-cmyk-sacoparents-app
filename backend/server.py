@@ -3043,6 +3043,8 @@ async def cron_follow_up_reminder(request: Request):
     if ack.get("duplicate"):
         return ack
     asyncio.create_task(run_follow_up_reminders())
+    from legal_lens import run_reassessment_reminders
+    asyncio.create_task(run_reassessment_reminders(db, send_email, app_url, EMAIL_FROM_NAME, logger))
     return ack
 
 

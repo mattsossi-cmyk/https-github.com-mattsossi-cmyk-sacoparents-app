@@ -693,8 +693,9 @@ def _pro_statement_routes(c: Ctx) -> APIRouter:
         doc = await own_case(rid, user)
         findings = joint_findings(doc)
         lens = await db.professional_reports.find_one({"case_id": rid}, {"_id": 0, "status": 1, "signature_name": 1})
+        packets = await db.court_packets.find({"report_id": rid, "frozen": True}, {"_id": 0, "submission_version": 1, "created_at": 1, "statement": 1, "superseded": 1, "legal_summary": 1}).sort("submission_version", 1).to_list(100)
         return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
-                "legal_lens": {"status": (lens or {}).get("status", "not_started"), "signature_name": (lens or {}).get("signature_name", "")},
+                "legal_lens": {"status": (lens or {}).get("status", "not_started"), "signature_name": (lens or {}).get("signature_name", "")}, "level_history": level_history(packets),
                 "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
                 "findings": findings, "subject_options": (findings or {}).get("subject_options") or [], "library": clean_library(user.get("resource_library") or {}),
                 "org_library": await org_library(user), "organization": (user.get("profile") or {}).get("organization") or "",

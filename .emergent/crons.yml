@@ -23,7 +23,7 @@ crons:
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     enabled: true
   - name: follow-up-reminder
-    description: "Daily 8am Central email to professionals on the follow-up date set when saving a session outcome"
+    description: "Daily 8am Central email to professionals on session follow-up dates and Professional Evaluation Report reassessment dates"
     cron: "0 8 * * *"
     timezone: "America/Chicago"
     endpoint: "{{BASE_URL}}/api/cron/follow-up-reminder"
