@@ -132,6 +132,7 @@ def court_summary(rep: dict) -> dict:
             "risk_screening": [{"label": lbl, "level": risk.get(k, {}).get("level", "Not assessed"), "note": risk.get(k, {}).get("note", "")} for k, lbl, _ in RISK_CATEGORIES],
             "fv_received": {"a": rep.get("fv_a_received"), "b": rep.get("fv_b_received")}, "joint_process_appropriate": rep.get("joint_process_appropriate"), "safety_takeaway": rep.get("safety_takeaway"),
             "growth": {"a": growth_lines(rep, "a"), "b": growth_lines(rep, "b")}, "parent_names": {"a": rep.get("parent_a_name"), "b": rep.get("parent_b_name")},
+            "scale_table": SCALE_TABLE, "placement": {"a": (a or {}).get("row"), "b": (b or {}).get("row"), "joint": (j or {}).get("row")},
             "pathway": next((p["name"] for p in PATHWAYS if p["key"] == chosen), None), "pathway_rationale": rep.get("conflict_management_rationale"),
             "short_term_goals": [g.strip() for g in (rep.get("short_term_goals") or "").split("\n") if g.strip()], "long_term_goals": [g.strip() for g in (rep.get("long_term_goals") or "").split("\n") if g.strip()],
             "resources": rep.get("resource_rows") or [], "reassess_interval": rep.get("reassess_interval"), "next_review_date": rep.get("next_review_date"), "finalized_at": rep.get("finalized_at")}

@@ -70,7 +70,7 @@ export default function SampleLegalLensReport() {
           <div data-testid="sample-lens-joint"><H3>Joint Dynamic Summary (Rated: Level {rep.joint_rating})</H3>
             <p className="mt-1"><strong>Operating Dynamic:</strong> <strong>{cls.joint.mode} Mode</strong> — {cls.joint.label}.<br /><strong>Summary:</strong> {rep.joint_notes}</p></div>
         </Sec>
-        <Sec n={3} title="Comprehensive 1–10 Co-Parenting Scale: Joint & Individual Behaviors" testId="sample-lens-s3"><ScaleTable scale={lib.scale_table} cls={cls} rep={rep} /></Sec>
+        <Sec n={3} title="Comprehensive 1–10 Co-Parenting Scale: Individual Parents, then Joint" testId="sample-lens-s3"><ScaleTable scale={lib.scale_table} cls={cls} rep={rep} /></Sec>
         <Sec n={4} title="Post-Rating Roadmap: Short-Term & Long-Term Goals" testId="sample-lens-s4">
           <H3>A. Short-Term Goals (Next 30 to 90 Days)</H3><Lines text={rep.short_term_goals} />
           <H3>B. Long-Term Goals (6 to 12 Months)</H3><Lines text={rep.long_term_goals} />

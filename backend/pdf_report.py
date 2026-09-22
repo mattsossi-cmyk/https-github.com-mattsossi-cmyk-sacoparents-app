@@ -1085,16 +1085,37 @@ def _lens_parent(pdf: FPDF, name: str, rep: dict, role: str, cls: dict | None) -
     _stmt_text(pdf, "Professional notes (PARENT-REPORTED INFORMATION summarized by the professional)", rep.get(f"parent_{role}_notes"))
 
 
-def _lens_scale(pdf: FPDF, scale: list, cls: dict, rep: dict) -> None:
-    a, b, j = cls.get("parent_a"), cls.get("parent_b"), cls.get("joint")
+def _lens_subhead(pdf: FPDF, text: str) -> None:
+    pdf.set_font(FONT, "B", 10)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 6, _s(text), new_x="LMARGIN", new_y="NEXT")
+
+
+def _lens_individual_scale(pdf: FPDF, scale: list, cls: dict | None, rep: dict, role: str) -> None:
+    from legal_lens import growth_lines
+    name, rating = rep.get(f"parent_{role}_name") or f"Parent {role.upper()}", rep.get(f"parent_{role}_rating")
+    _lens_subhead(pdf, f"{name} — Individual Challenges & Growth" + (f" (Rated: Level {rating})" if rating else ""))
+    growth = "\n".join(f"{'[MET] ' if g['met'] else '[ ] '}{g['text']}" for g in growth_lines(rep, role))
     rows, active = [], set()
     for i, r in enumerate(scale):
-        place = [f"PARENT A (L{rep.get('parent_a_rating')})" if a and a["row"] == i else "", f"PARENT B (L{rep.get('parent_b_rating')})" if b and b["row"] == i else "",
-                 f"JOINT (L{rep.get('joint_rating')})" if j and j["row"] == i else ""]
-        if any(place):
+        hit = bool(cls) and cls["row"] == i
+        if hit:
             active.add(i)
-        rows.append([f"{r['lo']} – {r['hi']}", f"{r['label']} ({r['mode']})", f"Joint: {r['well']['joint']} Parent A: {r['well']['a']} Parent B: {r['well']['b']}",
-                     f"Joint: {r['poor']['joint']} Parent A: {r['poor']['a']} Parent B: {r['poor']['b']}", "\n".join(p for p in place if p)])
+        rows.append([f"{r['lo']} – {r['hi']}", f"{r['label']} ({r['mode']})", r["well"][role], r["poor"][role], f"{name.upper()} (L{rating})" + (f"\nGrowth areas:\n{growth}" if growth else "") if hit else ""])
+    _lens_table(pdf, ["Score", "Dynamic & Mode", "Where This Parent Does Well (Strengths)", "Where This Parent Does Poorly (Challenges)", "Placement & Growth Areas"], rows, [14, 30, 45, 45, 40], active)
+
+
+def _lens_scale(pdf: FPDF, scale: list, cls: dict, rep: dict) -> None:
+    _lens_individual_scale(pdf, scale, cls.get("parent_a"), rep, "a")
+    _lens_individual_scale(pdf, scale, cls.get("parent_b"), rep, "b")
+    j = cls.get("joint")
+    _lens_subhead(pdf, "Joint Co-Parenting Dynamic" + (f" (Rated: Level {rep.get('joint_rating')})" if rep.get("joint_rating") else ""))
+    rows, active = [], set()
+    for i, r in enumerate(scale):
+        hit = bool(j) and j["row"] == i
+        if hit:
+            active.add(i)
+        rows.append([f"{r['lo']} – {r['hi']}", f"{r['label']} ({r['mode']})", r["well"]["joint"], r["poor"]["joint"], f"JOINT (L{rep.get('joint_rating')})" if hit else ""])
     _lens_table(pdf, ["Score", "Dynamic & Mode", "Where Co-Parents Do Well (Strengths)", "Where Co-Parents Do Poorly (Gaps)", "Case Placement"], rows, [14, 30, 50, 50, 30], active)
 
 
@@ -1142,7 +1163,7 @@ def build_legal_lens_pdf(v: dict) -> bytes:
     _stmt_text(pdf, "Where the parents do well together", rep.get("joint_strengths"))
     _stmt_text(pdf, "Where the parents struggle together", rep.get("joint_gaps"))
     _stmt_text(pdf, "Summary", rep.get("joint_notes"), required=True)
-    _lens_heading(pdf, "3. Comprehensive 1–10 Co-Parenting Scale: Joint & Individual Behaviors")
+    _lens_heading(pdf, "3. Comprehensive 1–10 Co-Parenting Scale: Individual Parents, then Joint")
     _lens_scale(pdf, SCALE_TABLE, cls, rep)
     _lens_heading(pdf, "4. Post-Rating Roadmap: Short-Term & Long-Term Goals")
     _stmt_list(pdf, "A. Short-Term Goals (Next 30 to 90 Days)", [g.strip() for g in (rep.get("short_term_goals") or "").split("\n") if g.strip()], "Not yet entered.")

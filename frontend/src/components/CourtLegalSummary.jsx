@@ -1,4 +1,5 @@
 import { CheckCircle2, Circle, ShieldAlert } from "lucide-react";
+import { IndividualScaleTable, JointScaleTable } from "@/components/LensScale";
 
 const Block = ({ title, children, testId }) => <div className="rounded-lg border border-border p-4" data-testid={testId}><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</p><div className="mt-2 text-sm space-y-2">{children}</div></div>;
 const RISK_STYLE = { "High Risk": "bg-red-100 text-red-800", "Moderate-to-High Risk": "bg-orange-100 text-orange-800", "Moderate Risk": "bg-amber-100 text-amber-800", "Low Risk": "bg-align-green/15 text-align-green", "Not assessed": "bg-secondary text-muted-foreground" };
@@ -20,6 +21,14 @@ export function CourtLegalSummary({ s }) {
           <div><p className="text-xs text-muted-foreground">Joint dynamic</p><Score s={s.ratings?.joint} /></div>
         </div>
       </Block>
+      {s.scale_table && <Block title="1–10 Scale Placement — Individual, then Joint" testId="court-legal-scale">
+        <div className="space-y-5">
+          <IndividualScaleTable scale={s.scale_table} row={s.placement?.a} rating={s.ratings?.parent_a?.score} role="a" name={names.a} growth={s.growth?.a} />
+          <IndividualScaleTable scale={s.scale_table} row={s.placement?.b} rating={s.ratings?.parent_b?.score} role="b" name={names.b} growth={s.growth?.b} />
+          <JointScaleTable scale={s.scale_table} row={s.placement?.joint} rating={s.ratings?.joint?.score} />
+        </div>
+        <p className="text-[11px] italic text-muted-foreground">Reference scale recorded by the professional at finalization; placements are professional ratings, not court findings.</p>
+      </Block>}
       <Block title="Safety First — IPV Risk Screening Summary" testId="court-legal-risk">
         <p className="text-xs text-muted-foreground">Family Violence assessments: Parent A {s.fv_received?.a || "—"} · Parent B {s.fv_received?.b || "—"} · Joint process appropriate: <strong>{s.joint_process_appropriate || "—"}</strong></p>
         <ul className="grid gap-1 sm:grid-cols-2">{(s.risk_screening || []).map((r) => <li key={r.label} className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${RISK_STYLE[r.level] || RISK_STYLE["Not assessed"]}`}>{r.level}</span><span className="font-medium">{r.label}</span>{r.note && <span className="text-xs text-muted-foreground">— {r.note}</span>}</li>)}</ul>

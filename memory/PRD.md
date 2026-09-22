@@ -668,3 +668,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Reassessment Reminder (2026-06): legal_lens.run_reassessment_reminders emails professional when next_review_date <= today (final/submitted reports), idempotent via reassess_reminder_for; wired into existing daily follow-up-reminder cron endpoint (platform cap 5 crons; crons.yml already lists 6 — judge-digest is the 6th and is NOT scheduled). tests/test_reassessment_reminder.py.
 - Score Trend Chart: level_history rows carry ratings {parent_a,parent_b,joint}; ScoreTrendChart.jsx (recharts) on CourtCase and ProfessionalStatement (professional-statement GET now returns level_history). Sample judicial case has ratings/growth.
 - Cron limit fix (2026-06): judge-digest merged into weekly-summary cron (Mon 8am Central runs run_weekly_summaries + run_judge_digests); crons.yml now exactly 5 entries. /api/cron/judge-digest endpoint kept (unscheduled).
+
+## 2026-09-22 — Individual parent scale tables (preview, agent-tested)
+- Section 3 of the Legal Lens report now renders three tables: Parent A individual, Parent B individual (Strengths / Challenges per band, placement column includes Key Growth Areas + MET status), then Joint table.
+- Applied to: professional editor, sample report + tour tip, PDF (`_lens_individual_scale`), judge court view (`court_summary` now freezes `scale_table` + `placement`; `CourtLegalSummary` renders tables when present).
+- Verified: sample PDF contains new headings; legal_report + court_workflow tests 9 passed; sample & /court/sample render all three tables. Not user-confirmed; not republished.

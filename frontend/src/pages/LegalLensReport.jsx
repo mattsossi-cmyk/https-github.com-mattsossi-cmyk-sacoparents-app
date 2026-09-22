@@ -159,7 +159,7 @@ export default function LegalLensReport() {
                 <Field big label="Summary" value={rep.joint_notes} onChange={(val) => set("joint_notes", val)} id="joint_notes" />
               </div>
             </Sec>
-            <Sec n={3} title="Comprehensive 1–10 Co-Parenting Scale: Joint & Individual Behaviors" id="scale"><ScaleTable scale={lib.scale_table} cls={cls} rep={rep} /></Sec>
+            <Sec n={3} title="Comprehensive 1–10 Co-Parenting Scale: Individual Parents, then Joint" id="scale"><ScaleTable scale={lib.scale_table} cls={cls} rep={rep} /></Sec>
             <Sec n={4} title="Post-Rating Roadmap: Short-Term & Long-Term Goals" id="roadmap">
               <Field big label="A. Short-Term Goals (Next 30 to 90 Days)" hint="One goal per line, as “Title: concrete action”." value={rep.short_term_goals} onChange={(val) => set("short_term_goals", val)} id="short_term_goals" />
               <Field big label="B. Long-Term Goals (6 to 12 Months)" hint="One goal per line." value={rep.long_term_goals} onChange={(val) => set("long_term_goals", val)} id="long_term_goals" />
