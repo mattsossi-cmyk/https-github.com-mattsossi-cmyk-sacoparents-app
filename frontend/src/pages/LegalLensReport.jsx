@@ -33,7 +33,10 @@ function ParentBlock({ role, rep, cls, set }) {
 
 function ResourceRows({ rows = [], lib, onChange }) {
   const upd = (i, k, val) => onChange(rows.map((r, j) => (j === i ? { ...r, [k]: val } : r)));
-  const add = (r = { category: lib.resource_categories[0], resource: "", focus: "" }) => onChange([...rows, r]);
+  const add = (r = { category: lib.resource_categories[0], resource: "", focus: "" }) => {
+    if (r.resource && rows.some((x) => x.resource === r.resource)) { toast.info(`${r.resource.split(" — ")[0]} is already in the table`); return; }
+    onChange([...rows, r]);
+  };
   const cat = (p) => (/education/i.test(p.specialty) ? "Educational Assessment" : /children in the middle/i.test(p.specialty) ? "Parent Education" : /options|forensic|facilitat/i.test(p.specialty) ? "Clinical & Forensics" : "Joint / Co-Parenting");
   return (
     <div className="space-y-2" data-testid="lens-resource-rows">

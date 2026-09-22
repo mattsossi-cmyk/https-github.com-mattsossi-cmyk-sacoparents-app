@@ -89,10 +89,12 @@ INTRO_TEXT = ("The SA CoParents Align system evaluates co-parenting dynamic stab
 
 
 def recommended_pathway(joint_rating) -> dict | None:
+    """1–2 Court · 3–4 Facilitation · 5–6 Traditional Mediation · 7–9 Child-Centered · 10 Direct Collaboration."""
     if not joint_rating:
         return None
     r = int(joint_rating)
-    return next((p for p in PATHWAYS if p["lo"] <= r <= p["hi"] and p["key"] != "direct"), PATHWAYS[-1]) if r < 10 else PATHWAYS[-1]
+    key = "court" if r <= 2 else "facilitation" if r <= 4 else "mediation" if r <= 6 else "child_centered" if r <= 9 else "direct"
+    return next(p for p in PATHWAYS if p["key"] == key)
 
 
 def resource_lists(providers: list[dict]) -> tuple[list[str], list[str]]:
@@ -283,6 +285,8 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
         ind, joint = resource_lists(provs)
         if not rep.get("resource_rows"):
             rep = {**rep, "resource_rows": default_resource_rows(provs)}
+        rep = {**rep, "reassess_up": rep.get("reassess_up") or REASSESS_UP_DEFAULT, "reassess_down": rep.get("reassess_down") or REASSESS_DOWN_DEFAULT,
+               "reassess_interval": rep.get("reassess_interval") or "Every 90 to 180 days"}
         return {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
                 "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
                 "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE, "risk_categories": RISK_CATEGORIES,
