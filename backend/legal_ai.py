@@ -43,12 +43,13 @@ def rule_based_lens(draft: dict) -> dict:
 
 MODELS = {"gemini": ("gemini", "gemini-3.1-pro-preview", "Gemini 3.1 Pro"), "openai": ("openai", "gpt-5.4-mini", "GPT-5.4 Mini")}
 DEFAULT_MODEL = "gemini"
-LENS_REPORT_KEYS = ("joint_notes", "alignment_summary", "conflict_management_rationale", "short_term_goals", "long_term_goals", "professional_summary")
+LENS_REPORT_KEYS = ("safety_takeaway", "parent_a_growth", "parent_b_growth", "joint_notes", "conflict_management_rationale", "short_term_goals", "long_term_goals")
 LENS_REPORT_SYSTEM = SYSTEM.split("Return ONLY JSON")[0] + (
-    "You are drafting narrative sections of the SA CoParents Legal Lens Review and Report to Court from the structured report data provided (ratings, classifications, "
-    "prefilled strengths/gaps, alignment lists, selected resources and conflict-management options). Ratings describe the co-parenting context, never fitness or credibility. "
-    "Return ONLY JSON with keys: joint_notes, alignment_summary, conflict_management_rationale, short_term_goals, long_term_goals, professional_summary. "
-    "short_term_goals and long_term_goals are newline-separated concrete goals (3-4 lines each); other values are 3-5 sentences.")
+    "You are drafting narrative sections of the SA CoParents Align Professional Evaluation Report from the structured report data provided (1-10 ratings, classifications, "
+    "prefilled strengths/gaps, risk screening levels, resource rows and the recommended conflict-resolution pathway). Ratings describe the co-parenting context, never fitness or credibility. "
+    "Return ONLY JSON with keys: safety_takeaway, parent_a_growth, parent_b_growth, joint_notes, conflict_management_rationale, short_term_goals, long_term_goals. "
+    "parent_a_growth and parent_b_growth are exactly 3 newline-separated 'Key Growth Areas' starting with 'Focus on'; short_term_goals and long_term_goals are 3-4 newline-separated "
+    "goals in the form 'Title: concrete action'; other values are 2-4 sentences.")
 
 
 def _label(v: str) -> str:
@@ -62,15 +63,18 @@ def _v(rep: dict, key: str, default: str = "not yet recorded") -> str:
 def rule_based_lens_report(rep: dict, cls: dict) -> dict:
     j = cls.get("joint") or {}
     lbl = f"joint rating {rep.get('joint_rating')} ({j.get('label')}, {j.get('mode')})" if j else "no joint rating entered yet"
-    opts = ", ".join(rep.get("conflict_management_options") or []) or "no conflict-management approach selected yet"
+    opts = ", ".join(rep.get("conflict_management_options") or []) or "no conflict-management approach selected yet"  # noqa: F841
     guidance = ", ".join(j.get("guidance") or []) or "enter a joint rating for guidance"
+    pathway = (j.get("pathway") or {}).get("name") or "to be selected"
+    risk = ", ".join(f"{k.replace('_', ' ')}: {d.get('level')}" for k, d in (rep.get("risk_screening") or {}).items() if isinstance(d, dict)) or "not yet recorded"
     return {k: _label(v) for k, v in {
+        "safety_takeaway": f"Risk screening summary — {risk}. Whether an emergency safety override or restriction on direct negotiation is needed is for the professional to state after review; no allegation is treated as a verified finding.",
+        "parent_a_growth": "Focus on sending calm, strictly factual messages instead of reactive replies.\nFocus on sharing child information openly and early.\nFocus on separating personal feelings about the other parent from that parent's role with the child.",
+        "parent_b_growth": "Focus on being consistently on time for all scheduled transitions.\nFocus on keeping written messages brief, clear, and non-repetitive.\nFocus on accessing school and medical information independently.",
         "joint_notes": f"The Joint Report reflects {lbl}. Areas where the parents do well together: {_v(rep, 'joint_strengths')}. Areas of difficulty: {_v(rep, 'joint_gaps')}. These statements are parent-reported and are not verified findings.",
-        "alignment_summary": f"Aligned areas: {_v(rep, 'alignment_agreements', 'none recorded')}. Non-aligned areas: {_v(rep, 'alignment_disagreements', 'none recorded')}. Partial alignment: {_v(rep, 'partial_alignment', 'none recorded')}. This summary does not determine which parent's position is correct.",
-        "conflict_management_rationale": f"Selected approaches: {opts}. Neutral guidance for this rating band suggests: {guidance}. Safety screening, court orders and the child's needs remain controlling.",
-        "short_term_goals": "Adopt a single written communication channel with a defined response window.\nComplete the selected individual resources.\nSchedule the first session of the selected conflict-management approach.",
-        "long_term_goals": "Reach a written co-parenting agreement on the non-aligned areas.\nMaintain or improve the joint co-parenting rating at reassessment.\nReduce court involvement in routine decisions.",
-        "professional_summary": f"This report documents review of both individual assessments, family violence screenings ({_v(rep, 'fv_a_received', 'pending')} / {_v(rep, 'fv_b_received', 'pending')}) and the Joint Report, with individual ratings {_v(rep, 'parent_a_rating', '–')} and {_v(rep, 'parent_b_rating', '–')} and {lbl}. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.",
+        "conflict_management_rationale": f"Recommended pathway for this rating band: {pathway}. Neutral guidance suggests: {guidance}. Safety screening, court orders and the child's needs remain controlling.",
+        "short_term_goals": "Transition Handoff Protocol: Shift transitions to neutral locations or school pickup/drop-off; keep greetings brief.\nApp-Only Communication Window: Move all non-emergency messaging to SA CoParents Align with a defined response window.\nShared Information Access: Both parents hold direct login access to school and medical portals.",
+        "long_term_goals": "Step Down Monitoring: Reduce facilitator check-ins from weekly to monthly as promptness and calm messaging hold.\nFlexible Schedule Swaps: After 90 days of consistency, introduce a structured Right of First Refusal policy.\nUnified Two-Household Expectations: Complete parent education to align major household rules across homes.",
     }.items()}
 
 

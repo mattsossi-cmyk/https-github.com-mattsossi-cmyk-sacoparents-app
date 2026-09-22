@@ -4,6 +4,7 @@ from io import BytesIO
 
 import qrcode
 from fpdf import FPDF
+from fpdf.fonts import FontFace
 
 _FONT_DIR = Path(__file__).resolve().parent / "fonts"
 _UNICODE_FONTS = all((_FONT_DIR / f).exists() for f in (
@@ -1056,59 +1057,117 @@ def _lens_resources(pdf: FPDF, title: str, items: list, provider: dict | None) -
     pdf.ln(1)
 
 
+def _lens_table(pdf: FPDF, headers: list, rows: list, widths: list, active: set | None = None) -> None:
+    pdf.set_font(FONT, "", 8)
+    with pdf.table(col_widths=widths, text_align="LEFT", line_height=4.2, headings_style=FontFace(emphasis="BOLD", color=PURPLE, fill_color=(243, 238, 250)), borders_layout="ALL") as table:
+        hdr = table.row()
+        for h in headers:
+            hdr.cell(_s(h))
+        for i, r in enumerate(rows):
+            style = FontFace(fill_color=(254, 243, 199)) if active and i in active else None
+            row = table.row(style=style)
+            for cell in r:
+                row.cell(_s(str(cell)))
+    pdf.ln(2)
+
+
+def _lens_parent(pdf: FPDF, name: str, rep: dict, role: str, cls: dict | None) -> None:
+    rating = rep.get(f"parent_{role}_rating")
+    pdf.set_font(FONT, "B", 10.5)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 6, _s(f"{name} (Rated: Level {rating})" if rating else f"{name} (not yet rated)"), new_x="LMARGIN", new_y="NEXT")
+    if cls:
+        _body(pdf, f"Band {cls['range']} — {cls['label']}", italic=True)
+    _stmt_text(pdf, "What's Working Well (Strengths)", rep.get(f"parent_{role}_strengths"), required=True)
+    _stmt_text(pdf, "Real-World Example (Gaps)", rep.get(f"parent_{role}_gaps"), required=True)
+    _stmt_list(pdf, "Key Growth Areas", [g.strip() for g in (rep.get(f"parent_{role}_growth") or "").split("\n") if g.strip()], "Not yet entered.")
+    _stmt_text(pdf, "Professional notes (PARENT-REPORTED INFORMATION summarized by the professional)", rep.get(f"parent_{role}_notes"))
+
+
+def _lens_scale(pdf: FPDF, scale: list, cls: dict, rep: dict) -> None:
+    a, b, j = cls.get("parent_a"), cls.get("parent_b"), cls.get("joint")
+    rows, active = [], set()
+    for i, r in enumerate(scale):
+        place = [f"PARENT A (L{rep.get('parent_a_rating')})" if a and a["row"] == i else "", f"PARENT B (L{rep.get('parent_b_rating')})" if b and b["row"] == i else "",
+                 f"JOINT (L{rep.get('joint_rating')})" if j and j["row"] == i else ""]
+        if any(place):
+            active.add(i)
+        rows.append([f"{r['lo']} – {r['hi']}", f"{r['label']} ({r['mode']})", f"Joint: {r['well']['joint']} Parent A: {r['well']['a']} Parent B: {r['well']['b']}",
+                     f"Joint: {r['poor']['joint']} Parent A: {r['poor']['a']} Parent B: {r['poor']['b']}", "\n".join(p for p in place if p)])
+    _lens_table(pdf, ["Score", "Dynamic & Mode", "Where Co-Parents Do Well (Strengths)", "Where Co-Parents Do Poorly (Gaps)", "Case Placement"], rows, [14, 30, 50, 50, 30], active)
+
+
 def build_legal_lens_pdf(v: dict) -> bytes:
-    """Legal Lens Review and Report to Court — court-ready PDF in the spec'd section order."""
+    """SA CoParents Align Professional Evaluation Report — court-ready PDF (7 sections + certification)."""
+    from legal_lens import PATHWAYS, RISK_CATEGORIES, SCALE_TABLE
     rep, c, cls, notes = v["report"], v["case"], v["classification"], v["notes"]
     pdf = _new_pdf()
     pdf.footer_meta = f"{notes['tagline']} · Case {c.get('case_code') or ''} · {rep.get('professional_name') or ''} · {rep.get('report_date') or ''}"
-    if rep.get("status") != "final" and rep.get("status") != "submitted_to_court":
+    if rep.get("status") not in ("final", "submitted_to_court"):
         pdf.watermark_text = "DRAFT"
     pdf.set_font(FONT, "B", 11)
     pdf.set_text_color(*TEAL)
     pdf.cell(0, 6, "SA CoParents Align", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font(FONT, "B", 17)
     pdf.set_text_color(*PURPLE)
-    pdf.multi_cell(0, 8, "SA CoParents Legal Lens Review and Report to Court", new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(2)
-    _lens_heading(pdf, "1. Case Information")
-    _legal_kv(pdf, [("Case / Matter", rep.get("matter_name")), ("Case ID", c.get("case_code")), ("Court / County", rep.get("court_county")), ("Cause Number", rep.get("cause_number")),
-                    ("Professional", rep.get("professional_name")), ("Professional Role", rep.get("professional_role")), ("Report Date", rep.get("report_date")),
+    pdf.multi_cell(0, 8, "SA CoParents Align Professional Evaluation Report", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_draw_color(*PURPLE)
+    pdf.set_line_width(0.6)
+    pdf.line(pdf.l_margin, pdf.get_y() + 1, pdf.w - pdf.r_margin, pdf.get_y() + 1)
+    pdf.ln(4)
+    _legal_kv(pdf, [("Platform", "sacoparentsalign.com"), ("Focus", "Comprehensive 1–10 Scale Analysis (Joint & Individual Behaviors), Stage-Specific Profiles, Resources & Actionable Roadmap"),
+                    ("Case / Matter", rep.get("matter_name")), ("Case ID", c.get("case_code")), ("Court / County", rep.get("court_county")), ("Cause Number", rep.get("cause_number")),
+                    ("Professional", f"{rep.get('professional_name') or ''} · {rep.get('professional_role') or ''}".strip(" ·")), ("Report Date", rep.get("report_date")),
                     ("Parent A", rep.get("parent_a_name")), ("Parent B", rep.get("parent_b_name")), ("Report Status", (rep.get("status") or "draft").replace("_", " ").title())])
-    _lens_heading(pdf, "2. Safety First — Receipt of Individual Family Violence Assessment(s)")
+    _lens_heading(pdf, "What This Report Covers")
+    _body(pdf, notes.get("intro", ""))
+    _lens_heading(pdf, "1. Safety First: Checking for Domestic Violence & IPV Risks")
+    _body(pdf, "Before evaluating co-parenting scores or suggesting joint meetings, we screen for Intimate Partner Violence (IPV) and coercive control.")
+    _body(pdf, notes.get("alert", ""), italic=True)
     _legal_kv(pdf, [("Parent A FV Assessment", rep.get("fv_a_received")), ("Parent B FV Assessment", rep.get("fv_b_received")), ("Joint Process Appropriate?", rep.get("joint_process_appropriate"))])
+    risk = rep.get("risk_screening") or {}
+    _stmt_list(pdf, "Risk Screening Summary", [f"{lbl}: {risk.get(k, {}).get('level', 'Not assessed')}." + (f" {risk[k]['note']}" if risk.get(k, {}).get("note") else "") for k, lbl, _ in RISK_CATEGORIES])
     _stmt_text(pdf, "Safety notes / safeguards", rep.get("safety_notes"))
+    _stmt_text(pdf, "Takeaway", rep.get("safety_takeaway"), required=True)
     _body(pdf, notes["safety"], italic=True)
-    for role, n in (("a", 3), ("b", 4)):
-        name = rep.get(f"parent_{role}_name") or f"Parent {role.upper()}"
-        _lens_heading(pdf, f"{n}. Individual Assessment — {name}")
-        _lens_rating(pdf, name, rep.get(f"parent_{role}_rating"), cls[f"parent_{role}"])
-        _stmt_text(pdf, f"Where {name} does well", rep.get(f"parent_{role}_strengths"))
-        _stmt_text(pdf, f"Where {name} struggles", rep.get(f"parent_{role}_gaps"))
-        _stmt_text(pdf, "Professional notes", rep.get(f"parent_{role}_notes"))
-        _lens_resources(pdf, f"{name} — Individual Resources", rep.get(f"parent_{role}_resources") or [], rep.get(f"parent_{role}_provider"))
-    _lens_heading(pdf, "5. Joint Co-Parenting Assessment")
-    _lens_rating(pdf, "Joint co-parenting", rep.get("joint_rating"), cls["joint"], joint=True)
+    _lens_heading(pdf, "2. Detailed Individual Breakdown for Parent A & Parent B")
+    _lens_parent(pdf, rep.get("parent_a_name") or "Parent A", rep, "a", cls["parent_a"])
+    _lens_parent(pdf, rep.get("parent_b_name") or "Parent B", rep, "b", cls["parent_b"])
+    j = cls["joint"]
+    pdf.set_font(FONT, "B", 10.5)
+    pdf.set_text_color(*TEAL)
+    pdf.cell(0, 6, _s(f"Joint Dynamic Summary (Rated: Level {rep.get('joint_rating')})" if rep.get("joint_rating") else "Joint Dynamic Summary (not yet rated)"), new_x="LMARGIN", new_y="NEXT")
+    _legal_kv(pdf, [("Operating Dynamic", f"{j['mode']} Mode — {j['label']}" if j else "")])
     _stmt_text(pdf, "Where the parents do well together", rep.get("joint_strengths"))
     _stmt_text(pdf, "Where the parents struggle together", rep.get("joint_gaps"))
-    _stmt_text(pdf, "Professional joint assessment notes", rep.get("joint_notes"))
-    _lens_resources(pdf, "6. Joint Resources", rep.get("joint_resources") or [], rep.get("joint_provider"))
-    _lens_heading(pdf, "7. Parent Alignment — Based on Joint Report")
-    for t, k in (("Where the parents agree / are aligned", "alignment_agreements"), ("Where the parents do not agree / are not aligned", "alignment_disagreements"),
-                 ("Partial alignment / potential areas for agreement", "partial_alignment"), ("Professional alignment summary", "alignment_summary")):
-        _stmt_text(pdf, t, rep.get(k), required=True)
-    _lens_heading(pdf, "8. Conflict Management — Approaches to Conflict")
-    _stmt_list(pdf, "Selected approaches", rep.get("conflict_management_options") or [], "None selected.")
-    if cls["joint"]:
-        _stmt_list(pdf, f"Automatic guidance for joint rating {rep.get('joint_rating')} — consider", cls["joint"]["guidance"])
-    _stmt_text(pdf, "Conflict management rationale / recommended structure", rep.get("conflict_management_rationale"))
+    _stmt_text(pdf, "Summary", rep.get("joint_notes"), required=True)
+    _lens_heading(pdf, "3. Comprehensive 1–10 Co-Parenting Scale: Joint & Individual Behaviors")
+    _lens_scale(pdf, SCALE_TABLE, cls, rep)
+    _lens_heading(pdf, "4. Post-Rating Roadmap: Short-Term & Long-Term Goals")
+    _stmt_list(pdf, "A. Short-Term Goals (Next 30 to 90 Days)", [g.strip() for g in (rep.get("short_term_goals") or "").split("\n") if g.strip()], "Not yet entered.")
+    _stmt_list(pdf, "B. Long-Term Goals (6 to 12 Months)", [g.strip() for g in (rep.get("long_term_goals") or "").split("\n") if g.strip()], "Not yet entered.")
+    _lens_heading(pdf, "5. Resource & Support Options")
+    rows = [[r.get("category", ""), r.get("resource", ""), r.get("focus", "")] for r in (rep.get("resource_rows") or [])]
+    if rows:
+        _lens_table(pdf, ["Category", "Recommended Resource / Specialist", "Service Focus & Scope"], rows, [40, 60, 74])
+    else:
+        _body(pdf, "No resources selected.", italic=True)
+    _lens_heading(pdf, "6. Checking In: Regular Reassessments")
+    _body(pdf, f"By checking in {(rep.get('reassess_interval') or 'every 90 to 180 days').lower()} via SA CoParents Align, parents can track progress against their roadmap:")
+    _stmt_text(pdf, "When Score Moves Up", rep.get("reassess_up"))
+    _stmt_text(pdf, "When Score Drops", rep.get("reassess_down"))
+    _legal_kv(pdf, [("Next review / reassessment", rep.get("next_review_date"))])
+    _lens_heading(pdf, "7. Conflict Resolution Pathways (Levels 1–10)")
+    rec = (j or {}).get("pathway") or {}
+    chosen = rep.get("conflict_pathway") or rec.get("key")
+    for n, p in enumerate(PATHWAYS, 1):
+        mark = f" — [Level {rep.get('joint_rating')} Recommendation]" if p["key"] == chosen and rep.get("joint_rating") else ""
+        _body(pdf, f"{n}. {p['name']} ({p['levels']}){mark}: {p['desc']}", indent=2)
+    _stmt_text(pdf, "Rationale / recommended structure", rep.get("conflict_management_rationale"), required=True)
     _body(pdf, notes["rating"], italic=True)
-    _lens_heading(pdf, "9. Roadmap")
-    _stmt_text(pdf, "Short-term goals — next 30 to 90 days", rep.get("short_term_goals"), required=True)
-    _stmt_text(pdf, "Long-term goals — 6 to 12 months", rep.get("long_term_goals"), required=True)
-    _lens_heading(pdf, "10. Professional Legal Lens Review and Report to Court")
-    _stmt_text(pdf, "Professional summary", rep.get("professional_summary"), required=True)
-    _legal_kv(pdf, [("Next review / reassessment", rep.get("next_review_date")), ("Professional signature", rep.get("signature_name")), ("Title", rep.get("professional_title")),
-                    ("Date finalized", (rep.get("finalized_at") or "")[:10])])
+    _lens_heading(pdf, "Professional Certification")
+    _body(pdf, "This report reflects the professional's review of the individual assessments, safety screenings and Joint Report. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.", italic=True)
+    _legal_kv(pdf, [("Professional signature", rep.get("signature_name")), ("Title", rep.get("professional_title")), ("Date finalized", (rep.get("finalized_at") or "")[:10])])
     _lens_ai_appendix(pdf, rep)
     pdf.ln(3)
     pdf.set_font(FONT, "B", 10)
@@ -1117,8 +1176,9 @@ def build_legal_lens_pdf(v: dict) -> bytes:
     return bytes(pdf.output())
 
 
-LENS_FIELD_TITLES = {"joint_notes": "Professional joint assessment notes", "alignment_summary": "Professional alignment summary", "conflict_management_rationale": "Conflict management rationale",
-                     "short_term_goals": "Short-term goals", "long_term_goals": "Long-term goals", "professional_summary": "Professional summary"}
+LENS_FIELD_TITLES = {"safety_takeaway": "Safety takeaway", "parent_a_growth": "Parent A key growth areas", "parent_b_growth": "Parent B key growth areas", "joint_notes": "Joint dynamic summary",
+                     "conflict_management_rationale": "Conflict resolution rationale", "short_term_goals": "Short-term goals", "long_term_goals": "Long-term goals",
+                     "alignment_summary": "Professional alignment summary", "professional_summary": "Professional summary"}
 
 
 def _lens_ai_appendix(pdf: FPDF, rep: dict) -> None:

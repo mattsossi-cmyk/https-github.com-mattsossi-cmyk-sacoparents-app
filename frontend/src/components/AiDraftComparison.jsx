@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 
-const TITLES = { joint_notes: "Professional joint assessment notes", alignment_summary: "Professional alignment summary", conflict_management_rationale: "Conflict management rationale", short_term_goals: "Short-term goals", long_term_goals: "Long-term goals", professional_summary: "Professional summary" };
+const TITLES = { safety_takeaway: "Safety takeaway", parent_a_growth: "Parent A key growth areas", parent_b_growth: "Parent B key growth areas", joint_notes: "Joint dynamic summary", conflict_management_rationale: "Conflict resolution rationale", short_term_goals: "Short-term goals", long_term_goals: "Long-term goals", alignment_summary: "Professional alignment summary", professional_summary: "Professional summary" };
 
 export function AiDraftComparison({ drafts, rep }) {
   const [open, setOpen] = useState(false);
