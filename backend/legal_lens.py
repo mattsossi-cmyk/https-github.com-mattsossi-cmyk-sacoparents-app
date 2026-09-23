@@ -9,149 +9,41 @@ from pydantic import BaseModel
 from coparenting_tiers import joint_findings, suggested_score
 from joint_data import SAFETY_SUBJECT_KEYS
 
-TAGLINE = "SA CoParents — Starting With Alignment, Ending With Agreement"
-STATUSES = ("draft", "under_review", "final", "submitted_to_court")
-SAFETY_NOTE = "Safety findings may alter or override ordinary co-parenting, mediation, communication, or joint-process recommendations."
-RATING_NOTE = "The rating does not automatically determine the process. Safety screening, professional judgment, court orders, and the specific needs of the child remain controlling considerations."
-JOINT_OPTIONS = ("Yes", "Yes, with safeguards", "No / Not recommended at this time")
-RECEIPT = ("Received", "Not Received", "Not Applicable")
-
-INDIVIDUAL_BANDS = [
-    (1, 2, "Crisis / High Conflict", ["follows some formal orders", "maintains separation when required", "participates in structured exchanges"],
-     ["highly reactive communication", "poor boundaries", "repeated conflict", "child exposure to conflict", "heavy court involvement"]),
-    (3, 4, "Restricted / Reactive", ["follows basic parenting schedule", "provides required child information", "participates in important child activities"],
-     ["defensive communication", "delayed information sharing", "difficulty separating relationship conflict from parenting issues"]),
-    (5, 6, "Business-Like / Functional", ["child-focused communication", "respects separate household boundaries", "handles routine requests appropriately"],
-     ["difficulty with unexpected changes", "flexibility concerns", "occasional emotionally reactive communication"]),
-    (7, 8, "Cooperative / Collaborative", ["consults on major decisions", "shares information proactively", "supports reasonable flexibility"],
-     ["occasional disputes over parenting styles", "differences in household expectations"]),
-    (9, 10, "Child-Centered Partnership", ["constructive communication", "supports child's relationship with other parent", "resolves disputes without involving the child"],
-     ["few meaningful co-parenting difficulties"]),
-]
-JOINT_BANDS = [
-    (1, 2, "Crisis / High Conflict", "Supervised / Strict Parallel", ["compliance with formal court orders", "structured exchanges", "maintaining physical separation"],
-     ["communication collapse", "hostile exchanges", "repeated litigation", "serious safety concerns"],
-     ["further court involvement", "formal orders", "highly structured communication", "supervised or structured exchanges", "separate professional support"]),
-    (3, 4, "Restricted / Reactive", "Restricted Parallel Parenting", ["honoring scheduled transitions", "sharing required school and medical information", "attending child-related events"],
-     ["handoff conflict", "reactive messages", "lateness", "gatekeeping minor information"],
-     ["parent facilitation", "parallel-parenting structure", "BIFF", "Children in the Middle", "structured app communication", "carefully structured mediation when appropriate"]),
-    (5, 6, "Business-Like / Functional", "Emerging Cooperative", ["task-focused written messages", "schedule accommodation with advance notice", "respect for separate households"],
-     ["difficulty with sudden changes", "financial friction", "passive-aggressive communication"], ["traditional mediation", "child-centered mediation", "co-parenting agreement", "structured problem-solving"]),
-    (7, 8, "Cooperative / Collaborative", "High Co-Parenting", ["consultation on major decisions", "flexible schedule changes", "support of extracurricular activities"],
-     ["occasional parenting-style differences"], ["child-centered mediation", "collaborative problem-solving", "flexible parenting-plan modifications"]),
-    (9, 10, "Child-Centered Partnership", "Unified Partnership", ["fluid communication", "active support for child's relationship with both parents", "shared problem-solving"],
-     ["few meaningful co-parenting difficulties"], ["direct collaboration", "shared planning", "mediation only when needed for significant disputes"]),
-]
-INDIVIDUAL_BASE = ["Foundation Statement", "BIFF Communication Method", "SA CoParents AI Conversation Builder", "Individual Counseling / Coaching"]
-JOINT_BASE = ["Co-Parenting Agreement", "Parent Facilitation / Coordination", "Traditional Mediation", "Child-Centered Mediation"]
-INDIVIDUAL_RESOURCES = [*INDIVIDUAL_BASE, "Kelly Bernstein — Child-Focused Options Provider", "Kassandra Levay — Education Specialist", "Additional Counselor / Provider"]
-JOINT_RESOURCES = ["Brad Craig — Children in the Middle", "Kelly Bernstein — Child-Focused Options Provider", "Kassandra Levay — Education Specialist", *JOINT_BASE, "Additional Expert / Provider"]
-
-# Section 3 — Comprehensive 1–10 Co-Parenting Scale (joint & individual behaviors), verbatim from the Professional Evaluation Report form.
-SCALE_TABLE = [
-    {"lo": 1, "hi": 2, "label": "Crisis / High Conflict", "mode": "Supervised / Strict Parallel",
-     "well": {"joint": "Adhere to legal orders; use 3rd-party sites.", "a": "Follows court boundaries.", "b": "Complies with supervised visits."},
-     "poor": {"joint": "Communication collapse; hostile outbursts.", "a": "Repeated legal motions under stress.", "b": "Hostility or total refusal at handoffs."}},
-    {"lo": 3, "hi": 4, "label": "Restricted / Reactive", "mode": "Restricted Parallel",
-     "well": {"joint": "Honor scheduled times; share portal logs.", "a": "Keeps portal updated.", "b": "Engaged in sports/school events."},
-     "poor": {"joint": "Verbal friction; reactive texts; late handoffs.", "a": "Defensive messaging; holds back info.", "b": "15-20 min late; redundant texts."}},
-    {"lo": 5, "hi": 6, "label": "Business-Like / Functional", "mode": "Emerging Cooperative",
-     "well": {"joint": "Task-focused messages; advance swaps (48h+).", "a": "Concise portal updates.", "b": "On time; checks portals independently."},
-     "poor": {"joint": "Struggle with sudden schedule shifts.", "a": "Passive resistance to last-minute shifts.", "b": "Minor administrative lapses."}},
-    {"lo": 7, "hi": 8, "label": "Cooperative / Collaborative", "mode": "High Co-Parenting",
-     "well": {"joint": "Consult on health/school; informal swaps.", "a": "Proactive medical consultation.", "b": "Shares transport duties."},
-     "poor": {"joint": "Clash over secondary house rules.", "a": "Pushes for single-rule priority.", "b": "Clashes over discipline styles."}},
-    {"lo": 9, "hi": 10, "label": "Child-Centered Partnership", "mode": "Unified Partnership",
-     "well": {"joint": "Matching rules; joint events; fluid updates.", "a": "Promotes bond with Parent B.", "b": "Complete rule alignment."},
-     "poor": {"joint": "Complete absence of dysfunction.", "a": "Zero gatekeeping.", "b": "Zero transition delays."}},
-]
-RISK_CATEGORIES = [("coercive_control", "Coercive Control", "financial isolation, stalking, schedule monopolization"),
-                   ("threats", "Threats & Intimidation", "physical threats, child abduction risk"),
-                   ("hostility", "Verbal & Emotional Hostility", "intense or hostile exchanges, especially at transitions"),
-                   ("child_exposure", "Child Exposure", "disagreements observed by the child")]
-RISK_LEVELS = ["Not assessed", "Low Risk", "Moderate Risk", "Moderate-to-High Risk", "High Risk"]
-SAFETY_ALERT = ("Important Safety Note: If high-risk IPV indicators are present, joint mediation, open messaging, and unmonitored contact are counter-indicated. "
-                "In these situations, court orders, supervised exchanges, or legal safety plans take priority over standard co-parenting goals.")
-PATHWAYS = [
-    {"key": "court", "lo": 1, "hi": 3, "name": "Litigation & Court", "levels": "Levels 1–3", "desc": "Formal orders and parallel mandates. Requires mandatory individual therapy."},
-    {"key": "facilitation", "lo": 3, "hi": 5, "name": "Parent Facilitation & Coordination", "levels": "Levels 3–5", "desc": "Neutral professional resolves day-to-day bumps, supported by parent education, individual counseling, and neutral educational testing."},
-    {"key": "mediation", "lo": 5, "hi": 7, "name": "Traditional Mediation", "levels": "Levels 5–7", "desc": "Guided conversations to update parenting plans or schedules without court."},
-    {"key": "child_centered", "lo": 7, "hi": 10, "name": "Child-Centered Mediation", "levels": "Levels 7–10", "desc": "Collaborative sessions focusing directly on the child's evolving needs."},
-    {"key": "direct", "lo": 10, "hi": 10, "name": "Direct Collaboration", "levels": "Level 10", "desc": "Managing schedule shifts directly using shared calendars on SA CoParents Align."},
-]
-RESOURCE_CATEGORIES = ["Individual (Parent A)", "Individual (Parent B)", "Individual (Child)", "Educational Assessment", "Parent Education", "Clinical & Forensics", "Joint / Co-Parenting", "Other"]
-REASSESS_INTERVALS = ["Every 90 days", "Every 90 to 180 days", "Every 180 days"]
-REASSESS_UP_DEFAULT = "Move away from formal facilitators, start traditional mediation, and introduce flexible schedule swaps."
-REASSESS_DOWN_DEFAULT = "Re-check safety protocols, restrict communication strictly to app logs, and bring in court oversight or clinical therapy."
-INTRO_TEXT = ("The SA CoParents Align system evaluates co-parenting dynamic stability on a 1 to 10 scale. Level 1 indicates high conflict or active safety risks, while Level 10 represents a smooth, "
-              "fully collaborative partnership. This report provides a complete 1–10 behavioral breakdown—identifying specific areas where co-parents and individual parents do well (strengths) "
-              "and where they struggle (gaps) at every tier. It details individual placements for Parent A and Parent B, establishes a Short-Term and Long-Term Roadmap, and matches families with "
-              "targeted clinical and educational resources.")
+from lens_data import (  # noqa: F401  (re-exported for callers importing from legal_lens)
+    TAGLINE, STATUSES, SAFETY_NOTE, RATING_NOTE, JOINT_OPTIONS, RECEIPT, INDIVIDUAL_BANDS, JOINT_BANDS, INDIVIDUAL_BASE, JOINT_BASE, INDIVIDUAL_RESOURCES, JOINT_RESOURCES, SCALE_TABLE, RISK_CATEGORIES, RISK_LEVELS, SAFETY_ALERT, PATHWAYS, RESOURCE_CATEGORIES, REASSESS_INTERVALS, REASSESS_UP_DEFAULT, REASSESS_DOWN_DEFAULT, INTRO_TEXT, recommended_pathway, resource_lists, CONFLICT_OPTIONS, TEXT_FIELDS, LIST_FIELDS, DICT_FIELDS, INT_FIELDS, ROWS_FIELDS, RISK_FIELDS, GROWTH_FIELDS, growth_lines, AI_MODELS, classify_individual, classify_joint)
 
 
-def recommended_pathway(joint_rating) -> dict | None:
-    """1–2 Court · 3–4 Facilitation · 5–6 Traditional Mediation · 7–9 Child-Centered · 10 Direct Collaboration."""
-    if not joint_rating:
-        return None
-    r = int(joint_rating)
-    key = "court" if r <= 2 else "facilitation" if r <= 4 else "mediation" if r <= 6 else "child_centered" if r <= 9 else "direct"
-    return next(p for p in PATHWAYS if p["key"] == key)
+def _lines(text) -> list[str]:
+    return [g.strip() for g in (text or "").split("\n") if g.strip()]
 
 
-def resource_lists(providers: list[dict]) -> tuple[list[str], list[str]]:
-    ind = [p["label"] for p in providers if "individual" in p["lists"]]
-    joint = [p["label"] for p in providers if "joint" in p["lists"]]
-    return [*INDIVIDUAL_BASE, *ind, "Additional Counselor / Provider"], [*joint, *JOINT_BASE, "Additional Expert / Provider"]
-CONFLICT_OPTIONS = ["Further Court Hearing", "Parent Facilitation", "Traditional Mediation", "Child-Centered Mediation"]
-TEXT_FIELDS = ("matter_name", "court_county", "cause_number", "professional_role", "report_date", "parent_a_name", "parent_b_name", "joint_process_appropriate", "safety_notes",
-               "safety_takeaway", "parent_a_strengths", "parent_a_gaps", "parent_a_growth", "parent_a_notes", "parent_b_strengths", "parent_b_gaps", "parent_b_growth", "parent_b_notes",
-               "joint_strengths", "joint_gaps", "joint_notes", "alignment_agreements", "alignment_disagreements", "partial_alignment", "alignment_summary",
-               "conflict_pathway", "conflict_management_rationale", "short_term_goals", "long_term_goals", "reassess_interval", "reassess_up", "reassess_down",
-               "professional_summary", "next_review_date", "signature_name", "professional_title", "fv_a_received", "fv_b_received")
-LIST_FIELDS = ("parent_a_resources", "parent_b_resources", "joint_resources", "conflict_management_options")
-DICT_FIELDS = ("parent_a_provider", "parent_b_provider", "joint_provider")
-INT_FIELDS = ("parent_a_rating", "parent_b_rating", "joint_rating")
-ROWS_FIELDS = ("resource_rows",)
-RISK_FIELDS = ("risk_screening",)
-GROWTH_FIELDS = ("growth_status",)
+def _summary_ratings(rep: dict, a: dict | None, b: dict | None, j: dict | None) -> dict:
+    return {"parent_a": {"score": rep.get("parent_a_rating"), "label": (a or {}).get("label")}, "parent_b": {"score": rep.get("parent_b_rating"), "label": (b or {}).get("label")},
+            "joint": {"score": rep.get("joint_rating"), "label": (j or {}).get("label"), "mode": (j or {}).get("mode")}}
 
 
-def growth_lines(rep: dict, role: str) -> list[dict]:
-    """Key Growth Areas for a parent with met-at-reassessment flags."""
-    status = (rep.get("growth_status") or {}).get(role) or {}
-    return [{"text": g.strip(), "met": bool(status.get(g.strip()))} for g in (rep.get(f"parent_{role}_growth") or "").split("\n") if g.strip()]
+def _summary_safety(rep: dict) -> dict:
+    risk = rep.get("risk_screening") or {}
+    return {"risk_screening": [{"label": lbl, "level": risk.get(k, {}).get("level", "Not assessed"), "note": risk.get(k, {}).get("note", "")} for k, lbl, _ in RISK_CATEGORIES],
+            "fv_received": {"a": rep.get("fv_a_received"), "b": rep.get("fv_b_received")}, "joint_process_appropriate": rep.get("joint_process_appropriate"), "safety_takeaway": rep.get("safety_takeaway")}
+
+
+def _summary_scale(rep: dict, a: dict | None, b: dict | None, j: dict | None) -> dict:
+    return {"growth": {"a": growth_lines(rep, "a"), "b": growth_lines(rep, "b")}, "parent_names": {"a": rep.get("parent_a_name"), "b": rep.get("parent_b_name")},
+            "scale_table": SCALE_TABLE, "placement": {"a": (a or {}).get("row"), "b": (b or {}).get("row"), "joint": (j or {}).get("row")}}
+
+
+def _summary_roadmap(rep: dict, j: dict | None) -> dict:
+    chosen = rep.get("conflict_pathway") or ((j or {}).get("pathway") or {}).get("key")
+    return {"pathway": next((p["name"] for p in PATHWAYS if p["key"] == chosen), None), "pathway_rationale": rep.get("conflict_management_rationale"),
+            "short_term_goals": _lines(rep.get("short_term_goals")), "long_term_goals": _lines(rep.get("long_term_goals")),
+            "resources": rep.get("resource_rows") or [], "reassess_interval": rep.get("reassess_interval"), "next_review_date": rep.get("next_review_date"), "finalized_at": rep.get("finalized_at")}
 
 
 def court_summary(rep: dict) -> dict:
     """Court-safe snapshot of the Professional Evaluation Report frozen with a submission (no parent-reported notes)."""
     a, b, j = classify_individual(rep.get("parent_a_rating")), classify_individual(rep.get("parent_b_rating")), classify_joint(rep.get("joint_rating"))
-    risk = rep.get("risk_screening") or {}
-    chosen = rep.get("conflict_pathway") or ((j or {}).get("pathway") or {}).get("key")
-    return {"ratings": {"parent_a": {"score": rep.get("parent_a_rating"), "label": (a or {}).get("label")}, "parent_b": {"score": rep.get("parent_b_rating"), "label": (b or {}).get("label")},
-                        "joint": {"score": rep.get("joint_rating"), "label": (j or {}).get("label"), "mode": (j or {}).get("mode")}},
-            "risk_screening": [{"label": lbl, "level": risk.get(k, {}).get("level", "Not assessed"), "note": risk.get(k, {}).get("note", "")} for k, lbl, _ in RISK_CATEGORIES],
-            "fv_received": {"a": rep.get("fv_a_received"), "b": rep.get("fv_b_received")}, "joint_process_appropriate": rep.get("joint_process_appropriate"), "safety_takeaway": rep.get("safety_takeaway"),
-            "growth": {"a": growth_lines(rep, "a"), "b": growth_lines(rep, "b")}, "parent_names": {"a": rep.get("parent_a_name"), "b": rep.get("parent_b_name")},
-            "scale_table": SCALE_TABLE, "placement": {"a": (a or {}).get("row"), "b": (b or {}).get("row"), "joint": (j or {}).get("row")},
-            "pathway": next((p["name"] for p in PATHWAYS if p["key"] == chosen), None), "pathway_rationale": rep.get("conflict_management_rationale"),
-            "short_term_goals": [g.strip() for g in (rep.get("short_term_goals") or "").split("\n") if g.strip()], "long_term_goals": [g.strip() for g in (rep.get("long_term_goals") or "").split("\n") if g.strip()],
-            "resources": rep.get("resource_rows") or [], "reassess_interval": rep.get("reassess_interval"), "next_review_date": rep.get("next_review_date"), "finalized_at": rep.get("finalized_at")}
-AI_MODELS = [{"key": "gemini", "label": "Gemini 3.1 Pro"}, {"key": "openai", "label": "GPT-5.4 Mini"}]
-
-
-def classify_individual(rating) -> dict | None:
-    if not rating:
-        return None
-    lo, hi, label, strengths, gaps = next(b for b in INDIVIDUAL_BANDS if b[0] <= int(rating) <= b[1])
-    return {"range": f"{lo}-{hi}", "label": label, "strengths": strengths, "gaps": gaps, "row": next(i for i, r in enumerate(SCALE_TABLE) if r["lo"] <= int(rating) <= r["hi"])}
-
-
-def classify_joint(rating) -> dict | None:
-    if not rating:
-        return None
-    lo, hi, label, mode, strengths, gaps, guidance = next(b for b in JOINT_BANDS if b[0] <= int(rating) <= b[1])
-    return {"range": f"{lo}-{hi}", "label": label, "mode": mode, "strengths": strengths, "gaps": gaps, "guidance": guidance,
-            "row": next(i for i, r in enumerate(SCALE_TABLE) if r["lo"] <= int(rating) <= r["hi"]), "pathway": recommended_pathway(rating)}
+    return {"ratings": _summary_ratings(rep, a, b, j), **_summary_safety(rep), **_summary_scale(rep, a, b, j), **_summary_roadmap(rep, j)}
 
 
 def default_resource_rows(providers: list[dict]) -> list[dict]:
@@ -328,61 +220,86 @@ async def run_reassessment_reminders(db, send_email, app_url, email_from_name, l
     return sent
 
 
-def build_router(db, get_current_user, log_event) -> APIRouter:
-    r = APIRouter()
+def _lens_case_query(rid: str, user: dict) -> dict:
+    if user.get("role") not in ("professional", "admin") or (user.get("role") == "professional" and not user.get("approved")):
+        raise HTTPException(status_code=403, detail="Approved professional access required.")
+    return {"id": rid} if user.get("role") == "admin" else {"id": rid, "professional_id": user["_id"]}
 
-    async def own_case(rid: str, user: dict) -> dict:
-        if user.get("role") not in ("professional", "admin") or (user.get("role") == "professional" and not user.get("approved")):
-            raise HTTPException(status_code=403, detail="Approved professional access required.")
-        q = {"id": rid} if user.get("role") == "admin" else {"id": rid, "professional_id": user["_id"]}
-        doc = await db.joint_reports.find_one(q, {"_id": 0})
+
+async def _lens_view(db, rep: dict, doc: dict) -> dict:
+    from providers import active_providers
+    provs = await active_providers(db)
+    ind, joint = resource_lists(provs)
+    if not rep.get("resource_rows"):
+        rep = {**rep, "resource_rows": default_resource_rows(provs)}
+    rep = {**rep, "reassess_up": rep.get("reassess_up") or REASSESS_UP_DEFAULT, "reassess_down": rep.get("reassess_down") or REASSESS_DOWN_DEFAULT,
+           "reassess_interval": rep.get("reassess_interval") or "Every 90 to 180 days"}
+    return {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
+            "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
+            "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE, "risk_categories": RISK_CATEGORIES,
+            "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT},
+            "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
+
+
+def _new_report(doc: dict, pro: dict | None) -> dict:
+    now = datetime.now(timezone.utc).isoformat()
+    return {"id": str(uuid.uuid4()), "case_id": doc["id"], "professional_id": doc["professional_id"], "professional_name": (pro or {}).get("name", ""), "joint_report_id": doc["id"],
+            "parent_a_assessment_id": f"{doc['id']}:a", "parent_b_assessment_id": f"{doc['id']}:b", "status": "draft", "created_at": now, "updated_at": now, "finalized_at": None,
+            **{k: "" for k in TEXT_FIELDS}, **{k: [] for k in LIST_FIELDS}, **{k: {"name": "", "specialty": "", "contact": ""} for k in DICT_FIELDS}, **{k: None for k in INT_FIELDS},
+            **prefill(doc, {**((pro or {}).get("profile") or {})})}
+
+
+class LensStore:
+    """Case access + Professional Evaluation Report persistence for the Legal Lens routes."""
+
+    def __init__(self, db, log_event):
+        self.db, self.log_event = db, log_event
+
+    async def own_case(self, rid: str, user: dict) -> dict:
+        doc = await self.db.joint_reports.find_one(_lens_case_query(rid, user), {"_id": 0})
         if not doc:
             raise HTTPException(status_code=404, detail="Case not found")
         return doc
 
-    async def view(rep: dict, doc: dict) -> dict:
-        from providers import active_providers
-        provs = await active_providers(db)
-        ind, joint = resource_lists(provs)
-        if not rep.get("resource_rows"):
-            rep = {**rep, "resource_rows": default_resource_rows(provs)}
-        rep = {**rep, "reassess_up": rep.get("reassess_up") or REASSESS_UP_DEFAULT, "reassess_down": rep.get("reassess_down") or REASSESS_DOWN_DEFAULT,
-               "reassess_interval": rep.get("reassess_interval") or "Every 90 to 180 days"}
-        return {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
-                "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
-                "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE, "risk_categories": RISK_CATEGORIES,
-                "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT},
-                "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
+    async def view(self, rep: dict, doc: dict) -> dict:
+        return await _lens_view(self.db, rep, doc)
 
-    async def get_or_create(doc: dict, user: dict) -> dict:
-        rep = await db.professional_reports.find_one({"case_id": doc["id"]}, {"_id": 0})
+    async def get_or_create(self, doc: dict, user: dict) -> dict:
+        rep = await self.db.professional_reports.find_one({"case_id": doc["id"]}, {"_id": 0})
         if rep:
             return rep
-        pro = await db.users.find_one({"_id": doc["professional_id"]}, {"_id": 0, "name": 1, "profile": 1})
-        now = datetime.now(timezone.utc).isoformat()
-        rep = {"id": str(uuid.uuid4()), "case_id": doc["id"], "professional_id": doc["professional_id"], "professional_name": (pro or {}).get("name", ""), "joint_report_id": doc["id"],
-               "parent_a_assessment_id": f"{doc['id']}:a", "parent_b_assessment_id": f"{doc['id']}:b", "status": "draft", "created_at": now, "updated_at": now, "finalized_at": None,
-               **{k: "" for k in TEXT_FIELDS}, **{k: [] for k in LIST_FIELDS}, **{k: {"name": "", "specialty": "", "contact": ""} for k in DICT_FIELDS}, **{k: None for k in INT_FIELDS},
-               **prefill(doc, {**((pro or {}).get("profile") or {})})}
-        await db.professional_reports.insert_one({**rep})
-        await log_event(doc["id"], "LEGAL_LENS_REPORT_CREATED", user)
+        rep = _new_report(doc, await self.db.users.find_one({"_id": doc["professional_id"]}, {"_id": 0, "name": 1, "profile": 1}))
+        await self.db.professional_reports.insert_one({**rep})
+        await self.log_event(doc["id"], "LEGAL_LENS_REPORT_CREATED", user)
         return rep
+
+
+def build_router(db, get_current_user, log_event) -> APIRouter:
+    r = APIRouter()
+    s = LensStore(db, log_event)
+    r.include_router(_report_routes(s, get_current_user))
+    r.include_router(_export_routes(s, get_current_user))
+    return r
+
+
+def _report_routes(s: LensStore, get_current_user) -> APIRouter:
+    r, db, log_event = APIRouter(), s.db, s.log_event
 
     @r.get("/cases/{rid}/professional-report")
     async def get_report(rid: str, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
-        return await view(await get_or_create(doc, user), doc)
+        doc = await s.own_case(rid, user)
+        return await s.view(await s.get_or_create(doc, user), doc)
 
     @r.get("/cases/{rid}/professional-report/readiness")
     async def get_readiness(rid: str, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
+        doc = await s.own_case(rid, user)
         rep = await db.professional_reports.find_one({"case_id": rid}, {"_id": 0, "status": 1})
         return {"readiness": readiness(doc), "status": (rep or {}).get("status")}
 
     @r.put("/cases/{rid}/professional-report")
     async def save_report(rid: str, body: ReportIn, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
-        rep = await get_or_create(doc, user)
+        doc = await s.own_case(rid, user)
+        rep = await s.get_or_create(doc, user)
         upd = sanitize_fields(body.fields)
         if body.status:
             apply_status(rep, upd, body.status)
@@ -391,14 +308,20 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
         await log_event(rid, "LEGAL_LENS_REPORT_FINALIZED" if body.status == "final" else "LEGAL_LENS_REPORT_SAVED", user)
         if upd.get("ai_review"):
             await log_event(rid, ai_disclosure_line(upd["ai_review"]), user)
-        return await view({**rep, **upd}, doc)
+        return await s.view({**rep, **upd}, doc)
+
+    return r
+
+
+def _export_routes(s: LensStore, get_current_user) -> APIRouter:
+    r, db, log_event = APIRouter(), s.db, s.log_event
 
     @r.post("/cases/{rid}/professional-report/ai-draft")
     async def ai_draft(rid: str, body: AiDraftIn, user=Depends(get_current_user)):
         from legal_ai import draft_lens_report
-        doc = await own_case(rid, user)
-        rep = {**(await get_or_create(doc, user)), **sanitize_fields({k: v for k, v in body.fields.items() if k not in DICT_FIELDS})}
-        cls = (await view(rep, doc))["classification"]
+        doc = await s.own_case(rid, user)
+        rep = {**(await s.get_or_create(doc, user)), **sanitize_fields({k: v for k, v in body.fields.items() if k not in DICT_FIELDS})}
+        cls = (await s.view(rep, doc))["classification"]
         fields, source, label = await draft_lens_report(rep, cls, rid, body.model)
         drafts = merge_drafts(rep, fields, label, source)
         await db.professional_reports.update_one({"case_id": rid}, {"$set": {"ai_drafts": drafts}})
@@ -408,10 +331,10 @@ def build_router(db, get_current_user, log_event) -> APIRouter:
     @r.get("/cases/{rid}/professional-report/pdf")
     async def report_pdf(rid: str, user=Depends(get_current_user)):
         from pdf_report import build_legal_lens_pdf
-        doc = await own_case(rid, user)
-        rep = await get_or_create(doc, user)
+        doc = await s.own_case(rid, user)
+        rep = await s.get_or_create(doc, user)
         await log_event(rid, "LEGAL_LENS_REPORT_EXPORTED", user)
-        return Response(content=build_legal_lens_pdf(await view(rep, doc)), media_type="application/pdf",
+        return Response(content=build_legal_lens_pdf(await s.view(rep, doc)), media_type="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="legal-lens-report-{doc.get("case_code") or rid}.pdf"'})
 
     @r.get("/professional-report/cases")

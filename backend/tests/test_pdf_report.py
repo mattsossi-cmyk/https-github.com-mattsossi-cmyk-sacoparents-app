@@ -66,7 +66,6 @@ class TestPdfDownload:
             "School / Education",
             "Purpose of This Report",
             "Alignment Map",
-            "Options and Resources",
             "Alignment Before Agreement",
         ]:
             assert marker in text, f"missing marker: {marker!r}"

@@ -1088,7 +1088,7 @@ def _growth_bar(pdf: FPDF, met: int, total: int) -> None:
 
 
 def _lens_parent(pdf: FPDF, name: str, rep: dict, role: str, cls: dict | None) -> None:
-    from legal_lens import growth_lines
+    from lens_data import growth_lines
     rating = rep.get(f"parent_{role}_rating")
     pdf.set_font(FONT, "B", 10.5)
     pdf.set_text_color(*TEAL)
@@ -1110,7 +1110,7 @@ def _lens_subhead(pdf: FPDF, text: str) -> None:
 
 
 def _lens_individual_scale(pdf: FPDF, scale: list, cls: dict | None, rep: dict, role: str) -> None:
-    from legal_lens import growth_lines
+    from lens_data import growth_lines
     name, rating = rep.get(f"parent_{role}_name") or f"Parent {role.upper()}", rep.get(f"parent_{role}_rating")
     _lens_subhead(pdf, f"{name} — Individual Challenges & Growth" + (f" (Rated: Level {rating})" if rating else ""))
     growth = "\n".join(f"{'[MET] ' if g['met'] else '[ ] '}{g['text']}" for g in growth_lines(rep, role))
@@ -1140,7 +1140,7 @@ def _lens_scale(pdf: FPDF, scale: list, cls: dict, rep: dict) -> None:
 
 def build_legal_lens_pdf(v: dict) -> bytes:
     """SA CoParents Align Professional Evaluation Report — court-ready PDF (7 sections + certification)."""
-    from legal_lens import PATHWAYS, RISK_CATEGORIES, SCALE_TABLE
+    from lens_data import PATHWAYS, RISK_CATEGORIES, SCALE_TABLE
     rep, c, cls, notes = v["report"], v["case"], v["classification"], v["notes"]
     pdf = _new_pdf()
     pdf.footer_meta = f"{notes['tagline']} · Case {c.get('case_code') or ''} · {rep.get('professional_name') or ''} · {rep.get('report_date') or ''}"

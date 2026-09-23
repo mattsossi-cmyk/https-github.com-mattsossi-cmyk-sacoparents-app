@@ -177,20 +177,23 @@ class PacketService:
         return build_joint_pdf({**generate_joint_report(d), "professional": {"name": pro["name"], "credentials_verified": pro["credentials_verified"]},
                                 "verify": {"case_code": d.get("case_code"), "url": f"{self.app_url()}/verify?code={d.get('case_code')}"}})
 
+    async def _frozen_pdf(self, p: dict) -> bytes | None:
+        if not p.get("frozen"):
+            return None
+        frozen = await self.db.court_frozen_pdfs.find_one({"packet_id": p["id"]}, {"pdf": 1})
+        return bytes(frozen["pdf"]) if frozen else None
+
     async def combined_pdf(self, p: dict) -> bytes:
-        if p.get("frozen"):
-            frozen = await self.db.court_frozen_pdfs.find_one({"packet_id": p["id"]}, {"pdf": 1})
-            if frozen:
-                return bytes(frozen["pdf"])
+        frozen = await self._frozen_pdf(p)
+        if frozen:
+            return frozen
         docs = await self.packet_reports(p)
         pro = await self.pro_profile(p["professional_id"])
         primary = next((d for d in docs if d["id"] == p["report_id"]), docs[0] if docs else {})
         closing_docs = [d for d in docs if p.get("include_closing_summary") and d.get("closed_at")]
-        index = [_enclosure_title(d) for d in docs] + [f"Case Closing Summary ({d.get('case_code')})" for d in closing_docs]
-        cover = build_court_cover_letter_pdf({**p, "professional": pro, "index": index,
+        cover = build_court_cover_letter_pdf({**p, "professional": pro, "index": [_enclosure_title(d) for d in docs] + [f"Case Closing Summary ({d.get('case_code')})" for d in closing_docs],
                                               "session_outcome": primary.get("session_outcome") if p.get("include_session_outcome") else None})
-        parts = [cover] + [self._report_pdf(d, pro) for d in docs] + [await self._closing_pdf(d, pro["name"]) for d in closing_docs]
-        return merge_pdfs(parts)
+        return merge_pdfs([cover] + [self._report_pdf(d, pro) for d in docs] + [await self._closing_pdf(d, pro["name"]) for d in closing_docs])
 
     async def view(self, p: dict) -> dict:
         docs = await self.packet_reports(p)
@@ -223,24 +226,33 @@ class PacketService:
                          f"<p>Your access code for the Court Packet from {escape(pro_name)}:</p><p style=\"font-size:28px;letter-spacing:6px;font-weight:bold\">{code}</p>"
                          "<p>Enter it on the packet page that was sent to you in a separate email. The code stays valid until the packet expires.</p>", case_id=p["report_id"], kind="court_packet_code")
 
-    async def record_response(self, p: dict, body: RespondIn, by: str | None = None, by_name: str | None = None) -> dict:
+    @staticmethod
+    def _validated_response(body: RespondIn) -> tuple[str, str, str]:
+        """Returns (message, new packet status, action label)."""
         if body.kind not in ("acknowledged", "clarification"):
             raise HTTPException(status_code=400, detail="Unknown response type")
         msg = body.message.strip()[:2000]
         if body.kind == "clarification" and not msg:
             raise HTTPException(status_code=400, detail="Please describe what needs clarification")
-        resp = {"id": str(uuid.uuid4()), "kind": body.kind, "message": msg, "at": _now_iso(), "by": p["judge_name"]}
-        status = "acknowledged" if body.kind == "acknowledged" else "clarification_requested"
-        await self.db.court_packets.update_one({"id": p["id"]}, {"$push": {"responses": resp}, "$set": {"status": status}})
-        label = "acknowledged receipt of" if body.kind == "acknowledged" else "requested clarification on"
-        await self.log_court(p, f"{p['judge_name']} {label} the Court Packet", by, by_name)
+        ack = body.kind == "acknowledged"
+        return msg, "acknowledged" if ack else "clarification_requested", "acknowledged receipt of" if ack else "requested clarification on"
+
+    async def _notify_pro_of_response(self, p: dict, label: str, msg: str) -> None:
         pro = await self.db.users.find_one({"_id": p["professional_id"]}, {"email": 1, "name": 1})
-        if pro and pro.get("email"):
-            quote = f'<blockquote style="border-left:3px solid #5B2A86;padding-left:12px;color:#444">{escape(msg)}</blockquote>' if msg else ""
-            cause = f" for Cause No. {escape(p['cause_number'])}" if p.get("cause_number") else ""
-            await self._mail(pro["email"], f"Court response: {p['judge_name']} {label} your packet",
-                             f"<p>Hi {escape(pro.get('name', ''))},</p><p><strong>{escape(p['judge_name'])}</strong> ({escape(p.get('court_name') or 'court')}) {label} the Court Packet{cause}.</p>{quote}"
-                             f'<p><a href="{self.app_url()}/joint/{p["report_id"]}" style="color:#5B2A86">Open the case</a></p>', case_id=p["report_id"], kind="court_response", to_role="Professional")
+        if not pro or not pro.get("email"):
+            return
+        quote = f'<blockquote style="border-left:3px solid #5B2A86;padding-left:12px;color:#444">{escape(msg)}</blockquote>' if msg else ""
+        cause = f" for Cause No. {escape(p['cause_number'])}" if p.get("cause_number") else ""
+        await self._mail(pro["email"], f"Court response: {p['judge_name']} {label} your packet",
+                         f"<p>Hi {escape(pro.get('name', ''))},</p><p><strong>{escape(p['judge_name'])}</strong> ({escape(p.get('court_name') or 'court')}) {label} the Court Packet{cause}.</p>{quote}"
+                         f'<p><a href="{self.app_url()}/joint/{p["report_id"]}" style="color:#5B2A86">Open the case</a></p>', case_id=p["report_id"], kind="court_response", to_role="Professional")
+
+    async def record_response(self, p: dict, body: RespondIn, by: str | None = None, by_name: str | None = None) -> dict:
+        msg, status, label = self._validated_response(body)
+        resp = {"id": str(uuid.uuid4()), "kind": body.kind, "message": msg, "at": _now_iso(), "by": p["judge_name"]}
+        await self.db.court_packets.update_one({"id": p["id"]}, {"$push": {"responses": resp}, "$set": {"status": status}})
+        await self.log_court(p, f"{p['judge_name']} {label} the Court Packet", by, by_name)
+        await self._notify_pro_of_response(p, label, msg)
         return resp
 
     async def transmittal(self, p: dict, user: dict) -> bytes:

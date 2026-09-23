@@ -246,21 +246,34 @@ def _assert_statement_ready(st: dict, prev) -> None:
         raise HTTPException(status_code=400, detail="Complete role, process, observations and next steps before marking the statement ready")
 
 
-def validated_statement(body: StatementIn, doc: dict, library: dict | None = None) -> dict:
-    """Normalize + validate a Professional Statement payload; blocks custody recommendations."""
-    status = body.status if body.status in ("draft", "ready") else "draft"
+def _statement_base(body: StatementIn) -> dict:
     st = {k: getattr(body, k).strip()[:5000] for k in STATEMENT_FIELDS}
     st["role"] = body.role.strip()[:80]
     st["materials_reviewed"] = [m for m in body.materials_reviewed if m in STATEMENT_MATERIALS][:20]
-    if body.dynamic_score:
-        st.update(_framework_fields(body, doc, library))
     st["level_change_note"] = body.level_change_note.strip()[:300]
+    return st
+
+
+def _level_changed_from(doc: dict, st: dict):
     prev = (doc.get("court_submissions") or [{}])[-1].get("level_score")
-    st["level_changed_from"] = prev if prev and st.get("dynamic_score") and prev != st["dynamic_score"] else None
-    if status == "ready":
-        _assert_statement_ready(st, prev)
+    return prev if prev and st.get("dynamic_score") and prev != st["dynamic_score"] else None
+
+
+def _assert_neutral(st: dict) -> None:
     if BANNED_STATEMENT_RE.search(" ".join(st[k] for k in STATEMENT_FIELDS) + " " + st["level_change_note"]):
         raise HTTPException(status_code=400, detail="The statement must not recommend custody or conservatorship outcomes. Please rephrase as facilitation observations.")
+
+
+def validated_statement(body: StatementIn, doc: dict, library: dict | None = None) -> dict:
+    """Normalize + validate a Professional Statement payload; blocks custody recommendations."""
+    status = body.status if body.status in ("draft", "ready") else "draft"
+    st = _statement_base(body)
+    if body.dynamic_score:
+        st.update(_framework_fields(body, doc, library))
+    st["level_changed_from"] = _level_changed_from(doc, st)
+    if status == "ready":
+        _assert_statement_ready(st, (doc.get("court_submissions") or [{}])[-1].get("level_score"))
+    _assert_neutral(st)
     st.update({"status": status, "updated_at": _iso(_now()), "version": ((doc.get("professional_statement") or {}).get("version") or 0) + 1})
     return st
 
@@ -437,26 +450,34 @@ def _judge_routes(c: Ctx) -> APIRouter:
             raise HTTPException(status_code=404, detail="Professional not found or not approved")
         if not body.cause_number.strip():
             raise HTTPException(status_code=400, detail="Cause number is required")
-        now = _now()
-        ref = {"id": str(uuid.uuid4()), "judge_id": user["_id"], "judge_name": user.get("name", ""), "judge_email": user["email"].lower(),
-               "court_name": body.court_name.strip()[:160] or (user.get("profile") or {}).get("organization", ""), "cause_number": body.cause_number.strip()[:80],
-               "subject": body.subject or "communication", "child_initials": body.child_initials.strip()[:10], "parent_a_name": body.parent_a_name.strip()[:120],
-               "parent_a_email": body.parent_a_email.strip().lower()[:200], "parent_b_name": body.parent_b_name.strip()[:120], "parent_b_email": body.parent_b_email.strip().lower()[:200],
-               "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "requested_reports": _valid_reports(body.requested_reports), "professional_id": pro["_id"], "professional_name": pro.get("name", ""), "status": "pending", "created_at": _iso(now),
-               "case_code": new_case_code(next((REPORT_TYPES[k][1][0] for k in _valid_reports(body.requested_reports) if REPORT_TYPES[k][1]), "co_parenting"))}
+        ref = _new_referral(body, user, pro)
         await db.court_referrals.insert_one(ref)
         try:
             await send_email(to=pro["email"], case_id=ref["id"], kind="court_referral", to_role="Professional", subject=f"Court referral from {user.get('name', 'the court')} - Cause No. {ref['cause_number']}",
-                             html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                                   f"<p>Hi {escape(pro.get('name', ''))},</p><p><strong>{escape(ref['judge_name'])}</strong> ({escape(ref['court_name'] or 'court')}) has referred a co-parenting matter to you "
-                                   f"(Cause No. {escape(ref['cause_number'])}). Accept it in your dashboard to invite both parents; the Joint Report and your Professional Statement return to the court through Align.</p>"
-                                   f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open Court Referrals</a></p>'
-                                   f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>'))
+                             html=_referral_email_html(ref, pro, app_url, email_from_name))
         except Exception as exc:
             logger.warning("referral email failed: %s", exc)
         return referral_public(ref)
 
     return r
+
+
+def _new_referral(body: ReferralIn, user: dict, pro: dict) -> dict:
+    reports = _valid_reports(body.requested_reports)
+    return {"id": str(uuid.uuid4()), "judge_id": user["_id"], "judge_name": user.get("name", ""), "judge_email": user["email"].lower(),
+            "court_name": body.court_name.strip()[:160] or (user.get("profile") or {}).get("organization", ""), "cause_number": body.cause_number.strip()[:80],
+            "subject": body.subject or "communication", "child_initials": body.child_initials.strip()[:10], "parent_a_name": body.parent_a_name.strip()[:120],
+            "parent_a_email": body.parent_a_email.strip().lower()[:200], "parent_b_name": body.parent_b_name.strip()[:120], "parent_b_email": body.parent_b_email.strip().lower()[:200],
+            "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "requested_reports": reports, "professional_id": pro["_id"], "professional_name": pro.get("name", ""),
+            "status": "pending", "created_at": _iso(_now()), "case_code": new_case_code(next((REPORT_TYPES[k][1][0] for k in reports if REPORT_TYPES[k][1]), "co_parenting"))}
+
+
+def _referral_email_html(ref: dict, pro: dict, app_url, email_from_name: str) -> str:
+    return ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+            f"<p>Hi {escape(pro.get('name', ''))},</p><p><strong>{escape(ref['judge_name'])}</strong> ({escape(ref['court_name'] or 'court')}) has referred a co-parenting matter to you "
+            f"(Cause No. {escape(ref['cause_number'])}). Accept it in your dashboard to invite both parents; the Joint Report and your Professional Statement return to the court through Align.</p>"
+            f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open Court Referrals</a></p>'
+            f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>')
 
 
 def _judge_case_routes(c: Ctx) -> APIRouter:
@@ -608,20 +629,92 @@ async def _legal_pdf_bytes(db, doc: dict) -> tuple[bytes, dict]:
     return build_legal_lens_pdf(view), court_summary(rep)
 
 
-def _frozen_packet(pid: str, rid: str, user: dict, court: dict, st: dict, version: int, now: datetime, sha: str, legal_meta: dict) -> dict:
-    return {"id": pid, "report_id": rid, "professional_id": user["_id"], "professional_name": user.get("name", ""), "judge_name": court.get("judge_name", ""),
-            "judge_email": court["judge_email"], "court_name": court.get("court_name", ""), "cause_number": court.get("cause_number", ""),
-            "cover_letter": st.get("process_summary", ""), "statement": st, "report_ids": [rid], "include_session_outcome": False, "include_closing_summary": False,
-            "attestation_text": STATEMENT_ATTESTATION, "attested_at": _iso(now), "token_hash": hashlib.sha256(secrets.token_bytes(32)).hexdigest(), "code_hash": "",
-            "code_attempts": 0, "sessions": [], "status": "sent", "responses": [], "opened_count": 0, "download_count": 0, "submission_version": version,
-            "frozen": True, "sha256": sha, "created_at": _iso(now), "expires_at": _iso(now + timedelta(days=3650)), **legal_meta}
+@dataclass(frozen=True)
+class Submission:
+    """One frozen court submission (inputs shared by the packet, the case record and the audit line)."""
+    pid: str
+    rid: str
+    user: dict
+    court: dict
+    st: dict
+    version: int
+    now: datetime
+    shas: dict
+    legal_meta: dict
 
 
-def _submission_record(pid: str, user: dict, court: dict, st: dict, version: int, now: datetime, shas: dict, legal_meta: dict) -> dict:
-    fw = st.get("framework") or {}
-    return {"version": version, "packet_id": pid, "submitted_at": _iso(now), "submitted_by": user.get("name", ""), **shas, **legal_meta,
-            "statement_version": st.get("version"), "judge_name": court.get("judge_name", ""), "court_name": court.get("court_name", ""),
-            "level_score": fw.get("score"), "level_label": fw.get("label"), "level_change_note": st.get("level_change_note") or "", "level_changed_from": st.get("level_changed_from")}
+def _frozen_packet(s: Submission) -> dict:
+    return {"id": s.pid, "report_id": s.rid, "professional_id": s.user["_id"], "professional_name": s.user.get("name", ""), "judge_name": s.court.get("judge_name", ""),
+            "judge_email": s.court["judge_email"], "court_name": s.court.get("court_name", ""), "cause_number": s.court.get("cause_number", ""),
+            "cover_letter": s.st.get("process_summary", ""), "statement": s.st, "report_ids": [s.rid], "include_session_outcome": False, "include_closing_summary": False,
+            "attestation_text": STATEMENT_ATTESTATION, "attested_at": _iso(s.now), "token_hash": hashlib.sha256(secrets.token_bytes(32)).hexdigest(), "code_hash": "",
+            "code_attempts": 0, "sessions": [], "status": "sent", "responses": [], "opened_count": 0, "download_count": 0, "submission_version": s.version,
+            "frozen": True, "sha256": s.shas["sha256"], "created_at": _iso(s.now), "expires_at": _iso(s.now + timedelta(days=3650)), **s.legal_meta}
+
+
+def _submission_record(s: Submission) -> dict:
+    fw = s.st.get("framework") or {}
+    return {"version": s.version, "packet_id": s.pid, "submitted_at": _iso(s.now), "submitted_by": s.user.get("name", ""), **s.shas, **s.legal_meta,
+            "statement_version": s.st.get("version"), "judge_name": s.court.get("judge_name", ""), "court_name": s.court.get("court_name", ""),
+            "level_score": fw.get("score"), "level_label": fw.get("label"), "level_change_note": s.st.get("level_change_note") or "", "level_changed_from": s.st.get("level_changed_from")}
+
+
+async def _own_case(db, rid: str, user: dict) -> dict:
+    doc = await db.joint_reports.find_one({"id": rid, "professional_id": user["_id"]}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Case not found")
+    return doc
+
+
+async def _org_library(db, user: dict) -> dict:
+    key = _org_key(user)
+    d = await db.org_libraries.find_one({"key": key}, {"_id": 0}) if key else None
+    return clean_library((d or {}).get("library") or {})
+
+
+async def _effective_library(db, user: dict) -> dict:
+    own, org = clean_library(user.get("resource_library") or {}), await _org_library(db, user)
+    return {k: list(dict.fromkeys(own[k] + org[k])) for k in own}
+
+
+def _statement_payload(doc: dict, user: dict, lens: dict | None, packets: list, org_lib: dict) -> dict:
+    findings = joint_findings(doc)
+    return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
+            "legal_lens": {"status": (lens or {}).get("status", "not_started"), "signature_name": (lens or {}).get("signature_name", "")}, "level_history": level_history(packets),
+            "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
+            "findings": findings, "subject_options": (findings or {}).get("subject_options") or [], "library": clean_library(user.get("resource_library") or {}),
+            "org_library": org_lib, "organization": (user.get("profile") or {}).get("organization") or "",
+            "court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
+
+
+def _statement_pdf_bytes(doc: dict, pro: dict) -> bytes:
+    subs = doc.get("court_submissions") or []
+    hist = [{"version": s["version"], "at": s.get("submitted_at"), "score": s.get("level_score"), "label": s.get("level_label"), "note": s.get("level_change_note"), "changed_from": s.get("level_changed_from")} for s in subs]
+    return build_professional_statement_pdf({"professional": pro, "statement": doc.get("professional_statement") or {}, "court": doc.get("court") or {}, "findings": joint_findings(doc), "level_history": hist,
+                                             "case_code": doc.get("case_code"), "subject_label": doc.get("subject_label"), "child_name": doc.get("child_name"),
+                                             "attestation_text": STATEMENT_ATTESTATION, "date": _iso(_now())[:10]})
+
+
+async def _submission_pdfs(db, doc: dict, pro: dict, app_url, include_legal: bool) -> tuple[bytes, bytes, bytes | None, dict | None]:
+    """Joint Report PDF, Professional Statement PDF and (optionally) the finalized Legal Lens PDF + court-safe summary."""
+    joint_pdf = build_joint_pdf({**generate_joint_report(doc), "professional": {"name": pro["name"], "credentials_verified": pro["credentials_verified"]},
+                                 "verify": {"case_code": doc.get("case_code"), "url": f"{app_url()}/verify?code={doc.get('case_code')}"}})
+    legal_pdf, legal_summary = (await _legal_pdf_bytes(db, doc)) if include_legal else (None, None)
+    return joint_pdf, _statement_pdf_bytes(doc, pro), legal_pdf, legal_summary
+
+
+async def _persist_submission(db, s: Submission, doc: dict, combined: bytes, legal_pdf: bytes | None) -> dict:
+    """Store the hash-sealed frozen PDF, the court packet and the case's submission record; supersede earlier versions."""
+    await db.court_frozen_pdfs.insert_one({"packet_id": s.pid, "report_id": s.rid, "version": s.version, "pdf": Binary(combined), **s.shas, "created_at": _iso(s.now), **s.legal_meta,
+                                           **({"legal_pdf": Binary(legal_pdf)} if legal_pdf else {})})
+    if s.version > 1:
+        await db.court_packets.update_many({"report_id": s.rid, "submission_version": {"$exists": True}}, {"$set": {"superseded": True}})
+    await db.court_packets.insert_one(_frozen_packet(s))
+    sub = _submission_record(s)
+    await db.joint_reports.update_one({"id": s.rid}, {"$push": {"court_submissions": sub}, "$set": {"report_generated_at": doc.get("report_generated_at") or _iso(s.now)}})
+    if doc.get("court_referral_id"):
+        await db.court_referrals.update_one({"id": doc["court_referral_id"]}, {"$set": {"status": "submitted", "submitted_at": _iso(s.now)}})
+    return sub
 
 
 def _submission_email_html(user: dict, court: dict, version: int, app_url, email_from_name: str) -> str:
@@ -637,15 +730,10 @@ def _library_routes(c: Ctx) -> APIRouter:
     db, get_current_user, require_pro = c.db, c.get_current_user, c.h['require_pro']
     r = APIRouter()
 
-    async def org_library(user: dict) -> dict:
-        key = _org_key(user)
-        d = await db.org_libraries.find_one({"key": key}, {"_id": 0}) if key else None
-        return clean_library((d or {}).get("library") or {})
-
     @r.get("/me/resource-library")
     async def get_library(user=Depends(get_current_user)):
         require_pro(user)
-        return {**clean_library(user.get("resource_library") or {}), "organization": (user.get("profile") or {}).get("organization") or "", "org_library": await org_library(user)}
+        return {**clean_library(user.get("resource_library") or {}), "organization": (user.get("profile") or {}).get("organization") or "", "org_library": await _org_library(db, user)}
 
     @r.put("/me/resource-library")
     async def put_library(body: dict, user=Depends(get_current_user)):
@@ -667,102 +755,62 @@ def _library_routes(c: Ctx) -> APIRouter:
     return r
 
 
-def _pro_statement_routes(c: Ctx) -> APIRouter:
-    """Professional: Professional Assessment Statement + frozen submission to court."""
-    db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h = c.db, c.get_current_user, c.app_url, c.send_email, c.email_from_name, c.logger, c.log_report_event, c.h
+def _statement_routes(c: Ctx) -> APIRouter:
+    """Professional: read, save and export the Professional Assessment Statement."""
+    db, get_current_user, pro_profile = c.db, c.get_current_user, c.h['pro_profile']
     r = APIRouter()
-    require_pro, pro_profile = h['require_pro'], h['pro_profile']
-
-    async def own_case(rid: str, user: dict) -> dict:
-        doc = await db.joint_reports.find_one({"id": rid, "professional_id": user["_id"]}, {"_id": 0})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Case not found")
-        return doc
-
-    async def org_library(user: dict) -> dict:
-        key = _org_key(user)
-        d = await db.org_libraries.find_one({"key": key}, {"_id": 0}) if key else None
-        return clean_library((d or {}).get("library") or {})
-
-    async def effective_library(user: dict) -> dict:
-        own, org = clean_library(user.get("resource_library") or {}), await org_library(user)
-        return {k: list(dict.fromkeys(own[k] + org[k])) for k in own}
 
     @r.get("/joint/reports/{rid}/professional-statement")
     async def get_statement(rid: str, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
-        findings = joint_findings(doc)
+        doc = await _own_case(db, rid, user)
         lens = await db.professional_reports.find_one({"case_id": rid}, {"_id": 0, "status": 1, "signature_name": 1})
         packets = await db.court_packets.find({"report_id": rid, "frozen": True}, {"_id": 0, "submission_version": 1, "created_at": 1, "statement": 1, "superseded": 1, "legal_summary": 1}).sort("submission_version", 1).to_list(100)
-        return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
-                "legal_lens": {"status": (lens or {}).get("status", "not_started"), "signature_name": (lens or {}).get("signature_name", "")}, "level_history": level_history(packets),
-                "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
-                "findings": findings, "subject_options": (findings or {}).get("subject_options") or [], "library": clean_library(user.get("resource_library") or {}),
-                "org_library": await org_library(user), "organization": (user.get("profile") or {}).get("organization") or "",
-                "court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
+        return _statement_payload(doc, user, lens, packets, await _org_library(db, user))
 
     @r.put("/joint/reports/{rid}/professional-statement")
     async def save_statement(rid: str, body: StatementIn, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
-        st = {**validated_statement(body, doc, await effective_library(user)), "updated_by": user.get("name", "")}
-        status = st["status"]
+        doc = await _own_case(db, rid, user)
+        st = {**validated_statement(body, doc, await _effective_library(db, user)), "updated_by": user.get("name", "")}
         await db.joint_reports.update_one({"id": rid}, {"$set": {"professional_statement": st}})
-        await log_report_event(rid, f"Professional Statement {'marked ready' if status == 'ready' else 'draft saved'} (v{st['version']})", user)
+        await c.log_report_event(rid, f"Professional Statement {'marked ready' if st['status'] == 'ready' else 'draft saved'} (v{st['version']})", user)
         return {"statement": st, "stage": court_stage({**doc, "professional_statement": st})}
-
-    async def statement_pdf_bytes(doc: dict) -> bytes:
-        st = doc.get("professional_statement") or {}
-        subs = doc.get("court_submissions") or []
-        hist = [{"version": s["version"], "at": s.get("submitted_at"), "score": s.get("level_score"), "label": s.get("level_label"), "note": s.get("level_change_note"), "changed_from": s.get("level_changed_from")} for s in subs]
-        return build_professional_statement_pdf({"professional": await pro_profile(doc["professional_id"]), "statement": st, "court": doc.get("court") or {}, "findings": joint_findings(doc), "level_history": hist,
-                                                 "case_code": doc.get("case_code"), "subject_label": doc.get("subject_label"), "child_name": doc.get("child_name"),
-                                                 "attestation_text": STATEMENT_ATTESTATION, "date": _iso(_now())[:10]})
 
     @r.get("/joint/reports/{rid}/professional-statement.pdf")
     async def statement_pdf(rid: str, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
+        doc = await _own_case(db, rid, user)
         if not doc.get("professional_statement"):
             raise HTTPException(status_code=400, detail="Write the Professional Statement first")
-        return Response(content=await statement_pdf_bytes(doc), media_type="application/pdf",
+        return Response(content=_statement_pdf_bytes(doc, await pro_profile(doc["professional_id"])), media_type="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="professional-statement-{doc.get("case_code") or rid[:8]}.pdf"'})
 
-    # ---------- submit to court ----------
+    return r
+
+
+def _submit_routes(c: Ctx) -> APIRouter:
+    """Professional: frozen, hash-sealed submission to the referring court."""
+    db, require_pro, pro_profile, get_current_user = c.db, c.h['require_pro'], c.h['pro_profile'], c.get_current_user
+    r = APIRouter()
 
     @r.post("/joint/reports/{rid}/submit-to-court")
     async def submit_to_court(rid: str, body: SubmitIn, user=Depends(get_current_user)):
         require_pro(user)
-        doc = await own_case(rid, user)
+        doc = await _own_case(db, rid, user)
         court = assert_submittable(doc, body)
-        pro = await pro_profile(user["_id"])
-        rep = generate_joint_report(doc)
-        joint_pdf = build_joint_pdf({**rep, "professional": {"name": pro["name"], "credentials_verified": pro["credentials_verified"]},
-                                     "verify": {"case_code": doc.get("case_code"), "url": f"{app_url()}/verify?code={doc.get('case_code')}"}})
-        stmt_pdf = await statement_pdf_bytes(doc)
-        legal_pdf, legal_summary = (await _legal_pdf_bytes(db, doc)) if body.include_legal_report else (None, None)
+        joint_pdf, stmt_pdf, legal_pdf, legal_summary = await _submission_pdfs(db, doc, await pro_profile(user["_id"]), c.app_url, body.include_legal_report)
         combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []))
         version = len(doc.get("court_submissions") or []) + 1
-        now = _now()
-        pid = str(uuid.uuid4())
-        legal_meta = {"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None, "legal_summary": legal_summary}
-        shas = {"sha256": _sha(combined), "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf)}
-        await db.court_frozen_pdfs.insert_one({"packet_id": pid, "report_id": rid, "version": version, "pdf": Binary(combined), **shas, "created_at": _iso(now), **legal_meta,
-                                               **({"legal_pdf": Binary(legal_pdf)} if legal_pdf else {})})
-        if version > 1:
-            await db.court_packets.update_many({"report_id": rid, "submission_version": {"$exists": True}}, {"$set": {"superseded": True}})
-        st = doc["professional_statement"]
-        await db.court_packets.insert_one(_frozen_packet(pid, rid, user, court, st, version, now, shas["sha256"], legal_meta))
-        sub = _submission_record(pid, user, court, st, version, now, shas, legal_meta)
-        await db.joint_reports.update_one({"id": rid}, {"$push": {"court_submissions": sub}, "$set": {"report_generated_at": doc.get("report_generated_at") or _iso(now)}})
-        await log_report_event(rid, f"Submitted Joint Report + Professional Statement{' + Professional Legal Report' if legal_pdf else ''} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
+        s = Submission(pid=str(uuid.uuid4()), rid=rid, user=user, court=court, st=doc["professional_statement"], version=version, now=_now(),
+                       shas={"sha256": _sha(combined), "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf)},
+                       legal_meta={"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None, "legal_summary": legal_summary})
+        sub = await _persist_submission(db, s, doc, combined, legal_pdf)
+        await c.log_report_event(rid, f"Submitted Joint Report + Professional Statement{' + Professional Legal Report' if legal_pdf else ''} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
         if legal_pdf:
-            await log_report_event(rid, "LEGAL_REPORT_SHARED", user)
-        if doc.get("court_referral_id"):
-            await db.court_referrals.update_one({"id": doc["court_referral_id"]}, {"$set": {"status": "submitted", "submitted_at": _iso(now)}})
+            await c.log_report_event(rid, "LEGAL_REPORT_SHARED", user)
         try:
-            await send_email(to=court["judge_email"], case_id=doc["id"], kind="court_submission", to_role="Court", subject=f"Submission received - Cause No. {court.get('cause_number', '')} (v{version})",
-                             html=_submission_email_html(user, court, version, app_url, email_from_name))
+            await c.send_email(to=court["judge_email"], case_id=doc["id"], kind="court_submission", to_role="Court", subject=f"Submission received - Cause No. {court.get('cause_number', '')} (v{version})",
+                               html=_submission_email_html(user, court, version, c.app_url, c.email_from_name))
         except Exception as exc:
-            logger.warning("submission email failed: %s", exc)
+            c.logger.warning("submission email failed: %s", exc)
         return {"submission": sub, "stage": court_stage({**doc, "court_submissions": [sub]})}
 
     return r
@@ -772,7 +820,7 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, log
     h = _shared(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event)
     c = Ctx(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event, h)
     r = APIRouter()
-    for factory in (_judge_routes, _judge_case_routes, _pro_routes, _library_routes, _pro_statement_routes):
+    for factory in (_judge_routes, _judge_case_routes, _pro_routes, _library_routes, _statement_routes, _submit_routes):
         r.include_router(factory(c))
     from court_messages import build_router as build_messages
     r.include_router(build_messages(db, get_current_user, app_url, send_email, email_from_name, h["require_judge"], h["require_pro"]))
