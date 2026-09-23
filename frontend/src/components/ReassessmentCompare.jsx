@@ -16,8 +16,8 @@ export function ReassessmentCompare({ history = [], names = {} }) {
   const prev = rows[rows.length - 2], cur = rows[rows.length - 1];
   const metrics = [
     ["Ability level (1–10)", (h) => h.score, "level"],
-    [`${names.a || "Parent A"} rating`, (h) => h.ratings?.a, "a"],
-    [`${names.b || "Parent B"} rating`, (h) => h.ratings?.b, "b"],
+    [`${names.a || "Parent A"} rating`, (h) => h.ratings?.parent_a, "a"],
+    [`${names.b || "Parent B"} rating`, (h) => h.ratings?.parent_b, "b"],
     ["Joint rating", (h) => h.ratings?.joint, "joint"],
     [`${names.a || "Parent A"} growth areas met`, (h) => growthPct(h.growth, "a"), "growth-a", (h) => h.growth?.a ? `${h.growth.a.met}/${h.growth.a.total}` : null],
     [`${names.b || "Parent B"} growth areas met`, (h) => growthPct(h.growth, "b"), "growth-b", (h) => h.growth?.b ? `${h.growth.b.met}/${h.growth.b.total}` : null],
