@@ -65,3 +65,12 @@ No code change made. Fifth consecutive false-positive report for this rule — t
 - test_referral_inbox and test_closing_summary split into module fixtures + focused/parametrized tests.
 - "is vs ==" (server.py ×13, joint_engine, email_utils, 8 tests): `ruff --select F632 .` → All checks passed; all `is None`. Unchanged (8th recurrence).
 - server.py import count / split: deferred (see round 6). Remaining test-complexity items (preview/close/revoke) are short linear tests; left as is.
+
+## 2026-09-22 — Code review pass 3 (applied)
+- server.py (3401 → 1764 lines) split: core.py (env/db/logger/app_url/constants), auth.py, joint_helpers.py, admin_routes.py, integrations.py, cron_jobs.py; identical 177-route set verified by import-time comparison, no path shadowing changes.
+- legal_lens.py ↔ pdf_report.py: constants/classifiers moved to lens_data.py (pdf_report imports lens_data only; legal_lens re-exports). court_summary split into _summary_ratings/_summary_safety/_summary_scale/_summary_roadmap. build_router → LensStore + _report_routes/_export_routes.
+- court_workflow.py: _pro_statement_routes → _statement_routes + _submit_routes; Submission dataclass replaces 9/8-arg _frozen_packet/_submission_record; validated_statement/_judge_routes simplified via _statement_base/_level_changed_from/_assert_neutral/_new_referral/_referral_email_html; submit_to_court → _submission_pdfs/_persist_submission.
+- court_messages.py: Threads service class; court_packets.py: combined_pdf/_frozen_pdf, record_response/_validated_response/_notify_pro_of_response.
+- `is` comparisons flagged in server.py were all `is None`/`is not None` — correct, left unchanged.
+- Ruff C901 (max 10): remaining only legal_report.py:187 and providers.py:51.
+- Full pytest: 276 passed. Stale test marker "Options and Resources" (parent PDF intentionally no longer includes options) removed from tests/test_pdf_report.py.

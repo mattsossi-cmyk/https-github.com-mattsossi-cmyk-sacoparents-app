@@ -43,11 +43,11 @@ def rule_based_lens(draft: dict) -> dict:
 
 MODELS = {"gemini": ("gemini", "gemini-3.1-pro-preview", "Gemini 3.1 Pro"), "openai": ("openai", "gpt-5.4-mini", "GPT-5.4 Mini")}
 DEFAULT_MODEL = "gemini"
-LENS_REPORT_KEYS = ("safety_takeaway", "parent_a_growth", "parent_b_growth", "joint_notes", "conflict_management_rationale", "short_term_goals", "long_term_goals")
+LENS_REPORT_KEYS = ("safety_takeaway", "parent_a_growth", "parent_b_growth", "joint_notes", "shared_concerns", "pathway_rationale", "conflict_management_rationale", "short_term_goals", "long_term_goals")
 LENS_REPORT_SYSTEM = SYSTEM.split("Return ONLY JSON")[0] + (
     "You are drafting narrative sections of the SA CoParents Align Professional Evaluation Report from the structured report data provided (1-10 ratings, classifications, "
     "prefilled strengths/gaps, risk screening levels, resource rows and the recommended conflict-resolution pathway). Ratings describe the co-parenting context, never fitness or credibility. "
-    "Return ONLY JSON with keys: safety_takeaway, parent_a_growth, parent_b_growth, joint_notes, conflict_management_rationale, short_term_goals, long_term_goals. "
+    "Return ONLY JSON with keys: safety_takeaway, parent_a_growth, parent_b_growth, joint_notes, shared_concerns, pathway_rationale, conflict_management_rationale, short_term_goals, long_term_goals. pathway_rationale must explain WHY a pathway fits the type of conflict identified (communication-based, defined parenting disagreement, subject-matter disagreement, persistent high conflict, safety concern). "
     "parent_a_growth and parent_b_growth are exactly 3 newline-separated 'Key Growth Areas' starting with 'Focus on'; short_term_goals and long_term_goals are 3-4 newline-separated "
     "goals in the form 'Title: concrete action'; other values are 2-4 sentences.")
 

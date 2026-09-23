@@ -10,7 +10,7 @@ from coparenting_tiers import joint_findings, suggested_score
 from joint_data import SAFETY_SUBJECT_KEYS
 
 from lens_data import (  # noqa: F401  (re-exported for callers importing from legal_lens)
-    TAGLINE, STATUSES, SAFETY_NOTE, RATING_NOTE, JOINT_OPTIONS, RECEIPT, INDIVIDUAL_BANDS, JOINT_BANDS, INDIVIDUAL_BASE, JOINT_BASE, INDIVIDUAL_RESOURCES, JOINT_RESOURCES, SCALE_TABLE, RISK_CATEGORIES, RISK_LEVELS, SAFETY_ALERT, PATHWAYS, RESOURCE_CATEGORIES, REASSESS_INTERVALS, REASSESS_UP_DEFAULT, REASSESS_DOWN_DEFAULT, INTRO_TEXT, recommended_pathway, resource_lists, CONFLICT_OPTIONS, TEXT_FIELDS, LIST_FIELDS, DICT_FIELDS, INT_FIELDS, ROWS_FIELDS, RISK_FIELDS, GROWTH_FIELDS, growth_lines, AI_MODELS, classify_individual, classify_joint)
+    TAGLINE, STATUSES, SAFETY_NOTE, RATING_NOTE, JOINT_OPTIONS, RECEIPT, INDIVIDUAL_BANDS, JOINT_BANDS, INDIVIDUAL_BASE, JOINT_BASE, INDIVIDUAL_RESOURCES, JOINT_RESOURCES, SCALE_TABLE, RISK_CATEGORIES, RISK_LEVELS, SAFETY_ALERT, PATHWAYS, RESOURCE_CATEGORIES, REASSESS_INTERVALS, REASSESS_UP_DEFAULT, REASSESS_DOWN_DEFAULT, INTRO_TEXT, recommended_pathway, resource_lists, CONFLICT_OPTIONS, TEXT_FIELDS, LIST_FIELDS, DICT_FIELDS, INT_FIELDS, ROWS_FIELDS, RISK_FIELDS, GROWTH_FIELDS, CHILD_FIELDS, CONFLICT_GUIDANCE, CHILD_FOCUS_CATEGORIES, REPORT_PRINCIPLE, REPORT_PURPOSE, growth_lines, AI_MODELS, classify_individual, classify_joint)
 
 
 def _lines(text) -> list[str]:
@@ -34,8 +34,11 @@ def _summary_scale(rep: dict, a: dict | None, b: dict | None, j: dict | None) ->
 
 
 def _summary_roadmap(rep: dict, j: dict | None) -> dict:
-    chosen = rep.get("conflict_pathway") or ((j or {}).get("pathway") or {}).get("key")
-    return {"pathway": next((p["name"] for p in PATHWAYS if p["key"] == chosen), None), "pathway_rationale": rep.get("conflict_management_rationale"),
+    chosen = rep.get("conflict_pathways") or [k for k in [rep.get("conflict_pathway") or ((j or {}).get("pathway") or {}).get("key")] if k]
+    names = [p["name"] for p in PATHWAYS if p["key"] in chosen]
+    return {"pathway": " · ".join(names) or None, "pathways": names, "pathway_rationale": rep.get("pathway_rationale") or rep.get("conflict_management_rationale"),
+            "child_focus": [{"label": lbl, "note": (rep.get("child_focus") or {}).get(k, {}).get("note", "")} for k, lbl in CHILD_FOCUS_CATEGORIES if (rep.get("child_focus") or {}).get(k, {}).get("checked")],
+            "shared_concerns": rep.get("shared_concerns"), "professional_summary": rep.get("professional_summary"),
             "short_term_goals": _lines(rep.get("short_term_goals")), "long_term_goals": _lines(rep.get("long_term_goals")),
             "resources": rep.get("resource_rows") or [], "reassess_interval": rep.get("reassess_interval"), "next_review_date": rep.get("next_review_date"), "finalized_at": rep.get("finalized_at")}
 
@@ -97,7 +100,17 @@ def prefill(doc: dict, pro: dict) -> dict:
         out["alignment_agreements"] = "\n".join(f["alignment"])
         out["alignment_disagreements"] = "\n".join(f["differences"])
         out["partial_alignment"] = "\n".join(f"{r['area']}: some common ground; may benefit from structured discussion." for r in f["alignment_map"] if r.get("status") == "Moderate alignment")
+        out["child_focus"] = _child_focus_prefill(f.get("child_focused") or [], doc.get("subject") or "")
     return out
+
+
+def _child_focus_prefill(child_items: list, subject: str) -> dict:
+    """Tick child-focused categories suggested by the Joint Report's child-needs items and the case subject."""
+    text = " ".join(str(x.get("text") if isinstance(x, dict) else x) for x in child_items).lower() + " " + subject.lower()
+    hints = {"educational": ("school", "educat", "homework"), "medical": ("medical", "doctor", "health"), "psychological": ("emotion", "anxiety", "counsel", "psycholog"),
+             "developmental": ("development", "milestone"), "routines": ("routine", "bedtime", "schedule"), "relationships": ("relationship", "bond", "time with"),
+             "communication": ("communicat", "message", "text"), "transitions": ("transition", "handoff", "exchange", "pickup"), "special_needs": ("iep", "accommodat", "special need")}
+    return {k: {"checked": any(h in text for h in hs), "note": ""} for k, hs in hints.items()}
 
 
 class ReportIn(BaseModel):
@@ -145,7 +158,14 @@ def _clean_growth(v):
     return {role: {str(t)[:300]: bool(m) for t, m in d.items()} for role, d in v.items() if role in ("a", "b") and isinstance(d, dict)}
 
 
-_CLEANERS = [(TEXT_FIELDS, _clean_text), (LIST_FIELDS, _clean_list), (DICT_FIELDS, _clean_dict), (INT_FIELDS, _clean_int), (ROWS_FIELDS, _clean_rows), (RISK_FIELDS, _clean_risk), (GROWTH_FIELDS, _clean_growth)]
+def _clean_child(v):
+    if not isinstance(v, dict):
+        return None
+    keys = {k for k, _ in CHILD_FOCUS_CATEGORIES}
+    return {k: {"checked": bool((d or {}).get("checked")), "note": str((d or {}).get("note") or "")[:1000]} for k, d in v.items() if k in keys and isinstance(d, dict)}
+
+
+_CLEANERS = [(TEXT_FIELDS, _clean_text), (CHILD_FIELDS, _clean_child), (LIST_FIELDS, _clean_list), (DICT_FIELDS, _clean_dict), (INT_FIELDS, _clean_int), (ROWS_FIELDS, _clean_rows), (RISK_FIELDS, _clean_risk), (GROWTH_FIELDS, _clean_growth)]
 
 
 def sanitize_fields(fields: dict) -> dict:
@@ -165,6 +185,9 @@ def apply_status(rep: dict, upd: dict, status: str) -> None:
         raise HTTPException(status_code=400, detail="Invalid status")
     if status in ("final", "submitted_to_court") and not (upd.get("signature_name") or rep.get("signature_name")):
         raise HTTPException(status_code=400, detail="Professional Signature Name is required to finalize")
+    merged_rationale = upd.get("pathway_rationale") or rep.get("pathway_rationale") or upd.get("conflict_management_rationale") or rep.get("conflict_management_rationale")
+    if status in ("final", "submitted_to_court") and (upd.get("conflict_pathways") or rep.get("conflict_pathways")) and not (merged_rationale or "").strip():
+        raise HTTPException(status_code=400, detail="Explain why the selected conflict-resolution pathways are relevant before finalizing")
     upd["status"] = status
     if status == "final" and not rep.get("finalized_at"):
         upd["finalized_at"] = datetime.now(timezone.utc).isoformat()
@@ -237,7 +260,7 @@ async def _lens_view(db, rep: dict, doc: dict) -> dict:
     return {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
             "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
             "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE, "risk_categories": RISK_CATEGORIES,
-            "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT},
+            "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE},
             "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
 
 

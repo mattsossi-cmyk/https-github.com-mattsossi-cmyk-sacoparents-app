@@ -11,8 +11,8 @@ import { HearingDate } from "@/components/CourtCaseCard";
 import { CourtLegalSummary } from "@/components/CourtLegalSummary";
 import { ScoreTrendChart } from "@/components/ScoreTrendChart";
 
-const Section = ({ n, title, children, testId }) => (
-  <section className="rounded-lg border border-border bg-white p-6" data-testid={testId}>
+const Section = ({ n, title, children, testId, id }) => (
+  <section id={id} className="scroll-mt-24 rounded-lg border border-border bg-white p-6" data-testid={testId}>
     <h2 className="text-lg font-semibold flex items-center gap-2"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-purple text-xs font-bold text-white">{n}</span>{title}</h2>
     <div className="mt-4">{children}</div>
   </section>
@@ -40,6 +40,10 @@ export default function CourtCase({ sample = false }) {
   const [err, setErr] = useState(null);
   const load = () => api.get(sample ? "/court-dashboard/sample-case" : `/court-dashboard/cases/${refId}`).then((r) => setD(r.data)).catch((e) => setErr(e?.response?.data?.detail || "Not found"));
   useEffect(() => { load(); }, [refId, sample]);
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (d && id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [d]);
   const ref = d?.referral;
   const pdf = (pid) => (sample ? `${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-legal-lens/pdf?inline=1` : `${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${pid}/pdf`);
   return (
@@ -72,7 +76,7 @@ export default function CourtCase({ sample = false }) {
               <ul className="grid gap-2 sm:grid-cols-2">{d.checklist.map((c) => <li key={c.label} className={`flex items-center gap-2 text-sm ${c.done ? "" : "text-muted-foreground"}`}>{c.done ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4" />}{c.label}</li>)}</ul>
             </Section>
 
-            <Section n={2} title="AI Court Summary" testId="court-case-ai">
+            <Section n={2} title="AI Court Summary" testId="court-case-ai" id="summary">
               <CourtStatusSummary referralId={ref.id} summary={d.status_summary} readOnly={sample} onRefreshed={(s) => setD((x) => ({ ...x, status_summary: s }))} />
               <div className="mt-4 grid grid-cols-3 gap-3">
                 <Stat label="Alignment Areas" value={d.counts?.alignment_areas} testId="court-stat-alignment" />
@@ -82,7 +86,7 @@ export default function CourtCase({ sample = false }) {
               <p className="mt-3 text-xs text-muted-foreground" data-testid="court-case-disclaimer">No determination of credibility, parenting fitness, or legal conclusions is made by SA CoParents.</p>
             </Section>
 
-            <Section n={3} title="Joint Assessment Report" testId="court-case-reports">
+            <Section n={3} title="Joint Assessment Report" testId="court-case-reports" id="reports">
               {d.reports.length === 0 ? <p className="text-sm text-muted-foreground" data-testid="court-case-no-reports">No Joint Report has been submitted to the court yet. Reports appear here only after the professional's authorized submission.</p> : d.reports.map((r) => (
                 <div key={r.key} className="space-y-4" data-testid={`court-report-${r.key}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-semibold">{r.label} <span className="text-xs text-muted-foreground">· v{r.version} · {r.case_code}</span></p><Button size="sm" variant="outline" asChild data-testid="court-report-pdf"><a href={pdf(r.packet_id)} download><Download className="h-4 w-4 mr-1" /> Submitted packet PDF</a></Button></div>
@@ -93,7 +97,7 @@ export default function CourtCase({ sample = false }) {
               ))}
             </Section>
 
-            <Section n={4} title="Professional Report" testId="court-case-statement">
+            <Section n={4} title="Professional Report" testId="court-case-statement" id="statement">
               {!d.statement ? <p className="text-sm text-muted-foreground" data-testid="court-case-no-statement">Not yet submitted.</p> : (
                 <div className="space-y-3 text-sm">
                   <p><span className="text-muted-foreground">Professional:</span> <strong>{d.statement.professional_name}</strong>{d.statement.role && <> · <span className="text-muted-foreground">Role:</span> {d.statement.role}</>} · submitted {d.statement.submitted_at?.slice(0, 10)}</p>
@@ -140,7 +144,7 @@ export default function CourtCase({ sample = false }) {
               {d.submissions.length > 0 && <ul className="mt-4 space-y-1 text-xs text-muted-foreground" data-testid="court-case-submissions">{d.submissions.map((s) => <li key={s.version}>Version {s.version} · {s.at?.slice(0, 16).replace("T", " ")} · SHA-256 {s.sha256?.slice(0, 16)}…{s.superseded ? " · superseded" : ""}</li>)}</ul>}
             </Section>
 
-            <Section n={5} title="Court–Professional Communication" testId="court-case-thread">
+            <Section n={5} title="Court–Professional Communication" testId="court-case-thread" id="thread">
               {sample ? <p className="text-sm text-muted-foreground" data-testid="court-sample-thread-note">In a live case this is a case-specific, timestamped message thread between the court and the assigned professional, with an AI-neutral summary of open requests. Disabled in the sample.</p> : <CourtThread baseUrl={`/court-dashboard/cases/${ref.id}`} side="court" />}
             </Section>
           </>

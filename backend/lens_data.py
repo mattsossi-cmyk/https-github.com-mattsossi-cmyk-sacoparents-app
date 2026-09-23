@@ -33,8 +33,8 @@ JOINT_BANDS = [
     (9, 10, "Child-Centered Partnership", "Unified Partnership", ["fluid communication", "active support for child's relationship with both parents", "shared problem-solving"],
      ["few meaningful co-parenting difficulties"], ["direct collaboration", "shared planning", "mediation only when needed for significant disputes"]),
 ]
-INDIVIDUAL_BASE = ["Foundation Statement", "BIFF Communication Method", "SA CoParents AI Conversation Builder", "Individual Counseling / Coaching"]
-JOINT_BASE = ["Co-Parenting Agreement", "Parent Facilitation / Coordination", "Traditional Mediation", "Child-Centered Mediation"]
+INDIVIDUAL_BASE = ["BIFF Communication Method", "SA CoParents Communication Coach", "OurFamilyWizard / communication & tone tools", "Parenting education", "Individual professional consultation", "Therapy or counseling resources"]
+JOINT_BASE = ["Children in the Middle", "Co-Parenting Agreement", "Structured communication tools", "Parent Facilitation / Coordination", "Traditional Mediation", "Child-Focused Mediation", "Educational, medical, or psychological consultation"]
 INDIVIDUAL_RESOURCES = [*INDIVIDUAL_BASE, "Kelly Bernstein — Child-Focused Options Provider", "Kassandra Levay — Education Specialist", "Additional Counselor / Provider"]
 JOINT_RESOURCES = ["Brad Craig — Children in the Middle", "Kelly Bernstein — Child-Focused Options Provider", "Kassandra Levay — Education Specialist", *JOINT_BASE, "Additional Expert / Provider"]
 
@@ -64,12 +64,31 @@ RISK_LEVELS = ["Not assessed", "Low Risk", "Moderate Risk", "Moderate-to-High Ri
 SAFETY_ALERT = ("Important Safety Note: If high-risk IPV indicators are present, joint mediation, open messaging, and unmonitored contact are counter-indicated. "
                 "In these situations, court orders, supervised exchanges, or legal safety plans take priority over standard co-parenting goals.")
 PATHWAYS = [
-    {"key": "court", "lo": 1, "hi": 3, "name": "Litigation & Court", "levels": "Levels 1–3", "desc": "Formal orders and parallel mandates. Requires mandatory individual therapy."},
-    {"key": "facilitation", "lo": 3, "hi": 5, "name": "Parent Facilitation & Coordination", "levels": "Levels 3–5", "desc": "Neutral professional resolves day-to-day bumps, supported by parent education, individual counseling, and neutral educational testing."},
-    {"key": "mediation", "lo": 5, "hi": 7, "name": "Traditional Mediation", "levels": "Levels 5–7", "desc": "Guided conversations to update parenting plans or schedules without court."},
-    {"key": "child_centered", "lo": 7, "hi": 10, "name": "Child-Centered Mediation", "levels": "Levels 7–10", "desc": "Collaborative sessions focusing directly on the child's evolving needs."},
-    {"key": "direct", "lo": 10, "hi": 10, "name": "Direct Collaboration", "levels": "Level 10", "desc": "Managing schedule shifts directly using shared calendars on SA CoParents Align."},
+    {"key": "direct", "lo": 8, "hi": 10, "name": "Direct structured parent discussion", "levels": "Levels 8–10", "desc": "Parents resolve the issue themselves using agreed written structure and shared calendars on SA CoParents Align."},
+    {"key": "coach", "lo": 6, "hi": 10, "name": "SA CoParents Communication Coach", "levels": "Levels 6–10", "desc": "Tone-checked, BIFF-structured written communication before any escalation."},
+    {"key": "facilitation", "lo": 3, "hi": 5, "name": "Parent facilitation", "levels": "Levels 3–5", "desc": "Neutral professional resolves day-to-day bumps and models child-focused communication."},
+    {"key": "coordination", "lo": 2, "hi": 4, "name": "Parenting coordination", "levels": "Levels 2–4", "desc": "Structured, ongoing professional process for persistent disagreement about the parenting plan."},
+    {"key": "child_centered", "lo": 5, "hi": 9, "name": "Child-focused mediation", "levels": "Levels 5–9", "desc": "Mediation focused on one specific unresolved parenting issue and the child's needs."},
+    {"key": "mediation", "lo": 4, "hi": 7, "name": "Traditional mediation", "levels": "Levels 4–7", "desc": "Guided conversations to update parenting plans or schedules without court."},
+    {"key": "collaborative", "lo": 4, "hi": 8, "name": "Collaborative law", "levels": "Levels 4–8", "desc": "Attorney-supported, agreement-based process with a commitment to stay out of court."},
+    {"key": "therapist", "lo": 2, "hi": 7, "name": "Therapist-assisted or interdisciplinary resolution", "levels": "Levels 2–7", "desc": "Counseling-supported process where emotional or relational factors drive the dispute."},
+    {"key": "consult", "lo": 1, "hi": 10, "name": "Consultation with an educational, medical, or mental-health professional", "levels": "Any level", "desc": "Subject-matter input first, followed by mediation or another structured decision-making process."},
+    {"key": "expert", "lo": 1, "hi": 10, "name": "Use of an agreed neutral or subject-matter expert", "levels": "Any level", "desc": "Both parents accept one neutral expert's assessment of the disputed question."},
+    {"key": "attorney", "lo": 1, "hi": 4, "name": "Attorney-assisted negotiation", "levels": "Levels 1–4", "desc": "Counsel-to-counsel negotiation where direct or facilitated processes are not appropriate."},
+    {"key": "court", "lo": 1, "hi": 3, "name": "Court determination", "levels": "Levels 1–3", "desc": "When issues cannot appropriately be resolved through agreement, or a safety concern requires orders."},
 ]
+CONFLICT_GUIDANCE = [
+    ("Communication-based conflict", "Consider structured written communication using BIFF principles, a parenting communication platform, or the SA CoParents Communication Coach before escalating the dispute."),
+    ("Defined parenting disagreement", "Consider child-focused mediation focused on the specific unresolved parenting issue."),
+    ("Educational, medical, or psychological disagreement", "Consider consultation with an appropriate subject-matter professional followed by mediation or another structured decision-making process."),
+    ("Persistent high conflict", "Consider a more structured professional process, including parent facilitation, parenting coordination, attorney-assisted negotiation, or mediation."),
+    ("Safety or power-imbalance concerns", "Conflict-resolution recommendations should be considered separately and with safeguards appropriate to the circumstances."),
+]
+CHILD_FOCUS_CATEGORIES = [("educational", "Educational needs"), ("medical", "Medical needs"), ("psychological", "Psychological or emotional needs"), ("developmental", "Developmental needs"),
+                          ("routines", "Parenting routines"), ("relationships", "Parent-child relationships"), ("communication", "Communication between parents"),
+                          ("transitions", "Transitions between households"), ("special_needs", "Special needs or accommodations")]
+REPORT_PRINCIPLE = ["Parents provide the information.", "SA CoParents organizes and compares the information.", "SA CoParents Align identifies potential options and pathways.", "The professional provides the judgment."]
+REPORT_PURPOSE = "What do the parents' differences mean for resolving the dispute, and what options, resources, and conflict-resolution pathways may help meet the needs of the child?"
 RESOURCE_CATEGORIES = ["Individual (Parent A)", "Individual (Parent B)", "Individual (Child)", "Educational Assessment", "Parent Education", "Clinical & Forensics", "Joint / Co-Parenting", "Other"]
 REASSESS_INTERVALS = ["Every 90 days", "Every 90 to 180 days", "Every 180 days"]
 REASSESS_UP_DEFAULT = "Move away from formal facilitators, start traditional mediation, and introduce flexible schedule swaps."
@@ -97,13 +116,14 @@ TEXT_FIELDS = ("matter_name", "court_county", "cause_number", "professional_role
                "safety_takeaway", "parent_a_strengths", "parent_a_gaps", "parent_a_growth", "parent_a_notes", "parent_b_strengths", "parent_b_gaps", "parent_b_growth", "parent_b_notes",
                "joint_strengths", "joint_gaps", "joint_notes", "alignment_agreements", "alignment_disagreements", "partial_alignment", "alignment_summary",
                "conflict_pathway", "conflict_management_rationale", "short_term_goals", "long_term_goals", "reassess_interval", "reassess_up", "reassess_down",
-               "professional_summary", "next_review_date", "signature_name", "professional_title", "fv_a_received", "fv_b_received")
-LIST_FIELDS = ("parent_a_resources", "parent_b_resources", "joint_resources", "conflict_management_options")
+               "professional_summary", "next_review_date", "signature_name", "professional_title", "fv_a_received", "fv_b_received", "shared_concerns", "sources_considered", "pathway_rationale")
+LIST_FIELDS = ("parent_a_resources", "parent_b_resources", "joint_resources", "conflict_management_options", "conflict_pathways")
 DICT_FIELDS = ("parent_a_provider", "parent_b_provider", "joint_provider")
 INT_FIELDS = ("parent_a_rating", "parent_b_rating", "joint_rating")
 ROWS_FIELDS = ("resource_rows",)
 RISK_FIELDS = ("risk_screening",)
 GROWTH_FIELDS = ("growth_status",)
+CHILD_FIELDS = ("child_focus",)
 
 def growth_lines(rep: dict, role: str) -> list[dict]:
     """Key Growth Areas for a parent with met-at-reassessment flags."""

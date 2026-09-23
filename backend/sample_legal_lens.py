@@ -1,5 +1,5 @@
 """Fictional, fully filled-in Professional Evaluation Report — public sample (no real data)."""
-from legal_lens import (AI_MODELS, CONFLICT_OPTIONS, INTRO_TEXT, JOINT_OPTIONS, PATHWAYS, RATING_NOTE, REASSESS_INTERVALS, RECEIPT, RESOURCE_CATEGORIES, RISK_CATEGORIES, RISK_LEVELS,
+from legal_lens import (AI_MODELS, CONFLICT_OPTIONS, INTRO_TEXT, JOINT_OPTIONS, PATHWAYS, RATING_NOTE, REASSESS_INTERVALS, RECEIPT, RESOURCE_CATEGORIES, RISK_CATEGORIES, RISK_LEVELS, REPORT_PRINCIPLE, REPORT_PURPOSE, CONFLICT_GUIDANCE, CHILD_FOCUS_CATEGORIES,
                         SAFETY_ALERT, SAFETY_NOTE, SCALE_TABLE, STATUSES, TAGLINE, classify_individual, classify_joint)
 from sample_professional_report import SAMPLE_COURT, SAMPLE_PRO
 
@@ -48,9 +48,14 @@ _REPORT = {
     "reassess_interval": "Every 90 to 180 days",
     "reassess_up": "When Score Moves Up (Level 5–6): Move away from formal facilitators, start traditional mediation, and introduce flexible schedule swaps.",
     "reassess_down": "When Score Drops (Level 1–2): Re-check safety protocols, restrict communication strictly to app logs, and bring in court oversight or clinical therapy.",
-    "next_review_date": "2026-08-28", "conflict_pathway": "facilitation",
+    "next_review_date": "2026-08-28", "conflict_pathway": "facilitation", "conflict_pathways": ["coach", "facilitation", "consult"],
+    "shared_concerns": "Both parents want M. to stop overhearing transition disputes and to keep school performance steady.",
+    "sources_considered": "Parent A and Parent B co-parenting assessments (completed 2026-05-20 / 2026-05-22), both Family Violence screenings, the Joint Report, and the professional's two facilitation sessions.",
+    "child_focus": {"educational": {"checked": True, "note": "Homework routine differs between households; teacher reports late assignments after Parent B weeks."}, "communication": {"checked": True, "note": "Reactive texting during handoffs."}, "transitions": {"checked": True, "note": "Child present during transition disputes."}},
+    "pathway_rationale": "Communication-based conflict is the primary driver, so structured written communication through the SA CoParents Communication Coach comes first; parent facilitation (Kelly Bernstein) resolves day-to-day bumps while an educational consultation (Kassandra Levay) settles the homework question with facts before any mediation.",
     "conflict_management_rationale": "Parent Facilitation & Coordination (Levels 3–5) — Level 4 Recommendation: a neutral professional (Kelly Bernstein) resolves day-to-day bumps, supported by Children in the Middle "
                                      "(Brad Craig), individual counseling, and neutral educational testing (Kassandra Levay).",
+    "professional_summary": "In my professional judgment the parents' disagreement is communication-driven rather than values-driven: both describe the same child-focused goals but escalate at transitions. A structured written channel plus facilitation for the next 90 days, with an educational consultation to settle the homework question, is proportionate to a Level 4 dynamic. This statement is my own interpretation and is distinct from the parent-reported information and system-generated comparisons above.",
     "signature_name": SAMPLE_PRO["name"], "professional_title": "Licensed Professional Counselor · Parenting Facilitator",
 }
 
@@ -63,7 +68,7 @@ def sample_legal_lens() -> dict:
                           {"key": "fv_b", "label": "Parent B Family Violence Assessment Received", "done": True, "na": False}],
             "classification": {"parent_a": classify_individual(rep["parent_a_rating"]), "parent_b": classify_individual(rep["parent_b_rating"]), "joint": classify_joint(rep["joint_rating"])},
             "library": {"conflict_options": CONFLICT_OPTIONS, "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE,
-                        "risk_categories": RISK_CATEGORIES, "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS, "providers": []},
-            "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT},
+                        "risk_categories": RISK_CATEGORIES, "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS, "providers": []},
+            "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE},
             "case": {"id": "sample-case", "case_code": "SA-26-TRN-000000", "child_name": "M. Carter", "subject_label": "Transitions & Communication"},
             "professional": SAMPLE_PRO, "court": SAMPLE_COURT}

@@ -7,10 +7,11 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiDraftComparison } from "@/components/AiDraftComparison";
-import { ScaleTable, PathwayList } from "@/components/LensScale";
+import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/LensScale";
+import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker } from "@/components/LensSections";
 import { GrowthProgress } from "@/components/CourtLegalSummary";
 
-const STEPS = ["Case Information", "Safety First", "Individual Breakdown (Parent A, Parent B, Joint)", "1–10 Co-Parenting Scale", "Roadmap", "Resource & Support Options", "Regular Reassessments", "Conflict Resolution Pathways", "Certification & PDF"];
+const STEPS = REPORT_STEPS;
 const STATUS = { draft: "Draft", under_review: "Under Review", final: "Final", submitted_to_court: "Submitted to Court" };
 const Sec = ({ n, title, children, id }) => <section className="rounded-lg border border-border bg-[#f7f3fb] p-6" data-testid={`lens-${id}`}><h2 className="text-lg font-semibold text-brand-purple flex items-center gap-2">{n !== undefined && <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-purple text-xs font-bold text-white">{n}</span>}{title}</h2><div className="mt-4 space-y-3 text-sm">{children}</div></section>;
 const Field = ({ label, value, onChange, id, type = "text", big, hint }) => <label className="block text-sm"><span className="font-medium">{label}</span>{hint && <span className="block text-xs text-muted-foreground">{hint}</span>}{big ? <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} className="mt-1 min-h-[100px] bg-white" data-testid={`lens-${id}`} /> : <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2 text-sm" data-testid={`lens-${id}`} />}</label>;
@@ -123,64 +124,77 @@ export default function LegalLensReport() {
       <header className="border-b border-border"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="lens-back"><ArrowLeft className="h-4 w-4" /> Back to Case</Link><BrandLogo size="text-xl" /><span className="rounded-full bg-brand-purple/10 px-3 py-1 text-xs font-semibold text-brand-purple" data-testid="lens-status">{STATUS[rep.status]}</span></div></header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5">
         <div className="border-b-2 border-brand-purple pb-3">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-purple" data-testid="lens-title">SA CoParents Align Professional Evaluation Report</h1>
-          <p className="text-sm text-muted-foreground mt-2"><strong className="text-foreground">Platform:</strong> sacoparentsalign.com · <strong className="text-foreground">Focus:</strong> Comprehensive 1–10 Scale Analysis (Joint &amp; Individual Behaviors), Stage-Specific Profiles, Resources &amp; Actionable Roadmap</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-purple" data-testid="lens-title">SA CoParents Align — Professional Report</h1>
+          <p className="text-sm text-muted-foreground mt-2"><strong className="text-foreground">Purpose:</strong> {notes.purpose}</p>
         </div>
         <ol className="flex flex-wrap gap-1 text-[11px]" data-testid="lens-steps">{STEPS.map((s, i) => <li key={s} className="rounded-full border border-brand-purple/30 px-2 py-0.5 text-brand-purple">{i + 1}. {s}</li>)}</ol>
-        <ul className="flex flex-wrap gap-3 text-xs" data-testid="lens-readiness">{readiness.map((r) => <li key={r.key} className="flex items-center gap-1">{r.done ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4 text-muted-foreground" />}{r.label}{r.na && !r.done ? " (N/A)" : ""}</li>)}</ul>
         {actions(true)}
         {aiNotice}
         <AiDraftComparison drafts={rep.ai_drafts} rep={rep} />
         {preview ? <iframe title="Report preview" src={pdf} className="h-[80vh] w-full rounded-lg border border-border" data-testid="lens-preview-frame" /> : (
           <>
-            <Sec title="What This Report Covers" id="intro"><p className="text-sm leading-relaxed" data-testid="lens-intro">{notes.intro}</p></Sec>
-            <Sec title="Case Information" id="case"><div className="grid gap-3 sm:grid-cols-3">{[["matter_name", "Case / Matter Name"], ["court_county", "Court / County"], ["cause_number", "Cause Number"], ["professional_role", "Professional Role"], ["parent_a_name", "Parent A Name"], ["parent_b_name", "Parent B Name"]].map(([k, l]) => <Field key={k} label={l} value={rep[k]} onChange={(val) => set(k, val)} id={k} />)}<label className="block text-sm"><span className="font-medium">Case ID</span><input readOnly value={v.case.case_code || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-case-id" /></label><label className="block text-sm"><span className="font-medium">Professional Name</span><input readOnly value={rep.professional_name || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-professional-name" /></label><Field label="Report Date" type="date" value={rep.report_date} onChange={(val) => set("report_date", val)} id="report_date" /></div></Sec>
-            <Sec n={1} title="Safety First: Checking for Domestic Violence & IPV Risks" id="safety">
-              <p className="text-sm">Before evaluating co-parenting scores or suggesting joint meetings, we screen for <strong>Intimate Partner Violence (IPV) and coercive control</strong>.</p>
-              <p className="rounded-r-md border-l-4 border-amber-500 bg-amber-50 p-3 text-xs" data-testid="lens-safety-alert">{notes.alert}</p>
-              <div className="grid gap-3 sm:grid-cols-2"><Radio label="Parent A Family Violence Assessment" options={lib.receipt_options} value={rep.fv_a_received} onChange={(val) => set("fv_a_received", val)} id="fv-a" /><Radio label="Parent B Family Violence Assessment" options={lib.receipt_options} value={rep.fv_b_received} onChange={(val) => set("fv_b_received", val)} id="fv-b" /></div>
-              <p className="text-xs font-semibold" data-testid="lens-fv-both">{rep.fv_a_received === "Received" && rep.fv_b_received === "Received" ? "✓ Both Assessments Received" : "Both assessments not yet received"}</p>
-              <h3 className="font-semibold text-align-green">Risk Screening Summary</h3>
-              <div className="space-y-2" data-testid="lens-risk-grid">{lib.risk_categories.map(([k, label, hint]) => (
-                <div key={k} className="grid gap-2 sm:grid-cols-[1.2fr_1fr_2fr] items-start rounded-md border border-border bg-white p-2">
-                  <div><p className="text-sm font-semibold">{label}</p><p className="text-xs text-muted-foreground">{hint}</p></div>
-                  <select value={risk[k]?.level || "Not assessed"} onChange={(e) => setRisk(k, { level: e.target.value })} className="h-8 rounded-md border border-input bg-white px-1 text-sm" data-testid={`lens-risk-${k}`}>{lib.risk_levels.map((l) => <option key={l}>{l}</option>)}</select>
-                  <input value={risk[k]?.note || ""} onChange={(e) => setRisk(k, { note: e.target.value })} placeholder="Basis / observation (screening summary, not a finding)" className="h-8 rounded-md border border-input px-2 text-sm" data-testid={`lens-risk-${k}-note`} />
-                </div>))}</div>
-              <Radio label="Joint Process Appropriate?" options={lib.joint_process_options} value={rep.joint_process_appropriate} onChange={(val) => set("joint_process_appropriate", val)} id="joint-process" />
-              <Field big label="Safety Notes / Safeguards" value={rep.safety_notes} onChange={(val) => set("safety_notes", val)} id="safety_notes" />
-              <Field big label="Takeaway" hint="e.g. whether an emergency safety override is required and whether direct face-to-face negotiation is a fit right now." value={rep.safety_takeaway} onChange={(val) => set("safety_takeaway", val)} id="safety_takeaway" />
-              <p className="text-xs italic" data-testid="lens-safety-note">{notes.safety}</p>
-            </Sec>
-            <Sec n={2} title="Detailed Individual Breakdown for Parent A & Parent B" id="individual">
-              <ParentBlock role="a" rep={rep} cls={cls.parent_a} set={set} /><ParentBlock role="b" rep={rep} cls={cls.parent_b} set={set} />
-              <div className="rounded-md border border-border bg-white p-4 space-y-3" data-testid="lens-joint">
-                <h3 className="font-semibold text-align-green">Joint Dynamic Summary{rep.joint_rating ? ` (Rated: Level ${rep.joint_rating})` : ""}</h3>
-                <Rating label="Joint Co-Parenting Rating (1–10)" value={rep.joint_rating} onChange={(val) => set("joint_rating", val)} id="joint-rating" /><Band cls={cls.joint} joint />
-                <div className="grid gap-3 sm:grid-cols-2"><Field big label="Where the Parents Do Well Together" value={rep.joint_strengths} onChange={(val) => set("joint_strengths", val)} id="joint_strengths" /><Field big label="Where the Parents Struggle Together" value={rep.joint_gaps} onChange={(val) => set("joint_gaps", val)} id="joint_gaps" /></div>
-                <Field big label="Summary" value={rep.joint_notes} onChange={(val) => set("joint_notes", val)} id="joint_notes" />
+            <Sec n={1} title="Case & Assessment Overview" id="case">
+              <p className="text-sm leading-relaxed" data-testid="lens-intro">{notes.intro}</p>
+              <div className="grid gap-3 sm:grid-cols-3">{[["matter_name", "Case / Matter Name"], ["court_county", "Court / County"], ["cause_number", "Cause Number"], ["professional_role", "Professional Role"], ["parent_a_name", "Parent A Name"], ["parent_b_name", "Parent B Name"]].map(([k, l]) => <Field key={k} label={l} value={rep[k]} onChange={(val) => set(k, val)} id={k} />)}<label className="block text-sm"><span className="font-medium">Case ID</span><input readOnly value={v.case.case_code || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-case-id" /></label><label className="block text-sm"><span className="font-medium">Professional Name</span><input readOnly value={rep.professional_name || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-professional-name" /></label><Field label="Report Date" type="date" value={rep.report_date} onChange={(val) => set("report_date", val)} id="report_date" /></div>
+              <div><p className="text-sm font-medium">Assessments completed</p><ul className="mt-1 flex flex-wrap gap-3 text-xs" data-testid="lens-assessments">{readiness.map((r) => <li key={r.key} className="flex items-center gap-1">{r.done ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4 text-muted-foreground" />}{r.label}{r.na && !r.done ? " (N/A)" : ""}</li>)}</ul></div>
+              <Field big label="Sources of information considered" hint="Assessments, screenings, Joint Report, sessions, documents reviewed — with completion dates." value={rep.sources_considered} onChange={(val) => set("sources_considered", val)} id="sources_considered" />
+              <div className="rounded-md border border-amber-300 bg-white p-4 space-y-3" data-testid="lens-safety">
+                <h3 className="font-semibold text-align-green">Safety screening (IPV &amp; coercive control)</h3>
+                <p className="rounded-r-md border-l-4 border-amber-500 bg-amber-50 p-3 text-xs" data-testid="lens-safety-alert">{notes.alert}</p>
+                <div className="grid gap-3 sm:grid-cols-2"><Radio label="Parent A Family Violence Assessment" options={lib.receipt_options} value={rep.fv_a_received} onChange={(val) => set("fv_a_received", val)} id="fv-a" /><Radio label="Parent B Family Violence Assessment" options={lib.receipt_options} value={rep.fv_b_received} onChange={(val) => set("fv_b_received", val)} id="fv-b" /></div>
+                <p className="text-xs font-semibold" data-testid="lens-fv-both">{rep.fv_a_received === "Received" && rep.fv_b_received === "Received" ? "✓ Both Assessments Received" : "Both assessments not yet received"}</p>
+                <div className="space-y-2" data-testid="lens-risk-grid">{lib.risk_categories.map(([k, label, hint]) => (
+                  <div key={k} className="grid gap-2 sm:grid-cols-[1.2fr_1fr_2fr] items-start rounded-md border border-border bg-white p-2">
+                    <div><p className="text-sm font-semibold">{label}</p><p className="text-xs text-muted-foreground">{hint}</p></div>
+                    <select value={risk[k]?.level || "Not assessed"} onChange={(e) => setRisk(k, { level: e.target.value })} className="h-8 rounded-md border border-input bg-white px-1 text-sm" data-testid={`lens-risk-${k}`}>{lib.risk_levels.map((l) => <option key={l}>{l}</option>)}</select>
+                    <input value={risk[k]?.note || ""} onChange={(e) => setRisk(k, { note: e.target.value })} placeholder="Basis / observation (screening summary, not a finding)" className="h-8 rounded-md border border-input px-2 text-sm" data-testid={`lens-risk-${k}-note`} />
+                  </div>))}</div>
+                <Radio label="Joint Process Appropriate?" options={lib.joint_process_options} value={rep.joint_process_appropriate} onChange={(val) => set("joint_process_appropriate", val)} id="joint-process" />
+                <Field big label="Safety Notes / Safeguards" value={rep.safety_notes} onChange={(val) => set("safety_notes", val)} id="safety_notes" />
+                <Field big label="Takeaway" hint="e.g. whether an emergency safety override is required and whether direct face-to-face negotiation is a fit right now." value={rep.safety_takeaway} onChange={(val) => set("safety_takeaway", val)} id="safety_takeaway" />
+                <p className="text-xs italic" data-testid="lens-safety-note">{notes.safety}</p>
               </div>
             </Sec>
-            <Sec n={3} title="Comprehensive 1–10 Co-Parenting Scale: Individual Parents, then Joint" id="scale"><ScaleTable scale={lib.scale_table} cls={cls} rep={rep} /></Sec>
-            <Sec n={4} title="Post-Rating Roadmap: Short-Term & Long-Term Goals" id="roadmap">
-              <Field big label="A. Short-Term Goals (Next 30 to 90 Days)" hint="One goal per line, as “Title: concrete action”." value={rep.short_term_goals} onChange={(val) => set("short_term_goals", val)} id="short_term_goals" />
-              <Field big label="B. Long-Term Goals (6 to 12 Months)" hint="One goal per line." value={rep.long_term_goals} onChange={(val) => set("long_term_goals", val)} id="long_term_goals" />
+            <Sec n={2} title="Individual Parent Perspectives" id="individual">
+              <p className="text-xs italic text-muted-foreground">Each parent is presented separately and neutrally — concerns, priorities, perceptions and identified needs — without determining which account is correct.</p>
+              <ParentBlock role="a" rep={rep} cls={cls.parent_a} set={set} /><ParentBlock role="b" rep={rep} cls={cls.parent_b} set={set} />
+              <div className="space-y-5" data-testid="lens-individual-scales"><IndividualScaleTable scale={lib.scale_table} row={cls.parent_a?.row} rating={rep.parent_a_rating} role="a" name={rep.parent_a_name} growth={growthOf(rep, "a")} /><IndividualScaleTable scale={lib.scale_table} row={cls.parent_b?.row} rating={rep.parent_b_rating} role="b" name={rep.parent_b_name} growth={growthOf(rep, "b")} /></div>
             </Sec>
-            <Sec n={5} title="Resource & Support Options" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /></Sec>
-            <Sec n={6} title="Checking In: Regular Reassessments" id="reassess">
+            <Sec n={3} title="Joint Assessment Findings" id="joint">
+              <div className="rounded-md border border-border bg-white p-4 space-y-3" data-testid="lens-joint">
+                <Rating label="Joint Co-Parenting Rating (1–10)" value={rep.joint_rating} onChange={(val) => set("joint_rating", val)} id="joint-rating" /><Band cls={cls.joint} joint />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field big label="Areas of alignment" value={rep.alignment_agreements ?? rep.joint_strengths} onChange={(val) => set("alignment_agreements", val)} id="alignment_agreements" />
+                  <Field big label="Areas of partial alignment" value={rep.partial_alignment} onChange={(val) => set("partial_alignment", val)} id="partial_alignment" />
+                  <Field big label="Areas of differing perspectives" value={rep.alignment_disagreements ?? rep.joint_gaps} onChange={(val) => set("alignment_disagreements", val)} id="alignment_disagreements" />
+                  <Field big label="Shared concerns" value={rep.shared_concerns} onChange={(val) => set("shared_concerns", val)} id="shared_concerns" />
+                </div>
+                <Field big label="Issues requiring further discussion or professional attention" value={rep.joint_notes} onChange={(val) => set("joint_notes", val)} id="joint_notes" />
+              </div>
+              <JointScaleTable scale={lib.scale_table} row={cls.joint?.row} rating={rep.joint_rating} />
+            </Sec>
+            <Sec n={4} title="Child-Focused Issues" id="child">
+              <p className="text-xs text-muted-foreground">Tick each area affecting the child's needs and circumstances; categories suggested by the Joint Report are pre-ticked for your review.</p>
+              <ChildFocusList categories={lib.child_focus_categories} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
+            </Sec>
+            <Sec n={5} title="Options & Resources" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /></Sec>
+            <Sec n={6} title="Conflict Resolution Pathways" id="conflict">
+              <PathwayPicker lib={lib} rep={rep} cls={cls} set={set} />
+              <Field big label="Why these pathways are relevant to the issues identified" hint="Explain the fit to the type of conflict — not just a list of services. Required to finalize." value={rep.pathway_rationale ?? rep.conflict_management_rationale} onChange={(val) => set("pathway_rationale", val)} id="pathway_rationale" />
+              <p className="text-xs italic" data-testid="lens-rating-note">{notes.rating}</p>
+            </Sec>
+            <Sec n={7} title="Professional Statement" id="summary">
+              <p className="text-xs italic text-muted-foreground">Your own observations, interpretation, recommendations and conclusions — clearly distinct from parent-reported information, individual responses, joint comparisons and any system- or AI-generated summary. You remain responsible for the judgment in this section.</p>
+              <Field big label="Professional statement" value={rep.professional_summary} onChange={(val) => set("professional_summary", val)} id="professional_summary" />
+              <Field big label="Short-Term Goals (Next 30 to 90 Days)" hint="One goal per line, as “Title: concrete action”." value={rep.short_term_goals} onChange={(val) => set("short_term_goals", val)} id="short_term_goals" />
+              <Field big label="Long-Term Goals (6 to 12 Months)" hint="One goal per line." value={rep.long_term_goals} onChange={(val) => set("long_term_goals", val)} id="long_term_goals" />
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm"><span className="font-medium">Reassessment interval</span><select value={rep.reassess_interval || ""} onChange={(e) => set("reassess_interval", e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2 text-sm" data-testid="lens-reassess_interval">{lib.reassess_intervals.map((o) => <option key={o}>{o}</option>)}</select></label>
                 <Field label="Next Review / Reassessment Date" type="date" value={rep.next_review_date} onChange={(val) => set("next_review_date", val)} id="next_review_date" />
               </div>
-              <Field big label="When Score Moves Up" value={rep.reassess_up} onChange={(val) => set("reassess_up", val)} id="reassess_up" />
-              <Field big label="When Score Drops" value={rep.reassess_down} onChange={(val) => set("reassess_down", val)} id="reassess_down" />
-            </Sec>
-            <Sec n={7} title="Conflict Resolution Pathways (Levels 1–10)" id="conflict">
-              <PathwayList pathways={lib.pathways} rating={rep.joint_rating} recommended={cls.joint?.pathway?.key} chosen={rep.conflict_pathway} onChoose={(k) => set("conflict_pathway", k)} />
-              <Field big label="Rationale / Recommended Structure" value={rep.conflict_management_rationale} onChange={(val) => set("conflict_management_rationale", val)} id="conflict_management_rationale" />
-              <p className="text-xs italic" data-testid="lens-rating-note">{notes.rating}</p>
-            </Sec>
-            <Sec title="Professional Certification" id="summary">
+              <div className="grid gap-3 sm:grid-cols-2"><Field big label="When Score Moves Up" value={rep.reassess_up} onChange={(val) => set("reassess_up", val)} id="reassess_up" /><Field big label="When Score Drops" value={rep.reassess_down} onChange={(val) => set("reassess_down", val)} id="reassess_down" /></div>
+              <ReportPrinciple notes={notes} />
+              <h3 className="font-semibold text-align-green">Professional Certification</h3>
               <p className="text-xs italic">This report reflects the professional's review of the individual assessments, safety screenings and Joint Report. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.</p>
               <div className="grid gap-3 sm:grid-cols-2"><Field label="Professional Signature Name" value={rep.signature_name} onChange={(val) => set("signature_name", val)} id="signature_name" /><Field label="Professional Title" value={rep.professional_title} onChange={(val) => set("professional_title", val)} id="professional_title" /></div>
               {rep.finalized_at && <p className="text-xs text-align-green font-semibold" data-testid="lens-finalized">Date finalized: {rep.finalized_at.slice(0, 10)}</p>}

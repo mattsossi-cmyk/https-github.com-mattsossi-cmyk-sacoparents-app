@@ -6,7 +6,8 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { SampleEmailForm } from "@/components/SampleEmailForm";
 import { SampleLensTour, StartTourButton, useSampleLensTour } from "@/components/SampleLensTour";
-import { ScaleTable, PathwayList } from "@/components/LensScale";
+import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/LensScale";
+import { ReportPrinciple, ChildFocusSummary, PathwayPicker } from "@/components/LensSections";
 
 const Sec = ({ n, title, children, testId }) => (
   <section className="bg-white border border-border rounded-lg p-6" data-testid={testId}>
@@ -51,47 +52,57 @@ export default function SampleLegalLensReport() {
         <div className="flex justify-end gap-2"><StartTourButton onClick={tour.start} /><SampleEmailForm endpoint="/joint/sample-legal-lens/email" label="Sample Professional Report" idPrefix="sample-lens-page" /></div>
         <div className="rounded-lg border-2 border-brand-purple/30 bg-white p-6 border-b-4">
           <p className="text-xs font-bold uppercase tracking-widest text-brand-purple flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Legal · Professional &amp; Court only · Sample (fictional data)</p>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mt-1 text-brand-purple" data-testid="sample-lens-title">SA CoParents Align Professional Evaluation Report</h1>
-          <p className="text-sm text-muted-foreground mt-3" data-testid="sample-lens-note"><strong className="text-foreground">Platform:</strong> sacoparentsalign.com<br /><strong className="text-foreground">Focus:</strong> Comprehensive 1–10 Scale Analysis (Joint &amp; Individual Behaviors), Stage-Specific Profiles, Resources &amp; Actionable Roadmap</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold mt-1 text-brand-purple" data-testid="sample-lens-title">SA CoParents Align — Professional Report</h1>
+          <p className="text-sm text-muted-foreground mt-3" data-testid="sample-lens-note"><strong className="text-foreground">Purpose:</strong> {d.notes.purpose}</p>
           <div className="mt-4"><KV rows={[["Court", rep.court_county], ["Cause No.", rep.cause_number], ["Align case", d.case.case_code], ["Professional", `${rep.professional_name} · ${rep.professional_role}`], ["Report date", rep.report_date], ["Status", rep.status.replace(/_/g, " ")]]} /></div>
         </div>
-        <Sec title="What This Report Covers" testId="sample-lens-intro"><p>{d.notes.intro}</p></Sec>
-        <Sec n={1} title="Safety First: Checking for Domestic Violence & IPV Risks" testId="sample-lens-s1">
-          <p>Before evaluating co-parenting scores or suggesting joint meetings, we screen for <strong>Intimate Partner Violence (IPV) and coercive control</strong>.</p>
+        <Sec n={1} title="Case & Assessment Overview" testId="sample-lens-s1">
+          <p data-testid="sample-lens-intro">{d.notes.intro}</p>
+          <H3>Assessments completed</H3>
+          <ul className="list-disc pl-5 space-y-1" data-testid="sample-lens-assessments">{d.readiness.map((r) => <li key={r.key}>{r.label}: <strong>{r.done ? "Complete" : r.na ? "N/A" : "Not received"}</strong></li>)}</ul>
+          <p><strong>Sources of information considered:</strong> {rep.sources_considered}</p>
+          <H3>Safety screening (IPV &amp; coercive control)</H3>
           <p className="rounded-r-md border-l-4 border-amber-500 bg-amber-50 p-3 text-xs">{d.notes.alert}</p>
           <KV rows={[["Parent A FV assessment", rep.fv_a_received], ["Parent B FV assessment", rep.fv_b_received], ["Joint process appropriate?", rep.joint_process_appropriate]]} />
-          <H3>Risk Screening Summary</H3>
           <ul className="list-disc pl-5 space-y-1" data-testid="sample-lens-risk">{lib.risk_categories.map(([k, label]) => <li key={k}><strong>{label}:</strong> <strong>{risk[k]?.level}.</strong> {risk[k]?.note}</li>)}</ul>
           <p><strong>Takeaway:</strong> {rep.safety_takeaway}</p>
           <p className="text-xs italic text-muted-foreground flex gap-2"><ShieldCheck className="h-4 w-4 shrink-0" /> {d.notes.safety}</p>
         </Sec>
-        <Sec n={2} title="Detailed Individual Breakdown for Parent A & Parent B" testId="sample-lens-s2">
+        <Sec n={2} title="Individual Parent Perspectives" testId="sample-lens-s2">
+          <p className="text-xs italic text-muted-foreground">Each parent is presented separately and neutrally (PARENT-REPORTED INFORMATION summarized by the professional); no determination is made about which account is correct.</p>
           <ParentBlock role="a" rep={rep} testId="sample-lens-parent-a" /><ParentBlock role="b" rep={rep} testId="sample-lens-parent-b" />
-          <div data-testid="sample-lens-joint"><H3>Joint Dynamic Summary (Rated: Level {rep.joint_rating})</H3>
-            <p className="mt-1"><strong>Operating Dynamic:</strong> <strong>{cls.joint.mode} Mode</strong> — {cls.joint.label}.<br /><strong>Summary:</strong> {rep.joint_notes}</p></div>
+          <div className="space-y-5" data-testid="sample-lens-s3"><IndividualScaleTable scale={lib.scale_table} row={cls.parent_a?.row} rating={rep.parent_a_rating} role="a" name={rep.parent_a_name} growth={growthOf(rep, "a")} /><IndividualScaleTable scale={lib.scale_table} row={cls.parent_b?.row} rating={rep.parent_b_rating} role="b" name={rep.parent_b_name} growth={growthOf(rep, "b")} /></div>
         </Sec>
-        <Sec n={3} title="Comprehensive 1–10 Co-Parenting Scale: Individual Parents, then Joint" testId="sample-lens-s3"><ScaleTable scale={lib.scale_table} cls={cls} rep={rep} /></Sec>
-        <Sec n={4} title="Post-Rating Roadmap: Short-Term & Long-Term Goals" testId="sample-lens-s4">
-          <H3>A. Short-Term Goals (Next 30 to 90 Days)</H3><Lines text={rep.short_term_goals} />
-          <H3>B. Long-Term Goals (6 to 12 Months)</H3><Lines text={rep.long_term_goals} />
+        <Sec n={3} title="Joint Assessment Findings" testId="sample-lens-joint">
+          <p><strong>Joint rating:</strong> Level {rep.joint_rating} — <strong>{cls.joint.mode} Mode</strong> — {cls.joint.label}</p>
+          <Lines label="Areas of alignment" text={rep.alignment_agreements || rep.joint_strengths} />
+          <Lines label="Areas of partial alignment" text={rep.partial_alignment} />
+          <Lines label="Areas of differing perspectives" text={rep.alignment_disagreements || rep.joint_gaps} />
+          <p><strong>Shared concerns:</strong> {rep.shared_concerns}</p>
+          <p><strong>Issues requiring further discussion or professional attention:</strong> {rep.joint_notes}</p>
+          <JointScaleTable scale={lib.scale_table} row={cls.joint?.row} rating={rep.joint_rating} />
         </Sec>
-        <Sec n={5} title="Resource & Support Options" testId="sample-lens-s5">
+        <Sec n={4} title="Child-Focused Issues" testId="sample-lens-s4"><ChildFocusSummary categories={lib.child_focus_categories} value={rep.child_focus} testId="sample-lens-child-focus" /></Sec>
+        <Sec n={5} title="Options & Resources" testId="sample-lens-s5">
           <div className="overflow-x-auto"><table className="w-full border-collapse text-xs" data-testid="sample-lens-resources">
             <thead><tr className="bg-brand-purple/10 text-brand-purple">{["Category", "Recommended Resource / Specialist", "Service Focus & Scope"].map((h) => <th key={h} className="border border-border p-2 text-left">{h}</th>)}</tr></thead>
             <tbody>{rep.resource_rows.map((r, i) => <tr key={i} className={i % 2 ? "bg-secondary/40" : ""}><td className="border border-border p-2 font-bold">{r.category}</td><td className="border border-border p-2 font-semibold">{r.resource}</td><td className="border border-border p-2">{r.focus}</td></tr>)}</tbody>
           </table></div>
         </Sec>
-        <Sec n={6} title="Checking In: Regular Reassessments" testId="sample-lens-s6">
-          <p>By checking in <strong>{rep.reassess_interval.replace("Every ", "every ")}</strong> via SA CoParents Align, parents can track progress against their roadmap:</p>
-          <ul className="list-disc pl-5 space-y-1"><li>{rep.reassess_up}</li><li>{rep.reassess_down}</li></ul>
-          <p className="text-xs text-muted-foreground">Next review / reassessment: {rep.next_review_date}</p>
-        </Sec>
-        <Sec n={7} title="Conflict Resolution Pathways (Levels 1–10)" testId="sample-lens-s7">
-          <PathwayList pathways={lib.pathways} rating={rep.joint_rating} recommended={cls.joint?.pathway?.key} chosen={rep.conflict_pathway} />
-          <p><strong>Rationale:</strong> {rep.conflict_management_rationale}</p>
+        <Sec n={6} title="Conflict Resolution Pathways" testId="sample-lens-s7">
+          <PathwayPicker lib={lib} rep={rep} cls={cls} set={() => {}} readOnly />
+          <p><strong>Why these pathways are relevant:</strong> {rep.pathway_rationale}</p>
           <p className="text-xs italic text-muted-foreground">{d.notes.rating}</p>
         </Sec>
-        <Sec title="Professional Certification" testId="sample-lens-s8">
+        <Sec n={7} title="Professional Statement" testId="sample-lens-s8">
+          <p className="text-xs italic text-muted-foreground">The professional's own observations, interpretation, recommendations and conclusions — distinct from parent-reported information and system- or AI-generated summaries.</p>
+          <p data-testid="sample-lens-statement">{rep.professional_summary}</p>
+          <H3>Short-Term Goals (Next 30 to 90 Days)</H3><Lines text={rep.short_term_goals} />
+          <H3>Long-Term Goals (6 to 12 Months)</H3><Lines text={rep.long_term_goals} />
+          <p>Reassessment <strong>{rep.reassess_interval.replace("Every ", "every ")}</strong> · next review {rep.next_review_date}</p>
+          <ul className="list-disc pl-5 space-y-1"><li>{rep.reassess_up}</li><li>{rep.reassess_down}</li></ul>
+          <ReportPrinciple notes={d.notes} testId="sample-lens-principle" />
+          <H3>Professional Certification</H3>
           <KV rows={[["Professional signature", rep.signature_name], ["Title", rep.professional_title], ["Date finalized", rep.finalized_at?.slice(0, 10)]]} />
           <p className="rounded-md bg-secondary/50 p-3 text-xs italic flex gap-2"><Lock className="h-4 w-4 shrink-0" /> {d.notes.tagline}</p>
         </Sec>

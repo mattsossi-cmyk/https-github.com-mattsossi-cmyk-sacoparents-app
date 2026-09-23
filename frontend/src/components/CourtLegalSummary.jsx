@@ -50,9 +50,12 @@ export function CourtLegalSummary({ s }) {
           {["a", "b"].map((r) => { const items = s.growth?.[r] || []; const met = items.filter((g) => g.met).length; return <div key={r}><p className="font-semibold">{names[r] || `Parent ${r.toUpperCase()}`} <span className="text-xs text-muted-foreground">({met} of {items.length} met)</span></p><GrowthProgress met={met} total={items.length} testId={`court-legal-growth-progress-${r}`} /><GrowthList items={items} testId={`court-legal-growth-${r}`} /></div>; })}
         </div>
       </Block>
-      <Block title="Conflict Resolution Pathway" testId="court-legal-pathway">
-        <p><strong>{s.pathway || "Not selected"}</strong></p>{s.pathway_rationale && <p className="whitespace-pre-wrap text-muted-foreground">{s.pathway_rationale}</p>}
+      <Block title="Conflict Resolution Pathways" testId="court-legal-pathway">
+        {(s.pathways || (s.pathway ? [s.pathway] : [])).length ? <ul className="list-disc pl-4">{(s.pathways || [s.pathway]).map((p) => <li key={p}><strong>{p}</strong></li>)}</ul> : <p><strong>Not selected</strong></p>}
+        {s.pathway_rationale && <p className="whitespace-pre-wrap text-muted-foreground">{s.pathway_rationale}</p>}
       </Block>
+      {s.child_focus?.length > 0 && <Block title="Child-Focused Issues" testId="court-legal-child-focus"><ul className="list-disc pl-4 space-y-1">{s.child_focus.map((c) => <li key={c.label}><strong>{c.label}</strong>{c.note ? ` — ${c.note}` : ""}</li>)}</ul></Block>}
+      {s.professional_summary && <Block title="Professional Statement" testId="court-legal-statement"><p className="whitespace-pre-wrap">{s.professional_summary}</p><p className="text-[11px] italic text-muted-foreground">The professional's own judgment, distinct from parent-reported information and system/AI summaries.</p></Block>}
       <div className="grid gap-3 sm:grid-cols-2">
         <Block title="Short-Term Goals (30–90 days)" testId="court-legal-short"><ul className="list-disc pl-4 space-y-1">{(s.short_term_goals || []).map((g, i) => <li key={i}>{g}</li>)}</ul></Block>
         <Block title="Long-Term Goals (6–12 months)" testId="court-legal-long"><ul className="list-disc pl-4 space-y-1">{(s.long_term_goals || []).map((g, i) => <li key={i}>{g}</li>)}</ul></Block>

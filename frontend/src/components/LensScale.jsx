@@ -43,7 +43,7 @@ export function JointScaleTable({ scale = [], row, rating }) {
   );
 }
 
-const growthOf = (rep, role) => (rep[`parent_${role}_growth`] || "").split("\n").map((s) => s.trim()).filter(Boolean).map((t) => ({ text: t, met: !!(rep.growth_status?.[role] || {})[t] }));
+export const growthOf = (rep, role) => (rep[`parent_${role}_growth`] || "").split("\n").map((s) => s.trim()).filter(Boolean).map((t) => ({ text: t, met: !!(rep.growth_status?.[role] || {})[t] }));
 
 export function ScaleTable({ scale = [], cls = {}, rep = {} }) {
   return (
@@ -55,20 +55,24 @@ export function ScaleTable({ scale = [], cls = {}, rep = {} }) {
   );
 }
 
-export function PathwayList({ pathways = [], rating, recommended, chosen, onChoose }) {
-  const active = chosen || recommended;
+export function PathwayList({ pathways = [], rating, recommended, chosen = [], onToggle }) {
+  const picked = Array.isArray(chosen) ? chosen : [chosen].filter(Boolean);
   return (
     <ol className="space-y-2" data-testid="lens-pathways">
-      {pathways.map((p, i) => (
-        <li key={p.key} className={`rounded-md border p-3 text-sm ${active === p.key ? "border-amber-500 bg-amber-50" : "border-border bg-white"}`} data-testid={`lens-pathway-${p.key}`}>
+      {pathways.map((p, i) => {
+        const on = picked.includes(p.key);
+        return (
+        <li key={p.key} className={`rounded-md border p-3 text-sm ${on ? "border-amber-500 bg-amber-50" : "border-border bg-white"}`} data-testid={`lens-pathway-${p.key}`}>
           <div className="flex flex-wrap items-center gap-2">
-            <strong>{i + 1}. {p.name} ({p.levels})</strong>
-            {recommended === p.key && rating && <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold" data-testid="lens-pathway-recommended">Level {rating} Recommendation</span>}
-            {onChoose && <label className="ml-auto flex items-center gap-1 text-xs"><input type="radio" checked={active === p.key} onChange={() => onChoose(p.key)} data-testid={`lens-pathway-pick-${p.key}`} /> Select</label>}
+            <strong>{i + 1}. {p.name} <span className="font-normal text-muted-foreground">({p.levels})</span></strong>
+            {recommended === p.key && rating && <span className="rounded-full bg-brand-purple/10 px-2 py-0.5 text-[10px] font-bold text-brand-purple" data-testid="lens-pathway-recommended">Level {rating} suggestion</span>}
+            {on && !onToggle && <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold">Selected</span>}
+            {onToggle && <label className="ml-auto flex items-center gap-1 text-xs"><input type="checkbox" checked={on} onChange={() => onToggle(p.key)} data-testid={`lens-pathway-pick-${p.key}`} /> Select</label>}
           </div>
           <p className="text-muted-foreground mt-1">{p.desc}</p>
         </li>
-      ))}
+        );
+      })}
     </ol>
   );
 }
