@@ -905,6 +905,29 @@ def _statement_framework(pdf: FPDF, fw: dict) -> None:
     pdf.ln(2)
 
 
+def _statement_compare(pdf: FPDF, cmp: dict | None) -> None:
+    """Previous vs. current submission: ability level, 1–10 ratings and growth areas met."""
+    if not cmp or not cmp.get("prev"):
+        return
+    prev, cur = cmp["prev"], cmp["cur"]
+    def rating(h, k): return (h.get("ratings") or {}).get(k)
+    def growth(h, k): g = (h.get("growth") or {}).get(k); return f"{g['met']}/{g['total']}" if g and g.get("total") else None
+    def delta(a, b): return "—" if a is None or b is None else (f"+{b - a}" if b > a else str(b - a) if b < a else "0")
+    def gnum(h, k): g = (h.get("growth") or {}).get(k); return g["met"] if g and g.get("total") else None
+    rows = [["Ability level (1–10)", prev.get("score"), cur.get("score"), delta(prev.get("score"), cur.get("score"))]]
+    for k, lbl in (("parent_a", "Parent A rating"), ("parent_b", "Parent B rating"), ("joint", "Joint rating")):
+        rows.append([lbl, rating(prev, k), rating(cur, k), delta(rating(prev, k), rating(cur, k))])
+    for k, lbl in (("a", "Parent A growth areas met"), ("b", "Parent B growth areas met")):
+        rows.append([lbl, growth(prev, k), growth(cur, k), delta(gnum(prev, k), gnum(cur, k))])
+    _label(pdf, "REASSESSMENT COMPARISON — PREVIOUS vs. CURRENT SUBMISSION")
+    _lens_table(pdf, ["Measure", f"v{prev.get('version')} · {str(prev.get('at') or '')[:10]}", f"v{cur.get('version')} · {str(cur.get('at') or '')[:10]}", "Change"],
+                [[r[0], "—" if r[1] is None else str(r[1]), "—" if r[2] is None else str(r[2]), r[3]] for r in rows], [70, 40, 40, 24])
+    if cur.get("note"):
+        _body(pdf, f"Professional's note on the change: {cur['note']}", italic=True)
+    _body(pdf, "Ratings and growth status are the professional's assessments frozen with each submission — not court findings.", italic=True)
+    pdf.ln(2)
+
+
 def _statement_level_history(pdf: FPDF, hist: list) -> None:
     """Prior submitted versions' Ability Levels (progress over time)."""
     rows = [h for h in hist if h.get("score")]
@@ -954,6 +977,7 @@ def build_professional_statement_pdf(p: dict) -> bytes:
     if st.get("framework"):
         _statement_framework(pdf, {**st["framework"], "level_change_note": (f"Level {st['level_changed_from']} → {st['framework']['score']}: {st['level_change_note']}" if st.get("level_changed_from") and st.get("level_change_note") else "")})
         _statement_level_history(pdf, p.get("level_history") or [])
+        _statement_compare(pdf, p.get("compare"))
     _label(pdf, "6. PARENT ALIGNMENT — BASED ON JOINT REPORT")
     _body(pdf, "Where the parents are aligned, where they are not, and which unresolved issues may require additional professional support or conflict-management intervention.", italic=True)
     _stmt_text(pdf, "Where the parents agree / are aligned", st.get("alignment_areas"), required=True)

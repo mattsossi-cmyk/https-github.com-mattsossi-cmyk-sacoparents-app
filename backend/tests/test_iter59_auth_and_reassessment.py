@@ -389,3 +389,15 @@ def test_reassessment_compare_shape_matches_frontend(compare_flow):
     # looks up r.a / r.b. Only the Ability Level row and Joint row + growth rows
     # will populate. This is a FRONTEND BUG (data-testid=compare-row-a / -b).
     assert "a" not in r, "backend now uses 'a' key - update ReassessmentCompare test"
+
+
+def test_frozen_submission_pdf_contains_reassessment_comparison(compare_flow):
+    import pymupdf
+    judge, case_ref = compare_flow["judge"], compare_flow["case_ref"]
+    body = judge.get(f"{API}/court-dashboard/cases/{case_ref}").json()
+    pid = body["statement"]["packet_id"]
+    r = judge.get(f"{API}/court-dashboard/packets/{pid}/pdf")
+    assert r.status_code == 200, r.text
+    text = "".join(p.get_text() for p in pymupdf.open(stream=r.content, filetype="pdf"))
+    assert "REASSESSMENT COMPARISON" in text
+    assert "Parent A rating" in text and "+2" in text

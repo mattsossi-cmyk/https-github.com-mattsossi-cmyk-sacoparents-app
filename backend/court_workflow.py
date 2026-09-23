@@ -687,12 +687,25 @@ def _statement_payload(doc: dict, user: dict, lens: dict | None, packets: list, 
             "court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
 
 
-def _statement_pdf_bytes(doc: dict, pro: dict) -> bytes:
+def _statement_pdf_bytes(doc: dict, pro: dict, compare: dict | None = None) -> bytes:
     subs = doc.get("court_submissions") or []
     hist = [{"version": s["version"], "at": s.get("submitted_at"), "score": s.get("level_score"), "label": s.get("level_label"), "note": s.get("level_change_note"), "changed_from": s.get("level_changed_from")} for s in subs]
-    return build_professional_statement_pdf({"professional": pro, "statement": doc.get("professional_statement") or {}, "court": doc.get("court") or {}, "findings": joint_findings(doc), "level_history": hist,
+    return build_professional_statement_pdf({"professional": pro, "statement": doc.get("professional_statement") or {}, "court": doc.get("court") or {}, "findings": joint_findings(doc), "level_history": hist, "compare": compare,
                                              "case_code": doc.get("case_code"), "subject_label": doc.get("subject_label"), "child_name": doc.get("child_name"),
                                              "attestation_text": STATEMENT_ATTESTATION, "date": _iso(_now())[:10]})
+
+
+async def _compare_rows(db, doc: dict, legal_summary: dict | None) -> dict | None:
+    """Previous frozen submission vs. the submission being built (same shape as level_history rows)."""
+    from coparenting_tiers import _growth_progress, _ratings
+    packets = await db.court_packets.find({"report_id": doc["id"], "frozen": True}, {"_id": 0, "submission_version": 1, "created_at": 1, "statement": 1, "legal_summary": 1}).to_list(100)
+    hist = level_history(packets)
+    if not hist:
+        return None
+    st = doc.get("professional_statement") or {}
+    cur = {"version": len(hist) + 1, "at": _iso(_now()), "score": (st.get("framework") or {}).get("score"), "note": st.get("level_change_note") or "",
+           "ratings": _ratings(legal_summary), "growth": _growth_progress(legal_summary)}
+    return {"prev": hist[-1], "cur": cur}
 
 
 async def _submission_pdfs(db, doc: dict, pro: dict, app_url, include_legal: bool) -> tuple[bytes, bytes, bytes | None, dict | None]:
@@ -700,7 +713,7 @@ async def _submission_pdfs(db, doc: dict, pro: dict, app_url, include_legal: boo
     joint_pdf = build_joint_pdf({**generate_joint_report(doc), "professional": {"name": pro["name"], "credentials_verified": pro["credentials_verified"]},
                                  "verify": {"case_code": doc.get("case_code"), "url": f"{app_url()}/verify?code={doc.get('case_code')}"}})
     legal_pdf, legal_summary = (await _legal_pdf_bytes(db, doc)) if include_legal else (None, None)
-    return joint_pdf, _statement_pdf_bytes(doc, pro), legal_pdf, legal_summary
+    return joint_pdf, _statement_pdf_bytes(doc, pro, await _compare_rows(db, doc, legal_summary)), legal_pdf, legal_summary
 
 
 async def _persist_submission(db, s: Submission, doc: dict, combined: bytes, legal_pdf: bytes | None) -> dict:
