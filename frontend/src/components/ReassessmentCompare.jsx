@@ -27,11 +27,11 @@ export function ReassessmentCompare({ history = [], names = {} }) {
     <div className="rounded-lg border border-brand-purple/30 bg-white p-4" data-testid="reassessment-compare">
       <p className="text-xs font-bold uppercase tracking-widest text-brand-purple">Reassessment comparison — previous vs. current submission</p>
       <div className="mt-2 overflow-x-auto"><table className="w-full border-collapse text-sm">
-        <thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1 pr-2"></th><th className="py-1 pr-2" data-testid="compare-prev-head">v{prev.version} · {prev.at?.slice(0, 10)}</th><th className="py-1 pr-2" data-testid="compare-cur-head">v{cur.version} · {cur.at?.slice(0, 10)}</th><th className="py-1">Change</th></tr></thead>
-        <tbody>{metrics.map(([label, get, key, fmt]) => (
-          <tr key={key} className="border-t border-border" data-testid={`compare-row-${key}`}>
-            <td className="py-1.5 pr-2 font-medium">{label}</td><td className="py-1.5 pr-2">{show(prev, get, fmt)}</td><td className="py-1.5 pr-2 font-semibold">{show(cur, get, fmt)}</td>
-            <td className="py-1.5"><Delta prev={get(prev)} cur={get(cur)} testId={`compare-delta-${key}`} /></td>
+        <thead><tr className="bg-brand-purple/10 text-left text-xs text-brand-purple"><th className="border border-border p-2">Measure</th><th className="border border-border p-2" data-testid="compare-prev-head">v{prev.version} · {prev.at?.slice(0, 10)}</th><th className="border border-border p-2" data-testid="compare-cur-head">v{cur.version} · {cur.at?.slice(0, 10)}</th><th className="border border-border p-2">Change</th></tr></thead>
+        <tbody>{metrics.map(([label, get, key, fmt], i) => (
+          <tr key={key} className={i % 2 ? "bg-secondary/40" : ""} data-testid={`compare-row-${key}`}>
+            <td className="border border-border p-2 font-medium">{label}</td><td className="border border-border p-2">{show(prev, get, fmt)}</td><td className="border border-border p-2 font-semibold">{show(cur, get, fmt)}</td>
+            <td className="border border-border p-2"><Delta prev={get(prev)} cur={get(cur)} testId={`compare-delta-${key}`} /></td>
           </tr>))}</tbody>
       </table></div>
       {cur.note && <p className="mt-2 text-[11px] italic text-muted-foreground" data-testid="compare-note">Professional's note on the change: {cur.note}</p>}

@@ -1043,15 +1043,19 @@ def _prep_checkbox(pdf: FPDF, text: str) -> None:
 
 
 def _legal_kv(pdf: FPDF, rows: list) -> None:
+    rows = [(k, v) for k, v in rows if v]
+    if not rows:
+        return
+    pdf.set_font(FONT, "B", 9.5)
+    label_w = min(80, max(42, max(pdf.get_string_width(_s(k)) for k, _ in rows) + 4))
     for k, v in rows:
-        if not v:
-            continue
         pdf.set_font(FONT, "B", 9.5)
         pdf.set_text_color(*DARK)
-        pdf.cell(42, 5.5, _s(k))
+        pdf.cell(label_w, 5.5, _s(k))
         pdf.set_font(FONT, "", 9.5)
         pdf.set_text_color(*BODY)
         pdf.multi_cell(0, 5.5, _s(str(v)), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
 
 
 def _lens_heading(pdf: FPDF, text: str) -> None:
@@ -1178,7 +1182,7 @@ def build_legal_lens_pdf(v: dict) -> bytes:
     pdf.cell(0, 6, "SA CoParents Align", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font(FONT, "B", 17)
     pdf.set_text_color(*PURPLE)
-    pdf.multi_cell(0, 8, "SA CoParents Align Professional Evaluation Report", new_x="LMARGIN", new_y="NEXT")
+    pdf.multi_cell(0, 8, "SA CoParents Align — Professional Alignment Report", new_x="LMARGIN", new_y="NEXT")
     pdf.set_draw_color(*PURPLE)
     pdf.set_line_width(0.6)
     pdf.line(pdf.l_margin, pdf.get_y() + 1, pdf.w - pdf.r_margin, pdf.get_y() + 1)
@@ -1409,7 +1413,7 @@ def build_communications_log_pdf(r: dict) -> bytes:
     pdf.ln(3)
     widths = (34, 40, 66, 34)
     pdf.set_font(FONT, "B", 8.5)
-    pdf.set_fill_color(240, 236, 246)
+    pdf.set_fill_color(243, 238, 250)
     pdf.set_text_color(*PURPLE)
     for w, h in zip(widths, ("Sent (UTC)", "Type", "Subject", "Recipient")):
         pdf.cell(w, 6, h, border="B", fill=True)

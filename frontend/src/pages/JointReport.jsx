@@ -263,7 +263,7 @@ export default function JointReport() {
             <Section num={5} title="Alignment Map" testId="jr-map">
               <table className="w-full text-sm border border-border rounded-lg overflow-hidden" data-testid="jr-map-table">
                 <thead>
-                  <tr className="bg-muted/60 text-left">
+                  <tr className="bg-brand-purple/10 text-left text-brand-purple">
                     <th className="px-4 py-3 font-semibold">Subject</th>
                     <th className="px-4 py-3 font-semibold">Alignment</th>
                   </tr>

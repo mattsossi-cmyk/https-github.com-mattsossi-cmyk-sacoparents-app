@@ -102,7 +102,7 @@ export default function CompleteReport() {
                       <h3 className="font-display text-xl font-semibold mb-3 text-align-blue">Different Perspectives</h3>
                       <div className="overflow-x-auto mb-8">
                         <table className="w-full text-sm border border-border rounded-lg overflow-hidden">
-                          <thead><tr className="bg-muted/60 text-left"><th className="px-4 py-3 font-semibold">Issue</th><th className="px-4 py-3 font-semibold">Parent A</th><th className="px-4 py-3 font-semibold">Parent B</th></tr></thead>
+                          <thead><tr className="bg-brand-purple/10 text-left text-brand-purple"><th className="px-4 py-3 font-semibold">Issue</th><th className="px-4 py-3 font-semibold">Parent A</th><th className="px-4 py-3 font-semibold">Parent B</th></tr></thead>
                           <tbody>
                             {s.differences.map((d, j) => (
                               <tr key={j} className="border-t border-border">

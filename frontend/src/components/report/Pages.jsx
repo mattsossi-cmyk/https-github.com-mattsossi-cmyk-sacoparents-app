@@ -130,7 +130,7 @@ function Page4({ r }) {
         <div className="overflow-x-auto mb-8" data-testid="differences-table-wrapper">
           <table className="w-full text-sm border border-border rounded-lg overflow-hidden" data-testid="differences-table">
             <thead>
-              <tr className="bg-muted/60 text-left">
+              <tr className="bg-brand-purple/10 text-left text-brand-purple">
                 <th className="px-4 py-3 font-semibold">Child Issue</th>
                 <th className="px-4 py-3 font-semibold">{r.parent_a_name}</th>
                 <th className="px-4 py-3 font-semibold">{r.parent_b_name}</th>

@@ -45,7 +45,7 @@ export function CompareView({ report, onOpenReport }) {
       <div className="mt-6 overflow-x-auto">
         <table className="w-full text-sm" data-testid="compare-table">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+            <tr className="bg-brand-purple/10 text-left text-xs uppercase tracking-wider text-brand-purple">
               <th className="py-2 pr-3 w-44">Area</th>
               <th className="py-2 pr-3">{report.parent_a_name}</th>
               <th className="py-2 pr-3">{report.parent_b_name}</th>
