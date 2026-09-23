@@ -1143,7 +1143,7 @@ def _lens_scale(pdf: FPDF, scale: list, cls: dict, rep: dict) -> None:
 
 def build_legal_lens_pdf(v: dict) -> bytes:
     """SA CoParents Align Professional Evaluation Report — court-ready PDF (7 sections + certification)."""
-    from lens_data import CHILD_FOCUS_CATEGORIES, CONFLICT_GUIDANCE, PATHWAYS, RISK_CATEGORIES, SCALE_TABLE
+    from lens_data import CHILD_FOCUS_CATEGORIES, CONFLICT_GUIDANCE, PATHWAYS, RISK_CATEGORIES, SCALE_TABLE, SAFETY_PATHWAY, REPORT_DISCLAIMER
     rep, c, cls, notes = v["report"], v["case"], v["classification"], v["notes"]
     pdf = _new_pdf()
     pdf.footer_meta = f"{notes['tagline']} · Case {c.get('case_code') or ''} · {rep.get('professional_name') or ''} · {rep.get('report_date') or ''}"
@@ -1177,6 +1177,7 @@ def build_legal_lens_pdf(v: dict) -> bytes:
     _body(pdf, notes["safety"], italic=True)
     pdf.add_page()
     _lens_heading(pdf, "2. Individual Parent Perspectives")
+    _body(pdf, "[PARENT-REPORTED INFORMATION]", italic=True)
     _body(pdf, "Parent A and Parent B are presented separately and neutrally. PARENT-REPORTED INFORMATION is summarized by the professional; no determination is made about which account is correct.", italic=True)
     _lens_parent(pdf, rep.get("parent_a_name") or "Parent A", rep, "a", cls["parent_a"])
     _lens_parent(pdf, rep.get("parent_b_name") or "Parent B", rep, "b", cls["parent_b"])
@@ -1186,6 +1187,7 @@ def build_legal_lens_pdf(v: dict) -> bytes:
     j = cls["joint"]
     pdf.add_page()
     _lens_heading(pdf, "3. Joint Assessment Findings")
+    _body(pdf, "[SYSTEM-GENERATED COMPARISON — reviewed by the professional]", italic=True)
     _legal_kv(pdf, [("Joint rating", f"Level {rep.get('joint_rating')} — {j['mode']} Mode — {j['label']}" if j and rep.get("joint_rating") else "Not yet rated")])
     _stmt_text(pdf, "Areas of alignment", rep.get("alignment_agreements") or rep.get("joint_strengths"))
     _stmt_text(pdf, "Areas of partial alignment", rep.get("partial_alignment"))
@@ -1212,8 +1214,10 @@ def build_legal_lens_pdf(v: dict) -> bytes:
         _body(pdf, f"{n}. {p['name']}{mark}{hint}: {p['desc']}", indent=2)
     _stmt_text(pdf, "Why these pathways are relevant to the issues identified", rep.get("pathway_rationale") or rep.get("conflict_management_rationale"), required=True)
     _stmt_list(pdf, "Guidance by type of conflict", [f"{t}: {d}" for t, d in CONFLICT_GUIDANCE])
+    _stmt_text(pdf, f"[SEPARATE SAFETY PATHWAY] {SAFETY_PATHWAY[0]}", SAFETY_PATHWAY[1])
     _body(pdf, notes["rating"], italic=True)
     _lens_heading(pdf, "7. Professional Statement")
+    _body(pdf, "[PROFESSIONAL OBSERVATION]", italic=True)
     _body(pdf, "The professional's own observations, interpretation, recommendations and conclusions — distinct from parent-reported information, individual responses, joint comparisons and any system- or AI-generated summary. The professional remains responsible for the judgment in this section.", italic=True)
     _stmt_text(pdf, "Professional statement", rep.get("professional_summary"), required=True)
     _stmt_list(pdf, "Short-Term Goals (Next 30 to 90 Days)", [g.strip() for g in (rep.get("short_term_goals") or "").split("\n") if g.strip()], "Not yet entered.")
@@ -1223,7 +1227,10 @@ def build_legal_lens_pdf(v: dict) -> bytes:
     _stmt_text(pdf, "When Score Drops", rep.get("reassess_down"))
     _legal_kv(pdf, [("Next review / reassessment", rep.get("next_review_date"))])
     _stmt_list(pdf, "Report principle", notes.get("principle") or [])
+    _lens_heading(pdf, "8. Concise Court / Referral Summary")
+    _stmt_text(pdf, "Professional summary for the court, referring professional, mediator or other authorized recipient", rep.get("court_summary_text"), required=True)
     _lens_heading(pdf, "Professional Certification")
+    _body(pdf, "Important: " + REPORT_DISCLAIMER, italic=True)
     _body(pdf, "This report reflects the professional's review of the individual assessments, safety screenings and Joint Report. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.", italic=True)
     _legal_kv(pdf, [("Professional signature", rep.get("signature_name")), ("Title", rep.get("professional_title")), ("Date finalized", (rep.get("finalized_at") or "")[:10])])
     _lens_ai_appendix(pdf, rep)

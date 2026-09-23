@@ -11,6 +11,7 @@ export const TOUR_STEPS = [
   { id: "sample-lens-s5", title: "5. Options & Resources", tip: "Practical tools: BIFF, OurFamilyWizard / tone tools, the SA CoParents Communication Coach, Children in the Middle, parenting education, counseling and subject-matter consultation. One click adds a provider from the admin directory with contact details." },
   { id: "sample-lens-s7", title: "6. Conflict Resolution Pathways", tip: "Twelve pathways from direct structured discussion to court determination — multi-select. The level suggestion is only a hint; the professional must explain why the chosen pathways fit the type of conflict (communication-based, defined disagreement, subject-matter, persistent high conflict, safety)." },
   { id: "sample-lens-s8", title: "7. Professional Statement", tip: "The professional's own judgment — distinct from parent-reported information and AI/system summaries — plus short/long-term goals, reassessment interval and certification. Finalizing locks the report; only a finalized report can be included in a frozen court submission." },
+  { id: "sample-lens-s9", title: "8. Concise Court / Referral Summary", tip: "A 1–3 paragraph summary for the court, referring professional or mediator — the only narrative that travels into the judge's frozen-submission summary alongside the ratings, pathways and child-focused issues. Certification, signature lines and the disclaimer follow." },
 ];
 
 const rectOf = (id) => document.querySelector(`[data-testid="${id}"]`)?.getBoundingClientRect();

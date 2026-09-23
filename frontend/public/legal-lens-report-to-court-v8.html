@@ -1,83 +1,43 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SA CoParents Align — Legal Lens Review and Report to Court (v8)</title>
-<style>
-  :root { --purple:#5B2A86; --ink:#1f1f1f; --muted:#6b6b6b; --line:#d9d4e3; }
-  body { font-family: "Work Sans", Georgia, serif; color: var(--ink); max-width: 860px; margin: 40px auto; padding: 0 24px; line-height: 1.5; }
-  header { border-bottom: 3px solid var(--purple); padding-bottom: 12px; margin-bottom: 24px; }
-  header h1 { margin: 0; color: var(--purple); font-size: 26px; }
-  header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
-  h2 { color: var(--purple); font-size: 17px; margin: 32px 0 8px; border-left: 4px solid var(--purple); padding-left: 10px; }
-  .section-note { font-size: 13px; color: var(--muted); margin: 0 0 12px; font-style: italic; }
-  .field { margin: 12px 0; }
-  .field label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-  .field textarea, .field input { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 6px; padding: 10px; font: inherit; font-size: 14px; min-height: 96px; }
-  .field input { min-height: 0; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .scale { display: flex; align-items: center; gap: 12px; }
-  .scale input[type=range] { flex: 1; }
-  .attest { background: #f6f2fb; border: 1px solid var(--line); border-radius: 8px; padding: 14px; font-size: 14px; }
-  footer { margin-top: 40px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
-  @media print { textarea { border: none; resize: none; } .noprint { display: none; } }
-</style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SA CoParents Align | Professional Report</title>
+<style>:root{--purple:#6f42c1;--purple-dark:#4f2d8c;--purple-light:#f3effb;--purple-soft:#e7dcf7;--green:#2f855a;--green-light:#edf8f2;--orange:#c56a18;--orange-light:#fff4e8;--red:#b42318;--red-light:#fff1f0;--blue:#2563a6;--blue-light:#eef6ff;--gray-900:#1f2937;--gray-700:#4b5563;--gray-500:#6b7280;--gray-300:#d1d5db;--gray-200:#e5e7eb;--gray-100:#f7f7f8;--white:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--gray-900);background:#f4f3f7;line-height:1.55}
+.toolbar{position:sticky;top:0;z-index:10;display:flex;justify-content:flex-end;gap:10px;padding:12px 20px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--gray-200)}
+.btn{border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer}.btn-primary{background:var(--purple);color:#fff}.btn-secondary{background:#fff;color:var(--purple);border:1px solid var(--purple)}
+.report{width:min(1000px,calc(100% - 30px));margin:26px auto 60px;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.08)}
+.header{background:linear-gradient(135deg,var(--purple-dark),var(--purple));color:#fff;padding:36px 42px}.brand{font-size:15px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;opacity:.9}.header h1{margin:8px 0 4px;font-size:32px}.header p{margin:0;max-width:720px;opacity:.92}
+.content{padding:34px 42px 50px}.notice{background:var(--purple-light);border-left:5px solid var(--purple);padding:16px 18px;margin-bottom:26px;border-radius:6px}.notice strong{color:var(--purple-dark)}
+.meta-grid,.two-column,.three-column{display:grid;gap:16px}.meta-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:28px}.two-column{grid-template-columns:repeat(2,minmax(0,1fr))}.three-column{grid-template-columns:repeat(3,minmax(0,1fr))}
+.field{border:1px solid var(--gray-200);border-radius:8px;padding:12px 14px;background:var(--gray-100)}.field-label{display:block;font-size:12px;text-transform:uppercase;color:var(--gray-500);font-weight:700;letter-spacing:.04em;margin-bottom:4px}.field-value{min-height:20px;font-size:15px;font-weight:600}
+.section{margin-top:34px}.section-header{display:flex;gap:12px;align-items:center;padding-bottom:10px;border-bottom:2px solid var(--purple-soft);margin-bottom:18px}.section-number{width:34px;height:34px;display:grid;place-items:center;background:var(--purple);color:#fff;border-radius:50%;font-weight:700;flex:0 0 auto}.section h2{margin:0;color:var(--purple-dark);font-size:22px}.section-intro{color:var(--gray-700);margin:-6px 0 16px}
+.source-tag{display:inline-block;padding:4px 8px;margin-bottom:8px;font-size:11px;font-weight:700;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}.source-parent{background:var(--blue-light);color:var(--blue)}.source-system{background:var(--purple-light);color:var(--purple-dark)}.source-professional{background:var(--green-light);color:var(--green)}.source-safety{background:var(--red-light);color:var(--red)}
+.card{border:1px solid var(--gray-200);border-radius:10px;padding:18px;margin-bottom:14px;background:#fff}.card h3{margin:0 0 8px;font-size:17px}.card p{margin:6px 0}.muted{color:var(--gray-500)}
+.alignment-box{border:2px solid var(--purple-soft);background:var(--purple-light);border-radius:12px;padding:20px;margin-bottom:18px}.alignment-level{font-size:24px;font-weight:800;color:var(--purple-dark);margin-bottom:6px}
+.status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}.status{padding:14px;border-radius:8px;border:1px solid var(--gray-200)}.status strong{display:block;margin-bottom:5px}.aligned{background:var(--green-light)}.partial{background:var(--orange-light)}.different{background:var(--red-light)}
+.safety{border:2px solid #f1aaa5;background:var(--red-light)}.safety h3{color:var(--red)}
+.resource-list{display:grid;gap:10px}.resource{padding:14px;border-radius:8px;border:1px solid var(--gray-200)}.resource-title{font-weight:800;color:var(--purple-dark)}.resource-purpose{color:var(--gray-700);font-size:14px;margin-top:4px}
+.resolution-path{padding:14px 16px;border-left:5px solid var(--purple);background:var(--purple-light);margin-bottom:12px}.resolution-path strong{color:var(--purple-dark)}
+textarea,input,select{width:100%;font:inherit;border:1px solid var(--gray-300);border-radius:7px;padding:10px 12px;background:#fff}textarea{min-height:110px;resize:vertical}.editable-box{margin-top:10px}
+.court-summary{border:2px solid var(--purple);border-radius:10px;padding:22px;margin-top:20px}.court-summary h3{color:var(--purple-dark);margin-top:0}
+.disclaimer{margin-top:35px;padding:16px;background:var(--gray-100);border-radius:8px;color:var(--gray-700);font-size:13px}
+.signature{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px}.signature-line{border-top:1px solid var(--gray-700);padding-top:7px;color:var(--gray-500);margin-top:35px}
+.footer{background:var(--gray-100);text-align:center;padding:18px;color:var(--gray-500);font-size:12px}
+@media (max-width:760px){.content,.header{padding-left:22px;padding-right:22px}.meta-grid,.two-column,.three-column,.status-grid,.signature{grid-template-columns:1fr}}
+@media print{body{background:#fff}.toolbar{display:none}.report{width:100%;margin:0;box-shadow:none}textarea,input,select{border:none;padding-left:0}.section,.card,.court-summary,.alignment-box{break-inside:avoid}}</style>
 </head>
 <body>
-<header>
-  <h1>Legal Lens Review and Report to Court</h1>
-  <p>SA CoParents Align · Professional Report (v8) · Visible to the professional and the court only — never to the parents.</p>
-</header>
-<form>
-  <h2>1. Case &amp; Referral</h2>
-  <div class="grid">
-    <div class="field"><label>Court</label><input name="courtName" /></div>
-    <div class="field"><label>Cause Number</label><input name="causeNumber" /></div>
-    <div class="field"><label>Align Case ID</label><input name="caseCode" placeholder="SA-YY-PFX-XXXXXX" /></div>
-    <div class="field"><label>Professional Role</label><input name="role" placeholder="Mediator, Parenting Facilitator, Amicus Attorney…" /></div>
-  </div>
-  <div class="field"><label>Role and Basis of Involvement</label><textarea name="roleBasis" placeholder="How you came to facilitate this matter (court referral, appointment, parties' agreement) and your professional role."></textarea></div>
-
-  <h2>2. Materials Reviewed</h2>
-  <div class="field"><label>Materials</label><textarea name="materialsReviewed" placeholder="Parent A Assessment · Parent B Assessment · Joint Report · Educational / Medical / Psychological Assessment · Co-Parenting Agreement · Safety Assessment"></textarea></div>
-
-  <h2>3. Process Completed by the Parents</h2>
-  <div class="field"><label>Process Summary</label><textarea name="processSummary" placeholder="What each parent completed independently and how the Joint Alignment Report was produced."></textarea></div>
-
-  <h2>4. Joint Assessment Findings</h2>
-  <p class="section-note">Infused from the Joint Alignment Report. Differences are listed by area only; neither parent's individual responses appear here.</p>
-  <div class="field"><label>Areas of Alignment</label><textarea name="findingsAlignment"></textarea></div>
-  <div class="field"><label>Differences in Perspective (by area)</label><textarea name="findingsDifferences"></textarea></div>
-  <div class="field"><label>Child-Focused Considerations</label><textarea name="findingsChildFocused"></textarea></div>
-
-  <h2>5. Co-Parenting Ability Level</h2>
-  <p class="section-note">1–3 High Risk / IPV / Severe Conflict · 4–6 Moderate Conflict / Low Trust · 7–10 Collaborative Co-Parenting. Neutral, data-informed; not a finding about either parent.</p>
-  <div class="scale"><span>1 High conflict</span><input type="range" name="dynamicScore" min="1" max="10" value="5" /><span>10 Collaborative</span></div>
-  <div class="field"><label>Reason for change since last submission (if the level changed)</label><input name="levelChangeNote" maxlength="300" placeholder="Neutral one-line reason for the court." /></div>
-
-  <h2>6. Parent Alignment — Based on Joint Report</h2>
-  <p class="section-note">Use the Joint Report to identify where the parents are aligned, where they are not aligned, and which unresolved issues may require additional professional support or conflict-management intervention.</p>
-  <div class="field"><label>Where the Parents Agree / Are Aligned</label><textarea name="alignmentAgreements" placeholder="Identify shared priorities, agreements, common child-focused goals, parenting practices, schedules, educational or medical decisions, communication expectations, and other areas of alignment reflected in the Joint Report."></textarea></div>
-  <div class="field"><label>Where the Parents Do Not Agree / Are Not Aligned</label><textarea name="alignmentDisagreements" placeholder="Identify unresolved issues, differing priorities or positions, parenting-plan disagreements, communication concerns, educational or medical differences, and other areas of non-alignment reflected in the Joint Report."></textarea></div>
-  <div class="field"><label>Partial Alignment / Potential Areas for Agreement</label><textarea name="partialAlignment" placeholder="Identify areas where the parents share some common ground and further discussion, professional guidance, or mediation may help produce agreement."></textarea></div>
-  <div class="field"><label>Professional Alignment Summary</label><textarea name="alignmentSummary" placeholder="Summarize the significant areas of agreement and disagreement, their relationship to the child's needs, and issues that may need further resolution."></textarea></div>
-
-  <h2>7. Conflict Management — Approaches to Conflict</h2>
-  <div class="field"><label>Options &amp; Resources (calibrated to the Ability Level)</label><textarea name="optionsResources"></textarea></div>
-  <div class="field"><label>Conflict-Management Techniques</label><textarea name="techniques"></textarea></div>
-  <div class="field"><label>Resources / Interventions Considered</label><textarea name="resourcesConsidered"></textarea></div>
-  <div class="field"><label>Safety Considerations (optional)</label><textarea name="safetyConsiderations" placeholder="Neutral process notes only."></textarea></div>
-
-  <h2>8. Roadmap</h2>
-  <div class="field"><label>Current Status</label><textarea name="currentStatus"></textarea></div>
-  <div class="field"><label>Recommended Next Steps for Facilitation</label><textarea name="nextSteps" placeholder="Facilitation steps only — no recommendations about conservatorship or possession."></textarea></div>
-
-  <h2>9. Professional Summary</h2>
-  <div class="field"><label>Professional Observations</label><textarea name="observations"></textarea></div>
-  <div class="attest">I attest that this Professional Report reflects my professional observations of the facilitation process, that it contains no recommendation regarding conservatorship or possession, and that I have authority to submit it to the court.</div>
-  <p class="noprint"><button type="button" onclick="window.print()">Print / Save as PDF</button></p>
-</form>
-<footer>© 2026 sacoparentsalign.com · SA CoParents Align. All rights reserved. · Template v8 — the in-app Professional Report at /joint/&lt;case&gt; is the system of record.</footer>
+<div class="toolbar"><button class="btn btn-secondary" onclick="window.scrollTo({top:0,behavior:'smooth'})">Top</button><button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button></div>
+<main class="report">
+<header class="header"><div class="brand">SA CoParents Align</div><h1>Professional Alignment Report</h1><p>A structured review of individual and joint parent assessments, child-focused concerns, areas of alignment and difference, available resources, and potential conflict-resolution pathways.</p></header>
+<div class="content">
+<div class="notice"><strong>Report Principle:</strong> Parent statements, system-generated comparisons, AI-assisted summaries, and professional observations are identified separately so the source of each statement remains clear.</div>
+<div class="meta-grid"><div class="field"><span class="field-label">Case ID</span><div class="field-value">SAC-2026-0001</div></div><div class="field"><span class="field-label">Report Date</span><div class="field-value">September 23, 2026</div></div><div class="field"><span class="field-label">Parent A</span><div class="field-value">Parent A</div></div><div class="field"><span class="field-label">Parent B</span><div class="field-value">Parent B</div></div><div class="field"><span class="field-label">Professional</span><div class="field-value">Professional Name / Credential</div></div><div class="field"><span class="field-label">Professional Role</span><div class="field-value">Therapist / Attorney / Mediator / Parent Facilitator / Other</div></div></div><section class="section"><div class="section-header"><div class="section-number">1</div><h2>Case &amp; Assessment Overview</h2></div><p class="section-intro">Identifies the assessments completed and information available for professional review.</p><div class="three-column"><div class="card "><h3>Parent A</h3><p>✓ Co-Parenting Assessment</p><p>✓ Foundation Statement</p><p>✓ Focused Assessment, if applicable</p></div><div class="card "><h3>Parent B</h3><p>✓ Co-Parenting Assessment</p><p>✓ Foundation Statement</p><p>✓ Focused Assessment, if applicable</p></div><div class="card "><h3>Joint Information</h3><p>✓ Joint Assessment Comparison</p><p>✓ Areas of Alignment</p><p>✓ Areas of Difference</p></div></div></section><section class="section"><div class="section-header"><div class="section-number">2</div><h2>Individual Parent Perspectives</h2></div><p class="section-intro">Each parent's perspective is summarized independently and neutrally.</p><div class="two-column"><div class="card"><span class="source-tag source-parent">Parent-Reported Information</span><h3>Parent A Perspective</h3><p>Parent A identifies the following concerns, goals, and priorities regarding the child and co-parenting relationship.</p><div class="editable-box"><textarea placeholder="Parent A summary..."></textarea></div></div><div class="card"><span class="source-tag source-parent">Parent-Reported Information</span><h3>Parent B Perspective</h3><p>Parent B identifies the following concerns, goals, and priorities regarding the child and co-parenting relationship.</p><div class="editable-box"><textarea placeholder="Parent B summary..."></textarea></div></div></div></section><section class="section"><div class="section-header"><div class="section-number">3</div><h2>Joint Assessment Findings</h2></div><span class="source-tag source-system">System-Generated Comparison</span><div class="alignment-box"><div class="alignment-level">Co-Parenting Alignment Level: Developing Alignment</div><p>The parents demonstrate identifiable areas of agreement, together with differences that may benefit from structured communication, clarification, or professional assistance.</p></div><div class="status-grid"><div class="status aligned"><strong>Areas of Alignment</strong>Parenting priorities, school participation, important routines, and identified child needs.</div><div class="status partial"><strong>Partial Alignment</strong>Communication expectations, schedule flexibility, and sharing of information.</div><div class="status different"><strong>Different Perspectives</strong>Decision-making process, conflict response, or selected parenting issues.</div></div></section><section class="section"><div class="section-header"><div class="section-number">4</div><h2>Child-Focused Issues</h2></div><p class="section-intro">Identified issues involving the child's educational, medical, psychological, developmental, scheduling, or communication needs.</p><div class="two-column"><div class="card "><h3>Educational</h3><textarea placeholder="School, ARD/IEP, tutoring, educational decisions..."></textarea></div><div class="card "><h3>Medical</h3><textarea placeholder="Providers, prescriptions, appointments, medical decisions..."></textarea></div><div class="card "><h3>Psychological / Emotional</h3><textarea placeholder="Therapy, emotional needs, treatment decisions..."></textarea></div><div class="card "><h3>Developmental / Other</h3><textarea placeholder="Developmental needs, activities, routines or other concerns..."></textarea></div></div></section><section class="section"><div class="section-header"><div class="section-number">5</div><h2>Options &amp; Resources</h2></div><p class="section-intro">Resources are presented as options for consideration. Selection should depend upon the needs of the family and the professional's independent judgment.</p><div class="resource-list"><div class="resource"><div class="resource-title">BIFF Communication</div><div class="resource-purpose">Brief, Informative, Friendly and Firm communication strategies for reducing escalation.</div></div><div class="resource"><div class="resource-title">SA CoParents Communication Coach</div><div class="resource-purpose">Helps parents prepare for conversations, identify the purpose of the discussion, and develop child-focused communication.</div></div><div class="resource"><div class="resource-title">Structured Co-Parent Communication Platform</div><div class="resource-purpose">Tools such as OurFamilyWizard or similar structured communication services may help organize information and communication.</div></div><div class="resource"><div class="resource-title">Children in the Middle / Parent Education</div><div class="resource-purpose">Educational resources may help parents understand the impact of parental conflict on children.</div></div><div class="resource"><div class="resource-title">Focused Assessment</div><div class="resource-purpose">Educational, medical, or psychological focused assessments may help clarify specific child-related disagreements.</div></div></div></section><section class="section"><div class="section-header"><div class="section-number">6</div><h2>Conflict Resolution</h2></div><p class="section-intro">What do the identified differences mean for resolving the dispute, and what process may help the parents address those differences?</p><div class="resolution-path"><strong>Parent Discussion / Agreement Building</strong><br>Appropriate where parents demonstrate substantial alignment and can address remaining differences directly.</div><div class="resolution-path"><strong>Structured Communication</strong><br>Consider where disagreement appears connected primarily to communication patterns rather than substantive parenting goals.</div><div class="resolution-path"><strong>Child-Focused Mediation</strong><br>May assist parents in examining differing perspectives through the child's developmental and practical needs.</div><div class="resolution-path"><strong>Traditional Mediation</strong><br>May assist where defined legal or parenting disputes are ready for negotiated resolution.</div><div class="resolution-path"><strong>Professional Consultation</strong><br>Educational, medical, mental-health, or other appropriate professional input may help narrow specific disagreements.</div><div class="resolution-path"><strong>Parent Facilitation / Parenting Coordination</strong><br>Where authorized and appropriate, structured professional involvement may assist with repeated implementation or communication disputes.</div><div class="card safety"><span class="source-tag source-safety">Separate Safety Pathway</span><h3>Family Violence / Safety Considerations</h3><p>Family-violence or safety concerns should not be treated simply as a higher level of ordinary co-parenting conflict.</p><p>Where identified, the case should follow the applicable SA CoParents safety assessment and safeguarding pathway.</p></div></section><section class="section"><div class="section-header"><div class="section-number">7</div><h2>Professional Statement</h2></div><span class="source-tag source-professional">Professional Observation</span><p>This section contains the reviewing professional's independent observations and is separate from parent-reported information and system-generated assessment comparisons.</p><textarea placeholder="Enter professional observations, interpretation of areas of alignment and difference, relevant resources, and considerations for conflict resolution..."></textarea></section><section class="section"><div class="section-header"><div class="section-number">8</div><h2>Concise Court / Referral Summary</h2></div><div class="court-summary"><h3>Professional Summary</h3><p>Both parents completed individual assessments and their responses were compared through the SA CoParents Align process.</p><p>The assessment identifies areas of alignment, partial alignment, and differing perspectives concerning the child's needs and the parents' co-parenting relationship.</p><textarea placeholder="Enter concise 1–3 paragraph summary for court, referring professional, mediator, or other authorized recipient..."></textarea></div></section><div class="signature"><div><div class="signature-line">Professional Name / Signature</div></div><div><div class="signature-line">Date</div></div></div><div class="disclaimer"><strong>Important:</strong> This report is designed to organize assessment information, identify areas of agreement and difference, and assist qualified professionals in considering appropriate options and resources. SA CoParents Align does not determine custody, diagnose a parent or child, make judicial findings, or substitute for the independent judgment of an attorney, therapist, mediator, court, or other qualified professional.</div>
+</div>
+<footer class="footer">SA CoParents Align • Starting With Alignment, Ending With Agreement</footer>
+</main>
 </body>
 </html>

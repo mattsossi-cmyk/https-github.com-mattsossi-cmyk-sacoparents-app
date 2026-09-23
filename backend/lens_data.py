@@ -64,19 +64,16 @@ RISK_LEVELS = ["Not assessed", "Low Risk", "Moderate Risk", "Moderate-to-High Ri
 SAFETY_ALERT = ("Important Safety Note: If high-risk IPV indicators are present, joint mediation, open messaging, and unmonitored contact are counter-indicated. "
                 "In these situations, court orders, supervised exchanges, or legal safety plans take priority over standard co-parenting goals.")
 PATHWAYS = [
-    {"key": "direct", "lo": 8, "hi": 10, "name": "Direct structured parent discussion", "levels": "Levels 8–10", "desc": "Parents resolve the issue themselves using agreed written structure and shared calendars on SA CoParents Align."},
-    {"key": "coach", "lo": 6, "hi": 10, "name": "SA CoParents Communication Coach", "levels": "Levels 6–10", "desc": "Tone-checked, BIFF-structured written communication before any escalation."},
-    {"key": "facilitation", "lo": 3, "hi": 5, "name": "Parent facilitation", "levels": "Levels 3–5", "desc": "Neutral professional resolves day-to-day bumps and models child-focused communication."},
-    {"key": "coordination", "lo": 2, "hi": 4, "name": "Parenting coordination", "levels": "Levels 2–4", "desc": "Structured, ongoing professional process for persistent disagreement about the parenting plan."},
-    {"key": "child_centered", "lo": 5, "hi": 9, "name": "Child-focused mediation", "levels": "Levels 5–9", "desc": "Mediation focused on one specific unresolved parenting issue and the child's needs."},
-    {"key": "mediation", "lo": 4, "hi": 7, "name": "Traditional mediation", "levels": "Levels 4–7", "desc": "Guided conversations to update parenting plans or schedules without court."},
-    {"key": "collaborative", "lo": 4, "hi": 8, "name": "Collaborative law", "levels": "Levels 4–8", "desc": "Attorney-supported, agreement-based process with a commitment to stay out of court."},
-    {"key": "therapist", "lo": 2, "hi": 7, "name": "Therapist-assisted or interdisciplinary resolution", "levels": "Levels 2–7", "desc": "Counseling-supported process where emotional or relational factors drive the dispute."},
-    {"key": "consult", "lo": 1, "hi": 10, "name": "Consultation with an educational, medical, or mental-health professional", "levels": "Any level", "desc": "Subject-matter input first, followed by mediation or another structured decision-making process."},
-    {"key": "expert", "lo": 1, "hi": 10, "name": "Use of an agreed neutral or subject-matter expert", "levels": "Any level", "desc": "Both parents accept one neutral expert's assessment of the disputed question."},
-    {"key": "attorney", "lo": 1, "hi": 4, "name": "Attorney-assisted negotiation", "levels": "Levels 1–4", "desc": "Counsel-to-counsel negotiation where direct or facilitated processes are not appropriate."},
-    {"key": "court", "lo": 1, "hi": 3, "name": "Court determination", "levels": "Levels 1–3", "desc": "When issues cannot appropriately be resolved through agreement, or a safety concern requires orders."},
+    {"key": "direct", "lo": 8, "hi": 10, "name": "Parent Discussion / Agreement Building", "levels": "Levels 8–10", "desc": "Appropriate where parents demonstrate substantial alignment and can address remaining differences directly."},
+    {"key": "coach", "lo": 6, "hi": 9, "name": "Structured Communication", "levels": "Levels 6–9", "desc": "Consider where disagreement appears connected primarily to communication patterns rather than substantive parenting goals (BIFF, SA CoParents Communication Coach, structured platform)."},
+    {"key": "child_centered", "lo": 5, "hi": 8, "name": "Child-Focused Mediation", "levels": "Levels 5–8", "desc": "May assist parents in examining differing perspectives through the child's developmental and practical needs."},
+    {"key": "mediation", "lo": 4, "hi": 7, "name": "Traditional Mediation", "levels": "Levels 4–7", "desc": "May assist where defined legal or parenting disputes are ready for negotiated resolution."},
+    {"key": "consult", "lo": 1, "hi": 10, "name": "Professional Consultation", "levels": "Any level", "desc": "Educational, medical, mental-health, or other appropriate professional input may help narrow specific disagreements."},
+    {"key": "facilitation", "lo": 1, "hi": 5, "name": "Parent Facilitation / Parenting Coordination", "levels": "Levels 1–5", "desc": "Where authorized and appropriate, structured professional involvement may assist with repeated implementation or communication disputes."},
 ]
+SAFETY_PATHWAY = ("Family Violence / Safety Considerations", "Family-violence or safety concerns should not be treated simply as a higher level of ordinary co-parenting conflict. Where identified, the case should follow the applicable SA CoParents safety assessment and safeguarding pathway.")
+REPORT_DISCLAIMER = ("This report is designed to organize assessment information, identify areas of agreement and difference, and assist qualified professionals in considering appropriate options and resources. "
+                     "SA CoParents Align does not determine custody, diagnose a parent or child, make judicial findings, or substitute for the independent judgment of an attorney, therapist, mediator, court, or other qualified professional.")
 CONFLICT_GUIDANCE = [
     ("Communication-based conflict", "Consider structured written communication using BIFF principles, a parenting communication platform, or the SA CoParents Communication Coach before escalating the dispute."),
     ("Defined parenting disagreement", "Consider child-focused mediation focused on the specific unresolved parenting issue."),
@@ -103,8 +100,8 @@ def recommended_pathway(joint_rating) -> dict | None:
     if not joint_rating:
         return None
     r = int(joint_rating)
-    key = "court" if r <= 2 else "facilitation" if r <= 4 else "mediation" if r <= 6 else "child_centered" if r <= 9 else "direct"
-    return next(p for p in PATHWAYS if p["key"] == key)
+    key = "facilitation" if r <= 4 else "mediation" if r <= 6 else "child_centered" if r <= 8 else "direct"
+    return next((p for p in PATHWAYS if p["key"] == key), None)
 
 def resource_lists(providers: list[dict]) -> tuple[list[str], list[str]]:
     ind = [p["label"] for p in providers if "individual" in p["lists"]]
@@ -116,7 +113,7 @@ TEXT_FIELDS = ("matter_name", "court_county", "cause_number", "professional_role
                "safety_takeaway", "parent_a_strengths", "parent_a_gaps", "parent_a_growth", "parent_a_notes", "parent_b_strengths", "parent_b_gaps", "parent_b_growth", "parent_b_notes",
                "joint_strengths", "joint_gaps", "joint_notes", "alignment_agreements", "alignment_disagreements", "partial_alignment", "alignment_summary",
                "conflict_pathway", "conflict_management_rationale", "short_term_goals", "long_term_goals", "reassess_interval", "reassess_up", "reassess_down",
-               "professional_summary", "next_review_date", "signature_name", "professional_title", "fv_a_received", "fv_b_received", "shared_concerns", "sources_considered", "pathway_rationale")
+               "professional_summary", "next_review_date", "signature_name", "professional_title", "fv_a_received", "fv_b_received", "shared_concerns", "sources_considered", "pathway_rationale", "court_summary_text")
 LIST_FIELDS = ("parent_a_resources", "parent_b_resources", "joint_resources", "conflict_management_options", "conflict_pathways")
 DICT_FIELDS = ("parent_a_provider", "parent_b_provider", "joint_provider")
 INT_FIELDS = ("parent_a_rating", "parent_b_rating", "joint_rating")

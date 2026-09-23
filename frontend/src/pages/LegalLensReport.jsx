@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiDraftComparison } from "@/components/AiDraftComparison";
 import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/LensScale";
-import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker } from "@/components/LensSections";
+import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid } from "@/components/LensSections";
 import { GrowthProgress } from "@/components/CourtLegalSummary";
 
 const STEPS = REPORT_STEPS;
@@ -123,10 +123,8 @@ export default function LegalLensReport() {
     <div className="min-h-screen bg-white" data-testid="lens-page">
       <header className="border-b border-border"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="lens-back"><ArrowLeft className="h-4 w-4" /> Back to Case</Link><BrandLogo size="text-xl" /><span className="rounded-full bg-brand-purple/10 px-3 py-1 text-xs font-semibold text-brand-purple" data-testid="lens-status">{STATUS[rep.status]}</span></div></header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5">
-        <div className="border-b-2 border-brand-purple pb-3">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-purple" data-testid="lens-title">SA CoParents Align — Professional Report</h1>
-          <p className="text-sm text-muted-foreground mt-2"><strong className="text-foreground">Purpose:</strong> {notes.purpose}</p>
-        </div>
+        <ReportHeader />
+        <p className="rounded-md border-l-4 border-brand-purple bg-brand-purple/5 p-3 text-sm" data-testid="lens-principle-notice"><strong className="text-brand-purple">Report Principle:</strong> Parent statements, system-generated comparisons, AI-assisted summaries, and professional observations are identified separately so the source of each statement remains clear.</p>
         <ol className="flex flex-wrap gap-1 text-[11px]" data-testid="lens-steps">{STEPS.map((s, i) => <li key={s} className="rounded-full border border-brand-purple/30 px-2 py-0.5 text-brand-purple">{i + 1}. {s}</li>)}</ol>
         {actions(true)}
         {aiNotice}
@@ -156,11 +154,13 @@ export default function LegalLensReport() {
               </div>
             </Sec>
             <Sec n={2} title="Individual Parent Perspectives" id="individual">
+              <SourceTag kind="parent" />
               <p className="text-xs italic text-muted-foreground">Each parent is presented separately and neutrally — concerns, priorities, perceptions and identified needs — without determining which account is correct.</p>
               <ParentBlock role="a" rep={rep} cls={cls.parent_a} set={set} /><ParentBlock role="b" rep={rep} cls={cls.parent_b} set={set} />
               <div className="space-y-5" data-testid="lens-individual-scales"><IndividualScaleTable scale={lib.scale_table} row={cls.parent_a?.row} rating={rep.parent_a_rating} role="a" name={rep.parent_a_name} growth={growthOf(rep, "a")} /><IndividualScaleTable scale={lib.scale_table} row={cls.parent_b?.row} rating={rep.parent_b_rating} role="b" name={rep.parent_b_name} growth={growthOf(rep, "b")} /></div>
             </Sec>
             <Sec n={3} title="Joint Assessment Findings" id="joint">
+              <SourceTag kind="system" />
               <div className="rounded-md border border-border bg-white p-4 space-y-3" data-testid="lens-joint">
                 <Rating label="Joint Co-Parenting Rating (1–10)" value={rep.joint_rating} onChange={(val) => set("joint_rating", val)} id="joint-rating" /><Band cls={cls.joint} joint />
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -171,6 +171,7 @@ export default function LegalLensReport() {
                 </div>
                 <Field big label="Issues requiring further discussion or professional attention" value={rep.joint_notes} onChange={(val) => set("joint_notes", val)} id="joint_notes" />
               </div>
+              <AlignmentStatusGrid rep={rep} />
               <JointScaleTable scale={lib.scale_table} row={cls.joint?.row} rating={rep.joint_rating} />
             </Sec>
             <Sec n={4} title="Child-Focused Issues" id="child">
@@ -178,12 +179,14 @@ export default function LegalLensReport() {
               <ChildFocusList categories={lib.child_focus_categories} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
             </Sec>
             <Sec n={5} title="Options & Resources" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /></Sec>
-            <Sec n={6} title="Conflict Resolution Pathways" id="conflict">
-              <PathwayPicker lib={lib} rep={rep} cls={cls} set={set} />
+            <Sec n={6} title="Conflict Resolution" id="conflict">
+              <p className="text-xs text-muted-foreground">{notes.purpose}</p>
+              <PathwayPicker lib={{ ...lib, notes }} rep={rep} cls={cls} set={set} />
               <Field big label="Why these pathways are relevant to the issues identified" hint="Explain the fit to the type of conflict — not just a list of services. Required to finalize." value={rep.pathway_rationale ?? rep.conflict_management_rationale} onChange={(val) => set("pathway_rationale", val)} id="pathway_rationale" />
               <p className="text-xs italic" data-testid="lens-rating-note">{notes.rating}</p>
             </Sec>
             <Sec n={7} title="Professional Statement" id="summary">
+              <SourceTag kind="professional" />
               <p className="text-xs italic text-muted-foreground">Your own observations, interpretation, recommendations and conclusions — clearly distinct from parent-reported information, individual responses, joint comparisons and any system- or AI-generated summary. You remain responsible for the judgment in this section.</p>
               <Field big label="Professional statement" value={rep.professional_summary} onChange={(val) => set("professional_summary", val)} id="professional_summary" />
               <Field big label="Short-Term Goals (Next 30 to 90 Days)" hint="One goal per line, as “Title: concrete action”." value={rep.short_term_goals} onChange={(val) => set("short_term_goals", val)} id="short_term_goals" />
@@ -194,10 +197,15 @@ export default function LegalLensReport() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2"><Field big label="When Score Moves Up" value={rep.reassess_up} onChange={(val) => set("reassess_up", val)} id="reassess_up" /><Field big label="When Score Drops" value={rep.reassess_down} onChange={(val) => set("reassess_down", val)} id="reassess_down" /></div>
               <ReportPrinciple notes={notes} />
+            </Sec>
+            <Sec n={8} title="Concise Court / Referral Summary" id="court-summary">
+              <p className="text-xs text-muted-foreground">1–3 paragraphs for the court, referring professional, mediator or other authorized recipient. Included in the frozen court submission.</p>
+              <Field big label="Professional summary" value={rep.court_summary_text} onChange={(val) => set("court_summary_text", val)} id="court_summary_text" />
               <h3 className="font-semibold text-align-green">Professional Certification</h3>
               <p className="text-xs italic">This report reflects the professional's review of the individual assessments, safety screenings and Joint Report. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.</p>
               <div className="grid gap-3 sm:grid-cols-2"><Field label="Professional Signature Name" value={rep.signature_name} onChange={(val) => set("signature_name", val)} id="signature_name" /><Field label="Professional Title" value={rep.professional_title} onChange={(val) => set("professional_title", val)} id="professional_title" /></div>
               {rep.finalized_at && <p className="text-xs text-align-green font-semibold" data-testid="lens-finalized">Date finalized: {rep.finalized_at.slice(0, 10)}</p>}
+              <ReportDisclaimer notes={notes} signature={rep.signature_name} date={rep.finalized_at?.slice(0, 10)} />
             </Sec>
             {actions(false)}
           </>

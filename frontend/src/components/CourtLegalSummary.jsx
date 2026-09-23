@@ -55,6 +55,7 @@ export function CourtLegalSummary({ s }) {
         {s.pathway_rationale && <p className="whitespace-pre-wrap text-muted-foreground">{s.pathway_rationale}</p>}
       </Block>
       {s.child_focus?.length > 0 && <Block title="Child-Focused Issues" testId="court-legal-child-focus"><ul className="list-disc pl-4 space-y-1">{s.child_focus.map((c) => <li key={c.label}><strong>{c.label}</strong>{c.note ? ` — ${c.note}` : ""}</li>)}</ul></Block>}
+      {s.court_summary && <Block title="Concise Court / Referral Summary" testId="court-legal-court-summary"><p className="whitespace-pre-wrap">{s.court_summary}</p></Block>}
       {s.professional_summary && <Block title="Professional Statement" testId="court-legal-statement"><p className="whitespace-pre-wrap">{s.professional_summary}</p><p className="text-[11px] italic text-muted-foreground">The professional's own judgment, distinct from parent-reported information and system/AI summaries.</p></Block>}
       <div className="grid gap-3 sm:grid-cols-2">
         <Block title="Short-Term Goals (30–90 days)" testId="court-legal-short"><ul className="list-disc pl-4 space-y-1">{(s.short_term_goals || []).map((g, i) => <li key={i}>{g}</li>)}</ul></Block>

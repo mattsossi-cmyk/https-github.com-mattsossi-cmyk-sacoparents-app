@@ -10,7 +10,7 @@ from coparenting_tiers import joint_findings, suggested_score
 from joint_data import SAFETY_SUBJECT_KEYS
 
 from lens_data import (  # noqa: F401  (re-exported for callers importing from legal_lens)
-    TAGLINE, STATUSES, SAFETY_NOTE, RATING_NOTE, JOINT_OPTIONS, RECEIPT, INDIVIDUAL_BANDS, JOINT_BANDS, INDIVIDUAL_BASE, JOINT_BASE, INDIVIDUAL_RESOURCES, JOINT_RESOURCES, SCALE_TABLE, RISK_CATEGORIES, RISK_LEVELS, SAFETY_ALERT, PATHWAYS, RESOURCE_CATEGORIES, REASSESS_INTERVALS, REASSESS_UP_DEFAULT, REASSESS_DOWN_DEFAULT, INTRO_TEXT, recommended_pathway, resource_lists, CONFLICT_OPTIONS, TEXT_FIELDS, LIST_FIELDS, DICT_FIELDS, INT_FIELDS, ROWS_FIELDS, RISK_FIELDS, GROWTH_FIELDS, CHILD_FIELDS, CONFLICT_GUIDANCE, CHILD_FOCUS_CATEGORIES, REPORT_PRINCIPLE, REPORT_PURPOSE, growth_lines, AI_MODELS, classify_individual, classify_joint)
+    TAGLINE, STATUSES, SAFETY_NOTE, RATING_NOTE, JOINT_OPTIONS, RECEIPT, INDIVIDUAL_BANDS, JOINT_BANDS, INDIVIDUAL_BASE, JOINT_BASE, INDIVIDUAL_RESOURCES, JOINT_RESOURCES, SCALE_TABLE, RISK_CATEGORIES, RISK_LEVELS, SAFETY_ALERT, PATHWAYS, RESOURCE_CATEGORIES, REASSESS_INTERVALS, REASSESS_UP_DEFAULT, REASSESS_DOWN_DEFAULT, INTRO_TEXT, recommended_pathway, resource_lists, CONFLICT_OPTIONS, TEXT_FIELDS, LIST_FIELDS, DICT_FIELDS, INT_FIELDS, ROWS_FIELDS, RISK_FIELDS, GROWTH_FIELDS, CHILD_FIELDS, CONFLICT_GUIDANCE, CHILD_FOCUS_CATEGORIES, REPORT_PRINCIPLE, REPORT_PURPOSE, SAFETY_PATHWAY, REPORT_DISCLAIMER, growth_lines, AI_MODELS, classify_individual, classify_joint)
 
 
 def _lines(text) -> list[str]:
@@ -38,7 +38,7 @@ def _summary_roadmap(rep: dict, j: dict | None) -> dict:
     names = [p["name"] for p in PATHWAYS if p["key"] in chosen]
     return {"pathway": " · ".join(names) or None, "pathways": names, "pathway_rationale": rep.get("pathway_rationale") or rep.get("conflict_management_rationale"),
             "child_focus": [{"label": lbl, "note": (rep.get("child_focus") or {}).get(k, {}).get("note", "")} for k, lbl in CHILD_FOCUS_CATEGORIES if (rep.get("child_focus") or {}).get(k, {}).get("checked")],
-            "shared_concerns": rep.get("shared_concerns"), "professional_summary": rep.get("professional_summary"),
+            "shared_concerns": rep.get("shared_concerns"), "professional_summary": rep.get("professional_summary"), "court_summary": rep.get("court_summary_text"),
             "short_term_goals": _lines(rep.get("short_term_goals")), "long_term_goals": _lines(rep.get("long_term_goals")),
             "resources": rep.get("resource_rows") or [], "reassess_interval": rep.get("reassess_interval"), "next_review_date": rep.get("next_review_date"), "finalized_at": rep.get("finalized_at")}
 
@@ -260,7 +260,7 @@ async def _lens_view(db, rep: dict, doc: dict) -> dict:
     return {"report": rep, "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
             "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
             "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE, "risk_categories": RISK_CATEGORIES,
-            "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE},
+            "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE, "safety_pathway": SAFETY_PATHWAY, "disclaimer": REPORT_DISCLAIMER},
             "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
 
 

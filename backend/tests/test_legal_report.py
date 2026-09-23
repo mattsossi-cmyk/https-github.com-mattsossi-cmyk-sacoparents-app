@@ -77,7 +77,7 @@ def test_legal_report_attached_to_court_submission() -> None:
     view = judge.get(f"{API}/court-dashboard/cases/{ref['id']}").json()
     assert view["statement"]["legal_report_included"]
     ls = view["statement"]["legal_summary"]
-    assert ls["ratings"]["joint"]["score"] == 6 and ls["pathway"] == "Traditional mediation"
+    assert ls["ratings"]["joint"]["score"] == 6 and ls["pathway"] == "Traditional Mediation"
     assert [g["met"] for g in ls["growth"]["a"]] == [True, False] and ls["risk_screening"][2]["level"] == "Moderate Risk"
     assert "parent_a_notes" not in ls and view["level_history"][-1]["growth"]["a"] == {"met": 1, "total": 2, "items": ls["growth"]["a"]}
     lp = judge.get(f"{API}/court-dashboard/packets/{sub['packet_id']}/legal-report.pdf")

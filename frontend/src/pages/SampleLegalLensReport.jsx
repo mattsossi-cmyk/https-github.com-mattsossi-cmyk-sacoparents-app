@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SampleEmailForm } from "@/components/SampleEmailForm";
 import { SampleLensTour, StartTourButton, useSampleLensTour } from "@/components/SampleLensTour";
 import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/LensScale";
-import { ReportPrinciple, ChildFocusSummary, PathwayPicker } from "@/components/LensSections";
+import { ReportPrinciple, ChildFocusSummary, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid } from "@/components/LensSections";
 
 const Sec = ({ n, title, children, testId }) => (
   <section className="bg-white border border-border rounded-lg p-6" data-testid={testId}>
@@ -50,12 +50,8 @@ export default function SampleLegalLensReport() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-5">
         {tour.open && <SampleLensTour onDone={tour.close} />}
         <div className="flex justify-end gap-2"><StartTourButton onClick={tour.start} /><SampleEmailForm endpoint="/joint/sample-legal-lens/email" label="Sample Professional Report" idPrefix="sample-lens-page" /></div>
-        <div className="rounded-lg border-2 border-brand-purple/30 bg-white p-6 border-b-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-brand-purple flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Legal · Professional &amp; Court only · Sample (fictional data)</p>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mt-1 text-brand-purple" data-testid="sample-lens-title">SA CoParents Align — Professional Report</h1>
-          <p className="text-sm text-muted-foreground mt-3" data-testid="sample-lens-note"><strong className="text-foreground">Purpose:</strong> {d.notes.purpose}</p>
-          <div className="mt-4"><KV rows={[["Court", rep.court_county], ["Cause No.", rep.cause_number], ["Align case", d.case.case_code], ["Professional", `${rep.professional_name} · ${rep.professional_role}`], ["Report date", rep.report_date], ["Status", rep.status.replace(/_/g, " ")]]} /></div>
-        </div>
+        <ReportHeader right={<span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold" data-testid="sample-lens-note">Sample · fictional data</span>} />
+        <div className="rounded-lg border border-border bg-white p-4"><KV rows={[["Court", rep.court_county], ["Cause No.", rep.cause_number], ["Align case", d.case.case_code], ["Professional", `${rep.professional_name} · ${rep.professional_role}`], ["Report date", rep.report_date], ["Status", rep.status.replace(/_/g, " ")]]} /></div>
         <Sec n={1} title="Case & Assessment Overview" testId="sample-lens-s1">
           <p data-testid="sample-lens-intro">{d.notes.intro}</p>
           <H3>Assessments completed</H3>
@@ -69,15 +65,18 @@ export default function SampleLegalLensReport() {
           <p className="text-xs italic text-muted-foreground flex gap-2"><ShieldCheck className="h-4 w-4 shrink-0" /> {d.notes.safety}</p>
         </Sec>
         <Sec n={2} title="Individual Parent Perspectives" testId="sample-lens-s2">
+          <SourceTag kind="parent" />
           <p className="text-xs italic text-muted-foreground">Each parent is presented separately and neutrally (PARENT-REPORTED INFORMATION summarized by the professional); no determination is made about which account is correct.</p>
           <ParentBlock role="a" rep={rep} testId="sample-lens-parent-a" /><ParentBlock role="b" rep={rep} testId="sample-lens-parent-b" />
           <div className="space-y-5" data-testid="sample-lens-s3"><IndividualScaleTable scale={lib.scale_table} row={cls.parent_a?.row} rating={rep.parent_a_rating} role="a" name={rep.parent_a_name} growth={growthOf(rep, "a")} /><IndividualScaleTable scale={lib.scale_table} row={cls.parent_b?.row} rating={rep.parent_b_rating} role="b" name={rep.parent_b_name} growth={growthOf(rep, "b")} /></div>
         </Sec>
         <Sec n={3} title="Joint Assessment Findings" testId="sample-lens-joint">
+          <SourceTag kind="system" />
           <p><strong>Joint rating:</strong> Level {rep.joint_rating} — <strong>{cls.joint.mode} Mode</strong> — {cls.joint.label}</p>
           <Lines label="Areas of alignment" text={rep.alignment_agreements || rep.joint_strengths} />
           <Lines label="Areas of partial alignment" text={rep.partial_alignment} />
           <Lines label="Areas of differing perspectives" text={rep.alignment_disagreements || rep.joint_gaps} />
+          <AlignmentStatusGrid rep={rep} />
           <p><strong>Shared concerns:</strong> {rep.shared_concerns}</p>
           <p><strong>Issues requiring further discussion or professional attention:</strong> {rep.joint_notes}</p>
           <JointScaleTable scale={lib.scale_table} row={cls.joint?.row} rating={rep.joint_rating} />
@@ -89,12 +88,13 @@ export default function SampleLegalLensReport() {
             <tbody>{rep.resource_rows.map((r, i) => <tr key={i} className={i % 2 ? "bg-secondary/40" : ""}><td className="border border-border p-2 font-bold">{r.category}</td><td className="border border-border p-2 font-semibold">{r.resource}</td><td className="border border-border p-2">{r.focus}</td></tr>)}</tbody>
           </table></div>
         </Sec>
-        <Sec n={6} title="Conflict Resolution Pathways" testId="sample-lens-s7">
-          <PathwayPicker lib={lib} rep={rep} cls={cls} set={() => {}} readOnly />
+        <Sec n={6} title="Conflict Resolution" testId="sample-lens-s7">
+          <PathwayPicker lib={{ ...lib, notes: d.notes }} rep={rep} cls={cls} set={() => {}} readOnly />
           <p><strong>Why these pathways are relevant:</strong> {rep.pathway_rationale}</p>
           <p className="text-xs italic text-muted-foreground">{d.notes.rating}</p>
         </Sec>
         <Sec n={7} title="Professional Statement" testId="sample-lens-s8">
+          <SourceTag kind="professional" />
           <p className="text-xs italic text-muted-foreground">The professional's own observations, interpretation, recommendations and conclusions — distinct from parent-reported information and system- or AI-generated summaries.</p>
           <p data-testid="sample-lens-statement">{rep.professional_summary}</p>
           <H3>Short-Term Goals (Next 30 to 90 Days)</H3><Lines text={rep.short_term_goals} />
@@ -102,8 +102,12 @@ export default function SampleLegalLensReport() {
           <p>Reassessment <strong>{rep.reassess_interval.replace("Every ", "every ")}</strong> · next review {rep.next_review_date}</p>
           <ul className="list-disc pl-5 space-y-1"><li>{rep.reassess_up}</li><li>{rep.reassess_down}</li></ul>
           <ReportPrinciple notes={d.notes} testId="sample-lens-principle" />
+        </Sec>
+        <Sec n={8} title="Concise Court / Referral Summary" testId="sample-lens-s9">
+          <p data-testid="sample-lens-court-summary">{rep.court_summary_text}</p>
           <H3>Professional Certification</H3>
           <KV rows={[["Professional signature", rep.signature_name], ["Title", rep.professional_title], ["Date finalized", rep.finalized_at?.slice(0, 10)]]} />
+          <ReportDisclaimer notes={d.notes} signature={rep.signature_name} date={rep.finalized_at?.slice(0, 10)} />
           <p className="rounded-md bg-secondary/50 p-3 text-xs italic flex gap-2"><Lock className="h-4 w-4 shrink-0" /> {d.notes.tagline}</p>
         </Sec>
         <div className="bg-white border border-border rounded-lg p-6 text-center" data-testid="sample-lens-cta">

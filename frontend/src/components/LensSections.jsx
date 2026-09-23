@@ -1,6 +1,41 @@
 import { PathwayList } from "@/components/LensScale";
 
-export const REPORT_STEPS = ["Case & Assessment Overview", "Individual Parent Perspectives", "Joint Assessment Findings", "Child-Focused Issues", "Options & Resources", "Conflict Resolution Pathways", "Professional Statement"];
+export const REPORT_STEPS = ["Case & Assessment Overview", "Individual Parent Perspectives", "Joint Assessment Findings", "Child-Focused Issues", "Options & Resources", "Conflict Resolution", "Professional Statement", "Concise Court / Referral Summary"];
+
+const TAG = { parent: ["Parent-Reported Information", "bg-align-blue/15 text-align-blue"], system: ["System-Generated Comparison", "bg-brand-purple/10 text-brand-purple"], professional: ["Professional Observation", "bg-align-green/15 text-green-900"], safety: ["Separate Safety Pathway", "bg-red-50 text-red-700"] };
+export function SourceTag({ kind }) {
+  const [label, cls] = TAG[kind];
+  return <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${cls}`} data-testid={`lens-source-${kind}`}>{label}</span>;
+}
+
+export function ReportHeader({ title = "Professional Alignment Report", subtitle, right }) {
+  return (
+    <div className="rounded-lg bg-gradient-to-br from-[#4f2d8c] to-[#6f42c1] p-8 text-white" data-testid="lens-report-header">
+      <p className="text-xs font-bold uppercase tracking-[0.08em] opacity-90">SA CoParents Align</p>
+      <div className="flex flex-wrap items-start justify-between gap-3"><h1 className="mt-1 text-3xl font-bold" data-testid="lens-title">{title}</h1>{right}</div>
+      <p className="mt-2 max-w-3xl text-sm opacity-90">{subtitle || "A structured review of individual and joint parent assessments, child-focused concerns, areas of alignment and difference, available resources, and potential conflict-resolution pathways."}</p>
+    </div>
+  );
+}
+
+export function SafetyPathwayCard({ notes }) {
+  const [t, d] = notes.safety_pathway || [];
+  return <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4" data-testid="lens-safety-pathway"><SourceTag kind="safety" /><h3 className="mt-1 font-semibold text-red-700">{t}</h3><p className="mt-1 text-sm">{d}</p></div>;
+}
+
+export function ReportDisclaimer({ notes, signature, date }) {
+  return (
+    <div className="space-y-4" data-testid="lens-disclaimer">
+      <div className="grid gap-8 sm:grid-cols-2 pt-6"><div className="border-t border-foreground/70 pt-1 text-xs text-muted-foreground">Professional Name / Signature{signature ? <span className="block font-semibold text-foreground">{signature}</span> : null}</div><div className="border-t border-foreground/70 pt-1 text-xs text-muted-foreground">Date{date ? <span className="block font-semibold text-foreground">{date}</span> : null}</div></div>
+      <p className="rounded-md bg-secondary/60 p-3 text-xs text-muted-foreground"><strong>Important:</strong> {notes.disclaimer}</p>
+    </div>
+  );
+}
+
+export function AlignmentStatusGrid({ rep }) {
+  const cells = [["Areas of Alignment", rep.alignment_agreements || rep.joint_strengths, "bg-align-green/10 border-align-green/30"], ["Partial Alignment", rep.partial_alignment, "bg-align-yellow/20 border-align-yellow/60"], ["Different Perspectives", rep.alignment_disagreements || rep.joint_gaps, "bg-red-50 border-red-200"]];
+  return <div className="grid gap-3 sm:grid-cols-3" data-testid="lens-status-grid">{cells.map(([t, v, cls]) => <div key={t} className={`rounded-lg border p-3 text-sm ${cls}`}><strong className="block mb-1">{t}</strong><span className="whitespace-pre-wrap">{v || "—"}</span></div>)}</div>;
+}
 
 export function ReportPrinciple({ notes, testId = "lens-principle" }) {
   return (
@@ -41,6 +76,7 @@ export function PathwayPicker({ lib, rep, cls, set, readOnly = false }) {
   return (
     <div className="space-y-3">
       <PathwayList pathways={lib.pathways} rating={rep.joint_rating} recommended={cls.joint?.pathway?.key} chosen={chosen} onToggle={readOnly ? undefined : toggle} />
+      <SafetyPathwayCard notes={lib.notes || {}} />
       <div className="rounded-md border border-border bg-white p-3" data-testid="lens-conflict-guidance">
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Which pathway fits which kind of conflict?</p>
         <ul className="mt-1 space-y-1 text-xs">{(lib.conflict_guidance || []).map(([t, d]) => <li key={t}><strong>{t}:</strong> {d}</li>)}</ul>

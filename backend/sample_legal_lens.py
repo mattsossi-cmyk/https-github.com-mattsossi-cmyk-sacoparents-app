@@ -1,5 +1,5 @@
 """Fictional, fully filled-in Professional Evaluation Report — public sample (no real data)."""
-from legal_lens import (AI_MODELS, CONFLICT_OPTIONS, INTRO_TEXT, JOINT_OPTIONS, PATHWAYS, RATING_NOTE, REASSESS_INTERVALS, RECEIPT, RESOURCE_CATEGORIES, RISK_CATEGORIES, RISK_LEVELS, REPORT_PRINCIPLE, REPORT_PURPOSE, CONFLICT_GUIDANCE, CHILD_FOCUS_CATEGORIES,
+from legal_lens import (AI_MODELS, CONFLICT_OPTIONS, INTRO_TEXT, JOINT_OPTIONS, PATHWAYS, RATING_NOTE, REASSESS_INTERVALS, RECEIPT, RESOURCE_CATEGORIES, RISK_CATEGORIES, RISK_LEVELS, REPORT_PRINCIPLE, REPORT_PURPOSE, SAFETY_PATHWAY, REPORT_DISCLAIMER, CONFLICT_GUIDANCE, CHILD_FOCUS_CATEGORIES,
                         SAFETY_ALERT, SAFETY_NOTE, SCALE_TABLE, STATUSES, TAGLINE, classify_individual, classify_joint)
 from sample_professional_report import SAMPLE_COURT, SAMPLE_PRO
 
@@ -56,6 +56,7 @@ _REPORT = {
     "conflict_management_rationale": "Parent Facilitation & Coordination (Levels 3–5) — Level 4 Recommendation: a neutral professional (Kelly Bernstein) resolves day-to-day bumps, supported by Children in the Middle "
                                      "(Brad Craig), individual counseling, and neutral educational testing (Kassandra Levay).",
     "professional_summary": "In my professional judgment the parents' disagreement is communication-driven rather than values-driven: both describe the same child-focused goals but escalate at transitions. A structured written channel plus facilitation for the next 90 days, with an educational consultation to settle the homework question, is proportionate to a Level 4 dynamic. This statement is my own interpretation and is distinct from the parent-reported information and system-generated comparisons above.",
+    "court_summary_text": "Both parents completed individual assessments and their responses were compared through the SA CoParents Align process. The assessment identifies alignment on M.'s school participation and routines, partial alignment on information-sharing, and differing perspectives on transition handling. Structured written communication and parent facilitation for 90 days, with an educational consultation, are proportionate to the identified issues; no safety override is required.",
     "signature_name": SAMPLE_PRO["name"], "professional_title": "Licensed Professional Counselor · Parenting Facilitator",
 }
 
@@ -69,6 +70,6 @@ def sample_legal_lens() -> dict:
             "classification": {"parent_a": classify_individual(rep["parent_a_rating"]), "parent_b": classify_individual(rep["parent_b_rating"]), "joint": classify_joint(rep["joint_rating"])},
             "library": {"conflict_options": CONFLICT_OPTIONS, "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE,
                         "risk_categories": RISK_CATEGORIES, "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS, "providers": []},
-            "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE},
+            "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE, "safety_pathway": SAFETY_PATHWAY, "disclaimer": REPORT_DISCLAIMER},
             "case": {"id": "sample-case", "case_code": "SA-26-TRN-000000", "child_name": "M. Carter", "subject_label": "Transitions & Communication"},
             "professional": SAMPLE_PRO, "court": SAMPLE_COURT}
