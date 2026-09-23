@@ -74,3 +74,10 @@ No code change made. Fifth consecutive false-positive report for this rule — t
 - `is` comparisons flagged in server.py were all `is None`/`is not None` — correct, left unchanged.
 - Ruff C901 (max 10): remaining only legal_report.py:187 and providers.py:51.
 - Full pytest: 276 passed. Stale test marker "Options and Resources" (parent PDF intentionally no longer includes options) removed from tests/test_pdf_report.py.
+
+## 2026-09-23 — Code review pass 4 (applied)
+- Circular import sample_professional_report ↔ sample_legal_lens removed: shared fixtures moved to sample_fixtures.py.
+- tests/test_iter59: hardcoded link token replaced with per-run secrets.token_urlsafe().
+- legal_report.py: build_router (C=47) → LegalStore + _edit_routes/_output_routes/_sample_routes; statement mutations extracted (_generated_statement/_patched_statement/_finalized_statement); availability/_parent_summary split (_resp/_focused_rows/_answers_for).
+- legal_lens.py: prefill → _prefill_header/_prefill_joint; apply_status → _assert_finalizable/_ai_review; run_reassessment_reminders → _reminder_html/_send_reminder.
+- ruff C901 (max 10): legal_lens.py and legal_report.py now clean. server.py imports 42 → 28 after the pass-3 module split; remaining imports are the joint/case/agreement routes that still live there.

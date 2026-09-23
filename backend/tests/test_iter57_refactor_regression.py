@@ -41,7 +41,8 @@ class TestPublic:
         assert r.status_code == 200
         j = r.json()
         assert j.get("status") == "healthy"
-        assert j.get("build") == "2026-09-22.1"
+        from core import BUILD_ID
+        assert j.get("build") == BUILD_ID
 
     def test_sample_legal_lens_pdf(self):
         r = requests.get(f"{API}/joint/sample-legal-lens/pdf")
@@ -145,7 +146,7 @@ class TestAdmin:
         email = f"t_iter57_admin_{uuid.uuid4().hex[:8]}@example.com"
         payload = {
             "name": "Iter57 Admin-Created Pro", "email": email,
-            "organization": "Iter57 Firm", "pro_role": "Mediator",
+            "organization": "Iter57 Firm", "pro_role": "Mediator", "profession": "Mediator",
         }
         r = admin_session.post(f"{API}/admin/professionals", json=payload)
         assert r.status_code in (200, 201), r.text

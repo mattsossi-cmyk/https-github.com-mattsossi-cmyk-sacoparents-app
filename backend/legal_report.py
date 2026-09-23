@@ -26,36 +26,43 @@ def _status_word(done: bool, exists: bool = True) -> str:
     return "Complete" if done else ("Incomplete" if exists else "Not Created")
 
 
-def availability(doc: dict, notes_count: int) -> list[dict]:
-    subs = _subjects(doc)
-    a, b = _complete(doc, "a"), _complete(doc, "b")
-    fa = bool(((doc.get("responses") or {}).get("a") or {}).get("foundation"))
-    fb = bool(((doc.get("responses") or {}).get("b") or {}).get("foundation"))
-    joint_exists = doc.get("kind", "joint_report") == "joint_report"
+def _resp(doc: dict, role: str) -> dict:
+    return (doc.get("responses") or {}).get(role) or {}
+
+
+def _focused_rows(subs: list, both: bool) -> list[dict]:
+    rows = [{"key": key, "label": label, "status": (_status_word(both) if key in subs else "Not Applicable")}
+            for key, label in (("education", "Educational Assessment"), ("medical", "Medical Assessment"), ("psychological", "Psychological Assessment"))]
     safety = any(s in SAFETY_SUBJECT_KEYS for s in subs)
+    rows.append({"key": "safety", "label": "Family Violence / Communication Safety Assessment", "status": (_status_word(both) if safety else "Not Applicable")})
+    return rows
+
+
+def availability(doc: dict, notes_count: int) -> list[dict]:
+    a, b = _complete(doc, "a"), _complete(doc, "b")
+    joint_exists = doc.get("kind", "joint_report") == "joint_report"
     rows = [{"key": "assessment_a", "label": "Parent A Co-Parenting Assessment", "status": _status_word(a)}, {"key": "assessment_b", "label": "Parent B Co-Parenting Assessment", "status": _status_word(b)},
-            {"key": "foundation_a", "label": "Parent A Foundation Statement", "status": "Complete" if fa else "Incomplete"}, {"key": "foundation_b", "label": "Parent B Foundation Statement", "status": "Complete" if fb else "Incomplete"},
+            {"key": "foundation_a", "label": "Parent A Foundation Statement", "status": "Complete" if _resp(doc, "a").get("foundation") else "Incomplete"},
+            {"key": "foundation_b", "label": "Parent B Foundation Statement", "status": "Complete" if _resp(doc, "b").get("foundation") else "Incomplete"},
             {"key": "joint", "label": "Joint Assessment", "status": _status_word(a and b, joint_exists)}]
-    for key, label in (("education", "Educational Assessment"), ("medical", "Medical Assessment"), ("psychological", "Psychological Assessment")):
-        rows.append({"key": key, "label": label, "status": (_status_word(a and b) if key in subs else "Not Applicable")})
-    rows.append({"key": "safety", "label": "Family Violence / Communication Safety Assessment", "status": (_status_word(a and b) if safety else "Not Applicable")})
+    rows += _focused_rows(_subjects(doc), a and b)
     rows.append({"key": "notes", "label": "Professional Notes", "status": "Available" if notes_count else "None"})
     return rows
 
 
+def _answers_for(answers: dict, key: str) -> list[str]:
+    return [str(v).strip() for k, v in answers.items() if (k == key or k.endswith(f":{key}") or k.startswith(f"{key}:")) and str(v).strip()]
+
+
 def _parent_summary(doc: dict, role: str) -> dict:
-    answers = ((doc.get("responses") or {}).get(role) or {}).get("answers") or {}
-    out = {"label": "PARENT-REPORTED INFORMATION", "items": []}
-    for key, heading in PARENT_HEADINGS:
-        vals = [str(v).strip() for k, v in answers.items() if (k == key or k.endswith(f":{key}") or k.startswith(f"{key}:")) and str(v).strip()]
-        if vals:
-            out["items"].append({"heading": heading, "text": " ".join(vals)[:1500]})
-    foundation = ((doc.get("responses") or {}).get(role) or {}).get("foundation") or []
-    if foundation:
-        out["items"].append({"heading": "Foundation Statement (parent's own words)", "text": " ".join(str(f.get("content", "")).strip() for f in foundation)[:2000]})
-    if not out["items"]:
-        out["items"].append({"heading": "Assessment", "text": "No completed assessment was available for this parent at the time this draft was generated."})
-    return out
+    resp = _resp(doc, role)
+    answers = resp.get("answers") or {}
+    items = [{"heading": heading, "text": " ".join(vals)[:1500]} for key, heading in PARENT_HEADINGS if (vals := _answers_for(answers, key))]
+    if resp.get("foundation"):
+        items.append({"heading": "Foundation Statement (parent's own words)", "text": " ".join(str(f.get("content", "")).strip() for f in resp["foundation"])[:2000]})
+    if not items:
+        items.append({"heading": "Assessment", "text": "No completed assessment was available for this parent at the time this draft was generated."})
+    return {"label": "PARENT-REPORTED INFORMATION", "items": items}
 
 
 def _joint(doc: dict) -> dict:
@@ -184,130 +191,159 @@ def build_payload(doc: dict, notes: int) -> dict:
                      "court": doc.get("court") or {}}}
 
 
-def build_router(db, get_current_user, log_event) -> APIRouter:
-    r = APIRouter()
+class LegalStore:
+    """Case access + notes count for the (legacy) Professional Legal Report routes."""
 
-    async def own_case(rid: str, user: dict) -> dict:
+    def __init__(self, db, log_event):
+        self.db, self.log_event = db, log_event
+
+    async def own_case(self, rid: str, user: dict) -> dict:
         if user.get("role") not in ("professional", "admin"):
             raise HTTPException(status_code=403, detail="Professional access required.")
-        q = {"id": rid} if user.get("role") == "admin" else {"id": rid, "professional_id": user["_id"]}
-        doc = await db.joint_reports.find_one(q, {"_id": 0})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Case not found")
         if user.get("role") == "professional" and not user.get("approved"):
             raise HTTPException(status_code=403, detail="Professional approval required.")
+        q = {"id": rid} if user.get("role") == "admin" else {"id": rid, "professional_id": user["_id"]}
+        doc = await self.db.joint_reports.find_one(q, {"_id": 0})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Case not found")
         return doc
 
-    async def notes_count(rid: str, user: dict) -> int:
-        return await db.professional_notes.count_documents({"report_id": rid, "author_id": user["_id"]})
+    async def payload(self, doc: dict, rid: str, user: dict) -> dict:
+        return build_payload(doc, await self.db.professional_notes.count_documents({"report_id": rid, "author_id": user["_id"]}))
 
-    def payload(doc: dict, notes: int) -> dict:
-        return build_payload(doc, notes)
+    async def save(self, rid: str, st: dict, extra: dict | None = None) -> None:
+        await self.db.joint_reports.update_one({"id": rid}, {"$set": {"professional_statement": st}, **(extra or {})})
+
+
+def _generated_statement(st: dict, draft: dict, lens: dict, source: str, regenerate: bool) -> dict:
+    st = {**st, "legal_draft": draft, "ai_generated_content": {**lens, "source": source, "generated_at": draft["generated_at"]}, "legal_status": "draft", "purpose": PURPOSE}
+    for ai_key, field in LENS_MAP.items():
+        if regenerate or not (st.get(field) or "").strip():
+            st[field] = lens[ai_key]
+    for k, v in (("options_resources", []), ("conflict_resolution_paths", []), ("status", "draft")):
+        st.setdefault(k, v)
+    st["updated_at"] = _now()
+    return st
+
+
+def _patched_statement(st: dict, fields: dict) -> dict:
+    changes = {k: v for k, v in fields.items() if k in EDITABLE}
+    text = " ".join(str(v) for v in changes.values() if isinstance(v, str)).lower()
+    if any(b in text for b in BANNED_LABELS):
+        raise HTTPException(status_code=400, detail="Do not characterize a parent with diagnostic or pejorative labels unless quoting an identified documented source (name the source).")
+    st.update({k: (v[:6000] if isinstance(v, str) else v) for k, v in changes.items()})
+    st["professional_edited_content"] = {**(st.get("professional_edited_content") or {}), **{k: _now() for k in changes}}
+    if st.get("legal_status") == "finalized" or (st.get("legal_status") == "draft" and changes):
+        st["legal_status"] = "professional_review"
+    st["updated_at"] = _now()
+    return st
+
+
+def _finalized_statement(st: dict, body: "FinalizeIn", version: int) -> tuple[dict, str]:
+    if not st.get("legal_draft"):
+        raise HTTPException(status_code=400, detail="Generate a draft before finalizing.")
+    if not (body.certified and body.certified_name.strip() and body.certified_date.strip()):
+        raise HTTPException(status_code=400, detail="Certification checkbox, professional name and date are required.")
+    now = _now()
+    st = {**st, "observations": st.get("observations", ""), "next_steps": st.get("next_steps", ""),
+          "legal_status": "finalized", "status": "ready", "version": max(int(st.get("version") or 0), version), "professional_certified": True,
+          "professional_certified_name": body.certified_name.strip()[:120], "professional_certified_at": now, "professional_certified_date": body.certified_date.strip()[:40],
+          "certification": {"title": body.title[:120], "bar_number": body.bar_number[:60], "organization": body.organization[:160], "email": body.email[:160], "phone": body.phone[:40]},
+          "finalized_at": now, "updated_at": now, "legal_version": version}
+    return st, now
+
+
+def build_router(db, get_current_user, log_event) -> APIRouter:
+    s = LegalStore(db, log_event)
+    r = APIRouter()
+    r.include_router(_edit_routes(s, get_current_user))
+    r.include_router(_output_routes(s, get_current_user))
+    r.include_router(_sample_routes())
+    return r
+
+
+def _edit_routes(s: LegalStore, get_current_user) -> APIRouter:
+    r = APIRouter()
 
     @r.get("/cases/{rid}/professional-legal-report")
     async def get_report(rid: str, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
-        await log_event(rid, "LEGAL_REPORT_VIEWED", user)
-        return payload(doc, await notes_count(rid, user))
+        doc = await s.own_case(rid, user)
+        await s.log_event(rid, "LEGAL_REPORT_VIEWED", user)
+        return await s.payload(doc, rid, user)
 
     @r.post("/cases/{rid}/professional-legal-report/generate")
     async def generate(rid: str, body: GenerateIn, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
+        doc = await s.own_case(rid, user)
         st = doc.get("professional_statement") or {}
         if st.get("legal_status") == "finalized" and not body.regenerate:
             raise HTTPException(status_code=409, detail="Report is finalized. Use Regenerate to start a new version.")
         draft = build_draft(doc)
         lens, source = await draft_lens(draft, rid)
         created = not st.get("legal_draft")
-        st = {**st, "legal_draft": draft, "ai_generated_content": {**lens, "source": source, "generated_at": draft["generated_at"]}, "legal_status": "draft", "purpose": PURPOSE}
-        for ai_key, field in LENS_MAP.items():
-            if body.regenerate or not (st.get(field) or "").strip():
-                st[field] = lens[ai_key]
-        st.setdefault("options_resources", [])
-        st.setdefault("conflict_resolution_paths", [])
-        st.setdefault("status", "draft")
-        st["updated_at"] = _now()
-        await db.joint_reports.update_one({"id": rid}, {"$set": {"professional_statement": st}})
-        await log_event(rid, "LEGAL_REPORT_CREATED" if created else "LEGAL_REPORT_GENERATED", user)
-        if not created:
-            pass
-        doc["professional_statement"] = st
-        return payload(doc, await notes_count(rid, user))
+        doc["professional_statement"] = _generated_statement(st, draft, lens, source, body.regenerate)
+        await s.save(rid, doc["professional_statement"])
+        await s.log_event(rid, "LEGAL_REPORT_CREATED" if created else "LEGAL_REPORT_GENERATED", user)
+        return await s.payload(doc, rid, user)
 
     @r.patch("/professional-legal-reports/{rid}")
     async def patch_report(rid: str, body: PatchIn, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
-        st = doc.get("professional_statement") or {}
-        changes = {k: v for k, v in body.fields.items() if k in EDITABLE}
-        text = " ".join(str(v) for v in changes.values() if isinstance(v, str)).lower()
-        if any(b in text for b in BANNED_LABELS):
-            raise HTTPException(status_code=400, detail="Do not characterize a parent with diagnostic or pejorative labels unless quoting an identified documented source (name the source).")
-        st.update({k: (v[:6000] if isinstance(v, str) else v) for k, v in changes.items()})
-        st["professional_edited_content"] = {**(st.get("professional_edited_content") or {}), **{k: _now() for k in changes}}
-        if st.get("legal_status") == "finalized":
-            st["legal_status"] = "professional_review"
-        elif st.get("legal_status") == "draft" and changes:
-            st["legal_status"] = "professional_review"
-        st["updated_at"] = _now()
-        await db.joint_reports.update_one({"id": rid}, {"$set": {"professional_statement": st}})
-        await log_event(rid, "LEGAL_REPORT_EDITED", user)
-        doc["professional_statement"] = st
-        return payload(doc, await notes_count(rid, user))
+        doc = await s.own_case(rid, user)
+        doc["professional_statement"] = _patched_statement(doc.get("professional_statement") or {}, body.fields)
+        await s.save(rid, doc["professional_statement"])
+        await s.log_event(rid, "LEGAL_REPORT_EDITED", user)
+        return await s.payload(doc, rid, user)
 
     @r.post("/professional-legal-reports/{rid}/preview")
     async def preview(rid: str, user=Depends(get_current_user)):
-        await own_case(rid, user)
-        await log_event(rid, "LEGAL_REPORT_PREVIEWED", user)
+        await s.own_case(rid, user)
+        await s.log_event(rid, "LEGAL_REPORT_PREVIEWED", user)
         return {"ok": True}
 
     @r.post("/professional-legal-reports/{rid}/finalize")
     async def finalize(rid: str, body: FinalizeIn, user=Depends(get_current_user)):
-        doc = await own_case(rid, user)
-        st = doc.get("professional_statement") or {}
-        if not st.get("legal_draft"):
-            raise HTTPException(status_code=400, detail="Generate a draft before finalizing.")
-        if not (body.certified and body.certified_name.strip() and body.certified_date.strip()):
-            raise HTTPException(status_code=400, detail="Certification checkbox, professional name and date are required.")
-        for f in ("observations", "next_steps"):
-            st.setdefault(f, "")
+        doc = await s.own_case(rid, user)
         versions = doc.get("legal_report_versions") or []
-        version = len(versions) + 1
-        now = _now()
-        st.update({"legal_status": "finalized", "status": "ready", "version": max(int(st.get("version") or 0), version), "professional_certified": True,
-                   "professional_certified_name": body.certified_name.strip()[:120], "professional_certified_at": now, "professional_certified_date": body.certified_date.strip()[:40],
-                   "certification": {"title": body.title[:120], "bar_number": body.bar_number[:60], "organization": body.organization[:160], "email": body.email[:160], "phone": body.phone[:40]},
-                   "finalized_at": now, "updated_at": now, "legal_version": version})
-        snapshot = {"version": version, "finalized_at": now, "professional_name": body.certified_name.strip()[:120], "professional_id": user["_id"], "case_id": rid, "audit_timestamp": now, "report": st}
-        await db.joint_reports.update_one({"id": rid}, {"$set": {"professional_statement": st}, "$push": {"legal_report_versions": snapshot}})
-        await log_event(rid, "LEGAL_REPORT_FINALIZED", user)
-        doc["professional_statement"] = st
-        doc["legal_report_versions"] = versions + [snapshot]
-        return payload(doc, await notes_count(rid, user))
+        st, now = _finalized_statement(doc.get("professional_statement") or {}, body, len(versions) + 1)
+        snapshot = {"version": st["legal_version"], "finalized_at": now, "professional_name": st["professional_certified_name"], "professional_id": user["_id"], "case_id": rid, "audit_timestamp": now, "report": st}
+        await s.save(rid, st, {"$push": {"legal_report_versions": snapshot}})
+        await s.log_event(rid, "LEGAL_REPORT_FINALIZED", user)
+        doc["professional_statement"], doc["legal_report_versions"] = st, versions + [snapshot]
+        return await s.payload(doc, rid, user)
+
+    return r
+
+
+def _output_routes(s: LegalStore, get_current_user) -> APIRouter:
+    r = APIRouter()
 
     @r.get("/professional-legal-reports/{rid}/pdf")
     async def pdf(rid: str, user=Depends(get_current_user)):
         from pdf_report import build_legal_report_pdf
-        doc = await own_case(rid, user)
-        st = doc.get("professional_statement") or {}
-        if not st.get("legal_draft"):
+        doc = await s.own_case(rid, user)
+        if not (doc.get("professional_statement") or {}).get("legal_draft"):
             raise HTTPException(status_code=400, detail="Generate a draft first.")
-        pro = await db.users.find_one({"_id": doc["professional_id"]}, {"_id": 0, "name": 1, "profile": 1, "email": 1}) or {}
-        await log_event(rid, "LEGAL_REPORT_EXPORTED", user)
-        data = {**payload(doc, await notes_count(rid, user)), "professional": {"name": pro.get("name", ""), **(pro.get("profile") or {})}, "date": _now()[:10]}
+        pro = await s.db.users.find_one({"_id": doc["professional_id"]}, {"_id": 0, "name": 1, "profile": 1, "email": 1}) or {}
+        await s.log_event(rid, "LEGAL_REPORT_EXPORTED", user)
+        data = {**(await s.payload(doc, rid, user)), "professional": {"name": pro.get("name", ""), **(pro.get("profile") or {})}, "date": _now()[:10]}
         return Response(content=build_legal_report_pdf(data), media_type="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="professional-legal-report-{doc.get("case_code") or rid}.pdf"'})
 
     @r.get("/professional-legal-reports/{rid}/diff")
     async def diff(rid: str, from_version: int = 0, to_version: int = 0, user=Depends(get_current_user)):
         """Compare finalized versions (to_version=0 → current working copy)."""
-        doc = await own_case(rid, user)
+        doc = await s.own_case(rid, user)
         versions = {v["version"]: v for v in (doc.get("legal_report_versions") or [])}
         if from_version not in versions:
             raise HTTPException(status_code=404, detail="Version not found")
-        old = versions[from_version]["report"]
         new = versions[to_version]["report"] if to_version else (doc.get("professional_statement") or {})
         return {"from_version": from_version, "to_version": to_version or "current", "from_finalized_at": versions[from_version]["finalized_at"],
-                "to_finalized_at": versions[to_version]["finalized_at"] if to_version else None, "changes": report_diff(old, new)}
+                "to_finalized_at": versions[to_version]["finalized_at"] if to_version else None, "changes": report_diff(versions[from_version]["report"], new)}
+
+    return r
+
+
+def _sample_routes() -> APIRouter:
+    r = APIRouter()
 
     @r.get("/professional-legal-report/sample")
     async def sample():

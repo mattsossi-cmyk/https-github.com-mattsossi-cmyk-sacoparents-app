@@ -1,3 +1,4 @@
+import secrets
 """Iter-59: verify (A) sign-in / forgot-password / reset-password paths and
 (B) Reassessment Compare backend feed (level_history 2 rows with ratings + growth
 after two submit-to-court cycles)."""
@@ -226,7 +227,7 @@ def test_reset_via_link_token_clears_lockout():
                       "locked_until": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()}})
 
     # Insert reset doc directly with a known link_token
-    link_token = "known-link-token-abc123"
+    link_token = secrets.token_urlsafe(24)  # throwaway per-run token, not a secret
     _db().password_resets.delete_many({"email": email})
     _db().password_resets.insert_one({
         "email": email,

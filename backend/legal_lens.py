@@ -77,31 +77,31 @@ def readiness(doc: dict) -> list[dict]:
             {"key": "fv_b", "label": "Parent B Family Violence Assessment Received", "done": safety and b, "na": not safety}]
 
 
+def _prefill_header(doc: dict, pro: dict, rd: dict) -> dict:
+    parts, court, sug = doc.get("participants") or {}, doc.get("court") or {}, suggested_score(doc)
+    fv = lambda k: "Not Applicable" if rd[k]["na"] else ("Received" if rd[k]["done"] else "Not Received")  # noqa: E731
+    return {"matter_name": f"{doc.get('subject_label') or 'Co-parenting'} — {doc.get('child_name') or ''}".strip(" —"), "court_county": court.get("court_name", ""),
+            "cause_number": court.get("cause_number", ""), "professional_role": pro.get("pro_role", ""), "report_date": datetime.now(timezone.utc).date().isoformat(),
+            "parent_a_name": parts.get("a", {}).get("name") or "Parent A", "parent_b_name": parts.get("b", {}).get("name") or "Parent B", "fv_a_received": fv("fv_a"), "fv_b_received": fv("fv_b"),
+            "joint_rating": sug["score"] if sug else None, "parent_a_rating": None, "parent_b_rating": None,
+            "risk_screening": {k: {"level": "Not assessed", "note": ""} for k, _, _ in RISK_CATEGORIES}, "reassess_interval": "Every 90 to 180 days",
+            "reassess_up": REASSESS_UP_DEFAULT, "reassess_down": REASSESS_DOWN_DEFAULT, "resource_rows": []}
+
+
+def _prefill_joint(f: dict, doc: dict) -> dict:
+    return {"joint_strengths": " ".join(f["alignment"]), "joint_gaps": " ".join(f["differences"]), "alignment_agreements": "\n".join(f["alignment"]), "alignment_disagreements": "\n".join(f["differences"]),
+            "partial_alignment": "\n".join(f"{r['area']}: some common ground; may benefit from structured discussion." for r in f["alignment_map"] if r.get("status") == "Moderate alignment"),
+            "child_focus": _child_focus_prefill(f.get("child_focused") or [], doc.get("subject") or "")}
+
+
 def prefill(doc: dict, pro: dict) -> dict:
     """Pull everything already in the case so the professional never re-enters it."""
-    f = joint_findings(doc)
-    sug = suggested_score(doc)
-    rd = {r["key"]: r for r in readiness(doc)}
-    parts = doc.get("participants") or {}
-    fv = lambda k: "Not Applicable" if rd[k]["na"] else ("Received" if rd[k]["done"] else "Not Received")  # noqa: E731
-    out = {"matter_name": f"{doc.get('subject_label') or 'Co-parenting'} — {doc.get('child_name') or ''}".strip(" —"), "court_county": (doc.get("court") or {}).get("court_name", ""),
-           "cause_number": (doc.get("court") or {}).get("cause_number", ""), "professional_role": pro.get("pro_role", ""), "report_date": datetime.now(timezone.utc).date().isoformat(),
-           "parent_a_name": parts.get("a", {}).get("name") or "Parent A", "parent_b_name": parts.get("b", {}).get("name") or "Parent B", "fv_a_received": fv("fv_a"), "fv_b_received": fv("fv_b"),
-           "joint_rating": sug["score"] if sug else None, "parent_a_rating": None, "parent_b_rating": None,
-           "risk_screening": {k: {"level": "Not assessed", "note": ""} for k, _, _ in RISK_CATEGORIES}, "reassess_interval": "Every 90 to 180 days",
-           "reassess_up": REASSESS_UP_DEFAULT, "reassess_down": REASSESS_DOWN_DEFAULT, "resource_rows": []}
+    out = _prefill_header(doc, pro, {r["key"]: r for r in readiness(doc)})
     for role in ("a", "b"):
         ans = _answers(doc, role)
-        out[f"parent_{role}_strengths"] = _pick(ans, "working_well")
-        out[f"parent_{role}_gaps"] = _pick(ans, "concerns")
-    if f:
-        out["joint_strengths"] = " ".join(f["alignment"])
-        out["joint_gaps"] = " ".join(f["differences"])
-        out["alignment_agreements"] = "\n".join(f["alignment"])
-        out["alignment_disagreements"] = "\n".join(f["differences"])
-        out["partial_alignment"] = "\n".join(f"{r['area']}: some common ground; may benefit from structured discussion." for r in f["alignment_map"] if r.get("status") == "Moderate alignment")
-        out["child_focus"] = _child_focus_prefill(f.get("child_focused") or [], doc.get("subject") or "")
-    return out
+        out[f"parent_{role}_strengths"], out[f"parent_{role}_gaps"] = _pick(ans, "working_well"), _pick(ans, "concerns")
+    f = joint_findings(doc)
+    return {**out, **_prefill_joint(f, doc)} if f else out
 
 
 def _child_focus_prefill(child_items: list, subject: str) -> dict:
@@ -180,19 +180,28 @@ def sanitize_fields(fields: dict) -> dict:
     return upd
 
 
+def _assert_finalizable(rep: dict, upd: dict) -> None:
+    if not (upd.get("signature_name") or rep.get("signature_name")):
+        raise HTTPException(status_code=400, detail="Professional Signature Name is required to finalize")
+    rationale = next((v for k in ("pathway_rationale", "conflict_management_rationale") for v in (upd.get(k), rep.get(k)) if v), "")
+    if (upd.get("conflict_pathways") or rep.get("conflict_pathways")) and not rationale.strip():
+        raise HTTPException(status_code=400, detail="Explain why the selected conflict-resolution pathways are relevant before finalizing")
+
+
+def _ai_review(rep: dict, upd: dict) -> dict:
+    merged = {**rep, **upd}
+    return {k: {"model": d["model"], "drafted_at": d["at"], "edited": (merged.get(k) or "").strip() != d["text"].strip()} for k, d in (rep.get("ai_drafts") or {}).items()}
+
+
 def apply_status(rep: dict, upd: dict, status: str) -> None:
     if status not in STATUSES:
         raise HTTPException(status_code=400, detail="Invalid status")
-    if status in ("final", "submitted_to_court") and not (upd.get("signature_name") or rep.get("signature_name")):
-        raise HTTPException(status_code=400, detail="Professional Signature Name is required to finalize")
-    merged_rationale = upd.get("pathway_rationale") or rep.get("pathway_rationale") or upd.get("conflict_management_rationale") or rep.get("conflict_management_rationale")
-    if status in ("final", "submitted_to_court") and (upd.get("conflict_pathways") or rep.get("conflict_pathways")) and not (merged_rationale or "").strip():
-        raise HTTPException(status_code=400, detail="Explain why the selected conflict-resolution pathways are relevant before finalizing")
+    if status in ("final", "submitted_to_court"):
+        _assert_finalizable(rep, upd)
     upd["status"] = status
     if status == "final" and not rep.get("finalized_at"):
         upd["finalized_at"] = datetime.now(timezone.utc).isoformat()
-        merged = {**rep, **upd}
-        upd["ai_review"] = {k: {"model": d["model"], "drafted_at": d["at"], "edited": (merged.get(k) or "").strip() != d["text"].strip()} for k, d in (rep.get("ai_drafts") or {}).items()}
+        upd["ai_review"] = _ai_review(rep, upd)
 
 
 def ai_disclosure_line(ai_review: dict) -> str:
@@ -212,35 +221,37 @@ def case_summary(d: dict, status: str) -> dict:
             "parent_a": parts.get("a", {}).get("name"), "parent_b": parts.get("b", {}).get("name"), "readiness": readiness(d)}
 
 
+def _reminder_html(rep: dict, case: dict, pro: dict, app_url, email_from_name: str) -> str:
+    open_goals = sum(1 for r in ("a", "b") for g in growth_lines(rep, r) if not g["met"])
+    return ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+            f"<p>Hi {escape(pro.get('name', ''))},</p><p>The next review date (<strong>{rep['next_review_date']}</strong>) for the Professional Evaluation Report in case "
+            f"<strong>{escape(case.get('case_code') or '')}</strong> has arrived. {open_goals} Key Growth Area{'s are' if open_goals != 1 else ' is'} not yet marked as met.</p>"
+            "<p>Re-check each parent's growth areas, update the 1–10 ratings, set the next review date, and submit a new version if the court should see the progress.</p>"
+            f'<p><a href="{app_url()}/cases/{rep["case_id"]}/professional-report" style="background:#5B2A86;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block">Open the report</a></p>'
+            f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>')
+
+
+async def _send_reminder(db, rep: dict, send_email, app_url, email_from_name, logger) -> bool:
+    case = await db.joint_reports.find_one({"id": rep["case_id"]}, {"_id": 0, "case_code": 1, "child_name": 1, "professional_id": 1}) or {}
+    pro = await db.users.find_one({"_id": rep.get("professional_id") or case.get("professional_id")}, {"name": 1, "email": 1}) or {}
+    if not pro.get("email"):
+        return False
+    try:
+        await send_email(to=pro["email"], case_id=rep["case_id"], kind="reassessment_reminder", to_role="Professional",
+                         subject=f"Reassessment due - Case {case.get('case_code') or ''}", html=_reminder_html(rep, case, pro, app_url, email_from_name))
+    except Exception as exc:
+        logger.warning("reassessment reminder failed for %s: %s", rep["case_id"], exc)
+        return False
+    await db.professional_reports.update_one({"case_id": rep["case_id"]}, {"$set": {"reassess_reminder_for": rep["next_review_date"], "reassess_reminder_sent_at": datetime.now(timezone.utc).isoformat()}})
+    return True
+
+
 async def run_reassessment_reminders(db, send_email, app_url, email_from_name, logger, today=None) -> int:
     """Email the professional on a report's next_review_date so Key Growth Areas are re-checked; once per date."""
     today_s = (today or datetime.now(timezone.utc).date()).isoformat()
-    reps = await db.professional_reports.find({"next_review_date": {"$gt": "", "$lte": today_s}, "status": {"$in": ["final", "submitted_to_court"]},
-                                               "$or": [{"reassess_reminder_for": {"$exists": False}}, {"reassess_reminder_for": {"$ne": "$next_review_date"}}]}, {"_id": 0}).to_list(500)
-    sent = 0
-    for rep in reps:
-        if rep.get("reassess_reminder_for") == rep["next_review_date"]:
-            continue
-        case = await db.joint_reports.find_one({"id": rep["case_id"]}, {"_id": 0, "case_code": 1, "child_name": 1, "professional_id": 1})
-        pro = await db.users.find_one({"_id": rep.get("professional_id") or (case or {}).get("professional_id")}, {"name": 1, "email": 1}) or {}
-        if not pro.get("email"):
-            continue
-        open_goals = sum(1 for r in ("a", "b") for g in growth_lines(rep, r) if not g["met"])
-        try:
-            await send_email(to=pro["email"], case_id=rep["case_id"], kind="reassessment_reminder", to_role="Professional",
-                             subject=f"Reassessment due - Case {(case or {}).get('case_code') or ''}",
-                             html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                                   f"<p>Hi {escape(pro.get('name', ''))},</p><p>The next review date (<strong>{rep['next_review_date']}</strong>) for the Professional Evaluation Report in case "
-                                   f"<strong>{escape((case or {}).get('case_code') or '')}</strong> has arrived. {open_goals} Key Growth Area{'s are' if open_goals != 1 else ' is'} not yet marked as met.</p>"
-                                   "<p>Re-check each parent's growth areas, update the 1–10 ratings, set the next review date, and submit a new version if the court should see the progress.</p>"
-                                   f'<p><a href="{app_url()}/cases/{rep["case_id"]}/professional-report" style="background:#5B2A86;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block">Open the report</a></p>'
-                                   f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>'))
-        except Exception as exc:
-            logger.warning("reassessment reminder failed for %s: %s", rep["case_id"], exc)
-            continue
-        await db.professional_reports.update_one({"case_id": rep["case_id"]}, {"$set": {"reassess_reminder_for": rep["next_review_date"], "reassess_reminder_sent_at": datetime.now(timezone.utc).isoformat()}})
-        sent += 1
-    return sent
+    reps = await db.professional_reports.find({"next_review_date": {"$gt": "", "$lte": today_s}, "status": {"$in": ["final", "submitted_to_court"]}}, {"_id": 0}).to_list(500)
+    due = [rep for rep in reps if rep.get("reassess_reminder_for") != rep["next_review_date"]]
+    return sum([await _send_reminder(db, rep, send_email, app_url, email_from_name, logger) for rep in due])
 
 
 def _lens_case_query(rid: str, user: dict) -> dict:

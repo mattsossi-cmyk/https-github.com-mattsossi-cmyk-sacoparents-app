@@ -1,7 +1,7 @@
 """Fictional, fully filled-in Professional Evaluation Report — public sample (no real data)."""
 from legal_lens import (AI_MODELS, CONFLICT_OPTIONS, INTRO_TEXT, JOINT_OPTIONS, PATHWAYS, RATING_NOTE, REASSESS_INTERVALS, RECEIPT, RESOURCE_CATEGORIES, RISK_CATEGORIES, RISK_LEVELS, REPORT_PRINCIPLE, REPORT_PURPOSE, SAFETY_PATHWAY, REPORT_DISCLAIMER, CONFLICT_GUIDANCE, CHILD_FOCUS_CATEGORIES,
                         SAFETY_ALERT, SAFETY_NOTE, SCALE_TABLE, STATUSES, TAGLINE, classify_individual, classify_joint)
-from sample_professional_report import SAMPLE_COURT, SAMPLE_PRO
+from sample_fixtures import SAMPLE_COURT, SAMPLE_PRO
 
 _REPORT = {
     "id": "sample-legal-lens", "case_id": "sample-case", "status": "final", "professional_name": SAMPLE_PRO["name"], "professional_role": SAMPLE_PRO["pro_role"],

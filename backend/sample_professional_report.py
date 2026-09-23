@@ -2,8 +2,7 @@
 from coparenting_tiers import framework_block, joint_findings, suggested_score
 from joint_engine import SAMPLE_SCENARIOS
 
-SAMPLE_PRO = {"name": "Jordan Reyes, LPC", "pro_role": "Parenting Facilitator", "organization": "Alamo Family Solutions (fictional)", "license_number": "TX-LPC-00000", "phone": "", "city": "San Antonio", "state": "TX", "email": "", "credentials_verified": True}
-SAMPLE_COURT = {"court_name": "000th Judicial District Court, Bexar County (fictional)", "cause_number": "2026-CI-00000", "judge_name": "[Presiding Judge]", "judge_email": ""}
+from sample_fixtures import SAMPLE_PRO, SAMPLE_COURT  # noqa: F401
 
 STATEMENT_TEXT = {
     "role_basis": "Appointed Parenting Facilitator by court referral through SA CoParents Align. My role is to facilitate child-focused alignment between the parents; I make no findings about either parent and no recommendation regarding conservatorship or possession.",
