@@ -10,6 +10,7 @@ import { CourtThread } from "@/components/CourtThread";
 import { HearingDate } from "@/components/CourtCaseCard";
 import { CourtLegalSummary } from "@/components/CourtLegalSummary";
 import { ScoreTrendChart } from "@/components/ScoreTrendChart";
+import { ReassessmentCompare } from "@/components/ReassessmentCompare";
 
 const Section = ({ n, title, children, testId, id }) => (
   <section id={id} className="scroll-mt-24 rounded-lg border border-border bg-white p-6" data-testid={testId}>
@@ -123,6 +124,7 @@ export default function CourtCase({ sample = false }) {
                   )}
                   {d.level_history?.filter((h) => h.score).length > 0 && (
                     <>
+                    <ReassessmentCompare history={d.level_history} names={{ a: d.statement?.legal_summary?.parent_names?.a, b: d.statement?.legal_summary?.parent_names?.b }} />
                     <ScoreTrendChart history={d.level_history} names={{ a: d.statement?.legal_summary?.parent_names?.a, b: d.statement?.legal_summary?.parent_names?.b }} />
                     <div className="rounded-lg border border-border p-4" data-testid="court-level-history">
                       <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ability Level across submitted versions</p>
