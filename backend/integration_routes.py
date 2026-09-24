@@ -329,13 +329,32 @@ async def export_assessments(
     }
 
     # Foundation Statement — the four reflective prompts saved via
-    # /api/mediation/reflection.
+    # /api/mediation/reflection. Canonical keys are the ones the
+    # frontend writes (child_lens / own_part / best_outcome /
+    # coparent_feedback — see models.ReflectionPayload). The
+    # historical export shape used different names (my_part /
+    # best_case / coparent_lens) that no writer ever populated, so
+    # 3 of 4 fields silently came back null for every parent.
+    # We now read canonical keys but keep the historical output field
+    # names AND populate a `canonical` block so Align can migrate off
+    # the legacy names on its own timeline.
     reflection = prep.get("reflection") or {}
-    foundation_statement = {
+    canonical = {
         "child_lens": _clean(reflection.get("child_lens")),
-        "my_part": _clean(reflection.get("my_part")),
-        "best_case": _clean(reflection.get("best_case")),
-        "coparent_lens": _clean(reflection.get("coparent_lens")),
+        "own_part": _clean(reflection.get("own_part")),
+        "best_outcome": _clean(reflection.get("best_outcome")),
+        "coparent_feedback": _clean(reflection.get("coparent_feedback")),
+    }
+    foundation_statement = {
+        # Historical field names — kept populated so any existing
+        # Align integration that still reads them starts receiving
+        # real data immediately.
+        "child_lens": canonical["child_lens"],
+        "my_part": canonical["own_part"],
+        "best_case": canonical["best_outcome"],
+        "coparent_lens": canonical["coparent_feedback"],
+        # Canonical block — the shape Align should adopt going forward.
+        "canonical": canonical,
         "updated_at": _iso(reflection.get("updated_at") or prep.get("updated_at")),
     }
 

@@ -2,15 +2,12 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  ArrowDown,
   ArrowUpRight,
   ShieldCheck,
   Facebook,
   Heart,
   MessageCircle,
-  Sparkles,
   ClipboardList,
-  BookOpen,
   Users,
   Compass,
   Lock,
@@ -1517,8 +1514,8 @@ export default function Landing() {
                right after Step 6, with two CTAs: "I have a professional
                invitation" (→ /join) and "Learn about SA CoParents
                Align" (→ sacoparentsalign.com).
-            4. AlignmentPhilosophy → TrustSignals → HomepageFAQ →
-               FinalCTA close the page. */}
+            4. AlignmentPhilosophy → TrustSignals → HomepageFAQ close
+               the page. (FinalCTA was removed per user request.) */}
         <HeroTop />
         <CoachDemoSection />
         <HeroBottom />

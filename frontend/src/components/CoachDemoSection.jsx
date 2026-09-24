@@ -305,7 +305,7 @@ export default function CoachDemoSection() {
               )}
 
               {transcript.map((turn, i) => (
-                <ChatBubble key={i} turn={turn} onFollowup={send} pending={pending} />
+                <ChatBubble key={i} turn={turn} onFollowup={send} pending={pending} capReached={capReached} />
               ))}
 
               {pending && (
@@ -505,7 +505,7 @@ function BeforeAfterStrip() {
 }
 
 
-function ChatBubble({ turn, onFollowup, pending }) {
+function ChatBubble({ turn, onFollowup, pending, capReached }) {
   if (turn.role === "user") {
     return (
       <div className="self-end max-w-[78%]" data-testid="coach-demo-bubble-user">
@@ -540,7 +540,7 @@ function ChatBubble({ turn, onFollowup, pending }) {
             <button
               key={i}
               type="button"
-              disabled={pending}
+              disabled={pending || capReached}
               onClick={() => onFollowup(f)}
               data-testid={`coach-demo-followup-${i}`}
               className="text-[11.5px] font-medium text-[#3D1A78] bg-[#F5F0FF] border border-[#E0D3FF] rounded-full px-3 py-1.5 hover:bg-[#EBE1FF] transition disabled:opacity-50"

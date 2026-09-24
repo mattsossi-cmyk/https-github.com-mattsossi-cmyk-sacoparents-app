@@ -67,20 +67,30 @@ def _client_ip(request: Request) -> str:
 
 
 async def _rate_guard(ip: str) -> None:
-    """Raise 429 if this IP or the platform is over the demo quota."""
+    """Raise 429 if this IP or the platform is over the demo quota.
+
+    Sweeps expired buckets on every call — otherwise `_ip_hits` grew
+    unbounded as unique visitor IPs kept a live entry forever even
+    after their window emptied. The sweep runs under the rate lock
+    so a concurrent reader never sees a partially-deleted key.
+    """
     now = time.monotonic()
     async with _rate_lock:
         # Trim global window.
         while _global_hits and now - _global_hits[0] > _GLOBAL_WINDOW_SECONDS:
             _global_hits.popleft()
-        # Trim per-IP window.
+        # Trim the caller's per-IP window and reap any other IP whose
+        # window has fully aged out — bounded work per call because
+        # the number of live IPs is bounded by the global limit.
+        stale_ips: list[str] = []
+        for other_ip, other_bucket in _ip_hits.items():
+            while other_bucket and now - other_bucket[0] > _PER_IP_WINDOW_SECONDS:
+                other_bucket.popleft()
+            if not other_bucket:
+                stale_ips.append(other_ip)
+        for stale in stale_ips:
+            _ip_hits.pop(stale, None)
         bucket = _ip_hits.get(ip)
-        if bucket is not None:
-            while bucket and now - bucket[0] > _PER_IP_WINDOW_SECONDS:
-                bucket.popleft()
-            if not bucket:
-                _ip_hits.pop(ip, None)
-                bucket = None
         if len(_global_hits) >= _GLOBAL_LIMIT:
             raise HTTPException(
                 status_code=429,
