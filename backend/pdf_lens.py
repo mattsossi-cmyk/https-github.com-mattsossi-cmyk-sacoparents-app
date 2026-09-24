@@ -171,9 +171,11 @@ def small_lines(pdf: FPDF, lines: list) -> None:
 def _parent_lines(rep: dict, role: str) -> list:
     from lens_data import growth_lines
     g = growth_lines(rep, role)
+    met, total = sum(1 for x in g if x["met"]), len(g)
+    caption = [f"{met} of {total} growth areas met ({round(met / total * 100)}%)"] if total else []
     return ([f"Current Level: {rep.get(f'parent_{role}_rating') or '—'}/10", "", "SUCCESSES"] + [f"✓ {x}" for x in _lines(rep.get(f"parent_{role}_strengths"))]
             + ["", "CHALLENGES / FAILURES"] + [f"! {x}" for x in _lines(rep.get(f"parent_{role}_gaps"))]
-            + ["", f"GROWTH PRIORITIES ({sum(1 for x in g if x['met'])} of {len(g)} met)"] + [f"{'☑' if x['met'] else '☐'} {x['text']}" for x in g]
+            + ["", "GROWTH PRIORITIES"] + [f"{'☑' if x['met'] else '☐'} {x['text']}{'  [MET at reassessment]' if x['met'] else ''}" for x in g] + caption
             + ([f"Notes: {rep.get(f'parent_{role}_notes')}"] if rep.get(f"parent_{role}_notes") else []))
 
 
@@ -185,6 +187,10 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     pdf.set_font(FONT, "B", 18)
     pdf.set_text_color(*PURPLE)
     pdf.cell(0, 9, "Professional Alignment Report", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 8.5)
+    pdf.set_text_color(*GRAY)
+    pdf.cell(0, 5, "SA CoParents Align Professional Evaluation Report (Legal Lens) — for professionals and the court", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
     full_card(pdf, "Purpose", [notes.get("purpose", "")], PURPLE_FILL, PURPLE)
     _lens_heading(pdf, "1. Case & Assessment Snapshot")
     kv_table(pdf, [("Case / Matter", rep.get("matter_name")), ("Case ID", c.get("case_code")), ("Court / County", rep.get("court_county")), ("Cause Number", rep.get("cause_number")),

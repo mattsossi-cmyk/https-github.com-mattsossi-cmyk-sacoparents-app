@@ -779,6 +779,21 @@ async def email_sample_professional_report(body: EmailSampleIn):
     return {"ok": True}
 
 
+@api.get("/joint/sample-foundation-statement")
+async def sample_foundation_json():
+    from sample_foundation import sample_foundation_statement
+    return sample_foundation_statement()
+
+
+@api.get("/joint/sample-foundation-statement/pdf")
+async def sample_foundation_pdf(inline: int = 0):
+    from pdf_foundation import build_foundation_pdf
+    from sample_foundation import sample_foundation_statement
+    disposition = "inline" if inline else "attachment"
+    return Response(content=build_foundation_pdf(sample_foundation_statement()), media_type="application/pdf",
+                    headers={"Content-Disposition": f'{disposition}; filename="sample-foundation-statement.pdf"'})
+
+
 @api.get("/joint/sample-agreement")
 async def sample_agreement_json():
     from sample_agreement import sample_agreement

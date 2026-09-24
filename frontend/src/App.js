@@ -17,6 +17,7 @@ import SampleReport from "@/pages/SampleReport";
 import Samples from "@/pages/Samples";
 import SampleLegalLensReport from "@/pages/SampleLegalLensReport";
 import SampleAgreement from "@/pages/SampleAgreement";
+import SampleFoundationStatement from "@/pages/SampleFoundationStatement";
 import LegalLensReport from "@/pages/LegalLensReport";
 import ProfessionalReportHome from "@/pages/ProfessionalReportHome";
 
@@ -79,6 +80,7 @@ function App() {
             <Route path="/samples/professional-report" element={<Navigate to="/samples/legal-lens-report" replace />} />
             <Route path="/samples/legal-lens-report" element={<SampleLegalLensReport />} />
             <Route path="/samples/coparenting-agreement" element={<SampleAgreement />} />
+            <Route path="/samples/foundation-statement" element={<SampleFoundationStatement />} />
             <Route path="/samples/:key" element={<SampleReport />} />
             <Route path="/legal/:page" element={<Legal />} />
             <Route path="/accept-invite" element={<Protected><AcceptInvite /></Protected>} />

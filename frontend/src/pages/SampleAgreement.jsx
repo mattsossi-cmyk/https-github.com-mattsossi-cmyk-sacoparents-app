@@ -16,10 +16,10 @@ export default function SampleAgreement() {
   return (
     <div className="min-h-screen bg-background" data-testid="sample-agreement-page">
       <header className="bg-white border-b border-border">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between gap-3">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
           <Link to="/samples" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" data-testid="sample-agreement-back-link"><ArrowLeft className="h-4 w-4" /> Samples</Link>
-          <BrandLogo size="text-xl" />
-          <div className="flex gap-2">
+          <span className="hidden sm:block"><BrandLogo size="text-xl" /></span>
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild data-testid="sample-agreement-viewpdf-link"><a href={`${pdf}?inline=1`} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4 mr-1" /> View PDF</a></Button>
             <Button size="sm" asChild data-testid="sample-agreement-pdf-link"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> Download PDF</a></Button>
           </div>
