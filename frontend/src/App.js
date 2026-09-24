@@ -18,6 +18,7 @@ import Samples from "@/pages/Samples";
 import SampleLegalLensReport from "@/pages/SampleLegalLensReport";
 import SampleAgreement from "@/pages/SampleAgreement";
 import SampleFoundationStatement from "@/pages/SampleFoundationStatement";
+import FoundationEditor from "@/pages/FoundationEditor";
 import LegalLensReport from "@/pages/LegalLensReport";
 import ProfessionalReportHome from "@/pages/ProfessionalReportHome";
 
@@ -73,6 +74,7 @@ function App() {
             <Route path="/cases/:id/professional-report" element={<Protected><LegalLensReport /></Protected>} />
             <Route path="/joint/:id" element={<Protected><JointReport /></Protected>} />
             <Route path="/hub" element={<Protected><Hub /></Protected>} />
+            <Route path="/foundation" element={<Protected><FoundationEditor /></Protected>} />
             <Route path="/hub/complete" element={<Protected><CompleteReport /></Protected>} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/sample-mediation" element={<SampleReport fixedKey="mediation" />} />

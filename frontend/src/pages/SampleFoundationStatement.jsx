@@ -4,6 +4,7 @@ import { ArrowLeft, Download, ExternalLink } from "lucide-react";
 import api from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
+import { SampleTour, useSampleTour, TourButton, FOUNDATION_TOUR } from "@/components/SampleTour";
 
 const Bullets = ({ items, testId }) => (
   <ul className="space-y-2" data-testid={testId}>{(items || []).map((t, i) => <li key={i} className="relative pl-6 text-sm before:absolute before:left-0.5 before:top-1.5 before:h-2.5 before:w-2.5 before:rounded-full before:bg-teal-600">{t}</li>)}</ul>
@@ -35,6 +36,7 @@ const Banner = ({ right }) => (
 export default function SampleFoundationStatement() {
   const [d, setD] = useState(null);
   const [error, setError] = useState("");
+  const tour = useSampleTour(!!d, "sa-foundation-sample-tour-seen");
   useEffect(() => { api.get("/joint/sample-foundation-statement").then(({ data }) => setD(data)).catch(() => setError("The sample statement could not be loaded.")); }, []);
   const pdf = `${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-foundation-statement/pdf`;
   return (
@@ -44,6 +46,7 @@ export default function SampleFoundationStatement() {
           <Link to="/samples" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" data-testid="sample-foundation-back-link"><ArrowLeft className="h-4 w-4" /> Samples</Link>
           <span className="hidden sm:block"><BrandLogo size="text-xl" /></span>
           <div className="flex flex-wrap gap-2">
+            <TourButton onClick={tour.start} testId="foundation-tour-start-btn" />
             <Button variant="outline" size="sm" asChild data-testid="sample-foundation-viewpdf-link"><a href={`${pdf}?inline=1`} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4 mr-1" /> View PDF</a></Button>
             <Button size="sm" asChild data-testid="sample-foundation-pdf-link"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> Download PDF</a></Button>
           </div>
@@ -52,6 +55,7 @@ export default function SampleFoundationStatement() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 text-[#2d2d34]">
         <div className="mb-6 rounded-lg border border-[#4b2a7b]/30 bg-[#4b2a7b]/5 p-4 text-sm" data-testid="sample-foundation-banner"><strong className="text-[#4b2a7b]">Sample — fictional data.</strong> A parent's Child-Focused Foundation Statement as written in the SA CoParents parent app and imported into Align's joint Co-Parenting Agreement.</div>
         {error && <p className="text-sm text-red-700" data-testid="sample-foundation-error">{error}</p>}
+        {tour.open && d && <SampleTour steps={FOUNDATION_TOUR} storageKey="sa-foundation-sample-tour-seen" onDone={tour.close} label="How a parent writes this" prefix="foundation-tour" />}
         {d && (
           <div className="overflow-hidden rounded-lg bg-white shadow-lg" data-testid="foundation-document">
             <Banner right={"Child-Focused\nParent Report"} />

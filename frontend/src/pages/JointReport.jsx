@@ -10,6 +10,7 @@ import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { AgreementDocument } from "@/components/AgreementDocument";
 import { ProWorkspace } from "@/components/ProWorkspace";
 import { FoundationStatements } from "@/components/FoundationStatements";
+import { ShareFoundation } from "@/components/ShareFoundation";
 import { CompareView } from "@/components/CompareView";
 import { SampleWalkthrough } from "@/components/SampleWalkthrough";
 
@@ -160,6 +161,7 @@ export default function JointReport() {
               Invitation code for {detail.invitation.invitee_email}: <span className="font-semibold tracking-widest">{detail.invitation.code}</span>
             </p>
           )}
+          {detail.my_role && !detail.is_creator && <ShareFoundation rid={id} shared={detail.my_foundation_shared} onShared={() => setDetail((d) => ({ ...d, my_foundation_shared: true }))} />}
           {ready && detail.my_role && (
             <div className="mt-5 pt-4 border-t border-border">
               <p className="text-sm font-medium mb-2">Share with a professional (mediator, attorney, therapist):</p>

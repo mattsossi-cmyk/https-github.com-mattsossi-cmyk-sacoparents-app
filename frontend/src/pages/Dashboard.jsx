@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Trash2, CheckCircle2, Circle, Mail, Scale, ShieldAlert, Link2, Unlink } from "lucide-react";
+import { Trash2, CheckCircle2, Circle, Mail, Scale, ShieldAlert, Link2, Unlink, FileText } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { PrimaryTiles } from "@/components/dashboard/PrimaryTiles";
@@ -279,6 +279,17 @@ export default function Dashboard() {
         </div>
 
         <div className={isPro ? "grid md:grid-cols-2 gap-4" : "grid gap-4"} data-testid="agreement-tools-grid">
+          {!isPro && (
+          <div className="bg-white border border-border rounded-lg p-6 min-w-0" data-testid="foundation-card">
+            <p className="text-xs uppercase tracking-widest text-brand-teal font-bold">Child-Focused Foundation Statement</p>
+            <h2 className="text-2xl font-semibold mt-1">Write your Foundation Statement</h2>
+            <p className="text-sm text-muted-foreground mt-2 mb-5">Your goals, priorities, concerns and commitments for your child — in your own words. Private until you share it into a case, then downloadable as a branded PDF.</p>
+            <div className="flex flex-wrap gap-2">
+              <Link to="/foundation" data-testid="foundation-write-link"><Button className="gap-2" data-testid="foundation-write-btn"><FileText className="h-4 w-4" /> Write / edit my statement</Button></Link>
+              <Link to="/samples/foundation-statement" data-testid="foundation-sample-link"><Button variant="outline">See a sample</Button></Link>
+            </div>
+          </div>
+          )}
           {isPro && (
           <div className="bg-white border border-border rounded-lg p-6 min-w-0" data-testid="agreement-card">
             <p className="text-xs uppercase tracking-widest text-brand-teal font-bold">Co-Parenting Agreement</p>

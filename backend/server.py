@@ -704,8 +704,13 @@ async def joint_foundation_pdf(rid: str, side: str, user=Depends(get_current_use
         raise HTTPException(status_code=404, detail="No Foundation Statement on file for this parent")
     parent = (doc.get("participants", {}).get(side) or {}).get("name") or f"Parent {side.upper()}"
     await _log_report_access(doc, user, f"Downloaded Foundation Statement ({parent})", "download")
-    pdf = build_foundation_pdf({"freeform": stmts, "parent_name": parent, "child_name": doc.get("child_name") or "—", "child_short": doc.get("child_name") or "my child",
-                                "statement_date": ((doc.get("responses", {}).get(side) or {}).get("completed_at") or "")[:10], "is_sample": bool(doc.get("is_demo"))})
+    structured = next((s["structured"] for s in stmts if isinstance(s.get("structured"), dict)), None)
+    if structured:
+        from foundation import to_pdf_data
+        pdf = build_foundation_pdf(to_pdf_data({"fields": structured, "updated_at": stmts[0].get("shared_at", "")}, parent, bool(doc.get("is_demo"))))
+    else:
+        pdf = build_foundation_pdf({"freeform": stmts, "parent_name": parent, "child_name": doc.get("child_name") or "—", "child_short": doc.get("child_name") or "my child",
+                                    "statement_date": ((doc.get("responses", {}).get(side) or {}).get("completed_at") or "")[:10], "is_sample": bool(doc.get("is_demo"))})
     return Response(content=pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="foundation-statement-{side}.pdf"'})
 
 
@@ -1810,6 +1815,8 @@ from legal_lens import build_router as _build_lens_router  # noqa: E402
 app.include_router(_build_lens_router(db, get_current_user, _log_lifecycle), prefix="/api")
 from providers import build_router as _build_providers_router  # noqa: E402
 app.include_router(_build_providers_router(db, get_current_user), prefix="/api")
+from foundation import build_router as _build_foundation_router  # noqa: E402
+app.include_router(_build_foundation_router(db, get_current_user, get_joint_report_doc, report_role), prefix="/api")
 
 
 @app.get("/health")
