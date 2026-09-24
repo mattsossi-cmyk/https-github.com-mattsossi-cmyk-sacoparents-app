@@ -693,6 +693,22 @@ async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
     return rep
 
 
+@api.get("/joint/reports/{rid}/foundation/{side}/pdf")
+async def joint_foundation_pdf(rid: str, side: str, user=Depends(get_current_user)):
+    from pdf_foundation import build_foundation_pdf
+    doc = await get_joint_report_doc(rid, user)
+    if side not in ("a", "b") or (doc.get("created_by") != user["_id"] and report_role(doc, user["_id"]) != side):
+        raise HTTPException(status_code=403, detail="Not authorized to view this Foundation Statement")
+    stmts = (doc.get("responses", {}).get(side) or {}).get("foundation") or []
+    if not stmts:
+        raise HTTPException(status_code=404, detail="No Foundation Statement on file for this parent")
+    parent = (doc.get("participants", {}).get(side) or {}).get("name") or f"Parent {side.upper()}"
+    await _log_report_access(doc, user, f"Downloaded Foundation Statement ({parent})", "download")
+    pdf = build_foundation_pdf({"freeform": stmts, "parent_name": parent, "child_name": doc.get("child_name") or "—", "child_short": doc.get("child_name") or "my child",
+                                "statement_date": ((doc.get("responses", {}).get(side) or {}).get("completed_at") or "")[:10], "is_sample": bool(doc.get("is_demo"))})
+    return Response(content=pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="foundation-statement-{side}.pdf"'})
+
+
 @api.get("/joint/reports/{rid}/pdf")
 async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)

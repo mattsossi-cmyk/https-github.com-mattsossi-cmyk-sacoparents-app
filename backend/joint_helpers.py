@@ -148,6 +148,8 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
         my = doc.get("responses", {}).get(role)
         out["my_answers"] = my["answers"] if my else None
     if doc.get("created_by") == uid:
+        out["foundation_statements"] = [{"side": side, "parent": (doc.get("participants", {}).get(side) or {}).get("name") or f"Parent {side.upper()}", "title": s.get("title", "Foundation Statement"), "content": s.get("content", "")}
+                                        for side in ("a", "b") for s in (doc.get("responses", {}).get(side) or {}).get("foundation") or []]
         if invitation:
             out["invitation"] = _invitation_public(invitation)
         if pending:

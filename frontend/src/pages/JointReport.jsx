@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { AgreementDocument } from "@/components/AgreementDocument";
 import { ProWorkspace } from "@/components/ProWorkspace";
+import { FoundationStatements } from "@/components/FoundationStatements";
 import { CompareView } from "@/components/CompareView";
 import { SampleWalkthrough } from "@/components/SampleWalkthrough";
 
@@ -323,6 +324,7 @@ export default function JointReport() {
             </div>
           </div>
         )}
+        {detail.is_creator && <FoundationStatements rid={id} items={detail.foundation_statements} />}
         {detail.is_creator && <ProWorkspace rid={id} steps={ready && report && detail.kind !== "agreement" ? [...(report.next_steps || []), ...(report.options || [])] : null} outcome={detail.session_outcome} onOutcomeSaved={(o) => setDetail((d) => ({ ...d, session_outcome: o }))} courtReady={!!(ready && report && detail.kind !== "agreement")} />}
       </main>
     </div>

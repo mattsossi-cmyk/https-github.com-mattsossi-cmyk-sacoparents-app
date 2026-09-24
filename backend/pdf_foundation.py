@@ -147,6 +147,13 @@ def build_foundation_pdf(d: dict) -> bytes:
     pdf.cell(0, 6, "A parent's statement of goals, priorities, concerns and commitments for their child.", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(5)
     _info_cards(pdf, [("Parent", d.get("parent_name") or "—"), ("Child", d.get("child_name") or "—"), ("Statement Date", d.get("statement_date") or "—")])
+    if d.get("freeform"):
+        _panel(pdf, "This Foundation Statement was written by the parent in the SA CoParents app and imported into SA CoParents Align. It reflects the parent's own goals, concerns, priorities and commitments.", TEAL_LIGHT, accent=TEAL, sub="Purpose of This Statement")
+        for n, s in enumerate(d["freeform"], 1):
+            _heading(pdf, n, s.get("title") or "Foundation Statement")
+            _panel(pdf, s.get("content") or "—", PANEL)
+        _footer_block(pdf, d)
+        return bytes(pdf.output())
     _panel(pdf, d.get("purpose") or "", TEAL_LIGHT, accent=TEAL, sub="Purpose of This Statement")
     _heading(pdf, 1, "Shared Purpose")
     _panel(pdf, d.get("shared_purpose") or "—", PANEL)
@@ -192,6 +199,17 @@ def build_foundation_pdf(d: dict) -> bytes:
     _panel(pdf, d.get("future") or "—", PURPLE_LIGHT, label="Looking Forward")
     _heading(pdf, 10, "Parent Commitment")
     _panel(pdf, d.get("parent_commitment") or "—", COMMIT, accent=PURPLE, sub="My Foundation Statement")
+    _footer_block(pdf, d)
+    return bytes(pdf.output())
+
+
+_DISCLAIMER = "This Foundation Statement reflects parent-reported goals, concerns, priorities and commitments. It is intended to support child-focused reflection and communication. It is not a legal agreement and does not replace legal advice or a court order."
+_CONTACT = ["SA CoParents", "16607 Blanco #703", "San Antonio, TX 78232", "mattsossi@bsossi.com", "210-224-1667", "sacoparentsapp.online"]
+
+
+def _footer_block(pdf: FPDF, d: dict) -> None:
+    if pdf.get_y() > pdf.h - 70:
+        pdf.add_page()
     pdf.ln(14)
     y = pdf.get_y()
     pdf.set_draw_color(68, 68, 68)
@@ -210,7 +228,7 @@ def build_foundation_pdf(d: dict) -> bytes:
     pdf.set_xy(18, y + 4)
     pdf.set_font(FONT, "B", 9.5)
     pdf.set_text_color(*PURPLE)
-    contact = d.get("contact") or ["SA CoParents"]
+    contact = d.get("contact") or _CONTACT
     pdf.cell(70, 5, _s(contact[0]), new_x="LMARGIN", new_y="NEXT")
     pdf.set_font(FONT, "", 7.5)
     pdf.set_text_color(*GRAY)
@@ -218,5 +236,4 @@ def build_foundation_pdf(d: dict) -> bytes:
         pdf.cell(70, 3.8, _s(line), new_x="LMARGIN", new_y="NEXT")
     pdf.set_xy(95, y + 4)
     pdf.set_font(FONT, "I", 7.5)
-    pdf.multi_cell(pdf.w - 18 - 95, 3.8, _s(d.get("disclaimer") or ""))
-    return bytes(pdf.output())
+    pdf.multi_cell(pdf.w - 18 - 95, 3.8, _s(d.get("disclaimer") or _DISCLAIMER))

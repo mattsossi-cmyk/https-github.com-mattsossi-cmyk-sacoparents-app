@@ -21,7 +21,7 @@ from email_utils import set_comm_logger, EMAIL_FROM_NAME
 client = AsyncIOMotorClient(os.environ["MONGO_URL"])
 db = client[os.environ["DB_NAME"]]
 logger = logging.getLogger(__name__)
-BUILD_ID = "2026-09-23.1"
+BUILD_ID = "2026-09-24.1"
 logging.basicConfig(level=logging.INFO)
 
 async def _log_communication(rec: dict) -> None:

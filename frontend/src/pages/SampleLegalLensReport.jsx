@@ -7,14 +7,9 @@ import { Button } from "@/components/ui/button";
 import { SampleEmailForm } from "@/components/SampleEmailForm";
 import { SampleLensTour, StartTourButton, useSampleLensTour } from "@/components/SampleLensTour";
 import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/LensScale";
-import { ReportPrinciple, ChildFocusSummary, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid } from "@/components/LensSections";
+import { ReportPrinciple, ChildFocusSummary, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
 
-const Sec = ({ n, title, children, testId }) => (
-  <section className="bg-white border border-border rounded-lg p-6" data-testid={testId}>
-    <h2 className="text-lg font-semibold flex items-center gap-2 border-b border-border pb-2 text-brand-purple">{n !== undefined && <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-purple text-xs font-bold text-white">{n}</span>}{title}</h2>
-    <div className="mt-3 space-y-3 text-sm leading-relaxed">{children}</div>
-  </section>
-);
+const Sec = ({ n, title, children, testId }) => <LensSec n={n} title={title} testId={testId}>{children}</LensSec>;
 const H3 = ({ children }) => <h3 className="font-semibold text-align-green">{children}</h3>;
 const Lines = ({ label, text, ordered }) => { const items = (text || "").split("\n").filter(Boolean); const Tag = ordered ? "ol" : "ul"; return items.length > 0 && <div>{label && <p className="font-semibold">{label}</p>}<Tag className={`${ordered ? "list-decimal" : "list-disc"} pl-5 space-y-1`}>{items.map((x, i) => { const [t, ...rest] = x.split(": "); return <li key={i}>{rest.length ? <><strong>{t}:</strong> {rest.join(": ")}</> : x}</li>; })}</Tag></div>; };
 const KV = ({ rows }) => <dl className="grid gap-2 sm:grid-cols-3">{rows.map(([k, v]) => v && <div key={k}><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-semibold">{v}</dd></div>)}</dl>;

@@ -10,11 +10,31 @@ export function SourceTag({ kind }) {
 
 export function ReportHeader({ title = "Professional Alignment Report", subtitle, right }) {
   return (
-    <div className="rounded-lg bg-gradient-to-br from-[#4f2d8c] to-[#6f42c1] p-8 text-white" data-testid="lens-report-header">
-      <p className="text-xs font-bold uppercase tracking-[0.08em] opacity-90">SA CoParents Align</p>
-      <div className="flex flex-wrap items-start justify-between gap-3"><h1 className="mt-1 text-3xl font-bold" data-testid="lens-title">{title}</h1>{right}</div>
-      <p className="mt-2 max-w-3xl text-sm opacity-90">{subtitle || "A structured review of individual and joint parent assessments, child-focused concerns, areas of alignment and difference, available resources, and potential conflict-resolution pathways."}</p>
+    <div className="rounded-lg border-b-4 border-brand-purple bg-white p-6 sm:p-8" data-testid="lens-report-header">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="h-11 w-11 shrink-0 rounded-full" style={{ background: "linear-gradient(90deg,#5b2d8e 50%,#1f9a94 50%)" }} aria-hidden="true" />
+          <div><p className="text-2xl font-extrabold leading-tight text-brand-purple">SA CoParents <span className="text-teal-600">Align</span></p><p className="text-xs font-bold text-align-blue">Starting With Alignment, Ending With Agreement</p></div>
+        </div>
+        <div className="flex flex-col items-end gap-2"><p className="text-right text-[10px] font-extrabold uppercase leading-relaxed tracking-[0.08em] text-brand-purple">Child Focused<br />Solutions<br />Stronger Tomorrows</p>{right}</div>
+      </div>
+      <h1 className="mt-5 text-3xl font-bold text-brand-purple" data-testid="lens-title">{title}</h1>
+      <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{subtitle || "A structured review of individual and joint parent assessments, child-focused concerns, areas of alignment and difference, available resources, and potential conflict-resolution pathways."}</p>
     </div>
+  );
+}
+
+const CARD = { purple: "border-[#dcd7e6] bg-[#f3edfb] [&>h3]:text-brand-purple", teal: "border-[#dcd7e6] bg-[#e8f7f7] [&>h3]:text-teal-700", blue: "border-[#dcd7e6] bg-[#eaf4fb] [&>h3]:text-align-blue", green: "border-[#dcd7e6] bg-[#eaf7f1] [&>h3]:text-align-green", orange: "border-[#dcd7e6] bg-[#fff0e8] [&>h3]:text-[#d86936]", gold: "border-[#f0d78a] bg-[#fff7df] [&>h3]:text-[#b07d10]" };
+export function LensCard({ tone = "purple", title, children, testId, className = "" }) {
+  return <div className={`rounded-xl border p-4 ${CARD[tone]} ${className}`} data-testid={testId}><h3 className="text-sm font-bold">{title}</h3><div className="mt-2 space-y-1.5 text-sm">{children}</div></div>;
+}
+
+export function LensSec({ n, title, children, testId, id }) {
+  return (
+    <section className="rounded-lg border border-border bg-white p-5 sm:p-6" data-testid={testId || `lens-${id}`} id={id}>
+      <h2 className="flex items-center gap-2 rounded-md bg-[#f3edfb] px-3 py-2 text-lg font-semibold text-brand-purple">{n !== undefined && <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-purple text-xs font-bold text-white">{n}</span>}{title}</h2>
+      <div className="mt-4 space-y-3 text-sm leading-relaxed">{children}</div>
+    </section>
   );
 }
 
