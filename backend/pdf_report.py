@@ -382,6 +382,11 @@ def _agreement_summary(pdf: FPDF, r: dict) -> None:
 
 
 def build_agreement_pdf(r: dict) -> bytes:
+    from pdf_agreement import build_agreement_pdf as _build
+    return _build(r)
+
+
+def _legacy_build_agreement_pdf(r: dict) -> bytes:
     pdf = _new_pdf()
     _title_header(pdf, r["report_title"], [
         f"Child: {r['child_name']}",

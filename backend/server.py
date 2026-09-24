@@ -779,6 +779,20 @@ async def email_sample_professional_report(body: EmailSampleIn):
     return {"ok": True}
 
 
+@api.get("/joint/sample-agreement")
+async def sample_agreement_json():
+    from sample_agreement import sample_agreement
+    return sample_agreement()
+
+
+@api.get("/joint/sample-agreement/pdf")
+async def sample_agreement_pdf(inline: int = 0):
+    from sample_agreement import sample_agreement
+    disposition = "inline" if inline else "attachment"
+    return Response(content=build_agreement_pdf(sample_agreement()), media_type="application/pdf",
+                    headers={"Content-Disposition": f'{disposition}; filename="sample-coparenting-agreement.pdf"'})
+
+
 @api.get("/joint/sample-legal-lens")
 async def sample_legal_lens_json():
     from sample_legal_lens import sample_legal_lens

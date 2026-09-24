@@ -44,6 +44,19 @@ export default function Samples() {
           </div>
         </div>
 
+        <div className="mb-8 rounded-lg border border-border bg-white p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-testid="sample-card-coparenting-agreement">
+          <div className="flex-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-teal-700">For parents · Joint Agreement</p>
+            <h3 className="text-lg font-bold mt-1">Sample Co-Parenting Agreement</h3>
+            <p className="text-sm text-muted-foreground mt-1">Built from each parent's private proposals across 10 areas — transitions, communication, education, medical, emotional needs, activities, major decisions, managing differences and review. Matching answers become specific agreements; differences are listed for discussion.</p>
+          </div>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <Link to="/samples/coparenting-agreement" data-testid="sample-view-link-coparenting-agreement"><Button variant="outline">View</Button></Link>
+            <Button variant="outline" asChild data-testid="sample-viewpdf-link-coparenting-agreement"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-agreement/pdf?inline=1`} target="_blank" rel="noopener noreferrer">View PDF</a></Button>
+            <Button asChild data-testid="sample-pdf-link-coparenting-agreement"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/sample-agreement/pdf`} download>Download PDF</a></Button>
+          </div>
+        </div>
+
         <div className="mb-8 rounded-lg border border-border bg-white p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-testid="sample-card-judicial-preview">
           <div className="flex-1">
             <p className="text-xs font-bold uppercase tracking-widest text-accent">For courts &amp; judges</p>
