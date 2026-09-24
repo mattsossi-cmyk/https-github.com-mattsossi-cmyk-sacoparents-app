@@ -1,7 +1,7 @@
 """
 Sibling integration for sacoparentsalign.com.
 
-Three endpoints on `/api`:
+Endpoints on `/api`:
   1. POST /link-codes  — parent-authenticated (JWT). Mints a single-use
      8-char code, 15-minute TTL. Response: {"code": "AB3K7Q2Z"}.
   2. POST /integrations/verify-link-code — server-to-server, gated on
@@ -13,6 +13,13 @@ Three endpoints on `/api`:
      Situation Snapshot, Foundation Statement, and the three-pronged
      Special Needs deep-dive artefacts (Medical, Educational,
      Psychological).
+  4. GET /integrations/foundation-statement.pdf?email=… (Iter208) —
+     server-to-server, same header gate. Streams the parent's
+     Foundation Statement PDF, rendered by the SAME
+     `build_foundation_statement_pdf` builder the parent-facing
+     `/api/mediation/foundation-statement.pdf` uses. Lets Align embed
+     the app-branded PDF directly instead of re-rendering from raw
+     JSON — both sites automatically stay visually in sync.
 
 Design notes
 ------------
@@ -37,10 +44,12 @@ import os
 import secrets
 import string
 from datetime import datetime, timezone, timedelta
+from io import BytesIO
 from typing import Any, Dict, Optional
 
 import bcrypt
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field
 
@@ -401,3 +410,80 @@ def _iso(value) -> Optional[str]:
     if isinstance(value, datetime):
         return value.astimezone(timezone.utc).isoformat()
     return str(value)
+
+
+# --------------------------------------------------------------------- #
+# Iter208 — Foundation Statement PDF bytes for Align.
+#
+# Ships the SAME PDF the parent downloads on the parent-facing app so
+# the two sites can never drift visually. Reuses `_load_reflection` +
+# `build_foundation_statement_pdf` directly rather than re-implementing
+# them here.
+# --------------------------------------------------------------------- #
+@router.get("/integrations/foundation-statement.pdf")
+async def integrations_foundation_statement_pdf(
+    email: str,
+    x_integration_key: Optional[str] = Header(default=None, alias="X-Integration-Key"),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Stream the parent's Foundation Statement PDF (server-to-server).
+
+    * Gate: `X-Integration-Key` header must match
+      `INTEGRATION_SHARED_SECRET` (constant-time compare).
+    * 400 if `email` query param missing.
+    * 404 if no parent is linked to that email (same generic body as
+      `export-assessments` so we don't leak account existence).
+    * 409 when the parent has completed no reflection prompts yet —
+      Align's UI can then show its own empty-state instead of
+      embedding a hollow PDF.
+    * 200 with `application/pdf` bytes rendered by the exact same
+      `build_foundation_statement_pdf` builder the parent-facing route
+      calls.
+    """
+    _verify_integration_key(x_integration_key)
+
+    if not email:
+        raise HTTPException(status_code=400, detail="email query param required")
+
+    user = await db.users.find_one(
+        {"email": email.lower()},
+        {"user_id": 1, "email": 1, "name": 1},
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="No linked parent found")
+
+    prep = await db.prep_data.find_one({"user_id": user["user_id"]}, {"_id": 0}) or {}
+    reflection = prep.get("reflection") or {}
+
+    # Reuse the parent-facing builder so future visual updates flow
+    # through Align automatically. Lazy import — keeps a heavy PDF
+    # module out of the integrations hot path when only JSON lookups
+    # are being served.
+    from foundation_statement_pdf import (
+        build_foundation_statement_pdf,
+        foundation_statement_has_content,
+    )
+    if not foundation_statement_has_content(reflection):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This parent hasn't completed a Foundation Statement yet."
+            ),
+        )
+
+    author_name = (user.get("name") or (user.get("email") or "").split("@", 1)[0]).strip()
+    pdf_bytes = build_foundation_statement_pdf(
+        author_name=author_name or "A co-parent",
+        reflection=reflection,
+    )
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": 'inline; filename="foundation-statement.pdf"',
+            # Bundle metadata for Align diagnostics — never contains
+            # PHI, just render info.
+            "X-Report-Type": "foundation_statement",
+            "X-Report-Version": "iter208",
+        },
+    )
