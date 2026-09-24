@@ -130,12 +130,12 @@ def test_pdf_has_7_sections(flow):
     r = pro.get(f"{API}/cases/{rid}/professional-report/pdf")
     assert r.status_code == 200 and r.headers["content-type"].startswith("application/pdf")
     text = _pdf_text(r.content)
-    for h in ("1. Case & Assessment Overview", "2. Individual Parent Perspectives",
-              "3. Joint Assessment Findings", "4. Child-Focused Issues",
-              "5. Options & Resources", "6. Conflict Resolution Pathways",
-              "7. Professional Statement"):
+    for h in ("1. Case & Assessment Snapshot", "2. Individual Parent Perspectives",
+              "3. Joint Co-Parenting Assessment", "4. Child-Focused Issues",
+              "5. Options & Resources", "6. Conflict-Resolution Pathway",
+              "7. Professional Observation & Action Plan"):
         assert h in text, f"missing PDF heading: {h!r}; head={text[:400]!r}"
-    assert "[SELECTED]" in text, "no [SELECTED] marker in PDF"
+    assert "SELECTED" in text, "no SELECTED marker in PDF"
     assert "Homework routine" in text, "child-focus note missing from PDF"
     assert "REPORT PRINCIPLE" in text.upper()
 
@@ -171,9 +171,9 @@ def test_public_sample_pdf_7_headings():
     r = requests.get(f"{API}/joint/sample-legal-lens/pdf", timeout=30)
     assert r.status_code == 200 and r.headers["content-type"].startswith("application/pdf")
     text = _pdf_text(r.content)
-    for h in ("1. Case & Assessment Overview", "2. Individual Parent Perspectives",
-              "3. Joint Assessment Findings", "4. Child-Focused Issues",
-              "5. Options & Resources", "6. Conflict Resolution Pathways",
-              "7. Professional Statement"):
+    for h in ("1. Case & Assessment Snapshot", "2. Individual Parent Perspectives",
+              "3. Joint Co-Parenting Assessment", "4. Child-Focused Issues",
+              "5. Options & Resources", "6. Conflict-Resolution Pathway",
+              "7. Professional Observation & Action Plan"):
         assert h in text, f"sample PDF missing {h!r}"
-    assert "[SELECTED]" in text
+    assert "SELECTED" in text

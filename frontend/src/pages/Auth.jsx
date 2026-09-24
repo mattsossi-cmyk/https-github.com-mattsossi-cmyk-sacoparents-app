@@ -22,6 +22,7 @@ export default function Auth() {
   const [email, setEmail] = useState(search.get("email") || "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [formError, setFormError] = useState("");
   const [profile, setProfile] = useState({ phone: "", organization: "", pro_role: "", city: "", state: "", license_number: "", website: "" });
   const [agreed, setAgreed] = useState(false);
   const [resetCode, setResetCode] = useState("");
@@ -52,6 +53,7 @@ export default function Auth() {
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
+    setFormError("");
     try {
       if (mode === "login") {
         await login(email, password);
@@ -75,7 +77,9 @@ export default function Auth() {
       }
       navigate(next || "/dashboard");
     } catch (err) {
-      toast.error(formatApiError(err));
+      const msg = formatApiError(err);
+      setFormError(msg);
+      toast.error(msg, { duration: 8000 });
     } finally {
       setBusy(false);
     }
@@ -238,6 +242,7 @@ export default function Auth() {
               </>
             )}
             {mode === "register" && <ConfidentialityNotice variant={isParentFlow ? "parent" : "professional"} />}
+            {formError && <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" data-testid="auth-form-error">{formError}</div>}
             <Button type="submit" className="w-full h-12" disabled={busy || (mode === "register" && !isParentFlow && !agreed)} data-testid="auth-submit-btn">
               {busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? (isParentFlow ? "Create parent account" : isCourt ? "Create court account" : "Create professional account") : mode === "forgot" ? "Send verification code" : "Reset password"}
             </Button>

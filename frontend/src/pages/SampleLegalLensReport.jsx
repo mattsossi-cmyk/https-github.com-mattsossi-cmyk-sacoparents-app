@@ -93,11 +93,12 @@ export default function SampleLegalLensReport() {
           <p><strong>Why these pathways are relevant:</strong> {rep.pathway_rationale}</p>
           <p className="text-xs italic text-muted-foreground">{d.notes.rating}</p>
         </Sec>
-        <Sec n={7} title="Professional Statement" testId="sample-lens-s8">
+        <Sec n={7} title="Professional Observation & Action Plan" testId="sample-lens-s8">
           <SourceTag kind="professional" />
           <p className="text-xs italic text-muted-foreground">The professional's own observations, interpretation, recommendations and conclusions — distinct from parent-reported information and system- or AI-generated summaries.</p>
           <p data-testid="sample-lens-statement">{rep.professional_summary}</p>
-          <H3>Short-Term Goals (Next 30 to 90 Days)</H3><Lines text={rep.short_term_goals} />
+          <H3>90-Day Action Plan (Next 30 to 90 Days)</H3><Lines text={rep.short_term_goals} />
+          <H3>How We Will Know Things Are Improving</H3><div data-testid="sample-lens-success-indicators"><Lines text={rep.success_indicators} /></div>
           <H3>Long-Term Goals (6 to 12 Months)</H3><Lines text={rep.long_term_goals} />
           <p>Reassessment <strong>{rep.reassess_interval.replace("Every ", "every ")}</strong> · next review {rep.next_review_date}</p>
           <ul className="list-disc pl-5 space-y-1"><li>{rep.reassess_up}</li><li>{rep.reassess_down}</li></ul>

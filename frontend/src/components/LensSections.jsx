@@ -1,6 +1,6 @@
 import { PathwayList } from "@/components/LensScale";
 
-export const REPORT_STEPS = ["Case & Assessment Overview", "Individual Parent Perspectives", "Joint Assessment Findings", "Child-Focused Issues", "Options & Resources", "Conflict Resolution", "Professional Statement", "Concise Court / Referral Summary"];
+export const REPORT_STEPS = ["Case & Assessment Overview", "Individual Parent Perspectives", "Joint Assessment Findings", "Child-Focused Issues", "Options & Resources", "Conflict Resolution", "Professional Observation & Action Plan", "Concise Court / Referral Summary"];
 
 const TAG = { parent: ["Parent-Reported Information", "bg-align-blue/15 text-align-blue"], system: ["System-Generated Comparison", "bg-brand-purple/10 text-brand-purple"], professional: ["Professional Observation", "bg-align-green/15 text-green-900"], safety: ["Separate Safety Pathway", "bg-red-50 text-red-700"] };
 export function SourceTag({ kind }) {

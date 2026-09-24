@@ -64,7 +64,6 @@ RISK_LEVELS = ["Not assessed", "Low Risk", "Moderate Risk", "Moderate-to-High Ri
 SAFETY_ALERT = ("Important Safety Note: If high-risk IPV indicators are present, joint mediation, open messaging, and unmonitored contact are counter-indicated. "
                 "In these situations, court orders, supervised exchanges, or legal safety plans take priority over standard co-parenting goals.")
 PATHWAYS = [
-    {"key": "direct", "lo": 8, "hi": 10, "name": "Parent Discussion / Agreement Building", "levels": "Levels 8–10", "desc": "Appropriate where parents demonstrate substantial alignment and can address remaining differences directly."},
     {"key": "coach", "lo": 6, "hi": 9, "name": "Structured Communication", "levels": "Levels 6–9", "desc": "Consider where disagreement appears connected primarily to communication patterns rather than substantive parenting goals (BIFF, SA CoParents Communication Coach, structured platform)."},
     {"key": "child_centered", "lo": 5, "hi": 8, "name": "Child-Focused Mediation", "levels": "Levels 5–8", "desc": "May assist parents in examining differing perspectives through the child's developmental and practical needs."},
     {"key": "mediation", "lo": 4, "hi": 7, "name": "Traditional Mediation", "levels": "Levels 4–7", "desc": "May assist where defined legal or parenting disputes are ready for negotiated resolution."},
@@ -100,7 +99,7 @@ def recommended_pathway(joint_rating) -> dict | None:
     if not joint_rating:
         return None
     r = int(joint_rating)
-    key = "facilitation" if r <= 4 else "mediation" if r <= 6 else "child_centered" if r <= 8 else "direct"
+    key = "facilitation" if r <= 4 else "mediation" if r <= 6 else "child_centered" if r <= 8 else "coach"
     return next((p for p in PATHWAYS if p["key"] == key), None)
 
 def resource_lists(providers: list[dict]) -> tuple[list[str], list[str]]:
@@ -113,7 +112,7 @@ TEXT_FIELDS = ("matter_name", "court_county", "cause_number", "professional_role
                "safety_takeaway", "parent_a_strengths", "parent_a_gaps", "parent_a_growth", "parent_a_notes", "parent_b_strengths", "parent_b_gaps", "parent_b_growth", "parent_b_notes",
                "joint_strengths", "joint_gaps", "joint_notes", "alignment_agreements", "alignment_disagreements", "partial_alignment", "alignment_summary",
                "conflict_pathway", "conflict_management_rationale", "short_term_goals", "long_term_goals", "reassess_interval", "reassess_up", "reassess_down",
-               "professional_summary", "next_review_date", "signature_name", "professional_title", "fv_a_received", "fv_b_received", "shared_concerns", "sources_considered", "pathway_rationale", "court_summary_text")
+               "professional_summary", "next_review_date", "signature_name", "professional_title", "fv_a_received", "fv_b_received", "shared_concerns", "sources_considered", "pathway_rationale", "court_summary_text", "success_indicators")
 LIST_FIELDS = ("parent_a_resources", "parent_b_resources", "joint_resources", "conflict_management_options", "conflict_pathways")
 DICT_FIELDS = ("parent_a_provider", "parent_b_provider", "joint_provider")
 INT_FIELDS = ("parent_a_rating", "parent_b_rating", "joint_rating")

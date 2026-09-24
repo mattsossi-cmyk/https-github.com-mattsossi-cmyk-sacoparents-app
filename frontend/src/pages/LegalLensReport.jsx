@@ -185,11 +185,12 @@ export default function LegalLensReport() {
               <Field big label="Why these pathways are relevant to the issues identified" hint="Explain the fit to the type of conflict — not just a list of services. Required to finalize." value={rep.pathway_rationale ?? rep.conflict_management_rationale} onChange={(val) => set("pathway_rationale", val)} id="pathway_rationale" />
               <p className="text-xs italic" data-testid="lens-rating-note">{notes.rating}</p>
             </Sec>
-            <Sec n={7} title="Professional Statement" id="summary">
+            <Sec n={7} title="Professional Observation & Action Plan" id="summary">
               <SourceTag kind="professional" />
               <p className="text-xs italic text-muted-foreground">Your own observations, interpretation, recommendations and conclusions — clearly distinct from parent-reported information, individual responses, joint comparisons and any system- or AI-generated summary. You remain responsible for the judgment in this section.</p>
               <Field big label="Professional statement" value={rep.professional_summary} onChange={(val) => set("professional_summary", val)} id="professional_summary" />
-              <Field big label="Short-Term Goals (Next 30 to 90 Days)" hint="One goal per line, as “Title: concrete action”." value={rep.short_term_goals} onChange={(val) => set("short_term_goals", val)} id="short_term_goals" />
+              <Field big label="Short-Term Goals / 90-Day Action Plan (Next 30 to 90 Days)" hint="One goal per line, as “Title: concrete action”." value={rep.short_term_goals} onChange={(val) => set("short_term_goals", val)} id="short_term_goals" />
+              <Field big label="How We Will Know Things Are Improving (Success Indicators)" hint="One observable indicator per line, e.g. “Fewer transition disputes.”" value={rep.success_indicators} onChange={(val) => set("success_indicators", val)} id="success_indicators" />
               <Field big label="Long-Term Goals (6 to 12 Months)" hint="One goal per line." value={rep.long_term_goals} onChange={(val) => set("long_term_goals", val)} id="long_term_goals" />
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm"><span className="font-medium">Reassessment interval</span><select value={rep.reassess_interval || ""} onChange={(e) => set("reassess_interval", e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2 text-sm" data-testid="lens-reassess_interval">{lib.reassess_intervals.map((o) => <option key={o}>{o}</option>)}</select></label>
