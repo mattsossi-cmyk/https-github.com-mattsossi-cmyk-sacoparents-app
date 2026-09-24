@@ -1,0 +1,33 @@
+{
+  "summary": "Iter-61 verified Foundation Statements on joint agreement cases + per-side branded PDF (creator-only visibility, side authorization), extra sample email endpoints, BUILD_ID bump, /samples grid new cards (foundation-statement, coparenting-agreement) with View/PDF/Email, restyled ReportHeader on /samples/legal-lens-report (white brand header with 'SA CoParents' and 'Starting With Alignment, Ending With Agreement' + purple section bars), tinted CourtLegalSummary blocks on /court/sample, and the professional editor /joint/{rid}/legal-report renders the same new header + section bars. Backend pytest 10/10 passed (/app/backend/tests/test_iter61_foundation_and_samples.py). Frontend Playwright flows for /samples, /samples/foundation-statement, /samples/coparenting-agreement, /samples/legal-lens-report, /court/sample, and authenticated /joint/{rid} + /joint/{rid}/legal-report all pass with expected data-testids.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter61_foundation_and_samples.py",
+    "/app/test_reports/pytest/iter61.xml"
+  ],
+  "action_items": [
+    "Fix React warning 'Encountered two children with the same key: P\\'s assessment' seen on /joint/{rid}/legal-report editor (both parent names default to 'P' when created via API without names; likely a key builder concatenating parent name + '\\'s assessment' instead of a stable id). Non-blocking but should be fixed.",
+    "Consider ?inline=1 support on GET /api/joint/reports/{rid}/foundation/{side}/pdf for parity with sample-agreement PDF (only attachment disposition today)."
+  ],
+  "critical_code_review_comments": [
+    "server.py joint_foundation_pdf() (line 700) combines two authorization branches on one line — separate side validation from ownership check to reduce risk of a future regression allowing side='c' to fall into a 403 vs 400 path; also emit 400 for bad side value instead of 403 to distinguish invalid input from access denial.",
+    "server.py _EXTRA_SAMPLES (line 856) reuses an inline dict literal for two records; if a third sample is added the endpoint should be data-driven from /app/backend/samples config to avoid drift with frontend /app/frontend/src/lib/samples.js.",
+    "joint_helpers.py joint_public() line 151 builds foundation_statements via nested comprehension over sides — extract into a small helper _foundation_public(doc) for readability and easy reuse in PDF generation.",
+    "Non-unique React key on legal-report editor (see action_items) — Section headings or Assessments list should key off role/id rather than parent name to avoid duplicate keys when parents share a name."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter61_foundation_and_samples.py (new)"
+  ],
+  "success_rate": {"backend": "100% (10/10)", "frontend": "100% for flows tested"},
+  "test_credentials": "Admin mattsossi@bsossi.com / CoParents2026! (unused). Professional approval.test.pro1@gmail.com / TestPass2026! used both for API case creation and browser login to verify foundation-statements-card and legal-report header.",
+  "seed_data_creation": "Created two throwaway TEST_ fixture agreement cases (child 'UI FS Kid' + one joint education case 'LR Kid') under approval.test.pro1 with @example.com parents. These are purged by conftest _purge_fixture_accounts on next pytest run; leftover joint_reports owned by approval.test.pro1 will remain until then and may show up in her dashboard list.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run: pytest /app/backend/tests/test_iter61_foundation_and_samples.py -o addopts= -v (10 tests, ~11s). Endpoints exercised: GET /api/health (build 2026-09-24.1), GET /api/joint/reports/{rid} (foundation_statements visibility), GET /api/joint/reports/{rid}/foundation/{a|b}/pdf (200/404/403 matrix, creator + own-side parent access), POST /api/joint/sample-extra/{foundation-statement|coparenting-agreement}/email (200 ok), POST /api/joint/sample-extra/{bogus}/email (404). PDF text asserted with pymupdf 1.28: contains the statement title, 'Child-Focused Foundation Statement', 'SA CoParents'. Frontend data-testids verified: sample-card-foundation-statement, sample-card-coparenting-agreement, sample-view-link-*, sample-download-btn-* (asChild — testid is on the <a>), sample-email-btn-*, sample-email-form-*, foundation-document, agreement-document, lens-report-header (contains brand + tagline), foundation-statements-card, foundation-pdf-a (href '/api/joint/reports/{rid}/foundation/a/pdf'), court-legal-summary + court-legal-{ratings,risk,growth,court-summary}. No horizontal overflow at 390 or 1920 on /court/sample or /samples/legal-lens-report.",
+  "rca of the issue": "No functional bugs found. One React key uniqueness warning noted on /joint/{rid}/legal-report editor when both parents' display names happen to be equal (test fixtures registered as 'P' + 'P'); production users with distinct names likely won't hit it, but the underlying key builder should use a stable id."
+}
