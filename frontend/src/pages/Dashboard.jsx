@@ -536,8 +536,8 @@ export default function Dashboard() {
                     </div>
                     <div className="mt-5 flex flex-wrap gap-2 items-center">
                       {myP && !myP.completed && myP.accepted && (
-                        <Link to={`/joint/${j.id}/assess`} data-testid={`joint-complete-link-${j.id}`}>
-                          <Button size="sm" data-testid={`joint-complete-btn-${j.id}`}>Complete My Assessment</Button>
+                        <Link to={j.kind === "foundation" ? `/foundation?case=${j.id}` : `/joint/${j.id}/assess`} data-testid={`joint-complete-link-${j.id}`}>
+                          <Button size="sm" data-testid={`joint-complete-btn-${j.id}`}>{j.kind === "foundation" ? "Write My Foundation Statement" : "Complete My Assessment"}</Button>
                         </Link>
                       )}
                       {(ready || (myP && myP.completed) || !j.my_role) && (

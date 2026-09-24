@@ -481,6 +481,7 @@ async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_curre
         "subjects": subject_keys,
         "subject_label": label,
         "is_safety": all(k in SAFETY_SUBJECT_KEYS for k in subject_keys),
+        "kind": "foundation" if subject == "foundation" else "joint_report",
         "case_code": case_code,
         "case_reference": body.case_reference.strip()[:120],
         "child_name": body.child_name.strip(),
@@ -688,6 +689,8 @@ async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
     await _log_report_access(doc, user, "Viewed report on screen", "view")
     if doc.get("kind") == "agreement":
         return generate_agreement(await ensure_agreement_ai(doc))
+    if doc.get("kind") == "foundation":
+        return {"kind": "foundation", "foundation_statements": joint_public(doc, user).get("foundation_statements", [])}
     rep = generate_joint_report(doc)
     rep.pop("options", None)  # options/resources live only in the Professional Report
     return rep
@@ -727,6 +730,8 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
             media_type="application/pdf",
             headers={"Content-Disposition": f'attachment; filename="coparenting-agreement-{child}.pdf"'},
         )
+    if doc.get("kind") == "foundation":
+        raise HTTPException(status_code=400, detail="Foundation Statement cases have one PDF per parent — use the Foundation Statement download buttons")
     pdf_bytes = build_joint_pdf({**generate_joint_report(doc), "is_sample": bool(doc.get("is_demo")), "professional": await _report_professional(doc), "verify": _verify_info(doc)})
     return Response(
         content=pdf_bytes,

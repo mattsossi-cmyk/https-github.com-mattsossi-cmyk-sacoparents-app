@@ -75,6 +75,7 @@ export default function JointAssessment() {
       .then(([c, d]) => {
         setConfig(c.data);
         setDetail(d.data);
+        if (d.data.kind === "foundation") navigate(`/foundation?case=${id}`, { replace: true });
         if (d.data.my_answers) {
           navigate(`/joint/${id}`, { replace: true });
         } else if (!d.data.my_role || !d.data.participants[d.data.my_role]?.accepted) {

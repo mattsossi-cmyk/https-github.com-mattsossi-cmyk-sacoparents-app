@@ -94,7 +94,13 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role) -> API
         if not mine or not _complete(mine["fields"]):
             raise HTTPException(status_code=400, detail="Complete your Foundation Statement (child, shared purpose, vision, priorities, commitments and parent commitment) before sharing it")
         entry = {"title": "Child-Focused Foundation Statement", "content": to_text(mine["fields"])[:5000], "structured": mine["fields"], "shared_at": datetime.now(timezone.utc).isoformat(), "source": "align"}
-        await db.joint_reports.update_one({"id": rid}, {"$set": {f"responses.{side}.foundation": [entry]}})
+        if doc.get("kind") == "foundation":
+            updates = {f"responses.{side}": {"answers": {}, "completed_at": entry["shared_at"], "foundation": [entry]}}
+            if doc.get("responses", {}).get("b" if side == "a" else "a"):
+                updates["status"] = "ready"
+            await db.joint_reports.update_one({"id": rid}, {"$set": updates})
+        else:
+            await db.joint_reports.update_one({"id": rid}, {"$set": {f"responses.{side}.foundation": [entry]}})
         return {"ok": True, "side": side}
 
     return r

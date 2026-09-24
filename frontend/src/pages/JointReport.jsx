@@ -11,6 +11,7 @@ import { AgreementDocument } from "@/components/AgreementDocument";
 import { ProWorkspace } from "@/components/ProWorkspace";
 import { FoundationStatements } from "@/components/FoundationStatements";
 import { ShareFoundation } from "@/components/ShareFoundation";
+const NO_REPORT = new Set(["agreement", "foundation"]);
 import { CompareView } from "@/components/CompareView";
 import { SampleWalkthrough } from "@/components/SampleWalkthrough";
 
@@ -107,14 +108,14 @@ export default function JointReport() {
             <ArrowLeft className="h-4 w-4" /> Dashboard
           </Link>
           <BrandLogo size="text-xl" />
-          {ready && report && (
+          {ready && report && detail.kind !== "foundation" && (
             <Button size="sm" className="gap-2" asChild data-testid="joint-print-btn">
               <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${id}/pdf`} download aria-label="Download PDF">
                 <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Download PDF</span>
               </a>
             </Button>
           )}
-          {ready && report && detail.is_creator && detail.kind !== "agreement" && (
+          {ready && report && detail.is_creator && !NO_REPORT.has(detail.kind) && (
             <Button size="sm" variant="outline" className="gap-2 ml-2" asChild data-testid="session-prep-btn">
               <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${id}/session-prep.pdf`} download aria-label="Download Session Prep Sheet">
                 <ClipboardList className="h-4 w-4" /> <span className="hidden sm:inline">Session Prep Sheet</span>
@@ -144,7 +145,7 @@ export default function JointReport() {
           </div>
           <div className="mt-5 flex flex-wrap gap-2 items-center">
             {detail.my_role && !detail.participants[detail.my_role].completed && detail.participants[detail.my_role].accepted && (
-              <Link to={`/joint/${id}/assess`}><Button size="sm" data-testid="status-complete-btn">Complete My Assessment</Button></Link>
+              <Link to={detail.kind === "foundation" ? "/foundation" : `/joint/${id}/assess`}><Button size="sm" data-testid="status-complete-btn">{detail.kind === "foundation" ? "Write My Foundation Statement" : "Complete My Assessment"}</Button></Link>
             )}
             {detail.is_creator && detail.invitation && detail.invitation.status === "pending" && (
               <>
@@ -177,11 +178,11 @@ export default function JointReport() {
 
         {ready && report && detail.kind === "agreement" && <AgreementDocument report={report} />}
 
-        {ready && report && detail.kind !== "agreement" && detail.is_creator && (
+        {ready && report && !NO_REPORT.has(detail.kind) && detail.is_creator && (
           <SampleWalkthrough active={!!detail.is_demo} onStart={() => setView("report")} />
         )}
 
-        {ready && report && detail.kind !== "agreement" && detail.is_creator && (
+        {ready && report && !NO_REPORT.has(detail.kind) && detail.is_creator && (
           <div className="no-print flex gap-2 mb-4" role="tablist" data-testid="report-view-tabs">
             {[["compare", "Compare"], ["report", "Joint Report"]].map(([k, label]) => (
               <button key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setView(k)} className={`text-sm font-medium rounded-full px-4 py-2 border transition-colors ${view === k ? "bg-primary text-white border-primary" : "bg-white border-border hover:border-primary/50"}`} data-testid={`view-tab-${k}`}>{label}</button>
@@ -189,11 +190,11 @@ export default function JointReport() {
           </div>
         )}
 
-        {ready && report && detail.kind !== "agreement" && detail.is_creator && view === "compare" && (
+        {ready && report && !NO_REPORT.has(detail.kind) && detail.is_creator && view === "compare" && (
           <CompareView report={report} onOpenReport={() => setView("report")} />
         )}
 
-        {ready && report && detail.kind !== "agreement" && (!detail.is_creator || view === "report") && (
+        {ready && report && !NO_REPORT.has(detail.kind) && (!detail.is_creator || view === "report") && (
           <div className="report-paper rounded-lg p-8 sm:p-12" data-testid="joint-report-document">
             <div className="text-center border-b border-border pb-8 mb-10">
               <BrandLogo size="text-xl" />
@@ -327,7 +328,7 @@ export default function JointReport() {
           </div>
         )}
         {detail.is_creator && <FoundationStatements rid={id} items={detail.foundation_statements} />}
-        {detail.is_creator && <ProWorkspace rid={id} steps={ready && report && detail.kind !== "agreement" ? [...(report.next_steps || []), ...(report.options || [])] : null} outcome={detail.session_outcome} onOutcomeSaved={(o) => setDetail((d) => ({ ...d, session_outcome: o }))} courtReady={!!(ready && report && detail.kind !== "agreement")} />}
+        {detail.is_creator && <ProWorkspace rid={id} steps={ready && report && !NO_REPORT.has(detail.kind) ? [...(report.next_steps || []), ...(report.options || [])] : null} outcome={detail.session_outcome} onOutcomeSaved={(o) => setDetail((d) => ({ ...d, session_outcome: o }))} courtReady={!!(ready && report && !NO_REPORT.has(detail.kind))} />}
       </main>
     </div>
   );

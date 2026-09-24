@@ -132,6 +132,15 @@ SUBJECTS = {
             ["Could the parents agree on anchor points without identical routines?", "Which routines most affect the child's wellbeing?", "Would a visible routine chart help the child?", "Should routines be revisited as the child grows?"],
         ),
     },
+    "foundation": {
+        "label": "Foundation Statement",
+        **S(
+            ["Each parent's goals, priorities and commitments written in their own words", "A child-centered starting point before any joint comparison", "Clear, blame-free concerns", "Personal commitments both parents can be held to"],
+            ["Which priorities do both parents already share?", "Which concerns are stated in a way the other parent can hear?", "Which commitments could become specific agreements?"],
+            ["Option A: Use both Foundation Statements as the opening of a Joint Agreement.", "Option B: Review the statements with a professional before any joint session.", "Option C: Revisit the statements at reassessment to check commitments."],
+            ["Could the parents agree on the child's needs before discussing differences?", "What would each parent need to see from the other to feel heard?", "Which commitment matters most to the child right now?"],
+        ),
+    },
     "mediation": {
         "label": "Mediation Statement",
         **S(
@@ -220,7 +229,7 @@ ORDERED_SUBJECT_KEYS = [
     "transitions", "decision_making", "holidays", "technology", "routine",
     "co_parenting", "child_needs", "special_needs",
     "safety", "risk", "safety_communication", "safeguards",
-    "mediation", "custom",
+    "mediation", "custom", "foundation",
 ]
 
 HUB_MAIN_SUBJECTS = [
@@ -350,7 +359,7 @@ SUBJECT_CODE_PREFIX = {
     "psychological": "PSY", "activities": "ACT", "transitions": "TRA", "decision_making": "DEC",
     "holidays": "HOL", "technology": "TEC", "routine": "ROU", "co_parenting": "COP",
     "child_needs": "CHD", "special_needs": "SPN", "safety": "SAF", "risk": "RSK",
-    "safety_communication": "SCO", "safeguards": "SGR", "mediation": "MDN", "custom": "CUS",
+    "safety_communication": "SCO", "safeguards": "SGR", "mediation": "MDN", "custom": "CUS", "foundation": "FND",
     "multi": "ALN",
 }
 CASE_ID_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"

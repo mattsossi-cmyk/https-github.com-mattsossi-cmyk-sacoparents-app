@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Save } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Download, Save, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import api, { formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -26,9 +26,17 @@ const EMPTY = Object.fromEntries(STEPS.map((s) => [s.key, s.list ? [] : ""]));
 export default function FoundationEditor() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [search] = useSearchParams();
+  const caseId = search.get("case");
   const [f, setF] = useState({ child_name: "", ...EMPTY });
   const [meta, setMeta] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [shared, setShared] = useState(false);
+  const shareToCase = async () => {
+    setBusy(true);
+    try { await api.post(`/joint/reports/${caseId}/foundation/share`); setShared(true); toast.success("Shared into your case. The professional can now see it."); }
+    catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
+  };
   useEffect(() => {
     api.get("/foundation/mine").then(({ data }) => { if (data.statement) { setF({ ...EMPTY, ...data.statement.fields }); setMeta(data.statement); } }).catch(() => {});
   }, []);
@@ -60,6 +68,7 @@ export default function FoundationEditor() {
           <div className="bg-gradient-to-r from-[#2f174f] to-[#4b2a7b] px-8 py-6 text-white"><p className="text-[10px] uppercase tracking-[2px] opacity-85">SA CoParents Parent Report</p><h1 className="font-display text-3xl font-bold mt-1" data-testid="foundation-editor-title">My Child-Focused Foundation Statement</h1><p className="mt-1 text-sm opacity-90">Written by {user?.name || "you"} · private to you until you share it into a case.</p></div>
           <div className="p-6 sm:p-8 space-y-6">
             <div className="rounded-md border-l-4 border-teal-600 bg-[#eaf7f7] p-4 text-sm">Your statement stays private. When a professional invites you to a joint case, you can share it so it appears in the Co-Parenting Agreement and in the professional's case file.</div>
+            {caseId && <div className="rounded-md border border-brand-purple/30 bg-[#f3edfb] p-4 text-sm flex flex-wrap items-center justify-between gap-3" data-testid="foundation-case-share-block"><span>{shared ? "Shared into your case — you can re-share after edits." : "This statement was requested for one of your cases. Save it, then share it into the case."}</span><Button size="sm" onClick={shareToCase} disabled={busy || !meta?.complete} data-testid="foundation-case-share-btn"><Share2 className="h-4 w-4 mr-1" /> {shared ? "Re-share" : "Share into case"}</Button></div>}
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm"><span className="font-medium">Child's name (or initials)</span><input value={f.child_name || ""} onChange={(e) => set("child_name", e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-white px-3 text-sm" data-testid="foundation-child_name" /></label>
               <div className="text-sm"><span className="font-medium">Status</span><p className="mt-2" data-testid="foundation-status">{meta ? (meta.complete ? <span className="rounded-full bg-[#eaf7f1] px-3 py-1 font-semibold text-align-green">Complete</span> : <span className="rounded-full bg-[#fff7df] px-3 py-1 font-semibold text-[#b07d10]">Draft</span>) : <span className="text-muted-foreground">Not started</span>}</p></div>

@@ -17,7 +17,7 @@ const PRO_ASSESSMENTS = [
   { key: "education", label: "Educational", hint: "School, homework and learning needs" },
   { key: "medical", label: "Medical", hint: "Health care, appointments and decisions" },
   { key: "psychological", label: "Psychological", hint: "Emotional wellbeing and support" },
-  { key: "mediation", label: "Mediation", hint: "Statement to prepare for mediation" },
+  { key: "foundation", label: "Foundation Statement", hint: "Each parent writes a Child-Focused Foundation Statement" },
   { key: "complete", label: "Complete Alignment", hint: "All five core areas in one assessment", multi: ["co_parenting", "communication", "education", "medical", "psychological"] },
 ];
 
