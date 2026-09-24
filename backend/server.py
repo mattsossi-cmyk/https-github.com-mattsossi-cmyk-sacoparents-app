@@ -837,6 +837,28 @@ async def email_sample_legal_lens(body: EmailSampleIn):
     return {"ok": True}
 
 
+_EXTRA_SAMPLES = {
+    "foundation-statement": ("Child-Focused Foundation Statement", "a parent's statement of shared purpose, vision, priorities, the child's strengths and needs, concerns, commitments and 12-month goals", "/samples/foundation-statement", "/api/joint/sample-foundation-statement/pdf"),
+    "coparenting-agreement": ("Co-Parenting Agreement", "a joint agreement built from both parents' private proposals across 10 areas, with specific agreements and issues still requiring resolution", "/samples/coparenting-agreement", "/api/joint/sample-agreement/pdf"),
+}
+
+
+@api.post("/joint/sample-extra/{key}/email")
+async def email_extra_sample(key: str, body: EmailSampleIn):
+    if key not in _EXTRA_SAMPLES:
+        raise HTTPException(status_code=404, detail="Unknown sample report")
+    label, desc, view, pdf = _EXTRA_SAMPLES[key]
+    await send_email(
+        to=str(body.email).lower(),
+        subject=f"Sample {label} - {EMAIL_FROM_NAME}",
+        html=('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+              f"<p>Hello,</p><p>Here is the sample <strong>SA CoParents {escape(label)}</strong> — {escape(desc)}.</p>"
+              f'<p><a href="{app_url()}{view}" style="color:#5B2A86">View the sample online</a></p>'
+              f'<p><a href="{app_url()}{pdf}" style="color:#5B2A86">Download the sample PDF</a></p>'
+              f'<p style="font-size:12px;color:#888">Sample uses fictional data. Sent by {escape(EMAIL_FROM_NAME)} via the public sample-sharing form.</p></td></tr></table>'))
+    return {"ok": True}
+
+
 @api.get("/court-dashboard/sample-case")
 async def judicial_sample_case():
     return sample_judicial_case()

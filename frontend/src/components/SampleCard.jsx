@@ -16,7 +16,7 @@ export function SampleCard({ s }) {
     if (!email.trim()) return;
     setSending(true);
     try {
-      await api.post(`/joint/sample/${s.key}/email`, { email: email.trim() });
+      await api.post(s.emailEndpoint || `/joint/sample/${s.key}/email`, { email: email.trim() });
       toast.success(`Sample "${s.label}" sent to ${email.trim()}`);
       setEmail("");
       setShowEmail(false);
@@ -34,16 +34,17 @@ export function SampleCard({ s }) {
           <ShieldAlert className="h-3.5 w-3.5" /> Professional-mediated preview
         </span>
       )}
+      {s.tag && <span className="text-xs font-bold uppercase tracking-widest text-teal-700 mb-2" data-testid={`sample-card-tag-${s.key}`}>{s.tag}</span>}
       <h3 className="text-lg font-bold" data-testid={`sample-card-title-${s.key}`}>{s.label}</h3>
       <p className="text-sm text-muted-foreground mt-2 flex-1">{s.blurb}</p>
       <div className="flex gap-2 mt-5">
-        <Link to={`/samples/${s.key}`} className="flex-1" data-testid={`sample-view-link-${s.key}`}>
+        <Link to={s.to || `/samples/${s.key}`} className="flex-1" data-testid={`sample-view-link-${s.key}`}>
           <Button variant="outline" size="sm" className="w-full gap-2" data-testid={`sample-view-btn-${s.key}`}>
             <Eye className="h-4 w-4" /> View
           </Button>
         </Link>
         <Button size="sm" className="flex-1 gap-2" asChild data-testid={`sample-download-btn-${s.key}`}>
-          <a href={samplePdfUrl(s.key)} download>
+          <a href={s.pdf || samplePdfUrl(s.key)} download>
             <Download className="h-4 w-4" /> PDF
           </a>
         </Button>
