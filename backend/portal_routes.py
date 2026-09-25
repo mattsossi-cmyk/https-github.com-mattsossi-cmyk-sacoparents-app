@@ -14,8 +14,13 @@ Powers the mobile-first single-page portal (`SacoparentsPortal.jsx`) with:
       POST /api/portal/court-keys/verify   — public, checks a hashed key
 
   * Branded PDFs (replace `window.print()`)
-      POST /api/portal/foundation-pdf      — public
-      POST /api/portal/legal-report-pdf    — public
+      POST /api/portal/foundation-pdf         — public
+      POST /api/portal/legal-report-pdf       — public
+      POST /api/portal/weekly-progress-pdf    — public
+
+  * Signed share-links for any generated PDF (short URL to text/email)
+      POST /api/portal/share                  — public, mints share_id
+      GET  /api/portal/share/{share_id}.pdf   — public, regenerates PDF
 
 The court-keys collection is seeded idempotently at import time (the two
 demo keys wired into the mockup: `ALIGN-SA-2026`, `COURT-8842`) so a
@@ -26,9 +31,11 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import os
+import secrets
 import time
 from collections import deque
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Deque, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -412,5 +419,180 @@ async def weekly_progress_pdf(body: WeeklyProgressPdfBody) -> Response:
             "Content-Disposition": (
                 'attachment; filename="sacoparents-weekly-progress.pdf"'
             )
+        },
+    )
+
+
+# --------------------------------------------------------------------- #
+# Share-links — persist an artefact payload and mint a signed short URL.
+# --------------------------------------------------------------------- #
+_SHARES_COLLECTION = "portal_pdf_shares"
+_SHARE_TTL_DAYS = 30
+
+# Public origin the short URL is built against. Prefers request scheme+host
+# so preview / prod / custom-domain deployments all Just Work; falls back
+# to PORTAL_SHARE_ORIGIN env var if present.
+_PUBLIC_ORIGIN = os.environ.get("PORTAL_SHARE_ORIGIN", "").rstrip("/")
+
+
+def _share_origin(request: Request) -> str:
+    if _PUBLIC_ORIGIN:
+        return _PUBLIC_ORIGIN
+    # `x-forwarded-host` beats `host` behind the k8s ingress.
+    host = (
+        request.headers.get("x-forwarded-host")
+        or request.headers.get("host")
+        or "sacoparentsapp.online"
+    ).split(",")[0].strip()
+    scheme = (
+        request.headers.get("x-forwarded-proto")
+        or request.url.scheme
+        or "https"
+    ).split(",")[0].strip()
+    return f"{scheme}://{host}"
+
+_ALLOWED_ARTEFACT_TYPES = {"foundation", "legal", "weekly"}
+_FILENAMES = {
+    "foundation": "sacoparents-foundation-statement.pdf",
+    "legal": "sacoparents-legal-report.pdf",
+    "weekly": "sacoparents-weekly-progress.pdf",
+}
+
+
+class SharePayload(BaseModel):
+    artefact_type: str = Field(pattern="^(foundation|legal|weekly)$")
+    # Reuse the same body shape as the direct-download endpoints.
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+
+@router.post("/share")
+async def create_share_link(body: SharePayload, request: Request) -> Dict[str, Any]:
+    """Persist the payload used to generate a portal PDF and mint a
+    signed short URL. Rate limited (shares the BIFF/verify quota).
+
+    Returns `{share_id, url, expires_at}`. The URL is public — anyone
+    with the id can regenerate the PDF, so callers should treat it like
+    a share-token, not a secret.
+    """
+    ip = _client_ip(request)
+    await _rate_guard(ip)
+
+    if body.artefact_type not in _ALLOWED_ARTEFACT_TYPES:
+        raise HTTPException(status_code=400, detail="Unknown artefact type")
+
+    # Validate the payload can produce a PDF before we store it — cheap
+    # smoke test that saves us from minting broken links.
+    try:
+        _regenerate_share_pdf(body.artefact_type, body.payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    share_id = secrets.token_urlsafe(10)
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(days=_SHARE_TTL_DAYS)
+
+    db = request.app.state.db
+    await db[_SHARES_COLLECTION].insert_one(
+        {
+            "share_id": share_id,
+            "artefact_type": body.artefact_type,
+            "payload": body.payload,
+            "created_at": now.isoformat(),
+            "expires_at": expires_at.isoformat(),
+            "revoked_at": None,
+            "hit_count": 0,
+        }
+    )
+
+    return {
+        "share_id": share_id,
+        "url": f"{_share_origin(request)}/api/portal/share/{share_id}.pdf",
+        "expires_at": expires_at.isoformat(),
+    }
+
+
+def _regenerate_share_pdf(artefact_type: str, payload: Dict[str, Any]) -> bytes:
+    """Dispatch to the correct builder based on artefact type."""
+    if artefact_type == "foundation":
+        return portal_pdf.build_portal_foundation_pdf(
+            foundation_text=payload.get("foundation_text") or "",
+            case_ref=payload.get("case_ref"),
+            author_name=payload.get("author_name"),
+        )
+    if artefact_type == "legal":
+        return portal_pdf.build_portal_legal_report_pdf(
+            health_index=payload.get("health_index") or {},
+            foundation_text=payload.get("foundation_text"),
+            signatures=payload.get("signatures") or {},
+            matrix=payload.get("matrix"),
+            case_ref=payload.get("case_ref"),
+        )
+    if artefact_type == "weekly":
+        return portal_pdf.build_portal_weekly_progress_pdf(
+            health_index=payload.get("health_index") or {},
+            biff_logs=payload.get("biff_logs") or [],
+            milestones=payload.get("milestones") or [],
+            reassessments=payload.get("reassessments") or [],
+            foundation_text=payload.get("foundation_text"),
+            case_ref=payload.get("case_ref"),
+            author_name=payload.get("author_name"),
+        )
+    raise ValueError(f"Unknown artefact_type: {artefact_type}")
+
+
+@router.get("/share/{share_id}.pdf")
+async def fetch_share_pdf(share_id: str, request: Request) -> Response:
+    """Regenerate and stream the PDF a share link points to."""
+    db = request.app.state.db
+    # Very lax id shape so we don't over-validate — the sha-256 lookup
+    # is the real gate. But block obvious bad inputs so we can 404 fast.
+    if not share_id or len(share_id) > 32 or not share_id.replace("-", "").replace("_", "").isalnum():
+        raise HTTPException(status_code=404, detail="Share not found")
+
+    doc = await db[_SHARES_COLLECTION].find_one({"share_id": share_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Share not found")
+    if doc.get("revoked_at"):
+        raise HTTPException(status_code=410, detail="Share revoked")
+    exp = doc.get("expires_at")
+    if exp:
+        try:
+            expires_at = datetime.fromisoformat(exp) if isinstance(exp, str) else exp
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at < datetime.now(timezone.utc):
+                raise HTTPException(status_code=410, detail="Share expired")
+        except HTTPException:
+            raise
+        except Exception:  # noqa: BLE001 - corrupt expiry => fail closed
+            raise HTTPException(status_code=410, detail="Share expired")
+
+    try:
+        pdf_bytes = _regenerate_share_pdf(
+            doc.get("artefact_type") or "foundation",
+            doc.get("payload") or {},
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    # Bump the hit counter — fire-and-forget, doesn't block the response.
+    try:
+        await db[_SHARES_COLLECTION].update_one(
+            {"share_id": share_id},
+            {
+                "$inc": {"hit_count": 1},
+                "$set": {"last_fetched_at": datetime.now(timezone.utc).isoformat()},
+            },
+        )
+    except Exception:  # noqa: BLE001
+        logger.warning("Failed to bump share hit_count for %s", share_id)
+
+    filename = _FILENAMES.get(doc.get("artefact_type"), "sacoparents.pdf")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "private, max-age=300",
         },
     )

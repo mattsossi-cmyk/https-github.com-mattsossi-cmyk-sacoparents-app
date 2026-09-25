@@ -160,6 +160,100 @@ function computeHealthLabel(avg) {
   return "Low Alignment";
 }
 
+/**
+ * TrendSparkline — tiny SVG line chart showing the last N reassessment
+ * averages plus the current one. Renders a helpful hint if fewer than 2
+ * data points exist so the parent knows what to do next.
+ */
+function TrendSparkline({ series, currentAvg }) {
+  const points = React.useMemo(() => {
+    const base = Array.isArray(series) ? [...series] : [];
+    if (Number.isFinite(currentAvg)) base.push(Number(currentAvg));
+    return base.filter((v) => Number.isFinite(v));
+  }, [series, currentAvg]);
+
+  if (points.length < 2) {
+    return (
+      <div
+        data-testid="trend-sparkline-empty"
+        className="text-[10px] text-slate-500 italic mt-2 flex items-center gap-1"
+      >
+        <i className="fa-solid fa-chart-line text-purple-700"></i>
+        Log at least one Reassessment above to unlock your trend line.
+      </div>
+    );
+  }
+
+  const width = 240;
+  const height = 40;
+  const step = points.length > 1 ? width / (points.length - 1) : width;
+  const toY = (v) => height - (Math.max(0, Math.min(10, v)) / 10) * height;
+  const path = points
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${(i * step).toFixed(1)} ${toY(v).toFixed(1)}`)
+    .join(" ");
+
+  const first = points[0];
+  const last = points[points.length - 1];
+  const delta = last - first;
+  const deltaLabel =
+    delta > 0.05
+      ? `▲ +${delta.toFixed(1)} vs first point`
+      : delta < -0.05
+      ? `▼ ${delta.toFixed(1)} vs first point`
+      : "◆ Flat";
+  const deltaColor =
+    delta > 0.05 ? "text-emerald-700" : delta < -0.05 ? "text-rose-700" : "text-slate-500";
+
+  return (
+    <div
+      className="mt-2 p-2.5 bg-white rounded-lg border border-purple-200"
+      data-testid="trend-sparkline"
+    >
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-[9px] font-bold text-purple-800 uppercase">
+          Trend (last {points.length - 1} reassessment{points.length - 1 === 1 ? "" : "s"} + now)
+        </span>
+        <span
+          data-testid="trend-delta"
+          className={`text-[10px] font-bold ${deltaColor}`}
+        >
+          {deltaLabel}
+        </span>
+      </div>
+      <svg
+        viewBox={`-2 -2 ${width + 4} ${height + 4}`}
+        preserveAspectRatio="none"
+        className="w-full h-10"
+        aria-label="Trend line of reassessment scores"
+      >
+        {/* mid line */}
+        <line
+          x1="0"
+          y1={toY(5)}
+          x2={width}
+          y2={toY(5)}
+          stroke="#E9DFF6"
+          strokeWidth="1"
+          strokeDasharray="2 2"
+        />
+        <path d={path} fill="none" stroke="#6D28D9" strokeWidth="2" strokeLinejoin="round" />
+        {points.map((v, i) => (
+          <circle
+            key={i}
+            cx={(i * step).toFixed(1)}
+            cy={toY(v).toFixed(1)}
+            r="2.5"
+            fill={i === points.length - 1 ? "#4A1A6E" : "#6D28D9"}
+          />
+        ))}
+      </svg>
+      <div className="text-[9px] text-slate-400 text-center mt-1">
+        {points.map((v) => v.toFixed(1)).join(" → ")}
+      </div>
+    </div>
+  );
+}
+
 export default function SacoparentsPortal() {
   const { user } = useAuth();
   // Screen state: 'gateway' | 'court-key' | 'parent-journey'
@@ -170,6 +264,7 @@ export default function SacoparentsPortal() {
   const [alignRecords, setAlignRecords] = useState([]);
   const [biffLogs, setBiffLogs] = useState([]);
   const [milestones, setMilestones] = useState([]);
+  const [reassessments, setReassessments] = useState([]);
   const [foundationText, setFoundationText] = useState(DEFAULT_FOUNDATION);
   const [legalReport, setLegalReport] = useState(DEFAULT_LEGAL_REPORT);
   const [healthIndex, setHealthIndex] = useState(DEFAULT_HEALTH_INDEX);
@@ -248,6 +343,9 @@ export default function SacoparentsPortal() {
     if (seededLogs == null) writeJson(BIFF_LOG_KEY, DEFAULT_BIFF_LOGS);
     setBiffLogs(seededLogs ?? DEFAULT_BIFF_LOGS);
 
+    const seededReassessments = readJson(REASSESSMENT_KEY, null);
+    setReassessments(seededReassessments ?? []);
+
     const seededCourtKey = readString(COURT_KEY_KEY, "");
     setCourtKey(seededCourtKey);
   }, []);
@@ -281,6 +379,10 @@ export default function SacoparentsPortal() {
         if (Array.isArray(s.biff_logs)) {
           setBiffLogs(s.biff_logs);
           writeJson(BIFF_LOG_KEY, s.biff_logs);
+        }
+        if (Array.isArray(s.reassessments)) {
+          setReassessments(s.reassessments);
+          writeJson(REASSESSMENT_KEY, s.reassessments);
         }
         if (typeof s.foundation_text === "string") {
           setFoundationText(s.foundation_text);
@@ -334,6 +436,7 @@ export default function SacoparentsPortal() {
           legal_report: legalReport,
           health_index: healthIndex,
           court_key: courtKey,
+          reassessments,
         });
         writeString(SYNC_PENDING_KEY, "");
         setSyncStatus("synced");
@@ -354,6 +457,7 @@ export default function SacoparentsPortal() {
     legalReport,
     healthIndex,
     courtKey,
+    reassessments,
   ]);
 
   // Flush queued PUT when we come back online (or on mount if a pending
@@ -393,6 +497,28 @@ export default function SacoparentsPortal() {
   }, [healthIndex]);
 
   const healthLabel = useMemo(() => computeHealthLabel(Number(healthAvg)), [healthAvg]);
+
+  // Last 4 reassessment averages (oldest → newest) — powers the sparkline.
+  const trendSeries = useMemo(() => {
+    if (!reassessments || reassessments.length === 0) return [];
+    const ordered = [...reassessments]
+      .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
+      .slice(-4);
+    const out = [];
+    for (const rec of ordered) {
+      let avg = rec.avg;
+      if (avg == null && rec.snapshot) {
+        const s1 = Number(rec.snapshot.s1);
+        const s2 = Number(rec.snapshot.s2);
+        const s3 = Number(rec.snapshot.s3);
+        if (Number.isFinite(s1) && Number.isFinite(s2) && Number.isFinite(s3)) {
+          avg = (s1 + s2 + s3) / 3;
+        }
+      }
+      if (Number.isFinite(Number(avg))) out.push(Number(avg));
+    }
+    return out;
+  }, [reassessments]);
 
   const setHealthScore = useCallback((key, value) => {
     setHealthIndex((prev) => {
@@ -557,6 +683,8 @@ export default function SacoparentsPortal() {
   // Tone-safe copy = BIFF body + a short audit stamp (date + case ref +
   // origin) so attorneys/mediators can see this message went through the
   // BIFF coach on a specific date, not that the parent hand-wrote it.
+  // Also fires a "Kudos" success-milestone when the draft was flagged as
+  // an Escalation Flag — visible proof the coach kept a hot message safe.
   const copyToneSafe = useCallback(() => {
     if (!biffOutput) return;
     const stamp = [
@@ -573,7 +701,24 @@ export default function SacoparentsPortal() {
     } catch {
       alert("Clipboard unavailable — please copy manually.");
     }
-  }, [biffOutput, courtKey]);
+
+    // Kudos loop: only fires when the tone was actually risky. Otherwise
+    // it would clutter the milestone list with false wins.
+    if (riskLabel === "Escalation Flag") {
+      const kudos = {
+        id: Date.now(),
+        type: "success",
+        title: "Coach kept a hot message tone-safe",
+        date: new Date().toISOString().substring(0, 10),
+        note:
+          "You reformulated an escalation-flagged draft into a BIFF message and copied it via the Tone-Safe stamp.",
+        source: "biff_kudos",
+      };
+      const next = [kudos, ...milestones];
+      setMilestones(next);
+      writeJson(MILESTONE_KEY, next);
+    }
+  }, [biffOutput, courtKey, riskLabel, milestones]);
 
   const logCommunication = useCallback(() => {
     const raw = rawInput.trim();
@@ -668,20 +813,30 @@ export default function SacoparentsPortal() {
     (e) => {
       e.preventDefault();
       const prev = readJson(REASSESSMENT_KEY, []);
+      const snapshot = { ...healthIndex };
+      const s1 = Number(snapshot.s1) || 0;
+      const s2 = Number(snapshot.s2) || 0;
+      const s3 = Number(snapshot.s3) || 0;
+      const avg = Number(((s1 + s2 + s3) / 3).toFixed(1));
       const entry = {
         id: Date.now(),
         stage: reassStage,
         notes: reassNotes,
         date: new Date().toISOString(),
+        // Snapshot the current Health Index so we can render a trend
+        // sparkline across reassessments over time.
+        snapshot,
+        avg,
       };
       const next = [entry, ...prev];
       writeJson(REASSESSMENT_KEY, next);
+      setReassessments(next);
       setReassessOpen(false);
       setReassNotes("");
       setReassStage("30-Day Progress Review");
       alert("Reassessment logged!");
     },
-    [reassStage, reassNotes]
+    [reassStage, reassNotes, healthIndex]
   );
 
   const handlePrint = useCallback(() => window.print(), []);
@@ -699,6 +854,40 @@ export default function SacoparentsPortal() {
       window.URL.revokeObjectURL(url);
     } catch {
       alert("PDF could not be generated right now — please try again in a moment.");
+    }
+  }, []);
+
+  // Mint a share link for the given artefact + payload, copy to clipboard.
+  const [shareStatus, setShareStatus] = useState({}); // { foundation?: "loading"|"copied"|"error", ... }
+
+  const createShareLink = useCallback(async (artefactType, payload) => {
+    setShareStatus((prev) => ({ ...prev, [artefactType]: "loading" }));
+    try {
+      const { data } = await api.post("/portal/share", {
+        artefact_type: artefactType,
+        payload,
+      });
+      const url = data?.url;
+      if (!url) throw new Error("no url");
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareStatus((prev) => ({ ...prev, [artefactType]: "copied" }));
+        alert(
+          `Share link copied to clipboard:\n\n${url}\n\nText or email this to your pediatrician, mediator, or attorney. It works for 30 days.`
+        );
+      } catch {
+        setShareStatus((prev) => ({ ...prev, [artefactType]: "copied" }));
+        window.prompt(
+          "Copy this share link (Ctrl+C / Cmd+C):",
+          url
+        );
+      }
+      setTimeout(() => {
+        setShareStatus((prev) => ({ ...prev, [artefactType]: undefined }));
+      }, 4000);
+    } catch {
+      setShareStatus((prev) => ({ ...prev, [artefactType]: "error" }));
+      alert("Couldn't create a share link — please try again in a moment.");
     }
   }, []);
 
@@ -739,6 +928,7 @@ export default function SacoparentsPortal() {
         health_index: healthIndex,
         biff_logs: biffLogs,
         milestones,
+        reassessments,
         foundation_text: foundationText || null,
         case_ref: courtKey || null,
         author_name: user?.name || null,
@@ -748,6 +938,7 @@ export default function SacoparentsPortal() {
     healthIndex,
     biffLogs,
     milestones,
+    reassessments,
     foundationText,
     courtKey,
     user,
@@ -1130,6 +1321,12 @@ export default function SacoparentsPortal() {
                           Log Reassessment
                         </button>
                       </div>
+
+                      {/* Trend sparkline (last 4 reassessments + current) */}
+                      <TrendSparkline
+                        series={trendSeries}
+                        currentAvg={Number(healthAvg)}
+                      />
                     </div>
 
                     {/* Dispute Resolution Matrix */}
@@ -1240,7 +1437,28 @@ export default function SacoparentsPortal() {
                         onClick={downloadLegalPdf}
                         className="bg-slate-800 text-white font-bold px-3 py-2 rounded-xl text-xs"
                       >
-                        <i className="fa-solid fa-file-pdf"></i> Export Legal PDF
+                        <i className="fa-solid fa-file-pdf"></i> PDF
+                      </button>
+                      <button
+                        data-testid="share-legal-btn"
+                        onClick={() =>
+                          createShareLink("legal", {
+                            health_index: healthIndex,
+                            foundation_text: foundationText || null,
+                            signatures: legalReport,
+                            case_ref: courtKey || null,
+                          })
+                        }
+                        title="Copy a 30-day share link"
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-2 rounded-xl text-xs shadow disabled:opacity-60"
+                        disabled={shareStatus.legal === "loading"}
+                      >
+                        <i className="fa-solid fa-link"></i>{" "}
+                        {shareStatus.legal === "loading"
+                          ? "…"
+                          : shareStatus.legal === "copied"
+                          ? "Copied!"
+                          : "Share"}
                       </button>
                     </div>
                   </div>
@@ -1405,6 +1623,26 @@ export default function SacoparentsPortal() {
                       className="bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs border border-slate-200"
                     >
                       <i className="fa-solid fa-file-pdf"></i> PDF
+                    </button>
+                    <button
+                      data-testid="share-foundation-btn"
+                      onClick={() =>
+                        createShareLink("foundation", {
+                          foundation_text: foundationText,
+                          case_ref: courtKey || null,
+                          author_name: user?.name || null,
+                        })
+                      }
+                      title="Copy a 30-day share link"
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-2 rounded-xl text-xs shadow disabled:opacity-60"
+                      disabled={shareStatus.foundation === "loading"}
+                    >
+                      <i className="fa-solid fa-link"></i>{" "}
+                      {shareStatus.foundation === "loading"
+                        ? "…"
+                        : shareStatus.foundation === "copied"
+                        ? "Copied!"
+                        : "Share"}
                     </button>
                   </div>
                 </div>
@@ -1675,14 +1913,40 @@ export default function SacoparentsPortal() {
                     )}
                   </div>
 
-                  <button
-                    data-testid="export-weekly-progress-pdf-btn"
-                    onClick={downloadWeeklyProgressPdf}
-                    className="no-print w-full mt-1 bg-purple-900 hover:bg-purple-950 text-white font-bold py-2 rounded-xl text-xs shadow"
-                  >
-                    <i className="fa-solid fa-file-pdf mr-1"></i>
-                    Export Weekly Progress PDF
-                  </button>
+                  <div className="flex gap-2 no-print">
+                    <button
+                      data-testid="export-weekly-progress-pdf-btn"
+                      onClick={downloadWeeklyProgressPdf}
+                      className="flex-1 bg-purple-900 hover:bg-purple-950 text-white font-bold py-2 rounded-xl text-xs shadow"
+                    >
+                      <i className="fa-solid fa-file-pdf mr-1"></i>
+                      Export Weekly Progress PDF
+                    </button>
+                    <button
+                      data-testid="share-weekly-btn"
+                      onClick={() =>
+                        createShareLink("weekly", {
+                          health_index: healthIndex,
+                          biff_logs: biffLogs,
+                          milestones,
+                          reassessments,
+                          foundation_text: foundationText || null,
+                          case_ref: courtKey || null,
+                          author_name: user?.name || null,
+                        })
+                      }
+                      title="Copy a 30-day share link"
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-2 rounded-xl text-xs shadow disabled:opacity-60"
+                      disabled={shareStatus.weekly === "loading"}
+                    >
+                      <i className="fa-solid fa-link"></i>{" "}
+                      {shareStatus.weekly === "loading"
+                        ? "…"
+                        : shareStatus.weekly === "copied"
+                        ? "Copied!"
+                        : "Share"}
+                    </button>
+                  </div>
                   <p className="text-[10px] text-slate-400 text-center no-print">
                     One-page snapshot to share with your pediatrician, mediator, or attorney.
                   </p>

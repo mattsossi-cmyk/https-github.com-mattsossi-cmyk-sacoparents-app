@@ -117,6 +117,79 @@ def _draw_meta_row(pdf: FPDF, label: str, value: str) -> None:
     pdf.cell(0, 5, _safe(value or "-"), ln=1)
 
 
+def _draw_sparkline(pdf: FPDF, points: List[float], *, x: float, y: float, w: float, h: float) -> None:
+    """Draw a tiny line chart of `points` (0..10 range). Nothing rendered
+    if we have fewer than 2 points."""
+    if not points or len(points) < 2:
+        return
+    # Frame
+    pdf.set_draw_color(*_PURPLE_ACCENT)
+    pdf.set_line_width(0.2)
+    pdf.rect(x, y, w, h, style="D")
+    # Mid line (5/10)
+    pdf.set_draw_color(220, 214, 232)
+    pdf.set_line_width(0.15)
+    pdf.line(x, y + h / 2, x + w, y + h / 2)
+    # Points
+    n = len(points)
+    step = w / (n - 1) if n > 1 else w
+    pdf.set_draw_color(*_PURPLE_ACCENT)
+    pdf.set_line_width(0.35)
+    prev_px = None
+    prev_py = None
+    for i, val in enumerate(points):
+        v = max(0.0, min(10.0, float(val)))
+        px = x + i * step
+        py = y + h - (v / 10.0) * h
+        if prev_px is not None:
+            pdf.line(prev_px, prev_py, px, py)
+        prev_px = px
+        prev_py = py
+    # Dots
+    pdf.set_fill_color(*_PURPLE_DEEP)
+    for i, val in enumerate(points):
+        v = max(0.0, min(10.0, float(val)))
+        px = x + i * step
+        py = y + h - (v / 10.0) * h
+        pdf.ellipse(px - 0.7, py - 0.7, 1.4, 1.4, style="F")
+
+
+def _reassessment_series(reassessments: Optional[List[Dict[str, Any]]], limit: int = 4) -> List[float]:
+    """Extract the last `limit` overall averages from reassessment records
+    (oldest → newest). Records that don't have a stored `avg` are ignored.
+    """
+    if not reassessments:
+        return []
+    # Records are stored newest-first in localStorage; sort by created date
+    # if available, otherwise trust insertion order.
+    def _key(rec):
+        return rec.get("date") or rec.get("created_at") or ""
+
+    ordered = sorted(reassessments, key=_key)
+    tail = ordered[-limit:]
+    series: List[float] = []
+    for rec in tail:
+        raw = rec.get("avg")
+        if raw is None:
+            snap = rec.get("snapshot") or {}
+            if isinstance(snap, dict):
+                s1 = snap.get("s1")
+                s2 = snap.get("s2")
+                s3 = snap.get("s3")
+                if s1 is not None and s2 is not None and s3 is not None:
+                    try:
+                        raw = (float(s1) + float(s2) + float(s3)) / 3.0
+                    except (TypeError, ValueError):
+                        raw = None
+        if raw is None:
+            continue
+        try:
+            series.append(float(raw))
+        except (TypeError, ValueError):
+            continue
+    return series
+
+
 def build_portal_foundation_pdf(
     *,
     foundation_text: str,
@@ -521,6 +594,40 @@ def build_portal_weekly_progress_pdf(
     pdf.set_text_color(*_PURPLE_INK)
     pdf.cell(0, 5, _safe(f"{avg} / 10 - {label}"), ln=1)
     pdf.set_y(y0 + box_h + 3)
+
+    # ---- Trend line (last 4 reassessments) ----
+    series = _reassessment_series(reassessments, limit=4)
+    # Always include the current avg as the newest point so the chart
+    # never renders "empty" for a parent who just started using the tool.
+    series_with_current = series + [float(avg)] if series else []
+    if len(series_with_current) >= 2:
+        _draw_h2(pdf, "Trend (last 4 reassessments + current)")
+        pdf.set_font("Helvetica", "", 8)
+        pdf.set_text_color(*_SLATE_MUTED)
+        pdf.multi_cell(
+            0,
+            4,
+            _safe(
+                "Each dot is an overall Health Index score. Higher is "
+                "better — the trend matters more than any single point."
+            ),
+        )
+        chart_y = pdf.get_y() + 1
+        _draw_sparkline(
+            pdf,
+            series_with_current,
+            x=pdf.l_margin,
+            y=chart_y,
+            w=inner_w,
+            h=18,
+        )
+        # Legend
+        pdf.set_y(chart_y + 20)
+        pdf.set_font("Helvetica", "", 7)
+        pdf.set_text_color(*_SLATE_MUTED)
+        labels = [f"{v:.1f}" for v in series_with_current]
+        pdf.cell(0, 3, _safe(" -> ".join(labels)), align="C", ln=1)
+        pdf.ln(2)
 
     # ---- Milestones counts ----
     recent_milestones = [
