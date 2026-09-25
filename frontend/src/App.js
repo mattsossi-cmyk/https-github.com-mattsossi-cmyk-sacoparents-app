@@ -11,6 +11,7 @@ import PolicyRefreshBanner from "@/components/PolicyRefreshBanner";
 import BackToDashboardPill from "@/components/BackToDashboardPill";
 
 import Landing from "@/pages/Landing";
+import SacoparentsPortal from "@/pages/SacoparentsPortal";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import OnboardingIntake from "@/pages/OnboardingIntake";
@@ -154,7 +155,8 @@ function AppRoutes() {
       <BiometricGate>
         <PolicyRefreshBanner />
         <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<SacoparentsPortal />} />
+        <Route path="/legacy" element={<Landing />} />
         <Route path="/samples" element={<Samples />} />
         <Route path="/samples/joint-alignment-preview" element={<JointAlignmentSamplePreview />} />
         <Route path="/complete-alignment-report" element={<ProtectedRoute><CompleteAlignmentReport /></ProtectedRoute>} />
@@ -308,11 +310,7 @@ function AppRoutes() {
 
         <Route
           path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
+          element={<SacoparentsPortal />}
         />
         <Route
           path="/my-plan"
