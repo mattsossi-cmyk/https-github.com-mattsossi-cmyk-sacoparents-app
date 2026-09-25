@@ -1,4 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
+
+import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 /**
  * sacoparentsapp.online — Child-Centered Co-Parenting Portal (Full Rewrite)
@@ -156,6 +160,7 @@ function computeHealthLabel(avg) {
 }
 
 export default function SacoparentsPortal() {
+  const { user } = useAuth();
   // Screen state: 'gateway' | 'court-key' | 'parent-journey'
   const [screen, setScreen] = useState("gateway");
   const [hubSection, setHubSection] = useState("alignment"); // 'alignment' | 'biff'
@@ -199,6 +204,22 @@ export default function SacoparentsPortal() {
   const initialisedRef = useRef(false);
   const printDate = useMemo(() => new Date().toLocaleDateString(), []);
 
+  // BIFF live-refine state
+  const [biffLoading, setBiffLoading] = useState(false);
+  const [biffError, setBiffError] = useState("");
+  const biffAbortRef = useRef(null);
+  const biffDebounceRef = useRef(null);
+
+  // Court key verify state
+  const [courtKeyError, setCourtKeyError] = useState("");
+  const [courtKeyLoading, setCourtKeyLoading] = useState(false);
+  const [verifiedMediator, setVerifiedMediator] = useState("");
+
+  // Sync state
+  const [syncStatus, setSyncStatus] = useState("idle"); // 'idle'|'syncing'|'synced'|'error'
+  const syncDebounceRef = useRef(null);
+  const hasHydratedFromServerRef = useRef(false);
+
   // Hydrate from localStorage on mount (idempotent seed)
   useEffect(() => {
     if (initialisedRef.current) return;
@@ -230,6 +251,100 @@ export default function SacoparentsPortal() {
     setCourtKey(seededCourtKey);
   }, []);
 
+  // Cross-device sync: if the user is signed in, pull server state on mount
+  // (server wins over localStorage — that's the whole point of cross-device
+  // sync) then push any subsequent mutation back to the server.
+  useEffect(() => {
+    if (!user) {
+      hasHydratedFromServerRef.current = false;
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await api.get("/portal/state");
+        if (cancelled || !data?.exists) {
+          // No server state yet — first sync will be a push, not a pull.
+          hasHydratedFromServerRef.current = true;
+          return;
+        }
+        const s = data.state || {};
+        if (Array.isArray(s.align_records)) {
+          setAlignRecords(s.align_records);
+          writeJson(ALIGN_RECORDS_KEY, s.align_records);
+        }
+        if (Array.isArray(s.milestones)) {
+          setMilestones(s.milestones);
+          writeJson(MILESTONE_KEY, s.milestones);
+        }
+        if (Array.isArray(s.biff_logs)) {
+          setBiffLogs(s.biff_logs);
+          writeJson(BIFF_LOG_KEY, s.biff_logs);
+        }
+        if (typeof s.foundation_text === "string") {
+          setFoundationText(s.foundation_text);
+          writeString(FOUNDATION_KEY, s.foundation_text);
+        }
+        if (s.legal_report && typeof s.legal_report === "object") {
+          setLegalReport({ ...DEFAULT_LEGAL_REPORT, ...s.legal_report });
+          writeJson(LEGAL_REPORT_KEY, s.legal_report);
+        }
+        if (s.health_index && typeof s.health_index === "object") {
+          setHealthIndex({ ...DEFAULT_HEALTH_INDEX, ...s.health_index });
+          writeJson(HEALTH_INDEX_KEY, s.health_index);
+        }
+        if (typeof s.court_key === "string") {
+          setCourtKey(s.court_key);
+          writeString(COURT_KEY_KEY, s.court_key);
+        }
+        hasHydratedFromServerRef.current = true;
+      } catch {
+        // Silent: sync is best-effort; localStorage still works.
+        hasHydratedFromServerRef.current = true;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  // Debounced server push. Waits for the initial pull to complete so we
+  // don't clobber server state with our defaults on the very first render.
+  useEffect(() => {
+    if (!user) return;
+    if (!hasHydratedFromServerRef.current) return;
+    if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
+    syncDebounceRef.current = setTimeout(async () => {
+      setSyncStatus("syncing");
+      try {
+        await api.put("/portal/state", {
+          align_records: alignRecords,
+          milestones,
+          biff_logs: biffLogs,
+          foundation_text: foundationText,
+          legal_report: legalReport,
+          health_index: healthIndex,
+          court_key: courtKey,
+        });
+        setSyncStatus("synced");
+      } catch {
+        setSyncStatus("error");
+      }
+    }, 700);
+    return () => {
+      if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
+    };
+  }, [
+    user,
+    alignRecords,
+    milestones,
+    biffLogs,
+    foundationText,
+    legalReport,
+    healthIndex,
+    courtKey,
+  ]);
+
   // Compute Overall Co-Parenting Health Index (avg)
   const healthAvg = useMemo(() => {
     const s1 = Number(healthIndex.s1) || 0;
@@ -253,15 +368,43 @@ export default function SacoparentsPortal() {
   const enterParentJourney = useCallback(() => setScreen("parent-journey"), []);
   const enterCourtPath = useCallback(() => setScreen("court-key"), []);
 
-  const verifyProfessionalKey = useCallback(() => {
+  const verifyProfessionalKey = useCallback(async () => {
     const key = courtKeyInput.trim();
     if (!key) {
-      alert("Please enter a key code from sacoparentsalign.com");
+      setCourtKeyError("Please enter a key code from sacoparentsalign.com");
       return;
     }
-    setCourtKey(key);
-    writeString(COURT_KEY_KEY, key);
-    setScreen("parent-journey");
+    setCourtKeyLoading(true);
+    setCourtKeyError("");
+    try {
+      const { data } = await api.post("/portal/court-keys/verify", { key });
+      if (!data?.verified) {
+        const reasonMap = {
+          expired: "That key has expired — please request a new one from your mediator.",
+          revoked: "That key has been revoked. Contact your mediator for a replacement.",
+          unknown_key: "We don't recognise that key. Double-check the code or ask your mediator.",
+        };
+        setCourtKeyError(
+          reasonMap[data?.reason] ||
+            "We couldn't verify that key. Please check the code and try again."
+        );
+        setCourtKeyLoading(false);
+        return;
+      }
+      const caseId = data.case_id || key;
+      const mediator =
+        data.mediator_name || "Matt Sossi, Licensed Mediator (San Antonio, TX)";
+      setCourtKey(caseId);
+      setVerifiedMediator(mediator);
+      writeString(COURT_KEY_KEY, caseId);
+      setScreen("parent-journey");
+    } catch {
+      setCourtKeyError(
+        "Network issue while verifying. Please check your connection and try again."
+      );
+    } finally {
+      setCourtKeyLoading(false);
+    }
   }, [courtKeyInput]);
 
   // Foundation Statement
@@ -276,8 +419,8 @@ export default function SacoparentsPortal() {
     alert("Official Legal Conflict Resolution Report draft saved!");
   }, [legalReport]);
 
-  // BIFF analysis (runs on typed input)
-  const runAnalysis = useCallback((val) => {
+  // BIFF analysis (local regex — instant, used while typing before AI kicks in)
+  const runLocalAnalysis = useCallback((val) => {
     const trimmed = (val || "").trim();
     if (!trimmed) {
       setFlagList([]);
@@ -295,12 +438,60 @@ export default function SacoparentsPortal() {
     );
   }, []);
 
+  // Debounced Claude refinement (falls back to local regex if the API errors).
+  const runAiRefine = useCallback((val) => {
+    if (biffDebounceRef.current) clearTimeout(biffDebounceRef.current);
+    if (biffAbortRef.current) {
+      try {
+        biffAbortRef.current.abort();
+      } catch {
+        /* noop */
+      }
+    }
+    const trimmed = (val || "").trim();
+    if (!trimmed) {
+      setBiffLoading(false);
+      setBiffError("");
+      return;
+    }
+    biffDebounceRef.current = setTimeout(async () => {
+      setBiffLoading(true);
+      setBiffError("");
+      const controller = new AbortController();
+      biffAbortRef.current = controller;
+      try {
+        const { data } = await api.post(
+          "/portal/biff-refine",
+          { raw: trimmed },
+          { signal: controller.signal }
+        );
+        if (data?.biff) {
+          setBiffOutput(data.biff);
+          setFlagList(Array.isArray(data.flags) ? data.flags : []);
+          setRiskLabel(
+            data.risk === "Escalation Flag" || data.risk === "Low Risk"
+              ? data.risk
+              : (data.flags || []).length
+              ? "Escalation Flag"
+              : "Low Risk"
+          );
+        }
+      } catch (err) {
+        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") return;
+        setBiffError("Coach is warming up — using local guidance for now.");
+      } finally {
+        setBiffLoading(false);
+      }
+    }, 900);
+  }, []);
+
   const handleRawInputChange = useCallback(
     (val) => {
       setRawInput(val);
-      runAnalysis(val);
+      runLocalAnalysis(val);
+      runAiRefine(val);
     },
-    [runAnalysis]
+    [runLocalAnalysis, runAiRefine]
   );
 
   const applyPreset = useCallback((key) => {
@@ -310,7 +501,9 @@ export default function SacoparentsPortal() {
     setFlagList(p.flags);
     setRiskLabel(p.flags.length > 0 ? "Escalation Flag" : "Low Risk");
     setBiffOutput(p.biff);
-  }, []);
+    // Also fire the AI refine so the user sees a fresh, tailored rewrite.
+    runAiRefine(p.raw);
+  }, [runAiRefine]);
 
   const copyBiffOutput = useCallback(() => {
     if (!biffOutput) return;
@@ -432,6 +625,51 @@ export default function SacoparentsPortal() {
   );
 
   const handlePrint = useCallback(() => window.print(), []);
+
+  const downloadPdfFromApi = useCallback(async (path, filename, body) => {
+    try {
+      const res = await api.post(path, body, { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert("PDF could not be generated right now — please try again in a moment.");
+    }
+  }, []);
+
+  const downloadFoundationPdf = useCallback(() => {
+    if (!foundationText.trim()) {
+      alert("Please write your Foundation Statement before exporting the PDF.");
+      return;
+    }
+    downloadPdfFromApi(
+      "/portal/foundation-pdf",
+      "sacoparents-foundation-statement.pdf",
+      {
+        foundation_text: foundationText,
+        case_ref: courtKey || null,
+        author_name: user?.name || null,
+      }
+    );
+  }, [foundationText, courtKey, user, downloadPdfFromApi]);
+
+  const downloadLegalPdf = useCallback(() => {
+    downloadPdfFromApi(
+      "/portal/legal-report-pdf",
+      "sacoparents-legal-report.pdf",
+      {
+        health_index: healthIndex,
+        foundation_text: foundationText || null,
+        signatures: legalReport,
+        case_ref: courtKey || null,
+      }
+    );
+  }, [healthIndex, foundationText, legalReport, courtKey, downloadPdfFromApi]);
 
   const showBackBtn = screen !== "gateway";
 
@@ -577,6 +815,31 @@ export default function SacoparentsPortal() {
                 </div>
               </div>
             </div>
+
+            {/* Sync / Sign-in chip */}
+            <div className="text-center pt-2" data-testid="sync-chip">
+              {user ? (
+                <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-full text-[11px] font-semibold">
+                  <i className="fa-solid fa-cloud-arrow-up"></i>
+                  <span data-testid="sync-status">
+                    {syncStatus === "syncing"
+                      ? "Syncing across devices…"
+                      : syncStatus === "error"
+                      ? "Sync paused — your work is safe locally"
+                      : `Synced as ${user.email || user.name || "your account"}`}
+                  </span>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  data-testid="sync-signin-link"
+                  className="inline-flex items-center gap-2 bg-white border border-purple-200 text-purple-800 px-3 py-1.5 rounded-full text-[11px] font-semibold hover:bg-purple-50 transition"
+                >
+                  <i className="fa-solid fa-cloud"></i>
+                  Sign in to sync across devices
+                </Link>
+              )}
+            </div>
           </div>
         )}
 
@@ -604,10 +867,21 @@ export default function SacoparentsPortal() {
                   type="text"
                   data-testid="court-key-input"
                   value={courtKeyInput}
-                  onChange={(e) => setCourtKeyInput(e.target.value)}
+                  onChange={(e) => {
+                    setCourtKeyInput(e.target.value);
+                    setCourtKeyError("");
+                  }}
                   className="w-full p-3 border border-slate-300 rounded-xl text-sm font-mono tracking-wider focus:ring-2 focus:ring-purple-600 focus:outline-none"
                   placeholder="e.g. ALIGN-SA-2026"
                 />
+                {courtKeyError && (
+                  <p
+                    data-testid="court-key-error"
+                    className="text-[11px] text-rose-600 font-semibold"
+                  >
+                    {courtKeyError}
+                  </p>
+                )}
                 <p className="text-[10px] text-slate-400">
                   Demo Keys: Use{" "}
                   <button
@@ -633,9 +907,11 @@ export default function SacoparentsPortal() {
               <button
                 onClick={verifyProfessionalKey}
                 data-testid="verify-court-key-btn"
-                className="w-full bg-purple-950 hover:bg-purple-900 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow"
+                disabled={courtKeyLoading}
+                className="w-full bg-purple-950 hover:bg-purple-900 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow"
               >
-                <i className="fa-solid fa-key"></i> Verify & Sync Joint Case
+                <i className="fa-solid fa-key"></i>{" "}
+                {courtKeyLoading ? "Verifying…" : "Verify & Sync Joint Case"}
               </button>
             </div>
           </div>
@@ -658,7 +934,7 @@ export default function SacoparentsPortal() {
                     Verified Case: {courtKey}
                   </div>
                   <div className="text-[10px] text-purple-200">
-                    Mediator: Matt Sossi, Licensed Mediator (San Antonio, TX)
+                    Mediator: {verifiedMediator || "Matt Sossi, Licensed Mediator (San Antonio, TX)"}
                   </div>
                 </div>
                 <i className="fa-solid fa-shield-halved text-purple-300 text-xl"></i>
@@ -875,7 +1151,8 @@ export default function SacoparentsPortal() {
                         <i className="fa-solid fa-floppy-disk"></i> Save Legal Report
                       </button>
                       <button
-                        onClick={handlePrint}
+                        data-testid="export-legal-pdf-btn"
+                        onClick={downloadLegalPdf}
                         className="bg-slate-800 text-white font-bold px-3 py-2 rounded-xl text-xs"
                       >
                         <i className="fa-solid fa-file-pdf"></i> Export Legal PDF
@@ -1038,10 +1315,11 @@ export default function SacoparentsPortal() {
                       <i className="fa-solid fa-floppy-disk"></i> Save Foundation Text
                     </button>
                     <button
-                      onClick={handlePrint}
+                      data-testid="export-foundation-pdf-btn"
+                      onClick={downloadFoundationPdf}
                       className="bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs border border-slate-200"
                     >
-                      <i className="fa-solid fa-print"></i> PDF
+                      <i className="fa-solid fa-file-pdf"></i> PDF
                     </button>
                   </div>
                 </div>
@@ -1147,6 +1425,21 @@ export default function SacoparentsPortal() {
                           </span>
                         )}
                       </div>
+                      {(biffLoading || biffError) && (
+                        <div
+                          data-testid="biff-loading"
+                          className="text-[10px] text-purple-700 font-semibold pt-1 flex items-center gap-1"
+                        >
+                          {biffLoading ? (
+                            <>
+                              <i className="fa-solid fa-wand-magic-sparkles"></i>
+                              Coach refining…
+                            </>
+                          ) : (
+                            <span className="text-amber-700">{biffError}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div

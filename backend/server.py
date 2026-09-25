@@ -75,6 +75,7 @@ from alignment_reflection_analytics import router as alignment_reflection_analyt
 from professional_bundle_templates import router as professional_bundle_templates_router  # noqa: E402
 from bundle_routes import router as bundle_router  # noqa: E402
 from coach_demo_routes import router as coach_demo_router  # noqa: E402
+from portal_routes import router as portal_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -220,6 +221,7 @@ api_router.include_router(alignment_reflection_analytics_router)
 api_router.include_router(professional_bundle_templates_router)
 api_router.include_router(bundle_router)
 api_router.include_router(coach_demo_router)
+api_router.include_router(portal_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.
@@ -313,6 +315,14 @@ async def startup_log():
     asyncio.create_task(alignment_reflection_reminder_loop(app))
     from case_completion_nudge import case_completion_nudge_loop
     asyncio.create_task(case_completion_nudge_loop(app))
+
+    # Seed the two demo court keys for SacoparentsPortal (Door 2 flow).
+    # Idempotent — only inserts on first boot; subsequent boots are no-ops.
+    try:
+        from portal_routes import seed_court_keys
+        await seed_court_keys(app.state.db)
+    except Exception:  # noqa: BLE001
+        logger.exception("Failed to seed portal court keys")
 
 
 @app.on_event("shutdown")
