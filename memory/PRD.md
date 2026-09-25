@@ -26,6 +26,88 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter207 · Full Portal Rewrite (SacoparentsPortal)
+
+The user provided a complete HTML/Tailwind mockup for a mobile-first
+"Child-Centered Co-Parenting Portal" and chose **option 1a: full
+rewrite** — replace the primary user-facing experience.
+
+**🟢 New primary experience at `/`**
+- `Landing.jsx` moved to `/legacy`; `/` and `/dashboard` now render
+  `SacoparentsPortal.jsx`.
+- Single-page portal with three screens (gateway → parent-journey /
+  court-key) driven by `useState` and persisted to **localStorage**
+  (matches mockup design; **no backend hooks**).
+- Font Awesome 6.4.0 CDN added in `public/index.html`.
+- All backend routes (`Complete Alignment Report`, `Joint Report`,
+  `Foundation Statement PDF`, `Coach Demo`, integration endpoint for
+  `sacoparentsalign.com`) remain intact and untouched for the sibling
+  Align app.
+
+**LocalStorage keys**
+- `sacoparents_biff_logs`, `sacoparents_align_records`,
+  `sacoparents_milestone_logs`, `sacoparents_foundation_statement`,
+  `sacoparents_legal_report`, `sacoparents_health_index`,
+  `sacoparents_court_key`, `sacoparents_reassessments`.
+
+**Modules implemented**
+- Gateway with Door 1 (Self-Guided Parent Journey) and Door 2
+  (Court Ordered Path — professional-key entry via `sacoparentsalign.com`).
+- Court key verify screen with two demo keys (`ALIGN-SA-2026`,
+  `COURT-8842`) and persistent verified banner.
+- Hub tabs: **I. Legal Report & Alignment** and **II. BIFF & Success History**.
+- Official Legal Conflict Resolution Report card with 3 Health Index
+  sliders (Info Sharing, Handoff Predictability, Decision-Making
+  Collaboration) computing an Overall Co-Parenting Health Index
+  (Low / Moderate / High Alignment).
+- Legal Dispute Resolution Matrix table.
+- Digital Affirmation & Certification signatures (Parent A, Parent B,
+  Mediator).
+- Align Before Agreement records — Medical / Educational / Psychological
+  folders with counters, filter, add-record modal.
+- Foundation Statement textarea with save-to-localStorage.
+- BIFF Communication Builder with 4 scenario presets (Late Handoff,
+  Reimbursement, Schedule Swap, Medical Update), real-time tone risk
+  analysis (flags 'always'/'never'/'!!'), archive to history.
+- History of Communications + History of Successes & Failures with
+  Log Milestone (prompt+confirm).
+- Reassessment modal with milestone-stage + notes.
+- Bottom mobile nav (Doors / Report / BIFF Tool / PDF Export).
+- Export PDF button uses `window.print()` and print-only header/footer.
+
+**Testids** (major): `sacoparents-portal`, `door-parent-journey`,
+`door-court-path`, `screen-court-key`, `court-key-input`,
+`demo-key-1`, `demo-key-2`, `verify-court-key-btn`,
+`screen-parent-journey`, `court-verified-banner`, `verified-case-id`,
+`hub-tab-alignment`, `hub-tab-biff`, `hub-section-alignment`,
+`hub-section-biff`, `score-slider-1/2/3`, `score-val-1/2/3`,
+`overall-health-label`, `log-reassessment-btn`, `sig-parent-a/b`,
+`sig-mediator`, `save-legal-report-btn`, `add-alignment-btn`,
+`folder-medical/educational/psychological`,
+`count-medical/educational/psychological`, `clear-folder-filter`,
+`alignment-records-grid`, `foundation-text`, `save-foundation-btn`,
+`raw-input`, `risk-badge`, `flag-list`, `biff-output`, `copy-biff-btn`,
+`archive-biff-btn`, `biff-history-list`, `success-count`,
+`friction-count`, `milestone-history-list`, `add-milestone-btn`,
+`modal-reassessment`, `submit-reassessment-btn`, `modal-alignment`,
+`align-category/title/provider/date/summary`, `submit-alignment-btn`,
+`bottom-nav`, `nav-doors/report/biff/print`, `header-back-btn`,
+`export-pdf-btn`.
+
+**Test verification**: iter67 (frontend) — 100% pass across 15 flows;
+Font Awesome 6.4.0 renders; localStorage persistence confirmed across
+reloads; no horizontal overflow at 390×844; desktop renders as
+centered narrow column (intentional per mockup).
+
+**Preserved but no longer primary**
+- Old `Landing.jsx` accessible at `/legacy`.
+- All existing legacy pages (`Dashboard`, `SafetyAssessment`,
+  `CompleteAlignmentReport`, `JointProfessionalReport`, deep-dive
+  pages, admin pages, verify pages, etc.) still routed for
+  direct/deep-link access and for the sacoparentsalign.com sibling
+  integration flows. They are **not linked** from the new portal.
+
+
 ### 2026-09-20 — Iter206 · Coach Demo · Custom Prompt Slot + Before-After Strip
 
 Follow-on polish to iter205's Landing-page Coach demo.
