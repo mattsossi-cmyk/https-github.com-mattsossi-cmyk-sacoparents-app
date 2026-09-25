@@ -1,0 +1,40 @@
+{
+  "summary": "iter69 delta: Tone-Safe copy, Weekly Progress PDF, Offline sync retry — all 3 new features verified end-to-end. Backend: 18/18 tests pass including new /api/portal/weekly-progress-pdf validation. Frontend: BIFF preset -> Claude refine -> Tone-Safe clipboard writeText contains BIFF body + '---' + 'Refined via SA CoParents BIFF Coach' + 'Refined: <UTC ISO date>' + 'Case: Self-Guided Parent Journey' + 'sacoparentsapp.online'. Export Weekly Progress PDF POST returns 200 application/pdf with %PDF magic bytes. Offline queue: online PUT clears pending, going offline sets 'sacoparents_sync_pending'='1' and chip shows 'Offline — changes will sync when you\\'re back'; on back online + window.dispatchEvent('online') queued PUT flushes and chip returns to 'Synced as parent1@test.com'. Regression on iter68 (sync-chip, court-key verify, BIFF refine, foundation-pdf, legal-report-pdf, state GET/PUT) all still pass.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/portal/weekly-progress-pdf", "issue": "Spec asks for 400 on out-of-range health_index like s1=0, but the code coerces falsy values via `int(... or 5)` so s1=0 -> defaults to 5 and returns 200. Same pattern exists in /legal-report-pdf. Consider using `int(health_index.get('s1', 5))` (without `or 5`) so 0 fails the 1..10 guard, if strict validation is desired. Non-blocking — s1=11 still returns 400 correctly."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "SacoparentsPortal render", "issues": ["Pre-existing React console warning: 'Each child in a list should have a unique key prop' when the alignment hub renders — not introduced by iter69, but worth cleaning up."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter69_weekly_progress_pdf.py",
+    "/app/backend/tests/test_portal_routes.py",
+    "/app/test_reports/pytest/iter69.xml"
+  ],
+  "action_items": [
+    "(Optional) Tighten weekly-progress-pdf health_index validation so s1=0 returns 400 like the spec asks (drop the `or 5` fallback on user-supplied values).",
+    "(Optional) Fix React 'unique key' warning in SacoparentsPortal alignment hub render (pre-existing, cosmetic)."
+  ],
+  "critical_code_review_comments": [
+    "portal_pdf.build_portal_weekly_progress_pdf duplicates health-index scoring/label rendering logic from build_portal_legal_report_pdf — worth extracting a shared _draw_health_panel helper to keep the two PDFs consistent.",
+    "SacoparentsPortal.jsx is 1941 lines — approaching the 700-line ceiling from code-review guidelines. Splitting per-tab (BIFF, Alignment, Doors, CourtKey) into sub-components would materially improve maintainability.",
+    "Offline flush effect at line 382 does `setHealthIndex(prev => ({...prev}))` to trigger the debounced PUT. Works, but couples the re-sync to health_index state; consider a dedicated 'flushVersion' state to avoid accidental re-renders of the alignment sliders."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter69_weekly_progress_pdf.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123!",
+  "seed_data_creation": "None — used existing seeded portal state for parent1.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The SacoparentsPortal sync-chip is only rendered on the 'doors' screen (nav-doors), not in the parent-journey hub — when validating offline chip text, click nav-doors first. The 'online' event flush is triggered via a state bump (onlineTick) which mutates healthIndex, causing the debounced PUT effect to re-run. Weekly-progress-pdf endpoint is public (no auth); test with empty body still returns a valid PDF. Clipboard tests need context.grant_permissions(['clipboard-read','clipboard-write']).",
+  "rca of the issue": "N/A — no bugs found in iter69 delta."
+}

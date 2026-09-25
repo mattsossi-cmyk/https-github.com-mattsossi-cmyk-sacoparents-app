@@ -26,6 +26,74 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter209 · Signed BIFF Copy + Offline Retry + Weekly Progress PDF
+
+Follow-on batch layering three concrete parent-facing utilities on top
+of iter68's backend-connected portal. All three verified in iter69
+(100% backend + 100% frontend).
+
+**🟢 1. Signed BIFF Copy (Tone-Safe)**
+- New button `copy-tone-safe-btn` (emerald pill) sits between "Copy
+  BIFF" and "Archive" in the BIFF composer.
+- On click, copies BIFF body + a 5-line audit stamp:
+    ```
+    <BIFF body>
+    ---
+    Refined via SA CoParents BIFF Coach
+    Refined: 2026-02-25 14:32 UTC
+    Case: ALIGN-SA-2026 (or "Self-Guided Parent Journey")
+    sacoparentsapp.online
+    ```
+- Intent: attorneys/mediators can see the message went through the
+  coach on a specific date, not that the parent hand-wrote a
+  suspiciously calm reply.
+
+**🟢 2. Offline Sync Retry**
+- Added localStorage key `sacoparents_sync_pending` (value `"1"` when a
+  PUT is queued).
+- Debounced PUT effect now checks `navigator.onLine` before firing:
+    * Offline → skip the PUT, set flag, chip shows "Offline — changes
+      will sync when you're back".
+    * Online but PUT fails → also set flag, chip shows "Sync paused —
+      your work is safe locally".
+    * Online and PUT succeeds → clear flag, chip shows "Synced as
+      {email}".
+- Auto-flush: on mount, if flag is set + online, bump internal
+  `onlineTick` state → force the debounced PUT effect to re-run.
+- Also listens on `window.addEventListener("online", ...)` to flush
+  the moment connectivity returns without a page reload.
+
+**🟢 3. Weekly Progress PDF**
+- Backend: new `build_portal_weekly_progress_pdf()` in
+  `portal_pdf.py` + endpoint `POST /api/portal/weekly-progress-pdf`
+  (public — same tier as the other two portal PDFs).
+- Renders a one-pager:
+    * Header with 7-day period + case ref + parent name
+    * Health Index (3 sliders + overall label) as horizontal
+      progress bars
+    * Milestones this week: two summary chips (success / friction) +
+      bullet list. Falls back to the 3 most-recent milestones if none
+      dated in the last 7 days.
+    * Recent BIFF messages (top 5, with timestamp + category chip)
+    * Foundation Statement excerpt (first 500 chars)
+- Frontend: new button `export-weekly-progress-pdf-btn` in the BIFF
+  hub under "History of Successes & Failures". Downloads a real PDF
+  via `URL.createObjectURL` (same helper as Foundation/Legal).
+- Copy: "One-page snapshot to share with your pediatrician, mediator,
+  or attorney."
+
+**New endpoints**
+- `POST /api/portal/weekly-progress-pdf` — public, streams application/pdf.
+
+**Deferred (P2 — noted from iter69 review)**
+- Tighten `health_index` validation so `s1=0` returns 400 (currently
+  coerces via `int(... or 5)`; slider min=1 prevents this in practice).
+- Extract a shared `_draw_health_panel` helper between the legal
+  report + weekly progress PDFs.
+- Split `SacoparentsPortal.jsx` (now ~1940 lines) into per-tab
+  sub-components.
+
+
 ### 2026-02-25 — Iter208 · Portal Backend Wire-Up (all 4 next-action items)
 
 Turned the portal from a localStorage-only demo into a real
