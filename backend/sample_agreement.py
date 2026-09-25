@@ -38,10 +38,18 @@ def _answers(side: int) -> dict:
     return out
 
 
+def sample_agreement_doc() -> dict:
+    from sample_foundation import sample_foundation_statement
+    fs = sample_foundation_statement()
+    structured = {k: fs[k] for k in ("child_name", "shared_purpose", "vision", "priorities", "strengths", "needs", "concerns", "child_may_need", "commitments", "goals", "future", "parent_commitment")}
+    entry = {"title": "Child-Focused Foundation Statement", "content": fs["parent_commitment"], "structured": structured, "source": "align"}
+    return {"kind": "agreement", "child_name": "M.", "subject": "Co-Parenting Agreement", "is_demo": True, "case_code": "SA-26-AGR-SAMPLE",
+            "participants": {"a": {"name": "Parent A"}, "b": {"name": "Parent B"}},
+            "responses": {"a": {"answers": _answers(0), "foundation": [entry]}, "b": {"answers": _answers(1), "foundation": [dict(entry)]}}}
+
+
 def sample_agreement() -> dict:
-    doc = {"kind": "agreement", "child_name": "M.", "subject": "Co-Parenting Agreement", "is_demo": True,
-           "participants": {"a": {"name": "Parent A"}, "b": {"name": "Parent B"}},
-           "responses": {"a": {"answers": _answers(0)}, "b": {"answers": _answers(1)}}}
+    doc = sample_agreement_doc()
     rep = generate_agreement(doc)
     rep["is_sample"] = True
     rep["date"] = "May 29, 2026"

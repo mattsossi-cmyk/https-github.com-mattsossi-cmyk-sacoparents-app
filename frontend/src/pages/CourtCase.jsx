@@ -110,6 +110,21 @@ export default function CourtCase({ sample = false }) {
                     </div>
                   )}
                   <CourtLegalSummary s={d.statement.legal_summary} />
+                  {d.statement.agreement_included && (
+                    <div className="rounded-xl border-2 border-teal-300 bg-[#eaf7f7] p-4 space-y-3" data-testid="court-agreement-card">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p><span className="rounded-full bg-teal-600/10 px-2 py-0.5 text-[10px] font-bold tracking-widest text-teal-700 mr-2">CO-PARENTING AGREEMENT</span><strong>Child-Focused Co-Parenting Agreement</strong>{d.statement.agreement_card?.case_code && <> · {d.statement.agreement_card.case_code}</>}{d.statement.agreement_card?.date && <> · {d.statement.agreement_card.date}</>}{d.statement.agreement_sha256 && <span className="block text-xs text-muted-foreground mt-0.5">SHA-256 {d.statement.agreement_sha256.slice(0, 16)}…</span>}</p>
+                        {!sample && <Button size="sm" variant="outline" asChild data-testid="court-agreement-pdf"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${d.statement.packet_id}/agreement.pdf`} download><Download className="h-4 w-4 mr-1" /> Agreement PDF</a></Button>}
+                      </div>
+                      {d.statement.agreement_card && (
+                        <div className="grid gap-3 sm:grid-cols-2 text-sm">
+                          <div className="rounded-lg border border-[#cde7da] bg-[#edf8f3] p-3"><p className="text-xs font-bold uppercase tracking-widest text-[#2d8a64]">Areas of Alignment ({d.statement.agreement_card.counts?.alignment})</p><ul className="mt-1 list-disc pl-4 space-y-0.5" data-testid="court-agreement-aligned">{d.statement.agreement_card.needs_aligned.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+                          <div className="rounded-lg border border-[#eed4b4] bg-[#fff6ea] p-3"><p className="text-xs font-bold uppercase tracking-widest text-[#c67a26]">Areas Requiring Agreement ({d.statement.agreement_card.counts?.resolution})</p><ul className="mt-1 list-disc pl-4 space-y-0.5" data-testid="court-agreement-open">{d.statement.agreement_card.needs_open.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+                        </div>
+                      )}
+                      <p className="text-xs italic text-muted-foreground">Parent-authored agreement organized by SA CoParents; it does not modify a court order. Specific agreements: {d.statement.agreement_card?.counts?.specific ?? "—"}.</p>
+                    </div>
+                  )}
 
                   {STMT_ALL.filter(([k]) => d.statement[k] && !(d.statement.legal_summary && ALIGNMENT_KEYS.includes(k))).map(([k, t]) => <div key={k}><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t}</p><p className="leading-relaxed whitespace-pre-wrap">{d.statement[k]}</p></div>)}
                   {d.statement.framework && (

@@ -381,9 +381,9 @@ def _agreement_summary(pdf: FPDF, r: dict) -> None:
     pdf.ln(4)
 
 
-def build_agreement_pdf(r: dict) -> bytes:
+def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = False) -> bytes:
     from pdf_agreement import build_agreement_pdf as _build
-    return _build(r)
+    return _build(r, doc=doc, is_sample=is_sample)
 
 
 def _legacy_build_agreement_pdf(r: dict) -> bytes:

@@ -81,10 +81,9 @@ class TestSampleAgreement:
         assert "attachment" in r.headers.get("content-disposition", "").lower()
         assert len(r.content) > 20_000, f"PDF too small: {len(r.content)} bytes"
         pages, text = _extract_text(r.content)
-        for s in ["At a Glance", "Agreement Sections", "Signatures", "Alignment Before Agreement"]:
+        for s in ["Child-Focused Co-Parenting Agreement", "Our Child's Strengths", "Conflict Resolution Plan", "Alignment Before Agreement"]:
             assert s in text, f"Missing '{s}' in agreement PDF"
-        brand = "Starting With Alignment, Ending With Agreement"
-        missing_pages = [i for i, p in enumerate(pages) if brand not in p]
+        missing_pages = [i for i, p in enumerate(pages) if "starting with alignment" not in p.lower()]
         assert not missing_pages, f"Brand header missing on pages: {missing_pages}"
 
     def test_pdf_inline_disposition(self):

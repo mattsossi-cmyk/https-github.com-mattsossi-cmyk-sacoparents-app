@@ -29,6 +29,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
   const [busy, setBusy] = useState(false);
   const [attest, setAttest] = useState(false);
   const [includeLegal, setIncludeLegal] = useState(false);
+  const [agreementId, setAgreementId] = useState("");
 
   const load = () => { api.get(`/joint/reports/${rid}/professional-statement`).then((r) => { setData(r.data); setSt(r.data.statement); onStageChange?.(r.data.stage); }).catch(() => {}); };
   useEffect(() => { load(); }, [rid]);
@@ -46,7 +47,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
     if (!window.confirm("Submit the Joint Report and Professional Statement to the court? Both documents will be locked, timestamped and placed in the Judge Portal.")) return;
     setBusy(true);
     try {
-      const { data: d } = await api.post(`/joint/reports/${rid}/submit-to-court`, { attest, include_legal_report: includeLegal });
+      const { data: d } = await api.post(`/joint/reports/${rid}/submit-to-court`, { attest, include_legal_report: includeLegal, agreement_report_id: agreementId || null });
       toast.success(`Submitted to court — version ${d.submission.version} locked`);
       setAttest(false); load();
     } catch (e) { toast.error(formatApiError(e)); }
@@ -121,6 +122,19 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
             <label className="mb-3 flex items-start gap-2 text-sm cursor-pointer rounded-md border border-border bg-white p-3" data-testid="submit-include-legal-label">
               <input type="checkbox" checked={includeLegal} onChange={(e) => setIncludeLegal(e.target.checked)} className="mt-1" disabled={!submittable} data-testid="submit-include-legal" />
               <span>Also attach the finalized <strong>Legal Lens Review and Report to Court</strong>{data.legal_lens.signature_name && <> (signed by {data.legal_lens.signature_name})</>}. The judge receives it alongside the Joint Report and Professional Statement, hash-sealed in the same frozen packet.</span>
+            </label>
+          )}
+          {data.agreement_options?.length > 0 && (
+            <label className="mb-3 flex items-start gap-2 text-sm cursor-pointer rounded-md border border-border bg-white p-3" data-testid="submit-include-agreement-label">
+              <input type="checkbox" checked={!!agreementId} onChange={(e) => setAgreementId(e.target.checked ? data.agreement_options[0].id : "")} className="mt-1" disabled={!submittable} data-testid="submit-include-agreement" />
+              <span className="flex-1">Also attach the parents' completed <strong>Child-Focused Co-Parenting Agreement</strong>. The judge receives it hash-sealed in the same frozen packet, with a neutral summary card.
+                {agreementId && data.agreement_options.length > 1 && (
+                  <select value={agreementId} onChange={(e) => setAgreementId(e.target.value)} className="mt-2 block h-9 w-full rounded-md border border-input bg-white px-2 text-sm" data-testid="submit-agreement-select">
+                    {data.agreement_options.map((a) => <option key={a.id} value={a.id}>{a.case_code} · {a.child_name} · {a.date}</option>)}
+                  </select>
+                )}
+                {agreementId && data.agreement_options.length === 1 && <span className="block mt-1 text-xs text-muted-foreground" data-testid="submit-agreement-picked">{data.agreement_options[0].case_code} · {data.agreement_options[0].date}</span>}
+              </span>
             </label>
           )}
 

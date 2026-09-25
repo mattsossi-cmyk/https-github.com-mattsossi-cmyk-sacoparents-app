@@ -173,7 +173,7 @@ class PacketService:
 
     def _report_pdf(self, d: dict, pro: dict) -> bytes:
         if d.get("kind") == "agreement":
-            return build_agreement_pdf(generate_agreement(d))
+            return build_agreement_pdf(generate_agreement(d), doc=d)
         return build_joint_pdf({**generate_joint_report(d), "professional": {"name": pro["name"], "credentials_verified": pro["credentials_verified"]},
                                 "verify": {"case_code": d.get("case_code"), "url": f"{self.app_url()}/verify?code={d.get('case_code')}"}})
 
@@ -444,6 +444,15 @@ def _judge_routes(svc: PacketService, get_current_user) -> APIRouter:
             raise HTTPException(status_code=404, detail="No Professional Legal Report was attached to this submission")
         await svc.log_court(p, f"Professional Legal Report PDF downloaded by {p['judge_name']} (court account)", user["_id"], user.get("name", ""))
         return _pdf_response(bytes(frozen["legal_pdf"]), f"professional-legal-report-{_safe_name(p)}.pdf")
+
+    @r.get("/court-dashboard/packets/{pid}/agreement.pdf")
+    async def judge_agreement_pdf(pid: str, user=Depends(get_current_user)):
+        p = await svc.for_judge(pid, user)
+        frozen = await db.court_frozen_pdfs.find_one({"packet_id": pid, "agreement_pdf": {"$exists": True}}, {"agreement_pdf": 1})
+        if not frozen:
+            raise HTTPException(status_code=404, detail="No Co-Parenting Agreement was attached to this submission")
+        await svc.log_court(p, f"Co-Parenting Agreement PDF downloaded by {p['judge_name']} (court account)", user["_id"], user.get("name", ""))
+        return _pdf_response(bytes(frozen["agreement_pdf"]), f"coparenting-agreement-{_safe_name(p)}.pdf")
 
     @r.get("/court-dashboard/packets/{pid}/pdf")
     async def judge_pdf(pid: str, user=Depends(get_current_user)):

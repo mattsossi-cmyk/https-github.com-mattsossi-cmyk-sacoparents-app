@@ -7,7 +7,7 @@ PURPLE, PURPLE_DARK, PURPLE_LIGHT, TEAL_LIGHT, BORDER, PANEL, COMMIT = (75, 42, 
 _W = 210 - 36
 
 
-def _banner(pdf: FPDF, right: str) -> None:
+def _banner(pdf: FPDF, right: str, kicker: str = "F O U N D A T I O N   S T A T E M E N T") -> None:
     pdf.set_fill_color(*PURPLE_DARK)
     pdf.rect(0, 0, pdf.w, 30, style="F")
     pdf.set_fill_color(*PURPLE)
@@ -24,7 +24,7 @@ def _banner(pdf: FPDF, right: str) -> None:
     pdf.cell(100, 8, "SA CoParents")
     pdf.set_xy(36, 16.5)
     pdf.set_font(FONT, "", 7)
-    pdf.cell(100, 4, "F O U N D A T I O N   S T A T E M E N T")
+    pdf.cell(100, 4, kicker)
     pdf.set_xy(pdf.w - 18 - 60, 9)
     pdf.set_font(FONT, "", 7)
     pdf.multi_cell(60, 4.5, right.upper(), align="R")
@@ -32,7 +32,7 @@ def _banner(pdf: FPDF, right: str) -> None:
 
 
 def _heading(pdf: FPDF, n: int, title: str) -> None:
-    if pdf.get_y() > pdf.h - 60:
+    if pdf.get_y() > pdf.h - 85:
         pdf.add_page()
     y = pdf.get_y()
     pdf.set_fill_color(*PURPLE)
@@ -110,7 +110,8 @@ def _bullets(pdf: FPDF, items: list, boxed: bool = False, accent: tuple | None =
 
 
 def _info_cards(pdf: FPDF, items: list) -> None:
-    gap, w = 4, (_W - 8) / 3
+    gap = 4
+    w = (_W - gap * (len(items) - 1)) / len(items)
     y = pdf.get_y()
     for i, (label, value) in enumerate(items):
         x = 18 + i * (w + gap)
@@ -207,9 +208,12 @@ _DISCLAIMER = "This Foundation Statement reflects parent-reported goals, concern
 _CONTACT = ["SA CoParents", "16607 Blanco #703", "San Antonio, TX 78232", "mattsossi@bsossi.com", "210-224-1667", "sacoparentsapp.online"]
 
 
-def _footer_block(pdf: FPDF, d: dict) -> None:
+def _footer_block(pdf: FPDF, d: dict, signature: bool = True) -> None:
     if pdf.get_y() > pdf.h - 70:
         pdf.add_page()
+    if not signature:
+        _footer_contact(pdf, d)
+        return
     pdf.ln(14)
     y = pdf.get_y()
     pdf.set_draw_color(68, 68, 68)
@@ -221,6 +225,10 @@ def _footer_block(pdf: FPDF, d: dict) -> None:
     pdf.cell(80, 4, "P A R E N T   S I G N A T U R E")
     pdf.set_xy(118, y + 1.5)
     pdf.cell(60, 4, "D A T E", new_x="LMARGIN", new_y="NEXT")
+    _footer_contact(pdf, d)
+
+
+def _footer_contact(pdf: FPDF, d: dict) -> None:
     pdf.ln(10)
     y = pdf.get_y()
     pdf.set_draw_color(*BORDER)

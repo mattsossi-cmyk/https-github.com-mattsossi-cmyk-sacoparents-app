@@ -661,6 +661,9 @@ async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(ge
     if role is None:
         raise HTTPException(status_code=403, detail="Only invited parents can submit responses")
     payload = _validated_answers(doc, body)
+    existing_foundation = (doc.get("responses", {}).get(role) or {}).get("foundation")
+    if existing_foundation and not payload.get("foundation"):
+        payload["foundation"] = existing_foundation
     updates = {f"responses.{role}": payload}
     other = "b" if role == "a" else "a"
     if doc.get("responses", {}).get(other):
@@ -726,7 +729,7 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
     child = re.sub(r"[^a-z0-9-]", "", (doc.get("child_name") or "child").lower().replace(" ", "-")) or "child"
     if doc.get("kind") == "agreement":
         return Response(
-            content=build_agreement_pdf(generate_agreement(await ensure_agreement_ai(doc))),
+            content=build_agreement_pdf(generate_agreement(await ensure_agreement_ai(doc)), doc=doc, is_sample=bool(doc.get("is_demo"))),
             media_type="application/pdf",
             headers={"Content-Disposition": f'attachment; filename="coparenting-agreement-{child}.pdf"'},
         )
@@ -828,9 +831,9 @@ async def sample_agreement_json():
 
 @api.get("/joint/sample-agreement/pdf")
 async def sample_agreement_pdf(inline: int = 0):
-    from sample_agreement import sample_agreement
+    from sample_agreement import sample_agreement, sample_agreement_doc
     disposition = "inline" if inline else "attachment"
-    return Response(content=build_agreement_pdf(sample_agreement()), media_type="application/pdf",
+    return Response(content=build_agreement_pdf(sample_agreement(), doc=sample_agreement_doc(), is_sample=True), media_type="application/pdf",
                     headers={"Content-Disposition": f'{disposition}; filename="sample-coparenting-agreement.pdf"'})
 
 

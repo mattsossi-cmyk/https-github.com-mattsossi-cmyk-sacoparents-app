@@ -135,6 +135,7 @@ class CourtMessageIn(BaseModel):
 class SubmitIn(BaseModel):
     attest: bool = False
     include_legal_report: bool = False
+    agreement_report_id: str | None = None
 
 
 SUMMARY_DISCLAIMER = ("Procedural status summary generated from authorized case-status records only. It does not draw on private parent journals, raw assessment answers, "
@@ -315,7 +316,8 @@ def _submitted_material(case: dict | None, packets: list, done: list) -> tuple[l
         counts = {"alignment_areas": len(report["alignment"]), "discussion_areas": len(report["differences"]), "completion_pct": 100}
         statement = {**(packets[0].get("statement") or {}), "professional_name": packets[0].get("professional_name"), "submitted_at": packets[0].get("created_at"), "packet_id": packets[0]["id"],
                      "legal_report_included": packets[0].get("legal_report_included", False), "legal_version": packets[0].get("legal_version"), "legal_sha256": packets[0].get("legal_sha256", ""),
-                     "legal_summary": packets[0].get("legal_summary")}
+                     "legal_summary": packets[0].get("legal_summary"),
+                     "agreement_included": packets[0].get("agreement_included", False), "agreement_sha256": packets[0].get("agreement_sha256", ""), "agreement_card": packets[0].get("agreement_card")}
         return [report], counts, statement
     if case:
         return [], {"alignment_areas": None, "discussion_areas": None, "completion_pct": int(sum(done) / 2 * 100)}, None
@@ -629,6 +631,30 @@ async def _legal_pdf_bytes(db, doc: dict) -> tuple[bytes, dict]:
     return build_legal_lens_pdf(view), court_summary(rep)
 
 
+async def _agreement_pdf_bytes(db, doc: dict, user: dict, agreement_id: str | None) -> tuple[bytes | None, dict | None]:
+    """Explicitly selected, ready Co-Parenting Agreement (same professional, same parents) → PDF + neutral judge card."""
+    if not agreement_id:
+        return None, None
+    from agreement_model import court_agreement_card
+    from pdf_report import build_agreement_pdf
+    from joint_engine import generate_agreement
+    ag = await db.joint_reports.find_one({"id": agreement_id, "kind": "agreement", "created_by": user["_id"]}, {"_id": 0})
+    if not ag or ag.get("status") not in ("ready", "closed"):
+        raise HTTPException(status_code=400, detail="Choose a completed Co-Parenting Agreement that you created for these parents")
+    emails = lambda d: {(d.get("participants", {}).get(s) or {}).get("email", "").lower() for s in ("a", "b")}  # noqa: E731
+    if emails(ag) != emails(doc):
+        raise HTTPException(status_code=400, detail="That Co-Parenting Agreement belongs to different parents than this case")
+    return build_agreement_pdf(generate_agreement(ag), doc=ag), court_agreement_card(ag)
+
+
+async def agreement_options(db, doc: dict, user: dict) -> list:
+    """Ready agreements by this professional for the same two parents (for the submit-to-court picker)."""
+    em = {(doc.get("participants", {}).get(s) or {}).get("email", "").lower() for s in ("a", "b")}
+    cur = db.joint_reports.find({"kind": "agreement", "created_by": user["_id"], "status": {"$in": ["ready", "closed"]}}, {"_id": 0, "id": 1, "case_code": 1, "child_name": 1, "participants": 1, "report_generated_at": 1, "created_at": 1})
+    return [{"id": a["id"], "case_code": a.get("case_code"), "child_name": a.get("child_name"), "date": (a.get("report_generated_at") or a.get("created_at") or "")[:10]}
+            async for a in cur if {(a.get("participants", {}).get(s) or {}).get("email", "").lower() for s in ("a", "b")} == em]
+
+
 @dataclass(frozen=True)
 class Submission:
     """One frozen court submission (inputs shared by the packet, the case record and the audit line)."""
@@ -716,10 +742,10 @@ async def _submission_pdfs(db, doc: dict, pro: dict, app_url, include_legal: boo
     return joint_pdf, _statement_pdf_bytes(doc, pro, await _compare_rows(db, doc, legal_summary)), legal_pdf, legal_summary
 
 
-async def _persist_submission(db, s: Submission, doc: dict, combined: bytes, legal_pdf: bytes | None) -> dict:
+async def _persist_submission(db, s: Submission, doc: dict, combined: bytes, legal_pdf: bytes | None, agreement_pdf: bytes | None = None) -> dict:
     """Store the hash-sealed frozen PDF, the court packet and the case's submission record; supersede earlier versions."""
     await db.court_frozen_pdfs.insert_one({"packet_id": s.pid, "report_id": s.rid, "version": s.version, "pdf": Binary(combined), **s.shas, "created_at": _iso(s.now), **s.legal_meta,
-                                           **({"legal_pdf": Binary(legal_pdf)} if legal_pdf else {})})
+                                           **({"legal_pdf": Binary(legal_pdf)} if legal_pdf else {}), **({"agreement_pdf": Binary(agreement_pdf)} if agreement_pdf else {})})
     if s.version > 1:
         await db.court_packets.update_many({"report_id": s.rid, "submission_version": {"$exists": True}}, {"$set": {"superseded": True}})
     await db.court_packets.insert_one(_frozen_packet(s))
@@ -783,7 +809,7 @@ def _statement_routes(c: Ctx) -> APIRouter:
         doc = await _own_case(db, rid, user)
         lens = await db.professional_reports.find_one({"case_id": rid}, {"_id": 0, "status": 1, "signature_name": 1})
         packets = await db.court_packets.find({"report_id": rid, "frozen": True}, {"_id": 0, "submission_version": 1, "created_at": 1, "statement": 1, "superseded": 1, "legal_summary": 1}).sort("submission_version", 1).to_list(100)
-        return _statement_payload(doc, user, lens, packets, await _org_library(db, user))
+        return _statement_payload(doc, user, lens, packets, await _org_library(db, user)) | {"agreement_options": await agreement_options(db, doc, user)}
 
     @r.put("/joint/reports/{rid}/professional-statement")
     async def save_statement(rid: str, body: StatementIn, user=Depends(get_current_user)):
@@ -815,13 +841,15 @@ def _submit_routes(c: Ctx) -> APIRouter:
         doc = await _own_case(db, rid, user)
         court = assert_submittable(doc, body)
         joint_pdf, stmt_pdf, legal_pdf, legal_summary = await _submission_pdfs(db, doc, await pro_profile(user["_id"]), c.app_url, body.include_legal_report)
-        combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []))
+        agreement_pdf, agreement_card = await _agreement_pdf_bytes(db, doc, user, body.agreement_report_id)
+        combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []) + ([agreement_pdf] if agreement_pdf else []))
         version = len(doc.get("court_submissions") or []) + 1
         s = Submission(pid=str(uuid.uuid4()), rid=rid, user=user, court=court, st=doc["professional_statement"], version=version, now=_now(),
                        shas={"sha256": _sha(combined), "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf)},
-                       legal_meta={"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None, "legal_summary": legal_summary})
-        sub = await _persist_submission(db, s, doc, combined, legal_pdf)
-        await c.log_report_event(rid, f"Submitted Joint Report + Professional Statement{' + Professional Legal Report' if legal_pdf else ''} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
+                       legal_meta={"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None, "legal_summary": legal_summary,
+                                   "agreement_included": bool(agreement_pdf), "agreement_sha256": _sha(agreement_pdf) if agreement_pdf else "", "agreement_card": agreement_card})
+        sub = await _persist_submission(db, s, doc, combined, legal_pdf, agreement_pdf)
+        await c.log_report_event(rid, f"Submitted Joint Report + Professional Statement{' + Professional Legal Report' if legal_pdf else ''}{' + Co-Parenting Agreement' if agreement_pdf else ''} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
         if legal_pdf:
             await c.log_report_event(rid, "LEGAL_REPORT_SHARED", user)
         try:
