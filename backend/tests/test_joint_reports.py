@@ -49,7 +49,7 @@ class TestJointConfig:
         r = requests.get(f"{API}/joint/config")
         assert r.status_code == 200
         data = r.json()
-        assert len(data["subjects"]) == 20
+        assert len(data["subjects"]) == 21
         keys = [s["key"] for s in data["subjects"]]
         assert "education" in keys and "custom" in keys
         assert len(data["questions"]) == 6

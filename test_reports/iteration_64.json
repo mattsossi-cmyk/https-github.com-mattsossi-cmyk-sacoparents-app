@@ -1,0 +1,25 @@
+{
+  "summary": "Iter-64 FRONTEND: validated the new 'attach Co-Parenting Agreement to court submission' UI end-to-end. Data set up via API using the same recipe as backend/tests/test_iter64_agreement_to_court.py (already-passing). Verified (1) professional /joint/{rid} submit-to-court box shows [submit-include-agreement-label] with checkbox [submit-include-agreement]; ticking it renders [submit-agreement-picked] with the agreement case_code + date (single option flow); ticking [submit-attest] and clicking [submit-to-court-btn] auto-accepts the window.confirm dialog and POSTs /api/joint/reports/{rid}/submit-to-court with agreement_report_id=ag.id (200; submission.agreement_included=true; agreement_sha256 present) and toast 'Submitted to court — version 1 locked' appears. (2) Judge /court/case/{refId} renders [court-agreement-card] containing 'Child-Focused Co-Parenting Agreement' label, agreement case_code, SHA-256 prefix, aligned list [court-agreement-aligned] (8 sections) and open list [court-agreement-open] (fallback message when everything aligned); [court-agreement-pdf] is an <a> (Button asChild) with href /api/court-dashboard/packets/{pid}/agreement.pdf that returns 200 application/pdf (67.5 KB PDF). (3) A separate case whose submission was made WITHOUT agreement (agreement_report_id null) produces NO [court-agreement-card] on the judge case view. (4) /samples/coparenting-agreement loads (banner + AgreementDocument + tour); the 'View PDF' link ([sample-agreement-viewpdf-link]) returns 200 application/pdf; page-1 of that PDF contains 'Child-Focused Co-Parenting Agreement', the four info cards (PARENT A, PARENT B, CHILD, AGREEMENT DATE) and 'Purpose of This Agreement' — matches the new 15-section design. (5) Overflow check: agreement card at 1920x800 scrollWidth==clientWidth (922==922) and at 390x844 (mobile) body scrollWidth==clientWidth (390==390), card 288==288 — no horizontal overflow.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/_iter64_ui_setup.py",
+    "/app/backend/tests/test_iter64_agreement_to_court.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ProfessionalStatement.jsx L129 toggles agreementId by grabbing data.agreement_options[0].id — if the list changes after mount (e.g., another agreement is completed in another tab) the checkbox will still pick index 0 rather than a canonical latest one; not a bug today but consider selecting the most recent by date.",
+    "CourtCase.jsx L117: <Button asChild>...<a/></Button> exposes data-testid on the anchor. Test agents commonly write [data-testid=court-agreement-pdf] a which returns null — consider adding an inner span or a wrapper testid to make selectors robust.",
+    "SampleAgreement.jsx: AgreementDocument uses report.report_title as the visible heading which does not literally read 'Child-Focused Co-Parenting Agreement' on the HTML view (only the PDF does). If the product intent is for the HTML sample to visually match the PDF's cover, backend /joint/sample-agreement report_title (or the component) should be updated to 'Child-Focused Co-Parenting Agreement'."
+  ],
+  "updated_files": [
+    "/app/backend/tests/_iter64_ui_setup.py (new — UI data-setup helper)"
+  ],
+  "success_rate": {"backend": "n/a (skipped — pytest suite verified)", "frontend": "100% (pro submit-with-agreement, judge card + lists + SHA-256 + PDF 200, no-card when not attached, sample page loads + sample PDF new design, no overflow at 1920x800 or 390x844)"},
+  "test_credentials": "Ephemeral: t_*@example.com / testpass123 (judge + professional auto-approved via Mongo).",
+  "seed_data_creation": "Two court-referred cases + one Co-Parenting Agreement per run. Case A (WITH agreement) rid=<random>, refId=<random>, agreement_case_code SA-26-AGR-*; Case B submitted without agreement. Data is ephemeral and only used by the UI run — regenerated each time _iter64_ui_setup.py runs.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Re-run: python /app/backend/tests/_iter64_ui_setup.py to regenerate data, then follow the browser flow: login as pro → /joint/{rid_with} → tick [submit-include-agreement] → assert [submit-agreement-picked] contains agreement_case_code → tick [submit-attest] → click [submit-to-court-btn] (auto-accept confirm dialog) → expect POST /joint/reports/{rid}/submit-to-court 200 with agreement_included=true. Then login as judge → /court/case/{refId_with} → assert [court-agreement-card], [court-agreement-aligned], [court-agreement-open], SHA-256 substring in card text, and href of [court-agreement-pdf] ends /agreement.pdf and fetches 200 application/pdf. Note: [court-agreement-pdf] element itself IS the <a> (Button asChild) — do NOT append ' a' to the selector.",
+  "rca of the issue": "No issues found; feature implemented as specified across pro submit UI, judge card view, no-card fallback, and the sample PDF's new 15-section design."
+}

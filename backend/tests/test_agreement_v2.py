@@ -76,5 +76,5 @@ def test_agreement_report_sorts_three_ways_and_pdf_renders() -> None:
     assert pdf.status_code == 200
     doc = fitz.open(stream=io.BytesIO(pdf.content), filetype="pdf")
     text = "".join(p.get_text() for p in doc)
-    assert "At a Glance" in text and "Issues Still Requiring Resolution" in text and "4. Education" in text
+    assert "Child-Focused Co-Parenting Agreement" in text and "Areas Requiring Agreement" in text and "Educational Decisions" in text
     assert "2026 sacoparentsalign.com" in text

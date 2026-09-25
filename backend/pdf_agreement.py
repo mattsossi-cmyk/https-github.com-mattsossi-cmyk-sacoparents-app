@@ -121,6 +121,8 @@ def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = Fals
     _panel(pdf, m["purpose"], TEAL_LIGHT, accent=TEAL, sub="Purpose of This Agreement")
     _heading(pdf, 1, "Our Shared Child-Focused Purpose")
     _panel(pdf, "\n".join(f"• {x}" for x in m["shared_purpose"]), PURPLE_LIGHT, label="Shared Foundation")
+    for f in m.get("foundation_statements") or []:
+        _panel(pdf, f["content"], TEAL_LIGHT, label=f"{f['parent']} — {f['title']}")
     _heading(pdf, 2, "Our Child's Strengths")
     _bullets(pdf, m["strengths"])
     _heading(pdf, 3, "Our Child's Current Needs")

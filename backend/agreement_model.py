@@ -85,6 +85,7 @@ def court_agreement_model(doc: dict) -> dict:
         "review": _agreed(rep, "review") or [TBD],
         "review_choices": [("Review Trigger", rev.get("review_trigger") or TBD), ("Review Frequency", "Every 6 or 12 months"), ("Earlier Review", "If significant circumstances change")],
         "shared_commitment": SHARED_COMMITMENT, "disclaimer": DISCLAIMER,
+        "foundation_statements": [{"parent": f["parent"], "title": f["title"], "content": f["content"]} for f in rep.get("foundation_statements") or []],
         "counts": {"alignment": len(sm["alignment"]), "specific": len(sm["specific"]), "resolution": len(sm["resolution"])},
         "statuses": [(s["label"], s["status"]) for s in rep.get("sections") or []],
     }
