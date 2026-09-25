@@ -26,6 +26,70 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter210 · Trend Line + BIFF Kudos Loop + Share Links
+
+Follow-on batch to iter69. Ships three parent-facing features. All
+three verified in iter70 (backend 10/10 new tests + frontend 100%).
+
+**🟢 1. Trend Line (mini sparkline)**
+- Reassessment records now snapshot the Health Index at the moment of
+  logging: `{stage, notes, date, snapshot:{s1,s2,s3}, avg}`.
+- Frontend: new `<TrendSparkline />` component renders under the
+  Overall Health Index panel. Shows a compact SVG line chart of the
+  last 4 reassessment averages + the current live value.
+    * Empty state (< 2 data points): `trend-sparkline-empty` hint
+      "Log at least one Reassessment above to unlock your trend line".
+    * With ≥ 2 points: `trend-sparkline` + a delta chip
+      `trend-delta` ("▲ +0.7", "▼ -0.3", or "◆ Flat").
+- Backend: new `_draw_sparkline()` + `_reassessment_series()` helpers
+  in `portal_pdf.py`. Weekly Progress PDF now includes a "Trend"
+  section right under the Overall Health Index box with the same
+  sparkline + a `6.0 → 6.5 → 6.7` textual legend.
+- The reassessment array is now tracked in React state, hydrated from
+  server, and included in the debounced PUT payload.
+
+**🟢 2. BIFF Kudos Loop**
+- `copyToneSafe()` now checks `riskLabel`. When it equals
+  "Escalation Flag" at the moment of copy, it also appends a
+  Success milestone:
+    * `title`: "Coach kept a hot message tone-safe"
+    * `note`: describes the reformulation
+    * `source: "biff_kudos"` (so the milestone list can be filtered
+      or badged if we ever want to)
+- Silently no-op for Low-Risk drafts so the milestone log doesn't get
+  cluttered with false wins.
+
+**🟢 3. Share Links**
+- New collection `portal_pdf_shares` (TTL 30 days).
+- Endpoints:
+    * `POST /api/portal/share` (public, rate-limited) —
+      `{artefact_type: 'foundation'|'legal'|'weekly', payload: {...}}`
+      → `{share_id, url, expires_at}`. Smoke-generates the PDF once
+      to validate the payload before minting the link.
+    * `GET /api/portal/share/{share_id}.pdf` (public) — regenerates
+      the PDF on demand from the stored payload, streams as
+      `application/pdf` with `Content-Disposition: inline` so it
+      previews in-browser when texted. 404 on unknown, 410 on
+      expired/revoked. Bumps `hit_count` on each fetch.
+- Share URL origin is derived from the request scheme+host
+  (`x-forwarded-host` if present), so preview/prod/custom-domain
+  deploys all Just Work. Overridable via `PORTAL_SHARE_ORIGIN` env.
+- Frontend: three new `share-*-btn` buttons (Foundation, Legal,
+  Weekly). On click, POST /portal/share → write URL to clipboard →
+  briefly show "Copied!" state. Alert shows the URL for users where
+  the clipboard API is blocked.
+
+**Deferred (P2 — from iter70 review)**
+- Split `SacoparentsPortal.jsx` (~2200 lines) into per-tab
+  sub-components.
+- Add optional passphrase / short-TTL toggle to share links for
+  privacy-sensitive legal reports.
+- Replace `_regenerate_share_pdf` smoke build with a lighter
+  per-artefact payload validator to avoid discarding a full weekly
+  PDF on mint.
+- Log the underlying error in `createShareLink`'s catch branch.
+
+
 ### 2026-02-25 — Iter209 · Signed BIFF Copy + Offline Retry + Weekly Progress PDF
 
 Follow-on batch layering three concrete parent-facing utilities on top
