@@ -21,6 +21,7 @@ const LEGAL_REPORT_KEY = "sacoparents_legal_report";
 const HEALTH_INDEX_KEY = "sacoparents_health_index";
 const COURT_KEY_KEY = "sacoparents_court_key";
 const REASSESSMENT_KEY = "sacoparents_reassessments";
+const SYNC_PENDING_KEY = "sacoparents_sync_pending"; // '1' if a PUT is queued
 
 const PRESETS = {
   late_handoff: {
@@ -310,11 +311,19 @@ export default function SacoparentsPortal() {
 
   // Debounced server push. Waits for the initial pull to complete so we
   // don't clobber server state with our defaults on the very first render.
+  // Also handles offline / transient failure by marking a "pending" flag in
+  // localStorage — the next successful hydrate + effect firing will re-push
+  // the current state, so nothing is ever silently dropped.
   useEffect(() => {
     if (!user) return;
     if (!hasHydratedFromServerRef.current) return;
     if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
     syncDebounceRef.current = setTimeout(async () => {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        writeString(SYNC_PENDING_KEY, "1");
+        setSyncStatus("offline");
+        return;
+      }
       setSyncStatus("syncing");
       try {
         await api.put("/portal/state", {
@@ -326,8 +335,10 @@ export default function SacoparentsPortal() {
           health_index: healthIndex,
           court_key: courtKey,
         });
+        writeString(SYNC_PENDING_KEY, "");
         setSyncStatus("synced");
       } catch {
+        writeString(SYNC_PENDING_KEY, "1");
         setSyncStatus("error");
       }
     }, 700);
@@ -344,6 +355,34 @@ export default function SacoparentsPortal() {
     healthIndex,
     courtKey,
   ]);
+
+  // Flush queued PUT when we come back online (or on mount if a pending
+  // flush was left over from last session). Re-uses the same debounced
+  // effect above by bumping a state var, so we don't duplicate logic.
+  const [onlineTick, setOnlineTick] = useState(0);
+  useEffect(() => {
+    if (!user) return;
+    // On mount: if a queued flush is pending, trigger a re-sync.
+    const pending = readString(SYNC_PENDING_KEY, "");
+    if (pending === "1" && typeof navigator !== "undefined" && navigator.onLine !== false) {
+      setOnlineTick((t) => t + 1);
+    }
+    const onOnline = () => {
+      setOnlineTick((t) => t + 1);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", onOnline);
+      return () => window.removeEventListener("online", onOnline);
+    }
+    return undefined;
+  }, [user]);
+
+  // When onlineTick bumps, force the debounced PUT effect above to re-run
+  // by re-writing the health index to itself (no user-visible change).
+  useEffect(() => {
+    if (onlineTick === 0) return;
+    setHealthIndex((prev) => ({ ...prev }));
+  }, [onlineTick]);
 
   // Compute Overall Co-Parenting Health Index (avg)
   const healthAvg = useMemo(() => {
@@ -515,6 +554,27 @@ export default function SacoparentsPortal() {
     }
   }, [biffOutput]);
 
+  // Tone-safe copy = BIFF body + a short audit stamp (date + case ref +
+  // origin) so attorneys/mediators can see this message went through the
+  // BIFF coach on a specific date, not that the parent hand-wrote it.
+  const copyToneSafe = useCallback(() => {
+    if (!biffOutput) return;
+    const stamp = [
+      "",
+      "---",
+      "Refined via SA CoParents BIFF Coach",
+      `Refined: ${new Date().toISOString().replace("T", " ").substring(0, 16)} UTC`,
+      `Case: ${courtKey || "Self-Guided Parent Journey"}`,
+      "sacoparentsapp.online",
+    ].join("\n");
+    try {
+      navigator.clipboard.writeText(`${biffOutput}${stamp}`);
+      alert("Tone-safe message copied with audit stamp — safe to share with your attorney or mediator.");
+    } catch {
+      alert("Clipboard unavailable — please copy manually.");
+    }
+  }, [biffOutput, courtKey]);
+
   const logCommunication = useCallback(() => {
     const raw = rawInput.trim();
     if (!raw || !biffOutput) return;
@@ -671,6 +731,29 @@ export default function SacoparentsPortal() {
     );
   }, [healthIndex, foundationText, legalReport, courtKey, downloadPdfFromApi]);
 
+  const downloadWeeklyProgressPdf = useCallback(() => {
+    downloadPdfFromApi(
+      "/portal/weekly-progress-pdf",
+      "sacoparents-weekly-progress.pdf",
+      {
+        health_index: healthIndex,
+        biff_logs: biffLogs,
+        milestones,
+        foundation_text: foundationText || null,
+        case_ref: courtKey || null,
+        author_name: user?.name || null,
+      }
+    );
+  }, [
+    healthIndex,
+    biffLogs,
+    milestones,
+    foundationText,
+    courtKey,
+    user,
+    downloadPdfFromApi,
+  ]);
+
   const showBackBtn = screen !== "gateway";
 
   return (
@@ -824,6 +907,8 @@ export default function SacoparentsPortal() {
                   <span data-testid="sync-status">
                     {syncStatus === "syncing"
                       ? "Syncing across devices…"
+                      : syncStatus === "offline"
+                      ? "Offline — changes will sync when you're back"
                       : syncStatus === "error"
                       ? "Sync paused — your work is safe locally"
                       : `Synced as ${user.email || user.name || "your account"}`}
@@ -1464,6 +1549,14 @@ export default function SacoparentsPortal() {
                         Copy BIFF
                       </button>
                       <button
+                        data-testid="copy-tone-safe-btn"
+                        onClick={copyToneSafe}
+                        title="Copy BIFF + a date/case audit stamp — safe to share with attorneys or mediators"
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-2 rounded-xl text-xs shadow"
+                      >
+                        <i className="fa-solid fa-shield-halved mr-1"></i>Tone-Safe
+                      </button>
+                      <button
                         data-testid="archive-biff-btn"
                         onClick={logCommunication}
                         className="bg-slate-800 text-white font-bold px-3 py-2 rounded-xl text-xs"
@@ -1581,6 +1674,18 @@ export default function SacoparentsPortal() {
                       ))
                     )}
                   </div>
+
+                  <button
+                    data-testid="export-weekly-progress-pdf-btn"
+                    onClick={downloadWeeklyProgressPdf}
+                    className="no-print w-full mt-1 bg-purple-900 hover:bg-purple-950 text-white font-bold py-2 rounded-xl text-xs shadow"
+                  >
+                    <i className="fa-solid fa-file-pdf mr-1"></i>
+                    Export Weekly Progress PDF
+                  </button>
+                  <p className="text-[10px] text-slate-400 text-center no-print">
+                    One-page snapshot to share with your pediatrician, mediator, or attorney.
+                  </p>
                 </div>
               </div>
             )}

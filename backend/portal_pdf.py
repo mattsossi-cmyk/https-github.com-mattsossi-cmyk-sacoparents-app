@@ -376,3 +376,236 @@ def build_portal_legal_report_pdf(
     pdf.cell(0, 6, _safe(sigs.get("sigMed") or "Matt Sossi, Licensed Mediator (San Antonio, TX)"), ln=1)
 
     return bytes(pdf.output(dest="S"))
+
+
+
+# ============================================================
+# Weekly Progress snapshot PDF
+# ============================================================
+
+def _fmt_date_iso(raw: Any) -> str:
+    """Coerce anything that looks like a date/datetime into 'YYYY-MM-DD'."""
+    if not raw:
+        return ""
+    if isinstance(raw, datetime):
+        return raw.strftime("%Y-%m-%d")
+    s = str(raw).strip()
+    if not s:
+        return ""
+    # Common formats: 'YYYY-MM-DD', 'YYYY-MM-DD HH:MM', ISO 8601
+    for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(s[: len(fmt) + 2], fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return s[:10]
+
+
+def _in_last_7_days(iso_date: str, ref: datetime) -> bool:
+    if not iso_date:
+        return False
+    try:
+        d = datetime.strptime(iso_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return False
+    delta = ref - d
+    return delta.days >= 0 and delta.days <= 7
+
+
+def build_portal_weekly_progress_pdf(
+    *,
+    health_index: Dict[str, int],
+    biff_logs: Optional[List[Dict[str, Any]]] = None,
+    milestones: Optional[List[Dict[str, Any]]] = None,
+    reassessments: Optional[List[Dict[str, Any]]] = None,
+    foundation_text: Optional[str] = None,
+    case_ref: Optional[str] = None,
+    author_name: Optional[str] = None,
+    generated_at: Optional[datetime] = None,
+) -> bytes:
+    """One-page snapshot suitable to hand to a pediatrician or attorney.
+
+    Renders:
+      * Header: date range + case/parent metadata
+      * Current Health Index with progress bars + label
+      * Milestones this week (successes vs friction, chip counts)
+      * Recent BIFF messages (up to 5 most recent)
+      * Foundation Statement anchor (excerpt)
+
+    Everything is filtered to the last 7 days where the underlying record
+    carries a date; anything without a date falls into the "recent" bucket.
+    """
+    when = generated_at or datetime.now(timezone.utc)
+    week_start = when
+    week_ago = when.replace(hour=0, minute=0, second=0, microsecond=0)
+    range_start = when.replace(hour=0, minute=0, second=0, microsecond=0)
+    from datetime import timedelta as _td
+    range_start = week_ago - _td(days=7)
+
+    s1 = int((health_index or {}).get("s1", 5) or 5)
+    s2 = int((health_index or {}).get("s2", 5) or 5)
+    s3 = int((health_index or {}).get("s3", 5) or 5)
+    for v in (s1, s2, s3):
+        if v < 1 or v > 10:
+            raise ValueError("health_index scores must be integers 1..10")
+    avg = round((s1 + s2 + s3) / 3, 1)
+    label = _health_label(avg)
+
+    pdf = _PortalPDF(title="Weekly Progress Snapshot")
+    pdf.alias_nb_pages()
+    pdf.add_page()
+
+    _draw_chip(pdf, "Weekly Snapshot")
+    pdf.set_text_color(*_PURPLE_INK)
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.cell(0, 9, _safe("Weekly Progress Snapshot"), ln=1)
+    pdf.set_text_color(*_SLATE_MUTED)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.multi_cell(
+        0,
+        4.5,
+        _safe(
+            "A one-page summary of your co-parenting alignment this week. "
+            "Share with your pediatrician, mediator, or attorney."
+        ),
+    )
+    pdf.ln(2)
+
+    _draw_meta_row(
+        pdf,
+        "Period",
+        f"{range_start.strftime('%b %d, %Y')} - {when.strftime('%b %d, %Y')}",
+    )
+    _draw_meta_row(pdf, "Case Reference", case_ref or "Self-Guided Parent Journey")
+    if author_name:
+        _draw_meta_row(pdf, "Parent", author_name)
+    pdf.ln(3)
+
+    # ---- Health Index panel ----
+    _draw_h2(pdf, "Co-Parenting Health Index")
+    inner_w = pdf.w - pdf.l_margin - pdf.r_margin
+    pdf.set_fill_color(*_PURPLE_WASH)
+    pdf.set_draw_color(*_PURPLE_ACCENT)
+    pdf.set_line_width(0.3)
+    y0 = pdf.get_y()
+    box_h = 44
+    pdf.rect(pdf.l_margin, y0, inner_w, box_h, style="DF")
+
+    def _score_row(y_offset: float, row_label: str, val: int) -> None:
+        pdf.set_xy(pdf.l_margin + 4, y0 + y_offset)
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_text_color(*_SLATE_INK)
+        pdf.cell(90, 5, _safe(row_label))
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_text_color(*_PURPLE_ACCENT)
+        pdf.cell(20, 5, _safe(f"{val} / 10"), align="R")
+        bar_x = pdf.l_margin + 4
+        bar_y = y0 + y_offset + 5.5
+        bar_w = inner_w - 8
+        pdf.set_fill_color(232, 224, 245)
+        pdf.rect(bar_x, bar_y, bar_w, 2, style="F")
+        pdf.set_fill_color(*_PURPLE_ACCENT)
+        pdf.rect(bar_x, bar_y, bar_w * val / 10.0, 2, style="F")
+
+    _score_row(3, "Info Sharing & Transparency", s1)
+    _score_row(14, "Handoff & Transition Predictability", s2)
+    _score_row(25, "Decision-Making Collaboration", s3)
+
+    overall_y = y0 + box_h - 8
+    pdf.set_xy(pdf.l_margin + 4, overall_y)
+    pdf.set_font("Helvetica", "B", 8)
+    pdf.set_text_color(*_PURPLE_DEEP)
+    pdf.cell(0, 4, _safe("OVERALL CO-PARENTING HEALTH INDEX"), ln=1)
+    pdf.set_x(pdf.l_margin + 4)
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.set_text_color(*_PURPLE_INK)
+    pdf.cell(0, 5, _safe(f"{avg} / 10 - {label}"), ln=1)
+    pdf.set_y(y0 + box_h + 3)
+
+    # ---- Milestones counts ----
+    recent_milestones = [
+        m for m in (milestones or []) if _in_last_7_days(_fmt_date_iso(m.get("date")), when)
+    ]
+    # If nothing in the last 7 days, fall back to the most recent 3.
+    if not recent_milestones and milestones:
+        recent_milestones = list(milestones)[:3]
+    succ = sum(1 for m in recent_milestones if m.get("type") == "success")
+    fric = sum(1 for m in recent_milestones if m.get("type") == "friction")
+
+    _draw_h2(pdf, "Milestones this week")
+    col_w = (inner_w - 6) / 2
+    y_m = pdf.get_y()
+    # Successes chip
+    pdf.set_fill_color(212, 244, 227)
+    pdf.set_draw_color(*_EMERALD)
+    pdf.rect(pdf.l_margin, y_m, col_w, 12, style="DF")
+    pdf.set_xy(pdf.l_margin, y_m + 2)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.set_text_color(6, 106, 66)
+    pdf.cell(col_w, 6, _safe(str(succ)), align="C", ln=2)
+    pdf.set_font("Helvetica", "B", 7)
+    pdf.cell(col_w, 4, _safe("SUCCESSFUL RESOLUTIONS"), align="C", ln=2)
+    # Friction chip
+    pdf.set_xy(pdf.l_margin + col_w + 6, y_m)
+    pdf.set_fill_color(253, 226, 226)
+    pdf.set_draw_color(190, 40, 40)
+    pdf.rect(pdf.l_margin + col_w + 6, y_m, col_w, 12, style="DF")
+    pdf.set_xy(pdf.l_margin + col_w + 6, y_m + 2)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.set_text_color(160, 40, 40)
+    pdf.cell(col_w, 6, _safe(str(fric)), align="C", ln=2)
+    pdf.set_xy(pdf.l_margin + col_w + 6, y_m + 8)
+    pdf.set_font("Helvetica", "B", 7)
+    pdf.cell(col_w, 4, _safe("FRICTION POINTS"), align="C", ln=1)
+    pdf.set_y(y_m + 16)
+
+    # List milestones (bullet)
+    for m in recent_milestones[:6]:
+        title = str(m.get("title") or "").strip()
+        date = _fmt_date_iso(m.get("date"))
+        note = str(m.get("note") or "").strip()
+        mtype = str(m.get("type") or "").upper() or "SUCCESS"
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.set_text_color(*_PURPLE_DEEP)
+        pdf.cell(0, 4, _safe(f"[{mtype}]  {title}  ({date})"), ln=1)
+        if note:
+            pdf.set_font("Helvetica", "", 8)
+            pdf.set_text_color(*_SLATE_MUTED)
+            pdf.multi_cell(0, 4, _safe(f"    {note}"))
+        pdf.ln(0.5)
+
+    if not recent_milestones:
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(*_SLATE_MUTED)
+        pdf.multi_cell(0, 5, _safe("No milestones logged in the last 7 days."))
+    pdf.ln(2)
+
+    # ---- BIFF messages ----
+    recent_biff = list(biff_logs or [])[:5]
+    _draw_h2(pdf, "Recent BIFF Messages")
+    if not recent_biff:
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(*_SLATE_MUTED)
+        pdf.multi_cell(0, 5, _safe("No archived messages yet."))
+        pdf.ln(2)
+    for entry in recent_biff:
+        ts = str(entry.get("timestamp") or "").strip()
+        cat = str(entry.get("category") or "BIFF").strip()
+        biff = str(entry.get("biff") or "").strip()
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.set_text_color(*_PURPLE_DEEP)
+        pdf.cell(0, 4, _safe(f"{ts}  -  {cat}"), ln=1)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(*_SLATE_INK)
+        pdf.multi_cell(0, 5, _safe(biff))
+        pdf.ln(0.5)
+
+    # ---- Foundation excerpt ----
+    if foundation_text and foundation_text.strip():
+        _draw_h2(pdf, "Foundation Statement (Anchor)")
+        excerpt = foundation_text.strip()
+        if len(excerpt) > 500:
+            excerpt = excerpt[:500].rstrip() + "..."
+        _draw_text_block(pdf, excerpt)
+
+    return bytes(pdf.output(dest="S"))

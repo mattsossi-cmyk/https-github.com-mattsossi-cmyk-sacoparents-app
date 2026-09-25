@@ -337,6 +337,16 @@ class LegalReportPdfBody(BaseModel):
     case_ref: Optional[str] = Field(default=None, max_length=80)
 
 
+class WeeklyProgressPdfBody(BaseModel):
+    health_index: Dict[str, int] = Field(default_factory=dict)
+    biff_logs: Optional[List[Dict[str, Any]]] = Field(default=None)
+    milestones: Optional[List[Dict[str, Any]]] = Field(default=None)
+    reassessments: Optional[List[Dict[str, Any]]] = Field(default=None)
+    foundation_text: Optional[str] = Field(default=None, max_length=5000)
+    case_ref: Optional[str] = Field(default=None, max_length=80)
+    author_name: Optional[str] = Field(default=None, max_length=120)
+
+
 @router.post("/foundation-pdf")
 async def foundation_pdf(body: FoundationPdfBody) -> Response:
     try:
@@ -376,6 +386,31 @@ async def legal_report_pdf(body: LegalReportPdfBody) -> Response:
         headers={
             "Content-Disposition": (
                 'attachment; filename="sacoparents-legal-report.pdf"'
+            )
+        },
+    )
+
+
+@router.post("/weekly-progress-pdf")
+async def weekly_progress_pdf(body: WeeklyProgressPdfBody) -> Response:
+    try:
+        pdf_bytes = portal_pdf.build_portal_weekly_progress_pdf(
+            health_index=body.health_index or {},
+            biff_logs=body.biff_logs or [],
+            milestones=body.milestones or [],
+            reassessments=body.reassessments or [],
+            foundation_text=body.foundation_text,
+            case_ref=body.case_ref,
+            author_name=body.author_name,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                'attachment; filename="sacoparents-weekly-progress.pdf"'
             )
         },
     )
