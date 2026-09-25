@@ -1,0 +1,32 @@
+{
+  "summary": "Iteration 68 — Tested the 4 new SacoparentsPortal backend endpoints + frontend integrations (state sync, court-key verify, Coach BIFF via Claude, server PDFs). All 12 pytest cases pass and all 4 frontend flows verified end-to-end on mobile viewport 390x844.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "SacoparentsPortal (parent-journey hub)", "issues": ["React console warning: 'Each child in a list should have a unique key prop' — non-blocking but should be fixed for clean logs."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_portal_routes.py",
+    "/app/test_reports/pytest/iter68_portal.xml"
+  ],
+  "action_items": [
+    "Optional: add missing `key` prop to the list rendered inside SacoparentsPortal (React key warning in the parent-journey view)."
+  ],
+  "critical_code_review_comments": [
+    "portal_routes.py::foundation-pdf returns 422 (Pydantic min_length=1) for empty foundation_text instead of the spec's 400. Test accepts either, but if 400 is strict-required, catch ValueError at Pydantic layer or make the field free-form and validate manually.",
+    "get_current_user_optional imports HTTPBearer inside the function — fine but consider hoisting to module scope.",
+    "Rate limiter is process-local; multi-worker deployments would allow effective_limit = 40 * workers. Acceptable for MVP.",
+    "SacoparentsPortal.jsx is a single monolithic component (>1500 lines). Consider splitting by screen (gateway / court-key / parent-journey hub / biff / pdf-export) for maintainability."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "100% (12/12)", "frontend": "100% (4/4 flows: sync chip, court-key verify pass+fail, Coach AI BIFF, foundation+legal PDF downloads, signed-in sync PUT)" },
+  "test_credentials": "parent1@test.com / TestPass123! — used successfully (JWT auth via /api/auth/login)",
+  "seed_data_creation": "Seeded court keys ALIGN-SA-2026 and COURT-8842 already present on backend startup; verified both return {verified:true} with mediator name 'Matt Sossi, Licensed Mediator (San Antonio, TX)'. Unknown key returns {verified:false, reason:'unknown_key'} at 200.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend endpoints under /api/portal/* are stable. Frontend SacoparentsPortal.jsx has data-testids for: sync-signin-link / sync-status, door-parent-journey, door-court-path, screen-court-key, court-key-input, verify-court-key-btn, court-key-error, court-verified-banner, hub-tab-alignment / hub-tab-biff, raw-input, biff-loading, biff-output, risk-badge, flag-list, export-foundation-pdf-btn, export-legal-pdf-btn, score-slider-1..3. BIFF Claude call latency ~3-6s; wait accordingly. To login use /login → 'Sign in with email' link → email form; login redirects to /dashboard, then navigate back to '/'. State GET/PUT run automatically on portal state changes (debounced ~1s).",
+  "notes": "Verified BIFF response is Claude-generated (not the local 'Thank you for your message...' fallback). Sample output: 'Thanks for coordinating. I would appreciate it if we could both aim to be on time for pickups...'. Flags detected: ['Hostile tone', 'Accusatory phrasing', 'Blame language']. Risk: 'Escalation Flag'. Foundation and Legal PDF downloads work (Content-Type application/pdf, %PDF magic verified, correct suggested filenames)."
+}

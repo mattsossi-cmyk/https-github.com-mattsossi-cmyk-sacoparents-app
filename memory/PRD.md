@@ -26,6 +26,100 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter208 · Portal Backend Wire-Up (all 4 next-action items)
+
+Turned the portal from a localStorage-only demo into a real
+backend-connected app by shipping the four next-action items in one
+batch. All 4 verified working end-to-end (iter68: 100% pass rate,
+12/12 backend + 4/4 frontend flows).
+
+**🟢 1. Wire To Backend (cross-device sync)**
+- New collection `portal_state` (one doc per user, keyed by `user_id`).
+- New endpoints:
+    * `GET /api/portal/state` — hydrate signed-in caller's state
+    * `PUT /api/portal/state` — upsert; caps arrays (500 records,
+      milestones, biff_logs; 200 reassessments), clamps health index to
+      1..10, truncates strings.
+- Frontend: on mount, if `useAuth().user` exists, `GET /portal/state`
+  and merge into localStorage (server wins). Every state change fires a
+  debounced (~700ms) `PUT /portal/state`. Sync status pill on gateway:
+  "Sign in to sync across devices" (anonymous) → "Synced as {email}"
+  (signed in). Testids: `sync-chip`, `sync-signin-link`, `sync-status`.
+
+**🟢 2. Real Key Verify**
+- New collection `portal_court_keys` (hashed keys via sha256).
+- Endpoint `POST /api/portal/court-keys/verify` returns
+  `{verified, case_id, mediator_name, reason?}` — returns 200 with
+  `verified:false` for unknown / expired / revoked keys so the UI can
+  render an inline error rather than a network failure toast. Rate
+  limited (40/hr per-IP, 800/hr global).
+- Idempotent seed on backend startup writes the two demo keys the
+  mockup ships with: `ALIGN-SA-2026` and `COURT-8842` — both map to
+  "Matt Sossi, Licensed Mediator (San Antonio, TX)".
+- Frontend court-key screen now shows inline `court-key-error` and a
+  "Verifying…" state; verified banner uses the mediator name returned
+  by the backend (not a hard-coded string).
+
+**🟢 3. Server PDFs**
+- New module `portal_pdf.py` with two builders:
+    * `build_portal_foundation_pdf(foundation_text, case_ref, author_name)`
+    * `build_portal_legal_report_pdf(health_index, foundation_text, signatures, matrix, case_ref)`
+- Both use `fpdf2` with the mockup's purple palette (deep #4A1A6E,
+  accent #6D28D9, wash #F4EFFF). Legal Report renders the 3 slider
+  scores as inline progress bars, the Dispute Resolution Matrix as a
+  table, and the signature lines with underline.
+- New endpoints (public, no auth needed to keep the demo/gift path
+  frictionless): `POST /api/portal/foundation-pdf`,
+  `POST /api/portal/legal-report-pdf`. Both stream `application/pdf`
+  with a `Content-Disposition: attachment` header.
+- Frontend: two "PDF" buttons (`export-foundation-pdf-btn`,
+  `export-legal-pdf-btn`) now trigger a real download via
+  `URL.createObjectURL(blob)` — no more `window.print()`.
+
+**🟢 4. Coach AI (BIFF)**
+- New module `portal_ai.py` with `refine_biff(raw_message)` calling
+  Claude Sonnet 4.5 via `emergentintegrations.llm.chat.LlmChat`, pinned
+  to the "claude" tone. Prompt enforces BIFF style + strict JSON output
+  `{biff, flags, risk}`, layered on top of the shared
+  `SAFETY_GUARDRAIL` from `ai_service`.
+- Endpoint `POST /api/portal/biff-refine` — public, rate limited
+  (40/hr per-IP, 800/hr global), 502 on provider failure so the UI can
+  fall back to local regex.
+- Frontend: typing into `raw-input` fires an instant local-regex analysis
+  (unchanged) AND a debounced (~900ms) Claude call. A
+  `biff-loading` chip shows "Coach refining…" while Claude works.
+  When it returns, `biff-output`, `flag-list`, and `risk-badge` all
+  update with Claude's tailored rewrite. Presets also trigger an AI
+  refine so the demo copy stays fresh.
+
+**Backend files added**
+- `/app/backend/portal_routes.py` (7 endpoints + startup seed)
+- `/app/backend/portal_ai.py` (Claude BIFF refiner)
+- `/app/backend/portal_pdf.py` (Foundation + Legal Report PDFs)
+- `/app/backend/server.py` (imports `portal_router`, seeds keys)
+
+**Frontend files edited**
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — imports `useAuth`
+  and `api`; new hydrate-from-server effect, debounced PUT effect,
+  Claude BIFF integration, PDF download handlers, sync chip, inline
+  court-key error, dynamic mediator name in the verified banner.
+
+**Verified**
+- iter68 report: 12/12 pytest cases + 4/4 Playwright flows pass.
+- Claude output confirmed non-local (sample: "Thanks for coordinating.
+  I would appreciate it if we could both aim to be on time for
+  pickups…" for input "You were late again! You have zero respect.").
+- Sync chip flips from "Sign in to sync across devices" to
+  "Synced as parent1@test.com" after `POST /api/auth/login`.
+
+**Deferred (P2)**
+- Split `SacoparentsPortal.jsx` (~1500 lines) into per-screen
+  sub-components for maintainability.
+- Move rate limiter off in-memory to Mongo/Redis for multi-worker.
+- Consider issuing court keys via a mediator admin route (currently
+  only seeded via startup).
+
+
 ### 2026-02-25 — Iter207 · Full Portal Rewrite (SacoparentsPortal)
 
 The user provided a complete HTML/Tailwind mockup for a mobile-first
