@@ -26,6 +26,59 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter217 · Situation-Aware Milestone Panel
+
+Small delta on top of iter76. Pivots the milestone framing to fit
+the parent's stated situation when the Quick Safety Check is
+flagged. Verified in iter77 (frontend 5/5, backend skipped — no
+change).
+
+**🟢 P1 — Flagged parents see an Advocate Review Log**
+- When `safetyFlagged=true`, `BiffTab.jsx` swaps:
+    * Heading: "History of Successes & Failures" → "Advocate
+      Review Log".
+    * 2-column emerald/rose Successful Resolutions / Friction
+      Points tiles → single purple `advocate-review-tile` +
+      `advocate-review-count` with the note *"Events logged for
+      advocate / attorney review."*.
+    * "+ Log Milestone" → "+ Log for advocate" (purple).
+- `addMilestoneLog` in `SacoparentsPortal.jsx` skips the
+  Success/Friction `window.confirm` entirely on the flagged path.
+  Every flagged-context entry becomes:
+  ```
+  {type: "friction", source: "advocate_review",
+   note: "Logged for advocate review — flagged safety context."}
+  ```
+- Individual milestone chips are now source-based: any entry with
+  `source: "advocate_review"` renders a purple `ADVOCATE` chip
+  regardless of the current safety-flag state — so a parent who
+  clears the flag later still sees the advocate-context markers
+  in their history.
+- `advocateReviewCount` useMemo derives the count from
+  `milestones.filter(m => m.source === 'advocate_review')`.
+
+**Files touched**
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — branched
+  `addMilestoneLog`; new `advocateReviewCount` useMemo; passes
+  prop to BiffTab.
+- `/app/frontend/src/pages/portal/BiffTab.jsx` — flagged-branch
+  rendering of the milestones section header, tile, log-button
+  label, and per-row chip.
+
+**Verified**
+- iter77 report: 5/5 Playwright scenarios pass — flagged view
+  hides success/friction, shows advocate tile; flagged log flow
+  fires exactly one prompt + zero confirms; non-flagged view
+  restores the 2-column tiles; advocate-review-sourced chips
+  remain visible in the non-flagged view; no horizontal overflow
+  at 390×844.
+
+**Deferred (P2)**
+- Extract handler groups (milestones, share-links, PDF exports)
+  from `SacoparentsPortal.jsx` into hooks — container still
+  ~1485 lines.
+
+
 ### 2026-02-25 — Iter216 · Grey-Rock Local Fallback (client stub)
 
 Small delta on top of iter75. Closes a subtle guardrail hole: when
