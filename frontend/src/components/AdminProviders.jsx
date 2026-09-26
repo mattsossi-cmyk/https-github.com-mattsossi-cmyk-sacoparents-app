@@ -50,11 +50,23 @@ export function AdminProviders() {
     try { const { data } = await api.post(`/research/providers/${p.id}/apply-verification`); toast.success(Object.keys(data.updated).length ? `Updated ${Object.keys(data.updated).join(", ")}` : "Nothing to update"); load(); }
     catch (e) { toast.error(formatApiError(e)); }
   };
+  const isStale = (p) => !p.last_verified_at || (Date.now() - new Date(p.last_verified_at).getTime()) > 90 * 86400000;
+  const stale = items.filter((p) => p.active !== false && isStale(p));
+  const [checkingAll, setCheckingAll] = useState(false);
+  const checkAll = async () => {
+    setCheckingAll(true);
+    let ok = 0;
+    for (const p of stale) { try { setVerifying(p.id); await api.post(`/research/providers/${p.id}/verify`); ok += 1; } catch { /* continue */ } }
+    setVerifying(null); setCheckingAll(false); load(); toast.success(`Checked ${ok} of ${stale.length} stale provider${stale.length === 1 ? "" : "s"}`);
+  };
   return (
     <section className="mt-10" data-testid="admin-providers">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-2xl font-semibold flex items-center gap-2"><BookUser className="h-6 w-6 text-brand-purple" /> Resource Provider Directory</h2>
-        <Button size="sm" onClick={() => setEdit({ ...EMPTY })} data-testid="provider-add-btn"><Plus className="h-4 w-4 mr-1" /> Add provider</Button>
+        <div className="flex items-center gap-2">
+          {stale.length > 0 && <Button size="sm" variant="outline" onClick={checkAll} disabled={checkingAll} data-testid="provider-check-all-btn"><RefreshCw className={`h-4 w-4 mr-1 ${checkingAll ? "animate-spin" : ""}`} /> {checkingAll ? "Checking…" : `Check all stale (${stale.length})`}</Button>}
+          <Button size="sm" onClick={() => setEdit({ ...EMPTY })} data-testid="provider-add-btn"><Plus className="h-4 w-4 mr-1" /> Add provider</Button>
+        </div>
       </div>
       <p className="text-sm text-muted-foreground mt-1">Providers listed here appear in the Legal Lens resource checklists; ticking one auto-fills the provider name, specialty and contact into the report.</p>
       {edit && !edit.id && <div className="mt-4"><ProviderForm value={edit} onChange={setEdit} onSave={save} onCancel={() => setEdit(null)} saving={saving} /></div>}
@@ -64,7 +76,7 @@ export function AdminProviders() {
             {edit?.id === p.id ? <ProviderForm value={edit} onChange={setEdit} onSave={save} onCancel={() => setEdit(null)} saving={saving} /> : (
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex-1 min-w-[200px]">
-                  <p className="font-semibold">{p.name}{p.degrees && <span className="font-normal">, {p.degrees}</span>}{!p.active && <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs font-normal">inactive</span>}</p>
+                  <p className="font-semibold">{p.name}{p.degrees && <span className="font-normal">, {p.degrees}</span>}{!p.active && <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs font-normal">inactive</span>}{isStale(p) && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800" title="Not freshness-checked in the last 90 days" data-testid={`provider-stale-${p.id}`}>{p.last_verified_at ? "stale check" : "never checked"}</span>}</p>
                   <p className="text-sm text-muted-foreground">{[p.specialty, p.organization, p.phone, p.email, p.website].filter(Boolean).join(" · ") || "No details yet"}</p>
                   <p className="text-xs text-brand-purple mt-0.5">Lists: {(p.lists || []).join(", ")}</p>
                 </div>

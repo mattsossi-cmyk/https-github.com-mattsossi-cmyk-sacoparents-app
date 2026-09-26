@@ -12,7 +12,18 @@ const BUBBLES = [
   { key: "co_parenting", label: "General Coparenting Assessment", color: "bg-brand-teal", icon: Heart },
 ];
 
-function MainBadge({ to, ring, color, icon: Icon, title, tagline, notice, action, pill, testid }) {
+function MainBadge({ to, ring, color, icon: Icon, title, tagline, notice, action, pill, testid, img }) {
+  if (img) {
+    return (
+      <Link to={to} className="group block" data-testid={testid}>
+        <div className="relative h-44 w-44 lg:h-56 lg:w-56 rounded-full overflow-hidden bg-white shadow-xl group-hover:scale-105 group-hover:shadow-2xl transition-all duration-200">
+          <img src={img} alt={title.join(" ")} className="h-full w-full object-cover" data-testid={`${testid}-img`} />
+        </div>
+        {action && <div className="mt-2 flex justify-center"><span className={`px-3 py-1 rounded-full text-[9px] lg:text-[10px] font-bold text-white whitespace-nowrap ${pill} group-hover:brightness-110 transition`} data-testid={`${testid}-action`}>{action}</span></div>}
+        {notice && <div className="mt-1.5 max-w-[11rem] lg:max-w-[14rem] text-center text-[9px] text-muted-foreground italic leading-tight flex items-center justify-center gap-1" data-testid={`${testid}-notice`}><Lock className="h-2.5 w-2.5 shrink-0" /> {notice}</div>}
+      </Link>
+    );
+  }
   return (
     <Link to={to} className="group block" data-testid={testid}>
       <div className={`h-44 w-44 lg:h-56 lg:w-56 rounded-full bg-white border-[10px] ${ring} shadow-xl flex flex-col items-center justify-center text-center p-4 group-hover:scale-105 group-hover:shadow-2xl transition-all duration-200`}>
@@ -60,6 +71,7 @@ export function CircleNav({ isPro }) {
         action="Start Assessment"
         pill="bg-brand-purple"
         testid="circle-uniform"
+        img="/badge-uniform.png"
       />
       <MainBadge
         to="/joint/new?kind=agreement"
@@ -84,6 +96,7 @@ export function CircleNav({ isPro }) {
         action="Request Professional"
         pill="bg-red-700"
         testid="circle-safety"
+        img="/badge-safety.png"
       />
     </>
   );

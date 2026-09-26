@@ -134,6 +134,22 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, req
 
 
 def _judge_routes(r: APIRouter, get_current_user, require_judge, t: Threads) -> None:
+    @r.get("/court-dashboard/urgent-messages")
+    async def judge_urgent(user=Depends(get_current_user)):
+        """Professional messages Jev triaged as urgent_safety that the Court has not yet answered."""
+        await require_judge(user)
+        refs = {x["id"]: x async for x in t.db.court_referrals.find({"judge_id": user["_id"]}, {"_id": 0, "id": 1, "cause_number": 1, "case_id": 1})}
+        if not refs:
+            return {"items": []}
+        msgs = await t.db.court_messages.find({"referral_id": {"$in": list(refs)}}, {"_id": 0}).sort("at", 1).to_list(5000)
+        last_court = {}
+        for m in msgs:
+            if m["from_role"] == "court":
+                last_court[m["referral_id"]] = m["at"]
+        items = [{**t.public(m), "referral_id": m["referral_id"], "cause_number": refs[m["referral_id"]].get("cause_number")} for m in msgs
+                 if m["from_role"] == "professional" and (m.get("triage") or {}).get("category") == "urgent_safety" and last_court.get(m["referral_id"], "") < m["at"]]
+        return {"items": sorted(items, key=lambda x: x["at"], reverse=True)[:20]}
+
     @r.get("/court-dashboard/cases/{ref_id}/messages")
     async def judge_thread(ref_id: str, user=Depends(get_current_user)):
         await require_judge(user)
