@@ -12,6 +12,24 @@ transmission via Virtru.
 non-adjudicative language in all reports, explicit user consent before sharing,
 and robust privacy policies.
 
+**Standing rule — SAST / Code-Review findings are DO NOT FIX** (reaffirmed
+2026-02-26). Every fork since iter60ish has been served the same report
+(MD5 in `intervention_compliance_routes.py`, circular imports between
+`nd_risk_pdf` ↔ `nd_risk_routes`, ~86 "undefined variables" from Motor
+cursor / Pydantic false-positives, 41+ hardcoded test secrets, complexity
+warnings on `admin_nd_case_pdf.build_admin_case_history_pdf` +
+`_render_assessment_block` + `ai_service.generate_summary` +
+`generate_improvement_plan`, 33/32/42-import counts on
+`insights_routes.py` / `joint_alignment_routes.py` /
+`mediation_routes.py`). Every one of these either (a) risks the
+"PDFs and frontend strings must remain in exact lockstep" invariant
+(anything touching a PDF builder or an ai_service prompt template),
+(b) is a static-analysis false positive, or (c) would orphan existing
+stored hashes (MD5 → SHA-256 swap on intervention IDs). Founder has
+confirmed on iter226 (and every prior fork) to **ignore this report
+in full**. If a future fork sees the same list, the answer is the
+same — do not touch it.
+
 ## Core User Personas
 - Separated / co-parenting parents preparing for mediation or court
 - Mediators, family attorneys, and DV practitioners receiving reports
