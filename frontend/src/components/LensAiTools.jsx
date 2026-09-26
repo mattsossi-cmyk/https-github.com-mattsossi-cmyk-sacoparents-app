@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Globe, ScanSearch, ShieldCheck, Sparkles, Tags } from "lucide-react";
+import { BookOpen, Globe, ScanSearch, ShieldCheck, Sparkles, Tags } from "lucide-react";
 import { toast } from "sonner";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,34 @@ export function ParallelSummaryHelper({ id, onInsert }) {
         </div>
       )}
     </div>
+  );
+}
+
+export function ResearchBase({ id, value, onChange }) {
+  const [busy, setBusy] = useState(false);
+  const refresh = async () => {
+    setBusy(true);
+    try { const { data } = await api.post(`/cases/${id}/professional-report/research-insight`); onChange(data.research_base); toast.success("Research Base updated — review before finalizing"); }
+    catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
+  };
+  const clear = async () => { try { await api.delete(`/cases/${id}/professional-report/research-insight`); onChange(null); } catch (e) { toast.error(formatApiError(e)); } };
+  return (
+    <aside className="rounded-md border border-teal-300 bg-white p-3" data-testid="lens-research-base">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-bold uppercase tracking-widest text-teal-700 flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" /> Research Base</p>
+        <div className="flex gap-1">
+          <Button size="sm" variant="outline" onClick={refresh} disabled={busy} data-testid="lens-research-base-refresh-btn">{busy ? "Fetching…" : value ? "Refresh insight" : "Fetch research insight"}</Button>
+          {value && <Button size="sm" variant="ghost" onClick={clear} data-testid="lens-research-base-clear-btn">Remove</Button>}
+        </div>
+      </div>
+      {value ? (
+        <div className="mt-2 text-sm" data-testid="lens-research-base-content">
+          <p className="whitespace-pre-wrap leading-relaxed">{value.text}</p>
+          {value.citations?.length > 0 && <ol className="mt-2 list-decimal pl-5 text-xs" data-testid="lens-research-base-citations">{value.citations.map((c) => <li key={c.index}><a href={c.url} target="_blank" rel="noreferrer" className="text-brand-purple underline break-all">{c.url}</a></li>)}</ol>}
+          <p className="mt-2 text-[11px] text-muted-foreground">Fetched {String(value.fetched_at || "").slice(0, 10)} via Perplexity {value.model}{value.zip ? ` · ZIP ${value.zip}` : ""}. Appears as a “Research Base” footer under Section 5 in the PDF. Web research for professional review — not a finding or recommendation.</p>
+        </div>
+      ) : <p className="mt-1 text-xs text-muted-foreground" data-testid="lens-research-base-empty">Real-time, cited research on the child-focused issues and pathways you selected (plus local resource availability near your ZIP). Fetched automatically with AI-assist draft when configured; the report is never blocked if research is unavailable.</p>}
+    </aside>
   );
 }
 

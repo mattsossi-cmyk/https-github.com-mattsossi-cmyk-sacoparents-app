@@ -1,5 +1,6 @@
 """Perplexity Sonar research helper for professionals — cited answers and ZIP-based local resource lookup (review before use)."""
 import json
+import logging
 import os
 import re
 import uuid
@@ -8,6 +9,10 @@ from datetime import datetime, timezone
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+
+from lens_data import CHILD_FOCUS_CATEGORIES
+
+logger = logging.getLogger("research")
 
 SONAR_URL = "https://api.perplexity.ai/v1/sonar"
 SYSTEM = ("You assist a licensed family-law professional in Texas. Answer concisely with numbered inline citations [1], [2]. "
@@ -58,6 +63,10 @@ async def sonar(question: str, recency: str | None = None) -> dict:
     key = os.environ.get("PERPLEXITY_API_KEY")
     if not key:
         raise HTTPException(status_code=503, detail="Research helper is not configured (PERPLEXITY_API_KEY missing)")
+    return await _sonar_call(key, question, recency)
+
+
+async def _sonar_call(key: str, question: str, recency: str | None) -> dict:
     payload = {"model": "sonar", "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": question}], "temperature": 0.1, "search_mode": "web", "stream": False}
     if recency:
         payload["search_recency_filter"] = recency
@@ -72,6 +81,37 @@ async def sonar(question: str, recency: str | None = None) -> dict:
         raise HTTPException(status_code=504, detail="Research service timed out") from e
     answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
     return {"answer": answer, "citations": [{"index": i, "url": u} for i, u in enumerate(data.get("citations") or [], 1)], "model": data.get("model"), "disclaimer": DISCLAIMER}
+
+
+def _insight_question(rep: dict, zip_code: str) -> str:
+    focus = [lbl for k, lbl in CHILD_FOCUS_CATEGORIES if (rep.get("child_focus") or {}).get(k, {}).get("checked")]
+    pathways = rep.get("conflict_pathways") or []
+    parts = [f"Provide a short evidence-based research summary (4-6 sentences, cite sources) for a family-court professional preparing a neutral co-parenting report. Joint co-parenting rating: {rep.get('joint_rating') or 'n/a'}/10."]
+    if focus:
+        parts.append("Child-focused issues identified: " + ", ".join(focus) + ".")
+    if pathways:
+        parts.append("Conflict-resolution pathways under consideration: " + ", ".join(pathways) + ".")
+    parts.append("Cover: what current research says about these issues for children of separated parents, and which interventions (parenting coordination, structured communication, parent education, child therapy) show evidence of benefit.")
+    if zip_code:
+        parts.append(f"Then note, in one or two sentences, local resource availability near ZIP code {zip_code}, Texas (parenting facilitators, supervised exchange, parent education).")
+    parts.append("Do not give legal advice or comment on specific parents.")
+    return " ".join(parts)
+
+
+async def research_insight(rep: dict, user: dict) -> dict | None:
+    """Fetches the 'Research Base' for a professional report. Never raises — returns None when unconfigured or unreachable."""
+    key = os.environ.get("PERPLEXITY_API_KEY")
+    if not key:
+        return None
+    zip_code = ((user.get("profile") or {}).get("zip") or "").strip()
+    try:
+        res = await _sonar_call(key, _insight_question(rep, zip_code), "year")
+    except Exception as exc:
+        logger.warning("research insight unavailable: %s", exc)
+        return None
+    if not res.get("answer"):
+        return None
+    return {"text": res["answer"][:4000], "citations": res["citations"][:10], "model": res.get("model") or "sonar", "zip": zip_code, "fetched_at": datetime.now(timezone.utc).isoformat()}
 
 
 def build_router(db, get_current_user) -> APIRouter:

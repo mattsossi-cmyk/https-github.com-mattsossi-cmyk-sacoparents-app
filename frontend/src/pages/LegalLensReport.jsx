@@ -12,7 +12,7 @@ import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/Le
 import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
 import { GrowthProgress } from "@/components/CourtLegalSummary";
-import { NeutralityCheck, ChildFocusSuggest, ParallelSummaryHelper, ResearchPanel } from "@/components/LensAiTools";
+import { NeutralityCheck, ChildFocusSuggest, ParallelSummaryHelper, ResearchPanel, ResearchBase } from "@/components/LensAiTools";
 
 const STEPS = REPORT_STEPS;
 const STATUS = { draft: "Draft", under_review: "Under Review", final: "Final", submitted_to_court: "Submitted to Court" };
@@ -94,7 +94,7 @@ export default function LegalLensReport() {
       const { data } = await api.post(`/cases/${id}/professional-report/ai-draft`, { fields: rep, model });
       const empty = Object.keys(data.fields).filter((k) => !(rep[k] || "").trim());
       const keys = empty.length ? empty : Object.keys(data.fields);
-      setRep((r) => ({ ...r, ...Object.fromEntries(keys.map((k) => [k, data.fields[k]])), ai_drafts: data.ai_drafts }));
+      setRep((r) => ({ ...r, ...Object.fromEntries(keys.map((k) => [k, data.fields[k]])), ai_drafts: data.ai_drafts, ...(data.research_base ? { research_base: data.research_base } : {}) }));
       setAiInfo(data);
       toast.success(`${data.model}${data.source === "rule_based" ? " unavailable — rule-based" : ""} draft filled ${keys.length} section${keys.length === 1 ? "" : "s"}. Review and edit before finalizing.`);
     } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
@@ -185,7 +185,7 @@ export default function LegalLensReport() {
               <ChildFocusList categories={lib.child_focus_categories} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
               <ChildFocusSuggest id={id} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
             </Sec>
-            <Sec n={5} title="Options & Resources" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /><ResearchPanel isAdmin={user?.role === "admin"} onAddRow={(row) => set("resource_rows", [...(rep.resource_rows || []), row])} /></Sec>
+            <Sec n={5} title="Options & Resources" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /><ResearchBase id={id} value={rep.research_base} onChange={(rb) => set("research_base", rb)} /><ResearchPanel isAdmin={user?.role === "admin"} onAddRow={(row) => set("resource_rows", [...(rep.resource_rows || []), row])} /></Sec>
             <Sec n={6} title="Conflict Resolution" id="conflict">
               <p className="text-xs text-muted-foreground">{notes.purpose}</p>
               <PathwayPicker lib={{ ...lib, notes }} rep={rep} cls={cls} set={set} />

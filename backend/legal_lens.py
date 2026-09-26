@@ -358,9 +358,32 @@ def _export_routes(s: LensStore, get_current_user) -> APIRouter:
         cls = (await s.view(rep, doc))["classification"]
         fields, source, label = await draft_lens_report(rep, cls, rid, body.model)
         drafts = merge_drafts(rep, fields, label, source)
-        await db.professional_reports.update_one({"case_id": rid}, {"$set": {"ai_drafts": drafts}})
-        await log_event(rid, f"LEGAL_LENS_AI_DRAFT ({label}, {len(fields)} sections)", user)
-        return {"fields": fields, "source": source, "model": label, "label": "AI-Assisted Draft — Professional Review Required", "ai_drafts": drafts}
+        upd = {"ai_drafts": drafts}
+        from research import research_insight
+        rb = await research_insight(rep, user)
+        if rb:
+            upd["research_base"] = rb
+        await db.professional_reports.update_one({"case_id": rid}, {"$set": upd})
+        await log_event(rid, f"LEGAL_LENS_AI_DRAFT ({label}, {len(fields)} sections{', research base refreshed' if rb else ''})", user)
+        return {"fields": fields, "source": source, "model": label, "label": "AI-Assisted Draft — Professional Review Required", "ai_drafts": drafts, "research_base": rb}
+
+    @r.post("/cases/{rid}/professional-report/research-insight")
+    async def research_refresh(rid: str, user=Depends(get_current_user)):
+        from research import research_insight
+        doc = await s.own_case(rid, user)
+        rep = await s.get_or_create(doc, user)
+        rb = await research_insight(rep, user)
+        if rb is None:
+            raise HTTPException(status_code=503, detail="Research Base unavailable — Perplexity is not configured or unreachable. The report is unaffected.")
+        await db.professional_reports.update_one({"case_id": rid}, {"$set": {"research_base": rb}})
+        await log_event(rid, "LEGAL_LENS_RESEARCH_BASE_REFRESHED", user)
+        return {"research_base": rb}
+
+    @r.delete("/cases/{rid}/professional-report/research-insight")
+    async def research_clear(rid: str, user=Depends(get_current_user)):
+        await s.own_case(rid, user)
+        await db.professional_reports.update_one({"case_id": rid}, {"$unset": {"research_base": ""}})
+        return {"ok": True}
 
     @r.get("/cases/{rid}/professional-report/pdf")
     async def report_pdf(rid: str, user=Depends(get_current_user)):

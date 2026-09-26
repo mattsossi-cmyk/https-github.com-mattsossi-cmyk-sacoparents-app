@@ -179,6 +179,16 @@ def _parent_lines(rep: dict, role: str) -> list:
             + ([f"Notes: {rep.get(f'parent_{role}_notes')}"] if rep.get(f"parent_{role}_notes") else []))
 
 
+def _research_base(pdf: FPDF, rb: dict | None) -> None:
+    """'Research Base' footer for Section 5 — live Perplexity Sonar insight with numbered citations (professional-reviewed, never a finding)."""
+    if not rb or not rb.get("text"):
+        return
+    cites = [f"[{c.get('index', i)}] {c.get('url', '')}" for i, c in enumerate(rb.get("citations") or [], 1)][:10]
+    lines = [rb["text"], "", "SOURCES"] + (cites or ["No citations returned."]) + ["", f"Research Base — fetched {str(rb.get('fetched_at') or '')[:10]} via Perplexity {rb.get('model') or 'Sonar'}"
+             + (f" for ZIP {rb['zip']}" if rb.get("zip") else "") + ". Real-time web research reviewed by the professional; not a finding, diagnosis or recommendation."]
+    full_card(pdf, "RESEARCH BASE (Perplexity Sonar — professional-reviewed)", lines, TEAL_FILL, TEAL)
+
+
 def render_lens_body(pdf: FPDF, v: dict) -> None:
     """Pages 1–6 of the Professional Alignment Report (everything before the certification block)."""
     from lens_data import CHILD_FOCUS_CATEGORIES, CONFLICT_GUIDANCE, PATHWAYS, RISK_CATEGORIES, SCALE_TABLE, SAFETY_PATHWAY
@@ -234,6 +244,7 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     _lens_heading(pdf, "5. Options & Resources")
     rows = [[r.get("category", ""), r.get("resource", ""), r.get("focus", "")] for r in (rep.get("resource_rows") or [])]
     _lens_table(pdf, ["Category", "Recommended Resource / Specialist", "Purpose / Service Focus"], rows, [40, 60, 74]) if rows else _body(pdf, "No resources selected.", italic=True)
+    _research_base(pdf, rep.get("research_base"))
     _lens_heading(pdf, "6. Conflict-Resolution Pathway")
     chosen = set(rep.get("conflict_pathways") or ([rep.get("conflict_pathway")] if rep.get("conflict_pathway") else []))
     pathway_steps(pdf, PATHWAYS, chosen)
