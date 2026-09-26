@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { WorkflowGuide } from "@/components/WorkflowGuide";
 
 const STEPS = [
   { key: "shared_purpose", n: 1, title: "Shared Purpose", hint: "Regardless of what brought your family here, what does your child deserve from both parents?" },
@@ -71,6 +72,7 @@ export default function FoundationEditor() {
         <div className="rounded-lg overflow-hidden bg-white shadow-sm border border-border">
           <div className="bg-gradient-to-r from-[#2f174f] to-[#4b2a7b] px-8 py-6 text-white"><p className="text-[10px] uppercase tracking-[2px] opacity-85">SA CoParents Parent Report</p><h1 className="font-display text-3xl font-bold mt-1" data-testid="foundation-editor-title">My Child-Focused Foundation Statement</h1><p className="mt-1 text-sm opacity-90">Written by {user?.name || "you"} · private to you until you share it into a case.</p></div>
           <div className="p-6 sm:p-8 space-y-6">
+            <WorkflowGuide kind="foundation" />
             <div className="rounded-md border-l-4 border-teal-600 bg-[#eaf7f7] p-4 text-sm">Your statement stays private. When a professional invites you to a joint case, you can share it so it appears in the Co-Parenting Agreement and in the professional's case file.</div>
             <section className="rounded-lg border border-[#f0d78a] bg-[#fff7df] p-4" data-testid="foundation-safety-screen">
               <p className="text-xs font-bold uppercase tracking-widest text-[#b07d10]">Safety first — private to you</p>

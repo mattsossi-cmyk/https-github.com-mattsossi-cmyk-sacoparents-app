@@ -62,3 +62,17 @@ def test_agreement_uses_parallel_parenting_when_flagged() -> None:
     assert cd["statement"]["agreement_card"]["safety_override"]
     jp = judge.get(f"{API}/court-dashboard/packets/{cd['statement']['packet_id']}/agreement.pdf")
     assert "Parallel Parenting" in "".join(p.get_text() for p in pymupdf.open(stream=jp.content, filetype="pdf"))
+    pp = judge.get(f"{API}/court-dashboard/packets/{cd['statement']['packet_id']}/parallel-plan.pdf")
+    plan = pymupdf.open(stream=pp.content, filetype="pdf")
+    assert pp.status_code == 200 and len(plan) == 1 and "Parallel Parenting Order Summary" in plan[0].get_text()
+
+
+def test_parallel_plan_summary_only_with_override() -> None:
+    judge, pro, ref, case = _flow()
+    rid = case["id"]
+    complete_both(API, pro, rid, case["invitations"])
+    base = {"role": "Mediator", "role_basis": "Court referral", "process_summary": "x", "observations": "y", "next_steps": "z", "status": "ready", "dynamic_score": 5}
+    pro.put(f"{API}/joint/reports/{rid}/professional-statement", json=base)
+    pro.post(f"{API}/joint/reports/{rid}/submit-to-court", json={"attest": True})
+    cd = judge.get(f"{API}/court-dashboard/cases/{ref['id']}").json()
+    assert judge.get(f"{API}/court-dashboard/packets/{cd['statement']['packet_id']}/parallel-plan.pdf").status_code == 404

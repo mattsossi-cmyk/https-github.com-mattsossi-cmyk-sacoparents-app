@@ -445,6 +445,17 @@ def _judge_routes(svc: PacketService, get_current_user) -> APIRouter:
         await svc.log_court(p, f"Professional Legal Report PDF downloaded by {p['judge_name']} (court account)", user["_id"], user.get("name", ""))
         return _pdf_response(bytes(frozen["legal_pdf"]), f"professional-legal-report-{_safe_name(p)}.pdf")
 
+    @r.get("/court-dashboard/packets/{pid}/parallel-plan.pdf")
+    async def judge_parallel_plan_pdf(pid: str, user=Depends(get_current_user)):
+        from pdf_parallel_plan import build_parallel_plan_pdf
+        p = await svc.for_judge(pid, user)
+        frozen = await db.court_frozen_pdfs.find_one({"packet_id": pid}, {"agreement_card": 1})
+        card = (frozen or {}).get("agreement_card") or {}
+        if not card.get("safety_override"):
+            raise HTTPException(status_code=404, detail="This submission has no Safety Override agreement; a Parallel Parenting summary is only produced when the override applies")
+        await svc.log_court(p, f"Parallel Parenting Order Summary downloaded by {p['judge_name']} (court account)", user["_id"], user.get("name", ""))
+        return _pdf_response(build_parallel_plan_pdf(card, p, p.get("professional_name") or "the professional"), f"parallel-parenting-summary-{_safe_name(p)}.pdf")
+
     @r.get("/court-dashboard/packets/{pid}/agreement.pdf")
     async def judge_agreement_pdf(pid: str, user=Depends(get_current_user)):
         p = await svc.for_judge(pid, user)

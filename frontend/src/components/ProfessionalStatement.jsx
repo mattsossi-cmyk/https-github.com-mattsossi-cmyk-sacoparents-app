@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { FileSignature, Download, Lock, ShieldCheck } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { Textarea } from "@/components/ui/textarea";
 import { CaseProgress } from "@/components/CaseProgress";
 import { FrameworkPanel } from "@/components/FrameworkPanel";
@@ -68,6 +69,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
         </div>
         {court?.judge_email && <div className="text-right text-xs text-muted-foreground" data-testid="statement-court-info"><p className="font-semibold text-foreground">{court.court_name || "Court"}</p><p>Cause No. {court.cause_number} · {court.judge_name}</p></div>}
       </div>
+      <div className="mt-4"><WorkflowGuide kind="professional_statement" /></div>
       <CaseProgress stage={data.stage} />
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <label className="block text-sm"><span className="font-medium">Role</span>

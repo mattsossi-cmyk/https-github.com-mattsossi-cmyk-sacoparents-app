@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiDraftComparison } from "@/components/AiDraftComparison";
 import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/LensScale";
+import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
 import { GrowthProgress } from "@/components/CourtLegalSummary";
 
@@ -125,6 +126,7 @@ export default function LegalLensReport() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5">
         <ReportHeader />
         <p className="rounded-md border-l-4 border-brand-purple bg-brand-purple/5 p-3 text-sm" data-testid="lens-principle-notice"><strong className="text-brand-purple">Report Principle:</strong> Parent statements, system-generated comparisons, AI-assisted summaries, and professional observations are identified separately so the source of each statement remains clear.</p>
+        <WorkflowGuide kind="legal_lens" />
         <ol className="flex flex-wrap gap-1 text-[11px]" data-testid="lens-steps">{STEPS.map((s, i) => <li key={s} className="rounded-full border border-brand-purple/30 px-2 py-0.5 text-brand-purple">{i + 1}. {s}</li>)}</ol>
         {actions(true)}
         {aiNotice}

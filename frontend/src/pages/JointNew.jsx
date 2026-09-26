@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
 import { InvitationPreviewButton } from "@/components/InvitationPreview";
+import { WorkflowGuide } from "@/components/WorkflowGuide";
 
 const PRO_ASSESSMENTS = [
   { key: "co_parenting", label: "Co-Parenting", hint: "Shared parenting priorities and routines" },
@@ -153,6 +154,7 @@ export default function JointNew() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-10">
+        <div className="mb-6"><WorkflowGuide kind={isAgreement ? "agreement_create" : "case_create"} /></div>
         {referral && (
           <div className="mb-6 rounded-lg border border-brand-purple/30 bg-brand-purple/5 px-4 py-3 text-sm" data-testid="referral-banner">
             <span className="font-semibold text-brand-purple">Court referral</span> · Cause No. {referral.cause_number} · {referral.court_name || "court"} · {referral.judge_name}. Parties pre-filled where the court provided them; the Joint Report and your Professional Statement return to this court.

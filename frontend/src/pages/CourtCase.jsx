@@ -116,6 +116,7 @@ export default function CourtCase({ sample = false }) {
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p><span className="rounded-full bg-teal-600/10 px-2 py-0.5 text-[10px] font-bold tracking-widest text-teal-700 mr-2">CO-PARENTING AGREEMENT</span><strong>Child-Focused Co-Parenting Agreement</strong>{d.statement.agreement_card?.case_code && <> · {d.statement.agreement_card.case_code}</>}{d.statement.agreement_card?.date && <> · {d.statement.agreement_card.date}</>}{d.statement.agreement_sha256 && <span className="block text-xs text-muted-foreground mt-0.5">SHA-256 {d.statement.agreement_sha256.slice(0, 16)}…</span>}</p>
                         {!sample && <Button size="sm" variant="outline" asChild data-testid="court-agreement-pdf"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${d.statement.packet_id}/agreement.pdf`} download><Download className="h-4 w-4 mr-1" /> Agreement PDF</a></Button>}
+                        {!sample && d.statement.agreement_card?.safety_override && <Button size="sm" className="bg-[#b07d10] hover:bg-[#946909]" asChild data-testid="court-parallel-plan-pdf"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${d.statement.packet_id}/parallel-plan.pdf`} download><Download className="h-4 w-4 mr-1" /> Parallel Parenting Summary (1 page)</a></Button>}
                       </div>
                       {d.statement.agreement_card && (
                         <div className="grid gap-3 sm:grid-cols-2 text-sm">
