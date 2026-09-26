@@ -26,6 +26,74 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter212 · Safety-Ack Sync + Guided Safety Plan Builder
+
+Follow-on delta to iter71's safety guardrail suite. Ships two safety
+follow-through pieces: server sync for the safety flags so signed-in
+parents don't re-prompt on a new browser, and an optional 5-field
+Safety Plan builder embedded inside the flagged card. All verified
+in iter72 (backend 8/8 + frontend 100%).
+
+**🟢 P1 — Safety-Ack + Safety-Plan Sync**
+- `PortalStatePayload` (Pydantic) gains two optional fields:
+    * `safety_ack: {cleared, flagged, date}`
+    * `safety_plan: {safe_place, trusted_contact, essentials,
+      code_word, tech_notes, updated_at}`
+- New sanitizers `_sanitize_safety_ack` / `_sanitize_safety_plan`
+  whitelist keys + cap each plan field at 500 chars server-side.
+- `_empty_portal_state()` now returns both as `None`.
+- Frontend `SacoparentsPortal.jsx` hydrates both from `GET
+  /api/portal/state` on mount and includes them in the debounced
+  `PUT /api/portal/state` payload.
+- Two-user isolation verified: parent1's safety_plan never visible
+  on parent2's GET.
+
+**🟢 P1 — Guided Safety Plan Builder**
+- New `SafetyPlanBuilder.jsx` embedded inside the flagged
+  `safety-flagged-card`. Collapsible by default so it stays quiet
+  when a parent just wants the hotlines.
+- Five optional prompts from the National DV Hotline playbook:
+    1. Somewhere safe I can go (safe_place)
+    2. Someone I can call for help (trusted_contact)
+    3. Things to grab if I leave in a hurry (essentials)
+    4. A code word or phrase (code_word)
+    5. Tech-safety notes (tech_notes)
+- Each input capped at 500 chars client-side + server-side. Saves
+  to `sacoparents_safety_plan` localStorage AND syncs when signed
+  in.
+- "Show private summary" panel with copy-to-clipboard for parents
+  who want a screenshot or a printed plan. Summary appends the
+  standard hotline block (911, 988, 1-800-799-7233, TEXT START to
+  88788).
+- **Privacy invariant**: the plan is NEVER surfaced to the
+  co-parent (no joint reports, no share links carry it).
+
+**Modal state reset fix**
+- `SafetyScreen.jsx` now resets `phys/coerce/device/
+  showFlaggedCard` on modal re-open via `useEffect([open])` — a
+  parent re-taking the check no longer sees the stale flagged card
+  from the previous session.
+
+**Files edited / added**
+- `/app/backend/portal_routes.py` — model + sanitizers (~50 new lines).
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — safetyPlan state +
+  hydrate + PUT + onSaveSafetyPlan handler.
+- `/app/frontend/src/pages/portal/portalStorage.js` — SAFETY_PLAN_KEY.
+- `/app/frontend/src/pages/portal/SafetyPlanBuilder.jsx` (new).
+- `/app/frontend/src/pages/portal/SafetyScreen.jsx` — plumbed
+  Safety Plan props into the flagged-card + reset useEffect.
+- `/app/backend/tests/test_iter72_safety_sync_plan.py` (new, 8 tests).
+
+**Deferred (P2 — from iter72 review)**
+- Add a "Delete my Safety Plan" affordance.
+- Consider PATCH-style semantics (or `exclude_unset`) on `PUT
+  /portal/state` so partial-update clients don't clobber
+  server-side fields.
+- Validate `safety_plan.updated_at` as ISO-8601, not just cap chars.
+- Extract a `usePortalSync` hook from `SacoparentsPortal.jsx` —
+  container still over the 700-line guideline.
+
+
 ### 2026-02-25 — Iter211 · Component Split + Safety-First Guardrail + Passphrase Shares + Kudos Streak
 
 Big architectural + clinical follow-on to iter70. Cuts the 2205-line
