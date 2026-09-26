@@ -27,6 +27,127 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-26 — Iter223 · Guided Draft Nudge Cron + Fridge-Size Recap
+
+Two follow-on features layered on iter222 the founder picked from
+Next Action Items. Verified in iter82 (backend 15/15 pytest; frontend
+2-button recap grid + fridge-download filename smoke-tested by main
+agent).
+
+**🟢 P1 — Guided Draft Nudge (weekly cron)**
+- New platform cron in `/app/.emergent/crons.yml` — single entry
+  `guided-draft-nudge` scheduled `0 15 * * 1` (Monday 15:00 UTC),
+  calling `{{BASE_URL}}/api/cron/guided-draft-nudge` via POST.
+- New backend module `/app/backend/cron_routes.py` — dedicated
+  router prefix `/cron`, bearer-auth via `WEBHOOK_CRON_SECRET`
+  env (added to `/app/backend/.env` at bootstrap;
+  `hmac.compare_digest` constant-time verification). Missing/empty
+  secret refuses every call (401). Endpoint acks 2xx immediately
+  and enqueues the sweep as a `BackgroundTasks` job. Echoes the
+  dispatcher's `X-Webhook-Id` back as `run_id` for observability.
+- New worker `/app/backend/guided_draft_nudge.py` —
+  `send_guided_draft_nudges(db, portal_url)` sweeps
+  `portal_state` for docs with a non-null `guided_drafts`,
+  filters to parents whose newest draft `updated_at` is
+  ≥5 days (`NUDGE_MIN_DAYS`) and ≤14 days (`DRAFT_TTL_DAYS`)
+  ago — past-TTL drafts are skipped so we never spam a
+  parent for a draft that's already been auto-cleared.
+- Per-parent-per-topic-per-ISO-week dedupe collection
+  `guided_draft_nudges` (`{user_id, topic, week_key,
+  sent_at, days_since_update, days_left}`) — first-touch wins;
+  running the sweep twice in the same week is a no-op after the
+  first send. Users collection is queried by `user_id`
+  (this codebase's `users` schema uses `user_id`, not `id`).
+- New email helper `send_guided_draft_nudge()` in
+  `email_service.py` (uses the shared Resend `_send()`). Subject
+  reads "Your {topic_label} is {N} days from expiring"; CTA
+  "Finish my guided journey"; body names the exact step and
+  days-left. Never mentions the co-parent.
+- All 4 age scenarios verified against a real seed:
+  7-day stale → stats {eligible:1, sent:1}; second run → dedupe
+  {sent:0, skipped_dupes:1}; 2-day fresh → {eligible:0};
+  20-day expired → {eligible:0}.
+
+**🟢 P1 — Fridge-Size Recap (postcard variant)**
+- New `_FridgePDF` chassis in `portal_pdf.py` — A6 portrait
+  (105 × 148 mm), minimal footer, no banner header. Sits
+  cleanly on 4×6 photo paper or a fridge magnet.
+- New `_build_fridge_snapshot_pdf()` renders a soft-purple
+  `_FRIDGE_HEADLINES` title + a meta strip (parent · date ·
+  optional "Safety-flagged voice") + a 5-item bullet list of
+  the parent's answers ONLY (no scripted questions, each
+  truncated to 140 chars). Bottom of the card has two
+  hand-sign lines with "Parent A signature" / "Parent B
+  signature" labels + a "Signed by both parents" caption
+  pinned above the footer.
+- `build_portal_guided_snapshot_pdf()` now dispatches on a
+  new `variant: Literal['standard','fridge']` kwarg.
+- Endpoint `POST /api/portal/guided-snapshot-pdf` gains a
+  `variant` field on `GuidedSnapshotPdfBody`
+  (`Field(default='standard', pattern='^(standard|fridge)$')`).
+  Filename suffix `-fridge` when variant=fridge so parents
+  can tell the two downloads apart.
+- Frontend recap card in `GuidedJourneyModal.jsx` now
+  shows a 2-column grid of buttons:
+    * `guided-recap-snapshot-{topic}` — purple outline
+      → "Snapshot PDF" (standard A4)
+    * `guided-recap-fridge-{topic}` — amber outline
+      → "Fridge Card" (postcard A6)
+- `snapshotBusy` state now stores `false | "standard" | "fridge"`
+  so each button shows "Preparing…" while its own download is
+  in-flight; the other button stays disabled in the meantime.
+
+**Files touched**
+- `/app/.emergent/crons.yml` (new — single weekly entry).
+- `/app/backend/.env` — new `WEBHOOK_CRON_SECRET` (48 URL-safe
+  random bytes).
+- `/app/backend/cron_routes.py` (new) — cron webhook router.
+- `/app/backend/guided_draft_nudge.py` (new) — worker.
+- `/app/backend/email_service.py` — new
+  `send_guided_draft_nudge()`.
+- `/app/backend/portal_pdf.py` — `_FridgePDF` chassis,
+  `_build_fridge_snapshot_pdf()`, dispatcher in
+  `build_portal_guided_snapshot_pdf()`.
+- `/app/backend/portal_routes.py` —
+  `GuidedSnapshotPdfBody.variant`, filename suffix logic,
+  import of `hmac` + `BackgroundTasks`.
+- `/app/backend/server.py` — register `cron_router` on the
+  api_router.
+- `/app/frontend/src/pages/portal/GuidedJourneyModal.jsx` —
+  2-col recap grid, `downloadSnapshot(variant)`, per-variant
+  busy state.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` —
+  `downloadGuidedSnapshot` accepts + forwards `variant`.
+- `/app/backend/tests/test_iter223_guided_nudge_and_fridge.py`
+  (new, 15 tests).
+
+**Verified — iter82 test report**
+- Backend 15/15 pytest passing: cron auth (missing/wrong/correct
+  bearer), X-Webhook-Id echo, worker stats for all 4 draft-age
+  scenarios (2d/7d/20d + dedupe), dedup row structure, fridge
+  PDF endpoint (5 sub-cases incl. Safety-flagged voice marker via
+  pypdf text extraction), regression standard variant for all
+  six topics, crons.yml YAML validity.
+- Main-agent smoke test @ 390×844: recap card rendered with
+  BOTH `guided-recap-snapshot-foundation` + `guided-recap-fridge-foundation`
+  in a 2-col grid; fridge download event fired with EXACT
+  filename `coparent-snapshot-foundation-fridge.pdf`; standard
+  download fired with `coparent-snapshot-foundation.pdf`. No
+  horizontal overflow.
+
+**⚠️ Manual DevOps step for the founder**
+- The preview environment now has `WEBHOOK_CRON_SECRET` in
+  its `/app/backend/.env`. When the app is redeployed to
+  production, that secret must also be present in the
+  production env — otherwise every cron dispatch will 401.
+  I can't set production env vars from preview.
+
+**Deferred (P2 — from iter82 review)**
+- Add a `guided-recap-actions-{topic}` testid on the recap
+  button grid `<div>` so future E2E tests can assert 2-col
+  layout without structural traversal.
+
+
 ### 2026-02-26 — Iter222 · Coparent Snapshot PDF + Draft Sync + Voice Note
 
 Three follow-on features to the iter220/iter221 Guided Journey
