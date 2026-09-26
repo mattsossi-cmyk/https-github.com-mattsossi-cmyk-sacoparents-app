@@ -543,9 +543,35 @@ export function AlignmentHub({
 
         <div className="space-y-2 pt-2" data-testid="alignment-records-grid">
           {filteredRecords.length === 0 ? (
-            <p className="text-slate-400 text-center text-xs py-2">
-              No assessment records found in this folder.
-            </p>
+            <div
+              className="p-4 bg-emerald-50 border border-dashed border-emerald-300 rounded-xl text-center space-y-2"
+              data-testid={`assessment-empty-${folderFilter.toLowerCase()}`}
+            >
+              <i className="fa-solid fa-folder-open text-emerald-600 text-lg"></i>
+              <div className="font-bold text-slate-800 text-xs">
+                {folderFilter === "All"
+                  ? "You have 0 assessment records yet"
+                  : `You have 0 ${folderFilter.toLowerCase()} records yet`}
+              </div>
+              <p className="text-[10px] text-slate-500 leading-snug">
+                {folderFilter === "All"
+                  ? "Add your first record — a provider name, a date, a short note. It saves privately to this device."
+                  : folderFilter === "Medical"
+                  ? "Log a provider, a diagnosis, a medication, or an upcoming appointment."
+                  : folderFilter === "Educational"
+                  ? "Log an IEP review, a teacher note, tutoring hours, or a school observation."
+                  : "Log a therapist, an evaluation, a behavioural note, or a treatment plan."}
+              </p>
+              <button
+                type="button"
+                data-testid={`assessment-empty-add-${folderFilter.toLowerCase()}`}
+                onClick={onAddAlignment}
+                className="mt-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px]"
+              >
+                <i className="fa-solid fa-plus mr-1"></i>Add your first{" "}
+                {folderFilter === "All" ? "record" : folderFilter.toLowerCase() + " record"}
+              </button>
+            </div>
           ) : (
             filteredRecords.map((item) => (
               <div

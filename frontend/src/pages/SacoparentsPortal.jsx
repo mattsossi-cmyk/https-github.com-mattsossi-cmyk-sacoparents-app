@@ -96,6 +96,8 @@ export default function SacoparentsPortal() {
   const [alignmentOpen, setAlignmentOpen] = useState(false);
   const [shareLegalOpen, setShareLegalOpen] = useState(false);
   const [shareLegalLastUrl, setShareLegalLastUrl] = useState("");
+  const [shareCompleteOpen, setShareCompleteOpen] = useState(false);
+  const [shareCompleteLastUrl, setShareCompleteLastUrl] = useState("");
 
   // Reassessment form state
   const [reassStage, setReassStage] = useState("30-Day Progress Review");
@@ -871,6 +873,8 @@ export default function SacoparentsPortal() {
           if (artefactType === "legal") {
             // ShareLegalModal renders the result; skip the alert.
             setShareLegalLastUrl(url);
+          } else if (artefactType === "complete") {
+            setShareCompleteLastUrl(url);
           } else {
             alert(
               `Share link copied to clipboard:\n\n${url}\n\nText or email this to your pediatrician, mediator, or attorney. It works for ${opts.ttl_days || 30} days.`
@@ -880,6 +884,8 @@ export default function SacoparentsPortal() {
           setShareStatus((prev) => ({ ...prev, [artefactType]: "copied" }));
           if (artefactType === "legal") {
             setShareLegalLastUrl(url);
+          } else if (artefactType === "complete") {
+            setShareCompleteLastUrl(url);
           } else {
             window.prompt("Copy this share link (Ctrl+C / Cmd+C):", url);
           }
@@ -1013,8 +1019,16 @@ export default function SacoparentsPortal() {
   ]);
 
   const onShareCompleteReport = useCallback(() => {
-    createShareLink("complete", buildCompleteReportPayload());
-  }, [createShareLink, buildCompleteReportPayload]);
+    setShareCompleteLastUrl("");
+    setShareCompleteOpen(true);
+  }, []);
+
+  const onMintShareComplete = useCallback(
+    (opts) => {
+      createShareLink("complete", buildCompleteReportPayload(), opts);
+    },
+    [createShareLink, buildCompleteReportPayload]
+  );
 
   const onOpenShareLegal = useCallback(() => {
     setShareLegalLastUrl("");
@@ -1336,6 +1350,20 @@ export default function SacoparentsPortal() {
         onMint={onMintShareLegal}
         loading={shareStatus.legal === "loading"}
         lastUrl={shareLegalLastUrl}
+      />
+
+      {/* Share Complete Coparenting Report modal (same passphrase +
+          TTL flow, reuses ShareLegalModal via `variant='complete'`). */}
+      <ShareLegalModal
+        variant="complete"
+        open={shareCompleteOpen}
+        onClose={() => {
+          setShareCompleteOpen(false);
+          setShareCompleteLastUrl("");
+        }}
+        onMint={onMintShareComplete}
+        loading={shareStatus.complete === "loading"}
+        lastUrl={shareCompleteLastUrl}
       />
 
       {/* Reassessment modal */}

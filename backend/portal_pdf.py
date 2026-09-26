@@ -786,6 +786,7 @@ def build_portal_complete_report_pdf(
     cop_assessment: Optional[Dict[str, Any]] = None,
     align_records: Optional[List[Dict[str, Any]]] = None,
     joint_records: Optional[List[Dict[str, Any]]] = None,
+    joint_summary: Optional[Dict[str, Any]] = None,
     foundation_text: Optional[str] = None,
     case_ref: Optional[str] = None,
     author_name: Optional[str] = None,
@@ -802,9 +803,11 @@ def build_portal_complete_report_pdf(
       3. Individual Align-Before-Agreement Records (portal's own
          alignment records, grouped by Medical / Educational /
          Psychological).
-      4. Joint Align-Before-Agreement Records (only rendered when the
-         caller passes joint records; empty-state stub otherwise so the
-         parent knows to build the joint report next).
+      4. Joint Alignment Summary (``joint_summary`` — the caller's
+         latest ``agreements`` doc pulled server-side when auth is
+         present) OR any explicitly-provided joint alignment records
+         (``joint_records``). If neither is present, an empty-state
+         stub points the parent at ``/joint-agreement`` to build one.
       5. Foundation Statement (verbatim, from portal state).
 
     Empty sections are rendered with an italicised muted stub so the
@@ -928,17 +931,100 @@ def build_portal_complete_report_pdf(
         ),
     )
 
-    # ---- 4. Joint Align Before Agreement ----
-    _draw_align_records_section(
-        pdf,
-        list(joint_records or []),
-        heading="4. Joint Align Before Agreement",
-        empty_stub=(
-            "No joint alignment records yet. Both parents can build these "
+    # ---- 4. Joint Alignment Summary ----
+    # Prefer the server-fetched `agreements` doc (joint_summary) — it
+    # holds prose sections (shared_goals, communication, child_needs,
+    # household_rules, priority_items, open_for_discussion). Fall
+    # back to explicit joint_records if the caller passed them, and
+    # finally to an empty-state stub pointing the parent at the
+    # /joint-agreement flow.
+    _draw_h2(pdf, "4. Joint Alignment Summary")
+
+    joint_sections = [
+        ("shared_goals", "Shared Goals"),
+        ("communication", "Communication"),
+        ("child_needs", "Child Needs"),
+        ("household_rules", "Household Rules"),
+        ("priority_items", "Priority Items"),
+        ("open_for_discussion", "Open for Discussion"),
+    ]
+
+    has_joint_summary = False
+    if joint_summary and isinstance(joint_summary, dict):
+        has_joint_summary = any(
+            joint_summary.get(k) for k, _ in joint_sections
+        )
+
+    if has_joint_summary:
+        overview = str(joint_summary.get("overview") or "").strip()
+        if overview:
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_text_color(*_SLATE_INK)
+            pdf.set_x(pdf.l_margin)
+            pdf.multi_cell(0, 5, _safe(overview))
+            pdf.ln(1)
+        for key, label in joint_sections:
+            items = joint_summary.get(key) or []
+            if not items:
+                continue
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*_PURPLE_INK)
+            pdf.set_x(pdf.l_margin)
+            pdf.cell(0, 5, _safe(label), ln=1)
+            for item in items:
+                if isinstance(item, dict):
+                    # Reuse joint_agreement's clause-shape convention:
+                    # try common keys; fall back to any string value.
+                    text = (
+                        item.get("agreement")
+                        or item.get("statement")
+                        or item.get("clause")
+                        or item.get("text")
+                        or item.get("topic")
+                        or item.get("value")
+                        or ""
+                    )
+                    area = item.get("area") or item.get("category") or ""
+                elif isinstance(item, str):
+                    text = item
+                    area = ""
+                else:
+                    continue
+                text = str(text).strip()
+                if not text:
+                    continue
+                if area:
+                    pdf.set_font("Helvetica", "B", 8)
+                    pdf.set_text_color(*_SLATE_MUTED)
+                    pdf.set_x(pdf.l_margin)
+                    pdf.cell(0, 4, _safe(str(area)), ln=1)
+                pdf.set_font("Helvetica", "", 9)
+                pdf.set_text_color(*_SLATE_INK)
+                pdf.set_x(pdf.l_margin)
+                pdf.multi_cell(0, 5, _safe(f"- {text}"))
+            pdf.ln(0.5)
+        closing = str(joint_summary.get("closing_note") or "").strip()
+        if closing:
+            pdf.set_font("Helvetica", "I", 9)
+            pdf.set_text_color(*_SLATE_MUTED)
+            pdf.set_x(pdf.l_margin)
+            pdf.multi_cell(0, 5, _safe(closing))
+        pdf.ln(1)
+    elif joint_records:
+        # Fallback path: caller supplied categorised joint records.
+        _draw_align_records_section(
+            pdf,
+            list(joint_records or []),
+            heading="Joint Records by Category",
+            empty_stub="",
+        )
+    else:
+        _draw_empty_state(
+            pdf,
+            "No joint alignment on file yet. Both parents can build one "
             "in the Joint Alignment Report flow at "
-            "sacoparentsapp.online/joint-agreement."
-        ),
-    )
+            "sacoparentsapp.online/joint-agreement.",
+        )
 
     # ---- 5. Foundation Statement ----
     _draw_h2(pdf, "5. Foundation Statement")

@@ -528,20 +528,45 @@ class CompleteReportPdfBody(BaseModel):
 
 
 @router.post("/complete-report-pdf")
-async def complete_report_pdf(body: CompleteReportPdfBody) -> Response:
+async def complete_report_pdf(
+    body: CompleteReportPdfBody,
+    request: Request,
+    user: Optional[UserPublic] = Depends(get_current_user_optional),
+) -> Response:
     """Assemble the Complete Coparenting Report PDF from the portal's
     self-guided artefacts (Safety Check answers, Co-parenting
     Assessment / Health Index, individual + joint Align-Before-Agreement
     records, and Foundation Statement). Missing sections render as
     empty-state stubs so a mediator or attorney sees exactly what the
     parent has and hasn't completed.
+
+    Optional auth: when the caller presents a valid bearer token, we
+    also fetch their latest `agreements` doc and pipe it into Section
+    4 as the Joint Alignment Summary. Unauthenticated callers get the
+    empty-state stub for that section (or whatever `joint_records`
+    they pass in the body).
     """
+    joint_summary = None
+    if user is not None:
+        try:
+            db = request.app.state.db
+            joint_summary = await db["agreements"].find_one(
+                {"user_id": user.user_id},
+                {"_id": 0},
+                sort=[("generated_at", -1)],
+            )
+        except Exception:
+            # Non-fatal — degrade to the empty-state stub so a Mongo
+            # blip never blocks a PDF.
+            joint_summary = None
+
     try:
         pdf_bytes = portal_pdf.build_portal_complete_report_pdf(
             safety_ack=body.safety_ack,
             cop_assessment=body.cop_assessment,
             align_records=body.align_records or [],
             joint_records=body.joint_records or [],
+            joint_summary=joint_summary,
             foundation_text=body.foundation_text,
             case_ref=body.case_ref,
             author_name=body.author_name,
@@ -696,6 +721,7 @@ def _regenerate_share_pdf(artefact_type: str, payload: Dict[str, Any]) -> bytes:
             cop_assessment=payload.get("cop_assessment"),
             align_records=payload.get("align_records") or [],
             joint_records=payload.get("joint_records") or [],
+            joint_summary=payload.get("joint_summary"),
             foundation_text=payload.get("foundation_text"),
             case_ref=payload.get("case_ref"),
             author_name=payload.get("author_name"),
