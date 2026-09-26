@@ -712,13 +712,31 @@ async def _effective_library(db, user: dict) -> dict:
 
 
 def _statement_payload(doc: dict, user: dict, lens: dict | None, packets: list, org_lib: dict) -> dict:
+    return {**_statement_block(doc), **_lens_block(lens, packets), **_library_block(user, org_lib), **_findings_block(doc), **_court_block(doc)}
+
+
+def _statement_block(doc: dict) -> dict:
+    return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []},
+            "attestation_text": STATEMENT_ATTESTATION, "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS}
+
+
+def _lens_block(lens: dict | None, packets: list) -> dict:
+    lens = lens or {}
+    return {"legal_lens": {"status": lens.get("status", "not_started"), "signature_name": lens.get("signature_name", ""), "has_research_base": bool((lens.get("research_base") or {}).get("citations"))},
+            "level_history": level_history(packets)}
+
+
+def _library_block(user: dict, org_lib: dict) -> dict:
+    return {"library": clean_library(user.get("resource_library") or {}), "org_library": org_lib, "organization": (user.get("profile") or {}).get("organization") or ""}
+
+
+def _findings_block(doc: dict) -> dict:
     findings = joint_findings(doc)
-    return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
-            "legal_lens": {"status": (lens or {}).get("status", "not_started"), "signature_name": (lens or {}).get("signature_name", ""), "has_research_base": bool(((lens or {}).get("research_base") or {}).get("citations"))}, "level_history": level_history(packets),
-            "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
-            "findings": findings, "subject_options": (findings or {}).get("subject_options") or [], "library": clean_library(user.get("resource_library") or {}),
-            "org_library": org_lib, "organization": (user.get("profile") or {}).get("organization") or "",
-            "court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
+    return {"findings": findings, "subject_options": (findings or {}).get("subject_options") or [], "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()]}
+
+
+def _court_block(doc: dict) -> dict:
+    return {"court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
 
 
 def _statement_pdf_bytes(doc: dict, pro: dict, compare: dict | None = None) -> bytes:
@@ -850,26 +868,45 @@ def _submit_routes(c: Ctx) -> APIRouter:
         require_pro(user)
         doc = await _own_case(db, rid, user)
         court = assert_submittable(doc, body)
-        joint_pdf, stmt_pdf, legal_pdf, legal_summary = await _submission_pdfs(db, doc, await pro_profile(user["_id"]), c.app_url, body.include_legal_report, body.include_research_sources)
-        agreement_pdf, agreement_card = await _agreement_pdf_bytes(db, doc, user, body.agreement_report_id)
-        combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []) + ([agreement_pdf] if agreement_pdf else []))
+        bundle = await _build_bundle(db, doc, await pro_profile(user["_id"]), c.app_url, user, body)
         version = len(doc.get("court_submissions") or []) + 1
-        s = Submission(pid=str(uuid.uuid4()), rid=rid, user=user, court=court, st=doc["professional_statement"], version=version, now=_now(),
-                       shas={"sha256": _sha(combined), "joint_sha256": _sha(joint_pdf), "statement_sha256": _sha(stmt_pdf)},
-                       legal_meta={"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None, "legal_summary": legal_summary,
-                                   "agreement_included": bool(agreement_pdf), "agreement_sha256": _sha(agreement_pdf) if agreement_pdf else "", "agreement_card": agreement_card})
-        sub = await _persist_submission(db, s, doc, combined, legal_pdf, agreement_pdf)
-        await c.log_report_event(rid, f"Submitted Joint Report + Professional Statement{' + Professional Legal Report' if legal_pdf else ''}{' + Co-Parenting Agreement' if agreement_pdf else ''} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
-        if legal_pdf:
-            await c.log_report_event(rid, "LEGAL_REPORT_SHARED", user)
-        try:
-            await c.send_email(to=court["judge_email"], case_id=doc["id"], kind="court_submission", to_role="Court", subject=f"Submission received - Cause No. {court.get('cause_number', '')} (v{version})",
-                               html=_submission_email_html(user, court, version, c.app_url, c.email_from_name, (legal_summary or {}).get("court_summary")))
-        except Exception as exc:
-            c.logger.warning("submission email failed: %s", exc)
+        sub = await _persist_submission(db, _build_submission(rid, user, court, doc, version, bundle), doc, bundle["combined"], bundle["legal_pdf"], bundle["agreement_pdf"])
+        await _log_submission(c, rid, user, court, version, sub, bundle)
+        await _notify_court(c, user, court, doc, version, bundle["legal_summary"])
         return {"submission": sub, "stage": court_stage({**doc, "court_submissions": [sub]})}
 
     return r
+
+
+async def _build_bundle(db, doc: dict, pro: dict, app_url, user: dict, body: SubmitIn) -> dict:
+    """All PDFs for one submission (statement + joint always; Legal Lens / Agreement only when explicitly selected) and the merged packet."""
+    joint_pdf, stmt_pdf, legal_pdf, legal_summary = await _submission_pdfs(db, doc, pro, app_url, body.include_legal_report, body.include_research_sources)
+    agreement_pdf, agreement_card = await _agreement_pdf_bytes(db, doc, user, body.agreement_report_id)
+    combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []) + ([agreement_pdf] if agreement_pdf else []))
+    return {"joint_pdf": joint_pdf, "stmt_pdf": stmt_pdf, "legal_pdf": legal_pdf, "legal_summary": legal_summary, "agreement_pdf": agreement_pdf, "agreement_card": agreement_card, "combined": combined}
+
+
+def _build_submission(rid: str, user: dict, court: dict, doc: dict, version: int, b: dict) -> Submission:
+    legal_pdf, agreement_pdf = b["legal_pdf"], b["agreement_pdf"]
+    return Submission(pid=str(uuid.uuid4()), rid=rid, user=user, court=court, st=doc["professional_statement"], version=version, now=_now(),
+                      shas={"sha256": _sha(b["combined"]), "joint_sha256": _sha(b["joint_pdf"]), "statement_sha256": _sha(b["stmt_pdf"])},
+                      legal_meta={"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None, "legal_summary": b["legal_summary"],
+                                  "agreement_included": bool(agreement_pdf), "agreement_sha256": _sha(agreement_pdf) if agreement_pdf else "", "agreement_card": b["agreement_card"]})
+
+
+async def _log_submission(c: Ctx, rid: str, user: dict, court: dict, version: int, sub: dict, b: dict) -> None:
+    extras = ("" if not b["legal_pdf"] else " + Professional Legal Report") + ("" if not b["agreement_pdf"] else " + Co-Parenting Agreement")
+    await c.log_report_event(rid, f"Submitted Joint Report + Professional Statement{extras} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
+    if b["legal_pdf"]:
+        await c.log_report_event(rid, "LEGAL_REPORT_SHARED", user)
+
+
+async def _notify_court(c: Ctx, user: dict, court: dict, doc: dict, version: int, legal_summary: dict | None) -> None:
+    try:
+        await c.send_email(to=court["judge_email"], case_id=doc["id"], kind="court_submission", to_role="Court", subject=f"Submission received - Cause No. {court.get('cause_number', '')} (v{version})",
+                           html=_submission_email_html(user, court, version, c.app_url, c.email_from_name, (legal_summary or {}).get("court_summary")))
+    except Exception as exc:
+        c.logger.warning("submission email failed: %s", exc)
 
 
 def build_router(db, get_current_user, app_url, send_email, email_from_name, logger, log_report_event) -> APIRouter:

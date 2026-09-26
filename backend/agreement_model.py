@@ -64,36 +64,47 @@ def _base_model(doc: dict) -> dict:
     rep = generate_agreement(doc)
     structs = _structured(doc)
     sm = rep.get("summary") or {"alignment": [], "specific": [], "resolution": []}
+    return {**_identity(doc, rep), **_needs(rep, sm), **_practical(rep), **_conflict_and_commitments(rep, structs), **_appendix(rep, sm)}
+
+
+def _identity(doc: dict, rep: dict) -> dict:
+    return {"title": "Child-Focused Co-Parenting Agreement", "subtitle": "Turning shared priorities, child needs and parent commitments into practical co-parenting agreements.",
+            "parent_a_name": rep["parent_a_name"], "parent_b_name": rep["parent_b_name"], "child_name": rep["child_name"], "date": rep["date"], "case_code": doc.get("case_code") or "",
+            "purpose": "This agreement builds from the parents' Foundation Statements and identifies practical ways the parents intend to support their child's emotional, educational, medical and developmental needs.",
+            "shared_commitment": SHARED_COMMITMENT, "disclaimer": DISCLAIMER}
+
+
+def _needs(rep: dict, sm: dict) -> dict:
     aligned = list(dict.fromkeys(x.partition(":")[0].strip() for x in sm["alignment"]))
-    open_items = [_short_open(x) for x in sm["resolution"]]
-    comm, diff, rev = _sec(rep, "communication"), _sec(rep, "differences"), _sec(rep, "review")
+    fnd = _sec(rep, "foundation")
+    return {"shared_purpose": [_clean(x) for x in (fnd.get("current_alignment") or []) + _agreed(rep, "foundation")] or [fnd.get("shared_goal") or TBD],
+            "needs_aligned": aligned or [TBD], "needs_open": [_short_open(x) for x in sm["resolution"]] or ["None identified — every answered item is aligned."]}
+
+
+def _practical(rep: dict) -> dict:
+    comm, rev = _sec(rep, "communication"), _sec(rep, "review")
     info = [x for x in _agreed(rep, "education", "medical", "communication") if any(w in x.lower() for w in _INFO_WORDS)]
-    return {
-        "title": "Child-Focused Co-Parenting Agreement", "subtitle": "Turning shared priorities, child needs and parent commitments into practical co-parenting agreements.",
-        "parent_a_name": rep["parent_a_name"], "parent_b_name": rep["parent_b_name"], "child_name": rep["child_name"], "date": rep["date"], "case_code": doc.get("case_code") or "",
-        "purpose": "This agreement builds from the parents' Foundation Statements and identifies practical ways the parents intend to support their child's emotional, educational, medical and developmental needs.",
-        "shared_purpose": [_clean(x) for x in (_sec(rep, "foundation").get("current_alignment") or []) + _agreed(rep, "foundation")] or [_sec(rep, "foundation").get("shared_goal") or TBD],
-        "strengths": _union(structs, "strengths") or [TBD],
-        "needs_aligned": aligned or [TBD], "needs_open": open_items or ["None identified — every answered item is aligned."],
-        "communication": _agreed(rep, "communication") or [TBD],
-        "communication_choices": [("Primary Method", comm.get("communication_method") or TBD), ("Decision Process", comm.get("decision_process") or _sec(rep, "decisions").get("decision_process") or TBD), ("Open Items", _first(comm.get("open_issues") or []) if comm.get("open_issues") else "None")],
-        "transitions": _agreed(rep, "transitions") or [TBD],
-        "routines": [("Emotional Continuity", _first(_agreed(rep, "psychological"))), ("School", _first(_agreed(rep, "education"))), ("Activities", _first(_agreed(rep, "activities")))],
-        "information": info or [TBD],
-        "education": _agreed(rep, "education") or [TBD],
-        "medical": _agreed(rep, "medical", "psychological") or [TBD],
-        "conflict_intro": diff.get("shared_goal") or "When a disagreement occurs, we will try to resolve it at the lowest appropriate level.",
-        "conflict_agreed": _agreed(rep, "differences"), "conflict_steps": CONFLICT_STEPS,
-        "options": OPTIONS,
-        "commitments": _union(structs, "commitments") or [TBD],
-        "goals": _union(structs, "goals") or [TBD],
-        "review": _agreed(rep, "review") or [TBD],
-        "review_choices": [("Review Trigger", rev.get("review_trigger") or TBD), ("Review Frequency", "Every 6 or 12 months"), ("Earlier Review", "If significant circumstances change")],
-        "shared_commitment": SHARED_COMMITMENT, "disclaimer": DISCLAIMER,
-        "foundation_statements": [{"parent": f["parent"], "title": f["title"], "content": f["content"]} for f in rep.get("foundation_statements") or []],
-        "counts": {"alignment": len(sm["alignment"]), "specific": len(sm["specific"]), "resolution": len(sm["resolution"])},
-        "statuses": [(s["label"], s["status"]) for s in rep.get("sections") or []],
-    }
+    return {"communication": _agreed(rep, "communication") or [TBD],
+            "communication_choices": [("Primary Method", comm.get("communication_method") or TBD), ("Decision Process", comm.get("decision_process") or _sec(rep, "decisions").get("decision_process") or TBD),
+                                      ("Open Items", _first(comm.get("open_issues") or []) if comm.get("open_issues") else "None")],
+            "transitions": _agreed(rep, "transitions") or [TBD],
+            "routines": [("Emotional Continuity", _first(_agreed(rep, "psychological"))), ("School", _first(_agreed(rep, "education"))), ("Activities", _first(_agreed(rep, "activities")))],
+            "information": info or [TBD], "education": _agreed(rep, "education") or [TBD], "medical": _agreed(rep, "medical", "psychological") or [TBD],
+            "review": _agreed(rep, "review") or [TBD],
+            "review_choices": [("Review Trigger", rev.get("review_trigger") or TBD), ("Review Frequency", "Every 6 or 12 months"), ("Earlier Review", "If significant circumstances change")]}
+
+
+def _conflict_and_commitments(rep: dict, structs: list) -> dict:
+    diff = _sec(rep, "differences")
+    return {"conflict_intro": diff.get("shared_goal") or "When a disagreement occurs, we will try to resolve it at the lowest appropriate level.",
+            "conflict_agreed": _agreed(rep, "differences"), "conflict_steps": CONFLICT_STEPS, "options": OPTIONS,
+            "strengths": _union(structs, "strengths") or [TBD], "commitments": _union(structs, "commitments") or [TBD], "goals": _union(structs, "goals") or [TBD]}
+
+
+def _appendix(rep: dict, sm: dict) -> dict:
+    return {"foundation_statements": [{"parent": f["parent"], "title": f["title"], "content": f["content"]} for f in rep.get("foundation_statements") or []],
+            "counts": {"alignment": len(sm["alignment"]), "specific": len(sm["specific"]), "resolution": len(sm["resolution"])},
+            "statuses": [(s["label"], s["status"]) for s in rep.get("sections") or []]}
 
 
 def court_agreement_card(doc: dict, safety: dict | None = None) -> dict:
