@@ -27,6 +27,136 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-26 — Iter222 · Coparent Snapshot PDF + Draft Sync + Voice Note
+
+Three follow-on features to the iter220/iter221 Guided Journey
+wizard the founder picked from Next Action Items. Verified in
+iter81 (backend 24/24 pytest + frontend 100% acceptance criteria).
+
+**🟢 P1 — Coparent Snapshot PDF (one-page shareable)**
+- New `portal_pdf.build_portal_guided_snapshot_pdf(topic, answers,
+  author_name, case_ref, safety_flagged, generated_at)` builds a
+  one-page branded PDF with per-topic label + intro + meta rows +
+  Q&A card grid. Empty answers render an empty-state stub instead
+  of a silent blank. `safety_flagged=true` adds a "Communication
+  Style: Grey-rock voice" meta row for the mediator/attorney
+  who receives the file.
+- New endpoint `POST /api/portal/guided-snapshot-pdf` (public,
+  streams application/pdf with attachment Content-Disposition
+  `coparent-snapshot-{topic}.pdf`).
+- Frontend: recap card in `GuidedJourneyModal.jsx` gets a
+  `guided-recap-snapshot-{topic}` button. Container's
+  `downloadGuidedSnapshot` uses the shared `downloadPdfFromApi`
+  helper so the file lands via `URL.createObjectURL` → click
+  download link (same UX as the other portal PDFs).
+
+**🟢 P1 — Draft Sync (cross-device resume)**
+- `PortalStatePayload` gains a `guided_drafts: Optional[Dict]`
+  field. `_sanitize_guided_drafts` whitelists the six topic
+  keys (`foundation`, `coparenting`, `safety`, `medical`,
+  `educational`, `psychological`), truncates history/answers
+  arrays defensively (40 items each), and enforces a per-topic
+  12 KB byte cap after serialization.
+- Frontend container hydrates guided_drafts from
+  `GET /portal/state` on sign-in (writes each topic to
+  `localStorage.sacoparents_guided_draft_${topic}`) so a new
+  device can immediately show the resume prompt.
+- Modal fires `onDraftPersist()` after every `writeDraft`/
+  `clearDraft`. Container bumps `guidedDraftsRev` → the
+  debounced `PUT /portal/state` effect re-fires, collects the
+  current localStorage drafts, and syncs them up under
+  `guided_drafts`.
+- Cross-device round-trip verified: parent1 answers Q1 in
+  browser A → server has `guided_drafts.foundation.answers=[…]`.
+  Same parent in browser B → hydrates draft → resume prompt
+  shows the same answer count.
+
+**🟢 P1 — Coach Voice Note (hold-to-record)**
+- New Whisper wrapper `portal_ai.transcribe_voice_note(bytes,
+  filename)` uses `OpenAISpeechToText` from
+  `emergentintegrations.llm.openai` with the shared
+  `EMERGENT_LLM_KEY`. Model `whisper-1`, response_format
+  `json`, language `en`. Zero on-disk storage — bytes fed
+  through a `BytesIO` stream and dropped after transcription.
+- New endpoint `POST /api/portal/voice-transcribe` accepts
+  multipart `audio: UploadFile`. 25 MB size cap (Whisper's
+  hard limit), 400 on empty payload, 415 on wrong
+  content-type. Rate-limited via the shared BIFF/guided-
+  journey bucket. 502 with a friendly "please type instead"
+  message on any Whisper failure.
+- Frontend: new `guided-mic-{topic}` button next to the send
+  button. Hold to record (mousedown/touchstart), release to
+  transcribe (mouseup/touchend). Uses `MediaRecorder` with
+  `audio/webm;codecs=opus`. On release, sends the webm blob
+  as multipart and prepends the transcript to the input —
+  parent reviews + edits before pressing Send. Rose button
+  + animate-pulse + "Recording…" placeholder while active.
+- Guardrails: min-audio guard (skip upload if blob < 4 KB, i.e.
+  <300 ms tap). getUserMedia denial → non-blocking error
+  banner + composer still available. Modal-close stops any
+  active recorder + releases the mic track.
+
+**Files touched**
+- `/app/backend/portal_pdf.py` — new
+  `build_portal_guided_snapshot_pdf()` + `_TOPIC_LABELS` +
+  `_TOPIC_INTRO` maps (~140 lines).
+- `/app/backend/portal_routes.py` — new
+  `GuidedSnapshotPdfBody` + `POST /portal/guided-snapshot-pdf`
+  + `voice_transcribe` multipart handler +
+  `_sanitize_guided_drafts` +
+  `PortalStatePayload.guided_drafts` (~110 lines).
+- `/app/backend/portal_ai.py` — new
+  `transcribe_voice_note()` at bottom (~35 lines).
+- `/app/frontend/src/pages/portal/GuidedJourneyModal.jsx` —
+  added `onDownloadSnapshot` + `onDraftPersist` props, mic +
+  transcription state (`recording`, `transcribing`,
+  `mediaRecorderRef`, `audioChunksRef`, `audioStreamRef`),
+  start/stopRecording callbacks, mic button next to send,
+  snapshot download button in recap footer.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — hydrate
+  effect writes server drafts back to localStorage, PUT
+  effect collects + includes guided_drafts, new
+  `guidedDraftsRev` state + `onGuidedDraftPersist` callback,
+  new `downloadGuidedSnapshot` handler.
+
+**Verified — iter81 test report**
+- Backend 24/24 pytest passing: PDF endpoint for all 6 topics +
+  empty-state + invalid topic 422 + safety_flagged meta row;
+  voice endpoint with real WAV → 200 (Whisper responded
+  {"text": "Oh"} on a 440 Hz sine) + 400/415/429 error paths;
+  guided_drafts sanitizer strips unknown topics + honors 12 KB
+  cap + parent1/parent2 isolation; regression PDF endpoints
+  all still 200.
+- Frontend @ 390×844: full parent1 flow — safety-screen clear
+  → toolkit-guided-medical → 4-question wizard → recap card
+  target caption "Align-Before-Agreement record (added to
+  your folder)" → snapshot download event with EXACTLY
+  filename `coparent-snapshot-medical.pdf` → Confirm bumps
+  align_records count by 1 AND clears guided_drafts.medical
+  on the server. Mic mousedown → bg-rose-600 + animate-pulse
+  + "Recording… release to send" placeholder.
+- Draft sync verified via GET /api/portal/state after Q1
+  close → `guided_drafts.foundation.answers=1, stepIndex=1,
+  progress={step:2,total:5}, saveKey='foundation_text'`.
+- Zero horizontal overflow at 390×844.
+
+**Deferred (P2 — from iter81 code review)**
+- Split guided-journey + voice-transcribe into their own
+  rate-limit buckets so voice testing doesn't burn BIFF's
+  40/hr quota for the same IP.
+- Shallow-copy the incoming snapshot dict in
+  `_sanitize_guided_drafts` before truncating history/answers
+  arrays (currently mutates in-place — harmless but fragile).
+- Extract `useGuidedJourney`, `usePortalShare`,
+  `useDraftSync` hooks — `SacoparentsPortal.jsx` now
+  ~1794 lines.
+- Auto-dismiss the `guided-error-{topic}` banner when the
+  parent starts a new recording (currently only clears on
+  next successful send).
+- Bump the "Guided chat" toolkit pill text to 10px semi-bold
+  for low-vision accessibility (currently 9px).
+
+
 ### 2026-02-26 — Iter221 · Guided Journey Resume + Recap
 
 Two quality-of-life follow-ons to iter220 the founder picked from
