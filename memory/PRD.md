@@ -26,6 +26,67 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter215 · Grey-Rock Chip + Undo Toast + PATCH State Semantics
+
+Three quality-of-life deltas on top of iter74. Verified in iter75
+(backend 5/5 + frontend 100% assertions passed at 390×844).
+
+**🟢 P1 — Grey-Rock Toggle Chip**
+- New `biff-greyrock-chip` in the BIFF composer header. Renders only
+  when `safetyFlagged=true` (i.e. the parent's own Quick Safety
+  Check returned a flag). Text: `🪨 Grey-rock coach on`, slate-900
+  background, amber accent. Title-tooltip explains the switch.
+- Composer subtitle swaps to *"Grey-rock BIFF: short, factual,
+  neutral. Safer to send to a coercive co-parent."* when the chip
+  is on.
+- `SacoparentsPortal.jsx` passes the derived `safetyFlagged` prop
+  into `<BiffTab />`.
+
+**🟢 P1 — Undo Toast for Safety-Plan Delete**
+- Replaced `window.confirm` (modal wall) with an inline slate-900
+  undo toast (`safety-plan-undo-toast`) + 5-second Undo button
+  (`safety-plan-undo-btn`).
+- Delete fires immediately — local state cleared, localStorage
+  wiped, `PUT /portal/state` with `{safety_plan: null}` dispatched.
+- Undo snapshot (previous values + savedAt + committed plan) held
+  in ref state; tapping Undo restores UI + re-saves server-side.
+- Auto-dismiss via `setTimeout(5000)` cleared on unmount.
+
+**🟢 P1 — PATCH-Style State Semantics**
+- `PUT /api/portal/state` now uses
+  `payload.model_dump(exclude_unset=True)` so only fields explicitly
+  present in the request body are written. Sanitizers + caps are
+  applied conditionally per field. `$set` + `$setOnInsert(user_id)`
+  preserves untouched fields.
+- Frontend `onSaveSafetyPlan(null)` shrinks the immediate delete PUT
+  to `{safety_plan: null}` — no more full-state snapshot on delete.
+- Full-state PUTs from the debounced sync still work exactly as
+  before (regression preserved).
+- Verified via curl: full PUT populates → `{safety_plan: null}` PUT
+  clears only safety_plan → `{court_key: 'NEW-KEY'}` PUT updates
+  only court_key → `{}` PUT bumps updated_at with no other changes.
+
+**Files touched**
+- `/app/backend/portal_routes.py` — merge-style PUT with per-field
+  conditional sanitization.
+- `/app/frontend/src/pages/portal/BiffTab.jsx` — grey-rock chip +
+  subtitle swap.
+- `/app/frontend/src/pages/portal/SafetyPlanBuilder.jsx` — undo
+  snapshot + toast + auto-dismiss + timer cleanup on unmount.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — pass
+  `safetyFlagged` to BiffTab + shrink delete PUT to
+  `{safety_plan: null}`.
+- `/app/backend/tests/test_iter75_greyrock_undo_patch.py` (new, 5
+  tests).
+
+**Deferred (P2 — from iter75 review)**
+- Retry / offline-banner around the fire-and-forget delete PATCH
+  (currently silent on failure — debounced PUT catches it, but a
+  visible signal would be kinder).
+- Remove the dead `else if` branch in `undoWipe()` (unsaved-typing
+  fall-through is a no-op).
+
+
 ### 2026-02-25 — Iter214 · One-Shot Server Sync on Safety Plan Delete
 
 Tiny follow-on delta to iter73 review comment. Closes the ~700ms
