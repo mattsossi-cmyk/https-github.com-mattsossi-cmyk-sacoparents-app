@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
+import { SafetyPlanBuilder } from "./SafetyPlanBuilder";
 
 /**
  * SafetyScreen — first-visit safety triage before letting the parent
@@ -7,7 +9,8 @@ import { Link } from "react-router-dom";
  * violence signals (physical safety, coercion & control, device
  * privacy). Never blocks a parent from continuing — per clinical
  * guardrail rule — but re-routes flagged parents to the Safety Path
- * card with hotlines + deep-link to the full /safety-assessment.
+ * card with hotlines + deep-link to the full /safety-assessment, and
+ * offers an optional private Safety Plan builder.
  *
  * Rendered in two modes:
  *   - `open` (modal) — used as a re-take chip from the Parent Journey
@@ -18,12 +21,32 @@ import { Link } from "react-router-dom";
  *   - onClose       : () => void          — dismiss without submitting
  *   - onCleared     : () => void          — Safety Screen returned "no risk"
  *   - onContinueFlagged : () => void      — parent chose "Continue anyway"
+ *   - safetyPlan    : object              — persisted Safety Plan (or null)
+ *   - onSaveSafetyPlan : (plan) => void   — save the Safety Plan
  */
-export function SafetyScreen({ open, onClose, onCleared, onContinueFlagged }) {
+export function SafetyScreen({
+  open,
+  onClose,
+  onCleared,
+  onContinueFlagged,
+  safetyPlan,
+  onSaveSafetyPlan,
+}) {
   const [phys, setPhys] = useState(null); // 'yes' | 'no'
   const [coerce, setCoerce] = useState(null); // 'yes' | 'no' | 'prefer_not'
   const [device, setDevice] = useState(null); // 'yes' | 'no' | 'unsure'
   const [showFlaggedCard, setShowFlaggedCard] = useState(false);
+
+  // Reset the questionnaire whenever the modal re-opens so the parent
+  // starts from a clean slate every time (crucial on re-take).
+  useEffect(() => {
+    if (open) {
+      setPhys(null);
+      setCoerce(null);
+      setDevice(null);
+      setShowFlaggedCard(false);
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -293,6 +316,15 @@ export function SafetyScreen({ open, onClose, onCleared, onContinueFlagged }) {
             >
               Open the full clinical Safety Screen
             </Link>
+
+            {/* Optional private Safety Plan builder — never surfaced to
+                the co-parent. Sits between the hotline block and the
+                "continue anyway" foot so the parent sees concrete
+                next steps before deciding to press on. */}
+            <SafetyPlanBuilder
+              plan={safetyPlan}
+              onSave={onSaveSafetyPlan}
+            />
 
             <div className="pt-1 border-t border-slate-100">
               <p className="text-[10px] text-slate-500 leading-snug mb-1.5">

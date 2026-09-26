@@ -21,6 +21,7 @@ import {
   PRESETS,
   REASSESSMENT_KEY,
   SAFETY_ACK_KEY,
+  SAFETY_PLAN_KEY,
   SYNC_PENDING_KEY,
   computeHealthLabel,
   computeKudosStreak,
@@ -74,6 +75,7 @@ export default function SacoparentsPortal() {
 
   // Safety Screen state (first-visit gate + persistent flag)
   const [safetyAck, setSafetyAck] = useState(null); // { date, cleared, flagged? } | null
+  const [safetyPlan, setSafetyPlan] = useState(null); // {safe_place, trusted_contact, ...}
   const [safetyOpen, setSafetyOpen] = useState(false);
   const pendingDoorRef = useRef(null); // 'parent' | 'court' — where to go after safety
 
@@ -162,6 +164,9 @@ export default function SacoparentsPortal() {
 
     const seededSafety = readJson(SAFETY_ACK_KEY, null);
     setSafetyAck(seededSafety);
+
+    const seededSafetyPlan = readJson(SAFETY_PLAN_KEY, null);
+    setSafetyPlan(seededSafetyPlan);
   }, []);
 
   // ----------------------------------------------------------------
@@ -213,6 +218,14 @@ export default function SacoparentsPortal() {
           setCourtKey(s.court_key);
           writeString(COURT_KEY_KEY, s.court_key);
         }
+        if (s.safety_ack && typeof s.safety_ack === "object") {
+          setSafetyAck(s.safety_ack);
+          writeJson(SAFETY_ACK_KEY, s.safety_ack);
+        }
+        if (s.safety_plan && typeof s.safety_plan === "object") {
+          setSafetyPlan(s.safety_plan);
+          writeJson(SAFETY_PLAN_KEY, s.safety_plan);
+        }
         hasHydratedFromServerRef.current = true;
       } catch {
         hasHydratedFromServerRef.current = true;
@@ -247,6 +260,8 @@ export default function SacoparentsPortal() {
           health_index: healthIndex,
           court_key: courtKey,
           reassessments,
+          safety_ack: safetyAck,
+          safety_plan: safetyPlan,
         });
         writeString(SYNC_PENDING_KEY, "");
         setSyncStatus("synced");
@@ -268,6 +283,8 @@ export default function SacoparentsPortal() {
     healthIndex,
     courtKey,
     reassessments,
+    safetyAck,
+    safetyPlan,
   ]);
 
   // Flush queued PUT when we come back online
@@ -427,6 +444,11 @@ export default function SacoparentsPortal() {
   const onOpenSafetyRetake = useCallback(() => {
     pendingDoorRef.current = null;
     setSafetyOpen(true);
+  }, []);
+
+  const onSaveSafetyPlan = useCallback((plan) => {
+    writeJson(SAFETY_PLAN_KEY, plan);
+    setSafetyPlan(plan);
   }, []);
 
   const verifyProfessionalKey = useCallback(async () => {
@@ -1169,6 +1191,8 @@ export default function SacoparentsPortal() {
         onClose={() => setSafetyOpen(false)}
         onCleared={onSafetyCleared}
         onContinueFlagged={onSafetyContinueFlagged}
+        safetyPlan={safetyPlan}
+        onSaveSafetyPlan={onSaveSafetyPlan}
       />
 
       {/* Share Legal modal (passphrase + TTL) */}

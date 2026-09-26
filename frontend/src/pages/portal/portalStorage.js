@@ -13,6 +13,7 @@ export const COURT_KEY_KEY = "sacoparents_court_key";
 export const REASSESSMENT_KEY = "sacoparents_reassessments";
 export const SYNC_PENDING_KEY = "sacoparents_sync_pending";
 export const SAFETY_ACK_KEY = "sacoparents_safety_screen_ack";
+export const SAFETY_PLAN_KEY = "sacoparents_safety_plan";
 
 export const PRESETS = {
   late_handoff: {

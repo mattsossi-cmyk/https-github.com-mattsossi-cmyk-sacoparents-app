@@ -144,6 +144,8 @@ def _empty_portal_state() -> Dict[str, Any]:
         "health_index": {"s1": 7, "s2": 6, "s3": 5},
         "court_key": "",
         "reassessments": [],
+        "safety_ack": None,
+        "safety_plan": None,
         "updated_at": None,
     }
 
@@ -157,6 +159,11 @@ class PortalStatePayload(BaseModel):
     health_index: Dict[str, int] = Field(default_factory=dict)
     court_key: str = ""
     reassessments: List[Dict[str, Any]] = Field(default_factory=list)
+    # Safety-first sync (iter212). Both are opaque JSON blobs the client
+    # owns — the server only enforces size + shape at write time so we
+    # can iterate on the client without a schema migration.
+    safety_ack: Optional[Dict[str, Any]] = None
+    safety_plan: Optional[Dict[str, Any]] = None
 
 
 @router.get("/state")
@@ -167,6 +174,54 @@ async def get_state(user: UserPublic = Depends(get_current_user), db=Depends(get
         return {"exists": False, "state": _empty_portal_state()}
     doc.pop("user_id", None)
     return {"exists": True, "state": doc}
+
+
+def _sanitize_safety_ack(raw: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Whitelist the small handful of safety-ack keys.
+
+    Kept intentionally opaque to the server — the ack is a client-owned
+    JSON blob. We enforce keys + types so a bad client can't push a
+    huge object into every parent's record.
+    """
+    if not isinstance(raw, dict):
+        return None
+    cleared = bool(raw.get("cleared"))
+    flagged = bool(raw.get("flagged"))
+    date = str(raw.get("date", ""))[:40]
+    if not date:
+        return None
+    return {"cleared": cleared, "flagged": flagged, "date": date}
+
+
+_SAFETY_PLAN_KEYS = (
+    "safe_place",
+    "trusted_contact",
+    "essentials",
+    "code_word",
+    "tech_notes",
+)
+
+
+def _sanitize_safety_plan(raw: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Whitelist Safety Plan text fields and cap them at 500 chars each.
+
+    A parent's Safety Plan is private and NEVER surfaced to the co-parent
+    via joint reports or share links — the caller-scoped `portal_state`
+    endpoint is the only surface that reads it back.
+    """
+    if not isinstance(raw, dict):
+        return None
+    out: Dict[str, Any] = {}
+    for key in _SAFETY_PLAN_KEYS:
+        val = raw.get(key)
+        if isinstance(val, str) and val.strip():
+            out[key] = val[:500]
+    if not out:
+        return None
+    updated_at = raw.get("updated_at")
+    if isinstance(updated_at, str):
+        out["updated_at"] = updated_at[:40]
+    return out
 
 
 @router.put("/state")
@@ -198,6 +253,8 @@ async def put_state(
         },
         "court_key": (payload.court_key or "")[:80],
         "reassessments": _cap(payload.reassessments, 200),
+        "safety_ack": _sanitize_safety_ack(payload.safety_ack),
+        "safety_plan": _sanitize_safety_plan(payload.safety_plan),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     await db[_PORTAL_COLLECTION].update_one(
