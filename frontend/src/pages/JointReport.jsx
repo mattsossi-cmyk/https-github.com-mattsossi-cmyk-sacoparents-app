@@ -190,7 +190,12 @@ export default function JointReport() {
         )}
         {ready && report?.professional_evaluation && detail.is_creator && (
           <section className="no-print mb-8 rounded-xl border border-border bg-white p-5" data-testid="joint-professional-evaluation">
-            <p className="text-sm font-semibold">Professional Evaluation (approved · {report.ai_model})</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold">Professional Evaluation (approved · {report.ai_model})</p>
+              <Button size="sm" variant="outline" className="gap-2" asChild data-testid="evaluation-pdf-btn">
+                <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${id}/evaluation.pdf`} download><Printer className="h-4 w-4" /> Evaluation Report PDF</a>
+              </Button>
+            </div>
             <EvaluationEditor fields={report.professional_evaluation} readOnly />
           </section>
         )}

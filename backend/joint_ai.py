@@ -209,4 +209,20 @@ def build_router(db, get_current_user, get_joint_report_doc) -> APIRouter:
         await db.joint_reports.update_one({"id": rid}, {"$unset": {"ai_joint_draft": ""}})
         return {"status": "none"}
 
+    @r.get("/joint/reports/{rid}/evaluation.pdf")
+    async def evaluation_pdf(rid: str, user=Depends(get_current_user)):
+        from fastapi import Response
+        from pdf_evaluation import build_evaluation_pdf
+        doc = await _own_ready_case(rid, user)
+        d = doc.get("ai_joint_draft") or {}
+        if d.get("status") != "approved":
+            raise HTTPException(status_code=400, detail="Approve the Gemini draft first — the Professional Evaluation PDF reflects the approved evaluation")
+        ev = {k: v for k, v in (d.get("fields") or {}).items() if k in EVAL_KEYS}
+        meta = {"case_code": doc.get("case_code"), "subject_label": doc.get("subject_label"), "child_name": doc.get("child_name"), "professional": d.get("reviewed_by_name") or user.get("name", ""),
+                "date": datetime.now(timezone.utc).strftime("%B %d, %Y"), "ai_model": d.get("model", MODEL[2]),
+                "parent_a_name": (doc.get("participants", {}).get("a") or {}).get("name"), "parent_b_name": (doc.get("participants", {}).get("b") or {}).get("name")}
+        await db.access_events.insert_one({"report_id": rid, "action": "Downloaded Professional Evaluation PDF", "kind": "download", "at": meta["date"], "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Professional"})
+        code = "".join(ch for ch in (doc.get("case_code") or rid[:8]) if ch.isalnum() or ch == "-")
+        return Response(content=build_evaluation_pdf(ev, meta), media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="professional-evaluation-{code}.pdf"'})
+
     return r

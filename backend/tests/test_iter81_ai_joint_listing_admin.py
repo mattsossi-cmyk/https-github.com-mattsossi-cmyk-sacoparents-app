@@ -40,6 +40,12 @@ def test_ai_joint_draft_review_gate() -> None:
     prep = pa.get(f"{API}/joint/reports/{rid}/report").json()
     assert "professional_evaluation" not in prep and prep["ai_assisted"] is True
     assert pro.get(f"{API}/joint/reports/{rid}/pdf").status_code == 200
+    epdf = pro.get(f"{API}/joint/reports/{rid}/evaluation.pdf")
+    assert epdf.status_code == 200 and epdf.headers["content-type"] == "application/pdf" and epdf.content[:4] == b"%PDF"
+    import fitz
+    text = "".join(p.get_text() for p in fitz.open(stream=epdf.content, filetype="pdf"))
+    assert "Professional Evaluation Report" in text and "Safety First" in text and "Scale Analysis Matrix" in text and "Unified Partnership" in text and "Resource & Referral Network" in text
+    assert pa.get(f"{API}/joint/reports/{rid}/evaluation.pdf").status_code == 403
     assert pro.post(f"{API}/joint/reports/{rid}/ai-joint-draft/discard").json()["status"] == "none"
     assert not pro.get(f"{API}/joint/reports/{rid}/report").json().get("ai_assisted")
     assert judge.get(f"{API}/joint/reports/{rid}/ai-joint-draft").status_code in (403, 404)
