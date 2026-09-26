@@ -121,6 +121,8 @@ def score_boxes(pdf: FPDF, items: list) -> None:
 
 def kv_table(pdf: FPDF, rows: list) -> None:
     pdf.set_font(FONT, "", 9)
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_text_color(*BODY)
     with pdf.table(col_widths=[45, 137], text_align="LEFT", line_height=4.6, first_row_as_headings=False, borders_layout="ALL") as table:
         for k, v in rows:
             row = table.row()
@@ -189,42 +191,110 @@ def _research_base(pdf: FPDF, rb: dict | None) -> None:
     full_card(pdf, "RESEARCH BASE (Perplexity — professional-reviewed)", lines, TEAL_FILL, TEAL)
 
 
+def heading(pdf: FPDF, n: int, text: str) -> None:
+    """Numbered purple circle badge + title + hairline, as in the mockup."""
+    if pdf.get_y() > pdf.h - 50:
+        pdf.add_page()
+    y = pdf.get_y()
+    pdf.set_fill_color(*PURPLE)
+    pdf.ellipse(pdf.l_margin, y, 7.5, 7.5, style="F")
+    pdf.set_xy(pdf.l_margin, y + 0.4)
+    pdf.set_font(FONT, "B", 8.5)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(7.5, 6.7, str(n), align="C")
+    pdf.set_xy(pdf.l_margin + 10, y)
+    pdf.set_font(FONT, "B", 12.5)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 7.5, _s(text), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_draw_color(*PURPLE_FILL)
+    pdf.set_line_width(0.6)
+    pdf.line(pdf.l_margin, y + 9, pdf.w - pdf.r_margin, y + 9)
+    pdf.set_line_width(0.2)
+    pdf.set_y(y + 12)
+
+
+def title_band(pdf: FPDF, title: str, sub: str) -> None:
+    y, w = pdf.get_y(), pdf.w - pdf.l_margin - pdf.r_margin
+    steps = 40
+    for i in range(steps):
+        t = i / (steps - 1)
+        pdf.set_fill_color(int(PURPLE[0] + (BLUE[0] - PURPLE[0]) * t), int(PURPLE[1] + (BLUE[1] - PURPLE[1]) * t), int(PURPLE[2] + (BLUE[2] - PURPLE[2]) * t))
+        pdf.rect(pdf.l_margin + w * i / steps, y, w / steps + 0.3, 20, style="F")
+    pdf.set_xy(pdf.l_margin, y + 2.5)
+    pdf.set_font(FONT, "B", 18)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(w, 9, _s(title), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 8.5)
+    pdf.cell(w, 5, _s(sub), align="C")
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_text_color(*DARK)
+    pdf.set_y(y + 24)
+
+
+def score_cards(pdf: FPDF, items: list) -> None:
+    """Solid-colour score cards with white text (Parent A purple, Parent B blue, Joint teal)."""
+    gap, n = 4, len(items)
+    w = (pdf.w - pdf.l_margin - pdf.r_margin - gap * (n - 1)) / n
+    y = pdf.get_y()
+    for i, (label, score, band, color) in enumerate(items):
+        x = pdf.l_margin + i * (w + gap)
+        pdf.set_fill_color(*color)
+        pdf.rect(x, y, w, 30, style="F", round_corners=True, corner_radius=3)
+        for yy, size, txt, style in ((2, 9.5, label, "B"), (7.5, 22, f"{score}/10" if score else "—", "B"), (21, 8.5, band or "Not yet rated", "B")):
+            pdf.set_xy(x, y + yy)
+            pdf.set_font(FONT, style, size)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(w, 11 if size == 22 else 5, _s(txt), align="C")
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_y(y + 34)
+
+
+def _perspective(pdf: FPDF, rep: dict, role: str, scale, cls) -> None:
+    from lens_data import growth_lines
+    g = growth_lines(rep, role)
+    met, total = sum(1 for x in g if x["met"]), len(g)
+    growth = [f"{'☑' if x['met'] else '☐'} {x['text']}{'  [MET at reassessment]' if x['met'] else ''}" for x in g] + ([f"{met} of {total} growth areas met ({round(met / total * 100)}%)"] if total else [])
+    cards_row(pdf, [("Successes", [f"✓ {x}" for x in _lines(rep.get(f"parent_{role}_strengths"))] or ["—"], GREEN_FILL, GREEN),
+                    ("Challenges", [f"! {x}" for x in _lines(rep.get(f"parent_{role}_gaps"))] or ["—"], ORANGE_FILL, ORANGE),
+                    ("Growth Priorities", growth or ["—"], BLUE_FILL, BLUE)])
+    if rep.get(f"parent_{role}_notes"):
+        _body(pdf, f"Notes: {rep[f'parent_{role}_notes']}", italic=True)
+    _lens_individual_scale(pdf, scale, cls, rep, role)
+
+
 def render_lens_body(pdf: FPDF, v: dict) -> None:
     """Pages 1–6 of the Professional Alignment Report (everything before the certification block)."""
     from lens_data import CHILD_FOCUS_CATEGORIES, CONFLICT_GUIDANCE, PATHWAYS, RISK_CATEGORIES, SCALE_TABLE, SAFETY_PATHWAY
     rep, c, cls, notes = v["report"], v["case"], v["classification"], v["notes"]
     brand_header(pdf)
-    pdf.set_font(FONT, "B", 18)
-    pdf.set_text_color(*PURPLE)
-    pdf.cell(0, 9, "Professional Alignment Report", new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font(FONT, "", 8.5)
+    title_band(pdf, "Professional Alignment Report", "Prepared for: Court • Attorneys • Mediators • Parent Facilitators • Other Authorized Professionals")
+    pdf.set_font(FONT, "", 8)
     pdf.set_text_color(*GRAY)
-    pdf.cell(0, 5, "SA CoParents Align Professional Evaluation Report (Legal Lens) — for professionals and the court", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 4.5, _s("SA CoParents Align Professional Evaluation Report (Legal Lens) — for professionals and the court"), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(1)
     full_card(pdf, "Purpose", [notes.get("purpose", "")], PURPLE_FILL, PURPLE)
-    _lens_heading(pdf, "1. Case & Assessment Snapshot")
+    heading(pdf, 1, "Case & Assessment Overview")
     kv_table(pdf, [("Case / Matter", rep.get("matter_name")), ("Case ID", c.get("case_code")), ("Court / County", rep.get("court_county")), ("Cause Number", rep.get("cause_number")),
                    ("Professional", f"{rep.get('professional_name') or ''} · {rep.get('professional_role') or ''}".strip(" ·")), ("Report Date", rep.get("report_date")),
                    ("Parent A", rep.get("parent_a_name")), ("Parent B", rep.get("parent_b_name")), ("Report Status", (rep.get("status") or "draft").replace("_", " ").title())])
     cards_row(pdf, [("Assessments Reviewed", [f"{'☑' if r['done'] else '☐'} {r['label']}" + (" (N/A)" if r.get("na") and not r["done"] else "") for r in v.get("readiness") or []], BLUE_FILL, BLUE),
                     ("Sources of Information Considered", [rep.get("sources_considered") or "—"], PURPLE_FILL, PURPLE)])
-    _lens_subhead(pdf, "Current Alignment Levels")
-    score_boxes(pdf, [("Parent A", rep.get("parent_a_rating"), (cls["parent_a"] or {}).get("label"), PURPLE_FILL), ("Parent B", rep.get("parent_b_rating"), (cls["parent_b"] or {}).get("label"), TEAL_FILL),
-                      ("Co-Parents (Joint)", rep.get("joint_rating"), (cls["joint"] or {}).get("label"), GREEN_FILL)])
+    heading(pdf, 2, "Alignment Snapshot")
+    score_cards(pdf, [("Parent A", rep.get("parent_a_rating"), (cls["parent_a"] or {}).get("label"), PURPLE), ("Parent B", rep.get("parent_b_rating"), (cls["parent_b"] or {}).get("label"), BLUE),
+                      ("Joint Co-Parenting", rep.get("joint_rating"), (cls["joint"] or {}).get("label"), TEAL)])
     risk = rep.get("risk_screening") or {}
     cards_row(pdf, [(f"Joint process: {rep.get('joint_process_appropriate') or 'Not yet determined'}", [rep.get("safety_takeaway") or "—", "", f"Parent A FV assessment: {rep.get('fv_a_received') or '—'}", f"Parent B FV assessment: {rep.get('fv_b_received') or '—'}", "", notes["safety"]], TEAL_FILL, TEAL),
-                    ("Risk Screening Summary", [f"{lbl}: {risk.get(k, {}).get('level', 'Not assessed')}." + (f" {risk[k]['note']}" if risk.get(k, {}).get("note") else "") for k, lbl, _ in RISK_CATEGORIES] + ([f"Safeguards: {rep['safety_notes']}"] if rep.get("safety_notes") else []), ORANGE_FILL, ORANGE)], subhead="Safety Status")
+                    ("Risk Screening Summary", [f"{lbl}: {risk.get(k, {}).get('level', 'Not assessed')}." + (f" {risk[k]['note']}" if risk.get(k, {}).get("note") else "") for k, lbl, _ in RISK_CATEGORIES] + ([f"Safeguards: {rep['safety_notes']}"] if rep.get("safety_notes") else []), ORANGE_FILL, ORANGE)], subhead="Safety Screening & Process Considerations")
     new_page(pdf)
-    _lens_heading(pdf, "2. Individual Parent Perspectives")
+    heading(pdf, 3, f"Parent A Perspective — {rep.get('parent_a_name') or 'Parent A'}")
     _body(pdf, "PARENT-REPORTED INFORMATION, summarized separately and neutrally by the professional; no determination is made about which account is correct.", italic=True)
-    cards_row(pdf, [(rep.get("parent_a_name") or "Parent A", _parent_lines(rep, "a"), PURPLE_FILL, PURPLE), (rep.get("parent_b_name") or "Parent B", _parent_lines(rep, "b"), TEAL_FILL, TEAL)])
+    _perspective(pdf, rep, "a", SCALE_TABLE, cls["parent_a"])
     new_page(pdf)
-    _lens_individual_scale(pdf, SCALE_TABLE, cls["parent_a"], rep, "a")
-    pdf.ln(2)
-    _lens_individual_scale(pdf, SCALE_TABLE, cls["parent_b"], rep, "b")
+    heading(pdf, 4, f"Parent B Perspective — {rep.get('parent_b_name') or 'Parent B'}")
+    _perspective(pdf, rep, "b", SCALE_TABLE, cls["parent_b"])
     j = cls["joint"]
     new_page(pdf)
-    _lens_heading(pdf, "3. Joint Co-Parenting Assessment")
+    heading(pdf, 5, "Joint Co-Parenting Assessment")
     _body(pdf, "[SYSTEM-GENERATED COMPARISON — reviewed by the professional]", italic=True)
     full_card(pdf, f"Joint Alignment Level: {rep.get('joint_rating') or '—'} / 10" + (f" — {j['label']} ({j['mode']} Mode)" if j and rep.get("joint_rating") else ""), [], PURPLE_FILL, PURPLE)
     cards_row(pdf, [("Areas of Alignment — Successes", [f"✓ {x}" for x in _lines(rep.get("alignment_agreements") or rep.get("joint_strengths"))] or ["—"], GREEN_FILL, GREEN),
@@ -233,19 +303,17 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     _stmt_text(pdf, "Issues requiring further discussion or professional attention", rep.get("joint_notes"), required=True)
     _lens_joint_scale(pdf, SCALE_TABLE, j, rep)
     new_page(pdf)
-    _lens_heading(pdf, "4. Child-Focused Issues")
+    heading(pdf, 6, "Child-Focused Legal Issues")
+    _body(pdf, "What do the parents' differences mean for the child and the dispute?", italic=True)
     cf = rep.get("child_focus") or {}
-    ticked = [(lbl, cf[k].get("note") or "Identified as an area affecting the child's needs.") for k, lbl in CHILD_FOCUS_CATEGORIES if cf.get(k, {}).get("checked")]
-    fills = [BLUE_FILL, TEAL_FILL, PURPLE_FILL, ORANGE_FILL]
-    for i in range(0, len(ticked), 2):
-        cards_row(pdf, [(t, [n], fills[(i + k) % 4], BLUE) for k, (t, n) in enumerate(ticked[i:i + 2])])
-    if not ticked:
-        _body(pdf, "No child-focused categories identified.", italic=True)
-    _lens_heading(pdf, "5. Options & Resources")
+    ticked = [[lbl, cf[k].get("note") or "Identified as an area affecting the child's needs.", "Structured, child-focused discussion; written protocol where helpful."] for k, lbl in CHILD_FOCUS_CATEGORIES if cf.get(k, {}).get("checked")]
+    _lens_table(pdf, ["Issue", "Current Concern", "Potential Focus"], ticked, [40, 74, 60]) if ticked else _body(pdf, "No child-focused categories identified.", italic=True)
+    heading(pdf, 7, "Options & Resources")
     rows = [[r.get("category", ""), r.get("resource", ""), r.get("focus", "")] for r in (rep.get("resource_rows") or [])]
     _lens_table(pdf, ["Category", "Recommended Resource / Specialist", "Purpose / Service Focus"], rows, [40, 60, 74]) if rows else _body(pdf, "No resources selected.", italic=True)
     _research_base(pdf, rep.get("research_base"))
-    _lens_heading(pdf, "6. Conflict-Resolution Pathway")
+    new_page(pdf)
+    heading(pdf, 8, "Conflict Resolution Pathways")
     chosen = set(rep.get("conflict_pathways") or ([rep.get("conflict_pathway")] if rep.get("conflict_pathway") else []))
     pathway_steps(pdf, PATHWAYS, chosen)
     small_lines(pdf, [f"{n}. {p['name']}: {p['desc']}" for n, p in enumerate(PATHWAYS, 1)])
@@ -253,12 +321,16 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     full_card(pdf, "Guidance by Type of Conflict", [f"• {t}: {d}" for t, d in CONFLICT_GUIDANCE], BLUE_FILL, BLUE)
     full_card(pdf, f"Safety Override — {SAFETY_PATHWAY[0]}", [SAFETY_PATHWAY[1]], GOLD_SOFT, GOLD)
     _body(pdf, notes["rating"], italic=True)
-    _lens_heading(pdf, "7. Professional Observation & Action Plan")
+    heading(pdf, 9, "Legal Conflict & Agreement-Building Analysis")
+    cards_row(pdf, [("Areas Potentially Capable of Agreement", [f"✓ {x}" for x in _lines(rep.get("agreement_building_opportunities") or rep.get("alignment_agreements"))] or ["—"], GREEN_FILL, GREEN),
+                    ("Issues Requiring Further Resolution", [f"! {x}" for x in _lines(rep.get("issues_requiring_attention") or rep.get("alignment_disagreements"))] or ["—"], ORANGE_FILL, ORANGE)])
+    cards_row(pdf, [("Existing Agreements / Orders Noted", _lines(rep.get("existing_agreements")) or ["—"], BLUE_FILL, BLUE), ("Procedural Considerations", _lines(rep.get("procedural_considerations")) or ["—"], PURPLE_FILL, PURPLE)])
+    heading(pdf, 10, "Professional Legal Statement & Roadmap")
     full_card(pdf, "PROFESSIONAL OBSERVATION", [rep.get("professional_summary") or "—", "", "The professional's own observations and judgment — distinct from parent-reported information and system- or AI-generated summaries."], BLUE_FILL, BLUE)
     plan = ([f"☐ {g}" for g in _lines(rep.get("short_term_goals"))] or ["—"]) + ["", f"Reassessment: {rep.get('reassess_interval') or 'every 90 to 180 days'}" + (f" · next review {rep['next_review_date']}" if rep.get("next_review_date") else "")]
     indicators = _lines(rep.get("success_indicators")) or _lines(rep.get("long_term_goals")) or ["—"]
-    cards_row(pdf, [("90-Day Action Plan", plan, TEAL_FILL, TEAL), ("How We Will Know Things Are Improving", [f"• {x}" for x in indicators], BLUE_FILL, BLUE)])
+    cards_row(pdf, [("30–90 Day Goals", plan, TEAL_FILL, TEAL), ("How We Will Know Things Are Improving", [f"• {x}" for x in indicators], BLUE_FILL, BLUE)])
     cards_row(pdf, [("Long-Term Goals (6 to 12 Months)", [f"• {x}" for x in _lines(rep.get("long_term_goals"))] or ["—"], PURPLE_FILL, PURPLE), ("Reassessment Triggers", [rep.get("reassess_up") or "Score moves up: —", "", rep.get("reassess_down") or "Score drops: —"], GREEN_FILL, GREEN)])
-    _lens_heading(pdf, "8. Concise Court / Referral Summary")
+    heading(pdf, 11, "Concise Court Summary")
     full_card(pdf, f"Parent A: Level {rep.get('parent_a_rating') or '—'}   |   Parent B: Level {rep.get('parent_b_rating') or '—'}   |   Joint Co-Parenting: Level {rep.get('joint_rating') or '—'}", _lines(rep.get("court_summary_text")) or ["—"], (255, 255, 255), PURPLE)
     full_card(pdf, "Our Report Principle", notes.get("principle") or [], PURPLE_FILL, PURPLE)

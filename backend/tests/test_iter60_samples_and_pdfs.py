@@ -33,21 +33,21 @@ class TestSampleLegalLensPDF:
         pages, text = _extract_text(r.content)
         assert len(pages) >= 2
         expected = [
-            "Case & Assessment Snapshot",
-            "Current Alignment Levels",
-            "Safety Status",
-            "2. Individual Parent Perspectives",
+            "Case & Assessment Overview",
+            "Alignment Snapshot",
+            "Safety Screening",
+            "Parent A Perspective",
             "Next developmental goal",
-            "3. Joint Co-Parenting Assessment",
-            "4. Child-Focused Issues",
-            "5. Options & Resources",
-            "6. Conflict-Resolution Pathway",
+            "Joint Co-Parenting Assessment",
+            "Child-Focused Legal Issues",
+            "Options & Resources",
+            "Conflict Resolution Pathways",
             "SELECTED",
             "Safety Override",
-            "7. Professional Observation & Action Plan",
-            "90-Day Action Plan",
+            "Professional Legal Statement & Roadmap",
+            "30–90 Day Goals",
             "Fewer transition disputes",
-            "8. Concise Court / Referral Summary",
+            "Concise Court Summary",
             "Professional Certification",
         ]
         missing = [e for e in expected if e not in text]

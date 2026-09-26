@@ -130,10 +130,10 @@ def test_pdf_has_7_sections(flow):
     r = pro.get(f"{API}/cases/{rid}/professional-report/pdf")
     assert r.status_code == 200 and r.headers["content-type"].startswith("application/pdf")
     text = _pdf_text(r.content)
-    for h in ("1. Case & Assessment Snapshot", "2. Individual Parent Perspectives",
-              "3. Joint Co-Parenting Assessment", "4. Child-Focused Issues",
-              "5. Options & Resources", "6. Conflict-Resolution Pathway",
-              "7. Professional Observation & Action Plan"):
+    for h in ("Case & Assessment Overview", "Parent A Perspective", "Parent B Perspective",
+              "Joint Co-Parenting Assessment", "Child-Focused Legal Issues",
+              "Options & Resources", "Conflict Resolution Pathways",
+              "Legal Conflict & Agreement-Building Analysis", "Professional Legal Statement & Roadmap", "Concise Court Summary"):
         assert h in text, f"missing PDF heading: {h!r}; head={text[:400]!r}"
     assert "SELECTED" in text, "no SELECTED marker in PDF"
     assert "Homework routine" in text, "child-focus note missing from PDF"
@@ -171,9 +171,9 @@ def test_public_sample_pdf_7_headings():
     r = requests.get(f"{API}/joint/sample-legal-lens/pdf", timeout=30)
     assert r.status_code == 200 and r.headers["content-type"].startswith("application/pdf")
     text = _pdf_text(r.content)
-    for h in ("1. Case & Assessment Snapshot", "2. Individual Parent Perspectives",
-              "3. Joint Co-Parenting Assessment", "4. Child-Focused Issues",
-              "5. Options & Resources", "6. Conflict-Resolution Pathway",
-              "7. Professional Observation & Action Plan"):
+    for h in ("Case & Assessment Overview", "Parent A Perspective", "Parent B Perspective",
+              "Joint Co-Parenting Assessment", "Child-Focused Legal Issues",
+              "Options & Resources", "Conflict Resolution Pathways",
+              "Legal Conflict & Agreement-Building Analysis", "Professional Legal Statement & Roadmap", "Concise Court Summary"):
         assert h in text, f"sample PDF missing {h!r}"
     assert "SELECTED" in text

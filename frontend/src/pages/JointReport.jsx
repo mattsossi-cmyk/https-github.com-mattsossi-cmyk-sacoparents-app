@@ -15,8 +15,6 @@ import { ShareFoundation } from "@/components/ShareFoundation";
 const NO_REPORT = new Set(["agreement", "foundation"]);
 import { CompareView } from "@/components/CompareView";
 import { SampleWalkthrough } from "@/components/SampleWalkthrough";
-import { JointAiDraft } from "@/components/JointAiDraft";
-import { EvaluationEditor } from "@/components/EvaluationEditor";
 
 function Section({ num, title, children, testId }) {
   return (
@@ -186,21 +184,6 @@ export default function JointReport() {
         )}
 
         {ready && report && !NO_REPORT.has(detail.kind) && detail.is_creator && (
-          <JointAiDraft reportId={id} onChanged={() => api.get(`/joint/reports/${id}/report`).then((rr) => setReport(rr.data)).catch(() => {})} />
-        )}
-        {ready && report?.professional_evaluation && detail.is_creator && (
-          <section className="no-print mb-8 rounded-xl border border-border bg-white p-5" data-testid="joint-professional-evaluation">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold">Professional Evaluation (approved · {report.ai_model})</p>
-              <Button size="sm" variant="outline" className="gap-2" asChild data-testid="evaluation-pdf-btn">
-                <a href={`${process.env.REACT_APP_BACKEND_URL}/api/joint/reports/${id}/evaluation.pdf`} download><Printer className="h-4 w-4" /> Evaluation Report PDF</a>
-              </Button>
-            </div>
-            <EvaluationEditor fields={report.professional_evaluation} readOnly />
-          </section>
-        )}
-
-        {ready && report && !NO_REPORT.has(detail.kind) && detail.is_creator && (
           <div className="no-print flex gap-2 mb-4" role="tablist" data-testid="report-view-tabs">
             {[["compare", "Compare"], ["report", "Joint Report"]].map(([k, label]) => (
               <button key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setView(k)} className={`text-sm font-medium rounded-full px-4 py-2 border transition-colors ${view === k ? "bg-primary text-white border-primary" : "bg-white border-border hover:border-primary/50"}`} data-testid={`view-tab-${k}`}>{label}</button>
@@ -222,7 +205,6 @@ export default function JointReport() {
                 <p data-testid="joint-report-subject">Subject: <strong className="text-foreground">{report.subject_label}</strong></p>
                 <p data-testid="joint-report-participants">Participants: {report.parent_a_name} / {report.parent_b_name}</p>
                 <p data-testid="joint-report-date">{report.date}</p>
-                {report.ai_assisted && <p className="text-xs text-brand-purple font-medium" data-testid="joint-report-ai-badge">AI-assisted draft ({report.ai_model}) reviewed and approved by the case professional{report.ai_reviewed_by ? ` — ${report.ai_reviewed_by}` : ""}</p>}
               </div>
             </div>
 
