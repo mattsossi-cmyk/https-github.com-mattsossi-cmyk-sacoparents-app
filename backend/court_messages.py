@@ -66,7 +66,7 @@ class Threads:
 
     @staticmethod
     def public(m: dict) -> dict:
-        return {k: m.get(k) for k in ("id", "from_role", "from_name", "text", "at", "triage")}
+        return {k: m.get(k) for k in ("id", "from_role", "from_name", "text", "at", "triage", "urgent_alert_sent_at")}
 
     async def thread(self, ref_id: str) -> list[dict]:
         return await self.db.court_messages.find({"referral_id": ref_id}, {"_id": 0}).sort("at", 1).to_list(500)
@@ -86,15 +86,19 @@ class Threads:
             return pro.get("email"), "Professional", f"{self.app_url()}/dashboard#court-referrals"
         return ref.get("judge_email"), "Court", f"{self.app_url()}/court/case/{ref['id']}"
 
-    async def notify(self, ref: dict, user: dict, role: str, text: str) -> None:
+    async def notify(self, ref: dict, user: dict, role: str, text: str, triage: dict | None = None) -> str | None:
         to, to_role, link = await self._recipient(ref, role)
         if not to:
-            return
+            return None
+        urgent = role == "professional" and (triage or {}).get("category") == "urgent_safety"
+        subject = (f"URGENT — safety concern raised - Cause No. {ref.get('cause_number', '')}" if urgent else f"Court communication - Cause No. {ref.get('cause_number', '')}")
         try:
-            await self.send_email(to=to, case_id=ref.get("case_id") or ref["id"], kind="court_message", to_role=to_role, subject=f"Court communication - Cause No. {ref.get('cause_number', '')}",
-                                  html=_message_email_html(ref, user, role, text, link, self.email_from_name))
+            await self.send_email(to=to, case_id=ref.get("case_id") or ref["id"], kind="court_urgent_safety" if urgent else "court_message", to_role=to_role, subject=subject,
+                                  html=_message_email_html(ref, user, role, text, link, self.email_from_name, urgent))
         except Exception as exc:
             logger.warning("court message email failed: %s", exc)
+            return None
+        return "urgent" if urgent else "standard"
 
     async def post(self, ref: dict, user: dict, role: str, text: str) -> dict:
         text = (text or "").strip()[:4000]
@@ -108,7 +112,10 @@ class Threads:
         await self.db.court_referrals.update_one({"id": ref["id"]}, {"$set": {"communication_summary": summary}})
         if ref.get("case_id"):
             await self._audit(ref, user, role, msg["at"])
-        await self.notify(ref, user, role, text)
+        sent = await self.notify(ref, user, role, text, msg["triage"])
+        if sent == "urgent":
+            msg["urgent_alert_sent_at"] = _now()
+            await self.db.court_messages.update_one({"id": msg["id"]}, {"$set": {"urgent_alert_sent_at": msg["urgent_alert_sent_at"]}})
         return {"message": self.public(msg), "summary": summary}
 
     async def _audit(self, ref: dict, user: dict, role: str, at: str) -> None:
@@ -117,10 +124,12 @@ class Threads:
                                                 "at": at, "by": user["_id"], "by_name": user.get("name", ""), "by_role": "Court" if role == "court" else "Professional"})
 
 
-def _message_email_html(ref: dict, user: dict, role: str, text: str, link: str, email_from_name: str) -> str:
-    return ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+def _message_email_html(ref: dict, user: dict, role: str, text: str, link: str, email_from_name: str, urgent: bool = False) -> str:
+    banner = ('<div style="background:#b91c1c;color:#fff;padding:10px 14px;font-weight:bold;border-radius:6px;margin-bottom:12px">URGENT — SAFETY CONCERN RAISED BY THE ASSIGNED PROFESSIONAL<br>'
+              '<span style="font-weight:normal;font-size:12px">Flagged automatically from the message wording (advisory triage). Please review and respond in the Judicial Portal.</span></div>' if urgent else "")
+    return ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">' + banner +
             f"<p>New message from {escape(user.get('name', ''))} ({'the Court' if role == 'court' else 'assigned professional'}) regarding Cause No. {escape(ref.get('cause_number', ''))}:</p>"
-            f'<blockquote style="border-left:3px solid #5B2A86;margin:0;padding:8px 12px;color:#333">{escape(text)}</blockquote>'
+            f'<blockquote style="border-left:3px solid {"#b91c1c" if urgent else "#5B2A86"};margin:0;padding:8px 12px;color:#333">{escape(text)}</blockquote>'
             f'<p><a href="{link}" style="color:#5B2A86">Open the case</a></p>'
             f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>')
 

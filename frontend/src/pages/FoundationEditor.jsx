@@ -121,6 +121,10 @@ export default function FoundationEditor() {
               </section>
             ))}
             <FoundationAttachments />
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-white p-4" data-testid="foundation-listen-panel">
+              <div><p className="text-sm font-bold text-[#2f174f]">Hear it before you share it</p><p className="text-xs text-muted-foreground">Listening to your own words often reveals what sounds blaming or unclear. Read aloud in a calm voice; nothing is shared.</p></div>
+              <ListenButton text={STEPS.map((s) => `${s.title}. ${s.list ? (f[s.key] || []).filter(Boolean).join(". ") : (f[s.key] || "")}`).filter((t) => t.split(". ").slice(1).join("").trim()).join(" ")} label="Read my statement aloud" testId="foundation-listen-all" />
+            </div>
             <div className="flex justify-end"><Button onClick={() => save()} disabled={busy} data-testid="foundation-save-bottom-btn"><Save className="h-4 w-4 mr-1" /> {busy ? "Saving…" : "Save Foundation Statement"}</Button></div>
           </div>
         </div>
