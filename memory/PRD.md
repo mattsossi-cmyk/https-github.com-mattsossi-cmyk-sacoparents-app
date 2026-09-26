@@ -27,6 +27,74 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-26 — Iter221 · Guided Journey Resume + Recap
+
+Two quality-of-life follow-ons to iter220 the founder picked from
+Next Action Items. Both live inside `GuidedJourneyModal.jsx`.
+
+**🟢 P1 — Resume Where You Left Off**
+- New per-topic localStorage draft key
+  `sacoparents_guided_draft_${topic}` (14-day TTL). Written on every
+  parent send + on isFinal, cleared on Confirm-save.
+- On open, if a fresh draft exists we surface a resume prompt
+  (`guided-resume-${topic}`) INSTEAD of firing a new intro turn so
+  we don't burn a Claude call. Prompt shows the last saved timestamp
+  + step X of Y + count of saved answers. Three actions:
+    * `guided-resume-continue-${topic}` — hydrate all state from
+      the draft (history, answers, stepIndex, progress, isFinal,
+      saveKey, category, nextQuestion) and drop into the chat
+    * `guided-resume-restart-${topic}` — clear draft, fire intro
+    * `guided-resume-discard-${topic}` — clear draft, close modal
+
+**🟢 P1 — Guided Answer Recap**
+- Final scripted question is answered → composer swaps to a
+  "Save & review recap" button (`guided-save-${topic}`). Clicking
+  it flips to a plain-language recap card (`guided-recap-${topic}`)
+  showing every Q&A pair as a `guided-recap-item-${i}` card.
+- Recap header caption (`guided-recap-target-${topic}`) tells the
+  parent EXACTLY where their answers will land based on `save_key`:
+    * foundation_text → "Foundation Statement (a paragraph you can
+      save + print as PDF)"
+    * cop_assessment(_note) → "Co-parenting Assessment note
+      (attached to your Health Index)"
+    * align_record → "Align-Before-Agreement record (added to your
+      folder)"
+    * safety_ack → "Private Safety Check summary (kept on this
+      device)"
+- Footer swaps to `guided-recap-back-${topic}` (return to wizard
+  and edit) + `guided-recap-confirm-${topic}` (commit + clear
+  draft + close modal + call `onSave`).
+- Nothing is stored until Confirm. Cancelling from the recap does
+  NOT wipe the draft — the parent can leave, come back, resume,
+  and re-open the recap.
+
+**Bonus polish (from iter80 code-review comments)**
+- Transient error state now clears the moment the parent hits Send
+  again (was iter80 P2 nit — "error only clears on modal close").
+- Removed the dead `isQuestion` prop from coach bubbles.
+
+**Files touched**
+- `/app/frontend/src/pages/portal/portalStorage.js` — new
+  `GUIDED_DRAFT_KEY_PREFIX` + `GUIDED_DRAFT_TTL_MS` constants.
+- `/app/frontend/src/pages/portal/GuidedJourneyModal.jsx` —
+  rewritten (~460 lines). Added `readDraft`/`writeDraft`/`clearDraft`
+  helpers, resume-prompt state, recap-card state, auto-save effect.
+
+**Verified — smoke test @ 390×844**
+1. Fresh state → open modal → coach intro renders (no resume prompt)
+2. Answer Q1, close mid-flow → draft written to localStorage with
+   `answers=1, step=2/5`
+3. Reopen → resume prompt appears with correct timestamp + progress
+4. Click Continue → 5 messages restored, wizard resumes at Q2
+5. Answer Q2–Q5 → final state, "Save & review recap" button
+6. Click Save → recap card with 5 Q&A items + correct target caption
+   ("This will be added to your Foundation Statement…")
+7. Click Confirm & save → modal closes, foundation-text populated
+   with 1259-char summary starting "Foundation Statement (guided
+   draft)\n\nQ1: …"
+8. Draft cleared after Confirm. No horizontal overflow.
+
+
 ### 2026-02-26 — Iter220 · Guided Journey Chat Wizard
 
 Follow-on delta to iter218. Ships a one-question-at-a-time chat

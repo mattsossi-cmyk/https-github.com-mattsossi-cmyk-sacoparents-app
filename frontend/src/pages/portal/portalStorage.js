@@ -14,6 +14,12 @@ export const REASSESSMENT_KEY = "sacoparents_reassessments";
 export const SYNC_PENDING_KEY = "sacoparents_sync_pending";
 export const SAFETY_ACK_KEY = "sacoparents_safety_screen_ack";
 export const SAFETY_PLAN_KEY = "sacoparents_safety_plan";
+// Per-topic draft store for the Guided Journey chat wizard so parents
+// can resume a mid-wizard session on their next visit. Actual key at
+// runtime: `sacoparents_guided_draft_${topic}`. Drafts auto-expire after
+// GUIDED_DRAFT_TTL_MS (14 days) so we don't hand parents stale material.
+export const GUIDED_DRAFT_KEY_PREFIX = "sacoparents_guided_draft_";
+export const GUIDED_DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
 export const PRESETS = {
   late_handoff: {
