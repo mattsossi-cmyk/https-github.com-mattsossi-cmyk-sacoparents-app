@@ -101,6 +101,11 @@ export default function SacoparentsPortal() {
   const [shareCompleteLastUrl, setShareCompleteLastUrl] = useState("");
   // Guided-journey chat wizard state (iter220). One modal, six topics.
   const [guidedTopic, setGuidedTopic] = useState(null);
+  // Guided-drafts revision counter (iter222). Bumped whenever the
+  // modal persists a draft to localStorage, so the debounced PUT
+  // effect re-fires and pushes the fresh drafts up to portal_state
+  // for cross-device resume.
+  const [guidedDraftsRev, setGuidedDraftsRev] = useState(0);
 
   // Reassessment form state
   const [reassStage, setReassStage] = useState("30-Day Progress Review");
@@ -231,6 +236,22 @@ export default function SacoparentsPortal() {
           setSafetyPlan(s.safety_plan);
           writeJson(SAFETY_PLAN_KEY, s.safety_plan);
         }
+        // iter222 — hydrate guided drafts so a signed-in parent can
+        // resume a mid-wizard session on a new device.
+        if (s.guided_drafts && typeof s.guided_drafts === "object") {
+          try {
+            for (const [topic, snapshot] of Object.entries(s.guided_drafts)) {
+              if (snapshot && typeof snapshot === "object") {
+                window.localStorage.setItem(
+                  `sacoparents_guided_draft_${topic}`,
+                  JSON.stringify(snapshot)
+                );
+              }
+            }
+          } catch {
+            /* ignore quota / SSR */
+          }
+        }
         hasHydratedFromServerRef.current = true;
       } catch {
         hasHydratedFromServerRef.current = true;
@@ -256,6 +277,36 @@ export default function SacoparentsPortal() {
       }
       setSyncStatus("syncing");
       try {
+        // Collect the current guided-journey drafts from localStorage
+        // so the debounced PUT carries them up to portal_state for
+        // cross-device resume.
+        let guidedDrafts = null;
+        try {
+          const collected = {};
+          const topics = [
+            "foundation",
+            "coparenting",
+            "safety",
+            "medical",
+            "educational",
+            "psychological",
+          ];
+          for (const t of topics) {
+            const raw = window.localStorage.getItem(
+              `sacoparents_guided_draft_${t}`
+            );
+            if (raw) {
+              try {
+                collected[t] = JSON.parse(raw);
+              } catch {
+                /* skip malformed */
+              }
+            }
+          }
+          if (Object.keys(collected).length) guidedDrafts = collected;
+        } catch {
+          /* SSR / storage disabled */
+        }
         await api.put("/portal/state", {
           align_records: alignRecords,
           milestones,
@@ -267,6 +318,7 @@ export default function SacoparentsPortal() {
           reassessments,
           safety_ack: safetyAck,
           safety_plan: safetyPlan,
+          guided_drafts: guidedDrafts,
         });
         writeString(SYNC_PENDING_KEY, "");
         setSyncStatus("synced");
@@ -290,6 +342,7 @@ export default function SacoparentsPortal() {
     reassessments,
     safetyAck,
     safetyPlan,
+    guidedDraftsRev,
   ]);
 
   // Flush queued PUT when we come back online
@@ -918,6 +971,34 @@ export default function SacoparentsPortal() {
     }
   }, []);
 
+  // iter222 — download the Coparent Snapshot PDF built from a finished
+  // Guided Journey run. Called from GuidedJourneyModal's recap card.
+  const downloadGuidedSnapshot = useCallback(
+    async ({ topic, answers, safety_flagged }) => {
+      await downloadPdfFromApi(
+        "/portal/guided-snapshot-pdf",
+        `coparent-snapshot-${topic}.pdf`,
+        {
+          topic,
+          answers,
+          parent_name: user?.name || null,
+          case_ref: courtKey || null,
+          safety_flagged: !!safety_flagged,
+        }
+      );
+    },
+    [downloadPdfFromApi, user, courtKey]
+  );
+
+  // iter222 — fire when the guided modal writes/clears a localStorage
+  // draft. Bumping guidedDraftsRev re-triggers the debounced PUT
+  // effect, which reads all localStorage guided drafts and syncs
+  // them into portal_state.guided_drafts.
+  const onGuidedDraftPersist = useCallback(() => {
+    if (!user) return;
+    setGuidedDraftsRev((r) => r + 1);
+  }, [user]);
+
   // Share links
   const [shareStatus, setShareStatus] = useState({});
 
@@ -1507,6 +1588,8 @@ export default function SacoparentsPortal() {
           onClose={() => setGuidedTopic(null)}
           onSave={onGuidedSave}
           safetyFlagged={safetyFlagged}
+          onDownloadSnapshot={downloadGuidedSnapshot}
+          onDraftPersist={onGuidedDraftPersist}
         />
       )}
 

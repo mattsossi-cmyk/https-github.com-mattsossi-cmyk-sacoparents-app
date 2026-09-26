@@ -375,3 +375,51 @@ async def guided_journey_step(
         "save_key": script["save_key"],
         "category": script.get("category"),
     }
+
+
+
+# --------------------------------------------------------------------- #
+# iter222 · Voice Note transcription (whisper-1 via Emergent LLM Key)
+# --------------------------------------------------------------------- #
+async def transcribe_voice_note(audio_bytes: bytes, filename: str) -> str:
+    """Transcribe a short co-parent voice note into text via Whisper.
+
+    Takes the raw bytes of the audio (browser MediaRecorder → webm
+    typically) plus a filename hint so Whisper knows the container.
+    Nothing is persisted to disk — the bytes stay in memory and are
+    handed straight to the OpenAI SDK.
+
+    Returns the plain text on success, raises ValueError on empty
+    input, and lets any Whisper SDK exception bubble up for the
+    endpoint to translate into a 502.
+    """
+    if not audio_bytes:
+        raise ValueError("empty audio payload")
+
+    try:
+        from emergentintegrations.llm.openai import OpenAISpeechToText
+    except ImportError as exc:  # pragma: no cover - integration missing
+        raise RuntimeError("emergentintegrations not installed") from exc
+
+    key = os.getenv("EMERGENT_LLM_KEY")
+    if not key:
+        raise RuntimeError("EMERGENT_LLM_KEY not configured")
+
+    stt = OpenAISpeechToText(api_key=key)
+    import io
+
+    # OpenAISpeechToText.transcribe reads .name off the file-like to
+    # pick the correct multipart content-type. Give it something
+    # sensible so webm blobs from the browser stay webm.
+    stream = io.BytesIO(audio_bytes)
+    stream.name = filename or "voice_note.webm"
+
+    response = await stt.transcribe(
+        file=stream,
+        model="whisper-1",
+        response_format="json",
+        language="en",
+    )
+    text = getattr(response, "text", "") or ""
+    return text.strip()
+

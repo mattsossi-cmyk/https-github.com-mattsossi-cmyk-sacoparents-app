@@ -1039,3 +1039,149 @@ def build_portal_complete_report_pdf(
         _draw_text_block(pdf, text)
 
     return bytes(pdf.output(dest="S"))
+
+
+
+# --------------------------------------------------------------------- #
+# iter222 · Coparent Snapshot PDF — the "print this and stick it on the
+# fridge, or forward it to your mediator" one-pager built from a finished
+# Guided Journey wizard run.
+# --------------------------------------------------------------------- #
+_TOPIC_LABELS = {
+    "foundation": "Foundation Statement Snapshot",
+    "coparenting": "Co-parenting Assessment Snapshot",
+    "safety": "Private Safety Check Snapshot",
+    "medical": "Medical Needs Snapshot",
+    "educational": "Educational Snapshot",
+    "psychological": "Psychological Snapshot",
+}
+_TOPIC_INTRO = {
+    "foundation": (
+        "A child-first anchor built from your guided conversation. Return to "
+        "it whenever emotions get hot."
+    ),
+    "coparenting": (
+        "A plain-language summary of where your co-parenting is strong and "
+        "where you'd like more support."
+    ),
+    "safety": (
+        "A private summary of your last Safety Check. Keep this on your "
+        "device — never share it with your co-parent."
+    ),
+    "medical": (
+        "A one-page snapshot of your child's medical picture — providers, "
+        "appointments, medications, priorities."
+    ),
+    "educational": (
+        "A one-page snapshot of your child's schooling — programs, "
+        "supports, upcoming milestones."
+    ),
+    "psychological": (
+        "A one-page snapshot of your child's mental-health picture — "
+        "clinicians, plans, observations."
+    ),
+}
+
+
+def build_portal_guided_snapshot_pdf(
+    *,
+    topic: str,
+    answers: List[Dict[str, str]],
+    author_name: Optional[str] = None,
+    case_ref: Optional[str] = None,
+    safety_flagged: bool = False,
+    generated_at: Optional[datetime] = None,
+) -> bytes:
+    """Render a finished Guided Journey wizard as a shareable PDF.
+
+    Layout: header chip + big title + intro paragraph + one Q&A card
+    per answered question. Footer disclaimer is inherited from the
+    shared ``_PortalPDF`` chassis so every guided snapshot lines up
+    visually with the other portal artefacts.
+    """
+    if topic not in _TOPIC_LABELS:
+        raise ValueError(f"unknown topic: {topic}")
+    if not isinstance(answers, list):
+        raise ValueError("answers must be a list")
+
+    when = generated_at or datetime.now(timezone.utc)
+    label = _TOPIC_LABELS[topic]
+    pdf = _PortalPDF(title=label)
+    pdf.alias_nb_pages()
+    pdf.add_page()
+
+    _draw_chip(pdf, "Guided Journey Snapshot")
+    pdf.set_text_color(*_PURPLE_INK)
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.cell(0, 9, _safe(label), ln=1)
+
+    pdf.set_text_color(*_SLATE_MUTED)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.multi_cell(0, 4.5, _safe(_TOPIC_INTRO.get(topic, "")))
+    pdf.ln(3)
+
+    _draw_meta_row(pdf, "Generated", when.strftime("%B %d, %Y"))
+    _draw_meta_row(pdf, "Case Reference", case_ref or "Self-Guided Parent Journey")
+    if author_name:
+        _draw_meta_row(pdf, "Parent", author_name)
+    if safety_flagged:
+        _draw_meta_row(pdf, "Communication Style", "Grey-rock voice (safety flagged)")
+    pdf.ln(3)
+
+    if not answers:
+        _draw_empty_state(
+            pdf,
+            "No answers captured yet — reopen the Guided chat from your "
+            "Coparenting Journey toolkit to complete the wizard.",
+        )
+        return bytes(pdf.output(dest="S"))
+
+    _draw_h2(pdf, "Your answers")
+
+    inner_w = pdf.w - pdf.l_margin - pdf.r_margin
+    pad = 4
+    for i, qa in enumerate(answers, start=1):
+        question = str(qa.get("question", "") or "").strip()
+        answer = str(qa.get("answer", "") or "").strip()
+        if not question and not answer:
+            continue
+
+        # Measure card height first (split_only) so we can draw the wash.
+        pdf.set_font("Helvetica", "", 10)
+        q_lines = pdf.multi_cell(
+            inner_w - pad * 2, 5, _safe(question), split_only=True
+        )
+        pdf.set_font("Helvetica", "", 11)
+        a_lines = pdf.multi_cell(
+            inner_w - pad * 2, 5.5, _safe(answer), split_only=True
+        )
+        card_h = pad * 2 + 5 + max(len(q_lines), 1) * 5 + max(len(a_lines), 1) * 5.5 + 3
+
+        # Auto page break check — jump if this card would spill.
+        if pdf.get_y() + card_h > pdf.page_break_trigger:
+            pdf.add_page()
+
+        x, y = pdf.l_margin, pdf.get_y()
+        pdf.set_fill_color(*_PURPLE_WASH)
+        pdf.set_draw_color(*_PURPLE_ACCENT)
+        pdf.set_line_width(0.2)
+        pdf.rect(x, y, inner_w, card_h, style="DF")
+
+        pdf.set_xy(x + pad, y + pad)
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.set_text_color(*_PURPLE_ACCENT)
+        pdf.cell(0, 4, _safe(f"Q{i}"), ln=1)
+
+        pdf.set_x(x + pad)
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(*_SLATE_MUTED)
+        pdf.multi_cell(inner_w - pad * 2, 5, _safe(question))
+
+        pdf.set_x(x + pad)
+        pdf.set_font("Helvetica", "", 11)
+        pdf.set_text_color(*_PURPLE_INK)
+        pdf.multi_cell(inner_w - pad * 2, 5.5, _safe(answer))
+
+        pdf.ln(3)
+
+    return bytes(pdf.output(dest="S"))

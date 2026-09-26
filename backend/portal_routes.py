@@ -146,6 +146,7 @@ def _empty_portal_state() -> Dict[str, Any]:
         "reassessments": [],
         "safety_ack": None,
         "safety_plan": None,
+        "guided_drafts": None,
         "updated_at": None,
     }
 
@@ -164,6 +165,10 @@ class PortalStatePayload(BaseModel):
     # can iterate on the client without a schema migration.
     safety_ack: Optional[Dict[str, Any]] = None
     safety_plan: Optional[Dict[str, Any]] = None
+    # Guided Journey draft sync (iter222). Map: topic -> snapshot the
+    # frontend GuidedJourneyModal writes on every parent-send so a
+    # signed-in parent can resume a mid-wizard session on a new device.
+    guided_drafts: Optional[Dict[str, Any]] = None
 
 
 @router.get("/state")
@@ -224,6 +229,54 @@ def _sanitize_safety_plan(raw: Optional[Dict[str, Any]]) -> Optional[Dict[str, A
     return out
 
 
+_GUIDED_TOPICS = {
+    "foundation",
+    "coparenting",
+    "safety",
+    "medical",
+    "educational",
+    "psychological",
+}
+
+
+def _sanitize_guided_drafts(
+    raw: Optional[Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
+    """Whitelist Guided Journey draft snapshots for cross-device resume.
+
+    Draft snapshots are opaque JSON the client owns. We cap per-topic
+    payload size (~12 KB) and only accept known topic keys so a bad
+    client can't push runaway blobs into the parent's record. Passing
+    ``None`` (or an empty dict) clears every draft.
+    """
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        return None
+    out: Dict[str, Any] = {}
+    for topic, snapshot in raw.items():
+        if topic not in _GUIDED_TOPICS:
+            continue
+        if not isinstance(snapshot, dict):
+            continue
+        # Truncate history / answers arrays defensively (each guided
+        # topic maxes out at ~10 turns so 40 is a very safe ceiling).
+        hist = snapshot.get("history")
+        answers = snapshot.get("answers")
+        if isinstance(hist, list):
+            snapshot["history"] = hist[:40]
+        if isinstance(answers, list):
+            snapshot["answers"] = answers[:40]
+        # Enforce total per-topic byte cap after truncation.
+        import json as _json
+
+        serialized = _json.dumps(snapshot, default=str)
+        if len(serialized) > 12_000:
+            continue
+        out[topic] = snapshot
+    return out or None
+
+
 @router.put("/state")
 async def put_state(
     payload: PortalStatePayload,
@@ -277,6 +330,8 @@ async def put_state(
         updates["safety_ack"] = _sanitize_safety_ack(updates["safety_ack"])
     if "safety_plan" in updates:
         updates["safety_plan"] = _sanitize_safety_plan(updates["safety_plan"])
+    if "guided_drafts" in updates:
+        updates["guided_drafts"] = _sanitize_guided_drafts(updates["guided_drafts"])
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
 
     await db[_PORTAL_COLLECTION].update_one(
@@ -330,6 +385,109 @@ async def guided_journey_step_endpoint(
         raise HTTPException(
             status_code=502, detail="Coach is warming up — please try again."
         )
+
+
+# --------------------------------------------------------------------- #
+# iter222 · Coparent Snapshot PDF — one-page shareable summary of a
+# finished Guided Journey wizard run.
+# --------------------------------------------------------------------- #
+class GuidedSnapshotPdfBody(BaseModel):
+    topic: str = Field(
+        pattern="^(foundation|safety|coparenting|medical|educational|psychological)$"
+    )
+    answers: List[Dict[str, str]] = Field(default_factory=list)
+    parent_name: Optional[str] = None
+    case_ref: Optional[str] = None
+    safety_flagged: bool = False
+
+
+@router.post("/guided-snapshot-pdf")
+async def guided_snapshot_pdf(body: GuidedSnapshotPdfBody) -> Response:
+    """Stream a one-page Coparent Snapshot PDF from a guided run.
+
+    Public — same auth tier as the other portal PDF endpoints so a
+    parent can download without an account.
+    """
+    try:
+        pdf_bytes = portal_pdf.build_portal_guided_snapshot_pdf(
+            topic=body.topic,
+            answers=body.answers,
+            author_name=body.parent_name,
+            case_ref=body.case_ref,
+            safety_flagged=bool(body.safety_flagged),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    filename = f"coparent-snapshot-{body.topic}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+# --------------------------------------------------------------------- #
+# iter222 · Voice Note transcription (Whisper via Emergent LLM Key)
+# --------------------------------------------------------------------- #
+from fastapi import UploadFile, File
+
+_MAX_VOICE_BYTES = 25 * 1024 * 1024  # Whisper's 25 MB hard cap
+_ALLOWED_VOICE_TYPES = {
+    "audio/webm",
+    "audio/ogg",
+    "audio/mp4",
+    "audio/mpeg",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/m4a",
+    "audio/x-m4a",
+    # Some browsers (Safari) omit the codecs suffix
+    "audio/mp3",
+}
+
+
+@router.post("/voice-transcribe")
+async def voice_transcribe(
+    request: Request,
+    audio: UploadFile = File(...),
+) -> Dict[str, Any]:
+    """Transcribe a short parent voice note to text via Whisper.
+
+    Multipart upload from the browser MediaRecorder. Nothing is stored
+    on disk — the bytes go straight to Whisper and are dropped. Rate
+    limited via the shared BIFF/guided-journey quota so a bad client
+    can't burn Whisper credits.
+    """
+    ip = _client_ip(request)
+    await _rate_guard(ip)
+
+    if audio.content_type and audio.content_type not in _ALLOWED_VOICE_TYPES:
+        # Chromium sometimes stamps "audio/webm;codecs=opus" — allow it.
+        if not audio.content_type.startswith(tuple(_ALLOWED_VOICE_TYPES)):
+            raise HTTPException(
+                status_code=415,
+                detail=f"Unsupported audio type: {audio.content_type}",
+            )
+
+    data = await audio.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty audio payload")
+    if len(data) > _MAX_VOICE_BYTES:
+        raise HTTPException(status_code=413, detail="Audio too large (25 MB max)")
+
+    try:
+        text = await portal_ai.transcribe_voice_note(
+            data, filename=audio.filename or "voice_note.webm"
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("voice transcription failed: %s", exc)
+        raise HTTPException(
+            status_code=502,
+            detail="Voice transcription unavailable — please try typing instead.",
+        )
+    return {"text": text}
 
 
 @router.post("/biff-refine")

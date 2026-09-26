@@ -99,6 +99,8 @@ export function GuidedJourneyModal({
   onClose,
   onSave,
   safetyFlagged = false,
+  onDownloadSnapshot,
+  onDraftPersist,
 }) {
   // Conversation history: array of {role: 'coach'|'parent', text}
   const [history, setHistory] = useState([]);
@@ -118,6 +120,12 @@ export function GuidedJourneyModal({
   const [resumePrompt, setResumePrompt] = useState(null);
   // iter221 — recap card shown after Save & continue on the final step.
   const [showRecap, setShowRecap] = useState(false);
+  // iter222 — hold-to-record voice input state.
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const audioStreamRef = useRef(null);
   const scrollRef = useRef(null);
 
   const runIntroTurn = useCallback(async () => {
@@ -199,6 +207,9 @@ export function GuidedJourneyModal({
       category,
       nextQuestion,
     });
+    if (typeof onDraftPersist === "function") {
+      onDraftPersist();
+    }
   }, [
     open,
     resumePrompt,
@@ -212,6 +223,7 @@ export function GuidedJourneyModal({
     saveKey,
     category,
     nextQuestion,
+    onDraftPersist,
   ]);
 
   const applyDraft = useCallback((draft) => {
@@ -228,15 +240,17 @@ export function GuidedJourneyModal({
 
   const startFresh = useCallback(() => {
     clearDraft(topic);
+    if (typeof onDraftPersist === "function") onDraftPersist();
     setResumePrompt(null);
     runIntroTurn();
-  }, [topic, runIntroTurn]);
+  }, [topic, runIntroTurn, onDraftPersist]);
 
   const discardDraftAndClose = useCallback(() => {
     clearDraft(topic);
+    if (typeof onDraftPersist === "function") onDraftPersist();
     setResumePrompt(null);
     onClose();
-  }, [topic, onClose]);
+  }, [topic, onClose, onDraftPersist]);
 
   const submitAnswer = useCallback(async () => {
     const trimmed = input.trim();
@@ -303,8 +317,113 @@ export function GuidedJourneyModal({
 
   const commitSave = useCallback(() => {
     clearDraft(topic);
+    if (typeof onDraftPersist === "function") onDraftPersist();
     onSave({ save_key: saveKey, category, answers, summary });
-  }, [topic, answers, saveKey, category, onSave, summary]);
+  }, [topic, answers, saveKey, category, onSave, summary, onDraftPersist]);
+
+  // iter222 — download the Coparent Snapshot PDF from the recap card.
+  const [snapshotBusy, setSnapshotBusy] = useState(false);
+  const downloadSnapshot = useCallback(async () => {
+    if (typeof onDownloadSnapshot !== "function") return;
+    setSnapshotBusy(true);
+    try {
+      await onDownloadSnapshot({
+        topic,
+        answers,
+        safety_flagged: !!safetyFlagged,
+      });
+    } finally {
+      setSnapshotBusy(false);
+    }
+  }, [onDownloadSnapshot, topic, answers, safetyFlagged]);
+
+  // iter222 — hold-to-record voice note via MediaRecorder → Whisper.
+  // We store the transcript into the composer input so the parent can
+  // review + edit before sending — no auto-submit.
+  const startRecording = useCallback(async () => {
+    if (recording || transcribing || loading) return;
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+      setError("Voice input isn't supported on this device.");
+      return;
+    }
+    setError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioStreamRef.current = stream;
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/webm";
+      const rec = new MediaRecorder(stream, { mimeType });
+      audioChunksRef.current = [];
+      rec.addEventListener("dataavailable", (e) => {
+        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
+      });
+      rec.addEventListener("stop", async () => {
+        try {
+          const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          audioChunksRef.current = [];
+          if (audioStreamRef.current) {
+            audioStreamRef.current.getTracks().forEach((t) => t.stop());
+            audioStreamRef.current = null;
+          }
+          // Guard: ignore ultra-short taps (<300 ms of audio ≈ <8 KB).
+          if (blob.size < 4000) return;
+          setTranscribing(true);
+          const fd = new FormData();
+          fd.append("audio", blob, "voice_note.webm");
+          const { data } = await api.post("/portal/voice-transcribe", fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          const text = (data && data.text) || "";
+          if (text) {
+            setInput((prev) => (prev ? prev + " " + text : text));
+          } else {
+            setError("Didn't catch that — try recording again or type instead.");
+          }
+        } catch (err) {
+          setError("Voice transcription failed — please type instead.");
+        } finally {
+          setTranscribing(false);
+        }
+      });
+      rec.start();
+      mediaRecorderRef.current = rec;
+      setRecording(true);
+    } catch (err) {
+      setError("Microphone access denied — please type instead.");
+    }
+  }, [recording, transcribing, loading]);
+
+  const stopRecording = useCallback(() => {
+    const rec = mediaRecorderRef.current;
+    if (rec && rec.state !== "inactive") {
+      rec.stop();
+    }
+    mediaRecorderRef.current = null;
+    setRecording(false);
+  }, []);
+
+  // Safety net: stop any active recording when the modal closes.
+  useEffect(() => {
+    if (open) return;
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch {
+        /* noop */
+      }
+    }
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((t) => t.stop());
+      audioStreamRef.current = null;
+    }
+    setRecording(false);
+    setTranscribing(false);
+  }, [open]);
 
   if (!open) return null;
 
@@ -517,6 +636,20 @@ export function GuidedJourneyModal({
                   Nothing has been saved yet — tap Confirm to store your
                   answers, or go back to edit.
                 </div>
+                {typeof onDownloadSnapshot === "function" && (
+                  <button
+                    type="button"
+                    data-testid={`guided-recap-snapshot-${topic}`}
+                    onClick={downloadSnapshot}
+                    disabled={snapshotBusy}
+                    className="w-full py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs disabled:opacity-40"
+                  >
+                    <i className="fa-solid fa-file-arrow-down mr-1"></i>
+                    {snapshotBusy
+                      ? "Preparing snapshot…"
+                      : "Download Coparent Snapshot PDF"}
+                  </button>
+                )}
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -576,16 +709,57 @@ export function GuidedJourneyModal({
                       submitAnswer();
                     }
                   }}
-                  placeholder={loading ? "…" : "Type your answer"}
-                  disabled={loading}
+                  placeholder={
+                    transcribing
+                      ? "Transcribing…"
+                      : recording
+                      ? "Recording… release to send"
+                      : loading
+                      ? "…"
+                      : "Type your answer or hold the mic"
+                  }
+                  disabled={loading || transcribing}
                   className="flex-1 p-2 border border-slate-300 rounded-lg text-xs resize-none"
                   maxLength={4000}
                 />
                 <button
                   type="button"
+                  data-testid={`guided-mic-${topic}`}
+                  onMouseDown={startRecording}
+                  onMouseUp={stopRecording}
+                  onMouseLeave={recording ? stopRecording : undefined}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    startRecording();
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    stopRecording();
+                  }}
+                  disabled={loading || transcribing}
+                  aria-label="Hold to record voice note"
+                  title="Hold to record — release to transcribe"
+                  className={
+                    recording
+                      ? "py-2 px-3 bg-rose-600 text-white rounded-lg font-bold text-xs shrink-0 animate-pulse"
+                      : "py-2 px-3 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-700 rounded-lg font-bold text-xs shrink-0 border border-slate-300"
+                  }
+                >
+                  <i
+                    className={
+                      transcribing
+                        ? "fa-solid fa-spinner fa-spin"
+                        : recording
+                        ? "fa-solid fa-stop"
+                        : "fa-solid fa-microphone"
+                    }
+                  ></i>
+                </button>
+                <button
+                  type="button"
                   data-testid={`guided-send-${topic}`}
                   onClick={submitAnswer}
-                  disabled={!input.trim() || loading}
+                  disabled={!input.trim() || loading || transcribing}
                   className="py-2 px-3 bg-purple-800 hover:bg-purple-900 disabled:opacity-40 text-white rounded-lg font-bold text-xs shrink-0"
                 >
                   <i className="fa-solid fa-paper-plane"></i>
