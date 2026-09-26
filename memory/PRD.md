@@ -749,3 +749,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Tests: `tests/test_iter80_public_listing.py`; full suite 386 passed / 1 skipped.
 - 2026-06 follow-up: `ListedProsTeaser.jsx` on landing (first 3 listed pros + Find a Professional button; hidden when none listed); shared `PublicProCard.jsx`; live "Preview — how your public card will look" inside `PublicListingCard.jsx` edit panel. Frontend-only; verified by screenshot.
 - OPEN: user asked for Joint Report to be based on "old Gemini code we had provided" — no such spec exists in /app; awaiting user paste. Joint Report remains rule-based (`joint_engine.py`).
+
+## 2026-06 — Gemini Joint Report (review-gated) + listing admin + referral distance + share link
+- `backend/joint_ai.py`: Gemini 3.1 Pro (Emergent key, LlmChat) drafts narrative fields (alignment_statements, differences, child_needs, alignment_paragraph, conversation, questions, next_steps) from both parents' answers. Stored on case as `ai_joint_draft {status draft|approved, fields, model, reviewed_*}`. Endpoints (creator only): GET/POST/PUT `/api/joint/reports/{rid}/ai-joint-draft`, POST `.../approve`, `.../discard`. `effective_joint_report()` overlays approved fields (adds `ai_assisted`, `ai_model`, `ai_reviewed_by`) and now backs all joint-report consumers (screen, PDF, session prep, court view/packet, Legal Lens prefill). Rule-based engine remains default/fallback. UI: `JointAiDraft.jsx` on /joint/:id for creators; badge on published report.
+- Admin "Public Listings" tab (`AdminListings.jsx`): GET `/api/admin/public-listings`, POST `/api/admin/public-listings/{id}/hide {hidden, reason}`; hidden listings excluded from public directory; professional sees hidden notice.
+- Referral stores `professional_zip` + `professional_distance_miles`; shown in judge Case Overview and referral email.
+- Share link: GET `/api/public/professionals/{id}`, route `/find-a-professional/:proId`, "Copy share link" button.
+- Tests: `tests/test_iter81_ai_joint_listing_admin.py`; full suite 389 passed / 1 skipped (one transient reload 503 rerun green).

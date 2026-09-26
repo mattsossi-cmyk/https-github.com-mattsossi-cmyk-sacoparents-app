@@ -21,7 +21,7 @@ from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_pay
 from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS, AGREEMENT_SECTIONS, new_case_code
 from agreement_ai import draft_agreement_clauses, answers_signature
-from joint_engine import SAMPLE_SCENARIOS, generate_joint_report, generate_agreement, sample_mediation_report, sample_report, sample_list
+from joint_engine import SAMPLE_SCENARIOS, generate_agreement, sample_mediation_report, sample_report, sample_list
 
 
 from sample_professional_report import sample_judicial_case, sample_professional_report
@@ -32,6 +32,7 @@ from auth_utils import hash_password, verify_password
 from email_utils import send_email, EMAIL_FROM_NAME
 from starlette.middleware.cors import CORSMiddleware
 from auth import get_current_user, is_pro, require_approved_professional
+from joint_ai import effective_joint_report as generate_joint_report
 from joint_helpers import get_joint_report_doc, report_role, invite_expired, _pending_public, joint_public, InviteSpec, _invite_email_content, send_invite_email, create_invitation, _actor_label
 import auth, admin_routes, integrations, cron_jobs
 
@@ -1861,6 +1862,8 @@ from tts import build_router as _build_tts_router  # noqa: E402
 app.include_router(_build_tts_router(db), prefix="/api")
 from public_listing import build_router as _build_public_listing_router  # noqa: E402
 app.include_router(_build_public_listing_router(db, get_current_user), prefix="/api")
+from joint_ai import build_router as _build_joint_ai_router  # noqa: E402
+app.include_router(_build_joint_ai_router(db, get_current_user, get_joint_report_doc), prefix="/api")
 
 
 @app.get("/health")

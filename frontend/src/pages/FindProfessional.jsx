@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Search } from "lucide-react";
 import api from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
@@ -8,14 +8,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function FindProfessional() {
+  const { proId } = useParams();
+  const [one, setOne] = useState(null);
   const [data, setData] = useState(null);
   const [zip, setZip] = useState("");
   const [q, setQ] = useState("");
 
   useEffect(() => {
+    if (!proId) { setOne(null); return; }
+    api.get(`/public/professionals/${proId}`).then((r) => setOne(r.data)).catch(() => setOne({ missing: true }));
+  }, [proId]);
+
+  useEffect(() => {
+    if (proId) return undefined;
     const t = setTimeout(() => api.get("/public/professionals", { params: { zip: zip.trim(), q } }).then((r) => setData(r.data)).catch(() => setData({ professionals: [], count: 0, note: "" })), 250);
     return () => clearTimeout(t);
-  }, [zip, q]);
+  }, [zip, q, proId]);
+
+  if (proId) {
+    return (
+      <div className="min-h-screen bg-background" data-testid="find-professional-single-page">
+        <header className="bg-white border-b border-border"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
+          <Link to="/find-a-professional" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground shrink-0" data-testid="find-pro-single-back-link"><ArrowLeft className="h-4 w-4" /> All professionals</Link><BrandLogo size="text-xl" /><span /></div></header>
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
+          {!one ? <p className="text-muted-foreground">Loading…</p> : one.missing ? <p className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground" data-testid="find-pro-single-missing">This professional is not currently listed.</p>
+            : <ul><PublicProCard p={one} testId="find-pro-single-card" /></ul>}
+          <p className="mt-8 text-xs text-muted-foreground">Listing on SA CoParents Align is voluntary and indicates an approved account; it is not an endorsement, referral, or recommendation.</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background" data-testid="find-professional-page">

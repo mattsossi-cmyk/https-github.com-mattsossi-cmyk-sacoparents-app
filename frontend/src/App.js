@@ -94,6 +94,7 @@ function App() {
             <Route path="/methodology" element={<Methodology />} />
             <Route path="/professionals" element={<Protected><Professionals /></Protected>} />
             <Route path="/find-a-professional" element={<FindProfessional />} />
+            <Route path="/find-a-professional/:proId" element={<FindProfessional />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <footer className="py-4 text-center text-xs text-muted-foreground" data-testid="copyright-footer">

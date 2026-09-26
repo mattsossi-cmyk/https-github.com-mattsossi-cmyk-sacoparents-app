@@ -15,6 +15,7 @@ import { ShareFoundation } from "@/components/ShareFoundation";
 const NO_REPORT = new Set(["agreement", "foundation"]);
 import { CompareView } from "@/components/CompareView";
 import { SampleWalkthrough } from "@/components/SampleWalkthrough";
+import { JointAiDraft } from "@/components/JointAiDraft";
 
 function Section({ num, title, children, testId }) {
   return (
@@ -184,6 +185,10 @@ export default function JointReport() {
         )}
 
         {ready && report && !NO_REPORT.has(detail.kind) && detail.is_creator && (
+          <JointAiDraft reportId={id} onChanged={() => api.get(`/joint/reports/${id}/report`).then((rr) => setReport(rr.data)).catch(() => {})} />
+        )}
+
+        {ready && report && !NO_REPORT.has(detail.kind) && detail.is_creator && (
           <div className="no-print flex gap-2 mb-4" role="tablist" data-testid="report-view-tabs">
             {[["compare", "Compare"], ["report", "Joint Report"]].map(([k, label]) => (
               <button key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setView(k)} className={`text-sm font-medium rounded-full px-4 py-2 border transition-colors ${view === k ? "bg-primary text-white border-primary" : "bg-white border-border hover:border-primary/50"}`} data-testid={`view-tab-${k}`}>{label}</button>
@@ -205,6 +210,7 @@ export default function JointReport() {
                 <p data-testid="joint-report-subject">Subject: <strong className="text-foreground">{report.subject_label}</strong></p>
                 <p data-testid="joint-report-participants">Participants: {report.parent_a_name} / {report.parent_b_name}</p>
                 <p data-testid="joint-report-date">{report.date}</p>
+                {report.ai_assisted && <p className="text-xs text-brand-purple font-medium" data-testid="joint-report-ai-badge">AI-assisted draft ({report.ai_model}) reviewed and approved by the case professional{report.ai_reviewed_by ? ` — ${report.ai_reviewed_by}` : ""}</p>}
               </div>
             </div>
 

@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import AliasChoices, BaseModel, Field
 
 from joint_data import new_case_code
-from joint_engine import generate_joint_report
+from joint_ai import effective_joint_report as generate_joint_report
 from geo import zip_distance_miles
 from coparenting_tiers import TIERS, clean_library, framework_block, joint_findings, level_history, suggested_score, tier_for
 from pdf_report import build_joint_pdf, build_professional_statement_pdf, merge_pdfs
@@ -440,7 +440,7 @@ def _shared(db, get_current_user, app_url, send_email, email_from_name, logger, 
 
     def referral_public(x: dict) -> dict:
         out = {k: x.get(k) for k in ("id", "judge_name", "judge_email", "court_name", "cause_number", "subject", "child_initials", "parent_a_name", "parent_a_email",
-                                     "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at", "hearing_date", "case_code", "communication_summary", "parties_zip")}
+                                     "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at", "hearing_date", "case_code", "communication_summary", "parties_zip", "professional_zip", "professional_distance_miles")}
         out["overdue"] = hearing_overdue(x)
         out["requested_reports"] = [{"key": k, "label": REPORT_TYPES[k][0], "subjects": REPORT_TYPES[k][1]} for k in (x.get("requested_reports") or []) if k in REPORT_TYPES]
         return out
@@ -480,7 +480,7 @@ def _judge_routes(c: Ctx) -> APIRouter:
     @r.post("/court-dashboard/referrals")
     async def create_referral(body: ReferralIn, user=Depends(get_current_user)):
         await require_judge(user)
-        pro = await db.users.find_one({"_id": body.professional_id, "approved": True, "role": {"$in": ["professional", "admin"]}}, {"name": 1, "email": 1})
+        pro = await db.users.find_one({"_id": body.professional_id, "approved": True, "role": {"$in": ["professional", "admin"]}}, {"name": 1, "email": 1, "profile": 1})
         if not pro:
             raise HTTPException(status_code=404, detail="Professional not found or not approved")
         if not body.cause_number.strip():
@@ -499,18 +499,24 @@ def _judge_routes(c: Ctx) -> APIRouter:
 
 def _new_referral(body: ReferralIn, user: dict, pro: dict) -> dict:
     reports = _valid_reports(body.requested_reports)
+    parties_zip = body.parties_zip.strip()[:10]
     return {"id": str(uuid.uuid4()), "judge_id": user["_id"], "judge_name": user.get("name", ""), "judge_email": user["email"].lower(),
+            "professional_zip": ((pro.get("profile") or {}).get("zip") or "")[:10], "professional_distance_miles": zip_distance_miles((pro.get("profile") or {}).get("zip", ""), parties_zip) if parties_zip else None,
             "court_name": body.court_name.strip()[:160] or (user.get("profile") or {}).get("organization", ""), "cause_number": body.cause_number.strip()[:80],
             "subject": body.subject or "communication", "child_initials": body.child_initials.strip()[:10], "parent_a_name": body.parent_a_name.strip()[:120],
             "parent_a_email": body.parent_a_email.strip().lower()[:200], "parent_b_name": body.parent_b_name.strip()[:120], "parent_b_email": body.parent_b_email.strip().lower()[:200],
-            "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "requested_reports": reports, "parties_zip": body.parties_zip.strip()[:10], "professional_id": pro["_id"], "professional_name": pro.get("name", ""),
+            "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "requested_reports": reports, "parties_zip": parties_zip, "professional_id": pro["_id"], "professional_name": pro.get("name", ""),
             "status": "pending", "created_at": _iso(_now()), "case_code": new_case_code(next((REPORT_TYPES[k][1][0] for k in reports if REPORT_TYPES[k][1]), "co_parenting"))}
 
 
 def _referral_email_html(ref: dict, pro: dict, app_url, email_from_name: str) -> str:
+    zip_line = ""
+    if ref.get("parties_zip"):
+        dist = ref.get("professional_distance_miles")
+        zip_line = f"<p>Parties' ZIP: <strong>{escape(ref['parties_zip'])}</strong>" + (f" — about {dist} miles from your practice ZIP {escape(ref.get('professional_zip') or '')}." if dist is not None else ".") + "</p>"
     return ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
             f"<p>Hi {escape(pro.get('name', ''))},</p><p><strong>{escape(ref['judge_name'])}</strong> ({escape(ref['court_name'] or 'court')}) has referred a co-parenting matter to you "
-            f"(Cause No. {escape(ref['cause_number'])}). Accept it in your dashboard to invite both parents; the Joint Report and your Professional Statement return to the court through Align.</p>"
+            f"(Cause No. {escape(ref['cause_number'])}). Accept it in your dashboard to invite both parents; the Joint Report and your Professional Statement return to the court through Align.</p>{zip_line}"
             f'<p><a href="{app_url()}/dashboard" style="color:#5B2A86">Open Court Referrals</a></p>'
             f'<p style="font-size:12px;color:#888">Sent by {escape(email_from_name)}.</p></td></tr></table>')
 

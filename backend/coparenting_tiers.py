@@ -1,5 +1,5 @@
 """Co-Parenting Ability Level (1-10 scale) → tier library used ONLY in the Professional Report (professional + court)."""
-from joint_engine import generate_joint_report
+from joint_ai import effective_joint_report as generate_joint_report
 
 TIERS = {
     1: {"key": "high_risk", "range": (1, 3), "label": "Level 1-3: High Risk / IPV / Severe Conflict", "color": "#dc2626", "safety_alert": True,

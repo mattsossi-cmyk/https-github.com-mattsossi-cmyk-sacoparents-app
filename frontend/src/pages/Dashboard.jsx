@@ -27,6 +27,7 @@ import { UpcomingCheckIns } from "@/components/UpcomingCheckIns";
 import { ReferralInbox } from "@/components/ReferralInbox";
 import { ProZipPrompt } from "@/components/ProZipPrompt";
 import { PublicListingCard } from "@/components/PublicListingCard";
+import { AdminListings } from "@/components/AdminListings";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -402,6 +403,7 @@ export default function Dashboard() {
               <TabsTrigger value="approved" data-testid="admin-tab-approved">Approved Professionals</TabsTrigger>
               <TabsTrigger value="judges" data-testid="admin-tab-judges">Judges</TabsTrigger>
               <TabsTrigger value="providers" data-testid="admin-tab-providers">Provider Directory</TabsTrigger>
+              <TabsTrigger value="listings" data-testid="admin-tab-listings">Public Listings</TabsTrigger>
             </TabsList>
             <TabsContent value="invite"><InviteProfessional /></TabsContent>
             <TabsContent value="pending">
@@ -468,6 +470,7 @@ export default function Dashboard() {
           </section>
             </TabsContent>
             <TabsContent value="approved"><AdminProfessionals /></TabsContent>
+            <TabsContent value="listings"><AdminListings /></TabsContent>
             <TabsContent value="judges"><AdminJudges /></TabsContent>
             <TabsContent value="providers"><AdminProviders /></TabsContent>
           </Tabs>

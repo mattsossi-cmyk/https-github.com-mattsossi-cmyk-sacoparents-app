@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Globe, ExternalLink } from "lucide-react";
+import { Globe, ExternalLink, Link as LinkIcon } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -38,10 +38,12 @@ export const PublicListingCard = () => {
         <Globe className="h-5 w-5 shrink-0 text-accent" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">{state.listed ? "You're listed on sacoparentsalign.com" : "Get listed on sacoparentsalign.com"}</p>
+          {state.hidden && <p className="text-xs font-medium text-red-700" data-testid="public-listing-hidden-notice">Your listing is currently hidden by the administrator{state.hidden_reason ? `: ${state.hidden_reason}` : ""}. Update your details to request a review.</p>}
           <p className="text-xs text-muted-foreground">{state.listed ? "Parents and courts can find you in the public Find a Professional directory." : "Let parents and courts find you in the public Find a Professional directory. Voluntary — you can un-list at any time."}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {state.listed && <Link to="/find-a-professional" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline" data-testid="public-listing-view-link">View listing <ExternalLink className="h-3 w-3" /></Link>}
+          {state.listed && !state.hidden && <Button variant="outline" size="sm" onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/find-a-professional/${user.id}`); toast.success("Share link copied"); }} data-testid="public-listing-copy-link-btn"><LinkIcon className="h-4 w-4" /> Copy share link</Button>}
           <Button variant="outline" size="sm" onClick={() => setEdit((v) => !v)} data-testid="public-listing-edit-btn">{edit ? "Cancel" : state.listed ? "Edit details" : "Preview & add details"}</Button>
           {state.listed
             ? <Button variant="outline" size="sm" onClick={() => save(false)} disabled={busy} data-testid="public-listing-unlist-btn">Un-list me</Button>

@@ -59,6 +59,7 @@ export function CaseOverview({ x, d, hearing }) {
         <Field label="Cause Number" value={x.cause_number} testId="court-overview-cause" />
         <Field label="SA CoParents Case ID" value={x.case_code} testId="court-overview-case-id" />
         <Field label="Assigned Professional" value={x.professional_name} testId="court-overview-pro" />
+        <Field label="Parties' ZIP" value={x.parties_zip ? `${x.parties_zip}${x.professional_distance_miles != null ? ` · professional ≈ ${x.professional_distance_miles} mi away` : ""}` : ""} testId="court-overview-zip" />
         <Field label="Court" value={x.court_name} />
         <Field label="Child" value={x.child_initials} />
         <Field label="Stage" value={d?.stage?.label || x.stage?.label} testId="court-overview-stage" />
