@@ -1,0 +1,31 @@
+{
+  "summary": "Iter220 Guided Journey Chat wizard — end-to-end verification of the new one-question-at-a-time chat modal across all six topics + regression on the PDF endpoints. Backend: created /app/backend/tests/test_iter220_guided_journey.py (16/16 pytest passing @ 17s) covering (1) intro turn for all six topics returns scripted intro + first_question + correct total_steps (foundation:5, safety:3, coparenting:5, medical:4, educational:4, psychological:4) + save_key mapping, (2) follow-up turn advances step_number and returns coach_message + next_question, (3) final turn flips is_final=true with next_question=None and correct category='Medical' for align_record topics, (4) grey-rock voice: safety_flagged=true reply is <=45 words and contains no 'thanks' token, (5) 422 on bad topic, (6) out-of-bounds step_index is 200/400 (not 500), (7) rate-limit hits 429 within 45 rapid calls (40/hr per-IP), (8) all four PDF endpoints (foundation-pdf, legal-report-pdf, weekly-progress-pdf, complete-report-pdf) still stream application/pdf with %PDF magic bytes. Frontend @ 390x844: portal-crisis-strip visible above bottom-nav; door-parent-journey + door-court-path both render; bottom-nav with nav-doors/nav-report/nav-biff/nav-print all visible. First-visit door-parent-journey click opens modal-safety-screen. UNSAFE path (phys-no + coerce-no + device-yes) renders safety-flagged-card with continue-anyway CTA — clicking continue lands on screen-parent-journey (not blocked). All six toolkit-guided-{foundation|medical|coparenting|safety|educational|psychological} pills visible. Opening toolkit-guided-foundation while safety_flagged=true shows the 'Grey-rock' badge (bg-slate-900) instead of 'Guided' (bg-purple-100); coach intro renders as guided-msg-coach-0 within ~2s. SAFE path — full 5-question foundation flow: progress bar advances 20%→40%→60%→80%→100% exactly on schedule, guided-save-foundation + guided-discard-foundation swap in on final step, clicking Save closes the modal and writes the Q&A summary into the foundation-text textarea (verified starts with 'Foundation Statement (guided draft)\\n\\nQ1: What matters most for your child right now?...'). close-guided-foundation dismisses the modal without persisting; reopening starts fresh (2 initial messages: coach intro + first question). Zero horizontal overflow at 390x844 throughout guided-chat flow. Regression: PDF endpoints all 200/application/pdf.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter220_guided_journey.py",
+    "/app/test_reports/pytest/iter220_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "portal_ai._GUIDED_SCRIPTS['coparenting'].save_key = 'cop_assessment_note' — the review_request enumerates save_key as one of {'foundation_text','cop_assessment','safety_ack','align_record'}. The frontend onGuidedSave handler in SacoparentsPortal.jsx (line 884) matches on 'cop_assessment_note' so this works end-to-end, but the request-spec drift should be reconciled (rename to 'cop_assessment' in both places OR update the spec).",
+    "portal_routes._rate_guard is shared between BIFF, guided-journey, share-mint, verify — burning the guided-journey 40/hr quota during pytest also blocks BIFF for the same IP for 1h. Consider a separate bucket for guided-journey (chat wizards emit ~5 calls per session so the ceiling gets hit fast in QA). Not a correctness bug; only impacts test-agent workflow (I had to restart backend once).",
+    "GuidedJourneyModal.jsx line 78 pushes the intro message and the first question as two separate coach bubbles both keyed 'coach-0' / 'coach-1' via array index — fine for display but the second bubble's `isQuestion` flag is unused (dead prop). Cosmetic.",
+    "SacoparentsPortal.jsx has grown to ~1710 lines. The iter79 reviewer already flagged this at ~1567 lines — iter220 added ~140 more lines of guided-journey handlers. Please extract useGuidedJourney() and usePortalShare() hooks before the next feature iteration.",
+    "GuidedJourneyModal error state ('Coach is warming up — please close and try again.') only clears when the modal is closed and re-opened. When a mid-flow LLM 502 happens the parent sees the error but the composer is still enabled — a retry click will not clear the toast. Minor UX polish."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter220_guided_journey.py (new)"
+  ],
+  "success_rate": {"backend": "100% (16/16)", "frontend": "100% (all iter220 acceptance criteria verified)"},
+  "test_credentials": "Not required — /api/portal/guided-journey/step is public and anonymous.",
+  "seed_data_creation": "Frontend test seeded/cleared localStorage sacoparents_safety_screen_ack to toggle flagged vs safe paths. No Mongo seed data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test_iter220_guided_journey.py is the reusable regression suite for the guided-journey endpoint + PDF regressions. Note the rate-limit test burns the 40/hr per-IP quota — running it back-to-back with a manual Playwright session will 429; either restart backend (`sudo supervisorctl restart backend`) or wait 1h. All six topic save_keys and category mappings are enumerated at the top of the file for easy extension. Frontend GuidedJourneyModal testids follow the pattern modal-guided-{topic} / guided-msg-{role}-{index} / guided-input-{topic} / guided-send-{topic} / guided-save-{topic} / guided-discard-{topic} / close-guided-{topic} / guided-progress-{topic}.",
+  "rca of the issue": "N/A — no bugs found. One caveat surfaced during testing: hitting the guided-journey rate limit also blocks BIFF from the same IP (shared _rate_guard bucket in portal_routes.py:99). Not a correctness issue but flagged under code review comments."
+}
