@@ -23,7 +23,14 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
-  const [profile, setProfile] = useState({ phone: "", organization: "", pro_role: "", city: "", state: "", zip: "", license_number: "", website: "" });
+  const [profile, setProfile] = useState({ phone: "", organization: "", pro_role: "", city: "", state: "", zip: "", license_number: "", website: "", credential_type: "" });
+  const proInvite = search.get("pi") || "";
+  const [credTypes, setCredTypes] = useState([]);
+  useEffect(() => {
+    if (!proInvite) return;
+    api.get(`/auth/pro-invite/${proInvite}`).then((r) => { setName(r.data.name || ""); setEmail(r.data.email || ""); setProfile((p) => ({ ...p, zip: r.data.zip || "", pro_role: r.data.profession || p.pro_role })); setCredTypes(r.data.credential_types || []); setMode("register"); })
+      .catch(() => toast.error("This invitation link is no longer valid"));
+  }, [proInvite]);
   const [agreed, setAgreed] = useState(false);
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -58,7 +65,7 @@ export default function Auth() {
       if (mode === "login") {
         await login(email, password);
       } else if (mode === "register") {
-        await register({ name, email, password, role, invite: inviteToken, agreements_accepted: agreed, ...profile });
+        await register({ name, email, password, role, invite: inviteToken, pro_invite: proInvite, agreements_accepted: agreed, ...profile });
       } else if (mode === "forgot") {
         await api.post("/auth/forgot-password", { email });
         setMode("reset");
@@ -167,6 +174,13 @@ export default function Auth() {
                     <Label htmlFor="zip">ZIP code</Label>
                     <Input id="zip" className="h-12" maxLength={10} value={profile.zip} onChange={(e) => setProfile({ ...profile, zip: e.target.value })} placeholder="78205" data-testid="zip-input" />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="credential-type">Credential type</Label>
+                  <select id="credential-type" className="w-full h-12 rounded-md border border-input bg-white px-3 text-sm" value={profile.credential_type} onChange={(e) => setProfile({ ...profile, credential_type: e.target.value })} data-testid="credential-type-select">
+                    <option value="">Select…</option>
+                    {(credTypes.length ? credTypes : ["Licensed Attorney (State Bar)", "LPC / LMFT / LCSW (Texas BHEC)", "Licensed Psychologist", "Certified Mediator", "Parenting Facilitator / Coordinator", "Other credential"]).map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="license">License, certification, or State Bar number (when applicable)</Label>

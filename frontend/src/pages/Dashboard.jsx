@@ -15,6 +15,10 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AdminProfessionals } from "@/components/AdminProfessionals";
 import { AdminJudges } from "@/components/AdminJudges";
 import { AdminProviders } from "@/components/AdminProviders";
+import { InviteProfessional } from "@/components/InviteProfessional";
+import { PendingCredentialActions } from "@/components/PendingCredentialActions";
+import { CredentialUpload } from "@/components/CredentialUpload";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CourtReferralsInbox } from "@/components/CourtReferralsInbox";
 import { ForcePasswordChange } from "@/components/ForcePasswordChange";
 import { ParentRequestStatus } from "@/components/ParentRequestStatus";
@@ -386,8 +390,18 @@ export default function Dashboard() {
         )}
 
         {user?.role === "admin" && (
+          <Tabs defaultValue="invite" className="mb-6" data-testid="admin-tabs">
+            <TabsList className="flex flex-wrap h-auto gap-1 bg-white border border-border p-1">
+              <TabsTrigger value="invite" data-testid="admin-tab-invite">Invite Professional</TabsTrigger>
+              <TabsTrigger value="pending" data-testid="admin-tab-pending">Pending Credentials{pendingPros.length ? <span className="ml-1 rounded-full bg-align-yellow px-1.5 text-[10px] font-bold text-black">{pendingPros.length}</span> : null}</TabsTrigger>
+              <TabsTrigger value="approved" data-testid="admin-tab-approved">Approved Professionals</TabsTrigger>
+              <TabsTrigger value="judges" data-testid="admin-tab-judges">Judges</TabsTrigger>
+              <TabsTrigger value="providers" data-testid="admin-tab-providers">Provider Directory</TabsTrigger>
+            </TabsList>
+            <TabsContent value="invite"><InviteProfessional /></TabsContent>
+            <TabsContent value="pending">
           <section className="bg-white border-2 border-align-yellow/50 rounded-lg p-6 mb-6" data-testid="admin-approvals-section">
-            <h2 className="text-lg font-semibold">Pending Professional Approvals</h2>
+            <h2 className="text-lg font-semibold">Pending Credentials &amp; Approvals</h2>
             {pendingPros.length === 0 ? (
               <p className="text-sm text-muted-foreground mt-2" data-testid="admin-approvals-empty">No professionals awaiting approval.</p>
             ) : (
@@ -404,6 +418,7 @@ export default function Dashboard() {
                       </dl>
                       {p.profile?.website && <a href={p.profile.website} target="_blank" rel="noreferrer" className="text-xs text-align-teal underline mt-1 inline-block" data-testid={`pending-pro-website-${p.id}`}>{p.profile.website}</a>}
                       {p.created_at && <p className="text-[11px] text-muted-foreground mt-1">Registered {new Date(p.created_at).toLocaleDateString()}</p>}
+                      <PendingCredentialActions pro={p} onAccepted={(id) => setPendingPros((prev) => prev.filter((x) => x.id !== id))} />
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <div className="flex gap-2">
@@ -446,11 +461,14 @@ export default function Dashboard() {
               )}
             </div>
           </section>
+            </TabsContent>
+            <TabsContent value="approved"><AdminProfessionals /></TabsContent>
+            <TabsContent value="judges"><AdminJudges /></TabsContent>
+            <TabsContent value="providers"><AdminProviders /></TabsContent>
+          </Tabs>
         )}
 
-        {user?.role === "admin" && <AdminProfessionals />}
-        {user?.role === "admin" && <AdminJudges />}
-        {user?.role === "admin" && <AdminProviders />}
+        {isPro && user?.role === "professional" && <CredentialUpload user={user} />}
 
         {connections.length > 0 && (
           <div data-testid="connections-section">

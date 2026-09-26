@@ -108,6 +108,8 @@ class RegisterIn(BaseModel):
     license_number: str = ""
     website: str = ""
     zip: str = ""
+    credential_type: str = ""
+    pro_invite: str = ""
 
 
 class LoginIn(BaseModel):
@@ -141,6 +143,7 @@ def _professional_profile(body: RegisterIn) -> dict:
         "license_number": body.license_number.strip(),
         "website": body.website.strip(),
         "zip": body.zip.strip()[:10],
+        "credential_type": body.credential_type.strip()[:80],
     }
 
 
@@ -189,6 +192,9 @@ async def register(body: RegisterIn, response: Response):
             if not user["profile"].get("organization"):
                 user["profile"]["organization"] = inv.get("court_name", "")
             await db.court_invites.update_one({"email": email}, {"$set": {"status": "registered", "registered_at": user["created_at"]}})
+    if role == "professional" and body.pro_invite.strip():
+        from pro_invites import consume_invite
+        await consume_invite(body.pro_invite.strip(), user)
     await db.users.insert_one(user)
     if role in ("professional", "judge") and not FIXTURE_EMAIL_RE.search(email):
         await _notify_admin_new_professional(user)

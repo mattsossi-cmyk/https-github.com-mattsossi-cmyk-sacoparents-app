@@ -9,6 +9,7 @@ import { AdminAddProfessional } from "@/components/AdminAddProfessional";
 export function AdminProfessionals() {
   const [pros, setPros] = useState([]);
   const [q, setQ] = useState("");
+  const [zipQ, setZipQ] = useState("");
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState("");
@@ -48,7 +49,7 @@ export function AdminProfessionals() {
   };
 
   const needle = q.trim().toLowerCase();
-  const shown = pros.filter((p) => !needle || [p.name, p.email, p.profile?.organization, p.profile?.license_number].some((v) => (v || "").toLowerCase().includes(needle)));
+  const shown = pros.filter((p) => (!needle || [p.name, p.email, p.profile?.organization, p.profile?.license_number, p.profile?.city].some((v) => (v || "").toLowerCase().includes(needle))) && (!zipQ.trim() || (p.profile?.zip || "").startsWith(zipQ.trim())));
   const verifiedCount = pros.filter((p) => p.credentials_verified).length;
 
   return (
@@ -65,6 +66,7 @@ export function AdminProfessionals() {
         <div className="mt-4">
           <div className="flex flex-wrap items-center gap-3">
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, organization or license" className="max-w-md" data-testid="admin-professionals-search" />
+            <Input value={zipQ} onChange={(e) => setZipQ(e.target.value)} placeholder="ZIP" maxLength={10} className="w-28" data-testid="admin-professionals-zip" />
             <AdminAddProfessional onAdded={(p) => setPros((prev) => [...prev, p].sort((a, b) => a.name.localeCompare(b.name)))} />
           </div>
           <ul className="mt-3 space-y-2" data-testid="admin-professionals-list">

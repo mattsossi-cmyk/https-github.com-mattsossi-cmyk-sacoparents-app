@@ -1831,6 +1831,8 @@ async def api_health():
 
 api.include_router(auth.router)
 api.include_router(admin_routes.router)
+import pro_invites as _pro_invites  # noqa: E402
+api.include_router(_pro_invites.router)
 api.include_router(integrations.router)
 api.include_router(cron_jobs.router)
 app.include_router(api)
