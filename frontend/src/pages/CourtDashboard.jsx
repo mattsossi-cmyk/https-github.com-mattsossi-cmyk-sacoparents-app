@@ -10,6 +10,7 @@ import { ReferCaseForm } from "@/components/ReferCaseForm";
 import { CourtThread } from "@/components/CourtThread";
 import { HearingDate } from "@/components/CourtCaseCard";
 import { CaseSidebar, CaseOverview, ParentStatus, ReportsAvailable, PortalCard, HowItWorks } from "@/components/JudgePortal";
+import { WorkflowGuide } from "@/components/WorkflowGuide";
 
 const STATUS = {
   sent: ["New", "bg-align-yellow/30 text-yellow-900"],
@@ -96,6 +97,7 @@ export default function CourtDashboard() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-6 py-8">
+        <div className="mb-6"><WorkflowGuide kind="judge" /></div>
         {active ? (
           <>
             <button type="button" onClick={back} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground" data-testid="court-back-btn"><ArrowLeft className="h-4 w-4" /> Back to portal</button>

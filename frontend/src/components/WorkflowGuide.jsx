@@ -3,6 +3,13 @@ import { ChevronDown, ChevronUp, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const GUIDES = {
+  judge: { title: "How to use the Judicial Case Review Portal", steps: [
+    ["Refer a case", "Use Refer Case: cause number, parties' emails and the professional. Both parents are invited privately; you never see raw parent answers."],
+    ["Track status", "The case list shows each parent's assessment status and when the Joint Report and Professional Report are ready. Set a hearing date to get reminders."],
+    ["Read the frozen packet", "Every submission is hash-sealed (SHA-256) and versioned. The Court Packet PDF holds the Professional Statement, Joint Report and any explicitly attached reports."],
+    ["Read the Professional Report", "Neutral: alignment levels (1–10), individual and joint scale tables, child-focused issues, options and pathways. It contains no custody recommendation, diagnosis or credibility finding."],
+    ["Check safety first", "Gold Safety Override cards mean family-violence indicators exist; agreements then follow a Parallel Parenting structure and a one-page order summary is available."],
+    ["Message the professional", "Use the case thread for procedural questions; messages are logged to the case record."]] },
   legal_lens: { title: "Before you start the Professional Alignment Report", steps: [
     ["Review the sources", "Read both parents' assessments, both Family Violence screenings and the Joint Report. Raw parent answers stay private — you summarize them neutrally."],
     ["Check safety first", "Record the risk screening and decide whether a joint process is appropriate. Safety findings override ordinary co-parenting recommendations."],

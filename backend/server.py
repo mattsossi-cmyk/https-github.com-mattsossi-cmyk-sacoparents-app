@@ -465,6 +465,23 @@ async def create_joint_report(body: JointReportIn, user=Depends(get_current_user
     return {**joint_public(doc, user), "invitation": {"id": inv["id"], "code": inv["code"], "link": invite_link(inv["token"]), "invitee_email": inv["invitee_email"], "status": "pending"}}
 
 
+@api.post("/joint/reports/{rid}/safety-case")
+async def start_safety_case(rid: str, user=Depends(get_current_user)):
+    """One-click Family Violence / Safety assessment case for the same parents when a safety screen is flagged."""
+    doc = await get_joint_report_doc(rid, user)
+    if doc.get("created_by") != user["_id"]:
+        raise HTTPException(status_code=403, detail="Only the professional on this case can start a safety assessment")
+    p = doc.get("participants") or {}
+    if not (p.get("a", {}).get("email") and p.get("b", {}).get("email")):
+        raise HTTPException(status_code=400, detail="Both parents must be on the case before starting a safety assessment")
+    body = ProJointReportIn(subject="safety", subjects=["safety", "risk", "safety_communication", "safeguards"], child_name=doc.get("child_name") or "Child",
+                            parent_a_name=p["a"].get("name") or "Parent A", parent_a_email=p["a"]["email"], parent_b_name=p["b"].get("name") or "Parent B", parent_b_email=p["b"]["email"],
+                            case_reference=f"Safety pathway from {doc.get('case_code') or rid[:8]}", court_referral_id=doc.get("court_referral_id") or "")
+    created = await create_pro_joint_report(body, user)
+    await db.joint_reports.update_one({"id": rid}, {"$set": {"safety_case_id": created["id"]}})
+    return created
+
+
 @api.post("/joint/reports/professional")
 async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_current_user)):
     require_approved_professional(user, "Only professional accounts can create reports for two parents")

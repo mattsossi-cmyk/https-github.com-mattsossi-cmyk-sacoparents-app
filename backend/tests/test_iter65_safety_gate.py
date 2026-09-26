@@ -76,3 +76,17 @@ def test_parallel_plan_summary_only_with_override() -> None:
     pro.post(f"{API}/joint/reports/{rid}/submit-to-court", json={"attest": True})
     cd = judge.get(f"{API}/court-dashboard/cases/{ref['id']}").json()
     assert judge.get(f"{API}/court-dashboard/packets/{cd['statement']['packet_id']}/parallel-plan.pdf").status_code == 404
+
+
+def test_safety_case_auto_start() -> None:
+    judge, pro, ref, case = _flow()
+    rid = case["id"]
+    pa, pb = complete_both(API, pro, rid, case["invitations"])
+    r = pro.post(f"{API}/joint/reports/{rid}/safety-case")
+    assert r.status_code == 200, r.text[:200]
+    sc = r.json()
+    assert sc["is_safety"] is True and "Safety" in sc["subject_label"]
+    assert {i["invitee_email"] for i in sc["invitations"]} == {i["invitee_email"] for i in case["invitations"]}
+    det = pro.get(f"{API}/joint/reports/{rid}").json()
+    assert det["safety_case_id"] == sc["id"]
+    assert pa.post(f"{API}/joint/reports/{rid}/safety-case").status_code == 403
