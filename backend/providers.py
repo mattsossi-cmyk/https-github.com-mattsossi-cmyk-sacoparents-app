@@ -96,6 +96,19 @@ def build_router(db, get_current_user) -> APIRouter:
         fname = f"sa-coparents-provider-directory-{datetime.now(timezone.utc).strftime('%Y-%m-%d')}.csv"
         return Response(content="\ufeff" + buf.getvalue(), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="{fname}"'})
 
+    @r.get("/court-dashboard/providers")
+    async def court_directory(user=Depends(get_current_user)):
+        """Read-only provider directory for judges: contact details + last freshness-check date; never internal notes."""
+        if user.get("role") != "judge" or not user.get("approved"):
+            raise HTTPException(status_code=403, detail="Judicial access required")
+        rows = await db.providers.find({"active": {"$ne": False}}, {"_id": 0}).sort("specialty", 1).to_list(500)
+        out = []
+        for p in rows:
+            checks = ((p.get("verification") or {}).get("checks") or {})
+            out.append({**public(p), "organization": p.get("organization", ""), "phone": p.get("phone", ""), "email": p.get("email", ""), "website": p.get("website", ""),
+                        "last_verified_at": p.get("last_verified_at"), "contact_verified": bool(checks) and all(c.get("match") for c in checks.values() if c.get("found")) and any(c.get("found") for c in checks.values())})
+        return {"providers": out, "note": "Provider details are maintained by SA CoParents Align administrators and re-verified against public sources. Listing is informational only and is not a court endorsement."}
+
     @r.post("/admin/providers")
     async def create(body: ProviderIn, user=Depends(get_current_user)):
         admin(user)

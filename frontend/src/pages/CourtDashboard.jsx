@@ -13,6 +13,7 @@ import { CaseSidebar, CaseOverview, ParentStatus, ReportsAvailable, PortalCard, 
 import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { UrgentMessages } from "@/components/UrgentMessages";
 import { UrgentSmsSettings } from "@/components/UrgentSmsSettings";
+import { CourtDirectory } from "@/components/CourtDirectory";
 
 const STATUS = {
   sent: ["New", "bg-align-yellow/30 text-yellow-900"],
@@ -102,6 +103,7 @@ export default function CourtDashboard() {
         <div className="mb-6"><WorkflowGuide kind="judge" /></div>
         <UrgentMessages onOpen={(refId) => { setActive(null); setSelected(refId); window.location.hash = "thread"; }} />
         <UrgentSmsSettings />
+        <CourtDirectory />
         {active ? (
           <>
             <button type="button" onClick={back} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground" data-testid="court-back-btn"><ArrowLeft className="h-4 w-4" /> Back to portal</button>
