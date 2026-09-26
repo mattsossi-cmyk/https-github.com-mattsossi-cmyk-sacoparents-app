@@ -428,6 +428,11 @@ async def weekly_progress_pdf(body: WeeklyProgressPdfBody) -> Response:
 # --------------------------------------------------------------------- #
 _SHARES_COLLECTION = "portal_pdf_shares"
 _SHARE_TTL_DAYS = 30
+_ALLOWED_TTL_DAYS = {7, 30}
+
+# Reuse the auth password-hash context so we don't ship a second crypto
+# dependency. bcrypt is fine for a short passphrase.
+from auth import pwd_ctx as _pwd_ctx  # noqa: E402
 
 # Public origin the short URL is built against. Prefers request scheme+host
 # so preview / prod / custom-domain deployments all Just Work; falls back
@@ -463,6 +468,11 @@ class SharePayload(BaseModel):
     artefact_type: str = Field(pattern="^(foundation|legal|weekly)$")
     # Reuse the same body shape as the direct-download endpoints.
     payload: Dict[str, Any] = Field(default_factory=dict)
+    # Optional passphrase — if set, the recipient must supply it via
+    # `?p=<passphrase>` on the fetch URL. Max 40 chars is a UX choice,
+    # not a security ceiling (bcrypt truncates at 72 bytes anyway).
+    passphrase: Optional[str] = Field(default=None, max_length=40)
+    ttl_days: Optional[int] = Field(default=None, ge=1, le=90)
 
 
 @router.post("/share")
@@ -470,9 +480,7 @@ async def create_share_link(body: SharePayload, request: Request) -> Dict[str, A
     """Persist the payload used to generate a portal PDF and mint a
     signed short URL. Rate limited (shares the BIFF/verify quota).
 
-    Returns `{share_id, url, expires_at}`. The URL is public — anyone
-    with the id can regenerate the PDF, so callers should treat it like
-    a share-token, not a secret.
+    Returns `{share_id, url, expires_at, requires_passphrase}`.
     """
     ip = _client_ip(request)
     await _rate_guard(ip)
@@ -487,9 +495,13 @@ async def create_share_link(body: SharePayload, request: Request) -> Dict[str, A
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
+    ttl_days = body.ttl_days if body.ttl_days in _ALLOWED_TTL_DAYS else _SHARE_TTL_DAYS
+    passphrase = (body.passphrase or "").strip()
+    passphrase_hash = _pwd_ctx.hash(passphrase[:72]) if passphrase else None
+
     share_id = secrets.token_urlsafe(10)
     now = datetime.now(timezone.utc)
-    expires_at = now + timedelta(days=_SHARE_TTL_DAYS)
+    expires_at = now + timedelta(days=ttl_days)
 
     db = request.app.state.db
     await db[_SHARES_COLLECTION].insert_one(
@@ -501,6 +513,8 @@ async def create_share_link(body: SharePayload, request: Request) -> Dict[str, A
             "expires_at": expires_at.isoformat(),
             "revoked_at": None,
             "hit_count": 0,
+            "passphrase_hash": passphrase_hash,
+            "ttl_days": ttl_days,
         }
     )
 
@@ -508,6 +522,8 @@ async def create_share_link(body: SharePayload, request: Request) -> Dict[str, A
         "share_id": share_id,
         "url": f"{_share_origin(request)}/api/portal/share/{share_id}.pdf",
         "expires_at": expires_at.isoformat(),
+        "requires_passphrase": bool(passphrase_hash),
+        "ttl_days": ttl_days,
     }
 
 
@@ -540,12 +556,71 @@ def _regenerate_share_pdf(artefact_type: str, payload: Dict[str, Any]) -> bytes:
     raise ValueError(f"Unknown artefact_type: {artefact_type}")
 
 
+_PASSPHRASE_GATE_HTML = """<!doctype html>
+<html><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Enter passphrase - sacoparentsapp.online</title>
+<style>
+  :root { --purple:#4A1A6E; --accent:#6D28D9; --wash:#F4EFFF; --ink:#1A1330; --slate:#64748B; }
+  body { font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:#F1F5F9; margin:0; padding:0; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; }
+  .card { max-width: 400px; width: calc(100% - 32px); background:#fff;
+    border-radius: 20px; padding: 28px; box-shadow: 0 10px 40px rgba(29,20,60,0.15);
+    border: 1px solid #E5E0EE; }
+  .brand { color: var(--purple); font-weight: 700; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  h1 { color: var(--ink); font-size: 20px; margin: 0 0 8px 0; }
+  p { color: var(--slate); font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
+  input { width: 100%; padding: 12px 14px; border: 2px solid #E5E0EE; border-radius: 12px;
+    font-size: 15px; font-family: ui-monospace,Menlo,Consolas,monospace;
+    letter-spacing: 2px; box-sizing: border-box; }
+  input:focus { outline: none; border-color: var(--accent); }
+  button { margin-top: 12px; width: 100%; padding: 12px 14px; border: 0;
+    background: var(--purple); color: white; font-weight: 700; font-size: 14px;
+    border-radius: 12px; cursor: pointer; }
+  button:hover { background: #3D1360; }
+  .err { color: #B91C1C; font-size: 12px; margin-top: 8px; font-weight: 600; }
+  .foot { color: var(--slate); font-size: 10px; text-align:center; margin-top:20px; }
+</style></head>
+<body>
+  <form class="card" method="GET">
+    <div class="brand">sacoparentsapp.online</div>
+    <h1>Passphrase required</h1>
+    <p>The parent who shared this link protected it with a passphrase. Enter it below to view the PDF.</p>
+    <input type="text" name="p" placeholder="Passphrase" autofocus autocomplete="off"/>
+    {{ERROR_BLOCK}}
+    <button type="submit">Open PDF</button>
+    <div class="foot">SA CoParents Assessment &amp; Alignment Portal</div>
+  </form>
+</body></html>"""
+
+
+def _passphrase_gate_html(*, error: bool) -> str:
+    err_block = (
+        '<div class="err">That passphrase did not match. Try again.</div>'
+        if error else ""
+    )
+    return _PASSPHRASE_GATE_HTML.replace("{{ERROR_BLOCK}}", err_block)
+
+
 @router.get("/share/{share_id}.pdf")
-async def fetch_share_pdf(share_id: str, request: Request) -> Response:
-    """Regenerate and stream the PDF a share link points to."""
+async def fetch_share_pdf(
+    share_id: str,
+    request: Request,
+    p: Optional[str] = None,
+) -> Response:
+    """Regenerate and stream the PDF a share link points to.
+
+    If the share is passphrase-protected, `?p=<passphrase>` must be
+    supplied (and match) — otherwise the response is a small HTML
+    gateway page (200 OK, text/html) asking the recipient to enter it.
+    """
     db = request.app.state.db
-    # Very lax id shape so we don't over-validate — the sha-256 lookup
-    # is the real gate. But block obvious bad inputs so we can 404 fast.
+    # Very lax id shape so we don't over-validate — the collection
+    # lookup is the real gate. But block obvious bad inputs so we can
+    # 404 fast.
     if not share_id or len(share_id) > 32 or not share_id.replace("-", "").replace("_", "").isalnum():
         raise HTTPException(status_code=404, detail="Share not found")
 
@@ -566,6 +641,31 @@ async def fetch_share_pdf(share_id: str, request: Request) -> Response:
             raise
         except Exception:  # noqa: BLE001 - corrupt expiry => fail closed
             raise HTTPException(status_code=410, detail="Share expired")
+
+    # Passphrase gate — if the share has a hash, the recipient must
+    # supply the matching passphrase via ?p=<...>. When missing we
+    # serve a friendly HTML form (200 OK). When wrong we serve the
+    # same form with an error message.
+    passphrase_hash = doc.get("passphrase_hash")
+    if passphrase_hash:
+        if not p:
+            return Response(
+                content=_passphrase_gate_html(error=False),
+                media_type="text/html",
+                status_code=200,
+                headers={"Cache-Control": "no-store"},
+            )
+        try:
+            ok = _pwd_ctx.verify((p or "")[:72], passphrase_hash)
+        except Exception:  # noqa: BLE001
+            ok = False
+        if not ok:
+            return Response(
+                content=_passphrase_gate_html(error=True),
+                media_type="text/html",
+                status_code=200,
+                headers={"Cache-Control": "no-store"},
+            )
 
     try:
         pdf_bytes = _regenerate_share_pdf(
