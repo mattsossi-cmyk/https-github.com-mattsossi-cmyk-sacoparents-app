@@ -400,7 +400,7 @@ class GuidedSnapshotPdfBody(BaseModel):
     parent_name: Optional[str] = None
     case_ref: Optional[str] = None
     safety_flagged: bool = False
-    variant: str = Field(default="standard", pattern="^(standard|fridge)$")
+    variant: str = Field(default="standard", pattern="^(standard|fridge|fridge_pair)$")
 
 
 @router.post("/guided-snapshot-pdf")
@@ -410,6 +410,9 @@ async def guided_snapshot_pdf(body: GuidedSnapshotPdfBody) -> Response:
     Public — same auth tier as the other portal PDF endpoints so a
     parent can download without an account. ``variant='fridge'``
     returns a postcard-sized A6 variant with hand-sign lines.
+    ``variant='fridge_pair'`` returns two side-by-side fridge cards
+    on an A5-landscape sheet with a cut line down the middle so both
+    parents get an identical card from one print.
     """
     try:
         pdf_bytes = portal_pdf.build_portal_guided_snapshot_pdf(
@@ -422,7 +425,12 @@ async def guided_snapshot_pdf(body: GuidedSnapshotPdfBody) -> Response:
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    suffix = "-fridge" if body.variant == "fridge" else ""
+    if body.variant == "fridge":
+        suffix = "-fridge"
+    elif body.variant == "fridge_pair":
+        suffix = "-fridge-pair"
+    else:
+        suffix = ""
     filename = f"coparent-snapshot-{body.topic}{suffix}.pdf"
     return Response(
         content=pdf_bytes,

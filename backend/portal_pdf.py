@@ -1094,31 +1094,134 @@ _FRIDGE_HEADLINES = {
 }
 
 
-class _FridgePDF(FPDF):
-    """Postcard-sized (A6 portrait) fpdf chassis with a minimal footer."""
+def _draw_fridge_card(
+    pdf: FPDF,
+    *,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    label: str,
+    when: datetime,
+    author_name: Optional[str],
+    safety_flagged: bool,
+    plain: List[str],
+) -> None:
+    """Draw a single A6-sized fridge card at (x, y) with size (w, h).
 
-    def __init__(self, title: str) -> None:
+    Extracted so ``_build_fridge_snapshot_pdf`` (solo) and
+    ``_build_fridge_pair_snapshot_pdf`` (two-up on A5-landscape) can
+    share the exact same layout with zero drift.
+    """
+    inner_pad = 8
+    inner_w = w - inner_pad * 2
+
+    # Headline
+    pdf.set_xy(x + inner_pad, y + inner_pad)
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(*_PURPLE_DEEP)
+    pdf.cell(inner_w, 8, _safe(label), ln=1)
+
+    # Meta strip
+    pdf.set_x(x + inner_pad)
+    pdf.set_font("Helvetica", "", 7)
+    pdf.set_text_color(*_SLATE_MUTED)
+    meta = when.strftime("%B %d, %Y")
+    if author_name:
+        meta = f"{author_name} \u2022 {meta}"
+    if safety_flagged:
+        meta = f"{meta} \u2022 Safety-flagged voice"
+    pdf.cell(inner_w, 3, _safe(meta), ln=1)
+    pdf.ln(2)
+
+    if plain:
+        pdf.set_draw_color(*_PURPLE_ACCENT)
+        pdf.set_line_width(0.3)
+        divider_y = pdf.get_y()
+        pdf.line(x + inner_pad, divider_y, x + w - inner_pad, divider_y)
+        pdf.ln(3)
+        for text in plain[:5]:
+            pdf.set_x(x + inner_pad)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*_PURPLE_ACCENT)
+            pdf.cell(4, 5, _safe("\u2022"))
+            pdf.set_font("Helvetica", "", 11)
+            pdf.set_text_color(*_PURPLE_INK)
+            pdf.multi_cell(inner_w - 4, 5, _safe(text))
+            pdf.ln(1)
+    else:
+        pdf.set_x(x + inner_pad)
+        pdf.set_font("Helvetica", "I", 10)
+        pdf.set_text_color(*_SLATE_MUTED)
+        pdf.multi_cell(
+            inner_w,
+            5,
+            _safe(
+                "Come back and complete a Guided Journey to fill this "
+                "postcard with your commitments."
+            ),
+        )
+
+    # Sign lines pinned to the bottom of the card so they sit right
+    # where a fridge magnet would hold the postcard.
+    sign_zone_top = y + h - 24
+    pdf.set_draw_color(*_SLATE_MUTED)
+    pdf.set_line_width(0.2)
+    half_w = (inner_w - 4) / 2
+    line_y = sign_zone_top + 4
+    pdf.line(x + inner_pad, line_y, x + inner_pad + half_w, line_y)
+    pdf.line(
+        x + inner_pad + half_w + 4,
+        line_y,
+        x + w - inner_pad,
+        line_y,
+    )
+    pdf.set_xy(x + inner_pad, sign_zone_top + 5)
+    pdf.set_font("Helvetica", "", 7)
+    pdf.set_text_color(*_SLATE_MUTED)
+    pdf.cell(half_w, 3, _safe("Parent A signature"), align="C")
+    pdf.cell(4, 3, "")
+    pdf.cell(half_w, 3, _safe("Parent B signature"), align="C")
+    pdf.set_xy(x + inner_pad, sign_zone_top + 9)
+    pdf.set_font("Helvetica", "B", 8)
+    pdf.set_text_color(*_PURPLE_DEEP)
+    pdf.cell(inner_w, 3, _safe("Signed by both parents"), align="C")
+
+    # Footer text pinned to the very bottom edge of the card, matching
+    # the single-postcard footer from _FridgePDF.footer().
+    pdf.set_xy(x + inner_pad, y + h - 6)
+    pdf.set_font("Helvetica", "", 6)
+    pdf.set_text_color(*_SLATE_MUTED)
+    pdf.cell(inner_w, 3, _safe(f"sacoparentsapp.online \u2022 {label}"), align="C")
+
+
+def _plain_answers(answers: List[Dict[str, str]]) -> List[str]:
+    plain: List[str] = []
+    for qa in answers:
+        raw = str(qa.get("answer") or "").strip()
+        if not raw:
+            continue
+        if len(raw) > 140:
+            raw = raw[:137].rstrip() + "..."
+        plain.append(raw)
+    return plain
+
+
+class _FridgePDF(FPDF):
+    """Postcard-sized (A6 portrait) fpdf chassis. Solo variant."""
+
+    def __init__(self) -> None:
         # A6: 105 × 148 mm. Fits on a fridge magnet + prints on standard
         # 4×6 photo paper without cropping.
         super().__init__(orientation="P", unit="mm", format=(105.0, 148.0))
-        self._title = title
-        self.set_auto_page_break(auto=True, margin=8)
-        self.set_margins(left=8, top=8, right=8)
+        self.set_auto_page_break(auto=False, margin=0)
+        self.set_margins(left=0, top=0, right=0)
 
     def header(self) -> None:  # pragma: no cover - visual
-        # No banner — we want the whole postcard to be answer-first.
         return
 
     def footer(self) -> None:  # pragma: no cover - visual
-        self.set_y(-8)
-        self.set_font("Helvetica", "", 6)
-        self.set_text_color(*_SLATE_MUTED)
-        self.cell(
-            0,
-            3,
-            _safe(f"sacoparentsapp.online \u2022 {self._title}"),
-            align="C",
-        )
+        return
 
 
 def _build_fridge_snapshot_pdf(
@@ -1129,104 +1232,102 @@ def _build_fridge_snapshot_pdf(
     safety_flagged: bool = False,
     generated_at: Optional[datetime] = None,
 ) -> bytes:
-    """Postcard-size (A6) snapshot for the fridge.
+    """Postcard-size (A6) snapshot for the fridge."""
+    when = generated_at or datetime.now(timezone.utc)
+    label = _FRIDGE_HEADLINES.get(topic, _TOPIC_LABELS[topic])
+    pdf = _FridgePDF()
+    pdf.add_page()
+    _draw_fridge_card(
+        pdf,
+        x=0,
+        y=0,
+        w=105.0,
+        h=148.0,
+        label=label,
+        when=when,
+        author_name=author_name,
+        safety_flagged=safety_flagged,
+        plain=_plain_answers(answers),
+    )
+    return bytes(pdf.output(dest="S"))
 
-    Only the parent's ANSWERS are printed — no scripted questions —
-    in oversized soft-purple type so a child (or a parent on the way
-    out the door) can read it at a glance. A pair of hand-sign lines
-    sit at the bottom for "Signed by both parents".
+
+class _FridgePairPDF(FPDF):
+    """A5-landscape sheet (210×148 mm) that holds two A6 cards side by side."""
+
+    def __init__(self) -> None:
+        super().__init__(orientation="L", unit="mm", format=(148.0, 210.0))
+        self.set_auto_page_break(auto=False, margin=0)
+        self.set_margins(left=0, top=0, right=0)
+
+    def header(self) -> None:  # pragma: no cover - visual
+        return
+
+    def footer(self) -> None:  # pragma: no cover - visual
+        return
+
+
+def _build_fridge_pair_snapshot_pdf(
+    *,
+    topic: str,
+    answers: List[Dict[str, str]],
+    author_name: Optional[str] = None,
+    safety_flagged: bool = False,
+    generated_at: Optional[datetime] = None,
+) -> bytes:
+    """Two A6 fridge cards side-by-side on an A5-landscape sheet.
+
+    Prints on a single sheet of A5-landscape paper (210×148 mm) or on
+    standard US-Letter (with margins) — cut down the dashed centerline
+    and each parent walks away with an identical fridge card.
     """
     when = generated_at or datetime.now(timezone.utc)
     label = _FRIDGE_HEADLINES.get(topic, _TOPIC_LABELS[topic])
-    pdf = _FridgePDF(title=label)
-    pdf.alias_nb_pages()
+    plain = _plain_answers(answers)
+
+    pdf = _FridgePairPDF()
     pdf.add_page()
 
-    # Headline
-    pdf.set_font("Helvetica", "B", 18)
-    pdf.set_text_color(*_PURPLE_DEEP)
-    pdf.cell(0, 8, _safe(label), ln=1)
-
-    # Meta strip
-    pdf.set_font("Helvetica", "", 7)
-    pdf.set_text_color(*_SLATE_MUTED)
-    meta = when.strftime("%B %d, %Y")
-    if author_name:
-        meta = f"{author_name} \u2022 {meta}"
-    if safety_flagged:
-        meta = f"{meta} \u2022 Safety-flagged voice"
-    pdf.cell(0, 3, _safe(meta), ln=1)
-    pdf.ln(2)
-
-    # Answer bullets — short + big. Truncate each to ~140 chars so a
-    # single postcard fits ~5 items comfortably.
-    plain = []
-    for qa in answers:
-        raw = str(qa.get("answer") or "").strip()
-        if not raw:
-            continue
-        if len(raw) > 140:
-            raw = raw[:137].rstrip() + "..."
-        plain.append(raw)
-
-    if plain:
-        pdf.set_text_color(*_PURPLE_INK)
-        pdf.set_font("Helvetica", "", 11)
-        # Divider between the meta strip and the answers so the
-        # postcard reads calmly.
-        pdf.set_draw_color(*_PURPLE_ACCENT)
-        pdf.set_line_width(0.3)
-        pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
-        pdf.ln(3)
-        for text in plain[:5]:
-            # Bullet + soft indent
-            pdf.set_x(pdf.l_margin)
-            pdf.set_font("Helvetica", "B", 10)
-            pdf.set_text_color(*_PURPLE_ACCENT)
-            pdf.cell(4, 5, _safe("\u2022"))
-            pdf.set_font("Helvetica", "", 11)
-            pdf.set_text_color(*_PURPLE_INK)
-            pdf.multi_cell(
-                pdf.w - pdf.l_margin - pdf.r_margin - 4, 5, _safe(text)
-            )
-            pdf.ln(1)
-    else:
-        pdf.set_font("Helvetica", "I", 10)
-        pdf.set_text_color(*_SLATE_MUTED)
-        pdf.multi_cell(
-            0,
-            5,
-            _safe(
-                "Come back and complete a Guided Journey to fill this "
-                "postcard with your commitments."
-            ),
-        )
-
-    # Sign lines pinned to the bottom of the postcard so they sit
-    # right where a fridge magnet would hold the card.
-    pdf.set_y(-24)
-    pdf.set_draw_color(*_SLATE_MUTED)
-    pdf.set_line_width(0.2)
-    inner_w = pdf.w - pdf.l_margin - pdf.r_margin
-    half_w = (inner_w - 4) / 2
-    y = pdf.get_y()
-    pdf.line(pdf.l_margin, y + 4, pdf.l_margin + half_w, y + 4)
-    pdf.line(
-        pdf.l_margin + half_w + 4,
-        y + 4,
-        pdf.w - pdf.r_margin,
-        y + 4,
+    # Left card: (0, 0) to (105, 148); right card: (105, 0) to (210, 148).
+    _draw_fridge_card(
+        pdf,
+        x=0,
+        y=0,
+        w=105.0,
+        h=148.0,
+        label=label,
+        when=when,
+        author_name=author_name,
+        safety_flagged=safety_flagged,
+        plain=plain,
     )
-    pdf.set_y(y + 5)
-    pdf.set_font("Helvetica", "", 7)
+    _draw_fridge_card(
+        pdf,
+        x=105.0,
+        y=0,
+        w=105.0,
+        h=148.0,
+        label=label,
+        when=when,
+        author_name=author_name,
+        safety_flagged=safety_flagged,
+        plain=plain,
+    )
+
+    # Dashed cutting line down the centerline with a small "cut here"
+    # scissors label at the top.
+    pdf.set_draw_color(*_SLATE_MUTED)
+    pdf.set_line_width(0.15)
+    # Dashed by drawing many short segments.
+    y = 4.0
+    while y < 144.0:
+        pdf.line(105.0, y, 105.0, y + 3)
+        y += 5
+    # Scissors + label at the very top of the centerline.
+    pdf.set_xy(101.0, 0.5)
+    pdf.set_font("Helvetica", "", 6)
     pdf.set_text_color(*_SLATE_MUTED)
-    pdf.cell(half_w, 3, _safe("Parent A signature"), align="C")
-    pdf.cell(4, 3, "")
-    pdf.cell(half_w, 3, _safe("Parent B signature"), align="C")
-    pdf.ln(4)
-    pdf.set_font("Helvetica", "B", 8)
-    pdf.set_text_color(*_PURPLE_DEEP)
-    pdf.cell(0, 3, _safe("Signed by both parents"), align="C")
+    pdf.cell(8, 3, _safe("\u2702 cut"), align="C")
 
     return bytes(pdf.output(dest="S"))
 
@@ -1250,16 +1351,29 @@ def build_portal_guided_snapshot_pdf(
     condensed answer-only layout with a "Signed by both parents ___"
     line at the bottom so parents can stick it on the fridge and
     hand-sign it together.
+
+    ``variant='fridge_pair'`` — Two identical A6 fridge cards laid
+    out side-by-side on an A5-landscape sheet (210 × 148 mm) with a
+    dashed cut line down the centerline. Print once, cut once, both
+    parents walk away with the same card.
     """
     if topic not in _TOPIC_LABELS:
         raise ValueError(f"unknown topic: {topic}")
     if not isinstance(answers, list):
         raise ValueError("answers must be a list")
-    if variant not in ("standard", "fridge"):
+    if variant not in ("standard", "fridge", "fridge_pair"):
         raise ValueError(f"unknown variant: {variant}")
 
     if variant == "fridge":
         return _build_fridge_snapshot_pdf(
+            topic=topic,
+            answers=answers,
+            author_name=author_name,
+            safety_flagged=safety_flagged,
+            generated_at=generated_at,
+        )
+    if variant == "fridge_pair":
+        return _build_fridge_pair_snapshot_pdf(
             topic=topic,
             answers=answers,
             author_name=author_name,

@@ -974,10 +974,18 @@ export default function SacoparentsPortal() {
   // iter222 — download the Coparent Snapshot PDF built from a finished
   // Guided Journey run. Called from GuidedJourneyModal's recap card.
   // iter223 — supports `variant='fridge'` for the postcard-size card.
+  // iter225 — supports `variant='fridge_pair'` for two side-by-side.
   const downloadGuidedSnapshot = useCallback(
     async ({ topic, answers, safety_flagged, variant }) => {
-      const chosen = variant === "fridge" ? "fridge" : "standard";
-      const suffix = chosen === "fridge" ? "-fridge" : "";
+      let chosen = "standard";
+      let suffix = "";
+      if (variant === "fridge") {
+        chosen = "fridge";
+        suffix = "-fridge";
+      } else if (variant === "fridge_pair") {
+        chosen = "fridge_pair";
+        suffix = "-fridge-pair";
+      }
       await downloadPdfFromApi(
         "/portal/guided-snapshot-pdf",
         `coparent-snapshot-${topic}${suffix}.pdf`,

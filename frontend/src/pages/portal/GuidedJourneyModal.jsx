@@ -323,22 +323,27 @@ export function GuidedJourneyModal({
 
   // iter222 — download the Coparent Snapshot PDF from the recap card.
   const [snapshotBusy, setSnapshotBusy] = useState(false);
+  // iter225 — "Print two side-by-side" toggle for the fridge variant.
+  const [pairPrint, setPairPrint] = useState(false);
   const downloadSnapshot = useCallback(
     async (variant = "standard") => {
       if (typeof onDownloadSnapshot !== "function") return;
+      // Fridge downloads honour the pair-print toggle.
+      const resolved =
+        variant === "fridge" && pairPrint ? "fridge_pair" : variant;
       setSnapshotBusy(variant);
       try {
         await onDownloadSnapshot({
           topic,
           answers,
           safety_flagged: !!safetyFlagged,
-          variant,
+          variant: resolved,
         });
       } finally {
         setSnapshotBusy(false);
       }
     },
-    [onDownloadSnapshot, topic, answers, safetyFlagged]
+    [onDownloadSnapshot, topic, answers, safetyFlagged, pairPrint]
   );
 
   // iter222 — hold-to-record voice note via MediaRecorder → Whisper.
@@ -641,32 +646,55 @@ export function GuidedJourneyModal({
                   answers, or go back to edit.
                 </div>
                 {typeof onDownloadSnapshot === "function" && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      data-testid={`guided-recap-snapshot-${topic}`}
-                      onClick={() => downloadSnapshot("standard")}
-                      disabled={!!snapshotBusy}
-                      className="py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs disabled:opacity-40"
+                  <>
+                    <div
+                      className="grid grid-cols-2 gap-2"
+                      data-testid={`guided-recap-actions-${topic}`}
                     >
-                      <i className="fa-solid fa-file-arrow-down mr-1"></i>
-                      {snapshotBusy === "standard"
-                        ? "Preparing…"
-                        : "Snapshot PDF"}
-                    </button>
-                    <button
-                      type="button"
-                      data-testid={`guided-recap-fridge-${topic}`}
-                      onClick={() => downloadSnapshot("fridge")}
-                      disabled={!!snapshotBusy}
-                      className="py-2 bg-white hover:bg-amber-50 border border-amber-400 text-amber-800 rounded-lg font-bold text-xs disabled:opacity-40"
+                      <button
+                        type="button"
+                        data-testid={`guided-recap-snapshot-${topic}`}
+                        onClick={() => downloadSnapshot("standard")}
+                        disabled={!!snapshotBusy}
+                        className="py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs disabled:opacity-40"
+                      >
+                        <i className="fa-solid fa-file-arrow-down mr-1"></i>
+                        {snapshotBusy === "standard"
+                          ? "Preparing…"
+                          : "Snapshot PDF"}
+                      </button>
+                      <button
+                        type="button"
+                        data-testid={`guided-recap-fridge-${topic}`}
+                        onClick={() => downloadSnapshot("fridge")}
+                        disabled={!!snapshotBusy}
+                        className="py-2 bg-white hover:bg-amber-50 border border-amber-400 text-amber-800 rounded-lg font-bold text-xs disabled:opacity-40"
+                      >
+                        <i className="fa-solid fa-note-sticky mr-1"></i>
+                        {snapshotBusy === "fridge"
+                          ? "Preparing…"
+                          : pairPrint
+                          ? "Fridge Card \u00d72"
+                          : "Fridge Card"}
+                      </button>
+                    </div>
+                    <label
+                      data-testid={`guided-recap-pair-toggle-${topic}`}
+                      className="flex items-center gap-1.5 pt-1 text-[10px] text-slate-600 cursor-pointer select-none"
                     >
-                      <i className="fa-solid fa-note-sticky mr-1"></i>
-                      {snapshotBusy === "fridge"
-                        ? "Preparing…"
-                        : "Fridge Card"}
-                    </button>
-                  </div>
+                      <input
+                        type="checkbox"
+                        data-testid={`guided-recap-pair-checkbox-${topic}`}
+                        checked={pairPrint}
+                        onChange={(e) => setPairPrint(e.target.checked)}
+                        className="accent-amber-600 w-3.5 h-3.5"
+                      />
+                      <span>
+                        Print two side-by-side (both parents get a fridge
+                        card from one print)
+                      </span>
+                    </label>
+                  </>
                 )}
                 <div className="flex gap-2">
                   <button
