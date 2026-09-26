@@ -1,0 +1,27 @@
+{
+  "summary": "iter225 — Coparent Snapshot 'fridge_pair' variant + frontend checkbox. Backend: 20/20 pytest checks passing (filenames per topic, size delta pair>solo, variant regressions for solo/standard, pattern 422 for bogus/case, pypdf-verified A5-landscape 210×148mm with doubled headline, empty answers → 200 both variants, safety_flagged meta on both cards, /portal/state auth still enforced, voice-transcribe alive). Frontend: end-to-end on 390×844 — seeded a completed foundation draft in localStorage, resumed the wizard, opened recap, verified all three iter225 testids (guided-recap-actions-{topic}, guided-recap-pair-toggle-{topic}, guided-recap-pair-checkbox-{topic}), verified default unchecked, verified button label swap 'Fridge Card' <-> 'Fridge Card ×2', verified download filename routing (unchecked → -fridge.pdf, checked → -fridge-pair.pdf, uncheck → -fridge.pdf, Snapshot PDF button independent → -{topic}.pdf even when pair is checked with variant='standard' in the API body), verified label copy contains 'Print two side-by-side', verified pairPrint resets to false on modal close+reopen, verified no horizontal overflow (0px).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter225_fridge_pair.py",
+    "/app/test_reports/pytest/iter225.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "portal_pdf.py is >1400 lines — approaching the 700-line split threshold; consider splitting the fridge builders and standard builder into a submodule.",
+    "The dashed cut line uses many short line() calls in a Python loop — fine but fpdf2 supports set_dash_pattern() for cleaner rendering; low priority.",
+    "Solo (fridge) and pair sizes match spec (~1500 vs ~1900 bytes) per iter225 request; verified programmatically."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter225_fridge_pair.py",
+    "/app/test_reports/pytest/iter225.xml",
+    "/app/test_reports/iteration_84.json"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "none — /api/portal/guided-snapshot-pdf is public",
+  "seed_data_creation": "Playwright test seeds a completed foundation guided-journey draft into localStorage (key `sacoparents_guided_draft_foundation`) to skip AI wizard turns and jump straight into the recap.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter225 refactor of fridge PDF into shared _draw_fridge_card() helper did not regress solo variant (dims still 105×148mm A6, filename unchanged). Playwright network route to /api/portal/guided-snapshot-pdf lets you verify the variant value in the request body without needing a real PDF back — return %PDF-1.4 with a matching Content-Disposition filename and Playwright's download event fires correctly. Safety modal (`modal-safety-screen`) blocks the toolkit; either answer it (Yes/No/Yes → Continue) or dismiss with 'close-safety-screen' (dismiss alone does NOT clear the flag so you must actually answer).",
+  "rca_of_the_issue": "N/A — no bugs found."
+}

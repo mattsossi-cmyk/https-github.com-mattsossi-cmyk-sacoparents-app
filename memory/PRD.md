@@ -27,6 +27,96 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-26 — Iter225 · Fridge Card Pair Print
+
+Follow-on to iter223's fridge-size recap. Adds a "Print two
+side-by-side" option so both parents get an identical fridge
+card from one print — cut down the middle and each parent walks
+away with their own copy. Verified in iter84 (backend 20/20 +
+frontend 100% at 390×844).
+
+**🟢 P1 — Fridge Pair PDF variant**
+- Refactored `_build_fridge_snapshot_pdf` into a shared
+  `_draw_fridge_card(pdf, x, y, w, h, ...)` helper + a
+  `_plain_answers()` extractor. Solo variant now uses the
+  helper too, so both variants share pixel-perfect layout
+  with zero drift.
+- New `_FridgePairPDF` chassis — A5-landscape (210×148 mm,
+  orientation='L'), zero margins.
+- New `_build_fridge_pair_snapshot_pdf()` draws two copies of
+  the card side by side at `x=0` and `x=105` on a single
+  A5-landscape sheet. A dashed cut line runs down the
+  centerline (`x=105`) drawn as short 3 mm segments, and a
+  small "✂ cut" label sits at the very top so users know
+  exactly where the scissors go.
+- `build_portal_guided_snapshot_pdf()` variant tuple
+  extended to `('standard', 'fridge', 'fridge_pair')`.
+- Endpoint `POST /api/portal/guided-snapshot-pdf` pattern
+  updated to `^(standard|fridge|fridge_pair)$`. Filename
+  suffix logic: `fridge`→`-fridge`, `fridge_pair`→
+  `-fridge-pair`, standard→no suffix.
+- Regression: solo (`variant='fridge'`) filename + layout
+  unchanged from iter223 (verified via pypdf mediabox
+  105×148 mm + doubled headline text only in the pair
+  variant).
+
+**🟢 P1 — Frontend "Print two side-by-side" toggle**
+- New `pairPrint` state in `GuidedJourneyModal.jsx`. Default
+  unchecked; resets on modal close/reopen.
+- New checkbox row below the recap 2-col button grid with
+  testid `guided-recap-pair-checkbox-{topic}` inside a
+  `guided-recap-pair-toggle-{topic}` label. Copy: *"Print
+  two side-by-side (both parents get a fridge card from
+  one print)"*.
+- Fridge Card button label swaps to "Fridge Card ×2" when
+  the checkbox is on.
+- `downloadSnapshot('fridge')` resolves to
+  `variant='fridge_pair'` when `pairPrint===true`. The
+  Snapshot PDF button (standard variant) is INDEPENDENT of
+  the checkbox — always ships the A4 standard even when
+  pair is toggled on.
+
+**Files touched**
+- `/app/backend/portal_pdf.py` — `_draw_fridge_card`,
+  `_plain_answers`, `_FridgePDF` (zero-margin refactor),
+  `_FridgePairPDF`, `_build_fridge_pair_snapshot_pdf`,
+  updated dispatcher.
+- `/app/backend/portal_routes.py` — variant pattern +
+  filename suffix logic.
+- `/app/frontend/src/pages/portal/GuidedJourneyModal.jsx` —
+  `pairPrint` state, checkbox row, button label swap,
+  variant routing in `downloadSnapshot`.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` —
+  `downloadGuidedSnapshot` accepts + forwards
+  `variant='fridge_pair'` with `-fridge-pair` filename
+  suffix.
+- `/app/backend/tests/test_iter225_fridge_pair.py` (new,
+  20 tests).
+
+**Verified — iter84 test report**
+- Backend 20/20 pytest: filenames per topic, size delta
+  pair>solo (~1900 vs ~1500 bytes), pattern 422 for
+  bogus/case-sensitive variants, pypdf mediabox verified
+  A5-landscape 210×148 mm with doubled headline (once per
+  card), empty answers → 200 both variants with empty-state
+  stubs, safety_flagged meta on both cards, regression on
+  solo dimensions + filename + auth.
+- Frontend 100% @ 390×844: recap card renders with
+  `guided-recap-actions-{topic}` grid + toggle label with
+  copy "Print two side-by-side" + checkbox default
+  unchecked; button label swaps `Fridge Card` ↔
+  `Fridge Card ×2`; download filenames route correctly
+  based on checkbox state; toggle resets on modal close.
+- Zero horizontal overflow at 390×844.
+
+**Deferred (P2 — from iter84 review)**
+- `portal_pdf.py` now ~1400 lines — split fridge builders
+  + standard builder into a submodule at next opportunity.
+- Dashed cut line uses a Python loop of short `line()`
+  calls — fpdf2 supports `set_dash_pattern()` for cleaner
+  rendering. Low priority.
+
+
 ### 2026-02-26 — Iter224 · Nudge Digest for Founder (weekly admin recap)
 
 Follow-on to iter223. Sends a weekly recap email to every
