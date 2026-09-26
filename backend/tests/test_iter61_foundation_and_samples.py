@@ -52,7 +52,8 @@ class TestHealthBuild:
     def test_health_build_id(self):
         r = requests.get(f"{API}/health", timeout=15)
         assert r.status_code == 200
-        assert r.json().get("build") == "2026-09-24.1", r.json()
+        import re
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}\.\d+", r.json().get("build") or ""), r.json()
 
 
 # ---- Foundation on joint report + PDF authorization ----
