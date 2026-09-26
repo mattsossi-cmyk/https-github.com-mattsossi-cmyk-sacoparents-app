@@ -1083,6 +1083,154 @@ _TOPIC_INTRO = {
 }
 
 
+# --- Fridge-card headlines (postcard variant) -------------------- #
+_FRIDGE_HEADLINES = {
+    "foundation": "Our Foundation",
+    "coparenting": "Our Co-parenting Plan",
+    "safety": "Our Safe-Space Pledge",
+    "medical": "Our Medical Plan",
+    "educational": "Our School Plan",
+    "psychological": "Our Support Plan",
+}
+
+
+class _FridgePDF(FPDF):
+    """Postcard-sized (A6 portrait) fpdf chassis with a minimal footer."""
+
+    def __init__(self, title: str) -> None:
+        # A6: 105 × 148 mm. Fits on a fridge magnet + prints on standard
+        # 4×6 photo paper without cropping.
+        super().__init__(orientation="P", unit="mm", format=(105.0, 148.0))
+        self._title = title
+        self.set_auto_page_break(auto=True, margin=8)
+        self.set_margins(left=8, top=8, right=8)
+
+    def header(self) -> None:  # pragma: no cover - visual
+        # No banner — we want the whole postcard to be answer-first.
+        return
+
+    def footer(self) -> None:  # pragma: no cover - visual
+        self.set_y(-8)
+        self.set_font("Helvetica", "", 6)
+        self.set_text_color(*_SLATE_MUTED)
+        self.cell(
+            0,
+            3,
+            _safe(f"sacoparentsapp.online \u2022 {self._title}"),
+            align="C",
+        )
+
+
+def _build_fridge_snapshot_pdf(
+    *,
+    topic: str,
+    answers: List[Dict[str, str]],
+    author_name: Optional[str] = None,
+    safety_flagged: bool = False,
+    generated_at: Optional[datetime] = None,
+) -> bytes:
+    """Postcard-size (A6) snapshot for the fridge.
+
+    Only the parent's ANSWERS are printed — no scripted questions —
+    in oversized soft-purple type so a child (or a parent on the way
+    out the door) can read it at a glance. A pair of hand-sign lines
+    sit at the bottom for "Signed by both parents".
+    """
+    when = generated_at or datetime.now(timezone.utc)
+    label = _FRIDGE_HEADLINES.get(topic, _TOPIC_LABELS[topic])
+    pdf = _FridgePDF(title=label)
+    pdf.alias_nb_pages()
+    pdf.add_page()
+
+    # Headline
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(*_PURPLE_DEEP)
+    pdf.cell(0, 8, _safe(label), ln=1)
+
+    # Meta strip
+    pdf.set_font("Helvetica", "", 7)
+    pdf.set_text_color(*_SLATE_MUTED)
+    meta = when.strftime("%B %d, %Y")
+    if author_name:
+        meta = f"{author_name} \u2022 {meta}"
+    if safety_flagged:
+        meta = f"{meta} \u2022 Safety-flagged voice"
+    pdf.cell(0, 3, _safe(meta), ln=1)
+    pdf.ln(2)
+
+    # Answer bullets — short + big. Truncate each to ~140 chars so a
+    # single postcard fits ~5 items comfortably.
+    plain = []
+    for qa in answers:
+        raw = str(qa.get("answer") or "").strip()
+        if not raw:
+            continue
+        if len(raw) > 140:
+            raw = raw[:137].rstrip() + "..."
+        plain.append(raw)
+
+    if plain:
+        pdf.set_text_color(*_PURPLE_INK)
+        pdf.set_font("Helvetica", "", 11)
+        # Divider between the meta strip and the answers so the
+        # postcard reads calmly.
+        pdf.set_draw_color(*_PURPLE_ACCENT)
+        pdf.set_line_width(0.3)
+        pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+        pdf.ln(3)
+        for text in plain[:5]:
+            # Bullet + soft indent
+            pdf.set_x(pdf.l_margin)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*_PURPLE_ACCENT)
+            pdf.cell(4, 5, _safe("\u2022"))
+            pdf.set_font("Helvetica", "", 11)
+            pdf.set_text_color(*_PURPLE_INK)
+            pdf.multi_cell(
+                pdf.w - pdf.l_margin - pdf.r_margin - 4, 5, _safe(text)
+            )
+            pdf.ln(1)
+    else:
+        pdf.set_font("Helvetica", "I", 10)
+        pdf.set_text_color(*_SLATE_MUTED)
+        pdf.multi_cell(
+            0,
+            5,
+            _safe(
+                "Come back and complete a Guided Journey to fill this "
+                "postcard with your commitments."
+            ),
+        )
+
+    # Sign lines pinned to the bottom of the postcard so they sit
+    # right where a fridge magnet would hold the card.
+    pdf.set_y(-24)
+    pdf.set_draw_color(*_SLATE_MUTED)
+    pdf.set_line_width(0.2)
+    inner_w = pdf.w - pdf.l_margin - pdf.r_margin
+    half_w = (inner_w - 4) / 2
+    y = pdf.get_y()
+    pdf.line(pdf.l_margin, y + 4, pdf.l_margin + half_w, y + 4)
+    pdf.line(
+        pdf.l_margin + half_w + 4,
+        y + 4,
+        pdf.w - pdf.r_margin,
+        y + 4,
+    )
+    pdf.set_y(y + 5)
+    pdf.set_font("Helvetica", "", 7)
+    pdf.set_text_color(*_SLATE_MUTED)
+    pdf.cell(half_w, 3, _safe("Parent A signature"), align="C")
+    pdf.cell(4, 3, "")
+    pdf.cell(half_w, 3, _safe("Parent B signature"), align="C")
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "B", 8)
+    pdf.set_text_color(*_PURPLE_DEEP)
+    pdf.cell(0, 3, _safe("Signed by both parents"), align="C")
+
+    return bytes(pdf.output(dest="S"))
+
+
 def build_portal_guided_snapshot_pdf(
     *,
     topic: str,
@@ -1090,19 +1238,34 @@ def build_portal_guided_snapshot_pdf(
     author_name: Optional[str] = None,
     case_ref: Optional[str] = None,
     safety_flagged: bool = False,
+    variant: str = "standard",
     generated_at: Optional[datetime] = None,
 ) -> bytes:
     """Render a finished Guided Journey wizard as a shareable PDF.
 
-    Layout: header chip + big title + intro paragraph + one Q&A card
-    per answered question. Footer disclaimer is inherited from the
-    shared ``_PortalPDF`` chassis so every guided snapshot lines up
-    visually with the other portal artefacts.
+    ``variant='standard'`` — A4 portrait, one Q&A card per question,
+    signature block reserved for the mediator/attorney workflow.
+
+    ``variant='fridge'`` — A6 postcard (105 × 148 mm), oversized type,
+    condensed answer-only layout with a "Signed by both parents ___"
+    line at the bottom so parents can stick it on the fridge and
+    hand-sign it together.
     """
     if topic not in _TOPIC_LABELS:
         raise ValueError(f"unknown topic: {topic}")
     if not isinstance(answers, list):
         raise ValueError("answers must be a list")
+    if variant not in ("standard", "fridge"):
+        raise ValueError(f"unknown variant: {variant}")
+
+    if variant == "fridge":
+        return _build_fridge_snapshot_pdf(
+            topic=topic,
+            answers=answers,
+            author_name=author_name,
+            safety_flagged=safety_flagged,
+            generated_at=generated_at,
+        )
 
     when = generated_at or datetime.now(timezone.utc)
     label = _TOPIC_LABELS[topic]

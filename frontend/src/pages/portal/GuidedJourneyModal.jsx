@@ -323,19 +323,23 @@ export function GuidedJourneyModal({
 
   // iter222 — download the Coparent Snapshot PDF from the recap card.
   const [snapshotBusy, setSnapshotBusy] = useState(false);
-  const downloadSnapshot = useCallback(async () => {
-    if (typeof onDownloadSnapshot !== "function") return;
-    setSnapshotBusy(true);
-    try {
-      await onDownloadSnapshot({
-        topic,
-        answers,
-        safety_flagged: !!safetyFlagged,
-      });
-    } finally {
-      setSnapshotBusy(false);
-    }
-  }, [onDownloadSnapshot, topic, answers, safetyFlagged]);
+  const downloadSnapshot = useCallback(
+    async (variant = "standard") => {
+      if (typeof onDownloadSnapshot !== "function") return;
+      setSnapshotBusy(variant);
+      try {
+        await onDownloadSnapshot({
+          topic,
+          answers,
+          safety_flagged: !!safetyFlagged,
+          variant,
+        });
+      } finally {
+        setSnapshotBusy(false);
+      }
+    },
+    [onDownloadSnapshot, topic, answers, safetyFlagged]
+  );
 
   // iter222 — hold-to-record voice note via MediaRecorder → Whisper.
   // We store the transcript into the composer input so the parent can
@@ -637,18 +641,32 @@ export function GuidedJourneyModal({
                   answers, or go back to edit.
                 </div>
                 {typeof onDownloadSnapshot === "function" && (
-                  <button
-                    type="button"
-                    data-testid={`guided-recap-snapshot-${topic}`}
-                    onClick={downloadSnapshot}
-                    disabled={snapshotBusy}
-                    className="w-full py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs disabled:opacity-40"
-                  >
-                    <i className="fa-solid fa-file-arrow-down mr-1"></i>
-                    {snapshotBusy
-                      ? "Preparing snapshot…"
-                      : "Download Coparent Snapshot PDF"}
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      data-testid={`guided-recap-snapshot-${topic}`}
+                      onClick={() => downloadSnapshot("standard")}
+                      disabled={!!snapshotBusy}
+                      className="py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs disabled:opacity-40"
+                    >
+                      <i className="fa-solid fa-file-arrow-down mr-1"></i>
+                      {snapshotBusy === "standard"
+                        ? "Preparing…"
+                        : "Snapshot PDF"}
+                    </button>
+                    <button
+                      type="button"
+                      data-testid={`guided-recap-fridge-${topic}`}
+                      onClick={() => downloadSnapshot("fridge")}
+                      disabled={!!snapshotBusy}
+                      className="py-2 bg-white hover:bg-amber-50 border border-amber-400 text-amber-800 rounded-lg font-bold text-xs disabled:opacity-40"
+                    >
+                      <i className="fa-solid fa-note-sticky mr-1"></i>
+                      {snapshotBusy === "fridge"
+                        ? "Preparing…"
+                        : "Fridge Card"}
+                    </button>
+                  </div>
                 )}
                 <div className="flex gap-2">
                   <button

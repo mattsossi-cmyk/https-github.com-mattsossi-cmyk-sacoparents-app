@@ -973,17 +973,21 @@ export default function SacoparentsPortal() {
 
   // iter222 — download the Coparent Snapshot PDF built from a finished
   // Guided Journey run. Called from GuidedJourneyModal's recap card.
+  // iter223 — supports `variant='fridge'` for the postcard-size card.
   const downloadGuidedSnapshot = useCallback(
-    async ({ topic, answers, safety_flagged }) => {
+    async ({ topic, answers, safety_flagged, variant }) => {
+      const chosen = variant === "fridge" ? "fridge" : "standard";
+      const suffix = chosen === "fridge" ? "-fridge" : "";
       await downloadPdfFromApi(
         "/portal/guided-snapshot-pdf",
-        `coparent-snapshot-${topic}.pdf`,
+        `coparent-snapshot-${topic}${suffix}.pdf`,
         {
           topic,
           answers,
           parent_name: user?.name || null,
           case_ref: courtKey || null,
           safety_flagged: !!safety_flagged,
+          variant: chosen,
         }
       );
     },

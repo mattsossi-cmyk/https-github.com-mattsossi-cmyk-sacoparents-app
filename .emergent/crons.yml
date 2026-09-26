@@ -1,0 +1,8 @@
+crons:
+  # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+  - name: guided-draft-nudge
+    description: "Weekly friendly nudge to parents with a stale Guided Journey draft before it expires at 14 days"
+    cron: "0 15 * * 1"
+    endpoint: "{{BASE_URL}}/api/cron/guided-draft-nudge"
+    method: POST
+    enabled: true

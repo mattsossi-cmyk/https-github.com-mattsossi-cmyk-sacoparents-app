@@ -296,6 +296,82 @@ def send_silent_reviewer_nudge(
     )
 
 
+def send_guided_draft_nudge(
+    *,
+    to_email: str,
+    parent_name: Optional[str],
+    topic_label: str,
+    step_number: int,
+    total_steps: int,
+    days_since_update: int,
+    days_left: int,
+    portal_url: str,
+) -> None:
+    """Nudge a parent who has a stale Guided Journey draft.
+
+    Fires once per stale draft per week — the cron scheduler and the
+    ``guided_draft_nudges`` collection guarantee we never double-nudge
+    the same parent for the same topic in a given week.
+    """
+    greeting = f"Hi {parent_name}," if parent_name else "Hi there,"
+    plain = (
+        f"{greeting}\n\n"
+        f"You started a {topic_label} in the SA CoParents portal a "
+        f"few days ago and you're on step {step_number} of "
+        f"{total_steps}. It's been {days_since_update} days since "
+        f"you last touched it, and unfinished drafts auto-clear "
+        f"after 14 days — that leaves about {days_left} day"
+        f"{'s' if days_left != 1 else ''} to finish.\n\n"
+        "Two or three minutes and you're done — open the portal and "
+        "tap 'Guided chat' on the same tile to pick up right where "
+        "you left off:\n\n"
+        f"{portal_url}\n\n"
+        "If you'd rather start over, just tap 'Start over' when the "
+        "resume prompt appears.\n\n"
+        "\u2014 SA CoParents \u00b7 sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'{_html.escape(greeting)}'
+        f'</p>'
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
+        f'You started a <strong>{_html.escape(topic_label)}</strong> '
+        f'in the SA CoParents portal a few days ago and you\u2019re on '
+        f'<strong>step {step_number} of {total_steps}</strong>. It\u2019s '
+        f'been {days_since_update} days since you last touched it, '
+        f'and unfinished drafts auto-clear after 14 days \u2014 that '
+        f'leaves about <strong>{days_left} day'
+        f'{"s" if days_left != 1 else ""}</strong> to finish.'
+        f'</p>'
+        f'<div style="background:#F4EFFF;border-radius:14px;padding:14px 16px;'
+        f'margin:0 0 16px 0;border:1px solid #E5E0EE;color:#1A1330;'
+        f'font-size:14px;line-height:1.55;">'
+        f'Two or three minutes and you\u2019re done. Open the portal '
+        f'and tap <strong>\u201cGuided chat\u201d</strong> on the same '
+        f'tile to pick up right where you left off.'
+        f'</div>'
+        f'<p style="font-size:12px;line-height:1.55;color:#857E9C;margin:0;">'
+        f'If you\u2019d rather start over, just tap \u201cStart over\u201d '
+        f'when the resume prompt appears.'
+        f'</p>'
+    )
+    html = _branded_html(
+        headline=f"Your {topic_label} is waiting",
+        body_html=body_html,
+        cta_label="Finish my guided journey",
+        cta_url=portal_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Your {topic_label} is {days_left} day"
+        f"{'s' if days_left != 1 else ''} from expiring",
+        html=html,
+        text=plain,
+        failure_message="Could not send the guided-draft nudge right now.",
+    )
+
+
+
 def send_magic_link(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
     """Send a one-tap sign-in link."""
     greeting = f"Hi {user_name}," if user_name else "Hi there,"

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import hmac
 import logging
 import os
 import secrets
@@ -38,7 +39,7 @@ from collections import deque
 from datetime import datetime, timedelta, timezone
 from typing import Any, Deque, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from auth import get_current_user, get_db
@@ -399,6 +400,7 @@ class GuidedSnapshotPdfBody(BaseModel):
     parent_name: Optional[str] = None
     case_ref: Optional[str] = None
     safety_flagged: bool = False
+    variant: str = Field(default="standard", pattern="^(standard|fridge)$")
 
 
 @router.post("/guided-snapshot-pdf")
@@ -406,7 +408,8 @@ async def guided_snapshot_pdf(body: GuidedSnapshotPdfBody) -> Response:
     """Stream a one-page Coparent Snapshot PDF from a guided run.
 
     Public — same auth tier as the other portal PDF endpoints so a
-    parent can download without an account.
+    parent can download without an account. ``variant='fridge'``
+    returns a postcard-sized A6 variant with hand-sign lines.
     """
     try:
         pdf_bytes = portal_pdf.build_portal_guided_snapshot_pdf(
@@ -415,10 +418,12 @@ async def guided_snapshot_pdf(body: GuidedSnapshotPdfBody) -> Response:
             author_name=body.parent_name,
             case_ref=body.case_ref,
             safety_flagged=bool(body.safety_flagged),
+            variant=body.variant,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    filename = f"coparent-snapshot-{body.topic}.pdf"
+    suffix = "-fridge" if body.variant == "fridge" else ""
+    filename = f"coparent-snapshot-{body.topic}{suffix}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

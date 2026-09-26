@@ -76,6 +76,7 @@ from professional_bundle_templates import router as professional_bundle_template
 from bundle_routes import router as bundle_router  # noqa: E402
 from coach_demo_routes import router as coach_demo_router  # noqa: E402
 from portal_routes import router as portal_router  # noqa: E402
+from cron_routes import router as cron_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -222,6 +223,7 @@ api_router.include_router(professional_bundle_templates_router)
 api_router.include_router(bundle_router)
 api_router.include_router(coach_demo_router)
 api_router.include_router(portal_router)
+api_router.include_router(cron_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.
