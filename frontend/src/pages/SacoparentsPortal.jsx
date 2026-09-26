@@ -1041,7 +1041,7 @@ export default function SacoparentsPortal() {
 
   return (
     <div
-      className="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col pb-28"
+      className="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col pb-32"
       data-testid="sacoparents-portal"
     >
       {/* Print-only styles */}

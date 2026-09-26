@@ -26,6 +26,108 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter218 · Coparenting Journey Toolkit + Complete Report Bundle PDF
+
+Big delta on top of iter77. Renames "Parent Journey" → "Coparenting
+Journey" everywhere user-visible, hides the court-only Legal Report
+module on the self-guided door, and adds a full-featured Toolkit tile
+grid + a Complete Coparenting Report bundle PDF. Verified in iter78
+(backend 8/8 + frontend 13/14 — one z-order overlap bug, now fixed
+inline; re-verified via smoke test).
+
+**🟢 P0 — Rename Parent Journey → Coparenting Journey**
+- `DoorsGateway.jsx`: `<h3>Coparenting Journey</h3>` + "Enter
+  Coparenting Path" CTA.
+- `SacoparentsPortal.jsx`: audit-stamp text + print-only header +
+  tab label ("I. Alignment & Tools" when no court key, "I. Legal
+  Report & Alignment" when court key is set) all reflect the new
+  name.
+- Internal state keys (`screen === 'parent-journey'`) + testids
+  (`door-parent-journey`, `screen-parent-journey`) kept stable to
+  avoid regressing tests.
+
+**🟢 P0 — Legal Report hidden on Coparenting Journey door**
+- `AlignmentHub.jsx` accepts a new `hideCourtOnly` prop. When true
+  (i.e. `!courtKey`), the entire "Official Legal Conflict Resolution
+  Report" module is skipped and the new Toolkit tile grid renders in
+  its place.
+- Court-Key path preserved 1:1 (Legal Report still there, tabs still
+  read "I. Legal Report & Alignment").
+
+**🟢 P1 — Coparenting Journey Toolkit tiles**
+- Eight tiles rendered in a 2-column grid inside
+  `parent-journey-toolkit`:
+    1. Co-parenting Assessment → `/nd-risk-assessment`
+    2. Safety Screen → `/safety-assessment`
+    3. Mediation Prep & Report → `/prep/child-goals`
+    4. Foundation Statement PDF → direct download
+    5. Medical Needs Assessment → scroll+filter Assessments to
+       Medical
+    6. Educational Assessment → scroll+filter to Educational
+    7. Psychological Assessment → scroll+filter to Psychological
+    8. Share Joint Reports → `/joint-reports`
+- Removed on user request: "Alignment Before Agreement" tile and
+  "Joint Alignment Report" tile.
+- New callback `openAssessmentFolder(category)` in
+  `SacoparentsPortal` sets `folderFilter` and calls `scrollIntoView`
+  on `#assessment-records-section`.
+- "Align Before Agreement Records" section renamed to "Assessments"
+  with an id anchor for the scroll target.
+
+**🟢 P1 — Complete Coparenting Report bundle PDF**
+- New backend endpoint `POST /api/portal/complete-report-pdf`
+  assembles a 5-section PDF:
+    1. Family Violence / Safety Assessment (from `safety_ack`)
+    2. Co-parenting Assessment (from Health Index sliders as
+       `cop_assessment`)
+    3. Individual Align-Before-Agreement Records — Medical,
+       Educational, Psychological (from portal `align_records`)
+    4. Joint Align-Before-Agreement Records — empty-state stub with
+       pointer to `/joint-agreement` (portal doesn't hold joint
+       records)
+    5. Foundation Statement (verbatim)
+- Empty sections render italic muted stubs so a reader sees exactly
+  what the parent still has to complete — never a silent hole.
+- New `CompleteReportPdfBody` Pydantic model. `_ALLOWED_ARTEFACT_TYPES`
+  extended with `"complete"`; `_FILENAMES["complete"]` +
+  `_regenerate_share_pdf` dispatch added.
+- Full-width primary CTA `download-complete-report-btn` below the
+  toolkit grid + a secondary `share-complete-report-btn` that mints
+  a `/api/portal/share` link with `artefact_type='complete'`.
+- Manifest string under the CTAs lists every included section.
+- Backend curl: rich payload → 200 application/pdf ~2758 bytes;
+  empty payload `{}` → 200 application/pdf ~2466 bytes (all
+  empty-state stubs).
+
+**🟢 P0 — Nav overlap fix (iter78 discovery)**
+- Testing agent found the fixed bottom-nav (z-40) was occluding the
+  two new full-width CTAs at 390×844 (button center returned
+  `NAV[data-testid=bottom-nav]` from `elementFromPoint`).
+- Fix: wrapper `pb-28` → `pb-32` (128px) — pushes scrollable content
+  above the fixed nav + crisis-strip stack. Verified via
+  `elementFromPoint` at each button's center — both now return the
+  correct button testid, and a real click fires the download.
+
+**Files touched**
+- `/app/backend/portal_pdf.py` — new
+  `build_portal_complete_report_pdf()` + helpers
+  (`_draw_empty_state`, `_draw_align_records_section`) (~150 lines).
+- `/app/backend/portal_routes.py` — new endpoint + Pydantic body +
+  extended `_ALLOWED_ARTEFACT_TYPES` / `_FILENAMES` /
+  `_regenerate_share_pdf`.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — new callbacks
+  (`openAssessmentFolder`, `buildCompleteReportPayload`,
+  `downloadCompleteReportPdf`, `onShareCompleteReport`), tab label
+  branches on `courtKey`, print-header + audit-stamp renamed, pb-32
+  overlap fix.
+- `/app/frontend/src/pages/portal/AlignmentHub.jsx` — Toolkit tile
+  grid restructured (8 tiles), section renamed "Assessments" with
+  scroll anchor id, Legal Report block wrapped in `{!hideCourtOnly}`.
+- `/app/frontend/src/pages/portal/DoorsGateway.jsx` — "Coparenting
+  Journey" label + "Enter Coparenting Path" CTA.
+- `/app/backend/tests/test_iter78_complete_report.py` (8 tests).
+
+
 ### 2026-02-25 — Iter217 · Situation-Aware Milestone Panel
 
 Small delta on top of iter76. Pivots the milestone framing to fit
