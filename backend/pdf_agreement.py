@@ -7,6 +7,7 @@ from agreement_model import court_agreement_model
 
 TEAL = (21, 154, 156)
 GREEN, GREEN_LIGHT, ORANGE, ORANGE_LIGHT = (45, 138, 100), (237, 248, 243), (198, 122, 38), (255, 246, 234)
+GOLD, GOLD_SOFT = (176, 125, 16), (255, 247, 223)
 
 
 def _choices(pdf: FPDF, items: list) -> None:
@@ -98,9 +99,9 @@ def _signatures(pdf: FPDF, m: dict) -> None:
     pdf.set_xy(18, y + 26)
 
 
-def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = False) -> bytes:
+def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = False, safety: dict | None = None) -> bytes:
     """`doc` is the agreement case; `r` (legacy generate_agreement output) is accepted for callers that only have the report."""
-    m = court_agreement_model(doc) if doc else r
+    m = court_agreement_model(doc, safety) if doc else r
     pdf = _new_pdf()
     pdf.footer_meta = f"SA CoParents Co-Parenting Agreement · {m['child_name']} · {m['date']}"
     if is_sample or r.get("is_sample"):
@@ -119,6 +120,9 @@ def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = Fals
     pdf.ln(4)
     _info_cards(pdf, [("Parent A", m["parent_a_name"]), ("Parent B", m["parent_b_name"]), ("Child", m["child_name"]), ("Agreement Date", m["date"])])
     _panel(pdf, m["purpose"], TEAL_LIGHT, accent=TEAL, sub="Purpose of This Agreement")
+    so = m.get("safety_override")
+    if so:
+        _panel(pdf, so["note"] + ("\n\nBasis: " + " ".join(so["reasons"]) if so.get("reasons") else ""), GOLD_SOFT, accent=GOLD, sub=so["banner"])
     _heading(pdf, 1, "Our Shared Child-Focused Purpose")
     _panel(pdf, "\n".join(f"• {x}" for x in m["shared_purpose"]), PURPLE_LIGHT, label="Shared Foundation")
     for f in m.get("foundation_statements") or []:
@@ -129,7 +133,7 @@ def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = Fals
     _two_boxes(pdf, ("Areas of Alignment", m["needs_aligned"], GREEN, GREEN_LIGHT), ("Areas Requiring Agreement", m["needs_open"], ORANGE, ORANGE_LIGHT))
     pdf.add_page()
     _heading(pdf, 4, "Communication Between Parents")
-    _card(pdf, "Our Communication Agreement", m["communication"])
+    _card(pdf, "Our Communication Agreement" if not so else "Parallel Parenting — Written Communication Only", m["communication"])
     _choices(pdf, m["communication_choices"])
     _heading(pdf, 5, "Parenting Transitions")
     _bullets(pdf, m["transitions"])

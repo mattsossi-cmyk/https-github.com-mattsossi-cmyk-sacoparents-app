@@ -55,7 +55,12 @@ def _short_open(x: str) -> str:
     return f"{label} — {q[0].lower() + q[1:]}" if q and rest else label
 
 
-def court_agreement_model(doc: dict) -> dict:
+def court_agreement_model(doc: dict, safety: dict | None = None) -> dict:
+    from safety_gate import apply_parallel
+    return apply_parallel(_base_model(doc), safety or {})
+
+
+def _base_model(doc: dict) -> dict:
     rep = generate_agreement(doc)
     structs = _structured(doc)
     sm = rep.get("summary") or {"alignment": [], "specific": [], "resolution": []}
@@ -91,7 +96,8 @@ def court_agreement_model(doc: dict) -> dict:
     }
 
 
-def court_agreement_card(doc: dict) -> dict:
+def court_agreement_card(doc: dict, safety: dict | None = None) -> dict:
     """Neutral, judge-facing snapshot (no per-parent answers)."""
-    m = court_agreement_model(doc)
-    return {"case_code": m["case_code"], "child_name": m["child_name"], "date": m["date"], "counts": m["counts"], "statuses": m["statuses"], "needs_aligned": m["needs_aligned"][:8], "needs_open": m["needs_open"][:8]}
+    m = court_agreement_model(doc, safety)
+    return {"case_code": m["case_code"], "child_name": m["child_name"], "date": m["date"], "counts": m["counts"], "statuses": m["statuses"], "needs_aligned": m["needs_aligned"][:8], "needs_open": m["needs_open"][:8],
+            "safety_override": m.get("safety_override")}

@@ -327,7 +327,7 @@ export default function JointReport() {
             </div>
           </div>
         )}
-        {detail.is_creator && <FoundationStatements rid={id} items={detail.foundation_statements} />}
+        {detail.is_creator && <FoundationStatements rid={id} items={detail.foundation_statements} safetyRoute={detail.safety_route} />}
         {detail.is_creator && <ProWorkspace rid={id} steps={ready && report && !NO_REPORT.has(detail.kind) ? [...(report.next_steps || []), ...(report.options || [])] : null} outcome={detail.session_outcome} onOutcomeSaved={(o) => setDetail((d) => ({ ...d, session_outcome: o }))} courtReady={!!(ready && report && !NO_REPORT.has(detail.kind))} />}
       </main>
     </div>

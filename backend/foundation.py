@@ -14,6 +14,7 @@ PURPOSE = "This Foundation Statement organizes the parent's child-focused reflec
 
 class FoundationIn(BaseModel):
     fields: dict
+    safety: dict | None = None
 
 
 def _lines(t) -> list:
@@ -33,7 +34,13 @@ def _complete(f: dict) -> bool:
 
 
 def _public(doc: dict) -> dict:
-    return {"id": doc["id"], "fields": doc["fields"], "complete": _complete(doc["fields"]), "updated_at": doc.get("updated_at"), "created_at": doc.get("created_at")}
+    from safety_gate import parent_safety_flag
+    return {"id": doc["id"], "fields": doc["fields"], "safety": doc.get("safety") or {}, "safety_flagged": parent_safety_flag(doc), "complete": _complete(doc["fields"]), "updated_at": doc.get("updated_at"), "created_at": doc.get("created_at")}
+
+
+def _clean_safety(safety: dict | None) -> dict:
+    from safety_gate import FOUNDATION_SAFETY_QUESTIONS
+    return {k: (safety or {}).get(k) for k, _ in FOUNDATION_SAFETY_QUESTIONS if isinstance((safety or {}).get(k), bool)}
 
 
 def to_pdf_data(doc: dict, parent_name: str, is_sample: bool = False) -> dict:
@@ -59,19 +66,21 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role) -> API
 
     @r.get("/foundation/mine")
     async def get_mine(user=Depends(get_current_user)):
+        from safety_gate import FOUNDATION_SAFETY_QUESTIONS
         doc = await _mine(user)
-        return {"statement": _public(doc) if doc else None, "sections": SECTIONS}
+        return {"statement": _public(doc) if doc else None, "sections": SECTIONS, "safety_questions": [{"key": k, "text": t} for k, t in FOUNDATION_SAFETY_QUESTIONS]}
 
     @r.put("/foundation/mine")
     async def save_mine(body: FoundationIn, user=Depends(get_current_user)):
         now = datetime.now(timezone.utc).isoformat()
         doc = await _mine(user)
         fields = _clean(body.fields)
+        safety = _clean_safety(body.safety) if body.safety is not None else (doc or {}).get("safety") or {}
         if doc:
-            await db.foundation_statements.update_one({"id": doc["id"]}, {"$set": {"fields": fields, "updated_at": now}})
-            doc = {**doc, "fields": fields, "updated_at": now}
+            await db.foundation_statements.update_one({"id": doc["id"]}, {"$set": {"fields": fields, "safety": safety, "updated_at": now}})
+            doc = {**doc, "fields": fields, "safety": safety, "updated_at": now}
         else:
-            doc = {"id": str(uuid.uuid4()), "user_id": user["_id"], "fields": fields, "created_at": now, "updated_at": now}
+            doc = {"id": str(uuid.uuid4()), "user_id": user["_id"], "fields": fields, "safety": safety, "created_at": now, "updated_at": now}
             await db.foundation_statements.insert_one(dict(doc))
         return {"statement": _public(doc)}
 
@@ -90,7 +99,13 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role) -> API
         side = report_role(doc, user["_id"])
         if not side:
             raise HTTPException(status_code=403, detail="Only a parent on this case can share a Foundation Statement into it")
+        from safety_gate import parent_safety_flag, SAFETY_ROUTE_NOTE, FOUNDATION_SAFETY_QUESTIONS
         mine = await _mine(user)
+        if mine and len(mine.get("safety") or {}) < len(FOUNDATION_SAFETY_QUESTIONS):
+            raise HTTPException(status_code=400, detail="Please answer the three safety questions before sharing your Foundation Statement")
+        if parent_safety_flag(mine):
+            await db.joint_reports.update_one({"id": rid}, {"$set": {f"responses.{side}.safety_route": True}})
+            raise HTTPException(status_code=409, detail=SAFETY_ROUTE_NOTE)
         if not mine or not _complete(mine["fields"]):
             raise HTTPException(status_code=400, detail="Complete your Foundation Statement (child, shared purpose, vision, priorities, commitments and parent commitment) before sharing it")
         entry = {"title": "Child-Focused Foundation Statement", "content": to_text(mine["fields"])[:5000], "structured": mine["fields"], "shared_at": datetime.now(timezone.utc).isoformat(), "source": "align"}

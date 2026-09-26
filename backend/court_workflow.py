@@ -644,7 +644,9 @@ async def _agreement_pdf_bytes(db, doc: dict, user: dict, agreement_id: str | No
     emails = lambda d: {(d.get("participants", {}).get(s) or {}).get("email", "").lower() for s in ("a", "b")}  # noqa: E731
     if emails(ag) != emails(doc):
         raise HTTPException(status_code=400, detail="That Co-Parenting Agreement belongs to different parents than this case")
-    return build_agreement_pdf(generate_agreement(ag), doc=ag), court_agreement_card(ag)
+    from safety_gate import safety_status
+    safety = await safety_status(db, emails(ag), user["_id"])
+    return build_agreement_pdf(generate_agreement(ag), doc=ag, safety=safety), court_agreement_card(ag, safety)
 
 
 async def agreement_options(db, doc: dict, user: dict) -> list:
@@ -809,7 +811,9 @@ def _statement_routes(c: Ctx) -> APIRouter:
         doc = await _own_case(db, rid, user)
         lens = await db.professional_reports.find_one({"case_id": rid}, {"_id": 0, "status": 1, "signature_name": 1})
         packets = await db.court_packets.find({"report_id": rid, "frozen": True}, {"_id": 0, "submission_version": 1, "created_at": 1, "statement": 1, "superseded": 1, "legal_summary": 1}).sort("submission_version", 1).to_list(100)
-        return _statement_payload(doc, user, lens, packets, await _org_library(db, user)) | {"agreement_options": await agreement_options(db, doc, user)}
+        from safety_gate import safety_status
+        em = {(doc.get("participants", {}).get(s) or {}).get("email", "").lower() for s in ("a", "b")} - {""}
+        return _statement_payload(doc, user, lens, packets, await _org_library(db, user)) | {"agreement_options": await agreement_options(db, doc, user), "agreement_safety": await safety_status(db, em, user["_id"])}
 
     @r.put("/joint/reports/{rid}/professional-statement")
     async def save_statement(rid: str, body: StatementIn, user=Depends(get_current_user)):

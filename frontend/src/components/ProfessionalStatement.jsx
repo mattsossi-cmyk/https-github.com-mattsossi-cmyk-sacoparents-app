@@ -125,9 +125,10 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
             </label>
           )}
           {data.agreement_options?.length > 0 && (
-            <label className="mb-3 flex items-start gap-2 text-sm cursor-pointer rounded-md border border-border bg-white p-3" data-testid="submit-include-agreement-label">
-              <input type="checkbox" checked={!!agreementId} onChange={(e) => setAgreementId(e.target.checked ? data.agreement_options[0].id : "")} className="mt-1" disabled={!submittable} data-testid="submit-include-agreement" />
+            <label className={`mb-3 flex items-start gap-2 text-sm cursor-pointer rounded-md border bg-white p-3 ${data.agreement_safety?.flagged ? "border-red-300" : "border-border"}`} data-testid="submit-include-agreement-label">
+              <input type="checkbox" checked={!!agreementId} onChange={(e) => { if (e.target.checked && data.agreement_safety?.flagged && !window.confirm("Safety indicators exist for these parents. The attached agreement will be the Parallel Parenting variant (written-only communication, neutral exchanges, no direct negotiation). Attach anyway?")) return; setAgreementId(e.target.checked ? data.agreement_options[0].id : ""); }} className="mt-1" disabled={!submittable} data-testid="submit-include-agreement" />
               <span className="flex-1">Also attach the parents' completed <strong>Child-Focused Co-Parenting Agreement</strong>. The judge receives it hash-sealed in the same frozen packet, with a neutral summary card.
+                {data.agreement_safety?.flagged && <span className="mt-2 block rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-800" data-testid="submit-agreement-safety-warning"><strong>Safety Override applies.</strong> {data.agreement_safety.reasons.join(" ")} The agreement will be rendered as a Parallel Parenting structure and the judge's card will show the override.</span>}
                 {agreementId && data.agreement_options.length > 1 && (
                   <select value={agreementId} onChange={(e) => setAgreementId(e.target.value)} className="mt-2 block h-9 w-full rounded-md border border-input bg-white px-2 text-sm" data-testid="submit-agreement-select">
                     {data.agreement_options.map((a) => <option key={a.id} value={a.id}>{a.case_code} · {a.child_name} · {a.date}</option>)}

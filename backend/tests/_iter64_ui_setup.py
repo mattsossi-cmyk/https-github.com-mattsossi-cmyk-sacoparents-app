@@ -103,7 +103,7 @@ def main() -> None:
         r = s.post(f"{API}/auth/login", json={"email": em, "password": PASSWORD})
         r.raise_for_status()
         s.post(f"{API}/joint/invitations/accept", json={"code": ag_toks[role]}).raise_for_status()
-        s.put(f"{API}/foundation/mine", json={"fields": AGR_FIELDS}).raise_for_status()
+        s.put(f"{API}/foundation/mine", json={"fields": AGR_FIELDS, "safety": {"fear": False, "threats": False, "control": False}}).raise_for_status()
         s.post(f"{API}/joint/reports/{ag['id']}/foundation/share").raise_for_status()
         r = s.put(f"{API}/joint/reports/{ag['id']}/responses", json={"answers": ans})
         r.raise_for_status()

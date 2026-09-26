@@ -1,13 +1,14 @@
 import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function FoundationStatements({ rid, items = [] }) {
-  if (!items.length) return null;
+export function FoundationStatements({ rid, items = [], safetyRoute = false }) {
+  if (!items.length && !safetyRoute) return null;
   return (
     <section className="bg-white border border-border rounded-lg p-6 mt-6" data-testid="foundation-statements-card">
       <p className="text-xs uppercase tracking-widest text-brand-teal font-bold">Parent-Reported · Imported from the SA CoParents app</p>
       <h2 className="text-xl font-semibold mt-1">Foundation Statements</h2>
       <p className="text-sm text-muted-foreground mt-1">Each parent's Child-Focused Foundation Statement, shared into this case. Download as a branded PDF.</p>
+      {safetyRoute && <div className="mt-3 rounded-md border border-[#e0b04a] bg-[#fff7df] p-3 text-sm" data-testid="foundation-safety-route-notice"><strong className="text-[#b07d10]">Safety pathway triggered.</strong> A parent's private safety screening indicated a concern, so their statement was not shared and this case should not proceed to a joint agreement or direct negotiation. Use the Family Violence / Safety assessment and a Parallel Parenting structure with safeguards.</div>}
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">
         {items.map((s, i) => (
           <li key={i} className={`rounded-lg border p-4 ${s.side === "a" ? "border-brand-purple/30 bg-[#f3edfb]" : "border-teal-300 bg-[#e8f7f7]"}`} data-testid={`foundation-statement-${s.side}-${i}`}>

@@ -111,7 +111,8 @@ export default function CourtCase({ sample = false }) {
                   )}
                   <CourtLegalSummary s={d.statement.legal_summary} />
                   {d.statement.agreement_included && (
-                    <div className="rounded-xl border-2 border-teal-300 bg-[#eaf7f7] p-4 space-y-3" data-testid="court-agreement-card">
+                    <div className={`rounded-xl border-2 p-4 space-y-3 ${d.statement.agreement_card?.safety_override ? "border-[#e0b04a] bg-[#fff7df]" : "border-teal-300 bg-[#eaf7f7]"}`} data-testid="court-agreement-card">
+                      {d.statement.agreement_card?.safety_override && <div className="rounded-md border border-[#e0b04a] bg-white p-3 text-sm" data-testid="court-agreement-safety-override"><p className="text-xs font-bold uppercase tracking-widest text-[#b07d10]">{d.statement.agreement_card.safety_override.banner}</p><p className="mt-1">{d.statement.agreement_card.safety_override.note}</p></div>}
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p><span className="rounded-full bg-teal-600/10 px-2 py-0.5 text-[10px] font-bold tracking-widest text-teal-700 mr-2">CO-PARENTING AGREEMENT</span><strong>Child-Focused Co-Parenting Agreement</strong>{d.statement.agreement_card?.case_code && <> · {d.statement.agreement_card.case_code}</>}{d.statement.agreement_card?.date && <> · {d.statement.agreement_card.date}</>}{d.statement.agreement_sha256 && <span className="block text-xs text-muted-foreground mt-0.5">SHA-256 {d.statement.agreement_sha256.slice(0, 16)}…</span>}</p>
                         {!sample && <Button size="sm" variant="outline" asChild data-testid="court-agreement-pdf"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${d.statement.packet_id}/agreement.pdf`} download><Download className="h-4 w-4 mr-1" /> Agreement PDF</a></Button>}

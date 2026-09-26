@@ -77,7 +77,7 @@ class TestFoundationAuthoring:
         assert r.status_code == 400, r.text
 
         # PUT complete
-        r = pa.put(f"{API}/foundation/mine", json={"fields": COMPLETE})
+        r = pa.put(f"{API}/foundation/mine", json={"fields": COMPLETE, "safety": {"fear": False, "threats": False, "control": False}})
         assert r.status_code == 200
         st = r.json()["statement"]
         assert st["complete"] is True

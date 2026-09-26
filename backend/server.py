@@ -728,8 +728,11 @@ async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
     await _log_report_access(doc, user, "Downloaded PDF", "download")
     child = re.sub(r"[^a-z0-9-]", "", (doc.get("child_name") or "child").lower().replace(" ", "-")) or "child"
     if doc.get("kind") == "agreement":
+        from safety_gate import safety_status
+        em = {(doc.get("participants", {}).get(s) or {}).get("email", "").lower() for s in ("a", "b")} - {""}
+        safety = await safety_status(db, em, doc.get("created_by"))
         return Response(
-            content=build_agreement_pdf(generate_agreement(await ensure_agreement_ai(doc)), doc=doc, is_sample=bool(doc.get("is_demo"))),
+            content=build_agreement_pdf(generate_agreement(await ensure_agreement_ai(doc)), doc=doc, is_sample=bool(doc.get("is_demo")), safety=safety),
             media_type="application/pdf",
             headers={"Content-Disposition": f'attachment; filename="coparenting-agreement-{child}.pdf"'},
         )

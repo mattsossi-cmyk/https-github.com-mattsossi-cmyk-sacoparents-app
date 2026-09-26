@@ -69,7 +69,7 @@ class TestFoundationKindCase:
             assert s.post(f"{API}/joint/invitations/accept", json={"code": tok}).status_code == 200
 
         # Parent A: complete + share
-        assert pa.put(f"{API}/foundation/mine", json={"fields": COMPLETE}).status_code == 200
+        assert pa.put(f"{API}/foundation/mine", json={"fields": COMPLETE, "safety": {"fear": False, "threats": False, "control": False}}).status_code == 200
         r = pa.post(f"{API}/joint/reports/{rid}/foundation/share")
         assert r.status_code == 200, r.text
         assert r.json()["side"] == "a"
@@ -88,7 +88,7 @@ class TestFoundationKindCase:
         assert r.status_code == 400
 
         # Parent B: complete + share
-        assert pb.put(f"{API}/foundation/mine", json={"fields": {**COMPLETE, "child_name": "Sky (B)"}}).status_code == 200
+        assert pb.put(f"{API}/foundation/mine", json={"fields": {**COMPLETE, "child_name": "Sky (B)"}, "safety": {"fear": False, "threats": False, "control": False}}).status_code == 200
         r = pb.post(f"{API}/joint/reports/{rid}/foundation/share")
         assert r.status_code == 200, r.text
         assert r.json()["side"] == "b"

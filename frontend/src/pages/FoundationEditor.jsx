@@ -30,6 +30,10 @@ export default function FoundationEditor() {
   const caseId = search.get("case");
   const [f, setF] = useState({ child_name: "", ...EMPTY });
   const [meta, setMeta] = useState(null);
+  const [safety, setSafety] = useState({});
+  const [safetyQs, setSafetyQs] = useState([]);
+  const safetyFlagged = Object.values(safety).some((v) => v === true);
+  const safetyComplete = safetyQs.length > 0 && safetyQs.every((q) => typeof safety[q.key] === "boolean");
   const [busy, setBusy] = useState(false);
   const [shared, setShared] = useState(false);
   const shareToCase = async () => {
@@ -38,13 +42,13 @@ export default function FoundationEditor() {
     catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
   };
   useEffect(() => {
-    api.get("/foundation/mine").then(({ data }) => { if (data.statement) { setF({ ...EMPTY, ...data.statement.fields }); setMeta(data.statement); } }).catch(() => {});
+    api.get("/foundation/mine").then(({ data }) => { setSafetyQs(data.safety_questions || []); if (data.statement) { setSafety(data.statement.safety || {}); setF({ ...EMPTY, ...data.statement.fields }); setMeta(data.statement); } }).catch(() => {});
   }, []);
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const save = async () => {
     setBusy(true);
     try {
-      const { data } = await api.put("/foundation/mine", { fields: f });
+      const { data } = await api.put("/foundation/mine", { fields: f, safety });
       setMeta(data.statement);
       toast.success(data.statement.complete ? "Foundation Statement saved — complete and ready to share." : "Draft saved. Fill in child, shared purpose, vision, priorities, commitments and parent commitment to complete it.");
     } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
@@ -68,7 +72,20 @@ export default function FoundationEditor() {
           <div className="bg-gradient-to-r from-[#2f174f] to-[#4b2a7b] px-8 py-6 text-white"><p className="text-[10px] uppercase tracking-[2px] opacity-85">SA CoParents Parent Report</p><h1 className="font-display text-3xl font-bold mt-1" data-testid="foundation-editor-title">My Child-Focused Foundation Statement</h1><p className="mt-1 text-sm opacity-90">Written by {user?.name || "you"} · private to you until you share it into a case.</p></div>
           <div className="p-6 sm:p-8 space-y-6">
             <div className="rounded-md border-l-4 border-teal-600 bg-[#eaf7f7] p-4 text-sm">Your statement stays private. When a professional invites you to a joint case, you can share it so it appears in the Co-Parenting Agreement and in the professional's case file.</div>
-            {caseId && <div className="rounded-md border border-brand-purple/30 bg-[#f3edfb] p-4 text-sm flex flex-wrap items-center justify-between gap-3" data-testid="foundation-case-share-block"><span>{shared ? "Shared into your case — you can re-share after edits." : "This statement was requested for one of your cases. Save it, then share it into the case."}</span><Button size="sm" onClick={shareToCase} disabled={busy || !meta?.complete} data-testid="foundation-case-share-btn"><Share2 className="h-4 w-4 mr-1" /> {shared ? "Re-share" : "Share into case"}</Button></div>}
+            <section className="rounded-lg border border-[#f0d78a] bg-[#fff7df] p-4" data-testid="foundation-safety-screen">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#b07d10]">Safety first — private to you</p>
+              <p className="mt-1 text-sm">Three quick questions before anything is shared. Your answers are never shown to the other parent.</p>
+              <div className="mt-3 space-y-3">
+                {safetyQs.map((q) => (
+                  <div key={q.key} className="flex flex-wrap items-center justify-between gap-2 text-sm" data-testid={`foundation-safety-${q.key}`}>
+                    <span className="flex-1 min-w-[200px]">{q.text}</span>
+                    <div className="flex gap-2">{[["No", false], ["Yes", true]].map(([l, v]) => <button key={l} type="button" onClick={() => setSafety((x) => ({ ...x, [q.key]: v }))} className={`rounded-full border px-3 py-1 text-xs font-semibold ${safety[q.key] === v ? (v ? "bg-[#b07d10] text-white border-[#b07d10]" : "bg-align-green text-white border-align-green") : "bg-white border-border"}`} data-testid={`foundation-safety-${q.key}-${l.toLowerCase()}`}>{l}</button>)}</div>
+                  </div>
+                ))}
+              </div>
+              {safetyFlagged && <div className="mt-3 rounded-md border border-[#e0b04a] bg-white p-3 text-sm" data-testid="foundation-safety-route"><strong className="text-[#b07d10]">Safety pathway.</strong> Your statement stays private and will not be shared into a joint agreement. Your professional will use the Family Violence / Safety pathway with safeguards (written-only communication, neutral exchanges). If you are in immediate danger call 911; the National Domestic Violence Hotline is 1-800-799-7233.</div>}
+            </section>
+            {caseId && <div className="rounded-md border border-brand-purple/30 bg-[#f3edfb] p-4 text-sm flex flex-wrap items-center justify-between gap-3" data-testid="foundation-case-share-block"><span>{safetyFlagged ? "Sharing is paused because of your safety answers — your professional is notified to use the safety pathway." : shared ? "Shared into your case — you can re-share after edits." : "This statement was requested for one of your cases. Answer the safety questions, save, then share it into the case."}</span><Button size="sm" onClick={shareToCase} disabled={busy || !meta?.complete || !safetyComplete || safetyFlagged} data-testid="foundation-case-share-btn"><Share2 className="h-4 w-4 mr-1" /> {shared ? "Re-share" : "Share into case"}</Button></div>}
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm"><span className="font-medium">Child's name (or initials)</span><input value={f.child_name || ""} onChange={(e) => set("child_name", e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-white px-3 text-sm" data-testid="foundation-child_name" /></label>
               <div className="text-sm"><span className="font-medium">Status</span><p className="mt-2" data-testid="foundation-status">{meta ? (meta.complete ? <span className="rounded-full bg-[#eaf7f1] px-3 py-1 font-semibold text-align-green">Complete</span> : <span className="rounded-full bg-[#fff7df] px-3 py-1 font-semibold text-[#b07d10]">Draft</span>) : <span className="text-muted-foreground">Not started</span>}</p></div>

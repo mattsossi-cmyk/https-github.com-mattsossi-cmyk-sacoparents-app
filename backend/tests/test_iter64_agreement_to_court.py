@@ -30,7 +30,7 @@ def test_agreement_attached_to_court_submission() -> None:
     answers = _agreement_answers()
     for s, role in ((pa, "a"), (pb, "b")):
         assert s.post(f"{API}/joint/invitations/accept", json={"code": toks[role]}).json().get("ok")
-        s.put(f"{API}/foundation/mine", json={"fields": AGR_FIELDS})
+        s.put(f"{API}/foundation/mine", json={"fields": AGR_FIELDS, "safety": {"fear": False, "threats": False, "control": False}})
         s.post(f"{API}/joint/reports/{ag['id']}/foundation/share")
         r = s.put(f"{API}/joint/reports/{ag['id']}/responses", json={"answers": answers})
         assert r.status_code == 200, r.text[:200]
