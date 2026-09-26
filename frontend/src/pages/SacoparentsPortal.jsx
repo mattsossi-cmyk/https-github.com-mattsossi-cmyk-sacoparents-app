@@ -446,22 +446,58 @@ export default function SacoparentsPortal() {
     setSafetyOpen(true);
   }, []);
 
-  const onSaveSafetyPlan = useCallback((plan) => {
-    if (plan == null) {
-      // Delete: wipe local storage AND state; the debounced PUT will
-      // then sync a `safety_plan: null` up to the server so the plan
-      // is gone across devices.
-      try {
-        localStorage.removeItem(SAFETY_PLAN_KEY);
-      } catch {
-        /* ignore quota */
+  const onSaveSafetyPlan = useCallback(
+    (plan) => {
+      if (plan == null) {
+        // Delete: wipe local storage AND state; cross-device wipe
+        // usually rides on the debounced PUT that fires when
+        // `safetyPlan` state changes, but that has a ~700ms lag. Fire
+        // a fire-and-forget PUT NOW so the server-side copy is gone
+        // as soon as the network round-trip completes — critical for
+        // a parent who taps delete and then closes the tab.
+        try {
+          localStorage.removeItem(SAFETY_PLAN_KEY);
+        } catch {
+          /* ignore quota */
+        }
+        setSafetyPlan(null);
+        if (user) {
+          api
+            .put("/portal/state", {
+              align_records: alignRecords,
+              milestones,
+              biff_logs: biffLogs,
+              foundation_text: foundationText,
+              legal_report: legalReport,
+              health_index: healthIndex,
+              court_key: courtKey,
+              reassessments,
+              safety_ack: safetyAck,
+              safety_plan: null,
+            })
+            .catch(() => {
+              // The debounced PUT triggered by the state change will
+              // retry on the next tick / online event.
+            });
+        }
+        return;
       }
-      setSafetyPlan(null);
-      return;
-    }
-    writeJson(SAFETY_PLAN_KEY, plan);
-    setSafetyPlan(plan);
-  }, []);
+      writeJson(SAFETY_PLAN_KEY, plan);
+      setSafetyPlan(plan);
+    },
+    [
+      user,
+      alignRecords,
+      milestones,
+      biffLogs,
+      foundationText,
+      legalReport,
+      healthIndex,
+      courtKey,
+      reassessments,
+      safetyAck,
+    ]
+  );
 
   const verifyProfessionalKey = useCallback(async () => {
     const key = courtKeyInput.trim();

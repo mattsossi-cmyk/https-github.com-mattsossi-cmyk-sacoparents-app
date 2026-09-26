@@ -26,6 +26,32 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter214 · One-Shot Server Sync on Safety Plan Delete
+
+Tiny follow-on delta to iter73 review comment. Closes the ~700ms
+window where a parent could tap "Delete my Safety Plan" and then
+immediately close the tab — before the debounced `PUT /portal/state`
+had fired — leaving the server-side copy alive.
+
+**🟢 P2 — Immediate PUT on delete**
+- `SacoparentsPortal.onSaveSafetyPlan(null)` now fires a
+  fire-and-forget `PUT /portal/state` with the full current state
+  snapshot and `safety_plan: null`, in addition to clearing local
+  state.
+- Silent on failure — the state-change-driven debounced PUT will
+  still fire ~700ms later and retry (offline queue also picks it up
+  via the existing `SYNC_PENDING_KEY`).
+- Only fires when `user` is signed in.
+- Verified via curl: PUT populated → GET returns plan → PUT with
+  `safety_plan:null` → GET returns `safety_plan: None`,
+  `safety_ack` preserved.
+
+**Files touched**
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — expanded
+  `onSaveSafetyPlan` (added ~20 lines) with a full-state PUT and
+  the corresponding deps in useCallback.
+
+
 ### 2026-02-25 — Iter213 · Delete My Plan + Situation-Aware Grey-Rock Coach
 
 Small delta on top of iter72. Ships the two follow-on safety
