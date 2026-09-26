@@ -26,6 +26,40 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter216 · Grey-Rock Local Fallback (client stub)
+
+Small delta on top of iter75. Closes a subtle guardrail hole: when
+Claude was cold or the /biff-refine request errored out, the client-
+side local stub was still emitting the warm *"Thank you for your
+message… Let's maintain focus on the child's schedule. Thanks."*
+line to flagged parents. Verified via smoke tests with `/biff-refine`
+network-blocked to force the fallback path.
+
+**🟢 P1 — Grey-rock Local Fallback**
+- `runLocalAnalysis(val)` in `SacoparentsPortal.jsx` now branches on
+  `safetyAck?.flagged`. When flagged, emits the same grey-rock
+  template the server uses on empty Claude replies:
+  `Received. Follow-up in writing. — <first 120 chars of draft>`.
+- `applyPreset(key)` gets the same treatment — canned warm preset
+  copy (e.g. "Thank you for letting me know…") is skipped for
+  flagged parents in favour of the grey-rock line.
+- Both callbacks include `safetyAck` in their `useCallback` deps so
+  the shift is instant when the parent flips their Quick Safety
+  Check.
+
+**Files touched**
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — two conditional
+  branches (typing + preset paths).
+
+**Verified**
+- Preview smoke (`/portal/biff-refine` mocked to `route.abort()`):
+    - Flagged + typing → grey-rock line, no "Thank you"
+    - Flagged + preset → grey-rock line, no canned warm copy
+    - Non-flagged + typing → warm fallback preserved
+    - Non-flagged + preset → warm canned BIFF preserved
+- No layout shift, no horizontal overflow at 390×844.
+
+
 ### 2026-02-25 — Iter215 · Grey-Rock Chip + Undo Toast + PATCH State Semantics
 
 Three quality-of-life deltas on top of iter74. Verified in iter75

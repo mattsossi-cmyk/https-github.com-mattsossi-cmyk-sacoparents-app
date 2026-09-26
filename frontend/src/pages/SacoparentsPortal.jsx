@@ -536,23 +536,36 @@ export default function SacoparentsPortal() {
   }, [legalReport]);
 
   // BIFF local + AI refinement
-  const runLocalAnalysis = useCallback((val) => {
-    const trimmed = (val || "").trim();
-    if (!trimmed) {
-      setFlagList([]);
-      setBiffOutput("");
-      setRiskLabel("Neutral");
-      return;
-    }
-    const flags = [];
-    if (/always|never|you do/i.test(trimmed)) flags.push("Accusatory phrasing");
-    if (/!{2,}/.test(trimmed)) flags.push("High intensity");
-    setFlagList(flags);
-    setRiskLabel(flags.length > 0 ? "Escalation Flag" : "Low Risk");
-    setBiffOutput(
-      `Thank you for your message. ${trimmed.substring(0, 100)}... Let's maintain focus on the child's schedule. Thanks.`
-    );
-  }, []);
+  const runLocalAnalysis = useCallback(
+    (val) => {
+      const trimmed = (val || "").trim();
+      if (!trimmed) {
+        setFlagList([]);
+        setBiffOutput("");
+        setRiskLabel("Neutral");
+        return;
+      }
+      const flags = [];
+      if (/always|never|you do/i.test(trimmed)) flags.push("Accusatory phrasing");
+      if (/!{2,}/.test(trimmed)) flags.push("High intensity");
+      setFlagList(flags);
+      setRiskLabel(flags.length > 0 ? "Escalation Flag" : "Low Risk");
+      // Match the server-side grey-rock fallback text (portal_ai.py) so a
+      // flagged parent never sees a warm "Thank you for your message..."
+      // line while Claude is warming up.
+      const flagged = !!(safetyAck && safetyAck.flagged);
+      if (flagged) {
+        setBiffOutput(
+          `Received. Follow-up in writing. — ${trimmed.substring(0, 120)}`
+        );
+      } else {
+        setBiffOutput(
+          `Thank you for your message. ${trimmed.substring(0, 100)}... Let's maintain focus on the child's schedule. Thanks.`
+        );
+      }
+    },
+    [safetyAck]
+  );
 
   const runAiRefine = useCallback(
     (val) => {
@@ -620,10 +633,19 @@ export default function SacoparentsPortal() {
       setRawInput(p.raw);
       setFlagList(p.flags);
       setRiskLabel(p.flags.length > 0 ? "Escalation Flag" : "Low Risk");
-      setBiffOutput(p.biff);
+      // A flagged parent should NEVER see the canned warm preset copy
+      // — use the grey-rock template until Claude's real reply lands.
+      const flagged = !!(safetyAck && safetyAck.flagged);
+      if (flagged) {
+        setBiffOutput(
+          `Received. Follow-up in writing. — ${p.raw.substring(0, 120)}`
+        );
+      } else {
+        setBiffOutput(p.biff);
+      }
       runAiRefine(p.raw);
     },
-    [runAiRefine]
+    [runAiRefine, safetyAck]
   );
 
   const copyBiffOutput = useCallback(() => {
