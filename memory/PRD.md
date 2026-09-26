@@ -26,6 +26,117 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter211 · Component Split + Safety-First Guardrail + Passphrase Shares + Kudos Streak
+
+Big architectural + clinical follow-on to iter70. Cuts the 2205-line
+monolithic `SacoparentsPortal.jsx` down to a 1383-line container and
+adds a full 4-layer safety guardrail that was silently missing from
+the new SPA. All layers verified in iter71 (backend 13/13 + frontend
+100%).
+
+**🟢 P0 — Component Split**
+- `SacoparentsPortal.jsx` (2205 → 1383 lines) now imports from
+  `/app/frontend/src/pages/portal/*`:
+    * `portalStorage.js` — shared constants, defaults, helpers,
+      `computeKudosStreak()`.
+    * `DoorsGateway.jsx` — Gateway with sync-chip + optional kudos
+      streak badge.
+    * `CourtKeyScreen.jsx` — court-key entry + inline error.
+    * `AlignmentHub.jsx` — Legal Report + Alignment records +
+      Foundation Statement.
+    * `BiffTab.jsx` — BIFF composer + history + milestones + weekly
+      PDF actions.
+    * `TrendSparkline.jsx` — SVG sparkline (moved out of monolith).
+    * `ShareLegalModal.jsx` — passphrase + TTL toggle modal.
+- Container owns state + effects; sub-components are pure renderers
+  with prop callbacks. Every legacy testid preserved (score-slider-*,
+  sig-parent-*, folder-*, preset-*, nav-*, etc.).
+- `console.warn(exc)` added to `createShareLink` catch branch
+  (deferred P2 from iter70).
+
+**🔴 P0 — Safety-First Guardrail Suite (NEW — was missing)**
+Clinical review flagged that the new SPA had ZERO IPV / family-
+violence guardrails — BIFF, Legal Report signatures, and court-key
+entry were all reachable with no safety gate. Fixed with four layers:
+
+1. **Persistent Crisis Strip** — `SafetyCrisisStrip.jsx` pinned above
+   the bottom nav on every screen (Gateway, Court-Key, Parent
+   Journey). Tap-to-call for 911, 988, DV 1-800-799-7233, and text
+   START to 88788. Testid: `portal-crisis-strip` +
+   `crisis-{call-911, dv-hotline, text-start, 988}`.
+
+2. **First-Visit Safety Screen** — `SafetyScreen.jsx` renders as a
+   modal gate the first time the parent taps either Door 1 or Door 2.
+   Three questions (physical safety / coercion & control / device
+   privacy). If any answer suggests risk → shows
+   `safety-flagged-card` with hotline buttons + deep-link to
+   `/safety-assessment` for the full clinical screen + a
+   `safety-flagged-continue-btn` (never blocks a parent — clinical
+   rule). Cleared → `sacoparents_safety_screen_ack = {cleared:true,
+   flagged:false, date}` set in localStorage.
+
+3. **Safety Retake Chip** — `SafetyRetakeChip` on the Parent Journey
+   header, always visible. Purple pill when non-flagged, rose pill
+   when flagged (reads "Safety concerns flagged — tap to re-check").
+   Testid: `safety-retake-chip`.
+
+4. **Soft Banner** — `SafetySoftBanner` renders at the top of
+   AlignmentHub and BiffTab whenever the parent's last screening was
+   flagged. Names the mismatch clearly (BIFF/Legal assumes both
+   parents are safe) but never blocks the tool. Testids:
+   `safety-soft-banner-{alignment|biff}` + hotline anchors.
+
+**🟢 P1 — Passphrase + 7-Day TTL on Legal Report Shares**
+- `ShareLegalModal.jsx` now surfaces a passphrase input + a 7-day /
+  30-day toggle. Frontend passes `{passphrase, ttl_days}` to
+  `POST /api/portal/share`; backend was already ready to accept them
+  (from iter70 groundwork).
+- Passphrase gate on `GET /api/portal/share/{id}.pdf`:
+    * No `?p` → 200 HTML "Passphrase required" page (branded).
+    * Wrong `?p` → 200 HTML gate + "did not match" error.
+    * Correct `?p` → 200 application/pdf %PDF bytes.
+- Backend response now includes `requires_passphrase` and `ttl_days`.
+
+**🟢 P1 — Kudos Streak Badge**
+- `computeKudosStreak(milestones)` in `portalStorage.js` counts
+  consecutive UTC days ending today (or yesterday, ≤1 day gap)
+  containing at least one `source: "biff_kudos"` milestone.
+  Stale streaks (>1 day old) return 0.
+- `DoorsGateway.jsx` renders `kudos-streak-badge` +
+  `kudos-streak-count` when streak ≥ 2. Silent when streak < 2 to
+  avoid celebrating single kudos events.
+
+**Backend / frontend files edited**
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — rewritten as
+  container.
+- `/app/frontend/src/pages/portal/SafetyCrisisStrip.jsx` (new).
+- `/app/frontend/src/pages/portal/SafetyScreen.jsx` (new — exports
+  `SafetyScreen`, `SafetyRetakeChip`, `SafetySoftBanner`).
+- `/app/frontend/src/pages/portal/portalStorage.js` — added
+  `SAFETY_ACK_KEY`.
+- `/app/backend/tests/test_iter71_split_safety_passphrase.py` (new,
+  13 tests) — passphrase gate states, TTL coercion, share types
+  without gate, direct PDF endpoints, court-key verify.
+
+**Verified**
+- iter71 report: 13/13 backend + 100% frontend across all critical
+  flows (safety gate first-visit, cleared, flagged, retake, soft
+  banner on both tabs; passphrase mint + gate all three states;
+  kudos streak with today+yesterday seed).
+- No horizontal overflow at 390×844.
+- Every legacy testid preserved after the split.
+
+**Deferred (P2 — from iter71 review)**
+- Tighten `ttl_days` pydantic constraint to `Literal[7,30]` so
+  clients don't silently receive 30 when sending 14.
+- Sync `sacoparents_safety_screen_ack` into portal_state so
+  signed-in users on a new browser don't re-prompt.
+- Extract Reassessment / Alignment modals from the container into
+  their own components (container still at 1383 lines).
+- Replace `_regenerate_share_pdf` smoke build with a lighter
+  per-artefact payload validator.
+
+
 ### 2026-02-25 — Iter210 · Trend Line + BIFF Kudos Loop + Share Links
 
 Follow-on batch to iter69. Ships three parent-facing features. All
