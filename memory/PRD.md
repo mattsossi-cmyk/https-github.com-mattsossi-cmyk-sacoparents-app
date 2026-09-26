@@ -26,6 +26,69 @@ Email: Resend SDK (default) + Virtru Gateway SMTP (flag-gated, BAA-pending)
 LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
+### 2026-02-25 — Iter213 · Delete My Plan + Situation-Aware Grey-Rock Coach
+
+Small delta on top of iter72. Ships the two follow-on safety
+enhancements requested by the founder. All verified in iter73
+(backend 8/8 + frontend 4/4).
+
+**🟢 P1 — Delete My Safety Plan**
+- New `safety-plan-delete-btn` (rose underline link) inside the
+  `SafetyPlanBuilder`, visible only when there's a saved plan.
+- On click: `window.confirm` guard → clears the 5 input fields,
+  wipes `sacoparents_safety_plan` from localStorage, calls
+  `onSave(null)`.
+- `SacoparentsPortal.onSaveSafetyPlan` now handles `null` — clears
+  local state so the debounced `PUT /portal/state` syncs
+  `safety_plan: null` up. Backend sanitizer already returns `None`
+  for null/empty, so the server-side copy is wiped on next sync.
+- Sync-caveat: cross-device wipe waits for the ~700ms debounce PUT
+  to fire (called out in iter73 review as a P2 — a one-shot
+  immediate PUT on delete would close the gap).
+
+**🟢 P1 — Situation-Aware Grey-Rock Coach**
+- `portal_ai.refine_biff(raw_message, *, safety_flagged=False)` now
+  branches on the flag. When true, Claude runs the new
+  `_BIFF_GREYROCK_SYSTEM` prompt that produces DV-safe grey-rock
+  replies: minimum words, no "thanks" / "I appreciate" openers, no
+  emotion words, no explanations, no questions that invite further
+  contact.
+- `POST /api/portal/biff-refine` accepts an optional
+  `safety_flagged: bool = False` (default preserves the existing
+  warm coach for un-flagged parents).
+- Frontend `runAiRefine` reads `safetyAck?.flagged` and passes it in
+  every debounced refine POST — so a flagged parent gets grey-rock
+  copy from the moment they type without any extra UI to toggle.
+- Grey-rock fallback text (when Claude returns nothing) is also
+  short and factual: `"Received. Follow-up in writing. — <draft>"`.
+- Verified live: same raw draft
+  ("You are always late for pickups and I am sick of your excuses")
+  produces "Hi, I've noticed pickup times have been running late …
+  Thanks for understanding." (warm) vs. "Pickup is at 6pm on
+  Friday." (grey-rock).
+
+**Files touched**
+- `/app/backend/portal_ai.py` — new grey-rock system prompt +
+  branching + grey-rock fallback.
+- `/app/backend/portal_routes.py` — BiffRefineBody + endpoint
+  threading of `safety_flagged`.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — thread
+  `safetyAck?.flagged` into runAiRefine + null-handling in
+  onSaveSafetyPlan.
+- `/app/frontend/src/pages/portal/SafetyPlanBuilder.jsx` — new
+  `wipe()` handler + `safety-plan-delete-btn` in the saved footer.
+- `/app/backend/tests/test_iter73_greyrock_delete.py` (new, 8 tests).
+
+**Deferred (P2 — from iter73 review)**
+- Consider `strict=True` on the pydantic bool so 'true'/'false'
+  strings don't coerce.
+- Replace `window.confirm` in the wipe flow with an inline
+  undo-toast to remove the modal hop.
+- Fire a one-shot immediate `PUT /portal/state` on delete so the
+  server-side wipe doesn't wait on the debounce.
+- Extract a `usePortalSync` hook — container still at 1424 lines.
+
+
 ### 2026-02-25 — Iter212 · Safety-Ack Sync + Guided Safety Plan Builder
 
 Follow-on delta to iter71's safety guardrail suite. Ships two safety

@@ -1,0 +1,24 @@
+{
+  "summary": "Iter73 delta verified end-to-end. Backend (8/8 pytest cases in /app/backend/tests/test_iter73_greyrock_delete.py): (1) default POST /api/portal/biff-refine returns {biff, flags, risk} shape; (2) POST with safety_flagged=true returns identical shape; (3) grey-rock biff response is materially SHORTER than default AND lacks warm openers (thanks/thank you/i appreciate/i understand) for the same raw draft 'You are always late for pickups and I am sick of your excuses'; (4) missing safety_flagged defaults to false and works; (5) non-bool-ish string 'not-a-bool' is rejected 422 by pydantic; (6) empty raw rejected 422; (7) safety_plan delete round-trip: PUT /api/portal/state with safety_plan=<dict> then PUT with safety_plan=None -> GET returns safety_plan: null; (8) explicit JSON null in payload accepted and persisted as None. Frontend (390x844, real preview): (A) DELETE-ACCEPT: seeded sacoparents_safety_plan + sacoparents_safety_screen_ack.flagged=true, entered parent journey via door-parent-journey, opened safety-retake-chip, submitted with coerce=Yes to re-flag, expanded safety-plan-toggle -> safety-plan-delete-btn visible + safety-plan-saved-at chip visible. Auto-accepted dialog and clicked delete -> localStorage.sacoparents_safety_plan is null, saved-at chip gone, delete btn gone, all 5 safety-plan-input-* fields empty. (B) DELETE-CANCEL: attached dialog dismiss handler; localStorage remained intact and saved-at chip remained visible after dismiss. (C) BIFF flagged=true: with flagged ack seeded, typed into raw-input -> intercepted POST body was {\"raw\":\"...\",\"safety_flagged\":true}. (D) BIFF flagged=false: with cleared ack, typed into raw-input -> intercepted POST body was {\"raw\":\"...\",\"safety_flagged\":false}. All acceptance criteria for iter73 met.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter73_greyrock_delete.py",
+    "/app/test_reports/pytest/iter73.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "BiffRefineBody uses pydantic default `safety_flagged: bool = False` — v2 will coerce strings like 'true'/'false'/'1'/'0' to bool. The current impl rejects a garbage string 'not-a-bool' (422) which satisfies the spec, but a client passing the literal strings 'true'/'false' will succeed. Consider `strict=True` if strict typing is required.",
+    "wipe() in SafetyPlanBuilder uses window.confirm which is a hard blocker; per the code comment 'a parent under duress needs to be able to erase their plan in one tap.' Consider replacing with an inline undo-toast pattern to remove the confirm hop entirely.",
+    "onSaveSafetyPlan(null) only clears localStorage + local state — the server sync depends on the parent's debounced PUT firing after the state change. If the parent closes the tab within the debounce window, server-side plan persists until next PUT. A one-shot immediate PUT on delete would guarantee cross-device wipe.",
+    "SacoparentsPortal.jsx remains over the 700-line guideline (1424 lines). Iter73 delta is small (~15 lines), but the surrounding refactor risk keeps growing."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter73_greyrock_delete.py"],
+  "success_rate": {"backend": "100% (8/8)", "frontend": "100% (4/4)"},
+  "test_credentials": "parent1@test.com / TestPass123!",
+  "seed_data_creation": "Backend: parent1 auto-registered via /api/auth/register if login 401. Frontend: sacoparents_safety_plan + sacoparents_safety_screen_ack seeded via page.evaluate before reload for each subtest.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter73 grey-rock BIFF + Safety-Plan delete are stable. Test file: /app/backend/tests/test_iter73_greyrock_delete.py (8 tests, all pass). Frontend testids: hub-tab-biff, raw-input, safety-plan-toggle, safety-plan-delete-btn, safety-plan-saved-at, safety-plan-input-{safe_place,trusted_contact,essentials,code_word,tech_notes}. Note safety-screen submit testid is submit-safety-screen-btn (not safety-submit). Safety flag is triggered via safety-q-coerce-yes.",
+  "rca of the issue": "N/A — no bugs found."
+}
