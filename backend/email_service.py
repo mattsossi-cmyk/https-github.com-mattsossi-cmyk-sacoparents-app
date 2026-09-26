@@ -371,6 +371,119 @@ def send_guided_draft_nudge(
     )
 
 
+def send_nudge_digest(*, to_email: str, digest: dict) -> None:
+    """Weekly admin digest of last week's guided-draft nudge batch.
+
+    ``digest`` shape (see ``guided_draft_digest.compute_digest``):
+      {
+        window_start, window_end,   # ISO datetimes
+        total_sent, total_finished, # ints
+        conversion_pct,             # float
+        by_topic: { "<label>": {sent: int, finished: int}, ... }
+      }
+    """
+    total_sent = int(digest.get("total_sent", 0))
+    total_finished = int(digest.get("total_finished", 0))
+    conversion_pct = digest.get("conversion_pct", 0.0)
+    by_topic = digest.get("by_topic") or {}
+    window_start = str(digest.get("window_start", ""))[:10]
+    window_end = str(digest.get("window_end", ""))[:10]
+
+    plain_lines = [
+        "SA CoParents \u2014 Guided Draft Nudge Digest",
+        "",
+        f"Window: {window_start} \u2192 {window_end}",
+        f"Nudges sent: {total_sent}",
+        f"Parents who finished within 7 days: {total_finished}",
+        f"Conversion: {conversion_pct}%",
+        "",
+        "By topic:",
+    ]
+    for label, counts in by_topic.items():
+        plain_lines.append(
+            f"  \u2022 {label}: {counts.get('finished', 0)}/"
+            f"{counts.get('sent', 0)} finished"
+        )
+    plain_lines.append("")
+    plain_lines.append("\u2014 sacoparentsapp.online")
+    plain = "\n".join(plain_lines)
+
+    rows_html = "".join(
+        f'<tr>'
+        f'<td style="padding:6px 10px;border-bottom:1px solid #EEE9F7;'
+        f'font-size:13px;color:#1A1330;">{_html.escape(label)}</td>'
+        f'<td style="padding:6px 10px;border-bottom:1px solid #EEE9F7;'
+        f'font-size:13px;color:#4B4567;text-align:right;">'
+        f'{int(counts.get("finished", 0))} / '
+        f'{int(counts.get("sent", 0))}'
+        f'</td>'
+        f'</tr>'
+        for label, counts in by_topic.items()
+    ) or (
+        '<tr><td style="padding:8px 10px;font-size:13px;color:#857E9C;" colspan="2">'
+        "No topic breakdown this week."
+        "</td></tr>"
+    )
+
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 14px 0;">'
+        f'Weekly recap of the Guided Journey draft nudges we sent last '
+        f'week (<strong>{_html.escape(window_start)}</strong> to '
+        f'<strong>{_html.escape(window_end)}</strong>).'
+        f'</p>'
+        f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;'
+        f'gap:8px;margin:0 0 16px 0;">'
+        f'<div style="background:#F4EFFF;border-radius:10px;padding:12px;'
+        f'text-align:center;">'
+        f'<div style="font-size:22px;font-weight:700;color:#4A1A6E;">'
+        f'{total_sent}</div>'
+        f'<div style="font-size:11px;color:#857E9C;text-transform:uppercase;'
+        f'letter-spacing:0.5px;">Nudges sent</div></div>'
+        f'<div style="background:#ECFDF5;border-radius:10px;padding:12px;'
+        f'text-align:center;">'
+        f'<div style="font-size:22px;font-weight:700;color:#046C4E;">'
+        f'{total_finished}</div>'
+        f'<div style="font-size:11px;color:#857E9C;text-transform:uppercase;'
+        f'letter-spacing:0.5px;">Finished in 7d</div></div>'
+        f'<div style="background:#FFFBEB;border-radius:10px;padding:12px;'
+        f'text-align:center;">'
+        f'<div style="font-size:22px;font-weight:700;color:#A45507;">'
+        f'{conversion_pct}%</div>'
+        f'<div style="font-size:11px;color:#857E9C;text-transform:uppercase;'
+        f'letter-spacing:0.5px;">Conversion</div></div>'
+        f'</div>'
+        f'<table style="width:100%;border-collapse:collapse;border:1px solid #EEE9F7;'
+        f'border-radius:10px;overflow:hidden;">'
+        f'<thead><tr style="background:#F8F7FC;">'
+        f'<th style="padding:8px 10px;text-align:left;font-size:11px;'
+        f'font-weight:700;color:#4A1A6E;text-transform:uppercase;'
+        f'letter-spacing:0.5px;">Topic</th>'
+        f'<th style="padding:8px 10px;text-align:right;font-size:11px;'
+        f'font-weight:700;color:#4A1A6E;text-transform:uppercase;'
+        f'letter-spacing:0.5px;">Finished / Sent</th>'
+        f'</tr></thead>'
+        f'<tbody>{rows_html}</tbody>'
+        f'</table>'
+    )
+    html = _branded_html(
+        headline="Guided Draft Nudge \u2014 Weekly Digest",
+        body_html=body_html,
+        cta_label="",
+        cta_url=None,
+    )
+    _send(
+        to_email=to_email,
+        subject=(
+            f"[SA CoParents] Nudge digest \u2014 {total_finished} of "
+            f"{total_sent} finished last week"
+        ),
+        html=html,
+        text=plain,
+        failure_message="Could not send the nudge digest right now.",
+    )
+
+
+
 
 def send_magic_link(*, to_email: str, link_url: str, user_name: Optional[str] = None) -> None:
     """Send a one-tap sign-in link."""

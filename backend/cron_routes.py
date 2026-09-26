@@ -76,3 +76,34 @@ async def guided_draft_nudge_cron(
 
     background.add_task(_run)
     return {"ok": True, "run_id": run_id, "enqueued": "guided-draft-nudge"}
+
+
+@router.post("/nudge-digest")
+async def nudge_digest_cron(
+    background: BackgroundTasks,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Weekly admin digest of last week's Guided Journey nudge batch.
+
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    """
+    _verify_cron_auth(authorization)
+    run_id = request.headers.get("X-Webhook-Id") or "manual"
+
+    from guided_draft_digest import send_nudge_digest
+
+    async def _run() -> None:
+        try:
+            stats = await send_nudge_digest(db)
+            logger.info(
+                "nudge-digest cron run_id=%s stats=%s", run_id, stats
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
+                "nudge-digest cron run_id=%s failed: %s", run_id, exc
+            )
+
+    background.add_task(_run)
+    return {"ok": True, "run_id": run_id, "enqueued": "nudge-digest"}

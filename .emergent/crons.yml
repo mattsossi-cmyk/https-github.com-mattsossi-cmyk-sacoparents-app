@@ -6,3 +6,9 @@ crons:
     endpoint: "{{BASE_URL}}/api/cron/guided-draft-nudge"
     method: POST
     enabled: true
+  - name: nudge-digest
+    description: "Weekly admin recap of last week's guided-draft nudge batch: how many sent + how many finished"
+    cron: "0 16 * * 1"
+    endpoint: "{{BASE_URL}}/api/cron/nudge-digest"
+    method: POST
+    enabled: true
