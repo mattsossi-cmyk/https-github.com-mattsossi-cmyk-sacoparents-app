@@ -4,8 +4,10 @@ import { Sparkles, CheckCircle2, Trash2 } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { EvaluationEditor } from "@/components/EvaluationEditor";
 
 const LIST_FIELDS = [["alignment_statements", "What both parents agree about"], ["child_needs", "Child's identified needs"], ["conversation", "Conversation starters"], ["questions", "Reflection questions"], ["next_steps", "Next steps"]];
+const EVAL_KEYS = ["safety_status", "parent_a_profile", "parent_b_profile", "scale", "short_term_goals", "long_term_goals", "resources"];
 
 const toText = (v) => (Array.isArray(v) ? v.join("\n") : v || "");
 const fromText = (k, t) => (k === "alignment_paragraph" ? t.trim() : t.split("\n").map((s) => s.trim()).filter(Boolean));
@@ -13,18 +15,21 @@ const fromText = (k, t) => (k === "alignment_paragraph" ? t.trim() : t.split("\n
 export const JointAiDraft = ({ reportId, onChanged }) => {
   const [d, setD] = useState(null);
   const [edit, setEdit] = useState({});
+  const [evalEdit, setEvalEdit] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  const load = () => api.get(`/joint/reports/${reportId}/ai-joint-draft`).then((r) => { setD(r.data); setEdit({}); }).catch(() => {});
+  const load = () => api.get(`/joint/reports/${reportId}/ai-joint-draft`).then((r) => { setD(r.data); setEdit({}); setEvalEdit(null); }).catch(() => {});
   useEffect(() => { load(); }, [reportId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const run = async (fn, ok) => {
     setBusy(true);
     try { await fn(); toast.success(ok); await load(); onChanged?.(); } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
   };
+  const dirty = Object.keys(edit).length > 0 || evalEdit !== null;
+  const editedFields = () => ({ ...Object.fromEntries(Object.entries(edit).map(([k, t]) => [k, fromText(k, t)])), ...(evalEdit ? Object.fromEntries(EVAL_KEYS.filter((k) => k in evalEdit).map((k) => [k, evalEdit[k]])) : {}) });
   const generate = () => run(() => api.post(`/joint/reports/${reportId}/ai-joint-draft`), "Gemini draft ready for your review");
-  const saveEdits = () => run(() => api.put(`/joint/reports/${reportId}/ai-joint-draft`, { fields: Object.fromEntries(Object.entries(edit).map(([k, t]) => [k, fromText(k, t)])) }), "Draft edits saved");
-  const approve = async () => { if (Object.keys(edit).length) await saveEdits(); await run(() => api.post(`/joint/reports/${reportId}/ai-joint-draft/approve`), "Approved — parents and court now see the reviewed AI-assisted report"); };
+  const saveEdits = () => run(() => api.put(`/joint/reports/${reportId}/ai-joint-draft`, { fields: editedFields() }), "Draft edits saved");
+  const approve = async () => { if (dirty) await saveEdits(); await run(() => api.post(`/joint/reports/${reportId}/ai-joint-draft/approve`), "Approved — parents and court now see the reviewed AI-assisted report"); };
   const discard = () => run(() => api.post(`/joint/reports/${reportId}/ai-joint-draft/discard`), "AI draft discarded — rule-based report in effect");
 
   if (!d) return null;
@@ -42,7 +47,7 @@ export const JointAiDraft = ({ reportId, onChanged }) => {
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={generate} disabled={busy} className="bg-brand-purple hover:bg-brand-purple/90 text-white" data-testid="joint-ai-generate-btn">{busy ? "Working…" : has ? "Re-draft" : "Draft with Gemini"}</Button>
           {has && d.status !== "approved" && <Button size="sm" onClick={approve} disabled={busy} className="bg-align-green hover:bg-align-green/90 text-white" data-testid="joint-ai-approve-btn"><CheckCircle2 className="h-4 w-4" /> Approve & publish</Button>}
-          {has && Object.keys(edit).length > 0 && <Button size="sm" variant="outline" onClick={saveEdits} disabled={busy} data-testid="joint-ai-save-btn">Save edits</Button>}
+          {has && dirty && <Button size="sm" variant="outline" onClick={saveEdits} disabled={busy} data-testid="joint-ai-save-btn">Save edits</Button>}
           {has && <Button size="sm" variant="outline" onClick={discard} disabled={busy} data-testid="joint-ai-discard-btn"><Trash2 className="h-4 w-4" /> Discard</Button>}
         </div>
       </div>
@@ -65,6 +70,9 @@ export const JointAiDraft = ({ reportId, onChanged }) => {
                 <p className="mt-1 italic text-muted-foreground">{x.reframe}</p>
               </div>
             ))}
+          </div>
+          <div className="rounded-xl border border-brand-purple/20 bg-brand-purple/5 p-4">
+            <EvaluationEditor fields={{ ...Object.fromEntries(EVAL_KEYS.map((k) => [k, d.fields[k]])), ...(evalEdit || {}) }} matrix={d.scale_matrix} onChange={setEvalEdit} />
           </div>
         </div>
       )}

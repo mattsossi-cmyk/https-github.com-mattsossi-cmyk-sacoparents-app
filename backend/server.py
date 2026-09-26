@@ -719,6 +719,8 @@ async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
         return {"kind": "foundation", "foundation_statements": joint_public(doc, user).get("foundation_statements", [])}
     rep = generate_joint_report(doc)
     rep.pop("options", None)  # options/resources live only in the Professional Report
+    if doc.get("created_by") != user["_id"]:
+        rep.pop("professional_evaluation", None)
     return rep
 
 

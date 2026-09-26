@@ -16,6 +16,7 @@ const NO_REPORT = new Set(["agreement", "foundation"]);
 import { CompareView } from "@/components/CompareView";
 import { SampleWalkthrough } from "@/components/SampleWalkthrough";
 import { JointAiDraft } from "@/components/JointAiDraft";
+import { EvaluationEditor } from "@/components/EvaluationEditor";
 
 function Section({ num, title, children, testId }) {
   return (
@@ -186,6 +187,12 @@ export default function JointReport() {
 
         {ready && report && !NO_REPORT.has(detail.kind) && detail.is_creator && (
           <JointAiDraft reportId={id} onChanged={() => api.get(`/joint/reports/${id}/report`).then((rr) => setReport(rr.data)).catch(() => {})} />
+        )}
+        {ready && report?.professional_evaluation && detail.is_creator && (
+          <section className="no-print mb-8 rounded-xl border border-border bg-white p-5" data-testid="joint-professional-evaluation">
+            <p className="text-sm font-semibold">Professional Evaluation (approved · {report.ai_model})</p>
+            <EvaluationEditor fields={report.professional_evaluation} readOnly />
+          </section>
         )}
 
         {ready && report && !NO_REPORT.has(detail.kind) && detail.is_creator && (
