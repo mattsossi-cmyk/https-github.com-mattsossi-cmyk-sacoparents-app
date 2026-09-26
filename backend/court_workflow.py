@@ -68,6 +68,34 @@ class ReferralIn(BaseModel):
     note: str = ""
     hearing_date: str = ""
     requested_reports: list[str] = []
+    parties_zip: str = ""
+
+
+def _zip_match(pro_zip: str, target: str) -> str:
+    """Advisory proximity label: exact ZIP, same 3-digit area, or none."""
+    pro_zip, target = (pro_zip or "").strip()[:5], (target or "").strip()[:5]
+    if not target or not pro_zip:
+        return ""
+    if pro_zip == target:
+        return "nearby"
+    return "same_area" if pro_zip[:3] == target[:3] else ""
+
+
+_MATCH_RANK = {"nearby": 0, "same_area": 1, "": 2}
+
+
+def _pro_row(d: dict, target_zip: str) -> dict:
+    p = d.get("profile") or {}
+    return {"id": d["_id"], "name": d.get("name", ""), "pro_role": p.get("pro_role", ""), "organization": p.get("organization", ""),
+            "city": p.get("city", ""), "state": p.get("state", ""), "zip": (p.get("zip") or "")[:10],
+            "credentials_verified": d.get("verification_level") == "credentials_verified", "match": _zip_match(p.get("zip", ""), target_zip)}
+
+
+def rank_professionals(docs: list[dict], target_zip: str) -> list[dict]:
+    rows = [_pro_row(d, target_zip) for d in docs]
+    if not target_zip.strip():
+        return rows
+    return sorted(rows, key=lambda x: (_MATCH_RANK[x["match"]], 0 if x["zip"] else 1, x["name"].lower()))
 
 
 REPORT_TYPES = {
@@ -407,7 +435,7 @@ def _shared(db, get_current_user, app_url, send_email, email_from_name, logger, 
 
     def referral_public(x: dict) -> dict:
         out = {k: x.get(k) for k in ("id", "judge_name", "judge_email", "court_name", "cause_number", "subject", "child_initials", "parent_a_name", "parent_a_email",
-                                     "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at", "hearing_date", "case_code", "communication_summary")}
+                                     "parent_b_name", "parent_b_email", "note", "professional_id", "professional_name", "status", "decline_reason", "case_id", "created_at", "responded_at", "hearing_date", "case_code", "communication_summary", "parties_zip")}
         out["overdue"] = hearing_overdue(x)
         out["requested_reports"] = [{"key": k, "label": REPORT_TYPES[k][0], "subjects": REPORT_TYPES[k][1]} for k in (x.get("requested_reports") or []) if k in REPORT_TYPES]
         return out
@@ -438,12 +466,11 @@ def _judge_routes(c: Ctx) -> APIRouter:
     # ---------- judge: refer ----------
 
     @r.get("/court-dashboard/professionals")
-    async def referable_professionals(user=Depends(get_current_user)):
+    async def referable_professionals(zip: str = "", user=Depends(get_current_user)):
         await require_judge(user)
         docs = await db.users.find({"role": {"$in": ["professional", "admin"]}, "approved": True, "profile.accept_court_referrals": {"$ne": False}},
                                    {"name": 1, "profile": 1, "verification_level": 1}).sort("name", 1).to_list(500)
-        return [{"id": d["_id"], "name": d.get("name", ""), "pro_role": (d.get("profile") or {}).get("pro_role", ""), "organization": (d.get("profile") or {}).get("organization", ""),
-                 "city": (d.get("profile") or {}).get("city", ""), "state": (d.get("profile") or {}).get("state", ""), "credentials_verified": d.get("verification_level") == "credentials_verified"} for d in docs]
+        return rank_professionals(docs, zip)
 
     @r.post("/court-dashboard/referrals")
     async def create_referral(body: ReferralIn, user=Depends(get_current_user)):
@@ -471,7 +498,7 @@ def _new_referral(body: ReferralIn, user: dict, pro: dict) -> dict:
             "court_name": body.court_name.strip()[:160] or (user.get("profile") or {}).get("organization", ""), "cause_number": body.cause_number.strip()[:80],
             "subject": body.subject or "communication", "child_initials": body.child_initials.strip()[:10], "parent_a_name": body.parent_a_name.strip()[:120],
             "parent_a_email": body.parent_a_email.strip().lower()[:200], "parent_b_name": body.parent_b_name.strip()[:120], "parent_b_email": body.parent_b_email.strip().lower()[:200],
-            "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "requested_reports": reports, "professional_id": pro["_id"], "professional_name": pro.get("name", ""),
+            "note": body.note.strip()[:2000], "hearing_date": _valid_date(body.hearing_date), "requested_reports": reports, "parties_zip": body.parties_zip.strip()[:10], "professional_id": pro["_id"], "professional_name": pro.get("name", ""),
             "status": "pending", "created_at": _iso(_now()), "case_code": new_case_code(next((REPORT_TYPES[k][1][0] for k in reports if REPORT_TYPES[k][1]), "co_parenting"))}
 
 

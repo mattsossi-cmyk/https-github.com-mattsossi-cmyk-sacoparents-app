@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-const EMPTY = { professional_id: "", cause_number: "", court_name: "", child_initials: "", parent_a_name: "", parent_a_email: "", parent_b_name: "", parent_b_email: "", note: "", subject: "co_parenting", hearing_date: "", requested_reports: ["co_parenting"] };
+const EMPTY = { professional_id: "", cause_number: "", court_name: "", child_initials: "", parent_a_name: "", parent_a_email: "", parent_b_name: "", parent_b_email: "", note: "", subject: "co_parenting", hearing_date: "", requested_reports: ["co_parenting"], parties_zip: "" };
+
+const MATCH_BADGE = { nearby: ["Nearby", "bg-emerald-100 text-emerald-800"], same_area: ["Same area", "bg-amber-100 text-amber-800"] };
 
 const REPORT_TYPES = [
   ["co_parenting", "Co-Parenting Joint Report"], ["education", "Educational Joint Report"], ["medical", "Medical Joint Report"],
@@ -19,7 +21,11 @@ export function ReferCaseForm({ defaultCourt, onCreated }) {
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
 
-  useEffect(() => { api.get("/court-dashboard/professionals").then((r) => setPros(r.data)).catch(() => {}); }, []);
+  const zip = form.parties_zip.trim();
+  useEffect(() => {
+    const t = setTimeout(() => api.get("/court-dashboard/professionals", { params: { zip } }).then((r) => setPros(r.data)).catch(() => {}), zip ? 250 : 0);
+    return () => clearTimeout(t);
+  }, [zip]);
 
   const send = async () => {
     setBusy(true);
@@ -66,14 +72,24 @@ export function ReferCaseForm({ defaultCourt, onCreated }) {
       </div>
       <Textarea placeholder="Note to the professional (scope, deadlines)…" value={form.note} onChange={set("note")} className="mt-3 min-h-[70px]" data-testid="refer-note" />
       <div className="mt-4">
-        <div className="flex items-center justify-between gap-3"><p className="text-sm font-medium">Choose an approved professional *</p><Input placeholder="Search name, role, city…" value={q} onChange={(e) => setQ(e.target.value)} className="h-8 max-w-[220px] text-xs" data-testid="refer-pro-search" /></div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm font-medium">Choose an approved professional *</p>
+          <div className="flex items-center gap-2">
+            <Input placeholder="Parties' ZIP" value={form.parties_zip} onChange={set("parties_zip")} inputMode="numeric" maxLength={10} className="h-8 w-[120px] text-xs" data-testid="refer-parties-zip" />
+            <Input placeholder="Search name, role, city…" value={q} onChange={(e) => setQ(e.target.value)} className="h-8 max-w-[220px] text-xs" data-testid="refer-pro-search" />
+          </div>
+        </div>
+        {zip && <p className="mt-1 text-xs text-muted-foreground" data-testid="refer-zip-hint">Sorted by proximity to ZIP {zip}: exact match first, then the same 3-digit area. You may still choose anyone.</p>}
         <ul className="mt-2 max-h-56 overflow-y-auto divide-y divide-border rounded-md border border-border" data-testid="refer-pro-list">
           {shown.length === 0 && <li className="px-3 py-3 text-sm text-muted-foreground">No approved professionals match.</li>}
           {shown.map((p) => (
             <li key={p.id}>
               <button type="button" onClick={() => setForm({ ...form, professional_id: p.id })} className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-2 ${form.professional_id === p.id ? "bg-brand-purple/10" : "hover:bg-secondary/60"}`} data-testid={`refer-pro-option-${p.id}`}>
-                <span><span className="font-medium">{p.name}</span> <span className="text-muted-foreground">· {[p.pro_role, p.organization, [p.city, p.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</span></span>
-                {p.credentials_verified && <span className="text-[10px] font-semibold text-accent shrink-0">VERIFIED</span>}
+                <span><span className="font-medium">{p.name}</span> <span className="text-muted-foreground">{[p.pro_role, p.organization, [[p.city, p.state].filter(Boolean).join(", "), p.zip].filter(Boolean).join(" "), zip && !p.zip && !p.city ? "Location not listed" : ""].filter(Boolean).map((s) => `· ${s}`).join(" ")}</span></span>
+                <span className="flex items-center gap-1.5 shrink-0">
+                  {MATCH_BADGE[p.match] && <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${MATCH_BADGE[p.match][1]}`} data-testid={`refer-pro-match-${p.id}`}>{MATCH_BADGE[p.match][0]}</span>}
+                  {p.credentials_verified && <span className="text-[10px] font-semibold text-accent">VERIFIED</span>}
+                </span>
               </button>
             </li>
           ))}
