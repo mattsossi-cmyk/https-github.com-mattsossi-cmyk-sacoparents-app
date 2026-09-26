@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BookUser, History, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { BookUser, Download, History, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { ProviderHistory } from "@/components/ProviderHistory";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,7 @@ export function AdminProviders() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-2xl font-semibold flex items-center gap-2"><BookUser className="h-6 w-6 text-brand-purple" /> Resource Provider Directory</h2>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" asChild data-testid="provider-export-csv-btn"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/admin/providers/export.csv`} download><Download className="h-4 w-4 mr-1" /> Export CSV</a></Button>
           {stale.length > 0 && <Button size="sm" variant="outline" onClick={checkAll} disabled={checkingAll} data-testid="provider-check-all-btn"><RefreshCw className={`h-4 w-4 mr-1 ${checkingAll ? "animate-spin" : ""}`} /> {checkingAll ? "Checking…" : `Check all stale (${stale.length})`}</Button>}
           <Button size="sm" onClick={() => setEdit({ ...EMPTY })} data-testid="provider-add-btn"><Plus className="h-4 w-4 mr-1" /> Add provider</Button>
         </div>

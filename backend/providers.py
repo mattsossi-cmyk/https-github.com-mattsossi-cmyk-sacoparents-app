@@ -74,6 +74,28 @@ def build_router(db, get_current_user) -> APIRouter:
         admin(user)
         return await db.providers.find({}, {"_id": 0}).sort("name", 1).to_list(500)
 
+    @r.get("/admin/providers/export.csv")
+    async def export_csv(user=Depends(get_current_user)):
+        import csv
+        import io
+        from datetime import datetime, timezone
+        from fastapi.responses import Response
+        admin(user)
+        rows = await db.providers.find({}, {"_id": 0}).sort("name", 1).to_list(500)
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(["Name", "Degrees", "Specialty", "Organization", "Phone", "Email", "Website", "Lists", "Active", "Last checked (UTC)", "Last check result", "Contact change applied (UTC)", "Source"])
+        for p in rows:
+            v = p.get("verification") or {}
+            checks = v.get("checks") or {}
+            result = "; ".join(f"{k}: {'matches' if c.get('match') else ('differs → ' + c['found'] if c.get('found') else 'not found')}" for k, c in checks.items()) if checks else "never checked"
+            applied = await db.provider_checks.find_one({"provider_id": p["id"], "applied_at": {"$ne": None}}, {"applied_at": 1}, sort=[("applied_at", -1)])
+            w.writerow([p.get("name", ""), p.get("degrees", ""), p.get("specialty", ""), p.get("organization", ""), p.get("phone", ""), p.get("email", ""), p.get("website", ""),
+                        ", ".join(p.get("lists") or []), "yes" if p.get("active", True) else "no", (p.get("last_verified_at") or "")[:16].replace("T", " "), result,
+                        ((applied or {}).get("applied_at") or "")[:16].replace("T", " "), p.get("source", "manual")])
+        fname = f"sa-coparents-provider-directory-{datetime.now(timezone.utc).strftime('%Y-%m-%d')}.csv"
+        return Response(content="\ufeff" + buf.getvalue(), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
     @r.post("/admin/providers")
     async def create(body: ProviderIn, user=Depends(get_current_user)):
         admin(user)
