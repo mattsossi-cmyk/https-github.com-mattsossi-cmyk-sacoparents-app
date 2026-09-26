@@ -186,7 +186,7 @@ def _research_base(pdf: FPDF, rb: dict | None) -> None:
     cites = [f"[{c.get('index', i)}] {c.get('url', '')}" for i, c in enumerate(rb.get("citations") or [], 1)][:10]
     lines = [rb["text"], "", "SOURCES"] + (cites or ["No citations returned."]) + ["", f"Research Base — fetched {str(rb.get('fetched_at') or '')[:10]} via Perplexity {rb.get('model') or 'Sonar'}"
              + (f" for ZIP {rb['zip']}" if rb.get("zip") else "") + ". Real-time web research reviewed by the professional; not a finding, diagnosis or recommendation."]
-    full_card(pdf, "RESEARCH BASE (Perplexity Sonar — professional-reviewed)", lines, TEAL_FILL, TEAL)
+    full_card(pdf, "RESEARCH BASE (Perplexity — professional-reviewed)", lines, TEAL_FILL, TEAL)
 
 
 def render_lens_body(pdf: FPDF, v: dict) -> None:
