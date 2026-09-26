@@ -23,6 +23,7 @@ export default function Samples() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
         <div className="text-center max-w-2xl mx-auto mb-12">
+          <img src="/joint-report-poster.jpg" alt="The SA CoParents Difference — Joint Alignment Report" className="mx-auto mb-6 w-48 sm:w-56 rounded-lg shadow-md" data-testid="samples-poster" />
           <h1 className="text-4xl sm:text-5xl font-extrabold text-brand-purple" data-testid="samples-heading">Sample Joint Reports</h1>
           <p className="text-base md:text-lg text-muted-foreground mt-4" data-testid="samples-subheading">
             Every report follows the same neutral, child-focused structure: alignment, differences in

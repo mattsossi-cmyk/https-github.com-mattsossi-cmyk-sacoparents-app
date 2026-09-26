@@ -35,7 +35,16 @@ def _complete(f: dict) -> bool:
 
 def _public(doc: dict) -> dict:
     from safety_gate import parent_safety_flag
-    return {"id": doc["id"], "fields": doc["fields"], "safety": doc.get("safety") or {}, "safety_flagged": parent_safety_flag(doc), "complete": _complete(doc["fields"]), "updated_at": doc.get("updated_at"), "created_at": doc.get("created_at")}
+    return {"id": doc["id"], "fields": doc["fields"], "safety": doc.get("safety") or {}, "safety_flagged": parent_safety_flag(doc), "safety_language": doc.get("safety_language"), "complete": _complete(doc["fields"]), "updated_at": doc.get("updated_at"), "created_at": doc.get("created_at")}
+
+
+async def _language_screen(fields: dict) -> dict | None:
+    """Jev safety-language score over the free text (surfaces the safety pathway; never a finding)."""
+    try:
+        from jev import safety_language
+        return await safety_language(to_text(fields))
+    except Exception:
+        return None
 
 
 def _clean_safety(safety: dict | None) -> dict:
@@ -76,11 +85,12 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role) -> API
         doc = await _mine(user)
         fields = _clean(body.fields)
         safety = _clean_safety(body.safety) if body.safety is not None else (doc or {}).get("safety") or {}
+        lang = await _language_screen(fields)
         if doc:
-            await db.foundation_statements.update_one({"id": doc["id"]}, {"$set": {"fields": fields, "safety": safety, "updated_at": now}})
-            doc = {**doc, "fields": fields, "safety": safety, "updated_at": now}
+            await db.foundation_statements.update_one({"id": doc["id"]}, {"$set": {"fields": fields, "safety": safety, "safety_language": lang, "updated_at": now}})
+            doc = {**doc, "fields": fields, "safety": safety, "safety_language": lang, "updated_at": now}
         else:
-            doc = {"id": str(uuid.uuid4()), "user_id": user["_id"], "fields": fields, "safety": safety, "created_at": now, "updated_at": now}
+            doc = {"id": str(uuid.uuid4()), "user_id": user["_id"], "fields": fields, "safety": safety, "safety_language": lang, "created_at": now, "updated_at": now}
             await db.foundation_statements.insert_one(dict(doc))
         return {"statement": _public(doc)}
 

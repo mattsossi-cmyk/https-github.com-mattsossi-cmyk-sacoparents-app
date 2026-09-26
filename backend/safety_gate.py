@@ -40,9 +40,11 @@ async def safety_status(db, emails: set, pro_id: str | None = None) -> dict:
             if (rep.get("joint_process_appropriate") or "").strip().lower().startswith("no"):
                 reasons.append("The professional determined a joint process is not appropriate at this time.")
     async for u in db.users.find({"email": {"$in": list(emails)}}, {"_id": 1}):
-        fs = await db.foundation_statements.find_one({"user_id": u["_id"]}, {"_id": 0, "safety": 1})
+        fs = await db.foundation_statements.find_one({"user_id": u["_id"]}, {"_id": 0, "safety": 1, "safety_language": 1})
         if parent_safety_flag(fs):
             reasons.append("A parent's private safety screening indicates a safety concern.")
+        if ((fs or {}).get("safety_language") or {}).get("level") == "high":
+            reasons.append("Automated language screening of a parent's Foundation Statement detected strong threat, coercion or fear language (review required).")
     return {"flagged": bool(reasons), "reasons": list(dict.fromkeys(reasons))}
 
 

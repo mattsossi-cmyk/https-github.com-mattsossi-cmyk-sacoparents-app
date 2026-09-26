@@ -10,6 +10,7 @@ import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { AgreementDocument } from "@/components/AgreementDocument";
 import { ProWorkspace } from "@/components/ProWorkspace";
 import { FoundationStatements } from "@/components/FoundationStatements";
+import { CaseAttachments } from "@/components/FoundationAttachments";
 import { ShareFoundation } from "@/components/ShareFoundation";
 const NO_REPORT = new Set(["agreement", "foundation"]);
 import { CompareView } from "@/components/CompareView";
@@ -328,6 +329,7 @@ export default function JointReport() {
           </div>
         )}
         {detail.is_creator && <FoundationStatements rid={id} items={detail.foundation_statements} safetyRoute={detail.safety_route} safetyCaseId={detail.safety_case_id} />}
+        {detail.is_creator && <CaseAttachments rid={id} />}
         {detail.is_creator && <ProWorkspace rid={id} steps={ready && report && !NO_REPORT.has(detail.kind) ? [...(report.next_steps || []), ...(report.options || [])] : null} outcome={detail.session_outcome} onOutcomeSaved={(o) => setDetail((d) => ({ ...d, session_outcome: o }))} courtReady={!!(ready && report && !NO_REPORT.has(detail.kind))} />}
       </main>
     </div>

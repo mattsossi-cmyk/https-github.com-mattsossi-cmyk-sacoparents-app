@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { SampleEmailForm } from "@/components/SampleEmailForm";
+import { ListenButton } from "@/components/ListenButton";
 import { SampleLensTour, StartTourButton, useSampleLensTour } from "@/components/SampleLensTour";
 import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/LensScale";
 import { ReportPrinciple, ChildFocusSummary, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
@@ -44,8 +45,9 @@ export default function SampleLegalLensReport() {
       </div></header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-5">
         {tour.open && <SampleLensTour onDone={tour.close} />}
-        <div className="flex justify-end gap-2"><StartTourButton onClick={tour.start} /><SampleEmailForm endpoint="/joint/sample-legal-lens/email" label="Sample Professional Report" idPrefix="sample-lens-page" /></div>
+        <div className="flex justify-end gap-2"><ListenButton text={`Sample Professional Alignment Report. ${d.notes?.intro || ""} Professional statement: ${rep.professional_summary || ""} Court summary: ${rep.court_summary_text || ""}`} testId="sample-lens-listen" /><StartTourButton onClick={tour.start} /><SampleEmailForm endpoint="/joint/sample-legal-lens/email" label="Sample Professional Report" idPrefix="sample-lens-page" /></div>
         <ReportHeader right={<span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold" data-testid="sample-lens-note">Sample · fictional data</span>} />
+        <details className="rounded-lg border border-border bg-white p-3" data-testid="sample-lens-preview-image"><summary className="cursor-pointer text-sm font-semibold text-brand-purple">See the printed report layout (8 pages)</summary><img src="/alignment-report-preview.jpg" alt="Printed Professional Alignment Report — 8-page layout preview" className="mt-3 w-full rounded-md border border-border" loading="lazy" /></details>
         <div className="rounded-lg border border-border bg-white p-4"><KV rows={[["Court", rep.court_county], ["Cause No.", rep.cause_number], ["Align case", d.case.case_code], ["Professional", `${rep.professional_name} · ${rep.professional_role}`], ["Report date", rep.report_date], ["Status", rep.status.replace(/_/g, " ")]]} /></div>
         <Sec n={1} title="Case & Assessment Overview" testId="sample-lens-s1">
           <p data-testid="sample-lens-intro">{d.notes.intro}</p>

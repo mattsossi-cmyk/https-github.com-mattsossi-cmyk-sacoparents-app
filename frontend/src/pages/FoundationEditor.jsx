@@ -8,6 +8,8 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { WorkflowGuide } from "@/components/WorkflowGuide";
+import { ListenButton } from "@/components/ListenButton";
+import { FoundationAttachments } from "@/components/FoundationAttachments";
 
 const STEPS = [
   { key: "shared_purpose", n: 1, title: "Shared Purpose", hint: "Regardless of what brought your family here, what does your child deserve from both parents?" },
@@ -37,6 +39,17 @@ export default function FoundationEditor() {
   const safetyComplete = safetyQs.length > 0 && safetyQs.every((q) => typeof safety[q.key] === "boolean");
   const [busy, setBusy] = useState(false);
   const [shared, setShared] = useState(false);
+  const [blame, setBlame] = useState(null);
+  const checkBlame = async () => {
+    const lines = (f.concerns || []).filter((x) => x.trim());
+    if (!lines.length) return true;
+    try {
+      const { data } = await api.post("/foundation/mine/blame-check", { lines });
+      const flagged = data.results.filter((r) => r.focus === "blaming" && r.confidence >= 0.6);
+      setBlame(flagged);
+      return flagged.length === 0;
+    } catch { return true; }
+  };
   const shareToCase = async () => {
     setBusy(true);
     try { await api.post(`/joint/reports/${caseId}/foundation/share`); setShared(true); toast.success("Shared into your case. The professional can now see it."); }
@@ -46,9 +59,10 @@ export default function FoundationEditor() {
     api.get("/foundation/mine").then(({ data }) => { setSafetyQs(data.safety_questions || []); if (data.statement) { setSafety(data.statement.safety || {}); setF({ ...EMPTY, ...data.statement.fields }); setMeta(data.statement); } }).catch(() => {});
   }, []);
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
-  const save = async () => {
+  const save = async (force = false) => {
     setBusy(true);
     try {
+      if (!force && blame === null && !(await checkBlame())) { toast.info("Some concerns read as blaming the other parent — see the suggestions, or save anyway."); return; }
       const { data } = await api.put("/foundation/mine", { fields: f, safety });
       setMeta(data.statement);
       toast.success(data.statement.complete ? "Foundation Statement saved — complete and ready to share." : "Draft saved. Fill in child, shared purpose, vision, priorities, commitments and parent commitment to complete it.");
@@ -64,7 +78,7 @@ export default function FoundationEditor() {
           <div className="flex flex-wrap gap-2">
             <Link to="/samples/foundation-statement" className="text-sm text-brand-purple underline self-center" data-testid="foundation-sample-link">See the sample</Link>
             <Button variant="outline" size="sm" asChild disabled={!meta} data-testid="foundation-my-pdf-link"><a href={pdf} download aria-disabled={!meta} onClick={(e) => { if (!meta) { e.preventDefault(); toast.error("Save your statement first."); } }}><Download className="h-4 w-4 mr-1" /> Download PDF</a></Button>
-            <Button size="sm" onClick={save} disabled={busy} data-testid="foundation-save-btn"><Save className="h-4 w-4 mr-1" /> {busy ? "Saving…" : "Save"}</Button>
+            <Button size="sm" onClick={() => save()} disabled={busy} data-testid="foundation-save-btn"><Save className="h-4 w-4 mr-1" /> {busy ? "Saving…" : "Save"}</Button>
           </div>
         </div>
       </header>
@@ -94,12 +108,20 @@ export default function FoundationEditor() {
             </div>
             {STEPS.map((s) => (
               <section key={s.key} data-testid={`foundation-step-${s.key}`}>
-                <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4b2a7b] text-sm font-bold text-white">{s.n}</span><h2 className="font-display text-lg font-bold text-[#2f174f]">{s.title}</h2></div>
+                <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4b2a7b] text-sm font-bold text-white">{s.n}</span><h2 className="font-display text-lg font-bold text-[#2f174f] flex-1">{s.title}</h2><ListenButton text={`${s.title}. ${s.hint}`} label="Listen" variant="ghost" testId={`foundation-listen-${s.key}`} /></div>
                 <p className="mt-1 text-xs text-muted-foreground">{s.hint}</p>
-                <Textarea value={s.list ? (f[s.key] || []).join("\n") : (f[s.key] || "")} onChange={(e) => set(s.key, s.list ? e.target.value.split("\n") : e.target.value)} className="mt-2 min-h-[96px] bg-white" data-testid={`foundation-${s.key}`} />
+                <Textarea value={s.list ? (f[s.key] || []).join("\n") : (f[s.key] || "")} onChange={(e) => { set(s.key, s.list ? e.target.value.split("\n") : e.target.value); if (s.key === "concerns") setBlame(null); }} className="mt-2 min-h-[96px] bg-white" data-testid={`foundation-${s.key}`} />
+                {s.key === "concerns" && blame?.length > 0 && (
+                  <div className="mt-2 rounded-md border-l-4 border-amber-500 bg-amber-50 p-3 text-sm" data-testid="foundation-blame-nudge">
+                    <p className="font-semibold">Try rephrasing from your child's point of view:</p>
+                    <ul className="mt-1 list-disc pl-5 text-xs">{blame.map((b) => <li key={b.index} data-testid={`foundation-blame-line-${b.index}`}>“{b.line}” — describe what your child needs or experiences instead of the other parent's behavior or motives.</li>)}</ul>
+                    <div className="mt-2 flex gap-2"><Button size="sm" variant="outline" onClick={() => setBlame(null)} data-testid="foundation-blame-edit-btn">I'll rephrase</Button><Button size="sm" variant="ghost" onClick={() => save(true)} data-testid="foundation-blame-save-anyway-btn">Save anyway</Button></div>
+                  </div>
+                )}
               </section>
             ))}
-            <div className="flex justify-end"><Button onClick={save} disabled={busy} data-testid="foundation-save-bottom-btn"><Save className="h-4 w-4 mr-1" /> {busy ? "Saving…" : "Save Foundation Statement"}</Button></div>
+            <FoundationAttachments />
+            <div className="flex justify-end"><Button onClick={() => save()} disabled={busy} data-testid="foundation-save-bottom-btn"><Save className="h-4 w-4 mr-1" /> {busy ? "Saving…" : "Save Foundation Statement"}</Button></div>
           </div>
         </div>
       </main>

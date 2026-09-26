@@ -23,7 +23,7 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
-  const [profile, setProfile] = useState({ phone: "", organization: "", pro_role: "", city: "", state: "", license_number: "", website: "" });
+  const [profile, setProfile] = useState({ phone: "", organization: "", pro_role: "", city: "", state: "", zip: "", license_number: "", website: "" });
   const [agreed, setAgreed] = useState(false);
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -154,7 +154,7 @@ export default function Auth() {
                     ))}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="city">City</Label>
                     <Input id="city" className="h-12" value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} data-testid="city-input" />
@@ -162,6 +162,10 @@ export default function Auth() {
                   <div className="space-y-2">
                     <Label htmlFor="state">State</Label>
                     <Input id="state" className="h-12" value={profile.state} onChange={(e) => setProfile({ ...profile, state: e.target.value })} data-testid="state-input" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zip">ZIP code</Label>
+                    <Input id="zip" className="h-12" maxLength={10} value={profile.zip} onChange={(e) => setProfile({ ...profile, zip: e.target.value })} placeholder="78205" data-testid="zip-input" />
                   </div>
                 </div>
                 <div className="space-y-2">

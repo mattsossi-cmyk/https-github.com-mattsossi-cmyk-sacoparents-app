@@ -107,6 +107,7 @@ class RegisterIn(BaseModel):
     state: str = ""
     license_number: str = ""
     website: str = ""
+    zip: str = ""
 
 
 class LoginIn(BaseModel):
@@ -139,6 +140,7 @@ def _professional_profile(body: RegisterIn) -> dict:
         "state": body.state.strip(),
         "license_number": body.license_number.strip(),
         "website": body.website.strip(),
+        "zip": body.zip.strip()[:10],
     }
 
 

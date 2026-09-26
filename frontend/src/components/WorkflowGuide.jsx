@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ListenButton } from "@/components/ListenButton";
 
 export const GUIDES = {
   judge: { title: "How to use the Judicial Case Review Portal", steps: [
@@ -53,7 +54,10 @@ export function WorkflowGuide({ kind, storageKey, testId }) {
     <section className="rounded-lg border border-brand-purple/30 bg-[#f3edfb] p-4" data-testid={testId || `workflow-guide-${kind}`}>
       <div className="flex items-center justify-between gap-2">
         <p className="flex items-center gap-2 text-sm font-bold text-brand-purple"><ListChecks className="h-4 w-4" /> {g.title}</p>
-        <Button variant="ghost" size="sm" onClick={toggle} data-testid={`workflow-guide-${kind}-toggle`}>{open ? <><ChevronUp className="h-4 w-4 mr-1" /> Hide steps</> : <><ChevronDown className="h-4 w-4 mr-1" /> Show steps</>}</Button>
+        <div className="flex items-center gap-1">
+          <ListenButton text={`${g.title}. ${g.steps.map(([t, d], i) => `Step ${i + 1}: ${t}. ${d}`).join(" ")}`} variant="ghost" testId={`workflow-guide-${kind}-listen`} />
+          <Button variant="ghost" size="sm" onClick={toggle} data-testid={`workflow-guide-${kind}-toggle`}>{open ? <><ChevronUp className="h-4 w-4 mr-1" /> Hide steps</> : <><ChevronDown className="h-4 w-4 mr-1" /> Show steps</>}</Button>
+        </div>
       </div>
       {open && (
         <ol className="mt-3 grid gap-2 sm:grid-cols-2" data-testid={`workflow-guide-${kind}-steps`}>

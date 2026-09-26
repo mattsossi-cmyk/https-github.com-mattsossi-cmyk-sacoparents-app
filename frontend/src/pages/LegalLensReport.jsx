@@ -11,6 +11,7 @@ import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/Le
 import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
 import { GrowthProgress } from "@/components/CourtLegalSummary";
+import { NeutralityCheck, ChildFocusSuggest, ParallelSummaryHelper, ResearchPanel } from "@/components/LensAiTools";
 
 const STEPS = REPORT_STEPS;
 const STATUS = { draft: "Draft", under_review: "Under Review", final: "Final", submitted_to_court: "Submitted to Court" };
@@ -113,6 +114,7 @@ export default function LegalLensReport() {
       <Button variant="outline" size="sm" asChild data-testid="lens-pdf-btn"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> Print / Save as PDF</a></Button>
       <Button size="sm" onClick={() => save("final")} disabled={busy || !rep.signature_name} data-testid="lens-finalize-btn"><FileCheck2 className="h-4 w-4 mr-1" /> Finalize Report</Button>
       <select value={rep.status} onChange={(e) => save(e.target.value)} className="h-9 rounded-md border border-input bg-white px-2 text-sm" data-testid="lens-status-select">{lib.statuses.map((s) => <option key={s} value={s}>{STATUS[s]}</option>)}</select>
+      {top && <NeutralityCheck id={id} rep={rep} />}
       {top && rep.status !== "final" && rep.status !== "submitted_to_court" && <span className="flex items-center gap-1 rounded-md border border-brand-purple/30 bg-brand-purple/5 px-2" data-testid="lens-ai-block">
         <select value={model} onChange={(e) => setModel(e.target.value)} className="h-7 rounded-md border border-input bg-white px-1 text-xs" data-testid="lens-ai-model-select">{(lib.ai_models || []).map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}</select>
         <Button variant="ghost" size="sm" onClick={aiDraft} disabled={busy} data-testid="lens-ai-draft-btn"><Sparkles className="h-4 w-4 mr-1" /> AI-assist draft</Button>
@@ -179,8 +181,9 @@ export default function LegalLensReport() {
             <Sec n={4} title="Child-Focused Issues" id="child">
               <p className="text-xs text-muted-foreground">Tick each area affecting the child's needs and circumstances; categories suggested by the Joint Report are pre-ticked for your review.</p>
               <ChildFocusList categories={lib.child_focus_categories} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
+              <ChildFocusSuggest id={id} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
             </Sec>
-            <Sec n={5} title="Options & Resources" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /></Sec>
+            <Sec n={5} title="Options & Resources" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /><ResearchPanel onAddRow={(row) => set("resource_rows", [...(rep.resource_rows || []), row])} /></Sec>
             <Sec n={6} title="Conflict Resolution" id="conflict">
               <p className="text-xs text-muted-foreground">{notes.purpose}</p>
               <PathwayPicker lib={{ ...lib, notes }} rep={rep} cls={cls} set={set} />
@@ -191,6 +194,7 @@ export default function LegalLensReport() {
               <SourceTag kind="professional" />
               <p className="text-xs italic text-muted-foreground">Your own observations, interpretation, recommendations and conclusions — clearly distinct from parent-reported information, individual responses, joint comparisons and any system- or AI-generated summary. You remain responsible for the judgment in this section.</p>
               <Field big label="Professional statement" value={rep.professional_summary} onChange={(val) => set("professional_summary", val)} id="professional_summary" />
+              <ParallelSummaryHelper id={id} onInsert={(t) => set("professional_summary", `${(rep.professional_summary || "").trim()}${rep.professional_summary?.trim() ? "\n\n" : ""}${t}`)} />
               <Field big label="Short-Term Goals / 90-Day Action Plan (Next 30 to 90 Days)" hint="One goal per line, as “Title: concrete action”." value={rep.short_term_goals} onChange={(val) => set("short_term_goals", val)} id="short_term_goals" />
               <Field big label="How We Will Know Things Are Improving (Success Indicators)" hint="One observable indicator per line, e.g. “Fewer transition disputes.”" value={rep.success_indicators} onChange={(val) => set("success_indicators", val)} id="success_indicators" />
               <Field big label="Long-Term Goals (6 to 12 Months)" hint="One goal per line." value={rep.long_term_goals} onChange={(val) => set("long_term_goals", val)} id="long_term_goals" />

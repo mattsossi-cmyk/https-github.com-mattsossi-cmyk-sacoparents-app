@@ -66,7 +66,7 @@ class Threads:
 
     @staticmethod
     def public(m: dict) -> dict:
-        return {k: m.get(k) for k in ("id", "from_role", "from_name", "text", "at")}
+        return {k: m.get(k) for k in ("id", "from_role", "from_name", "text", "at", "triage")}
 
     async def thread(self, ref_id: str) -> list[dict]:
         return await self.db.court_messages.find({"referral_id": ref_id}, {"_id": 0}).sort("at", 1).to_list(500)
@@ -100,8 +100,10 @@ class Threads:
         text = (text or "").strip()[:4000]
         if not text:
             raise HTTPException(status_code=400, detail="Message is empty")
-        msg = {"id": str(uuid.uuid4()), "referral_id": ref["id"], "case_id": ref.get("case_id"), "from_role": role, "from_user": user["_id"], "from_name": user.get("name", ""), "text": text, "at": _now()}
-        await self.db.court_messages.insert_one(msg)
+        from jev import message_triage
+        msg = {"id": str(uuid.uuid4()), "referral_id": ref["id"], "case_id": ref.get("case_id"), "from_role": role, "from_user": user["_id"], "from_name": user.get("name", ""), "text": text, "at": _now(),
+               "triage": await message_triage(text)}
+        await self.db.court_messages.insert_one(dict(msg))
         summary = await summarize_thread(await self.thread(ref["id"]), ref)
         await self.db.court_referrals.update_one({"id": ref["id"]}, {"$set": {"communication_summary": summary}})
         if ref.get("case_id"):
