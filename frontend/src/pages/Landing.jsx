@@ -8,6 +8,7 @@ import { BrandLogo } from "@/components/Brand";
 import { SampleCard } from "@/components/SampleCard";
 import { AlignModel } from "@/components/AlignModel";
 import { MomentsStrip } from "@/components/MomentsStrip";
+import { ListedProsTeaser } from "@/components/ListedProsTeaser";
 import { SAMPLE_REPORTS } from "@/lib/samples";
 
 const POSTER_IMG = "/align-hero-simple.jpg";
@@ -203,6 +204,8 @@ export default function Landing() {
           </Link>
         </div>
       </section>
+
+      <ListedProsTeaser />
 
       <section id="subjects" className="border-y border-border bg-white/70 py-16" data-testid="subjects-section">
         <div className="max-w-6xl mx-auto px-6">

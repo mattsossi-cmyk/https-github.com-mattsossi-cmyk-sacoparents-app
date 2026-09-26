@@ -747,3 +747,5 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `backend/public_listing.py`: `GET/PUT /api/me/public-listing` (approved professionals only; bio/phone/website/zip; listed toggle), `GET /api/public/professionals?zip=&q=` (no auth; only `public_listing.listed=true`; distance sort; no email exposed; non-endorsement note).
 - Dashboard `PublicListingCard.jsx`: one-tap "List me on sacoparentsalign.com", edit details, un-list. Public page `/find-a-professional` (`FindProfessional.jsx`) + landing nav link.
 - Tests: `tests/test_iter80_public_listing.py`; full suite 386 passed / 1 skipped.
+- 2026-06 follow-up: `ListedProsTeaser.jsx` on landing (first 3 listed pros + Find a Professional button; hidden when none listed); shared `PublicProCard.jsx`; live "Preview — how your public card will look" inside `PublicListingCard.jsx` edit panel. Frontend-only; verified by screenshot.
+- OPEN: user asked for Joint Report to be based on "old Gemini code we had provided" — no such spec exists in /app; awaiting user paste. Joint Report remains rule-based (`joint_engine.py`).

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { PublicProCard } from "@/components/PublicProCard";
 
 export const PublicListingCard = () => {
   const { user, refresh } = useAuth();
@@ -41,19 +42,25 @@ export const PublicListingCard = () => {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {state.listed && <Link to="/find-a-professional" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline" data-testid="public-listing-view-link">View listing <ExternalLink className="h-3 w-3" /></Link>}
-          <Button variant="outline" size="sm" onClick={() => setEdit((v) => !v)} data-testid="public-listing-edit-btn">{edit ? "Cancel" : state.listed ? "Edit details" : "Add details"}</Button>
+          <Button variant="outline" size="sm" onClick={() => setEdit((v) => !v)} data-testid="public-listing-edit-btn">{edit ? "Cancel" : state.listed ? "Edit details" : "Preview & add details"}</Button>
           {state.listed
             ? <Button variant="outline" size="sm" onClick={() => save(false)} disabled={busy} data-testid="public-listing-unlist-btn">Un-list me</Button>
             : <Button size="sm" onClick={() => save(true)} disabled={busy} className="bg-accent hover:bg-accent/90 text-white" data-testid="public-listing-list-btn">{busy ? "Listing…" : "List me on sacoparentsalign.com"}</Button>}
         </div>
       </div>
       {edit && (
-        <div className="mt-4 grid gap-2 sm:grid-cols-3" data-testid="public-listing-form">
-          <Input placeholder="Practice ZIP" value={form.zip} onChange={set("zip")} maxLength={10} data-testid="public-listing-zip" />
-          <Input placeholder="Phone (optional)" value={form.phone} onChange={set("phone")} maxLength={40} data-testid="public-listing-phone" />
-          <Input placeholder="Website (optional)" value={form.website} onChange={set("website")} maxLength={200} data-testid="public-listing-website" />
-          <Textarea placeholder="Short bio — who you work with and how (max 600 characters). No custody recommendations or guarantees." value={form.bio} onChange={set("bio")} maxLength={600} className="sm:col-span-3 min-h-[70px]" data-testid="public-listing-bio" />
-          <div className="sm:col-span-3"><Button size="sm" onClick={() => save(true)} disabled={busy} className="bg-accent hover:bg-accent/90 text-white" data-testid="public-listing-save-btn">{busy ? "Saving…" : state.listed ? "Save changes" : "Save & list me"}</Button></div>
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]" data-testid="public-listing-form">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Input placeholder="Practice ZIP" value={form.zip} onChange={set("zip")} maxLength={10} data-testid="public-listing-zip" />
+            <Input placeholder="Phone (optional)" value={form.phone} onChange={set("phone")} maxLength={40} data-testid="public-listing-phone" />
+            <Input placeholder="Website (optional)" value={form.website} onChange={set("website")} maxLength={200} data-testid="public-listing-website" />
+            <Textarea placeholder="Short bio — who you work with and how (max 600 characters). No custody recommendations or guarantees." value={form.bio} onChange={set("bio")} maxLength={600} className="sm:col-span-3 min-h-[70px]" data-testid="public-listing-bio" />
+            <div className="sm:col-span-3"><Button size="sm" onClick={() => save(true)} disabled={busy} className="bg-accent hover:bg-accent/90 text-white" data-testid="public-listing-save-btn">{busy ? "Saving…" : state.listed ? "Save changes" : "Save & list me"}</Button></div>
+          </div>
+          <div data-testid="public-listing-preview">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Preview — how your public card will look</p>
+            <PublicProCard p={{ ...state.card, ...form, website: form.website && !/^https?:\/\//i.test(form.website) ? `https://${form.website}` : form.website }} testId="public-listing-preview-card" />
+          </div>
         </div>
       )}
     </div>
