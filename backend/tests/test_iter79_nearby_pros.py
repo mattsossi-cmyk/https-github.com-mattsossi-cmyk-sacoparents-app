@@ -32,7 +32,17 @@ def test_zip_ranked_professionals_and_referral_stores_zip() -> None:
     assert order.index(exact) < order.index(area) < order.index(far) < order.index(none)
 
     plain = judge.get(f"{API}/court-dashboard/professionals").json()
-    assert all(x["match"] == "" for x in plain) and {"zip", "city", "state"} <= set(plain[0])
+    assert all(x["match"] == "" for x in plain) and {"zip", "city", "state", "distance_miles"} <= set(plain[0])
+
+    # radius: 78201 (San Antonio) -> 78130 (New Braunfels, ~30 mi) is outside same-area but within 50 mi
+    nb = _pro_with_zip("78130", "Radius Pro")
+    r50 = {x["id"]: x for x in judge.get(f"{API}/court-dashboard/professionals", params={"zip": "78201", "radius": 50}).json()}
+    assert r50[nb]["match"] == "within_radius" and 20 < r50[nb]["distance_miles"] < 45
+    assert r50[far]["match"] == "" and r50[far]["distance_miles"] > 200
+    r10 = {x["id"]: x for x in judge.get(f"{API}/court-dashboard/professionals", params={"zip": "78201", "radius": 10}).json()}
+    assert r10[nb]["match"] == ""
+    order50 = [x["id"] for x in judge.get(f"{API}/court-dashboard/professionals", params={"zip": "78201", "radius": 50}).json()]
+    assert order50.index(area) < order50.index(nb) < order50.index(far)
 
     ref = judge.post(f"{API}/court-dashboard/referrals", json={"professional_id": far, "cause_number": f"2026-CI-Z{uuid.uuid4().hex[:4]}", "requested_reports": ["co_parenting"], "parties_zip": " 78201 "})
     assert ref.status_code == 200, ref.text

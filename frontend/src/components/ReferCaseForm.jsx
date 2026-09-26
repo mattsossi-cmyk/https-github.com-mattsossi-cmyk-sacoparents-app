@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 const EMPTY = { professional_id: "", cause_number: "", court_name: "", child_initials: "", parent_a_name: "", parent_a_email: "", parent_b_name: "", parent_b_email: "", note: "", subject: "co_parenting", hearing_date: "", requested_reports: ["co_parenting"], parties_zip: "" };
 
-const MATCH_BADGE = { nearby: ["Nearby", "bg-emerald-100 text-emerald-800"], same_area: ["Same area", "bg-amber-100 text-amber-800"] };
+const MATCH_BADGE = { nearby: ["Nearby", "bg-emerald-100 text-emerald-800"], same_area: ["Same area", "bg-amber-100 text-amber-800"], within_radius: ["Within radius", "bg-sky-100 text-sky-800"] };
+const RADII = [[0, "Same area only"], [10, "Within 10 mi"], [25, "Within 25 mi"], [50, "Within 50 mi"], [100, "Within 100 mi"]];
 
 const REPORT_TYPES = [
   ["co_parenting", "Co-Parenting Joint Report"], ["education", "Educational Joint Report"], ["medical", "Medical Joint Report"],
@@ -21,11 +22,12 @@ export function ReferCaseForm({ defaultCourt, onCreated }) {
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
 
+  const [radius, setRadius] = useState(0);
   const zip = form.parties_zip.trim();
   useEffect(() => {
-    const t = setTimeout(() => api.get("/court-dashboard/professionals", { params: { zip } }).then((r) => setPros(r.data)).catch(() => {}), zip ? 250 : 0);
+    const t = setTimeout(() => api.get("/court-dashboard/professionals", { params: { zip, radius } }).then((r) => setPros(r.data)).catch(() => {}), zip ? 250 : 0);
     return () => clearTimeout(t);
-  }, [zip]);
+  }, [zip, radius]);
 
   const send = async () => {
     setBusy(true);
@@ -68,18 +70,19 @@ export function ReferCaseForm({ defaultCourt, onCreated }) {
         <Input placeholder="Parent A email (optional)" value={form.parent_a_email} onChange={set("parent_a_email")} data-testid="refer-parent-a-email" />
         <Input placeholder="Parent B name (optional)" value={form.parent_b_name} onChange={set("parent_b_name")} data-testid="refer-parent-b-name" />
         <Input placeholder="Parent B email (optional)" value={form.parent_b_email} onChange={set("parent_b_email")} data-testid="refer-parent-b-email" />
-        <label className="flex items-center gap-2 text-sm text-muted-foreground sm:col-span-2"><span className="shrink-0">Hearing date (optional — reminders go out one week before if not yet submitted)</span><Input type="date" value={form.hearing_date} onChange={set("hearing_date")} className="h-10 max-w-[200px]" data-testid="refer-hearing-date" /></label>
+        <label className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground sm:col-span-2"><span className="min-w-0 flex-1 basis-[240px]">Hearing date (optional — reminders go out one week before if not yet submitted)</span><Input type="date" value={form.hearing_date} onChange={set("hearing_date")} className="h-10 w-full max-w-[200px]" data-testid="refer-hearing-date" /></label>
       </div>
       <Textarea placeholder="Note to the professional (scope, deadlines)…" value={form.note} onChange={set("note")} className="mt-3 min-h-[70px]" data-testid="refer-note" />
       <div className="mt-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-medium">Choose an approved professional *</p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Input placeholder="Parties' ZIP" value={form.parties_zip} onChange={set("parties_zip")} inputMode="numeric" maxLength={10} className="h-8 w-[120px] text-xs" data-testid="refer-parties-zip" />
+            {zip && <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="h-8 rounded-md border border-input bg-white px-2 text-xs" data-testid="refer-radius-select">{RADII.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>}
             <Input placeholder="Search name, role, city…" value={q} onChange={(e) => setQ(e.target.value)} className="h-8 max-w-[220px] text-xs" data-testid="refer-pro-search" />
           </div>
         </div>
-        {zip && <p className="mt-1 text-xs text-muted-foreground" data-testid="refer-zip-hint">Sorted by proximity to ZIP {zip}: exact match first, then the same 3-digit area. You may still choose anyone.</p>}
+        {zip && <p className="mt-1 text-xs text-muted-foreground" data-testid="refer-zip-hint">Sorted by proximity to ZIP {zip}: exact match first, then the same 3-digit area{radius ? `, then anyone within ${radius} miles (straight-line)` : ""}. You may still choose anyone.</p>}
         <ul className="mt-2 max-h-56 overflow-y-auto divide-y divide-border rounded-md border border-border" data-testid="refer-pro-list">
           {shown.length === 0 && <li className="px-3 py-3 text-sm text-muted-foreground">No approved professionals match.</li>}
           {shown.map((p) => (
@@ -87,7 +90,7 @@ export function ReferCaseForm({ defaultCourt, onCreated }) {
               <button type="button" onClick={() => setForm({ ...form, professional_id: p.id })} className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-2 ${form.professional_id === p.id ? "bg-brand-purple/10" : "hover:bg-secondary/60"}`} data-testid={`refer-pro-option-${p.id}`}>
                 <span><span className="font-medium">{p.name}</span> <span className="text-muted-foreground">{[p.pro_role, p.organization, [[p.city, p.state].filter(Boolean).join(", "), p.zip].filter(Boolean).join(" "), zip && !p.zip && !p.city ? "Location not listed" : ""].filter(Boolean).map((s) => `· ${s}`).join(" ")}</span></span>
                 <span className="flex items-center gap-1.5 shrink-0">
-                  {MATCH_BADGE[p.match] && <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${MATCH_BADGE[p.match][1]}`} data-testid={`refer-pro-match-${p.id}`}>{MATCH_BADGE[p.match][0]}</span>}
+                  {MATCH_BADGE[p.match] && <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${MATCH_BADGE[p.match][1]}`} data-testid={`refer-pro-match-${p.id}`}>{MATCH_BADGE[p.match][0]}{p.match !== "nearby" && p.distance_miles != null ? ` · ${p.distance_miles} mi` : ""}</span>}
                   {p.credentials_verified && <span className="text-[10px] font-semibold text-accent">VERIFIED</span>}
                 </span>
               </button>

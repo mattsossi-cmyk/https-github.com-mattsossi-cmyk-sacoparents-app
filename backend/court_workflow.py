@@ -13,6 +13,7 @@ from pydantic import AliasChoices, BaseModel, Field
 
 from joint_data import new_case_code
 from joint_engine import generate_joint_report
+from geo import zip_distance_miles
 from coparenting_tiers import TIERS, clean_library, framework_block, joint_findings, level_history, suggested_score, tier_for
 from pdf_report import build_joint_pdf, build_professional_statement_pdf, merge_pdfs
 
@@ -71,31 +72,35 @@ class ReferralIn(BaseModel):
     parties_zip: str = ""
 
 
-def _zip_match(pro_zip: str, target: str) -> str:
-    """Advisory proximity label: exact ZIP, same 3-digit area, or none."""
+def _zip_match(pro_zip: str, target: str, distance: float | None, radius: int) -> str:
+    """Advisory proximity label: exact ZIP, same 3-digit area, within judge-chosen radius, or none."""
     pro_zip, target = (pro_zip or "").strip()[:5], (target or "").strip()[:5]
     if not target or not pro_zip:
         return ""
     if pro_zip == target:
         return "nearby"
-    return "same_area" if pro_zip[:3] == target[:3] else ""
+    if pro_zip[:3] == target[:3]:
+        return "same_area"
+    return "within_radius" if radius > 0 and distance is not None and distance <= radius else ""
 
 
-_MATCH_RANK = {"nearby": 0, "same_area": 1, "": 2}
+_MATCH_RANK = {"nearby": 0, "same_area": 1, "within_radius": 2, "": 3}
 
 
-def _pro_row(d: dict, target_zip: str) -> dict:
+def _pro_row(d: dict, target_zip: str, radius: int) -> dict:
     p = d.get("profile") or {}
+    dist = zip_distance_miles(p.get("zip", ""), target_zip) if target_zip else None
     return {"id": d["_id"], "name": d.get("name", ""), "pro_role": p.get("pro_role", ""), "organization": p.get("organization", ""),
-            "city": p.get("city", ""), "state": p.get("state", ""), "zip": (p.get("zip") or "")[:10],
-            "credentials_verified": d.get("verification_level") == "credentials_verified", "match": _zip_match(p.get("zip", ""), target_zip)}
+            "city": p.get("city", ""), "state": p.get("state", ""), "zip": (p.get("zip") or "")[:10], "distance_miles": dist,
+            "credentials_verified": d.get("verification_level") == "credentials_verified", "match": _zip_match(p.get("zip", ""), target_zip, dist, radius)}
 
 
-def rank_professionals(docs: list[dict], target_zip: str) -> list[dict]:
-    rows = [_pro_row(d, target_zip) for d in docs]
-    if not target_zip.strip():
+def rank_professionals(docs: list[dict], target_zip: str, radius: int = 0) -> list[dict]:
+    target_zip = target_zip.strip()
+    rows = [_pro_row(d, target_zip, radius) for d in docs]
+    if not target_zip:
         return rows
-    return sorted(rows, key=lambda x: (_MATCH_RANK[x["match"]], 0 if x["zip"] else 1, x["name"].lower()))
+    return sorted(rows, key=lambda x: (_MATCH_RANK[x["match"]], x["distance_miles"] if x["distance_miles"] is not None else 99999, 0 if x["zip"] else 1, x["name"].lower()))
 
 
 REPORT_TYPES = {
@@ -466,11 +471,11 @@ def _judge_routes(c: Ctx) -> APIRouter:
     # ---------- judge: refer ----------
 
     @r.get("/court-dashboard/professionals")
-    async def referable_professionals(zip: str = "", user=Depends(get_current_user)):
+    async def referable_professionals(zip: str = "", radius: int = 0, user=Depends(get_current_user)):
         await require_judge(user)
         docs = await db.users.find({"role": {"$in": ["professional", "admin"]}, "approved": True, "profile.accept_court_referrals": {"$ne": False}},
                                    {"name": 1, "profile": 1, "verification_level": 1}).sort("name", 1).to_list(500)
-        return rank_professionals(docs, zip)
+        return rank_professionals(docs, zip, max(0, min(radius, 500)))
 
     @r.post("/court-dashboard/referrals")
     async def create_referral(body: ReferralIn, user=Depends(get_current_user)):

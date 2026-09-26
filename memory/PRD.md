@@ -740,3 +740,5 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `GET /api/court-dashboard/professionals?zip=` ranks approved professionals: exact ZIP (`match: nearby`) → same 3-digit area (`same_area`) → others; rows include zip/city/state.
 - Referral form has a "Parties' ZIP" input (stored as `parties_zip` on the referral, echoed in referral_public). Badges: Nearby / Same area; "Location not listed" for pros without ZIP/city. Judge may still pick anyone.
 - Tests: `tests/test_iter79_nearby_pros.py`; full suite 385 passed / 1 skipped.
+
+- 2026-06 follow-up: radius matching (`?radius=` miles, offline `zipcodes` centroids via `backend/geo.py`, badge `within_radius` + `distance_miles`), `ProZipPrompt.jsx` on professional dashboard when `profile.zip` empty (PUT /me/profile/zip), hearing-date label wraps on mobile. Full suite 385 passed / 1 skipped.

@@ -25,6 +25,7 @@ import { ParentRequestStatus } from "@/components/ParentRequestStatus";
 import { CasesTable } from "@/components/CasesTable";
 import { UpcomingCheckIns } from "@/components/UpcomingCheckIns";
 import { ReferralInbox } from "@/components/ReferralInbox";
+import { ProZipPrompt } from "@/components/ProZipPrompt";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -381,6 +382,8 @@ export default function Dashboard() {
             <SecondaryTools />
           </>
         )}
+
+        {isPro && user?.role === "professional" && <ProZipPrompt />}
 
         {isPro && user?.approved === false && (
           <div className="bg-align-yellow/10 border border-align-yellow/40 rounded-lg p-5 mb-6" data-testid="approval-pending-banner">
