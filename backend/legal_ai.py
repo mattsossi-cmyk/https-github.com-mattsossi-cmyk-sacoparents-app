@@ -63,7 +63,6 @@ def _v(rep: dict, key: str, default: str = "not yet recorded") -> str:
 def rule_based_lens_report(rep: dict, cls: dict) -> dict:
     j = cls.get("joint") or {}
     lbl = f"joint rating {rep.get('joint_rating')} ({j.get('label')}, {j.get('mode')})" if j else "no joint rating entered yet"
-    opts = ", ".join(rep.get("conflict_management_options") or []) or "no conflict-management approach selected yet"  # noqa: F841
     guidance = ", ".join(j.get("guidance") or []) or "enter a joint rating for guidance"
     pathway = (j.get("pathway") or {}).get("name") or "to be selected"
     risk = ", ".join(f"{k.replace('_', ' ')}: {d.get('level')}" for k, d in (rep.get("risk_screening") or {}).items() if isinstance(d, dict)) or "not yet recorded"

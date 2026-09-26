@@ -1,4 +1,3 @@
-from pathlib import Path
 from datetime import datetime as _dt, timezone as _tz
 from io import BytesIO
 
@@ -6,57 +5,8 @@ import qrcode
 from fpdf import FPDF
 from fpdf.fonts import FontFace
 
-_FONT_DIR = Path(__file__).resolve().parent / "fonts"
-_UNICODE_FONTS = all((_FONT_DIR / f).exists() for f in (
-    "DejaVuSans.ttf", "DejaVuSans-Bold.ttf", "DejaVuSans-Oblique.ttf", "DejaVuSans-BoldOblique.ttf",
-))
-FONT = "dejavu" if _UNICODE_FONTS else "helvetica"
-
-PURPLE = (91, 42, 134)
-TEAL = (37, 161, 154)
-GRAY = (110, 100, 120)
-GREEN = (102, 139, 105)
-BLUE = (96, 150, 186)
-YELLOW = (180, 150, 60)
-DARK = (30, 25, 40)
-BODY = (60, 55, 70)
-
-_REPLACEMENTS = [
-    ("—", "-"), ("–", "-"), ("'", "'"), ("'", "'"),
-    ('"', '"'), ('"', '"'), ("…", "..."), ("✓", "[x]"), ("•", "-"), ("≠", "!="),
-]
-
-
-def _s(text) -> str:
-    if _UNICODE_FONTS:
-        return str(text)
-    t = str(text)
-    for a, b in _REPLACEMENTS:
-        t = t.replace(a, b)
-    return t.encode("latin-1", "replace").decode("latin-1")
-
-
-class _JointPDF(FPDF):
-    watermark_text: str | None = None
-    footer_meta: str = ""
-    brand_header_fn = None
-
-    def header(self):
-        if self.brand_header_fn:
-            self.brand_header_fn(self)
-
-    def footer(self):
-        if self.watermark_text:
-            self.set_font(FONT, "B", 52)
-            self.set_text_color(235, 230, 242)
-            with self.rotation(40, self.w / 2, self.h / 2):
-                self.text(self.w / 2 - 68, self.h / 2, self.watermark_text)
-        self.set_y(-18 if self.footer_meta else -14)
-        self.set_font(FONT, "I", 8)
-        self.set_text_color(*GRAY)
-        if self.footer_meta:
-            self.cell(0, 4, _s(self.footer_meta), align="C", new_x="LMARGIN", new_y="NEXT")
-        self.cell(0, 8, _s(f"© 2026 sacoparentsalign.com · SA CoParents Align. All rights reserved. · Page {self.page_no()}"), align="C")
+from pdf_common import _FONT_DIR, _UNICODE_FONTS, FONT, PURPLE, TEAL, GRAY, GREEN, BLUE, YELLOW, DARK, BODY, _REPLACEMENTS, _s, _JointPDF, _new_pdf  # noqa: F401
+from pdf_agreement import build_agreement_pdf  # noqa: F401  (re-exported for callers)
 
 
 def verify_qr_png(url: str) -> bytes:
@@ -78,22 +28,6 @@ def _verify_qr_block(pdf: FPDF, verify: dict) -> None:
     pdf.set_xy(x - 2, y + size + 3.5)
     pdf.cell(size + 4, 3, _s(verify["case_code"]), align="C")
     pdf.set_xy(pdf.l_margin, pdf.t_margin)
-
-
-def _new_pdf() -> FPDF:
-    pdf = _JointPDF()
-    if _UNICODE_FONTS:
-        pdf.add_font("dejavu", "", str(_FONT_DIR / "DejaVuSans.ttf"))
-        pdf.add_font("dejavu", "B", str(_FONT_DIR / "DejaVuSans-Bold.ttf"))
-        pdf.add_font("dejavu", "I", str(_FONT_DIR / "DejaVuSans-Oblique.ttf"))
-        pdf.add_font("dejavu", "BI", str(_FONT_DIR / "DejaVuSans-BoldOblique.ttf"))
-    pdf.set_margins(18, 18, 18)
-    pdf.set_auto_page_break(auto=True, margin=18)
-    pdf.set_author("SA CoParents Align · sacoparentsalign.com")
-    pdf.set_creator("sacoparentsalign.com")
-    pdf.set_subject("© 2026 sacoparentsalign.com · SA CoParents Align. All rights reserved.")
-    pdf.add_page()
-    return pdf
 
 
 def _professional_line(pdf: FPDF, pro: dict) -> None:
@@ -379,11 +313,6 @@ def _agreement_summary(pdf: FPDF, r: dict) -> None:
     _agreement_bullets(pdf, f"Specific Agreements ({len(sm['specific'])})", sm["specific"][:16], PURPLE, empty="None confirmed yet.")
     _agreement_bullets(pdf, f"Issues Still Requiring Resolution ({len(sm['resolution'])})", sm["resolution"][:16], BLUE, empty="None — every answered item is aligned.")
     pdf.ln(4)
-
-
-def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = False, safety: dict | None = None) -> bytes:
-    from pdf_agreement import build_agreement_pdf as _build
-    return _build(r, doc=doc, is_sample=is_sample, safety=safety)
 
 
 def _legacy_build_agreement_pdf(r: dict) -> bytes:

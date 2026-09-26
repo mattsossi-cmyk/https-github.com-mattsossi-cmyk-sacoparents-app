@@ -2,6 +2,7 @@
 Emits JSON with data needed to drive the browser test."""
 import json
 import os
+import secrets
 import sys
 import uuid
 
@@ -18,7 +19,7 @@ from test_iter64_agreement_to_court import AGR_FIELDS, _agreement_answers  # noq
 
 BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/")
 API = f"{BASE_URL}/api"
-PASSWORD = "testpass123"
+PASSWORD = os.environ.get("TEST_FIXTURE_PASSWORD") or "T!" + secrets.token_urlsafe(12)
 SAFE = {"fear": False, "threats": False, "control": False}
 
 

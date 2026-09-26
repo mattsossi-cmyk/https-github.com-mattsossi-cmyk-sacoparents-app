@@ -1,7 +1,7 @@
 """Child-Focused Foundation Statement PDF — purple banner, teal accents, 10 numbered sections (matches the supplied HTML design)."""
 from fpdf import FPDF
 
-from pdf_report import FONT, TEAL, GRAY, BODY, _s, _new_pdf
+from pdf_common import FONT, TEAL, GRAY, BODY, _s, _new_pdf
 
 PURPLE, PURPLE_DARK, PURPLE_LIGHT, TEAL_LIGHT, BORDER, PANEL, COMMIT = (75, 42, 123), (47, 23, 79), (244, 240, 250), (234, 247, 247), (221, 215, 230), (250, 249, 252), (248, 246, 251)
 _W = 210 - 36

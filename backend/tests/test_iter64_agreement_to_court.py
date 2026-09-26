@@ -1,4 +1,5 @@
 """Iter 64: Co-Parenting Agreement explicitly attached to a court submission; judge sees card + PDF."""
+import requests
 import pymupdf
 from casekit import complete_both, new_user
 from test_judicial_portal import _flow
@@ -9,7 +10,7 @@ AGR_FIELDS = {"child_name": "Emma", "shared_purpose": "Calm.", "vision": "Safe."
 
 
 def _agreement_answers() -> dict:
-    secs = __import__("requests").get(f"{API}/joint/config").json().get("agreement_sections") or []
+    secs = requests.get(f"{API}/joint/config").json().get("agreement_sections") or []
     out = {}
     for s in secs:
         out[s["key"]] = f"Clear child-focused plan for {s['label'].lower()} using the app with 24-hour notice."

@@ -97,19 +97,6 @@ async def invite_prefill(token: str):
     return {**inv, "credential_types": CREDENTIAL_TYPES}
 
 
-async def consume_invite(token: str, user: dict) -> None:
-    """Called from registration: link the new professional account to its invitation."""
-    inv = await db.pro_invites.find_one({"token": token, "status": "invited"}) if token else None
-    if not inv or inv["email"] != user["email"]:
-        return
-    user["invited_by"] = inv["invited_by"]
-    user["pro_invite_id"] = inv["id"]
-    user.setdefault("profile", {})
-    if not user["profile"].get("zip"):
-        user["profile"]["zip"] = inv["zip"]
-    await db.pro_invites.update_one({"id": inv["id"]}, {"$set": {"status": "registered", "registered_at": _now(), "user_id": user["_id"]}})
-
-
 # ---- credentials request / upload / acceptance ----
 @router.post("/admin/professionals/{uid}/request-credentials")
 async def request_credentials(uid: str, user=Depends(get_current_user)):

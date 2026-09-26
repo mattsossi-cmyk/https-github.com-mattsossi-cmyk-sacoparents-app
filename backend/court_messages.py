@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from html import escape
 
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 
 from agreement_ai import _extract_json
@@ -155,17 +156,19 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, req
     return r
 
 
-def _judge_routes(r: APIRouter, get_current_user, require_judge, t: Threads) -> None:
-    from pydantic import BaseModel
+class MobileIn(BaseModel):
+    mobile: str = ""
+    sms_urgent_alerts: bool = True
 
-    class MobileIn(BaseModel):
-        mobile: str = ""
-        sms_urgent_alerts: bool = True
 
-    def _alert_view(user: dict) -> dict:
-        from sms import sms_configured
-        prof = user.get("profile") or {}
-        return {"configured": sms_configured(), "mobile": prof.get("mobile", ""), "sms_urgent_alerts": prof.get("sms_urgent_alerts", True), "email": user.get("email")}
+def _alert_view(user: dict) -> dict:
+    from sms import sms_configured
+    prof = user.get("profile") or {}
+    return {"configured": sms_configured(), "mobile": prof.get("mobile", ""), "sms_urgent_alerts": prof.get("sms_urgent_alerts", True), "email": user.get("email")}
+
+
+def _alert_routes(r: APIRouter, get_current_user, require_judge, t: Threads) -> None:
+    """Judge mobile number / urgent-safety SMS preferences."""
 
     @r.get("/court-dashboard/alert-settings")
     async def alert_settings(user=Depends(get_current_user)):
@@ -198,6 +201,11 @@ def _judge_routes(r: APIRouter, get_current_user, require_judge, t: Threads) -> 
         if not sid:
             raise HTTPException(status_code=502, detail="Could not send the test text — check the number and try again")
         return {"ok": True}
+
+
+def _judge_routes(r: APIRouter, get_current_user, require_judge, t: Threads) -> None:
+    """Judge-facing thread routes (urgent list, per-case messages) + professional thread routes."""
+    _alert_routes(r, get_current_user, require_judge, t)
 
     @r.get("/court-dashboard/urgent-messages")
     async def judge_urgent(user=Depends(get_current_user)):

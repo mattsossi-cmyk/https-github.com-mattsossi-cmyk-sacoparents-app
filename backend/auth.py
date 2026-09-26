@@ -117,6 +117,19 @@ class LoginIn(BaseModel):
     password: str
 
 
+async def _consume_pro_invite(token: str, user: dict) -> None:
+    """Link a new professional account to its admin invitation (pro_invites collection)."""
+    inv = await db.pro_invites.find_one({"token": token, "status": "invited"})
+    if not inv or inv["email"] != user["email"]:
+        return
+    user["invited_by"] = inv["invited_by"]
+    user["pro_invite_id"] = inv["id"]
+    user.setdefault("profile", {})
+    if not user["profile"].get("zip"):
+        user["profile"]["zip"] = inv["zip"]
+    await db.pro_invites.update_one({"id": inv["id"]}, {"$set": {"status": "registered", "registered_at": datetime.now(timezone.utc).isoformat(), "user_id": user["_id"]}})
+
+
 async def _validate_registration(body: RegisterIn, email: str, role: str) -> None:
     if await db.users.find_one({"email": email}):
         raise HTTPException(status_code=400, detail="An account with this email already exists")
@@ -193,8 +206,7 @@ async def register(body: RegisterIn, response: Response):
                 user["profile"]["organization"] = inv.get("court_name", "")
             await db.court_invites.update_one({"email": email}, {"$set": {"status": "registered", "registered_at": user["created_at"]}})
     if role == "professional" and body.pro_invite.strip():
-        from pro_invites import consume_invite
-        await consume_invite(body.pro_invite.strip(), user)
+        await _consume_pro_invite(body.pro_invite.strip(), user)
     await db.users.insert_one(user)
     if role in ("professional", "judge") and not FIXTURE_EMAIL_RE.search(email):
         await _notify_admin_new_professional(user)

@@ -48,6 +48,13 @@ def _joint_text(doc: dict) -> str:
 
 def build_router(db, get_current_user, own_case, get_joint_report_doc, report_role) -> APIRouter:
     r = APIRouter()
+    _jev_routes(r, db, get_current_user, own_case)
+    _attachment_routes(r, db, get_current_user, get_joint_report_doc, report_role)
+    return r
+
+
+def _jev_routes(r: APIRouter, db, get_current_user, own_case) -> None:
+    """Review-gated Jev / Claude helpers for the Professional Alignment Report and parent Foundation Statement."""
 
     @r.post("/cases/{rid}/professional-report/neutrality-check")
     async def neutrality(rid: str, body: FieldsIn, user=Depends(get_current_user)):
@@ -87,9 +94,13 @@ def build_router(db, get_current_user, own_case, get_joint_report_doc, report_ro
     async def blame(body: LinesIn, user=Depends(get_current_user)):
         return {"results": await jev.blame_check(body.lines[:12]), "note": "Nudge only — you decide the final wording."}
 
-    # ---- parent attachments (private: owner + assigned professional on a shared case) ----
-    def _pub(f: dict) -> dict:
-        return {k: f.get(k) for k in ("id", "original_filename", "content_type", "size", "created_at")}
+
+def _pub(f: dict) -> dict:
+    return {k: f.get(k) for k in ("id", "original_filename", "content_type", "size", "created_at")}
+
+
+def _attachment_routes(r: APIRouter, db, get_current_user, get_joint_report_doc, report_role) -> None:
+    """Parent attachments — private to the owner and the assigned professional on a case the statement was shared into."""
 
     @r.post("/foundation/mine/attachments")
     async def upload(file: UploadFile = File(...), user=Depends(get_current_user)):
@@ -156,4 +167,3 @@ def build_router(db, get_current_user, own_case, get_joint_report_doc, report_ro
         data, ct = get_object(rec["storage_path"])
         return Response(content=data, media_type=rec.get("content_type") or ct, headers={"Content-Disposition": f'inline; filename="{rec["original_filename"]}"'})
 
-    return r

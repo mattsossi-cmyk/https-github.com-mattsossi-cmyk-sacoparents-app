@@ -1,7 +1,7 @@
 """Child-Focused Co-Parenting Agreement PDF — purple banner, teal bullets, 15 numbered sections (supplied HTML design)."""
 from fpdf import FPDF
 
-from pdf_report import FONT, GRAY, BODY, _s, _new_pdf
+from pdf_common import FONT, GRAY, BODY, _s, _new_pdf
 from pdf_foundation import PURPLE, PURPLE_DARK, PURPLE_LIGHT, TEAL_LIGHT, BORDER, _W, _banner, _heading, _panel, _bullets, _info_cards, _footer_block
 from agreement_model import court_agreement_model
 

@@ -1,5 +1,5 @@
 """One-page Parallel Parenting Order Summary for judges — drawn from the Safety Override agreement card (neutral, no parent answers)."""
-from pdf_report import FONT, GRAY, BODY, _s, _new_pdf
+from pdf_common import FONT, GRAY, BODY, _s, _new_pdf
 from pdf_foundation import PURPLE, PURPLE_DARK, PURPLE_LIGHT, _W, _banner, _panel, _bullets, _info_cards
 from pdf_agreement import GOLD, GOLD_SOFT, TEAL
 from safety_gate import PARALLEL

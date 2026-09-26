@@ -4,6 +4,7 @@ pro_email, pro_password, judge_email, judge_password}.
 Mirrors backend/tests/test_iter64_agreement_to_court.py without asserting UI-only bits."""
 import json
 import os
+import secrets
 import sys
 import uuid
 
@@ -17,7 +18,7 @@ load_dotenv("/app/frontend/.env")
 BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/")
 API = f"{BASE_URL}/api"
 
-PASSWORD = "testpass123"
+PASSWORD = os.environ.get("TEST_FIXTURE_PASSWORD") or "T!" + secrets.token_urlsafe(12)
 
 AGR_FIELDS = {"child_name": "Emma64UI", "shared_purpose": "Calm.", "vision": "Safe.",
               "priorities": ["Protect Emma"], "strengths": "Curious and kind.",
