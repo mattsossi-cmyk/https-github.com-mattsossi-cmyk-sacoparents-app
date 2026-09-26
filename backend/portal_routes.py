@@ -230,39 +230,61 @@ async def put_state(
     user: UserPublic = Depends(get_current_user),
     db=Depends(get_db),
 ) -> Dict[str, Any]:
-    """Upsert the caller's portal state as one document."""
+    """Merge the caller's portal state.
+
+    Only fields explicitly present in the request body are written
+    (`pydantic.model_dump(exclude_unset=True)`). A partial-update
+    client sending `{"safety_plan": null}` clears only that field
+    and leaves align_records / milestones / biff_logs / health_index
+    / etc. untouched.
+
+    A client that still sends the full state (the current Portal
+    frontend) works exactly as before — every field is `set`, so
+    every field is updated.
+    """
     # Cap array sizes so a bad client can't push us over the Mongo doc limit.
     def _cap(seq: list, n: int) -> list:
         return list(seq or [])[:n]
 
-    state = {
-        "user_id": user.user_id,
-        "align_records": _cap(payload.align_records, 500),
-        "milestones": _cap(payload.milestones, 500),
-        "biff_logs": _cap(payload.biff_logs, 500),
-        "foundation_text": (payload.foundation_text or "")[:5000],
-        "legal_report": {
-            "sigA": (payload.legal_report or {}).get("sigA", "")[:120],
-            "sigB": (payload.legal_report or {}).get("sigB", "")[:120],
-            "sigMed": (payload.legal_report or {}).get("sigMed", "")[:200],
-        },
-        "health_index": {
-            "s1": max(1, min(10, int((payload.health_index or {}).get("s1", 5) or 5))),
-            "s2": max(1, min(10, int((payload.health_index or {}).get("s2", 5) or 5))),
-            "s3": max(1, min(10, int((payload.health_index or {}).get("s3", 5) or 5))),
-        },
-        "court_key": (payload.court_key or "")[:80],
-        "reassessments": _cap(payload.reassessments, 200),
-        "safety_ack": _sanitize_safety_ack(payload.safety_ack),
-        "safety_plan": _sanitize_safety_plan(payload.safety_plan),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    }
+    updates = payload.model_dump(exclude_unset=True)
+    if "align_records" in updates:
+        updates["align_records"] = _cap(updates["align_records"], 500)
+    if "milestones" in updates:
+        updates["milestones"] = _cap(updates["milestones"], 500)
+    if "biff_logs" in updates:
+        updates["biff_logs"] = _cap(updates["biff_logs"], 500)
+    if "reassessments" in updates:
+        updates["reassessments"] = _cap(updates["reassessments"], 200)
+    if "foundation_text" in updates:
+        updates["foundation_text"] = (updates["foundation_text"] or "")[:5000]
+    if "court_key" in updates:
+        updates["court_key"] = (updates["court_key"] or "")[:80]
+    if "legal_report" in updates:
+        lr = updates["legal_report"] or {}
+        updates["legal_report"] = {
+            "sigA": lr.get("sigA", "")[:120],
+            "sigB": lr.get("sigB", "")[:120],
+            "sigMed": lr.get("sigMed", "")[:200],
+        }
+    if "health_index" in updates:
+        hi = updates["health_index"] or {}
+        updates["health_index"] = {
+            "s1": max(1, min(10, int(hi.get("s1", 5) or 5))),
+            "s2": max(1, min(10, int(hi.get("s2", 5) or 5))),
+            "s3": max(1, min(10, int(hi.get("s3", 5) or 5))),
+        }
+    if "safety_ack" in updates:
+        updates["safety_ack"] = _sanitize_safety_ack(updates["safety_ack"])
+    if "safety_plan" in updates:
+        updates["safety_plan"] = _sanitize_safety_plan(updates["safety_plan"])
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+
     await db[_PORTAL_COLLECTION].update_one(
         {"user_id": user.user_id},
-        {"$set": state},
+        {"$set": updates, "$setOnInsert": {"user_id": user.user_id}},
         upsert=True,
     )
-    return {"ok": True, "updated_at": state["updated_at"]}
+    return {"ok": True, "updated_at": updates["updated_at"]}
 
 
 # --------------------------------------------------------------------- #

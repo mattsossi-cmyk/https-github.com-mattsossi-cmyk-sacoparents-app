@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 /**
  * SafetyPlanBuilder — a small optional stepper embedded in the flagged
@@ -58,6 +58,10 @@ export function SafetyPlanBuilder({ plan, onSave }) {
   const [showSummary, setShowSummary] = useState(false);
   const [savedAt, setSavedAt] = useState("");
   const [copyState, setCopyState] = useState("");
+  // Undo-toast state — after wipe(), we stash the previous plan for 5s
+  // so a parent under stress can hit "Undo" without a modal wall.
+  const [undo, setUndo] = useState(null); // { plan, values, savedAt } | null
+  const undoTimerRef = useRef(null);
 
   // Hydrate from prop when plan changes (e.g. server pull).
   useEffect(() => {
@@ -88,20 +92,58 @@ export function SafetyPlanBuilder({ plan, onSave }) {
   };
 
   const wipe = () => {
-    // Only surface a confirm if the parent actually has something saved
-    // — otherwise the button is a no-op. Never block: a parent under
-    // duress needs to be able to erase their plan in one tap.
-    const confirmed = window.confirm(
-      "Delete your Safety Plan from this device (and from your account if signed in)?\n\nThis cannot be undone."
-    );
-    if (!confirmed) return;
+    // No modal wall — a parent under duress needs a single tap.
+    // Snapshot the previous plan so the parent can hit "Undo" within
+    // 5 seconds. Fire the delete immediately so the server-side
+    // wipe kicks off in parallel — the undo simply re-saves.
+    const snapshot = {
+      values: { ...values },
+      savedAt,
+      plan: plan ? { ...plan } : null,
+    };
     const cleared = {};
     for (const f of FIELDS) cleared[f.key] = "";
     setValues(cleared);
     setSavedAt("");
     setShowSummary(false);
     onSave(null);
+    setUndo(snapshot);
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = setTimeout(() => {
+      setUndo(null);
+      undoTimerRef.current = null;
+    }, 5000);
   };
+
+  const undoWipe = () => {
+    if (!undo) return;
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+    setValues(undo.values);
+    setSavedAt(undo.savedAt);
+    // Re-save the snapshot server-side. If the snapshot had a
+    // committed plan (savedAt was set), push it back verbatim — the
+    // server will overwrite the null with the restored payload.
+    if (undo.plan) {
+      onSave(undo.plan);
+    } else if (Object.values(undo.values).some((v) => (v || "").trim())) {
+      // No previously-committed plan, but the parent had unsaved
+      // typing — restore fields locally without a server round-trip.
+    }
+    setUndo(null);
+  };
+
+  // Clear the undo timer on unmount so we don't leak.
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const summaryText = () => {
     const lines = ["My Safety Plan", "---"];
@@ -220,6 +262,26 @@ export function SafetyPlanBuilder({ plan, onSave }) {
                 className="text-[10px] font-bold text-rose-700 hover:text-rose-900 underline decoration-rose-300"
               >
                 <i className="fa-solid fa-trash-can mr-1"></i>Delete my Safety Plan
+              </button>
+            </div>
+          )}
+
+          {undo && (
+            <div
+              data-testid="safety-plan-undo-toast"
+              className="flex items-center justify-between gap-2 p-2 bg-slate-900 text-white rounded-lg text-[11px] animate-pulse-once"
+            >
+              <span>
+                <i className="fa-solid fa-trash-can mr-1.5"></i>
+                Safety Plan deleted
+              </span>
+              <button
+                type="button"
+                data-testid="safety-plan-undo-btn"
+                onClick={undoWipe}
+                className="px-2.5 py-1 bg-amber-400 text-slate-900 rounded font-bold uppercase tracking-wider text-[10px]"
+              >
+                Undo
               </button>
             </div>
           )}

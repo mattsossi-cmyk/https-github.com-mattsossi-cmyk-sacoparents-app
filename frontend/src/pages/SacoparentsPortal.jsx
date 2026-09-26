@@ -449,12 +449,13 @@ export default function SacoparentsPortal() {
   const onSaveSafetyPlan = useCallback(
     (plan) => {
       if (plan == null) {
-        // Delete: wipe local storage AND state; cross-device wipe
-        // usually rides on the debounced PUT that fires when
-        // `safetyPlan` state changes, but that has a ~700ms lag. Fire
-        // a fire-and-forget PUT NOW so the server-side copy is gone
-        // as soon as the network round-trip completes — critical for
-        // a parent who taps delete and then closes the tab.
+        // Delete: wipe local storage AND state; fire a fire-and-
+        // forget PUT NOW so the server-side copy is gone as soon as
+        // the network round-trip completes — critical for a parent
+        // who taps delete and then closes the tab. Uses the new
+        // PATCH-style semantics on /portal/state so we only send
+        // the field we're clearing, never risking clobbering
+        // alignments / milestones / biff logs.
         try {
           localStorage.removeItem(SAFETY_PLAN_KEY);
         } catch {
@@ -463,18 +464,7 @@ export default function SacoparentsPortal() {
         setSafetyPlan(null);
         if (user) {
           api
-            .put("/portal/state", {
-              align_records: alignRecords,
-              milestones,
-              biff_logs: biffLogs,
-              foundation_text: foundationText,
-              legal_report: legalReport,
-              health_index: healthIndex,
-              court_key: courtKey,
-              reassessments,
-              safety_ack: safetyAck,
-              safety_plan: null,
-            })
+            .put("/portal/state", { safety_plan: null })
             .catch(() => {
               // The debounced PUT triggered by the state change will
               // retry on the next tick / online event.
@@ -485,18 +475,7 @@ export default function SacoparentsPortal() {
       writeJson(SAFETY_PLAN_KEY, plan);
       setSafetyPlan(plan);
     },
-    [
-      user,
-      alignRecords,
-      milestones,
-      biffLogs,
-      foundationText,
-      legalReport,
-      healthIndex,
-      courtKey,
-      reassessments,
-      safetyAck,
-    ]
+    [user]
   );
 
   const verifyProfessionalKey = useCallback(async () => {
@@ -1174,6 +1153,7 @@ export default function SacoparentsPortal() {
                   downloadWeeklyProgressPdf={downloadWeeklyProgressPdf}
                   onShareWeekly={onShareWeekly}
                   shareStatus={shareStatus}
+                  safetyFlagged={safetyFlagged}
                 />
               </>
             )}

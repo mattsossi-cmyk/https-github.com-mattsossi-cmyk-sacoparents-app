@@ -30,20 +30,37 @@ export function BiffTab({
   downloadWeeklyProgressPdf,
   onShareWeekly,
   shareStatus,
+  // Grey-rock coach chip (fires when the parent's Quick Safety
+  // Check returned a coercion / device / physical-safety flag).
+  safetyFlagged = false,
 }) {
   return (
     <div className="space-y-4" data-testid="hub-section-biff">
       {/* BIFF Builder */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box">
         <div className="border-b border-slate-100 pb-2">
-          <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
-            De-escalation Engine
-          </span>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+              De-escalation Engine
+            </span>
+            {safetyFlagged && (
+              <span
+                data-testid="biff-greyrock-chip"
+                title="Because your Quick Safety Check flagged coercion or safety concerns, the coach is producing shorter, more neutral replies."
+                className="inline-flex items-center gap-1 bg-slate-900 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+              >
+                <span aria-hidden>🪨</span>
+                <span>Grey-rock coach on</span>
+              </span>
+            )}
+          </div>
           <h3 className="font-bold text-slate-800 text-sm mt-1">
             BIFF Communication Builder
           </h3>
           <p className="text-[11px] text-slate-500">
-            Brief, Informative, Friendly, and Firm messaging.
+            {safetyFlagged
+              ? "Grey-rock BIFF: short, factual, neutral. Safer to send to a coercive co-parent."
+              : "Brief, Informative, Friendly, and Firm messaging."}
           </p>
         </div>
 
