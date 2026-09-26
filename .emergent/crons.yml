@@ -15,7 +15,7 @@ crons:
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     enabled: true
   - name: weekly-summary
-    description: "Monday 8am Central: caseload overview email to professionals plus the Judicial Portal digest to each judge"
+    description: "Monday 8am Central: caseload email to professionals, Judicial Portal digest to judges, and provider freshness check emailing admins on contact changes"
     cron: "0 8 * * 1"
     timezone: "America/Chicago"
     endpoint: "{{BASE_URL}}/api/cron/weekly-summary"

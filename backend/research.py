@@ -4,7 +4,8 @@ import logging
 import os
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from html import escape
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -124,6 +125,65 @@ async def research_insight(rep: dict, user: dict) -> dict | None:
     return {"text": res["answer"][:4000], "citations": res["citations"][:10], "model": res.get("model") or "sonar", "zip": zip_code, "fetched_at": datetime.now(timezone.utc).isoformat()}
 
 
+async def verify_provider_record(db, p: dict, user_id: str | None = None) -> dict:
+    """Live Perplexity lookup of a provider's phone/website; stores `verification` + `last_verified_at`. Raises HTTPException on Perplexity errors."""
+    who = " ".join(x for x in (p.get("name"), p.get("organization"), "Texas") if x)
+    q = (f"What are the current public phone number and official website for {who}? Also state whether the service still appears to be operating. Cite sources. "
+         "After the prose, append a line 'PROVIDERS_JSON:' followed by a JSON array with ONE object with keys name, organization, phone, website, services.")
+    result = await sonar(q)
+    prose, found = _split_providers(result["answer"])
+    cur = found[0] if found else {}
+    norm = lambda s: re.sub(r"\D", "", s or "")  # noqa: E731
+    site = lambda s: re.sub(r"^https?://(www\.)?|/$", "", (s or "").strip().lower())  # noqa: E731
+    checks = {"phone": {"directory": p.get("phone", ""), "found": cur.get("phone", ""), "match": bool(cur.get("phone")) and norm(cur["phone"])[-10:] == norm(p.get("phone"))[-10:]},
+              "website": {"directory": p.get("website", ""), "found": cur.get("website", ""), "match": bool(cur.get("website")) and site(cur["website"]) == site(p.get("website"))}}
+    verification = {"checked_at": datetime.now(timezone.utc).isoformat(), "checks": checks, "summary": prose[:1200], "citations": result["citations"][:6], "model": result.get("model")}
+    await db.providers.update_one({"id": p["id"]}, {"$set": {"verification": verification, "last_verified_at": verification["checked_at"]}})
+    await db.research_queries.insert_one({"id": str(uuid.uuid4()), "user_id": user_id or "system", "kind": "verify", "question": q, "answer": result["answer"], "citations": result["citations"],
+                                          "model": result.get("model"), "created_at": verification["checked_at"]})
+    return verification
+
+
+async def run_provider_freshness(db, send_email, app_url, from_name: str, logger, stale_days: int = 90) -> dict:
+    """Weekly: re-verify active providers not checked in `stale_days`; email admins only when phone/website differs (or lookup found nothing)."""
+    if not os.environ.get("PERPLEXITY_API_KEY"):
+        return {"skipped": "unconfigured"}
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=stale_days)).isoformat()
+    provs = await db.providers.find({"active": {"$ne": False}, "$or": [{"last_verified_at": {"$exists": False}}, {"last_verified_at": None}, {"last_verified_at": {"$lt": cutoff}}]}, {"_id": 0}).to_list(200)
+    changed, failed = [], []
+    for p in provs:
+        try:
+            v = await verify_provider_record(db, p)
+        except Exception as exc:
+            logger.warning("freshness check failed for %s: %s", p.get("name"), exc)
+            failed.append(p.get("name", ""))
+            continue
+        diffs = {k: c for k, c in v["checks"].items() if c["found"] and not c["match"]}
+        if diffs:
+            changed.append((p, diffs))
+    if changed or failed:
+        admins = {os.environ.get("ADMIN_EMAIL", "")} | {u["email"] async for u in db.users.find({"role": "admin"}, {"email": 1})}
+        html = _freshness_html(changed, failed, len(provs), f"{app_url()}/dashboard", from_name)
+        for to in filter(None, admins):
+            try:
+                await send_email(to=to, subject=f"Provider directory: {len(changed)} contact change{'s' if len(changed) != 1 else ''} to review", html=html, kind="provider_freshness", to_role="Admin")
+            except Exception as exc:
+                logger.warning("freshness email to %s failed: %s", to, exc)
+    return {"checked": len(provs), "changed": len(changed), "failed": len(failed)}
+
+
+def _freshness_html(changed: list, failed: list, checked: int, link: str, from_name: str) -> str:
+    def row(p, diffs):
+        cells = "".join(f"<li><strong>{escape(k)}</strong>: directory “{escape(c['directory'] or '—')}” → found “{escape(c['found'])}”</li>" for k, c in diffs.items())
+        return f"<li style='margin-bottom:8px'><strong>{escape(p.get('name', ''))}</strong> <span style='color:#666'>{escape(p.get('specialty', ''))}</span><ul>{cells}</ul></li>"
+    body = "".join(row(p, d) for p, d in changed) or "<li>No contact changes detected.</li>"
+    fail = f"<p style='color:#a15c00'>Could not verify: {escape(', '.join(failed))}</p>" if failed else ""
+    return (f"<table width='100%' cellpadding='0' cellspacing='0'><tr><td style='font-family:Arial,sans-serif;color:#222'>"
+            f"<h2 style='color:#5B2A86'>Weekly provider freshness check</h2><p>{checked} provider{'s' if checked != 1 else ''} re-verified against live web results (Perplexity). "
+            f"Review the differences below and use <em>Apply found values</em> in the Resource Provider Directory if correct — nothing was changed automatically.</p><ul>{body}</ul>{fail}"
+            f"<p><a href='{link}' style='color:#5B2A86'>Open the admin dashboard</a></p><p style='font-size:12px;color:#888'>Sent by {escape(from_name)}.</p></td></tr></table>")
+
+
 def build_router(db, get_current_user) -> APIRouter:
     r = APIRouter()
 
@@ -189,19 +249,7 @@ def build_router(db, get_current_user) -> APIRouter:
         p = await db.providers.find_one({"id": pid}, {"_id": 0})
         if not p:
             raise HTTPException(status_code=404, detail="Provider not found")
-        who = " ".join(x for x in (p.get("name"), p.get("organization"), "Texas") if x)
-        q = (f"What are the current public phone number and official website for {who}? Also state whether the service still appears to be operating. Cite sources. "
-             "After the prose, append a line 'PROVIDERS_JSON:' followed by a JSON array with ONE object with keys name, organization, phone, website, services.")
-        result = await sonar(q)
-        prose, found = _split_providers(result["answer"])
-        cur = found[0] if found else {}
-        norm = lambda s: re.sub(r"\D", "", s or "")  # noqa: E731
-        site = lambda s: re.sub(r"^https?://(www\.)?|/$", "", (s or "").strip().lower())  # noqa: E731
-        checks = {"phone": {"directory": p.get("phone", ""), "found": cur.get("phone", ""), "match": bool(cur.get("phone")) and norm(cur["phone"])[-10:] == norm(p.get("phone"))[-10:]},
-                  "website": {"directory": p.get("website", ""), "found": cur.get("website", ""), "match": bool(cur.get("website")) and site(cur["website"]) == site(p.get("website"))}}
-        verification = {"checked_at": datetime.now(timezone.utc).isoformat(), "checks": checks, "summary": prose[:1200], "citations": result["citations"][:6], "model": result.get("model")}
-        await db.providers.update_one({"id": pid}, {"$set": {"verification": verification, "last_verified_at": verification["checked_at"]}})
-        await _store(user, "verify", q, result)
+        verification = await verify_provider_record(db, p, user["_id"])
         return {"verification": verification, "disclaimer": DISCLAIMER}
 
     @r.post("/research/providers/{pid}/apply-verification")

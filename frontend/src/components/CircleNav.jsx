@@ -84,6 +84,7 @@ export function CircleNav({ isPro }) {
         action="Build Agreement"
         pill="bg-brand-green"
         testid="circle-agreement"
+        img="/badge-agreement.png"
       />
       <MainBadge
         to={safetyTo}
