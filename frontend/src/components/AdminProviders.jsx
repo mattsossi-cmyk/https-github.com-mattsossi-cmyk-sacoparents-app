@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BookUser, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { BookUser, History, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { ProviderHistory } from "@/components/ProviderHistory";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,7 @@ export function AdminProviders() {
   const isStale = (p) => !p.last_verified_at || (Date.now() - new Date(p.last_verified_at).getTime()) > 90 * 86400000;
   const stale = items.filter((p) => p.active !== false && isStale(p));
   const [checkingAll, setCheckingAll] = useState(false);
+  const [historyFor, setHistoryFor] = useState(null);
   const checkAll = async () => {
     setCheckingAll(true);
     let ok = 0;
@@ -82,6 +84,7 @@ export function AdminProviders() {
                 </div>
                 <Button size="sm" variant="outline" onClick={() => setEdit({ ...EMPTY, ...p })} data-testid={`provider-edit-${p.id}`}><Pencil className="h-4 w-4" /></Button>
                 <Button size="sm" variant="outline" onClick={() => verify(p)} disabled={verifying === p.id} title="Re-verify phone & website via Perplexity" data-testid={`provider-verify-${p.id}`}><RefreshCw className={`h-4 w-4 ${verifying === p.id ? "animate-spin" : ""}`} /></Button>
+                <Button size="sm" variant={historyFor === p.id ? "secondary" : "outline"} onClick={() => setHistoryFor((h) => (h === p.id ? null : p.id))} title="Freshness history" data-testid={`provider-history-btn-${p.id}`}><History className="h-4 w-4" /></Button>
                 <Button size="sm" variant="ghost" onClick={() => remove(p)} data-testid={`provider-delete-${p.id}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             )}
@@ -93,6 +96,7 @@ export function AdminProviders() {
                 {Object.values(p.verification.checks || {}).some((c) => c.found && !c.match) && <Button size="sm" variant="outline" className="mt-1 h-7" onClick={() => applyVerification(p)} data-testid={`provider-verification-apply-${p.id}`}>Apply found values</Button>}
               </div>
             )}
+            {historyFor === p.id && <ProviderHistory providerId={p.id} refreshKey={`${p.last_verified_at}-${p.updated_at}`} />}
           </li>
         ))}
         {items.length === 0 && <li className="text-sm text-muted-foreground" data-testid="provider-empty">No providers yet.</li>}

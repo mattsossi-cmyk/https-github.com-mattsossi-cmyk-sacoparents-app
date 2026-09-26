@@ -139,6 +139,9 @@ async def verify_provider_record(db, p: dict, user_id: str | None = None) -> dic
               "website": {"directory": p.get("website", ""), "found": cur.get("website", ""), "match": bool(cur.get("website")) and site(cur["website"]) == site(p.get("website"))}}
     verification = {"checked_at": datetime.now(timezone.utc).isoformat(), "checks": checks, "summary": prose[:1200], "citations": result["citations"][:6], "model": result.get("model")}
     await db.providers.update_one({"id": p["id"]}, {"$set": {"verification": verification, "last_verified_at": verification["checked_at"]}})
+    await db.provider_checks.insert_one({"id": str(uuid.uuid4()), "provider_id": p["id"], "checked_at": verification["checked_at"], "by": user_id or "system",
+                                         "checks": checks, "changed": [k for k, c in checks.items() if c["found"] and not c["match"]], "not_found": [k for k, c in checks.items() if not c["found"]],
+                                         "applied_at": None, "applied": {}})
     await db.research_queries.insert_one({"id": str(uuid.uuid4()), "user_id": user_id or "system", "kind": "verify", "question": q, "answer": result["answer"], "citations": result["citations"],
                                           "model": result.get("model"), "created_at": verification["checked_at"]})
     return verification
@@ -261,8 +264,20 @@ def build_router(db, get_current_user) -> APIRouter:
             raise HTTPException(status_code=404, detail="Run a freshness check first")
         upd = {k: v["found"][:200] for k, v in p["verification"]["checks"].items() if v.get("found") and not v.get("match")}
         if upd:
-            upd["updated_at"] = datetime.now(timezone.utc).isoformat()
-            await db.providers.update_one({"id": pid}, {"$set": upd})
-        return {"updated": {k: v for k, v in upd.items() if k != "updated_at"}}
+            now = datetime.now(timezone.utc).isoformat()
+            await db.providers.update_one({"id": pid}, {"$set": {**upd, "updated_at": now}})
+            await db.provider_checks.update_one({"provider_id": pid, "checked_at": p["verification"]["checked_at"]}, {"$set": {"applied_at": now, "applied": upd, "applied_by": user["_id"]}})
+        return {"updated": upd}
+
+    @r.get("/research/providers/{pid}/history")
+    async def provider_history(pid: str, user=Depends(get_current_user)):
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        rows = await db.provider_checks.find({"provider_id": pid}, {"_id": 0}).sort("checked_at", -1).to_list(50)
+        names = {u["_id"]: u.get("name", "") async for u in db.users.find({"_id": {"$in": [x for r_ in rows for x in (r_.get("by"), r_.get("applied_by")) if x and x != "system"]}}, {"name": 1})}
+        for row in rows:
+            row["by_name"] = "Weekly cron" if row.get("by") == "system" else names.get(row.get("by"), "")
+            row["applied_by_name"] = names.get(row.get("applied_by"), "") if row.get("applied_by") else ""
+        return {"history": rows}
 
     return r
