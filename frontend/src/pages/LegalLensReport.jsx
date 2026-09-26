@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, Circle, Download, Eye, FileCheck2, Plus, Save, Sparkles, Trash2 } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,6 +81,7 @@ function ResourceRows({ rows = [], lib, onChange }) {
 
 export default function LegalLensReport() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [v, setV] = useState(null);
   const [rep, setRep] = useState({});
   const [busy, setBusy] = useState(false);
@@ -183,7 +185,7 @@ export default function LegalLensReport() {
               <ChildFocusList categories={lib.child_focus_categories} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
               <ChildFocusSuggest id={id} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
             </Sec>
-            <Sec n={5} title="Options & Resources" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /><ResearchPanel onAddRow={(row) => set("resource_rows", [...(rep.resource_rows || []), row])} /></Sec>
+            <Sec n={5} title="Options & Resources" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /><ResearchPanel isAdmin={user?.role === "admin"} onAddRow={(row) => set("resource_rows", [...(rep.resource_rows || []), row])} /></Sec>
             <Sec n={6} title="Conflict Resolution" id="conflict">
               <p className="text-xs text-muted-foreground">{notes.purpose}</p>
               <PathwayPicker lib={{ ...lib, notes }} rep={rep} cls={cls} set={set} />

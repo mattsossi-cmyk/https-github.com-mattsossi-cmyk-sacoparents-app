@@ -67,13 +67,18 @@ export function ParallelSummaryHelper({ id, onInsert }) {
   );
 }
 
-export function ResearchPanel({ onAddRow }) {
+export function ResearchPanel({ onAddRow, isAdmin = false }) {
   const [cfg, setCfg] = useState(null);
   const [zip, setZip] = useState("");
   const [cat, setCat] = useState("parenting_facilitator");
   const [q, setQ] = useState("");
   const [res, setRes] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [added, setAdded] = useState({});
+  const addToDirectory = async (p, i) => {
+    try { await api.post("/research/providers/add", { ...p, category: res.category }); setAdded((x) => ({ ...x, [i]: true })); toast.success(`${p.name} added to the provider directory`); }
+    catch (e) { toast.error(formatApiError(e)); }
+  };
   useEffect(() => { api.get("/research/config").then((r) => { setCfg(r.data); setZip(r.data.zip || ""); }).catch(() => setCfg({ configured: false, categories: [] })); }, []);
   const saveZip = async () => { try { await api.put("/me/profile/zip", { zip }); toast.success("ZIP code saved to your profile"); } catch (e) { toast.error(formatApiError(e)); } };
   const local = async () => { setBusy(true); try { if (zip && zip !== cfg.zip) await saveZip(); const { data } = await api.post("/research/local-resources", { category: cat, zip }); setRes(data); } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); } };
@@ -95,6 +100,21 @@ export function ResearchPanel({ onAddRow }) {
       {res && (
         <div className="rounded-md border border-border bg-white p-3 text-sm" data-testid="lens-research-result">
           <p className="whitespace-pre-wrap leading-relaxed">{res.answer}</p>
+          {res.providers?.length > 0 && (
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2" data-testid="lens-research-providers">
+              {res.providers.map((p, i) => (
+                <li key={i} className="rounded-md border border-teal-200 bg-[#f4fbfb] p-2 text-xs" data-testid={`lens-research-provider-${i}`}>
+                  <p className="font-semibold text-sm">{p.name}</p>
+                  {(p.organization || p.phone || p.website) && <p className="text-muted-foreground">{[p.organization, p.phone].filter(Boolean).join(" · ")}{p.website && <> · <a href={/^https?:/.test(p.website) ? p.website : `https://${p.website}`} target="_blank" rel="noreferrer" className="underline break-all">{p.website}</a></>}</p>}
+                  {p.services && <p className="mt-0.5">{p.services}</p>}
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {onAddRow && <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => onAddRow({ category: "Joint / Co-Parenting", resource: p.name, focus: [p.services, p.phone, p.website].filter(Boolean).join(" · ").slice(0, 600) })} data-testid={`lens-research-provider-row-${i}`}>Add to report</Button>}
+                    {isAdmin && <Button size="sm" variant="outline" className="h-7 text-xs" disabled={!!added[i]} onClick={() => addToDirectory(p, i)} data-testid={`lens-research-provider-directory-${i}`}>{added[i] ? "In directory" : "Add to directory"}</Button>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
           {res.citations?.length > 0 && <ol className="mt-2 list-decimal pl-5 text-xs">{res.citations.map((c) => <li key={c.index}><a href={c.url} target="_blank" rel="noreferrer" className="text-brand-purple underline break-all">{c.url}</a></li>)}</ol>}
           <p className="mt-2 text-[11px] text-muted-foreground">{res.disclaimer}</p>
           {onAddRow && <Button size="sm" variant="ghost" className="mt-1" onClick={() => onAddRow({ category: "Joint / Co-Parenting", resource: `Local resources (${res.zip || "research"})`, focus: res.answer.slice(0, 600) })} data-testid="lens-research-add-row-btn">Add as resource row (edit before finalizing)</Button>}

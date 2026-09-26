@@ -1,5 +1,7 @@
 """Perplexity Sonar research helper for professionals — cited answers and ZIP-based local resource lookup (review before use)."""
+import json
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 
@@ -27,6 +29,29 @@ class LocalIn(BaseModel):
 
 class ZipIn(BaseModel):
     zip: str
+
+
+class ProviderAddIn(BaseModel):
+    name: str = Field(min_length=2, max_length=150)
+    organization: str = ""
+    phone: str = ""
+    website: str = ""
+    services: str = ""
+    category: str = ""
+
+
+def _split_providers(answer: str) -> tuple[str, list[dict]]:
+    """Separate the prose from the trailing PROVIDERS_JSON block Sonar was asked to append."""
+    if "PROVIDERS_JSON:" not in (answer or ""):
+        return answer, []
+    prose, _, tail = answer.partition("PROVIDERS_JSON:")
+    m = re.search(r"\[.*\]", tail, re.S)
+    try:
+        items = json.loads(m.group(0)) if m else []
+    except ValueError:
+        items = []
+    keys = ("name", "organization", "phone", "website", "services")
+    return prose.strip(), [{k: str(i.get(k) or "")[:300] for k in keys} for i in items if isinstance(i, dict) and i.get("name")][:8]
 
 
 async def sonar(question: str, recency: str | None = None) -> dict:
@@ -87,9 +112,24 @@ def build_router(db, get_current_user) -> APIRouter:
         if not z:
             raise HTTPException(status_code=400, detail="Add your ZIP code to your professional profile first")
         q = (f"List up to 6 {LOCAL_CATEGORIES[body.category]} serving ZIP code {z} and the surrounding county in Texas. For each: organization name, phone, website, and one line on services. "
-             "Only include providers you can cite.")
+             "Only include providers you can cite. After the prose, append a line 'PROVIDERS_JSON:' followed by a JSON array of objects with keys name, organization, phone, website, services (strings, empty if unknown).")
         result = await sonar(q)
+        result["answer"], result["providers"] = _split_providers(result["answer"])
         await _store(user, "local", q, result)
         return {**result, "zip": z, "category": body.category}
+
+    @r.post("/research/providers/add")
+    async def add_provider(body: ProviderAddIn, user=Depends(get_current_user)):
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        from providers import ProviderIn
+        if await db.providers.find_one({"name": {"$regex": f"^{re.escape(body.name.strip())}$", "$options": "i"}}, {"_id": 1}):
+            raise HTTPException(status_code=409, detail="A provider with this name is already in the directory")
+        now = datetime.now(timezone.utc).isoformat()
+        p = ProviderIn(name=body.name.strip()[:120], specialty=LOCAL_CATEGORIES.get(body.category, body.category)[:120].capitalize(), organization=body.organization.strip()[:150],
+                       phone=body.phone.strip()[:40], website=body.website.strip()[:200], lists=["individual", "joint"])
+        doc = {"id": str(uuid.uuid4()), **p.model_dump(), "source": "perplexity", "source_note": body.services.strip()[:400], "created_at": now, "updated_at": now}
+        await db.providers.insert_one(dict(doc))
+        return doc
 
     return r
