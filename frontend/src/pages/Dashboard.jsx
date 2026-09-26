@@ -26,6 +26,7 @@ import { CasesTable } from "@/components/CasesTable";
 import { UpcomingCheckIns } from "@/components/UpcomingCheckIns";
 import { ReferralInbox } from "@/components/ReferralInbox";
 import { ProZipPrompt } from "@/components/ProZipPrompt";
+import { PublicListingCard } from "@/components/PublicListingCard";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -384,6 +385,7 @@ export default function Dashboard() {
         )}
 
         {isPro && user?.role === "professional" && <ProZipPrompt />}
+        {isPro && user?.role === "professional" && <PublicListingCard />}
 
         {isPro && user?.approved === false && (
           <div className="bg-align-yellow/10 border border-align-yellow/40 rounded-lg p-5 mb-6" data-testid="approval-pending-banner">

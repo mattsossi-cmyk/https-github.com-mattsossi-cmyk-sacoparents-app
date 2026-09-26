@@ -742,3 +742,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Tests: `tests/test_iter79_nearby_pros.py`; full suite 385 passed / 1 skipped.
 
 - 2026-06 follow-up: radius matching (`?radius=` miles, offline `zipcodes` centroids via `backend/geo.py`, badge `within_radius` + `distance_miles`), `ProZipPrompt.jsx` on professional dashboard when `profile.zip` empty (PUT /me/profile/zip), hearing-date label wraps on mobile. Full suite 385 passed / 1 skipped.
+
+## 2026-06 — Public "Find a Professional" listing (opt-in)
+- `backend/public_listing.py`: `GET/PUT /api/me/public-listing` (approved professionals only; bio/phone/website/zip; listed toggle), `GET /api/public/professionals?zip=&q=` (no auth; only `public_listing.listed=true`; distance sort; no email exposed; non-endorsement note).
+- Dashboard `PublicListingCard.jsx`: one-tap "List me on sacoparentsalign.com", edit details, un-list. Public page `/find-a-professional` (`FindProfessional.jsx`) + landing nav link.
+- Tests: `tests/test_iter80_public_listing.py`; full suite 386 passed / 1 skipped.

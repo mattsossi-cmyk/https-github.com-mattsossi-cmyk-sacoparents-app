@@ -56,6 +56,7 @@ export default function Landing() {
           <a href="#for-courts" className="text-muted-foreground hover:text-foreground" data-testid="nav-for-courts">For Courts</a>
           <Link to="/samples" className="text-muted-foreground hover:text-foreground" data-testid="nav-sample-report">Sample Reports</Link>
           <Link to="/resources" className="text-muted-foreground hover:text-foreground" data-testid="nav-resources">Resources</Link>
+          <Link to="/find-a-professional" className="text-muted-foreground hover:text-foreground" data-testid="nav-find-professional">Find a Professional</Link>
           <Link to="/verify" className="text-muted-foreground hover:text-foreground" data-testid="nav-verify">Verify a Professional</Link>
         </nav>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">

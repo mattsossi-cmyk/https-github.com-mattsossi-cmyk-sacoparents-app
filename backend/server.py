@@ -1859,6 +1859,8 @@ from research import build_router as _build_research_router  # noqa: E402
 app.include_router(_build_research_router(db, get_current_user), prefix="/api")
 from tts import build_router as _build_tts_router  # noqa: E402
 app.include_router(_build_tts_router(db), prefix="/api")
+from public_listing import build_router as _build_public_listing_router  # noqa: E402
+app.include_router(_build_public_listing_router(db, get_current_user), prefix="/api")
 
 
 @app.get("/health")
