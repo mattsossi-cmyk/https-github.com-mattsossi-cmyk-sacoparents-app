@@ -27,6 +27,91 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-26 — Iter224 · Nudge Digest for Founder (weekly admin recap)
+
+Follow-on to iter223. Sends a weekly recap email to every
+`ADMIN_EMAILS` inbox summarizing last week's Guided Draft Nudge
+batch — how many nudges went out, how many parents finished within
+7 days, per-topic breakdown, conversion %. Verified in iter83
+(15/15 backend pytest passing).
+
+**🟢 P1 — Nudge Digest cron + worker**
+- New second cron entry in `/app/.emergent/crons.yml` —
+  `nudge-digest` scheduled `0 16 * * 1` (Monday 16:00 UTC,
+  one hour after the nudge send at 15:00) so every parent in
+  the digest has had a full 7-day follow-up window.
+- New endpoint `POST /api/cron/nudge-digest` on the existing
+  cron router — same bearer-auth pattern, echoes
+  `X-Webhook-Id` as `run_id`, enqueues via `BackgroundTasks`.
+- New worker `/app/backend/guided_draft_digest.py`:
+  * `compute_digest(db, now)` — pure, no email side-effects,
+    reusable by the future admin UI. Scans
+    `guided_draft_nudges` for `sent_at` in the 14→7 day
+    lookback window. Builds a per-user portal_state index
+    once (O(n)).
+  * "Finished" heuristic: the parent's
+    `portal_state.guided_drafts[topic]` is either
+    (a) missing entirely (Confirm & save cleared the draft),
+    or (b) has an `updated_at` newer than `sent_at` AND
+    within the 7-day follow-up deadline.
+  * `send_nudge_digest(db, now)` — computes then dispatches
+    to every `ADMIN_EMAILS` recipient. When `total_sent == 0`
+    the email is skipped entirely so admins don't get empty
+    weekly noise. Per-admin try/except keeps the loop
+    resilient to a single Resend transient failure.
+- Defensive `_TOPIC_LABELS` whitelist skips legacy/unknown
+  topics so a bad legacy row never contaminates the digest.
+- `by_topic` output is keyed only by the human-readable
+  label ("Foundation Statement", "Medical Needs Assessment",
+  etc.) — no user_id in the email body.
+
+**🟢 P1 — Nudge Digest email**
+- New `send_nudge_digest()` helper in `email_service.py`.
+  Subject: `[SA CoParents] Nudge digest — X of Y finished
+  last week`. HTML body has three summary tiles (Nudges
+  sent, Finished in 7d, Conversion %) plus a per-topic table
+  showing "Finished / Sent" for each topic. Plain-text
+  fallback lists the same numbers as a bullet list.
+- HTML-escapes every user-visible topic label + date range
+  via the existing `_html.escape` path.
+
+**Files touched**
+- `/app/.emergent/crons.yml` — added second entry
+  `nudge-digest` Monday 16:00 UTC.
+- `/app/backend/cron_routes.py` — new
+  `POST /cron/nudge-digest` handler.
+- `/app/backend/guided_draft_digest.py` (new) —
+  `compute_digest()` + `send_nudge_digest()` (~180 lines).
+- `/app/backend/email_service.py` — new
+  `send_nudge_digest()` helper (~100 lines).
+- `/app/backend/tests/test_iter224_nudge_digest.py` (new,
+  15 tests).
+
+**Verified — iter83 test report**
+- Backend 15/15: cron auth (401/200/X-Webhook-Id echo,
+  enqueued='nudge-digest'); compute_digest heuristic across
+  three seeded nudges (updated-after → finished; updated-
+  before → not finished; drafts=null → finished; totals
+  3/2/66.7%); window boundaries (5d fresh + 20d old both
+  excluded, 8d included); empty window returns zeros AND
+  skips email; unknown-topic defensive skip; multi-admin
+  dispatch loop with single-recipient failure isolated;
+  email body assertions (3 tiles + per-topic table + window
+  range + correct subject); crons.yml has BOTH entries
+  scheduled 1 hour apart with matching schema; regression on
+  guided-draft-nudge cron + fridge PDF + standard PDF.
+- End-to-end main-agent smoke test: `compute_digest` returned
+  `{total_sent: 3, total_finished: 2, conversion_pct: 66.7,
+  by_topic: {Foundation: 1/1, Medical: 0/1, Educational:
+  1/1}}` and `send_nudge_digest` dispatched to
+  1 admin (`mattsossi@bsossi.com` via existing Resend).
+
+**Deferred (P2)**
+- Admin UI card that surfaces this same `compute_digest()`
+  payload in `/admin` so the founder can pull it on-demand
+  without waiting for the weekly cron.
+
+
 ### 2026-02-26 — Iter223 · Guided Draft Nudge Cron + Fridge-Size Recap
 
 Two follow-on features layered on iter222 the founder picked from
