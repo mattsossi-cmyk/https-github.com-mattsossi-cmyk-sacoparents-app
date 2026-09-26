@@ -510,6 +510,55 @@ async def weekly_progress_pdf(body: WeeklyProgressPdfBody) -> Response:
     )
 
 
+class CompleteReportPdfBody(BaseModel):
+    """Complete Coparenting Report bundle payload.
+
+    Every field is optional — the PDF renders an empty-state stub for
+    sections the parent hasn't filled in yet, so nothing is silently
+    hidden from a reader (mediator / attorney / co-parent).
+    """
+
+    safety_ack: Optional[Dict[str, Any]] = Field(default=None)
+    cop_assessment: Optional[Dict[str, Any]] = Field(default=None)
+    align_records: Optional[List[Dict[str, Any]]] = Field(default=None)
+    joint_records: Optional[List[Dict[str, Any]]] = Field(default=None)
+    foundation_text: Optional[str] = Field(default=None, max_length=8000)
+    case_ref: Optional[str] = Field(default=None, max_length=80)
+    author_name: Optional[str] = Field(default=None, max_length=120)
+
+
+@router.post("/complete-report-pdf")
+async def complete_report_pdf(body: CompleteReportPdfBody) -> Response:
+    """Assemble the Complete Coparenting Report PDF from the portal's
+    self-guided artefacts (Safety Check answers, Co-parenting
+    Assessment / Health Index, individual + joint Align-Before-Agreement
+    records, and Foundation Statement). Missing sections render as
+    empty-state stubs so a mediator or attorney sees exactly what the
+    parent has and hasn't completed.
+    """
+    try:
+        pdf_bytes = portal_pdf.build_portal_complete_report_pdf(
+            safety_ack=body.safety_ack,
+            cop_assessment=body.cop_assessment,
+            align_records=body.align_records or [],
+            joint_records=body.joint_records or [],
+            foundation_text=body.foundation_text,
+            case_ref=body.case_ref,
+            author_name=body.author_name,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                'attachment; filename="sacoparents-complete-report.pdf"'
+            )
+        },
+    )
+
+
 # --------------------------------------------------------------------- #
 # Share-links — persist an artefact payload and mint a signed short URL.
 # --------------------------------------------------------------------- #
@@ -543,16 +592,17 @@ def _share_origin(request: Request) -> str:
     ).split(",")[0].strip()
     return f"{scheme}://{host}"
 
-_ALLOWED_ARTEFACT_TYPES = {"foundation", "legal", "weekly"}
+_ALLOWED_ARTEFACT_TYPES = {"foundation", "legal", "weekly", "complete"}
 _FILENAMES = {
     "foundation": "sacoparents-foundation-statement.pdf",
     "legal": "sacoparents-legal-report.pdf",
     "weekly": "sacoparents-weekly-progress.pdf",
+    "complete": "sacoparents-complete-report.pdf",
 }
 
 
 class SharePayload(BaseModel):
-    artefact_type: str = Field(pattern="^(foundation|legal|weekly)$")
+    artefact_type: str = Field(pattern="^(foundation|legal|weekly|complete)$")
     # Reuse the same body shape as the direct-download endpoints.
     payload: Dict[str, Any] = Field(default_factory=dict)
     # Optional passphrase — if set, the recipient must supply it via
@@ -636,6 +686,16 @@ def _regenerate_share_pdf(artefact_type: str, payload: Dict[str, Any]) -> bytes:
             biff_logs=payload.get("biff_logs") or [],
             milestones=payload.get("milestones") or [],
             reassessments=payload.get("reassessments") or [],
+            foundation_text=payload.get("foundation_text"),
+            case_ref=payload.get("case_ref"),
+            author_name=payload.get("author_name"),
+        )
+    if artefact_type == "complete":
+        return portal_pdf.build_portal_complete_report_pdf(
+            safety_ack=payload.get("safety_ack"),
+            cop_assessment=payload.get("cop_assessment"),
+            align_records=payload.get("align_records") or [],
+            joint_records=payload.get("joint_records") or [],
             foundation_text=payload.get("foundation_text"),
             case_ref=payload.get("case_ref"),
             author_name=payload.get("author_name"),

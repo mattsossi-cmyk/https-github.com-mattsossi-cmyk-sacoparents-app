@@ -1,14 +1,20 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 import { TrendSparkline } from "./TrendSparkline";
 
 /**
  * AlignmentHub — Section I of the Parent Journey. Shows:
- *   - Official Legal Conflict Resolution Report (Health Index sliders +
- *     Dispute Matrix + Signatures + Save/PDF/Share)
+ *   - (Only when a Court Key is verified) Official Legal Conflict
+ *     Resolution Report (Health Index sliders + Dispute Matrix +
+ *     Signatures + Save/PDF/Share).
+ *   - (Only on the Parent Journey Door — no court key) a Toolkit tile
+ *     grid that links out to the app's parent-facing pages: Co-parent
+ *     Assessment, Safety Screen, Mediation Prep, Alignment Before
+ *     Agreement, and Joint Reports sharing.
  *   - Align Before Agreement Records (Medical / Educational /
- *     Psychological folders with counts + filter + add)
- *   - Foundation Statement (anchor text + Save/PDF/Share)
+ *     Psychological folders with counts + filter + add).
+ *   - Foundation Statement (anchor text + Save/PDF/Share).
  */
 export function AlignmentHub({
   // Health Index
@@ -37,10 +43,206 @@ export function AlignmentHub({
   saveFoundationText,
   downloadFoundationPdf,
   onShareFoundation,
+  // Court-only gating: hide the Legal Report module when there is no
+  // verified Court Key (Parent Journey door). Toolkit tile-grid takes
+  // its place with links to the app's parent-facing pages.
+  hideCourtOnly = false,
+  // Toolkit tile → scroll+filter the assessment records section by
+  // category (Medical / Educational / Psychological).
+  openAssessmentFolder = () => {},
+  // Complete Coparenting Report bundle (iter218) — download + share.
+  downloadCompleteReportPdf = () => {},
+  onShareCompleteReport = () => {},
 }) {
   return (
     <div className="space-y-4" data-testid="hub-section-alignment">
-      {/* OFFICIAL LEGAL REPORT MODULE */}
+      {/* PARENT JOURNEY TOOLKIT — only for the self-guided Door (no
+          Court Key). Legal Report is a court/mediator artefact, so a
+          parent flying solo shouldn't see it. Instead point them at
+          the app's own parent-facing pages. */}
+      {hideCourtOnly && (
+        <div
+          className="bg-white rounded-2xl shadow-sm border border-purple-200 p-4 space-y-3 card-box"
+          data-testid="parent-journey-toolkit"
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <span className="bg-purple-100 text-purple-800 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                Coparenting Journey Toolkit
+              </span>
+              <h3 className="font-bold text-slate-800 text-sm mt-1">
+                Assessments, Alignment & Joint Reports
+              </h3>
+              <p className="text-[11px] text-slate-500 leading-snug">
+                Open a full-featured tool. Your work saves to your
+                account — you can share the finished report with your
+                co-parent, a mediator, or an attorney.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <Link
+              to="/nd-risk-assessment"
+              data-testid="toolkit-link-assessment"
+              className="p-3 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-slate-800 transition"
+            >
+              <i className="fa-solid fa-clipboard-question text-purple-800 text-base"></i>
+              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                Co-parenting Assessment
+              </div>
+              <div className="text-[10px] text-slate-500 leading-snug">
+                Take the risk-and-strengths self-assessment
+              </div>
+            </Link>
+
+            <Link
+              to="/safety-assessment"
+              data-testid="toolkit-link-safety"
+              className="p-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-slate-800 transition"
+            >
+              <i className="fa-solid fa-shield-heart text-rose-700 text-base"></i>
+              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                Safety Screen
+              </div>
+              <div className="text-[10px] text-slate-500 leading-snug">
+                Full clinical Safety Assessment
+              </div>
+            </Link>
+
+            <Link
+              to="/prep/child-goals"
+              data-testid="toolkit-link-mediation"
+              className="p-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-slate-800 transition"
+            >
+              <i className="fa-solid fa-file-signature text-amber-700 text-base"></i>
+              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                Mediation Prep & Report
+              </div>
+              <div className="text-[10px] text-slate-500 leading-snug">
+                Build your Foundation Statement + summary
+              </div>
+            </Link>
+
+            <button
+              type="button"
+              data-testid="toolkit-link-foundation"
+              onClick={downloadFoundationPdf}
+              className="p-3 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-slate-800 text-left transition"
+            >
+              <i className="fa-solid fa-file-lines text-purple-800 text-base"></i>
+              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                Foundation Statement PDF
+              </div>
+              <div className="text-[10px] text-slate-500 leading-snug">
+                Download your child-first anchor as PDF
+              </div>
+            </button>
+
+            <button
+              type="button"
+              data-testid="toolkit-link-medical"
+              onClick={() => openAssessmentFolder("Medical")}
+              className="p-3 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-xl text-slate-800 text-left transition"
+            >
+              <i className="fa-solid fa-stethoscope text-sky-700 text-base"></i>
+              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                Medical Needs Assessment
+              </div>
+              <div className="text-[10px] text-slate-500 leading-snug">
+                Log providers, meds, appointments
+              </div>
+            </button>
+
+            <button
+              type="button"
+              data-testid="toolkit-link-educational"
+              onClick={() => openAssessmentFolder("Educational")}
+              className="p-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-slate-800 text-left transition"
+            >
+              <i className="fa-solid fa-graduation-cap text-amber-700 text-base"></i>
+              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                Educational Assessment
+              </div>
+              <div className="text-[10px] text-slate-500 leading-snug">
+                Log IEPs, tutoring, teacher notes
+              </div>
+            </button>
+
+            <button
+              type="button"
+              data-testid="toolkit-link-psychological"
+              onClick={() => openAssessmentFolder("Psychological")}
+              className="p-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-slate-800 text-left transition"
+            >
+              <i className="fa-solid fa-brain text-indigo-700 text-base"></i>
+              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                Psychological Assessment
+              </div>
+              <div className="text-[10px] text-slate-500 leading-snug">
+                Log therapists, evals, behavioural notes
+              </div>
+            </button>
+
+            <Link
+              to="/joint-reports"
+              data-testid="toolkit-link-share-joint"
+              className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-800 transition"
+            >
+              <i className="fa-solid fa-share-nodes text-slate-700 text-base"></i>
+              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                Share Joint Reports
+              </div>
+              <div className="text-[10px] text-slate-500 leading-snug">
+                Send a joint report to a professional
+              </div>
+            </Link>
+          </div>
+
+          {/* Full-width Complete Coparenting Report CTA — assembles
+              every artefact above (Safety Check + Co-parenting
+              Assessment + Individual & Joint Align-Before-Agreement +
+              Foundation Statement) into a single PDF. Sections the
+              parent hasn't filled in yet render as empty-state stubs
+              so a mediator/attorney sees exactly what's next. */}
+          <div className="pt-1">
+            <button
+              type="button"
+              data-testid="download-complete-report-btn"
+              onClick={downloadCompleteReportPdf}
+              className="w-full p-3 bg-purple-800 hover:bg-purple-900 text-white rounded-xl font-bold text-xs shadow-sm transition flex items-center justify-center gap-2"
+            >
+              <i className="fa-solid fa-file-invoice"></i>
+              Download Complete Coparenting Report PDF
+            </button>
+            <button
+              type="button"
+              data-testid="share-complete-report-btn"
+              onClick={onShareCompleteReport}
+              className="w-full mt-2 p-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-2 disabled:opacity-40"
+              disabled={shareStatus?.complete === "loading"}
+            >
+              <i className="fa-solid fa-link"></i>
+              {shareStatus?.complete === "copied"
+                ? "Share link copied!"
+                : shareStatus?.complete === "loading"
+                ? "Creating share link..."
+                : "Share the Complete Report (link + passphrase)"}
+            </button>
+            <p className="text-[10px] text-slate-500 leading-snug mt-1.5 text-center">
+              Includes: Family Violence Assessment · Co-parenting
+              Assessment · Individual + Joint Align Before Agreement
+              (Medical / Educational / Psychological) · Foundation
+              Statement.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* OFFICIAL LEGAL REPORT MODULE — only when a Court Key is
+          verified. Parent Journey (self-guided) hides this entirely
+          per clinical guardrail (Legal Report is a court artefact). */}
+      {!hideCourtOnly && (
       <div className="bg-white rounded-2xl shadow-sm border-2 border-purple-800 overflow-hidden card-box">
         <div className="bg-purple-900 text-white p-4">
           <div className="flex justify-between items-start">
@@ -244,16 +446,21 @@ export function AlignmentHub({
           </div>
         </div>
       </div>
+      )}
 
-      {/* ALIGNMENT RECORDS */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box">
+      {/* ASSESSMENTS (formerly Align Before Agreement Records) */}
+      <div
+        id="assessment-records-section"
+        data-testid="assessment-records-section"
+        className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box"
+      >
         <div className="flex justify-between items-center border-b border-slate-100 pb-2">
           <div>
             <span className="text-[10px] font-bold text-emerald-600 uppercase">
-              Step 5 Sub-Folders
+              Assessments
             </span>
             <h3 className="font-bold text-slate-800 text-sm">
-              Align Before Agreement Records
+              Medical, Educational & Psychological
             </h3>
           </div>
           <button

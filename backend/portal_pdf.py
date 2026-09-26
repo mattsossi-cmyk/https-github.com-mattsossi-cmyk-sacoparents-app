@@ -716,3 +716,240 @@ def build_portal_weekly_progress_pdf(
         _draw_text_block(pdf, excerpt)
 
     return bytes(pdf.output(dest="S"))
+
+
+
+# ---------------------------------------------------------------------------
+# Complete Coparenting Report — bundles every parent-facing artefact into one
+# multi-page PDF suitable for sharing with a mediator, attorney, or the
+# co-parent. Renders one section per artefact, with an empty-state stub when
+# a section hasn't been built yet so the parent sees exactly what to fill in
+# next.
+# ---------------------------------------------------------------------------
+
+_CATEGORY_ORDER = ("Medical", "Educational", "Psychological")
+
+
+def _draw_empty_state(pdf: FPDF, text: str) -> None:
+    pdf.set_font("Helvetica", "I", 9)
+    pdf.set_text_color(*_SLATE_MUTED)
+    pdf.multi_cell(0, 5, _safe(text))
+    pdf.ln(1)
+
+
+def _draw_align_records_section(
+    pdf: FPDF,
+    records: List[Dict[str, Any]],
+    heading: str,
+    empty_stub: str,
+) -> None:
+    """Render Medical/Educational/Psychological alignment records under
+    a subheading, grouped by category. Used for both individual and joint
+    variants — pass the pre-filtered list in.
+    """
+    _draw_h2(pdf, heading)
+    if not records:
+        _draw_empty_state(pdf, empty_stub)
+        return
+    for category in _CATEGORY_ORDER:
+        bucket = [r for r in records if str(r.get("category", "")) == category]
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*_PURPLE_INK)
+        pdf.cell(0, 5, _safe(f"{category} ({len(bucket)})"), ln=1)
+        if not bucket:
+            _draw_empty_state(pdf, f"No {category.lower()} alignment records logged yet.")
+            continue
+        for r in bucket:
+            title = str(r.get("title") or "Untitled").strip()
+            provider = str(r.get("provider") or "").strip()
+            date = str(r.get("date") or "").strip()
+            summary = str(r.get("summary") or "").strip()
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_text_color(*_SLATE_INK)
+            pdf.cell(0, 4.5, _safe(title), ln=1)
+            meta_bits = [b for b in (provider, date) if b]
+            if meta_bits:
+                pdf.set_font("Helvetica", "", 8)
+                pdf.set_text_color(*_SLATE_MUTED)
+                pdf.cell(0, 4, _safe("  ·  ".join(meta_bits)), ln=1)
+            if summary:
+                pdf.set_font("Helvetica", "", 9)
+                pdf.set_text_color(*_SLATE_INK)
+                pdf.multi_cell(0, 4.5, _safe(summary))
+            pdf.ln(0.4)
+    pdf.ln(1)
+
+
+def build_portal_complete_report_pdf(
+    *,
+    safety_ack: Optional[Dict[str, Any]] = None,
+    cop_assessment: Optional[Dict[str, Any]] = None,
+    align_records: Optional[List[Dict[str, Any]]] = None,
+    joint_records: Optional[List[Dict[str, Any]]] = None,
+    foundation_text: Optional[str] = None,
+    case_ref: Optional[str] = None,
+    author_name: Optional[str] = None,
+    generated_at: Optional[datetime] = None,
+) -> bytes:
+    """Assemble the Complete Coparenting Report PDF.
+
+    Sections rendered in order:
+      1. Family Violence / Safety Assessment (from the Quick Safety Check
+         answers persisted in ``safety_ack``).
+      2. Co-parenting Assessment (Health Index sliders from the portal;
+         when the caller provides a richer external assessment via
+         ``cop_assessment`` we surface those values instead).
+      3. Individual Align-Before-Agreement Records (portal's own
+         alignment records, grouped by Medical / Educational /
+         Psychological).
+      4. Joint Align-Before-Agreement Records (only rendered when the
+         caller passes joint records; empty-state stub otherwise so the
+         parent knows to build the joint report next).
+      5. Foundation Statement (verbatim, from portal state).
+
+    Empty sections are rendered with an italicised muted stub so the
+    consumer of the report sees exactly what the parent still has to
+    complete — never a silent hole.
+    """
+    when = generated_at or datetime.now(timezone.utc)
+
+    pdf = _PortalPDF(title="Complete Coparenting Report")
+    pdf.alias_nb_pages()
+    pdf.add_page()
+
+    # ---- Header ----
+    _draw_chip(pdf, "Complete Coparenting Report")
+    pdf.set_text_color(*_PURPLE_INK)
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.cell(0, 9, _safe("Complete Coparenting Report"), ln=1)
+    pdf.set_text_color(*_SLATE_MUTED)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.multi_cell(
+        0,
+        4.5,
+        _safe(
+            "A bundle of the parent's self-guided coparenting work. Share "
+            "with a mediator, attorney, or co-parent. Sections the parent "
+            "hasn't completed yet are shown as empty so nothing is hidden."
+        ),
+    )
+    pdf.ln(2)
+
+    _draw_meta_row(pdf, "Generated", when.strftime("%b %d, %Y %H:%M UTC"))
+    _draw_meta_row(pdf, "Case Reference", case_ref or "Self-Guided Coparenting Journey")
+    if author_name:
+        _draw_meta_row(pdf, "Parent", author_name)
+    pdf.ln(3)
+
+    # ---- 1. Family Violence Assessment ----
+    _draw_h2(pdf, "1. Family Violence / Safety Assessment")
+    if not safety_ack or not isinstance(safety_ack, dict):
+        _draw_empty_state(
+            pdf,
+            "No Safety Check completed yet. Ask the parent to open the "
+            "Portal, tap the Safety chip, and answer three quick questions.",
+        )
+    else:
+        cleared = bool(safety_ack.get("cleared"))
+        flagged = bool(safety_ack.get("flagged"))
+        completed_at = str(safety_ack.get("date") or "")
+        status_line = (
+            "Cleared - no risk flag." if cleared and not flagged
+            else "Flagged for safety concerns."
+        )
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*(_PURPLE_INK if cleared and not flagged else _SLATE_INK))
+        pdf.cell(0, 5, _safe(status_line), ln=1)
+        if completed_at:
+            pdf.set_font("Helvetica", "", 8)
+            pdf.set_text_color(*_SLATE_MUTED)
+            pdf.cell(0, 4, _safe(f"Completed: {completed_at}"), ln=1)
+        pdf.ln(0.5)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(*_SLATE_INK)
+        pdf.multi_cell(
+            0,
+            5,
+            _safe(
+                "The parent completed the Quick Safety Check inside the "
+                "SA CoParents Portal. This is NOT a clinical screen. For "
+                "the full clinical assessment, see the parent's Safety "
+                "Assessment record on sacoparentsapp.online."
+            ),
+        )
+        if flagged:
+            pdf.ln(0.5)
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_text_color(*_SLATE_INK)
+            pdf.multi_cell(
+                0,
+                5,
+                _safe(
+                    "Because a safety concern was flagged, all joint "
+                    "collaborative tools in this bundle should be read as "
+                    "voluntary. Any Safety Plan the parent built is "
+                    "PRIVATE and is NEVER included in this shared report."
+                ),
+            )
+    pdf.ln(2)
+
+    # ---- 2. Co-parenting Assessment (Health Index for now) ----
+    _draw_h2(pdf, "2. Co-parenting Assessment")
+    if cop_assessment and isinstance(cop_assessment, dict):
+        s1 = int(cop_assessment.get("s1", 0) or 0)
+        s2 = int(cop_assessment.get("s2", 0) or 0)
+        s3 = int(cop_assessment.get("s3", 0) or 0)
+    else:
+        s1 = s2 = s3 = 0
+    if s1 and s2 and s3:
+        avg = round((s1 + s2 + s3) / 3, 1)
+        _draw_meta_row(pdf, "Communication (1-10)", str(s1))
+        _draw_meta_row(pdf, "Consistency (1-10)", str(s2))
+        _draw_meta_row(pdf, "Emotional Alignment (1-10)", str(s3))
+        _draw_meta_row(pdf, "Average", f"{avg} - {_health_label(avg)}")
+    else:
+        _draw_empty_state(
+            pdf,
+            "No self-assessment recorded yet. In the Portal, tap the "
+            "Co-parenting Assessment tile or move the three Health Index "
+            "sliders to save a snapshot.",
+        )
+    pdf.ln(2)
+
+    # ---- 3. Individual Align Before Agreement ----
+    _draw_align_records_section(
+        pdf,
+        list(align_records or []),
+        heading="3. Individual Align Before Agreement",
+        empty_stub=(
+            "No individual alignment records logged yet. Add Medical, "
+            "Educational, and Psychological documents from the Portal's "
+            "Align Before Agreement section."
+        ),
+    )
+
+    # ---- 4. Joint Align Before Agreement ----
+    _draw_align_records_section(
+        pdf,
+        list(joint_records or []),
+        heading="4. Joint Align Before Agreement",
+        empty_stub=(
+            "No joint alignment records yet. Both parents can build these "
+            "in the Joint Alignment Report flow at "
+            "sacoparentsapp.online/joint-agreement."
+        ),
+    )
+
+    # ---- 5. Foundation Statement ----
+    _draw_h2(pdf, "5. Foundation Statement")
+    text = (foundation_text or "").strip()
+    if not text:
+        _draw_empty_state(
+            pdf,
+            "No Foundation Statement written yet. In the Portal, open the "
+            "Foundation Statement panel and write the child-first anchor.",
+        )
+    else:
+        _draw_text_block(pdf, text)
+
+    return bytes(pdf.output(dest="S"))

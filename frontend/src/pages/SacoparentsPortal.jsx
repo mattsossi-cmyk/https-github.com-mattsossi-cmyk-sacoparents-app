@@ -669,7 +669,7 @@ export default function SacoparentsPortal() {
       "---",
       "Refined via SA CoParents BIFF Coach",
       `Refined: ${new Date().toISOString().replace("T", " ").substring(0, 16)} UTC`,
-      `Case: ${courtKey || "Self-Guided Parent Journey"}`,
+      `Case: ${courtKey || "Self-Guided Coparenting Journey"}`,
       "sacoparentsapp.online",
     ].join("\n");
     try {
@@ -816,6 +816,20 @@ export default function SacoparentsPortal() {
 
   const handlePrint = useCallback(() => window.print(), []);
 
+  // Toolkit tile → filter the Assessments (Medical/Educational/
+  // Psychological) records section by category and scroll it into
+  // view. Uses instance behaviour="smooth" for a gentle jump.
+  const openAssessmentFolder = useCallback((category) => {
+    setFolderFilter(category);
+    // Defer one tick so the filter re-render commits before we scroll.
+    setTimeout(() => {
+      const el = document.getElementById("assessment-records-section");
+      if (el && typeof el.scrollIntoView === "function") {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 60);
+  }, []);
+
   const downloadPdfFromApi = useCallback(async (path, filename, body) => {
     try {
       const res = await api.post(path, body, { responseType: "blob" });
@@ -938,6 +952,37 @@ export default function SacoparentsPortal() {
     downloadPdfFromApi,
   ]);
 
+  // ---- Complete Coparenting Report (iter218) ------------------
+  // Bundle every parent-facing artefact into one PDF: safety check,
+  // co-parenting assessment (health index), individual + joint
+  // Align-Before-Agreement records (Medical/Educational/Psychological),
+  // and Foundation Statement. Empty sections render as stubs so the
+  // reader sees what's still to build.
+  const buildCompleteReportPayload = useCallback(
+    () => ({
+      safety_ack: safetyAck,
+      cop_assessment: healthIndex,
+      align_records: alignRecords,
+      // Joint records aren't held in the portal state today — the
+      // joint flow lives on /joint-agreement. Pass an empty list so
+      // the section renders its empty-state stub with the "build
+      // your joint report" pointer.
+      joint_records: [],
+      foundation_text: foundationText || null,
+      case_ref: courtKey || null,
+      author_name: user?.name || null,
+    }),
+    [safetyAck, healthIndex, alignRecords, foundationText, courtKey, user]
+  );
+
+  const downloadCompleteReportPdf = useCallback(() => {
+    downloadPdfFromApi(
+      "/portal/complete-report-pdf",
+      "sacoparents-complete-report.pdf",
+      buildCompleteReportPayload()
+    );
+  }, [downloadPdfFromApi, buildCompleteReportPayload]);
+
   const onShareFoundation = useCallback(() => {
     createShareLink("foundation", {
       foundation_text: foundationText,
@@ -966,6 +1011,10 @@ export default function SacoparentsPortal() {
     courtKey,
     user,
   ]);
+
+  const onShareCompleteReport = useCallback(() => {
+    createShareLink("complete", buildCompleteReportPayload());
+  }, [createShareLink, buildCompleteReportPayload]);
 
   const onOpenShareLegal = useCallback(() => {
     setShareLegalLastUrl("");
@@ -1058,7 +1107,7 @@ export default function SacoparentsPortal() {
         </p>
         <p className="text-xs text-slate-600">
           Generated Date: {printDate} | Case Reference:{" "}
-          {courtKey || "Self-Guided Parent Journey"}
+          {courtKey || "Self-Guided Coparenting Journey"}
         </p>
       </div>
 
@@ -1129,7 +1178,7 @@ export default function SacoparentsPortal() {
                 }
               >
                 <i className="fa-solid fa-scale-balanced block text-base mb-1"></i>{" "}
-                I. Legal Report & Alignment
+                {courtKey ? "I. Legal Report & Alignment" : "I. Alignment & Tools"}
               </button>
               <button
                 data-testid="hub-tab-biff"
@@ -1171,6 +1220,10 @@ export default function SacoparentsPortal() {
                   saveFoundationText={saveFoundationText}
                   downloadFoundationPdf={downloadFoundationPdf}
                   onShareFoundation={onShareFoundation}
+                  hideCourtOnly={!courtKey}
+                  openAssessmentFolder={openAssessmentFolder}
+                  downloadCompleteReportPdf={downloadCompleteReportPdf}
+                  onShareCompleteReport={onShareCompleteReport}
                 />
               </>
             )}

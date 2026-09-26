@@ -65,14 +65,14 @@ export function DoorsGateway({
             </span>
           </div>
           <div>
-            <h3 className="font-bold text-slate-800 text-base">Parent Journey</h3>
+            <h3 className="font-bold text-slate-800 text-base">Coparenting Journey</h3>
             <p className="text-xs text-slate-500 mt-1">
               Reflect independently, access existing co-parenting assessments,
               create a Foundation Statement PDF, and utilize BIFF tools.
             </p>
           </div>
           <div className="flex items-center text-xs font-bold text-purple-700 group-hover:translate-x-1 transition">
-            <span>Enter Parent Path</span>{" "}
+            <span>Enter Coparenting Path</span>{" "}
             <i className="fa-solid fa-arrow-right ml-1"></i>
           </div>
         </div>
