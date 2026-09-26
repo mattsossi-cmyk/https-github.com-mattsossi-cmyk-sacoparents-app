@@ -4,17 +4,19 @@ import { toast } from "sonner";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
-export function ListenButton({ text, label = "Listen", testId = "listen-btn", size = "sm", variant = "outline", className = "" }) {
+export function ListenButton({ text, label = "Listen", testId = "listen-btn", size = "sm", variant = "outline", className = "", voice = "sage", rate = 1 }) {
   const [state, setState] = useState("idle");
   const audioRef = useRef(null);
   useEffect(() => () => { audioRef.current?.pause(); }, []);
+  useEffect(() => { if (audioRef.current) audioRef.current.playbackRate = rate; }, [rate]);
   const stop = () => { audioRef.current?.pause(); audioRef.current = null; setState("idle"); };
   const play = async () => {
     if (state === "playing") return stop();
     setState("loading");
     try {
-      const { data } = await api.post("/tts", { text: String(text || "").slice(0, 4000) });
+      const { data } = await api.post("/tts", { text: String(text || "").slice(0, 4000), voice });
       const a = new Audio(`${process.env.REACT_APP_BACKEND_URL}${data.url}`);
+      a.playbackRate = rate;
       audioRef.current = a;
       a.onended = () => setState("idle");
       a.onerror = () => { setState("idle"); toast.error("Audio playback failed"); };

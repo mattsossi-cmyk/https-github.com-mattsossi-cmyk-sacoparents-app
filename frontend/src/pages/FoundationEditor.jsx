@@ -40,6 +40,8 @@ export default function FoundationEditor() {
   const [busy, setBusy] = useState(false);
   const [shared, setShared] = useState(false);
   const [blame, setBlame] = useState(null);
+  const [voice, setVoice] = useState(() => localStorage.getItem("tts_voice") || "sage");
+  const [rate, setRate] = useState(() => Number(localStorage.getItem("tts_rate")) || 1);
   const checkBlame = async () => {
     const lines = (f.concerns || []).filter((x) => x.trim());
     if (!lines.length) return true;
@@ -108,7 +110,7 @@ export default function FoundationEditor() {
             </div>
             {STEPS.map((s) => (
               <section key={s.key} data-testid={`foundation-step-${s.key}`}>
-                <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4b2a7b] text-sm font-bold text-white">{s.n}</span><h2 className="font-display text-lg font-bold text-[#2f174f] flex-1">{s.title}</h2><ListenButton text={`${s.title}. ${s.hint}`} label="Listen" variant="ghost" testId={`foundation-listen-${s.key}`} /></div>
+                <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4b2a7b] text-sm font-bold text-white">{s.n}</span><h2 className="font-display text-lg font-bold text-[#2f174f] flex-1">{s.title}</h2><ListenButton text={`${s.title}. ${s.hint}`} label="Listen" variant="ghost" voice={voice} rate={rate} testId={`foundation-listen-${s.key}`} /></div>
                 <p className="mt-1 text-xs text-muted-foreground">{s.hint}</p>
                 <Textarea value={s.list ? (f[s.key] || []).join("\n") : (f[s.key] || "")} onChange={(e) => { set(s.key, s.list ? e.target.value.split("\n") : e.target.value); if (s.key === "concerns") setBlame(null); }} className="mt-2 min-h-[96px] bg-white" data-testid={`foundation-${s.key}`} />
                 {s.key === "concerns" && blame?.length > 0 && (
@@ -121,9 +123,23 @@ export default function FoundationEditor() {
               </section>
             ))}
             <FoundationAttachments />
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-white p-4" data-testid="foundation-listen-panel">
-              <div><p className="text-sm font-bold text-[#2f174f]">Hear it before you share it</p><p className="text-xs text-muted-foreground">Listening to your own words often reveals what sounds blaming or unclear. Read aloud in a calm voice; nothing is shared.</p></div>
-              <ListenButton text={STEPS.map((s) => `${s.title}. ${s.list ? (f[s.key] || []).filter(Boolean).join(". ") : (f[s.key] || "")}`).filter((t) => t.split(". ").slice(1).join("").trim()).join(" ")} label="Read my statement aloud" testId="foundation-listen-all" />
+            <div className="rounded-lg border border-border bg-white p-4" data-testid="foundation-listen-panel">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div><p className="text-sm font-bold text-[#2f174f]">Hear it before you share it</p><p className="text-xs text-muted-foreground">Listening to your own words often reveals what sounds blaming or unclear. Nothing is shared.</p></div>
+                <ListenButton key={`${voice}-${rate}`} voice={voice} rate={rate} text={STEPS.map((s) => `${s.title}. ${s.list ? (f[s.key] || []).filter(Boolean).join(". ") : (f[s.key] || "")}`).filter((t) => t.split(". ").slice(1).join("").trim()).join(" ")} label="Read my statement aloud" testId="foundation-listen-all" />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-4 text-xs">
+                <label className="flex items-center gap-2">Voice
+                  <select value={voice} onChange={(e) => { setVoice(e.target.value); localStorage.setItem("tts_voice", e.target.value); }} className="h-8 rounded-md border border-input bg-white px-2 text-sm" data-testid="foundation-voice-select">
+                    <option value="sage">Calm (Sage)</option><option value="coral">Warm (Coral)</option><option value="nova">Bright (Nova)</option><option value="echo">Steady (Echo)</option>
+                  </select>
+                </label>
+                <label className="flex items-center gap-2">Speed
+                  <select value={rate} onChange={(e) => { setRate(Number(e.target.value)); localStorage.setItem("tts_rate", e.target.value); }} className="h-8 rounded-md border border-input bg-white px-2 text-sm" data-testid="foundation-speed-select">
+                    <option value={0.8}>Slower (0.8×)</option><option value={1}>Normal (1×)</option><option value={1.2}>Faster (1.2×)</option>
+                  </select>
+                </label>
+              </div>
             </div>
             <div className="flex justify-end"><Button onClick={() => save()} disabled={busy} data-testid="foundation-save-bottom-btn"><Save className="h-4 w-4 mr-1" /> {busy ? "Saving…" : "Save Foundation Statement"}</Button></div>
           </div>

@@ -7,6 +7,7 @@ import {
 import { BrandLogo } from "@/components/Brand";
 import { SampleCard } from "@/components/SampleCard";
 import { AlignModel } from "@/components/AlignModel";
+import { MomentsStrip } from "@/components/MomentsStrip";
 import { SAMPLE_REPORTS } from "@/lib/samples";
 
 const POSTER_IMG = "/align-hero-simple.jpg";
@@ -112,6 +113,7 @@ export default function Landing() {
         </div>
       </section>
 
+      <MomentsStrip />
       <section id="how-it-works" className="bg-brand-purple text-white py-16" data-testid="four-steps">
         <div className="max-w-6xl mx-auto px-6">
           <p className="text-xs uppercase tracking-widest font-bold text-white/70">How it works · Two ways a case begins</p>
