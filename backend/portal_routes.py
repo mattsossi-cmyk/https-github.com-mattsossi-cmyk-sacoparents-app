@@ -295,6 +295,43 @@ class BiffRefineBody(BaseModel):
     safety_flagged: bool = False
 
 
+class GuidedJourneyStepBody(BaseModel):
+    """One turn of the Coparenting Journey guided chat wizard."""
+
+    topic: str = Field(
+        pattern="^(foundation|safety|coparenting|medical|educational|psychological)$"
+    )
+    step_index: int = Field(ge=-1, le=20)  # -1 = intro turn
+    parent_answer: str = Field(default="", max_length=4000)
+    safety_flagged: bool = False
+
+
+@router.post("/guided-journey/step")
+async def guided_journey_step_endpoint(
+    body: GuidedJourneyStepBody, request: Request
+) -> Dict[str, Any]:
+    """Emit the coach's next turn in the guided-journey chat wizard.
+
+    Rate-limited via the shared BIFF/verify quota. No auth (offline-
+    first parity with the rest of the portal).
+    """
+    ip = _client_ip(request)
+    await _rate_guard(ip)
+    try:
+        return await portal_ai.guided_journey_step(
+            topic=body.topic,
+            step_index=body.step_index,
+            parent_answer=body.parent_answer,
+            safety_flagged=bool(body.safety_flagged),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception:
+        raise HTTPException(
+            status_code=502, detail="Coach is warming up — please try again."
+        )
+
+
 @router.post("/biff-refine")
 async def biff_refine_endpoint(body: BiffRefineBody, request: Request) -> Dict[str, Any]:
     """Refine a draft into BIFF style via Claude. Rate limited, no auth.

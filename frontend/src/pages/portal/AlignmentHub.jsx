@@ -53,6 +53,15 @@ export function AlignmentHub({
   // Complete Coparenting Report bundle (iter218) — download + share.
   downloadCompleteReportPdf = () => {},
   onShareCompleteReport = () => {},
+  // Email Foundation Statement to co-parent (iter219). Gated by
+  // safetyFlagged: when the parent's Safety Check flagged coercion,
+  // we HIDE the CTA and surface a soft-block warning instead so we
+  // never help facilitate contact with an unsafe co-parent.
+  safetyFlagged = false,
+  onEmailFoundationToCoparent = () => {},
+  // Guided-journey chat wizard (iter220). Toolkit tiles and the
+  // Foundation Statement panel both invoke this with a topic key.
+  openGuidedJourney = () => {},
 }) {
   return (
     <div className="space-y-4" data-testid="hub-section-alignment">
@@ -82,107 +91,177 @@ export function AlignmentHub({
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <Link
-              to="/nd-risk-assessment"
-              data-testid="toolkit-link-assessment"
-              className="p-3 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-slate-800 transition"
-            >
-              <i className="fa-solid fa-clipboard-question text-purple-800 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">
-                Co-parenting Assessment
-              </div>
-              <div className="text-[10px] text-slate-500 leading-snug">
-                Take the risk-and-strengths self-assessment
-              </div>
-            </Link>
+            <div className="relative">
+              <Link
+                to="/nd-risk-assessment"
+                data-testid="toolkit-link-assessment"
+                className="block p-3 pb-8 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-slate-800 transition"
+              >
+                <i className="fa-solid fa-clipboard-question text-purple-800 text-base"></i>
+                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                  Co-parenting Assessment
+                </div>
+                <div className="text-[10px] text-slate-500 leading-snug">
+                  Take the risk-and-strengths self-assessment
+                </div>
+              </Link>
+              <button
+                type="button"
+                data-testid="toolkit-guided-coparenting"
+                onClick={() => openGuidedJourney("coparenting")}
+                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-purple-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-purple-300"
+              >
+                <i className="fa-solid fa-comments mr-1"></i>Guided chat
+              </button>
+            </div>
 
-            <Link
-              to="/safety-assessment"
-              data-testid="toolkit-link-safety"
-              className="p-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-slate-800 transition"
-            >
-              <i className="fa-solid fa-shield-heart text-rose-700 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">
-                Safety Screen
-              </div>
-              <div className="text-[10px] text-slate-500 leading-snug">
-                Full clinical Safety Assessment
-              </div>
-            </Link>
+            <div className="relative">
+              <Link
+                to="/safety-assessment"
+                data-testid="toolkit-link-safety"
+                className="block p-3 pb-8 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-slate-800 transition"
+              >
+                <i className="fa-solid fa-shield-heart text-rose-700 text-base"></i>
+                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                  Safety Screen
+                </div>
+                <div className="text-[10px] text-slate-500 leading-snug">
+                  Full clinical Safety Assessment
+                </div>
+              </Link>
+              <button
+                type="button"
+                data-testid="toolkit-guided-safety"
+                onClick={() => openGuidedJourney("safety")}
+                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-rose-700 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-rose-300"
+              >
+                <i className="fa-solid fa-comments mr-1"></i>Guided chat
+              </button>
+            </div>
 
-            <Link
-              to="/prep/child-goals"
-              data-testid="toolkit-link-mediation"
-              className="p-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-slate-800 transition"
-            >
-              <i className="fa-solid fa-file-signature text-amber-700 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">
-                Mediation Prep & Report
-              </div>
-              <div className="text-[10px] text-slate-500 leading-snug">
-                Build your Foundation Statement + summary
-              </div>
-            </Link>
+            <div className="relative">
+              <Link
+                to="/prep/child-goals"
+                data-testid="toolkit-link-mediation"
+                className="block p-3 pb-8 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-slate-800 transition"
+              >
+                <i className="fa-solid fa-file-signature text-amber-700 text-base"></i>
+                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                  Mediation Prep & Report
+                </div>
+                <div className="text-[10px] text-slate-500 leading-snug">
+                  Build your Foundation Statement + summary
+                </div>
+              </Link>
+              <button
+                type="button"
+                data-testid="toolkit-guided-foundation"
+                onClick={() => openGuidedJourney("foundation")}
+                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-amber-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-amber-300"
+              >
+                <i className="fa-solid fa-comments mr-1"></i>Guided chat
+              </button>
+            </div>
 
-            <button
-              type="button"
-              data-testid="toolkit-link-foundation"
-              onClick={downloadFoundationPdf}
-              className="p-3 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-slate-800 text-left transition"
-            >
-              <i className="fa-solid fa-file-lines text-purple-800 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">
-                Foundation Statement PDF
-              </div>
-              <div className="text-[10px] text-slate-500 leading-snug">
-                Download your child-first anchor as PDF
-              </div>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                data-testid="toolkit-link-foundation"
+                onClick={downloadFoundationPdf}
+                className="w-full p-3 pb-8 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-slate-800 text-left transition"
+              >
+                <i className="fa-solid fa-file-lines text-purple-800 text-base"></i>
+                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                  Foundation Statement PDF
+                </div>
+                <div className="text-[10px] text-slate-500 leading-snug">
+                  Download your child-first anchor as PDF
+                </div>
+              </button>
+              <button
+                type="button"
+                data-testid="toolkit-guided-foundation-pdf"
+                onClick={() => openGuidedJourney("foundation")}
+                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-purple-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-purple-300"
+              >
+                <i className="fa-solid fa-comments mr-1"></i>Guided chat
+              </button>
+            </div>
 
-            <button
-              type="button"
-              data-testid="toolkit-link-medical"
-              onClick={() => openAssessmentFolder("Medical")}
-              className="p-3 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-xl text-slate-800 text-left transition"
-            >
-              <i className="fa-solid fa-stethoscope text-sky-700 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">
-                Medical Needs Assessment
-              </div>
-              <div className="text-[10px] text-slate-500 leading-snug">
-                Log providers, meds, appointments
-              </div>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                data-testid="toolkit-link-medical"
+                onClick={() => openAssessmentFolder("Medical")}
+                className="w-full p-3 pb-8 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-xl text-slate-800 text-left transition"
+              >
+                <i className="fa-solid fa-stethoscope text-sky-700 text-base"></i>
+                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                  Medical Needs Assessment
+                </div>
+                <div className="text-[10px] text-slate-500 leading-snug">
+                  Log providers, meds, appointments
+                </div>
+              </button>
+              <button
+                type="button"
+                data-testid="toolkit-guided-medical"
+                onClick={() => openGuidedJourney("medical")}
+                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-sky-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-sky-300"
+              >
+                <i className="fa-solid fa-comments mr-1"></i>Guided chat
+              </button>
+            </div>
 
-            <button
-              type="button"
-              data-testid="toolkit-link-educational"
-              onClick={() => openAssessmentFolder("Educational")}
-              className="p-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-slate-800 text-left transition"
-            >
-              <i className="fa-solid fa-graduation-cap text-amber-700 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">
-                Educational Assessment
-              </div>
-              <div className="text-[10px] text-slate-500 leading-snug">
-                Log IEPs, tutoring, teacher notes
-              </div>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                data-testid="toolkit-link-educational"
+                onClick={() => openAssessmentFolder("Educational")}
+                className="w-full p-3 pb-8 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-slate-800 text-left transition"
+              >
+                <i className="fa-solid fa-graduation-cap text-amber-700 text-base"></i>
+                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                  Educational Assessment
+                </div>
+                <div className="text-[10px] text-slate-500 leading-snug">
+                  Log IEPs, tutoring, teacher notes
+                </div>
+              </button>
+              <button
+                type="button"
+                data-testid="toolkit-guided-educational"
+                onClick={() => openGuidedJourney("educational")}
+                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-amber-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-amber-300"
+              >
+                <i className="fa-solid fa-comments mr-1"></i>Guided chat
+              </button>
+            </div>
 
-            <button
-              type="button"
-              data-testid="toolkit-link-psychological"
-              onClick={() => openAssessmentFolder("Psychological")}
-              className="p-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-slate-800 text-left transition"
-            >
-              <i className="fa-solid fa-brain text-indigo-700 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">
-                Psychological Assessment
-              </div>
-              <div className="text-[10px] text-slate-500 leading-snug">
-                Log therapists, evals, behavioural notes
-              </div>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                data-testid="toolkit-link-psychological"
+                onClick={() => openAssessmentFolder("Psychological")}
+                className="w-full p-3 pb-8 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-slate-800 text-left transition"
+              >
+                <i className="fa-solid fa-brain text-indigo-700 text-base"></i>
+                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                  Psychological Assessment
+                </div>
+                <div className="text-[10px] text-slate-500 leading-snug">
+                  Log therapists, evals, behavioural notes
+                </div>
+              </button>
+              <button
+                type="button"
+                data-testid="toolkit-guided-psychological"
+                onClick={() => openGuidedJourney("psychological")}
+                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-indigo-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-indigo-300"
+              >
+                <i className="fa-solid fa-comments mr-1"></i>Guided chat
+              </button>
+            </div>
 
             <Link
               to="/joint-reports"
@@ -654,6 +733,46 @@ export function AlignmentHub({
               : "Share"}
           </button>
         </div>
+
+        {/* Email to Co-parent — iter219 replaces the generic
+            "share with pediatrician" copy. Blocked when the parent's
+            Safety Check flagged coercion / device / physical-safety
+            risk (defense-in-depth: never facilitate outbound contact
+            when the parent's own signal says it isn't safe). */}
+        {safetyFlagged ? (
+          <div
+            data-testid="foundation-email-coparent-blocked"
+            className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px] no-print"
+          >
+            <div className="flex items-start gap-2">
+              <i className="fa-solid fa-shield-heart text-rose-700 mt-0.5"></i>
+              <div>
+                <div className="font-bold text-rose-900">
+                  Email to co-parent blocked
+                </div>
+                <p className="text-rose-800 leading-snug mt-0.5">
+                  You flagged safety concerns on your Quick Safety
+                  Check, so we won't help send your Foundation
+                  Statement directly to your co-parent. Route through
+                  your attorney or mediator instead.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            data-testid="email-foundation-coparent-btn"
+            onClick={onEmailFoundationToCoparent}
+            disabled={shareStatus.foundation_email === "loading"}
+            className="w-full p-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-2 disabled:opacity-40 no-print"
+          >
+            <i className="fa-solid fa-envelope"></i>
+            {shareStatus.foundation_email === "loading"
+              ? "Preparing email…"
+              : "Email my Foundation Statement to my co-parent"}
+          </button>
+        )}
       </div>
     </div>
   );

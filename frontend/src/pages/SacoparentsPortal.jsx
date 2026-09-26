@@ -34,6 +34,7 @@ import { AlignmentHub } from "./portal/AlignmentHub";
 import { BiffTab } from "./portal/BiffTab";
 import { CourtKeyScreen } from "./portal/CourtKeyScreen";
 import { DoorsGateway } from "./portal/DoorsGateway";
+import { GuidedJourneyModal } from "./portal/GuidedJourneyModal";
 import {
   SafetyRetakeChip,
   SafetyScreen,
@@ -98,6 +99,8 @@ export default function SacoparentsPortal() {
   const [shareLegalLastUrl, setShareLegalLastUrl] = useState("");
   const [shareCompleteOpen, setShareCompleteOpen] = useState(false);
   const [shareCompleteLastUrl, setShareCompleteLastUrl] = useState("");
+  // Guided-journey chat wizard state (iter220). One modal, six topics.
+  const [guidedTopic, setGuidedTopic] = useState(null);
 
   // Reassessment form state
   const [reassStage, setReassStage] = useState("30-Day Progress Review");
@@ -832,6 +835,71 @@ export default function SacoparentsPortal() {
     }, 60);
   }, []);
 
+  // Guided-journey chat wizard (iter220). Opens the modal for a
+  // specific topic; save handler funnels the collected answers into
+  // the correct portal storage.
+  const openGuidedJourney = useCallback((topic) => {
+    setGuidedTopic(topic);
+  }, []);
+
+  const onGuidedSave = useCallback(
+    ({ save_key, category, answers, summary }) => {
+      if (!Array.isArray(answers) || answers.length === 0) {
+        setGuidedTopic(null);
+        return;
+      }
+      const today = new Date().toISOString().substring(0, 10);
+      if (save_key === "foundation_text") {
+        // Prepend the guided summary to the existing foundation text
+        // so the parent's prior draft is preserved.
+        const stitched = [
+          "Foundation Statement (guided draft)",
+          summary,
+          foundationText && foundationText.trim() ? "\n---\nPrevious draft:\n" + foundationText : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n")
+          .slice(0, 8000);
+        setFoundationText(stitched);
+        writeString(FOUNDATION_KEY, stitched);
+      } else if (save_key === "align_record" && category) {
+        const first = answers[0]?.answer || "Guided record";
+        const rest = answers.slice(1).map((qa) => `- ${qa.answer}`).join("\n");
+        const entry = {
+          id: Date.now(),
+          category,
+          title: `${category} — Guided Journey ${today}`,
+          provider: first.slice(0, 120),
+          date: today,
+          summary: rest.slice(0, 600),
+        };
+        const next = [entry, ...alignRecords];
+        setAlignRecords(next);
+        writeJson(ALIGN_RECORDS_KEY, next);
+        openAssessmentFolder(category);
+      } else if (save_key === "safety_ack") {
+        // Deep-link to the existing SafetyScreen so the parent gets
+        // the real clinical guardrail rather than a paraphrased chat.
+        setSafetyOpen(true);
+      } else if (save_key === "cop_assessment_note") {
+        // Append the co-parenting reflection to milestones as a
+        // "reassessment" so it lands in the weekly PDF too.
+        const entry = {
+          id: Date.now(),
+          type: "success",
+          title: `Co-parenting Reflection ${today}`,
+          date: today,
+          note: summary.slice(0, 600),
+        };
+        const next = [entry, ...milestones];
+        setMilestones(next);
+        writeJson(MILESTONE_KEY, next);
+      }
+      setGuidedTopic(null);
+    },
+    [foundationText, alignRecords, milestones, openAssessmentFolder]
+  );
+
   const downloadPdfFromApi = useCallback(async (path, filename, body) => {
     try {
       const res = await api.post(path, body, { responseType: "blob" });
@@ -996,6 +1064,68 @@ export default function SacoparentsPortal() {
       author_name: user?.name || null,
     });
   }, [createShareLink, foundationText, courtKey, user]);
+
+  // Email Foundation Statement to co-parent (iter219). Client-side
+  // guardrail: when the parent's Quick Safety Check flagged coercion,
+  // this handler is never invoked because the button is hidden. The
+  // handler also refuses to proceed if safetyAck?.flagged is true as
+  // a belt-and-suspenders check.
+  const onEmailFoundationToCoparent = useCallback(async () => {
+    if (safetyAck?.flagged) {
+      alert(
+        "Email to co-parent is blocked because your Safety Check flagged safety concerns."
+      );
+      return;
+    }
+    if (!foundationText.trim()) {
+      alert(
+        "Write your Foundation Statement first — the email links to the PDF."
+      );
+      return;
+    }
+    setShareStatus((prev) => ({ ...prev, foundation_email: "loading" }));
+    try {
+      const { data } = await api.post("/portal/share", {
+        artefact_type: "foundation",
+        payload: {
+          foundation_text: foundationText,
+          case_ref: courtKey || null,
+          author_name: user?.name || null,
+        },
+        ttl_days: 30,
+      });
+      if (!data?.url) throw new Error("no share url");
+      const subject = encodeURIComponent(
+        "My Foundation Statement — sacoparentsapp.online"
+      );
+      const body = encodeURIComponent(
+        `Hi,\n\nHere's my Foundation Statement for our co-parenting.\n\n` +
+          `${foundationText.slice(0, 500)}${foundationText.length > 500 ? "..." : ""}\n\n` +
+          `Full PDF (link expires in 30 days):\n${data.url}\n\n` +
+          `— Sent via sacoparentsapp.online`
+      );
+      // Empty `mailto:` recipient — the user's email client opens with
+      // no address prefilled, so the app never sees or stores the
+      // co-parent's email. Privacy-first.
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+      setShareStatus((prev) => ({ ...prev, foundation_email: "copied" }));
+      setTimeout(
+        () =>
+          setShareStatus((prev) => ({
+            ...prev,
+            foundation_email: undefined,
+          })),
+        4000
+      );
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("email foundation to coparent failed", err);
+      setShareStatus((prev) => ({ ...prev, foundation_email: "error" }));
+      alert(
+        "Couldn't prepare the email — please try again in a moment, or use the Share link button."
+      );
+    }
+  }, [safetyAck, foundationText, courtKey, user]);
 
   const onShareWeekly = useCallback(() => {
     createShareLink("weekly", {
@@ -1238,6 +1368,9 @@ export default function SacoparentsPortal() {
                   openAssessmentFolder={openAssessmentFolder}
                   downloadCompleteReportPdf={downloadCompleteReportPdf}
                   onShareCompleteReport={onShareCompleteReport}
+                  safetyFlagged={safetyFlagged}
+                  onEmailFoundationToCoparent={onEmailFoundationToCoparent}
+                  openGuidedJourney={openGuidedJourney}
                 />
               </>
             )}
@@ -1365,6 +1498,17 @@ export default function SacoparentsPortal() {
         loading={shareStatus.complete === "loading"}
         lastUrl={shareCompleteLastUrl}
       />
+
+      {/* Guided-journey chat wizard (iter220) — one modal, six topics. */}
+      {guidedTopic && (
+        <GuidedJourneyModal
+          topic={guidedTopic}
+          open={!!guidedTopic}
+          onClose={() => setGuidedTopic(null)}
+          onSave={onGuidedSave}
+          safetyFlagged={safetyFlagged}
+        />
+      )}
 
       {/* Reassessment modal */}
       {reassessOpen && (

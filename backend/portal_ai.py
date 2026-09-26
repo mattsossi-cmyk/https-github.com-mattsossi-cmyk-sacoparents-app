@@ -11,7 +11,7 @@ import logging
 import os
 import re
 import uuid
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
@@ -145,3 +145,233 @@ async def refine_biff(
             )
 
     return {"biff": biff, "flags": flags, "risk": risk}
+
+
+# ---------------------------------------------------------------------------
+# Guided Journey (iter220) — one-question-at-a-time chat wizard for the six
+# Coparenting Journey Toolkit topics. Every topic ships with its own
+# ~5-question script; Claude answers as a warm coach (grey-rock voice when
+# safety_flagged=True); the client keeps the history and calls back for
+# each turn.
+# ---------------------------------------------------------------------------
+
+# Ordered scripts for each topic. `save_key` tells the caller where to
+# funnel the aggregated answers when the parent taps "Save & continue".
+_GUIDED_SCRIPTS: Dict[str, Dict[str, Any]] = {
+    "foundation": {
+        "save_key": "foundation_text",
+        "intro": (
+            "Hi — I'm your Coparenting Coach. Let's build a Foundation "
+            "Statement together in five short questions. The final result "
+            "goes onto a one-page PDF you can share, print, or keep private."
+        ),
+        "questions": [
+            "What matters most for your child right now? (age, school, health, hobbies — anything you'd want a stranger to know first)",
+            "What promise do you want to hold yourself to when tempers run hot? (e.g. 'never argue in front of the kids', 'take a 24-hour pause before big decisions')",
+            "How would you like communication with your co-parent to feel in six months? Give me an image, not a rule.",
+            "What's one thing you deeply appreciate about your co-parent as a parent, even if the relationship is hard right now?",
+            "If your child read this Foundation Statement at 18, what one line would you most want them to remember?",
+        ],
+    },
+    "safety": {
+        "save_key": "safety_ack",
+        "intro": (
+            "Before you build anything joint, let's do a fast wellbeing "
+            "check. Three questions. Your answers stay on your device."
+        ),
+        "questions": [
+            "Right now, do you feel physically safe in your home and in handoffs? (Yes / mostly / no — tell me anything you want to add)",
+            "Has there been intimidation, coercion, control of money, or physical harm from your co-parent? You can say 'prefer not to say'.",
+            "Is this device private — no one else can read what you type here? (Yes / no / unsure)",
+        ],
+    },
+    "coparenting": {
+        "save_key": "cop_assessment_note",
+        "intro": (
+            "Let's take a quick self-assessment of your co-parenting today. "
+            "Five short reflections — no scores, just your honest read."
+        ),
+        "questions": [
+            "How would you describe your current communication with your co-parent in one sentence?",
+            "On a scale of 1-10, how consistent do the two households feel to your child?",
+            "What's one recurring friction point you'd love to solve in the next 30 days?",
+            "What has already improved in the last 90 days that's worth naming?",
+            "If a mediator read your answers, what's the one context they'd need to understand your situation?",
+        ],
+    },
+    "medical": {
+        "save_key": "align_record",
+        "category": "Medical",
+        "intro": (
+            "Let's capture your child's medical picture as one Align "
+            "Before Agreement record. Four quick questions."
+        ),
+        "questions": [
+            "Who is your child's primary care doctor, and where do they practise?",
+            "Any current diagnoses, allergies, or medications the other parent must know?",
+            "What upcoming appointments or referrals are on the calendar?",
+            "Anything else a paediatrician or attorney should know to keep your child safe?",
+        ],
+    },
+    "educational": {
+        "save_key": "align_record",
+        "category": "Educational",
+        "intro": (
+            "Let's capture the school picture as one Align Before "
+            "Agreement record. Four short questions."
+        ),
+        "questions": [
+            "What school / grade / teacher, and what's the child's current strength there?",
+            "Any IEP, 504, tutor, or specialist support in place?",
+            "What academic or behavioural concern is currently open?",
+            "What's the ideal next-year plan — same school, transfer, home-school?",
+        ],
+    },
+    "psychological": {
+        "save_key": "align_record",
+        "category": "Psychological",
+        "intro": (
+            "Let's capture the emotional and psychological picture as "
+            "one Align Before Agreement record. Four questions."
+        ),
+        "questions": [
+            "Is your child currently seeing a therapist, counsellor, or psychologist? Who, and how often?",
+            "Any diagnoses, evaluations, or behavioural patterns worth naming?",
+            "What emotional support seems to work best across both homes?",
+            "What's the one thing you most want the co-parent to align on around your child's emotional wellbeing?",
+        ],
+    },
+}
+
+
+_GUIDED_COACH_WARM = (
+    SAFETY_GUARDRAIL
+    + "You are the Coparenting Coach for sacoparentsapp.online. You run a "
+    "warm, short, one-question-at-a-time chat wizard. You have already "
+    "asked the parent a scripted question; they've now answered.\n\n"
+    "Your job on this turn is to:\n"
+    "  1. Reflect ONE sentence of empathy or observation on what the parent "
+    "     just said. Keep it grounded, not saccharine.\n"
+    "  2. If the parent asked a clarifying question, answer it briefly.\n"
+    "  3. Then invite them into the NEXT scripted question if one exists, "
+    "     OR — if this was the final question — tell them we're done and "
+    "     that the next screen will let them save the summary.\n\n"
+    "NEVER give clinical or legal advice. NEVER invent facts about the "
+    "child, the co-parent, or the mediator. Keep total reply under 60 words."
+)
+
+
+_GUIDED_COACH_GREYROCK = (
+    SAFETY_GUARDRAIL
+    + "You are the Coparenting Coach for sacoparentsapp.online. The parent "
+    "has flagged safety concerns (coercion, intimidation, or device "
+    "privacy). Run a MINIMAL, grey-rock version of the guided chat: no "
+    "warmth words, no 'thanks', no emotion — just short factual acknowledgement "
+    "and the next scripted question. On this turn:\n"
+    "  1. Acknowledge in one short factual sentence (e.g. 'Got it.', "
+    "     'Understood.', 'Noted.').\n"
+    "  2. Ask the NEXT scripted question if one exists, OR say we're done "
+    "     and the next screen will offer a save option.\n\n"
+    "NEVER give clinical or legal advice. Keep total reply under 30 words."
+)
+
+
+def _resolve_next_question(topic: str, next_index: int) -> Optional[str]:
+    script = _GUIDED_SCRIPTS.get(topic)
+    if not script:
+        return None
+    qs = script["questions"]
+    if next_index < 0 or next_index >= len(qs):
+        return None
+    return qs[next_index]
+
+
+async def guided_journey_step(
+    *,
+    topic: str,
+    step_index: int,
+    parent_answer: str,
+    safety_flagged: bool = False,
+) -> Dict[str, Any]:
+    """One turn of the guided-journey chat.
+
+    Args:
+        topic: one of the keys in _GUIDED_SCRIPTS.
+        step_index: 0-based index of the question the parent JUST answered.
+                    -1 signals the very first turn — the coach greets +
+                    asks question 0.
+        parent_answer: the parent's text reply (ignored when step_index=-1).
+        safety_flagged: switch to grey-rock voice.
+
+    Returns:
+        `{coach_message, next_question, step_number, total_steps, is_final,
+          save_key, category?}`
+    """
+    script = _GUIDED_SCRIPTS.get(topic)
+    if not script:
+        raise ValueError(f"Unknown guided-journey topic: {topic}")
+
+    total_steps = len(script["questions"])
+
+    if step_index < 0:
+        # First turn — send the scripted intro + question 0, no LLM.
+        return {
+            "coach_message": script["intro"],
+            "next_question": script["questions"][0],
+            "step_number": 1,
+            "total_steps": total_steps,
+            "is_final": False,
+            "save_key": script["save_key"],
+            "category": script.get("category"),
+        }
+
+    next_index = step_index + 1
+    is_final = next_index >= total_steps
+    next_q = None if is_final else _resolve_next_question(topic, next_index)
+
+    system = _GUIDED_COACH_GREYROCK if safety_flagged else _GUIDED_COACH_WARM
+    last_q = script["questions"][step_index] if 0 <= step_index < total_steps else ""
+
+    user_text = (
+        f"Previous question I asked: {last_q}\n"
+        f"Parent's answer: {parent_answer.strip()[:800]}\n"
+        + (
+            f"Next scripted question: {next_q}\n"
+            "Reflect on their answer briefly, then invite them into the next question."
+            if next_q
+            else "This was the final question. Tell them we're done and the save panel is next."
+        )
+    )
+
+    provider, model_name = resolve_model("claude")
+    coach_text = ""
+    try:
+        chat = LlmChat(
+            api_key=os.environ["EMERGENT_LLM_KEY"],
+            session_id=f"sa-coparents-guided-{topic}-{uuid.uuid4().hex[:8]}",
+            system_message=system,
+        ).with_model(provider, model_name)
+        response = await chat.send_message(UserMessage(text=user_text))
+        coach_text = (response or "").strip()
+    except Exception:  # pragma: no cover - degrades gracefully
+        logger.warning("guided_journey_step LLM call failed", exc_info=True)
+        coach_text = ""
+
+    if not coach_text:
+        # Deterministic fallback so the chat never hangs.
+        if safety_flagged:
+            coach_text = "Noted." + (f" Next: {next_q}" if next_q else " We're done.")
+        else:
+            coach_text = (
+                "Thanks for sharing that. " + (f"Next: {next_q}" if next_q else "That's the last one — nice work.")
+            )
+
+    return {
+        "coach_message": coach_text,
+        "next_question": next_q,
+        "step_number": min(next_index + 1, total_steps),
+        "total_steps": total_steps,
+        "is_final": is_final,
+        "save_key": script["save_key"],
+        "category": script.get("category"),
+    }
