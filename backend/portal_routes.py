@@ -270,15 +270,23 @@ async def put_state(
 # --------------------------------------------------------------------- #
 class BiffRefineBody(BaseModel):
     raw: str = Field(min_length=1, max_length=_MAX_BIFF_INPUT_LEN)
+    safety_flagged: bool = False
 
 
 @router.post("/biff-refine")
 async def biff_refine_endpoint(body: BiffRefineBody, request: Request) -> Dict[str, Any]:
-    """Refine a draft into BIFF style via Claude. Rate limited, no auth."""
+    """Refine a draft into BIFF style via Claude. Rate limited, no auth.
+
+    When `safety_flagged=true` (the parent's own Quick Safety Check
+    returned any risk signal), the coach switches to a grey-rock
+    variant so replies stay safer to send to a coercive co-parent.
+    """
     ip = _client_ip(request)
     await _rate_guard(ip)
     try:
-        result = await portal_ai.refine_biff(body.raw)
+        result = await portal_ai.refine_biff(
+            body.raw, safety_flagged=bool(body.safety_flagged)
+        )
     except Exception as exc:  # noqa: BLE001
         logger.warning("portal biff-refine LLM call failed: %s", exc)
         raise HTTPException(

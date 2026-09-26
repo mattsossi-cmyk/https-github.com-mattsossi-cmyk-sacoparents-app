@@ -87,6 +87,22 @@ export function SafetyPlanBuilder({ plan, onSave }) {
     onSave(payload);
   };
 
+  const wipe = () => {
+    // Only surface a confirm if the parent actually has something saved
+    // — otherwise the button is a no-op. Never block: a parent under
+    // duress needs to be able to erase their plan in one tap.
+    const confirmed = window.confirm(
+      "Delete your Safety Plan from this device (and from your account if signed in)?\n\nThis cannot be undone."
+    );
+    if (!confirmed) return;
+    const cleared = {};
+    for (const f of FIELDS) cleared[f.key] = "";
+    setValues(cleared);
+    setSavedAt("");
+    setShowSummary(false);
+    onSave(null);
+  };
+
   const summaryText = () => {
     const lines = ["My Safety Plan", "---"];
     for (const f of FIELDS) {
@@ -186,13 +202,26 @@ export function SafetyPlanBuilder({ plan, onSave }) {
           </div>
 
           {savedAt && (
-            <p
-              data-testid="safety-plan-saved-at"
-              className="text-[10px] text-emerald-700 font-semibold"
+            <div
+              className="flex items-center justify-between flex-wrap gap-2"
             >
-              <i className="fa-solid fa-check-circle mr-1"></i>
-              Saved · {new Date(savedAt).toLocaleString()}
-            </p>
+              <p
+                data-testid="safety-plan-saved-at"
+                className="text-[10px] text-emerald-700 font-semibold"
+              >
+                <i className="fa-solid fa-check-circle mr-1"></i>
+                Saved · {new Date(savedAt).toLocaleString()}
+              </p>
+              <button
+                type="button"
+                data-testid="safety-plan-delete-btn"
+                onClick={wipe}
+                title="Delete your Safety Plan from this device and from your account"
+                className="text-[10px] font-bold text-rose-700 hover:text-rose-900 underline decoration-rose-300"
+              >
+                <i className="fa-solid fa-trash-can mr-1"></i>Delete my Safety Plan
+              </button>
+            </div>
           )}
 
           {showSummary && hasAnything && (

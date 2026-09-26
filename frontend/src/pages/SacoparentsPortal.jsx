@@ -447,6 +447,18 @@ export default function SacoparentsPortal() {
   }, []);
 
   const onSaveSafetyPlan = useCallback((plan) => {
+    if (plan == null) {
+      // Delete: wipe local storage AND state; the debounced PUT will
+      // then sync a `safety_plan: null` up to the server so the plan
+      // is gone across devices.
+      try {
+        localStorage.removeItem(SAFETY_PLAN_KEY);
+      } catch {
+        /* ignore quota */
+      }
+      setSafetyPlan(null);
+      return;
+    }
     writeJson(SAFETY_PLAN_KEY, plan);
     setSafetyPlan(plan);
   }, []);
@@ -527,51 +539,55 @@ export default function SacoparentsPortal() {
     );
   }, []);
 
-  const runAiRefine = useCallback((val) => {
-    if (biffDebounceRef.current) clearTimeout(biffDebounceRef.current);
-    if (biffAbortRef.current) {
-      try {
-        biffAbortRef.current.abort();
-      } catch {
-        /* noop */
-      }
-    }
-    const trimmed = (val || "").trim();
-    if (!trimmed) {
-      setBiffLoading(false);
-      setBiffError("");
-      return;
-    }
-    biffDebounceRef.current = setTimeout(async () => {
-      setBiffLoading(true);
-      setBiffError("");
-      const controller = new AbortController();
-      biffAbortRef.current = controller;
-      try {
-        const { data } = await api.post(
-          "/portal/biff-refine",
-          { raw: trimmed },
-          { signal: controller.signal }
-        );
-        if (data?.biff) {
-          setBiffOutput(data.biff);
-          setFlagList(Array.isArray(data.flags) ? data.flags : []);
-          setRiskLabel(
-            data.risk === "Escalation Flag" || data.risk === "Low Risk"
-              ? data.risk
-              : (data.flags || []).length
-              ? "Escalation Flag"
-              : "Low Risk"
-          );
+  const runAiRefine = useCallback(
+    (val) => {
+      if (biffDebounceRef.current) clearTimeout(biffDebounceRef.current);
+      if (biffAbortRef.current) {
+        try {
+          biffAbortRef.current.abort();
+        } catch {
+          /* noop */
         }
-      } catch (err) {
-        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") return;
-        setBiffError("Coach is warming up — using local guidance for now.");
-      } finally {
-        setBiffLoading(false);
       }
-    }, 900);
-  }, []);
+      const trimmed = (val || "").trim();
+      if (!trimmed) {
+        setBiffLoading(false);
+        setBiffError("");
+        return;
+      }
+      const flagged = !!(safetyAck && safetyAck.flagged);
+      biffDebounceRef.current = setTimeout(async () => {
+        setBiffLoading(true);
+        setBiffError("");
+        const controller = new AbortController();
+        biffAbortRef.current = controller;
+        try {
+          const { data } = await api.post(
+            "/portal/biff-refine",
+            { raw: trimmed, safety_flagged: flagged },
+            { signal: controller.signal }
+          );
+          if (data?.biff) {
+            setBiffOutput(data.biff);
+            setFlagList(Array.isArray(data.flags) ? data.flags : []);
+            setRiskLabel(
+              data.risk === "Escalation Flag" || data.risk === "Low Risk"
+                ? data.risk
+                : (data.flags || []).length
+                ? "Escalation Flag"
+                : "Low Risk"
+            );
+          }
+        } catch (err) {
+          if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") return;
+          setBiffError("Coach is warming up — using local guidance for now.");
+        } finally {
+          setBiffLoading(false);
+        }
+      }, 900);
+    },
+    [safetyAck]
+  );
 
   const handleRawInputChange = useCallback(
     (val) => {

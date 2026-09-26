@@ -51,20 +51,73 @@ _BIFF_SYSTEM = (
 )
 
 
-async def refine_biff(raw_message: str) -> Dict[str, Any]:
+# Grey-rock variant: used when the parent's own Quick Safety Check
+# flagged coercion / intimidation / device-monitoring risk. Same JSON
+# shape, but the rewrite guidance leans into DV-safe grey-rock replies
+# — factual only, no warmth, no "thanks", no engagement with the
+# coercive framing. Keeping the coach voice consistent lets the parent
+# swap between the two variants without a UI re-learning cost.
+_BIFF_GREYROCK_SYSTEM = (
+    SAFETY_GUARDRAIL
+    + "You are the BIFF Communication Coach for the SA CoParents portal. "
+    "IMPORTANT SAFETY CONTEXT: The parent has indicated to us that there "
+    "may be intimidation, coercion, financial control, or monitoring in "
+    "their co-parenting relationship. Warm openers (e.g. 'Thanks for "
+    "letting me know'), apologies, and emotion words can be used by a "
+    "coercive co-parent as ammunition or as bait for further engagement. "
+    "Rewrite the parent's draft in a GREY-ROCK BIFF variant:\n"
+    "  • Brief — one or two short sentences, absolute minimum words.\n"
+    "  • Informative — bare observable facts (times, dates, amounts, "
+    "logistics). No opinions, no explanations, no justifications.\n"
+    "  • Neutral (NOT friendly) — no 'thanks', no 'I appreciate', no "
+    "'I understand', no emotion words at all. No sign-off other than the "
+    "parent's own name if they included it. If the parent wrote a warm "
+    "opener, REMOVE it.\n"
+    "  • Firm — state the fact or the decision once. Do not re-explain or "
+    "hedge. Do not agree to anything not already agreed. Do not ask "
+    "questions that invite further contact unless a decision is required.\n"
+    "  • Never repeat the co-parent's inflammatory phrases back to them.\n"
+    "  • Never disclose the parent's location, plans, feelings, or the "
+    "child's plans beyond the immediate custody logistics being discussed.\n\n"
+    "Preserve any specific facts (times, dates, dollar amounts, child names) "
+    "the parent supplied. Do NOT invent new facts. Do NOT add legal or "
+    "clinical framing.\n\n"
+    "Return STRICT JSON only, matching exactly this shape:\n"
+    "{\n"
+    '  "biff": "<the rewritten grey-rock BIFF message, plain text, no bullets>",\n'
+    '  "flags": ["<short label per escalation cue you found>", ...],\n'
+    '  "risk": "Escalation Flag" | "Low Risk"\n'
+    "}\n\n"
+    "Because the safety flag is set, `risk` should almost always be "
+    "'Escalation Flag' unless the draft is already extremely neutral. "
+    "Typical flag labels are the same as the regular BIFF coach. "
+    "Never emit prose outside the JSON object."
+)
+
+
+async def refine_biff(
+    raw_message: str, *, safety_flagged: bool = False
+) -> Dict[str, Any]:
     """Send `raw_message` to Claude and return `{biff, flags, risk}`.
+
+    When `safety_flagged=True` (the parent's own Quick Safety Check
+    returned any risk signal), we switch to the grey-rock system
+    prompt so replies stay minimal, factual, and safe to send to a
+    coercive co-parent.
 
     Raises `Exception` on network / provider failure; caller wraps as 502.
     """
     if not raw_message or not raw_message.strip():
         return {"biff": "", "flags": [], "risk": "Neutral"}
 
+    system_message = _BIFF_GREYROCK_SYSTEM if safety_flagged else _BIFF_SYSTEM
+
     # BIFF is the empathetic voice — pin to Claude for warmth.
     provider, model_name = resolve_model("claude")
     chat = LlmChat(
         api_key=os.environ["EMERGENT_LLM_KEY"],
         session_id=f"sa-coparents-biff-{uuid.uuid4().hex[:10]}",
-        system_message=_BIFF_SYSTEM,
+        system_message=system_message,
     ).with_model(provider, model_name)
 
     response = await chat.send_message(
@@ -83,9 +136,12 @@ async def refine_biff(raw_message: str) -> Dict[str, Any]:
     if not biff:
         # Bare fallback so the caller never sees an empty rewrite.
         stripped = re.sub(r"\s+", " ", raw_message.strip())[:200]
-        biff = (
-            f"Thanks for the update. Regarding — {stripped} — let's keep the "
-            "focus on the child's schedule and follow up in writing. Thanks."
-        )
+        if safety_flagged:
+            biff = f"Received. Follow-up in writing. — {stripped[:120]}"
+        else:
+            biff = (
+                f"Thanks for the update. Regarding — {stripped} — let's keep the "
+                "focus on the child's schedule and follow up in writing. Thanks."
+            )
 
     return {"biff": biff, "flags": flags, "risk": risk}
