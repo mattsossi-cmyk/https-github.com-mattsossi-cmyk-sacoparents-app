@@ -369,6 +369,10 @@ export default function SacoparentsPortal() {
     () => milestones.filter((m) => m.type === "friction").length,
     [milestones]
   );
+  const advocateReviewCount = useMemo(
+    () => milestones.filter((m) => m.source === "advocate_review").length,
+    [milestones]
+  );
 
   const kudosStreak = useMemo(() => computeKudosStreak(milestones), [milestones]);
 
@@ -742,26 +746,45 @@ export default function SacoparentsPortal() {
   );
 
   const addMilestoneLog = useCallback(() => {
+    const flagged = !!(safetyAck && safetyAck.flagged);
     const title = window.prompt(
-      "Enter Milestone Title (e.g. Smooth Holiday Transition):"
+      flagged
+        ? "Log this for advocate/attorney review (e.g. Missed pickup, Coercive text):"
+        : "Enter Milestone Title (e.g. Smooth Holiday Transition):"
     );
     if (!title) return;
-    const isSuccess = window.confirm(
-      "Click OK for Successful Resolution, or Cancel for Friction Point."
-    );
-    const entry = {
-      id: Date.now(),
-      type: isSuccess ? "success" : "friction",
-      title,
-      date: new Date().toISOString().substring(0, 10),
-      note: isSuccess
-        ? "Logged as positive co-parenting milestone."
-        : "Logged as friction point for mediation review.",
-    };
+    let entry;
+    if (flagged) {
+      // Skip the success/friction dichotomy entirely — the collaborative
+      // frame doesn't fit the parent's stated situation. Log everything
+      // as friction with an advocate-review source marker so the Weekly
+      // Progress PDF and downstream reviewers can spot the context.
+      entry = {
+        id: Date.now(),
+        type: "friction",
+        title,
+        date: new Date().toISOString().substring(0, 10),
+        note: "Logged for advocate review — flagged safety context.",
+        source: "advocate_review",
+      };
+    } else {
+      const isSuccess = window.confirm(
+        "Click OK for Successful Resolution, or Cancel for Friction Point."
+      );
+      entry = {
+        id: Date.now(),
+        type: isSuccess ? "success" : "friction",
+        title,
+        date: new Date().toISOString().substring(0, 10),
+        note: isSuccess
+          ? "Logged as positive co-parenting milestone."
+          : "Logged as friction point for mediation review.",
+      };
+    }
     const next = [entry, ...milestones];
     setMilestones(next);
     writeJson(MILESTONE_KEY, next);
-  }, [milestones]);
+  }, [milestones, safetyAck]);
 
   const saveReassessment = useCallback(
     (e) => {
@@ -1172,6 +1195,7 @@ export default function SacoparentsPortal() {
                   successCount={successCount}
                   frictionCount={frictionCount}
                   addMilestoneLog={addMilestoneLog}
+                  advocateReviewCount={advocateReviewCount}
                   downloadWeeklyProgressPdf={downloadWeeklyProgressPdf}
                   onShareWeekly={onShareWeekly}
                   shareStatus={shareStatus}

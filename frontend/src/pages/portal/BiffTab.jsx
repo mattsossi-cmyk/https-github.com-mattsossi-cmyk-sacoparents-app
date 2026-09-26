@@ -26,6 +26,7 @@ export function BiffTab({
   successCount,
   frictionCount,
   addMilestoneLog,
+  advocateReviewCount = 0,
   // Weekly PDF
   downloadWeeklyProgressPdf,
   onShareWeekly,
@@ -237,42 +238,78 @@ export function BiffTab({
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box">
         <div className="flex justify-between items-center">
           <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-            <i className="fa-solid fa-chart-line text-emerald-600"></i>{" "}
-            History of Successes & Failures
+            {safetyFlagged ? (
+              <>
+                <i className="fa-solid fa-clipboard-list text-purple-800"></i>{" "}
+                Advocate Review Log
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-chart-line text-emerald-600"></i>{" "}
+                History of Successes & Failures
+              </>
+            )}
           </h3>
           <button
             data-testid="add-milestone-btn"
             onClick={addMilestoneLog}
-            className="no-print text-[10px] bg-slate-800 text-white px-2 py-1 rounded-lg"
+            className={
+              safetyFlagged
+                ? "no-print text-[10px] bg-purple-800 text-white px-2 py-1 rounded-lg"
+                : "no-print text-[10px] bg-slate-800 text-white px-2 py-1 rounded-lg"
+            }
           >
-            + Log Milestone
+            {safetyFlagged ? "+ Log for advocate" : "+ Log Milestone"}
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-center text-xs">
-          <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+        {safetyFlagged ? (
+          <div
+            className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-center"
+            data-testid="advocate-review-tile"
+          >
             <div
-              data-testid="success-count"
-              className="text-emerald-700 font-bold text-lg"
+              data-testid="advocate-review-count"
+              className="text-purple-900 font-bold text-lg"
             >
-              {successCount}
+              {advocateReviewCount}
             </div>
-            <div className="text-[10px] text-emerald-800 font-semibold">
-              Successful Resolutions
+            <div className="text-[10px] text-purple-800 font-semibold">
+              Events logged for advocate / attorney review
+            </div>
+            <p className="text-[10px] text-slate-500 mt-1 leading-snug">
+              The collaborative "Successful Resolution / Friction Point"
+              framing doesn't fit the safety context you flagged. Each
+              entry here goes into your Weekly Progress PDF for your
+              advocate.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 text-center text-xs">
+            <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+              <div
+                data-testid="success-count"
+                className="text-emerald-700 font-bold text-lg"
+              >
+                {successCount}
+              </div>
+              <div className="text-[10px] text-emerald-800 font-semibold">
+                Successful Resolutions
+              </div>
+            </div>
+            <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl">
+              <div
+                data-testid="friction-count"
+                className="text-rose-700 font-bold text-lg"
+              >
+                {frictionCount}
+              </div>
+              <div className="text-[10px] text-rose-800 font-semibold">
+                Friction Points
+              </div>
             </div>
           </div>
-          <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl">
-            <div
-              data-testid="friction-count"
-              className="text-rose-700 font-bold text-lg"
-            >
-              {frictionCount}
-            </div>
-            <div className="text-[10px] text-rose-800 font-semibold">
-              Friction Points
-            </div>
-          </div>
-        </div>
+        )}
 
         <div className="space-y-2 text-xs pt-1" data-testid="milestone-history-list">
           {milestones.length === 0 ? (
@@ -280,27 +317,30 @@ export function BiffTab({
               No milestone events logged.
             </p>
           ) : (
-            milestones.map((m) => (
-              <div
-                key={m.id}
-                className="p-2 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center text-xs"
-                data-testid={`milestone-${m.id}`}
-              >
-                <div>
-                  <span className="font-bold text-slate-800">{m.title}</span>
-                  <div className="text-[10px] text-slate-500">{m.note}</div>
-                </div>
-                <span
-                  className={
-                    m.type === "success"
-                      ? "text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800"
-                      : "text-[9px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800"
-                  }
+            milestones.map((m) => {
+              const isAdvocate = m.source === "advocate_review";
+              const tagClass = isAdvocate
+                ? "text-[9px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900"
+                : m.type === "success"
+                ? "text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800"
+                : "text-[9px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800";
+              const tagLabel = isAdvocate ? "ADVOCATE" : m.type.toUpperCase();
+              return (
+                <div
+                  key={m.id}
+                  className="p-2 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center text-xs"
+                  data-testid={`milestone-${m.id}`}
                 >
-                  {m.type.toUpperCase()}
-                </span>
-              </div>
-            ))
+                  <div>
+                    <span className="font-bold text-slate-800">{m.title}</span>
+                    <div className="text-[10px] text-slate-500">{m.note}</div>
+                  </div>
+                  <span className={tagClass} data-testid={`milestone-tag-${m.id}`}>
+                    {tagLabel}
+                  </span>
+                </div>
+              );
+            })
           )}
         </div>
 
