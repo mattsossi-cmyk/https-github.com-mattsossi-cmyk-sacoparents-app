@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BookUser, Pencil, Plus, Trash2 } from "lucide-react";
+import { BookUser, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,16 @@ export function AdminProviders() {
     if (!window.confirm(`Remove ${p.name} from the provider directory?`)) return;
     try { await api.delete(`/admin/providers/${p.id}`); toast.success("Provider removed"); load(); } catch (e) { toast.error(formatApiError(e)); }
   };
+  const [verifying, setVerifying] = useState(null);
+  const verify = async (p) => {
+    setVerifying(p.id);
+    try { await api.post(`/research/providers/${p.id}/verify`); toast.success(`${p.name} checked against live web results`); load(); }
+    catch (e) { toast.error(formatApiError(e)); } finally { setVerifying(null); }
+  };
+  const applyVerification = async (p) => {
+    try { const { data } = await api.post(`/research/providers/${p.id}/apply-verification`); toast.success(Object.keys(data.updated).length ? `Updated ${Object.keys(data.updated).join(", ")}` : "Nothing to update"); load(); }
+    catch (e) { toast.error(formatApiError(e)); }
+  };
   return (
     <section className="mt-10" data-testid="admin-providers">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -59,7 +69,16 @@ export function AdminProviders() {
                   <p className="text-xs text-brand-purple mt-0.5">Lists: {(p.lists || []).join(", ")}</p>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => setEdit({ ...EMPTY, ...p })} data-testid={`provider-edit-${p.id}`}><Pencil className="h-4 w-4" /></Button>
+                <Button size="sm" variant="outline" onClick={() => verify(p)} disabled={verifying === p.id} title="Re-verify phone & website via Perplexity" data-testid={`provider-verify-${p.id}`}><RefreshCw className={`h-4 w-4 ${verifying === p.id ? "animate-spin" : ""}`} /></Button>
                 <Button size="sm" variant="ghost" onClick={() => remove(p)} data-testid={`provider-delete-${p.id}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              </div>
+            )}
+            {p.verification && edit?.id !== p.id && (
+              <div className="mt-2 rounded-md border border-teal-200 bg-[#f4fbfb] p-2 text-xs" data-testid={`provider-verification-${p.id}`}>
+                <p className="font-semibold text-teal-700">Freshness check · {String(p.verification.checked_at || "").slice(0, 10)}</p>
+                {Object.entries(p.verification.checks || {}).map(([k, c]) => <p key={k} data-testid={`provider-verification-${p.id}-${k}`}><span className="capitalize">{k}</span>: {c.match ? <span className="text-align-green font-semibold">matches</span> : c.found ? <span className="text-amber-700 font-semibold">differs</span> : <span className="text-muted-foreground">not found</span>}{c.found && !c.match && <> — found <strong>{c.found}</strong> (directory: {c.directory || "—"})</>}</p>)}
+                {p.verification.summary && <p className="mt-1 text-muted-foreground line-clamp-3">{p.verification.summary}</p>}
+                {Object.values(p.verification.checks || {}).some((c) => c.found && !c.match) && <Button size="sm" variant="outline" className="mt-1 h-7" onClick={() => applyVerification(p)} data-testid={`provider-verification-apply-${p.id}`}>Apply found values</Button>}
               </div>
             )}
           </li>

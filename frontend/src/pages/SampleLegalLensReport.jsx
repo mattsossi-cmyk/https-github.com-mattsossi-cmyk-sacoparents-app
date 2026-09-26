@@ -84,6 +84,12 @@ export default function SampleLegalLensReport() {
             <thead><tr className="bg-brand-purple/10 text-brand-purple">{["Category", "Recommended Resource / Specialist", "Service Focus & Scope"].map((h) => <th key={h} className="border border-border p-2 text-left">{h}</th>)}</tr></thead>
             <tbody>{rep.resource_rows.map((r, i) => <tr key={i} className={i % 2 ? "bg-secondary/40" : ""}><td className="border border-border p-2 font-bold">{r.category}</td><td className="border border-border p-2 font-semibold">{r.resource}</td><td className="border border-border p-2">{r.focus}</td></tr>)}</tbody>
           </table></div>
+          <aside className="mt-3 rounded-md border border-teal-300 bg-[#e8f7f7] p-4 text-sm" data-testid="sample-lens-research-base">
+            <p className="text-xs font-bold uppercase tracking-widest text-teal-700">Research Base · Perplexity web research (fictional sample)</p>
+            <p className="mt-1 leading-relaxed">{rep.research_base?.text}</p>
+            <ol className="mt-2 list-decimal pl-5 text-xs">{(rep.research_base?.citations || []).map((c) => <li key={c.index} className="break-all text-brand-purple">{c.url}</li>)}</ol>
+            <p className="mt-2 text-[11px] text-muted-foreground">In a real report this footer is fetched live for the issues and pathways you select, near your registered ZIP code, and appears under Section 5 in the PDF. Professional-reviewed; never a finding or recommendation.</p>
+          </aside>
         </Sec>
         <Sec n={6} title="Conflict Resolution" testId="sample-lens-s7">
           <PathwayPicker lib={{ ...lib, notes: d.notes }} rep={rep} cls={cls} set={() => {}} readOnly />

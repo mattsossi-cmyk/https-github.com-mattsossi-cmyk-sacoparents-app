@@ -30,6 +30,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
   const [busy, setBusy] = useState(false);
   const [attest, setAttest] = useState(false);
   const [includeLegal, setIncludeLegal] = useState(false);
+  const [includeSources, setIncludeSources] = useState(false);
   const [agreementId, setAgreementId] = useState("");
 
   const load = () => { api.get(`/joint/reports/${rid}/professional-statement`).then((r) => { setData(r.data); setSt(r.data.statement); onStageChange?.(r.data.stage); }).catch(() => {}); };
@@ -48,7 +49,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
     if (!window.confirm("Submit the Joint Report and Professional Statement to the court? Both documents will be locked, timestamped and placed in the Judge Portal.")) return;
     setBusy(true);
     try {
-      const { data: d } = await api.post(`/joint/reports/${rid}/submit-to-court`, { attest, include_legal_report: includeLegal, agreement_report_id: agreementId || null });
+      const { data: d } = await api.post(`/joint/reports/${rid}/submit-to-court`, { attest, include_legal_report: includeLegal, include_research_sources: includeLegal && includeSources, agreement_report_id: agreementId || null });
       toast.success(`Submitted to court — version ${d.submission.version} locked`);
       setAttest(false); load();
     } catch (e) { toast.error(formatApiError(e)); }
@@ -124,6 +125,18 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
             <label className="mb-3 flex items-start gap-2 text-sm cursor-pointer rounded-md border border-border bg-white p-3" data-testid="submit-include-legal-label">
               <input type="checkbox" checked={includeLegal} onChange={(e) => setIncludeLegal(e.target.checked)} className="mt-1" disabled={!submittable} data-testid="submit-include-legal" />
               <span>Also attach the finalized <strong>Legal Lens Review and Report to Court</strong>{data.legal_lens.signature_name && <> (signed by {data.legal_lens.signature_name})</>}. The judge receives it alongside the Joint Report and Professional Statement, hash-sealed in the same frozen packet.</span>
+            </label>
+          )}
+          {["final", "submitted_to_court"].includes(data.legal_lens?.status) && data.legal_lens?.has_research_base && (
+            <label className={`mb-3 ml-6 flex items-start gap-2 text-sm cursor-pointer rounded-md border border-teal-200 bg-white p-3 ${includeLegal ? "" : "opacity-60"}`} data-testid="submit-include-sources-label">
+              <input type="checkbox" checked={includeLegal && includeSources} onChange={(e) => setIncludeSources(e.target.checked)} className="mt-1" disabled={!submittable || !includeLegal} data-testid="submit-include-sources" />
+              <span>Include <strong>Research Base sources</strong> — the judge sees the citation list (URLs only) from the report's Options &amp; Resources research footer. No findings or recommendations are drawn from them.</span>
+            </label>
+          )}
+          {["final", "submitted_to_court"].includes(data.legal_lens?.status) && data.legal_lens?.has_research_base && (
+            <label className={`mb-3 ml-6 flex items-start gap-2 text-sm cursor-pointer rounded-md border border-teal-200 bg-white p-3 ${includeLegal ? "" : "opacity-60"}`} data-testid="submit-include-sources-label">
+              <input type="checkbox" checked={includeLegal && includeSources} onChange={(e) => setIncludeSources(e.target.checked)} className="mt-1" disabled={!submittable || !includeLegal} data-testid="submit-include-sources" />
+              <span>Include <strong>Research Base sources</strong> — the judge sees the citation list (URLs only) from the report's Options &amp; Resources research footer. No findings or recommendations are drawn from them.</span>
             </label>
           )}
           {data.agreement_options?.length > 0 && (

@@ -182,4 +182,39 @@ def build_router(db, get_current_user) -> APIRouter:
         await db.providers.insert_one(dict(doc))
         return doc
 
+    @r.post("/research/providers/{pid}/verify")
+    async def verify_provider(pid: str, user=Depends(get_current_user)):
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        p = await db.providers.find_one({"id": pid}, {"_id": 0})
+        if not p:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        who = " ".join(x for x in (p.get("name"), p.get("organization"), "Texas") if x)
+        q = (f"What are the current public phone number and official website for {who}? Also state whether the service still appears to be operating. Cite sources. "
+             "After the prose, append a line 'PROVIDERS_JSON:' followed by a JSON array with ONE object with keys name, organization, phone, website, services.")
+        result = await sonar(q)
+        prose, found = _split_providers(result["answer"])
+        cur = found[0] if found else {}
+        norm = lambda s: re.sub(r"\D", "", s or "")  # noqa: E731
+        site = lambda s: re.sub(r"^https?://(www\.)?|/$", "", (s or "").strip().lower())  # noqa: E731
+        checks = {"phone": {"directory": p.get("phone", ""), "found": cur.get("phone", ""), "match": bool(cur.get("phone")) and norm(cur["phone"])[-10:] == norm(p.get("phone"))[-10:]},
+                  "website": {"directory": p.get("website", ""), "found": cur.get("website", ""), "match": bool(cur.get("website")) and site(cur["website"]) == site(p.get("website"))}}
+        verification = {"checked_at": datetime.now(timezone.utc).isoformat(), "checks": checks, "summary": prose[:1200], "citations": result["citations"][:6], "model": result.get("model")}
+        await db.providers.update_one({"id": pid}, {"$set": {"verification": verification, "last_verified_at": verification["checked_at"]}})
+        await _store(user, "verify", q, result)
+        return {"verification": verification, "disclaimer": DISCLAIMER}
+
+    @r.post("/research/providers/{pid}/apply-verification")
+    async def apply_verification(pid: str, user=Depends(get_current_user)):
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        p = await db.providers.find_one({"id": pid}, {"_id": 0})
+        if not p or not p.get("verification"):
+            raise HTTPException(status_code=404, detail="Run a freshness check first")
+        upd = {k: v["found"][:200] for k, v in p["verification"]["checks"].items() if v.get("found") and not v.get("match")}
+        if upd:
+            upd["updated_at"] = datetime.now(timezone.utc).isoformat()
+            await db.providers.update_one({"id": pid}, {"$set": upd})
+        return {"updated": {k: v for k, v in upd.items() if k != "updated_at"}}
+
     return r

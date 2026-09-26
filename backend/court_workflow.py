@@ -135,6 +135,7 @@ class CourtMessageIn(BaseModel):
 class SubmitIn(BaseModel):
     attest: bool = False
     include_legal_report: bool = False
+    include_research_sources: bool = False
     agreement_report_id: str | None = None
 
 
@@ -614,7 +615,7 @@ def _org_key(user: dict) -> str:
     return ((user.get("profile") or {}).get("organization") or "").strip().lower()
 
 
-async def _legal_pdf_bytes(db, doc: dict) -> tuple[bytes, dict]:
+async def _legal_pdf_bytes(db, doc: dict, include_sources: bool = False) -> tuple[bytes, dict]:
     """Finalized Professional Evaluation Report PDF + court-safe summary snapshot for a frozen court submission."""
     from legal_lens import classify_individual, classify_joint, court_summary, readiness
     from legal_lens import INTRO_TEXT, SAFETY_ALERT
@@ -628,7 +629,12 @@ async def _legal_pdf_bytes(db, doc: dict) -> tuple[bytes, dict]:
                       "alert": SAFETY_ALERT, "intro": INTRO_TEXT},
             "case": {"id": doc["id"], "case_code": doc.get("case_code"), "child_name": doc.get("child_name"), "subject_label": doc.get("subject_label")}}
     await db.professional_reports.update_one({"case_id": doc["id"]}, {"$set": {"status": "submitted_to_court", "updated_at": _iso(_now())}})
-    return build_legal_lens_pdf(view), court_summary(rep)
+    summary = court_summary(rep)
+    rb = rep.get("research_base") or {}
+    if include_sources and rb.get("citations"):
+        summary["research_sources"] = {"citations": rb["citations"][:10], "fetched_at": rb.get("fetched_at"), "model": rb.get("model"),
+                                       "note": "Cited web sources consulted by the professional for the Research Base under Options & Resources. Sources only — no findings, diagnoses or recommendations are drawn from them."}
+    return build_legal_lens_pdf(view), summary
 
 
 async def _agreement_pdf_bytes(db, doc: dict, user: dict, agreement_id: str | None) -> tuple[bytes | None, dict | None]:
@@ -708,7 +714,7 @@ async def _effective_library(db, user: dict) -> dict:
 def _statement_payload(doc: dict, user: dict, lens: dict | None, packets: list, org_lib: dict) -> dict:
     findings = joint_findings(doc)
     return {"statement": doc.get("professional_statement") or {k: "" for k in STATEMENT_FIELDS} | {"status": "draft", "role": "", "materials_reviewed": []}, "attestation_text": STATEMENT_ATTESTATION,
-            "legal_lens": {"status": (lens or {}).get("status", "not_started"), "signature_name": (lens or {}).get("signature_name", "")}, "level_history": level_history(packets),
+            "legal_lens": {"status": (lens or {}).get("status", "not_started"), "signature_name": (lens or {}).get("signature_name", ""), "has_research_base": bool(((lens or {}).get("research_base") or {}).get("citations"))}, "level_history": level_history(packets),
             "roles": STATEMENT_ROLES, "materials": STATEMENT_MATERIALS, "suggested_score": suggested_score(doc), "tiers": [tier_for(t["range"][0]) for t in TIERS.values()],
             "findings": findings, "subject_options": (findings or {}).get("subject_options") or [], "library": clean_library(user.get("resource_library") or {}),
             "org_library": org_lib, "organization": (user.get("profile") or {}).get("organization") or "",
@@ -736,11 +742,11 @@ async def _compare_rows(db, doc: dict, legal_summary: dict | None) -> dict | Non
     return {"prev": hist[-1], "cur": cur}
 
 
-async def _submission_pdfs(db, doc: dict, pro: dict, app_url, include_legal: bool) -> tuple[bytes, bytes, bytes | None, dict | None]:
+async def _submission_pdfs(db, doc: dict, pro: dict, app_url, include_legal: bool, include_sources: bool = False) -> tuple[bytes, bytes, bytes | None, dict | None]:
     """Joint Report PDF, Professional Statement PDF and (optionally) the finalized Legal Lens PDF + court-safe summary."""
     joint_pdf = build_joint_pdf({**generate_joint_report(doc), "professional": {"name": pro["name"], "credentials_verified": pro["credentials_verified"]},
                                  "verify": {"case_code": doc.get("case_code"), "url": f"{app_url()}/verify?code={doc.get('case_code')}"}})
-    legal_pdf, legal_summary = (await _legal_pdf_bytes(db, doc)) if include_legal else (None, None)
+    legal_pdf, legal_summary = (await _legal_pdf_bytes(db, doc, include_sources)) if include_legal else (None, None)
     return joint_pdf, _statement_pdf_bytes(doc, pro, await _compare_rows(db, doc, legal_summary)), legal_pdf, legal_summary
 
 
@@ -844,7 +850,7 @@ def _submit_routes(c: Ctx) -> APIRouter:
         require_pro(user)
         doc = await _own_case(db, rid, user)
         court = assert_submittable(doc, body)
-        joint_pdf, stmt_pdf, legal_pdf, legal_summary = await _submission_pdfs(db, doc, await pro_profile(user["_id"]), c.app_url, body.include_legal_report)
+        joint_pdf, stmt_pdf, legal_pdf, legal_summary = await _submission_pdfs(db, doc, await pro_profile(user["_id"]), c.app_url, body.include_legal_report, body.include_research_sources)
         agreement_pdf, agreement_card = await _agreement_pdf_bytes(db, doc, user, body.agreement_report_id)
         combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []) + ([agreement_pdf] if agreement_pdf else []))
         version = len(doc.get("court_submissions") or []) + 1

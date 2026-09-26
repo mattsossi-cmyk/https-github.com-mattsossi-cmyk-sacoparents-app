@@ -58,6 +58,7 @@ export function CourtLegalSummary({ s }) {
       </Block>
       {s.child_focus?.length > 0 && <Block title="Child-Focused Issues" testId="court-legal-child-focus"><ul className="list-disc pl-4 space-y-1">{s.child_focus.map((c) => <li key={c.label}><strong>{c.label}</strong>{c.note ? ` — ${c.note}` : ""}</li>)}</ul></Block>}
       {s.court_summary && <Block title="Concise Court / Referral Summary" testId="court-legal-court-summary"><p className="whitespace-pre-wrap">{s.court_summary}</p></Block>}
+      {s.research_sources?.citations?.length > 0 && <Block title="Research Base — Sources" testId="court-legal-research-sources"><ol className="list-decimal pl-4 space-y-0.5 text-xs">{s.research_sources.citations.map((c) => <li key={c.index}><a href={c.url} target="_blank" rel="noreferrer" className="text-brand-purple underline break-all">{c.url}</a></li>)}</ol><p className="text-[11px] italic text-muted-foreground mt-1">{s.research_sources.note}</p></Block>}
       {s.professional_summary && <Block title="Professional Statement" testId="court-legal-statement"><p className="whitespace-pre-wrap">{s.professional_summary}</p><p className="text-[11px] italic text-muted-foreground">The professional's own judgment, distinct from parent-reported information and system/AI summaries.</p></Block>}
       <div className="grid gap-3 sm:grid-cols-2">
         <Block title="Short-Term Goals (30–90 days)" testId="court-legal-short"><ul className="list-disc pl-4 space-y-1">{(s.short_term_goals || []).map((g, i) => <li key={i}>{g}</li>)}</ul></Block>
