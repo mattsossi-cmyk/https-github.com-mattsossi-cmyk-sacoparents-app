@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+import { SnapshotStrip } from "./SnapshotStrip";
 import { TrendSparkline } from "./TrendSparkline";
 
 /**
@@ -62,6 +63,11 @@ export function AlignmentHub({
   // Guided-journey chat wizard (iter220). Toolkit tiles and the
   // Foundation Statement panel both invoke this with a topic key.
   openGuidedJourney = () => {},
+  // Snapshot Library (iter227). Last-N committed Guided Journey runs
+  // + a callback to re-download in any variant (standard / fridge /
+  // fridge_pair) without re-running the wizard.
+  snapshotHistory = [],
+  onSnapshotRedownload = () => {},
 }) {
   return (
     <div className="space-y-4" data-testid="hub-section-alignment">
@@ -89,6 +95,12 @@ export function AlignmentHub({
               </p>
             </div>
           </div>
+
+          <SnapshotStrip
+            history={snapshotHistory}
+            onDownload={onSnapshotRedownload}
+            limit={3}
+          />
 
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="relative">

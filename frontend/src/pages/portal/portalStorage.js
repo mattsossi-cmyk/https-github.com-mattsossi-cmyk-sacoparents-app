@@ -20,6 +20,11 @@ export const SAFETY_PLAN_KEY = "sacoparents_safety_plan";
 // GUIDED_DRAFT_TTL_MS (14 days) so we don't hand parents stale material.
 export const GUIDED_DRAFT_KEY_PREFIX = "sacoparents_guided_draft_";
 export const GUIDED_DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+// Snapshot Library (iter227): committed Guided Journey runs so a
+// parent can re-download the last-N cards without re-running the
+// wizard.
+export const SNAPSHOT_HISTORY_KEY = "sacoparents_snapshot_history";
+export const SNAPSHOT_HISTORY_MAX = 12;
 
 export const PRESETS = {
   late_handoff: {

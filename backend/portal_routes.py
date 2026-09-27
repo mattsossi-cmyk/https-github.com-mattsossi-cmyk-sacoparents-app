@@ -148,6 +148,7 @@ def _empty_portal_state() -> Dict[str, Any]:
         "safety_ack": None,
         "safety_plan": None,
         "guided_drafts": None,
+        "snapshot_history": None,
         "updated_at": None,
     }
 
@@ -170,6 +171,10 @@ class PortalStatePayload(BaseModel):
     # frontend GuidedJourneyModal writes on every parent-send so a
     # signed-in parent can resume a mid-wizard session on a new device.
     guided_drafts: Optional[Dict[str, Any]] = None
+    # Snapshot Library (iter227). Ordered list (newest first) of
+    # committed Guided Journey runs so the toolkit's "Recent
+    # snapshots" strip can re-download without re-running the wizard.
+    snapshot_history: Optional[List[Dict[str, Any]]] = None
 
 
 @router.get("/state")
@@ -278,6 +283,72 @@ def _sanitize_guided_drafts(
     return out or None
 
 
+_MAX_SNAPSHOT_HISTORY = 12
+_MAX_SNAPSHOT_BYTES = 12_000
+
+
+def _sanitize_snapshot_history(
+    raw: Optional[List[Dict[str, Any]]],
+) -> Optional[List[Dict[str, Any]]]:
+    """Whitelist committed Guided Journey snapshots for the toolkit strip.
+
+    Each item must carry ``topic``, ``answers`` (list), ``saved_at``
+    (iso string), and optional ``id``, ``save_key``, ``category``.
+    Extra keys are dropped defensively. Total is capped at
+    ``_MAX_SNAPSHOT_HISTORY`` items (newest first) and each item at
+    ``_MAX_SNAPSHOT_BYTES`` bytes so a bad client can't push runaway
+    data into portal_state.
+    """
+    if raw is None:
+        return None
+    if not isinstance(raw, list):
+        return None
+    import json as _json
+
+    out: List[Dict[str, Any]] = []
+    for item in raw:
+        if len(out) >= _MAX_SNAPSHOT_HISTORY:
+            break
+        if not isinstance(item, dict):
+            continue
+        topic = item.get("topic")
+        if topic not in _GUIDED_TOPICS:
+            continue
+        answers = item.get("answers")
+        if not isinstance(answers, list) or not answers:
+            continue
+        clean_answers: List[Dict[str, str]] = []
+        for qa in answers[:40]:
+            if not isinstance(qa, dict):
+                continue
+            q = str(qa.get("question") or "")[:400]
+            a = str(qa.get("answer") or "")[:2000]
+            if q or a:
+                clean_answers.append({"question": q, "answer": a})
+        if not clean_answers:
+            continue
+        cleaned: Dict[str, Any] = {
+            "topic": topic,
+            "answers": clean_answers,
+            "saved_at": str(item.get("saved_at") or "")[:40],
+        }
+        if "id" in item:
+            try:
+                cleaned["id"] = int(item["id"])
+            except (TypeError, ValueError):
+                pass
+        if item.get("save_key"):
+            cleaned["save_key"] = str(item["save_key"])[:64]
+        if item.get("category"):
+            cleaned["category"] = str(item["category"])[:64]
+        if item.get("safety_flagged"):
+            cleaned["safety_flagged"] = True
+        if len(_json.dumps(cleaned, default=str)) > _MAX_SNAPSHOT_BYTES:
+            continue
+        out.append(cleaned)
+    return out or None
+
+
 @router.put("/state")
 async def put_state(
     payload: PortalStatePayload,
@@ -333,6 +404,10 @@ async def put_state(
         updates["safety_plan"] = _sanitize_safety_plan(updates["safety_plan"])
     if "guided_drafts" in updates:
         updates["guided_drafts"] = _sanitize_guided_drafts(updates["guided_drafts"])
+    if "snapshot_history" in updates:
+        updates["snapshot_history"] = _sanitize_snapshot_history(
+            updates["snapshot_history"]
+        )
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
 
     await db[_PORTAL_COLLECTION].update_one(

@@ -22,6 +22,8 @@ import {
   REASSESSMENT_KEY,
   SAFETY_ACK_KEY,
   SAFETY_PLAN_KEY,
+  SNAPSHOT_HISTORY_KEY,
+  SNAPSHOT_HISTORY_MAX,
   SYNC_PENDING_KEY,
   computeHealthLabel,
   computeKudosStreak,
@@ -70,6 +72,10 @@ export default function SacoparentsPortal() {
   const [milestones, setMilestones] = useState([]);
   const [reassessments, setReassessments] = useState([]);
   const [foundationText, setFoundationText] = useState(DEFAULT_FOUNDATION);
+  // Snapshot Library (iter227) — committed Guided Journey runs, newest
+  // first. Capped at SNAPSHOT_HISTORY_MAX both here and by the server
+  // sanitizer so a bad client can't push runaway data.
+  const [snapshotHistory, setSnapshotHistory] = useState([]);
   const [legalReport, setLegalReport] = useState(DEFAULT_LEGAL_REPORT);
   const [healthIndex, setHealthIndex] = useState(DEFAULT_HEALTH_INDEX);
   const [courtKey, setCourtKey] = useState("");
@@ -177,6 +183,11 @@ export default function SacoparentsPortal() {
 
     const seededSafetyPlan = readJson(SAFETY_PLAN_KEY, null);
     setSafetyPlan(seededSafetyPlan);
+
+    const seededSnapshotHistory = readJson(SNAPSHOT_HISTORY_KEY, []);
+    if (Array.isArray(seededSnapshotHistory)) {
+      setSnapshotHistory(seededSnapshotHistory);
+    }
   }, []);
 
   // ----------------------------------------------------------------
@@ -252,6 +263,12 @@ export default function SacoparentsPortal() {
             /* ignore quota / SSR */
           }
         }
+        // iter227 — hydrate snapshot history so re-download works
+        // across devices for a signed-in parent.
+        if (Array.isArray(s.snapshot_history)) {
+          setSnapshotHistory(s.snapshot_history);
+          writeJson(SNAPSHOT_HISTORY_KEY, s.snapshot_history);
+        }
         hasHydratedFromServerRef.current = true;
       } catch {
         hasHydratedFromServerRef.current = true;
@@ -319,6 +336,7 @@ export default function SacoparentsPortal() {
           safety_ack: safetyAck,
           safety_plan: safetyPlan,
           guided_drafts: guidedDrafts,
+          snapshot_history: snapshotHistory,
         });
         writeString(SYNC_PENDING_KEY, "");
         setSyncStatus("synced");
@@ -343,6 +361,7 @@ export default function SacoparentsPortal() {
     safetyAck,
     safetyPlan,
     guidedDraftsRev,
+    snapshotHistory,
   ]);
 
   // Flush queued PUT when we come back online
@@ -902,6 +921,24 @@ export default function SacoparentsPortal() {
         return;
       }
       const today = new Date().toISOString().substring(0, 10);
+      // iter227 — record every committed run so the "Recent snapshots"
+      // strip on the toolkit can re-download without re-running the
+      // wizard. Newest first, capped at SNAPSHOT_HISTORY_MAX.
+      const snapshotEntry = {
+        id: Date.now(),
+        topic: guidedTopic,
+        answers,
+        saved_at: new Date().toISOString(),
+        save_key,
+        category: category || null,
+        safety_flagged: !!safetyFlagged,
+      };
+      const nextHistory = [snapshotEntry, ...snapshotHistory].slice(
+        0,
+        SNAPSHOT_HISTORY_MAX
+      );
+      setSnapshotHistory(nextHistory);
+      writeJson(SNAPSHOT_HISTORY_KEY, nextHistory);
       if (save_key === "foundation_text") {
         // Prepend the guided summary to the existing foundation text
         // so the parent's prior draft is preserved.
@@ -950,7 +987,7 @@ export default function SacoparentsPortal() {
       }
       setGuidedTopic(null);
     },
-    [foundationText, alignRecords, milestones, openAssessmentFolder]
+    [foundationText, alignRecords, milestones, openAssessmentFolder, guidedTopic, safetyFlagged, snapshotHistory]
   );
 
   const downloadPdfFromApi = useCallback(async (path, filename, body) => {
@@ -1464,6 +1501,8 @@ export default function SacoparentsPortal() {
                   safetyFlagged={safetyFlagged}
                   onEmailFoundationToCoparent={onEmailFoundationToCoparent}
                   openGuidedJourney={openGuidedJourney}
+                  snapshotHistory={snapshotHistory}
+                  onSnapshotRedownload={downloadGuidedSnapshot}
                 />
               </>
             )}
