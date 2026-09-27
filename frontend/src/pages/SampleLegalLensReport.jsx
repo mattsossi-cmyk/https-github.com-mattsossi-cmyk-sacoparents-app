@@ -88,7 +88,7 @@ export default function SampleLegalLensReport() {
         <Sec n={6} title="Child-Focused Legal Issues" testId="sample-lens-s4"><ChildFocusSummary categories={lib.child_focus_categories} value={rep.child_focus} testId="sample-lens-child-focus" /></Sec>
         <Sec n={7} title="Options & Resources" testId="sample-lens-s5">
           <div className="overflow-x-auto"><table className="w-full border-collapse text-xs" data-testid="sample-lens-resources">
-            <thead><tr className="bg-brand-purple/10 text-brand-purple">{["Category", "Recommended Resource / Specialist", "Service Focus & Scope"].map((h) => <th key={h} className="border border-border p-2 text-left">{h}</th>)}</tr></thead>
+            <thead><tr className="bg-brand-blue/10 text-brand-blue">{["Category", "Recommended Resource / Specialist", "Service Focus & Scope"].map((h) => <th key={h} className="border border-border p-2 text-left">{h}</th>)}</tr></thead>
             <tbody>{rep.resource_rows.map((r, i) => <tr key={i} className={i % 2 ? "bg-secondary/40" : ""}><td className="border border-border p-2 font-bold">{r.category}</td><td className="border border-border p-2 font-semibold">{r.resource}</td><td className="border border-border p-2">{r.focus}</td></tr>)}</tbody>
           </table></div>
           <aside className="mt-3 rounded-md border border-teal-300 bg-[#e8f7f7] p-4 text-sm" data-testid="sample-lens-research-base">

@@ -74,7 +74,7 @@ export function ChildFocusList({ categories = [], value = {}, onChange, testId =
       {categories.map(([k, label]) => {
         const v = value[k] || {};
         return (
-          <div key={k} className={`rounded-md border p-2 ${v.checked ? "border-brand-purple/50 bg-white" : "border-border bg-white/60"}`} data-testid={`${testId}-${k}`}>
+          <div key={k} className={`rounded-md border p-2 ${v.checked ? "border-brand-teal/50 bg-brand-teal/5" : "border-border bg-white/60"}`} data-testid={`${testId}-${k}`}>
             <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={!!v.checked} onChange={(e) => upd(k, { checked: e.target.checked })} data-testid={`${testId}-${k}-check`} />{label}</label>
             {v.checked && <input value={v.note || ""} onChange={(e) => upd(k, { note: e.target.value })} placeholder="Optional note (neutral, child-focused)" className="mt-1 h-8 w-full rounded-md border border-input px-2 text-xs" data-testid={`${testId}-${k}-note`} />}
           </div>

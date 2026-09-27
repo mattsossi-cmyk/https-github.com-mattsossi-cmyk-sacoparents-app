@@ -338,10 +338,10 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     _body(pdf, "What do the parents' differences mean for the child and the dispute?", italic=True)
     cf = rep.get("child_focus") or {}
     ticked = [[lbl, cf[k].get("note") or "Identified as an area affecting the child's needs.", "Structured, child-focused discussion; written protocol where helpful."] for k, lbl in CHILD_FOCUS_CATEGORIES if cf.get(k, {}).get("checked")]
-    _lens_table(pdf, ["Issue", "Current Concern", "Potential Focus"], ticked, [40, 74, 60]) if ticked else _body(pdf, "No child-focused categories identified.", italic=True)
+    _lens_table(pdf, ["Issue", "Current Concern", "Potential Focus"], ticked, [40, 74, 60], header=(TEAL_FILL, TEAL)) if ticked else _body(pdf, "No child-focused categories identified.", italic=True)
     heading(pdf, 7, "Options & Resources")
     rows = [[r.get("category", ""), r.get("resource", ""), r.get("focus", "")] for r in (rep.get("resource_rows") or [])]
-    _lens_table(pdf, ["Category", "Recommended Resource / Specialist", "Purpose / Service Focus"], rows, [40, 60, 74]) if rows else _body(pdf, "No resources selected.", italic=True)
+    _lens_table(pdf, ["Category", "Recommended Resource / Specialist", "Purpose / Service Focus"], rows, [40, 60, 74], header=(BLUE_FILL, BLUE)) if rows else _body(pdf, "No resources selected.", italic=True)
     _research_base(pdf, rep.get("research_base"))
     new_page(pdf)
     heading(pdf, 8, "Conflict Resolution Pathways")

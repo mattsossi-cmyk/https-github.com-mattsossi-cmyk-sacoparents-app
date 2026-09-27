@@ -65,7 +65,7 @@ function ResourceRows({ rows = [], lib, onChange }) {
   const cat = (p) => (/education/i.test(p.specialty) ? "Educational Assessment" : /children in the middle/i.test(p.specialty) ? "Parent Education" : /options|forensic|facilitat/i.test(p.specialty) ? "Clinical & Forensics" : "Joint / Co-Parenting");
   return (
     <div className="space-y-2" data-testid="lens-resource-rows">
-      <div className="hidden sm:grid grid-cols-[1.1fr_1.4fr_2fr_auto] gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground"><span>Category</span><span>Recommended Resource / Specialist</span><span>Service Focus &amp; Scope</span><span /></div>
+      <div className="hidden sm:grid grid-cols-[1.1fr_1.4fr_2fr_auto] gap-2 rounded-md bg-brand-blue/10 px-2 py-1.5 text-xs font-bold uppercase tracking-widest text-brand-blue"><span>Category</span><span>Recommended Resource / Specialist</span><span>Service Focus &amp; Scope</span><span /></div>
       {rows.map((r, i) => (
         <div key={i} className="grid gap-2 sm:grid-cols-[1.1fr_1.4fr_2fr_auto] rounded-md border border-border bg-white p-2" data-testid={`lens-resource-row-${i}`}>
           <select value={r.category} onChange={(e) => upd(i, "category", e.target.value)} className="h-8 rounded-md border border-input bg-white px-1 text-xs" data-testid={`lens-resource-category-${i}`}>{lib.resource_categories.map((c) => <option key={c}>{c}</option>)}</select>

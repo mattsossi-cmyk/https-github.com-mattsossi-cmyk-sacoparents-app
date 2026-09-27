@@ -1024,9 +1024,12 @@ def _lens_resources(pdf: FPDF, title: str, items: list, provider: dict | None) -
     pdf.ln(1)
 
 
-def _lens_table(pdf: FPDF, headers: list, rows: list, widths: list, active: set | None = None, compact: bool = False, next_row: int | None = None) -> None:
+def _lens_table(pdf: FPDF, headers: list, rows: list, widths: list, active: set | None = None, compact: bool = False, next_row: int | None = None, header: tuple | None = None) -> None:
     pdf.set_font(FONT, "", 7.5 if compact else 8)
-    with pdf.table(col_widths=widths, text_align="LEFT", line_height=3.6 if compact else 4.2, headings_style=FontFace(emphasis="BOLD", color=(255, 255, 255), fill_color=PURPLE), borders_layout="ALL") as table:
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_text_color(*BODY)
+    head = FontFace(emphasis="BOLD", color=header[1], fill_color=header[0]) if header else FontFace(emphasis="BOLD", color=(255, 255, 255), fill_color=PURPLE)
+    with pdf.table(col_widths=widths, text_align="LEFT", line_height=3.6 if compact else 4.2, headings_style=head, borders_layout="ALL") as table:
         hdr = table.row()
         for h in headers:
             hdr.cell(_s(h))

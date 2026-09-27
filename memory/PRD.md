@@ -788,3 +788,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `SampleLegalLensReport.jsx` restructured to the 11 numbered sections (new testids sample-lens-s2 = snapshot, s3 = Parent A, s4b = Parent B, s9-legal); `SampleLensTour.jsx` steps rewritten (11). `sample_legal_lens.py` gained section-9 fields.
 - Judge: `GET /api/court-dashboard/packets/{pid}/legal-report-sections` → {pages: {n: page}, total_pages} by scanning the frozen PDF text after the "How to Read" page; `legal-report.pdf?inline=1` serves inline so `#page=N` works. `JudgeReportGuide` accepts `packetId` and renders p.N links; also embedded in `CourtCase.jsx` under the attached Professional Report block.
 - Tests: extended `test_legal_report.py`.
+
+## 2026-06 — Report §6/§7 table restyle
+- Professional Report §6 Child-Focused Legal Issues and §7 Options & Resources tables now use light-tinted headers (teal/blue) with white rows across PDF, editor and sample page.
+- Root cause of the solid-purple rows: fpdf2 tables inherit the current fill colour left by the heading badge; `_lens_table` (pdf_report.py) now resets fill to white and accepts `header=(fill, text)`.
