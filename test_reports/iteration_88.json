@@ -1,0 +1,26 @@
+{
+  "summary": "iter232 SA CoParents Assessment Guide chatbot — routing correctness + copy fidelity verified end-to-end via Playwright on the public URL. Modal opens from the Coparenting Journey Toolkit CTA ('Ask the Assessment Guide — which one should I start with?'), lists 7 numbered options + 'I'm Not Sure Where to Start' help card with founder-verbatim copy, and correctly routes each key to its target surface. Help-me-decide triage returns the expected recommendation for all 5 branches (safety-yes, area=medical, area=psychological, communication-focus=yes, and default coparenting fallback).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "AssessmentGuideChat.jsx OPTIONS array copy matches the founder's authored text verbatim (verified in modal.innerText for coparenting/communication/safety/educational/medical/psychological/court): headings, why-strings, topic bullets, and safety+communication footnotes all render intact.",
+    "Routing map in SacoparentsPortal.onStartAssessment (line 999-1034) is correct: {coparenting,educational,medical,psychological} → openGuidedJourney(key) opens GuidedJourneyModal with the matching TOPIC_TITLES entry — verified 'Co-parenting Assessment — guided', 'Educational Assessment — guided', 'Medical Needs Assessment — guided', 'Psychological Assessment — guided' all render. communication → hubSection=biff + scroll to #biff-tab-section (visible, top≈164, h≈996). safety → setSafetyOpen(true) re-opens data-testid='modal-safety-screen'. court → setHubSection('alignment') + setScreen('gateway') + enterCourtPath() lands the parent on screen-court-key (court-key-input + verify-court-key-btn present). No dead-end routes; every key hits an existing surface.",
+    "openGuidedJourney (line 1039-1051) has stale-closure risk: useCallback deps are [] but the fn is only used to set guidedTopic + write FIRST_ENGAGEMENT_KEY, both of which don't depend on captured state — so functionally correct, and the follow-up nudge suppression (iter231) still fires because engagement is marked before the guided modal renders.",
+    "recommendFromHelp (line 182-188) short-circuits on safety=yes before area/communication answers are consulted — matches founder's ask ('safety first'). However the UI still walks parents through Q1→Q2→Q3 even if Q1=yes; this is arguably a wasted 2 taps for a safety-flagged parent but it lets triage capture the fuller picture. Non-blocking; noting for the founder.",
+    "AssessmentGuideChat header pill flips to 'Grey-rock' when safetyFlagged=true (line 249) — parity with IntroChatBot. Not exercised in this run (safety-flagged bypass path clears the flag), but code path is trivially correct.",
+    "back-to-list ('Choose Another Area') and back-from-recap ('Show me the full list') both wired correctly; help-recap intentionally hides the option list so a follow-up click on assessment-option-* is not possible until the parent clicks assessment-help-back-from-recap. Behaviour matches the design; a test-author gotcha, not a bug."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (no backend surface for iter232)", "frontend": "100% — 7/7 option routes verified, 5/5 help-triage branches verified, modal open/close/back-to-list verified"},
+  "test_credentials": "n/a — public portal, all localStorage-only",
+  "seed_data_creation": "localStorage cleared at start of each Playwright run to force the intro chatbot + safety screen flow.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter232 AssessmentGuideChat at /app/frontend/src/pages/portal/AssessmentGuideChat.jsx exposes data-testids: assessment-guide-modal, assessment-guide-close, assessment-guide-scroll, assessment-option-{coparenting|communication|safety|educational|medical|psychological|court|help}, assessment-start-{key}, assessment-back-to-list, assessment-help-q-{0|1|2}-{value}, assessment-help-recommend, assessment-help-recommend-label, assessment-help-start-{key}, assessment-help-back, assessment-help-back-from-recap. Trigger: open-assessment-guide button on parent-journey-toolkit. Routing lives in SacoparentsPortal.onStartAssessment (SacoparentsPortal.jsx:999). Guided journey topics keyed identically to GuidedJourneyModal.TOPIC_TITLES. To reach the toolkit in tests: localStorage.clear() -> reload -> click intro-start-parent-journey -> answer safety screen (safety-q-phys-yes / safety-q-coerce-no / safety-q-device-yes) -> submit-safety-screen-btn."
+}

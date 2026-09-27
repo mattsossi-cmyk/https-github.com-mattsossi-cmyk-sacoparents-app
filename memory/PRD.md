@@ -45,6 +45,113 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-26 — Iter232 · SA CoParents Assessment Guide Chatbot
+
+Second chatbot layered on the Coparenting Journey. Unlike the
+`IntroChatBot` (iter228) which decides between VOLUNTARY vs
+COURT-ORDERED paths, this one helps a parent who is already
+inside the Coparenting Journey pick WHICH ASSESSMENT to open
+first. Copy is authored verbatim by the founder; do not
+paraphrase. Verified in iter88 (frontend 100% — 7/7 routes + 5/5
+triage branches).
+
+**🟢 P1 — AssessmentGuideChat component**
+- New `/app/frontend/src/pages/portal/AssessmentGuideChat.jsx`
+  (~485 lines). Chat-style modal with four phases:
+    * `list` — greeting + 7 numbered assessment cards
+      (Co-Parenting / Communication / Safety / Educational
+      / Medical / Psychological / Court-Ordered) + a dashed
+      "I'm Not Sure Where to Start" card that opens the
+      mini-triage.
+    * `recap` — per-selection card showing "You've selected
+      {label}" + "Why parents choose this assessment" +
+      "What you'll explore" (topic bullets) + optional
+      italic footnote (Communication + Safety only) +
+      "What happens afterward". Footer swaps to the
+      option's own CTA label (e.g. "Start Medical
+      Assessment") plus "Choose Another Area".
+    * `help` — 3-question triage (Yes/No/Not-sure for
+      safety, 4-way multi-choice for child-area, Yes/No/
+      Not-sure for communication focus).
+    * `help-recap` — recommend card + start-recommended CTA
+      + "Show me the full list".
+- `recommendFromHelp(answers)` logic: safety-yes → safety;
+  else specific child area if answered; else
+  communication-yes → communication; else default →
+  coparenting.
+- Two visual color tracks: purple for the 5 co-parenting/
+  child-focused options + safety-color amber for the two
+  Safety + Court-Ordered options. Header chip flips to
+  "Grey-rock" when `safetyFlagged` prop is true, mirroring
+  the IntroChatBot header parity.
+- No LLM — copy is fully static so it stays in exact
+  lockstep with the founder's authored text.
+
+**🟢 P1 — Container routing (`onStartAssessment(key)`)**
+- New callback in `SacoparentsPortal.jsx` that maps each
+  option key to its correct existing surface — never
+  introduces a new dead-end screen:
+    * `coparenting` / `educational` / `medical` /
+      `psychological` → `openGuidedJourney(key)` which
+      opens the existing Guided Journey wizard for that
+      topic (also marks first-engagement so the iter231
+      follow-up nudge stops).
+    * `communication` → `setHubSection('biff')` + scroll
+      to the newly-added `#biff-tab-section` anchor so
+      the BIFF Coach is front-and-center.
+    * `safety` → `setSafetyOpen(true)` so the parent can
+      retake the Safety Screen through the existing
+      safeguard flow.
+    * `court` → `setHubSection('alignment')` +
+      `setScreen('gateway')` + `enterCourtPath()` so the
+      parent lands on the Court-Key verification screen
+      via the existing door + safety-first flow.
+
+**🟢 P1 — Entry point**
+- New "Ask the Assessment Guide — which one should I start
+  with?" pill (`open-assessment-guide` testid) at the top of
+  the Coparenting Journey toolkit card in `AlignmentHub.jsx`,
+  sandwiched between the SnapshotStrip and the tile grid.
+  Purple gradient so it reads as the primary "not sure?"
+  entrypoint without competing with the toolkit tiles.
+
+**Files touched**
+- `/app/frontend/src/pages/portal/AssessmentGuideChat.jsx`
+  (new).
+- `/app/frontend/src/pages/portal/AlignmentHub.jsx` — new
+  `onOpenAssessmentGuide` prop + pill button rendered
+  above the tile grid.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` —
+  `assessmentGuideOpen` state, `onStartAssessment`
+  callback (~35 lines), `<AssessmentGuideChat>` mount,
+  `#biff-tab-section` id on the BiffTab wrapper.
+
+**Verified — iter88 test report**
+- Modal opens via the toolkit pill; all 7 numbered options
+  visible + 8th "I'm Not Sure Where to Start" card.
+- Copy fidelity: all 7 headings, why-strings, topic
+  bullets, and both italic footnotes (Communication +
+  Safety) render verbatim.
+- All 7 routes hit their intended surface: guided modal
+  for coparenting/educational/medical/psychological,
+  BIFF tab (`#biff-tab-section`) for communication,
+  safety modal (`modal-safety-screen`) for safety,
+  Court-Key verification screen for court.
+- All 5 triage branches recommend correctly (safety-yes →
+  Safety; area=medical → Medical; area=psychological →
+  Psychological; communication-yes → Communication;
+  default → Co-Parenting).
+- Zero horizontal overflow at 390×844.
+
+**Deferred (P2 — iter88 review, informational)**
+- Safety-yes on Q1 still walks the parent through Q2+Q3
+  before showing the recap. Founder-approved: lets the
+  triage capture the fuller picture even when Q1 has
+  already decided the recommendation.
+- Legacy stale-closure note on `openGuidedJourney` — the
+  callback captures no state so no risk today.
+
+
 ### 2026-02-26 — Iter229–231 · Delete + Trendline + Follow-up Guide
 
 Three follow-on features to iter228, all shipped in one batch and
