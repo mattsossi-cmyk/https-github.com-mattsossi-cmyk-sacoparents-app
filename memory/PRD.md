@@ -45,6 +45,63 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter233 · Assessment Guide moves inline on Alignment & Tools
+
+Founder feedback: "we want the chat box insert we just talked about
+to go on alignment and tools page". The Assessment Guide is now
+mounted inline directly above the toolkit tile grid instead of
+opening as a popup.
+
+**🟢 P1 — AssessmentGuideChatInline export**
+- Refactored `/app/frontend/src/pages/portal/AssessmentGuideChat.jsx`.
+  The chat body (list · recap · help · help-recap phases + all
+  option cards and copy) was extracted into an internal
+  `<AssessmentGuideBody />` sub-component and is now shared between
+  two exports:
+  - `AssessmentGuideChat` (unchanged) — modal, key-remounted on
+    each open so phase resets cleanly. Still available for import
+    by any future intro/follow-up flow.
+  - `AssessmentGuideChatInline` (new) — same body wrapped in a
+    normal card (no fixed overlay, no viewport-height column, no
+    close button). Scroll area capped at `max-h-[520px]` so it
+    can't swallow the toolkit below it. After a routing tap the
+    chat auto-resets to the list phase for the next triage cycle.
+- Copy stays byte-for-byte identical between the two variants —
+  strict lockstep invariant preserved.
+
+**🟢 P1 — AlignmentHub wiring**
+- `/app/frontend/src/pages/portal/AlignmentHub.jsx`:
+  - Removed the `open-assessment-guide` purple CTA button.
+  - New prop `onStartAssessment` (replaces
+    `onOpenAssessmentGuide`), passed straight through to the
+    inline chat's routing callback.
+  - Renders `<AssessmentGuideChatInline />` between the
+    `SnapshotStrip` and the tool tile grid.
+
+**🟢 P1 — SacoparentsPortal wiring**
+- `/app/frontend/src/pages/SacoparentsPortal.jsx`:
+  - Removed dead state (`assessmentGuideOpen` /
+    `setAssessmentGuideOpen`) and the mounted modal instance —
+    nothing was left calling `setAssessmentGuideOpen(true)` after
+    the CTA button was removed.
+  - Removed the now-unused `AssessmentGuideChat` import (the modal
+    export is still available in the module for future flows).
+  - Passes `onStartAssessment={onStartAssessment}` to
+    `<AlignmentHub />`. Routing table is unchanged (safety →
+    SafetyScreen; communication → BIFF tab; court → Court door;
+    coparenting/educational/medical/psychological → Guided
+    Journey wizard).
+
+**Verified in preview**
+- Screenshot 390×844 (mobile): inline chat card visible above the
+  four tool tiles, option list renders (Educational, Medical,
+  Psychological, Court-ordered, "I'm Not Sure Where to Start"),
+  `open-assessment-guide count = 0`, no horizontal overflow.
+- Screenshot 1920×800 (desktop): tapping "Co-Parenting Assessment"
+  transitions to the recap phase inline (Start CTA test-id
+  present, `assessment-guide-modal count = 0`).
+
+
 ### 2026-02-26 — Iter232 · SA CoParents Assessment Guide Chatbot
 
 Second chatbot layered on the Coparenting Journey. Unlike the

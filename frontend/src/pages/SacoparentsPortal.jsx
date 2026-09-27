@@ -47,7 +47,6 @@ import {
   hasIntroBeenSeen,
 } from "./portal/IntroChatBot";
 import { GuideFollowupModal } from "./portal/GuideFollowupModal";
-import { AssessmentGuideChat } from "./portal/AssessmentGuideChat";
 import {
   SafetyRetakeChip,
   SafetyScreen,
@@ -129,10 +128,11 @@ export default function SacoparentsPortal() {
   // iter231 — follow-up "how's it going?" modal shown to a parent
   // who picked a path but never opened their first tile.
   const [followupState, setFollowupState] = useState(null);
-  // iter232 — Assessment Guide chatbot: helps a parent who is already
-  // on the Coparenting Journey pick which specific assessment to
-  // start with. Invoked from a toolkit pill.
-  const [assessmentGuideOpen, setAssessmentGuideOpen] = useState(false);
+  // iter232/iter233 — the SA CoParents Assessment Guide is now
+  // rendered inline on the Alignment & Tools page (AlignmentHub);
+  // the standalone modal export <AssessmentGuideChat/> is still
+  // available for import if a future flow (intro/follow-up nudge)
+  // needs to open it as a popup.
 
   // Reassessment form state
   const [reassStage, setReassStage] = useState("30-Day Progress Review");
@@ -1669,7 +1669,7 @@ export default function SacoparentsPortal() {
                   snapshotHistory={snapshotHistory}
                   onSnapshotRedownload={downloadGuidedSnapshot}
                   onSnapshotDelete={onDeleteSnapshot}
-                  onOpenAssessmentGuide={() => setAssessmentGuideOpen(true)}
+                  onStartAssessment={onStartAssessment}
                 />
               </>
             )}
@@ -1853,13 +1853,10 @@ export default function SacoparentsPortal() {
         />
       )}
 
-      {/* iter232 — SA CoParents Assessment Guide chatbot */}
-      <AssessmentGuideChat
-        open={assessmentGuideOpen}
-        onClose={() => setAssessmentGuideOpen(false)}
-        onStartAssessment={onStartAssessment}
-        safetyFlagged={safetyFlagged}
-      />
+      {/* iter233 — SA CoParents Assessment Guide chatbot has moved
+          inline on the Alignment & Tools page. The <AssessmentGuideChat/>
+          modal export remains available for future intro/follow-up
+          flows if they need a popup, but it's no longer mounted here. */}
 
       {/* Reassessment modal */}
       {reassessOpen && (

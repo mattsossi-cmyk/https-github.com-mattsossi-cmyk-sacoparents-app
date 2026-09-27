@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { SnapshotStrip } from "./SnapshotStrip";
 import { TrendSparkline } from "./TrendSparkline";
+import { AssessmentGuideChatInline } from "./AssessmentGuideChat";
 
 /**
  * AlignmentHub — Section I of the Parent Journey. Shows:
@@ -69,7 +70,11 @@ export function AlignmentHub({
   snapshotHistory = [],
   onSnapshotRedownload = () => {},
   onSnapshotDelete = () => {},
-  onOpenAssessmentGuide = () => {},
+  // iter233 — inline Assessment Guide chatbot lives on this page
+  // (Alignment & Tools) at the top of the Coparenting Journey Toolkit.
+  // Routing target: same onStartAssessment used by the modal instance
+  // in SacoparentsPortal, so both surfaces stay in exact lockstep.
+  onStartAssessment = () => {},
 }) {
   return (
     <div className="space-y-4" data-testid="hub-section-alignment">
@@ -105,15 +110,13 @@ export function AlignmentHub({
             limit={3}
           />
 
-          <button
-            type="button"
-            data-testid="open-assessment-guide"
-            onClick={onOpenAssessmentGuide}
-            className="w-full mb-3 py-2.5 bg-gradient-to-r from-purple-800 to-purple-700 hover:from-purple-900 hover:to-purple-800 text-white rounded-lg font-bold text-xs shadow-sm"
-          >
-            <i className="fa-solid fa-clipboard-question mr-1.5"></i>
-            Ask the Assessment Guide — which one should I start with?
-          </button>
+          {/* iter233 — inline Assessment Guide chatbot. Same triage
+              flow that used to open as a modal, now living directly
+              above the toolkit tiles so it's always in view. */}
+          <AssessmentGuideChatInline
+            onStartAssessment={onStartAssessment}
+            safetyFlagged={safetyFlagged}
+          />
 
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="relative">
