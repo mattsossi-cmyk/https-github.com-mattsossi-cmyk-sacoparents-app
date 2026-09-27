@@ -28,6 +28,7 @@ import { ReferralInbox } from "@/components/ReferralInbox";
 import { ProZipPrompt } from "@/components/ProZipPrompt";
 import { PublicListingCard } from "@/components/PublicListingCard";
 import { AdminListings } from "@/components/AdminListings";
+import { SenderStatusBadge } from "@/components/SenderStatusBadge";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -397,6 +398,7 @@ export default function Dashboard() {
 
         {user?.role === "admin" && (
           <Tabs defaultValue="invite" className="mb-6" data-testid="admin-tabs">
+            <div className="mb-2 flex justify-end"><SenderStatusBadge /></div>
             <TabsList className="flex flex-wrap h-auto gap-1 bg-white border border-border p-1">
               <TabsTrigger value="invite" data-testid="admin-tab-invite">Invite Professional</TabsTrigger>
               <TabsTrigger value="pending" data-testid="admin-tab-pending">Pending Credentials{pendingPros.length ? <span className="ml-1 rounded-full bg-align-yellow px-1.5 text-[10px] font-bold text-black">{pendingPros.length}</span> : null}</TabsTrigger>

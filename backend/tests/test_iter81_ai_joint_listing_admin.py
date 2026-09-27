@@ -60,11 +60,9 @@ def test_admin_hide_listing_and_share_link() -> None:
     assert pro.put(f"{API}/me/public-listing", json={"listed": True, "bio": "Neutral mediation support."}).status_code == 200
     assert requests.get(f"{API}/public/professionals/{me['id']}").json()["name"] == "Share Pro"
 
-    admin = requests.Session()
-    creds = open("/app/memory/test_credentials.md").read()
-    email = next(l.split("Email:")[1].strip() for l in creds.splitlines() if l.strip().startswith("- Email:"))
-    pw = next(l.split("Password:")[1].strip() for l in creds.splitlines() if l.strip().startswith("- Password:"))
-    assert admin.post(f"{API}/auth/login", json={"email": email, "password": pw}).status_code == 200
+    admin = new_user(API, "professional", "Temp Admin")
+    admin_id = admin.get(f"{API}/auth/me").json()["id"]
+    DB.users.update_one({"_id": admin_id}, {"$set": {"role": "admin"}})
     listed = admin.get(f"{API}/admin/public-listings").json()
     assert any(x["id"] == me["id"] and x["email"] == me["email"] for x in listed)
     assert admin.post(f"{API}/admin/public-listings/{me['id']}/hide", json={"hidden": True, "reason": "Bio not neutral"}).json()["hidden"] is True

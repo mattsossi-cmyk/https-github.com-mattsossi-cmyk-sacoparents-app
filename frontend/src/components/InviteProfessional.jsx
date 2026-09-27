@@ -23,7 +23,14 @@ export function InviteProfessional() {
   const [health, setHealth] = useState(null);
   const [checking, setChecking] = useState(false);
   const runHealth = async () => { setChecking(true); try { const { data } = await api.post("/admin/email-health"); setHealth(data); } catch (err) { toast.error(formatApiError(err)); } finally { setChecking(false); } };
-  const resend = async (i) => { try { await api.post(`/admin/pro-invites/${i.id}/resend`); toast.success(`Reminder sent to ${i.email}`); load(); } catch (err) { toast.error(formatApiError(err)); } };
+  const resend = async (i) => {
+    try {
+      const { data } = await api.post(`/admin/pro-invites/${i.id}/resend`);
+      if (data.ok) toast.success(data.retry ? `Invitation delivered to ${i.email}` : `Reminder sent to ${i.email}`);
+      else toast.error(`Still failing for ${i.email}${data.email_error ? ` — ${data.email_error}` : ""}`, { duration: 9000 });
+      load();
+    } catch (err) { toast.error(formatApiError(err)); }
+  };
   return (
     <section className="bg-white border border-border rounded-lg p-6" data-testid="invite-professional-section">
       <h2 className="text-lg font-semibold flex items-center gap-2"><UserPlus className="h-5 w-5 text-brand-purple" /> Invite a professional</h2>
@@ -59,7 +66,10 @@ export function InviteProfessional() {
               <div><p className="font-medium">{i.name} <span className="text-muted-foreground font-normal">· {i.email}</span></p><p className="text-xs text-muted-foreground">ZIP {i.zip}{i.profession ? ` · ${i.profession}` : ""} · invited {String(i.created_at).slice(0, 10)}{i.invited_by_name ? ` by ${i.invited_by_name}` : ""}</p></div>
               <div className="flex items-center gap-2">
                 <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${(STATUS[i.status] || STATUS.invited)[1]}`} data-testid={`invite-status-${i.id}`}>{(STATUS[i.status] || STATUS.invited)[0]}</span>
-                {i.status === "invited" && <Button size="sm" variant="outline" onClick={() => resend(i)} data-testid={`invite-resend-${i.id}`}><RefreshCw className="h-3.5 w-3.5 mr-1" /> Resend</Button>}
+                {i.status === "invited" && i.email_sent === false && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-800" title={i.email_error || ""} data-testid={`invite-email-failed-${i.id}`}>Email failed</span>}
+                {i.status === "invited" && (i.email_sent === false
+                  ? <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => resend(i)} data-testid={`invite-retry-${i.id}`}><RefreshCw className="h-3.5 w-3.5 mr-1" /> Retry send</Button>
+                  : <Button size="sm" variant="outline" onClick={() => resend(i)} data-testid={`invite-resend-${i.id}`}><RefreshCw className="h-3.5 w-3.5 mr-1" /> Resend</Button>)}
               </div>
             </li>
           ))}

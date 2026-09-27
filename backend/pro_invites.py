@@ -118,7 +118,9 @@ async def create_invite(body: InviteIn, user=Depends(get_current_user)):
     inv = {"id": str(uuid.uuid4()), "token": secrets.token_urlsafe(24), "name": body.name.strip()[:120], "email": email, "zip": z, "profession": body.profession.strip()[:80],
            "status": "invited", "invited_by": user["_id"], "invited_by_name": user.get("name", ""), "created_at": _now(), "resent_at": None, "registered_at": None, "user_id": None}
     await db.pro_invites.insert_one(dict(inv))
-    inv.update(await _mail_detail(email, f"You're invited to join {EMAIL_FROM_NAME}", _invite_html(inv, user.get("name", ""))))
+    result = await _mail_detail(email, f"You're invited to join {EMAIL_FROM_NAME}", _invite_html(inv, user.get("name", "")))
+    await db.pro_invites.update_one({"id": inv["id"]}, {"$set": {"email_sent": result["email_sent"], "email_error": result["email_error"], "last_email_at": _now()}})
+    inv.update(result)
     return {k: v for k, v in inv.items() if k != "token"}
 
 
@@ -134,8 +136,25 @@ async def resend_invite(iid: str, user=Depends(get_current_user)):
     inv = await db.pro_invites.find_one({"id": iid, "status": "invited"}, {"_id": 0})
     if not inv:
         raise HTTPException(status_code=404, detail="Open invitation not found")
-    await db.pro_invites.update_one({"id": iid}, {"$set": {"resent_at": _now()}})
-    return {"ok": await _mail(inv["email"], f"Reminder: your invitation to {EMAIL_FROM_NAME}", _invite_html(inv, user.get("name", "")))}
+    retry = inv.get("email_sent") is False
+    subject = f"You're invited to join {EMAIL_FROM_NAME}" if retry else f"Reminder: your invitation to {EMAIL_FROM_NAME}"
+    result = await _mail_detail(inv["email"], subject, _invite_html(inv, user.get("name", "")))
+    await db.pro_invites.update_one({"id": iid}, {"$set": {"resent_at": _now(), "email_sent": result["email_sent"], "email_error": result["email_error"], "last_email_at": _now()}})
+    return {"ok": result["email_sent"], "retry": retry, **result}
+
+
+@router.get("/admin/email-status")
+async def email_status(user=Depends(get_current_user)):
+    """Cheap, no-send sender status for the dashboard badge: config presence + last real send outcome."""
+    import email_utils as eu
+    _admin(user)
+    last = await db.pro_invites.find_one({"last_email_at": {"$ne": None}}, {"_id": 0, "email_sent": 1, "email_error": 1, "last_email_at": 1}, sort=[("last_email_at", -1)])
+    resend_ok, emergent_ok = bool(eu.RESEND_API_KEY and eu.RESEND_FROM_EMAIL), bool(eu.EMAIL_KEY)
+    failed_count = await db.pro_invites.count_documents({"status": "invited", "email_sent": False})
+    level = "red" if not (resend_ok or emergent_ok) or (last and last.get("email_sent") is False) else "amber" if not resend_ok else "green"
+    label = {"green": f"Email sender ready · {eu.RESEND_FROM_EMAIL}", "amber": "Email via default Align sender (custom domain not configured)", "red": "Email sending is failing"}[level]
+    return {"level": level, "label": label, "resend_configured": resend_ok, "resend_from": eu.RESEND_FROM_EMAIL or "", "emergent_configured": emergent_ok,
+            "last_send": last, "failed_invites": failed_count}
 
 
 @router.get("/auth/pro-invite/{token}")
