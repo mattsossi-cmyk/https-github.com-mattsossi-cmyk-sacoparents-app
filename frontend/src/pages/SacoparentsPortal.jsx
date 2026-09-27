@@ -38,6 +38,10 @@ import { CourtKeyScreen } from "./portal/CourtKeyScreen";
 import { DoorsGateway } from "./portal/DoorsGateway";
 import { GuidedJourneyModal } from "./portal/GuidedJourneyModal";
 import {
+  IntroChatBot,
+  hasIntroBeenSeen,
+} from "./portal/IntroChatBot";
+import {
   SafetyRetakeChip,
   SafetyScreen,
   SafetySoftBanner,
@@ -112,6 +116,9 @@ export default function SacoparentsPortal() {
   // effect re-fires and pushes the fresh drafts up to portal_state
   // for cross-device resume.
   const [guidedDraftsRev, setGuidedDraftsRev] = useState(0);
+  // iter228 — intro chatbot ("SA CoParents Guide") shown on first
+  // visit and re-invokable from a Gateway pill.
+  const [introOpen, setIntroOpen] = useState(false);
 
   // Reassessment form state
   const [reassStage, setReassStage] = useState("30-Day Progress Review");
@@ -187,6 +194,13 @@ export default function SacoparentsPortal() {
     const seededSnapshotHistory = readJson(SNAPSHOT_HISTORY_KEY, []);
     if (Array.isArray(seededSnapshotHistory)) {
       setSnapshotHistory(seededSnapshotHistory);
+    }
+
+    // iter228 — auto-open the SA CoParents Guide intro chat on the
+    // very first visit. The modal itself marks the flag as seen when
+    // the parent closes or picks a path so we don't re-show it after.
+    if (!hasIntroBeenSeen()) {
+      setIntroOpen(true);
     }
   }, []);
 
@@ -1388,13 +1402,24 @@ export default function SacoparentsPortal() {
       {/* MAIN CONTAINER */}
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
         {screen === "gateway" && (
-          <DoorsGateway
-            onEnterParent={enterParentJourney}
-            onEnterCourt={enterCourtPath}
-            user={user}
-            syncStatus={syncStatus}
-            kudosStreak={kudosStreak}
-          />
+          <>
+            <DoorsGateway
+              onEnterParent={enterParentJourney}
+              onEnterCourt={enterCourtPath}
+              user={user}
+              syncStatus={syncStatus}
+              kudosStreak={kudosStreak}
+            />
+            <button
+              type="button"
+              data-testid="gateway-open-intro-guide"
+              onClick={() => setIntroOpen(true)}
+              className="w-full mt-3 py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs"
+            >
+              <i className="fa-solid fa-comment-dots mr-1.5"></i>
+              Talk to the SA CoParents Guide
+            </button>
+          </>
         )}
 
         {screen === "court-key" && (
@@ -1643,6 +1668,14 @@ export default function SacoparentsPortal() {
           onDraftPersist={onGuidedDraftPersist}
         />
       )}
+
+      {/* iter228 — SA CoParents Guide intro chatbot */}
+      <IntroChatBot
+        open={introOpen}
+        onClose={() => setIntroOpen(false)}
+        onEnterParent={enterParentJourney}
+        onEnterCourt={enterCourtPath}
+      />
 
       {/* Reassessment modal */}
       {reassessOpen && (
