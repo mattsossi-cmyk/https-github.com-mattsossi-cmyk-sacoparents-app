@@ -783,3 +783,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Court packet preview: `POST /api/joint/reports/{rid}/court-packet-preview` (same options as submit; returns merged PDF inline, header X-Packet-Preview, nothing persisted) + "Preview exact court packet (PDF)" button/iframe in ProfessionalStatement submit box.
 - Tests: `tests/test_iter83_editor_guide_preview.py`.
 - LESSON (repeat of ledger #7): never insert a route between an existing decorator and its handler — it silently rebinds the route (`/court-dashboard/professionals` briefly served the report guide). Insert new routes *before* the decorator line.
+
+## 2026-06 — Sample page 1–11 + judge section jump
+- `SampleLegalLensReport.jsx` restructured to the 11 numbered sections (new testids sample-lens-s2 = snapshot, s3 = Parent A, s4b = Parent B, s9-legal); `SampleLensTour.jsx` steps rewritten (11). `sample_legal_lens.py` gained section-9 fields.
+- Judge: `GET /api/court-dashboard/packets/{pid}/legal-report-sections` → {pages: {n: page}, total_pages} by scanning the frozen PDF text after the "How to Read" page; `legal-report.pdf?inline=1` serves inline so `#page=N` works. `JudgeReportGuide` accepts `packetId` and renders p.N links; also embedded in `CourtCase.jsx` under the attached Professional Report block.
+- Tests: extended `test_legal_report.py`.

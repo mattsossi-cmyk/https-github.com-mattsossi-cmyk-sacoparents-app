@@ -84,6 +84,13 @@ def test_legal_report_attached_to_court_submission() -> None:
     assert lp.status_code == 200 and lp.headers["content-type"].startswith("application/pdf")
     text = "".join(pg.get_text() for pg in pymupdf.open(stream=io.BytesIO(lp.content), filetype="pdf"))
     assert "Professional Evaluation Report" in text and "Court Pro, J.D." in text and "MET at reassessment" in text and "Starting With Alignment" in text and "DRAFT" not in text
+    secs = judge.get(f"{API}/court-dashboard/packets/{sub['packet_id']}/legal-report-sections")
+    assert secs.status_code == 200, secs.text
+    pages = secs.json()["pages"]
+    assert pages.get("1") and pages.get("11") and pages["1"] <= pages["3"] <= pages["11"] <= secs.json()["total_pages"], pages
+    inline = judge.get(f"{API}/court-dashboard/packets/{sub['packet_id']}/legal-report.pdf", params={"inline": 1})
+    assert inline.status_code == 200 and inline.headers["content-disposition"].startswith("inline")
+    assert pro.get(f"{API}/court-dashboard/packets/{sub['packet_id']}/legal-report-sections").status_code in (403, 404)
     db = pymongo.MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
     assert db.access_events.count_documents({"report_id": rid, "action": "LEGAL_REPORT_SHARED"}) == 1
     sub2 = pro.post(f"{API}/joint/reports/{rid}/submit-to-court", json={"attest": True}).json()["submission"]

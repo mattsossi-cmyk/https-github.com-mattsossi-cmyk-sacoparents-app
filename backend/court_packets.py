@@ -437,13 +437,36 @@ def _judge_routes(svc: PacketService, get_current_user) -> APIRouter:
         return await svc.view(p)
 
     @r.get("/court-dashboard/packets/{pid}/legal-report.pdf")
-    async def judge_legal_pdf(pid: str, user=Depends(get_current_user)):
+    async def judge_legal_pdf(pid: str, inline: int = 0, user=Depends(get_current_user)):
         p = await svc.for_judge(pid, user)
         frozen = await db.court_frozen_pdfs.find_one({"packet_id": pid, "legal_pdf": {"$exists": True}}, {"legal_pdf": 1})
         if not frozen:
             raise HTTPException(status_code=404, detail="No Professional Legal Report was attached to this submission")
-        await svc.log_court(p, f"Professional Legal Report PDF downloaded by {p['judge_name']} (court account)", user["_id"], user.get("name", ""))
-        return _pdf_response(bytes(frozen["legal_pdf"]), f"professional-legal-report-{_safe_name(p)}.pdf")
+        await svc.log_court(p, f"Professional Legal Report PDF {'opened' if inline else 'downloaded'} by {p['judge_name']} (court account)", user["_id"], user.get("name", ""))
+        resp = _pdf_response(bytes(frozen["legal_pdf"]), f"professional-legal-report-{_safe_name(p)}.pdf")
+        if inline:
+            resp.headers["Content-Disposition"] = resp.headers["Content-Disposition"].replace("attachment", "inline")
+        return resp
+
+    @r.get("/court-dashboard/packets/{pid}/legal-report-sections")
+    async def judge_legal_sections(pid: str, user=Depends(get_current_user)):
+        """Page number of each numbered section inside the frozen Professional Report PDF (for guide → page jumps)."""
+        import pymupdf
+        from lens_walkthrough import WALKTHROUGH
+        await svc.for_judge(pid, user)
+        frozen = await db.court_frozen_pdfs.find_one({"packet_id": pid, "legal_pdf": {"$exists": True}}, {"legal_pdf": 1})
+        if not frozen:
+            raise HTTPException(status_code=404, detail="No Professional Legal Report was attached to this submission")
+        pages = [pg.get_text() for pg in pymupdf.open(stream=bytes(frozen["legal_pdf"]), filetype="pdf")]
+        start = next((i for i, t in enumerate(pages) if "How to Read This Report" in t), -1) + 1
+        out, cursor = {}, start
+        for n, (title, *_rest) in enumerate(WALKTHROUGH, 1):
+            key = title.split(" — ")[0]
+            hit = next((i for i in range(cursor, len(pages)) if key in pages[i] and f"\n{n}\n" in pages[i]), None)
+            if hit is not None:
+                out[n] = hit + 1
+                cursor = hit
+        return {"pages": out, "total_pages": len(pages)}
 
     @r.get("/court-dashboard/packets/{pid}/parallel-plan.pdf")
     async def judge_parallel_plan_pdf(pid: str, user=Depends(get_current_user)):

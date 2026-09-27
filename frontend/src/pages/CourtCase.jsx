@@ -11,6 +11,7 @@ import { HearingDate } from "@/components/CourtCaseCard";
 import { CourtLegalSummary } from "@/components/CourtLegalSummary";
 import { ScoreTrendChart } from "@/components/ScoreTrendChart";
 import { ReassessmentCompare } from "@/components/ReassessmentCompare";
+import { JudgeReportGuide } from "@/components/JudgeReportGuide";
 
 const Section = ({ n, title, children, testId, id }) => (
   <section id={id} className="scroll-mt-24 rounded-lg border border-border bg-white p-6" data-testid={testId}>
@@ -109,6 +110,7 @@ export default function CourtCase({ sample = false }) {
                       {!sample && <Button size="sm" variant="outline" asChild data-testid="court-legal-report-pdf"><a href={`${process.env.REACT_APP_BACKEND_URL}/api/court-dashboard/packets/${d.statement.packet_id}/legal-report.pdf`} download><Download className="h-4 w-4 mr-1" /> Evaluation Report PDF</a></Button>}
                     </div>
                   )}
+                  {d.statement.legal_report_included && !sample && <JudgeReportGuide packetId={d.statement.packet_id} />}
                   <CourtLegalSummary s={d.statement.legal_summary} />
                   {d.statement.agreement_included && (
                     <div className={`rounded-xl border-2 p-4 space-y-3 ${d.statement.agreement_card?.safety_override ? "border-[#e0b04a] bg-[#fff7df]" : "border-teal-300 bg-[#eaf7f7]"}`} data-testid="court-agreement-card">
