@@ -1,0 +1,26 @@
+{
+  "summary": "Iter228 — IntroChatBot ('SA CoParents Guide') tested end-to-end via Playwright on the public frontend URL (mobile 390x844). Auto-open on first visit, seen-flag persistence, both direct-CTA paths, Help-Me-Choose triage across all 4 recommendation branches, Back-to-paths, Close(X)-marks-seen, and Gateway re-open pill all work. Recommendation logic in recommendFrom() matches spec: court_directed=yes OR active_case=yes → court; voluntary=yes → parent; all-No/Not-sure → parent (safer default).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Gateway (mobile viewport)", "issues": ["'Talk to the SA CoParents Guide' pill (data-testid=gateway-open-intro-guide) sits below fold and is initially overlapped by the fixed SafetyCrisisStrip / bottom nav on 390x844 first paint. Real click still works because Playwright/native scroll brings it into view via the pb-32 padding, but a first-time user landing on the gateway may not see the pill without scrolling. Consider surfacing the pill above the fold or adding a small pointer/anchor when the intro modal has already been dismissed."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "recommendFrom(): 'unsure' answers are treated identically to 'no' for court_directed/active_case (falls through to voluntary check, then default parent). This is intentional per the inline comment ('safer default is voluntary') and aligns with the request, but worth confirming with the founder that a parent answering 'Not sure' to court_directed should indeed be routed to the co-parenting path rather than surfacing a soft nudge to consult a professional.",
+    "IntroChatBot state reset on open (useEffect on `open`) is correct, but the Help Me Choose flow doesn't allow editing a prior answer once submitted — the only way back is the 'Back to the paths' link which wipes ALL answers. Minor UX cost; acceptable given only 3 questions.",
+    "closeAndMark markIntroSeen() is called for every path (direct CTAs, recommend CTAs, and X close), so the persist flag is set correctly in every exit path. Verified.",
+    "IntroChatBot has no dependency on user auth — flag is localStorage-only, which is the correct scope for a per-device onboarding hint."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (not tested per request)", "frontend": "100% (8/8 scenarios)"},
+  "test_credentials": "n/a — feature is public / pre-auth",
+  "seed_data_creation": "None — feature uses localStorage only. Reset via localStorage.clear() in tests.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "IntroChatBot lives at /app/frontend/src/pages/portal/IntroChatBot.jsx. Persist key: sacoparents_intro_chat_seen_v1. Wired into SacoparentsPortal.jsx behind introOpen state. Auto-open triggers only when hasIntroBeenSeen() is false on initial mount. Gateway pill data-testid=gateway-open-intro-guide always re-opens. Backend not touched by this feature."
+}

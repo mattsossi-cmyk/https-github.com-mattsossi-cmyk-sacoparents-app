@@ -45,6 +45,70 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-26 — Iter228 · SA CoParents Guide Intro Chatbot
+
+Founder-authored welcome flow layered on the Doors Gateway. Chat-
+style modal greets first-time visitors, describes the two paths
+(Coparenting Journey vs Court-Ordered), and offers a "Help Me
+Choose" mini-triage. Verified in iter86 (frontend 8/8 scenarios).
+
+**🟢 P1 — Intro chatbot component**
+- New `/app/frontend/src/pages/portal/IntroChatBot.jsx`
+  (~430 lines) with three phases:
+    * `paths` — greeting messages + two path cards (Parent
+      / Court) + Help-Me-Choose card + closing aphorism
+    * `help` — 3-question triage (Yes/No/Not sure buttons):
+        1. Was a professional directing you here?
+        2. Are you in an active custody case?
+        3. Are you here voluntarily?
+    * `recommend` — bot-recap card + primary CTA to enter
+      the recommended door
+- `recommendFrom(answers)` logic: court_directed=yes OR
+  active_case=yes → **court** door; voluntary=yes → **parent**
+  door; all-No / all-Not-sure → parent door (safer default —
+  parent can switch anytime).
+- Uses no LLM — copy is authored and rendered deterministically
+  so it stays in exact lockstep with the founder's marketing.
+- localStorage `sacoparents_intro_chat_seen_v1` flag persisted
+  on every exit path (X close, direct CTA, recommend CTA) so
+  the modal doesn't re-auto-open on subsequent visits.
+
+**🟢 P1 — Portal integration**
+- New `introOpen` state in `SacoparentsPortal.jsx`. On mount,
+  auto-opens when `hasIntroBeenSeen() === false`.
+- Wired above the Doors Gateway (not below) so the "Talk to
+  the SA CoParents Guide" pill stays visible above the fold
+  on mobile (previously below-fold at 390×844).
+- Both direct CTAs and both recommend CTAs call the container's
+  existing `enterParentJourney()` / `enterCourtPath()`
+  handlers — so the safety-first gate still fires before
+  either door as before.
+
+**Files touched**
+- `/app/frontend/src/pages/portal/IntroChatBot.jsx` (new).
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — import,
+  `introOpen` state, auto-open effect, gateway pill above
+  DoorsGateway, modal mount.
+
+**Verified — iter86 test report**
+- 100% pass across 8 scenarios: auto-open on first visit,
+  seen-flag persistence, both direct-CTA paths, all 4
+  Help-Me-Choose recommendation branches, Back-to-paths,
+  X-close-marks-seen, and gateway re-open pill. Zero
+  horizontal overflow. Pill bounding-box at y=86 (well
+  above the 844px fold on mobile).
+
+**Deferred (P2 — from iter86 review, informational)**
+- Help-Me-Choose flow doesn't allow editing a prior answer
+  individually — the only way back is "Back to the paths"
+  which clears everything. Acceptable given only 3
+  questions.
+- `unsure` on court_directed/active_case falls through to
+  the voluntary path (safer default per spec). Could be
+  softened to "consult a professional" if the founder
+  wants a more conservative nudge later.
+
+
 ### 2026-02-26 — Iter227 · Snapshot Library Strip
 
 Follow-on to iter225. Every time a parent hits Confirm & save in

@@ -1403,6 +1403,15 @@ export default function SacoparentsPortal() {
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
         {screen === "gateway" && (
           <>
+            <button
+              type="button"
+              data-testid="gateway-open-intro-guide"
+              onClick={() => setIntroOpen(true)}
+              className="w-full mb-3 py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs"
+            >
+              <i className="fa-solid fa-comment-dots mr-1.5"></i>
+              Talk to the SA CoParents Guide
+            </button>
             <DoorsGateway
               onEnterParent={enterParentJourney}
               onEnterCourt={enterCourtPath}
@@ -1410,15 +1419,6 @@ export default function SacoparentsPortal() {
               syncStatus={syncStatus}
               kudosStreak={kudosStreak}
             />
-            <button
-              type="button"
-              data-testid="gateway-open-intro-guide"
-              onClick={() => setIntroOpen(true)}
-              className="w-full mt-3 py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs"
-            >
-              <i className="fa-solid fa-comment-dots mr-1.5"></i>
-              Talk to the SA CoParents Guide
-            </button>
           </>
         )}
 
