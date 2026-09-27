@@ -47,6 +47,7 @@ import {
   hasIntroBeenSeen,
 } from "./portal/IntroChatBot";
 import { GuideFollowupModal } from "./portal/GuideFollowupModal";
+import { AssessmentGuideChat } from "./portal/AssessmentGuideChat";
 import {
   SafetyRetakeChip,
   SafetyScreen,
@@ -128,6 +129,10 @@ export default function SacoparentsPortal() {
   // iter231 — follow-up "how's it going?" modal shown to a parent
   // who picked a path but never opened their first tile.
   const [followupState, setFollowupState] = useState(null);
+  // iter232 — Assessment Guide chatbot: helps a parent who is already
+  // on the Coparenting Journey pick which specific assessment to
+  // start with. Invoked from a toolkit pill.
+  const [assessmentGuideOpen, setAssessmentGuideOpen] = useState(false);
 
   // Reassessment form state
   const [reassStage, setReassStage] = useState("30-Day Progress Review");
@@ -988,6 +993,46 @@ export default function SacoparentsPortal() {
     }, 60);
   }, []);
 
+  // iter232 — Assessment Guide chatbot routing. Each key maps to a
+  // concrete surface the parent already has in their journey so we
+  // never introduce a new dead-end screen.
+  const onStartAssessment = useCallback(
+    (key) => {
+      if (key === "court") {
+        // Route back to the doors gateway + trip the court door via
+        // the container's existing helper.
+        setHubSection("alignment");
+        setScreen("gateway");
+        enterCourtPath();
+        return;
+      }
+      if (key === "safety") {
+        // Re-open the Safety Screen so the parent can retake it in a
+        // grounded way — the existing safeguard flow.
+        setSafetyOpen(true);
+        return;
+      }
+      if (key === "communication") {
+        // Communication maps to the BIFF Coach tab in the toolkit.
+        setHubSection("biff");
+        setTimeout(() => {
+          const el = document.getElementById("biff-tab-section");
+          if (el && typeof el.scrollIntoView === "function") {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 60);
+        return;
+      }
+      // The remaining four (coparenting, educational, medical,
+      // psychological) all fire the Guided Journey wizard for that
+      // topic. openGuidedJourney also marks first-engagement so the
+      // iter231 follow-up nudge stops.
+      setHubSection("alignment");
+      openGuidedJourney(key);
+    },
+    [enterCourtPath]
+  );
+
   // Guided-journey chat wizard (iter220). Opens the modal for a
   // specific topic; save handler funnels the collected answers into
   // the correct portal storage.
@@ -1624,12 +1669,13 @@ export default function SacoparentsPortal() {
                   snapshotHistory={snapshotHistory}
                   onSnapshotRedownload={downloadGuidedSnapshot}
                   onSnapshotDelete={onDeleteSnapshot}
+                  onOpenAssessmentGuide={() => setAssessmentGuideOpen(true)}
                 />
               </>
             )}
 
             {hubSection === "biff" && (
-              <>
+              <div id="biff-tab-section">
                 {safetyFlagged && <SafetySoftBanner context="biff" />}
                 <BiffTab
                   rawInput={rawInput}
@@ -1654,7 +1700,7 @@ export default function SacoparentsPortal() {
                   shareStatus={shareStatus}
                   safetyFlagged={safetyFlagged}
                 />
-              </>
+              </div>
             )}
           </div>
         )}
@@ -1806,6 +1852,14 @@ export default function SacoparentsPortal() {
           parentName={user?.name || null}
         />
       )}
+
+      {/* iter232 — SA CoParents Assessment Guide chatbot */}
+      <AssessmentGuideChat
+        open={assessmentGuideOpen}
+        onClose={() => setAssessmentGuideOpen(false)}
+        onStartAssessment={onStartAssessment}
+        safetyFlagged={safetyFlagged}
+      />
 
       {/* Reassessment modal */}
       {reassessOpen && (

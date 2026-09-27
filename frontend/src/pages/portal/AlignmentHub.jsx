@@ -69,6 +69,7 @@ export function AlignmentHub({
   snapshotHistory = [],
   onSnapshotRedownload = () => {},
   onSnapshotDelete = () => {},
+  onOpenAssessmentGuide = () => {},
 }) {
   return (
     <div className="space-y-4" data-testid="hub-section-alignment">
@@ -103,6 +104,16 @@ export function AlignmentHub({
             onDelete={onSnapshotDelete}
             limit={3}
           />
+
+          <button
+            type="button"
+            data-testid="open-assessment-guide"
+            onClick={onOpenAssessmentGuide}
+            className="w-full mb-3 py-2.5 bg-gradient-to-r from-purple-800 to-purple-700 hover:from-purple-900 hover:to-purple-800 text-white rounded-lg font-bold text-xs shadow-sm"
+          >
+            <i className="fa-solid fa-clipboard-question mr-1.5"></i>
+            Ask the Assessment Guide — which one should I start with?
+          </button>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="relative">
