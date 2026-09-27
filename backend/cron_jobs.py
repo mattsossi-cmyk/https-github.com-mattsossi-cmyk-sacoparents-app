@@ -71,6 +71,7 @@ async def cron_expiry_digest(request: Request):
     if ack.get("duplicate"):
         return ack
     asyncio.create_task(run_expiry_digests())
+    asyncio.create_task(run_undelivered_invite_digest())
     return ack
 
 
@@ -305,6 +306,28 @@ async def _send_digest(pro_id: str, rows: list[str], now: datetime) -> None:
         await db.cron_runs.insert_one({"job": "expiry-digest-sent", "pro_id": pro_id, "day": today, "count": len(rows), "at": now.isoformat()})
     except Exception:
         logger.warning(f"Expiry digest not sent to {pro['email']}")
+
+
+async def run_undelivered_invite_digest() -> None:
+    """Daily admin digest: professional invitations whose email failed and have stayed undelivered > 24h (and never opened)."""
+    from email_utils import EMAIL_FROM_NAME as _from
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+    rows = await db.pro_invites.find({"status": "invited", "email_sent": False, "first_opened_at": None, "created_at": {"$lt": cutoff}},
+                                     {"_id": 0, "name": 1, "email": 1, "zip": 1, "created_at": 1, "email_error": 1, "invited_by_name": 1}).sort("created_at", 1).to_list(200)
+    if not rows:
+        return
+    admins = await db.users.find({"role": "admin"}, {"_id": 0, "email": 1, "name": 1}).to_list(20)
+    items = "".join(f"<li><strong>{escape(r['name'])}</strong> &lt;{escape(r['email'])}&gt; · ZIP {escape(r.get('zip') or '')} · invited {escape(str(r['created_at'])[:10])}"
+                    f"{' by ' + escape(r['invited_by_name']) if r.get('invited_by_name') else ''}{(' — ' + escape(r['email_error'][:120])) if r.get('email_error') else ''}</li>" for r in rows)
+    html = ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+            f"<p>{len(rows)} professional invitation{'s' if len(rows) > 1 else ''} could not be emailed and {'have' if len(rows) > 1 else 'has'} stayed undelivered for more than 24 hours:</p><ul>{items}</ul>"
+            f'<p>Open the admin dashboard → Invite Professional, run the <strong>email health check</strong>, fix the sender settings if needed, then tap <strong>Retry send</strong> on each invitation.</p>'
+            f'<p><a href="{app_url()}/dashboard">Go to the admin dashboard</a></p><p style="font-size:12px;color:#888">Sent by {escape(_from)}. We never ask for your password by email.</p></td></tr></table>')
+    for a in admins:
+        try:
+            await send_email(to=a["email"], subject=f"[Action needed] {len(rows)} undelivered professional invitation{'s' if len(rows) > 1 else ''}", html=html, kind="admin_alert", to_role="Admin")
+        except Exception as exc:
+            logger.warning("undelivered-invite digest to %s failed: %s", a["email"], exc)
 
 
 async def run_expiry_digests() -> None:

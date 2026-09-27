@@ -116,7 +116,8 @@ async def create_invite(body: InviteIn, user=Depends(get_current_user)):
     if await db.pro_invites.find_one({"email": email, "status": "invited"}, {"_id": 1}):
         raise HTTPException(status_code=409, detail="This professional already has an open invitation — use Resend")
     inv = {"id": str(uuid.uuid4()), "token": secrets.token_urlsafe(24), "name": body.name.strip()[:120], "email": email, "zip": z, "profession": body.profession.strip()[:80],
-           "status": "invited", "invited_by": user["_id"], "invited_by_name": user.get("name", ""), "created_at": _now(), "resent_at": None, "registered_at": None, "user_id": None}
+           "status": "invited", "invited_by": user["_id"], "invited_by_name": user.get("name", ""), "created_at": _now(), "resent_at": None, "registered_at": None, "user_id": None,
+           "first_opened_at": None, "open_count": 0}
     await db.pro_invites.insert_one(dict(inv))
     result = await _mail_detail(email, f"You're invited to join {EMAIL_FROM_NAME}", _invite_html(inv, user.get("name", "")))
     await db.pro_invites.update_one({"id": inv["id"]}, {"$set": {"email_sent": result["email_sent"], "email_error": result["email_error"], "last_email_at": _now()}})
@@ -159,10 +160,14 @@ async def email_status(user=Depends(get_current_user)):
 
 @router.get("/auth/pro-invite/{token}")
 async def invite_prefill(token: str):
-    inv = await db.pro_invites.find_one({"token": token, "status": "invited"}, {"_id": 0, "name": 1, "email": 1, "zip": 1, "profession": 1})
+    inv = await db.pro_invites.find_one({"token": token, "status": "invited"}, {"_id": 0, "name": 1, "email": 1, "zip": 1, "profession": 1, "first_opened_at": 1})
     if not inv:
         raise HTTPException(status_code=404, detail="This invitation link is no longer valid")
-    return {**inv, "credential_types": CREDENTIAL_TYPES}
+    if not inv.get("first_opened_at"):
+        await db.pro_invites.update_one({"token": token}, {"$set": {"first_opened_at": _now(), "email_sent": True}, "$inc": {"open_count": 1}})
+    else:
+        await db.pro_invites.update_one({"token": token}, {"$inc": {"open_count": 1}})
+    return {k: v for k, v in inv.items() if k != "first_opened_at"} | {"credential_types": CREDENTIAL_TYPES}
 
 
 # ---- credentials request / upload / acceptance ----

@@ -63,7 +63,8 @@ export function InviteProfessional() {
         <ul className="mt-2 divide-y divide-border" data-testid="invites-list">
           {items.map((i) => (
             <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm" data-testid={`invite-${i.id}`}>
-              <div><p className="font-medium">{i.name} <span className="text-muted-foreground font-normal">· {i.email}</span></p><p className="text-xs text-muted-foreground">ZIP {i.zip}{i.profession ? ` · ${i.profession}` : ""} · invited {String(i.created_at).slice(0, 10)}{i.invited_by_name ? ` by ${i.invited_by_name}` : ""}</p></div>
+              <div><p className="font-medium">{i.name} <span className="text-muted-foreground font-normal">· {i.email}</span></p><p className="text-xs text-muted-foreground">ZIP {i.zip}{i.profession ? ` · ${i.profession}` : ""} · invited {String(i.created_at).slice(0, 10)}{i.invited_by_name ? ` by ${i.invited_by_name}` : ""}</p>
+                <p className="text-xs" data-testid={`invite-opened-${i.id}`}>{i.first_opened_at ? <span className="text-align-green font-medium">✓ Link opened {String(i.first_opened_at).slice(0, 16).replace("T", " ")} UTC{i.open_count > 1 ? ` · ${i.open_count} opens` : ""}</span> : <span className="text-muted-foreground">Link not opened yet</span>}</p></div>
               <div className="flex items-center gap-2">
                 <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${(STATUS[i.status] || STATUS.invited)[1]}`} data-testid={`invite-status-${i.id}`}>{(STATUS[i.status] || STATUS.invited)[0]}</span>
                 {i.status === "invited" && i.email_sent === false && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-800" title={i.email_error || ""} data-testid={`invite-email-failed-${i.id}`}>Email failed</span>}

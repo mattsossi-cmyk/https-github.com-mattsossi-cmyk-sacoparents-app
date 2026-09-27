@@ -7,7 +7,7 @@ crons:
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     enabled: true
   - name: expiry-digest
-    description: "Daily 8am Central digest to professionals listing parent invitations expiring within 4 days"
+    description: "Daily 8am Central digest to professionals listing parent invitations expiring within 4 days, plus admin alert for professional invitations undelivered > 24h"
     cron: "0 8 * * *"
     timezone: "America/Chicago"
     endpoint: "{{BASE_URL}}/api/cron/expiry-digest"

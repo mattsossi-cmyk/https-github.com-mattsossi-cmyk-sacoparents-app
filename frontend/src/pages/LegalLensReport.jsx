@@ -10,13 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { AiDraftComparison } from "@/components/AiDraftComparison";
 import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/LensScale";
 import { WorkflowGuide } from "@/components/WorkflowGuide";
+import { SectionGuide, WalkthroughOverview, useWalkthrough } from "@/components/LensWalkthrough";
 import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
 import { GrowthProgress } from "@/components/CourtLegalSummary";
 import { NeutralityCheck, ChildFocusSuggest, ParallelSummaryHelper, ResearchPanel, ResearchBase } from "@/components/LensAiTools";
 
 const STEPS = REPORT_STEPS;
 const STATUS = { draft: "Draft", under_review: "Under Review", final: "Final", submitted_to_court: "Submitted to Court" };
-const Sec = ({ n, title, children, id }) => <LensSec n={n} title={title} id={id}>{children}</LensSec>;
+const GUIDE_SEC = { 1: "case", 2: "case", 3: "individual", 4: "individual", 5: "joint", 6: "child", 7: "resources", 8: "conflict", 9: "conflict", 10: "summary", 11: "court-summary" };
+const GUIDE_FIELDS = { 1: ["matter_name", "court_county"], 2: ["parent_a_rating", "parent_b_rating", "joint_rating"], 3: ["parent_a_strengths", "parent_a_gaps"], 4: ["parent_b_strengths", "parent_b_gaps"], 5: ["alignment_agreements", "joint_notes"], 6: ["child_focus"], 7: ["resource_rows"], 8: ["conflict_pathways", "pathway_rationale"], 9: ["agreement_building_opportunities", "issues_requiring_attention"], 10: ["professional_summary", "short_term_goals"], 11: ["court_summary_text"] };
+const Sec = ({ n, title, children, id, guides }) => <LensSec n={n} title={title} id={id}>{guides && <SectionGuide ns={Object.keys(GUIDE_SEC).filter((k) => GUIDE_SEC[k] === id).map(Number)} guides={guides} />}{children}</LensSec>;
 const Field = ({ label, value, onChange, id, type = "text", big, hint }) => <label className="block text-sm"><span className="font-medium">{label}</span>{hint && <span className="block text-xs text-muted-foreground">{hint}</span>}{big ? <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} className="mt-1 min-h-[100px] bg-white" data-testid={`lens-${id}`} /> : <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2 text-sm" data-testid={`lens-${id}`} />}</label>;
 const Radio = ({ label, options, value, onChange, id }) => <div><p className="text-sm font-medium">{label}</p><div className="mt-1 flex flex-wrap gap-3">{options.map((o) => <label key={o} className="flex items-center gap-1.5 text-sm"><input type="radio" checked={value === o} onChange={() => onChange(o)} data-testid={`lens-${id}-${o.split(/[ ,/]/)[0].toLowerCase()}`} />{o}</label>)}</div></div>;
 const Rating = ({ label, value, onChange, id }) => <label className="flex items-center gap-3 text-sm"><span className="font-medium">{label}</span><input type="range" min="1" max="10" value={value || 5} onChange={(e) => onChange(Number(e.target.value))} className="flex-1 accent-brand-purple" data-testid={`lens-${id}`} /><span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-purple text-sm font-bold text-white" data-testid={`lens-${id}-value`}>{value || "–"}</span></label>;
@@ -81,6 +84,7 @@ function ResourceRows({ rows = [], lib, onChange }) {
 
 export default function LegalLensReport() {
   const { id } = useParams();
+  const guides = useWalkthrough(id);
   const { user } = useAuth();
   const [v, setV] = useState(null);
   const [rep, setRep] = useState({});
@@ -131,13 +135,14 @@ export default function LegalLensReport() {
         <ReportHeader />
         <p className="rounded-md border-l-4 border-brand-purple bg-brand-purple/5 p-3 text-sm" data-testid="lens-principle-notice"><strong className="text-brand-purple">Report Principle:</strong> Parent statements, system-generated comparisons, AI-assisted summaries, and professional observations are identified separately so the source of each statement remains clear.</p>
         <WorkflowGuide kind="legal_lens" />
+        <WalkthroughOverview guides={guides} anchor={(n) => GUIDE_SEC[n]} done={(n) => (GUIDE_FIELDS[n] || []).some((k) => { const v = rep?.[k]; return Array.isArray(v) ? v.length > 0 : v && typeof v === "object" ? Object.values(v).some((x) => x?.checked) : Boolean(v); })} />
         <ol className="flex flex-wrap gap-1 text-[11px]" data-testid="lens-steps">{STEPS.map((s, i) => <li key={s} className="rounded-full border border-brand-purple/30 px-2 py-0.5 text-brand-purple">{i + 1}. {s}</li>)}</ol>
         {actions(true)}
         {aiNotice}
         <AiDraftComparison drafts={rep.ai_drafts} rep={rep} />
         {preview ? <iframe title="Report preview" src={pdf} className="h-[80vh] w-full rounded-lg border border-border" data-testid="lens-preview-frame" /> : (
           <>
-            <Sec n={1} title="Case & Assessment Overview" id="case">
+            <Sec n={1} title="Case & Assessment Overview" id="case" guides={guides}>
               <p className="text-sm leading-relaxed" data-testid="lens-intro">{notes.intro}</p>
               <div className="grid gap-3 sm:grid-cols-3">{[["matter_name", "Case / Matter Name"], ["court_county", "Court / County"], ["cause_number", "Cause Number"], ["professional_role", "Professional Role"], ["parent_a_name", "Parent A Name"], ["parent_b_name", "Parent B Name"]].map(([k, l]) => <Field key={k} label={l} value={rep[k]} onChange={(val) => set(k, val)} id={k} />)}<label className="block text-sm"><span className="font-medium">Case ID</span><input readOnly value={v.case.case_code || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-case-id" /></label><label className="block text-sm"><span className="font-medium">Professional Name</span><input readOnly value={rep.professional_name || ""} className="mt-1 h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm" data-testid="lens-professional-name" /></label><Field label="Report Date" type="date" value={rep.report_date} onChange={(val) => set("report_date", val)} id="report_date" /></div>
               <div><p className="text-sm font-medium">Assessments completed</p><ul className="mt-1 flex flex-wrap gap-3 text-xs" data-testid="lens-assessments">{readiness.map((r) => <li key={r.key} className="flex items-center gap-1">{r.done ? <CheckCircle2 className="h-4 w-4 text-align-green" /> : <Circle className="h-4 w-4 text-muted-foreground" />}{r.label}{r.na && !r.done ? " (N/A)" : ""}</li>)}</ul></div>
@@ -159,13 +164,13 @@ export default function LegalLensReport() {
                 <p className="text-xs italic" data-testid="lens-safety-note">{notes.safety}</p>
               </div>
             </Sec>
-            <Sec n={2} title="Individual Parent Perspectives" id="individual">
+            <Sec n={2} title="Individual Parent Perspectives" id="individual" guides={guides}>
               <SourceTag kind="parent" />
               <p className="text-xs italic text-muted-foreground">Each parent is presented separately and neutrally — concerns, priorities, perceptions and identified needs — without determining which account is correct.</p>
               <ParentBlock role="a" rep={rep} cls={cls.parent_a} set={set} /><ParentBlock role="b" rep={rep} cls={cls.parent_b} set={set} />
               <div className="space-y-5" data-testid="lens-individual-scales"><IndividualScaleTable scale={lib.scale_table} row={cls.parent_a?.row} rating={rep.parent_a_rating} role="a" name={rep.parent_a_name} growth={growthOf(rep, "a")} /><IndividualScaleTable scale={lib.scale_table} row={cls.parent_b?.row} rating={rep.parent_b_rating} role="b" name={rep.parent_b_name} growth={growthOf(rep, "b")} /></div>
             </Sec>
-            <Sec n={3} title="Joint Assessment Findings" id="joint">
+            <Sec n={3} title="Joint Assessment Findings" id="joint" guides={guides}>
               <SourceTag kind="system" />
               <div className="rounded-md border border-border bg-white p-4 space-y-3" data-testid="lens-joint">
                 <Rating label="Joint Co-Parenting Rating (1–10)" value={rep.joint_rating} onChange={(val) => set("joint_rating", val)} id="joint-rating" /><Band cls={cls.joint} joint />
@@ -180,19 +185,19 @@ export default function LegalLensReport() {
               <AlignmentStatusGrid rep={rep} />
               <JointScaleTable scale={lib.scale_table} row={cls.joint?.row} rating={rep.joint_rating} />
             </Sec>
-            <Sec n={4} title="Child-Focused Issues" id="child">
+            <Sec n={4} title="Child-Focused Issues" id="child" guides={guides}>
               <p className="text-xs text-muted-foreground">Tick each area affecting the child's needs and circumstances; categories suggested by the Joint Report are pre-ticked for your review.</p>
               <ChildFocusList categories={lib.child_focus_categories} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
               <ChildFocusSuggest id={id} value={rep.child_focus || {}} onChange={(val) => set("child_focus", val)} />
             </Sec>
-            <Sec n={5} title="Options & Resources" id="resources"><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /><ResearchBase id={id} value={rep.research_base} onChange={(rb) => set("research_base", rb)} /><ResearchPanel isAdmin={user?.role === "admin"} onAddRow={(row) => set("resource_rows", [...(rep.resource_rows || []), row])} /></Sec>
-            <Sec n={6} title="Conflict Resolution" id="conflict">
+            <Sec n={5} title="Options & Resources" id="resources" guides={guides}><ResourceRows rows={rep.resource_rows} lib={lib} onChange={(rows) => set("resource_rows", rows)} /><ResearchBase id={id} value={rep.research_base} onChange={(rb) => set("research_base", rb)} /><ResearchPanel isAdmin={user?.role === "admin"} onAddRow={(row) => set("resource_rows", [...(rep.resource_rows || []), row])} /></Sec>
+            <Sec n={6} title="Conflict Resolution" id="conflict" guides={guides}>
               <p className="text-xs text-muted-foreground">{notes.purpose}</p>
               <PathwayPicker lib={{ ...lib, notes }} rep={rep} cls={cls} set={set} />
               <Field big label="Why these pathways are relevant to the issues identified" hint="Explain the fit to the type of conflict — not just a list of services. Required to finalize." value={rep.pathway_rationale ?? rep.conflict_management_rationale} onChange={(val) => set("pathway_rationale", val)} id="pathway_rationale" />
               <p className="text-xs italic" data-testid="lens-rating-note">{notes.rating}</p>
             </Sec>
-            <Sec n={7} title="Professional Observation & Action Plan" id="summary">
+            <Sec n={7} title="Professional Observation & Action Plan" id="summary" guides={guides}>
               <SourceTag kind="professional" />
               <p className="text-xs italic text-muted-foreground">Your own observations, interpretation, recommendations and conclusions — clearly distinct from parent-reported information, individual responses, joint comparisons and any system- or AI-generated summary. You remain responsible for the judgment in this section.</p>
               <Field big label="Professional statement" value={rep.professional_summary} onChange={(val) => set("professional_summary", val)} id="professional_summary" />
@@ -207,7 +212,7 @@ export default function LegalLensReport() {
               <div className="grid gap-3 sm:grid-cols-2"><Field big label="When Score Moves Up" value={rep.reassess_up} onChange={(val) => set("reassess_up", val)} id="reassess_up" /><Field big label="When Score Drops" value={rep.reassess_down} onChange={(val) => set("reassess_down", val)} id="reassess_down" /></div>
               <ReportPrinciple notes={notes} />
             </Sec>
-            <Sec n={8} title="Concise Court / Referral Summary" id="court-summary">
+            <Sec n={8} title="Concise Court / Referral Summary" id="court-summary" guides={guides}>
               <p className="text-xs text-muted-foreground">1–3 paragraphs for the court, referring professional, mediator or other authorized recipient. Included in the frozen court submission.</p>
               <Field big label="Professional summary" value={rep.court_summary_text} onChange={(val) => set("court_summary_text", val)} id="court_summary_text" />
               <h3 className="font-semibold text-align-green">Professional Certification</h3>

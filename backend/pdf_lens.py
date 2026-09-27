@@ -201,7 +201,7 @@ def heading(pdf: FPDF, n: int, text: str) -> None:
     pdf.set_xy(pdf.l_margin, y + 0.4)
     pdf.set_font(FONT, "B", 8.5)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(7.5, 6.7, str(n), align="C")
+    pdf.cell(7.5, 6.7, str(n) if n else "?", align="C")
     pdf.set_xy(pdf.l_margin + 10, y)
     pdf.set_font(FONT, "B", 12.5)
     pdf.set_text_color(*PURPLE)
@@ -262,6 +262,36 @@ def _perspective(pdf: FPDF, rep: dict, role: str, scale, cls) -> None:
     _lens_individual_scale(pdf, scale, cls, rep, role)
 
 
+def how_to_read_page(pdf: FPDF) -> None:
+    """One-page reader's guide inserted after the title band."""
+    from lens_walkthrough import READER_INTRO, SCALE_NOTE, WALKTHROUGH
+    pdf.add_page()
+    heading(pdf, 0, "How to Read This Report")
+    _body(pdf, READER_INTRO, italic=True)
+    pdf.set_font(FONT, "", 8.4)
+    for i, (title, what, _how, guard) in enumerate(WALKTHROUGH, 1):
+        if pdf.get_y() > pdf.h - 30:
+            pdf.add_page()
+        y = pdf.get_y()
+        pdf.set_fill_color(*PURPLE)
+        pdf.ellipse(pdf.l_margin, y + 0.6, 5, 5, style="F")
+        pdf.set_xy(pdf.l_margin, y + 0.8)
+        pdf.set_font(FONT, "B", 6.5)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(5, 4.6, str(i), align="C")
+        pdf.set_xy(pdf.l_margin + 7, y)
+        pdf.set_font(FONT, "B", 8.6)
+        pdf.set_text_color(*PURPLE)
+        pdf.cell(0, 5, _s(title), new_x="LMARGIN", new_y="NEXT")
+        pdf.set_x(pdf.l_margin + 7)
+        pdf.set_font(FONT, "", 8.2)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(pdf.w - pdf.l_margin - pdf.r_margin - 7, 3.9, _s(f"{what}  Reader's guardrail: {guard}"), align="L")
+        pdf.ln(0.6)
+    full_card(pdf, "Reading the 1–10 scale", [SCALE_NOTE], TEAL_FILL, TEAL)
+    new_page(pdf)
+
+
 def render_lens_body(pdf: FPDF, v: dict) -> None:
     """Pages 1–6 of the Professional Alignment Report (everything before the certification block)."""
     from lens_data import CHILD_FOCUS_CATEGORIES, CONFLICT_GUIDANCE, PATHWAYS, RISK_CATEGORIES, SCALE_TABLE, SAFETY_PATHWAY
@@ -273,6 +303,7 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     pdf.cell(0, 4.5, _s("SA CoParents Align Professional Evaluation Report (Legal Lens) — for professionals and the court"), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(1)
     full_card(pdf, "Purpose", [notes.get("purpose", "")], PURPLE_FILL, PURPLE)
+    how_to_read_page(pdf)
     heading(pdf, 1, "Case & Assessment Overview")
     kv_table(pdf, [("Case / Matter", rep.get("matter_name")), ("Case ID", c.get("case_code")), ("Court / County", rep.get("court_county")), ("Cause Number", rep.get("cause_number")),
                    ("Professional", f"{rep.get('professional_name') or ''} · {rep.get('professional_role') or ''}".strip(" ·")), ("Report Date", rep.get("report_date")),

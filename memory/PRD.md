@@ -770,3 +770,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Added `POST /api/admin/email-health` (sends test email to the admin, reports Resend vs default sender, status/error, hints) + "Run email health check" panel in Admin → Invite Professional. Invite response now includes `email_error`; UI shows the real reason.
 - Preview admin login with seeded ADMIN_PASSWORD returns 401 (user changed password / seed doesn't overwrite) — noted, not changed.
 - 2026-06 Invite retry + sender badge: invites persist `email_sent/email_error/last_email_at`; `POST /admin/pro-invites/{id}/resend` returns `{ok, retry, email_sent, email_error}` (retry = original invite subject when the first send failed); red "Email failed" chip + "Retry send" button per invite. `GET /api/admin/email-status` (no send; config + last outcome + failed count → green/amber/red) powers `SenderStatusBadge.jsx` above the admin tabs. Verified via API in preview (green→red→retry→green).
+
+## 2026-06 — Report walk-through + invite open tracking + undelivered digest
+- `backend/lens_walkthrough.py` (11 sections: what/how/guardrail). `GET /api/cases/{rid}/professional-report/walkthrough` (own case). Editor: `LensWalkthrough.jsx` — overview with progress (fields per PDF section) + per-section "How to complete this section" (editor's 8 sections map to PDF sections 1–11). PDF: "How to Read This Report" page after the title band (`how_to_read_page` in pdf_lens.py).
+- Invites: `first_opened_at` / `open_count` set when `/auth/pro-invite/{token}` is fetched (also flips email_sent true); shown in admin list ("Link opened …").
+- `run_undelivered_invite_digest()` in cron_jobs.py, triggered by the daily `expiry-digest` cron: emails admins about invites with email_sent=false, unopened, >24h old.
+- Tests: `tests/test_iter82_walkthrough_invites.py`.
