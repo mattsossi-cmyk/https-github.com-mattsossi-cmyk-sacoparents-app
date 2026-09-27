@@ -1,0 +1,27 @@
+{
+  "summary": "iter227 — 'Recent snapshots' strip on Coparenting Journey toolkit + snapshot_history server-side sanitizer. Backend: 10/10 pytest checks passing on _sanitize_snapshot_history (valid roundtrip, bogus topics dropped, empty/missing/non-list answers dropped, cap at _MAX_SNAPSHOT_HISTORY=12 with newest-first order preserved, question truncated to 400 chars, answer truncated to 2000 chars, extra top-level and per-QA keys stripped, non-list body → pydantic 422 defense-in-depth with prior state untouched, explicit null clears field, partial-update leaves foundation_text intact, auth still enforced on GET/PUT). Frontend: verified on 390×844 with 3 seeded snapshot_history items (foundation / medical / safety) — snapshot-strip renders 'Recent snapshots' + 'Last 3 of 3' header, 3× snapshot-item-{topic}-{idx} cards, 9× re-download buttons (snapshot-redownload-{standard|fridge|pair}-{idx}). Playwright network route captured all 4 POSTs to /api/portal/guided-snapshot-pdf and confirmed variant is 'standard' | 'fridge' | 'fridge_pair' respectively, answers are plumbed through, safety_flagged=true is propagated for the seeded safety item, topic wiring correct for both foundation and medical items. No horizontal overflow (0px). No console errors from the strip itself (401s in log are the anonymous /api/portal/state fetch — expected, unrelated to iter227).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter227_snapshot_history.py",
+    "/app/test_reports/pytest/iter227.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SnapshotStrip uses key=`${snap.topic}-${idx}` when snap.id is missing — fine, but if two snapshots share the same topic and there is a reorder, React could reuse DOM. Not a bug today because history is append-newest-first and immutable per parent-send.",
+    "portal_routes.py is now >1150 lines; sanitizers are cleanly isolated but the file continues to approach the split threshold noted in iter226.",
+    "downloadGuidedSnapshot in SacoparentsPortal.jsx sends variant='standard' (not 'solo') — this matches the backend's default handling but the fridge PDF endpoint's canonical variant name for the single-card case per iter225 is 'fridge' vs 'fridge_pair'; standard=full PDF path stays intact. No behavioural regression."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter227_snapshot_history.py",
+    "/app/test_reports/pytest/iter227.xml",
+    "/app/test_reports/iteration_85.json"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "backend suite registers a fresh TEST_parent_{uuid}@test.com via /api/auth/register per session (see conftest.py); no shared account needed.",
+  "seed_data_creation": "Playwright test seeds `sacoparents_snapshot_history` (3 items across foundation/medical/safety topics) and `sacoparents_safety_screen_ack` into localStorage to render the strip without running the guided wizard. Backend test seeds snapshot_history via PUT /api/portal/state and reads back via GET.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Snapshot Library (iter227) lives in _sanitize_snapshot_history in /app/backend/portal_routes.py (~line 290) and PortalStatePayload.snapshot_history. Frontend: /app/frontend/src/pages/portal/SnapshotStrip.jsx renders inside AlignmentHub when hideCourtOnly=true (Parent Journey door / no court key). To reach the strip during UI tests you must (a) seed 'sacoparents_snapshot_history' + 'sacoparents_safety_screen_ack' in localStorage, (b) click data-testid='door-parent-journey', (c) dismiss safety modal with 'close-safety-screen' if present. The snapshot-item testid pattern is `snapshot-item-{topic}-{idx}` and buttons are `snapshot-redownload-{standard|fridge|pair}-{idx}`. Playwright page.route('**/api/portal/guided-snapshot-pdf', ...) can capture the POST body without needing a real PDF — verify body.variant ∈ {'standard','fridge','fridge_pair'} and body.answers plumbed through.",
+  "rca_of_the_issue": "N/A — no bugs found. iter226 SAST DO-NOT-FIX rule remains untouched."
+}

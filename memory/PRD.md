@@ -45,6 +45,75 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-26 — Iter227 · Snapshot Library Strip
+
+Follow-on to iter225. Every time a parent hits Confirm & save in
+the Guided Journey wizard we now record a snapshot entry so the
+Coparenting Journey toolkit can offer "Recent snapshots" one-tap
+re-downloads without re-running the wizard. Verified in iter85
+(backend 10/10 pytest + frontend 100% at 390×844).
+
+**🟢 P1 — snapshot_history field on portal_state**
+- New `snapshot_history: Optional[List[Dict]]` on
+  `PortalStatePayload`, defaulted to `None` in
+  `_empty_portal_state()`.
+- New sanitizer `_sanitize_snapshot_history()` in
+  `portal_routes.py`. Per-item validation:
+    * `topic` MUST be in `_GUIDED_TOPICS` (unknown topics
+      dropped)
+    * `answers` MUST be a non-empty list; each Q&A truncated
+      (`question` → 400 chars, `answer` → 2000 chars)
+    * `saved_at` capped at 40 chars; optional `id`
+      (int-coerced), `save_key` (64 chars), `category` (64
+      chars), `safety_flagged` (bool)
+    * total per-item JSON size capped at
+      `_MAX_SNAPSHOT_BYTES=12_000`
+    * list capped at `_MAX_SNAPSHOT_HISTORY=12` (newest
+      first — client is source of ordering)
+- Wired into the existing PUT/GET partial-update pipeline
+  so passing `snapshot_history=None` explicitly clears the
+  field.
+
+**🟢 P1 — Frontend Snapshot Library UX**
+- New localStorage constants `SNAPSHOT_HISTORY_KEY =
+  "sacoparents_snapshot_history"` +
+  `SNAPSHOT_HISTORY_MAX = 12` exported from
+  `portalStorage.js`.
+- New `snapshotHistory` state in `SacoparentsPortal.jsx`.
+  Hydrates from localStorage on mount; hydrated from
+  `portal_state.snapshot_history` on sign-in server-fetch;
+  included in the debounced PUT payload so it round-trips
+  across devices.
+- `onGuidedSave` now prepends a snapshot entry
+  `{id, topic, answers, saved_at, save_key, category,
+  safety_flagged}` before writing to
+  foundation_text/align_records/milestones — so **every
+  committed run lands in the library** regardless of which
+  save_key branch it took.
+- New component
+  `/app/frontend/src/pages/portal/SnapshotStrip.jsx`:
+    * renders nothing when `history` is empty
+    * header: "Recent snapshots" + FA clock-rotate icon +
+      "Last N of M" counter
+    * one card per snapshot (topic label + optional
+      category + N answers + relative age via a compact
+      `relativeAge()` helper — "1m ago", "3h ago", "2d
+      ago", "1mo ago")
+    * three tiny buttons per card: `PDF` (standard, purple
+      outline), `Fridge` (amber outline), `×2` (amber
+      outline) — testids
+      `snapshot-redownload-{standard|fridge|pair}-{idx}`
+- Rendered inside `AlignmentHub.jsx`'s
+  `hideCourtOnly` toolkit card, above the tile grid so
+  it's the first thing a returning parent sees.
+
+**Verified — iter85 test report**
+- Backend 10/10 pytest passing; frontend E2E on live wizard
+  + seeded snapshots — all 9 re-download buttons produce
+  correct filenames + variant + safety_flagged; zero
+  horizontal overflow at 390×844.
+
+
 ### 2026-02-26 — Iter225 · Fridge Card Pair Print
 
 Follow-on to iter223's fridge-size recap. Adds a "Print two
