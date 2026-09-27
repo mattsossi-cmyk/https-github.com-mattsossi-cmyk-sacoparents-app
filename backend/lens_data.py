@@ -108,7 +108,7 @@ def resource_lists(providers: list[dict]) -> tuple[list[str], list[str]]:
     return [*INDIVIDUAL_BASE, *ind, "Additional Counselor / Provider"], [*joint, *JOINT_BASE, "Additional Expert / Provider"]
 
 CONFLICT_OPTIONS = ["Further Court Hearing", "Parent Facilitation", "Traditional Mediation", "Child-Centered Mediation"]
-TEXT_FIELDS = ("matter_name", "court_county", "cause_number", "professional_role", "report_date", "parent_a_name", "parent_b_name", "joint_process_appropriate", "safety_notes",
+TEXT_FIELDS = ("agreement_building_opportunities", "issues_requiring_attention", "existing_agreements", "procedural_considerations", "matter_name", "court_county", "cause_number", "professional_role", "report_date", "parent_a_name", "parent_b_name", "joint_process_appropriate", "safety_notes",
                "safety_takeaway", "parent_a_strengths", "parent_a_gaps", "parent_a_growth", "parent_a_notes", "parent_b_strengths", "parent_b_gaps", "parent_b_growth", "parent_b_notes",
                "joint_strengths", "joint_gaps", "joint_notes", "alignment_agreements", "alignment_disagreements", "partial_alignment", "alignment_summary",
                "conflict_pathway", "conflict_management_rationale", "short_term_goals", "long_term_goals", "reassess_interval", "reassess_up", "reassess_down",

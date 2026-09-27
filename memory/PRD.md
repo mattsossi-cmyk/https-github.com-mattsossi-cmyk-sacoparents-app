@@ -776,3 +776,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Invites: `first_opened_at` / `open_count` set when `/auth/pro-invite/{token}` is fetched (also flips email_sent true); shown in admin list ("Link opened …").
 - `run_undelivered_invite_digest()` in cron_jobs.py, triggered by the daily `expiry-digest` cron: emails admins about invites with email_sent=false, unopened, >24h old.
 - Tests: `tests/test_iter82_walkthrough_invites.py`.
+
+## 2026-06 — Editor 1–11 match, guided step mode, judge reader guide, court packet preview
+- `LegalLensReport.jsx`: sections array S(1..11) mirroring the PDF (Case; Alignment Snapshot & Safety [ratings + safety block]; Parent A; Parent B; Joint; Child-Focused Legal Issues; Options & Resources; Conflict Resolution Pathways; Legal Conflict & Agreement-Building [new text fields agreement_building_opportunities / issues_requiring_attention / existing_agreements / procedural_considerations added to lens_data.TEXT_FIELDS]; Professional Legal Statement & Roadmap; Concise Court Summary). `REPORT_STEPS` now 11. Guided step mode: `lens-step-mode-toggle`, one section at a time, sticky Back / Save & Next / progress bar.
+- Judge: `GET /api/court-dashboard/report-guide` + `JudgeReportGuide.jsx` card in Judicial Portal case view.
+- Court packet preview: `POST /api/joint/reports/{rid}/court-packet-preview` (same options as submit; returns merged PDF inline, header X-Packet-Preview, nothing persisted) + "Preview exact court packet (PDF)" button/iframe in ProfessionalStatement submit box.
+- Tests: `tests/test_iter83_editor_guide_preview.py`.
+- LESSON (repeat of ledger #7): never insert a route between an existing decorator and its handler — it silently rebinds the route (`/court-dashboard/professionals` briefly served the report guide). Insert new routes *before* the decorator line.

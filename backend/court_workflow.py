@@ -470,6 +470,12 @@ def _judge_routes(c: Ctx) -> APIRouter:
     referral_public, require_judge = h["referral_public"], h["require_judge"]
     # ---------- judge: refer ----------
 
+    @r.get("/court-dashboard/report-guide")
+    async def report_guide(user=Depends(get_current_user)):
+        from lens_walkthrough import READER_INTRO, SCALE_NOTE, WALKTHROUGH
+        await require_judge(user)
+        return {"intro": READER_INTRO, "scale": SCALE_NOTE, "sections": [{"n": i, "title": t, "what": w, "guardrail": g} for i, (t, w, _h, g) in enumerate(WALKTHROUGH, 1)]}
+
     @r.get("/court-dashboard/professionals")
     async def referable_professionals(zip: str = "", radius: int = 0, user=Depends(get_current_user)):
         await require_judge(user)
@@ -900,6 +906,15 @@ def _submit_routes(c: Ctx) -> APIRouter:
     """Professional: frozen, hash-sealed submission to the referring court."""
     db, require_pro, pro_profile, get_current_user = c.db, c.h['require_pro'], c.h['pro_profile'], c.get_current_user
     r = APIRouter()
+
+    @r.post("/joint/reports/{rid}/court-packet-preview")
+    async def court_packet_preview(rid: str, body: SubmitIn, user=Depends(get_current_user)):
+        """Exact merged packet the court would receive for these options — nothing is recorded or frozen."""
+        require_pro(user)
+        doc = await _own_case(db, rid, user)
+        assert_submittable(doc, SubmitIn(**{**body.model_dump(), "attest": True}))
+        bundle = await _build_bundle(db, doc, await pro_profile(user["_id"]), c.app_url, user, body)
+        return Response(content=bundle["combined"], media_type="application/pdf", headers={"Content-Disposition": 'inline; filename="court-packet-PREVIEW.pdf"', "X-Packet-Preview": "1"})
 
     @r.post("/joint/reports/{rid}/submit-to-court")
     async def submit_to_court(rid: str, body: SubmitIn, user=Depends(get_current_user)):

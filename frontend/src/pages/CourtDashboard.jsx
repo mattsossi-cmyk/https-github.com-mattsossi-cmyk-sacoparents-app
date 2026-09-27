@@ -10,6 +10,7 @@ import { ReferCaseForm } from "@/components/ReferCaseForm";
 import { CourtThread } from "@/components/CourtThread";
 import { HearingDate } from "@/components/CourtCaseCard";
 import { CaseSidebar, CaseOverview, ParentStatus, ReportsAvailable, PortalCard, HowItWorks } from "@/components/JudgePortal";
+import { JudgeReportGuide } from "@/components/JudgeReportGuide";
 import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { UrgentMessages } from "@/components/UrgentMessages";
 import { UrgentSmsSettings } from "@/components/UrgentSmsSettings";
@@ -58,6 +59,7 @@ function CaseDetail({ x, onHearingSaved }) {
       <CaseOverview x={x} d={d} hearing={<HearingDate x={x} onSaved={onHearingSaved} />} />
       <ParentStatus x={x} d={d} />
       <ReportsAvailable x={x} d={d} />
+      <JudgeReportGuide />
       <PortalCard title="Professional Communication" testId="court-communication">
         <div className="rounded-xl bg-brand-purple/5 p-4"><p className="text-sm text-foreground/80">Secure case communication is limited to case status, report delivery, requests for additional information, and administrative court–professional matters.</p></div>
         <div className="mt-4 flex flex-wrap gap-3">

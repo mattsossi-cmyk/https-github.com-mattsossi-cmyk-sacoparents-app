@@ -32,6 +32,17 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
   const [includeLegal, setIncludeLegal] = useState(false);
   const [includeSources, setIncludeSources] = useState(false);
   const [agreementId, setAgreementId] = useState("");
+  const [packetUrl, setPacketUrl] = useState(null);
+  const [previewing, setPreviewing] = useState(false);
+  const previewPacket = async () => {
+    setPreviewing(true);
+    try {
+      const r = await api.post(`/joint/reports/${rid}/court-packet-preview`, { include_legal_report: includeLegal, include_research_sources: includeLegal && includeSources, agreement_report_id: agreementId || null }, { responseType: "blob" });
+      if (packetUrl) URL.revokeObjectURL(packetUrl);
+      setPacketUrl(URL.createObjectURL(r.data));
+      toast.success("Preview built — this is exactly what the court will receive. Nothing has been submitted.");
+    } catch (e) { toast.error(formatApiError(e)); } finally { setPreviewing(false); }
+  };
 
   const load = () => { api.get(`/joint/reports/${rid}/professional-statement`).then((r) => { setData(r.data); setSt(r.data.statement); onStageChange?.(r.data.stage); }).catch(() => {}); };
   useEffect(() => { load(); }, [rid]);
@@ -158,6 +169,10 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
             <input type="checkbox" checked={attest} onChange={(e) => setAttest(e.target.checked)} className="mt-1" disabled={!submittable} data-testid="submit-attest" />
             <span>{data.attestation_text}</span>
           </label>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button variant="outline" onClick={previewPacket} disabled={!submittable || busy} className="flex-1 h-11 border-brand-purple/40 text-brand-purple" data-testid="preview-court-packet-btn">{previewing ? "Building preview…" : "Preview exact court packet (PDF)"}</Button>
+          </div>
+          {packetUrl && <iframe title="Court packet preview" src={packetUrl} className="mt-3 h-[70vh] w-full rounded-lg border border-border" data-testid="court-packet-preview-frame" />}
           <Button onClick={submit} disabled={!submittable || !attest || busy} className="mt-4 w-full h-14 text-base font-bold tracking-wide bg-brand-purple hover:bg-brand-purple/90 text-white" data-testid="submit-to-court-btn">
             <Lock className="h-5 w-5 mr-2" /> {busy ? "Submitting…" : "SUBMIT JOINT REPORT + PROFESSIONAL STATEMENT TO COURT"}
           </Button>
