@@ -393,7 +393,7 @@ def _export_routes(s: LensStore, get_current_user) -> APIRouter:
 
     @r.get("/cases/{rid}/professional-report/pdf")
     async def report_pdf(rid: str, user=Depends(get_current_user)):
-        from pdf_report import build_legal_lens_pdf
+        from pdf_lens import build_legal_lens_pdf
         doc = await s.own_case(rid, user)
         rep = await s.get_or_create(doc, user)
         await log_event(rid, "LEGAL_LENS_REPORT_EXPORTED", user)

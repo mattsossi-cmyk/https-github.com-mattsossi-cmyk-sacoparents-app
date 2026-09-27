@@ -1113,50 +1113,6 @@ def _lens_scale(pdf: FPDF, scale: list, cls: dict, rep: dict) -> None:
     _lens_joint_scale(pdf, scale, cls.get("joint"), rep)
 
 
-def build_legal_lens_pdf(v: dict) -> bytes:
-    """SA CoParents Align Professional Evaluation Report — court-ready PDF (7 sections + certification)."""
-    from lens_data import REPORT_DISCLAIMER
-    from pdf_lens import brand_header, render_lens_body
-    rep, c, notes = v["report"], v["case"], v["notes"]
-    pdf = _new_pdf()
-    pdf.footer_meta = f"{notes['tagline']} · Case {c.get('case_code') or ''} · {rep.get('professional_name') or ''} · {rep.get('report_date') or ''}"
-    if rep.get("status") not in ("final", "submitted_to_court"):
-        pdf.watermark_text = "DRAFT"
-    pdf.brand_header_fn = brand_header
-    render_lens_body(pdf, v)
-    _lens_heading(pdf, "Professional Certification")
-    _body(pdf, "Important: " + REPORT_DISCLAIMER, italic=True)
-    _body(pdf, "This report reflects the professional's review of the individual assessments, safety screenings and Joint Report. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.", italic=True)
-    _legal_kv(pdf, [("Professional signature", rep.get("signature_name")), ("Title", rep.get("professional_title")), ("Date finalized", (rep.get("finalized_at") or "")[:10])])
-    _lens_ai_appendix(pdf, rep)
-    pdf.ln(3)
-    pdf.set_font(FONT, "B", 10)
-    pdf.set_text_color(*PURPLE)
-    pdf.cell(0, 6, _s(notes["tagline"]), align="C", new_x="LMARGIN", new_y="NEXT")
-    return bytes(pdf.output())
-
-
-LENS_FIELD_TITLES = {"safety_takeaway": "Safety takeaway", "parent_a_growth": "Parent A key growth areas", "parent_b_growth": "Parent B key growth areas", "joint_notes": "Joint dynamic summary",
-                     "conflict_management_rationale": "Conflict resolution rationale", "short_term_goals": "Short-term goals", "long_term_goals": "Long-term goals",
-                     "alignment_summary": "Professional alignment summary", "professional_summary": "Professional statement", "shared_concerns": "Shared concerns", "pathway_rationale": "Pathway rationale"}
-
-
-def _lens_ai_appendix(pdf: FPDF, rep: dict) -> None:
-    drafts = rep.get("ai_drafts") or {}
-    if not drafts:
-        return
-    review = rep.get("ai_review") or {}
-    _lens_heading(pdf, "Appendix — AI-Assisted Drafting Disclosure")
-    _body(pdf, "The sections listed below were initially drafted with an AI drafting aid at the professional's request. The professional reviewed each section and remains solely "
-               "responsible for its content. AI text makes no legal conclusion, credibility finding, diagnosis or custody recommendation.", italic=True)
-    rows = []
-    for k, d in drafts.items():
-        rv = review.get(k)
-        state = ("Edited by professional" if rv["edited"] else "Accepted without edits") if rv else "Under professional review"
-        rows.append((LENS_FIELD_TITLES.get(k, k), f"{d.get('model', '')} · drafted {str(d.get('at', ''))[:10]} · {state}"))
-    _legal_kv(pdf, rows)
-
-
 def _legal_parent(pdf: FPDF, title: str, summary: dict) -> None:
     _label(pdf, title.upper())
     _body(pdf, summary.get("label", "PARENT-REPORTED INFORMATION"), italic=True)

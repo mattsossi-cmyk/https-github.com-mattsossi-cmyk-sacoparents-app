@@ -663,7 +663,7 @@ async def _legal_pdf_bytes(db, doc: dict, include_sources: bool = False) -> tupl
     """Finalized Professional Evaluation Report PDF + court-safe summary snapshot for a frozen court submission."""
     from legal_lens import classify_individual, classify_joint, court_summary, readiness
     from legal_lens import INTRO_TEXT, SAFETY_ALERT
-    from pdf_report import build_legal_lens_pdf
+    from pdf_lens import build_legal_lens_pdf
     rep = await db.professional_reports.find_one({"case_id": doc["id"]}, {"_id": 0})
     if not rep or rep.get("status") not in ("final", "submitted_to_court"):
         raise HTTPException(status_code=400, detail="Finalize the Professional Evaluation Report before attaching it to a court submission")

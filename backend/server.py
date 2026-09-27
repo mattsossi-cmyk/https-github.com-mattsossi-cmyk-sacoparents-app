@@ -871,7 +871,7 @@ async def sample_legal_lens_json():
 
 @api.get("/joint/sample-legal-lens/pdf")
 async def sample_legal_lens_pdf(inline: int = 0):
-    from pdf_report import build_legal_lens_pdf
+    from pdf_lens import build_legal_lens_pdf
     from sample_legal_lens import sample_legal_lens
     disposition = "inline" if inline else "attachment"
     return Response(content=build_legal_lens_pdf(sample_legal_lens()), media_type="application/pdf",

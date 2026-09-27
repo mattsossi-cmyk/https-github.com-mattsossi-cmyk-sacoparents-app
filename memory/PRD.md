@@ -792,3 +792,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-06 — Report §6/§7 table restyle
 - Professional Report §6 Child-Focused Legal Issues and §7 Options & Resources tables now use light-tinted headers (teal/blue) with white rows across PDF, editor and sample page.
 - Root cause of the solid-purple rows: fpdf2 tables inherit the current fill colour left by the heading badge; `_lens_table` (pdf_report.py) now resets fill to white and accepts `header=(fill, text)`.
+
+## 2026-06 — Section colour pass + invite delivery test
+- Report sections 1–11 tinted per SECTION_COLORS (pdf_lens.py) / SECTION_TINT (LensSections.jsx): 1 slate, 2–3 purple, 4 blue, 5–6 teal, 7 blue, 8 green, 9 orange, 10 blue, 11 gold. Applied to PDF heading badge/hairline, editor and sample page.
+- Circular import removed: build_legal_lens_pdf + AI appendix now live in pdf_lens.py; importers (legal_lens, server, court_workflow, tests) updated.
+- Preview invite delivery test: Email Health Check green (Resend 200 via noreply@sacoparentsalign.com); invite bc0e82eb sent to mattsossi+invite@bsossi.com, email_sent=true. Inbox receipt + first-open tracking pending owner confirmation. Admin password temporarily reset (see test_credentials.md).

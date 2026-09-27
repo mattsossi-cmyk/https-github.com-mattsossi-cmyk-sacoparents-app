@@ -29,10 +29,15 @@ export function LensCard({ tone = "purple", title, children, testId, className =
   return <div className={`rounded-xl border p-4 ${CARD[tone]} ${className}`} data-testid={testId}><h3 className="text-sm font-bold">{title}</h3><div className="mt-2 space-y-1.5 text-sm">{children}</div></div>;
 }
 
+const PURPLE_SEC = ["bg-[#f3edfb] text-brand-purple", "bg-brand-purple"], BLUE_SEC = ["bg-[#eaf4fb] text-brand-blue", "bg-brand-blue"], TEAL_SEC = ["bg-[#e8f7f7] text-teal-700", "bg-brand-teal"];
+export const SECTION_TINT = { 1: ["bg-slate-100 text-slate-600", "bg-slate-500"], 2: PURPLE_SEC, 3: PURPLE_SEC, 4: BLUE_SEC, 5: TEAL_SEC, 6: TEAL_SEC, 7: BLUE_SEC, 8: ["bg-[#eaf7f1] text-green-800", "bg-brand-green"],
+  9: ["bg-[#fff0e8] text-orange-700", "bg-orange-600"], 10: BLUE_SEC, 11: ["bg-[#fff7df] text-yellow-800", "bg-yellow-600"] };
+
 export function LensSec({ n, title, children, testId, id }) {
+  const [head, badge] = SECTION_TINT[n] || PURPLE_SEC;
   return (
     <section className="rounded-lg border border-border bg-white p-5 sm:p-6" data-testid={testId || `lens-${id}`} id={id}>
-      <h2 className="flex items-center gap-2 rounded-md bg-[#f3edfb] px-3 py-2 text-lg font-semibold text-brand-purple">{n !== undefined && <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-purple text-xs font-bold text-white">{n}</span>}{title}</h2>
+      <h2 className={`flex items-center gap-2 rounded-md px-3 py-2 text-lg font-semibold ${head}`}>{n !== undefined && <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${badge}`}>{n}</span>}{title}</h2>
       <div className="mt-4 space-y-3 text-sm leading-relaxed">{children}</div>
     </section>
   );

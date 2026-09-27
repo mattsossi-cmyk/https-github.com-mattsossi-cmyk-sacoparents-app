@@ -30,7 +30,7 @@ def test_research_insight_swallows_upstream_errors(monkeypatch) -> None:
 
 
 def test_pdf_renders_research_base_footer() -> None:
-    from pdf_report import build_legal_lens_pdf
+    from pdf_lens import build_legal_lens_pdf
     from legal_lens import _new_report, _lens_view
     doc = {"id": "x", "professional_id": "p", "participants": {"a": {"name": "A"}, "b": {"name": "B"}}, "responses": {}, "child_name": "Kid", "subject": "education", "subject_label": "Education"}
     rep = _new_report(doc, {"name": "Pro"})

@@ -2,10 +2,16 @@
 from fpdf import FPDF
 from fpdf.fonts import FontFace
 
-from pdf_report import FONT, PURPLE, TEAL, BLUE, GREEN, GRAY, DARK, BODY, _s, _body, _stmt_text, _lens_heading, _lens_subhead, _lens_table, _lens_individual_scale, _lens_joint_scale
+from pdf_report import FONT, PURPLE, TEAL, BLUE, GREEN, GRAY, DARK, BODY, _s, _body, _stmt_text, _lens_heading, _lens_subhead, _lens_table, _lens_individual_scale, _lens_joint_scale, _legal_kv, _new_pdf
 
 GOLD_FILL, PURPLE_FILL, TEAL_FILL, BLUE_FILL, GREEN_FILL, ORANGE_FILL, GOLD_SOFT = (255, 243, 201), (243, 237, 251), (232, 247, 247), (234, 244, 251), (234, 247, 241), (255, 240, 232), (255, 247, 223)
 ORANGE, GOLD = (216, 105, 54), (214, 156, 32)
+SLATE, SLATE_FILL = (100, 116, 139), (241, 245, 249)
+SECTION_COLORS = {0: (PURPLE, PURPLE_FILL), 1: (SLATE, SLATE_FILL), 2: (PURPLE, PURPLE_FILL), 3: (PURPLE, PURPLE_FILL), 4: (BLUE, BLUE_FILL), 5: (TEAL, TEAL_FILL), 6: (TEAL, TEAL_FILL),
+                  7: (BLUE, BLUE_FILL), 8: (GREEN, GREEN_FILL), 9: (ORANGE, ORANGE_FILL), 10: (BLUE, BLUE_FILL), 11: (GOLD, GOLD_SOFT)}
+LENS_FIELD_TITLES = {"safety_takeaway": "Safety takeaway", "parent_a_growth": "Parent A key growth areas", "parent_b_growth": "Parent B key growth areas", "joint_notes": "Joint dynamic summary",
+                     "conflict_management_rationale": "Conflict resolution rationale", "short_term_goals": "Short-term goals", "long_term_goals": "Long-term goals",
+                     "alignment_summary": "Professional alignment summary", "professional_summary": "Professional statement", "shared_concerns": "Shared concerns", "pathway_rationale": "Pathway rationale"}
 _lines = lambda t: [g.strip() for g in (t or "").split("\n") if g.strip()]  # noqa: E731
 
 
@@ -192,11 +198,12 @@ def _research_base(pdf: FPDF, rb: dict | None) -> None:
 
 
 def heading(pdf: FPDF, n: int, text: str) -> None:
-    """Numbered purple circle badge + title + hairline, as in the mockup."""
+    """Numbered circle badge + title + hairline, tinted per section (SECTION_COLORS)."""
     if pdf.get_y() > pdf.h - 50:
         pdf.add_page()
+    color, fill = SECTION_COLORS.get(n, (PURPLE, PURPLE_FILL))
     y = pdf.get_y()
-    pdf.set_fill_color(*PURPLE)
+    pdf.set_fill_color(*color)
     pdf.ellipse(pdf.l_margin, y, 7.5, 7.5, style="F")
     pdf.set_xy(pdf.l_margin, y + 0.4)
     pdf.set_font(FONT, "B", 8.5)
@@ -204,9 +211,9 @@ def heading(pdf: FPDF, n: int, text: str) -> None:
     pdf.cell(7.5, 6.7, str(n) if n else "?", align="C")
     pdf.set_xy(pdf.l_margin + 10, y)
     pdf.set_font(FONT, "B", 12.5)
-    pdf.set_text_color(*PURPLE)
+    pdf.set_text_color(*color)
     pdf.cell(0, 7.5, _s(text), new_x="LMARGIN", new_y="NEXT")
-    pdf.set_draw_color(*PURPLE_FILL)
+    pdf.set_draw_color(*fill)
     pdf.set_line_width(0.6)
     pdf.line(pdf.l_margin, y + 9, pdf.w - pdf.r_margin, y + 9)
     pdf.set_line_width(0.2)
@@ -365,3 +372,41 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     heading(pdf, 11, "Concise Court Summary")
     full_card(pdf, f"Parent A: Level {rep.get('parent_a_rating') or '—'}   |   Parent B: Level {rep.get('parent_b_rating') or '—'}   |   Joint Co-Parenting: Level {rep.get('joint_rating') or '—'}", _lines(rep.get("court_summary_text")) or ["—"], (255, 255, 255), PURPLE)
     full_card(pdf, "Our Report Principle", notes.get("principle") or [], PURPLE_FILL, PURPLE)
+
+
+def _lens_ai_appendix(pdf: FPDF, rep: dict) -> None:
+    drafts = rep.get("ai_drafts") or {}
+    if not drafts:
+        return
+    review = rep.get("ai_review") or {}
+    _lens_heading(pdf, "Appendix — AI-Assisted Drafting Disclosure")
+    _body(pdf, "The sections listed below were initially drafted with an AI drafting aid at the professional's request. The professional reviewed each section and remains solely "
+               "responsible for its content. AI text makes no legal conclusion, credibility finding, diagnosis or custody recommendation.", italic=True)
+    rows = []
+    for k, d in drafts.items():
+        rv = review.get(k)
+        state = ("Edited by professional" if rv["edited"] else "Accepted without edits") if rv else "Under professional review"
+        rows.append((LENS_FIELD_TITLES.get(k, k), f"{d.get('model', '')} · drafted {str(d.get('at', ''))[:10]} · {state}"))
+    _legal_kv(pdf, rows)
+
+
+def build_legal_lens_pdf(v: dict) -> bytes:
+    """SA CoParents Align Professional Alignment Report — court-ready PDF (11 sections + certification)."""
+    from lens_data import REPORT_DISCLAIMER
+    rep, c, notes = v["report"], v["case"], v["notes"]
+    pdf = _new_pdf()
+    pdf.footer_meta = f"{notes['tagline']} · Case {c.get('case_code') or ''} · {rep.get('professional_name') or ''} · {rep.get('report_date') or ''}"
+    if rep.get("status") not in ("final", "submitted_to_court"):
+        pdf.watermark_text = "DRAFT"
+    pdf.brand_header_fn = brand_header
+    render_lens_body(pdf, v)
+    _lens_heading(pdf, "Professional Certification")
+    _body(pdf, "Important: " + REPORT_DISCLAIMER, italic=True)
+    _body(pdf, "This report reflects the professional's review of the individual assessments, safety screenings and Joint Report. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.", italic=True)
+    _legal_kv(pdf, [("Professional signature", rep.get("signature_name")), ("Title", rep.get("professional_title")), ("Date finalized", (rep.get("finalized_at") or "")[:10])])
+    _lens_ai_appendix(pdf, rep)
+    pdf.ln(3)
+    pdf.set_font(FONT, "B", 10)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 6, _s(notes["tagline"]), align="C", new_x="LMARGIN", new_y="NEXT")
+    return bytes(pdf.output())
