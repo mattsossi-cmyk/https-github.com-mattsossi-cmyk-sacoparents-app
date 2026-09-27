@@ -1,0 +1,33 @@
+{
+  "summary": "Iter229-231 tested end-to-end. iter229 (SnapshotStrip per-item delete with two-tap confirm), iter230 (guided_draft_digest week-over-week trendline: new/up/down/flat + previous_window fields), iter231 (GuideFollowupModal 'How's it going?' nudge with min-hours + engagement + snooze guards). Backend pytest: 4/4 pass. Frontend Playwright: 8/8 scenarios pass across both UI features.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter230_digest_trendline.py",
+    "/app/test_reports/pytest/iter230_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "iter229 SnapshotStrip: onDelete uses `snap.id ?? idx` fallback. If a legacy snapshot in localStorage has no `id` field, the index-based match works but is fragile if the list re-orders between clicks (e.g. after a new snapshot is prepended in another tab). Given snapshots are only prepended and confirm state is transient, this is acceptable but worth a comment for future readers.",
+    "iter229: The confirmingId state is component-local, so after deleting one snapshot the confirming state is cleared but the parent's snapshotHistory refresh re-numbers indices. Because the tap-delete flow requires a fresh click on a still-visible ✕ afterwards, there's no stale-confirm risk. Verified in Playwright.",
+    "iter230 compute_digest: Prior-window pass re-scans portal_state for finished-check against the CURRENT drafts dict — this is correct for the 'draft cleared entirely' heuristic (state at compute time is the truth) but slightly overcounts as 'finished' if a parent cleared a draft AFTER the prior window closed. This is documented behaviour (finished = draft absent OR updated_at > sent_at within 7d) and consistent with the current-window pass, so trend comparison stays apples-to-apples.",
+    "iter230 trend_direction thresholds: >0.5 pts → up, <-0.5 → down, otherwise flat. A digest jumping from 66.7% to 67.0% would render as 'flat' (delta=0.3). Intentional per founder's ask to avoid noise; confirmed.",
+    "iter231 followup gating: The min-hours guard uses `hoursSince >= FOLLOWUP_MIN_HOURS (24)`. Works with 2-day-old pick, correctly suppresses at 1h-old pick. Snooze uses FOLLOWUP_DISMISSED_KEY.at + 7 days.",
+    "iter231 close(X): Verified onClose does NOT persist the dismiss key — only 'Not now, thanks' snoozes for a week. This means clicking X will re-show on next visit, which matches the modal's copy ('Not now, thanks — remind me next week' as the explicit snooze CTA vs a generic close). Reasonable UX.",
+    "iter231 resume path: Sets FIRST_ENGAGEMENT_KEY before routing into requestDoorEntry, so a bounce (e.g. safety-screen intercept) still marks engagement. Correct — prevents modal loop.",
+    "iter231 daysSincePick copy: 'yesterday' branch triggers only when days === 1. Since FOLLOWUP_MIN_HOURS is 24 and Math.round(24/24)=1, boundary parents see 'yesterday' — correct."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter230_digest_trendline.py"
+  ],
+  "success_rate": {"backend": "100% (4/4 iter230 trendline tests)", "frontend": "100% (iter229 delete flow + iter231 followup modal, close, dismiss, snooze, engagement guard, min-hours guard, court/parent labels)"},
+  "test_credentials": "n/a — all three features are localStorage-only on the public portal; iter230 is a backend digest with no auth-facing endpoint (cron-only). Existing seed accounts (parent1@/parent2@test.com) used to seed nudges + portal_state for compute_digest.",
+  "seed_data_creation": "test_iter230_digest_trendline.py seeds guided_draft_nudges + portal_state.guided_drafts for parent1/parent2 test accounts and cleans up in fixture teardown. All docs prefixed with week_key='trend-...' for identification.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter229: SnapshotStrip in /app/frontend/src/pages/portal/SnapshotStrip.jsx exposes data-testid snapshot-strip, snapshot-item-{topic}-{idx}, snapshot-delete-{idx}, snapshot-delete-confirm-{idx}, snapshot-delete-confirm-cancel-{idx}, snapshot-delete-confirm-yes-{idx}. onDeleteSnapshot at SacoparentsPortal.jsx:1136 persists via writeJson(SNAPSHOT_HISTORY_KEY). iter230: compute_digest in /app/backend/guided_draft_digest.py returns previous_window_start/end, previous_total_sent, previous_total_finished, previous_conversion_pct, trend_delta_pct (rounded 1dp), trend_direction (new|up|down|flat). Email render in email_service.py:391-506 uses ↗↘→☆ arrows. iter231: GuideFollowupModal at /app/frontend/src/pages/portal/GuideFollowupModal.jsx. Persist keys: PATH_PICKED_KEY, FIRST_ENGAGEMENT_KEY, FOLLOWUP_DISMISSED_KEY. Constants FOLLOWUP_MIN_HOURS=24, FOLLOWUP_SNOOZE_DAYS=7."
+}

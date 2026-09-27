@@ -45,6 +45,123 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-26 — Iter229–231 · Delete + Trendline + Follow-up Guide
+
+Three follow-on features to iter228, all shipped in one batch and
+verified in iter87 (backend 4/4 pytest + frontend 8/8 Playwright
+scenarios across the two UI features). No SAST rule changes.
+
+**🟢 P1 — iter229 · Snapshot Delete**
+- `SnapshotStrip.jsx` grew a ✕ button in each card's top-right
+  corner (`snapshot-delete-{idx}`) that flips the card body
+  into a rose-tinted two-tap confirm pane
+  (`snapshot-delete-confirm-{idx}` /
+  `snapshot-delete-confirm-cancel-{idx}` /
+  `snapshot-delete-confirm-yes-{idx}`). Confirm-state is
+  transient + component-local so a fresh click starts fresh.
+- New `onDeleteSnapshot(idOrIdx)` in `SacoparentsPortal.jsx`
+  filters by stable `id` (with index fallback for legacy
+  entries), writes back to localStorage, and rides the
+  existing debounced `PUT /portal/state` so the delete
+  round-trips across devices.
+
+**🟢 P1 — iter230 · Digest Trendline**
+- `guided_draft_digest.compute_digest()` refactored to share a
+  `_compute_window(now, offset_days)` helper. Runs twice:
+  offset_days=0 for the current window, offset_days=7 for
+  the prior window.
+- Digest payload gains
+  `previous_window_start/end`, `previous_total_sent`,
+  `previous_total_finished`, `previous_conversion_pct`,
+  `trend_delta_pct` (rounded to 1dp), and `trend_direction`
+  (`'new' | 'up' | 'down' | 'flat'`). Thresholds: >0.5 pts →
+  up, <-0.5 → down, else flat. `'new'` when the prior window
+  has zero nudges.
+- Email template in `send_nudge_digest()` gets a
+  `Vs last week` panel with ↗ / ↘ / → / ☆ arrow + delta pts
+  + colored badge (emerald up, rose down, slate flat, muted
+  new). Plain-text fallback mirrors the same summary line.
+- Verified live: prev-week 4 sent / 1 finished / 25% vs
+  current 3 sent / 2 finished / 66.7% → direction=up,
+  delta=+41.7 pts. Also verified: zero prior data →
+  direction='new'.
+
+**🟢 P1 — iter231 · Guide Follow-up Nudge**
+- New `/app/frontend/src/pages/portal/GuideFollowupModal.jsx`
+  (~135 lines). Chat-style card with 3 bot messages ("how's
+  it going?", "you picked {path} {N days ago}", "no
+  pressure"), a primary CTA "Show me my first assessment"
+  (color-coded to the picked path — purple for parent,
+  amber for court), and a subtle "Not now, thanks — remind
+  me next week" secondary link.
+- Three new localStorage keys in `portalStorage.js`:
+    * `sacoparents_path_picked_at` — set inside
+      `enterParentJourney()` / `enterCourtPath()` on every
+      pick (overwrite is fine; parents can flip doors)
+    * `sacoparents_first_engagement_at` — set on the first
+      call to `openAssessmentFolder` or `openGuidedJourney`
+      (whichever the parent taps first)
+    * `sacoparents_followup_dismissed_at` — set only on the
+      explicit "Not now, thanks" snooze
+- Mount-time check inside the existing
+  `useEffect(() => {…}, [])`: opens the follow-up modal iff
+  intro-already-seen AND path picked AND no first-engagement
+  AND ≥ `FOLLOWUP_MIN_HOURS` (24h) since pick AND no active
+  snooze (`FOLLOWUP_SNOOZE_DAYS` = 7d).
+- The "Show me my first assessment" CTA sets
+  first-engagement itself (so a bounce from the safety
+  screen still counts) and re-invokes the container's
+  existing `enterParentJourney` / `enterCourtPath` so the
+  safety guardrail stays intact.
+
+**Files touched**
+- `/app/frontend/src/pages/portal/SnapshotStrip.jsx` — ✕
+  button + two-tap confirm pane + `onDelete` prop.
+- `/app/frontend/src/pages/portal/AlignmentHub.jsx` — new
+  `onSnapshotDelete` prop threaded to `<SnapshotStrip>`.
+- `/app/frontend/src/pages/portal/GuideFollowupModal.jsx`
+  (new).
+- `/app/frontend/src/pages/portal/portalStorage.js` — new
+  `PATH_PICKED_KEY`, `FIRST_ENGAGEMENT_KEY`,
+  `FOLLOWUP_DISMISSED_KEY`, `FOLLOWUP_MIN_HOURS`,
+  `FOLLOWUP_SNOOZE_DAYS` exports.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — path-
+  picked writes in `enterParentJourney/enterCourtPath`,
+  first-engagement writes in
+  `openAssessmentFolder/openGuidedJourney`, mount-time
+  follow-up check, `<GuideFollowupModal>` mount,
+  `onDeleteSnapshot` callback.
+- `/app/backend/guided_draft_digest.py` — split into
+  `_compute_window` helper + trend fields on `compute_digest`.
+- `/app/backend/email_service.py` — `send_nudge_digest`
+  gains the week-over-week panel + plain-text summary line.
+- `/app/backend/tests/test_iter230_digest_trendline.py`
+  (new, 4 tests).
+
+**Verified — iter87 test report**
+- Backend 4/4 pytest: trendline math with real seed
+  (prev/current windows across parent1+parent2); zero-prior
+  → 'new'; flat threshold ±0.5 pts; per-topic breakdown
+  round-trips through both windows.
+- Frontend 8/8 Playwright: snapshot delete (2→confirm→
+  cancel→2→confirm→delete→1 with localStorage sync);
+  follow-up modal auto-opens for 3-day-old parent-path pick
+  with no engagement; correct label + days copy; dismiss
+  persists across reload; resume routes into the picked
+  door + sets engagement flag; no-nag guarantee after
+  engagement.
+- Zero horizontal overflow at 390×844.
+
+**Deferred (P2 — iter87 review, informational)**
+- Close(X) on the follow-up does NOT snooze — parents can
+  keep seeing it every visit until they use the explicit
+  "Not now, thanks" or open a tile. Founder-approved UX
+  (explicit snooze CTA is right there).
+- Legacy snapshots without `id` fall back to index-match
+  on delete — safe today because history is
+  prepend-only and confirm state is per-mount.
+
+
 ### 2026-02-26 — Iter228 · SA CoParents Guide Intro Chatbot
 
 Founder-authored welcome flow layered on the Doors Gateway. Chat-
