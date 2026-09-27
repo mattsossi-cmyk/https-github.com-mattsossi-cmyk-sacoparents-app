@@ -24,6 +24,11 @@ import {
   SAFETY_PLAN_KEY,
   SNAPSHOT_HISTORY_KEY,
   SNAPSHOT_HISTORY_MAX,
+  PATH_PICKED_KEY,
+  FIRST_ENGAGEMENT_KEY,
+  FOLLOWUP_DISMISSED_KEY,
+  FOLLOWUP_MIN_HOURS,
+  FOLLOWUP_SNOOZE_DAYS,
   SYNC_PENDING_KEY,
   computeHealthLabel,
   computeKudosStreak,
@@ -41,6 +46,7 @@ import {
   IntroChatBot,
   hasIntroBeenSeen,
 } from "./portal/IntroChatBot";
+import { GuideFollowupModal } from "./portal/GuideFollowupModal";
 import {
   SafetyRetakeChip,
   SafetyScreen,
@@ -119,6 +125,9 @@ export default function SacoparentsPortal() {
   // iter228 — intro chatbot ("SA CoParents Guide") shown on first
   // visit and re-invokable from a Gateway pill.
   const [introOpen, setIntroOpen] = useState(false);
+  // iter231 — follow-up "how's it going?" modal shown to a parent
+  // who picked a path but never opened their first tile.
+  const [followupState, setFollowupState] = useState(null);
 
   // Reassessment form state
   const [reassStage, setReassStage] = useState("30-Day Progress Review");
@@ -201,6 +210,38 @@ export default function SacoparentsPortal() {
     // the parent closes or picks a path so we don't re-show it after.
     if (!hasIntroBeenSeen()) {
       setIntroOpen(true);
+    } else {
+      // iter231 — if a returning parent picked a path (via intro or
+      // gateway) but never opened a tile in the meantime, and enough
+      // time has passed, surface the Follow-up Guide check-in.
+      try {
+        const picked = readJson(PATH_PICKED_KEY, null);
+        const engaged = readJson(FIRST_ENGAGEMENT_KEY, null);
+        const dismissed = readJson(FOLLOWUP_DISMISSED_KEY, null);
+        if (picked && picked.picked_at && !engaged) {
+          const pickedAt = Date.parse(picked.picked_at);
+          const hoursSince =
+            (Date.now() - pickedAt) / (1000 * 60 * 60);
+          const dismissedAt = dismissed?.at
+            ? Date.parse(dismissed.at)
+            : 0;
+          const snoozeExpired =
+            !dismissedAt ||
+            Date.now() - dismissedAt >
+              FOLLOWUP_SNOOZE_DAYS * 24 * 60 * 60 * 1000;
+          if (hoursSince >= FOLLOWUP_MIN_HOURS && snoozeExpired) {
+            setFollowupState({
+              path: picked.path,
+              daysSincePick: Math.max(
+                1,
+                Math.round(hoursSince / 24)
+              ),
+            });
+          }
+        }
+      } catch {
+        /* ignore */
+      }
     }
   }, []);
 
@@ -498,11 +539,26 @@ export default function SacoparentsPortal() {
   );
 
   const enterParentJourney = useCallback(
-    () => requestDoorEntry("parent"),
+    () => {
+      // iter231 — remember which path the parent picked + when, so
+      // the Follow-up Guide can check in later if they never open a
+      // tile. Overwrite is safe: parents can flip doors anytime.
+      writeJson(PATH_PICKED_KEY, {
+        path: "parent",
+        picked_at: new Date().toISOString(),
+      });
+      requestDoorEntry("parent");
+    },
     [requestDoorEntry]
   );
   const enterCourtPath = useCallback(
-    () => requestDoorEntry("court"),
+    () => {
+      writeJson(PATH_PICKED_KEY, {
+        path: "court",
+        picked_at: new Date().toISOString(),
+      });
+      requestDoorEntry("court");
+    },
     [requestDoorEntry]
   );
 
@@ -912,6 +968,17 @@ export default function SacoparentsPortal() {
   // view. Uses instance behaviour="smooth" for a gentle jump.
   const openAssessmentFolder = useCallback((category) => {
     setFolderFilter(category);
+    // iter231 — mark first tile-open so the Follow-up Guide stops
+    // nagging on the next visit.
+    try {
+      if (!window.localStorage.getItem(FIRST_ENGAGEMENT_KEY)) {
+        writeJson(FIRST_ENGAGEMENT_KEY, {
+          at: new Date().toISOString(),
+        });
+      }
+    } catch {
+      /* ignore SSR / quota */
+    }
     // Defer one tick so the filter re-render commits before we scroll.
     setTimeout(() => {
       const el = document.getElementById("assessment-records-section");
@@ -926,6 +993,16 @@ export default function SacoparentsPortal() {
   // the correct portal storage.
   const openGuidedJourney = useCallback((topic) => {
     setGuidedTopic(topic);
+    // iter231 — count guided-chat opens as first engagement too.
+    try {
+      if (!window.localStorage.getItem(FIRST_ENGAGEMENT_KEY)) {
+        writeJson(FIRST_ENGAGEMENT_KEY, {
+          at: new Date().toISOString(),
+        });
+      }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const onGuidedSave = useCallback(
@@ -1051,6 +1128,24 @@ export default function SacoparentsPortal() {
       );
     },
     [downloadPdfFromApi, user, courtKey]
+  );
+
+  // iter229 — delete a single snapshot from the library. Removes
+  // by stable id (with fallback to index-match) and syncs via the
+  // existing debounced PUT.
+  const onDeleteSnapshot = useCallback(
+    (idOrIdx) => {
+      setSnapshotHistory((prev) => {
+        const next = prev.filter((s, i) =>
+          s.id !== undefined
+            ? s.id !== idOrIdx
+            : i !== idOrIdx
+        );
+        writeJson(SNAPSHOT_HISTORY_KEY, next);
+        return next;
+      });
+    },
+    []
   );
 
   // iter222 — fire when the guided modal writes/clears a localStorage
@@ -1528,6 +1623,7 @@ export default function SacoparentsPortal() {
                   openGuidedJourney={openGuidedJourney}
                   snapshotHistory={snapshotHistory}
                   onSnapshotRedownload={downloadGuidedSnapshot}
+                  onSnapshotDelete={onDeleteSnapshot}
                 />
               </>
             )}
@@ -1676,6 +1772,40 @@ export default function SacoparentsPortal() {
         onEnterParent={enterParentJourney}
         onEnterCourt={enterCourtPath}
       />
+
+      {/* iter231 — SA CoParents Guide follow-up nudge */}
+      {followupState && (
+        <GuideFollowupModal
+          open={!!followupState}
+          onClose={() => setFollowupState(null)}
+          onDismissForWeek={() => {
+            writeJson(FOLLOWUP_DISMISSED_KEY, {
+              at: new Date().toISOString(),
+            });
+            setFollowupState(null);
+          }}
+          onResume={() => {
+            // Mark engagement so we don't loop back to this modal
+            // even if the parent bounces before opening a tile.
+            try {
+              if (!window.localStorage.getItem(FIRST_ENGAGEMENT_KEY)) {
+                writeJson(FIRST_ENGAGEMENT_KEY, {
+                  at: new Date().toISOString(),
+                });
+              }
+            } catch {
+              /* ignore */
+            }
+            const path = followupState.path;
+            setFollowupState(null);
+            if (path === "court") enterCourtPath();
+            else enterParentJourney();
+          }}
+          path={followupState.path}
+          daysSincePick={followupState.daysSincePick}
+          parentName={user?.name || null}
+        />
+      )}
 
       {/* Reassessment modal */}
       {reassessOpen && (

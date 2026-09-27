@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 /**
  * SnapshotStrip — "Recent snapshots" strip on the Coparenting Journey
@@ -6,10 +6,16 @@ import React from "react";
  * runs so parents can re-download the Snapshot PDF, Fridge Card, or
  * Fridge Card x2 without re-running the wizard from scratch.
  *
+ * iter229 — also lets parents remove an individual snapshot via a
+ * small ✕ in the top-right of each card (with a two-tap
+ * "Delete? Yes/No" confirm so a fat-finger doesn't wipe a card).
+ *
  * Props:
  *   - history: array of {id, topic, answers, saved_at, save_key,
  *     category, safety_flagged}
  *   - onDownload({topic, answers, safety_flagged, variant})
+ *   - onDelete(id): called with the snapshot's stable id when the
+ *     parent confirms deletion. No-op if omitted.
  *   - limit: max items to render (defaults to 3 per the founder's ask)
  */
 const TOPIC_LABEL = {
@@ -45,7 +51,8 @@ function relativeAge(isoLike) {
   return `${months}mo ago`;
 }
 
-export function SnapshotStrip({ history, onDownload, limit = 3 }) {
+export function SnapshotStrip({ history, onDownload, onDelete, limit = 3 }) {
+  const [confirmingId, setConfirmingId] = useState(null);
   if (!Array.isArray(history) || history.length === 0) return null;
   const items = history.slice(0, limit);
 
@@ -75,9 +82,20 @@ export function SnapshotStrip({ history, onDownload, limit = 3 }) {
             <div
               key={key}
               data-testid={`snapshot-item-${snap.topic}-${idx}`}
-              className="p-2.5 bg-white border border-slate-200 rounded-xl shadow-sm"
+              className="p-2.5 bg-white border border-slate-200 rounded-xl shadow-sm relative"
             >
-              <div className="flex items-center gap-2 mb-2">
+              {typeof onDelete === "function" && (
+                <button
+                  type="button"
+                  data-testid={`snapshot-delete-${idx}`}
+                  onClick={() => setConfirmingId(snap.id ?? idx)}
+                  aria-label="Remove this snapshot"
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full text-slate-300 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"
+                >
+                  <i className="fa-solid fa-xmark text-[11px]"></i>
+                </button>
+              )}
+              <div className="flex items-center gap-2 mb-2 pr-6">
                 <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
                   <i className={`${iconClass} text-purple-800 text-xs`}></i>
                 </div>
@@ -92,7 +110,39 @@ export function SnapshotStrip({ history, onDownload, limit = 3 }) {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-1.5">
+              {confirmingId === (snap.id ?? idx) ? (
+                <div
+                  className="p-2 bg-rose-50 border border-rose-200 rounded-lg space-y-1.5"
+                  data-testid={`snapshot-delete-confirm-${idx}`}
+                >
+                  <div className="text-[11px] text-rose-800 leading-snug">
+                    Delete this snapshot? You can always re-run the
+                    Guided chat to make a new one.
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      data-testid={`snapshot-delete-confirm-cancel-${idx}`}
+                      onClick={() => setConfirmingId(null)}
+                      className="py-1.5 bg-white border border-slate-300 text-slate-600 rounded-lg font-bold text-[10px]"
+                    >
+                      Keep it
+                    </button>
+                    <button
+                      type="button"
+                      data-testid={`snapshot-delete-confirm-yes-${idx}`}
+                      onClick={() => {
+                        onDelete(snap.id ?? idx);
+                        setConfirmingId(null);
+                      }}
+                      className="py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[10px]"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-1.5">
                 <button
                   type="button"
                   data-testid={`snapshot-redownload-standard-${idx}`}
@@ -139,6 +189,7 @@ export function SnapshotStrip({ history, onDownload, limit = 3 }) {
                   <i className="fa-solid fa-copy mr-1"></i>×2
                 </button>
               </div>
+              )}
             </div>
           );
         })}

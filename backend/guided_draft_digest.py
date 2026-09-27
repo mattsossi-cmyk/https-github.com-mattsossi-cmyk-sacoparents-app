@@ -90,10 +90,83 @@ async def compute_digest(
 
     Split from ``send_nudge_digest`` so tests + the future admin UI
     can render the same numbers.
+
+    iter230 — also computes the PRIOR digest window (14–7 days
+    before this window) so the founder email can show a
+    week-over-week trend. Returns ``previous_total_sent``,
+    ``previous_total_finished``, ``previous_conversion_pct``,
+    ``trend_delta_pct`` and ``trend_direction`` ('up' / 'down' /
+    'flat' / 'new'). 'new' means we have no prior data to
+    compare against.
     """
     now = now or _now()
-    window_start = now - timedelta(days=LOOKBACK_START_DAYS)
-    window_end = now - timedelta(days=LOOKBACK_END_DAYS)
+    window_start, window_end, current = await _compute_window(
+        db, now=now, offset_days=0
+    )
+    prev_start, prev_end, previous = await _compute_window(
+        db, now=now, offset_days=7
+    )
+
+    total_sent = current["total_sent"]
+    total_finished = current["total_finished"]
+    conversion = (
+        round(total_finished / total_sent * 100, 1) if total_sent else 0.0
+    )
+    prev_total_sent = previous["total_sent"]
+    prev_total_finished = previous["total_finished"]
+    prev_conversion = (
+        round(prev_total_finished / prev_total_sent * 100, 1)
+        if prev_total_sent
+        else 0.0
+    )
+
+    if prev_total_sent == 0:
+        trend_direction = "new"
+        trend_delta_pct = 0.0
+    else:
+        trend_delta_pct = round(conversion - prev_conversion, 1)
+        if trend_delta_pct > 0.5:
+            trend_direction = "up"
+        elif trend_delta_pct < -0.5:
+            trend_direction = "down"
+        else:
+            trend_direction = "flat"
+
+    return {
+        "window_start": window_start.isoformat(),
+        "window_end": window_end.isoformat(),
+        "total_sent": total_sent,
+        "total_finished": total_finished,
+        "conversion_pct": conversion,
+        "by_topic": {
+            _TOPIC_LABELS[k]: v for k, v in sorted(current["by_topic"].items())
+        },
+        "previous_window_start": prev_start.isoformat(),
+        "previous_window_end": prev_end.isoformat(),
+        "previous_total_sent": prev_total_sent,
+        "previous_total_finished": prev_total_finished,
+        "previous_conversion_pct": prev_conversion,
+        "trend_delta_pct": trend_delta_pct,
+        "trend_direction": trend_direction,
+    }
+
+
+async def _compute_window(
+    db: AsyncIOMotorDatabase,
+    *,
+    now: datetime,
+    offset_days: int,
+) -> tuple:
+    """Compute totals for a single 7-day window offset by ``offset_days``.
+
+    offset_days=0 → the current digest window (now-14d → now-7d).
+    offset_days=7 → the previous window (now-21d → now-14d).
+
+    Returns (window_start, window_end, {total_sent, total_finished,
+    by_topic}).
+    """
+    window_start = now - timedelta(days=LOOKBACK_START_DAYS + offset_days)
+    window_end = now - timedelta(days=LOOKBACK_END_DAYS + offset_days)
 
     total_sent = 0
     total_finished = 0
@@ -145,18 +218,10 @@ async def compute_digest(
             total_finished += 1
             by_topic[topic]["finished"] += 1
 
-    conversion = (
-        round(total_finished / total_sent * 100, 1) if total_sent else 0.0
-    )
-    return {
-        "window_start": window_start.isoformat(),
-        "window_end": window_end.isoformat(),
+    return window_start, window_end, {
         "total_sent": total_sent,
         "total_finished": total_finished,
-        "conversion_pct": conversion,
-        "by_topic": {
-            _TOPIC_LABELS[k]: v for k, v in sorted(by_topic.items())
-        },
+        "by_topic": by_topic,
     }
 
 

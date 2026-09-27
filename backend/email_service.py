@@ -388,6 +388,27 @@ def send_nudge_digest(*, to_email: str, digest: dict) -> None:
     by_topic = digest.get("by_topic") or {}
     window_start = str(digest.get("window_start", ""))[:10]
     window_end = str(digest.get("window_end", ""))[:10]
+    # iter230 — trendline vs the prior 7-day window.
+    prev_sent = int(digest.get("previous_total_sent", 0))
+    prev_finished = int(digest.get("previous_total_finished", 0))
+    prev_conversion = digest.get("previous_conversion_pct", 0.0)
+    trend_delta = digest.get("trend_delta_pct", 0.0)
+    trend_direction = str(digest.get("trend_direction", "new"))
+    trend_arrow = {"up": "\u2197", "down": "\u2198", "flat": "\u2192", "new": "\u2606"}.get(
+        trend_direction, "\u2192"
+    )
+    trend_word = {
+        "up": "up",
+        "down": "down",
+        "flat": "flat",
+        "new": "first digest with data",
+    }.get(trend_direction, "flat")
+    trend_color = {
+        "up": "#046C4E",
+        "down": "#B91C1C",
+        "flat": "#4B4567",
+        "new": "#857E9C",
+    }.get(trend_direction, "#4B4567")
 
     plain_lines = [
         "SA CoParents \u2014 Guided Draft Nudge Digest",
@@ -396,9 +417,19 @@ def send_nudge_digest(*, to_email: str, digest: dict) -> None:
         f"Nudges sent: {total_sent}",
         f"Parents who finished within 7 days: {total_finished}",
         f"Conversion: {conversion_pct}%",
-        "",
-        "By topic:",
     ]
+    if trend_direction == "new":
+        plain_lines.append(
+            f"Prior week: no data (this is the first digest with data)"
+        )
+    else:
+        plain_lines.append(
+            f"Prior week: {prev_finished}/{prev_sent} finished "
+            f"({prev_conversion}%) \u2014 conversion is {trend_word} "
+            f"{abs(trend_delta)} pts"
+        )
+    plain_lines.append("")
+    plain_lines.append("By topic:")
     for label, counts in by_topic.items():
         plain_lines.append(
             f"  \u2022 {label}: {counts.get('finished', 0)}/"
@@ -432,7 +463,7 @@ def send_nudge_digest(*, to_email: str, digest: dict) -> None:
         f'<strong>{_html.escape(window_end)}</strong>).'
         f'</p>'
         f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;'
-        f'gap:8px;margin:0 0 16px 0;">'
+        f'gap:8px;margin:0 0 8px 0;">'
         f'<div style="background:#F4EFFF;border-radius:10px;padding:12px;'
         f'text-align:center;">'
         f'<div style="font-size:22px;font-weight:700;color:#4A1A6E;">'
@@ -451,6 +482,27 @@ def send_nudge_digest(*, to_email: str, digest: dict) -> None:
         f'{conversion_pct}%</div>'
         f'<div style="font-size:11px;color:#857E9C;text-transform:uppercase;'
         f'letter-spacing:0.5px;">Conversion</div></div>'
+        f'</div>'
+        # iter230 — week-over-week trend row
+        f'<div style="background:#F8F7FC;border:1px solid #EEE9F7;'
+        f'border-radius:10px;padding:10px 12px;margin:0 0 16px 0;'
+        f'display:flex;align-items:center;justify-content:space-between;">'
+        f'<div>'
+        f'<div style="font-size:10px;color:#857E9C;text-transform:uppercase;'
+        f'letter-spacing:0.5px;font-weight:700;">Vs last week</div>'
+        f'<div style="font-size:12px;color:#4B4567;margin-top:2px;">'
+        f'{"No prior data yet" if trend_direction == "new" else f"{prev_finished}/{prev_sent} finished ({prev_conversion}%)"}'
+        f'</div>'
+        f'</div>'
+        f'<div style="text-align:right;">'
+        f'<div style="font-size:22px;line-height:1;color:{trend_color};">'
+        f'{trend_arrow}</div>'
+        f'<div style="font-size:11px;color:{trend_color};font-weight:700;'
+        f'text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">'
+        f'{trend_word if trend_direction != "new" else "first digest"}'
+        f'{"" if trend_direction == "new" else f" {abs(trend_delta)} pts"}'
+        f'</div>'
+        f'</div>'
         f'</div>'
         f'<table style="width:100%;border-collapse:collapse;border:1px solid #EEE9F7;'
         f'border-radius:10px;overflow:hidden;">'

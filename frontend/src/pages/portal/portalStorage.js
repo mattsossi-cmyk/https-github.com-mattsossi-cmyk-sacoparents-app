@@ -25,6 +25,19 @@ export const GUIDED_DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 // wizard.
 export const SNAPSHOT_HISTORY_KEY = "sacoparents_snapshot_history";
 export const SNAPSHOT_HISTORY_MAX = 12;
+// Guide Follow-up Nudge (iter231): track path pick + first
+// engagement to trigger a "how's it going?" check-in on the next
+// visit if the parent picked a path but never opened a tile.
+export const PATH_PICKED_KEY = "sacoparents_path_picked_at";
+export const FIRST_ENGAGEMENT_KEY = "sacoparents_first_engagement_at";
+export const FOLLOWUP_DISMISSED_KEY = "sacoparents_followup_dismissed_at";
+// Minimum time between path-pick and first-visit-follow-up so we
+// don't nag someone who picked their path 20 minutes ago and is
+// still exploring.
+export const FOLLOWUP_MIN_HOURS = 24;
+// After a "not now, thanks" dismiss, wait this long before showing
+// the follow-up again.
+export const FOLLOWUP_SNOOZE_DAYS = 7;
 
 export const PRESETS = {
   late_handoff: {

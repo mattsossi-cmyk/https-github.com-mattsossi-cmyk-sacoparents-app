@@ -68,6 +68,7 @@ export function AlignmentHub({
   // fridge_pair) without re-running the wizard.
   snapshotHistory = [],
   onSnapshotRedownload = () => {},
+  onSnapshotDelete = () => {},
 }) {
   return (
     <div className="space-y-4" data-testid="hub-section-alignment">
@@ -99,6 +100,7 @@ export function AlignmentHub({
           <SnapshotStrip
             history={snapshotHistory}
             onDownload={onSnapshotRedownload}
+            onDelete={onSnapshotDelete}
             limit={3}
           />
 
