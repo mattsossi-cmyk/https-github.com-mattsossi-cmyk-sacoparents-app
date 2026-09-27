@@ -764,3 +764,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Professional Alignment Report PDF (`pdf_lens.py`) restyled to the user's mockup ("always like this"): gradient title band, numbered circle sections 1–11 (Case & Assessment Overview, Alignment Snapshot + Safety Screening, Parent A Perspective, Parent B Perspective, Joint Co-Parenting Assessment, Child-Focused Legal Issues (table), Options & Resources, Conflict Resolution Pathways, Legal Conflict & Agreement-Building Analysis, Professional Legal Statement & Roadmap, Concise Court Summary), solid purple/blue/teal score cards, Successes/Challenges/Growth cards per parent. Tests iter58/iter60 heading strings updated.
 - Dashboard CasesTable: "Professional Report →" link per ready case (`case-row-pro-report-{id}`).
 - DO NOT reintroduce the 5-section "SACO ParentAlign Professional Evaluation" HTML format.
+
+## 2026-06 — Invitation email diagnostics
+- Preview verified end-to-end: Resend custom-domain sender (sacoparentsalign.com) accepts sends (200) and admin invite path returns email_sent=true. Production failure ("not verified") is deployment-env specific.
+- Added `POST /api/admin/email-health` (sends test email to the admin, reports Resend vs default sender, status/error, hints) + "Run email health check" panel in Admin → Invite Professional. Invite response now includes `email_error`; UI shows the real reason.
+- Preview admin login with seeded ADMIN_PASSWORD returns 401 (user changed password / seed doesn't overwrite) — noted, not changed.

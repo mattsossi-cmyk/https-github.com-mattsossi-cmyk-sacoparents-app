@@ -17,9 +17,12 @@ export function InviteProfessional() {
   useEffect(() => { load(); }, []);
   const send = async (e) => {
     e.preventDefault(); setBusy(true);
-    try { const { data } = await api.post("/admin/pro-invites", form); toast[data.email_sent ? "success" : "warning"](data.email_sent ? `Invitation sent to ${data.email}` : "Invitation saved but the email could not be sent"); setForm(EMPTY); load(); }
+    try { const { data } = await api.post("/admin/pro-invites", form); toast[data.email_sent ? "success" : "error"](data.email_sent ? `Invitation sent to ${data.email}` : `Invitation saved but the email could not be sent${data.email_error ? ` — ${data.email_error}` : ""}. Run the Email health check below.`, { duration: 9000 }); setForm(EMPTY); load(); }
     catch (err) { toast.error(formatApiError(err)); } finally { setBusy(false); }
   };
+  const [health, setHealth] = useState(null);
+  const [checking, setChecking] = useState(false);
+  const runHealth = async () => { setChecking(true); try { const { data } = await api.post("/admin/email-health"); setHealth(data); } catch (err) { toast.error(formatApiError(err)); } finally { setChecking(false); } };
   const resend = async (i) => { try { await api.post(`/admin/pro-invites/${i.id}/resend`); toast.success(`Reminder sent to ${i.email}`); load(); } catch (err) { toast.error(formatApiError(err)); } };
   return (
     <section className="bg-white border border-border rounded-lg p-6" data-testid="invite-professional-section">
@@ -32,6 +35,22 @@ export function InviteProfessional() {
         <div className="space-y-1"><Label htmlFor="inv-prof">Profession (optional)</Label><Input id="inv-prof" placeholder="e.g. Family Law Attorney" value={form.profession} onChange={(e) => setForm({ ...form, profession: e.target.value })} data-testid="invite-profession" /></div>
         <Button type="submit" disabled={busy} data-testid="invite-submit"><Mail className="h-4 w-4 mr-1" /> {busy ? "Sending…" : "Send invitation"}</Button>
       </form>
+      <div className="mt-4 rounded-md border border-dashed border-border p-3" data-testid="email-health-panel">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">Invitations not arriving? Send a test email to <strong>your own address</strong> and see exactly which sender this deployment is using.</p>
+          <Button type="button" size="sm" variant="outline" onClick={runHealth} disabled={checking} data-testid="email-health-btn">{checking ? "Checking…" : "Run email health check"}</Button>
+        </div>
+        {health && (
+          <div className="mt-3 text-xs space-y-1" data-testid="email-health-result">
+            <p className={`font-semibold ${health.delivered_via === "none" ? "text-red-700" : "text-align-green"}`} data-testid="email-health-status">
+              {health.delivered_via === "none" ? "No sender could deliver the test email." : `Test email delivered to ${health.sent_to} via ${health.delivered_via === "resend" ? `your domain sender (${health.config.resend_from})` : "the default Align sender"}.`}
+            </p>
+            <p>Custom-domain sender (Resend): {health.config.resend_configured ? `configured as ${health.config.resend_from} — ${health.resend.ok ? "OK" : `FAILED (${health.resend.status || "no response"}) ${health.resend.error}`}` : "not configured in this deployment"}</p>
+            <p>Default Align sender: {health.config.emergent_email_key ? (health.fallback.attempted ? (health.fallback.ok ? "OK" : `FAILED ${health.fallback.error}`) : "available (not needed)") : "key missing"}</p>
+            {health.hints.map((h, i) => <p key={i} className="text-amber-800" data-testid={`email-health-hint-${i}`}>• {h}</p>)}
+          </div>
+        )}
+      </div>
       <h3 className="mt-6 text-sm font-semibold">Invitations ({items.length})</h3>
       {items.length === 0 ? <p className="text-xs text-muted-foreground mt-1" data-testid="invites-empty">No invitations yet.</p> : (
         <ul className="mt-2 divide-y divide-border" data-testid="invites-list">

@@ -49,6 +49,55 @@ async def _mail(to: str, subject: str, html: str) -> bool:
         return False
 
 
+async def _mail_detail(to: str, subject: str, html: str) -> dict:
+    try:
+        await send_email(to=to, subject=subject, html=html, kind="pro_onboarding", to_role="Professional")
+        return {"email_sent": True, "email_error": ""}
+    except HTTPException as exc:
+        logger.warning("onboarding email to %s failed: %s", to, exc.detail)
+        return {"email_sent": False, "email_error": str(exc.detail)}
+    except Exception as exc:
+        logger.warning("onboarding email to %s failed: %s", to, exc)
+        return {"email_sent": False, "email_error": f"{type(exc).__name__}: {exc}"[:200]}
+
+
+@router.post("/admin/email-health")
+async def email_health(user=Depends(get_current_user)):
+    """Admin-only: sends a real test email to the admin and reports which provider/key is configured and what happened."""
+    import email_utils as eu
+    _admin(user)
+    cfg = {"resend_configured": bool(eu.RESEND_API_KEY and eu.RESEND_FROM_EMAIL), "resend_from": eu.RESEND_FROM_EMAIL or "", "emergent_email_key": bool(eu.EMAIL_KEY),
+           "from_name": eu.EMAIL_FROM_NAME, "reply_to": eu.EMAIL_REPLY_TO or "", "app_url": app_url()}
+    resend = {"attempted": cfg["resend_configured"], "ok": False, "status": None, "error": ""}
+    if cfg["resend_configured"]:
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=12) as client:
+                r = await client.post("https://api.resend.com/emails", headers={"Authorization": f"Bearer {eu.RESEND_API_KEY}"},
+                                      json={"from": f"{eu.EMAIL_FROM_NAME} <{eu.RESEND_FROM_EMAIL}>", "to": [user["email"]], "subject": f"{eu.EMAIL_FROM_NAME} email health check",
+                                            "html": _wrap(f"<p>Hi {escape(user.get('name', ''))},</p><p>This test confirms the custom-domain sender <strong>{escape(eu.RESEND_FROM_EMAIL)}</strong> can deliver mail from this deployment.</p>")})
+            resend.update(ok=r.status_code < 300, status=r.status_code, error="" if r.status_code < 300 else r.text[:300])
+        except Exception as exc:
+            resend["error"] = f"{type(exc).__name__}: {exc}"[:300]
+    fallback = {"attempted": not resend["ok"], "ok": False, "error": ""}
+    if not resend["ok"]:
+        try:
+            await eu._post_email(eu._email_payload(user["email"], f"{eu.EMAIL_FROM_NAME} email health check (default sender)", _wrap("<p>This test confirms the default Align sender can deliver mail from this deployment.</p>"), None))
+            fallback["ok"] = True
+        except Exception as exc:
+            fallback["error"] = f"{type(exc).__name__}: {getattr(getattr(exc, 'response', None), 'text', '') or exc}"[:300]
+    hints = []
+    if not cfg["resend_configured"]:
+        hints.append("RESEND_API_KEY / RESEND_FROM_EMAIL are not set in this deployment's environment — custom-domain sending is off.")
+    if resend["attempted"] and not resend["ok"]:
+        hints.append("Resend rejected the send. Typical causes: domain not verified in the Resend dashboard (DNS records), a restricted/invalid API key, or FROM address on a different domain than the verified one.")
+    if not cfg["emergent_email_key"]:
+        hints.append("EMERGENT_EMAIL_KEY is missing — the default sender cannot be used.")
+    if fallback["attempted"] and not fallback["ok"]:
+        hints.append("Default sender also failed — check EMERGENT_EMAIL_KEY in the deployment environment.")
+    return {"config": cfg, "resend": resend, "fallback": fallback, "delivered_via": "resend" if resend["ok"] else "emergent" if fallback["ok"] else "none", "sent_to": user["email"], "hints": hints}
+
+
 def _invite_html(inv: dict, admin_name: str) -> str:
     url = f"{app_url()}/auth?mode=register&pi={inv['token']}"
     return _wrap(f"<p>Hi {escape(inv['name'])},</p><p>{escape(admin_name or 'The SA CoParents Align administrator')} has invited you to join <strong>{escape(EMAIL_FROM_NAME)}</strong> as a "
@@ -69,7 +118,7 @@ async def create_invite(body: InviteIn, user=Depends(get_current_user)):
     inv = {"id": str(uuid.uuid4()), "token": secrets.token_urlsafe(24), "name": body.name.strip()[:120], "email": email, "zip": z, "profession": body.profession.strip()[:80],
            "status": "invited", "invited_by": user["_id"], "invited_by_name": user.get("name", ""), "created_at": _now(), "resent_at": None, "registered_at": None, "user_id": None}
     await db.pro_invites.insert_one(dict(inv))
-    inv["email_sent"] = await _mail(email, f"You're invited to join {EMAIL_FROM_NAME}", _invite_html(inv, user.get("name", "")))
+    inv.update(await _mail_detail(email, f"You're invited to join {EMAIL_FROM_NAME}", _invite_html(inv, user.get("name", ""))))
     return {k: v for k, v in inv.items() if k != "token"}
 
 
