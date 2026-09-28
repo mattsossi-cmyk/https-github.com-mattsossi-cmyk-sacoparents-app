@@ -815,3 +815,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 — Signature image
 - Third profile image slot `signature` (pro_profile SLOTS, ProContactCard). pdf_lens._signature_image prints it above the certification block only when report status is final/submitted_to_court. Auth.jsx sibling-app link moved to REACT_APP_SACOPARENTS_APP_URL (frontend/.env).
+
+## 2026-06 — Signature on court packet
+- pdf_report._signature_block prints the uploaded signature image + rule + name/role/attested date under PROFESSIONAL ATTESTATION on the court-packet cover letter; court_packets.pro_profile passes signature_path. Falls back to blank rule when no image.

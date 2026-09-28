@@ -119,6 +119,7 @@ class PacketService:
         u = await self.db.users.find_one({"_id": pid}, {"name": 1, "email": 1, "profile": 1, "verification_level": 1}) or {}
         prof = u.get("profile") or {}
         return {"name": u.get("name", ""), "email": u.get("email", ""), "credentials_verified": u.get("verification_level") == "credentials_verified",
+                "signature_path": ((prof.get("images") or {}).get("signature") or {}).get("path"),
                 **{k: prof.get(k, "") for k in ("pro_role", "organization", "license_number", "phone", "city", "state")}}
 
     async def packet_reports(self, p: dict) -> list[dict]:

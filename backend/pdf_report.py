@@ -701,6 +701,32 @@ def _footnote(pdf: FPDF, text: str) -> None:
     pdf.multi_cell(0, 4, _s(text), new_x="LMARGIN", new_y="NEXT")
 
 
+def _signature_block(pdf: FPDF, pro: dict, date_text: str) -> None:
+    """Uploaded signature image (if any) over a rule, then name / date — used on the court-packet cover letter."""
+    from io import BytesIO
+    if pdf.get_y() > pdf.h - 55:
+        pdf.add_page()
+    pdf.ln(4)
+    y = pdf.get_y()
+    if pro.get("signature_path"):
+        try:
+            from storage import get_object
+            data, _ = get_object(pro["signature_path"])
+            pdf.image(BytesIO(data), x=pdf.l_margin + 2, y=y, w=50, h=18, keep_aspect_ratio=True)
+        except Exception:  # noqa: BLE001
+            pass
+    pdf.set_draw_color(*GRAY)
+    pdf.set_line_width(0.3)
+    pdf.line(pdf.l_margin + 2, y + 19, pdf.l_margin + 70, y + 19)
+    pdf.set_y(y + 20)
+    pdf.set_font(FONT, "B", 9.5)
+    pdf.set_text_color(*DARK)
+    pdf.cell(0, 5, _s(pro.get("name") or ""), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font(FONT, "", 8.5)
+    pdf.set_text_color(*GRAY)
+    pdf.cell(0, 4.5, _s(" · ".join(x for x in (pro.get("pro_role"), f"Attested {date_text}" if date_text else "") if x)), new_x="LMARGIN", new_y="NEXT")
+
+
 def build_court_cover_letter_pdf(p: dict) -> bytes:
     """Professional's cover letter to the court + packet index (pages 1-2 of a Court Packet)."""
     pro = p.get("professional") or {}
@@ -730,6 +756,7 @@ def build_court_cover_letter_pdf(p: dict) -> bytes:
     pdf.ln(4)
     _label(pdf, "PROFESSIONAL ATTESTATION")
     _body(pdf, p.get("attestation_text") or "", italic=True)
+    _signature_block(pdf, pro, _fmt_date(p.get("attested_at") or p.get("created_at")))
     pdf.ln(6)
     pdf.set_font(FONT, "I", 8)
     pdf.set_text_color(*GRAY)
