@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from core import db
 from storage import APP_NAME, get_object, put_object
 
-SLOTS = ("headshot", "firm_logo")
+SLOTS = ("headshot", "firm_logo", "signature")
 IMAGE_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 MAX_IMAGE = 2 * 1024 * 1024
 

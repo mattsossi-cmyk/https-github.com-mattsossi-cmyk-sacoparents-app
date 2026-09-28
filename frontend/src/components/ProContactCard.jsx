@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const FIELDS = [["phone", "Phone"], ["organization", "Firm / Organization"], ["address", "Office / Mailing Address"], ["city", "City"], ["state", "State"], ["zip", "ZIP"]];
-const SLOTS = [["headshot", "Headshot"], ["firm_logo", "Court / Firm Logo"]];
+const SLOTS = [["headshot", "Headshot"], ["firm_logo", "Court / Firm Logo"], ["signature", "Signature (prints on the certification page when finalized)"]];
 
 const ImageSlot = ({ slot, label, has, onChange }) => {
   const [busy, setBusy] = useState(false);

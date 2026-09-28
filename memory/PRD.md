@@ -812,3 +812,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - backend/pro_profile.py: PUT /api/me/profile/contact (phone, organization, address, city, state, zip); POST/DELETE/GET /api/me/profile/image/{headshot|firm_logo} via Emergent Object Storage (≤2 MB jpg/png/webp), refs stored at users.profile.images.
 - Cover: profile values auto-fill; per-report override fields cover_name/email/phone/address (TEXT_FIELDS) in the editor under the cover; images printed top-right of PDF cover (pdf_lens._cover_images) and shown on-screen.
 - Dashboard: ProContactCard (Report Cover Contact) with edit form + image slots.
+
+## 2026-06 — Signature image
+- Third profile image slot `signature` (pro_profile SLOTS, ProContactCard). pdf_lens._signature_image prints it above the certification block only when report status is final/submitted_to_court. Auth.jsx sibling-app link moved to REACT_APP_SACOPARENTS_APP_URL (frontend/.env).

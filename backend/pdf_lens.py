@@ -447,6 +447,24 @@ def _lens_ai_appendix(pdf: FPDF, rep: dict) -> None:
     _legal_kv(pdf, rows)
 
 
+def _signature_image(pdf: FPDF, path: str) -> None:
+    """Uploaded signature above the certification block (finalized reports only); skipped if storage is unavailable."""
+    from io import BytesIO
+    from storage import get_object
+    try:
+        data, _ = get_object(path)
+    except Exception:  # noqa: BLE001
+        return
+    if pdf.get_y() > pdf.h - 45:
+        pdf.add_page()
+    y = pdf.get_y() + 1
+    pdf.image(BytesIO(data), x=pdf.l_margin + 2, y=y, w=50, h=18, keep_aspect_ratio=True)
+    pdf.set_draw_color(*GRAY)
+    pdf.set_line_width(0.3)
+    pdf.line(pdf.l_margin + 2, y + 19, pdf.l_margin + 60, y + 19)
+    pdf.set_y(y + 21)
+
+
 def build_legal_lens_pdf(v: dict) -> bytes:
     """SA CoParents Align Professional Alignment Report — court-ready PDF (11 sections + certification)."""
     from lens_data import REPORT_DISCLAIMER
@@ -460,6 +478,9 @@ def build_legal_lens_pdf(v: dict) -> bytes:
     _lens_heading(pdf, "Professional Certification")
     _body(pdf, "Important: " + REPORT_DISCLAIMER, italic=True)
     _body(pdf, "This report reflects the professional's review of the individual assessments, safety screenings and Joint Report. It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.", italic=True)
+    sig = ((v.get("professional") or {}).get("images") or {}).get("signature")
+    if sig and rep.get("status") in ("final", "submitted_to_court"):
+        _signature_image(pdf, sig)
     _legal_kv(pdf, [("Professional signature", rep.get("signature_name")), ("Title", rep.get("professional_title")), ("Date finalized", (rep.get("finalized_at") or "")[:10])])
     _lens_ai_appendix(pdf, rep)
     pdf.ln(3)

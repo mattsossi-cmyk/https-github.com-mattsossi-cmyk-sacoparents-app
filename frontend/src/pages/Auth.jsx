@@ -273,7 +273,7 @@ export default function Auth() {
           {(mode === "login" || mode === "register") && !isParentFlow && (
             <div className="mt-6 bg-secondary/50 border border-border rounded-md p-4 text-sm" data-testid="parent-notice">
               <p className="font-semibold">Are you a parent?</p>
-              <p className="text-muted-foreground mt-1">Individual parent assessments begin at <a href="https://sacoparentsapp.online" target="_blank" rel="noreferrer" className="text-primary hover:underline">SA CoParents App</a>. Joint reports here are initiated by an authorized professional — you'll enter through your secure invitation link or case code.</p>
+              <p className="text-muted-foreground mt-1">Individual parent assessments begin at <a href={process.env.REACT_APP_SACOPARENTS_APP_URL} target="_blank" rel="noreferrer" className="text-primary hover:underline">SA CoParents App</a>. Joint reports here are initiated by an authorized professional — you'll enter through your secure invitation link or case code.</p>
             </div>
           )}
         </div>
