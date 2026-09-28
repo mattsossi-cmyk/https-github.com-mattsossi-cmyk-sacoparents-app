@@ -797,3 +797,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Report sections 1–11 tinted per SECTION_COLORS (pdf_lens.py) / SECTION_TINT (LensSections.jsx): 1 slate, 2–3 purple, 4 blue, 5–6 teal, 7 blue, 8 green, 9 orange, 10 blue, 11 gold. Applied to PDF heading badge/hairline, editor and sample page.
 - Circular import removed: build_legal_lens_pdf + AI appendix now live in pdf_lens.py; importers (legal_lens, server, court_workflow, tests) updated.
 - Preview invite delivery test: Email Health Check green (Resend 200 via noreply@sacoparentsalign.com); invite bc0e82eb sent to mattsossi+invite@bsossi.com, email_sent=true. Inbox receipt + first-open tracking pending owner confirmation. Admin password temporarily reset (see test_credentials.md).
+
+## 2026-06 — Professional Dashboard restructure + Align Assistant
+- /dashboard (pro/admin): ProTopNav (Case Lookup, Active Cases (n), + New Case), ProHero tagline + 3 CTA cards (Invite Parents, Review Joint Report, Create Prof. Report), PipelineStepper (5 steps for selected case, GET /api/assistant/case-brief/{id}). Old PrimaryTiles/SecondaryTools moved into More tools.
+- Align Assistant (backend/assistant.py, frontend AlignAssistant.jsx): Gemini 3 Flash (gemini-3-flash-preview) via EMERGENT_LLM_KEY, SSE streaming POST /api/assistant/chat, history in db.assistant_messages per session_id, suggestion chips (invite/review/pathway/report) triggered by CTA hover/click. Advisory-only system prompt: no custody/credibility/diagnosis/legal conclusions, email-only invites, never files.
+- Tested: iteration_68 all pass (backend + frontend).
