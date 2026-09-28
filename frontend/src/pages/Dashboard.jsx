@@ -29,6 +29,10 @@ import { ProZipPrompt } from "@/components/ProZipPrompt";
 import { PublicListingCard } from "@/components/PublicListingCard";
 import { AdminListings } from "@/components/AdminListings";
 import { SenderStatusBadge } from "@/components/SenderStatusBadge";
+import { ProTopNav } from "@/components/dashboard/ProTopNav";
+import { ProHero } from "@/components/dashboard/ProHero";
+import { PipelineStepper } from "@/components/dashboard/PipelineStepper";
+import { AlignAssistant } from "@/components/AlignAssistant";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -58,6 +62,14 @@ export default function Dashboard() {
   const pendingReferrals = (courtRefs || []).filter((x) => x.status === "pending").length;
   const awaitingSubmit = (courtRefs || []).filter((x) => x.status === "accepted").length;
   const overdueCount = (courtRefs || []).filter((x) => x.overdue).length;
+  const [selectedCase, setSelectedCase] = useState(null);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [trigger, setTrigger] = useState(null);
+  const activeCase = realCases.find((j) => j.id === selectedCase) || realCases[0] || null;
+  const fireTrigger = (key, mode) => setTrigger({ key, mode, at: Date.now() });
+  const reportCase = realCases.find((j) => j.id === activeCase?.id && j.status === "ready") || realCases.find((j) => j.status === "ready" && j.kind !== "agreement" && j.kind !== "foundation");
+  const reviewTo = activeCase ? `/joint/${activeCase.id}` : "#cases";
+  const reportTo = reportCase ? `/cases/${reportCase.id}/professional-report` : "#cases";
 
   const closeCase = async (j) => {
     const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);
@@ -363,8 +375,9 @@ export default function Dashboard() {
           <Link to="/" data-testid="dash-brand-link" className="min-w-0 shrink">
             <BrandLogo />
           </Link>
+          {isPro && <div className="hidden lg:block flex-1 px-4"><ProTopNav cases={realCases} /></div>}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <span className="text-sm hidden sm:block" data-testid="user-email"><span className="font-medium" data-testid="user-name">{user?.name}</span>{user?.name ? <span className="text-muted-foreground"> · {user?.email}</span> : <span className="text-muted-foreground">{user?.email}</span>}</span>
+            <span className="text-sm hidden 2xl:block" data-testid="user-email"><span className="font-medium" data-testid="user-name">{user?.name}</span>{user?.name ? <span className="text-muted-foreground"> · {user?.email}</span> : <span className="text-muted-foreground">{user?.email}</span>}</span>
             {user?.credentials_verified && <span className="hidden sm:inline-flex"><VerifiedBadge /></span>}
             <Button variant="outline" size="sm" onClick={async () => { await logout(); navigate("/"); }} data-testid="logout-btn">
               Sign out
@@ -374,16 +387,18 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-12 overflow-x-hidden">
-        <div>
-          <h1 className="text-4xl font-semibold" data-testid="dash-heading">Dashboard</h1>
-          <p className="text-muted-foreground mt-2" data-testid="dash-subtext">{isPro ? "Choose what you want to accomplish. Create or Receive a Case → Invite Parents → Monitor Assessments → Review Joint Reports → Prepare Professional Statement → Share/Submit Authorized Reports." : "Joint reports are initiated by your professional. Use your invitation link or case code to take part."}</p>
-        </div>
-
-        {isPro && (
+        {isPro ? (
           <>
-            <PrimaryTiles activeCount={realCases.length} readyCount={readyCount} referralCount={pendingReferrals} submitCount={awaitingSubmit} overdueCount={overdueCount} />
-            <SecondaryTools />
+            <div className="lg:hidden"><ProTopNav cases={realCases} /></div>
+            <ProHero reviewTo={reviewTo} reportTo={reportTo} onTrigger={fireTrigger} />
+            <PipelineStepper cases={realCases} selectedId={activeCase?.id} onSelect={setSelectedCase} onTrigger={fireTrigger} />
+            <AlignAssistant userId={user?.id || "anon"} caseId={activeCase?.id} caseLabel={activeCase?.case_code} trigger={trigger} open={assistantOpen} onOpenChange={setAssistantOpen} />
           </>
+        ) : (
+          <div>
+            <h1 className="text-4xl font-semibold" data-testid="dash-heading">Dashboard</h1>
+            <p className="text-muted-foreground mt-2" data-testid="dash-subtext">Joint reports are initiated by your professional. Use your invitation link or case code to take part.</p>
+          </div>
         )}
 
         {isPro && user?.role === "professional" && <ProZipPrompt />}
@@ -518,6 +533,8 @@ export default function Dashboard() {
           <details className="rounded-lg border border-border bg-white" data-testid="more-tools">
             <summary className="cursor-pointer select-none px-6 py-4 text-sm font-semibold" data-testid="more-tools-toggle">More tools — app account link, joint agreements, family violence pathway, invitation codes</summary>
             <div className="border-t border-border p-6 space-y-6">
+              <PrimaryTiles activeCount={realCases.length} readyCount={readyCount} referralCount={pendingReferrals} submitCount={awaitingSubmit} overdueCount={overdueCount} />
+              <SecondaryTools />
               {legacyTools}
             </div>
           </details>
