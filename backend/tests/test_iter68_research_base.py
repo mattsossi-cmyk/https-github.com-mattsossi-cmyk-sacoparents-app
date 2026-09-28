@@ -41,6 +41,11 @@ def test_pdf_renders_research_base_footer() -> None:
 
 
 class _FakeDb:
+    class users:
+        @staticmethod
+        async def find_one(*a, **k):
+            return None
+
     class providers:
         @staticmethod
         def find(*a, **k):

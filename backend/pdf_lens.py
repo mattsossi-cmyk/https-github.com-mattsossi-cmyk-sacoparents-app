@@ -269,6 +269,46 @@ def _perspective(pdf: FPDF, rep: dict, role: str, scale, cls) -> None:
     _lens_individual_scale(pdf, scale, cls, rep, role)
 
 
+def cover_page(pdf: FPDF, pro: dict) -> None:
+    """Page 1 — Professional Contact cover: title band, Professional Information, Purpose cards, Align→Focus→Resolve→Agree."""
+    brand_header(pdf)
+    title_band(pdf, "Professional Alignment Report", "Prepared for: Court • Attorneys • Mediators • Parent Facilitators • Other Authorized Professionals")
+    pdf.set_font(FONT, "", 8.5)
+    pdf.set_text_color(*GRAY)
+    pdf.cell(0, 5, _s("Understanding Differences. Identifying Alignment. Meeting the Needs of the Child."), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+    _lens_heading(pdf, "Professional Information")
+    blank = "_" * 44
+    kv_table(pdf, [("Professional Name", pro.get("name") or blank), ("Email", pro.get("email") or blank), ("Phone", pro.get("phone") or blank), ("Office / Mailing Address", pro.get("address") or f"{blank}\n{blank}")])
+    pdf.ln(3)
+    _lens_heading(pdf, "Purpose")
+    full_card(pdf, "FROM DIFFERENCES TO DIRECTION", ["This report helps professionals understand where the parents align, where perspectives differ, what the child may need, and what options, resources, and resolution pathways may help."], PURPLE_FILL, PURPLE)
+    full_card(pdf, "THE SA COPARENTS APPROACH", ["The goal is not to determine which parent is right. The goal is to understand the co-parenting situation, keep the child's needs at the center, and identify constructive pathways toward resolution and agreement."], TEAL_FILL, TEAL)
+    pdf.ln(3)
+    steps = [("ALIGN", "Understand the situation", PURPLE), ("FOCUS", "Identify child needs", TEAL), ("RESOLVE", "Explore pathways", BLUE), ("AGREE", "Build next steps", PURPLE)]
+    gap, bw, y = 12, 36, pdf.get_y()
+    x0 = pdf.l_margin + (pdf.w - pdf.l_margin - pdf.r_margin - (bw * 4 + gap * 3)) / 2
+    for i, (t, sub, color) in enumerate(steps):
+        x = x0 + i * (bw + gap)
+        pdf.set_fill_color(*color)
+        pdf.rect(x, y, bw, 18, style="F", round_corners=True, corner_radius=2)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_xy(x, y + 3)
+        pdf.set_font(FONT, "B", 9)
+        pdf.cell(bw, 5, t, align="C")
+        pdf.set_xy(x + 2, y + 8.5)
+        pdf.set_font(FONT, "B", 6.5)
+        pdf.multi_cell(bw - 4, 3.2, _s(sub), align="C")
+        if i < 3:
+            pdf.set_xy(x + bw, y + 6)
+            pdf.set_font(FONT, "", 12)
+            pdf.set_text_color(*PURPLE)
+            pdf.cell(gap, 6, _s("→"), align="C")
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_text_color(*BODY)
+    pdf.set_y(y + 22)
+
+
 def how_to_read_page(pdf: FPDF) -> None:
     """One-page reader's guide inserted after the title band."""
     from lens_walkthrough import READER_INTRO, SCALE_NOTE, WALKTHROUGH
@@ -303,13 +343,7 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     """Pages 1–6 of the Professional Alignment Report (everything before the certification block)."""
     from lens_data import CHILD_FOCUS_CATEGORIES, CONFLICT_GUIDANCE, PATHWAYS, RISK_CATEGORIES, SCALE_TABLE, SAFETY_PATHWAY
     rep, c, cls, notes = v["report"], v["case"], v["classification"], v["notes"]
-    brand_header(pdf)
-    title_band(pdf, "Professional Alignment Report", "Prepared for: Court • Attorneys • Mediators • Parent Facilitators • Other Authorized Professionals")
-    pdf.set_font(FONT, "", 8)
-    pdf.set_text_color(*GRAY)
-    pdf.cell(0, 4.5, _s("SA CoParents Align Professional Evaluation Report (Legal Lens) — for professionals and the court"), new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(1)
-    full_card(pdf, "Purpose", [notes.get("purpose", "")], PURPLE_FILL, PURPLE)
+    cover_page(pdf, v.get("professional") or {})
     how_to_read_page(pdf)
     heading(pdf, 1, "Case & Assessment Overview")
     kv_table(pdf, [("Case / Matter", rep.get("matter_name")), ("Case ID", c.get("case_code")), ("Court / County", rep.get("court_county")), ("Cause Number", rep.get("cause_number")),

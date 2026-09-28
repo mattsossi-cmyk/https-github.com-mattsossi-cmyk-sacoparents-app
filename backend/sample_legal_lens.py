@@ -82,4 +82,4 @@ def sample_legal_lens() -> dict:
                         "risk_categories": RISK_CATEGORIES, "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS, "providers": []},
             "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE, "safety_pathway": SAFETY_PATHWAY, "disclaimer": REPORT_DISCLAIMER},
             "case": {"id": "sample-case", "case_code": "SA-26-TRN-000000", "child_name": "M. Carter", "subject_label": "Transitions & Communication"},
-            "professional": SAMPLE_PRO, "court": SAMPLE_COURT}
+            "professional": {**SAMPLE_PRO, "address": f"{SAMPLE_PRO['organization']}\n{SAMPLE_PRO['city']}, {SAMPLE_PRO['state']}"}, "court": SAMPLE_COURT}

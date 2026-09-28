@@ -802,3 +802,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - /dashboard (pro/admin): ProTopNav (Case Lookup, Active Cases (n), + New Case), ProHero tagline + 3 CTA cards (Invite Parents, Review Joint Report, Create Prof. Report), PipelineStepper (5 steps for selected case, GET /api/assistant/case-brief/{id}). Old PrimaryTiles/SecondaryTools moved into More tools.
 - Align Assistant (backend/assistant.py, frontend AlignAssistant.jsx): Gemini 3 Flash (gemini-3-flash-preview) via EMERGENT_LLM_KEY, SSE streaming POST /api/assistant/chat, history in db.assistant_messages per session_id, suggestion chips (invite/review/pathway/report) triggered by CTA hover/click. Advisory-only system prompt: no custody/credibility/diagnosis/legal conclusions, email-only invites, never files.
 - Tested: iteration_68 all pass (backend + frontend).
+
+## 2026-06 — Professional Report cover page (Page 1 Professional Contact)
+- New PDF page 1 (pdf_lens.cover_page): title band, Professional Information (name/email/phone/office address from the professional profile via legal_lens.professional_contact; blank lines when missing), Purpose cards, ALIGN→FOCUS→RESOLVE→AGREE. Then How to Read, then sections 1–11 as before.
+- ReportCover.jsx shown on the report editor (/cases/:id/professional-report) and sample page. Tests updated (Alignment Report title; fake db users).
+- Invite test: mattsossi+invite@bsossi.com sent, not yet opened (first_opened_at null) — awaiting owner confirmation.

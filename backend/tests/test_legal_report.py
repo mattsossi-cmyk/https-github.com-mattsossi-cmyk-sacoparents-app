@@ -83,7 +83,7 @@ def test_legal_report_attached_to_court_submission() -> None:
     lp = judge.get(f"{API}/court-dashboard/packets/{sub['packet_id']}/legal-report.pdf")
     assert lp.status_code == 200 and lp.headers["content-type"].startswith("application/pdf")
     text = "".join(pg.get_text() for pg in pymupdf.open(stream=io.BytesIO(lp.content), filetype="pdf"))
-    assert "Professional Evaluation Report" in text and "Court Pro, J.D." in text and "MET at reassessment" in text and "Starting With Alignment" in text and "DRAFT" not in text
+    assert "Professional Alignment Report" in text and "Court Pro, J.D." in text and "MET at reassessment" in text and "Starting With Alignment" in text and "DRAFT" not in text
     secs = judge.get(f"{API}/court-dashboard/packets/{sub['packet_id']}/legal-report-sections")
     assert secs.status_code == 200, secs.text
     pages = secs.json()["pages"]

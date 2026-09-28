@@ -12,6 +12,7 @@ import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/Le
 import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { SectionGuide, WalkthroughOverview, useWalkthrough } from "@/components/LensWalkthrough";
 import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
+import { ReportCover } from "@/components/ReportCover";
 import { GrowthProgress } from "@/components/CourtLegalSummary";
 import { NeutralityCheck, ChildFocusSuggest, ParallelSummaryHelper, ResearchPanel, ResearchBase } from "@/components/LensAiTools";
 
@@ -221,6 +222,7 @@ export default function LegalLensReport() {
       <header className="border-b border-border"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="lens-back"><ArrowLeft className="h-4 w-4" /> Back to Case</Link><BrandLogo size="text-xl" /><span className="rounded-full bg-brand-purple/10 px-3 py-1 text-xs font-semibold text-brand-purple" data-testid="lens-status">{STATUS[rep.status]}</span></div></header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5">
         <ReportHeader />
+        <ReportCover pro={v?.professional} testId="lens-cover" />
         <p className="rounded-md border-l-4 border-brand-purple bg-brand-purple/5 p-3 text-sm" data-testid="lens-principle-notice"><strong className="text-brand-purple">Report Principle:</strong> Parent statements, system-generated comparisons, AI-assisted summaries, and professional observations are identified separately so the source of each statement remains clear.</p>
         <WorkflowGuide kind="legal_lens" />
         <WalkthroughOverview guides={guides} anchor={(n) => GUIDE_SEC[n]} done={(n) => (GUIDE_FIELDS[n] || []).some((k) => { const v = rep?.[k]; return Array.isArray(v) ? v.length > 0 : v && typeof v === "object" ? Object.values(v).some((x) => x?.checked) : Boolean(v); })} />
