@@ -112,7 +112,8 @@ TEXT_FIELDS = ("agreement_building_opportunities", "issues_requiring_attention",
                "safety_takeaway", "parent_a_strengths", "parent_a_gaps", "parent_a_growth", "parent_a_notes", "parent_b_strengths", "parent_b_gaps", "parent_b_growth", "parent_b_notes",
                "joint_strengths", "joint_gaps", "joint_notes", "alignment_agreements", "alignment_disagreements", "partial_alignment", "alignment_summary",
                "conflict_pathway", "conflict_management_rationale", "short_term_goals", "long_term_goals", "reassess_interval", "reassess_up", "reassess_down",
-               "professional_summary", "next_review_date", "signature_name", "professional_title", "fv_a_received", "fv_b_received", "shared_concerns", "sources_considered", "pathway_rationale", "court_summary_text", "success_indicators")
+               "professional_summary", "next_review_date", "signature_name", "professional_title", "fv_a_received", "fv_b_received", "shared_concerns", "sources_considered", "pathway_rationale", "court_summary_text", "success_indicators",
+               "cover_name", "cover_email", "cover_phone", "cover_address")
 LIST_FIELDS = ("parent_a_resources", "parent_b_resources", "joint_resources", "conflict_management_options", "conflict_pathways")
 DICT_FIELDS = ("parent_a_provider", "parent_b_provider", "joint_provider")
 INT_FIELDS = ("parent_a_rating", "parent_b_rating", "joint_rating")

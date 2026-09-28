@@ -269,6 +269,24 @@ def _perspective(pdf: FPDF, rep: dict, role: str, scale, cls) -> None:
     _lens_individual_scale(pdf, scale, cls, rep, role)
 
 
+def _cover_images(pdf: FPDF, images: dict) -> None:
+    """Headshot and firm logo, top-right under the brand header; skipped silently if storage is unavailable."""
+    from io import BytesIO
+    from storage import get_object
+    x, y = pdf.w - pdf.r_margin, pdf.get_y()
+    for slot in ("firm_logo", "headshot"):
+        path = images.get(slot)
+        if not path:
+            continue
+        try:
+            data, _ = get_object(path)
+            pdf.image(BytesIO(data), x=x - 22, y=y - 1, w=22, h=22, keep_aspect_ratio=True)
+            x -= 26
+        except Exception:  # noqa: BLE001
+            continue
+    pdf.set_y(y + 23)
+
+
 def cover_page(pdf: FPDF, pro: dict) -> None:
     """Page 1 — Professional Contact cover: title band, Professional Information, Purpose cards, Align→Focus→Resolve→Agree."""
     brand_header(pdf)
@@ -277,7 +295,12 @@ def cover_page(pdf: FPDF, pro: dict) -> None:
     pdf.set_text_color(*GRAY)
     pdf.cell(0, 5, _s("Understanding Differences. Identifying Alignment. Meeting the Needs of the Child."), align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
+    y0 = pdf.get_y()
     _lens_heading(pdf, "Professional Information")
+    if pro.get("images"):
+        pdf.set_y(y0)
+        _cover_images(pdf, pro["images"])
+        pdf.set_y(max(pdf.get_y(), y0 + 25))
     blank = "_" * 44
     kv_table(pdf, [("Professional Name", pro.get("name") or blank), ("Email", pro.get("email") or blank), ("Phone", pro.get("phone") or blank), ("Office / Mailing Address", pro.get("address") or f"{blank}\n{blank}")])
     pdf.ln(3)

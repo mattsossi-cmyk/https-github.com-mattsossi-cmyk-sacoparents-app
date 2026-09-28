@@ -26,6 +26,7 @@ import { CasesTable } from "@/components/CasesTable";
 import { UpcomingCheckIns } from "@/components/UpcomingCheckIns";
 import { ReferralInbox } from "@/components/ReferralInbox";
 import { ProZipPrompt } from "@/components/ProZipPrompt";
+import { ProContactCard } from "@/components/ProContactCard";
 import { PublicListingCard } from "@/components/PublicListingCard";
 import { AdminListings } from "@/components/AdminListings";
 import { SenderStatusBadge } from "@/components/SenderStatusBadge";
@@ -402,6 +403,7 @@ export default function Dashboard() {
         )}
 
         {isPro && user?.role === "professional" && <ProZipPrompt />}
+        {isPro && <ProContactCard />}
         {isPro && user?.role === "professional" && <PublicListingCard />}
 
         {isPro && user?.approved === false && (

@@ -807,3 +807,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - New PDF page 1 (pdf_lens.cover_page): title band, Professional Information (name/email/phone/office address from the professional profile via legal_lens.professional_contact; blank lines when missing), Purpose cards, ALIGN→FOCUS→RESOLVE→AGREE. Then How to Read, then sections 1–11 as before.
 - ReportCover.jsx shown on the report editor (/cases/:id/professional-report) and sample page. Tests updated (Alignment Report title; fake db users).
 - Invite test: mattsossi+invite@bsossi.com sent, not yet opened (first_opened_at null) — awaiting owner confirmation.
+
+## 2026-06 — Profile contact fields + cover images
+- backend/pro_profile.py: PUT /api/me/profile/contact (phone, organization, address, city, state, zip); POST/DELETE/GET /api/me/profile/image/{headshot|firm_logo} via Emergent Object Storage (≤2 MB jpg/png/webp), refs stored at users.profile.images.
+- Cover: profile values auto-fill; per-report override fields cover_name/email/phone/address (TEXT_FIELDS) in the editor under the cover; images printed top-right of PDF cover (pdf_lens._cover_images) and shown on-screen.
+- Dashboard: ProContactCard (Report Cover Contact) with edit form + image slots.

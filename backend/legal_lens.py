@@ -260,15 +260,15 @@ def _lens_case_query(rid: str, user: dict) -> dict:
     return {"id": rid} if user.get("role") == "admin" else {"id": rid, "professional_id": user["_id"]}
 
 
-async def professional_contact(db, uid: str | None) -> dict:
-    """Cover-page contact block from the professional's own profile (blank lines in the PDF when missing)."""
+async def professional_contact(db, uid: str | None, rep: dict | None = None) -> dict:
+    """Cover-page contact block: profile values, overridden per report by cover_* fields; images are storage refs."""
     u = await db.users.find_one({"_id": uid}, {"name": 1, "email": 1, "profile": 1}) if uid else None
-    if not u:
-        return {}
-    p = u.get("profile") or {}
+    rep = rep or {}
+    p = (u or {}).get("profile") or {}
     line2 = ", ".join(x for x in (p.get("city"), p.get("state")) if x) + (f" {p['zip']}" if p.get("zip") else "")
     address = "\n".join(x for x in (p.get("organization"), p.get("address"), line2.strip()) if x)
-    return {"name": u.get("name", ""), "email": u.get("email", ""), "phone": p.get("phone", ""), "address": address}
+    return {"name": rep.get("cover_name") or (u or {}).get("name", ""), "email": rep.get("cover_email") or (u or {}).get("email", ""), "phone": rep.get("cover_phone") or p.get("phone", ""),
+            "address": rep.get("cover_address") or address, "images": {k: v.get("path") for k, v in (p.get("images") or {}).items() if v}}
 
 
 async def _lens_view(db, rep: dict, doc: dict) -> dict:
@@ -279,7 +279,7 @@ async def _lens_view(db, rep: dict, doc: dict) -> dict:
         rep = {**rep, "resource_rows": default_resource_rows(provs)}
     rep = {**rep, "reassess_up": rep.get("reassess_up") or REASSESS_UP_DEFAULT, "reassess_down": rep.get("reassess_down") or REASSESS_DOWN_DEFAULT,
            "reassess_interval": rep.get("reassess_interval") or "Every 90 to 180 days"}
-    return {"report": rep, "professional": await professional_contact(db, rep.get("professional_id")), "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
+    return {"report": rep, "professional": await professional_contact(db, rep.get("professional_id"), rep), "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
             "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
             "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE, "risk_categories": RISK_CATEGORIES,
             "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE, "safety_pathway": SAFETY_PATHWAY, "disclaimer": REPORT_DISCLAIMER},

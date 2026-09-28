@@ -222,7 +222,12 @@ export default function LegalLensReport() {
       <header className="border-b border-border"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="lens-back"><ArrowLeft className="h-4 w-4" /> Back to Case</Link><BrandLogo size="text-xl" /><span className="rounded-full bg-brand-purple/10 px-3 py-1 text-xs font-semibold text-brand-purple" data-testid="lens-status">{STATUS[rep.status]}</span></div></header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5">
         <ReportHeader />
-        <ReportCover pro={v?.professional} testId="lens-cover" />
+        <ReportCover pro={{ ...(v?.professional || {}), name: rep.cover_name || v?.professional?.name, email: rep.cover_email || v?.professional?.email, phone: rep.cover_phone || v?.professional?.phone, address: rep.cover_address || v?.professional?.address }} testId="lens-cover" imageBase={`${process.env.REACT_APP_BACKEND_URL}/api/me/profile/image`}>
+          <details className="mt-3 rounded-md border border-dashed border-border p-3" data-testid="lens-cover-override">
+            <summary className="cursor-pointer text-xs font-semibold text-brand-purple">Override cover contact for this report only (profile values are used when blank)</summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">{[["cover_name", "Professional Name"], ["cover_email", "Email"], ["cover_phone", "Phone"], ["cover_address", "Office / Mailing Address"]].map(([k, l]) => <Field key={k} label={l} value={rep[k]} onChange={(val) => set(k, val)} id={k} big={k === "cover_address"} />)}</div>
+          </details>
+        </ReportCover>
         <p className="rounded-md border-l-4 border-brand-purple bg-brand-purple/5 p-3 text-sm" data-testid="lens-principle-notice"><strong className="text-brand-purple">Report Principle:</strong> Parent statements, system-generated comparisons, AI-assisted summaries, and professional observations are identified separately so the source of each statement remains clear.</p>
         <WorkflowGuide kind="legal_lens" />
         <WalkthroughOverview guides={guides} anchor={(n) => GUIDE_SEC[n]} done={(n) => (GUIDE_FIELDS[n] || []).some((k) => { const v = rep?.[k]; return Array.isArray(v) ? v.length > 0 : v && typeof v === "object" ? Object.values(v).some((x) => x?.checked) : Boolean(v); })} />

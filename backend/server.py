@@ -1858,6 +1858,8 @@ from legal_lens import LensStore as _LensStore  # noqa: E402
 app.include_router(_build_ai_tools_router(db, get_current_user, _LensStore(db, _log_lifecycle).own_case, get_joint_report_doc, report_role), prefix="/api")
 from assistant import build_router as _build_assistant_router  # noqa: E402
 app.include_router(_build_assistant_router(get_current_user), prefix="/api")
+from pro_profile import build_router as _build_pro_profile_router  # noqa: E402
+app.include_router(_build_pro_profile_router(get_current_user), prefix="/api")
 
 from research import build_router as _build_research_router  # noqa: E402
 app.include_router(_build_research_router(db, get_current_user), prefix="/api")
