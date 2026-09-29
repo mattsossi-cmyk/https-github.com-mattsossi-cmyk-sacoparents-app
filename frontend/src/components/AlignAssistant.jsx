@@ -1,21 +1,53 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, Send, X, Sparkles } from "lucide-react";
-import api from "@/lib/api";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { Bot, Send, X, Sparkles, FileText } from "lucide-react";
+import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 const sessionKey = (uid) => `align-assistant-session-${uid}`;
 const getSession = (uid) => { const k = sessionKey(uid); let s = localStorage.getItem(k); if (!s) { s = crypto.randomUUID(); localStorage.setItem(k, s); } return s; };
+
+const DRAFT_RE = /\[\[DRAFT section=([a-z_]+)\]\]\s*([\s\S]*?)\s*(?:\[\[\/DRAFT\]\]|$)/g;
+const splitDrafts = (text) => { const out = []; let last = 0; for (const m of text.matchAll(DRAFT_RE)) { if (m.index > last) out.push({ text: text.slice(last, m.index) }); out.push({ field: m[1], text: m[2] }); last = m.index + m[0].length; } if (last < text.length) out.push({ text: text.slice(last) }); return out; };
+
+const DraftCard = ({ part, caseId, sections, streaming }) => {
+  const [state, setState] = useState(null);
+  const insert = async () => {
+    setState("busy");
+    try { const { data } = await api.post("/assistant/insert-draft", { case_id: caseId, field: part.field, text: part.text }); setState({ url: data.editor_url, label: data.label }); toast.success(`Draft placed in ${data.label} — review it in the editor`); }
+    catch (e) { setState(null); toast.error(formatApiError(e)); }
+  };
+  return (
+    <div className="mt-2 rounded-lg border border-brand-blue/40 bg-white p-2" data-testid={`assistant-draft-${part.field}`}>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-brand-blue">Draft · {sections[part.field] || part.field}</p>
+      <p className="mt-1 whitespace-pre-wrap text-sm">{part.text}</p>
+      {!streaming && caseId && (state?.url ? (
+        <Link to={state.url} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-blue hover:underline" data-testid={`assistant-draft-${part.field}-open`}><FileText className="h-3.5 w-3.5" /> Inserted — open {state.label} in the editor →</Link>
+      ) : (
+        <button type="button" onClick={insert} disabled={state === "busy"} className="mt-2 inline-flex items-center gap-1 rounded-full bg-brand-blue px-3 py-1 text-xs font-semibold text-white hover:bg-brand-blue/90 disabled:opacity-60" data-testid={`assistant-draft-${part.field}-insert`}><FileText className="h-3.5 w-3.5" /> {state === "busy" ? "Inserting…" : "Insert into Professional Report for review"}</button>
+      ))}
+    </div>
+  );
+};
+
+const Msg = ({ m, caseId, sections, streaming }) => {
+  if (m.role === "user") return <div className="ml-auto max-w-[90%] whitespace-pre-wrap rounded-xl bg-brand-purple px-3 py-2 text-white" data-testid="assistant-msg-user">{m.content}</div>;
+  const parts = splitDrafts(m.content || "");
+  return <div className="max-w-[90%] rounded-xl bg-secondary/70 px-3 py-2" data-testid="assistant-msg-assistant">{parts.map((p, i) => p.field ? <DraftCard key={i} part={p} caseId={caseId} sections={sections} streaming={streaming} /> : <span key={i} className="whitespace-pre-wrap">{p.text}</span>)}{!m.content && streaming ? "…" : ""}</div>;
+};
 
 export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpenChange }) => {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [chips, setChips] = useState({});
+  const [sections, setSections] = useState({});
   const [chip, setChip] = useState(null);
   const session = getSession(userId);
   const endRef = useRef(null);
 
-  useEffect(() => { api.get("/assistant/history", { params: { session_id: session } }).then((r) => setMsgs(r.data)).catch(() => {}); api.get("/assistant/triggers").then((r) => setChips(r.data)).catch(() => {}); }, [session]);
+  useEffect(() => { api.get("/assistant/history", { params: { session_id: session } }).then((r) => setMsgs(r.data)).catch(() => {}); api.get("/assistant/triggers").then((r) => setChips(r.data)).catch(() => {}); api.get("/assistant/draft-sections").then((r) => setSections(r.data)).catch(() => {}); }, [session]);
   useEffect(() => { if (trigger?.key && chips[trigger.key]) { setChip(trigger.key); if (trigger.mode === "click") onOpenChange(true); } }, [trigger, chips]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, open]);
 
@@ -58,7 +90,7 @@ export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpe
           </header>
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm" data-testid="assistant-messages">
             {msgs.length === 0 && <p className="rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground" data-testid="assistant-empty">Ask about intake status, the alignment delta (Agreed / Minor Gap / High Discrepancy), pathway options or memo drafts for the selected case. Everything here is a suggestion for your review — nothing is filed or decided by the assistant.</p>}
-            {msgs.map((m, i) => <div key={i} className={`max-w-[90%] whitespace-pre-wrap rounded-xl px-3 py-2 ${m.role === "user" ? "ml-auto bg-brand-purple text-white" : "bg-secondary/70"}`} data-testid={`assistant-msg-${m.role}`}>{m.content || (busy ? "…" : "")}</div>)}
+            {msgs.map((m, i) => <Msg key={i} m={m} caseId={caseId} sections={sections} streaming={busy && i === msgs.length - 1} />)}
             <div ref={endRef} />
           </div>
           {chip && chips[chip] && (

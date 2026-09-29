@@ -835,3 +835,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 — Warmth touches
 - JudgeWelcomeChat: personalized greeting "Welcome back, Judge {first}!" when session user present (name prop; strips Judge/Hon. titles); secondary "Take a 1-Minute Portal Tour" button (onTour). Shown on /auth (navigates to /court-dashboard?tour=1 or /dashboard?tour=1) and on Court Dashboard (dismissible, localStorage judge-greet-{uid}). ?tour=1 starts the tour on both dashboards.
+
+## 2026-06 — Assistant draft insert
+- System prompt asks Gemini to wrap report drafts in [[DRAFT section=key]]…[[/DRAFT]] (keys = DRAFT_SECTIONS in assistant.py). GET /api/assistant/draft-sections; POST /api/assistant/insert-draft {case_id, field, text} writes the field + ai_drafts[field] (model "Align Assistant (…)") via LensStore and logs LEGAL_LENS_AI_DRAFT. Admins may access any case brief.
+- AlignAssistant.jsx renders DraftCard per marker block with "Insert into Professional Report for review" → link to editor #field.
+- NOTE: preview admin mattsossi@bsossi.com password changed again by owner (AlignTemp2026! no longer valid); use qa.admin.preview@bsossi.com for tests.

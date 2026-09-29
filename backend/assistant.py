@@ -23,8 +23,18 @@ SYSTEM = (
     "possession outcomes, never diagnose, never judge credibility, never say which parent is right, never state legal conclusions. Describe differences as differences in perspective. "
     "Use 'may consider' / 'one option is', never 'should be ordered'. Safety or family-violence indicators route to safety / parallel-parenting safeguards, not ordinary conflict "
     "pathways. Parent invitations are sent by email only (no SMS) via the Invite Parents flow; do not offer SMS. Nothing you write is filed with a court — the professional exports and "
-    "files. Keep answers concise (under 180 words unless drafting), plain text, no markdown headers. If the brief lacks data, say what is missing instead of guessing."
+    "files. Keep answers concise (under 180 words unless drafting), plain text, no markdown headers. If the brief lacks data, say what is missing instead of guessing. "
+    "DRAFTING FORMAT: when the professional asks you to draft text for the Professional Report, wrap ONLY the draft body in markers on their own lines: "
+    "[[DRAFT section=<key>]] on the line before and [[/DRAFT]] on the line after, where <key> is exactly one of: " + ", ".join(
+        f"{k} ({v})" for k, v in {"professional_summary": "Professional statement", "court_summary_text": "Concise court summary", "alignment_summary": "Alignment summary",
+                                  "joint_notes": "Joint dynamic summary", "shared_concerns": "Shared concerns", "pathway_rationale": "Pathway rationale", "short_term_goals": "30–90 day goals",
+                                  "long_term_goals": "6–12 month goals", "safety_takeaway": "Safety takeaway", "issues_requiring_attention": "Issues requiring attention",
+                                  "agreement_building_opportunities": "Agreement-building opportunities"}.items()) + ". One draft per marker block; the professional reviews before anything is saved."
 )
+DRAFT_SECTIONS = {"professional_summary": "Professional statement (§10)", "court_summary_text": "Concise court summary (§11)", "alignment_summary": "Alignment summary (§5)",
+                  "joint_notes": "Joint dynamic summary (§5)", "shared_concerns": "Shared concerns (§5)", "pathway_rationale": "Pathway rationale (§8)", "short_term_goals": "30–90 day goals (§10)",
+                  "long_term_goals": "6–12 month goals (§10)", "safety_takeaway": "Safety takeaway (§2)", "issues_requiring_attention": "Issues requiring attention (§9)",
+                  "agreement_building_opportunities": "Agreement-building opportunities (§9)"}
 TRIGGERS = {
     "invite": "I'm about to invite the parents. Walk me through what the standard intake email says and what I should check first for this case (e.g. any safety indicators).",
     "review": "Give me the alignment delta for this case: what is Agreed, Minor Gap and High Discrepancy, and should I generate a discrepancy summary?",
@@ -37,6 +47,12 @@ class ChatIn(BaseModel):
     session_id: str
     message: str
     case_id: str | None = None
+
+
+class DraftInsertIn(BaseModel):
+    case_id: str
+    field: str
+    text: str
 
 
 def _pro(user):
@@ -77,7 +93,8 @@ async def case_brief(doc: dict) -> dict:
 
 
 async def _own_case(cid: str, user: dict) -> dict:
-    doc = await db.joint_reports.find_one({"id": cid, "$or": [{"created_by": user["_id"]}, {"professional_id": user["_id"]}]}, {"_id": 0})
+    q = {"id": cid} if user.get("role") == "admin" else {"id": cid, "$or": [{"created_by": user["_id"]}, {"professional_id": user["_id"]}]}
+    doc = await db.joint_reports.find_one(q, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Case not found")
     return doc
@@ -95,6 +112,31 @@ def build_router(get_current_user) -> APIRouter:
     async def triggers(user=Depends(get_current_user)):
         _pro(user)
         return TRIGGERS
+
+    @r.get("/draft-sections")
+    async def draft_sections(user=Depends(get_current_user)):
+        _pro(user)
+        return DRAFT_SECTIONS
+
+    @r.post("/insert-draft")
+    async def insert_draft(body: DraftInsertIn, user=Depends(get_current_user)):
+        """Drop an assistant draft into a Professional Report section as an AI draft awaiting professional review (never finalizes)."""
+        from core import _log_lifecycle
+        from legal_lens import LensStore
+        _pro(user)
+        if body.field not in DRAFT_SECTIONS:
+            raise HTTPException(status_code=400, detail="That section cannot be drafted by the assistant")
+        text = body.text.strip()[:6000]
+        if not text:
+            raise HTTPException(status_code=400, detail="Draft is empty")
+        store = LensStore(db, _log_lifecycle)
+        doc = await store.own_case(body.case_id, user)
+        rep = await store.get_or_create(doc, user)
+        now = datetime.now(timezone.utc).isoformat()
+        drafts = {**(rep.get("ai_drafts") or {}), body.field: {"text": text, "model": f"Align Assistant ({MODEL[1]})", "at": now}}
+        await db.professional_reports.update_one({"case_id": body.case_id}, {"$set": {body.field: text, "ai_drafts": drafts, "updated_at": now}})
+        await _log_lifecycle(body.case_id, f"LEGAL_LENS_AI_DRAFT (Align Assistant, {DRAFT_SECTIONS[body.field]})", user)
+        return {"ok": True, "field": body.field, "label": DRAFT_SECTIONS[body.field], "editor_url": f"/cases/{body.case_id}/professional-report#{body.field}"}
 
     @r.get("/history")
     async def history(session_id: str, user=Depends(get_current_user)):
