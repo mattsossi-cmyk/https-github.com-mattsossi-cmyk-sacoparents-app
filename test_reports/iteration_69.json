@@ -1,0 +1,31 @@
+{
+  "summary": "Iter69 readiness check — 'when assessments are done, professionals can create PDF reports'. FULL PASS. Backend: created /app/backend/tests/test_iter69_prof_report_pdf_readiness.py — 6/6 pytest cases pass end-to-end: (1) GET /api/joint/reports/{rid}/report=200 alignment_map(6); (2) GET /api/joint/reports/{rid}/pdf=200 application/pdf, multi-page; (3) GET /api/cases/{rid}/professional-report=200 draft; (4) draft PDF=200 with DRAFT text; (5) PUT /api/cases/{rid}/professional-report {signature_name, professional_summary, court_summary_text, ratings, status=final} finalizes; finalized PDF=200 with 'Professional Alignment Report', 'Professional Certification', signature 'Test Pro, J.D.', NO 'DRAFT'; (6) pre-completion behavior — /joint/reports/{rid}/report=400 with clear detail, and /cases/{rid}/professional-report/pdf still 200 with DRAFT watermark. Frontend: logged in as freshly-seeded pro (approved via mongo), verified /joint/{rid} renders (with 'Download PDF' button that returns application/pdf via API), /cases/{rid}/professional-report renders lens-page with lens-cover + 11 lens-steps + lens-pdf-btn; lens-finalize-btn is disabled before signature_name and enabled after typing it; PDF API returns application/pdf. /dashboard shows pipeline-stepper — after selecting the case, pipeline-step-individual state=done, pipeline-step-joint state=done, pipeline-step-resources state=done, pipeline-step-pathway state=active, pipeline-step-report state=active; cta-create-report links to /cases/{rid}/professional-report. Overall: professionals CAN create both PDFs after assessments — no blockers.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard PipelineStepper", "issues": ["React hydration warning: <span> cannot be a child of <option> (PipelineStepper.jsx:21). Caused by Emergent dev-tooling injecting x-source-editable wrapper spans inside computed <option> text. Harmless in prod, pollutes dev console. Same issue flagged in iteration_68."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter69_prof_report_pdf_readiness.py",
+    "/app/test_reports/pytest/iter69_readiness.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "legal_lens._assert_finalizable is asymmetric: it enforces pathway_rationale iff conflict_pathways is set, but doesn't require professional_summary or court_summary_text — a professional could finalize with only a signature_name and produce a nearly-empty PDF. Consider mandating a minimum body (professional_summary or court_summary_text) before allowing status=final.",
+    "LegalLensReport.jsx line 123: pdf URL is built from window origin (REACT_APP_BACKEND_URL) plus /api/... — works, but hard-codes /api prefix in JSX instead of reusing the api client. If the API prefix ever changes, this breaks silently. Move to a helper (e.g., api.getUri).",
+    "PipelineStepper option rendering triggers hydration warning (see design_issues) — wrap computed option text so no injected span appears inside <option>."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter69_prof_report_pdf_readiness.py"
+  ],
+  "success_rate": {"backend": "100% (6/6)", "frontend": "100% of required flows"},
+  "test_credentials": "Seeded fresh pro iter69pro_f35074@example.com / TestPass2026! (approved via mongo). Case SA-26-EDU-DBDNM7, rid=6929380d-f7b3-4c24-ad34-40ff0514d719, both parents completed.",
+  "seed_data_creation": "Created 1 pro (iter69pro_f35074), 2 parents (iter69pa_*, iter69pb_*), 1 completed case SA-26-EDU-DBDNM7 via /tmp/seed_iter69.py. Prof report was subsequently finalized during backend pytest run using a different seeded case (short-lived, TEST_-style).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The end-to-end 'professional gets PDF after assessments' flow is healthy. Reusable test at /app/backend/tests/test_iter69_prof_report_pdf_readiness.py. Minimum fields required for finalize: signature_name (+ pathway_rationale IFF conflict_pathways set). The pre-completion 400 message from /joint/reports/{rid}/report exists; the professional-report PDF is always exportable even without both parent responses (renders DRAFT watermark).",
+  "rca of the issue": "N/A — no bugs. Readiness check passed."
+}

@@ -845,3 +845,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - LegalLensReport: Field wrapper shows "AI draft — needs your review" badge (yellow ring) while a field equals its ai_drafts text and has no accepted_at; Accept → POST /api/assistant/accept-draft sets ai_drafts[field].accepted_at (logged). Editing clears the badge naturally.
 - AlignAssistant embedded on the report editor (caseId=id, onInserted reloads report).
 - CourtDashboard greeting shows next upcoming hearing note (days until, date, cause no.).
+
+## 2026-06 — PDF readiness check (iteration_69)
+- Full flow verified by testing agent: create case → both parents complete → Joint Report on screen + PDF (200, multi-page) → Professional Report editor → finalize → PDF with cover, 11 sections, certification, no DRAFT. Pre-completion: joint report 400 with clear message; professional report PDF available with DRAFT watermark. Dashboard pipeline reflects readiness. New regression test tests/test_iter69_prof_report_pdf_readiness.py.
