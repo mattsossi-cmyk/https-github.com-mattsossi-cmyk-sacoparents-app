@@ -693,7 +693,32 @@ async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(ge
         updates["status"] = "ready"
     await db.joint_reports.update_one({"id": rid}, {"$set": updates})
     doc = await get_joint_report_doc(rid, user)
+    if updates.get("status") == "ready" and not doc.get("both_complete_notified_at"):
+        await _notify_both_complete(doc)
     return joint_public(doc, user)
+
+
+async def _notify_both_complete(doc: dict) -> None:
+    """Tell the case professional both parents have finished, with direct links to the Joint Report and Professional Report."""
+    pro = await db.users.find_one({"_id": doc.get("professional_id") or doc.get("created_by"), "role": {"$in": ["professional", "admin"]}}, {"email": 1, "name": 1})
+    await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {"both_complete_notified_at": datetime.now(timezone.utc).isoformat()}})
+    if not pro or doc.get("is_demo"):
+        return
+    code = doc.get("case_code") or doc["id"][:8]
+    try:
+        await send_email(
+            to=pro["email"], subject=f"Both parents have completed — Case {code} - {EMAIL_FROM_NAME}",
+            html=_pro_email_wrap(
+                f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
+                f"<p>Both parents have completed their individual assessments for <strong>{escape(doc.get('child_name') or 'the child')}</strong> "
+                f"(<strong>{escape(doc.get('subject_label') or '')}</strong>, Case {escape(code)}). The Joint Report is ready for your review, and the Professional Report can now be drafted.</p>"
+                f'<p><a href="{app_url()}/joint/{doc["id"]}" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Open Joint Report</a> &nbsp; '
+                f'<a href="{app_url()}/cases/{doc["id"]}/professional-report" style="display:inline-block;background:#1F6FB2;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Open Professional Report</a></p>'
+                "<p style=\"color:#666;font-size:13px\">Individual answers stay private to each parent; the Joint Report shows only the neutral comparison.</p>"
+            ),
+        )
+    except Exception:
+        logger.warning(f"Both-complete notification not sent for case {doc['id']}")
 
 
 

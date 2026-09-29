@@ -129,6 +129,7 @@ export default function LegalLensReport() {
       <Button variant="outline" size="sm" onClick={() => save()} disabled={busy} data-testid="lens-save-btn"><Save className="h-4 w-4 mr-1" /> Save Draft</Button>
       <Button variant="outline" size="sm" onClick={async () => { await save(); setPreview(!preview); }} disabled={busy} data-testid="lens-preview-btn"><Eye className="h-4 w-4 mr-1" /> {preview ? "Back to Editor" : "Preview Report"}</Button>
       <Button variant="outline" size="sm" asChild data-testid="lens-pdf-btn"><a href={pdf} download><Download className="h-4 w-4 mr-1" /> Print / Save as PDF</a></Button>
+      {(v?.readiness || []).find((x) => x.key === "joint")?.done && <Button variant="outline" size="sm" asChild><a href={`${process.env.REACT_APP_BACKEND_URL}/api/cases/${id}/professional-report/bundle.zip`} download title="Joint Report + Professional Report in one ZIP" data-testid="lens-bundle-btn"><Download className="h-4 w-4 mr-1" /> Download Both (ZIP)</a></Button>}
       <Button size="sm" onClick={() => save("final")} disabled={busy || !rep.signature_name} data-testid="lens-finalize-btn"><FileCheck2 className="h-4 w-4 mr-1" /> Finalize Report</Button>
       <select value={rep.status} onChange={(e) => save(e.target.value)} className="h-9 rounded-md border border-input bg-white px-2 text-sm" data-testid="lens-status-select">{lib.statuses.map((s) => <option key={s} value={s}>{STATUS[s]}</option>)}</select>
       {top && <NeutralityCheck id={id} rep={rep} />}

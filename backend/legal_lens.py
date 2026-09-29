@@ -411,6 +411,26 @@ def _export_routes(s: LensStore, get_current_user) -> APIRouter:
         return Response(content=build_legal_lens_pdf(await s.view(rep, doc)), media_type="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="legal-lens-report-{doc.get("case_code") or rid}.pdf"'})
 
+    @r.get("/cases/{rid}/professional-report/bundle.zip")
+    async def report_bundle(rid: str, user=Depends(get_current_user)):
+        """Joint Report PDF + Professional Report PDF in one ZIP for the case file."""
+        import io
+        import zipfile
+        from joint_engine import generate_joint_report
+        from pdf_lens import build_legal_lens_pdf
+        from pdf_report import build_joint_pdf
+        doc = await s.own_case(rid, user)
+        if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
+            raise HTTPException(status_code=400, detail="The report bundle becomes available when both parents have completed their assessments")
+        rep = await s.get_or_create(doc, user)
+        code = doc.get("case_code") or rid
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr(f"{code}-joint-report.pdf", build_joint_pdf({**generate_joint_report(doc), "is_sample": bool(doc.get("is_demo"))}))
+            z.writestr(f"{code}-professional-report.pdf", build_legal_lens_pdf(await s.view(rep, doc)))
+        await log_event(rid, "LEGAL_LENS_BUNDLE_EXPORTED", user)
+        return Response(content=buf.getvalue(), media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{code}-reports.zip"'})
+
     @r.get("/professional-report/cases")
     async def my_cases(user=Depends(get_current_user)):
         if user.get("role") != "professional" or not user.get("approved"):

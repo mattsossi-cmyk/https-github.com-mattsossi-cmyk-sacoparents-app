@@ -848,3 +848,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 — PDF readiness check (iteration_69)
 - Full flow verified by testing agent: create case → both parents complete → Joint Report on screen + PDF (200, multi-page) → Professional Report editor → finalize → PDF with cover, 11 sections, certification, no DRAFT. Pre-completion: joint report 400 with clear message; professional report PDF available with DRAFT watermark. Dashboard pipeline reflects readiness. New regression test tests/test_iter69_prof_report_pdf_readiness.py.
+
+## 2026-06 — Both-complete email + ZIP bundle
+- server._notify_both_complete: when the second parent submits (status→ready), emails the case professional (professional_id or created_by) with links to /joint/{id} and /cases/{id}/professional-report; idempotent via joint_reports.both_complete_notified_at; skipped for demo cases.
+- GET /api/cases/{rid}/professional-report/bundle.zip → ZIP with {code}-joint-report.pdf + {code}-professional-report.pdf (400 before both complete); "Download Both (ZIP)" button on the report editor (lens-bundle-btn). Tests: tests/test_iter85_bundle_notify.py (3 pass; run with REACT_APP_BACKEND_URL exported).
