@@ -124,8 +124,8 @@ export default function Auth() {
             </div>
           )}
 
-          {isCourt && !isParentFlow && (mode === "login" || mode === "register") && (
-            <JudgeWelcomeChat onEnter={() => { setMode("register"); setTimeout(() => { document.getElementById("name")?.focus(); document.querySelector('[data-testid="auth-form"]')?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 50); }} />
+          {!isParentFlow && (mode === "login" || mode === "register") && (isCourt || mode === "register") && (
+            <JudgeWelcomeChat kind={isCourt ? "judge" : "professional"} onEnter={() => { setMode("register"); setTimeout(() => { document.getElementById("name")?.focus(); document.querySelector('[data-testid="auth-form"]')?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 50); }} />
           )}
 
           <h1 className="text-3xl font-semibold mb-6" data-testid="auth-heading">

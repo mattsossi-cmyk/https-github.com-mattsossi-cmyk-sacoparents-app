@@ -821,3 +821,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 — Judge welcome chat box
 - JudgeWelcomeChat.jsx shown on /auth when Judge/court staff is selected (or ?court=1): welcome message + "Enter Your Judges Portal" button that switches to court-account registration and focuses the name field.
+
+## 2026-06 — Professional welcome chat + prod smoke check
+- JudgeWelcomeChat now takes kind=judge|professional; professional copy shows on Create-account when Family professional is selected; judge copy on login+register when court selected.
+- Live smoke (read-only): sacoparentsalign.com serves the new bundle (pro-hero, pipeline-stepper, assistant, sample cover) and /api/health healthy; sample PDF 200. Judge chat bundle not yet live (built after republish). Invite to mattsossi+invite@bsossi.com still unopened.
