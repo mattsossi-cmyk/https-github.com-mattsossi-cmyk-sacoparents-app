@@ -8,6 +8,7 @@ import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { JudgeWelcomeChat } from "@/components/JudgeWelcomeChat";
 
 export default function Auth() {
   const search = new URLSearchParams(window.location.search);
@@ -121,6 +122,10 @@ export default function Auth() {
                 Create account
               </button>
             </div>
+          )}
+
+          {isCourt && !isParentFlow && (mode === "login" || mode === "register") && (
+            <JudgeWelcomeChat onEnter={() => { setMode("register"); setTimeout(() => { document.getElementById("name")?.focus(); document.querySelector('[data-testid="auth-form"]')?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 50); }} />
           )}
 
           <h1 className="text-3xl font-semibold mb-6" data-testid="auth-heading">
