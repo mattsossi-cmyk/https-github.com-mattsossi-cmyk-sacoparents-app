@@ -26,7 +26,7 @@ const COPY = {
 
 const firstName = (name) => { const parts = (name || "").trim().split(/\s+/).filter((p) => !/^(judge|hon\.?|honorable|the)$/i.test(p)); return (parts[0] || "").replace(/,$/, ""); };
 
-export const JudgeWelcomeChat = ({ onEnter, onTour, kind = "judge", name, className = "mb-6" }) => {
+export const JudgeWelcomeChat = ({ onEnter, onTour, kind = "judge", name, note, className = "mb-6" }) => {
   const c = COPY[kind] || COPY.judge;
   const first = firstName(name);
   return (
@@ -35,6 +35,7 @@ export const JudgeWelcomeChat = ({ onEnter, onTour, kind = "judge", name, classN
       <div className="relative min-w-0 flex-1 rounded-2xl rounded-tl-sm border border-brand-purple/20 bg-[#f3edfb] px-4 py-3 text-sm leading-relaxed animate-in fade-in slide-in-from-left-2 duration-300">
         <p className="font-semibold text-brand-purple" data-testid={`${kind}-welcome-title`}>{first ? c.greet(first) : c.title}</p>
         <p className="mt-2">{c.body}</p>
+        {note && <p className="mt-2 rounded-md bg-white/70 px-2.5 py-1.5 text-xs font-semibold text-brand-purple" data-testid={`${kind}-welcome-note`}>{note}</p>}
         <p className="mt-2">{c.lead}</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button type="button" onClick={onEnter} className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.02]" data-testid={`${kind}-welcome-enter-btn`}>

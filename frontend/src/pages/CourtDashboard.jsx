@@ -98,6 +98,14 @@ export default function CourtDashboard() {
   useEffect(() => { if (new URLSearchParams(window.location.search).get("tour") === "1" && data?.approved && refs) tour.start(); }, [data?.approved, refs]); // eslint-disable-line react-hooks/exhaustive-deps
   const [greetHidden, setGreetHidden] = useState(() => Boolean(localStorage.getItem(`judge-greet-${user?.id || "anon"}`)));
   const hideGreet = () => { localStorage.setItem(`judge-greet-${user?.id || "anon"}`, "1"); setGreetHidden(true); };
+  const hearingNote = (() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const up = (refs || []).filter((x) => x.hearing_date && x.hearing_date >= today).sort((a, b) => a.hearing_date.localeCompare(b.hearing_date))[0];
+    if (!up) return null;
+    const days = Math.round((new Date(up.hearing_date) - new Date(today)) / 86400000);
+    const when = days === 0 ? "today" : days === 1 ? "tomorrow" : `in ${days} days`;
+    return `Your next Align hearing is ${when} (${up.hearing_date}${up.cause_number ? ` · Cause No. ${up.cause_number}` : ""}).`;
+  })();
   const tourSteps = JUDGE_TOUR.filter((s) => s.id !== "court-case-search" || (refs || []).length > 0);
 
   return (
@@ -112,7 +120,7 @@ export default function CourtDashboard() {
         {tour.open && !active && <SampleTour steps={tourSteps} storageKey={`judge-tour-${user?.id || "anon"}`} onDone={tour.close} label="Judicial Portal tour" prefix="judge-tour" />}
         {!active && !greetHidden && (
           <div className="relative mb-6" data-testid="judge-greeting-wrap">
-            <JudgeWelcomeChat kind="judge" name={user?.name} className="" onTour={tour.start} onEnter={() => { hideGreet(); document.querySelector('[data-testid="refer-case-toggle-btn"], [data-testid="court-empty-state"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); }} />
+            <JudgeWelcomeChat kind="judge" name={user?.name} note={hearingNote} className="" onTour={tour.start} onEnter={() => { hideGreet(); document.querySelector('[data-testid="refer-case-toggle-btn"], [data-testid="court-empty-state"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); }} />
             <button type="button" onClick={hideGreet} className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground hover:bg-white" aria-label="Dismiss greeting" data-testid="judge-greeting-dismiss"><X className="h-4 w-4" /></button>
           </div>
         )}

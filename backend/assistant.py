@@ -55,6 +55,11 @@ class DraftInsertIn(BaseModel):
     text: str
 
 
+class DraftAcceptIn(BaseModel):
+    case_id: str
+    field: str
+
+
 def _pro(user):
     if user.get("role") not in ("professional", "admin") or (user.get("role") == "professional" and not user.get("approved")):
         raise HTTPException(status_code=403, detail="Approved professional access required.")
@@ -137,6 +142,23 @@ def build_router(get_current_user) -> APIRouter:
         await db.professional_reports.update_one({"case_id": body.case_id}, {"$set": {body.field: text, "ai_drafts": drafts, "updated_at": now}})
         await _log_lifecycle(body.case_id, f"LEGAL_LENS_AI_DRAFT (Align Assistant, {DRAFT_SECTIONS[body.field]})", user)
         return {"ok": True, "field": body.field, "label": DRAFT_SECTIONS[body.field], "editor_url": f"/cases/{body.case_id}/professional-report#{body.field}"}
+
+    @r.post("/accept-draft")
+    async def accept_draft(body: DraftAcceptIn, user=Depends(get_current_user)):
+        """Professional explicitly accepts an AI draft as their own text; the disclosure appendix still records the AI origin."""
+        from core import _log_lifecycle
+        from legal_lens import LensStore
+        _pro(user)
+        store = LensStore(db, _log_lifecycle)
+        doc = await store.own_case(body.case_id, user)
+        rep = await store.get_or_create(doc, user)
+        drafts = rep.get("ai_drafts") or {}
+        if body.field not in drafts:
+            raise HTTPException(status_code=404, detail="No AI draft for that section")
+        drafts[body.field]["accepted_at"] = datetime.now(timezone.utc).isoformat()
+        await db.professional_reports.update_one({"case_id": body.case_id}, {"$set": {"ai_drafts": drafts}})
+        await _log_lifecycle(body.case_id, f"LEGAL_LENS_AI_DRAFT_ACCEPTED ({body.field})", user)
+        return {"ok": True, "ai_drafts": drafts}
 
     @r.get("/history")
     async def history(session_id: str, user=Depends(get_current_user)):

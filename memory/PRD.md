@@ -840,3 +840,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - System prompt asks Gemini to wrap report drafts in [[DRAFT section=key]]…[[/DRAFT]] (keys = DRAFT_SECTIONS in assistant.py). GET /api/assistant/draft-sections; POST /api/assistant/insert-draft {case_id, field, text} writes the field + ai_drafts[field] (model "Align Assistant (…)") via LensStore and logs LEGAL_LENS_AI_DRAFT. Admins may access any case brief.
 - AlignAssistant.jsx renders DraftCard per marker block with "Insert into Professional Report for review" → link to editor #field.
 - NOTE: preview admin mattsossi@bsossi.com password changed again by owner (AlignTemp2026! no longer valid); use qa.admin.preview@bsossi.com for tests.
+
+## 2026-06 — Draft badge, hearing note, assistant on report page
+- LegalLensReport: Field wrapper shows "AI draft — needs your review" badge (yellow ring) while a field equals its ai_drafts text and has no accepted_at; Accept → POST /api/assistant/accept-draft sets ai_drafts[field].accepted_at (logged). Editing clears the badge naturally.
+- AlignAssistant embedded on the report editor (caseId=id, onInserted reloads report).
+- CourtDashboard greeting shows next upcoming hearing note (days until, date, cause no.).

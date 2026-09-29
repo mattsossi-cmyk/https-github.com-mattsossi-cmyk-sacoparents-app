@@ -11,11 +11,11 @@ const getSession = (uid) => { const k = sessionKey(uid); let s = localStorage.ge
 const DRAFT_RE = /\[\[DRAFT section=([a-z_]+)\]\]\s*([\s\S]*?)\s*(?:\[\[\/DRAFT\]\]|$)/g;
 const splitDrafts = (text) => { const out = []; let last = 0; for (const m of text.matchAll(DRAFT_RE)) { if (m.index > last) out.push({ text: text.slice(last, m.index) }); out.push({ field: m[1], text: m[2] }); last = m.index + m[0].length; } if (last < text.length) out.push({ text: text.slice(last) }); return out; };
 
-const DraftCard = ({ part, caseId, sections, streaming }) => {
+const DraftCard = ({ part, caseId, sections, streaming, onInserted }) => {
   const [state, setState] = useState(null);
   const insert = async () => {
     setState("busy");
-    try { const { data } = await api.post("/assistant/insert-draft", { case_id: caseId, field: part.field, text: part.text }); setState({ url: data.editor_url, label: data.label }); toast.success(`Draft placed in ${data.label} — review it in the editor`); }
+    try { const { data } = await api.post("/assistant/insert-draft", { case_id: caseId, field: part.field, text: part.text }); setState({ url: data.editor_url, label: data.label }); toast.success(`Draft placed in ${data.label} — review it in the editor`); onInserted?.(data); }
     catch (e) { setState(null); toast.error(formatApiError(e)); }
   };
   return (
@@ -31,13 +31,13 @@ const DraftCard = ({ part, caseId, sections, streaming }) => {
   );
 };
 
-const Msg = ({ m, caseId, sections, streaming }) => {
+const Msg = ({ m, caseId, sections, streaming, onInserted }) => {
   if (m.role === "user") return <div className="ml-auto max-w-[90%] whitespace-pre-wrap rounded-xl bg-brand-purple px-3 py-2 text-white" data-testid="assistant-msg-user">{m.content}</div>;
   const parts = splitDrafts(m.content || "");
-  return <div className="max-w-[90%] rounded-xl bg-secondary/70 px-3 py-2" data-testid="assistant-msg-assistant">{parts.map((p, i) => p.field ? <DraftCard key={i} part={p} caseId={caseId} sections={sections} streaming={streaming} /> : <span key={i} className="whitespace-pre-wrap">{p.text}</span>)}{!m.content && streaming ? "…" : ""}</div>;
+  return <div className="max-w-[90%] rounded-xl bg-secondary/70 px-3 py-2" data-testid="assistant-msg-assistant">{parts.map((p, i) => p.field ? <DraftCard key={i} part={p} caseId={caseId} sections={sections} streaming={streaming} onInserted={onInserted} /> : <span key={i} className="whitespace-pre-wrap">{p.text}</span>)}{!m.content && streaming ? "…" : ""}</div>;
 };
 
-export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpenChange }) => {
+export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpenChange, onInserted }) => {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -90,7 +90,7 @@ export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpe
           </header>
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm" data-testid="assistant-messages">
             {msgs.length === 0 && <p className="rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground" data-testid="assistant-empty">Ask about intake status, the alignment delta (Agreed / Minor Gap / High Discrepancy), pathway options or memo drafts for the selected case. Everything here is a suggestion for your review — nothing is filed or decided by the assistant.</p>}
-            {msgs.map((m, i) => <Msg key={i} m={m} caseId={caseId} sections={sections} streaming={busy && i === msgs.length - 1} />)}
+            {msgs.map((m, i) => <Msg key={i} m={m} caseId={caseId} sections={sections} streaming={busy && i === msgs.length - 1} onInserted={onInserted} />)}
             <div ref={endRef} />
           </div>
           {chip && chips[chip] && (

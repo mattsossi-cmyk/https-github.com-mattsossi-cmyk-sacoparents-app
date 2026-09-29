@@ -13,6 +13,7 @@ import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { SectionGuide, WalkthroughOverview, useWalkthrough } from "@/components/LensWalkthrough";
 import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
 import { ReportCover } from "@/components/ReportCover";
+import { AlignAssistant } from "@/components/AlignAssistant";
 import { GrowthProgress } from "@/components/CourtLegalSummary";
 import { NeutralityCheck, ChildFocusSuggest, ParallelSummaryHelper, ResearchPanel, ResearchBase } from "@/components/LensAiTools";
 
@@ -21,7 +22,8 @@ const STATUS = { draft: "Draft", under_review: "Under Review", final: "Final", s
 const GUIDE_SEC = { 1: "case", 2: "snapshot", 3: "parent-a", 4: "parent-b", 5: "joint", 6: "child", 7: "resources", 8: "conflict", 9: "legal", 10: "summary", 11: "court-summary" };
 const GUIDE_FIELDS = { 1: ["matter_name", "court_county"], 2: ["parent_a_rating", "parent_b_rating", "joint_rating"], 3: ["parent_a_strengths", "parent_a_gaps"], 4: ["parent_b_strengths", "parent_b_gaps"], 5: ["alignment_agreements", "joint_notes"], 6: ["child_focus"], 7: ["resource_rows"], 8: ["conflict_pathways", "pathway_rationale"], 9: ["agreement_building_opportunities", "issues_requiring_attention"], 10: ["professional_summary", "short_term_goals"], 11: ["court_summary_text"] };
 const Sec = ({ n, title, children, id, guides }) => <LensSec n={n} title={title} id={id}>{guides && <SectionGuide ns={[n]} guides={guides} />}{children}</LensSec>;
-const Field = ({ label, value, onChange, id, type = "text", big, hint }) => <label className="block text-sm"><span className="font-medium">{label}</span>{hint && <span className="block text-xs text-muted-foreground">{hint}</span>}{big ? <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} className="mt-1 min-h-[100px] bg-white" data-testid={`lens-${id}`} /> : <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2 text-sm" data-testid={`lens-${id}`} />}</label>;
+const FieldBase = ({ label, value, onChange, id, type = "text", big, hint, badge }) => <label className="block text-sm"><span className="font-medium">{label}</span>{badge}{hint && <span className="block text-xs text-muted-foreground">{hint}</span>}{big ? <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} className={`mt-1 min-h-[100px] bg-white ${badge ? "border-align-yellow ring-1 ring-align-yellow/60" : ""}`} data-testid={`lens-${id}`} /> : <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2 text-sm" data-testid={`lens-${id}`} />}</label>;
+const DraftBadge = ({ id, onAccept }) => <span className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-align-yellow/25 px-2 py-0.5 text-[11px] font-semibold text-yellow-900 align-middle" data-testid={`lens-draft-badge-${id}`}><Sparkles className="h-3 w-3" /> AI draft — needs your review<button type="button" onClick={onAccept} className="ml-1 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-brand-purple hover:bg-brand-purple hover:text-white" data-testid={`lens-draft-accept-${id}`}>Accept</button></span>;
 const Radio = ({ label, options, value, onChange, id }) => <div><p className="text-sm font-medium">{label}</p><div className="mt-1 flex flex-wrap gap-3">{options.map((o) => <label key={o} className="flex items-center gap-1.5 text-sm"><input type="radio" checked={value === o} onChange={() => onChange(o)} data-testid={`lens-${id}-${o.split(/[ ,/]/)[0].toLowerCase()}`} />{o}</label>)}</div></div>;
 const Rating = ({ label, value, onChange, id }) => <label className="flex items-center gap-3 text-sm"><span className="font-medium">{label}</span><input type="range" min="1" max="10" value={value || 5} onChange={(e) => onChange(Number(e.target.value))} className="flex-1 accent-brand-purple" data-testid={`lens-${id}`} /><span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-purple text-sm font-bold text-white" data-testid={`lens-${id}-value`}>{value || "–"}</span></label>;
 const Band = ({ cls, joint }) => cls ? <p className="text-xs text-brand-purple font-semibold" data-testid="lens-band">Band {cls.range}: {cls.label}{joint && <span className="ml-2 rounded-full bg-brand-purple/10 px-2 py-0.5">Operating Dynamic: {cls.mode} Mode</span>}</p> : <p className="text-xs italic text-muted-foreground">Enter a 1–10 rating to see the automatic classification.</p>;
@@ -42,7 +44,7 @@ function GrowthTracker({ role, rep, set }) {
   );
 }
 
-function ParentBlock({ role, rep, cls, set }) {
+function ParentBlock({ role, rep, cls, set, Field = FieldBase }) {
   const name = rep[`parent_${role}_name`] || `Parent ${role.toUpperCase()}`;
   return (
     <div className="rounded-md border border-border bg-white p-4 space-y-3" data-testid={`lens-parent-${role}`}>
@@ -108,6 +110,11 @@ export default function LegalLensReport() {
   };
   const set = (k, val) => setRep((r) => ({ ...r, [k]: val }));
   const apply = (data) => { setV(data); setRep(data.report); };
+  const needsReview = (k) => { const d = rep.ai_drafts?.[k]; return Boolean(d && !d.accepted_at && (rep[k] || "").trim() === (d.text || "").trim()); };
+  const acceptDraft = (k) => api.post("/assistant/accept-draft", { case_id: id, field: k }).then((r) => { setRep((x) => ({ ...x, ai_drafts: r.data.ai_drafts })); toast.success("Draft accepted as your text"); }).catch((e) => toast.error(formatApiError(e)));
+  const Field = (props) => <FieldBase {...props} badge={needsReview(props.id) ? <DraftBadge id={props.id} onAccept={() => acceptDraft(props.id)} /> : null} />;
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const reload = () => api.get(`/cases/${id}/professional-report`).then((r) => apply(r.data)).catch(() => {});
   useEffect(() => { api.get(`/cases/${id}/professional-report`).then((r) => apply(r.data)).catch((e) => toast.error(formatApiError(e))); }, [id]);
   useEffect(() => { if (!v) return; const t = setTimeout(() => api.put(`/cases/${id}/professional-report`, { fields: { parent_a_rating: rep.parent_a_rating, parent_b_rating: rep.parent_b_rating, joint_rating: rep.joint_rating } }).then((r) => setV((x) => ({ ...x, classification: r.data.classification }))).catch(() => {}), 400); return () => clearTimeout(t); }, [rep.parent_a_rating, rep.parent_b_rating, rep.joint_rating]); // eslint-disable-line react-hooks/exhaustive-deps
   const save = async (status) => { setBusy(true); try { const { data } = await api.put(`/cases/${id}/professional-report`, { fields: rep, ...(status ? { status } : {}) }); apply(data); toast.success(status ? `Report marked ${STATUS[status]}` : "Draft saved"); } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); } };
@@ -161,8 +168,8 @@ export default function LegalLensReport() {
                 <p className="text-xs italic" data-testid="lens-safety-note">{notes.safety}</p>
               </div>
 </>),
-    S(3, `Parent A Perspective${rep.parent_a_name ? ` — ${rep.parent_a_name}` : ""}`, "parent-a", <><SourceTag kind="parent" /><p className="text-xs italic text-muted-foreground">Presented separately and neutrally — concerns, priorities, perceptions and identified needs — without determining which account is correct.</p><ParentBlock role="a" rep={rep} cls={cls.parent_a} set={set} /><IndividualScaleTable scale={lib.scale_table} row={cls.parent_a?.row} rating={rep.parent_a_rating} role="a" name={rep.parent_a_name} growth={growthOf(rep, "a")} /></>),
-    S(4, `Parent B Perspective${rep.parent_b_name ? ` — ${rep.parent_b_name}` : ""}`, "parent-b", <><SourceTag kind="parent" /><ParentBlock role="b" rep={rep} cls={cls.parent_b} set={set} /><IndividualScaleTable scale={lib.scale_table} row={cls.parent_b?.row} rating={rep.parent_b_rating} role="b" name={rep.parent_b_name} growth={growthOf(rep, "b")} /></>),
+    S(3, `Parent A Perspective${rep.parent_a_name ? ` — ${rep.parent_a_name}` : ""}`, "parent-a", <><SourceTag kind="parent" /><p className="text-xs italic text-muted-foreground">Presented separately and neutrally — concerns, priorities, perceptions and identified needs — without determining which account is correct.</p><ParentBlock Field={Field} role="a" rep={rep} cls={cls.parent_a} set={set} /><IndividualScaleTable scale={lib.scale_table} row={cls.parent_a?.row} rating={rep.parent_a_rating} role="a" name={rep.parent_a_name} growth={growthOf(rep, "a")} /></>),
+    S(4, `Parent B Perspective${rep.parent_b_name ? ` — ${rep.parent_b_name}` : ""}`, "parent-b", <><SourceTag kind="parent" /><ParentBlock Field={Field} role="b" rep={rep} cls={cls.parent_b} set={set} /><IndividualScaleTable scale={lib.scale_table} row={cls.parent_b?.row} rating={rep.parent_b_rating} role="b" name={rep.parent_b_name} growth={growthOf(rep, "b")} /></>),
     S(5, "Joint Co-Parenting Assessment", "joint", <>              <SourceTag kind="system" />
               <div className="rounded-md border border-border bg-white p-4 space-y-3" data-testid="lens-joint">
                 <Rating label="Joint Co-Parenting Rating (1–10)" value={rep.joint_rating} onChange={(val) => set("joint_rating", val)} id="joint-rating" /><Band cls={cls.joint} joint />
@@ -222,6 +229,7 @@ export default function LegalLensReport() {
       <header className="border-b border-border"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="lens-back"><ArrowLeft className="h-4 w-4" /> Back to Case</Link><BrandLogo size="text-xl" /><span className="rounded-full bg-brand-purple/10 px-3 py-1 text-xs font-semibold text-brand-purple" data-testid="lens-status">{STATUS[rep.status]}</span></div></header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5">
         <ReportHeader />
+        <AlignAssistant userId={user?.id || "anon"} caseId={id} caseLabel={v?.case?.case_code} open={assistantOpen} onOpenChange={setAssistantOpen} onInserted={reload} />
         <ReportCover pro={{ ...(v?.professional || {}), name: rep.cover_name || v?.professional?.name, email: rep.cover_email || v?.professional?.email, phone: rep.cover_phone || v?.professional?.phone, address: rep.cover_address || v?.professional?.address }} testId="lens-cover" imageBase={`${process.env.REACT_APP_BACKEND_URL}/api/me/profile/image`}>
           <details className="mt-3 rounded-md border border-dashed border-border p-3" data-testid="lens-cover-override">
             <summary className="cursor-pointer text-xs font-semibold text-brand-purple">Override cover contact for this report only (profile values are used when blank)</summary>
