@@ -74,6 +74,7 @@ export default function Dashboard() {
   const reportTo = reportCase ? `/cases/${reportCase.id}/professional-report` : "#cases";
   const proTour = useSampleTour(Boolean(isPro && user?.approved !== false && joints !== null), `pro-tour-${user?.id || "anon"}`);
   const proTourSteps = PRO_TOUR.filter((s) => s.id !== "pipeline-stepper" || realCases.length > 0);
+  useEffect(() => { if (new URLSearchParams(window.location.search).get("tour") === "1" && isPro && joints !== null) proTour.start(); }, [isPro, joints]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const closeCase = async (j) => {
     const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);

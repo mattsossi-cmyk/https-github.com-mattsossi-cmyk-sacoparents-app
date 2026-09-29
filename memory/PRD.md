@@ -832,3 +832,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-06 — Pro tour + parent welcome chat
 - PRO_TOUR (SampleTour.jsx) auto-opens once per professional on /dashboard (localStorage pro-tour-{uid}); restart via pro-tour-start-btn. Steps: CTA bar, pipeline, contact card, assistant, cases.
 - JudgeWelcomeChat kind=parent on Join.jsx invitation card (only when invite is not redirected to the sibling parent app) and on /auth when next=/join/... (parent flow).
+
+## 2026-06 — Warmth touches
+- JudgeWelcomeChat: personalized greeting "Welcome back, Judge {first}!" when session user present (name prop; strips Judge/Hon. titles); secondary "Take a 1-Minute Portal Tour" button (onTour). Shown on /auth (navigates to /court-dashboard?tour=1 or /dashboard?tour=1) and on Court Dashboard (dismissible, localStorage judge-greet-{uid}). ?tour=1 starts the tour on both dashboards.

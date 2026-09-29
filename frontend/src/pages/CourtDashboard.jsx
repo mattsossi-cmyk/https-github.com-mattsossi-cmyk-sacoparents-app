@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Gavel, ArrowLeft, Clock, MessageSquare } from "lucide-react";
+import { Gavel, ArrowLeft, Clock, MessageSquare, X } from "lucide-react";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { BrandLogo } from "@/components/Brand";
@@ -16,6 +16,7 @@ import { UrgentMessages } from "@/components/UrgentMessages";
 import { UrgentSmsSettings } from "@/components/UrgentSmsSettings";
 import { CourtDirectory } from "@/components/CourtDirectory";
 import { SampleTour, useSampleTour, TourButton, JUDGE_TOUR } from "@/components/SampleTour";
+import { JudgeWelcomeChat } from "@/components/JudgeWelcomeChat";
 
 const STATUS = {
   sent: ["New", "bg-align-yellow/30 text-yellow-900"],
@@ -94,6 +95,9 @@ export default function CourtDashboard() {
   const current = (refs || []).find((x) => x.id === selected);
   const onHearingSaved = (hd) => setRefs((rs) => rs.map((x) => (x.id === selected ? { ...x, hearing_date: hd } : x)));
   const tour = useSampleTour(Boolean(data?.approved && refs && !active), `judge-tour-${user?.id || "anon"}`);
+  useEffect(() => { if (new URLSearchParams(window.location.search).get("tour") === "1" && data?.approved && refs) tour.start(); }, [data?.approved, refs]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [greetHidden, setGreetHidden] = useState(() => Boolean(localStorage.getItem(`judge-greet-${user?.id || "anon"}`)));
+  const hideGreet = () => { localStorage.setItem(`judge-greet-${user?.id || "anon"}`, "1"); setGreetHidden(true); };
   const tourSteps = JUDGE_TOUR.filter((s) => s.id !== "court-case-search" || (refs || []).length > 0);
 
   return (
@@ -106,6 +110,12 @@ export default function CourtDashboard() {
       </header>
       <main className="mx-auto max-w-7xl px-6 py-8">
         {tour.open && !active && <SampleTour steps={tourSteps} storageKey={`judge-tour-${user?.id || "anon"}`} onDone={tour.close} label="Judicial Portal tour" prefix="judge-tour" />}
+        {!active && !greetHidden && (
+          <div className="relative mb-6" data-testid="judge-greeting-wrap">
+            <JudgeWelcomeChat kind="judge" name={user?.name} className="" onTour={tour.start} onEnter={() => { hideGreet(); document.querySelector('[data-testid="refer-case-toggle-btn"], [data-testid="court-empty-state"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); }} />
+            <button type="button" onClick={hideGreet} className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground hover:bg-white" aria-label="Dismiss greeting" data-testid="judge-greeting-dismiss"><X className="h-4 w-4" /></button>
+          </div>
+        )}
         <div className="mb-6" data-testid="judge-workflow-guide"><WorkflowGuide kind="judge" /></div>
         <UrgentMessages onOpen={(refId) => { setActive(null); setSelected(refId); window.location.hash = "thread"; }} />
         <UrgentSmsSettings />

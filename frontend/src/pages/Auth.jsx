@@ -55,7 +55,7 @@ export default function Auth() {
       if (e?.response?.status === 429) setCooldown(60);
     } finally { setResending(false); }
   };
-  const { login, register } = useAuth();
+  const { login, register, user: sessionUser } = useAuth();
   const navigate = useNavigate();
 
   const submit = async (e) => {
@@ -124,9 +124,9 @@ export default function Auth() {
             </div>
           )}
 
-          {isParentFlow && (mode === "login" || mode === "register") && <JudgeWelcomeChat kind="parent" onEnter={() => { setMode("register"); setTimeout(() => document.getElementById("name")?.focus(), 50); }} />}
+          {isParentFlow && (mode === "login" || mode === "register") && <JudgeWelcomeChat kind="parent" name={sessionUser?.name} onEnter={() => { setMode("register"); setTimeout(() => document.getElementById("name")?.focus(), 50); }} />}
           {!isParentFlow && (mode === "login" || mode === "register") && (isCourt || mode === "register") && (
-            <JudgeWelcomeChat kind={isCourt ? "judge" : "professional"} onEnter={() => { setMode("register"); setTimeout(() => { document.getElementById("name")?.focus(); document.querySelector('[data-testid="auth-form"]')?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 50); }} />
+            <JudgeWelcomeChat kind={isCourt ? "judge" : "professional"} name={sessionUser?.name} onTour={() => navigate(isCourt ? "/court-dashboard?tour=1" : "/dashboard?tour=1")} onEnter={() => { setMode("register"); setTimeout(() => { document.getElementById("name")?.focus(); document.querySelector('[data-testid="auth-form"]')?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 50); }} />
           )}
 
           <h1 className="text-3xl font-semibold mb-6" data-testid="auth-heading">
