@@ -825,3 +825,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-06 — Professional welcome chat + prod smoke check
 - JudgeWelcomeChat now takes kind=judge|professional; professional copy shows on Create-account when Family professional is selected; judge copy on login+register when court selected.
 - Live smoke (read-only): sacoparentsalign.com serves the new bundle (pro-hero, pipeline-stepper, assistant, sample cover) and /api/health healthy; sample PDF 200. Judge chat bundle not yet live (built after republish). Invite to mattsossi+invite@bsossi.com still unopened.
+
+## 2026-06 — Judge first-review tour
+- JUDGE_TOUR (SampleTour.jsx) auto-opens once per judge (localStorage judge-tour-{uid}) on /court-dashboard when approved; 5 steps (workflow guide, refer case, case list, packets heading, directory/alerts); restart via header judge-tour-start-btn. Republish requested via deployer.

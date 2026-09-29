@@ -15,6 +15,7 @@ import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { UrgentMessages } from "@/components/UrgentMessages";
 import { UrgentSmsSettings } from "@/components/UrgentSmsSettings";
 import { CourtDirectory } from "@/components/CourtDirectory";
+import { SampleTour, useSampleTour, TourButton, JUDGE_TOUR } from "@/components/SampleTour";
 
 const STATUS = {
   sent: ["New", "bg-align-yellow/30 text-yellow-900"],
@@ -92,17 +93,20 @@ export default function CourtDashboard() {
   const back = () => { setActive(null); setPacket(null); load(); };
   const current = (refs || []).find((x) => x.id === selected);
   const onHearingSaved = (hd) => setRefs((rs) => rs.map((x) => (x.id === selected ? { ...x, hearing_date: hd } : x)));
+  const tour = useSampleTour(Boolean(data?.approved && refs && !active), `judge-tour-${user?.id || "anon"}`);
+  const tourSteps = JUDGE_TOUR.filter((s) => s.id !== "court-case-search" || (refs || []).length > 0);
 
   return (
     <div className="min-h-screen bg-background" data-testid="court-dashboard">
       <header className="border-b border-border bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-6 py-4">
           <div><BrandLogo size="text-xl" /><p className="mt-1 text-xs font-semibold uppercase tracking-widest text-accent flex items-center gap-1.5"><Gavel className="h-3.5 w-3.5" /> Judicial Case Review Portal</p></div>
-          <div className="flex items-center gap-3 text-sm"><span className="text-muted-foreground hidden sm:inline" data-testid="court-dashboard-user">{user?.name}</span><Button size="sm" variant="outline" onClick={logout} data-testid="court-logout-btn">Sign out</Button></div>
+          <div className="flex items-center gap-3 text-sm">{data?.approved && !active && <TourButton onClick={tour.start} testId="judge-tour-start-btn" />}<span className="text-muted-foreground hidden sm:inline" data-testid="court-dashboard-user">{user?.name}</span><Button size="sm" variant="outline" onClick={logout} data-testid="court-logout-btn">Sign out</Button></div>
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-6"><WorkflowGuide kind="judge" /></div>
+        {tour.open && !active && <SampleTour steps={tourSteps} storageKey={`judge-tour-${user?.id || "anon"}`} onDone={tour.close} label="Judicial Portal tour" prefix="judge-tour" />}
+        <div className="mb-6" data-testid="judge-workflow-guide"><WorkflowGuide kind="judge" /></div>
         <UrgentMessages onOpen={(refId) => { setActive(null); setSelected(refId); window.location.hash = "thread"; }} />
         <UrgentSmsSettings />
         <CourtDirectory />
@@ -133,7 +137,7 @@ export default function CourtDashboard() {
               )
             )}
 
-            <h2 className="mt-12 text-lg font-semibold">Court Packets addressed to you</h2>
+            <h2 className="mt-12 text-lg font-semibold" data-testid="court-packets-heading">Court Packets addressed to you</h2>
             <PacketsList data={data} email={user?.email} onOpen={open} />
             <p className="mt-10 text-xs text-muted-foreground">Received a packet link with an access code instead? You can still open it directly from the email. <Link to="/methodology" className="text-primary hover:underline">About the Align methodology</Link>.</p>
           </>
