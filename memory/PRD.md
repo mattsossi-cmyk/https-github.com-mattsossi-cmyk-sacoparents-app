@@ -828,3 +828,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 — Judge first-review tour
 - JUDGE_TOUR (SampleTour.jsx) auto-opens once per judge (localStorage judge-tour-{uid}) on /court-dashboard when approved; 5 steps (workflow guide, refer case, case list, packets heading, directory/alerts); restart via header judge-tour-start-btn. Republish requested via deployer.
+
+## 2026-06 — Pro tour + parent welcome chat
+- PRO_TOUR (SampleTour.jsx) auto-opens once per professional on /dashboard (localStorage pro-tour-{uid}); restart via pro-tour-start-btn. Steps: CTA bar, pipeline, contact card, assistant, cases.
+- JudgeWelcomeChat kind=parent on Join.jsx invitation card (only when invite is not redirected to the sibling parent app) and on /auth when next=/join/... (parent flow).

@@ -124,6 +124,7 @@ export default function Auth() {
             </div>
           )}
 
+          {isParentFlow && (mode === "login" || mode === "register") && <JudgeWelcomeChat kind="parent" onEnter={() => { setMode("register"); setTimeout(() => document.getElementById("name")?.focus(), 50); }} />}
           {!isParentFlow && (mode === "login" || mode === "register") && (isCourt || mode === "register") && (
             <JudgeWelcomeChat kind={isCourt ? "judge" : "professional"} onEnter={() => { setMode("register"); setTimeout(() => { document.getElementById("name")?.focus(); document.querySelector('[data-testid="auth-form"]')?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 50); }} />
           )}

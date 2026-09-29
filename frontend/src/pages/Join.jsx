@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { BrandLogo } from "@/components/Brand";
 import { ConfidentialityNotice } from "@/components/ConfidentialityNotice";
 import { Button } from "@/components/ui/button";
+import { JudgeWelcomeChat } from "@/components/JudgeWelcomeChat";
 
 export default function Join() {
   const { token } = useParams();
@@ -58,6 +59,7 @@ export default function Join() {
           <p className="text-muted-foreground text-center" data-testid="join-loading">Taking you to SA CoParents App to complete your assessment…</p>
         ) : (
           <div className="bg-white border border-border rounded-lg p-8" data-testid="invitation-card">
+            <JudgeWelcomeChat kind="parent" onEnter={() => document.querySelector('[data-testid="accept-invitation-btn"], [data-testid="join-register-btn"]')?.scrollIntoView({ behavior: "smooth", block: "center" })} />
             <Mail className="h-10 w-10 text-primary mb-4" />
             <h1 className="text-3xl font-semibold mb-4" data-testid="invitation-heading">You've been invited</h1>
             <p className="text-muted-foreground leading-relaxed">

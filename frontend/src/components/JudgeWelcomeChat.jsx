@@ -15,6 +15,13 @@ const COPY = {
     cta: "Enter Your Professional Portal", Icon: Briefcase,
     hint: "First time here? Our dashboard walks you through inviting parents, reviewing the Joint Report and building your Professional Report.",
   },
+  parent: {
+    title: "Welcome to SA CoParents Alignment! 👋",
+    body: "Thank you for taking this step for your child. Your professional has invited you to share your own perspective — privately. Your answers are never shown to the other parent; SA CoParents only compares the two completed assessments to find where you align and where the child's needs deserve attention.",
+    lead: "Whenever you're ready, accept the invitation below and begin at your own pace:",
+    cta: "Begin My Parent Assessment", Icon: Heart,
+    hint: "First time here? Each question comes with a short explanation, and you can pause and return any time.",
+  },
 };
 
 export const JudgeWelcomeChat = ({ onEnter, kind = "judge" }) => {

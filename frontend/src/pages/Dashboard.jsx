@@ -34,6 +34,7 @@ import { ProTopNav } from "@/components/dashboard/ProTopNav";
 import { ProHero } from "@/components/dashboard/ProHero";
 import { PipelineStepper } from "@/components/dashboard/PipelineStepper";
 import { AlignAssistant } from "@/components/AlignAssistant";
+import { SampleTour, useSampleTour, TourButton, PRO_TOUR } from "@/components/SampleTour";
 
 export default function Dashboard() {
   const [cases, setCases] = useState(null);
@@ -71,6 +72,8 @@ export default function Dashboard() {
   const reportCase = realCases.find((j) => j.id === activeCase?.id && j.status === "ready") || realCases.find((j) => j.status === "ready" && j.kind !== "agreement" && j.kind !== "foundation");
   const reviewTo = activeCase ? `/joint/${activeCase.id}` : "#cases";
   const reportTo = reportCase ? `/cases/${reportCase.id}/professional-report` : "#cases";
+  const proTour = useSampleTour(Boolean(isPro && user?.approved !== false && joints !== null), `pro-tour-${user?.id || "anon"}`);
+  const proTourSteps = PRO_TOUR.filter((s) => s.id !== "pipeline-stepper" || realCases.length > 0);
 
   const closeCase = async (j) => {
     const note = window.prompt(`Close case ${j.case_code || ""}? It moves to the archive and stays available for records. Optional closing note:`);
@@ -391,6 +394,8 @@ export default function Dashboard() {
         {isPro ? (
           <>
             <div className="lg:hidden"><ProTopNav cases={realCases} /></div>
+            <div className="flex justify-end"><TourButton onClick={proTour.start} testId="pro-tour-start-btn" /></div>
+            {proTour.open && <SampleTour steps={proTourSteps} storageKey={`pro-tour-${user?.id || "anon"}`} onDone={proTour.close} label="Dashboard tour" prefix="pro-tour" />}
             <ProHero reviewTo={reviewTo} reportTo={reportTo} onTrigger={fireTrigger} />
             <PipelineStepper cases={realCases} selectedId={activeCase?.id} onSelect={setSelectedCase} onTrigger={fireTrigger} />
             <AlignAssistant userId={user?.id || "anon"} caseId={activeCase?.id} caseLabel={activeCase?.case_code} trigger={trigger} open={assistantOpen} onOpenChange={setAssistantOpen} />

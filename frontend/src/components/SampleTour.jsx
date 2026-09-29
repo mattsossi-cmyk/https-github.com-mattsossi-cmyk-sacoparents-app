@@ -50,6 +50,14 @@ export const TourButton = ({ onClick, testId = "tour-start-btn" }) => (
   <Button variant="outline" size="sm" onClick={onClick} data-testid={testId}><Compass className="h-4 w-4 mr-1" /> Start tour</Button>
 );
 
+export const PRO_TOUR = [
+  { id: "primary-cta-bar", title: "Three steps, three buttons", tip: "Invite Parents sends each parent a private assessment link. Review Joint Report opens the system-generated comparison once both finish. Create Prof. Report builds the neutral 11-section report you file with the court." },
+  { id: "pipeline-stepper", title: "Workflow pipeline", tip: "Pick a case and watch it move: Individual Assessments → Joint → Options & Resources → Pathway → Professional Report. Click any step to jump straight into that part of the case." },
+  { id: "pro-contact-card", title: "Report cover contact", tip: "Add your phone, office address, headshot, firm logo and signature once — they print on the Professional Report cover and the court-packet cover letter automatically." },
+  { id: "assistant-open-btn", title: "Align Assistant", tip: "An advisory helper that explains where the parents agree, where gaps are minor or high, and which pathways from the library fit. It drafts for your review; it never files or decides anything." },
+  { id: "joint-reports-section", title: "Your cases", tip: "Every case you created or received by court referral lists here with parent status and one-click access to the Joint Report and Professional Report." },
+];
+
 export const JUDGE_TOUR = [
   { id: "judge-workflow-guide", title: "How the Judicial Portal works", tip: "Refer a case → the professional invites both parents → parents complete private assessments → the professional reviews the Joint Report and files a neutral Professional Report. You never see raw parent answers." },
   { id: "refer-case-toggle-btn", title: "Refer a case", tip: "Enter the parties, cause number, hearing date and the parties' ZIP, then pick a nearby verified professional. The professional receives the referral by email and confirms acceptance." },
