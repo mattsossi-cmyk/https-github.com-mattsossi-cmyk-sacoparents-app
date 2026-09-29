@@ -10,6 +10,7 @@ import { AlignModel } from "@/components/AlignModel";
 import { MomentsStrip } from "@/components/MomentsStrip";
 import { ListedProsTeaser } from "@/components/ListedProsTeaser";
 import { SAMPLE_REPORTS } from "@/lib/samples";
+import { DemoVideoButton } from "@/components/DemoVideoButton";
 
 const POSTER_IMG = "/align-hero-simple.jpg";
 
@@ -96,6 +97,7 @@ export default function Landing() {
               <ul className="mt-2 space-y-0.5 text-sm text-muted-foreground">{["Invite parents.", "Assign assessments.", "Generate Joint Reports.", "Identify alignment and differences.", "Prepare Professional Statements."].map((t) => <li key={t}>{t}</li>)}</ul>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link to="/auth" data-testid="hero-signin-link"><Button size="sm" data-testid="hero-signin-btn">Professional Portal <ArrowRight className="h-4 w-4 ml-1" /></Button></Link>
+                <DemoVideoButton />
                 <Link to="/auth?mode=register" data-testid="hero-create-account-link"><Button size="sm" variant="ghost" data-testid="hero-create-account-btn">Create a free account</Button></Link>
               </div>
             </div>

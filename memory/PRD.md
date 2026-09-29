@@ -852,3 +852,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-06 — Both-complete email + ZIP bundle
 - server._notify_both_complete: when the second parent submits (status→ready), emails the case professional (professional_id or created_by) with links to /joint/{id} and /cases/{id}/professional-report; idempotent via joint_reports.both_complete_notified_at; skipped for demo cases.
 - GET /api/cases/{rid}/professional-report/bundle.zip → ZIP with {code}-joint-report.pdf + {code}-professional-report.pdf (400 before both complete); "Download Both (ZIP)" button on the report editor (lens-bundle-btn). Tests: tests/test_iter85_bundle_notify.py (3 pass; run with REACT_APP_BACKEND_URL exported).
+
+## 2026-06 — 3-minute demo video
+- scripts/build_demo_video.py assembles /app/frontend/public/demo/sacoparentsalign-demo.mp4 (1280x720, 2:50, ~3.9 MB, captions burned via PIL, xfade via imageio-ffmpeg static ffmpeg — no drawtext filter in that build). Scenes: landing, judge welcome/portal/refer, pro dashboard/pipeline/invite, Joint Report, Professional Report editor + 2 PDF spreads (cover+guide, §6/7+certification), Align Assistant, finalize, court packets. Source frames were screenshot_tool outputs under /root/.emergent/automation_output.
+- Landing: DemoVideoButton ("Watch the 3-minute demo") opens modal with player + Download MP4.
