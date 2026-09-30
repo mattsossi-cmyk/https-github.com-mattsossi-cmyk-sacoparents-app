@@ -856,3 +856,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-06 — 3-minute demo video
 - scripts/build_demo_video.py assembles /app/frontend/public/demo/sacoparentsalign-demo.mp4 (1280x720, 2:50, ~3.9 MB, captions burned via PIL, xfade via imageio-ffmpeg static ffmpeg — no drawtext filter in that build). Scenes: landing, judge welcome/portal/refer, pro dashboard/pipeline/invite, Joint Report, Professional Report editor + 2 PDF spreads (cover+guide, §6/7+certification), Align Assistant, finalize, court packets. Source frames were screenshot_tool outputs under /root/.emergent/automation_output.
 - Landing: DemoVideoButton ("Watch the 3-minute demo") opens modal with player + Download MP4.
+
+## 2026-06 — Demo read-along
+- frontend/public/demo/captions.json (15 timed captions generated from build_demo_video SCENES). DemoVideoButton modal now has a Read-along panel (highlights current line on timeupdate; click to seek).

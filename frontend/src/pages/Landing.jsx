@@ -61,12 +61,12 @@ export default function Landing() {
           <Link to="/find-a-professional" className="text-muted-foreground hover:text-foreground" data-testid="nav-find-professional">Find a Professional</Link>
           <Link to="/verify" className="text-muted-foreground hover:text-foreground" data-testid="nav-verify">Verify a Professional</Link>
         </nav>
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0 min-w-0">
           <Link to="/auth" data-testid="nav-login-link">
             <Button variant="ghost" size="sm" data-testid="nav-login-btn"><span className="hidden sm:inline">Professional </span>Sign In</Button>
           </Link>
           <Link to="/auth?court=1" data-testid="nav-judicial-link">
-            <Button size="sm" variant="outline" className="sm:h-9 sm:px-4 border-brand-purple/40 text-brand-purple" data-testid="nav-judicial-btn"><Gavel className="h-4 w-4 mr-1.5" /> Judicial Portal</Button>
+            <Button size="sm" variant="outline" className="px-2 sm:h-9 sm:px-4 border-brand-purple/40 text-brand-purple" data-testid="nav-judicial-btn"><Gavel className="h-4 w-4 sm:mr-1.5" /><span className="hidden sm:inline">Judicial Portal</span><span className="sm:hidden ml-1">Judges</span></Button>
           </Link>
         </div>
       </header>
