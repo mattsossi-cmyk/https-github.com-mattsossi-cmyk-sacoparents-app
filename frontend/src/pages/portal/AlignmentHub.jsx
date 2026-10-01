@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { SnapshotStrip } from "./SnapshotStrip";
 import { TrendSparkline } from "./TrendSparkline";
 import { AssessmentGuideChatInline } from "./AssessmentGuideChat";
+import { CpProgressTile } from "./CpProgressTile";
 
 /**
  * AlignmentHub — Section I of the Parent Journey. Shows:
@@ -118,6 +119,14 @@ export function AlignmentHub({
             safetyFlagged={safetyFlagged}
           />
 
+          {/* iter234 — Co-Parenting Assessment progress tile with
+              sparkline, section movers, radar, and the 60-day
+              retake nudge. Hides itself cleanly when there's no
+              history yet (empty state surfaces the sample link). */}
+          <CpProgressTile
+            onRetake={() => onStartAssessment("coparenting")}
+          />
+
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="relative">
               <Link
@@ -132,6 +141,17 @@ export function AlignmentHub({
                 <div className="text-[10px] text-slate-500 leading-snug">
                   Take the risk-and-strengths self-assessment
                 </div>
+                <a
+                  href={`${process.env.REACT_APP_BACKEND_URL}/api/insights/samples/coparenting-self-assessment.pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  data-testid="toolkit-coparenting-sample-link"
+                  className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-purple-800 hover:underline"
+                >
+                  <i className="fa-solid fa-file-pdf"></i>
+                  See a sample
+                </a>
               </Link>
               <button
                 type="button"

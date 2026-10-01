@@ -45,6 +45,85 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter234 · Self Co-Parenting Assessment · sample PDF + progress + 60-day retake
+
+Parents and professionals asked to **see** what the thorough
+10-section Self Co-Parenting Assessment report actually looks like
+before taking it or inviting a client to. Shipped three joined
+pieces:
+
+**🟢 P1 — Public sample PDF**
+- `/app/backend/coparenting_self_assessment_sample.py` — fixture
+  of a plausible mid-range parent "Jamie R." (no PII). Fixture
+  spans every rating band (Excellent / Good / Fair / Needs
+  Improvement) so the output exercises every rendered block:
+  strengths, growth areas, section detail, communication toolkit,
+  recommended next steps.
+- `GET /api/insights/samples/coparenting-self-assessment.pdf`
+  (added in `insights_routes.py` right above the existing
+  `/samples/joint-alignment-preview.pdf` route). Public, 24h
+  cached, no auth. Renders through the SAME
+  `compute_scores → build_report → build_coparenting_pdf` code
+  path a real submission uses, so any future tweak to the live
+  assessment flows automatically to the sample.
+
+**🟢 P1 — Progress history + chart**
+- `/app/backend/cp_report_history.py` — new append-only
+  `cp_report_history` collection (`{_id: user_id, snapshots: [...] }`).
+  Each snapshot is lightweight: `{submitted_at, overall_rating,
+  overall_value, section_avgs, answered, total}`. Helpers:
+  `append_history()`, `build_progress_payload()`.
+- `/app/backend/coparenting_routes.py` — `POST /report/generate`
+  now also calls `append_history` (fire-and-forget: a history
+  write never fails the parent's save). New `GET /report/progress`
+  returns `{snapshots, overall_series, recent, baseline,
+  section_movers, radar, days_since_last, retake_due,
+  retake_interval_days, sample_pdf_url}`. Baseline picked as the
+  snapshot closest to RETAKE_INTERVAL_DAYS (60) before the latest.
+- `/app/frontend/src/pages/portal/CpProgressTile.jsx` — new
+  component mounted inside the Coparenting Journey Toolkit on
+  Alignment & Tools. Four rendered blocks when history exists:
+    1. 60-day retake soft banner (amber) with Retake button —
+       only when `retake_due`.
+    2. Overall-rating sparkline (4 bands guide-lines, coloured
+       dot per data point).
+    3. Per-section change bars — top 5 movers vs ~60d-ago
+       baseline, up (emerald) / down (amber) / flat.
+    4. 10-axis radar chart comparing latest (filled purple) vs
+       ~60d-ago baseline (dashed grey).
+  Empty-state (no history yet) shows a short invite + the
+  public sample PDF link. Fetches via the shared cookie-auth
+  `api` client in `lib/api.js` — no bespoke token handling.
+
+**🟢 P1 — "See a sample" links in UI**
+- `/app/frontend/src/pages/portal/AlignmentHub.jsx` — small
+  "See a sample" link under the Co-Parenting Assessment tile
+  description. `stopPropagation` on the click so tapping the
+  link opens the sample PDF without triggering the tile's
+  parent Link navigation.
+- `/app/frontend/src/pages/portal/AssessmentGuideChat.jsx` —
+  inside the recap card for "Co-Parenting Assessment" (and
+  only that option), a "See a sample report" line sits above
+  the "Choose Another Area" link so parents can preview before
+  tapping Start.
+
+**Verified in preview**
+- 1920×800 desktop + 390×844 mobile:
+  - Logged-out: empty-state tile + "See a sample report" + tile
+    "See a sample" link render.
+  - Logged-in (parent1@test.com, seeded 4 history snapshots over
+    180 days): retake banner shows "It's been 65 days since
+    your last check-in" with Retake button; sparkline draws 4
+    points trending up ("Latest · Good"); 5 top movers listed
+    (Therapy +0.40, Communication +0.30, Medical +0.30,
+    Pick-Up/Drop-Off +0.20, Emotional +0.20); 10-axis radar
+    renders both latest (filled) and baseline (dashed).
+- Backend asserts: sample PDF 200 / 7966 B / application/pdf;
+  progress route 401 unauth, authenticated payload asserts on
+  `retake_due=True`, `days_since_last=65`, 4 series points, 10
+  movers, 10 radar labels, correct `sample_pdf_url`.
+
+
 ### 2026-02-27 — Iter233 · Assessment Guide moves inline on Alignment & Tools
 
 Founder feedback: "we want the chat box insert we just talked about

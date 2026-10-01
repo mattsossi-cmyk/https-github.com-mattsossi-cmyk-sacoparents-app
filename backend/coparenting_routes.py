@@ -37,6 +37,7 @@ from coparenting_questions import RESPONSE_SCALE, SECTIONS, find_question, total
 from coparenting_scoring import compute_scores, validate_answers
 import cp_report_content
 import cp_report_pdf
+import cp_report_history
 import report_visibility
 
 
@@ -269,8 +270,37 @@ async def generate_report(
     await db[REPORTS_COLLECTION].replace_one(
         {"user_id": user.user_id}, doc_out, upsert=True
     )
+    # Iter234 — append a lightweight snapshot to the user's history
+    # doc so Alignment & Tools can draw a progress chart + fire the
+    # 60-day retake nudge. Fire-and-forget semantics: a history
+    # failure never breaks the parent's save.
+    try:
+        await cp_report_history.append_history(
+            db,
+            user_id=user.user_id,
+            scores=scores,
+            answered=len(answers),
+            total=total_question_count(),
+        )
+    except Exception as hist_err:  # pragma: no cover — belt + braces
+        logger.warning("cp_report_history append failed: %s", hist_err)
     doc_out.pop("_id", None)
     return doc_out
+
+
+@router.get("/report/progress")
+async def get_report_progress(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Iter234 — progress payload for the Alignment & Tools progress
+    tile: sparkline series, per-section movers, radar baseline vs
+    recent, days-since-last, and the retake-due flag. Returns the
+    same shape even when no history exists yet so the frontend can
+    render its empty-state cleanly."""
+    return await cp_report_history.build_progress_payload(
+        db, user_id=user.user_id
+    )
 
 
 @router.get("/report")

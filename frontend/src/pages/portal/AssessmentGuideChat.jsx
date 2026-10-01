@@ -403,6 +403,18 @@ function AssessmentGuideBody({
                   possible options or resources for moving forward.
                 </p>
               </div>
+              {selected.key === "coparenting" && (
+                <a
+                  href={`${process.env.REACT_APP_BACKEND_URL || ""}/api/insights/samples/coparenting-self-assessment.pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="assessment-guide-sample-link-coparenting"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-purple-800 hover:underline"
+                >
+                  <i className="fa-solid fa-file-pdf"></i>
+                  See a sample report
+                </a>
+              )}
             </div>
           </>
         )}
