@@ -862,3 +862,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 — Safety sample reframed as self-assessment
 - Sample card + API: "Safety / Family Violence" is described as a professional-mediated self-assessment (not a Joint Assessment); title "Sample Safety-Focused Self-Assessment Report (Controlled Preview)"; SampleReport condensed note swaps to safety wording when is_safety.
+
+## 2026-06 — Code review pass
+- assistant.case_brief split into _participants/_alignment_buckets/_state/_tick/_pathway_names/_steps (complexity 47→small helpers), behaviour unchanged (tests pass). ruff F821/F841/F811 clean. `is None/True/False` in tests is correct Python — left as is. Large court/foundation router refactors intentionally skipped (risk, no user-visible benefit).

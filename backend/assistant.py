@@ -70,31 +70,61 @@ def _bucket(status: str) -> str:
     return "Agreed" if "strong" in s else "Minor Gap" if "moderate" in s else "High Discrepancy"
 
 
-async def case_brief(doc: dict) -> dict:
-    """Deterministic, neutral snapshot of one case for the stepper and the assistant. No raw parent answers."""
-    rep = await db.professional_reports.find_one({"case_id": doc["id"]}, {"_id": 0, "status": 1, "joint_rating": 1, "conflict_pathways": 1, "resource_rows": 1, "child_focus": 1}) or {}
-    parts = {r: {"name": (doc["participants"].get(r) or {}).get("name") or f"Parent {r.upper()}", "completed": bool((doc.get("responses") or {}).get(r)), "accepted": bool((doc["participants"].get(r) or {}).get("user_id"))} for r in ("a", "b")}
-    both = parts["a"]["completed"] and parts["b"]["completed"]
+def _participants(doc: dict) -> dict:
+    return {r: {"name": (doc["participants"].get(r) or {}).get("name") or f"Parent {r.upper()}", "completed": bool((doc.get("responses") or {}).get(r)),
+                "accepted": bool((doc["participants"].get(r) or {}).get("user_id"))} for r in ("a", "b")}
+
+
+def _alignment_buckets(doc: dict, both: bool) -> dict:
     buckets = {"Agreed": [], "Minor Gap": [], "High Discrepancy": []}
     if both and doc.get("kind", "joint_report") == "joint_report":
         for row in generate_joint_report(doc).get("alignment_map") or []:
             buckets[_bucket(row.get("status"))].append(row.get("area"))
-    total = sum(len(v) for v in buckets.values())
+    return buckets
+
+
+def _state(done: bool, active: bool) -> str:
+    return "done" if done else "active" if active else "todo"
+
+
+def _tick(ok: bool) -> str:
+    return "✓" if ok else "⏳"
+
+
+def _pathway_names(keys: list) -> str:
+    return ", ".join(next((p["name"] for p in PATHWAYS if p["key"] == k), k) for k in keys)
+
+
+def _steps(doc: dict, rep: dict, parts: dict, both: bool) -> list[dict]:
+    generated = bool(doc.get("report_generated_at"))
+    any_started = any(parts[r]["completed"] or parts[r]["accepted"] for r in ("a", "b"))
     pathways = rep.get("conflict_pathways") or []
     rec = recommended_pathway(rep.get("joint_rating"))
     ticked = [k for k, v in (rep.get("child_focus") or {}).items() if isinstance(v, dict) and v.get("checked")]
-    steps = [
-        {"key": "individual", "label": "Individual Assessments", "state": "done" if both else "active" if parts["a"]["completed"] or parts["b"]["completed"] or parts["a"]["accepted"] or parts["b"]["accepted"] else "todo",
-         "detail": f"Parent A: {'✓' if parts['a']['completed'] else '⏳'} · Parent B: {'✓' if parts['b']['completed'] else '⏳'}"},
-        {"key": "joint", "label": "Joint Assessment", "state": "done" if doc.get("report_generated_at") else "active" if both else "todo", "detail": "Report generated" if doc.get("report_generated_at") else "Ready for synthesis" if both else "Waiting on assessments"},
-        {"key": "resources", "label": "Options & Resources", "state": "done" if rep.get("resource_rows") or ticked else "active" if doc.get("report_generated_at") else "todo", "detail": f"{len(rep.get('resource_rows') or [])} resources · {len(ticked)} child-focused issues" if rep else "Not started"},
-        {"key": "pathway", "label": "Conflict-Resolution Pathway", "state": "done" if pathways else "active" if rep.get("joint_rating") else "todo", "detail": ", ".join(next((p["name"] for p in PATHWAYS if p["key"] == k), k) for k in pathways) if pathways else f"Library suggests {rec['name']}" if rec else "Rate joint alignment first"},
-        {"key": "report", "label": "Professional Report", "state": "done" if rep.get("status") in ("final", "submitted_to_court") else "active" if rep else "todo", "detail": (rep.get("status") or "not started").replace("_", " ").title()},
+    resources = rep.get("resource_rows") or []
+    status = rep.get("status")
+    pathway_detail = _pathway_names(pathways) if pathways else f"Library suggests {rec['name']}" if rec else "Rate joint alignment first"
+    return [
+        {"key": "individual", "label": "Individual Assessments", "state": _state(both, any_started), "detail": f"Parent A: {_tick(parts['a']['completed'])} · Parent B: {_tick(parts['b']['completed'])}"},
+        {"key": "joint", "label": "Joint Assessment", "state": _state(generated, both), "detail": "Report generated" if generated else "Ready for synthesis" if both else "Waiting on assessments"},
+        {"key": "resources", "label": "Options & Resources", "state": _state(bool(resources or ticked), generated), "detail": f"{len(resources)} resources · {len(ticked)} child-focused issues" if rep else "Not started"},
+        {"key": "pathway", "label": "Conflict-Resolution Pathway", "state": _state(bool(pathways), bool(rep.get("joint_rating"))), "detail": pathway_detail},
+        {"key": "report", "label": "Professional Report", "state": _state(status in ("final", "submitted_to_court"), bool(rep)), "detail": (status or "not started").replace("_", " ").title()},
     ]
+
+
+async def case_brief(doc: dict) -> dict:
+    """Deterministic, neutral snapshot of one case for the stepper and the assistant. No raw parent answers."""
+    rep = await db.professional_reports.find_one({"case_id": doc["id"]}, {"_id": 0, "status": 1, "joint_rating": 1, "conflict_pathways": 1, "resource_rows": 1, "child_focus": 1}) or {}
+    parts = _participants(doc)
+    both = parts["a"]["completed"] and parts["b"]["completed"]
+    buckets = _alignment_buckets(doc, both)
+    total = sum(len(v) for v in buckets.values())
+    rec = recommended_pathway(rep.get("joint_rating"))
     return {"case_id": doc["id"], "case_code": doc.get("case_code"), "subject_label": doc.get("subject_label"), "child_name": doc.get("child_name"), "case_status": case_status(doc), "is_safety": bool(doc.get("is_safety")),
             "safety_route": any((doc.get("responses", {}).get(s) or {}).get("safety_route") for s in ("a", "b")), "participants": parts, "buckets": buckets,
-            "agreed_pct": round(len(buckets["Agreed"]) / total * 100) if total else None, "joint_rating": rep.get("joint_rating"), "pathways": pathways, "suggested_pathway": rec["name"] if rec else None,
-            "report_status": rep.get("status") or "not_started", "steps": steps}
+            "agreed_pct": round(len(buckets["Agreed"]) / total * 100) if total else None, "joint_rating": rep.get("joint_rating"), "pathways": rep.get("conflict_pathways") or [],
+            "suggested_pathway": rec["name"] if rec else None, "report_status": rep.get("status") or "not_started", "steps": _steps(doc, rep, parts, both)}
 
 
 async def _own_case(cid: str, user: dict) -> dict:
