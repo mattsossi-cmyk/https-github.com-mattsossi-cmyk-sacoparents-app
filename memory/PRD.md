@@ -45,6 +45,37 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter236 · Deep-Dive Samples in Assessment Guide
+
+Follow-up on the iter234 "See a sample" treatment: three more
+sample links so parents can preview Educational, Medical, and
+Psychological deep-dive reports before committing to the
+assessment.
+
+**🟢 P1 — AssessmentGuideChat recap · sample link lookup**
+- `/app/frontend/src/pages/portal/AssessmentGuideChat.jsx` —
+  replaced the single-key hard-coded coparenting block with a
+  `SAMPLE_URL_BY_KEY` lookup inside the recap-card IIFE. Keys
+  map 1:1 to Assessment Guide options:
+    * `coparenting`   → `/api/insights/samples/coparenting-self-assessment.pdf` (dynamic, iter234)
+    * `educational`   → `/api/insights/samples/snc-sample-individual-report-educational.pdf` (static SNC artefact)
+    * `medical`       → `/api/insights/samples/snc-sample-individual-report-medical.pdf`
+    * `psychological` → `/api/insights/samples/snc-sample-individual-report-psychological.pdf`
+  The remaining Assessment Guide options (`communication`,
+  `safety`, `court`) deliberately return no sample — the first
+  two don't have individual-report artefacts and the third is a
+  routing path, not a report. Each link carries the stable test
+  id `assessment-guide-sample-link-{key}`.
+
+**Verified in preview**
+- Backend GET on each of the three deep-dive sample URLs: 200 /
+  ~1 MB / valid %PDF magic / 3 pages each.
+- Mobile 390: clicked through each option in the Assessment
+  Guide; the sample link renders only for coparenting +
+  educational + medical + psychological. Safety and Court
+  recaps correctly show no link. No horizontal overflow.
+
+
 ### 2026-02-27 — Iter235 · Snapshot Rename + Progress Share-with-Mediator
 
 Two parent-facing features. Both ride on infrastructure shipped in

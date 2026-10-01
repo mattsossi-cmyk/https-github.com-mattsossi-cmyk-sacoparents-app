@@ -403,18 +403,35 @@ function AssessmentGuideBody({
                   possible options or resources for moving forward.
                 </p>
               </div>
-              {selected.key === "coparenting" && (
-                <a
-                  href={`${process.env.REACT_APP_BACKEND_URL || ""}/api/insights/samples/coparenting-self-assessment.pdf`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="assessment-guide-sample-link-coparenting"
-                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-purple-800 hover:underline"
-                >
-                  <i className="fa-solid fa-file-pdf"></i>
-                  See a sample report
-                </a>
-              )}
+              {(() => {
+                // iter235/iter236 — "See a sample report" link.
+                // Each key points at the appropriate public sample
+                // PDF served by /api/insights/samples/*. The
+                // Co-Parenting sample is dynamically rendered
+                // (coparenting-self-assessment.pdf); the three
+                // deep-dive samples are static SNC artefacts that
+                // already live in the preview sandbox.
+                const SAMPLE_URL_BY_KEY = {
+                  coparenting:   "/api/insights/samples/coparenting-self-assessment.pdf",
+                  educational:   "/api/insights/samples/snc-sample-individual-report-educational.pdf",
+                  medical:       "/api/insights/samples/snc-sample-individual-report-medical.pdf",
+                  psychological: "/api/insights/samples/snc-sample-individual-report-psychological.pdf",
+                };
+                const path = SAMPLE_URL_BY_KEY[selected.key];
+                if (!path) return null;
+                return (
+                  <a
+                    href={`${process.env.REACT_APP_BACKEND_URL || ""}${path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid={`assessment-guide-sample-link-${selected.key}`}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-purple-800 hover:underline"
+                  >
+                    <i className="fa-solid fa-file-pdf"></i>
+                    See a sample report
+                  </a>
+                );
+              })()}
             </div>
           </>
         )}
