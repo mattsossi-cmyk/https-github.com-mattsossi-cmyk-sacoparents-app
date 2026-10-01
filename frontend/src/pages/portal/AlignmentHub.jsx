@@ -178,6 +178,27 @@ export function AlignmentHub({
               </button>
             </div>
 
+            {/* iter241 — Self Assessment · 40-question profile. Opens
+                the static preview page in a new tab. Parent can save
+                their results back to this account from the results
+                panel so the 8-domain profile flows into the Progress
+                tile sparkline. */}
+            <a
+              href="/coparenting-self-assessment-preview.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="toolkit-link-self-assessment"
+              className="block p-3 bg-gradient-to-br from-purple-700 to-purple-900 hover:from-purple-800 hover:to-purple-950 border border-purple-900 rounded-xl text-white transition"
+            >
+              <i className="fa-solid fa-wand-magic-sparkles text-amber-300 text-base"></i>
+              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                Self Assessment
+              </div>
+              <div className="text-[10px] text-purple-100/90 leading-snug">
+                40 quick questions · 8-domain profile · save or share
+              </div>
+            </a>
+
             <div className="relative">
               <Link
                 to="/safety-assessment"

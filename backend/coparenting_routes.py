@@ -40,6 +40,7 @@ import cp_report_content
 import cp_report_pdf
 import cp_report_history
 import cp_progress_pdf
+import cp_preview_profile_pdf
 import progress_share_analytics
 import report_visibility
 
@@ -507,6 +508,122 @@ async def list_progress_shares(
         db, user_id=user.user_id
     )
     return {"shares": rows}
+
+
+# ========================================================================
+# Iter241 — 40-question Preview Profile: branded PDF + save-to-account
+# ========================================================================
+class PreviewProfileScoreRow(BaseModel):
+    domain: str = Field(..., max_length=120)
+    score: float = Field(..., ge=0, le=5)
+
+
+class PreviewProfileReflection(BaseModel):
+    whats_working: Optional[str] = Field(default=None, max_length=2000)
+    to_improve: Optional[str] = Field(default=None, max_length=2000)
+    one_change: Optional[str] = Field(default=None, max_length=2000)
+
+
+class PreviewProfileRequest(BaseModel):
+    """Shape posted by `/coparenting-self-assessment-preview.html`."""
+    parent_name: Optional[str] = Field(default=None, max_length=120)
+    scores: List[PreviewProfileScoreRow] = Field(..., min_length=1, max_length=20)
+    reflection: Optional[PreviewProfileReflection] = Field(default=None)
+
+
+@router.post("/preview-profile/pdf")
+async def download_preview_profile_pdf(body: PreviewProfileRequest):
+    """Iter241 · Branded one-page PDF for the 40-question Preview
+    Profile. Public (no auth): the HTML form on
+    /coparenting-self-assessment-preview.html can be used without
+    an account; the parent should still be able to download their
+    profile."""
+    pdf_bytes = cp_preview_profile_pdf.build_preview_profile_pdf(
+        parent_name=(body.parent_name or "a parent"),
+        scores=[s.model_dump() for s in body.scores],
+        reflection=(body.reflection.model_dump() if body.reflection else {}),
+        completed_at=datetime.utcnow().strftime("%b %d, %Y"),
+    )
+    filename = f"Coparenting_Preview_Profile_{_safe_filename(body.parent_name or 'me')}.pdf"
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
+
+
+@router.post("/preview-profile/save")
+async def save_preview_profile(
+    body: PreviewProfileRequest,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Iter241 · Save a completed 40-question Preview Profile to the
+    parent's account. We write a lightweight snapshot into the SAME
+    `cp_report_history` collection the 70-question flow uses, tagged
+    with `source="preview"` so the Alignment & Tools progress tile
+    can render it alongside full-report snapshots.
+
+    Section ids `d_0..d_7` are stable and distinct from the
+    70-question `s1..s10` ids, so `_pick_baseline` / `_section_movers`
+    only match preview-to-preview and report-to-report — mixing is
+    silently ignored, which is the correct behaviour (a preview run
+    is not comparable to a thorough run)."""
+    scores_rows = [s.model_dump() for s in body.scores]
+    avgs = [float(r["score"]) for r in scores_rows]
+    overall_avg = sum(avgs) / len(avgs) if avgs else 0.0
+
+    def _rate(a: float) -> str:
+        if a >= 4.25: return "Excellent"
+        if a >= 3.5:  return "Good"
+        if a >= 2.75: return "Fair"
+        if a >= 2.0:  return "Fair"
+        return "Needs Improvement"
+
+    scores_bundle = {
+        "overall_rating": _rate(overall_avg),
+        "sections": [
+            {
+                "id":     f"d_{i}",
+                "number": i + 1,
+                "name":   r["domain"],
+                "rating": _rate(r["score"]),
+                "avg":    round(float(r["score"]), 2),
+            }
+            for i, r in enumerate(scores_rows)
+        ],
+    }
+    snapshot = await cp_report_history.append_history(
+        db,
+        user_id=user.user_id,
+        scores=scores_bundle,
+        answered=len(scores_rows) * 5,  # 5 Likert per domain
+        total=len(scores_rows) * 5,
+    )
+    # Stamp the source so analytics / future-us can tell preview
+    # snapshots apart. We update the just-appended row by
+    # `submitted_at` — tiny race window, fine for a reflection tool.
+    await db[cp_report_history.HISTORY_COLLECTION].update_one(
+        {
+            "_id": user.user_id,
+            "snapshots.submitted_at": snapshot["submitted_at"],
+        },
+        {
+            "$set": {
+                "snapshots.$.source": "preview",
+                "snapshots.$.reflection": (
+                    body.reflection.model_dump() if body.reflection else None
+                ),
+            }
+        },
+    )
+    return {
+        "ok": True,
+        "submitted_at": snapshot["submitted_at"],
+        "overall_rating": snapshot["overall_rating"],
+        "overall_value": snapshot["overall_value"],
+        "domains": len(scores_rows),
+    }
 
 
 @router.get("/report")

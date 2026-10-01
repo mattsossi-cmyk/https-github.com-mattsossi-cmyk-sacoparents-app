@@ -1609,7 +1609,15 @@ export default function SacoparentsPortal() {
             <button
               type="button"
               data-testid="gateway-safety-first-btn"
-              onClick={() => setSafetyOpen(true)}
+              onClick={() => {
+                // iter241 — pre-seed the pending door so when the
+                // parent finishes the Safety Screen (cleared OR
+                // flagged), they land inside the Parent Journey
+                // (grey-rock mode when flagged) instead of being
+                // stranded back on the Gateway.
+                pendingDoorRef.current = "parent";
+                setSafetyOpen(true);
+              }}
               className="w-full mb-3 p-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-left shadow-md border border-rose-800/30 flex items-start gap-3"
             >
               <div className="shrink-0 w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">

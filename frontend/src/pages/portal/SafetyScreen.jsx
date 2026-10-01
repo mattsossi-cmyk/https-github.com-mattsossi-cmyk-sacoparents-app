@@ -328,9 +328,9 @@ export function SafetyScreen({
 
             <div className="pt-1 border-t border-slate-100">
               <p className="text-[10px] text-slate-500 leading-snug mb-1.5">
-                You can still enter the Portal — nothing here will lock
-                you out. Just know these tools work best after the
-                safety picture is clearer.
+                {coerce === "yes"
+                  ? "Grey-rock mode is on — the Portal will quietly adapt its tools and language so nothing you do here can be used against you. You can turn it off from the Alignment & Tools page any time."
+                  : "You can still enter the Portal — nothing here will lock you out. Just know these tools work best after the safety picture is clearer."}
               </p>
               <div className="flex gap-2">
                 <button
@@ -339,15 +339,27 @@ export function SafetyScreen({
                   onClick={() => onContinueFlagged({ phys, coerce, device })}
                   className="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg font-semibold text-[11px]"
                 >
-                  Continue to the Portal anyway
+                  {coerce === "yes"
+                    ? "Enter the Portal in grey-rock mode"
+                    : "Continue to the Portal anyway"}
                 </button>
+                {/* iter241 — Safety-First auto-route: when intimidation
+                    is flagged (coerce === "yes") the Close button
+                    no longer dumps the parent back onto the Gateway
+                    unprotected. It routes into grey-rock mode too,
+                    with a softer label so the control stays visible
+                    but is no longer an unsafe exit. */}
                 <button
                   type="button"
                   data-testid="safety-flagged-close-btn"
-                  onClick={resetAndClose}
+                  onClick={
+                    coerce === "yes"
+                      ? () => onContinueFlagged({ phys, coerce, device })
+                      : resetAndClose
+                  }
                   className="px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-600 text-[11px]"
                 >
-                  Close
+                  {coerce === "yes" ? "Not now" : "Close"}
                 </button>
               </div>
             </div>

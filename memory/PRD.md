@@ -45,6 +45,100 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter241 · Safety-First auto-route · Preview-to-Account · Branded Profile PDF · Self Assessment tile
+
+Four tightly-related follow-ups shipped together.
+
+**🟢 P1 — Safety-First auto-route (intimidation=yes locks the exit)**
+- `/app/frontend/src/pages/portal/SafetyScreen.jsx` — when
+  `coerce === "yes"` on the Quick Safety Check:
+    * The flagged-card footer copy flips from the generic
+      "You can still enter the Portal" to a protective-wording
+      explainer: "Grey-rock mode is on — the Portal will quietly
+      adapt its tools and language so nothing you do here can be
+      used against you. You can turn it off from the Alignment &
+      Tools page any time."
+    * The "Continue to the Portal anyway" button relabels to
+      "Enter the Portal in grey-rock mode".
+    * The "Close" button relabels to "Not now" AND its onClick
+      now calls `onContinueFlagged` instead of `resetAndClose`,
+      so a parent in a flagged state can't exit the modal into
+      an unprotected gateway. Both buttons route to grey-rock.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — the Gateway
+  Safety-First button now pre-seeds `pendingDoorRef.current =
+  "parent"`, so `onSafetyContinueFlagged` lands the parent
+  inside the Parent Journey (grey-rock) instead of back on the
+  Gateway when the button was opened directly (not via a Door).
+- Verified: filling `coerce=yes` + clicking "Not now" landed on
+  Alignment & Tools (gateway button count 0, toolkit tiles
+  count 2) with 3 SafetySoftBanner instances rendering —
+  grey-rock mode confirmed active.
+
+**🟢 P1 — Preview-to-Account save**
+- `/app/backend/coparenting_routes.py` — two new auth-aware
+  Pydantic models (`PreviewProfileScoreRow`,
+  `PreviewProfileReflection`, `PreviewProfileRequest`) and two
+  new routes:
+    * `POST /api/coparenting/preview-profile/pdf` — public (no
+      auth); accepts posted scores + reflection, returns the
+      branded one-page PDF so the HTML form can offer a
+      download.
+    * `POST /api/coparenting/preview-profile/save` — auth
+      required; writes a snapshot into the SAME
+      `cp_report_history` collection the 70-question flow uses,
+      with stable section ids `d_0..d_7` and extra fields
+      `source: "preview"` + the three reflection answers.
+      Section ids are distinct from the 70-question `s1..s10`
+      ids so `_pick_baseline` / `_section_movers` only match
+      preview-to-preview and report-to-report (mixing is
+      silently ignored, which is correct — the two assessments
+      aren't comparable).
+- `/app/frontend/public/coparenting-self-assessment-preview.html`:
+    * New results-panel action strip with two buttons
+      ("Download my profile (PDF)" ghost + "Save to my account"
+      solid). Toast strip underneath for success/error states.
+    * `wireResultActions(results)` fires inside
+      `displayResults` to bind both buttons to the computed
+      scores. `collectPayload` serialises scores + the three
+      reflection textareas; `downloadProfilePdf` POSTs to the
+      PDF route and streams the result into an anchor-click
+      download; `saveToAccount` POSTs to the save route with
+      `credentials: "include"` so the same-origin httpOnly
+      session cookie carries.
+
+**🟢 P1 — Branded one-page Profile PDF**
+- `/app/backend/cp_preview_profile_pdf.py` — new sister module
+  to `cp_progress_pdf.py`. Single-page portrait with: overall
+  rating card (coloured to the band), per-domain progress bars
+  (purple-filled against ivory track, 8 rows), Profile Summary
+  (strengths and areas-to-attention), optional Parent
+  Reflection block (3 textareas) when any were filled. Band
+  cutoffs mirror the HTML form's `getProfileLabel` exactly so
+  the parent's screen and the shared PDF say the same words.
+  Verified by analyze_file_tool: single page, all requested
+  blocks present, correct scores + reflection rendered.
+
+**🟢 P1 — Self Assessment tile on Alignment & Tools**
+- `/app/frontend/src/pages/portal/AlignmentHub.jsx` — new
+  gradient-purple tile between the Co-Parenting Assessment and
+  Safety Screen tiles. Magic-wand sparkle icon (amber on
+  purple), "Self Assessment · 40 quick questions · 8-domain
+  profile · save or share". Opens the static preview page in a
+  new tab (test id `toolkit-link-self-assessment`).
+
+**End-to-end verified at mobile 390**
+- Preview page: 40 radios + 8 domains render; filling all with
+  "4" and clicking View Profile → results panel with 8 bars,
+  Profile Summary, Download PDF + Save-to-account buttons.
+- Save-to-account toast: "Saved. Your 8-domain profile
+  (overall Good) is now in your Alignment & Tools progress
+  tile." (confirmed via Progress endpoint: 5 snapshots, latest
+  with 8 sections and `source=preview`).
+- Download toast: "Downloaded. Share it with your mediator the
+  same way you'd share any PDF."
+- No horizontal overflow on any surface.
+
+
 ### 2026-02-27 — Iter240 · Co-Parenting Self-Assessment preview replaced
 
 Founder swapped the 30-question / 6-section / 4-point Likert

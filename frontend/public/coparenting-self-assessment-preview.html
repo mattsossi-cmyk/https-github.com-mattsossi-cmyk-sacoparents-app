@@ -178,6 +178,46 @@
       padding: 15px;
       border-radius: 10px;
     }
+    /* iter241 — action buttons at the end of the results panel */
+    .result-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 22px;
+    }
+    .result-actions button {
+      padding: 14px 10px;
+      font-size: 14px;
+      width: 100%;
+    }
+    .result-actions .ghost {
+      background: white;
+      color: var(--purple-dark);
+      border: 2px solid var(--purple);
+    }
+    .result-actions .ghost:hover {
+      background: var(--purple-light);
+    }
+    .action-toast {
+      margin-top: 12px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.45;
+      display: none;
+    }
+    .action-toast.ok {
+      display: block;
+      background: #e6f3ec;
+      color: var(--green);
+      border: 1px solid #b7dcc6;
+    }
+    .action-toast.err {
+      display: block;
+      background: #fbeaea;
+      color: var(--red);
+      border: 1px solid #e6b9b9;
+    }
     @media(max-width:700px) {
       .scale {
         grid-template-columns: 1fr;
@@ -257,6 +297,19 @@
       <h3>Profile Summary</h3>
       <div id="summary"></div>
     </div>
+    <!-- iter241 — Download PDF + Save to my account. The two buttons
+         call the public /preview-profile/pdf and auth-only
+         /preview-profile/save routes with the scores we just
+         computed in displayResults(). -->
+    <div class="result-actions">
+      <button type="button" id="btn-download-pdf" class="ghost">
+        Download my profile (PDF)
+      </button>
+      <button type="button" id="btn-save-account">
+        Save to my account
+      </button>
+    </div>
+    <div id="action-toast" class="action-toast"></div>
     <div class="disclaimer">
       <strong>Important:</strong>
       This assessment is educational and informational. It is not a
@@ -497,6 +550,81 @@ function displayResults(results) {
   document.getElementById("results").scrollIntoView({
     behavior: "smooth"
   });
+  wireResultActions(results);
+}
+
+// iter241 — Post the computed profile to the backend. The HTML is
+// served off the same origin as /api/* so same-site cookies are
+// sent automatically on auth routes; no manual token wiring needed.
+function collectPayload(results) {
+  return {
+    parent_name: null,
+    scores: results.map(r => ({ domain: r.domain, score: Number(r.score.toFixed(2)) })),
+    reflection: {
+      whats_working: document.getElementById("reflection1").value || null,
+      to_improve:    document.getElementById("reflection2").value || null,
+      one_change:    document.getElementById("reflection3").value || null,
+    },
+  };
+}
+function showToast(kind, msg) {
+  const t = document.getElementById("action-toast");
+  t.className = "action-toast " + kind;
+  t.textContent = msg;
+}
+async function downloadProfilePdf(results) {
+  const payload = collectPayload(results);
+  showToast("ok", "Building your PDF…");
+  try {
+    const res = await fetch("/api/coparenting/preview-profile/pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Coparenting_Preview_Profile.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast("ok", "Downloaded. Share it with your mediator the same way you'd share any PDF.");
+  } catch (err) {
+    showToast("err", "Could not build the PDF. Please try again in a moment.");
+  }
+}
+async function saveToAccount(results) {
+  const payload = collectPayload(results);
+  showToast("ok", "Saving to your account…");
+  try {
+    const res = await fetch("/api/coparenting/preview-profile/save", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.status === 401) {
+      showToast("err", "Please sign in to the SA CoParents portal first — then come back and tap Save.");
+      return;
+    }
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    showToast(
+      "ok",
+      `Saved. Your 8-domain profile (overall ${data.overall_rating}) is now in your Alignment & Tools progress tile.`
+    );
+  } catch (err) {
+    showToast("err", "Could not save to your account. Check that you're signed in and try again.");
+  }
+}
+function wireResultActions(results) {
+  const dl = document.getElementById("btn-download-pdf");
+  const sv = document.getElementById("btn-save-account");
+  if (dl) dl.onclick = () => downloadProfilePdf(results);
+  if (sv) sv.onclick = () => saveToAccount(results);
 }
 </script>
 </body>
