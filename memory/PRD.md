@@ -45,6 +45,45 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter240 · Co-Parenting Self-Assessment preview replaced
+
+Founder swapped the 30-question / 6-section / 4-point Likert
+version from iter238 for a new 40-question / 8-domain /
+5-point Likert version. All three discovery entry points
+(toolkit tile, Assessment Guide recap, Progress Tile
+empty-state) point at the same path, so the only wiring change
+was the "30" → "40" text in the two React copy strings.
+
+**🟢 P1 — File replacement**
+- `/app/frontend/public/coparenting-self-assessment-preview.html`
+  overwritten verbatim with the pasted HTML. Served at the
+  unchanged path. Visual: purple gradient header (replaces the
+  previous navy blue), per-domain cards, response scale legend
+  (Rarely / Sometimes / Developing / Usually / Consistently),
+  Parent Reflection textarea block, "View My Co-Parenting
+  Profile" CTA → results panel with 8 progress-bar rows and a
+  summary of top strengths and areas to attention.
+
+**🟢 P1 — Discovery-link copy updates**
+- `/app/frontend/src/pages/portal/AssessmentGuideChat.jsx` —
+  recap-card preview link now reads "Try the preview — 40
+  quick questions" (was "30").
+- `/app/frontend/src/pages/portal/CpProgressTile.jsx` — empty
+  state preview link now reads "Or try the preview — 40 quick
+  questions" (was "30").
+
+**Verified**
+- Mobile 390: 8 domains render in order (My Child's Needs,
+  My Parenting, Supporting the Other Parent, Communication,
+  Managing Conflict, Shared Parenting Decisions, Flexibility &
+  Problem Solving, Moving Forward), 40 questions render, 5
+  Likert values per question. Filling all 40 with "4" and
+  clicking View My Co-Parenting Profile produced 8 score rows
+  (4.0 / 5 · "Generally Working") and a Profile Summary with
+  top-3 strengths and bottom-3 areas-to-attention. No
+  horizontal overflow.
+
+
 ### 2026-02-27 — Iter239 · Safety-First button on the Gateway
 
 Founder ask: "when the coparents start their journey, I want a

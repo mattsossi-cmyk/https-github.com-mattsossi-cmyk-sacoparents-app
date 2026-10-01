@@ -448,7 +448,7 @@ function AssessmentGuideBody({
                         className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-700 hover:underline"
                       >
                         <i className="fa-solid fa-wand-magic-sparkles"></i>
-                        Try the preview — 30 quick questions
+                        Try the preview — 40 quick questions
                       </a>
                     )}
                   </div>

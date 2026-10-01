@@ -438,7 +438,7 @@ export function CpProgressTile({
               className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-amber-700 hover:underline"
             >
               <i className="fa-solid fa-wand-magic-sparkles"></i>
-              Or try the preview — 30 quick questions
+              Or try the preview — 40 quick questions
             </a>
           </div>
         </div>
