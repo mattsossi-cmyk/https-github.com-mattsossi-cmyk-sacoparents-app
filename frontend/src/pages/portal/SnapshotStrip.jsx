@@ -51,10 +51,35 @@ function relativeAge(isoLike) {
   return `${months}mo ago`;
 }
 
-export function SnapshotStrip({ history, onDownload, onDelete, limit = 3 }) {
+export function SnapshotStrip({
+  history,
+  onDownload,
+  onDelete,
+  onRename,
+  limit = 3,
+}) {
   const [confirmingId, setConfirmingId] = useState(null);
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameDraft, setRenameDraft] = useState("");
   if (!Array.isArray(history) || history.length === 0) return null;
   const items = history.slice(0, limit);
+
+  const beginRename = (snap, idx) => {
+    setRenamingId(snap.id ?? idx);
+    setRenameDraft(snap.label || "");
+  };
+  const commitRename = (snap, idx) => {
+    if (typeof onRename === "function") {
+      const trimmed = (renameDraft || "").trim().slice(0, 40);
+      onRename(snap.id ?? idx, trimmed);
+    }
+    setRenamingId(null);
+    setRenameDraft("");
+  };
+  const cancelRename = () => {
+    setRenamingId(null);
+    setRenameDraft("");
+  };
 
   return (
     <section
@@ -100,14 +125,82 @@ export function SnapshotStrip({ history, onDownload, onDelete, limit = 3 }) {
                   <i className={`${iconClass} text-purple-800 text-xs`}></i>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold text-slate-800 truncate">
-                    {label}
-                    {snap.category ? ` — ${snap.category}` : ""}
-                  </div>
-                  <div className="text-[10px] text-slate-500">
-                    {snap.answers?.length || 0} answers ·{" "}
-                    {relativeAge(snap.saved_at)}
-                  </div>
+                  {renamingId === (snap.id ?? idx) ? (
+                    <div
+                      className="flex items-center gap-1"
+                      data-testid={`snapshot-rename-input-wrap-${idx}`}
+                    >
+                      <input
+                        type="text"
+                        autoFocus
+                        value={renameDraft}
+                        maxLength={40}
+                        onChange={(e) => setRenameDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") commitRename(snap, idx);
+                          if (e.key === "Escape") cancelRename();
+                        }}
+                        placeholder={`${label} — e.g. Emma's summer plan`}
+                        data-testid={`snapshot-rename-input-${idx}`}
+                        className="flex-1 min-w-0 text-[11px] font-bold text-slate-800 bg-white border border-purple-400 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      />
+                      <button
+                        type="button"
+                        data-testid={`snapshot-rename-save-${idx}`}
+                        onClick={() => commitRename(snap, idx)}
+                        aria-label="Save name"
+                        className="shrink-0 w-6 h-6 rounded text-emerald-600 hover:bg-emerald-50 flex items-center justify-center"
+                      >
+                        <i className="fa-solid fa-check text-[11px]"></i>
+                      </button>
+                      <button
+                        type="button"
+                        data-testid={`snapshot-rename-cancel-${idx}`}
+                        onClick={cancelRename}
+                        aria-label="Cancel rename"
+                        className="shrink-0 w-6 h-6 rounded text-slate-400 hover:bg-slate-100 flex items-center justify-center"
+                      >
+                        <i className="fa-solid fa-xmark text-[11px]"></i>
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div
+                        className="text-xs font-bold text-slate-800 truncate flex items-center gap-1"
+                        data-testid={`snapshot-title-${idx}`}
+                      >
+                        <span className="truncate">
+                          {snap.label && snap.label.trim()
+                            ? snap.label
+                            : `${label}${snap.category ? ` — ${snap.category}` : ""}`}
+                        </span>
+                        {typeof onRename === "function" && (
+                          <button
+                            type="button"
+                            data-testid={`snapshot-rename-${idx}`}
+                            onClick={() => beginRename(snap, idx)}
+                            aria-label="Rename this snapshot"
+                            className="shrink-0 w-5 h-5 rounded text-slate-300 hover:text-purple-700 hover:bg-purple-50 flex items-center justify-center"
+                          >
+                            <i className="fa-solid fa-pen text-[9px]"></i>
+                          </button>
+                        )}
+                      </div>
+                      {snap.label && snap.label.trim() && (
+                        <div
+                          className="text-[9px] text-slate-400 uppercase tracking-wider truncate"
+                          data-testid={`snapshot-topic-sub-${idx}`}
+                        >
+                          {label}
+                          {snap.category ? ` · ${snap.category}` : ""}
+                        </div>
+                      )}
+                      <div className="text-[10px] text-slate-500">
+                        {snap.answers?.length || 0} answers ·{" "}
+                        {relativeAge(snap.saved_at)}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               {confirmingId === (snap.id ?? idx) ? (

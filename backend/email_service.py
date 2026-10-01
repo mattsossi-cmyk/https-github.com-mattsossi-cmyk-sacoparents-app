@@ -229,6 +229,83 @@ def _cover_note(
 
 
 # ============ Public API ============
+def send_cp_progress_share(
+    *,
+    to_email: str,
+    parent_name: str,
+    parent_email: Optional[str],
+    mediator_name: Optional[str],
+    note: Optional[str],
+    pdf_bytes: bytes,
+    filename: str = "coparenting-progress-snapshot.pdf",
+) -> None:
+    """Iter235 · Email the one-page Co-Parenting Progress Snapshot to a
+    mediator or professional of the parent's choice.
+
+    `parent_email` sets Reply-To so the mediator can respond
+    directly. The PDF is attached, not inlined. If a `note` is
+    passed we include it in the email body too, matching what's
+    rendered in the PDF, so a mediator skim-reading on mobile sees
+    the context without opening the attachment.
+    """
+    greeting = f"Hi {mediator_name}," if (mediator_name or "").strip() else "Hi,"
+    note_clean = (note or "").strip()
+    plain = (
+        f"{greeting}\n\n"
+        f"Attached is a one-page summary of my co-parenting progress "
+        f"over the last 60 days — strengths, movers, and the full "
+        f"section-by-section rating comparison.\n\n"
+    )
+    if note_clean:
+        plain += f"{note_clean}\n\n"
+    plain += (
+        f"Please reply directly to this email if you'd like to discuss.\n\n"
+        f"Thanks,\n{parent_name}\n"
+    )
+    if parent_email:
+        plain += f"{parent_email}\n"
+
+    note_block_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"{note_clean}</p>"
+        if note_clean else ""
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"{greeting} Attached is a one-page summary of my co-parenting "
+        f"progress over the last 60 days — strengths, movers, and the "
+        f"full section-by-section rating comparison.</p>"
+        + note_block_html +
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
+        f"Please reply directly to this email if you'd like to discuss.</p>"
+        f'<p style="font-size:15px;line-height:1.55;color:#1A1330;margin:0;">'
+        f"Thanks,<br/><strong>{parent_name}</strong>"
+        + (
+            f'<br/><a href="mailto:{parent_email}" '
+            f'style="color:#3D1A78;text-decoration:none;">{parent_email}</a>'
+            if parent_email else ""
+        )
+        + "</p>"
+    )
+    html = _branded_html(
+        headline="Co-Parenting Progress Snapshot",
+        body_html=body_html,
+        cta_label="",
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Co-Parenting Progress Snapshot — {parent_name}",
+        html=html,
+        text=plain,
+        reply_to=parent_email,
+        attachments=[(filename, pdf_bytes)],
+        failure_message=(
+            "We couldn't send your Progress Snapshot right now. "
+            "Please try again in a moment."
+        ),
+    )
+
+
 def send_silent_reviewer_nudge(
     *,
     to_email: str,

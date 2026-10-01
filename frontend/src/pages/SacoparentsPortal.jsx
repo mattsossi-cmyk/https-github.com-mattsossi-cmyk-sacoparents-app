@@ -1193,6 +1193,32 @@ export default function SacoparentsPortal() {
     []
   );
 
+  // iter235 — rename a saved snapshot so the library reads like a
+  // real folder ("Emma's summer plan") instead of the auto-labelled
+  // "Foundation · 3d ago". Label is capped at 40 chars at the input
+  // and trimmed again here so empty values clear the label cleanly.
+  const onRenameSnapshot = useCallback(
+    (idOrIdx, rawLabel) => {
+      const trimmed = (rawLabel || "").trim().slice(0, 40);
+      setSnapshotHistory((prev) => {
+        const next = prev.map((s, i) => {
+          const match =
+            s.id !== undefined ? s.id === idOrIdx : i === idOrIdx;
+          if (!match) return s;
+          if (!trimmed) {
+            // Clear a label by passing an empty string.
+            const { label: _dropped, ...rest } = s;
+            return rest;
+          }
+          return { ...s, label: trimmed };
+        });
+        writeJson(SNAPSHOT_HISTORY_KEY, next);
+        return next;
+      });
+    },
+    []
+  );
+
   // iter222 — fire when the guided modal writes/clears a localStorage
   // draft. Bumping guidedDraftsRev re-triggers the debounced PUT
   // effect, which reads all localStorage guided drafts and syncs
@@ -1669,6 +1695,7 @@ export default function SacoparentsPortal() {
                   snapshotHistory={snapshotHistory}
                   onSnapshotRedownload={downloadGuidedSnapshot}
                   onSnapshotDelete={onDeleteSnapshot}
+                  onSnapshotRename={onRenameSnapshot}
                   onStartAssessment={onStartAssessment}
                 />
               </>

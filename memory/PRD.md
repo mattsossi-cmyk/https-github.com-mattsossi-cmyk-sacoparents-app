@@ -45,6 +45,86 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter235 · Snapshot Rename + Progress Share-with-Mediator
+
+Two parent-facing features. Both ride on infrastructure shipped in
+iter234 (progress history + the inline Assessment Guide).
+
+**🟢 P1 — Snapshot Rename**
+- `/app/frontend/src/pages/portal/SnapshotStrip.jsx` — small pencil
+  icon on each row flips the title into an inline input (40-char
+  cap, Enter saves, Esc cancels). Row shows `snap.label` when set
+  with a small uppercase topic subtitle underneath; falls back to
+  the original "Foundation" / "Co-parenting" header when the
+  parent clears the name.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — new
+  `onRenameSnapshot(idOrIdx, rawLabel)` callback mirrors
+  `onDeleteSnapshot`: updates state + writeJson, which trips the
+  existing debounced PUT /api/portal/state. Empty string clears
+  the label cleanly (deletes the `label` key off the snapshot).
+- `/app/frontend/src/pages/portal/AlignmentHub.jsx` — threads
+  `onSnapshotRename` through to the strip.
+- `/app/backend/portal_routes.py` — `_sanitize_snapshot_history`
+  now whitelists `label` (max 40 chars) so the rename survives
+  the server round-trip. Without this the label was being
+  silently stripped by the sanitizer and bounced back empty on
+  reload.
+- Round-trip verified end-to-end: rename in UI → debounced PUT →
+  server returns the labelled snapshot via GET /api/portal/state.
+
+**🟢 P1 — Progress Share-with-Mediator**
+- `/app/backend/cp_progress_pdf.py` — new one-page portrait PDF
+  builder. Blocks: latest-rating badge card, overall-rating
+  sparkline (coloured dot per submission + guide-lines at every
+  rating band), top-5 section movers (↑/↓ arrows and bars),
+  10-row "All sections — latest rating" table with latest +
+  ~60d-ago columns, optional parent note. Rendered from the
+  SAME progress payload the Alignment & Tools tile reads
+  (`cp_report_history.build_progress_payload`), so wording never
+  drifts between the two surfaces.
+- `/app/backend/email_service.py` — new public
+  `send_cp_progress_share()` using the existing `_send()` helper
+  (Virtru-first, Resend fallback). Reply-To is set to the parent
+  so the mediator's reply comes straight back. PDF goes as a
+  single attachment (`Progress_Snapshot_{parent_name}.pdf`),
+  plain-text + branded HTML body both include the optional note.
+- `/app/backend/coparenting_routes.py` — two new routes:
+    * `GET /api/coparenting/report/progress/pdf` → inline PDF
+      download, optional `?mediator_name&note` query params so a
+      parent can preview the exact file before emailing.
+    * `POST /api/coparenting/report/progress/share` →
+      `{to_email, mediator_name?, note?}` body, generates the
+      same PDF, dispatches via `send_cp_progress_share`. 400 on
+      a bad email, 404 if the parent has no history yet, 502 on
+      Resend failures (surfaces the detail string the SDK gives
+      back).
+- `/app/frontend/src/pages/portal/CpProgressTile.jsx` — bottom
+  of the tile now shows a two-button row:
+    * **Download PDF** (opens the inline-pdf route in a new tab).
+    * **Share with mediator** (opens an inline mini-form:
+      email + optional mediator name + optional note, Cancel
+      and Send controls, spinner during send, success card
+      "Progress Snapshot sent" when the API returns ok, error
+      line in the form on failure).
+
+**Verified end-to-end**
+- Backend: PDF route 200 / 2.7 KB, share route 200 to
+  `delivered@resend.dev` sandbox (2.8 KB attached), rejected a
+  bad `example.com` recipient with a surfaced 502 (Resend
+  sandbox block).
+- One-page PDF content audit (via analyze_file_tool): confirmed
+  single page, every rendered block present (latest-rating
+  badge, sparkline, movers with ^/v arrows, all-sections
+  table with both columns, parent note).
+- Mobile 390 preview: rename pencil → inline edit → save →
+  title now reads "Emma's summer plan" with "FOUNDATION"
+  subtitle; share form submit → emerald "Progress Snapshot
+  sent" card. No horizontal overflow.
+- Server persistence confirmed via GET /api/portal/state:
+  renamed snapshot shows `label="Emma's summer plan"`, the
+  untouched sibling shows `label=None`.
+
+
 ### 2026-02-27 — Iter234 · Self Co-Parenting Assessment · sample PDF + progress + 60-day retake
 
 Parents and professionals asked to **see** what the thorough

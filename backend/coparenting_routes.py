@@ -38,6 +38,7 @@ from coparenting_scoring import compute_scores, validate_answers
 import cp_report_content
 import cp_report_pdf
 import cp_report_history
+import cp_progress_pdf
 import report_visibility
 
 
@@ -53,7 +54,16 @@ def _now_iso() -> str:
 
 
 def _safe_filename(name: str) -> str:
-    return "".join(c if c.isalnum() else "_" for c in (name or "report")).strip("_") or "report"
+    """Mirror of the helper used by the main report PDF route — keep
+    only alnum, dash, underscore so a parent name never breaks the
+    Content-Disposition header."""
+    out = []
+    for ch in (name or "").strip():
+        if ch.isalnum() or ch in ("-", "_"):
+            out.append(ch)
+        elif ch == " ":
+            out.append("_")
+    return ("".join(out) or "me")[:40]
 
 
 # ============================================================
@@ -301,6 +311,123 @@ async def get_report_progress(
     return await cp_report_history.build_progress_payload(
         db, user_id=user.user_id
     )
+
+
+def _safe_filename(name: str) -> str:
+    """Mirror of the helper used by the main report PDF route — keep
+    only alnum, dash, underscore so a parent name never breaks the
+    Content-Disposition header."""
+    out = []
+    for ch in (name or "").strip():
+        if ch.isalnum() or ch in ("-", "_"):
+            out.append(ch)
+        elif ch == " ":
+            out.append("_")
+    return ("".join(out) or "me")[:40]
+
+
+@router.get("/report/progress/pdf")
+async def download_report_progress_pdf(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    mediator_name: Optional[str] = None,
+    note: Optional[str] = None,
+):
+    """Iter235 — download the one-page Progress Snapshot PDF for
+    the current parent. Same payload the share-email route uses, but
+    returned to the browser so the parent can preview / save a copy
+    before sending it on."""
+    progress = await cp_report_history.build_progress_payload(
+        db, user_id=user.user_id,
+    )
+    if not (progress.get("snapshots") or []):
+        raise HTTPException(
+            status_code=404,
+            detail="Take the Co-Parenting Assessment first — no progress yet.",
+        )
+    pdf_bytes = cp_progress_pdf.build_progress_pdf(
+        parent_name=user.name or "a parent",
+        progress=progress,
+        mediator_name=(mediator_name or None),
+        note=(note or None),
+    )
+    filename = f"Progress_Snapshot_{_safe_filename(user.name or 'me')}.pdf"
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
+
+
+class ProgressShareRequest(BaseModel):
+    to_email: str = Field(..., min_length=3)
+    mediator_name: Optional[str] = Field(default=None, max_length=120)
+    note: Optional[str] = Field(default=None, max_length=1200)
+
+
+@router.post("/report/progress/share")
+async def share_report_progress(
+    body: ProgressShareRequest,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Iter235 — email the one-page Progress Snapshot PDF to a
+    mediator or other professional the parent names. The parent's
+    own email is set as Reply-To so the mediator can respond
+    directly."""
+    to_email = (body.to_email or "").strip().lower()
+    if "@" not in to_email or "." not in to_email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Enter a valid email.")
+
+    progress = await cp_report_history.build_progress_payload(
+        db, user_id=user.user_id,
+    )
+    if not (progress.get("snapshots") or []):
+        raise HTTPException(
+            status_code=400,
+            detail="Take the Co-Parenting Assessment first — nothing to share yet.",
+        )
+    pdf_bytes = cp_progress_pdf.build_progress_pdf(
+        parent_name=user.name or "a parent",
+        progress=progress,
+        mediator_name=(body.mediator_name or None),
+        note=(body.note or None),
+    )
+
+    # Import inline so an email misconfig in dev doesn't break the
+    # /report/progress read path above.
+    try:
+        from email_service import send_cp_progress_share, EmailNotConfigured, EmailSendError
+    except Exception as e:  # pragma: no cover
+        logger.exception("progress-share email import failed")
+        raise HTTPException(status_code=500, detail="Email service unavailable.") from e
+
+    try:
+        send_cp_progress_share(
+            to_email=to_email,
+            parent_name=user.name or "a parent",
+            parent_email=getattr(user, "email", None),
+            mediator_name=body.mediator_name,
+            note=body.note,
+            pdf_bytes=pdf_bytes,
+            filename=f"Progress_Snapshot_{_safe_filename(user.name or 'me')}.pdf",
+        )
+    except EmailNotConfigured:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Email delivery isn't configured yet. You can still "
+                "download the PDF and send it from your own inbox."
+            ),
+        )
+    except EmailSendError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    return {
+        "ok": True,
+        "to_email": to_email,
+        "attached_bytes": len(pdf_bytes),
+    }
 
 
 @router.get("/report")

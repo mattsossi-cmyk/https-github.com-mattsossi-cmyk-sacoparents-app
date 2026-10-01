@@ -283,6 +283,36 @@ export function CpProgressTile({
     error: null,
     data: null,
   });
+  // iter235 — share flow state. "idle" | "open" | "sending" | "sent" | "error"
+  const [shareState, setShareState] = useState("idle");
+  const [shareError, setShareError] = useState("");
+  const [shareForm, setShareForm] = useState({
+    to_email: "",
+    mediator_name: "",
+    note: "",
+  });
+
+  const sendShare = async () => {
+    const email = (shareForm.to_email || "").trim();
+    if (!email || !email.includes("@")) {
+      setShareError("Enter a valid email first.");
+      return;
+    }
+    setShareError("");
+    setShareState("sending");
+    try {
+      await api.post("/coparenting/report/progress/share", {
+        to_email: email,
+        mediator_name: shareForm.mediator_name.trim() || null,
+        note: shareForm.note.trim() || null,
+      });
+      setShareState("sent");
+    } catch (e) {
+      const detail = e?.response?.data?.detail || "Couldn't send right now.";
+      setShareError(detail);
+      setShareState("error");
+    }
+  };
 
   useEffect(() => {
     let alive = true;
@@ -442,6 +472,154 @@ export function CpProgressTile({
           <Radar radar={data.radar} />
         </div>
       )}
+
+      {/* iter235 — Share-with-mediator block.
+          Download = direct PDF of this exact view.
+          Share = inline mini-form, POSTs to /progress/share which
+          emails a one-page attachment to the mediator with Reply-To
+          set to the parent's own email. */}
+      <div
+        className="pt-2 border-t border-slate-100 space-y-2"
+        data-testid="cp-progress-share-block"
+      >
+        {shareState !== "open" && shareState !== "sending" && (
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={`${fullBase}/api/coparenting/report/progress/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="cp-progress-download-btn"
+              className="py-1.5 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-[11px] text-center"
+            >
+              <i className="fa-solid fa-file-arrow-down mr-1"></i>
+              Download PDF
+            </a>
+            <button
+              type="button"
+              data-testid="cp-progress-open-share-btn"
+              onClick={() => {
+                setShareState("open");
+                setShareError("");
+              }}
+              className="py-1.5 bg-purple-800 hover:bg-purple-900 text-white rounded-lg font-bold text-[11px]"
+            >
+              <i className="fa-solid fa-paper-plane mr-1"></i>
+              Share with mediator
+            </button>
+          </div>
+        )}
+
+        {(shareState === "open" || shareState === "sending" || shareState === "error") && (
+          <div
+            className="p-2 rounded-xl border border-purple-200 bg-purple-50/40 space-y-1.5"
+            data-testid="cp-progress-share-form"
+          >
+            <input
+              type="email"
+              value={shareForm.to_email}
+              onChange={(e) =>
+                setShareForm({ ...shareForm, to_email: e.target.value })
+              }
+              placeholder="mediator@example.com"
+              data-testid="cp-progress-share-email"
+              className="w-full text-[11px] px-2 py-1.5 bg-white border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
+            />
+            <input
+              type="text"
+              value={shareForm.mediator_name}
+              onChange={(e) =>
+                setShareForm({ ...shareForm, mediator_name: e.target.value })
+              }
+              placeholder="Mediator name (optional)"
+              maxLength={120}
+              data-testid="cp-progress-share-name"
+              className="w-full text-[11px] px-2 py-1.5 bg-white border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
+            />
+            <textarea
+              value={shareForm.note}
+              onChange={(e) =>
+                setShareForm({ ...shareForm, note: e.target.value })
+              }
+              placeholder="Add a short note (optional)"
+              maxLength={1200}
+              rows={2}
+              data-testid="cp-progress-share-note"
+              className="w-full text-[11px] px-2 py-1.5 bg-white border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
+            />
+            {shareError && (
+              <div
+                className="text-[10px] text-rose-700 font-semibold leading-snug"
+                data-testid="cp-progress-share-error"
+              >
+                {shareError}
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                data-testid="cp-progress-share-cancel"
+                onClick={() => {
+                  setShareState("idle");
+                  setShareError("");
+                }}
+                disabled={shareState === "sending"}
+                className="py-1.5 bg-white border border-slate-300 text-slate-600 rounded font-bold text-[11px] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                data-testid="cp-progress-share-send"
+                onClick={sendShare}
+                disabled={shareState === "sending"}
+                className="py-1.5 bg-purple-800 hover:bg-purple-900 text-white rounded font-bold text-[11px] disabled:opacity-60"
+              >
+                {shareState === "sending" ? (
+                  <>
+                    <i className="fa-solid fa-circle-notch fa-spin mr-1"></i>
+                    Sending…
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-paper-plane mr-1"></i>
+                    Send PDF
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {shareState === "sent" && (
+          <div
+            className="p-2 rounded-xl border border-emerald-200 bg-emerald-50 flex items-start gap-2"
+            data-testid="cp-progress-share-sent"
+          >
+            <i className="fa-solid fa-circle-check text-emerald-700 text-xs mt-0.5"></i>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-bold text-emerald-800 leading-snug">
+                Progress Snapshot sent
+              </div>
+              <p className="text-[10px] text-emerald-800/80 leading-snug">
+                We emailed the one-page PDF to{" "}
+                <span className="font-semibold">{shareForm.to_email}</span>
+                . Replies come straight to you.
+              </p>
+            </div>
+            <button
+              type="button"
+              data-testid="cp-progress-share-sent-close"
+              onClick={() => {
+                setShareState("idle");
+                setShareForm({ to_email: "", mediator_name: "", note: "" });
+              }}
+              className="shrink-0 text-[10px] font-bold text-emerald-800 underline"
+            >
+              Done
+            </button>
+          </div>
+        )}
+      </div>
 
       {!retakeDue && days !== null && days !== undefined && (
         <p

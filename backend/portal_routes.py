@@ -343,6 +343,12 @@ def _sanitize_snapshot_history(
             cleaned["category"] = str(item["category"])[:64]
         if item.get("safety_flagged"):
             cleaned["safety_flagged"] = True
+        # iter235 — preserve the parent's custom label so the
+        # Snapshot library reads like a real folder ("Emma's summer
+        # plan") instead of the auto-generated topic + ago string.
+        # Capped at 40 chars matching the frontend input maxLength.
+        if item.get("label"):
+            cleaned["label"] = str(item["label"])[:40]
         if len(_json.dumps(cleaned, default=str)) > _MAX_SNAPSHOT_BYTES:
             continue
         out.append(cleaned)
