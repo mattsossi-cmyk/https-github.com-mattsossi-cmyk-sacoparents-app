@@ -462,6 +462,32 @@ async def download_coparenting_alignment_sample_pdf(
     )
 
 
+@router.get("/samples/coparenting-self-assessment.pdf")
+async def download_coparenting_self_assessment_sample_pdf():
+    """Iter234 · Public sample of the full 10-section Self
+    Co-Parenting Assessment Report.
+
+    Mediators, attorneys, and parents who are deciding whether to
+    take the assessment can see the output format first. Rendered
+    with a plausible mid-range answer set — some sections Excellent,
+    some Good, some Fair, Communication intentionally Needs
+    Improvement so the Communication Toolkit block appears.
+
+    No PII, no real names. 24h public cache."""
+    from fastapi.responses import Response
+    from coparenting_self_assessment_sample import build_sample_pdf_bytes
+
+    pdf_bytes = build_sample_pdf_bytes()
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": 'inline; filename="sacoparents-self-assessment-sample.pdf"',
+            "Cache-Control": "public, max-age=86400",
+        },
+    )
+
+
 @router.get("/samples/joint-alignment-preview.pdf")
 async def download_joint_alignment_sample_pdf(scenario: str | None = None):
     """Serve the printable sample of the private Joint Alignment
