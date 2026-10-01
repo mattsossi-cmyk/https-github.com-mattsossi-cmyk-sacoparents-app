@@ -77,8 +77,9 @@ export default function SampleReport({ fixedKey }) {
               </p>
             )}
             <p className="mt-3 text-xs text-muted-foreground max-w-lg mx-auto" data-testid="sample-condensed-note">
-              This is a condensed sample. The complete Joint Alignment Report follows a universal
-              10-page structure (overview, alignment map, differences, child needs, options, conversation guide, action plan, and summary).
+              {report.is_safety
+                ? "This is a condensed sample of a professional-mediated safety self-assessment. Each parent answers privately; only the professional sees both. It is not a Joint Assessment and nothing is exchanged between the parents."
+                : "This is a condensed sample. The complete Joint Alignment Report follows a universal 10-page structure (overview, alignment map, differences, child needs, options, conversation guide, action plan, and summary)."}
             </p>
             <h1 className="text-4xl font-extrabold text-brand-purple mt-3" data-testid="sample-title">{report.report_title}</h1>
             <div className="mt-4 text-sm text-muted-foreground space-y-1">

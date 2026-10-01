@@ -859,3 +859,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 — Demo read-along
 - frontend/public/demo/captions.json (15 timed captions generated from build_demo_video SCENES). DemoVideoButton modal now has a Read-along panel (highlights current line on timeupdate; click to seek).
+
+## 2026-06 — Safety sample reframed as self-assessment
+- Sample card + API: "Safety / Family Violence" is described as a professional-mediated self-assessment (not a Joint Assessment); title "Sample Safety-Focused Self-Assessment Report (Controlled Preview)"; SampleReport condensed note swaps to safety wording when is_safety.

@@ -438,8 +438,8 @@ SAMPLE_SCENARIOS: dict[str, dict] = {
         },
     },
     "safety": {
-        "subject": "safety", "label": "Safety / Family Violence", "title": "Sample Safety-Focused Report (Controlled Preview)",
-        "description": "Controlled preview of the professional-mediated safety report format.",
+        "subject": "safety", "label": "Safety / Family Violence", "title": "Sample Safety-Focused Self-Assessment Report (Controlled Preview)",
+        "description": "Professional-mediated self-assessment: each parent answers privately and only the professional sees both. Not a Joint Assessment — controlled preview of the safety report format.",
         "safety": True,
         "child": "the child", "pa": "Parent A", "pb": "Parent B",
         "answers_a": {
