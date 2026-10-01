@@ -68,13 +68,19 @@ def _pick(ans: dict, key: str) -> str:
     return " ".join(str(v).strip() for k, v in ans.items() if (k == key or k.endswith(f":{key}")) and str(v).strip())[:1500]
 
 
+def _screening(doc: dict, role: str) -> dict | None:
+    return ((doc.get("responses") or {}).get(role) or {}).get("safety_screening") or None
+
+
 def readiness(doc: dict) -> list[dict]:
     a, b = bool(_answers(doc, "a")), bool(_answers(doc, "b"))
-    safety = any(s in SAFETY_SUBJECT_KEYS for s in (doc.get("subjects") or [doc.get("subject")]))
+    sa, sb = bool(_screening(doc, "a")), bool(_screening(doc, "b"))
+    subj_safety = any(s in SAFETY_SUBJECT_KEYS for s in (doc.get("subjects") or [doc.get("subject")]))
+    safety = sa or sb or subj_safety
     return [{"key": "assessment_a", "label": "Parent A Assessment Received", "done": a}, {"key": "assessment_b", "label": "Parent B Assessment Received", "done": b},
             {"key": "joint", "label": "Joint Report Received", "done": a and b},
-            {"key": "fv_a", "label": "Parent A Family Violence Assessment Received", "done": safety and a, "na": not safety},
-            {"key": "fv_b", "label": "Parent B Family Violence Assessment Received", "done": safety and b, "na": not safety}]
+            {"key": "fv_a", "label": "Parent A Family Violence Assessment Received", "done": sa or (subj_safety and a), "na": not safety},
+            {"key": "fv_b", "label": "Parent B Family Violence Assessment Received", "done": sb or (subj_safety and b), "na": not safety}]
 
 
 def _prefill_header(doc: dict, pro: dict, rd: dict) -> dict:
@@ -279,7 +285,8 @@ async def _lens_view(db, rep: dict, doc: dict) -> dict:
         rep = {**rep, "resource_rows": default_resource_rows(provs)}
     rep = {**rep, "reassess_up": rep.get("reassess_up") or REASSESS_UP_DEFAULT, "reassess_down": rep.get("reassess_down") or REASSESS_DOWN_DEFAULT,
            "reassess_interval": rep.get("reassess_interval") or "Every 90 to 180 days"}
-    return {"report": rep, "professional": await professional_contact(db, rep.get("professional_id"), rep), "readiness": readiness(doc), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
+    return {"report": rep, "professional": await professional_contact(db, rep.get("professional_id"), rep), "readiness": readiness(doc),
+            "safety_screening": {r: _screening(doc, r) for r in ("a", "b")}, "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
             "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
             "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE, "risk_categories": RISK_CATEGORIES,
             "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE, "safety_pathway": SAFETY_PATHWAY, "disclaimer": REPORT_DISCLAIMER},

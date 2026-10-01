@@ -232,11 +232,15 @@ async def import_external_assessment(rid: str, user=Depends(get_current_user)):
     if not link:
         raise HTTPException(status_code=400, detail="Link your sacoparentsapp.online account first")
     payload = await fetch_external_export(link["external_email"])
+    from safety_import import extract_safety_screening
+    screening = extract_safety_screening(payload)
     updates = {
         f"responses.{role}": {
             "answers": {},
             "imported": True,
             "external": payload,
+            "safety_screening": screening,
+            "safety_route": bool(screening and screening["concern_count"]),
             "completed_at": datetime.now(timezone.utc).isoformat(),
         }
     }

@@ -865,3 +865,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-06 — Code review pass
 - assistant.case_brief split into _participants/_alignment_buckets/_state/_tick/_pathway_names/_steps (complexity 47→small helpers), behaviour unchanged (tests pass). ruff F821/F841/F811 clean. `is None/True/False` in tests is correct Python — left as is. Large court/foundation router refactors intentionally skipped (risk, no user-visible benefit).
+
+## 2026-06 — Instagram cuts
+- scripts/build_demo_instagram.py → frontend/public/demo/sacoparentsalign-demo-reels-9x16.mp4 (1080x1920) and -square-1x1.mp4 (1080x1080), ~82 s, 8 highlight scenes, big captions. Source frames: /tmp/demo (restore from /root/.emergent/automation_output/20260929_2230*/ if wiped; PDF spreads re-cut from main demo at 118s/129s).
+
+## 2026-06 — Family-violence screening import surfaced
+- backend/safety_import.py: extract_safety_screening(payload) finds a safety/FV assessment in the sacoparentsapp.online export (by title/question keywords, or structured family_violence_assessment/safety_screening if ever added) → {source,title,completed_at,items[{question,answer,concern}],item_count,concern_count}. Stored at joint_reports.responses.{role}.safety_screening (+safety_route when concerns) on /joint/reports/{rid}/import.
+- legal_lens: readiness fv_a/fv_b done when screening imported → fv_*_received prefilled "Received"; _lens_view exposes safety_screening{a,b}. PDF §2 prints only a neutral receipt line (source, date, counts, "not findings") — never answer text. Editor §2 ImportedScreening.jsx shows the professional the items (collapsed) with concern highlighting. Tests: tests/test_iter86_safety_import.py.

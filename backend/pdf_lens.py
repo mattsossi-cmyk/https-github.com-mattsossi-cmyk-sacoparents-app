@@ -3,6 +3,7 @@ from fpdf import FPDF
 from fpdf.fonts import FontFace
 
 from pdf_report import FONT, PURPLE, TEAL, BLUE, GREEN, GRAY, DARK, BODY, _s, _body, _stmt_text, _lens_heading, _lens_subhead, _lens_table, _lens_individual_scale, _lens_joint_scale, _legal_kv, _new_pdf
+from safety_import import screening_summary
 
 GOLD_FILL, PURPLE_FILL, TEAL_FILL, BLUE_FILL, GREEN_FILL, ORANGE_FILL, GOLD_SOFT = (255, 243, 201), (243, 237, 251), (232, 247, 247), (234, 244, 251), (234, 247, 241), (255, 240, 232), (255, 247, 223)
 ORANGE, GOLD = (216, 105, 54), (214, 156, 32)
@@ -378,7 +379,9 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     score_cards(pdf, [("Parent A", rep.get("parent_a_rating"), (cls["parent_a"] or {}).get("label"), PURPLE), ("Parent B", rep.get("parent_b_rating"), (cls["parent_b"] or {}).get("label"), BLUE),
                       ("Joint Co-Parenting", rep.get("joint_rating"), (cls["joint"] or {}).get("label"), TEAL)])
     risk = rep.get("risk_screening") or {}
-    cards_row(pdf, [(f"Joint process: {rep.get('joint_process_appropriate') or 'Not yet determined'}", [rep.get("safety_takeaway") or "—", "", f"Parent A FV assessment: {rep.get('fv_a_received') or '—'}", f"Parent B FV assessment: {rep.get('fv_b_received') or '—'}", "", notes["safety"]], TEAL_FILL, TEAL),
+    scr = v.get("safety_screening") or {}
+    imported = [screening_summary(scr.get(r), f"Parent {r.upper()}") for r in ("a", "b") if scr.get(r)]
+    cards_row(pdf, [(f"Joint process: {rep.get('joint_process_appropriate') or 'Not yet determined'}", [rep.get("safety_takeaway") or "—", "", f"Parent A FV assessment: {rep.get('fv_a_received') or '—'}", f"Parent B FV assessment: {rep.get('fv_b_received') or '—'}", *([""] + imported if imported else []), "", notes["safety"]], TEAL_FILL, TEAL),
                     ("Risk Screening Summary", [f"{lbl}: {risk.get(k, {}).get('level', 'Not assessed')}." + (f" {risk[k]['note']}" if risk.get(k, {}).get("note") else "") for k, lbl, _ in RISK_CATEGORIES] + ([f"Safeguards: {rep['safety_notes']}"] if rep.get("safety_notes") else []), ORANGE_FILL, ORANGE)], subhead="Safety Screening & Process Considerations")
     new_page(pdf)
     heading(pdf, 3, f"Parent A Perspective — {rep.get('parent_a_name') or 'Parent A'}")
