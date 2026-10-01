@@ -156,6 +156,17 @@ export function AlignmentHub({
                   <i className="fa-solid fa-file-pdf"></i>
                   See a sample
                 </a>
+                <a
+                  href="/coparenting-self-assessment-preview.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  data-testid="toolkit-coparenting-preview-link"
+                  className="inline-flex items-center gap-1 mt-1 ml-2 text-[9px] font-bold text-amber-700 hover:underline"
+                >
+                  <i className="fa-solid fa-wand-magic-sparkles"></i>
+                  Try the preview
+                </a>
               </Link>
               <button
                 type="button"

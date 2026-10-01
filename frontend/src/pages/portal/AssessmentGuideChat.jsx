@@ -404,32 +404,54 @@ function AssessmentGuideBody({
                 </p>
               </div>
               {(() => {
-                // iter235/iter236 — "See a sample report" link.
-                // Each key points at the appropriate public sample
-                // PDF served by /api/insights/samples/*. The
-                // Co-Parenting sample is dynamically rendered
-                // (coparenting-self-assessment.pdf); the three
-                // deep-dive samples are static SNC artefacts that
-                // already live in the preview sandbox.
+                // iter235/iter236/iter238 — "See a sample report"
+                // and "Try the preview" links in the recap card.
+                // Each key maps to its public sample PDF; co-parenting
+                // ALSO maps to a static interactive 30-question
+                // preview form the founder dropped in so parents can
+                // try the questions themselves before committing.
                 const SAMPLE_URL_BY_KEY = {
                   coparenting:   "/api/insights/samples/coparenting-self-assessment.pdf",
                   educational:   "/api/insights/samples/snc-sample-individual-report-educational.pdf",
                   medical:       "/api/insights/samples/snc-sample-individual-report-medical.pdf",
                   psychological: "/api/insights/samples/snc-sample-individual-report-psychological.pdf",
                 };
-                const path = SAMPLE_URL_BY_KEY[selected.key];
-                if (!path) return null;
+                const samplePath = SAMPLE_URL_BY_KEY[selected.key];
+                // iter238 — only the Co-Parenting option has an
+                // interactive preview form (the other three are
+                // deep-dive assessments without a preview page).
+                const previewHref =
+                  selected.key === "coparenting"
+                    ? "/coparenting-self-assessment-preview.html"
+                    : null;
+                if (!samplePath && !previewHref) return null;
                 return (
-                  <a
-                    href={`${process.env.REACT_APP_BACKEND_URL || ""}${path}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-testid={`assessment-guide-sample-link-${selected.key}`}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-purple-800 hover:underline"
-                  >
-                    <i className="fa-solid fa-file-pdf"></i>
-                    See a sample report
-                  </a>
+                  <div className="flex flex-col gap-1 pt-1">
+                    {samplePath && (
+                      <a
+                        href={`${process.env.REACT_APP_BACKEND_URL || ""}${samplePath}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid={`assessment-guide-sample-link-${selected.key}`}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-purple-800 hover:underline"
+                      >
+                        <i className="fa-solid fa-file-pdf"></i>
+                        See a sample report
+                      </a>
+                    )}
+                    {previewHref && (
+                      <a
+                        href={previewHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="assessment-guide-preview-link-coparenting"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-700 hover:underline"
+                      >
+                        <i className="fa-solid fa-wand-magic-sparkles"></i>
+                        Try the preview — 30 quick questions
+                      </a>
+                    )}
+                  </div>
                 );
               })()}
             </div>

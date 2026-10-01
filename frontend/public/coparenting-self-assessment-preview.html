@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SA CoParents - Co-Parenting Self-Assessment</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --primary-accent: #0284c7;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border-color: #cbd5e1;
+            --focus-ring: #93c5fd;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+        .sticky-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sticky-bar .bar-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .sticky-bar .bar-metrics {
+            display: flex;
+            gap: 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+        }
+        header {
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: var(--primary);
+            margin: 0 0 4px 0;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .subtitle {
+            font-weight: 700;
+            color: var(--primary-accent);
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+        .form-group input {
+            padding: 9px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .form-group input:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+        .notice-box {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary-accent);
+            padding: 16px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.92rem;
+            color: #1e40af;
+        }
+        .scale-legend {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        .section-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 35px;
+            margin-bottom: 15px;
+        }
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.15rem;
+        }
+        .section-score {
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+        }
+        .question-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 8px;
+            border-bottom: 1px solid #f1f5f9;
+            gap: 20px;
+        }
+        .question-item:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .question-text {
+            flex: 1;
+            font-size: 0.96rem;
+        }
+        .question-num {
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-right: 8px;
+        }
+        .radio-options {
+            display: flex;
+            gap: 16px;
+        }
+        .radio-options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .summary-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 8px;
+            margin-top: 35px;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .summary-table th, .summary-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .total-row {
+            font-weight: 700;
+            font-size: 1.1rem;
+            background-color: #e2e8f0;
+        }
+        .tier-card {
+            padding: 16px;
+            border-radius: 6px;
+            background: #fff;
+            border-left: 5px solid var(--primary-accent);
+            margin-top: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        textarea {
+            width: 100%;
+            height: 70px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-top: 6px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        textarea:focus {
+            border-color: var(--primary-light);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+        .text-group {
+            margin-bottom: 20px;
+        }
+        .text-group label {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: var(--primary-light);
+        }
+        button.btn-secondary {
+            background-color: #64748b;
+        }
+        button.btn-secondary:hover {
+            background-color: #475569;
+        }
+        @media (max-width: 640px) {
+            .scale-legend { grid-template-columns: repeat(2, 1fr); }
+            .question-item { flex-direction: column; align-items: flex-start; }
+            .radio-options { width: 100%; justify-content: space-between; margin-top: 8px; }
+            .container { padding: 20px; }
+        }
+        @media print {
+            .sticky-bar, .actions { display: none !important; }
+            body { padding: 0; background: white; }
+            .container { box-shadow: none; max-width: 100%; padding: 0; margin: 0; }
+            textarea { border: 1px solid #94a3b8; }
+        }
+    </style>
+</head>
+<body>
+<div class="sticky-bar">
+    <div class="bar-title">SA CoParents Self-Assessment</div>
+    <div class="bar-metrics">
+        <div>Progress: <span id="bar-progress">0</span> / 30</div>
+        <div>Total Score: <span id="bar-score">0</span> / 120</div>
+    </div>
+</div>
+<div class="container">
+    <header>
+        <h1>SA CoParents</h1>
+        <div class="subtitle">CO-PARENTING SELF-ASSESSMENT</div>
+        <div>A private reflection to help you identify strengths, growth areas, and the next child-focused step.</div>
+    </header>
+    <div class="meta-grid">
+        <div class="form-group">
+            <label for="parentName">Parent Name</label>
+            <input type="text" id="parentName">
+        </div>
+        <div class="form-group">
+            <label for="assessmentDate">Date</label>
+            <input type="date" id="assessmentDate">
+        </div>
+        <div class="form-group">
+            <label for="childNames">Child(ren)</label>
+            <input type="text" id="childNames">
+        </div>
+        <div class="form-group">
+            <label for="caseRef">Case / Reference (optional)</label>
+            <input type="text" id="caseRef">
+        </div>
+    </div>
+    <div class="notice-box">
+        <strong>How to Use This Assessment:</strong> Answer based on how co-parenting is working right now, not how you hope it will work. This is a reflection tool - not a diagnosis, custody evaluation, credibility determination, or finding about either parent. If safety or family-violence concerns are present, a separate safety-focused assessment and professional guidance may be appropriate.
+    </div>
+    <div class="scale-legend">
+        <div>1 = Rarely/Not true now</div>
+        <div>2 = Sometimes</div>
+        <div>3 = Often</div>
+        <div>4 = Usually/Strongly true</div>
+    </div>
+    <form id="assessmentForm">
+        <!-- Section A -->
+        <div class="section-header">
+            <h2>A. Child-Focused Parenting</h2>
+            <div class="section-score">Subtotal: <span id="score-A">0</span>/20</div>
+        </div>
+        <div id="questions-A"></div>
+        <!-- Section B -->
+        <div class="section-header">
+            <h2>B. Communication</h2>
+            <div class="section-score">Subtotal: <span id="score-B">0</span>/20</div>
+        </div>
+        <div id="questions-B"></div>
+        <!-- Section C -->
+        <div class="section-header">
+            <h2>C. Reliability, Routines & Transitions</h2>
+            <div class="section-score">Subtotal: <span id="score-C">0</span>/20</div>
+        </div>
+        <div id="questions-C"></div>
+        <!-- Section D -->
+        <div class="section-header">
+            <h2>D. Decision-Making & Information Sharing</h2>
+            <div class="section-score">Subtotal: <span id="score-D">0</span>/20</div>
+        </div>
+        <div id="questions-D"></div>
+        <!-- Section E -->
+        <div class="section-header">
+            <h2>E. Conflict Management & Boundaries</h2>
+            <div class="section-score">Subtotal: <span id="score-E">0</span>/20</div>
+        </div>
+        <div id="questions-E"></div>
+        <!-- Section F -->
+        <div class="section-header">
+            <h2>F. Alignment & Readiness to Move Forward</h2>
+            <div class="section-score">Subtotal: <span id="score-F">0</span>/20</div>
+        </div>
+        <div id="questions-F"></div>
+        <!-- Summary -->
+        <div class="summary-card">
+            <h2 style="margin-top:0;">Your Reflection Summary</h2>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">The purpose of the score is to organize reflection - not to label either parent.</p>
+            <table class="summary-table">
+                <thead>
+                    <tr><th>Category</th><th>Score</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Child-Focused Parenting</td><td><span id="sum-A">0</span> / 20</td></tr>
+                    <tr><td>Communication</td><td><span id="sum-B">0</span> / 20</td></tr>
+                    <tr><td>Reliability, Routines & Transitions</td><td><span id="sum-C">0</span> / 20</td></tr>
+                    <tr><td>Decision-Making & Information Sharing</td><td><span id="sum-D">0</span> / 20</td></tr>
+                    <tr><td>Conflict Management & Boundaries</td><td><span id="sum-E">0</span> / 20</td></tr>
+                    <tr><td>Alignment & Readiness to Move Forward</td><td><span id="sum-F">0</span> / 20</td></tr>
+                    <tr class="total-row"><td>Total Score</td><td><span id="total-score">0</span> / 120</td></tr>
+                </tbody>
+            </table>
+            <div id="tier-analysis" class="tier-card">
+                <strong id="tier-title">Score Analysis</strong>
+                <p id="tier-desc" style="margin: 5px 0 0 0; font-size: 0.95rem;">Complete the assessment to see your action guidance.</p>
+            </div>
+        </div>
+        <!-- Foundation Statement -->
+        <div style="margin-top: 35px;">
+            <h2>Build Your Child-Focused Foundation</h2>
+            
+            <div class="text-group">
+                <label>Three things I believe are going well:</label>
+                <textarea id="well-1" placeholder="1. ..."></textarea>
+                <textarea id="well-2" placeholder="2. ..."></textarea>
+                <textarea id="well-3" placeholder="3. ..."></textarea>
+            </div>
+            <div class="text-group">
+                <label>Three areas I want to improve:</label>
+                <textarea id="improve-1" placeholder="1. ..."></textarea>
+                <textarea id="improve-2" placeholder="2. ..."></textarea>
+                <textarea id="improve-3" placeholder="3. ..."></textarea>
+            </div>
+            <div class="text-group">
+                <label for="child-needs">What does our child need most from both parents right now?</label>
+                <textarea id="child-needs"></textarea>
+            </div>
+            <div class="text-group">
+                <label for="personal-change">What is one change I can make - regardless of what the other parent does?</label>
+                <textarea id="personal-change"></textarea>
+            </div>
+            <div class="text-group">
+                <label for="shared-goals">Shared goals I believe we may have for our child:</label>
+                <textarea id="shared-goals"></textarea>
+            </div>
+        </div>
+        <div class="notice-box">
+            <strong>Next Step: Foundation Statement</strong><br>
+            Use the strengths, concerns, child needs, and shared goals you identified here to create your SA CoParents Child-Focused Foundation Statement. From there, you can identify options, resources, and issues that may be ready for discussion or mediation.<br><br>
+            <small><em>Important: This self-assessment is an educational and preparation tool. It does not provide legal advice, mental-health diagnosis, custody recommendations, or findings regarding family violence. Safety concerns should be addressed through an appropriate safety assessment and qualified professional resources.</em></small>
+        </div>
+        <div class="actions">
+            <button type="button" class="btn-secondary" onclick="exportData()">Export Data (JSON)</button>
+            <button type="button" onclick="window.print()">Print / Export PDF</button>
+        </div>
+    </form>
+</div>
+<script>
+const assessmentData = {
+    A: [
+        { id: 1, text: "I can separate my feelings about the other parent from decisions about our child." },
+        { id: 2, text: "I keep our child out of adult disagreements and avoid using the child as a messenger." },
+        { id: 3, text: "I can identify our child's current emotional, educational, medical, and developmental needs." },
+        { id: 4, text: "I support our child's relationship with the other parent when it is safe and appropriate." },
+        { id: 5, text: "I try to make parenting decisions based on what helps our child feel secure and supported." }
+    ],
+    B: [
+        { id: 6, text: "I can communicate about our child without unnecessary criticism, blame, or personal attacks." },
+        { id: 7, text: "I share important information about school, health, activities, and schedules in a timely way." },
+        { id: 8, text: "I can keep messages brief, informative, respectful, and focused on the child when conflict is high." },
+        { id: 9, text: "I can listen for the other parent's concern even when I disagree with the proposed solution." },
+        { id: 10, text: "I use a communication method that reduces confusion and creates a useful record when needed." }
+    ],
+    C: [
+        { id: 11, text: "I follow the parenting schedule and give reasonable notice when a change is needed." },
+        { id: 12, text: "I help our child move between homes without placing the child in the middle of tension." },
+        { id: 13, text: "I can maintain predictable routines while allowing reasonable flexibility when appropriate." },
+        { id: 14, text: "I make sure our child has needed school, medical, activity, and personal items for transitions." },
+        { id: 15, text: "I address transition problems directly with the other parent or an appropriate professional - not through the child." }
+    ],
+    D: [
+        { id: 16, text: "I understand which parenting decisions require consultation or joint decision-making." },
+        { id: 17, text: "I provide the other parent access to important records and information when appropriate." },
+        { id: 18, text: "I can discuss options before taking a fixed position on an important parenting issue." },
+        { id: 19, text: "I can identify areas where we already agree or have similar goals for our child." },
+        { id: 20, text: "When we disagree, I can focus on the specific decision rather than reopening unrelated past disputes." }
+    ],
+    E: [
+        { id: 21, text: "I recognize situations that tend to trigger conflict between us." },
+        { id: 22, text: "I can pause before responding when a message or event makes me angry or defensive." },
+        { id: 23, text: "I maintain appropriate boundaries and avoid monitoring or controlling the other parent's household." },
+        { id: 24, text: "I know when structured communication, mediation, parent facilitation, therapy, or another resource may help." },
+        { id: 25, text: "I can use a conflict-resolution process instead of repeatedly arguing about the same issue." }
+    ],
+    F: [
+        { id: 26, text: "I can name at least three goals I believe both parents may share for our child." },
+        { id: 27, text: "I can distinguish between an essential child need and a personal preference." },
+        { id: 28, text: "I am willing to consider more than one workable option for resolving a parenting issue." },
+        { id: 29, text: "I can describe what is going well in our co-parenting relationship, even if some areas are difficult." },
+        { id: 30, text: "I am prepared to build a child-focused Foundation Statement and identify next steps." }
+    ]
+};
+function renderQuestions() {
+    for (const [sectionKey, questions] of Object.entries(assessmentData)) {
+        const container = document.getElementById(`questions-${sectionKey}`);
+        questions.forEach(q => {
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.innerHTML = `
+                <div class="question-text"><span class="question-num">${q.id}.</span>${q.text}</div>
+                <div class="radio-options">
+                    ${[1, 2, 3, 4].map(val => `
+                        <label>
+                            <input type="radio" name="q${q.id}" value="${val}" onchange="updateScores()"> ${val}
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+}
+function updateScores() {
+    let grandTotal = 0;
+    let answeredCount = 0;
+    for (const sectionKey of Object.keys(assessmentData)) {
+        let sectionTotal = 0;
+        assessmentData[sectionKey].forEach(q => {
+            const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+            if (selected) {
+                sectionTotal += parseInt(selected.value, 10);
+                answeredCount++;
+            }
+        });
+        document.getElementById(`score-${sectionKey}`).innerText = sectionTotal;
+        document.getElementById(`sum-${sectionKey}`).innerText = sectionTotal;
+        grandTotal += sectionTotal;
+    }
+    document.getElementById('total-score').innerText = grandTotal;
+    document.getElementById('bar-score').innerText = grandTotal;
+    document.getElementById('bar-progress').innerText = answeredCount;
+    updateTierAnalysis(grandTotal, answeredCount);
+}
+function updateTierAnalysis(total, count) {
+    const title = document.getElementById('tier-title');
+    const desc = document.getElementById('tier-desc');
+    if (count === 0) {
+        title.innerText = "Score Analysis";
+        desc.innerText = "Complete the assessment to see your action guidance.";
+        return;
+    }
+    if (total >= 96) {
+        title.innerText = "96-120: Strong current co-parenting practices";
+        desc.innerText = "Identify what is working and protect those habits while addressing remaining issues.";
+    } else if (total >= 76) {
+        title.innerText = "76-95: Generally workable with growth areas";
+        desc.innerText = "Focus on the lowest sections and create specific communication or decision-making structures.";
+    } else if (total >= 56) {
+        title.innerText = "56-75: Significant structure may be helpful";
+        desc.innerText = "Consider more structured communication, clearer boundaries, professional guidance, or child-focused mediation.";
+    } else {
+        title.innerText = "30-55: High level of difficulty reported";
+        desc.innerText = "Prioritize safety screening, structure, boundaries, and professional review before expecting ordinary co-parenting processes to work well.";
+    }
+}
+function exportData() {
+    const formData = {
+        metadata: {
+            parentName: document.getElementById('parentName').value,
+            date: document.getElementById('assessmentDate').value,
+            childNames: document.getElementById('childNames').value,
+            caseRef: document.getElementById('caseRef').value,
+            totalScore: document.getElementById('total-score').innerText
+        },
+        responses: {},
+        reflection: {
+            goingWell: [
+                document.getElementById('well-1').value,
+                document.getElementById('well-2').value,
+                document.getElementById('well-3').value
+            ],
+            areasToImprove: [
+                document.getElementById('improve-1').value,
+                document.getElementById('improve-2').value,
+                document.getElementById('improve-3').value
+            ],
+            childNeeds: document.getElementById('child-needs').value,
+            personalChange: document.getElementById('personal-change').value,
+            sharedGoals: document.getElementById('shared-goals').value
+        }
+    };
+    for (let i = 1; i <= 30; i++) {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        formData.responses[`q${i}`] = selected ? parseInt(selected.value, 10) : null;
+    }
+    const blob = new Blob([JSON.stringify(formData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SACoParents_Assessment_${formData.metadata.parentName || 'Response'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+// Initialize on page load
+document.getElementById('assessmentDate').valueAsDate = new Date();
+renderQuestions();
+</script>
+</body>
+</html>

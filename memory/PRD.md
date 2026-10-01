@@ -45,6 +45,55 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter238 · Interactive 30-question Co-Parenting Self-Assessment preview
+
+Founder dropped in a self-contained 30-question Co-Parenting
+Self-Assessment HTML (6 sections × 5 Likert prompts + Foundation
+Statement textarea block + tier analysis + JSON export + print).
+Served verbatim as a static asset so parents can **try the
+questions themselves** before committing — complementing the
+iter234 "See a sample report" PDF, which only shows the output.
+
+**🟢 P1 — Static preview page**
+- `/app/frontend/public/coparenting-self-assessment-preview.html`
+  — HTML/CSS/JS exactly as provided, no modifications. Served at
+  `https://.../coparenting-self-assessment-preview.html` with
+  type `text/html` and ~25 KB payload. Self-contained: sticky
+  progress + total-score bar, 6 Likert sections (Child-Focused
+  Parenting, Communication, Reliability/Routines/Transitions,
+  Decision-Making/Information Sharing, Conflict Management/
+  Boundaries, Alignment/Readiness), tier bands (30-55 / 56-75 /
+  76-95 / 96-120), six Foundation Statement textareas, Export
+  Data (JSON) and Print/PDF buttons. Safety-first preamble
+  retained ("not a diagnosis, custody evaluation, …").
+
+**🟢 P1 — Three discovery entry points**
+- `/app/frontend/src/pages/portal/AssessmentGuideChat.jsx` —
+  recap-card IIFE now renders two links as a vertical pair when
+  Co-Parenting is selected: the existing "See a sample report"
+  (purple, PDF) plus a new "Try the preview — 30 quick
+  questions" (amber, test id
+  `assessment-guide-preview-link-coparenting`). Other options
+  are unchanged (the deep-dive options have only the sample
+  link because no interactive preview exists for them).
+- `/app/frontend/src/pages/portal/AlignmentHub.jsx` —
+  Co-Parenting Assessment tile now shows the new
+  `toolkit-coparenting-preview-link` right next to the existing
+  "See a sample" link.
+- `/app/frontend/src/pages/portal/CpProgressTile.jsx` — empty
+  state (no history yet) now ends with "Or try the preview —
+  30 quick questions" below "See a sample report" so first-time
+  visitors have a zero-commit way to engage.
+
+**Verified**
+- Static page: 200 / 25218 B / text/html; 6 sections render,
+  30 radio questions render, sticky bar progress ticks from 0
+  to 1 and score ticks from 0 to 4 on first Q=4 click.
+- Mobile 390: tile + guide-recap + empty-state entry points all
+  reachable; both links visible side-by-side in the recap card
+  (sample PDF + preview). No horizontal overflow.
+
+
 ### 2026-02-27 — Iter237 · Snapshot Pin + Progress Share Open Tracking
 
 Two parent-facing follow-ups to iter235. Pin keeps an active plan

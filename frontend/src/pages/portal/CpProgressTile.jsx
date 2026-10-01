@@ -429,6 +429,17 @@ export function CpProgressTile({
               <i className="fa-solid fa-file-pdf"></i>
               See a sample report
             </a>
+            <br />
+            <a
+              href="/coparenting-self-assessment-preview.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="cp-progress-preview-link"
+              className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-amber-700 hover:underline"
+            >
+              <i className="fa-solid fa-wand-magic-sparkles"></i>
+              Or try the preview — 30 quick questions
+            </a>
           </div>
         </div>
       </div>
