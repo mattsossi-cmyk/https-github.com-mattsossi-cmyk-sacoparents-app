@@ -45,6 +45,50 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter239 · Safety-First button on the Gateway
+
+Founder ask: "when the coparents start their journey, I want a
+safety first button to address family violence IPV concerns."
+
+**🟢 P1 — Safety-First Gateway button**
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — new button
+  rendered as the FIRST element inside `screen === "gateway"`,
+  above the existing "Talk to the SA CoParents Guide" button and
+  the two Doors. Rose gradient card with shield-heart icon,
+  "SAFETY FIRST" uppercase pill, headline "Start here if you
+  have family-violence or IPV concerns", subhead "A short,
+  private check before anything else — includes crisis hotlines
+  and a grey-rock path." Right-chevron on the right. Test id
+  `gateway-safety-first-btn`.
+- Click handler reuses the existing `setSafetyOpen(true)` state
+  that already drives the SafetyScreen modal at the portal root
+  — so **no new triage flow was built**. Opening via the
+  gateway button lands on the same Quick Safety Check (three
+  questions: physical safety, intimidation/coercion/control, is
+  this device private) + the "Full safety screen" fallback the
+  Parent Journey already uses.
+- The parent in a crisis sees it FIRST (y=86px on mobile, 358px
+  wide) before committing to either Door; the existing
+  IntroChatBot still auto-opens for first-time visitors on top,
+  but the Safety-First button is the first thing visible once
+  the intro is dismissed and the first thing on every
+  subsequent visit.
+
+**Clinical lockstep invariant preserved**
+- No new SafetyScreen variant, no new triage questions, no new
+  copy. The existing clinical screen is the single source of
+  truth; the Gateway button is purely a new entry point into
+  the same flow.
+
+**Verified**
+- Mobile 390: button renders at y=86 above the gateway content
+  (bounding 358x109). Clicking opens the SafetyScreen modal —
+  heading reads "Quick Safety Check", three questions render,
+  "Prefer not to say" / "Not sure" options present, "Continue"
+  button and "Full safety screen" fallback visible. No
+  horizontal overflow.
+
+
 ### 2026-02-27 — Iter238 · Interactive 30-question Co-Parenting Self-Assessment preview
 
 Founder dropped in a self-contained 30-question Co-Parenting

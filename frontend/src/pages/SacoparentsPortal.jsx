@@ -1599,6 +1599,37 @@ export default function SacoparentsPortal() {
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
         {screen === "gateway" && (
           <>
+            {/* iter239 — Safety First entry.
+                Shown above the Guide button + Doors so a parent who
+                is worried about family violence / IPV sees it on
+                first paint, BEFORE they commit to a journey. Opens
+                the same SafetyScreen the Parent Journey uses, so
+                the triage logic + crisis hotlines + grey-rock
+                routing are already in place — no new flow. */}
+            <button
+              type="button"
+              data-testid="gateway-safety-first-btn"
+              onClick={() => setSafetyOpen(true)}
+              className="w-full mb-3 p-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-left shadow-md border border-rose-800/30 flex items-start gap-3"
+            >
+              <div className="shrink-0 w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">
+                <i className="fa-solid fa-shield-heart text-white text-base"></i>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-rose-100">
+                  Safety First
+                </div>
+                <div className="text-sm font-bold leading-snug">
+                  Start here if you have family-violence or IPV concerns
+                </div>
+                <div className="text-[10px] text-rose-100/90 leading-snug mt-0.5">
+                  A short, private check before anything else — includes
+                  crisis hotlines and a grey-rock path.
+                </div>
+              </div>
+              <i className="fa-solid fa-arrow-right text-white/80 text-xs mt-2.5"></i>
+            </button>
+
             <button
               type="button"
               data-testid="gateway-open-intro-guide"
