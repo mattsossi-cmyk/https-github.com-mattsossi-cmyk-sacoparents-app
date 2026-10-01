@@ -1219,6 +1219,36 @@ export default function SacoparentsPortal() {
     []
   );
 
+  // iter237 — pin / unpin a snapshot. Pinned items float to the top
+  // of the Snapshot library (sort rule lives in SnapshotStrip). When
+  // pinning, stamp `pinned_at` so a flurry of pin flips preserves
+  // the most-recently-pinned order within the pinned group.
+  const onPinSnapshot = useCallback(
+    (idOrIdx, nextPinned) => {
+      setSnapshotHistory((prev) => {
+        const next = prev.map((s, i) => {
+          const match =
+            s.id !== undefined ? s.id === idOrIdx : i === idOrIdx;
+          if (!match) return s;
+          if (nextPinned) {
+            return {
+              ...s,
+              pinned: true,
+              pinned_at: new Date().toISOString(),
+            };
+          }
+          // Unpinning strips both fields so the sorter falls back
+          // to insertion order cleanly.
+          const { pinned: _p, pinned_at: _pa, ...rest } = s;
+          return rest;
+        });
+        writeJson(SNAPSHOT_HISTORY_KEY, next);
+        return next;
+      });
+    },
+    []
+  );
+
   // iter222 — fire when the guided modal writes/clears a localStorage
   // draft. Bumping guidedDraftsRev re-triggers the debounced PUT
   // effect, which reads all localStorage guided drafts and syncs
@@ -1696,6 +1726,7 @@ export default function SacoparentsPortal() {
                   onSnapshotRedownload={downloadGuidedSnapshot}
                   onSnapshotDelete={onDeleteSnapshot}
                   onSnapshotRename={onRenameSnapshot}
+                  onSnapshotPin={onPinSnapshot}
                   onStartAssessment={onStartAssessment}
                 />
               </>

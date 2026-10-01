@@ -45,6 +45,95 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter237 · Snapshot Pin + Progress Share Open Tracking
+
+Two parent-facing follow-ups to iter235. Pin keeps an active plan
+pinned to the top of the Snapshot library; open tracking closes
+the loop on "did the mediator actually see what I sent?"
+
+**🟢 P1 — Snapshot Pin (toggle + drag-to-top)**
+- `/app/frontend/src/pages/portal/SnapshotStrip.jsx`:
+  - New pushpin icon button on each row (test id
+    `snapshot-pin-{idx}`), toggles `snap.pinned`. Pinned rows
+    get an amber ring + amber-filled thumbtack; unpinned rows
+    show a greyed-out thumbtack that gains colour on hover.
+  - Sorter runs pinned-first (by `pinned_at` desc so the most
+    recently pinned sits on top), then falls back to insertion
+    order for unpinned.
+  - Native HTML5 drag: each row is `draggable`. When a drag is
+    in flight a dashed "Drop here to pin to the top" zone
+    materialises above the list (test id
+    `snapshot-pin-dropzone`). Dropping on it flips `pinned=true`
+    with no modifier keys needed.
+  - Delete button nudged right (`pr-6` → `pr-12`) to make room
+    for the pin button in the top-right corner.
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — new
+  `onPinSnapshot(idOrIdx, nextPinned)` callback stamps
+  `pinned=true, pinned_at=now()` or strips both fields on
+  unpin. Rides the same debounced
+  `PUT /api/portal/state` → `snapshot_history` sync as rename.
+- `/app/frontend/src/pages/portal/AlignmentHub.jsx` — threads
+  `onSnapshotPin` through to the strip.
+- `/app/backend/portal_routes.py` — `_sanitize_snapshot_history`
+  whitelists `pinned` (bool) and `pinned_at` (ISO string, 40
+  chars). Without this the pin would be stripped on round-trip.
+- Round-trip verified: `GET /api/portal/state` returned
+  `pinned=True, pinned_at=2026-10-01T15:13:36Z` on the pinned
+  snapshot, `pinned=None` on the sibling. UI confirmed the
+  Co-parenting snapshot moved from row 2 → row 1 after pinning.
+
+**🟢 P1 — Progress Share Open Tracking**
+- `/app/backend/progress_share_analytics.py` — new module
+  (collection `progress_shares`). Helpers:
+    * `mint_share_id()` → `sh_<12 hex>`
+    * `record_share(user_id, parent_name, to_email, mediator_name)`
+    * `record_open(share_id)` — idempotent: first open stamps
+      `opened_at`; subsequent opens `$inc` `open_count` and
+      stamp `last_opened_at`. Unknown share_id is a no-op.
+    * `recent_shares_for(user_id)` — N most recent shares,
+      sorted by `sent_at` desc.
+- `/app/backend/email_service.py` —
+  `send_cp_progress_share(..., tracking_pixel_url=None)`. When
+  the pixel URL is passed, append a hidden 1x1
+  `<img src="{pixel_url}" width=1 height=1 ...>` AFTER the
+  branded shell wraps the body — keeps `_branded_html` template
+  untouched.
+- `/app/backend/coparenting_routes.py`:
+  - Share route mints a `share_id`, persists a `progress_shares`
+    row BEFORE calling Resend (so a send failure leaves an
+    honest "Sent · never opened" row), then passes
+    `tracking_pixel_url` = `{PUBLIC_BACKEND_URL}/api/coparenting/progress-share/{share_id}/pixel.gif`
+    into the email send. Response now includes `share_id`.
+  - New `GET /api/coparenting/progress-share/{share_id}/pixel.gif`
+    (public, no auth, no cache) — returns a 43-byte 1x1 GIF
+    and records the open.
+  - New `GET /api/coparenting/report/progress/shares` — recent
+    share history for the current parent with open status.
+- `/app/backend/.env` — added `PUBLIC_BACKEND_URL` so the
+  tracking pixel URL embeds an externally-reachable host.
+  (Pre-existing `REACT_APP_BACKEND_URL` in the frontend .env
+  isn't visible to backend, so this is a new backend variable;
+  no existing key renamed or removed.)
+- `/app/frontend/src/pages/portal/CpProgressTile.jsx`:
+  - Fetches `/report/progress/shares` on mount and polls every
+    30 s so a new open shows up without a page reload.
+  - Refreshes shares immediately after a successful send.
+  - New "Share history" strip inside the share block
+    (test id `cp-progress-share-history`): one row per recent
+    share, test id `cp-progress-share-row-{share_id}`. Row
+    reads "Opened by Dr. Rivera · 2m ago · 2 opens" (emerald)
+    when opened, "Sent to … · not yet opened" (grey) when not.
+
+**Verified end-to-end**
+- Backend: share → shares list → pixel GET → shares list
+  sequence recorded `opened_at` on first pixel hit and bumped
+  `open_count` to 2 on a second hit.
+- Mobile 390: pinning the Co-parenting snapshot moved it from
+  row 2 to row 1 and persisted on the server. Share history
+  strip rendered "Opened by Dr. Rivera · 2m ago · 2 opens".
+  No horizontal overflow.
+
+
 ### 2026-02-27 — Iter236 · Deep-Dive Samples in Assessment Guide
 
 Follow-up on the iter234 "See a sample" treatment: three more

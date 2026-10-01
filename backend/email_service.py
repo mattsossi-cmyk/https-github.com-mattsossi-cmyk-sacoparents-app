@@ -238,6 +238,7 @@ def send_cp_progress_share(
     note: Optional[str],
     pdf_bytes: bytes,
     filename: str = "coparenting-progress-snapshot.pdf",
+    tracking_pixel_url: Optional[str] = None,
 ) -> None:
     """Iter235 · Email the one-page Co-Parenting Progress Snapshot to a
     mediator or professional of the parent's choice.
@@ -247,6 +248,13 @@ def send_cp_progress_share(
     passed we include it in the email body too, matching what's
     rendered in the PDF, so a mediator skim-reading on mobile sees
     the context without opening the attachment.
+
+    Iter237 · `tracking_pixel_url` is an optional https URL of a
+    1x1 open-tracking pixel. When present it's injected into the
+    HTML body as a hidden `<img>` so the Progress Tile can show
+    "Opened by Dr. Rivera 2h ago" after the mediator opens the
+    email. No-op when None, so this is a strict add-on — never
+    required for the actual delivery.
     """
     greeting = f"Hi {mediator_name}," if (mediator_name or "").strip() else "Hi,"
     note_clean = (note or "").strip()
@@ -292,6 +300,16 @@ def send_cp_progress_share(
         body_html=body_html,
         cta_label="",
     )
+    # iter237 — append a hidden 1x1 open-tracking pixel after the
+    # branded shell wraps the body. Placing it OUTSIDE _branded_html
+    # keeps the shell template unchanged and still rides along in
+    # every email client that fetches remote images.
+    if tracking_pixel_url:
+        html = html + (
+            f'<img src="{tracking_pixel_url}" alt="" width="1" height="1" '
+            f'style="display:none;visibility:hidden;opacity:0;height:1px;'
+            f'width:1px;overflow:hidden;" />'
+        )
     _send(
         to_email=to_email,
         subject=f"Co-Parenting Progress Snapshot — {parent_name}",

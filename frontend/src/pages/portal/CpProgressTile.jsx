@@ -42,6 +42,24 @@ function fmtDate(iso) {
   }
 }
 
+// iter237 — short relative age for the Share-history strip
+// ("Opened 2h ago", "Sent 3d ago"). Falls back silently if the ISO
+// string is malformed so a stale row never crashes the tile.
+function relativeAge(iso) {
+  if (!iso) return "just now";
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) return "recently";
+  const diffMs = Date.now() - then;
+  const mins = Math.max(1, Math.round(diffMs / 60000));
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.round(days / 30);
+  return `${months}mo ago`;
+}
+
 function Sparkline({ series }) {
   if (!series || series.length === 0) return null;
   const w = 240;
@@ -291,6 +309,26 @@ export function CpProgressTile({
     mediator_name: "",
     note: "",
   });
+  // iter237 — recent share history with open status for the
+  // "Opened by Dr. Rivera 2h ago" strip. Refreshed on mount and
+  // after every successful send, plus a 30s poller while the tile
+  // is mounted so a new open shows up without a page reload.
+  const [shares, setShares] = useState([]);
+
+  const refreshShares = async () => {
+    try {
+      const r = await api.get("/coparenting/report/progress/shares");
+      setShares(Array.isArray(r?.data?.shares) ? r.data.shares : []);
+    } catch {
+      /* ignore — tile just hides the history strip */
+    }
+  };
+
+  useEffect(() => {
+    refreshShares();
+    const t = window.setInterval(refreshShares, 30000);
+    return () => window.clearInterval(t);
+  }, []);
 
   const sendShare = async () => {
     const email = (shareForm.to_email || "").trim();
@@ -307,6 +345,9 @@ export function CpProgressTile({
         note: shareForm.note.trim() || null,
       });
       setShareState("sent");
+      // Pull fresh share history so the "Share with X — not yet
+      // opened" row shows up right next to the success card.
+      refreshShares();
     } catch (e) {
       const detail = e?.response?.data?.detail || "Couldn't send right now.";
       setShareError(detail);
@@ -617,6 +658,65 @@ export function CpProgressTile({
             >
               Done
             </button>
+          </div>
+        )}
+
+        {/* iter237 — Share history strip. One line per recent send
+            with open status. Hidden entirely when there's nothing
+            to show so the tile stays compact for new users. */}
+        {shares.length > 0 && (
+          <div
+            className="pt-1"
+            data-testid="cp-progress-share-history"
+          >
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              Share history
+            </div>
+            <ul className="space-y-1">
+              {shares.slice(0, 3).map((s) => {
+                const who =
+                  (s.mediator_name && s.mediator_name.trim()) ||
+                  s.to_email ||
+                  "a mediator";
+                const opened = !!s.opened_at;
+                return (
+                  <li
+                    key={s.share_id}
+                    data-testid={`cp-progress-share-row-${s.share_id}`}
+                    className={
+                      "flex items-start gap-2 p-1.5 rounded-lg border " +
+                      (opened
+                        ? "border-emerald-200 bg-emerald-50/60"
+                        : "border-slate-200 bg-white")
+                    }
+                  >
+                    <i
+                      className={
+                        opened
+                          ? "fa-solid fa-envelope-open-text text-emerald-700 text-[11px] mt-0.5"
+                          : "fa-solid fa-paper-plane text-slate-400 text-[11px] mt-0.5"
+                      }
+                    ></i>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] font-semibold text-slate-800 leading-tight truncate">
+                        {opened ? "Opened by " : "Sent to "}
+                        <span className="text-slate-900">{who}</span>
+                      </div>
+                      <div className="text-[9px] text-slate-500 leading-tight">
+                        {opened ? (
+                          <>
+                            {relativeAge(s.last_opened_at || s.opened_at)}
+                            {s.open_count > 1 ? ` · ${s.open_count} opens` : ""}
+                          </>
+                        ) : (
+                          <>Sent {relativeAge(s.sent_at)} · not yet opened</>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         )}
       </div>

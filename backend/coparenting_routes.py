@@ -21,6 +21,7 @@ Endpoints:
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from datetime import datetime, timezone
 from io import BytesIO
@@ -39,6 +40,7 @@ import cp_report_content
 import cp_report_pdf
 import cp_report_history
 import cp_progress_pdf
+import progress_share_analytics
 import report_visibility
 
 
@@ -402,6 +404,33 @@ async def share_report_progress(
         logger.exception("progress-share email import failed")
         raise HTTPException(status_code=500, detail="Email service unavailable.") from e
 
+    # iter237 — mint the share_id BEFORE sending so the open-tracking
+    # pixel URL can be embedded in the outbound HTML. The share doc
+    # is persisted up-front; a send failure below just leaves an
+    # orphan "sent but not delivered" row, which the parent will see
+    # as "Sent · never opened" — honest and self-explanatory.
+    share_id = progress_share_analytics.mint_share_id()
+    await progress_share_analytics.record_share(
+        db,
+        share_id=share_id,
+        user_id=user.user_id,
+        parent_name=user.name,
+        to_email=to_email,
+        mediator_name=body.mediator_name,
+    )
+    backend_base = os.environ.get("PUBLIC_BACKEND_URL", "").rstrip("/")
+    if not backend_base:
+        # Fall back to a relative URL — some email clients will still
+        # resolve it against the From domain. Better: have ops set
+        # PUBLIC_BACKEND_URL so the pixel always points at the
+        # externally reachable preview/prod host.
+        backend_base = ""
+    pixel_url = (
+        f"{backend_base}/api/coparenting/progress-share/{share_id}/pixel.gif"
+        if backend_base
+        else None
+    )
+
     try:
         send_cp_progress_share(
             to_email=to_email,
@@ -411,6 +440,7 @@ async def share_report_progress(
             note=body.note,
             pdf_bytes=pdf_bytes,
             filename=f"Progress_Snapshot_{_safe_filename(user.name or 'me')}.pdf",
+            tracking_pixel_url=pixel_url,
         )
     except EmailNotConfigured:
         raise HTTPException(
@@ -427,7 +457,56 @@ async def share_report_progress(
         "ok": True,
         "to_email": to_email,
         "attached_bytes": len(pdf_bytes),
+        "share_id": share_id,
     }
+
+
+# ---- iter237 · Progress-share open-tracking pixel + list ----
+
+# 1x1 transparent GIF used for the tracking pixel. Keeping this
+# literal here means the pixel endpoint has zero file-system
+# dependency.
+_PIXEL_GIF = bytes.fromhex(
+    "47494638396101000100800000ffffff00000021f9040100000000"
+    "2c00000000010001000002024401003b"
+)
+
+
+@router.get("/progress-share/{share_id}/pixel.gif", include_in_schema=False)
+async def progress_share_pixel(
+    share_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Public (no-auth) 1x1 open-tracking pixel for shared Progress
+    Snapshot emails. Always returns a 200 image/gif so bad clients
+    never break — a mangled share_id just records nothing."""
+    from fastapi.responses import Response
+    try:
+        await progress_share_analytics.record_open(db, share_id=share_id)
+    except Exception as e:  # pragma: no cover
+        logger.warning("progress pixel record_open failed: %s", e)
+    return Response(
+        content=_PIXEL_GIF,
+        media_type="image/gif",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+        },
+    )
+
+
+@router.get("/report/progress/shares")
+async def list_progress_shares(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    """Iter237 — recent Progress-Snapshot shares with open status.
+    Powers the "Share history" strip on the Alignment & Tools
+    progress tile ("Opened by Dr. Rivera 2h ago")."""
+    rows = await progress_share_analytics.recent_shares_for(
+        db, user_id=user.user_id
+    )
+    return {"shares": rows}
 
 
 @router.get("/report")

@@ -349,6 +349,14 @@ def _sanitize_snapshot_history(
         # Capped at 40 chars matching the frontend input maxLength.
         if item.get("label"):
             cleaned["label"] = str(item["label"])[:40]
+        # iter237 — preserve the pin flag so a renamed "active plan"
+        # stays at the top of the Snapshot library. `pinned_at` lets
+        # the UI sort multiple pinned items by most-recently-pinned
+        # when the parent flips several on in a row.
+        if item.get("pinned"):
+            cleaned["pinned"] = True
+            if item.get("pinned_at"):
+                cleaned["pinned_at"] = str(item["pinned_at"])[:40]
         if len(_json.dumps(cleaned, default=str)) > _MAX_SNAPSHOT_BYTES:
             continue
         out.append(cleaned)

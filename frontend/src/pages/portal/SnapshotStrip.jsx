@@ -56,13 +56,33 @@ export function SnapshotStrip({
   onDownload,
   onDelete,
   onRename,
+  onPin,
+  onReorder,
   limit = 3,
 }) {
   const [confirmingId, setConfirmingId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
   const [renameDraft, setRenameDraft] = useState("");
+  const [dragId, setDragId] = useState(null);
+  const [overTopZone, setOverTopZone] = useState(false);
   if (!Array.isArray(history) || history.length === 0) return null;
-  const items = history.slice(0, limit);
+
+  // iter237 — pinned snapshots float to the top (most-recently-pinned
+  // first within the pinned group); unpinned keep their original
+  // insertion order. Sort is pure so the server's canonical order is
+  // never mutated.
+  const sorted = [...history].sort((a, b) => {
+    const ap = a.pinned ? 1 : 0;
+    const bp = b.pinned ? 1 : 0;
+    if (ap !== bp) return bp - ap;
+    if (ap === 1) {
+      // Both pinned — most recent pin wins.
+      return String(b.pinned_at || "").localeCompare(String(a.pinned_at || ""));
+    }
+    // Both unpinned — keep insertion order (newest-first already).
+    return 0;
+  });
+  const items = sorted.slice(0, limit);
 
   const beginRename = (snap, idx) => {
     setRenamingId(snap.id ?? idx);
@@ -79,6 +99,10 @@ export function SnapshotStrip({
   const cancelRename = () => {
     setRenamingId(null);
     setRenameDraft("");
+  };
+  const togglePin = (snap, idx) => {
+    if (typeof onPin !== "function") return;
+    onPin(snap.id ?? idx, !snap.pinned);
   };
 
   return (
@@ -99,16 +123,72 @@ export function SnapshotStrip({
         </span>
       </div>
       <div className="grid grid-cols-1 gap-2">
+        {/* iter237 — drop zone above the first row. A dragged
+            snapshot released here flips to pinned so parents can
+            quickly "drag to the top" an active plan. The zone only
+            appears while a drag is in flight to avoid empty-state
+            visual noise. */}
+        {dragId !== null && typeof onPin === "function" && (
+          <div
+            data-testid="snapshot-pin-dropzone"
+            onDragOver={(e) => {
+              e.preventDefault();
+              setOverTopZone(true);
+            }}
+            onDragLeave={() => setOverTopZone(false)}
+            onDrop={() => {
+              onPin(dragId, true);
+              setDragId(null);
+              setOverTopZone(false);
+            }}
+            className={
+              overTopZone
+                ? "rounded-xl border-2 border-dashed border-amber-500 bg-amber-50 p-2 text-[10px] font-bold text-amber-800 text-center"
+                : "rounded-xl border-2 border-dashed border-purple-300 bg-purple-50/50 p-2 text-[10px] font-semibold text-purple-700 text-center"
+            }
+          >
+            <i className="fa-solid fa-thumbtack mr-1"></i>
+            Drop here to pin to the top
+          </div>
+        )}
         {items.map((snap, idx) => {
           const label = TOPIC_LABEL[snap.topic] || snap.topic;
           const iconClass = TOPIC_ICON[snap.topic] || "fa-solid fa-file-lines";
           const key = snap.id || `${snap.topic}-${idx}`;
+          const isPinned = !!snap.pinned;
           return (
             <div
               key={key}
               data-testid={`snapshot-item-${snap.topic}-${idx}`}
-              className="p-2.5 bg-white border border-slate-200 rounded-xl shadow-sm relative"
+              draggable={typeof onPin === "function" ? true : undefined}
+              onDragStart={() => setDragId(snap.id ?? idx)}
+              onDragEnd={() => {
+                setDragId(null);
+                setOverTopZone(false);
+              }}
+              className={
+                "p-2.5 bg-white border rounded-xl shadow-sm relative " +
+                (isPinned
+                  ? "border-amber-400 ring-1 ring-amber-100"
+                  : "border-slate-200")
+              }
             >
+              {typeof onPin === "function" && (
+                <button
+                  type="button"
+                  data-testid={`snapshot-pin-${idx}`}
+                  onClick={() => togglePin(snap, idx)}
+                  aria-label={isPinned ? "Unpin this snapshot" : "Pin this snapshot to the top"}
+                  className={
+                    "absolute top-1 right-7 w-6 h-6 rounded-full flex items-center justify-center transition " +
+                    (isPinned
+                      ? "text-amber-600 hover:bg-amber-50"
+                      : "text-slate-300 hover:text-amber-600 hover:bg-amber-50")
+                  }
+                >
+                  <i className="fa-solid fa-thumbtack text-[11px]"></i>
+                </button>
+              )}
               {typeof onDelete === "function" && (
                 <button
                   type="button"
@@ -120,7 +200,7 @@ export function SnapshotStrip({
                   <i className="fa-solid fa-xmark text-[11px]"></i>
                 </button>
               )}
-              <div className="flex items-center gap-2 mb-2 pr-6">
+              <div className="flex items-center gap-2 mb-2 pr-12">
                 <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
                   <i className={`${iconClass} text-purple-800 text-xs`}></i>
                 </div>

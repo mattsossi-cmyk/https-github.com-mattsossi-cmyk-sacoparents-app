@@ -72,6 +72,7 @@ export function AlignmentHub({
   onSnapshotRedownload = () => {},
   onSnapshotDelete = () => {},
   onSnapshotRename = () => {},
+  onSnapshotPin = () => {},
   // iter233 — inline Assessment Guide chatbot lives on this page
   // (Alignment & Tools) at the top of the Coparenting Journey Toolkit.
   // Routing target: same onStartAssessment used by the modal instance
@@ -110,6 +111,7 @@ export function AlignmentHub({
             onDownload={onSnapshotRedownload}
             onDelete={onSnapshotDelete}
             onRename={onSnapshotRename}
+            onPin={onSnapshotPin}
             limit={3}
           />
 
