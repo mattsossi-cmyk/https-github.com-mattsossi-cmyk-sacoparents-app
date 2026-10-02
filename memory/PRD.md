@@ -45,6 +45,57 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter242 · Safety-First button moved from Gateway to both paths
+
+Founder clarification: "the family violence button — should be
+renamed Safety First — remove it from the first dashboard — when
+parents select individual journey or court-ordered — include safety
+first button on both paths."
+
+**🟢 P1 — Removed from Gateway**
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — the iter239
+  `gateway-safety-first-btn` block was deleted from the
+  `screen === "gateway"` render. The Gateway is now focused on
+  the single decision (Individual Journey vs Court-Ordered Path)
+  with just the Guide chat chip and the two Doors.
+
+**🟢 P1 — Added to both paths**
+- `screen === "court-key"` now renders a Safety-First card
+  (test id `court-safety-first-btn`) ABOVE the Enter Professional
+  Access Key input. Sets `pendingDoorRef.current = "court"` so a
+  flagged safety submission lands inside the Court-Ordered flow.
+- `screen === "parent-journey"` renders the same Safety-First
+  card (test id `parent-safety-first-btn`) as the first element
+  of the Individual Journey, before the court-verified banner,
+  tabs, SafetyRetakeChip or any toolkit. Always visible — even
+  when `safetyFlagged === true` the button stays rendered with
+  adaptive sub-copy ("Re-run the private safety check — crisis
+  hotlines and the grey-rock path are still one tap away.") so a
+  parent in grey-rock mode has a one-tap re-check without having
+  to hunt for the thin retake chip.
+- Both buttons reuse the SafetyScreen modal (`setSafetyOpen(true)`)
+  and the iter241 flagged-exit auto-route logic, so clinical
+  guardrails are preserved verbatim.
+
+**UI framing**
+- Primary label: **"Safety First"** (was "Start here if you have
+  family-violence or IPV concerns" headline + "SAFETY FIRST" eyebrow
+  pill in iter239 — now simply "Safety First" as the primary line).
+- Secondary line (adaptive): "Short, private safety check — crisis
+  hotlines and a grey-rock path if family-violence or IPV concerns
+  are present." (not-yet-flagged) OR the re-run copy (flagged).
+- Rose gradient card, shield-heart icon, arrow-right chevron,
+  identical visual on both paths.
+
+**Verified at 390**
+- Gateway: `gateway-safety-first-btn` count = 0.
+- Parent-Journey: button renders at y=86, 358x75 px, click opens
+  the Quick Safety Check modal.
+- Court-Ordered: button renders at y=86, 358x88.5 px, above the
+  Enter Professional Access Key card.
+- No horizontal overflow on either path.
+
+
 ### 2026-02-27 — Iter241 · Safety-First auto-route · Preview-to-Account · Branded Profile PDF · Self Assessment tile
 
 Four tightly-related follow-ups shipped together.

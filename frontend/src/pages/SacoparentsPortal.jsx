@@ -1599,44 +1599,12 @@ export default function SacoparentsPortal() {
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
         {screen === "gateway" && (
           <>
-            {/* iter239 — Safety First entry.
-                Shown above the Guide button + Doors so a parent who
-                is worried about family violence / IPV sees it on
-                first paint, BEFORE they commit to a journey. Opens
-                the same SafetyScreen the Parent Journey uses, so
-                the triage logic + crisis hotlines + grey-rock
-                routing are already in place — no new flow. */}
-            <button
-              type="button"
-              data-testid="gateway-safety-first-btn"
-              onClick={() => {
-                // iter241 — pre-seed the pending door so when the
-                // parent finishes the Safety Screen (cleared OR
-                // flagged), they land inside the Parent Journey
-                // (grey-rock mode when flagged) instead of being
-                // stranded back on the Gateway.
-                pendingDoorRef.current = "parent";
-                setSafetyOpen(true);
-              }}
-              className="w-full mb-3 p-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-left shadow-md border border-rose-800/30 flex items-start gap-3"
-            >
-              <div className="shrink-0 w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">
-                <i className="fa-solid fa-shield-heart text-white text-base"></i>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-rose-100">
-                  Safety First
-                </div>
-                <div className="text-sm font-bold leading-snug">
-                  Start here if you have family-violence or IPV concerns
-                </div>
-                <div className="text-[10px] text-rose-100/90 leading-snug mt-0.5">
-                  A short, private check before anything else — includes
-                  crisis hotlines and a grey-rock path.
-                </div>
-              </div>
-              <i className="fa-solid fa-arrow-right text-white/80 text-xs mt-2.5"></i>
-            </button>
+            {/* iter242 — Safety-First button MOVED out of the Gateway.
+                It now lives at the top of each path (parent-journey
+                + court-key) so the parent sees it after they've
+                committed to a direction, not before. Keeps the
+                Gateway focused on the single decision: Individual
+                Journey vs Court-Ordered. */}
 
             <button
               type="button"
@@ -1658,17 +1626,82 @@ export default function SacoparentsPortal() {
         )}
 
         {screen === "court-key" && (
-          <CourtKeyScreen
-            courtKeyInput={courtKeyInput}
-            onChange={handleCourtKeyInputChange}
-            onVerify={verifyProfessionalKey}
-            courtKeyError={courtKeyError}
-            courtKeyLoading={courtKeyLoading}
-          />
+          <>
+            {/* iter242 — Safety-First at the top of the Court-Ordered
+                path. Same component as the Parent-Journey top row,
+                so a parent who entered via a court key still has a
+                one-tap route into the Quick Safety Check before
+                anything else. */}
+            <button
+              type="button"
+              data-testid="court-safety-first-btn"
+              onClick={() => {
+                // Court-path pending door so a flagged safety
+                // submission lands inside the Court-Ordered flow
+                // (not stranded back on the Gateway).
+                pendingDoorRef.current = "court";
+                setSafetyOpen(true);
+              }}
+              className="w-full mb-3 p-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-left shadow-md border border-rose-800/30 flex items-start gap-3"
+            >
+              <div className="shrink-0 w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">
+                <i className="fa-solid fa-shield-heart text-white text-base"></i>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold leading-snug">
+                  Safety First
+                </div>
+                <div className="text-[10px] text-rose-100/90 leading-snug mt-0.5">
+                  Short, private safety check — crisis hotlines and a
+                  grey-rock path if family-violence or IPV concerns
+                  are present.
+                </div>
+              </div>
+              <i className="fa-solid fa-arrow-right text-white/80 text-xs mt-2.5"></i>
+            </button>
+            <CourtKeyScreen
+              courtKeyInput={courtKeyInput}
+              onChange={handleCourtKeyInputChange}
+              onVerify={verifyProfessionalKey}
+              courtKeyError={courtKeyError}
+              courtKeyLoading={courtKeyLoading}
+            />
+          </>
         )}
 
         {screen === "parent-journey" && (
           <div className="space-y-4" data-testid="screen-parent-journey">
+            {/* iter242 — Safety-First at the top of the Individual
+                Journey. First thing a parent sees after they commit
+                to a path, before the court-verified banner, before
+                the tabs, before any toolkit. Always visible (even
+                in grey-rock mode) so a one-tap re-check is always
+                in reach. Reuses the same SafetyScreen modal +
+                grey-rock routing. */}
+            <button
+              type="button"
+              data-testid="parent-safety-first-btn"
+              onClick={() => {
+                pendingDoorRef.current = "parent";
+                setSafetyOpen(true);
+              }}
+              className="w-full p-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-left shadow-md border border-rose-800/30 flex items-start gap-3"
+            >
+              <div className="shrink-0 w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">
+                <i className="fa-solid fa-shield-heart text-white text-base"></i>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold leading-snug">
+                  Safety First
+                </div>
+                <div className="text-[10px] text-rose-100/90 leading-snug mt-0.5">
+                  {safetyFlagged
+                    ? "Re-run the private safety check — crisis hotlines and the grey-rock path are still one tap away."
+                    : "Short, private safety check — crisis hotlines and a grey-rock path if family-violence or IPV concerns are present."}
+                </div>
+              </div>
+              <i className="fa-solid fa-arrow-right text-white/80 text-xs mt-2.5"></i>
+            </button>
             {/* Court verified banner */}
             {courtKey && (
               <div
