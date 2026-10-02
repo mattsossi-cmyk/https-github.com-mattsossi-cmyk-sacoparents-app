@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 import { SnapshotStrip } from "./SnapshotStrip";
 import { TrendSparkline } from "./TrendSparkline";
@@ -38,6 +39,10 @@ export function GreyRockToggleChip({ onClear = () => {}, onRetake = () => {} }) 
             onClick={() => {
               onClear();
               setConfirming(false);
+              toast.success(
+                "Grey-rock mode is off — full tool language is back.",
+                { duration: 4000 }
+              );
             }}
             className="flex-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-[11px] transition"
           >
