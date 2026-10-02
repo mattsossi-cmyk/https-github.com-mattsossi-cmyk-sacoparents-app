@@ -602,6 +602,23 @@ export default function SacoparentsPortal() {
     setSafetyOpen(true);
   }, []);
 
+  // iter243 — Grey-rock toggle on Alignment & Tools. The SafetyScreen
+  // modal (SafetyScreen.jsx:332) promises "You can turn it off from
+  // the Alignment & Tools page any time." This closes the loop:
+  // clears the flag with no screen navigation (unlike onSafetyCleared
+  // which also honours pendingDoorRef and sets the screen). Rides the
+  // same safety_ack schema + debounced PUT /api/portal/state round
+  // trip, so the clear persists across devices.
+  const onClearGreyRock = useCallback(() => {
+    const ack = {
+      date: new Date().toISOString(),
+      cleared: true,
+      flagged: false,
+    };
+    writeJson(SAFETY_ACK_KEY, ack);
+    setSafetyAck(ack);
+  }, []);
+
   const onSaveSafetyPlan = useCallback(
     (plan) => {
       if (plan == null) {
@@ -1800,6 +1817,8 @@ export default function SacoparentsPortal() {
                   onSnapshotRename={onRenameSnapshot}
                   onSnapshotPin={onPinSnapshot}
                   onStartAssessment={onStartAssessment}
+                  onClearGreyRock={onClearGreyRock}
+                  onOpenSafetyRetake={onOpenSafetyRetake}
                 />
               </>
             )}

@@ -7,6 +7,93 @@ import { AssessmentGuideChatInline } from "./AssessmentGuideChat";
 import { CpProgressTile } from "./CpProgressTile";
 
 /**
+ * GreyRockToggleChip — iter243. Small amber chip shown on Alignment &
+ * Tools when grey-rock mode is on, closing the loop on the
+ * SafetyScreen modal's "you can turn it off from the Alignment &
+ * Tools page any time" promise. Two-step confirm (soft confirm card)
+ * so a single mis-tap can't disable the clinical guardrail. Also
+ * offers a secondary link back into the full Safety Screen.
+ */
+export function GreyRockToggleChip({ onClear = () => {}, onRetake = () => {} }) {
+  const [confirming, setConfirming] = React.useState(false);
+
+  if (confirming) {
+    return (
+      <div
+        data-testid="grey-rock-toggle-confirm"
+        className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-[11px] text-amber-900 space-y-2"
+      >
+        <p className="font-semibold leading-snug">
+          Are you back on safe ground?
+        </p>
+        <p className="leading-snug text-amber-800">
+          Turning grey-rock off brings back full tool language and
+          lets you email the co-parent again from the Portal. You can
+          turn it back on any time by re-running the Safety Check.
+        </p>
+        <div className="flex gap-2 pt-1">
+          <button
+            type="button"
+            data-testid="grey-rock-toggle-confirm-yes"
+            onClick={() => {
+              onClear();
+              setConfirming(false);
+            }}
+            className="flex-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-[11px] transition"
+          >
+            Yes, turn grey-rock off
+          </button>
+          <button
+            type="button"
+            data-testid="grey-rock-toggle-confirm-cancel"
+            onClick={() => setConfirming(false)}
+            className="px-3 py-1.5 border border-amber-400 text-amber-800 rounded-lg font-semibold text-[11px]"
+          >
+            Not yet
+          </button>
+        </div>
+        <button
+          type="button"
+          data-testid="grey-rock-toggle-retake-link"
+          onClick={() => {
+            setConfirming(false);
+            onRetake();
+          }}
+          className="w-full text-left text-[10px] text-amber-700 underline underline-offset-2"
+        >
+          Re-run the full safety check instead
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      data-testid="grey-rock-toggle-chip"
+      className="flex items-center justify-between gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-900"
+    >
+      <span className="flex items-center gap-2 leading-snug">
+        <i className="fa-solid fa-shield-halved text-amber-600"></i>
+        <span>
+          <span className="font-semibold">Grey-rock mode is on.</span>{" "}
+          <span className="text-amber-800">
+            Tools and language are quietly adapted.
+          </span>
+        </span>
+      </span>
+      <button
+        type="button"
+        data-testid="grey-rock-toggle-off-btn"
+        onClick={() => setConfirming(true)}
+        className="shrink-0 px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-semibold text-[10px] transition"
+      >
+        Turn off
+      </button>
+    </div>
+  );
+}
+
+/**
  * AlignmentHub — Section I of the Parent Journey. Shows:
  *   - (Only when a Court Key is verified) Official Legal Conflict
  *     Resolution Report (Health Index sliders + Dispute Matrix +
@@ -78,6 +165,13 @@ export function AlignmentHub({
   // Routing target: same onStartAssessment used by the modal instance
   // in SacoparentsPortal, so both surfaces stay in exact lockstep.
   onStartAssessment = () => {},
+  // iter243 — Grey-rock toggle chip. SafetyScreen.jsx:332 promises
+  // the parent can "turn it off from the Alignment & Tools page any
+  // time"; this prop pair wires that promise. onClearGreyRock does
+  // the clear with no navigation side-effect; onOpenSafetyRetake
+  // routes the parent back through the full Safety Screen.
+  onClearGreyRock = () => {},
+  onOpenSafetyRetake = () => {},
 }) {
   return (
     <div className="space-y-4" data-testid="hub-section-alignment">
@@ -114,6 +208,17 @@ export function AlignmentHub({
             onPin={onSnapshotPin}
             limit={3}
           />
+
+          {/* iter243 — Grey-rock toggle chip. Renders only when the
+              parent's Safety Check is currently flagged. Closes the
+              loop on the SafetyScreen modal's promise ("You can turn
+              it off from the Alignment & Tools page any time."). */}
+          {safetyFlagged && (
+            <GreyRockToggleChip
+              onClear={onClearGreyRock}
+              onRetake={onOpenSafetyRetake}
+            />
+          )}
 
           {/* iter233 — inline Assessment Guide chatbot. Same triage
               flow that used to open as a modal, now living directly

@@ -45,6 +45,76 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter243 · Grey-rock Toggle Chip on Alignment & Tools
+
+Founder ask: "Grey-rock Mode Toggle: Add a one-tap 'Turn grey-rock
+off' chip on Alignment & Tools once safety has stabilized — the
+modal already promises this control exists, so build it to match
+the promise."
+
+Context: `SafetyScreen.jsx:332` promises *"You can turn it off
+from the Alignment & Tools page any time."* — but no such control
+existed. The only path out of grey-rock mode was re-running the
+full Safety Screen questionnaire. This iter closes the loop.
+
+**🟢 P1 — GreyRockToggleChip component**
+- New named export in `/app/frontend/src/pages/portal/AlignmentHub.jsx`.
+  Amber chip (shield-halved icon + "Grey-rock mode is on." headline
+  + "Tools and language are quietly adapted." subhead + "Turn off"
+  button). Two-step confirm pattern prevents a single mis-tap from
+  disabling the clinical guardrail:
+    * Confirm card copy: *"Are you back on safe ground?"* +
+      "Turning grey-rock off brings back full tool language and
+      lets you email the co-parent again from the Portal. You can
+      turn it back on any time by re-running the Safety Check."
+    * Primary "Yes, turn grey-rock off" (amber solid) +
+      secondary "Not yet" (amber outline) + tertiary link
+      "Re-run the full safety check instead" (routes back into
+      the full Safety Screen modal via `onOpenSafetyRetake`).
+- Testids: `grey-rock-toggle-chip` /
+  `grey-rock-toggle-off-btn` / `grey-rock-toggle-confirm` /
+  `grey-rock-toggle-confirm-yes` /
+  `grey-rock-toggle-confirm-cancel` /
+  `grey-rock-toggle-retake-link`.
+- Rendered only when `safetyFlagged === true`, inside the
+  Coparenting Journey Toolkit card, between the SnapshotStrip
+  and the inline Assessment Guide — so a returning parent in
+  grey-rock mode sees it before any other control.
+
+**🟢 P1 — Container plumbing**
+- `/app/frontend/src/pages/SacoparentsPortal.jsx` — new
+  `onClearGreyRock` callback (sibling to the existing
+  `onSafetyCleared`). Unlike `onSafetyCleared` it does NOT
+  touch `pendingDoorRef` or `setScreen` — it only writes
+  `safety_ack = {cleared:true, flagged:false}` to localStorage
+  and `setSafetyAck`, so the parent stays exactly where they
+  are. The debounced `PUT /api/portal/state` pipeline persists
+  the clear across devices.
+- `AlignmentHub` receives two new props: `onClearGreyRock`
+  (chip "Yes" wire) and `onOpenSafetyRetake` (reuses the
+  existing retake handler for the tertiary link).
+
+**Clinical lockstep invariant preserved**
+- Reuses the existing `safety_ack` schema — single source of
+  truth for the flag.
+- No new SafetyScreen variant, no new triage questions, no
+  new modal copy. The modal's existing promise is honoured
+  verbatim; no copy changes needed anywhere else.
+- Backend sanitizer already whitelists `safety_ack.cleared`
+  and `safety_ack.flagged` — no backend route changes.
+
+**Verified at both viewports**
+- Mobile 390×844: chip renders at the top of the toolkit;
+  Turn off → confirm card; Cancel keeps chip; Yes clears
+  chip + flips AssessmentGuideChat header from "GREY-ROCK"
+  back to "ASSESSMENT GUIDE" (proving `safetyFlagged` state
+  propagated). localStorage `safety_ack` round-trips
+  cleanly to `{cleared:true, flagged:false}`.
+- Desktop 1920×800: chip renders left-aligned at
+  `max-w-md` card width, no overflow.
+- No horizontal overflow at either viewport.
+
+
 ### 2026-02-27 — Iter242 · Safety-First button moved from Gateway to both paths
 
 Founder clarification: "the family violence button — should be
