@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 
+import { GreyRockToggleChip } from "./AlignmentHub";
+
 /**
  * JourneyShell — iter244 Phase A.
  *
@@ -98,15 +100,19 @@ const TINT_CLASSES = {
   },
 };
 
-function pickCurrentStep({ safetyAck, pathPicked, firstEngagement, hasSnapshots }) {
+function pickCurrentStep({ safetyAck, pathPicked, firstEngagement, hasSnapshots, courtKey }) {
   // The system picks the "current" step for the parent. Future
   // iters (Phase B+) will replace this with signal from the
   // assessment & plan progress. For now:
+  //  - court key verified → Step 3 (iter246 Phase C: a referred
+  //    parent walks in holding a professional artefact; the next
+  //    step for them is Focus on My Child, not Start)
   //  - no path picked → Step 1
   //  - path picked but no safety ack cleared/flagged → Step 2
   //  - safety ack present but no engagement → Step 2
   //  - engagement but no snapshots → Step 3
   //  - snapshots exist → Step 4 (parent is iterating)
+  if (courtKey) return 3;
   if (!pathPicked) return 1;
   if (!safetyAck) return 2;
   if (!firstEngagement) return 2;
@@ -120,24 +126,30 @@ export function JourneyShell({
   pathPickedAt,
   firstEngagementAt,
   snapshotCount,
+  courtKey = null,
+  verifiedMediator = null,
   // Step 1 door CTAs — same handlers the old Gateway used, so the
   // Safety-First gate still fires before either door.
   onEnterParent = () => {},
   onEnterCourt = () => {},
-  // Step 2 — safety check launcher. Opens the SafetyScreen modal
-  // via the container's existing state.
+  // Step 2 — safety check launcher + grey-rock controls.
   onOpenSafety = () => {},
-  // Step 2 → 5 — route into the existing parent-journey screen and
-  // scroll to the right surface. Phase B will inline these.
-  onEnterStep2 = () => {},
-  onEnterStep3 = () => {},
-  onEnterStep4 = () => {},
-  onEnterStep5 = () => {},
-  // Intro guide chip (soft, non-blocking) — same handler as the
-  // old gateway's "Talk to the SA CoParents Guide" button.
+  onClearGreyRock = () => {},
+  onOpenSafetyRetake = () => {},
+  // Step 2 — self-assessment preview URL (static HTML in /public).
+  selfAssessmentUrl = "/coparenting-self-assessment-preview.html",
+  // Step 3 — assessment topic handlers (openGuidedJourney in parent).
+  onOpenGuidedJourney = () => {},
+  onOpenAssessmentFolder = () => {},
+  // Step 4 — BIFF Coach + Mediation Prep + Communication reflections.
+  onOpenBiffCoach = () => {},
+  // Step 5 — Foundation Statement + Share-complete-report + Email coparent.
+  onOpenFoundationStatement = () => {},
+  onDownloadCompleteReport = () => {},
+  onShareCompleteReport = () => {},
+  // Intro guide chip (soft, non-blocking).
   onOpenIntroGuide = () => {},
-  // Grey-rock chip surface, if applicable — reuses the Alignment
-  // hub chip when a parent in grey-rock mode lands on the shell.
+  // Grey-rock chip surface, if applicable.
   safetyFlagged = false,
 }) {
   const safetyFlag = safetyFlagged || !!(safetyAck && safetyAck.flagged);
@@ -148,11 +160,21 @@ export function JourneyShell({
         pathPicked: !!pathPickedAt,
         firstEngagement: !!firstEngagementAt,
         hasSnapshots: snapshotCount > 0,
+        courtKey: !!courtKey,
       }),
-    [safetyAck, pathPickedAt, firstEngagementAt, snapshotCount]
+    [safetyAck, pathPickedAt, firstEngagementAt, snapshotCount, courtKey]
   );
 
-  const [expanded, setExpanded] = useState(current);
+  const [expanded, setExpanded] = useState(null);
+
+  // If the parent hasn't explicitly toggled a step (expanded === null),
+  // the shell follows whichever step `pickCurrentStep` says is current.
+  // Once the parent manually toggles, we respect their choice. This
+  // handles the case where courtKey or safetyAck hydrates from
+  // localStorage AFTER mount — the shell re-targets the newly current
+  // step instead of staying on whichever step was current on first
+  // render.
+  const activeStep = expanded ?? current;
 
   const greetingName = user?.name ? user.name.split(" ")[0] : null;
 
@@ -222,7 +244,7 @@ export function JourneyShell({
         {STEPS.map((step) => {
           const tint = TINT_CLASSES[step.tint];
           const isCurrent = step.n === current;
-          const isOpen = expanded === step.n;
+          const isOpen = activeStep === step.n;
           return (
             <li key={step.n} data-testid={`journey-step-${step.n}`}>
               <button
@@ -328,53 +350,169 @@ export function JourneyShell({
                           Private Safety Check
                         </span>
                       </button>
+                      {safetyFlag && (
+                        <GreyRockToggleChip
+                          onClear={onClearGreyRock}
+                          onRetake={onOpenSafetyRetake}
+                        />
+                      )}
                       <button
                         type="button"
-                        data-testid="journey-step-2-cta-open"
-                        onClick={onEnterStep2}
-                        className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition text-sm font-bold`}
+                        data-testid="journey-step-2-cta-progress"
+                        onClick={() => onOpenGuidedJourney("coparenting")}
+                        className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition flex items-center gap-2`}
                       >
-                        Open my Understand My Situation workspace
+                        <i className="fa-solid fa-chart-line"></i>
+                        <span className="text-sm font-bold">
+                          Track my progress (take or re-take the
+                          40-Q check)
+                        </span>
                       </button>
+                      <a
+                        href={selfAssessmentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        data-testid="journey-step-2-cta-preview"
+                        className="block w-full p-2.5 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-300 text-indigo-800 text-left transition text-sm font-bold"
+                      >
+                        <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
+                        Try the 40-question interactive preview
+                      </a>
                     </div>
                   )}
 
                   {step.n === 3 && (
-                    <div className="pt-1">
+                    <div className="space-y-2 pt-1">
+                      {courtKey && (
+                        <div
+                          data-testid="journey-step-3-court-banner"
+                          className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-900 leading-snug"
+                        >
+                          <i className="fa-solid fa-gavel text-emerald-600 mr-1.5"></i>
+                          <span className="font-semibold">
+                            Court access verified:
+                          </span>{" "}
+                          Case {courtKey}
+                          {verifiedMediator
+                            ? ` · ${verifiedMediator}`
+                            : ""}
+                          . Your assessment feeds the mediator's
+                          joint report.
+                        </div>
+                      )}
                       <button
                         type="button"
-                        data-testid="journey-step-3-cta-open"
-                        onClick={onEnterStep3}
+                        data-testid="journey-step-3-cta-coparenting"
+                        onClick={() => onOpenGuidedJourney("coparenting")}
                         className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition text-sm font-bold`}
                       >
-                        Open Focus on My Child
+                        <i className="fa-solid fa-child-reaching mr-1.5"></i>
+                        Co-Parenting Assessment
+                      </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          data-testid="journey-step-3-cta-educational"
+                          onClick={() => onOpenGuidedJourney("educational")}
+                          className="p-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 text-[11px] font-bold transition"
+                        >
+                          <i className="fa-solid fa-graduation-cap block mb-0.5"></i>
+                          Educational
+                        </button>
+                        <button
+                          type="button"
+                          data-testid="journey-step-3-cta-medical"
+                          onClick={() => onOpenGuidedJourney("medical")}
+                          className="p-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 text-[11px] font-bold transition"
+                        >
+                          <i className="fa-solid fa-stethoscope block mb-0.5"></i>
+                          Medical
+                        </button>
+                        <button
+                          type="button"
+                          data-testid="journey-step-3-cta-psychological"
+                          onClick={() => onOpenGuidedJourney("psychological")}
+                          className="p-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 text-[11px] font-bold transition"
+                        >
+                          <i className="fa-solid fa-brain block mb-0.5"></i>
+                          Psychological
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        data-testid="journey-step-3-cta-records"
+                        onClick={() => onOpenAssessmentFolder("All")}
+                        className="w-full p-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-800 text-left transition text-xs font-semibold"
+                      >
+                        <i className="fa-solid fa-folder-open mr-1.5"></i>
+                        Open my Alignment Records folder
                       </button>
                     </div>
                   )}
 
                   {step.n === 4 && (
-                    <div className="pt-1">
+                    <div className="space-y-2 pt-1">
                       <button
                         type="button"
-                        data-testid="journey-step-4-cta-open"
-                        onClick={onEnterStep4}
+                        data-testid="journey-step-4-cta-biff"
+                        onClick={onOpenBiffCoach}
                         className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition text-sm font-bold`}
                       >
-                        Open Explore Options
+                        <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
+                        Rewrite a message the BIFF way
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="journey-step-4-cta-mediation"
+                        onClick={() => onOpenGuidedJourney("foundation")}
+                        className="w-full p-2.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-300 text-amber-900 text-left transition text-xs font-semibold"
+                      >
+                        <i className="fa-solid fa-handshake-angle mr-1.5"></i>
+                        Walk through a mediation-prep script
                       </button>
                     </div>
                   )}
 
                   {step.n === 5 && (
-                    <div className="pt-1">
+                    <div className="space-y-2 pt-1">
                       <button
                         type="button"
-                        data-testid="journey-step-5-cta-open"
-                        onClick={onEnterStep5}
+                        data-testid="journey-step-5-cta-foundation"
+                        onClick={onOpenFoundationStatement}
                         className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition text-sm font-bold`}
                       >
-                        Open Create My Plan
+                        <i className="fa-solid fa-feather-pointed mr-1.5"></i>
+                        Draft my Foundation Statement
                       </button>
+                      <button
+                        type="button"
+                        data-testid="journey-step-5-cta-download-complete"
+                        onClick={onDownloadCompleteReport}
+                        className="w-full p-2.5 rounded-xl bg-white hover:bg-rose-50 border border-rose-300 text-rose-800 text-left transition text-xs font-semibold"
+                      >
+                        <i className="fa-solid fa-file-pdf mr-1.5"></i>
+                        Download my complete report PDF
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="journey-step-5-cta-share-complete"
+                        onClick={onShareCompleteReport}
+                        className="w-full p-2.5 rounded-xl bg-white hover:bg-rose-50 border border-rose-300 text-rose-800 text-left transition text-xs font-semibold"
+                      >
+                        <i className="fa-solid fa-envelope-circle-check mr-1.5"></i>
+                        Email my progress to my mediator
+                      </button>
+                      {snapshotCount > 0 && (
+                        <p
+                          data-testid="journey-step-5-snapshot-count"
+                          className="text-[11px] text-rose-700 pt-1"
+                        >
+                          <i className="fa-solid fa-camera-retro mr-1"></i>
+                          You have {snapshotCount} saved snapshot
+                          {snapshotCount === 1 ? "" : "s"} available
+                          below.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -383,18 +521,6 @@ export function JourneyShell({
           );
         })}
       </ol>
-
-      {/* Advanced-view escape hatch. Will be deleted in Phase D
-          (iter247) once the shell has settled across all surfaces. */}
-      <div className="pt-2 text-center">
-        <a
-          href="?view=advanced"
-          data-testid="journey-advanced-view-link"
-          className="text-[10px] text-slate-400 underline underline-offset-2"
-        >
-          Advanced view (legacy)
-        </a>
-      </div>
     </div>
   );
 }

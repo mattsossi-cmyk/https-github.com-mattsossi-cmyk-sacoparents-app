@@ -871,7 +871,10 @@ export function AlignmentHub({
       </div>
 
       {/* FOUNDATION STATEMENT */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box">
+      <div
+        id="foundation-statement-section"
+        className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box"
+      >
         <div className="flex justify-between items-start border-b border-slate-100 pb-2">
           <div>
             <span className="text-[10px] font-bold text-purple-700 uppercase">

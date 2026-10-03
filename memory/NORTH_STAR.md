@@ -57,36 +57,44 @@ the five steps** and whichever one the system puts them on.
 - Future DNS split (DevOps): once prod has both domains, each
   app ships ONLY the routes for its side.
 
-## Phase Plan (committed order)
+## Phase Plan (status)
 
-- **Phase A (iter244, this iter)**: Build `<JourneyShell>` as the
-  5-step scaffold. New default view at `/sacoparents-portal`.
-  Old gateway kept behind `?view=advanced` escape hatch for 2-3
-  iters. Scaffold `/align` as a holding page. **All existing
-  components reused verbatim** inside the steps — zero PDF/AI/
-  report code touched.
+- **Phase A** ✅ **DONE (iter244)**: Built `<JourneyShell>` as the
+  5-step scaffold. New default view at `/`.
+  Scaffolded `/align`.
 
-- **Phase B (iter245)**: Merge the toolkit tile grid INTO the
-  steps. Each existing surface (BIFF Coach, Alignment Records,
-  Foundation Statement, Assessment Guide, Snapshot Library)
-  moves inside its step. The horizontal tab-switcher
-  (`alignment` / `biff` / `pdf-export`) dies. Testids
-  preserved.
+- **Phase B** ✅ **DONE (iter245)**: Merged the toolkit tile grid
+  INTO the steps. Each existing surface (BIFF Coach,
+  Alignment Records, Foundation Statement, Assessment Guide,
+  Snapshot Library) now has a home inside its step panel.
+  Testids preserved. Shell's `expanded` state now falls
+  through to `pickCurrentStep` dynamically so late-hydrating
+  signals (courtKey, safetyAck) correctly auto-expand.
 
-- **Phase C (iter246)**: Court-Ordered path becomes a Step 1
-  variant that fast-forwards to the referred artefact.
-  Parse the Court Key, auto-route to the referred assessment
-  as Step 3 state, surface the other four steps as context.
+- **Phase C** ✅ **DONE (iter246)**: Court-Ordered path is a
+  Step 1 variant that fast-forwards. `verifyProfessionalKey`
+  routes to the journey shell + auto-elevates Step 3. Banner
+  renders with Case ID + mediator name.
 
-- **Phase D (iter247)**: Audit `/align` for parent-journey copy
-  leaks and `/sacoparents-portal` for professional-nav leaks.
-  Delete the old `screen === "gateway"` code path. Delete
-  `?view=advanced` escape hatch.
+- **Phase D** ✅ **DONE (iter247)**: Deleted `?view=advanced`
+  kill-switch, DoorsGateway import, `screen === "gateway"`
+  render path, and the "Advanced view (legacy)" escape hatch.
+  The old gateway cannot be reached from the UI at all.
 
-- **Phase E (DevOps, parallel to C/D)**: Split the two domains in
-  prod. `sacoparentsapp.online` ships only `/sacoparents-portal/*`
-  routes. `sacoparentsalign.online` ships only `/align/*` and
+- **Phase E (DevOps, future)**: Split the two domains in
+  prod. `sacoparentsapp.online` ships only `/*` (parent).
+  `sacoparentsalign.online` ships only `/align/*` and
   `/admin/*` routes.
+
+- **iter248 (future)**: Inline BIFF Coach into Step 4 panel
+  + Alignment Records folder into Step 3 panel. Currently
+  these still route into the legacy parent-journey screen
+  for the heavy modal UI. Once inlined, `screen === "parent-journey"`
+  can also be deleted.
+
+- **iter249 (future)**: Render the grey-rock audit timeline
+  on the Mediator Progress PDF (`cp_progress_pdf.py`). The
+  audit log backend was built for exactly this clinical use.
 
 ## What NEVER changes
 

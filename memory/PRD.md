@@ -45,6 +45,142 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter245-247 · Phase B/C/D + Grey-Rock Audit Log
+
+Four deliverables landed in one session, in dependency order:
+
+**🟢 Backend — Grey-Rock Audit Log (new)**
+- New `/app/backend/grey_rock_audit.py` module. Mongo
+  collection `grey_rock_audit` with doc shape:
+  `{user_id, event: "on"|"off", source: "safety_screen"|"toggle_chip"|"import", at: ISO 8601 UTC}`.
+- Routes mounted at `/api/portal/grey-rock/*`:
+    * `POST /audit` — appends one transition event (401 if
+      unauthenticated).
+    * `GET /audit` — returns newest-first list, capped at 200
+      events (plenty for the mediator PDF timeline).
+- Server-side timestamp (`datetime.now(timezone.utc)`) — client
+  clock drift can't tamper with the clinical timeline.
+- Frontend wiring in `SacoparentsPortal.jsx`:
+    * `onSafetyContinueFlagged` → POST `{event:"on", source:"safety_screen"}`
+    * `onClearGreyRock` → POST `{event:"off", source:"toggle_chip"}`
+    * Fire-and-forget via `api.post(...).catch(()=>{})` so a
+      network blip never blocks the Safety-First routing.
+- End-to-end tested via curl (`parent1@test.com`): POST on →
+  POST off → GET list returns both events in newest-first
+  order.
+
+**🟢 Phase B — Toolkit Merged Into Step Panels**
+- `/app/frontend/src/pages/portal/JourneyShell.jsx` step panels
+  rewritten to render rich inline CTAs that invoke the SAME
+  handlers the old AlignmentHub tiles used — zero PDF/AI/report
+  code touched, every existing testid on existing components
+  preserved.
+- Step 2 "Understand My Situation" panel:
+    * `journey-step-2-cta-safety` → opens SafetyScreen modal
+    * Inline `<GreyRockToggleChip>` (only when flagged) — the
+      iter243 toggle moved INTO Step 2 where it belongs
+    * `journey-step-2-cta-progress` → `onOpenGuidedJourney("coparenting")`
+      (the 40-Q profile also doubles as the progress tracker)
+    * `journey-step-2-cta-preview` → external link to the
+      static 40-Q interactive HTML preview
+- Step 3 "Focus on My Child" panel:
+    * Court-verified banner (`journey-step-3-court-banner`)
+      visible when a court key is present
+    * `journey-step-3-cta-coparenting` (emerald CTA) →
+      `openGuidedJourney("coparenting")`
+    * 3-column secondary grid: Educational / Medical /
+      Psychological, each wiring to `openGuidedJourney(topic)`
+    * `journey-step-3-cta-records` → `openAssessmentFolder("All")`
+      + routes into parent-journey screen for the folder list
+      (iter247 will inline the folder too)
+- Step 4 "Explore Options" panel:
+    * `journey-step-4-cta-biff` → `setHubSection("biff")` +
+      enter parent-journey screen (BIFF Coach is still a
+      heavy UI; a future iter can modal-ise it)
+    * `journey-step-4-cta-mediation` → mediation-prep script
+- Step 5 "Create My Plan" panel:
+    * `journey-step-5-cta-foundation` → opens Foundation
+      Statement textarea (scrolls to `#foundation-statement-section`
+      anchor added in AlignmentHub)
+    * `journey-step-5-cta-download-complete` →
+      `downloadCompleteReportPdf`
+    * `journey-step-5-cta-share-complete` → `onShareCompleteReport`
+      (email to mediator)
+    * Snapshot count hint when the parent has existing snapshots
+- Fix: shell's `expanded` state now initialises to `null` and
+  falls through to `pickCurrentStep` dynamically, so the
+  shell auto-expands the correct step even when `courtKey` /
+  `safetyAck` hydrate from localStorage AFTER mount.
+
+**🟢 Phase C — Court Fast-Forward**
+- `verifyProfessionalKey` success handler routes to the
+  Journey shell (`setScreen("journey")`) instead of dumping
+  the parent in the legacy parent-journey screen's artefact
+  grid.
+- `pickCurrentStep` updated: a verified court key auto-
+  elevates to Step 3 as the "You're here" step. The court
+  banner renders with Case ID + mediator name inside Step 3's
+  panel, so a referred parent sees: "Court access verified:
+  Case SA-DEMO01 · [Mediator]. Your assessment feeds the
+  mediator's joint report."
+- End-to-end verified: localStorage `court_key=SA-DEMO01` →
+  shell lands on Step 3 "You're here" → banner renders → 4
+  assessment CTAs visible inline (Co-Parenting, Educational,
+  Medical, Psychological) with Alignment Records as a
+  secondary.
+
+**🟢 Phase D — Legacy Deleted**
+- `?view=advanced` kill-switch removed. `advancedView` state
+  deleted from `SacoparentsPortal.jsx`.
+- `DoorsGateway` import removed; the `screen === "gateway"`
+  render block removed in its entirety. (The component file
+  stays on disk unimported — Webpack tree-shakes it out of
+  the production bundle; a hypothetical future true-delete
+  would just `rm` the file.)
+- "Advanced view (legacy)" link + `journey-advanced-view-link`
+  testid removed from JourneyShell.jsx.
+- `openDoorGateway` simplified to `setScreen("journey")` with
+  no advanced branch.
+- Bottom-nav "Journey" button's active state no longer checks
+  for `screen === "gateway"` (which can't happen).
+- `showBackBtn` simplified to `screen !== "journey"`.
+- Verified: `/?view=advanced` now renders the shell exactly
+  like `/`. The old gateway and DoorsGateway cannot be
+  reached from the UI at all.
+
+**Clinical lockstep invariant preserved**
+- Zero touch to SafetyScreen, AI service, PDF builders,
+  Grey-rock chip component, or any clinical copy.
+- Every tile CTA invokes the SAME handler the old
+  AlignmentHub tile called (`openGuidedJourney`,
+  `openAssessmentFolder`, etc.) — behaviour identical, just
+  shelved under the right step.
+- SAST/CORS warnings still ignored per founder standing rule.
+
+**Verified at 390×844 mobile**
+- Phase B: Step 2 panel renders safety + progress + preview
+  CTAs; Step 3 renders coparenting + 3-col topics + records;
+  Step 5 renders foundation + download + share.
+- Phase C: `court_key=SA-DEMO01` → shell auto-expands Step 3
+  + banner reads "Court access verified: Case SA-DEMO01…" +
+  4 assessment CTAs inline.
+- Phase D: `/?view=advanced` returns the shell (not the
+  old gateway); `door-parent-journey` testid gone from DOM.
+- No horizontal overflow at any step.
+- Audit log: 2 live events (`on` + `off`) retrieved via
+  authenticated GET.
+
+**Next phases (updated)**
+- Phase E (DevOps): Split prod to `sacoparentsapp.online` +
+  `sacoparentsalign.online`.
+- iter248: inline the BIFF Coach INTO Step 4 panel (currently
+  still routes to the heavy parent-journey screen for the
+  modal). Same for Alignment Records in Step 3.
+- iter249: render the grey-rock audit timeline on the Mediator
+  Progress PDF (`cp_progress_pdf.py`) so the clinical artifact
+  the audit log was built for actually surfaces.
+
+
 ### 2026-02-27 — Iter244 · Phase A: Five-Step JourneyShell + /align scaffold
 
 Strategic turn: the app has grown feature-rich at the cost of

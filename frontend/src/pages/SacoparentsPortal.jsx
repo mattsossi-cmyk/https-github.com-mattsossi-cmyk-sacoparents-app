@@ -40,7 +40,6 @@ import {
 import { AlignmentHub } from "./portal/AlignmentHub";
 import { BiffTab } from "./portal/BiffTab";
 import { CourtKeyScreen } from "./portal/CourtKeyScreen";
-import { DoorsGateway } from "./portal/DoorsGateway";
 import { GuidedJourneyModal } from "./portal/GuidedJourneyModal";
 import { JourneyShell } from "./portal/JourneyShell";
 import {
@@ -73,18 +72,14 @@ import { ShareLegalModal } from "./portal/ShareLegalModal";
 export default function SacoparentsPortal() {
   const { user } = useAuth();
 
-  // iter244 — URL ?view=advanced returns the OLD gateway + hub-section
-  // view as a kill-switch while JourneyShell is settling. Phase D
-  // (iter247) will delete this escape hatch along with the legacy
-  // DoorsGateway code path.
-  const advancedView =
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("view") === "advanced";
-
-  // Screen state: 'journey' | 'gateway' | 'court-key' | 'parent-journey'.
-  // Default is now the 5-step JourneyShell (NORTH_STAR.md Phase A).
-  // ?view=advanced flips the default back to the legacy gateway.
-  const [screen, setScreen] = useState(advancedView ? "gateway" : "journey");
+  // iter247 Phase D — the legacy DoorsGateway and ?view=advanced
+  // kill-switch have been retired. Parent-facing surface is now
+  // exclusively the five-step JourneyShell. See NORTH_STAR.md.
+  // Screen state: 'journey' | 'court-key' | 'parent-journey'.
+  // 'parent-journey' is kept only for Step 3+5 deep links that
+  // still render the AlignmentHub inline until Phase B absorbs
+  // each hub section into its matching step panel.
+  const [screen, setScreen] = useState("journey");
   const [hubSection, setHubSection] = useState("alignment"); // 'alignment' | 'biff'
 
   // Persistent data
@@ -539,10 +534,7 @@ export default function SacoparentsPortal() {
 
   // Navigation with safety-gate: first-time visitors must complete
   // the quick safety check before entering EITHER door.
-  const openDoorGateway = useCallback(
-    () => setScreen(advancedView ? "gateway" : "journey"),
-    [advancedView]
-  );
+  const openDoorGateway = useCallback(() => setScreen("journey"), []);
 
   const requestDoorEntry = useCallback(
     (door) => {
@@ -605,6 +597,16 @@ export default function SacoparentsPortal() {
     writeJson(SAFETY_ACK_KEY, ack);
     setSafetyAck(ack);
     setSafetyOpen(false);
+    // iter245 — grey-rock audit. Fire-and-forget so a network blip
+    // never blocks the Safety-First routing. The server stores
+    // `datetime.now(timezone.utc)`, so client clock drift doesn't
+    // compromise the clinical timeline.
+    api
+      .post("/portal/grey-rock/audit", {
+        event: "on",
+        source: "safety_screen",
+      })
+      .catch(() => {});
     const pending = pendingDoorRef.current;
     pendingDoorRef.current = null;
     if (pending === "parent") setScreen("parent-journey");
@@ -631,6 +633,15 @@ export default function SacoparentsPortal() {
     };
     writeJson(SAFETY_ACK_KEY, ack);
     setSafetyAck(ack);
+    // iter245 — grey-rock audit (off). Fire-and-forget. Pairs with
+    // the "on" write in onSafetyContinueFlagged so cp_progress_pdf.py
+    // can render a complete safety-mode timeline.
+    api
+      .post("/portal/grey-rock/audit", {
+        event: "off",
+        source: "toggle_chip",
+      })
+      .catch(() => {});
   }, []);
 
   const onSaveSafetyPlan = useCallback(
@@ -697,7 +708,11 @@ export default function SacoparentsPortal() {
       setCourtKey(caseId);
       setVerifiedMediator(mediator);
       writeString(COURT_KEY_KEY, caseId);
-      setScreen("parent-journey");
+      // iter246 Phase C — a verified court key means the parent was
+      // referred by a professional and we know their next step is in
+      // Step 3 (Focus on My Child). Route back to the Journey shell
+      // which auto-expands Step 3 when `courtKey` is set.
+      setScreen("journey");
     } catch {
       setCourtKeyError(
         "Network issue while verifying. Please check your connection and try again."
@@ -1033,7 +1048,7 @@ export default function SacoparentsPortal() {
         // Route back to the journey shell + trip the court door via
         // the container's existing helper.
         setHubSection("alignment");
-        setScreen(advancedView ? "gateway" : "journey");
+        setScreen("journey");
         enterCourtPath();
         return;
       }
@@ -1061,7 +1076,7 @@ export default function SacoparentsPortal() {
       setHubSection("alignment");
       openGuidedJourney(key);
     },
-    [enterCourtPath, advancedView]
+    [enterCourtPath]
   );
 
   // Guided-journey chat wizard (iter220). Opens the modal for a
@@ -1552,7 +1567,7 @@ export default function SacoparentsPortal() {
     [createShareLink, healthIndex, foundationText, legalReport, courtKey]
   );
 
-  const showBackBtn = screen !== "gateway" && screen !== "journey";
+  const showBackBtn = screen !== "journey";
 
   return (
     <div
@@ -1637,59 +1652,45 @@ export default function SacoparentsPortal() {
             }
             firstEngagementAt={readJson(FIRST_ENGAGEMENT_KEY, null)}
             snapshotCount={snapshotHistory.length}
+            courtKey={courtKey}
+            verifiedMediator={verifiedMediator}
             onEnterParent={enterParentJourney}
             onEnterCourt={enterCourtPath}
             onOpenSafety={() => {
               pendingDoorRef.current = "parent";
               setSafetyOpen(true);
             }}
-            onEnterStep2={() => {
+            onClearGreyRock={onClearGreyRock}
+            onOpenSafetyRetake={onOpenSafetyRetake}
+            onOpenGuidedJourney={(topic) => {
               setHubSection("alignment");
+              openGuidedJourney(topic);
+            }}
+            onOpenAssessmentFolder={(category) => {
+              openAssessmentFolder(category);
+              // Also route into parent-journey screen so the records
+              // folder renders. Phase D will inline this.
               enterParentJourney();
             }}
-            onEnterStep3={() => {
-              setHubSection("alignment");
-              enterParentJourney();
-            }}
-            onEnterStep4={() => {
+            onOpenBiffCoach={() => {
               setHubSection("biff");
               enterParentJourney();
             }}
-            onEnterStep5={() => {
+            onOpenFoundationStatement={() => {
               setHubSection("alignment");
               enterParentJourney();
+              // Scroll to the Foundation Statement textarea once the
+              // parent-journey screen is mounted.
+              setTimeout(() => {
+                const el = document.getElementById("foundation-statement-section");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }, 300);
             }}
+            onDownloadCompleteReport={downloadCompleteReportPdf}
+            onShareCompleteReport={onShareCompleteReport}
             onOpenIntroGuide={() => setIntroOpen(true)}
             safetyFlagged={safetyFlagged}
           />
-        )}
-
-        {screen === "gateway" && (
-          <>
-            {/* iter242 — Safety-First button MOVED out of the Gateway.
-                It now lives at the top of each path (parent-journey
-                + court-key) so the parent sees it after they've
-                committed to a direction, not before. Keeps the
-                Gateway focused on the single decision: Individual
-                Journey vs Court-Ordered. */}
-
-            <button
-              type="button"
-              data-testid="gateway-open-intro-guide"
-              onClick={() => setIntroOpen(true)}
-              className="w-full mb-3 py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs"
-            >
-              <i className="fa-solid fa-comment-dots mr-1.5"></i>
-              Talk to the SA CoParents Guide
-            </button>
-            <DoorsGateway
-              onEnterParent={enterParentJourney}
-              onEnterCourt={enterCourtPath}
-              user={user}
-              syncStatus={syncStatus}
-              kudosStreak={kudosStreak}
-            />
-          </>
         )}
 
         {screen === "court-key" && (
@@ -1917,7 +1918,7 @@ export default function SacoparentsPortal() {
           data-testid="nav-doors"
           onClick={openDoorGateway}
           className={
-            screen === "journey" || screen === "gateway"
+            screen === "journey"
               ? "flex flex-col items-center space-y-0.5 bottom-nav-active"
               : "flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
           }
