@@ -872,3 +872,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-06 — Family-violence screening import surfaced
 - backend/safety_import.py: extract_safety_screening(payload) finds a safety/FV assessment in the sacoparentsapp.online export (by title/question keywords, or structured family_violence_assessment/safety_screening if ever added) → {source,title,completed_at,items[{question,answer,concern}],item_count,concern_count}. Stored at joint_reports.responses.{role}.safety_screening (+safety_route when concerns) on /joint/reports/{rid}/import.
 - legal_lens: readiness fv_a/fv_b done when screening imported → fv_*_received prefilled "Received"; _lens_view exposes safety_screening{a,b}. PDF §2 prints only a neutral receipt line (source, date, counts, "not findings") — never answer text. Editor §2 ImportedScreening.jsx shows the professional the items (collapsed) with concern highlighting. Tests: tests/test_iter86_safety_import.py.
+
+
+## 2026-06 Code review (read-only, safety-import scope) — findings only, no fixes applied
+- MEDIUM: `safety_import.py:47` / `ImportedScreening.jsx:8` assume `completed_at` is a string; non-string value from bridge would 500 PDF export and crash Section 2 UI. Fix: coerce to str at extraction + guard in UI.
+- LOW: `ImportedScreening.jsx:12` `scr.items` without fallback; `build_demo_instagram.py` lacks mkdir/asset checks/nonzero exit; ruff lint nits.
+- Open question: when one parent imports a screening on a non-safety case, other parent flips from "Not Applicable" to "Not Received" (`legal_lens.py:79-83`). Section 2 PDF uses stored snapshot vs Section 1 live readiness — can disagree.
+- Verified OK: privacy gating, non-adjudicative wording, idempotent import, tz-aware datetimes, no ObjectId leaks.
