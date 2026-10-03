@@ -63,13 +63,17 @@ the five steps** and whichever one the system puts them on.
   5-step scaffold. New default view at `/`.
   Scaffolded `/align`.
 
-- **Phase B** ✅ **DONE (iter245)**: Merged the toolkit tile grid
-  INTO the steps. Each existing surface (BIFF Coach,
-  Alignment Records, Foundation Statement, Assessment Guide,
-  Snapshot Library) now has a home inside its step panel.
-  Testids preserved. Shell's `expanded` state now falls
-  through to `pickCurrentStep` dynamically so late-hydrating
-  signals (courtKey, safetyAck) correctly auto-expand.
+- **Phase B** ✅ **DONE (iter245 + iter248)**: Merged the
+  toolkit tile grid INTO the step panels (iter245). iter248
+  tail: absorbed BIFF Coach, Alignment Records, and Foundation
+  Statement into three modal drawers (`BiffCoachDrawer`,
+  `RecordsDrawer`, `FoundationDrawer` in
+  `/app/frontend/src/pages/portal/JourneyDrawers.jsx`).
+  Deleted the `screen === "parent-journey"` code path and the
+  `hubSection` state entirely. BIFF Grey-Rock Mirror shipped
+  as part of the same iter: the toggle chip renders inside the
+  BIFF Coach drawer so a parent revising a message doesn't
+  have to navigate back to Step 2.
 
 - **Phase C** ✅ **DONE (iter246)**: Court-Ordered path is a
   Step 1 variant that fast-forwards. `verifyProfessionalKey`

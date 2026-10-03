@@ -37,11 +37,14 @@ import {
   writeJson,
   writeString,
 } from "./portal/portalStorage";
-import { AlignmentHub } from "./portal/AlignmentHub";
-import { BiffTab } from "./portal/BiffTab";
 import { CourtKeyScreen } from "./portal/CourtKeyScreen";
 import { GuidedJourneyModal } from "./portal/GuidedJourneyModal";
 import { JourneyShell } from "./portal/JourneyShell";
+import {
+  BiffCoachDrawer,
+  FoundationDrawer,
+  RecordsDrawer,
+} from "./portal/JourneyDrawers";
 import {
   IntroChatBot,
   hasIntroBeenSeen,
@@ -72,15 +75,17 @@ import { ShareLegalModal } from "./portal/ShareLegalModal";
 export default function SacoparentsPortal() {
   const { user } = useAuth();
 
-  // iter247 Phase D — the legacy DoorsGateway and ?view=advanced
-  // kill-switch have been retired. Parent-facing surface is now
-  // exclusively the five-step JourneyShell. See NORTH_STAR.md.
-  // Screen state: 'journey' | 'court-key' | 'parent-journey'.
-  // 'parent-journey' is kept only for Step 3+5 deep links that
-  // still render the AlignmentHub inline until Phase B absorbs
-  // each hub section into its matching step panel.
+  // iter248 — the parent-journey screen (and its hub-tabs toggle)
+  // has been deleted. The parent-facing surface is now exclusively
+  // the five-step JourneyShell + three modal drawers (BIFF,
+  // Records, Foundation). Screen state: 'journey' | 'court-key'.
+  // See NORTH_STAR.md.
   const [screen, setScreen] = useState("journey");
-  const [hubSection, setHubSection] = useState("alignment"); // 'alignment' | 'biff'
+
+  // Modal drawer state (iter248).
+  const [biffDrawerOpen, setBiffDrawerOpen] = useState(false);
+  const [recordsDrawerOpen, setRecordsDrawerOpen] = useState(false);
+  const [foundationDrawerOpen, setFoundationDrawerOpen] = useState(false);
 
   // Persistent data
   const [alignRecords, setAlignRecords] = useState([]);
@@ -543,7 +548,7 @@ export default function SacoparentsPortal() {
         setSafetyOpen(true);
         return;
       }
-      if (door === "parent") setScreen("parent-journey");
+      if (door === "parent") setScreen("journey");
       else setScreen("court-key");
     },
     [safetyAck]
@@ -584,7 +589,7 @@ export default function SacoparentsPortal() {
     setSafetyOpen(false);
     const pending = pendingDoorRef.current;
     pendingDoorRef.current = null;
-    if (pending === "parent") setScreen("parent-journey");
+    if (pending === "parent") setScreen("journey");
     else if (pending === "court") setScreen("court-key");
   }, []);
 
@@ -609,7 +614,7 @@ export default function SacoparentsPortal() {
       .catch(() => {});
     const pending = pendingDoorRef.current;
     pendingDoorRef.current = null;
-    if (pending === "parent") setScreen("parent-journey");
+    if (pending === "parent") setScreen("journey");
     else if (pending === "court") setScreen("court-key");
   }, []);
 
@@ -1047,7 +1052,6 @@ export default function SacoparentsPortal() {
       if (key === "court") {
         // Route back to the journey shell + trip the court door via
         // the container's existing helper.
-        setHubSection("alignment");
         setScreen("journey");
         enterCourtPath();
         return;
@@ -1059,21 +1063,14 @@ export default function SacoparentsPortal() {
         return;
       }
       if (key === "communication") {
-        // Communication maps to the BIFF Coach tab in the toolkit.
-        setHubSection("biff");
-        setTimeout(() => {
-          const el = document.getElementById("biff-tab-section");
-          if (el && typeof el.scrollIntoView === "function") {
-            el.scrollIntoView({ behavior: "smooth", block: "start" });
-          }
-        }, 60);
+        // iter248 — Communication maps to the BIFF Coach drawer.
+        setBiffDrawerOpen(true);
         return;
       }
       // The remaining four (coparenting, educational, medical,
       // psychological) all fire the Guided Journey wizard for that
       // topic. openGuidedJourney also marks first-engagement so the
       // iter231 follow-up nudge stops.
-      setHubSection("alignment");
       openGuidedJourney(key);
     },
     [enterCourtPath]
@@ -1662,30 +1659,15 @@ export default function SacoparentsPortal() {
             }}
             onClearGreyRock={onClearGreyRock}
             onOpenSafetyRetake={onOpenSafetyRetake}
-            onOpenGuidedJourney={(topic) => {
-              setHubSection("alignment");
-              openGuidedJourney(topic);
-            }}
+            onOpenGuidedJourney={(topic) => openGuidedJourney(topic)}
             onOpenAssessmentFolder={(category) => {
-              openAssessmentFolder(category);
-              // Also route into parent-journey screen so the records
-              // folder renders. Phase D will inline this.
-              enterParentJourney();
+              setFolderFilter(category);
+              setRecordsDrawerOpen(true);
             }}
-            onOpenBiffCoach={() => {
-              setHubSection("biff");
-              enterParentJourney();
-            }}
-            onOpenFoundationStatement={() => {
-              setHubSection("alignment");
-              enterParentJourney();
-              // Scroll to the Foundation Statement textarea once the
-              // parent-journey screen is mounted.
-              setTimeout(() => {
-                const el = document.getElementById("foundation-statement-section");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }, 300);
-            }}
+            onOpenBiffCoach={() => setBiffDrawerOpen(true)}
+            onOpenFoundationStatement={() =>
+              setFoundationDrawerOpen(true)
+            }
             onDownloadCompleteReport={downloadCompleteReportPdf}
             onShareCompleteReport={onShareCompleteReport}
             onOpenIntroGuide={() => setIntroOpen(true)}
@@ -1737,173 +1719,6 @@ export default function SacoparentsPortal() {
           </>
         )}
 
-        {screen === "parent-journey" && (
-          <div className="space-y-4" data-testid="screen-parent-journey">
-            {/* iter242 — Safety-First at the top of the Individual
-                Journey. First thing a parent sees after they commit
-                to a path, before the court-verified banner, before
-                the tabs, before any toolkit. Always visible (even
-                in grey-rock mode) so a one-tap re-check is always
-                in reach. Reuses the same SafetyScreen modal +
-                grey-rock routing. */}
-            <button
-              type="button"
-              data-testid="parent-safety-first-btn"
-              onClick={() => {
-                pendingDoorRef.current = "parent";
-                setSafetyOpen(true);
-              }}
-              className="w-full p-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-left shadow-md border border-rose-800/30 flex items-start gap-3"
-            >
-              <div className="shrink-0 w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">
-                <i className="fa-solid fa-shield-heart text-white text-base"></i>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold leading-snug">
-                  Safety First
-                </div>
-                <div className="text-[10px] text-rose-100/90 leading-snug mt-0.5">
-                  {safetyFlagged
-                    ? "Re-run the private safety check — crisis hotlines and the grey-rock path are still one tap away."
-                    : "Short, private safety check — crisis hotlines and a grey-rock path if family-violence or IPV concerns are present."}
-                </div>
-              </div>
-              <i className="fa-solid fa-arrow-right text-white/80 text-xs mt-2.5"></i>
-            </button>
-            {/* Court verified banner */}
-            {courtKey && (
-              <div
-                className="bg-purple-950 text-white p-3 rounded-2xl flex justify-between items-center text-xs border border-purple-800 shadow"
-                data-testid="court-verified-banner"
-              >
-                <div>
-                  <span className="text-[9px] bg-emerald-500 text-white font-bold px-2 py-0.5 rounded-full">
-                    ACTIVE COURT KEY
-                  </span>
-                  <div className="font-bold mt-0.5" data-testid="verified-case-id">
-                    Verified Case: {courtKey}
-                  </div>
-                  <div className="text-[10px] text-purple-200">
-                    Mediator:{" "}
-                    {verifiedMediator ||
-                      "Matt Sossi, Licensed Mediator (San Antonio, TX)"}
-                  </div>
-                </div>
-                <i className="fa-solid fa-shield-halved text-purple-300 text-xl"></i>
-              </div>
-            )}
-
-            {/* Safety re-take chip (persistent) */}
-            <div className="flex justify-center">
-              <SafetyRetakeChip
-                onOpen={onOpenSafetyRetake}
-                flagged={safetyFlagged}
-              />
-            </div>
-
-            {/* Hub Tabs */}
-            <div className="grid grid-cols-2 gap-2 text-xs font-bold no-print">
-              <button
-                data-testid="hub-tab-alignment"
-                onClick={() => setHubSection("alignment")}
-                className={
-                  hubSection === "alignment"
-                    ? "p-3 bg-purple-900 text-white rounded-xl shadow-sm text-center border border-purple-800"
-                    : "p-3 bg-white text-slate-700 rounded-xl shadow-sm border border-slate-200 text-center"
-                }
-              >
-                <i className="fa-solid fa-scale-balanced block text-base mb-1"></i>{" "}
-                {courtKey ? "I. Legal Report & Alignment" : "I. Alignment & Tools"}
-              </button>
-              <button
-                data-testid="hub-tab-biff"
-                onClick={() => setHubSection("biff")}
-                className={
-                  hubSection === "biff"
-                    ? "p-3 bg-purple-900 text-white rounded-xl shadow-sm text-center border border-purple-800"
-                    : "p-3 bg-white text-slate-700 rounded-xl shadow-sm border border-slate-200 text-center"
-                }
-              >
-                <i className="fa-solid fa-comments text-amber-500 block text-base mb-1"></i>{" "}
-                II. BIFF & Success History
-              </button>
-            </div>
-
-            {hubSection === "alignment" && (
-              <>
-                {safetyFlagged && <SafetySoftBanner context="alignment" />}
-                <AlignmentHub
-                  healthIndex={healthIndex}
-                  setHealthScore={setHealthScore}
-                  healthAvg={healthAvg}
-                  healthLabel={healthLabel}
-                  trendSeries={trendSeries}
-                  onLogReassessment={() => setReassessOpen(true)}
-                  legalReport={legalReport}
-                  setLegalReport={setLegalReport}
-                  saveLegalReport={saveLegalReport}
-                  downloadLegalPdf={downloadLegalPdf}
-                  onShareLegal={onOpenShareLegal}
-                  shareStatus={shareStatus}
-                  alignmentCounts={alignmentCounts}
-                  folderFilter={folderFilter}
-                  setFolderFilter={setFolderFilter}
-                  filteredRecords={filteredRecords}
-                  onAddAlignment={() => setAlignmentOpen(true)}
-                  foundationText={foundationText}
-                  setFoundationText={setFoundationText}
-                  saveFoundationText={saveFoundationText}
-                  downloadFoundationPdf={downloadFoundationPdf}
-                  onShareFoundation={onShareFoundation}
-                  hideCourtOnly={!courtKey}
-                  openAssessmentFolder={openAssessmentFolder}
-                  downloadCompleteReportPdf={downloadCompleteReportPdf}
-                  onShareCompleteReport={onShareCompleteReport}
-                  safetyFlagged={safetyFlagged}
-                  onEmailFoundationToCoparent={onEmailFoundationToCoparent}
-                  openGuidedJourney={openGuidedJourney}
-                  snapshotHistory={snapshotHistory}
-                  onSnapshotRedownload={downloadGuidedSnapshot}
-                  onSnapshotDelete={onDeleteSnapshot}
-                  onSnapshotRename={onRenameSnapshot}
-                  onSnapshotPin={onPinSnapshot}
-                  onStartAssessment={onStartAssessment}
-                  onClearGreyRock={onClearGreyRock}
-                  onOpenSafetyRetake={onOpenSafetyRetake}
-                />
-              </>
-            )}
-
-            {hubSection === "biff" && (
-              <div id="biff-tab-section">
-                {safetyFlagged && <SafetySoftBanner context="biff" />}
-                <BiffTab
-                  rawInput={rawInput}
-                  onRawInputChange={handleRawInputChange}
-                  applyPreset={applyPreset}
-                  riskLabel={riskLabel}
-                  flagList={flagList}
-                  biffOutput={biffOutput}
-                  biffLoading={biffLoading}
-                  biffError={biffError}
-                  copyBiffOutput={copyBiffOutput}
-                  copyToneSafe={copyToneSafe}
-                  logCommunication={logCommunication}
-                  biffLogs={biffLogs}
-                  milestones={milestones}
-                  successCount={successCount}
-                  frictionCount={frictionCount}
-                  addMilestoneLog={addMilestoneLog}
-                  advocateReviewCount={advocateReviewCount}
-                  downloadWeeklyProgressPdf={downloadWeeklyProgressPdf}
-                  onShareWeekly={onShareWeekly}
-                  shareStatus={shareStatus}
-                  safetyFlagged={safetyFlagged}
-                />
-              </div>
-            )}
-          </div>
-        )}
       </main>
 
       {/* Safety crisis strip — pinned above bottom nav */}
@@ -1929,11 +1744,14 @@ export default function SacoparentsPortal() {
         <button
           data-testid="nav-report"
           onClick={() => {
-            setHubSection("alignment");
-            enterParentJourney();
+            // iter248 — "Report" at the bottom nav opens the Foundation
+            // Statement drawer (Step 5). The parent's primary report
+            // artefact is the Foundation Statement PDF; nothing else
+            // in the five-step journey calls itself a "report."
+            setFoundationDrawerOpen(true);
           }}
           className={
-            screen === "parent-journey" && hubSection === "alignment"
+            foundationDrawerOpen
               ? "flex flex-col items-center space-y-0.5 bottom-nav-active"
               : "flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
           }
@@ -1944,11 +1762,12 @@ export default function SacoparentsPortal() {
         <button
           data-testid="nav-biff"
           onClick={() => {
-            setHubSection("biff");
-            enterParentJourney();
+            // iter248 — "BIFF Tool" at the bottom nav opens the BIFF
+            // Coach drawer directly (Step 4). No more hub-tab switch.
+            setBiffDrawerOpen(true);
           }}
           className={
-            screen === "parent-journey" && hubSection === "biff"
+            biffDrawerOpen
               ? "flex flex-col items-center space-y-0.5 bottom-nav-active"
               : "flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
           }
@@ -2000,6 +1819,60 @@ export default function SacoparentsPortal() {
         onMint={onMintShareComplete}
         loading={shareStatus.complete === "loading"}
         lastUrl={shareCompleteLastUrl}
+      />
+
+      {/* iter248 — three modal drawers replace the old parent-journey
+          screen's hub-tabs toggle. BIFF Coach / Alignment Records /
+          Foundation Statement are invoked directly from the Step
+          panels and bottom-nav. The grey-rock toggle is mirrored
+          inside the BIFF drawer. */}
+      <BiffCoachDrawer
+        open={biffDrawerOpen}
+        onClose={() => setBiffDrawerOpen(false)}
+        safetyFlagged={safetyFlagged}
+        onClearGreyRock={onClearGreyRock}
+        onOpenSafetyRetake={onOpenSafetyRetake}
+        rawInput={rawInput}
+        onRawInputChange={handleRawInputChange}
+        applyPreset={applyPreset}
+        riskLabel={riskLabel}
+        flagList={flagList}
+        biffOutput={biffOutput}
+        biffLoading={biffLoading}
+        biffError={biffError}
+        copyBiffOutput={copyBiffOutput}
+        copyToneSafe={copyToneSafe}
+        logCommunication={logCommunication}
+        biffLogs={biffLogs}
+        milestones={milestones}
+        successCount={successCount}
+        frictionCount={frictionCount}
+        addMilestoneLog={addMilestoneLog}
+        advocateReviewCount={advocateReviewCount}
+        downloadWeeklyProgressPdf={downloadWeeklyProgressPdf}
+        onShareWeekly={onShareWeekly}
+        shareStatus={shareStatus}
+      />
+      <RecordsDrawer
+        open={recordsDrawerOpen}
+        onClose={() => setRecordsDrawerOpen(false)}
+        alignmentCounts={alignmentCounts}
+        folderFilter={folderFilter}
+        setFolderFilter={setFolderFilter}
+        filteredRecords={filteredRecords}
+        onAddAlignment={() => setAlignmentOpen(true)}
+      />
+      <FoundationDrawer
+        open={foundationDrawerOpen}
+        onClose={() => setFoundationDrawerOpen(false)}
+        foundationText={foundationText}
+        setFoundationText={setFoundationText}
+        saveFoundationText={saveFoundationText}
+        downloadFoundationPdf={downloadFoundationPdf}
+        onShareFoundation={onShareFoundation}
+        shareStatus={shareStatus}
+        safetyFlagged={safetyFlagged}
+        onEmailFoundationToCoparent={onEmailFoundationToCoparent}
       />
 
       {/* Guided-journey chat wizard (iter220) — one modal, six topics. */}

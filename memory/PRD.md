@@ -45,6 +45,116 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter248 · Phase B Tail Inlined + BIFF Grey-Rock Mirror
+
+Final architectural cleanup. The `screen === "parent-journey"`
+code path — along with its hub-tabs toggle (`alignment` /
+`biff`), the inline SafetyRetakeChip, the AlignmentHub tile
+grid, and the BiffTab wrapper — has been deleted. The parent-
+facing surface is now exclusively the five-step JourneyShell +
+three modal drawers.
+
+**🟢 P1 — JourneyDrawers module (new)**
+- `/app/frontend/src/pages/portal/JourneyDrawers.jsx` exports
+  three bottom-sheet drawer wrappers that share a `DrawerShell`
+  (body-scroll lock + ESC-to-close + rounded-top mobile sheet):
+    * **BiffCoachDrawer** (`biff-coach-drawer` testid) wraps the
+      existing `<BiffTab>` verbatim. Zero changes to BiffTab or
+      its handlers.
+    * **RecordsDrawer** (`records-drawer`) renders the Alignment
+      Records section (folders filter + records grid + empty
+      state) — JSX lifted from AlignmentHub, props threaded
+      through unchanged (`folderFilter`, `setFolderFilter`,
+      `alignmentCounts`, `filteredRecords`, `onAddAlignment`).
+      Testids preserved verbatim (`assessment-records-section`,
+      `folder-medical/educational/psychological`,
+      `count-*`, `clear-folder-filter`, `add-alignment-btn`,
+      `assessment-empty-*`).
+    * **FoundationDrawer** (`foundation-drawer`) renders the
+      Foundation Statement textarea + Save / PDF / Share +
+      email-to-coparent guardrail. All existing testids
+      preserved (`foundation-text`, `save-foundation-btn`,
+      `export-foundation-pdf-btn`, `share-foundation-btn`,
+      `foundation-email-coparent-blocked`,
+      `email-foundation-coparent-btn`). iter219 safety guardrail
+      — Email to Co-parent is BLOCKED when `safetyFlagged` —
+      ships intact.
+
+**🟢 P1 — BIFF Grey-Rock Mirror (iter248 ask)**
+- `BiffCoachDrawer` renders the full `<GreyRockToggleChip>` at
+  the top of the drawer body (between the SafetySoftBanner and
+  the BIFF content) when `safetyFlagged === true`. A parent
+  revising a BIFF message no longer has to navigate back to
+  Step 2 to turn grey-rock off.
+- Reuses the SAME iter243 `GreyRockToggleChip` component,
+  `onClearGreyRock` + `onOpenSafetyRetake` handlers, and the
+  iter245 grey-rock audit backend log. One source of truth,
+  mirrored into a second surface.
+- End-to-end verified: toggle inside BIFF drawer → confirm → yes
+  → `safety_ack = {cleared:true, flagged:false}` persisted,
+  toast fires, BiffTab's internal "GREY-ROCK COACH ON" header
+  reverts to "De-Escalation Engine" immediately (same safety
+  flag used by both surfaces).
+
+**🟢 P1 — Delete parent-journey screen**
+- `screen === "parent-journey"` render block (166 lines)
+  removed from SacoparentsPortal.jsx. Lines 1724-1890 deleted.
+- `hubSection` / `setHubSection` state removed entirely —
+  dead after the hub-tabs died.
+- `setScreen("parent-journey")` call sites rerouted:
+    * Door entry (`requestDoorEntry`) now sets `setScreen("journey")`.
+    * `onSafetyCleared` + `onSafetyContinueFlagged` with
+      `pendingDoorRef = "parent"` now set `setScreen("journey")`.
+    * `verifyProfessionalKey` success already sets `journey`
+      (iter246 Phase C).
+- `onStartAssessment("communication")` now opens the BIFF
+  Drawer directly instead of switching hub-section + entering
+  parent-journey.
+- Dead imports removed (`AlignmentHub`, `BiffTab`).
+
+**🟢 P1 — Bottom-nav wired to drawers**
+- `nav-report` → opens FoundationDrawer. The parent's primary
+  "report" artefact is the Foundation Statement PDF; no other
+  nav choice calls itself a report.
+- `nav-biff` → opens BiffCoachDrawer directly.
+- Active-state styling driven by drawer open state, not by
+  `screen` + `hubSection` gymnastics.
+
+**Clinical lockstep invariant preserved**
+- Zero changes to SafetyScreen, AI service, PDF builders,
+  grey-rock chip component, iter219 email-coparent guardrail,
+  Safety-First auto-routing, or any clinical copy.
+- Every drawer invokes the EXACT handler the old parent-
+  journey screen called. The only change is where in the UI
+  the handler is invoked from.
+- AlignmentHub.jsx + the records-section JSX inside it
+  remain on disk unimported (webpack tree-shakes). A future
+  true-delete iter can `rm` the file once there's no
+  rollback risk; keeping it this iter is zero-cost.
+
+**Verified at 390×844 mobile**
+- BiffCoachDrawer opens from Step 4 CTA + bottom-nav. Grey-rock
+  mirror chip renders when flagged, two-step-confirms, clears
+  grey-rock, toast fires, BIFF content flips variant.
+- RecordsDrawer opens from Step 3 CTA. 3 folders render with
+  correct counts. Empty state renders when no records.
+- FoundationDrawer opens from Step 5 CTA + bottom-nav. Textarea
+  renders with current text. Save / PDF / Share buttons work.
+  Email-to-coparent BLOCKED when flagged, enabled otherwise.
+- `data-testid='screen-parent-journey'` NOT in DOM anywhere.
+- No horizontal overflow (only sonner `<ol>` internal element,
+  same as iter243 — not an app layout bug).
+
+**Next phases (updated)**
+- Phase E (DevOps): split prod to `sacoparentsapp.online` +
+  `sacoparentsalign.online`.
+- iter249: Render the grey-rock audit timeline on the
+  Mediator Progress PDF (`cp_progress_pdf.py`). The audit
+  backend built in iter245 was explicitly for this.
+- iter250: True-delete `/app/frontend/src/pages/portal/AlignmentHub.jsx`
+  + `DoorsGateway.jsx` once rollback risk window closes.
+
+
 ### 2026-02-27 — Iter245-247 · Phase B/C/D + Grey-Rock Audit Log
 
 Four deliverables landed in one session, in dependency order:
