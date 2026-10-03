@@ -100,8 +100,84 @@ const TINT_CLASSES = {
   },
 };
 
+/**
+ * ProgressDots — iter249. 5-dot strip at the top of the shell
+ * showing which steps the parent has "touched" so far. Dot
+ * fills are driven by completion signals, not by current-step
+ * cursor position — so a parent iterating back from Step 5 to
+ * Step 2 still sees their earlier progress preserved.
+ *
+ * Fill signals (one per step):
+ *   1. Start My Journey        pathPickedAt (any door chosen)
+ *   2. Understand My Situation safetyAck (any — flagged or cleared)
+ *   3. Focus on My Child       firstEngagementAt (any assessment opened)
+ *   4. Explore Options         biffUsedAt (any BIFF draft logged)
+ *   5. Create My Plan          hasSnapshots (any snapshot saved)
+ */
+function ProgressDots({
+  pathPickedAt,
+  safetyAck,
+  firstEngagementAt,
+  biffUsedAt,
+  hasSnapshots,
+}) {
+  const states = [
+    { n: 1, filled: !!pathPickedAt, label: "Started" },
+    { n: 2, filled: !!safetyAck, label: "Checked" },
+    { n: 3, filled: !!firstEngagementAt, label: "Assessed" },
+    { n: 4, filled: !!biffUsedAt, label: "Explored" },
+    { n: 5, filled: !!hasSnapshots, label: "Planned" },
+  ];
+  const filledCount = states.filter((s) => s.filled).length;
+
+  return (
+    <div
+      data-testid="journey-progress-dots"
+      className="bg-white rounded-xl border border-slate-200 px-3 py-2.5 flex items-center justify-between gap-2"
+    >
+      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+        {states.map((s, idx) => (
+          <React.Fragment key={s.n}>
+            <div
+              data-testid={`journey-progress-dot-${s.n}`}
+              data-filled={s.filled ? "true" : "false"}
+              className={
+                s.filled
+                  ? "w-6 h-6 rounded-full bg-purple-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0"
+                  : "w-6 h-6 rounded-full bg-slate-100 text-slate-400 text-[10px] font-bold flex items-center justify-center border border-slate-200 shrink-0"
+              }
+              title={`Step ${s.n} — ${s.label}`}
+            >
+              {s.filled ? (
+                <i className="fa-solid fa-check text-[9px]"></i>
+              ) : (
+                s.n
+              )}
+            </div>
+            {idx < states.length - 1 && (
+              <div
+                className={
+                  states[idx + 1].filled
+                    ? "h-0.5 flex-1 bg-purple-700/60 rounded"
+                    : "h-0.5 flex-1 bg-slate-200 rounded"
+                }
+              />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <span
+        data-testid="journey-progress-count"
+        className="shrink-0 text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-full"
+      >
+        {filledCount}/5
+      </span>
+    </div>
+  );
+}
+
 function pickCurrentStep({ safetyAck, pathPicked, firstEngagement, hasSnapshots, courtKey }) {
-  // The system picks the "current" step for the parent. Future
+  // The system picks the "current" step for the parent. Rules:
   // iters (Phase B+) will replace this with signal from the
   // assessment & plan progress. For now:
   //  - court key verified → Step 3 (iter246 Phase C: a referred
@@ -126,6 +202,10 @@ export function JourneyShell({
   pathPickedAt,
   firstEngagementAt,
   snapshotCount,
+  // iter249 — Step Progress Dots signals. biffUsedAt is derived
+  // from the parent's BIFF log history (first time they drafted a
+  // BIFF rewrite); it fills Dot 4 "Explore Options".
+  biffUsedAt = null,
   courtKey = null,
   verifiedMediator = null,
   // Step 1 door CTAs — same handlers the old Gateway used, so the
@@ -217,6 +297,17 @@ export function JourneyShell({
           Not sure where to start? Chat with the Guide
         </button>
       </section>
+
+      {/* iter249 — 5-dot progress strip. Driven by completion
+          signals, not current-step cursor, so a parent sees
+          their actual journey progress at a glance. */}
+      <ProgressDots
+        pathPickedAt={pathPickedAt}
+        safetyAck={safetyAck}
+        firstEngagementAt={firstEngagementAt}
+        biffUsedAt={biffUsedAt}
+        hasSnapshots={snapshotCount > 0}
+      />
 
       {/* Grey-rock soft indicator — if the parent is in grey-rock
           mode they already see the chip inside AlignmentHub when

@@ -9,6 +9,7 @@ import BiometricGate from "@/components/BiometricGate";
 import { PreShareConsentHost } from "@/components/PreShareConsentDialog";
 import PolicyRefreshBanner from "@/components/PolicyRefreshBanner";
 import BackToDashboardPill from "@/components/BackToDashboardPill";
+import DomainGuard from "@/components/DomainGuard";
 
 import Landing from "@/pages/Landing";
 import SacoparentsPortal from "@/pages/SacoparentsPortal";
@@ -156,8 +157,8 @@ function AppRoutes() {
       <BiometricGate>
         <PolicyRefreshBanner />
         <Routes>
-        <Route path="/" element={<SacoparentsPortal />} />
-        <Route path="/align" element={<Align />} />
+        <Route path="/" element={<DomainGuard side="parent"><SacoparentsPortal /></DomainGuard>} />
+        <Route path="/align" element={<DomainGuard side="align"><Align /></DomainGuard>} />
         <Route path="/legacy" element={<Landing />} />
         <Route path="/samples" element={<Samples />} />
         <Route path="/samples/joint-alignment-preview" element={<JointAlignmentSamplePreview />} />
@@ -573,9 +574,11 @@ function AppRoutes() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
+            <DomainGuard side="align">
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            </DomainGuard>
           }
         />
         <Route

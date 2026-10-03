@@ -45,6 +45,76 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter249 · DevOps Split (code-side) + Progress Dots
+
+Two deliverables shipped together: the architectural
+preparation for the two-domain production split, and the
+glanceable 5-dot progress strip at the top of the shell.
+
+**🟢 P1 — DomainGuard (code-side DNS split preparation)**
+- New `/app/frontend/src/components/DomainGuard.jsx`. Reads
+  `window.location.hostname` + env-configured production
+  hostnames; if the current host doesn't match the side a
+  route belongs to, renders a 2.5-second redirect card
+  (testid `domain-guard-redirect`) with a manual escape
+  button (`domain-guard-go-now`) and then auto-forwards
+  to the correct hostname with path + query preserved.
+- No-op by design when either `REACT_APP_PARENT_HOSTNAME` or
+  `REACT_APP_ALIGN_HOSTNAME` is missing (preview, localhost,
+  staging all pass through untouched). Verified on preview:
+  `domain_guard_shown=0 shell_shown=1`.
+- Env config in `/app/frontend/.env`:
+    * `REACT_APP_PARENT_HOSTNAME=sacoparentsapp.online`
+    * `REACT_APP_ALIGN_HOSTNAME=sacoparentsalign.online`
+    * `REACT_APP_PARENT_URL=https://sacoparentsapp.online`
+    * `REACT_APP_ALIGN_URL=https://sacoparentsalign.online`
+- Routes wrapped in `/app/frontend/src/App.js`:
+    * `/`     → `<DomainGuard side="parent">`
+    * `/align` → `<DomainGuard side="align">`
+    * `/admin` → `<DomainGuard side="align">`
+- `/app/memory/DEPLOYMENT.md` (new) — complete DNS / ingress /
+  TLS runbook the account owner can hand to DevOps. Covers:
+  Kubernetes ingress excerpt, A/CNAME records, cert-manager
+  config, verification curl commands, rollback.
+
+**🟢 P1 — Step Progress Dots**
+- `ProgressDots` component inside
+  `/app/frontend/src/pages/portal/JourneyShell.jsx`. Rendered
+  between the welcome card and the (optional) grey-rock
+  banner so a parent sees their progress strip BEFORE
+  scrolling the step cards.
+- 5 dots + connector segments + `filledCount/5` counter chip.
+  Fill signals (one per step, driven by actual completion,
+  not by the current-step cursor):
+    * Dot 1 "Started"  → `pathPickedAt` (any door chosen)
+    * Dot 2 "Checked"  → `safetyAck` (any — flagged or cleared)
+    * Dot 3 "Assessed" → `firstEngagementAt` (any assessment opened)
+    * Dot 4 "Explored" → `biffUsedAt` (parent authored at least one
+      BIFF rewrite beyond the demo seed; signal computed as
+      `biffLogs.length > 1` in SacoparentsPortal)
+    * Dot 5 "Planned"  → `snapshotCount > 0` (any snapshot saved)
+- Visual: filled dot = purple-700 bg + white checkmark;
+  empty dot = slate-100 bg + numbered 1-5 + slate border.
+  Connector between adjacent filled dots = purple-700/60;
+  else slate-200.
+- Testids: `journey-progress-dots`, `journey-progress-dot-{1..5}`
+  (plus `data-filled="true|false"` attribute),
+  `journey-progress-count`.
+
+**Verified at 390×844 mobile across three journey states**
+- Fresh parent: `filled=[0,0,0,0,0] counter=0/5` — all empty.
+- Partial: `filled=[1,1,1,0,0] counter=3/5` — dots 1-3 filled.
+- Advanced: `filled=[1,1,1,1,1] counter=5/5` — all 5 filled,
+  all connectors purple.
+- No horizontal overflow at either viewport.
+
+**Clinical lockstep invariant preserved**
+- DomainGuard renders only a redirect card — never touches
+  clinical screens or copy.
+- ProgressDots is a pure derivation from existing signals;
+  no new state, no new backend route, no PDF/AI touch.
+
+
 ### 2026-02-27 — Iter248 · Phase B Tail Inlined + BIFF Grey-Rock Mirror
 
 Final architectural cleanup. The `screen === "parent-journey"`
