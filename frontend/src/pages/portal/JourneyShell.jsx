@@ -36,30 +36,6 @@ const STEPS = [
     icon: "fa-compass",
     tint: "indigo",
   },
-  {
-    n: 3,
-    title: "Focus on My Child",
-    tagline: "What does your child actually need?",
-    body: "The full co-parenting assessment plus optional deep-dives for Educational, Medical, or Psychological needs. Choose what fits — skip what doesn't.",
-    icon: "fa-child-reaching",
-    tint: "emerald",
-  },
-  {
-    n: 4,
-    title: "Explore Options",
-    tagline: "Try something before you commit to it.",
-    body: "Rewrite a message the BIFF way, review conflict-resolution ideas, or walk through a mediation-prep script. Low-stakes, high-insight.",
-    icon: "fa-wand-magic-sparkles",
-    tint: "amber",
-  },
-  {
-    n: 5,
-    title: "Create My Plan",
-    tagline: "Build something you can share.",
-    body: "Draft your Foundation Statement, generate a fridge-size parenting card, request a Joint Report, or send a Progress Snapshot to your mediator.",
-    icon: "fa-clipboard-check",
-    tint: "rose",
-  },
 ];
 
 const TINT_CLASSES = {
@@ -100,112 +76,20 @@ const TINT_CLASSES = {
   },
 };
 
-/**
- * ProgressDots — iter249. 5-dot strip at the top of the shell
- * showing which steps the parent has "touched" so far. Dot
- * fills are driven by completion signals, not by current-step
- * cursor position — so a parent iterating back from Step 5 to
- * Step 2 still sees their earlier progress preserved.
- *
- * Fill signals (one per step):
- *   1. Start My Journey        pathPickedAt (any door chosen)
- *   2. Understand My Situation safetyAck (any — flagged or cleared)
- *   3. Focus on My Child       firstEngagementAt (any assessment opened)
- *   4. Explore Options         biffUsedAt (any BIFF draft logged)
- *   5. Create My Plan          hasSnapshots (any snapshot saved)
- */
-function ProgressDots({
-  pathPickedAt,
-  safetyAck,
-  firstEngagementAt,
-  biffUsedAt,
-  hasSnapshots,
-}) {
-  const states = [
-    { n: 1, filled: !!pathPickedAt, label: "Started" },
-    { n: 2, filled: !!safetyAck, label: "Checked" },
-    { n: 3, filled: !!firstEngagementAt, label: "Assessed" },
-    { n: 4, filled: !!biffUsedAt, label: "Explored" },
-    { n: 5, filled: !!hasSnapshots, label: "Planned" },
-  ];
-  const filledCount = states.filter((s) => s.filled).length;
-
-  return (
-    <div
-      data-testid="journey-progress-dots"
-      className="bg-white rounded-xl border border-slate-200 px-3 py-2.5 flex items-center justify-between gap-2"
-    >
-      <div className="flex items-center gap-1.5 flex-1 min-w-0">
-        {states.map((s, idx) => (
-          <React.Fragment key={s.n}>
-            <div
-              data-testid={`journey-progress-dot-${s.n}`}
-              data-filled={s.filled ? "true" : "false"}
-              className={
-                s.filled
-                  ? "w-6 h-6 rounded-full bg-purple-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0"
-                  : "w-6 h-6 rounded-full bg-slate-100 text-slate-400 text-[10px] font-bold flex items-center justify-center border border-slate-200 shrink-0"
-              }
-              title={`Step ${s.n} — ${s.label}`}
-            >
-              {s.filled ? (
-                <i className="fa-solid fa-check text-[9px]"></i>
-              ) : (
-                s.n
-              )}
-            </div>
-            {idx < states.length - 1 && (
-              <div
-                className={
-                  states[idx + 1].filled
-                    ? "h-0.5 flex-1 bg-purple-700/60 rounded"
-                    : "h-0.5 flex-1 bg-slate-200 rounded"
-                }
-              />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-      <span
-        data-testid="journey-progress-count"
-        className="shrink-0 text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-full"
-      >
-        {filledCount}/5
-      </span>
-    </div>
-  );
-}
-
-function pickCurrentStep({ safetyAck, pathPicked, firstEngagement, hasSnapshots, courtKey }) {
-  // The system picks the "current" step for the parent. Rules:
-  // iters (Phase B+) will replace this with signal from the
-  // assessment & plan progress. For now:
-  //  - court key verified → Step 3 (iter246 Phase C: a referred
-  //    parent walks in holding a professional artefact; the next
-  //    step for them is Focus on My Child, not Start)
-  //  - no path picked → Step 1
-  //  - path picked but no safety ack cleared/flagged → Step 2
-  //  - safety ack present but no engagement → Step 2
-  //  - engagement but no snapshots → Step 3
-  //  - snapshots exist → Step 4 (parent is iterating)
-  if (courtKey) return 3;
-  if (!pathPicked) return 1;
-  if (!safetyAck) return 2;
-  if (!firstEngagement) return 2;
-  if (!hasSnapshots) return 3;
-  return 4;
+function pickCurrentStep({ pathPicked }) {
+  // Simplified shell (iter251 — user asked to remove Steps 3, 4, 5).
+  // Only two steps remain, so the picker is trivially:
+  //   - no door chosen       → Step 1
+  //   - any door chosen      → Step 2
+  // BIFF, Foundation Statement, and the complete report are still
+  // reachable via the bottom-nav drawers (`nav-biff`, `nav-report`).
+  return pathPicked ? 2 : 1;
 }
 
 export function JourneyShell({
   user,
   safetyAck,
   pathPickedAt,
-  firstEngagementAt,
-  snapshotCount,
-  // iter249 — Step Progress Dots signals. biffUsedAt is derived
-  // from the parent's BIFF log history (first time they drafted a
-  // BIFF rewrite); it fills Dot 4 "Explore Options".
-  biffUsedAt = null,
   courtKey = null,
   verifiedMediator = null,
   // Step 1 door CTAs — same handlers the old Gateway used, so the
@@ -218,15 +102,8 @@ export function JourneyShell({
   onOpenSafetyRetake = () => {},
   // Step 2 — self-assessment preview URL (static HTML in /public).
   selfAssessmentUrl = "/coparenting-self-assessment-preview.html",
-  // Step 3 — assessment topic handlers (openGuidedJourney in parent).
+  // Step 2 — Co-parenting assessment / Guided Journey launcher.
   onOpenGuidedJourney = () => {},
-  onOpenAssessmentFolder = () => {},
-  // Step 4 — BIFF Coach + Mediation Prep + Communication reflections.
-  onOpenBiffCoach = () => {},
-  // Step 5 — Foundation Statement + Share-complete-report + Email coparent.
-  onOpenFoundationStatement = () => {},
-  onDownloadCompleteReport = () => {},
-  onShareCompleteReport = () => {},
   // Intro guide chip (soft, non-blocking).
   onOpenIntroGuide = () => {},
   // Grey-rock chip surface, if applicable.
@@ -234,15 +111,8 @@ export function JourneyShell({
 }) {
   const safetyFlag = safetyFlagged || !!(safetyAck && safetyAck.flagged);
   const current = useMemo(
-    () =>
-      pickCurrentStep({
-        safetyAck,
-        pathPicked: !!pathPickedAt,
-        firstEngagement: !!firstEngagementAt,
-        hasSnapshots: snapshotCount > 0,
-        courtKey: !!courtKey,
-      }),
-    [safetyAck, pathPickedAt, firstEngagementAt, snapshotCount, courtKey]
+    () => pickCurrentStep({ pathPicked: !!pathPickedAt }),
+    [pathPickedAt]
   );
 
   const [expanded, setExpanded] = useState(null);
@@ -276,13 +146,12 @@ export function JourneyShell({
               Welcome{greetingName ? `, ${greetingName}` : ""}
             </div>
             <h2 className="text-base font-bold text-slate-900 leading-tight">
-              Here's your journey, five steps at a time.
+              Here's where to begin.
             </h2>
             <p className="text-xs text-slate-600 mt-1 leading-snug">
-              Everything SA CoParents can do — assessments, plans,
-              reports, mediator-ready documents — lives behind
-              these five steps. We'll put you on the right one.
-              You can wander backward and forward any time.
+              Two short steps to start. Your BIFF Coach and
+              Reports stay one tap away at the bottom whenever
+              you need them.
             </p>
           </div>
         </div>
@@ -298,16 +167,24 @@ export function JourneyShell({
         </button>
       </section>
 
-      {/* iter249 — 5-dot progress strip. Driven by completion
-          signals, not current-step cursor, so a parent sees
-          their actual journey progress at a glance. */}
-      <ProgressDots
-        pathPickedAt={pathPickedAt}
-        safetyAck={safetyAck}
-        firstEngagementAt={firstEngagementAt}
-        biffUsedAt={biffUsedAt}
-        hasSnapshots={snapshotCount > 0}
-      />
+      {/* iter251 — court-ordered status card. Shown at the top of
+          the shell (not inside a step) whenever a court key is
+          verified. Replaces the Step-3 inline banner since Step 3
+          was deleted. */}
+      {courtKey && (
+        <div
+          data-testid="journey-court-banner"
+          className="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-[11px] text-emerald-900 leading-snug flex items-start gap-2"
+        >
+          <i className="fa-solid fa-gavel text-emerald-600 mt-0.5"></i>
+          <div>
+            <span className="font-semibold">Court access verified:</span>{" "}
+            Case {courtKey}
+            {verifiedMediator ? ` · ${verifiedMediator}` : ""}. Your
+            assessment feeds the mediator's joint report.
+          </div>
+        </div>
+      )}
 
       {/* Grey-rock soft indicator — if the parent is in grey-rock
           mode they already see the chip inside AlignmentHub when
@@ -469,141 +346,6 @@ export function JourneyShell({
                         <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
                         Try the 40-question interactive preview
                       </a>
-                    </div>
-                  )}
-
-                  {step.n === 3 && (
-                    <div className="space-y-2 pt-1">
-                      {courtKey && (
-                        <div
-                          data-testid="journey-step-3-court-banner"
-                          className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-900 leading-snug"
-                        >
-                          <i className="fa-solid fa-gavel text-emerald-600 mr-1.5"></i>
-                          <span className="font-semibold">
-                            Court access verified:
-                          </span>{" "}
-                          Case {courtKey}
-                          {verifiedMediator
-                            ? ` · ${verifiedMediator}`
-                            : ""}
-                          . Your assessment feeds the mediator's
-                          joint report.
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        data-testid="journey-step-3-cta-coparenting"
-                        onClick={() => onOpenGuidedJourney("coparenting")}
-                        className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition text-sm font-bold`}
-                      >
-                        <i className="fa-solid fa-child-reaching mr-1.5"></i>
-                        Co-Parenting Assessment
-                      </button>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <button
-                          type="button"
-                          data-testid="journey-step-3-cta-educational"
-                          onClick={() => onOpenGuidedJourney("educational")}
-                          className="p-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 text-[11px] font-bold transition"
-                        >
-                          <i className="fa-solid fa-graduation-cap block mb-0.5"></i>
-                          Educational
-                        </button>
-                        <button
-                          type="button"
-                          data-testid="journey-step-3-cta-medical"
-                          onClick={() => onOpenGuidedJourney("medical")}
-                          className="p-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 text-[11px] font-bold transition"
-                        >
-                          <i className="fa-solid fa-stethoscope block mb-0.5"></i>
-                          Medical
-                        </button>
-                        <button
-                          type="button"
-                          data-testid="journey-step-3-cta-psychological"
-                          onClick={() => onOpenGuidedJourney("psychological")}
-                          className="p-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 text-[11px] font-bold transition"
-                        >
-                          <i className="fa-solid fa-brain block mb-0.5"></i>
-                          Psychological
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        data-testid="journey-step-3-cta-records"
-                        onClick={() => onOpenAssessmentFolder("All")}
-                        className="w-full p-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-800 text-left transition text-xs font-semibold"
-                      >
-                        <i className="fa-solid fa-folder-open mr-1.5"></i>
-                        Open my Alignment Records folder
-                      </button>
-                    </div>
-                  )}
-
-                  {step.n === 4 && (
-                    <div className="space-y-2 pt-1">
-                      <button
-                        type="button"
-                        data-testid="journey-step-4-cta-biff"
-                        onClick={onOpenBiffCoach}
-                        className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition text-sm font-bold`}
-                      >
-                        <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
-                        Rewrite a message the BIFF way
-                      </button>
-                      <button
-                        type="button"
-                        data-testid="journey-step-4-cta-mediation"
-                        onClick={() => onOpenGuidedJourney("foundation")}
-                        className="w-full p-2.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-300 text-amber-900 text-left transition text-xs font-semibold"
-                      >
-                        <i className="fa-solid fa-handshake-angle mr-1.5"></i>
-                        Walk through a mediation-prep script
-                      </button>
-                    </div>
-                  )}
-
-                  {step.n === 5 && (
-                    <div className="space-y-2 pt-1">
-                      <button
-                        type="button"
-                        data-testid="journey-step-5-cta-foundation"
-                        onClick={onOpenFoundationStatement}
-                        className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition text-sm font-bold`}
-                      >
-                        <i className="fa-solid fa-feather-pointed mr-1.5"></i>
-                        Draft my Foundation Statement
-                      </button>
-                      <button
-                        type="button"
-                        data-testid="journey-step-5-cta-download-complete"
-                        onClick={onDownloadCompleteReport}
-                        className="w-full p-2.5 rounded-xl bg-white hover:bg-rose-50 border border-rose-300 text-rose-800 text-left transition text-xs font-semibold"
-                      >
-                        <i className="fa-solid fa-file-pdf mr-1.5"></i>
-                        Download my complete report PDF
-                      </button>
-                      <button
-                        type="button"
-                        data-testid="journey-step-5-cta-share-complete"
-                        onClick={onShareCompleteReport}
-                        className="w-full p-2.5 rounded-xl bg-white hover:bg-rose-50 border border-rose-300 text-rose-800 text-left transition text-xs font-semibold"
-                      >
-                        <i className="fa-solid fa-envelope-circle-check mr-1.5"></i>
-                        Email my progress to my mediator
-                      </button>
-                      {snapshotCount > 0 && (
-                        <p
-                          data-testid="journey-step-5-snapshot-count"
-                          className="text-[11px] text-rose-700 pt-1"
-                        >
-                          <i className="fa-solid fa-camera-retro mr-1"></i>
-                          You have {snapshotCount} saved snapshot
-                          {snapshotCount === 1 ? "" : "s"} available
-                          below.
-                        </p>
-                      )}
                     </div>
                   )}
                 </div>

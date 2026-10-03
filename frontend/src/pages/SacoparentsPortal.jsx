@@ -1682,15 +1682,6 @@ export default function SacoparentsPortal() {
             pathPickedAt={
               (readJson(PATH_PICKED_KEY, null) || {}).picked_at || null
             }
-            firstEngagementAt={readJson(FIRST_ENGAGEMENT_KEY, null)}
-            snapshotCount={snapshotHistory.length}
-            biffUsedAt={
-              /* iter249 — DEFAULT_BIFF_LOGS seeds one demo entry
-                 (id=1) at mount, so a brand-new parent always has
-                 length=1. Treat >1 as "the parent has drafted at
-                 least one of their own." */
-              biffLogs.length > 1 ? biffLogs[0]?.timestamp || true : null
-            }
             courtKey={courtKey}
             verifiedMediator={verifiedMediator}
             onEnterParent={enterParentJourney}
@@ -1702,16 +1693,6 @@ export default function SacoparentsPortal() {
             onClearGreyRock={onClearGreyRock}
             onOpenSafetyRetake={onOpenSafetyRetake}
             onOpenGuidedJourney={(topic) => openGuidedJourney(topic)}
-            onOpenAssessmentFolder={(category) => {
-              setFolderFilter(category);
-              setRecordsDrawerOpen(true);
-            }}
-            onOpenBiffCoach={() => setBiffDrawerOpen(true)}
-            onOpenFoundationStatement={() =>
-              setFoundationDrawerOpen(true)
-            }
-            onDownloadCompleteReport={downloadCompleteReportPdf}
-            onShareCompleteReport={onShareCompleteReport}
             onOpenIntroGuide={() => setIntroOpen(true)}
             safetyFlagged={safetyFlagged}
           />
