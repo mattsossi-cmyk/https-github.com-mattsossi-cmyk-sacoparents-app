@@ -5,7 +5,7 @@ STATUSES = ("draft", "under_review", "final", "submitted_to_court")
 SAFETY_NOTE = "Safety findings may alter or override ordinary co-parenting, mediation, communication, or joint-process recommendations."
 RATING_NOTE = "The rating does not automatically determine the process. Safety screening, professional judgment, court orders, and the specific needs of the child remain controlling considerations."
 JOINT_OPTIONS = ("Yes", "Yes, with safeguards", "No / Not recommended at this time")
-RECEIPT = ("Received", "Not Received", "Not Applicable")
+RECEIPT = ("Received", "Not Received", "Not Required", "Not Applicable")
 
 INDIVIDUAL_BANDS = [
     (1, 2, "Crisis / High Conflict", ["follows some formal orders", "maintains separation when required", "participates in structured exchanges"],

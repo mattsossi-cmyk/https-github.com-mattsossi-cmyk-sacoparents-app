@@ -5,11 +5,11 @@ const One = ({ role, name, scr }) => {
   return (
     <details className="rounded-md border border-teal-200 bg-[#e8f7f7]/60 p-2" data-testid={`lens-imported-screening-${role}`}>
       <summary className="cursor-pointer text-xs font-semibold text-teal-900">
-        {name}: safety screening received from {scr.source}{scr.completed_at ? ` · ${scr.completed_at.slice(0, 10)}` : ""} — {scr.item_count} items, <span data-testid={`lens-imported-screening-${role}-concerns`}>{scr.concern_count} indicated a concern</span>
+        {name}: safety screening received from {scr.source}{typeof scr.completed_at === "string" && scr.completed_at ? ` · ${scr.completed_at.slice(0, 10)}` : ""} — {scr.item_count ?? 0} items, <span data-testid={`lens-imported-screening-${role}-concerns`}>{scr.concern_count} indicated a concern</span>
       </summary>
       <p className="mt-2 text-[11px] italic text-muted-foreground">Parent-reported screening responses, shown to you for professional follow-up only. They are not findings and are never printed in the court PDF — only the receipt and counts above appear there.</p>
       <ul className="mt-2 space-y-1 text-xs">
-        {scr.items.map((it, i) => <li key={i} className={`rounded px-2 py-1 ${it.concern ? "bg-amber-50 border border-amber-200" : "bg-white/70"}`} data-testid={`lens-imported-screening-${role}-item-${i}`}><span className="font-medium">{it.question}</span> — {it.answer}</li>)}
+        {(scr.items || []).map((it, i) => <li key={i} className={`rounded px-2 py-1 ${it.concern ? "bg-amber-50 border border-amber-200" : "bg-white/70"}`} data-testid={`lens-imported-screening-${role}-item-${i}`}><span className="font-medium">{it.question}</span> — {it.answer}</li>)}
       </ul>
     </details>
   );

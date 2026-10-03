@@ -79,13 +79,13 @@ def readiness(doc: dict) -> list[dict]:
     safety = sa or sb or subj_safety
     return [{"key": "assessment_a", "label": "Parent A Assessment Received", "done": a}, {"key": "assessment_b", "label": "Parent B Assessment Received", "done": b},
             {"key": "joint", "label": "Joint Report Received", "done": a and b},
-            {"key": "fv_a", "label": "Parent A Family Violence Assessment Received", "done": sa or (subj_safety and a), "na": not safety},
-            {"key": "fv_b", "label": "Parent B Family Violence Assessment Received", "done": sb or (subj_safety and b), "na": not safety}]
+            {"key": "fv_a", "label": "Parent A Family Violence Assessment Received", "done": sa or (subj_safety and a), "na": not safety, "not_required": not subj_safety and not sa and sb},
+            {"key": "fv_b", "label": "Parent B Family Violence Assessment Received", "done": sb or (subj_safety and b), "na": not safety, "not_required": not subj_safety and not sb and sa}]
 
 
 def _prefill_header(doc: dict, pro: dict, rd: dict) -> dict:
     parts, court, sug = doc.get("participants") or {}, doc.get("court") or {}, suggested_score(doc)
-    fv = lambda k: "Not Applicable" if rd[k]["na"] else ("Received" if rd[k]["done"] else "Not Received")  # noqa: E731
+    fv = lambda k: "Not Applicable" if rd[k]["na"] else ("Received" if rd[k]["done"] else ("Not Required" if rd[k].get("not_required") else "Not Received"))  # noqa: E731
     return {"matter_name": f"{doc.get('subject_label') or 'Co-parenting'} — {doc.get('child_name') or ''}".strip(" —"), "court_county": court.get("court_name", ""),
             "cause_number": court.get("cause_number", ""), "professional_role": pro.get("pro_role", ""), "report_date": datetime.now(timezone.utc).date().isoformat(),
             "parent_a_name": parts.get("a", {}).get("name") or "Parent A", "parent_b_name": parts.get("b", {}).get("name") or "Parent B", "fv_a_received": fv("fv_a"), "fv_b_received": fv("fv_b"),

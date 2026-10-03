@@ -879,3 +879,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - LOW: `ImportedScreening.jsx:12` `scr.items` without fallback; `build_demo_instagram.py` lacks mkdir/asset checks/nonzero exit; ruff lint nits.
 - Open question: when one parent imports a screening on a non-safety case, other parent flips from "Not Applicable" to "Not Received" (`legal_lens.py:79-83`). Section 2 PDF uses stored snapshot vs Section 1 live readiness — can disagree.
 - Verified OK: privacy gating, non-adjudicative wording, idempotent import, tz-aware datetimes, no ObjectId leaks.
+
+## 2026-06 Fixes from code review (agent-tested: test_iter86 6 passed; related suites 15 passed)
+- `safety_import._date()` coerces any bridge `completed_at` (str/epoch/datetime/dict/None) to safe YYYY-MM-DD; `screening_summary` uses `.get()` throughout → PDF/bundle never 500 on malformed dates.
+- `ImportedScreening.jsx` guards non-string `completed_at` and missing `items`.
+- Readiness: new `not_required` flag; `_prefill_header` sets "Not Required" (not "Not Received") for the other parent when only one screening is imported on a non-safety-subject case. RECEIPT options now include "Not Required". Flows through editor radios, PDF Section 2, court summary.
+- Not yet redeployed — awaiting user go-ahead.
