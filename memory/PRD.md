@@ -45,6 +45,116 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter244 · Phase A: Five-Step JourneyShell + /align scaffold
+
+Strategic turn: the app has grown feature-rich at the cost of
+parent-brain simplicity. Standing from this iter forward, the
+architecture obeys ONE rule (NORTH_STAR.md):
+
+> The parent should never have to understand the structure of
+> the app. The app should understand where the parent is and
+> guide them.
+
+Every parent-facing surface now fits under one of five journey
+steps. Every professional surface moves under `/align`. Two sites,
+rigid separation, no leaks.
+
+**🟢 P1 — NORTH_STAR.md**
+- New `/app/memory/NORTH_STAR.md` captures the 5-step scaffold,
+  the two-site distinction, and the committed phase plan (A → E).
+  Future forks read this before touching UI chrome.
+
+**🟢 P1 — JourneyShell (parent-facing default)**
+- New `/app/frontend/src/pages/portal/JourneyShell.jsx` renders
+  the 5 steps as a vertical card list:
+    1. Start My Journey (purple)
+    2. Understand My Situation (indigo)
+    3. Focus on My Child (emerald)
+    4. Explore Options (amber)
+    5. Create My Plan (rose)
+- Each step card is tappable → expands a panel with context +
+  one or two CTAs that route into the existing surfaces. The
+  tools underneath (SafetyScreen, CpProgressTile, AlignmentHub,
+  BiffTab, Guided Journey, Foundation Statement, Snapshot
+  Library) are reused VERBATIM — no PDF/AI/report code touched.
+- "You're here" chip auto-picks the current step from signals
+  the container already tracks (`PATH_PICKED_KEY`,
+  `FIRST_ENGAGEMENT_KEY`, `snapshotHistory.length`, `safetyAck`).
+  New user → Step 1; returning user with snapshots → Step 4.
+- Grey-rock soft banner surfaces at the top of the shell when
+  `safetyFlagged === true` so a parent in grey-rock mode knows
+  the state before tapping any step. Mirrors the Alignment Hub
+  chip without duplicating logic.
+- Step 1 has two doors as sibling cards (same handlers the old
+  Gateway used, so the Safety-First gate still fires):
+    * Voluntary (purple) → `enterParentJourney`
+    * "I was sent here" (amber) → `enterCourtPath`
+
+**🟢 P1 — SacoparentsPortal.jsx wiring**
+- New `screen === "journey"` state is the DEFAULT. The old
+  gateway is reachable at `/?view=advanced` as a kill-switch
+  for 2-3 iters (deletable in Phase D).
+- `openDoorGateway` routes to the journey screen (not the
+  legacy gateway) unless `?view=advanced` is in the URL.
+- Bottom-nav "Doors" button renamed "Journey" with a compass
+  icon so the parent-facing navigation reads as a path, not a
+  room selector. Active state covers both `journey` and
+  `gateway` screens for continuity.
+- Header back button copy flipped "Doors" → "Journey".
+- IntroChatBot auto-open preserved verbatim — Phase A doesn't
+  touch the welcome triage, just the surface it lands on.
+
+**🟢 P1 — Align landing (`/align`)**
+- New `/app/frontend/src/pages/Align.jsx` scaffolds the
+  professional entry at `/align`. Slate + emerald visual
+  language (intentionally different from the parent portal's
+  purple/rose). Content:
+    * Header: "Professional Workspace · SA CoParents Align"
+    * Role explainer line linking back to `/` for parents who
+      landed here by mistake
+    * 4 tiles: Case Dashboard (`/admin`), Joint Reports
+      (`/joint-reports`), Reviewer Workbench
+      (`/admin/reviewers`), Sample Reports (`/samples`)
+    * Compliance footer naming HB 300 / HIPAA / BAA — correct
+      language for professionals, never surfaced on the
+      parent portal
+- `/app/frontend/src/App.js` registers the `/align` route.
+- No new backend routes; this re-frames surfaces that already
+  exist. DNS split to `sacoparentsalign.online` is DevOps
+  Phase E.
+
+**Verified at both viewports**
+- Mobile 390×844: Shell renders at `/`; Step 1 "You're here"
+  chip visible; Step 1 panel shows voluntary + court doors;
+  Step 2 panel shows "Private Safety Check" + workspace CTAs;
+  `?view=advanced` returns the old DoorsGateway (door-parent-
+  journey testid intact); `/align` renders landing with 4
+  tiles. No horizontal overflow.
+- Desktop 1920×800: Shell max-w-md column centered; Align
+  landing renders 2×2 tile grid; no overflow.
+- Smoke-tested: `shell=1, step1=1, step5=1, current_count=1,
+  adv_link=1, step2_panel=1, doors voluntary=1 court=1,
+  advanced: gateway_doors=1 shell=0, align_landing=1 tiles=4`.
+
+**Clinical lockstep invariant preserved**
+- Zero changes to SafetyScreen, AI service, PDF builders,
+  Grey-rock chip, or any clinical copy.
+- All existing testids on existing components untouched.
+- Safety-First auto-route still fires via `enterParentJourney`
+  / `enterCourtPath` — the same handlers the old Gateway
+  called.
+
+**Next phases (committed)**
+- Phase B (iter245): Merge toolkit tile grid INTO the steps.
+  Delete the horizontal hub-section tab switcher.
+- Phase C (iter246): Court-Ordered Step 1 variant fast-
+  forwards to the referred artefact after Court Key verify.
+- Phase D (iter247): Delete legacy DoorsGateway code path +
+  `?view=advanced` escape hatch.
+- Phase E (DevOps): Split prod to `sacoparentsapp.online` +
+  `sacoparentsalign.online`.
+
+
 ### 2026-02-27 — Iter243 · Grey-rock Toggle Chip on Alignment & Tools
 
 Founder ask: "Grey-rock Mode Toggle: Add a one-tap 'Turn grey-rock

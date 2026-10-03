@@ -42,6 +42,7 @@ import { BiffTab } from "./portal/BiffTab";
 import { CourtKeyScreen } from "./portal/CourtKeyScreen";
 import { DoorsGateway } from "./portal/DoorsGateway";
 import { GuidedJourneyModal } from "./portal/GuidedJourneyModal";
+import { JourneyShell } from "./portal/JourneyShell";
 import {
   IntroChatBot,
   hasIntroBeenSeen,
@@ -72,8 +73,18 @@ import { ShareLegalModal } from "./portal/ShareLegalModal";
 export default function SacoparentsPortal() {
   const { user } = useAuth();
 
-  // Screen state: 'gateway' | 'court-key' | 'parent-journey'
-  const [screen, setScreen] = useState("gateway");
+  // iter244 — URL ?view=advanced returns the OLD gateway + hub-section
+  // view as a kill-switch while JourneyShell is settling. Phase D
+  // (iter247) will delete this escape hatch along with the legacy
+  // DoorsGateway code path.
+  const advancedView =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("view") === "advanced";
+
+  // Screen state: 'journey' | 'gateway' | 'court-key' | 'parent-journey'.
+  // Default is now the 5-step JourneyShell (NORTH_STAR.md Phase A).
+  // ?view=advanced flips the default back to the legacy gateway.
+  const [screen, setScreen] = useState(advancedView ? "gateway" : "journey");
   const [hubSection, setHubSection] = useState("alignment"); // 'alignment' | 'biff'
 
   // Persistent data
@@ -528,7 +539,10 @@ export default function SacoparentsPortal() {
 
   // Navigation with safety-gate: first-time visitors must complete
   // the quick safety check before entering EITHER door.
-  const openDoorGateway = useCallback(() => setScreen("gateway"), []);
+  const openDoorGateway = useCallback(
+    () => setScreen(advancedView ? "gateway" : "journey"),
+    [advancedView]
+  );
 
   const requestDoorEntry = useCallback(
     (door) => {
@@ -1016,10 +1030,10 @@ export default function SacoparentsPortal() {
   const onStartAssessment = useCallback(
     (key) => {
       if (key === "court") {
-        // Route back to the doors gateway + trip the court door via
+        // Route back to the journey shell + trip the court door via
         // the container's existing helper.
         setHubSection("alignment");
-        setScreen("gateway");
+        setScreen(advancedView ? "gateway" : "journey");
         enterCourtPath();
         return;
       }
@@ -1047,7 +1061,7 @@ export default function SacoparentsPortal() {
       setHubSection("alignment");
       openGuidedJourney(key);
     },
-    [enterCourtPath]
+    [enterCourtPath, advancedView]
   );
 
   // Guided-journey chat wizard (iter220). Opens the modal for a
@@ -1538,7 +1552,7 @@ export default function SacoparentsPortal() {
     [createShareLink, healthIndex, foundationText, legalReport, courtKey]
   );
 
-  const showBackBtn = screen !== "gateway";
+  const showBackBtn = screen !== "gateway" && screen !== "journey";
 
   return (
     <div
@@ -1584,7 +1598,7 @@ export default function SacoparentsPortal() {
                 onClick={openDoorGateway}
                 className="bg-purple-900 hover:bg-purple-800 text-white px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 border border-purple-700 transition"
               >
-                <i className="fa-solid fa-arrow-left"></i> Doors
+                <i className="fa-solid fa-arrow-left"></i> Journey
               </button>
             )}
             <button
@@ -1614,6 +1628,42 @@ export default function SacoparentsPortal() {
 
       {/* MAIN CONTAINER */}
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
+        {screen === "journey" && (
+          <JourneyShell
+            user={user}
+            safetyAck={safetyAck}
+            pathPickedAt={
+              (readJson(PATH_PICKED_KEY, null) || {}).picked_at || null
+            }
+            firstEngagementAt={readJson(FIRST_ENGAGEMENT_KEY, null)}
+            snapshotCount={snapshotHistory.length}
+            onEnterParent={enterParentJourney}
+            onEnterCourt={enterCourtPath}
+            onOpenSafety={() => {
+              pendingDoorRef.current = "parent";
+              setSafetyOpen(true);
+            }}
+            onEnterStep2={() => {
+              setHubSection("alignment");
+              enterParentJourney();
+            }}
+            onEnterStep3={() => {
+              setHubSection("alignment");
+              enterParentJourney();
+            }}
+            onEnterStep4={() => {
+              setHubSection("biff");
+              enterParentJourney();
+            }}
+            onEnterStep5={() => {
+              setHubSection("alignment");
+              enterParentJourney();
+            }}
+            onOpenIntroGuide={() => setIntroOpen(true)}
+            safetyFlagged={safetyFlagged}
+          />
+        )}
+
         {screen === "gateway" && (
           <>
             {/* iter242 — Safety-First button MOVED out of the Gateway.
@@ -1866,10 +1916,14 @@ export default function SacoparentsPortal() {
         <button
           data-testid="nav-doors"
           onClick={openDoorGateway}
-          className="flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
+          className={
+            screen === "journey" || screen === "gateway"
+              ? "flex flex-col items-center space-y-0.5 bottom-nav-active"
+              : "flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
+          }
         >
-          <i className="fa-solid fa-door-open text-base"></i>
-          <span className="text-[9px] font-semibold">Doors</span>
+          <i className="fa-solid fa-compass text-base"></i>
+          <span className="text-[9px] font-semibold">Journey</span>
         </button>
         <button
           data-testid="nav-report"

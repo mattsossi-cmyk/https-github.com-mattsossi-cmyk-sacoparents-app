@@ -12,6 +12,7 @@ import BackToDashboardPill from "@/components/BackToDashboardPill";
 
 import Landing from "@/pages/Landing";
 import SacoparentsPortal from "@/pages/SacoparentsPortal";
+import Align from "@/pages/Align";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import OnboardingIntake from "@/pages/OnboardingIntake";
@@ -156,6 +157,7 @@ function AppRoutes() {
         <PolicyRefreshBanner />
         <Routes>
         <Route path="/" element={<SacoparentsPortal />} />
+        <Route path="/align" element={<Align />} />
         <Route path="/legacy" element={<Landing />} />
         <Route path="/samples" element={<Samples />} />
         <Route path="/samples/joint-alignment-preview" element={<JointAlignmentSamplePreview />} />
