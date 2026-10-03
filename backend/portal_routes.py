@@ -242,6 +242,13 @@ _GUIDED_TOPICS = {
     "medical",
     "educational",
     "psychological",
+    # iter250 — Draft-to-Snapshot. A "biff_pair" snapshot captures
+    # a parent's raw message + its BIFF rewrite so the mediator PDF
+    # can show the tone progression. Shape fits the existing
+    # `answers: [{question, answer}, ...]` schema:
+    #   answers[0] = {question: "Original message", answer: rawInput}
+    #   answers[1] = {question: "BIFF rewrite",     answer: biffOutput}
+    "biff_pair",
 }
 
 

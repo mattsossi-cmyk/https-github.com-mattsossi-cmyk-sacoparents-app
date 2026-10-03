@@ -45,6 +45,83 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter250 · Draft-to-Snapshot
+
+Founder ask: "Add a one-tap action inside the BIFF drawer to
+file the raw-first-draft + BIFF-rewrite pair into the Snapshot
+Library, so a mediator can see the actual tone progression."
+
+**🟢 P1 — New `biff_pair` snapshot topic**
+- Backend: `_GUIDED_TOPICS` whitelist in
+  `/app/backend/portal_routes.py` extended with `"biff_pair"`.
+  Everything else stayed intact — the sanitizer's existing
+  per-entry byte cap (12 KB), answer length cap (2000 chars),
+  and 12-item history cap all apply unchanged. Zero new fields,
+  zero new routes.
+- Reuses the existing `answers: [{question, answer}, ...]`
+  shape:
+    * `answers[0] = {question:"Original message", answer:rawInput}`
+    * `answers[1] = {question:"BIFF rewrite",     answer:biffOutput}`
+- Frontend: `SnapshotStrip.jsx` adds `biff_pair` to
+  `TOPIC_LABEL` ("BIFF rewrite") and `TOPIC_ICON`
+  (`fa-wand-magic-sparkles`). All existing rename / pin /
+  delete / share flows work on BIFF snapshots unchanged.
+
+**🟢 P1 — Draft-to-Snapshot card inside BiffCoachDrawer**
+- New card rendered BELOW the BiffTab content so the parent
+  sees the rewrite first, then the save CTA. Testids:
+    * `biff-draft-to-snapshot-card` — the card container.
+    * `biff-save-snapshot-btn` — the primary CTA. Disabled
+      with greyed-out styling until BOTH `rawInput` and
+      `biffOutput` are non-empty.
+    * `biff-save-snapshot-hint` — emerald confirmation line
+      appears after a successful save ("Saved — view it in
+      your Snapshot Library on Step 5.")
+- On tap, calls `onSaveBiffSnapshot({raw, biff})` which
+  returns a boolean. On success, fires a sonner toast:
+  _"Filed to your Snapshot Library. Your mediator will see
+  the before and after when you share it next."_
+
+**🟢 P1 — `onSaveBiffSnapshot` handler (SacoparentsPortal.jsx)**
+- Builds the `biff_pair` entry with the standard id
+  (`Date.now()`), `safety_flagged` from the current
+  `safetyFlagged` state, prepends to `snapshotHistory`
+  (capped at `SNAPSHOT_HISTORY_MAX`), mirrors to
+  `localStorage` via `writeJson(SNAPSHOT_HISTORY_KEY, ...)`.
+  The existing debounced `PUT /api/portal/state` round-trip
+  picks up the change and persists server-side.
+- Guards: if either raw or biff trims to empty, returns
+  `false` without side-effects. The drawer's `canSave`
+  flag mirrors the same check at the UI level.
+
+**Clinical lockstep invariant preserved**
+- Zero changes to the BIFF rewrite logic, grey-rock variant,
+  safety guardrails, PDF generation, or AI prompts. The
+  Draft-to-Snapshot card is a thin new UI layer plus one
+  whitelist add on the sanitizer.
+
+**Verified end-to-end at 390×844 mobile**
+- Open BIFF drawer → Draft-to-Snapshot card renders →
+  save button DISABLED initially (`save_btn_disabled=1`).
+- Fill raw input + click Rewrite (AI generates BIFF
+  output) → save button ENABLES (`can_save=1`).
+- Click save → toast fires + emerald hint appears
+  (`hint=1 toast=1`) + localStorage carries one new
+  `biff_pair` entry (`biff_pair_in_history=1`).
+- Snapshot shape verified in localStorage: topic
+  `"biff_pair"`, answers has both "Original message" and
+  "BIFF rewrite" entries, `safety_flagged: false`,
+  `save_key: biff_pair_<id>`.
+- No horizontal overflow (sonner `<ol>` same as iter243/245
+  — not an app layout bug).
+
+**Next iters (unchanged)**
+- iter251: Mediator Progress PDF reads `biff_pair`
+  snapshots and renders a tone-progression table.
+- iter252: Progress dot tooltips.
+- iter253: True-delete `AlignmentHub.jsx` + `DoorsGateway.jsx`.
+
+
 ### 2026-02-27 — Iter249 · DevOps Split (code-side) + Progress Dots
 
 Two deliverables shipped together: the architectural

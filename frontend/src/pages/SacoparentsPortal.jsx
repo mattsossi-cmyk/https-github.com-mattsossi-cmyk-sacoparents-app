@@ -1236,6 +1236,41 @@ export default function SacoparentsPortal() {
     []
   );
 
+  // iter250 — Draft-to-Snapshot. Files the parent's raw first-draft
+  // + its BIFF rewrite into the Snapshot Library as a single
+  // `biff_pair` snapshot so the mediator PDF can show the actual
+  // tone progression (not just the before/after count). Uses the
+  // existing `answers: [{question, answer}, ...]` schema so the
+  // backend sanitizer and SnapshotStrip's rename/pin/share flows
+  // all work without a new code path.
+  const onSaveBiffSnapshot = useCallback(
+    ({ raw, biff, category }) => {
+      const rawTrim = (raw || "").trim();
+      const biffTrim = (biff || "").trim();
+      if (!rawTrim || !biffTrim) return false;
+      const nowIso = new Date().toISOString();
+      const snapshotEntry = {
+        id: Date.now(),
+        topic: "biff_pair",
+        answers: [
+          { question: "Original message", answer: rawTrim.slice(0, 2000) },
+          { question: "BIFF rewrite", answer: biffTrim.slice(0, 2000) },
+        ],
+        saved_at: nowIso,
+        save_key: `biff_pair_${Date.now()}`,
+        category: category || null,
+        safety_flagged: !!safetyFlagged,
+      };
+      setSnapshotHistory((prev) => {
+        const next = [snapshotEntry, ...prev].slice(0, SNAPSHOT_HISTORY_MAX);
+        writeJson(SNAPSHOT_HISTORY_KEY, next);
+        return next;
+      });
+      return true;
+    },
+    [safetyFlagged]
+  );
+
   // iter235 — rename a saved snapshot so the library reads like a
   // real folder ("Emma's summer plan") instead of the auto-labelled
   // "Foundation · 3d ago". Label is capped at 40 chars at the input
@@ -1839,6 +1874,7 @@ export default function SacoparentsPortal() {
         safetyFlagged={safetyFlagged}
         onClearGreyRock={onClearGreyRock}
         onOpenSafetyRetake={onOpenSafetyRetake}
+        onSaveBiffSnapshot={onSaveBiffSnapshot}
         rawInput={rawInput}
         onRawInputChange={handleRawInputChange}
         applyPreset={applyPreset}

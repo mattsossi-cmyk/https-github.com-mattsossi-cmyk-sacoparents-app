@@ -25,6 +25,8 @@ const TOPIC_LABEL = {
   medical: "Medical",
   educational: "Educational",
   psychological: "Psychological",
+  // iter250 — Draft-to-Snapshot: a captured BIFF rewrite pair.
+  biff_pair: "BIFF rewrite",
 };
 
 const TOPIC_ICON = {
@@ -34,6 +36,7 @@ const TOPIC_ICON = {
   medical: "fa-solid fa-briefcase-medical",
   educational: "fa-solid fa-book-open",
   psychological: "fa-solid fa-brain",
+  biff_pair: "fa-solid fa-wand-magic-sparkles",
 };
 
 function relativeAge(isoLike) {
