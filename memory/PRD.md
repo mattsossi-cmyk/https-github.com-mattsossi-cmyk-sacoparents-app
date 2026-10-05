@@ -67,8 +67,8 @@ Delivered inside `JourneyShell`:
 
 Order inside Self Journey panel (top to bottom):
 Privacy Check → (Grey-rock chip when flagged) → Safety First →
-Progress tracker (40-Q) → 40-Q preview → Communication Builder
-(button + "?" explainer + growth record) → Commit chip (first-time
+Communication Builder (button + "?" explainer + growth record) →
+Progress tracker (40-Q) → 40-Q preview → Commit chip (first-time
 only).
 
 No backend changes. No PDF or AI-service touch — clinical lockstep

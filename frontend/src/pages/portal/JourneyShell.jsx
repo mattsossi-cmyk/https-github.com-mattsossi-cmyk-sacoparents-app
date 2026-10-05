@@ -431,31 +431,11 @@ export function JourneyShell({
                       Safety First
                     </span>
                   </button>
-                  <button
-                    type="button"
-                    data-testid="journey-path-self-cta-progress"
-                    onClick={() => onOpenGuidedJourney("coparenting")}
-                    className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition flex items-center gap-2`}
-                  >
-                    <i className="fa-solid fa-chart-line"></i>
-                    <span className="text-sm font-bold">
-                      Track my progress (take or re-take the 40-Q check)
-                    </span>
-                  </button>
-                  <a
-                    href={selfAssessmentUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    data-testid="journey-path-self-cta-preview"
-                    className="block w-full p-2.5 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-300 text-indigo-800 text-left transition text-sm font-bold"
-                  >
-                    <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
-                    Try the 40-question interactive preview
-                  </a>
 
                   {/* iter256 — Communication Builder, nested inside
-                      Self Journey. Keeps the "?" BIFF explainer and
-                      the growth record attached. */}
+                      Self Journey (between Safety First and the
+                      Progress tracker). Keeps the "?" BIFF explainer
+                      and the growth record attached. */}
                   <div
                     data-testid="journey-path-self-biff-group"
                     className="rounded-xl border border-amber-200 bg-amber-50/60 p-2.5 space-y-2"
@@ -552,6 +532,28 @@ export function JourneyShell({
                       </div>
                     </div>
                   </div>
+
+                  <button
+                    type="button"
+                    data-testid="journey-path-self-cta-progress"
+                    onClick={() => onOpenGuidedJourney("coparenting")}
+                    className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition flex items-center gap-2`}
+                  >
+                    <i className="fa-solid fa-chart-line"></i>
+                    <span className="text-sm font-bold">
+                      Track my progress (take or re-take the 40-Q check)
+                    </span>
+                  </button>
+                  <a
+                    href={selfAssessmentUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    data-testid="journey-path-self-cta-preview"
+                    className="block w-full p-2.5 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-300 text-indigo-800 text-left transition text-sm font-bold"
+                  >
+                    <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
+                    Try the 40-question interactive preview
+                  </a>
 
                   {/* iter254 — "Enter voluntary journey" link,
                       only shown the first time (parent hasn't
