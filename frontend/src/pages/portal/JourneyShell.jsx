@@ -141,6 +141,9 @@ export function JourneyShell({
   // iter253 — which path's "?" info card is currently open (null = none).
   const [infoOpenPath, setInfoOpenPath] = useState(null);
 
+  // iter255 — Privacy Check inline explainer inside Self Journey.
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+
   // iter253 — Bill Eddy's BIFF book link. Env-configurable so the
   // user can swap the direct publisher link for an affiliate link
   // without a code change.
@@ -351,14 +354,76 @@ export function JourneyShell({
                 </div>
               )}
 
-              {/* Self Journey expanded panel — Safety Check +
-                  Progress tracker + 40-Q interactive preview. */}
+              {/* Self Journey expanded panel — Privacy Check +
+                  Grey Rock Mode + Safety First + Progress tracker
+                  + 40-Q interactive preview. */}
               {path.key === "self" && isActive && (
                 <div
                   data-testid="journey-path-self-panel"
                   className="bg-slate-50 rounded-b-2xl border-2 border-t-0 border-purple-300 -mt-1 p-3 pt-4 text-[12px] text-slate-700 leading-snug space-y-2"
                 >
                   <p>{path.body}</p>
+
+                  {/* Privacy Check — inline explainer, opens on tap. */}
+                  <button
+                    type="button"
+                    data-testid="journey-path-self-cta-privacy"
+                    onClick={() => setPrivacyOpen((v) => !v)}
+                    aria-expanded={privacyOpen}
+                    className="w-full p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-left transition flex items-center gap-2"
+                  >
+                    <i className="fa-solid fa-user-shield"></i>
+                    <span className="text-sm font-bold flex-1">
+                      Privacy Check
+                    </span>
+                    <i
+                      className={`fa-solid ${
+                        privacyOpen ? "fa-chevron-up" : "fa-chevron-down"
+                      } text-xs opacity-80`}
+                    ></i>
+                  </button>
+                  {privacyOpen && (
+                    <div
+                      data-testid="journey-path-self-privacy-card"
+                      className="rounded-xl bg-indigo-50 border border-indigo-200 p-3 text-[12px] text-indigo-950 leading-snug space-y-2"
+                    >
+                      <div className="font-bold text-indigo-900">
+                        What stays on your device
+                      </div>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li>
+                          Your drafts, answers, and BIFF rewrites live
+                          in this browser first (local storage).
+                        </li>
+                        <li>
+                          A private copy syncs to your account so you
+                          can pick back up on another device.
+                        </li>
+                        <li>
+                          Nothing is shared with a mediator, court,
+                          or anyone else unless you tap{" "}
+                          <span className="font-semibold">Share</span>{" "}
+                          on a specific report.
+                        </li>
+                        <li>
+                          Grey-rock mode and your Safety-First
+                          answers are stored privately — never shown
+                          to the other parent.
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Grey Rock Mode — chip only when safety-flagged
+                      (today's behaviour), moved above Safety First. */}
+                  {safetyFlag && (
+                    <GreyRockToggleChip
+                      onClear={onClearGreyRock}
+                      onRetake={onOpenSafetyRetake}
+                    />
+                  )}
+
+                  {/* Safety First — opens the DV/IPV safety screen. */}
                   <button
                     type="button"
                     data-testid="journey-path-self-cta-safety"
@@ -367,15 +432,9 @@ export function JourneyShell({
                   >
                     <i className="fa-solid fa-shield-heart"></i>
                     <span className="text-sm font-bold">
-                      Private Safety Check
+                      Safety First
                     </span>
                   </button>
-                  {safetyFlag && (
-                    <GreyRockToggleChip
-                      onClear={onClearGreyRock}
-                      onRetake={onOpenSafetyRetake}
-                    />
-                  )}
                   <button
                     type="button"
                     data-testid="journey-path-self-cta-progress"

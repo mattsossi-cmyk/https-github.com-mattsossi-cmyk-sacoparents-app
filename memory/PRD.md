@@ -45,6 +45,29 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter255 · Privacy / Grey-Rock / Safety inside Self Journey
+
+Founder ask: "PRIVACY CHECK, GREY ROCK MODE AND SAFETY CHECK NEED TO
+BE PRESENT AFTER PARENTS CHECK SELF JOURNEY, KEEP REMAINING 3 TABS
+SELF JOURNEY COURT ORDERED AND COMMUNICATION BUILDER".
+
+Delivered inside `JourneyShell` Self Journey expanded panel:
+- `journey-path-self-cta-privacy` — new indigo button, taps open an
+  inline explainer (`journey-path-self-privacy-card`) describing what
+  stays on the device, what syncs, what is never shared.
+- Grey-rock chip stays visually above Safety First when `safetyFlag`
+  is on (behaviour unchanged — still only shown when flagged).
+- `journey-path-self-cta-safety` — renamed from "Private Safety Check"
+  → "Safety First"; still routes to the DV/IPV screen via `onOpenSafety`.
+- Progress tracker (40-Q) and 40-Q preview remain below.
+- Three main tabs on the dashboard untouched (Self Journey / Court
+  Ordered / Communication Builder).
+
+No backend changes. No PDF or AI-service touch — clinical lockstep
+preserved.
+
+
+
 ### 2026-02-27 — Iter250 · Draft-to-Snapshot
 
 Founder ask: "Add a one-tap action inside the BIFF drawer to
