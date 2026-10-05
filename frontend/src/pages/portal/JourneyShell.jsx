@@ -24,7 +24,7 @@ const PATHS = [
     key: "self",
     title: "Self Journey",
     tagline: "Start on your own.",
-    body: "Private safety check, a quick 40-question profile, and a progress tracker — all in one place. Nothing you do here is shared unless you decide to.",
+    body: "Private safety check, a quick 40-question profile, a progress tracker, and the Communication Builder — all in one place. Nothing you do here is shared unless you decide to.",
     icon: "fa-door-open",
     tint: "purple",
     expandable: true,
@@ -38,21 +38,15 @@ const PATHS = [
     tint: "indigo",
     expandable: false,
   },
-  {
-    key: "biff",
-    title: "Communication Builder",
-    tagline: "Rewrite before you send.",
-    body: "Draft a message, see a calmer BIFF rewrite, and build a record of your communication growth over time.",
-    icon: "fa-wand-magic-sparkles",
-    tint: "amber",
-    expandable: false,
-    info: {
-      title: "What's a BIFF rewrite?",
-      body: "BIFF stands for Brief, Informative, Friendly, and Firm — a research-backed way to answer a hot message without matching its heat. You keep the facts, drop the drama, and leave less room for a fight.",
-      linkKind: "biff_book",
-    },
-  },
 ];
+
+// iter256 — Communication Builder "?" explainer, lifted out of PATHS
+// so it can live inline inside the Self Journey panel.
+const BIFF_INFO = {
+  title: "What's a BIFF rewrite?",
+  body: "BIFF stands for Brief, Informative, Friendly, and Firm — a research-backed way to answer a hot message without matching its heat. You keep the facts, drop the drama, and leave less room for a fight.",
+  linkKind: "biff_book",
+};
 
 const TINT_CLASSES = {
   purple: {
@@ -144,6 +138,10 @@ export function JourneyShell({
   // iter255 — Privacy Check inline explainer inside Self Journey.
   const [privacyOpen, setPrivacyOpen] = useState(false);
 
+  // iter256 — Communication Builder inline "?" explainer, now nested
+  // inside the Self Journey panel instead of its own top-level tile.
+  const [biffInfoOpen, setBiffInfoOpen] = useState(false);
+
   // iter253 — Bill Eddy's BIFF book link. Env-configurable so the
   // user can swap the direct publisher link for an affiliate link
   // without a code change.
@@ -175,7 +173,7 @@ export function JourneyShell({
               Pick your path.
             </h2>
             <p className="text-xs text-slate-600 mt-1 leading-snug">
-              Three ways in. Your Reports and PDF Export stay one
+              Two ways in. Your Reports and PDF Export stay one
               tap away at the bottom whenever you need them.
             </p>
           </div>
@@ -246,8 +244,6 @@ export function JourneyShell({
               setExpandedPath(isActive ? "" : "self");
             } else if (path.key === "court") {
               onEnterCourt();
-            } else if (path.key === "biff") {
-              onOpenBiffCoach();
             }
           };
 
@@ -356,7 +352,7 @@ export function JourneyShell({
 
               {/* Self Journey expanded panel — Privacy Check +
                   Grey Rock Mode + Safety First + Progress tracker
-                  + 40-Q interactive preview. */}
+                  + 40-Q interactive preview + Communication Builder. */}
               {path.key === "self" && isActive && (
                 <div
                   data-testid="journey-path-self-panel"
@@ -456,6 +452,107 @@ export function JourneyShell({
                     <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
                     Try the 40-question interactive preview
                   </a>
+
+                  {/* iter256 — Communication Builder, nested inside
+                      Self Journey. Keeps the "?" BIFF explainer and
+                      the growth record attached. */}
+                  <div
+                    data-testid="journey-path-self-biff-group"
+                    className="rounded-xl border border-amber-200 bg-amber-50/60 p-2.5 space-y-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        data-testid="journey-path-self-cta-biff"
+                        onClick={onOpenBiffCoach}
+                        className="flex-1 p-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-left transition flex items-center gap-2"
+                      >
+                        <i className="fa-solid fa-wand-magic-sparkles"></i>
+                        <span className="text-sm font-bold flex-1">
+                          Communication Builder
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="journey-path-self-biff-info-btn"
+                        onClick={() => setBiffInfoOpen((v) => !v)}
+                        aria-label={BIFF_INFO.title}
+                        aria-expanded={biffInfoOpen}
+                        className="shrink-0 w-8 h-8 rounded-full bg-white hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold flex items-center justify-center transition"
+                      >
+                        ?
+                      </button>
+                    </div>
+                    {biffInfoOpen && (
+                      <div
+                        data-testid="journey-path-self-biff-info-card"
+                        className="rounded-lg bg-white border border-amber-200 p-2.5 text-[12px] text-amber-950 leading-snug space-y-2"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-bold text-amber-900">
+                            {BIFF_INFO.title}
+                          </h4>
+                          <button
+                            type="button"
+                            data-testid="journey-path-self-biff-info-close"
+                            onClick={() => setBiffInfoOpen(false)}
+                            aria-label="Close explainer"
+                            className="shrink-0 w-5 h-5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold flex items-center justify-center"
+                          >
+                            <i className="fa-solid fa-xmark"></i>
+                          </button>
+                        </div>
+                        <p>{BIFF_INFO.body}</p>
+                        {biffBookUrl && (
+                          <a
+                            href={biffBookUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-testid="journey-path-self-biff-info-book-link"
+                            className="inline-flex items-center gap-1.5 mt-1 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-bold text-[11px] transition"
+                          >
+                            <i className="fa-solid fa-book"></i>
+                            Get {biffBookTitle}
+                            {biffBookAuthor ? ` — ${biffBookAuthor}` : ""}
+                            <i className="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-80"></i>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    <div
+                      data-testid="journey-path-self-biff-progress"
+                      className="rounded-lg bg-white border border-amber-200 p-2 flex items-center gap-2"
+                    >
+                      <div className="shrink-0 w-7 h-7 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center font-bold text-[11px]">
+                        {biffAuthoredCount}
+                      </div>
+                      <div className="min-w-0 flex-1 leading-snug">
+                        <div className="text-[9px] uppercase font-bold tracking-wider text-amber-800">
+                          Your growth record
+                        </div>
+                        <p className="text-[10px] text-slate-700">
+                          {biffAuthoredCount === 0 ? (
+                            <>
+                              No rewrites yet. Your first draft will
+                              start the record.
+                            </>
+                          ) : (
+                            <>
+                              {biffAuthoredCount} message
+                              {biffAuthoredCount === 1 ? "" : "s"} reworked
+                              {biffPairCount > 0
+                                ? ` · ${biffPairCount} filed as snapshot${
+                                    biffPairCount === 1 ? "" : "s"
+                                  }`
+                                : ""}
+                              .
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* iter254 — "Enter voluntary journey" link,
                       only shown the first time (parent hasn't
                       committed to any path yet). This keeps the
@@ -472,44 +569,6 @@ export function JourneyShell({
                       Commit to the Self Journey
                     </button>
                   )}
-                </div>
-              )}
-
-              {/* Communication Builder — inline growth record visible
-                  under the main button so a parent sees progress at
-                  a glance without opening the BIFF drawer. */}
-              {path.key === "biff" && (
-                <div
-                  data-testid="journey-path-biff-progress"
-                  className="mt-2 rounded-xl bg-amber-50/60 border border-amber-200 p-2.5 flex items-center gap-2.5"
-                >
-                  <div className="shrink-0 w-8 h-8 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center font-bold text-xs">
-                    {biffAuthoredCount}
-                  </div>
-                  <div className="min-w-0 flex-1 leading-snug">
-                    <div className="text-[9px] uppercase font-bold tracking-wider text-amber-800">
-                      Your growth record
-                    </div>
-                    <p className="text-[10px] text-slate-700">
-                      {biffAuthoredCount === 0 ? (
-                        <>
-                          No rewrites yet. Your first draft will
-                          start the record.
-                        </>
-                      ) : (
-                        <>
-                          {biffAuthoredCount} message
-                          {biffAuthoredCount === 1 ? "" : "s"} reworked
-                          {biffPairCount > 0
-                            ? ` · ${biffPairCount} filed as snapshot${
-                                biffPairCount === 1 ? "" : "s"
-                              }`
-                            : ""}
-                          .
-                        </>
-                      )}
-                    </p>
-                  </div>
                 </div>
               )}
             </div>

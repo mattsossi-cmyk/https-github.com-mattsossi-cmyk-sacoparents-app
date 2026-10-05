@@ -45,6 +45,37 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter256 · Communication Builder nested inside Self Journey
+
+Founder ask (via Flow-1 "Two Doors" HTML mockup): "we're going to
+move the third tab - communication builder into an [option] which
+will appear as an additional option when parents select self journey".
+
+Delivered inside `JourneyShell`:
+- Dashboard reduced to **two top-level paths**: Self Journey and
+  Court Ordered. Communication Builder removed from the `PATHS`
+  array (no more `journey-path-biff` tile at the top level).
+- Communication Builder now lives inside the Self Journey expanded
+  panel as `journey-path-self-cta-biff` (amber button). Attached to
+  it: the "?" BIFF explainer (`journey-path-self-biff-info-btn` →
+  `journey-path-self-biff-info-card`) with the Bill Eddy book
+  affiliate link, and the growth-record chip
+  (`journey-path-self-biff-progress`) showing "X messages reworked".
+- Welcome copy updated from "Three ways in" → "Two ways in".
+- Dead top-level biff progress block + the `handleCardClick`
+  biff branch removed.
+
+Order inside Self Journey panel (top to bottom):
+Privacy Check → (Grey-rock chip when flagged) → Safety First →
+Progress tracker (40-Q) → 40-Q preview → Communication Builder
+(button + "?" explainer + growth record) → Commit chip (first-time
+only).
+
+No backend changes. No PDF or AI-service touch — clinical lockstep
+preserved.
+
+
+
 ### 2026-02-27 — Iter255 · Privacy / Grey-Rock / Safety inside Self Journey
 
 Founder ask: "PRIVACY CHECK, GREY ROCK MODE AND SAFETY CHECK NEED TO
