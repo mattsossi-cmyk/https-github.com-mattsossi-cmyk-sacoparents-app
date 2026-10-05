@@ -43,6 +43,13 @@ const STEPS = [
     body: "Draft a message, see a calmer BIFF rewrite, and build a record of your communication growth over time. Works whether you're here on your own or court-referred.",
     icon: "fa-wand-magic-sparkles",
     tint: "amber",
+    // iter253 — tiny "?" explainer surfaced inline so a parent
+    // landing fresh understands the term BIFF before expanding.
+    info: {
+      title: "What's a BIFF rewrite?",
+      body: "BIFF stands for Brief, Informative, Friendly, and Firm — a research-backed way to answer a hot message without matching its heat. You keep the facts, drop the drama, and leave less room for a fight.",
+      linkKind: "biff_book",
+    },
   },
 ];
 
@@ -131,6 +138,16 @@ export function JourneyShell({
   );
 
   const [expanded, setExpanded] = useState(null);
+  // iter253 — which step's "?" info card is currently open (0 = none).
+  const [infoOpenStep, setInfoOpenStep] = useState(0);
+
+  // iter253 — Bill Eddy's BIFF book link. Env-configurable so the
+  // user can swap the direct publisher link for an affiliate link
+  // without a code change.
+  const biffBookUrl = process.env.REACT_APP_BIFF_BOOK_URL || "";
+  const biffBookTitle =
+    process.env.REACT_APP_BIFF_BOOK_TITLE || "the BIFF book";
+  const biffBookAuthor = process.env.REACT_APP_BIFF_BOOK_AUTHOR || "";
 
   // If the parent hasn't explicitly toggled a step (expanded === null),
   // the shell follows whichever step `pickCurrentStep` says is current.
@@ -227,15 +244,29 @@ export function JourneyShell({
           const tint = TINT_CLASSES[step.tint];
           const isCurrent = step.n === current;
           const isOpen = activeStep === step.n;
+          const isInfoOpen = infoOpenStep === step.n;
+          const handleToggle = () => setExpanded(isOpen ? 0 : step.n);
           return (
             <li key={step.n} data-testid={`journey-step-${step.n}`}>
-              <button
-                type="button"
-                onClick={() => setExpanded(isOpen ? 0 : step.n)}
+              {/* iter253 — the step card header is a role="button"
+                  (not a <button>) so it can contain a nested
+                  interactive "?" info button without invalid HTML.
+                  Keyboard activation (Space / Enter) is wired by
+                  hand to match native button semantics. */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={handleToggle}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleToggle();
+                  }
+                }}
                 data-testid={`journey-step-${step.n}-toggle`}
                 className={`w-full text-left bg-white rounded-2xl border-2 ${
                   isCurrent ? tint.ring : "border-slate-200"
-                } p-3 transition hover:shadow-sm`}
+                } p-3 transition hover:shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400`}
               >
                 <div className="flex items-start gap-3">
                   <div
@@ -259,9 +290,28 @@ export function JourneyShell({
                         </span>
                       )}
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900 mt-1 leading-tight">
-                      {step.title}
-                    </h3>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <h3 className="text-sm font-bold text-slate-900 leading-tight">
+                        {step.title}
+                      </h3>
+                      {step.info && (
+                        <button
+                          type="button"
+                          data-testid={`journey-step-${step.n}-info-btn`}
+                          onClick={(e) => {
+                            // Stop propagation so clicking "?" doesn't
+                            // toggle the step expand/collapse.
+                            e.stopPropagation();
+                            setInfoOpenStep(isInfoOpen ? 0 : step.n);
+                          }}
+                          aria-label={step.info.title}
+                          aria-expanded={isInfoOpen}
+                          className="shrink-0 w-5 h-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center transition"
+                        >
+                          ?
+                        </button>
+                      )}
+                    </div>
                     <p className={`text-[11px] mt-0.5 leading-snug ${tint.accent}`}>
                       {step.tagline}
                     </p>
@@ -272,7 +322,47 @@ export function JourneyShell({
                     } text-slate-400 mt-3`}
                   ></i>
                 </div>
-              </button>
+              </div>
+
+              {/* iter253 — inline "What's a BIFF rewrite?" explainer.
+                  Renders between the step header and the step panel,
+                  only when the parent taps the "?" button. */}
+              {isInfoOpen && step.info && (
+                <div
+                  data-testid={`journey-step-${step.n}-info-card`}
+                  className="mt-1 rounded-xl bg-amber-50 border border-amber-200 p-3 text-[12px] text-amber-950 leading-snug space-y-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="font-bold text-amber-900">
+                      {step.info.title}
+                    </h4>
+                    <button
+                      type="button"
+                      data-testid={`journey-step-${step.n}-info-close`}
+                      onClick={() => setInfoOpenStep(0)}
+                      aria-label="Close explainer"
+                      className="shrink-0 w-5 h-5 rounded-full bg-white hover:bg-amber-100 text-amber-700 text-[10px] font-bold flex items-center justify-center"
+                    >
+                      <i className="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                  <p>{step.info.body}</p>
+                  {biffBookUrl && step.info.linkKind === "biff_book" && (
+                    <a
+                      href={biffBookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid={`journey-step-${step.n}-info-book-link`}
+                      className="inline-flex items-center gap-1.5 mt-1 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-bold text-[11px] transition"
+                    >
+                      <i className="fa-solid fa-book"></i>
+                      Get {biffBookTitle}
+                      {biffBookAuthor ? ` — ${biffBookAuthor}` : ""}
+                      <i className="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-80"></i>
+                    </a>
+                  )}
+                </div>
+              )}
 
               {isOpen && (
                 <div

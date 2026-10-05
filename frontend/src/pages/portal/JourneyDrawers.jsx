@@ -174,11 +174,57 @@ export function BiffCoachDrawer({
             className="text-[10px] text-emerald-700 font-semibold text-center"
           >
             <i className="fa-solid fa-check mr-1"></i>Saved — view it
-            in your Snapshot Library on Step 5.
+            in your Snapshot Library.
           </p>
         )}
       </div>
+
+      {/* iter253 — Deeper-learning link. Bill Eddy's own BIFF book
+          for co-parents, direct from the publisher. Env-driven URL
+          so an affiliate link can be swapped in without a redeploy. */}
+      <BiffBookLink />
     </DrawerShell>
+  );
+}
+
+/**
+ * BiffBookLink — iter253. Reusable inline CTA pointing parents at
+ * Bill Eddy's BIFF book (default: BIFF for CoParent Communication
+ * via the High Conflict Institute). Returns null when
+ * REACT_APP_BIFF_BOOK_URL is not configured, so dev / staging stays
+ * silent.
+ */
+function BiffBookLink() {
+  const url = process.env.REACT_APP_BIFF_BOOK_URL || "";
+  const title = process.env.REACT_APP_BIFF_BOOK_TITLE || "BIFF";
+  const author = process.env.REACT_APP_BIFF_BOOK_AUTHOR || "";
+  if (!url) return null;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-testid="biff-book-link"
+      className="block bg-white border border-amber-200 rounded-xl p-3 hover:border-amber-400 transition group"
+    >
+      <div className="flex items-start gap-2">
+        <i className="fa-solid fa-book text-amber-700 mt-0.5"></i>
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">
+            Deeper learning
+          </div>
+          <div className="text-xs font-bold text-slate-900">
+            Get the book: {title}
+            {author ? ` — ${author}` : ""}
+          </div>
+          <p className="text-[11px] text-slate-600 leading-snug mt-0.5">
+            The research + full method behind every rewrite in this
+            tool.
+          </p>
+        </div>
+        <i className="fa-solid fa-arrow-up-right-from-square text-[10px] text-amber-700 mt-1 group-hover:translate-x-0.5 transition"></i>
+      </div>
+    </a>
   );
 }
 
