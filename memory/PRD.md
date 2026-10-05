@@ -45,6 +45,50 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter257 · Help Me Choose + Deep-Dive Return
+
+Founder ask:
+- "Guided Entry Chip: Add a one-tap 'Help me choose' flow inside
+  Self Journey that routes parents to the right assessment based
+  on a single question".
+- "Deep-Dive Return: Surface Educational, Medical and Psychological
+  deep-dives as a tiny secondary row inside Self Journey so parents
+  can still find them".
+
+Delivered inside `JourneyShell` Self Journey expanded panel (no
+backend / handler changes — reuses existing
+`onOpenGuidedJourney(topic)`, `onOpenBiffCoach`, `onEnterCourt`
+props):
+
+**Help me choose (top of panel, above Privacy Check)**
+- Collapsed chip `journey-path-self-cta-help` (purple outline).
+- Opens inline card `journey-path-self-help-card` with the single
+  question "What brings you here today?" and four choices:
+  - `journey-help-choice-coparenting` → `onOpenGuidedJourney("coparenting")`
+  - `journey-help-choice-communication` → `onOpenBiffCoach()`
+  - `journey-help-choice-child` → reveals sub-stage with three
+    buttons: `-child-educational`, `-child-medical`,
+    `-child-psychological`, each routing via
+    `onOpenGuidedJourney(topic)`. A `-child-back` link returns
+    to the main stage.
+  - `journey-help-choice-referral` → `onEnterCourt()`
+- `helpStage` local state is set back to `null` (collapsed) on any
+  terminal choice.
+
+**Deep-Dive Return row (below the 40-Q preview, above Commit chip)**
+- Container `journey-path-self-deepdives` with a small
+  "Child-focused deep dives" label and a three-column grid of
+  colored secondary chips:
+  - `journey-deepdive-educational` (emerald) → `onOpenGuidedJourney("educational")`
+  - `journey-deepdive-medical` (sky) → `onOpenGuidedJourney("medical")`
+  - `journey-deepdive-psychological` (fuchsia) → `onOpenGuidedJourney("psychological")`
+
+Verified at 390×844: all testids present, no horizontal overflow,
+"Back" navigation works from the child sub-stage. No backend / PDF /
+AI-service changes — clinical lockstep preserved.
+
+
+
 ### 2026-02-27 — Iter256 · Communication Builder nested inside Self Journey
 
 Founder ask (via Flow-1 "Two Doors" HTML mockup): "we're going to

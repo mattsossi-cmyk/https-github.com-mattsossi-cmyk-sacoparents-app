@@ -142,6 +142,13 @@ export function JourneyShell({
   // inside the Self Journey panel instead of its own top-level tile.
   const [biffInfoOpen, setBiffInfoOpen] = useState(false);
 
+  // iter257 — "Help me choose" one-question router inside Self
+  // Journey. `helpStage` is either null (closed), "main" (the four
+  // top-level choices), or "child" (the Educational/Medical/
+  // Psychological sub-choice after the parent picks "Focus on my
+  // child's needs").
+  const [helpStage, setHelpStage] = useState(null);
+
   // iter253 — Bill Eddy's BIFF book link. Env-configurable so the
   // user can swap the direct publisher link for an affiliate link
   // without a code change.
@@ -360,6 +367,168 @@ export function JourneyShell({
                 >
                   <p>{path.body}</p>
 
+                  {/* iter257 — Help me choose: one-question router. */}
+                  <button
+                    type="button"
+                    data-testid="journey-path-self-cta-help"
+                    onClick={() =>
+                      setHelpStage((s) => (s === null ? "main" : null))
+                    }
+                    aria-expanded={helpStage !== null}
+                    className="w-full p-2.5 rounded-xl bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 text-left transition flex items-center gap-2"
+                  >
+                    <i className="fa-solid fa-circle-question"></i>
+                    <span className="text-sm font-bold flex-1">
+                      Help me choose where to start
+                    </span>
+                    <i
+                      className={`fa-solid ${
+                        helpStage !== null ? "fa-chevron-up" : "fa-chevron-down"
+                      } text-xs opacity-70`}
+                    ></i>
+                  </button>
+                  {helpStage !== null && (
+                    <div
+                      data-testid="journey-path-self-help-card"
+                      className="rounded-xl bg-purple-50 border border-purple-200 p-3 text-[12px] text-slate-800 leading-snug space-y-2"
+                    >
+                      <div className="font-bold text-purple-900">
+                        {helpStage === "child"
+                          ? "Which area of your child's life?"
+                          : "What brings you here today?"}
+                      </div>
+                      {helpStage === "main" && (
+                        <div className="grid grid-cols-1 gap-2">
+                          <button
+                            type="button"
+                            data-testid="journey-help-choice-coparenting"
+                            onClick={() => {
+                              setHelpStage(null);
+                              onOpenGuidedJourney("coparenting");
+                            }}
+                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                          >
+                            <div className="font-semibold text-purple-900">
+                              Improve our co-parenting
+                            </div>
+                            <div className="text-[11px] text-slate-600">
+                              Understand how we're doing as co-parents.
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="journey-help-choice-communication"
+                            onClick={() => {
+                              setHelpStage(null);
+                              onOpenBiffCoach();
+                            }}
+                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                          >
+                            <div className="font-semibold text-purple-900">
+                              Help with communication
+                            </div>
+                            <div className="text-[11px] text-slate-600">
+                              Prepare a message or conversation.
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="journey-help-choice-child"
+                            onClick={() => setHelpStage("child")}
+                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                          >
+                            <div className="font-semibold text-purple-900">
+                              Focus on my child's needs
+                            </div>
+                            <div className="text-[11px] text-slate-600">
+                              Educational, medical, or psychological.
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="journey-help-choice-referral"
+                            onClick={() => {
+                              setHelpStage(null);
+                              onEnterCourt();
+                            }}
+                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                          >
+                            <div className="font-semibold text-purple-900">
+                              I was sent here
+                            </div>
+                            <div className="text-[11px] text-slate-600">
+                              A court, mediator or attorney referred me.
+                            </div>
+                          </button>
+                        </div>
+                      )}
+                      {helpStage === "child" && (
+                        <div className="grid grid-cols-1 gap-2">
+                          <button
+                            type="button"
+                            data-testid="journey-help-choice-child-educational"
+                            onClick={() => {
+                              setHelpStage(null);
+                              onOpenGuidedJourney("educational");
+                            }}
+                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                          >
+                            <div className="font-semibold text-purple-900">
+                              <i className="fa-solid fa-graduation-cap mr-1.5"></i>
+                              Educational
+                            </div>
+                            <div className="text-[11px] text-slate-600">
+                              School, learning, teachers, IEP/504.
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="journey-help-choice-child-medical"
+                            onClick={() => {
+                              setHelpStage(null);
+                              onOpenGuidedJourney("medical");
+                            }}
+                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                          >
+                            <div className="font-semibold text-purple-900">
+                              <i className="fa-solid fa-stethoscope mr-1.5"></i>
+                              Medical
+                            </div>
+                            <div className="text-[11px] text-slate-600">
+                              Appointments, meds, allergies, consent.
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="journey-help-choice-child-psychological"
+                            onClick={() => {
+                              setHelpStage(null);
+                              onOpenGuidedJourney("psychological");
+                            }}
+                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                          >
+                            <div className="font-semibold text-purple-900">
+                              <i className="fa-solid fa-brain mr-1.5"></i>
+                              Psychological
+                            </div>
+                            <div className="text-[11px] text-slate-600">
+                              Therapy, emotional needs, stressors.
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="journey-help-choice-child-back"
+                            onClick={() => setHelpStage("main")}
+                            className="text-left text-[11px] text-purple-700 hover:text-purple-900 px-2 pt-1"
+                          >
+                            <i className="fa-solid fa-arrow-left mr-1"></i>
+                            Back
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Privacy Check — inline explainer, opens on tap. */}
                   <button
                     type="button"
@@ -554,6 +723,48 @@ export function JourneyShell({
                     <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
                     Try the 40-question interactive preview
                   </a>
+
+                  {/* iter257 — Deep-dive return row. Small secondary
+                      chips so parents can jump straight into any of
+                      the three child-focused deep-dives without going
+                      through the "Help me choose" router. */}
+                  <div
+                    data-testid="journey-path-self-deepdives"
+                    className="pt-1"
+                  >
+                    <div className="text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1.5 px-1">
+                      Child-focused deep dives
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <button
+                        type="button"
+                        data-testid="journey-deepdive-educational"
+                        onClick={() => onOpenGuidedJourney("educational")}
+                        className="text-center bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg py-1.5 px-1 text-[11px] font-semibold transition"
+                      >
+                        <i className="fa-solid fa-graduation-cap block text-sm mb-0.5"></i>
+                        Educational
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="journey-deepdive-medical"
+                        onClick={() => onOpenGuidedJourney("medical")}
+                        className="text-center bg-white hover:bg-sky-50 border border-sky-200 text-sky-800 rounded-lg py-1.5 px-1 text-[11px] font-semibold transition"
+                      >
+                        <i className="fa-solid fa-stethoscope block text-sm mb-0.5"></i>
+                        Medical
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="journey-deepdive-psychological"
+                        onClick={() => onOpenGuidedJourney("psychological")}
+                        className="text-center bg-white hover:bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 rounded-lg py-1.5 px-1 text-[11px] font-semibold transition"
+                      >
+                        <i className="fa-solid fa-brain block text-sm mb-0.5"></i>
+                        Psychological
+                      </button>
+                    </div>
+                  </div>
 
                   {/* iter254 — "Enter voluntary journey" link,
                       only shown the first time (parent hasn't
