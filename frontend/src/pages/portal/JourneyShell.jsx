@@ -3,96 +3,102 @@ import React, { useMemo, useState } from "react";
 import { GreyRockToggleChip } from "./AlignmentHub";
 
 /**
- * JourneyShell — iter244 Phase A.
+ * JourneyShell — iter258 three-tab dashboard.
  *
- * The five-step parent-facing scaffold. The ONE rule set in
- * NORTH_STAR.md: parents should see the five steps and nothing
- * else. Every current tool/assessment/report lives behind one of
- * these steps.
+ * Replaces the previous two-tile layout with a dashboard that
+ * mirrors the founder's Flow-1/3-tab mockup:
+ *   • Welcome banner with a progress bar
+ *   • Mode toggle (Self-Guided ↔ Court-Ordered) + Privacy Check +
+ *     Quick Exit in a controls strip
+ *   • Persistent Safety-First strip (Safety First button always
+ *     visible; Grey-Rock chip only when the parent is flagged)
+ *   • Three top-level tabs:
+ *       1. Reflect & Assess (Help-me-choose + three primary modules
+ *          + Child-focused deep-dives)
+ *       2. Foundation Report (summary + "Open full report" CTA)
+ *       3. AI Coach & Tools (BIFF Communication Builder with growth
+ *          record and the "?" BIFF explainer + Bill-Eddy book link)
  *
- * Phase A deliberately keeps old components intact. Steps 2–5 for
- * now route into the existing parent-journey screen (which still
- * renders the AlignmentHub + BiffTab + guided journey). Phase B
- * (iter245) will absorb those surfaces INTO the step cards
- * themselves, deleting the toolkit tile grid and hub-section tabs.
- *
- * Testids: `journey-shell`, `journey-step-{n}`, `journey-step-{n}-cta`.
- * Old testids on existing components stay untouched.
+ * Rule preserved from NORTH_STAR.md: the auto-opened SA CoParents
+ * Guide chatbot is rendered by the parent and is untouched here.
  */
-const PATHS = [
+
+const PRIMARY_MODULES = [
   {
-    key: "self",
-    title: "Self Journey",
-    tagline: "Start on your own.",
-    body: "Private safety check, a quick 40-question profile, a progress tracker, and the Communication Builder — all in one place. Nothing you do here is shared unless you decide to.",
-    icon: "fa-door-open",
-    tint: "purple",
-    expandable: true,
+    key: "foundation",
+    title: "1. Child Needs & Priorities",
+    body: "Focus on routines, school, and emotional security — the basis of your Foundation Statement.",
+    topic: "foundation",
   },
   {
-    key: "court",
-    title: "Court Ordered",
-    tagline: "Referred by a court, mediator, or attorney.",
-    body: "Enter the access key the professional gave you. We'll fast-forward you to the assessment they named.",
-    icon: "fa-gavel",
-    tint: "indigo",
-    expandable: false,
+    key: "coparenting",
+    title: "2. Co-Parenting Dynamics",
+    body: "Identify communication styles and decision-making preferences across 40 questions.",
+    topic: "coparenting",
+  },
+  {
+    key: "safety",
+    title: "3. Conflict Readiness & Goals",
+    body: "Prepare actionable guidelines for resolving future disagreements and spotting safety concerns.",
+    topic: "safety",
   },
 ];
 
-// iter256 — Communication Builder "?" explainer, lifted out of PATHS
-// so it can live inline inside the Self Journey panel.
+const DEEP_DIVES = [
+  {
+    key: "educational",
+    label: "Educational",
+    icon: "fa-graduation-cap",
+    hover: "hover:bg-emerald-50",
+    border: "border-emerald-200",
+    color: "text-emerald-800",
+  },
+  {
+    key: "medical",
+    label: "Medical",
+    icon: "fa-stethoscope",
+    hover: "hover:bg-sky-50",
+    border: "border-sky-200",
+    color: "text-sky-800",
+  },
+  {
+    key: "psychological",
+    label: "Psychological",
+    icon: "fa-brain",
+    hover: "hover:bg-fuchsia-50",
+    border: "border-fuchsia-200",
+    color: "text-fuchsia-800",
+  },
+];
+
 const BIFF_INFO = {
   title: "What's a BIFF rewrite?",
   body: "BIFF stands for Brief, Informative, Friendly, and Firm — a research-backed way to answer a hot message without matching its heat. You keep the facts, drop the drama, and leave less room for a fight.",
-  linkKind: "biff_book",
 };
 
-const TINT_CLASSES = {
-  purple: {
-    ring: "border-purple-300",
-    chip: "bg-purple-100 text-purple-800",
-    icon: "bg-purple-100 text-purple-700",
-    cta: "bg-purple-600 hover:bg-purple-700 text-white",
-    accent: "text-purple-700",
+const STATUS_META = {
+  completed: {
+    label: "Completed",
+    chip: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    ring: "border-emerald-200 bg-emerald-50/60",
+    cta: "bg-emerald-600 hover:bg-emerald-700",
+    ctaLabel: "Review responses",
   },
-  indigo: {
-    ring: "border-indigo-300",
-    chip: "bg-indigo-100 text-indigo-800",
-    icon: "bg-indigo-100 text-indigo-700",
-    cta: "bg-indigo-600 hover:bg-indigo-700 text-white",
-    accent: "text-indigo-700",
+  in_progress: {
+    label: "In progress",
+    chip: "bg-blue-100 text-blue-800 border-blue-200",
+    ring: "border-blue-300 bg-blue-50/40",
+    cta: "bg-blue-600 hover:bg-blue-700",
+    ctaLabel: "Continue",
   },
-  emerald: {
-    ring: "border-emerald-300",
-    chip: "bg-emerald-100 text-emerald-800",
-    icon: "bg-emerald-100 text-emerald-700",
-    cta: "bg-emerald-600 hover:bg-emerald-700 text-white",
-    accent: "text-emerald-700",
-  },
-  amber: {
-    ring: "border-amber-300",
-    chip: "bg-amber-100 text-amber-800",
-    icon: "bg-amber-100 text-amber-700",
-    cta: "bg-amber-600 hover:bg-amber-700 text-white",
-    accent: "text-amber-700",
-  },
-  rose: {
-    ring: "border-rose-300",
-    chip: "bg-rose-100 text-rose-800",
-    icon: "bg-rose-100 text-rose-700",
-    cta: "bg-rose-600 hover:bg-rose-700 text-white",
-    accent: "text-rose-700",
+  not_yet: {
+    label: "Not started",
+    chip: "bg-slate-100 text-slate-700 border-slate-200",
+    ring: "border-slate-200 bg-white",
+    cta: "bg-slate-800 hover:bg-slate-900",
+    ctaLabel: "Start",
   },
 };
-
-function pickCurrentStep() {
-  // Deprecated iter254 — the shell no longer tracks a sequential
-  // "current step." Kept as a stub only until any lingering import
-  // is removed. See `activePath` state inside JourneyShell for the
-  // replacement.
-  return null;
-}
 
 export function JourneyShell({
   user,
@@ -100,110 +106,182 @@ export function JourneyShell({
   pathPickedAt,
   courtKey = null,
   verifiedMediator = null,
-  // Path CTAs — same handlers the old Gateway used, so the
-  // Safety-First gate still fires before either entry.
   onEnterParent = () => {},
   onEnterCourt = () => {},
-  // Self Journey panel — safety check launcher + grey-rock controls.
   onOpenSafety = () => {},
   onClearGreyRock = () => {},
   onOpenSafetyRetake = () => {},
-  // Self Journey — self-assessment preview URL (static HTML in /public).
   selfAssessmentUrl = "/coparenting-self-assessment-preview.html",
-  // Self Journey — Co-parenting assessment / Guided Journey launcher.
   onOpenGuidedJourney = () => {},
-  // Communication Builder — BIFF Coach + growth record signals.
   onOpenBiffCoach = () => {},
+  onOpenIntroGuide = () => {},
+  onOpenReport = () => {},
   biffAuthoredCount = 0,
   biffPairCount = 0,
-  // Intro guide chip (soft, non-blocking).
-  onOpenIntroGuide = () => {},
-  // Grey-rock chip surface, if applicable.
+  progressByTopic = {},
   safetyFlagged = false,
 }) {
   const safetyFlag = safetyFlagged || !!(safetyAck && safetyAck.flagged);
 
-  // iter254 — the three top-level paths aren't sequential steps any
-  // more, so there's no "current step." The Self Journey panel is
-  // the only one with inline expansion; it auto-opens when the
-  // parent has picked that door before (we recognise them as a
-  // returning Self Journey parent).
-  const [expandedPath, setExpandedPath] = useState(null);
-  const activePath =
-    expandedPath !== null ? expandedPath : pathPickedAt ? "self" : null;
-
-  // iter253 — which path's "?" info card is currently open (null = none).
-  const [infoOpenPath, setInfoOpenPath] = useState(null);
-
-  // iter255 — Privacy Check inline explainer inside Self Journey.
+  const [activeTab, setActiveTab] = useState("reflect");
   const [privacyOpen, setPrivacyOpen] = useState(false);
-
-  // iter256 — Communication Builder inline "?" explainer, now nested
-  // inside the Self Journey panel instead of its own top-level tile.
+  const [helpStage, setHelpStage] = useState(null);
   const [biffInfoOpen, setBiffInfoOpen] = useState(false);
 
-  // iter257 — "Help me choose" one-question router inside Self
-  // Journey. `helpStage` is either null (closed), "main" (the four
-  // top-level choices), or "child" (the Educational/Medical/
-  // Psychological sub-choice after the parent picks "Focus on my
-  // child's needs").
-  const [helpStage, setHelpStage] = useState(null);
-
-  // iter253 — Bill Eddy's BIFF book link. Env-configurable so the
-  // user can swap the direct publisher link for an affiliate link
-  // without a code change.
   const biffBookUrl = process.env.REACT_APP_BIFF_BOOK_URL || "";
   const biffBookTitle =
     process.env.REACT_APP_BIFF_BOOK_TITLE || "the BIFF book";
   const biffBookAuthor = process.env.REACT_APP_BIFF_BOOK_AUTHOR || "";
 
   const greetingName = user?.name ? user.name.split(" ")[0] : null;
+  const isCourtMode = !!courtKey;
+
+  // Overall progress — share of the three primary modules that are
+  // "completed." Keeps the counting simple and visible.
+  const progressPct = useMemo(() => {
+    const done = PRIMARY_MODULES.filter(
+      (m) => progressByTopic?.[m.topic] === "completed"
+    ).length;
+    return Math.round((done / PRIMARY_MODULES.length) * 100);
+  }, [progressByTopic]);
+
+  const quickExit = () => {
+    // Low-friction DV pattern: open a neutral weather page in the
+    // same tab so a parent in distress can hide the app instantly.
+    try {
+      window.location.replace("https://www.weather.com/");
+    } catch {
+      // best-effort — nothing else to do if replace fails.
+    }
+  };
 
   return (
-    <div
-      data-testid="journey-shell"
-      className="space-y-4"
-    >
-      {/* Soft welcome. Not a modal, not a door — just a line of
-          text so the parent knows the five cards are a map, not a
-          choice to make. */}
-      <section className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="shrink-0 w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
-            <i className="fa-solid fa-hand-holding-heart"></i>
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
+    <div data-testid="journey-shell" className="space-y-4">
+      {/* Welcome banner */}
+      <section
+        data-testid="dashboard-banner"
+        className="rounded-2xl p-4 bg-gradient-to-r from-slate-900 to-blue-950 text-white shadow-sm"
+      >
+        <div className="flex flex-col gap-3">
+          <div>
+            <div className="text-[10px] uppercase font-bold tracking-wider text-blue-300">
               Welcome{greetingName ? `, ${greetingName}` : ""}
             </div>
-            <h2 className="text-base font-bold text-slate-900 leading-tight">
-              Pick your path.
+            <h2 className="text-base font-bold leading-tight">
+              {isCourtMode
+                ? "Complete your court-ordered steps."
+                : "Complete your reflection steps to build your Foundation Statement."}
             </h2>
-            <p className="text-xs text-slate-600 mt-1 leading-snug">
-              Two ways in. Your Reports and PDF Export stay one
-              tap away at the bottom whenever you need them.
-            </p>
+          </div>
+          <div
+            data-testid="dashboard-progress"
+            className="bg-slate-800/70 rounded-xl p-3 border border-slate-700"
+          >
+            <div className="flex justify-between text-[11px] font-medium mb-1.5">
+              <span className="text-slate-300">Overall completion</span>
+              <span className="text-blue-300" data-testid="dashboard-progress-pct">
+                {progressPct}%
+              </span>
+            </div>
+            <div className="w-full bg-slate-700/60 rounded-full h-2">
+              <div
+                className="bg-blue-400 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
           </div>
         </div>
+      </section>
 
+      {/* Controls strip: mode toggle, privacy, quick exit */}
+      <section
+        data-testid="dashboard-controls"
+        className="flex items-center gap-2 flex-wrap"
+      >
         <button
           type="button"
-          data-testid="journey-open-intro-guide"
-          onClick={onOpenIntroGuide}
-          className="mt-3 w-full py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs transition"
+          data-testid="dashboard-mode-toggle"
+          onClick={onEnterCourt}
+          className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition ${
+            isCourtMode
+              ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+              : "bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100"
+          }`}
         >
-          <i className="fa-solid fa-comment-dots mr-1.5"></i>
-          Not sure where to start? Chat with the Guide
+          <i
+            className={`fa-solid ${
+              isCourtMode ? "fa-gavel" : "fa-user"
+            } mr-1`}
+          ></i>
+          {isCourtMode ? "Court-Ordered Mode" : "Self-Guided Mode"}
+        </button>
+        <button
+          type="button"
+          data-testid="dashboard-privacy-btn"
+          onClick={() => setPrivacyOpen((v) => !v)}
+          aria-expanded={privacyOpen}
+          className="px-3 py-1.5 rounded-full text-[11px] font-semibold border border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 transition"
+        >
+          <i className="fa-solid fa-user-shield mr-1"></i>
+          Privacy
+        </button>
+        <div className="flex-1" />
+        <button
+          type="button"
+          data-testid="dashboard-quick-exit"
+          onClick={quickExit}
+          className="px-3 py-1.5 rounded-md text-[11px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
+        >
+          <i className="fa-solid fa-bolt mr-1"></i>
+          Quick Exit
         </button>
       </section>
 
-      {/* iter251 — court-ordered status card. Shown at the top of
-          the shell (not inside a step) whenever a court key is
-          verified. Replaces the Step-3 inline banner since Step 3
-          was deleted. */}
+      {privacyOpen && (
+        <div
+          data-testid="dashboard-privacy-card"
+          className="rounded-xl bg-indigo-50 border border-indigo-200 p-3 text-[12px] text-indigo-950 leading-snug space-y-2"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="font-bold text-indigo-900">
+              What stays on your device
+            </div>
+            <button
+              type="button"
+              data-testid="dashboard-privacy-close"
+              onClick={() => setPrivacyOpen(false)}
+              aria-label="Close explainer"
+              className="shrink-0 w-5 h-5 rounded-full bg-white hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center"
+            >
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>
+              Your drafts, answers, and BIFF rewrites live in this
+              browser first (local storage).
+            </li>
+            <li>
+              A private copy syncs to your account so you can pick
+              back up on another device.
+            </li>
+            <li>
+              Nothing is shared with a mediator, court, or anyone
+              else unless you tap <span className="font-semibold">Share</span>{" "}
+              on a specific report.
+            </li>
+            <li>
+              Grey-rock mode and your Safety-First answers are stored
+              privately — never shown to the other parent.
+            </li>
+          </ul>
+        </div>
+      )}
+
+      {/* Court-ordered verified banner (shown above tabs, if any) */}
       {courtKey && (
         <div
-          data-testid="journey-court-banner"
+          data-testid="dashboard-court-banner"
           className="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-[11px] text-emerald-900 leading-snug flex items-start gap-2"
         >
           <i className="fa-solid fa-gavel text-emerald-600 mt-0.5"></i>
@@ -216,578 +294,503 @@ export function JourneyShell({
         </div>
       )}
 
-      {/* Grey-rock soft indicator — if the parent is in grey-rock
-          mode they already see the chip inside AlignmentHub when
-          they tap Step 2–5. The shell adds a tiny banner above
-          the step list so it's visible BEFORE they tap anything. */}
-      {safetyFlag && (
-        <div
-          data-testid="journey-grey-rock-banner"
-          className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-900 flex items-start gap-2"
+      {/* Persistent safety strip — Safety First always available,
+          Grey-Rock chip only when flagged. */}
+      <section data-testid="dashboard-safety-strip" className="space-y-2">
+        <button
+          type="button"
+          data-testid="dashboard-safety-first"
+          onClick={onOpenSafety}
+          className="w-full p-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-left transition flex items-center gap-2"
         >
-          <i className="fa-solid fa-shield-halved text-amber-600 mt-0.5"></i>
-          <div className="leading-snug">
-            <span className="font-semibold">Grey-rock mode is on.</span>{" "}
-            <span className="text-amber-800">
-              Tools and language are quietly adapted. You can turn it
-              off inside Self Journey.
-            </span>
-          </div>
-        </div>
-      )}
+          <i className="fa-solid fa-shield-heart"></i>
+          <span className="text-sm font-bold">Safety First</span>
+          <span className="ml-auto text-[11px] opacity-90">
+            Private · DV &amp; IPV check
+          </span>
+        </button>
+        {safetyFlag && (
+          <GreyRockToggleChip
+            onClear={onClearGreyRock}
+            onRetake={onOpenSafetyRetake}
+          />
+        )}
+      </section>
 
-      {/* iter254 — three main paths. Self Journey expands inline
-          (safety + progress + preview CTAs). Court Ordered and
-          Communication Builder tap through to their respective
-          flows directly. */}
-      <div className="space-y-3">
-        {PATHS.map((path) => {
-          const tint = TINT_CLASSES[path.tint];
-          const isActive = activePath === path.key;
-          const isInfoOpen = infoOpenPath === path.key;
-
-          const handleCardClick = () => {
-            if (path.key === "self") {
-              setExpandedPath(isActive ? "" : "self");
-            } else if (path.key === "court") {
-              onEnterCourt();
-            }
-          };
-
+      {/* Tab bar */}
+      <nav
+        data-testid="dashboard-tabs"
+        className="bg-white rounded-xl border border-slate-200 flex overflow-x-auto"
+      >
+        {[
+          { key: "reflect", label: "1. Reflect & Assess", icon: "fa-list-check" },
+          { key: "report", label: "2. Foundation Report", icon: "fa-file-lines" },
+          { key: "coach", label: "3. AI Coach & Tools", icon: "fa-comments" },
+        ].map((t) => {
+          const isActive = activeTab === t.key;
           return (
-            <div key={path.key} data-testid={`journey-path-${path.key}`}>
-              {/* Primary path button. role="button" (not <button>)
-                  so the "?" info button can nest without invalid
-                  HTML. Keyboard Enter/Space wired by hand. */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={handleCardClick}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleCardClick();
-                  }
-                }}
-                data-testid={`journey-path-${path.key}-btn`}
-                className={`w-full text-left bg-white rounded-2xl border-2 ${
-                  isActive && path.expandable
-                    ? tint.ring
-                    : "border-slate-200"
-                } p-3 transition hover:shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400`}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`shrink-0 w-11 h-11 rounded-xl ${tint.icon} flex items-center justify-center`}
-                  >
-                    <i className={`fa-solid ${path.icon} text-lg`}></i>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <h3 className="text-sm font-bold text-slate-900 leading-tight">
-                        {path.title}
-                      </h3>
-                      {path.info && (
-                        <button
-                          type="button"
-                          data-testid={`journey-path-${path.key}-info-btn`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setInfoOpenPath(isInfoOpen ? null : path.key);
-                          }}
-                          aria-label={path.info.title}
-                          aria-expanded={isInfoOpen}
-                          className="shrink-0 w-5 h-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center transition"
-                        >
-                          ?
-                        </button>
-                      )}
-                    </div>
-                    <p className={`text-[11px] mt-0.5 leading-snug ${tint.accent}`}>
-                      {path.tagline}
-                    </p>
-                  </div>
-                  <i
-                    className={`fa-solid ${
-                      path.expandable
-                        ? isActive
-                          ? "fa-chevron-down"
-                          : "fa-chevron-right"
-                        : "fa-arrow-right"
-                    } text-slate-400 mt-3.5`}
-                  ></i>
-                </div>
-              </div>
+            <button
+              key={t.key}
+              type="button"
+              data-testid={`dashboard-tab-${t.key}`}
+              onClick={() => setActiveTab(t.key)}
+              className={`flex-1 min-w-[7rem] px-3 py-2.5 text-[11px] font-semibold whitespace-nowrap flex items-center justify-center gap-1.5 border-b-2 transition ${
+                isActive
+                  ? "border-blue-600 text-blue-700 bg-blue-50/60"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <i className={`fa-solid ${t.icon}`}></i>
+              <span>{t.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
-              {/* iter253 — inline info ("?") explainer. */}
-              {isInfoOpen && path.info && (
-                <div
-                  data-testid={`journey-path-${path.key}-info-card`}
-                  className="mt-1 rounded-xl bg-amber-50 border border-amber-200 p-3 text-[12px] text-amber-950 leading-snug space-y-2"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-bold text-amber-900">
-                      {path.info.title}
-                    </h4>
-                    <button
-                      type="button"
-                      data-testid={`journey-path-${path.key}-info-close`}
-                      onClick={() => setInfoOpenPath(null)}
-                      aria-label="Close explainer"
-                      className="shrink-0 w-5 h-5 rounded-full bg-white hover:bg-amber-100 text-amber-700 text-[10px] font-bold flex items-center justify-center"
-                    >
-                      <i className="fa-solid fa-xmark"></i>
-                    </button>
-                  </div>
-                  <p>{path.info.body}</p>
-                  {biffBookUrl && path.info.linkKind === "biff_book" && (
-                    <a
-                      href={biffBookUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-testid={`journey-path-${path.key}-info-book-link`}
-                      className="inline-flex items-center gap-1.5 mt-1 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-bold text-[11px] transition"
-                    >
-                      <i className="fa-solid fa-book"></i>
-                      Get {biffBookTitle}
-                      {biffBookAuthor ? ` — ${biffBookAuthor}` : ""}
-                      <i className="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-80"></i>
-                    </a>
-                  )}
+      {/* -------------------------------------------------------- */}
+      {/* TAB 1 — REFLECT & ASSESS                                  */}
+      {/* -------------------------------------------------------- */}
+      {activeTab === "reflect" && (
+        <section
+          data-testid="dashboard-view-reflect"
+          className="space-y-3"
+        >
+          {/* Not sure? Chat with the Guide */}
+          <button
+            type="button"
+            data-testid="dashboard-open-intro-guide"
+            onClick={onOpenIntroGuide}
+            className="w-full py-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-xs transition"
+          >
+            <i className="fa-solid fa-comment-dots mr-1.5"></i>
+            Not sure where to start? Chat with the Guide
+          </button>
+
+          {/* Help-me-choose chip */}
+          <button
+            type="button"
+            data-testid="dashboard-cta-help"
+            onClick={() =>
+              setHelpStage((s) => (s === null ? "main" : null))
+            }
+            aria-expanded={helpStage !== null}
+            className="w-full p-2.5 rounded-xl bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 text-left transition flex items-center gap-2"
+          >
+            <i className="fa-solid fa-circle-question"></i>
+            <span className="text-sm font-bold flex-1">
+              Help me choose where to start
+            </span>
+            <i
+              className={`fa-solid ${
+                helpStage !== null ? "fa-chevron-up" : "fa-chevron-down"
+              } text-xs opacity-70`}
+            ></i>
+          </button>
+          {helpStage !== null && (
+            <div
+              data-testid="dashboard-help-card"
+              className="rounded-xl bg-purple-50 border border-purple-200 p-3 text-[12px] text-slate-800 leading-snug space-y-2"
+            >
+              <div className="font-bold text-purple-900">
+                {helpStage === "child"
+                  ? "Which area of your child's life?"
+                  : "What brings you here today?"}
+              </div>
+              {helpStage === "main" && (
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    type="button"
+                    data-testid="help-choice-coparenting"
+                    onClick={() => {
+                      setHelpStage(null);
+                      onOpenGuidedJourney("coparenting");
+                    }}
+                    className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                  >
+                    <div className="font-semibold text-purple-900">
+                      Improve our co-parenting
+                    </div>
+                    <div className="text-[11px] text-slate-600">
+                      Understand how we're doing as co-parents.
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="help-choice-communication"
+                    onClick={() => {
+                      setHelpStage(null);
+                      setActiveTab("coach");
+                    }}
+                    className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                  >
+                    <div className="font-semibold text-purple-900">
+                      Help with communication
+                    </div>
+                    <div className="text-[11px] text-slate-600">
+                      Prepare a message or conversation.
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="help-choice-child"
+                    onClick={() => setHelpStage("child")}
+                    className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                  >
+                    <div className="font-semibold text-purple-900">
+                      Focus on my child's needs
+                    </div>
+                    <div className="text-[11px] text-slate-600">
+                      Educational, medical, or psychological.
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="help-choice-referral"
+                    onClick={() => {
+                      setHelpStage(null);
+                      onEnterCourt();
+                    }}
+                    className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
+                  >
+                    <div className="font-semibold text-purple-900">
+                      I was sent here
+                    </div>
+                    <div className="text-[11px] text-slate-600">
+                      A court, mediator or attorney referred me.
+                    </div>
+                  </button>
                 </div>
               )}
-
-              {/* Self Journey expanded panel — Privacy Check +
-                  Grey Rock Mode + Safety First + Progress tracker
-                  + 40-Q interactive preview + Communication Builder. */}
-              {path.key === "self" && isActive && (
-                <div
-                  data-testid="journey-path-self-panel"
-                  className="bg-slate-50 rounded-b-2xl border-2 border-t-0 border-purple-300 -mt-1 p-3 pt-4 text-[12px] text-slate-700 leading-snug space-y-2"
-                >
-                  <p>{path.body}</p>
-
-                  {/* iter257 — Help me choose: one-question router. */}
-                  <button
-                    type="button"
-                    data-testid="journey-path-self-cta-help"
-                    onClick={() =>
-                      setHelpStage((s) => (s === null ? "main" : null))
-                    }
-                    aria-expanded={helpStage !== null}
-                    className="w-full p-2.5 rounded-xl bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 text-left transition flex items-center gap-2"
-                  >
-                    <i className="fa-solid fa-circle-question"></i>
-                    <span className="text-sm font-bold flex-1">
-                      Help me choose where to start
-                    </span>
-                    <i
-                      className={`fa-solid ${
-                        helpStage !== null ? "fa-chevron-up" : "fa-chevron-down"
-                      } text-xs opacity-70`}
-                    ></i>
-                  </button>
-                  {helpStage !== null && (
-                    <div
-                      data-testid="journey-path-self-help-card"
-                      className="rounded-xl bg-purple-50 border border-purple-200 p-3 text-[12px] text-slate-800 leading-snug space-y-2"
-                    >
-                      <div className="font-bold text-purple-900">
-                        {helpStage === "child"
-                          ? "Which area of your child's life?"
-                          : "What brings you here today?"}
-                      </div>
-                      {helpStage === "main" && (
-                        <div className="grid grid-cols-1 gap-2">
-                          <button
-                            type="button"
-                            data-testid="journey-help-choice-coparenting"
-                            onClick={() => {
-                              setHelpStage(null);
-                              onOpenGuidedJourney("coparenting");
-                            }}
-                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
-                          >
-                            <div className="font-semibold text-purple-900">
-                              Improve our co-parenting
-                            </div>
-                            <div className="text-[11px] text-slate-600">
-                              Understand how we're doing as co-parents.
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            data-testid="journey-help-choice-communication"
-                            onClick={() => {
-                              setHelpStage(null);
-                              onOpenBiffCoach();
-                            }}
-                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
-                          >
-                            <div className="font-semibold text-purple-900">
-                              Help with communication
-                            </div>
-                            <div className="text-[11px] text-slate-600">
-                              Prepare a message or conversation.
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            data-testid="journey-help-choice-child"
-                            onClick={() => setHelpStage("child")}
-                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
-                          >
-                            <div className="font-semibold text-purple-900">
-                              Focus on my child's needs
-                            </div>
-                            <div className="text-[11px] text-slate-600">
-                              Educational, medical, or psychological.
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            data-testid="journey-help-choice-referral"
-                            onClick={() => {
-                              setHelpStage(null);
-                              onEnterCourt();
-                            }}
-                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
-                          >
-                            <div className="font-semibold text-purple-900">
-                              I was sent here
-                            </div>
-                            <div className="text-[11px] text-slate-600">
-                              A court, mediator or attorney referred me.
-                            </div>
-                          </button>
-                        </div>
-                      )}
-                      {helpStage === "child" && (
-                        <div className="grid grid-cols-1 gap-2">
-                          <button
-                            type="button"
-                            data-testid="journey-help-choice-child-educational"
-                            onClick={() => {
-                              setHelpStage(null);
-                              onOpenGuidedJourney("educational");
-                            }}
-                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
-                          >
-                            <div className="font-semibold text-purple-900">
-                              <i className="fa-solid fa-graduation-cap mr-1.5"></i>
-                              Educational
-                            </div>
-                            <div className="text-[11px] text-slate-600">
-                              School, learning, teachers, IEP/504.
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            data-testid="journey-help-choice-child-medical"
-                            onClick={() => {
-                              setHelpStage(null);
-                              onOpenGuidedJourney("medical");
-                            }}
-                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
-                          >
-                            <div className="font-semibold text-purple-900">
-                              <i className="fa-solid fa-stethoscope mr-1.5"></i>
-                              Medical
-                            </div>
-                            <div className="text-[11px] text-slate-600">
-                              Appointments, meds, allergies, consent.
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            data-testid="journey-help-choice-child-psychological"
-                            onClick={() => {
-                              setHelpStage(null);
-                              onOpenGuidedJourney("psychological");
-                            }}
-                            className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
-                          >
-                            <div className="font-semibold text-purple-900">
-                              <i className="fa-solid fa-brain mr-1.5"></i>
-                              Psychological
-                            </div>
-                            <div className="text-[11px] text-slate-600">
-                              Therapy, emotional needs, stressors.
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            data-testid="journey-help-choice-child-back"
-                            onClick={() => setHelpStage("main")}
-                            className="text-left text-[11px] text-purple-700 hover:text-purple-900 px-2 pt-1"
-                          >
-                            <i className="fa-solid fa-arrow-left mr-1"></i>
-                            Back
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Privacy Check — inline explainer, opens on tap. */}
-                  <button
-                    type="button"
-                    data-testid="journey-path-self-cta-privacy"
-                    onClick={() => setPrivacyOpen((v) => !v)}
-                    aria-expanded={privacyOpen}
-                    className="w-full p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-left transition flex items-center gap-2"
-                  >
-                    <i className="fa-solid fa-user-shield"></i>
-                    <span className="text-sm font-bold flex-1">
-                      Privacy Check
-                    </span>
-                    <i
-                      className={`fa-solid ${
-                        privacyOpen ? "fa-chevron-up" : "fa-chevron-down"
-                      } text-xs opacity-80`}
-                    ></i>
-                  </button>
-                  {privacyOpen && (
-                    <div
-                      data-testid="journey-path-self-privacy-card"
-                      className="rounded-xl bg-indigo-50 border border-indigo-200 p-3 text-[12px] text-indigo-950 leading-snug space-y-2"
-                    >
-                      <div className="font-bold text-indigo-900">
-                        What stays on your device
-                      </div>
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>
-                          Your drafts, answers, and BIFF rewrites live
-                          in this browser first (local storage).
-                        </li>
-                        <li>
-                          A private copy syncs to your account so you
-                          can pick back up on another device.
-                        </li>
-                        <li>
-                          Nothing is shared with a mediator, court,
-                          or anyone else unless you tap{" "}
-                          <span className="font-semibold">Share</span>{" "}
-                          on a specific report.
-                        </li>
-                        <li>
-                          Grey-rock mode and your Safety-First
-                          answers are stored privately — never shown
-                          to the other parent.
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Grey Rock Mode — chip only when safety-flagged
-                      (today's behaviour), moved above Safety First. */}
-                  {safetyFlag && (
-                    <GreyRockToggleChip
-                      onClear={onClearGreyRock}
-                      onRetake={onOpenSafetyRetake}
-                    />
-                  )}
-
-                  {/* Safety First — opens the DV/IPV safety screen. */}
-                  <button
-                    type="button"
-                    data-testid="journey-path-self-cta-safety"
-                    onClick={onOpenSafety}
-                    className="w-full p-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-left transition flex items-center gap-2"
-                  >
-                    <i className="fa-solid fa-shield-heart"></i>
-                    <span className="text-sm font-bold">
-                      Safety First
-                    </span>
-                  </button>
-
-                  {/* iter256 — Communication Builder, nested inside
-                      Self Journey (between Safety First and the
-                      Progress tracker). Keeps the "?" BIFF explainer
-                      and the growth record attached. */}
-                  <div
-                    data-testid="journey-path-self-biff-group"
-                    className="rounded-xl border border-amber-200 bg-amber-50/60 p-2.5 space-y-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        data-testid="journey-path-self-cta-biff"
-                        onClick={onOpenBiffCoach}
-                        className="flex-1 p-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-left transition flex items-center gap-2"
-                      >
-                        <i className="fa-solid fa-wand-magic-sparkles"></i>
-                        <span className="text-sm font-bold flex-1">
-                          Communication Builder
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        data-testid="journey-path-self-biff-info-btn"
-                        onClick={() => setBiffInfoOpen((v) => !v)}
-                        aria-label={BIFF_INFO.title}
-                        aria-expanded={biffInfoOpen}
-                        className="shrink-0 w-8 h-8 rounded-full bg-white hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold flex items-center justify-center transition"
-                      >
-                        ?
-                      </button>
-                    </div>
-                    {biffInfoOpen && (
-                      <div
-                        data-testid="journey-path-self-biff-info-card"
-                        className="rounded-lg bg-white border border-amber-200 p-2.5 text-[12px] text-amber-950 leading-snug space-y-2"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-bold text-amber-900">
-                            {BIFF_INFO.title}
-                          </h4>
-                          <button
-                            type="button"
-                            data-testid="journey-path-self-biff-info-close"
-                            onClick={() => setBiffInfoOpen(false)}
-                            aria-label="Close explainer"
-                            className="shrink-0 w-5 h-5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold flex items-center justify-center"
-                          >
-                            <i className="fa-solid fa-xmark"></i>
-                          </button>
-                        </div>
-                        <p>{BIFF_INFO.body}</p>
-                        {biffBookUrl && (
-                          <a
-                            href={biffBookUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            data-testid="journey-path-self-biff-info-book-link"
-                            className="inline-flex items-center gap-1.5 mt-1 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-bold text-[11px] transition"
-                          >
-                            <i className="fa-solid fa-book"></i>
-                            Get {biffBookTitle}
-                            {biffBookAuthor ? ` — ${biffBookAuthor}` : ""}
-                            <i className="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-80"></i>
-                          </a>
-                        )}
-                      </div>
-                    )}
-                    <div
-                      data-testid="journey-path-self-biff-progress"
-                      className="rounded-lg bg-white border border-amber-200 p-2 flex items-center gap-2"
-                    >
-                      <div className="shrink-0 w-7 h-7 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center font-bold text-[11px]">
-                        {biffAuthoredCount}
-                      </div>
-                      <div className="min-w-0 flex-1 leading-snug">
-                        <div className="text-[9px] uppercase font-bold tracking-wider text-amber-800">
-                          Your growth record
-                        </div>
-                        <p className="text-[10px] text-slate-700">
-                          {biffAuthoredCount === 0 ? (
-                            <>
-                              No rewrites yet. Your first draft will
-                              start the record.
-                            </>
-                          ) : (
-                            <>
-                              {biffAuthoredCount} message
-                              {biffAuthoredCount === 1 ? "" : "s"} reworked
-                              {biffPairCount > 0
-                                ? ` · ${biffPairCount} filed as snapshot${
-                                    biffPairCount === 1 ? "" : "s"
-                                  }`
-                                : ""}
-                              .
-                            </>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    data-testid="journey-path-self-cta-progress"
-                    onClick={() => onOpenGuidedJourney("coparenting")}
-                    className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition flex items-center gap-2`}
-                  >
-                    <i className="fa-solid fa-chart-line"></i>
-                    <span className="text-sm font-bold">
-                      Track my progress (take or re-take the 40-Q check)
-                    </span>
-                  </button>
-                  <a
-                    href={selfAssessmentUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    data-testid="journey-path-self-cta-preview"
-                    className="block w-full p-2.5 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-300 text-indigo-800 text-left transition text-sm font-bold"
-                  >
-                    <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
-                    Try the 40-question interactive preview
-                  </a>
-
-                  {/* iter257 — Deep-dive return row. Small secondary
-                      chips so parents can jump straight into any of
-                      the three child-focused deep-dives without going
-                      through the "Help me choose" router. */}
-                  <div
-                    data-testid="journey-path-self-deepdives"
-                    className="pt-1"
-                  >
-                    <div className="text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1.5 px-1">
-                      Child-focused deep dives
-                    </div>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      <button
-                        type="button"
-                        data-testid="journey-deepdive-educational"
-                        onClick={() => onOpenGuidedJourney("educational")}
-                        className="text-center bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg py-1.5 px-1 text-[11px] font-semibold transition"
-                      >
-                        <i className="fa-solid fa-graduation-cap block text-sm mb-0.5"></i>
-                        Educational
-                      </button>
-                      <button
-                        type="button"
-                        data-testid="journey-deepdive-medical"
-                        onClick={() => onOpenGuidedJourney("medical")}
-                        className="text-center bg-white hover:bg-sky-50 border border-sky-200 text-sky-800 rounded-lg py-1.5 px-1 text-[11px] font-semibold transition"
-                      >
-                        <i className="fa-solid fa-stethoscope block text-sm mb-0.5"></i>
-                        Medical
-                      </button>
-                      <button
-                        type="button"
-                        data-testid="journey-deepdive-psychological"
-                        onClick={() => onOpenGuidedJourney("psychological")}
-                        className="text-center bg-white hover:bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 rounded-lg py-1.5 px-1 text-[11px] font-semibold transition"
-                      >
-                        <i className="fa-solid fa-brain block text-sm mb-0.5"></i>
-                        Psychological
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* iter254 — "Enter voluntary journey" link,
-                      only shown the first time (parent hasn't
-                      committed to any path yet). This keeps the
-                      clinical Safety-First auto-gate accessible
-                      for parents who want the guarded entry. */}
-                  {!pathPickedAt && (
+              {helpStage === "child" && (
+                <div className="grid grid-cols-1 gap-2">
+                  {DEEP_DIVES.map((d) => (
                     <button
+                      key={d.key}
                       type="button"
-                      data-testid="journey-path-self-cta-commit"
-                      onClick={onEnterParent}
-                      className="w-full p-2 rounded-xl bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 text-left transition text-xs font-semibold"
+                      data-testid={`help-choice-child-${d.key}`}
+                      onClick={() => {
+                        setHelpStage(null);
+                        onOpenGuidedJourney(d.key);
+                      }}
+                      className="text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg p-2.5"
                     >
-                      <i className="fa-solid fa-check mr-1.5"></i>
-                      Commit to the Self Journey
+                      <div className="font-semibold text-purple-900">
+                        <i className={`fa-solid ${d.icon} mr-1.5`}></i>
+                        {d.label}
+                      </div>
                     </button>
-                  )}
+                  ))}
+                  <button
+                    type="button"
+                    data-testid="help-choice-child-back"
+                    onClick={() => setHelpStage("main")}
+                    className="text-left text-[11px] text-purple-700 hover:text-purple-900 px-2 pt-1"
+                  >
+                    <i className="fa-solid fa-arrow-left mr-1"></i>
+                    Back
+                  </button>
                 </div>
               )}
             </div>
-          );
-        })}
-      </div>
+          )}
+
+          {/* Reflection Roadmap card */}
+          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-bold text-slate-900">
+                Your reflection roadmap
+              </h3>
+              <span
+                data-testid="dashboard-roadmap-badge"
+                className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200"
+              >
+                {progressPct}% complete
+              </span>
+            </div>
+            <div className="grid gap-2.5">
+              {PRIMARY_MODULES.map((m) => {
+                const status = progressByTopic?.[m.topic] || "not_yet";
+                const meta = STATUS_META[status];
+                return (
+                  <div
+                    key={m.key}
+                    data-testid={`dashboard-module-${m.key}`}
+                    data-status={status}
+                    className={`p-3 rounded-lg border ${meta.ring}`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span
+                        className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${meta.chip}`}
+                      >
+                        {meta.label}
+                      </span>
+                      {status === "completed" && (
+                        <i className="fa-solid fa-check text-emerald-600"></i>
+                      )}
+                    </div>
+                    <div className="text-sm font-bold text-slate-900 leading-tight">
+                      {m.title}
+                    </div>
+                    <p className="text-[11px] text-slate-600 mt-1 leading-snug">
+                      {m.body}
+                    </p>
+                    <button
+                      type="button"
+                      data-testid={`dashboard-module-${m.key}-cta`}
+                      onClick={() =>
+                        m.topic === "safety"
+                          ? onOpenSafety()
+                          : onOpenGuidedJourney(m.topic)
+                      }
+                      className={`mt-2.5 w-full py-2 ${meta.cta} text-white rounded-md text-xs font-bold transition`}
+                    >
+                      {meta.ctaLabel}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 40-Q interactive preview — kept accessible on Tab 1 */}
+          <a
+            href={selfAssessmentUrl}
+            target="_blank"
+            rel="noreferrer"
+            data-testid="dashboard-preview-link"
+            className="block w-full p-2.5 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-300 text-indigo-800 text-left transition text-sm font-bold"
+          >
+            <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
+            Try the 40-question interactive preview
+          </a>
+
+          {/* Deep-dive secondary row */}
+          <div data-testid="dashboard-deepdives" className="pt-1">
+            <div className="text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1.5 px-1">
+              Child-focused deep dives
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {DEEP_DIVES.map((d) => {
+                const status = progressByTopic?.[d.key] || "not_yet";
+                return (
+                  <button
+                    key={d.key}
+                    type="button"
+                    data-testid={`dashboard-deepdive-${d.key}`}
+                    data-status={status}
+                    onClick={() => onOpenGuidedJourney(d.key)}
+                    className={`relative text-center bg-white ${d.hover} border ${d.border} ${d.color} rounded-lg py-1.5 px-1 text-[11px] font-semibold transition`}
+                  >
+                    {status === "completed" && (
+                      <span className="absolute top-1 right-1 text-emerald-600 text-[10px]">
+                        <i className="fa-solid fa-check"></i>
+                      </span>
+                    )}
+                    <i className={`fa-solid ${d.icon} block text-sm mb-0.5`}></i>
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* First-time commit chip — only before any path pick */}
+          {!pathPickedAt && (
+            <button
+              type="button"
+              data-testid="dashboard-cta-commit"
+              onClick={onEnterParent}
+              className="w-full p-2 rounded-xl bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 text-left transition text-xs font-semibold"
+            >
+              <i className="fa-solid fa-check mr-1.5"></i>
+              Commit to the Self Journey
+            </button>
+          )}
+        </section>
+      )}
+
+      {/* -------------------------------------------------------- */}
+      {/* TAB 2 — FOUNDATION REPORT                                 */}
+      {/* -------------------------------------------------------- */}
+      {activeTab === "report" && (
+        <section
+          data-testid="dashboard-view-report"
+          className="space-y-3"
+        >
+          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                <i className="fa-solid fa-file-lines"></i>
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-slate-900">
+                  Foundation Statement Summary
+                </h3>
+                <p className="text-[11px] text-slate-600 mt-1 leading-snug">
+                  Objective, non-blame summary generated from your
+                  completed reflections. Open it to review, edit, or
+                  export the PDF.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              data-testid="dashboard-report-open"
+              onClick={onOpenReport}
+              className="mt-3 w-full py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold transition"
+            >
+              <i className="fa-solid fa-folder-open mr-1.5"></i>
+              Open Foundation Report
+            </button>
+          </div>
+
+          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+            <h4 className="text-xs font-bold text-slate-700 mb-2">
+              What's included
+            </h4>
+            <ul className="text-[12px] text-slate-700 space-y-1.5 list-disc pl-4 leading-snug">
+              <li>Your Foundation Statement (non-blame, child-focused).</li>
+              <li>Co-parenting assessment (40-Q) summary when complete.</li>
+              <li>Snapshots you filed from the Communication Builder.</li>
+              <li>
+                Deep-dive notes (Educational, Medical, Psychological)
+                if present.
+              </li>
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {/* -------------------------------------------------------- */}
+      {/* TAB 3 — AI COACH & TOOLS                                  */}
+      {/* -------------------------------------------------------- */}
+      {activeTab === "coach" && (
+        <section
+          data-testid="dashboard-view-coach"
+          className="space-y-3"
+        >
+          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                data-testid="dashboard-cta-biff"
+                onClick={onOpenBiffCoach}
+                className="flex-1 p-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-left transition flex items-center gap-2"
+              >
+                <i className="fa-solid fa-wand-magic-sparkles"></i>
+                <span className="text-sm font-bold flex-1">
+                  Communication Builder
+                </span>
+              </button>
+              <button
+                type="button"
+                data-testid="dashboard-biff-info-btn"
+                onClick={() => setBiffInfoOpen((v) => !v)}
+                aria-label={BIFF_INFO.title}
+                aria-expanded={biffInfoOpen}
+                className="shrink-0 w-8 h-8 rounded-full bg-white hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold flex items-center justify-center transition"
+              >
+                ?
+              </button>
+            </div>
+            {biffInfoOpen && (
+              <div
+                data-testid="dashboard-biff-info-card"
+                className="rounded-lg bg-white border border-amber-200 p-2.5 text-[12px] text-amber-950 leading-snug space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="font-bold text-amber-900">
+                    {BIFF_INFO.title}
+                  </h4>
+                  <button
+                    type="button"
+                    data-testid="dashboard-biff-info-close"
+                    onClick={() => setBiffInfoOpen(false)}
+                    aria-label="Close explainer"
+                    className="shrink-0 w-5 h-5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold flex items-center justify-center"
+                  >
+                    <i className="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+                <p>{BIFF_INFO.body}</p>
+                {biffBookUrl && (
+                  <a
+                    href={biffBookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="dashboard-biff-info-book-link"
+                    className="inline-flex items-center gap-1.5 mt-1 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-bold text-[11px] transition"
+                  >
+                    <i className="fa-solid fa-book"></i>
+                    Get {biffBookTitle}
+                    {biffBookAuthor ? ` — ${biffBookAuthor}` : ""}
+                    <i className="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-80"></i>
+                  </a>
+                )}
+              </div>
+            )}
+            <div
+              data-testid="dashboard-biff-progress"
+              className="rounded-lg bg-white border border-amber-200 p-2 flex items-center gap-2"
+            >
+              <div className="shrink-0 w-7 h-7 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center font-bold text-[11px]">
+                {biffAuthoredCount}
+              </div>
+              <div className="min-w-0 flex-1 leading-snug">
+                <div className="text-[9px] uppercase font-bold tracking-wider text-amber-800">
+                  Your growth record
+                </div>
+                <p className="text-[10px] text-slate-700">
+                  {biffAuthoredCount === 0 ? (
+                    <>No rewrites yet. Your first draft will start the record.</>
+                  ) : (
+                    <>
+                      {biffAuthoredCount} message
+                      {biffAuthoredCount === 1 ? "" : "s"} reworked
+                      {biffPairCount > 0
+                        ? ` · ${biffPairCount} filed as snapshot${
+                            biffPairCount === 1 ? "" : "s"
+                          }`
+                        : ""}
+                      .
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Deep-dive chips repeated on Tab 3 per founder spec */}
+          <div data-testid="dashboard-coach-deepdives" className="pt-1">
+            <div className="text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1.5 px-1">
+              Child-focused deep dives
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {DEEP_DIVES.map((d) => {
+                const status = progressByTopic?.[d.key] || "not_yet";
+                return (
+                  <button
+                    key={d.key}
+                    type="button"
+                    data-testid={`dashboard-coach-deepdive-${d.key}`}
+                    data-status={status}
+                    onClick={() => onOpenGuidedJourney(d.key)}
+                    className={`relative text-center bg-white ${d.hover} border ${d.border} ${d.color} rounded-lg py-1.5 px-1 text-[11px] font-semibold transition`}
+                  >
+                    {status === "completed" && (
+                      <span className="absolute top-1 right-1 text-emerald-600 text-[10px]">
+                        <i className="fa-solid fa-check"></i>
+                      </span>
+                    )}
+                    <i className={`fa-solid ${d.icon} block text-sm mb-0.5`}></i>
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

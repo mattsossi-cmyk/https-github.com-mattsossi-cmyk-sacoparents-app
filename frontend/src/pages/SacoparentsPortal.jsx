@@ -503,6 +503,56 @@ export default function SacoparentsPortal() {
     };
   }, [alignRecords]);
 
+  // iter258 — Per-topic progress signal for the new 3-tab dashboard.
+  // "completed" = a snapshot (or foundation text / safetyAck /
+  // align-record) exists; "in_progress" = a guided-journey draft is
+  // in localStorage but no completion artifact yet; otherwise "not_yet".
+  const progressByTopic = useMemo(() => {
+    const readDraft = (topic) => {
+      try {
+        return !!window.localStorage.getItem(
+          `sacoparents_guided_draft_${topic}`
+        );
+      } catch {
+        return false;
+      }
+    };
+    const hasSnap = (topic) =>
+      snapshotHistory.some((s) => s?.topic === topic);
+    const state = (completed, topic) => {
+      if (completed) return "completed";
+      if (readDraft(topic)) return "in_progress";
+      return "not_yet";
+    };
+    const foundationDone =
+      !!(foundationText && foundationText.trim() &&
+         foundationText.trim() !== (DEFAULT_FOUNDATION || "").trim());
+    const safetyDone = !!(safetyAck && (safetyAck.ack_at || safetyAck.flagged));
+    return {
+      foundation: state(foundationDone || hasSnap("foundation"), "foundation"),
+      coparenting: state(hasSnap("coparenting"), "coparenting"),
+      safety: state(safetyDone || hasSnap("safety"), "safety"),
+      educational: state(
+        hasSnap("educational") || alignmentCounts.Educational > 0,
+        "educational"
+      ),
+      medical: state(
+        hasSnap("medical") || alignmentCounts.Medical > 0,
+        "medical"
+      ),
+      psychological: state(
+        hasSnap("psychological") || alignmentCounts.Psychological > 0,
+        "psychological"
+      ),
+    };
+  }, [
+    snapshotHistory,
+    foundationText,
+    safetyAck,
+    alignmentCounts,
+    guidedDraftsRev,
+  ]);
+
   const filteredRecords = useMemo(() => {
     return folderFilter === "All"
       ? alignRecords
@@ -1704,6 +1754,8 @@ export default function SacoparentsPortal() {
             onOpenGuidedJourney={(topic) => openGuidedJourney(topic)}
             onOpenBiffCoach={() => setBiffDrawerOpen(true)}
             onOpenIntroGuide={() => setIntroOpen(true)}
+            onOpenReport={() => setFoundationDrawerOpen(true)}
+            progressByTopic={progressByTopic}
             safetyFlagged={safetyFlagged}
           />
         )}

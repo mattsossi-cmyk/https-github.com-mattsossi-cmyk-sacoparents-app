@@ -45,6 +45,87 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter258 · 3-Tab Dashboard
+
+Founder ask (via Tailwind HTML mockup): "we need to redo the
+dashboard - with the three tabs - keeping the chatbot introduction
+messages intact".
+
+Full rewrite of `JourneyShell.jsx` from a 2-tile layout into the
+founder's 3-tab dashboard. The auto-opened SA CoParents Guide
+chatbot modal is rendered by `SacoparentsPortal` and is left
+completely untouched.
+
+**Layout (top to bottom)**
+- `dashboard-banner` — dark gradient welcome + overall progress bar
+  (`dashboard-progress-pct`; % = share of the three primary modules
+  marked completed).
+- `dashboard-controls` — a strip with:
+  - `dashboard-mode-toggle` (Self-Guided ↔ Court-Ordered; opens the
+    court access-key screen, auto-flips label once `courtKey` is
+    verified).
+  - `dashboard-privacy-btn` opens `dashboard-privacy-card` (what
+    stays on your device explainer).
+  - `dashboard-quick-exit` — DV best practice; replaces the page
+    with `https://www.weather.com/`.
+- `dashboard-court-banner` (when a court key is verified).
+- `dashboard-safety-strip` — persistent on every tab:
+  - `dashboard-safety-first` (always visible, opens DV/IPV screen).
+  - Grey-rock chip (`AlignmentHub.GreyRockToggleChip`) only when
+    `safetyFlag` is on.
+- `dashboard-tabs` with three tabs: `dashboard-tab-reflect`,
+  `dashboard-tab-report`, `dashboard-tab-coach`.
+
+**Tab 1 — `dashboard-view-reflect`**
+- `dashboard-open-intro-guide` — "Not sure where to start? Chat with
+  the Guide" (opens the same intro guide modal — chatbot messages
+  intact).
+- `dashboard-cta-help` → inline `dashboard-help-card` with the 4
+  "What brings you here today?" choices and the 3-way
+  Educational/Medical/Psychological sub-choice stage.
+- Reflection roadmap card with three primary modules:
+  `dashboard-module-foundation` → Foundation (topic `foundation`),
+  `dashboard-module-coparenting` → Co-Parenting Dynamics (topic
+  `coparenting`), `dashboard-module-safety` → Conflict Readiness
+  (opens the Safety screen). Each shows a `completed`/`in_progress`/
+  `not_yet` chip and a context-sensitive CTA label
+  (Review responses / Continue / Start). No hard-lock gating.
+- `dashboard-preview-link` — the 40-Q interactive preview.
+- `dashboard-deepdives` row — three deep-dive chips
+  (`dashboard-deepdive-educational`, `-medical`, `-psychological`)
+  with completion ticks when the parent has filed an align-record
+  or snapshot for that topic.
+- `dashboard-cta-commit` (first-time only).
+
+**Tab 2 — `dashboard-view-report`**
+- Foundation Statement Summary card with
+  `dashboard-report-open` (opens the Foundation drawer via the new
+  `onOpenReport` prop → `setFoundationDrawerOpen(true)`).
+- "What's included" list.
+
+**Tab 3 — `dashboard-view-coach`**
+- Communication Builder block: `dashboard-cta-biff` (opens BIFF
+  drawer), `dashboard-biff-info-btn` → `dashboard-biff-info-card`
+  with the "What's a BIFF rewrite?" explainer and the Bill-Eddy
+  book affiliate link, and `dashboard-biff-progress` growth-record
+  chip.
+- `dashboard-coach-deepdives` — the three deep-dive chips repeated
+  here so parents in the Coach tab can jump to a child-focused
+  journey without switching tabs.
+
+**Progress signal**
+- New `progressByTopic` memo in `SacoparentsPortal.jsx` derives
+  completion from `snapshotHistory`, `foundationText` vs
+  `DEFAULT_FOUNDATION`, `safetyAck`, and `alignmentCounts`. The dep
+  array includes `guidedDraftsRev` so the memo re-evaluates when a
+  draft is added/removed.
+
+No backend changes. No PDF or AI-service touch — clinical lockstep
+preserved. ESLint warnings are the same long-standing ones from
+earlier iters (intentional `guidedDraftsRev` dep included).
+
+
+
 ### 2026-02-27 — Iter257 · Help Me Choose + Deep-Dive Return
 
 Founder ask:
