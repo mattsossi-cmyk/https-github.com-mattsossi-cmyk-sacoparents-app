@@ -36,6 +36,14 @@ const STEPS = [
     icon: "fa-compass",
     tint: "indigo",
   },
+  {
+    n: 3,
+    title: "Communication Builder",
+    tagline: "Rewrite before you send.",
+    body: "Draft a message, see a calmer BIFF rewrite, and build a record of your communication growth over time. Works whether you're here on your own or court-referred.",
+    icon: "fa-wand-magic-sparkles",
+    tint: "amber",
+  },
 ];
 
 const TINT_CLASSES = {
@@ -104,6 +112,13 @@ export function JourneyShell({
   selfAssessmentUrl = "/coparenting-self-assessment-preview.html",
   // Step 2 — Co-parenting assessment / Guided Journey launcher.
   onOpenGuidedJourney = () => {},
+  // iter252 — Step 3 Communication Builder. biffAuthoredCount is
+  // the number of BIFF rewrites the parent has drafted themselves
+  // (seed demo entry subtracted out). biffPairCount is the number
+  // filed as `biff_pair` snapshots (parent-explicit saves).
+  onOpenBiffCoach = () => {},
+  biffAuthoredCount = 0,
+  biffPairCount = 0,
   // Intro guide chip (soft, non-blocking).
   onOpenIntroGuide = () => {},
   // Grey-rock chip surface, if applicable.
@@ -149,9 +164,8 @@ export function JourneyShell({
               Here's where to begin.
             </h2>
             <p className="text-xs text-slate-600 mt-1 leading-snug">
-              Two short steps to start. Your BIFF Coach and
-              Reports stay one tap away at the bottom whenever
-              you need them.
+              Three short steps. Your Reports and PDF Export stay
+              one tap away at the bottom whenever you need them.
             </p>
           </div>
         </div>
@@ -346,6 +360,72 @@ export function JourneyShell({
                         <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
                         Try the 40-question interactive preview
                       </a>
+                    </div>
+                  )}
+
+                  {step.n === 3 && (
+                    <div className="space-y-2 pt-1">
+                      {/* iter252 — Communication Builder progress
+                          strip. Tracks the parent's authored BIFF
+                          rewrites + explicitly filed Draft-to-
+                          Snapshot pairs. Always visible so a parent
+                          sees their growth record before drafting
+                          the next message. */}
+                      <div
+                        data-testid="journey-step-3-progress"
+                        className="rounded-xl bg-white border border-amber-200 p-3 flex items-center gap-3"
+                      >
+                        <div className="shrink-0 w-10 h-10 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-sm">
+                          {biffAuthoredCount}
+                        </div>
+                        <div className="min-w-0 flex-1 leading-snug">
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-amber-800">
+                            Your growth record
+                          </div>
+                          <p className="text-[11px] text-slate-700">
+                            {biffAuthoredCount === 0 ? (
+                              <>
+                                No rewrites yet. Your first draft
+                                will start the record.
+                              </>
+                            ) : (
+                              <>
+                                {biffAuthoredCount} message
+                                {biffAuthoredCount === 1 ? "" : "s"}{" "}
+                                reworked
+                                {biffPairCount > 0
+                                  ? ` · ${biffPairCount} filed as snapshot${
+                                      biffPairCount === 1 ? "" : "s"
+                                    }`
+                                  : ""}
+                                .
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        data-testid="journey-step-3-cta-biff"
+                        onClick={onOpenBiffCoach}
+                        className={`w-full p-2.5 rounded-xl ${tint.cta} text-left transition flex items-center gap-2`}
+                      >
+                        <i className="fa-solid fa-pen-nib"></i>
+                        <span className="text-sm font-bold">
+                          {biffAuthoredCount === 0
+                            ? "Draft my first BIFF rewrite"
+                            : "Draft another message"}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="journey-step-3-cta-history"
+                        onClick={onOpenBiffCoach}
+                        className="w-full p-2.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-300 text-amber-900 text-left transition text-xs font-semibold flex items-center gap-2"
+                      >
+                        <i className="fa-solid fa-clock-rotate-left"></i>
+                        <span>Review my past rewrites &amp; suggestions</span>
+                      </button>
                     </div>
                   )}
                 </div>

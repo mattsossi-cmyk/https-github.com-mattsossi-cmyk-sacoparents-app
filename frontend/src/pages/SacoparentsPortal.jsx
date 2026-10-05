@@ -1684,6 +1684,15 @@ export default function SacoparentsPortal() {
             }
             courtKey={courtKey}
             verifiedMediator={verifiedMediator}
+            /* iter252 — Communication Builder progress signals.
+               `biffAuthoredCount` subtracts the seed demo entry so a
+               brand-new parent sees "0 messages reworked." A filed
+               `biff_pair` snapshot (iter250 Draft-to-Snapshot) is a
+               stronger explicit-save signal. */
+            biffAuthoredCount={Math.max(0, biffLogs.length - 1)}
+            biffPairCount={
+              snapshotHistory.filter((s) => s?.topic === "biff_pair").length
+            }
             onEnterParent={enterParentJourney}
             onEnterCourt={enterCourtPath}
             onOpenSafety={() => {
@@ -1693,6 +1702,7 @@ export default function SacoparentsPortal() {
             onClearGreyRock={onClearGreyRock}
             onOpenSafetyRetake={onOpenSafetyRetake}
             onOpenGuidedJourney={(topic) => openGuidedJourney(topic)}
+            onOpenBiffCoach={() => setBiffDrawerOpen(true)}
             onOpenIntroGuide={() => setIntroOpen(true)}
             safetyFlagged={safetyFlagged}
           />
