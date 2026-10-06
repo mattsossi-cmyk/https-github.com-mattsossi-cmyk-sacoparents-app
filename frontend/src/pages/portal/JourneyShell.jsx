@@ -34,6 +34,7 @@ import { GreyRockToggleChip } from "./AlignmentHub";
 
 const DOOR_MEMORY_KEY = "sacoparents_last_door";
 const CELEBRATED_KEY = "sacoparents_celebrated_modules";
+const ALL_THREE_KEY = "sacoparents_all_three_celebrated";
 
 const readLastDoor = () => {
   try {
@@ -88,6 +89,54 @@ const celebrateConfetti = () => {
     });
   } catch {
     /* best-effort */
+  }
+};
+
+// iter262 — Finale burst for the all-three completion. Two bursts
+// from either side of the viewport so the moment really lands, but
+// still restrained enough to remain tasteful on a clinical surface.
+const celebrateFinaleConfetti = () => {
+  try {
+    const palette = ["#7c3aed", "#2563eb", "#10b981", "#f59e0b", "#ef4444"];
+    confetti({
+      particleCount: 140,
+      spread: 90,
+      startVelocity: 45,
+      origin: { x: 0.2, y: 0.75 },
+      colors: palette,
+      ticks: 220,
+      scalar: 1.05,
+    });
+    setTimeout(() => {
+      confetti({
+        particleCount: 140,
+        spread: 90,
+        startVelocity: 45,
+        origin: { x: 0.8, y: 0.75 },
+        colors: palette,
+        ticks: 220,
+        scalar: 1.05,
+      });
+    }, 180);
+  } catch {
+    /* best-effort */
+  }
+};
+
+const readAllThreeCelebrated = () => {
+  try {
+    return window.localStorage.getItem(ALL_THREE_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const writeAllThreeCelebrated = (value) => {
+  try {
+    if (value) window.localStorage.setItem(ALL_THREE_KEY, "1");
+    else window.localStorage.removeItem(ALL_THREE_KEY);
+  } catch {
+    /* storage unavailable — fail silently */
   }
 };
 
@@ -198,7 +247,12 @@ export function JourneyShell({
   // the first time each primary module transitions to "completed".
   // The celebrated set is persisted so refreshing or revisiting the
   // sub-view does not re-trigger the celebration.
+  //
+  // iter262 — When all three primary modules are complete, fire a
+  // bigger finale (double confetti burst + special toast) exactly
+  // once, de-duped via `ALL_THREE_KEY`.
   const celebratedRef = useRef(readCelebrated());
+  const allThreeRef = useRef(readAllThreeCelebrated());
   useEffect(() => {
     const already = celebratedRef.current;
     const newly = PRIMARY_MODULES.filter(
@@ -206,28 +260,99 @@ export function JourneyShell({
         progressByTopic?.[m.topic] === "completed" &&
         !already.includes(m.topic)
     );
-    if (newly.length === 0) return;
-    newly.forEach((m, idx) => {
-      // Stagger the toasts and the confetti bursts slightly so a
-      // double-complete still feels sequential rather than noisy.
+    const allDoneNow = PRIMARY_MODULES.every(
+      (m) => progressByTopic?.[m.topic] === "completed"
+    );
+    if (newly.length > 0) {
+      newly.forEach((m, idx) => {
+        setTimeout(() => {
+          celebrateConfetti();
+          try {
+            toast.success(`You completed ${m.title}`, {
+              description:
+                "Nice work. Your reflection is saved privately.",
+              duration: 4500,
+            });
+          } catch {
+            /* toast library absent — ignore */
+          }
+        }, idx * 500);
+      });
+      const nextList = Array.from(
+        new Set([...already, ...newly.map((m) => m.topic)])
+      );
+      celebratedRef.current = nextList;
+      writeCelebrated(nextList);
+    }
+    if (allDoneNow && !allThreeRef.current) {
+      // Fire the finale after the per-module bursts have had a beat
+      // to play out.
+      const delay = Math.max(0, newly.length * 500 + 200);
       setTimeout(() => {
-        celebrateConfetti();
+        celebrateFinaleConfetti();
         try {
-          toast.success(`You completed ${m.title}`, {
-            description: "Nice work. Your reflection is saved privately.",
-            duration: 4500,
+          toast.success("All three reflections complete", {
+            description:
+              "A, B, and C are done. Your Foundation Statement is ready to review.",
+            duration: 6500,
           });
         } catch {
           /* toast library absent — ignore */
         }
-      }, idx * 500);
-    });
-    const nextList = Array.from(
-      new Set([...already, ...newly.map((m) => m.topic)])
-    );
-    celebratedRef.current = nextList;
-    writeCelebrated(nextList);
+      }, delay);
+      allThreeRef.current = true;
+      writeAllThreeCelebrated(true);
+    }
   }, [progressByTopic]);
+
+  // iter262 — Replay celebration. Re-fires the per-module toasts +
+  // confetti bursts for every module currently marked completed,
+  // plus the finale when applicable. Does NOT touch the celebrated
+  // memory, so the first-time auto-celebration still runs normally.
+  const replayCelebration = () => {
+    const completed = PRIMARY_MODULES.filter(
+      (m) => progressByTopic?.[m.topic] === "completed"
+    );
+    if (completed.length === 0) {
+      try {
+        toast("No celebrations to replay yet", {
+          description:
+            "Finish one of the three reflections to earn your first.",
+          duration: 4000,
+        });
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+    completed.forEach((m, idx) => {
+      setTimeout(() => {
+        celebrateConfetti();
+        try {
+          toast.success(`You completed ${m.title}`, {
+            description:
+              "Replay — your reflection stays saved privately.",
+            duration: 3500,
+          });
+        } catch {
+          /* ignore */
+        }
+      }, idx * 450);
+    });
+    if (completed.length === PRIMARY_MODULES.length) {
+      setTimeout(() => {
+        celebrateFinaleConfetti();
+        try {
+          toast.success("All three reflections complete", {
+            description: "Replay — A, B, and C are done.",
+            duration: 5500,
+          });
+        } catch {
+          /* ignore */
+        }
+      }, completed.length * 450 + 200);
+    }
+  };
 
   const greetingName = user?.name ? user.name.split(" ")[0] : null;
 
@@ -660,6 +785,18 @@ export function JourneyShell({
               </p>
             </div>
             <i className="fa-solid fa-arrow-right text-slate-400"></i>
+          </button>
+          <button
+            type="button"
+            data-testid="door-self-replay-celebration"
+            onClick={replayCelebration}
+            className="w-full text-left bg-white hover:bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 text-[11px] font-semibold text-purple-800 transition flex items-center gap-2"
+          >
+            <i className="fa-solid fa-wand-sparkles"></i>
+            Replay celebration
+            <span className="ml-auto text-[10px] text-slate-500">
+              Relive your reflection wins
+            </span>
           </button>
         </div>
 

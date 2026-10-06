@@ -45,6 +45,56 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter262 · All-Three Finale + Celebration Replay
+
+Founder ask:
+- "All-Three Celebration: Fire a bigger confetti plus a special
+  toast when all three primary modules are completed so the finale
+  really lands".
+- "Celebration Replay: Add a tiny 'Replay celebration' link in
+  Report tab so parents can relive each completion whenever they
+  want".
+
+Delivered inside `JourneyShell`:
+
+**All-three finale**
+- New `celebrateFinaleConfetti()` fires two staggered confetti
+  bursts from the left (x 0.2) and right (x 0.8) edges, 140
+  particles each, 90° spread, 5-colour palette, 220 ticks — bigger
+  than the per-module burst but still restrained for a clinical
+  surface.
+- A new `ALL_THREE_KEY = "sacoparents_all_three_celebrated"`
+  localStorage flag de-dupes the finale.
+- The existing celebration `useEffect` now also checks
+  `PRIMARY_MODULES.every(m => completed)`; when true and the flag
+  is unset, it schedules the finale after the per-module toasts
+  (delay = `newly.length * 500 + 200` ms) and sets the flag.
+- Toast title `"All three reflections complete"`, description
+  `"A, B, and C are done. Your Foundation Statement is ready to
+  review."`, 6.5-second duration.
+
+**Replay celebration chip**
+- New `door-self-replay-celebration` chip rendered inside the Self
+  Journey sub-view directly under the Foundation Statement row
+  (the closest surface to the retired "Report tab").
+- `replayCelebration()` re-fires confetti + per-module toasts for
+  every module currently marked `completed`, staggered 450 ms
+  apart, with the toast description switched to
+  `"Replay — your reflection stays saved privately."`. If all
+  three are completed, the finale burst + a short-form finale
+  toast ("Replay — A, B, and C are done.") plays last.
+- Important: Replay does NOT touch `CELEBRATED_KEY` or
+  `ALL_THREE_KEY`, so first-time auto-celebrations still run their
+  own path on fresh devices.
+- Empty-state fallback: tapping replay with no completed modules
+  shows a neutral toast ("No celebrations to replay yet / Finish
+  one of the three reflections to earn your first.").
+
+No backend changes. No PDF or AI-service touch — clinical lockstep
+preserved.
+
+
+
 ### 2026-02-27 — Iter261 · Progress Celebrations + Switch-Door Chip
 
 Founder ask:
