@@ -92,6 +92,13 @@ def build_record(version: str, responses: dict, source: str = "sacoparentsalign.
             "item_count": len(items), "concern_count": concern, "responses": clean}
 
 
+def public_record(scr: dict | None) -> dict | None:
+    """Report-safe projection: receipt metadata only — never responses or items."""
+    if not scr:
+        return None
+    return {k: scr.get(k) for k in ("source", "version", "title", "completed_at", "tier", "answered_count", "skipped_count", "item_count")}
+
+
 def receipt(scr: dict | None, parent_label: str) -> str:
     """Court-safe line: receipt, version, tier, date. Never answer text."""
     if not scr:
@@ -125,7 +132,7 @@ def _status(doc: dict) -> dict:
     out = {}
     for r in ("a", "b"):
         p = doc["participants"][r]
-        scr = ((doc.get("responses") or {}).get(r) or {}).get("safety_screening") or None
+        scr = (doc.get("safety_screenings") or {}).get(r) or None
         ver = (doc.get("safety_version") or {}).get(r) or default_version(p.get("gender"))
         out[r] = {"name": p.get("name") or f"Parent {r.upper()}", "gender": p.get("gender"), "version": ver, "needs_assignment": ver is None, "received": bool(scr),
                   "tier": scr.get("tier") if scr else None, "tier_label": TIER_LABEL.get(scr.get("tier")) if scr else None, "version_label": VERSION_LABEL.get(ver or ""),
@@ -169,7 +176,7 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if not version:
             raise HTTPException(status_code=409, detail="Your professional has not assigned a screening version yet")
         rec = build_record(version, body.responses or {})
-        await db.joint_reports.update_one({"id": rid}, {"$set": {f"responses.{role}.safety_screening": rec, f"responses.{role}.safety_route": rec["tier"] >= 2}})
+        await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_screenings.{role}": rec, f"safety_flags.{role}": rec["tier"] >= 2}})
         return {"tier": rec["tier"], "tier_label": TIER_LABEL[rec["tier"]], "resources": RESOURCES, "answered_count": rec["answered_count"], "skipped_count": rec["skipped_count"], "scale_note": SCALE_NOTE}
 
     @r.get("/joint/reports/{rid}/safety-screening/{role}/responses")
@@ -177,7 +184,7 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         doc = await get_joint_report_doc(rid, user)
         if not _is_pro(doc, user):
             raise HTTPException(status_code=403, detail="Item-level screening responses are visible only to the assigned professional")
-        scr = ((doc.get("responses") or {}).get(role) or {}).get("safety_screening") if role in ("a", "b") else None
+        scr = (doc.get("safety_screenings") or {}).get(role) if role in ("a", "b") else None
         if not scr:
             raise HTTPException(status_code=404, detail="No safety screening on file for this parent")
         await log_access(doc, user, f"Viewed Parent {role.upper()} safety screening responses (professional-only)", "safety_screening")

@@ -43,7 +43,9 @@ def tier_for(score: int) -> dict:
 
 
 def _complete(case: dict) -> bool:
-    return bool(case.get("responses", {}).get("a") and case.get("responses", {}).get("b")) and case.get("kind", "joint_report") == "joint_report"
+    resp = case.get("responses") or {}
+    a, b = (resp.get("a") or {}), (resp.get("b") or {})
+    return bool(a.get("answers") and b.get("answers")) and case.get("kind", "joint_report") == "joint_report"
 
 
 def joint_findings(case: dict) -> dict | None:

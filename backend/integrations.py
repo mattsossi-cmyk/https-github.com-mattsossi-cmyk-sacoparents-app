@@ -239,11 +239,13 @@ async def import_external_assessment(rid: str, user=Depends(get_current_user)):
             "answers": {},
             "imported": True,
             "external": payload,
-            "safety_screening": screening,
             "safety_route": bool(screening and ((screening.get("tier") or 0) >= 2 or screening.get("concern_count"))),
             "completed_at": datetime.now(timezone.utc).isoformat(),
         }
     }
+    if screening:
+        updates[f"safety_screenings.{role}"] = screening
+        updates[f"safety_flags.{role}"] = updates[f"responses.{role}"]["safety_route"]
     other = "b" if role == "a" else "a"
     if doc.get("responses", {}).get(other):
         updates["status"] = "ready"

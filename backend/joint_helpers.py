@@ -146,11 +146,11 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
         out["court_submissions"] = doc.get("court_submissions") or []
     if role:
         my = doc.get("responses", {}).get(role)
-        out["my_answers"] = my["answers"] if my else None
+        out["my_answers"] = my.get("answers") if my else None
     if doc.get("created_by") == uid:
         out["foundation_statements"] = [{"side": side, "parent": (doc.get("participants", {}).get(side) or {}).get("name") or f"Parent {side.upper()}", "title": s.get("title", "Foundation Statement"), "content": s.get("content", ""), "structured": bool(s.get("structured"))}
                                         for side in ("a", "b") for s in (doc.get("responses", {}).get(side) or {}).get("foundation") or []]
-        out["safety_route"] = any((doc.get("responses", {}).get(s) or {}).get("safety_route") for s in ("a", "b"))
+        out["safety_route"] = any((doc.get("responses", {}).get(s) or {}).get("safety_route") or (doc.get("safety_flags") or {}).get(s) for s in ("a", "b"))
         out["safety_case_id"] = doc.get("safety_case_id")
         if invitation:
             out["invitation"] = _invitation_public(invitation)

@@ -122,7 +122,7 @@ async def case_brief(doc: dict) -> dict:
     total = sum(len(v) for v in buckets.values())
     rec = recommended_pathway(rep.get("joint_rating"))
     return {"case_id": doc["id"], "case_code": doc.get("case_code"), "subject_label": doc.get("subject_label"), "child_name": doc.get("child_name"), "case_status": case_status(doc), "is_safety": bool(doc.get("is_safety")),
-            "safety_route": any((doc.get("responses", {}).get(s) or {}).get("safety_route") for s in ("a", "b")), "participants": parts, "buckets": buckets,
+            "safety_route": any((doc.get("responses", {}).get(s) or {}).get("safety_route") or (doc.get("safety_flags") or {}).get(s) for s in ("a", "b")), "participants": parts, "buckets": buckets,
             "agreed_pct": round(len(buckets["Agreed"]) / total * 100) if total else None, "joint_rating": rep.get("joint_rating"), "pathways": rep.get("conflict_pathways") or [],
             "suggested_pathway": rec["name"] if rec else None, "report_status": rep.get("status") or "not_started", "steps": _steps(doc, rep, parts, both)}
 

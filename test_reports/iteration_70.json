@@ -1,0 +1,43 @@
+{
+  "summary": "Iter88 (batch 1 report framing + batch 2 private safety screenings) end-to-end testing. Created /app/backend/tests/test_iter88_safety_e2e.py: 15/16 pass. Backend tests cover: court report-guide auth, screening overview (version defaults from gender, needs_assignment on missing gender, pro-only assign), parent flows (version A tier 3 with a2=Sometimes, version B tier 2 with b3=Frequently, all-Never → tier 1, skipping-everything → tier 1), parent-sees-spec-only-her-role (co-parent role NOT returned, intro contains privacy notice, trigger_warning, items a1..a6/c1/c2/a9/safe present, hotline 1-800-799-7233 included), privacy (parent A→B responses 403, parent A→own responses 403 pro-only, pro view inserts access_events{kind:'safety_screening'}, co-parent view of /joint/reports/{id} has no UNIQUE-TEXT-123 leak), professional-report PDF (contains 'Version A (women)', 'Tier 3', 'Not a validated or diagnostic instrument', 'answers six questions', 'SOURCE: PARENT-REPORTED', 'PROFESSIONAL STATEMENT'; does NOT contain raw answers or 'UNIQUE-TEXT-123' or 'Sometimes'). Found & fixed 2 batch-2-regression crashes (KeyError 'answers' in joint_helpers.joint_public and coparenting_tiers._complete when parent submits only safety_screening, no joint answers). Found 1 critical privacy leak (see below). Frontend: landing page renders hero-mantra, 5 step items, 4 distinction cards (landing-distinctions-1..4), journey-details+court-pathway-details are <details> collapsed, no mobile 390px horizontal overflow. Professional view of /joint/{id} shows safety-screening-panel with safety-screening-a, safety-screening-b and safety-screening-a-version select; /cases/{id}/professional-report renders lens-six-questions, lens-source-legend, lens-statement-divider, lens-imported-screening, lens-sec-3-framing (with lens-source-parent nested), lens-sec-5-framing, lens-legal.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/cases/{id}/professional-report", "issue": "LEAK: response JSON includes safety_screening.a.responses with full raw parent answers (e.g. {\"a2\":\"Sometimes\",\"a9\":\"UNIQUE-TEXT-123\",\"safe\":\"Very safe\"}). Review spec says 'Report must show receipt/version/tier only, never answers.' Also bypasses the explicit /safety-screening/{role}/responses endpoint which is the only one that logs access_events. Fix: in backend/legal_lens.py _lens_view (line 289), the _screening(doc, r) helper returns the full stored record; strip `responses` and `items` before including in the view payload — e.g. {k:v for k,v in scr.items() if k not in ('responses','items')}.", "priority": "CRITICAL"}
+    ],
+    "minor": [
+      {"endpoint": "GET /api/joint/reports/{id} and GET /api/cases/{id}/professional-report(/pdf)", "issue": "Both 500'd when a parent submitted ONLY safety_screening without joint-report answers. Root cause: joint_helpers.py:149 did `my['answers']` and coparenting_tiers._complete returned true even without `answers` key, so joint_engine._analyze_answers crashed with KeyError 'answers'. FIXED by testing agent in both files (defensive .get('answers'))."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "LegalLensReport / ImportedScreening", "issue": "testids lens-imported-screening-a-status and lens-imported-screening-a-tier do not render when screening is Not Received. Review request expects lens-imported-screening-a-status to show 'Received' only after submission; verify these ids are emitted once a screening exists (positive case not reproducible via UI alone without parent completing — covered by backend). If main agent intended them always present with 'Not Received' value, this is a gap.", "selector": "[data-testid=lens-imported-screening-a-status]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard PipelineStepper", "issues": ["Known hydration warning persists: <span> cannot be child of <option> (PipelineStepper.jsx:21). Flagged iter68, iter69."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter88_safety_e2e.py", "/app/test_reports/pytest/iter88.xml"],
+  "action_items": [
+    "CRITICAL: Strip `responses` and `items` from safety_screening records returned by /api/cases/{id}/professional-report (backend/legal_lens.py _lens_view). Only expose version/tier/completed_at/source/counts/receipt in the view payload. Raw answers must be accessible only via the explicit /safety-screening/{role}/responses endpoint that already logs access_events.",
+    "Verify lens-imported-screening-a-status / lens-imported-screening-a-tier testids render in both Received and Not-Received states (frontend ImportedScreening.jsx).",
+    "Fix persistent PipelineStepper <span> inside <option> hydration warning."
+  ],
+  "critical_code_review_comments": [
+    "backend/safety_screening.py submit_screening writes `responses.{role}.safety_screening` into the joint_reports doc without an `answers` key — this broke two other code paths assuming `responses.{role}.answers` exists (joint_helpers.joint_public, coparenting_tiers._complete). Consider isolating safety_screening in a sibling field (e.g., `safety_screenings.{role}`) so it never pollutes the joint-report response shape. Testing agent patched the two consumers defensively, but any future code touching responses.{role} needs the same guard.",
+    "backend/legal_lens.py _lens_view (line 289) returns _screening(doc,r) which is the raw stored dict including `responses` (full raw parent answers). That's a privacy leak into the standard pro-report payload — the only pro endpoint that should expose raw answers is /safety-screening/{role}/responses, which logs access_events; the main report payload bypasses that log and may be cached/forwarded.",
+    "backend/safety_screening.py has unverified San Antonio hotline marked `TODO(verify)` with `verified: False` — fine to keep until verified but ensure UI reflects verified flag."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter88_safety_e2e.py",
+    "/app/backend/joint_helpers.py (defensive .get('answers') at line 149)",
+    "/app/backend/coparenting_tiers.py (_complete now checks responses.{role}.answers presence)"
+  ],
+  "success_rate": {"backend": "94% (15/16; the 1 failing test is a real privacy leak)", "frontend": "~95% of required testids verified"},
+  "test_credentials": "Pro: approval.test.pro1@gmail.com / TestPass2026!. Fixture parents created at qa.parent.*/qa.ng.*/qa.skip.*@example.com with password TestPass2026!; cleaned up by backend/tests/conftest.py pytest_sessionfinish.",
+  "seed_data_creation": "Per pytest run: 1 pro login + 3 joint cases (TEST Kiddo/TEST NoGender/TEST Skip) + 2–5 parent fixture accounts; all removed by conftest teardown.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Reusable e2e suite at /app/backend/tests/test_iter88_safety_e2e.py. The leak test TestProfessionalReport::test_pro_report_has_screening_summary will pass once _lens_view strips raw `responses`/`items` from safety_screening records. Note: pytest fixtures scope=module; conftest cleans fixture emails at session end. Judge /court-dashboard/report-guide was only exercised for 401/403 auth gating (no judge creds used); if judge auth is wanted end-to-end, use judge.ui.preview@sacoparentsalign.com / testpass123 from /app/memory/test_credentials.md.",
+  "rca of the issue": "Batch 2 added safety_screening submission that writes into responses.{role}.safety_screening but does not create a responses.{role}.answers key. (1) joint_helpers.joint_public assumed `my['answers']` always existed → KeyError on co-parent viewing /joint/reports/{id}. (2) coparenting_tiers._complete checked truthiness of responses.{role} dict (truthy because of safety_screening) and then called generate_joint_report which required `answers`. Fixed both by requiring/using .get('answers'). (3) legal_lens._lens_view includes _screening(doc,r) which returns the full stored safety_screening record including responses — a direct privacy leak in the professional-report JSON (not fixed, main agent must address)."
+}

@@ -885,3 +885,19 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - `ImportedScreening.jsx` guards non-string `completed_at` and missing `items`.
 - Readiness: new `not_required` flag; `_prefill_header` sets "Not Required" (not "Not Received") for the other parent when only one screening is imported on a non-safety-subject case. RECEIPT options now include "Not Required". Flows through editor radios, PDF Section 2, court summary.
 - Not yet redeployed — awaiting user go-ahead.
+
+## 2026-10-06 Six-Questions framing + source labels + landing simplification (agent-tested, NOT deployed)
+- `lens_walkthrough.py`: SIX_QUESTIONS, QUESTION_OF_SECTION, SOURCE_OF_SECTION, SOURCE_LEGEND, DISTINCTIONS, WORKFLOW. Walkthrough + judge report-guide endpoints expose question/source/legend/distinctions.
+- Report editor + sample report: `ReportFraming.jsx` (SixQuestions, SourceLegend, Distinctions, StatementDivider); every LensSec shows question subtitle + SourceTag; green divider before §9.
+- PDF: How-to-Read page has six questions, legend, four distinctions; headings print question + SOURCE; `statement_band()` before §9; `_ai_tag()` marks AI-drafted fields inline.
+- Landing: hero mantra, 5-step INVITE→ASSESS→ALIGN→REVIEW→RESPOND, Four distinctions block, long journey + 8 court steps collapsed in <details>. Judge guide shows six questions/legend/distinctions.
+
+## 2026-10-06 Private safety screenings Version A (women) / Version B (men) (agent-tested 16/16 E2E + 15 unit, NOT deployed)
+- `backend/safety_screening.py`: VERSIONS, tiers (design guide), gender→version default, routes GET/PUT /joint/reports/{rid}/safety-screening, PUT …/assign (pro), GET …/{role}/responses (pro-only, access logged kind=safety_screening).
+- Stored at top-level `joint_reports.safety_screenings.{role}` + `safety_flags.{role}` (NOT under responses — avoids marking a parent "complete"). Legal Lens view exposes `public_record()` only (no responses). PDF prints receipt/version/tier/date + "not a validated or diagnostic instrument" note.
+- `safety_import.py` parses new structured bridge `safety_screening {version,tier,completed_at,answered_count,responses}`; legacy free-text still supported (version/tier None → "legacy format").
+- JointNew: gender selects (parent-a-gender-select / co-parent-gender-select). JointReport: SafetyScreeningPanel. Pages: /joint/:id/safety-screening (parent), /joint/:id/safety-screening/:role (pro).
+- TODOs in code: FVPS San Antonio 210-733-8810 unverified; Velonis 2021 HITS permission pending.
+- Testing-agent fixes kept: joint_helpers.joint_public `.get("answers")`, coparenting_tiers._complete checks answers.
+- Note: run E2E tests with `-n0` (xdist workers collide on timestamped fixture emails).
+- DEPLOY PENDING user confirmation.

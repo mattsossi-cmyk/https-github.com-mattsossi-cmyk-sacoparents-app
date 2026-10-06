@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from coparenting_tiers import joint_findings, suggested_score
 from joint_data import SAFETY_SUBJECT_KEYS
+from safety_screening import public_record
 
 from lens_data import (  # noqa: F401  (re-exported for callers importing from legal_lens)
     TAGLINE, STATUSES, SAFETY_NOTE, RATING_NOTE, JOINT_OPTIONS, RECEIPT, INDIVIDUAL_BANDS, JOINT_BANDS, INDIVIDUAL_BASE, JOINT_BASE, INDIVIDUAL_RESOURCES, JOINT_RESOURCES, SCALE_TABLE, RISK_CATEGORIES, RISK_LEVELS, SAFETY_ALERT, PATHWAYS, RESOURCE_CATEGORIES, REASSESS_INTERVALS, REASSESS_UP_DEFAULT, REASSESS_DOWN_DEFAULT, INTRO_TEXT, recommended_pathway, resource_lists, CONFLICT_OPTIONS, TEXT_FIELDS, LIST_FIELDS, DICT_FIELDS, INT_FIELDS, ROWS_FIELDS, RISK_FIELDS, GROWTH_FIELDS, CHILD_FIELDS, CONFLICT_GUIDANCE, CHILD_FOCUS_CATEGORIES, REPORT_PRINCIPLE, REPORT_PURPOSE, SAFETY_PATHWAY, REPORT_DISCLAIMER, growth_lines, AI_MODELS, classify_individual, classify_joint)
@@ -69,7 +70,7 @@ def _pick(ans: dict, key: str) -> str:
 
 
 def _screening(doc: dict, role: str) -> dict | None:
-    return ((doc.get("responses") or {}).get(role) or {}).get("safety_screening") or None
+    return (doc.get("safety_screenings") or {}).get(role) or ((doc.get("responses") or {}).get(role) or {}).get("safety_screening") or None
 
 
 def readiness(doc: dict) -> list[dict]:
@@ -286,7 +287,7 @@ async def _lens_view(db, rep: dict, doc: dict) -> dict:
     rep = {**rep, "reassess_up": rep.get("reassess_up") or REASSESS_UP_DEFAULT, "reassess_down": rep.get("reassess_down") or REASSESS_DOWN_DEFAULT,
            "reassess_interval": rep.get("reassess_interval") or "Every 90 to 180 days"}
     return {"report": rep, "professional": await professional_contact(db, rep.get("professional_id"), rep), "readiness": readiness(doc),
-            "safety_screening": {r: _screening(doc, r) for r in ("a", "b")}, "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
+            "safety_screening": {r: public_record(_screening(doc, r)) for r in ("a", "b")}, "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
             "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
             "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE, "risk_categories": RISK_CATEGORIES,
             "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE, "safety_pathway": SAFETY_PATHWAY, "disclaimer": REPORT_DISCLAIMER},
