@@ -912,3 +912,6 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-10-06 Tier 3 alert (agent-tested, NOT deployed)
 - `safety_screening._tier3_alert`: on a Tier 3 submission, emails the assigned professional (receipt, version letter, tier, pro-only link). No answers, no identity wording. Logged in `communications` kind=safety_tier3_alert. Never blocks the parent's submission. E2E asserts the comm record (17/17 pass).
 - Resend rotation BLOCKED: `SA_COPARENTS_ALIGN_RESEND_KEY` not present in preview env as of 11:35 CDT. Nothing changed in .env. Deploy still pending user confirmation.
+
+## 2026-10-06 Parent App Spec export (agent-tested, NOT deployed)
+- `safety_screening.spec_export()`; server-to-server `GET /api/integrations/safety-screening-spec` (X-Integration-Key = INTEGRATION_SHARED_SECRET). Snapshot committed at `/app/docs/safety_screening_spec.json`. Test asserts tier3 ids match runtime.

@@ -1,0 +1,475 @@
+{
+  "schema_version": 2,
+  "label": "Screening questions, not a diagnostic tool",
+  "scale_note": "Screening questions adapted from published sources. Not a validated or diagnostic instrument. Tiers are a design guide, not a clinical cutoff.",
+  "trigger_warning": "Content note: these questions ask about fear, control, and physical or sexual harm in a relationship. Take a break at any time; your progress is saved only when you submit.",
+  "scales": {
+    "freq": [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Frequently",
+      "Prefer not to say"
+    ],
+    "yn": [
+      "Yes",
+      "No",
+      "Not sure",
+      "Prefer not to say"
+    ],
+    "safe": [
+      "Very safe",
+      "Somewhat safe",
+      "Not safe",
+      "Prefer not to say"
+    ]
+  },
+  "resources": [
+    {
+      "name": "National Domestic Violence Hotline",
+      "contact": "1-800-799-7233 · text START to 88788",
+      "url": "https://www.thehotline.org",
+      "verified": true
+    },
+    {
+      "name": "Family Violence Prevention Services (San Antonio)",
+      "contact": "210-733-8810",
+      "url": "https://fvps.org",
+      "verified": false
+    }
+  ],
+  "versions": {
+    "A": {
+      "version": "A",
+      "title": "Safety Screening — Version A (Women)",
+      "intro": "These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (or text START to 88788).",
+      "label": "Screening questions, not a diagnostic tool",
+      "source": "Adapted from the WPSI Screening for Intimate Partner and Domestic Violence in Women — Resource Guide & Clinical Workflow (9.9.25).",
+      "items": [
+        {
+          "id": "a1",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "humiliate you or emotionally abuse you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "a2",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "make you feel afraid of them?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "a3",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "force or pressure you into sexual activity?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "a4",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "hit, kick, or otherwise physically hurt you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "a5",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "control your money, phone, transportation, or who you see?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "a6",
+          "part": "Part 1 · Your relationship",
+          "stem": null,
+          "text": "How often do you feel you have to change what you say or do to avoid conflict with them?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "c1",
+          "part": "Part 2 · Your children",
+          "stem": null,
+          "text": "Have your children seen or heard any of the above?",
+          "kind": "yn",
+          "scale": "yn",
+          "tier3": false
+        },
+        {
+          "id": "c2",
+          "part": "Part 2 · Your children",
+          "stem": null,
+          "text": "Have you noticed changes in them (sleep problems, fear, anxiety, school trouble, acting out)?",
+          "kind": "yn",
+          "scale": "yn",
+          "tier3": false
+        },
+        {
+          "id": "a9",
+          "part": "Part 3 · Optional",
+          "stem": null,
+          "text": "What makes it hard to stay safe or get help (money, fear of losing custody, immigration status, lack of support)?",
+          "kind": "text",
+          "scale": null,
+          "tier3": false
+        },
+        {
+          "id": "safe",
+          "part": "Closing",
+          "stem": null,
+          "text": "How safe is it for you to go home today?",
+          "kind": "safe",
+          "scale": "safe",
+          "tier3": false
+        }
+      ]
+    },
+    "B": {
+      "version": "B",
+      "title": "Safety Screening — Version B (Men)",
+      "intro": "These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (or text START to 88788). Partner violence can happen to anyone, including men.",
+      "label": "Screening questions, not a diagnostic tool",
+      "source": "Adapted from Velonis et al. (2021), Journal of Interpersonal Violence (HITS-based, 9 items). © SAGE Publications; used with attribution, permission pending.",
+      "items": [
+        {
+          "id": "b1",
+          "part": "Part 1 · Your relationship",
+          "stem": null,
+          "text": "Over the last 12 months, how often did you feel uncomfortable doing or saying things around your current partner or someone you're currently dating?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b2",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "insult you or talk down to you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b3",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "yell, shout, or curse at you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b4",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "control who you see, where you go, what you do, or what you wear?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b5",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "make you feel afraid or scared of them?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b6",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "threaten to harm you or someone you care about?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "b7",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "physically hurt you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "b8",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "beat, punch, kick, strangle, or hurt you with a weapon?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "b9",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "force, threaten, or pressure you to participate in any sexual activity when you didn't want to?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "c1",
+          "part": "Part 2 · Your children",
+          "stem": null,
+          "text": "Have your children seen or heard any of the above?",
+          "kind": "yn",
+          "scale": "yn",
+          "tier3": false
+        },
+        {
+          "id": "c2",
+          "part": "Part 2 · Your children",
+          "stem": null,
+          "text": "Have you noticed changes in them (sleep problems, fear, anxiety, school trouble, acting out)?",
+          "kind": "yn",
+          "scale": "yn",
+          "tier3": false
+        },
+        {
+          "id": "c3",
+          "part": "Part 2 · Your children",
+          "stem": null,
+          "text": "Do you worry about losing contact with your children if you ask for help?",
+          "kind": "yn",
+          "scale": "yn",
+          "tier3": false
+        },
+        {
+          "id": "safe",
+          "part": "Closing",
+          "stem": null,
+          "text": "How safe do you feel going home today?",
+          "kind": "safe",
+          "scale": "safe",
+          "tier3": false
+        }
+      ]
+    },
+    "C": {
+      "version": "C",
+      "title": "Safety Screening — Version C (LGBTQ+ Relationship Self-Assessment)",
+      "intro": "These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. These questions are for people of any gender or orientation. If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (text START to 88788). LGBTQ+ support: The Network/La Red, 1-800-832-1901.",
+      "label": "Screening questions, not a diagnostic tool. Adapted from published guidance; not a validated instrument.",
+      "source": "Adapted from the Safe & Together Institute behavior/pattern-based approach and LGBTQ+ IPV screening guidance (NCAVP; The Network/La Red; LGBTQ health education sources).",
+      "items": [
+        {
+          "id": "c_1",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "insult you, put you down, or yell at you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "c_2",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "control who you see, where you go, your money, or your phone?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "c_3",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "make you feel afraid of them?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "c_4",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "threaten to harm you or someone you care about?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "c_5",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "physically hurt you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "c_6",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "force or pressure you into sexual activity?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "c_7",
+          "part": "Part 1 · Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "isolate you from friends, family, or LGBTQ+ community?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "c_8",
+          "part": "Part 2 · Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "threaten to out you to family, friends, an employer, or others?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "c_9",
+          "part": "Part 2 · Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "threaten to use your sexual orientation, gender identity, or HIV status against you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "c_10",
+          "part": "Part 2 · Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "pressure you to change or hide your gender expression, name, pronouns, or transition?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "c_11",
+          "part": "Part 2 · Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "hide, destroy, or withhold medication, hormones, or other personal items?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "c_12",
+          "part": "Part 2 · Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "text": "tell you no one will believe you, or that you won't get help because of who you are?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "c1",
+          "part": "Part 3 · Your children",
+          "stem": null,
+          "text": "Have your children seen or heard any of the above?",
+          "kind": "yn",
+          "scale": "yn",
+          "tier3": false
+        },
+        {
+          "id": "c2",
+          "part": "Part 3 · Your children",
+          "stem": null,
+          "text": "Have you noticed changes in them (sleep problems, fear, anxiety, school trouble, acting out)?",
+          "kind": "yn",
+          "scale": "yn",
+          "tier3": false
+        },
+        {
+          "id": "c_15",
+          "part": "Part 3 · Your children",
+          "stem": null,
+          "text": "Do you worry about losing contact with your children, or how a court would view you, if you ask for help?",
+          "kind": "yn",
+          "scale": "yn",
+          "tier3": false
+        },
+        {
+          "id": "safe",
+          "part": "Closing",
+          "stem": null,
+          "text": "How safe do you feel going home today?",
+          "kind": "safe",
+          "scale": "safe",
+          "tier3": false
+        }
+      ]
+    }
+  },
+  "tiers": {
+    "note": "Design guide, not a validated or clinical cutoff. Skipped and 'Prefer not to say' never raise the tier.",
+    "1": "All frequency items Never/Rarely AND closing Very safe or Somewhat safe.",
+    "2": "Any frequency item Sometimes/Frequently, OR closing Somewhat safe with any frequency item above Never.",
+    "3": "Any item flagged tier3 answered Sometimes/Frequently, OR closing Not safe.",
+    "tier3_items": {
+      "A": [
+        "a2",
+        "a3",
+        "a4"
+      ],
+      "B": [
+        "b6",
+        "b7",
+        "b8",
+        "b9"
+      ],
+      "C": [
+        "c_4",
+        "c_5",
+        "c_6",
+        "c_8",
+        "c_9"
+      ]
+    }
+  },
+  "assignment": {
+    "choice_screen": "Which questions fit your situation best?",
+    "default_by_gender": {
+      "woman": "A",
+      "man": "B"
+    },
+    "no_gender_or_non_binary": [
+      "A",
+      "B",
+      "C"
+    ],
+    "always_offer": "C",
+    "store_only": "version letter (A|B|C) — never infer or store orientation"
+  },
+  "export_contract": {
+    "path": "GET /api/integrations/export-assessments?email=<parent email>",
+    "field": "safety_screening",
+    "shape": {
+      "version": "A|B|C",
+      "completed_at": "ISO-8601",
+      "tier": "1|2|3 (optional; recomputed if missing)",
+      "answered_count": "int (optional)",
+      "responses": {
+        "<item id>": "<scale value or free text>"
+      }
+    },
+    "privacy": "Reports/PDFs/co-parent views show only Received, version letter, tier, date. Raw responses go to the assigned professional only."
+  }
+}

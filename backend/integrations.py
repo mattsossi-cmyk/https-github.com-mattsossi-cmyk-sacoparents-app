@@ -43,6 +43,14 @@ def check_integration_key(request: Request):
         raise HTTPException(status_code=401, detail="Invalid integration key")
 
 
+@router.get("/integrations/safety-screening-spec")
+async def integration_safety_spec(request: Request):
+    """Server-to-server: the parent app pulls the canonical Version A/B/C spec so wording and tiers stay identical."""
+    check_integration_key(request)
+    from safety_screening import spec_export
+    return spec_export()
+
+
 @router.get("/integrations/case-invite/{token}")
 async def integration_case_invite(token: str, request: Request):
     check_integration_key(request)

@@ -57,3 +57,13 @@ def test_pdf_shows_version_c_tier_only():
     text = " ".join("\n".join(p.get_text() for p in pymupdf.open(stream=build_legal_lens_pdf(v), filetype="pdf")).split()).lower()
     assert "version c" in text and "tier 3" in text and "not received" in text
     assert not any(w in text for w in IDENTITY_WORDS) and "frequently" not in text and "somewhat safe" not in text
+
+
+def test_spec_export_matches_runtime():
+    from safety_screening import spec_export
+    spec = spec_export()
+    assert set(spec["versions"]) == {"A", "B", "C"} and spec["assignment"]["no_gender_or_non_binary"] == ["A", "B", "C"]
+    for k, v in spec["versions"].items():
+        assert [i["id"] for i in v["items"]] == [i["id"] for i in VERSIONS[k]["items"]]
+        assert all(compute_tier(k, {i: "Sometimes"}) == 3 for i in spec["tiers"]["tier3_items"][k])
+    assert "orientation" in spec["assignment"]["store_only"] and spec["export_contract"]["field"] == "safety_screening"

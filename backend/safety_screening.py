@@ -165,6 +165,23 @@ def _status(doc: dict) -> dict:
     return out
 
 
+def spec_export() -> dict:
+    """Machine-readable spec for the parent app: identical wording, scales, tiering, and the import payload contract."""
+    return {"schema_version": 2, "label": LABEL, "scale_note": SCALE_NOTE, "trigger_warning": TRIGGER_WARNING, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE}, "resources": RESOURCES,
+            "versions": {k: {"version": k, "title": v["title"], "intro": v["intro"], "label": v.get("label", LABEL), "source": v["source"],
+                             "items": [{"id": i["id"], "part": i["part"], "stem": i["stem"], "text": i["text"], "kind": i["kind"], "scale": {"freq": "freq", "yn": "yn", "safe": "safe", "text": None}[i["kind"]], "tier3": i["tier3"]} for i in v["items"]]} for k, v in VERSIONS.items()},
+            "tiers": {"note": "Design guide, not a validated or clinical cutoff. Skipped and 'Prefer not to say' never raise the tier.",
+                      "1": "All frequency items Never/Rarely AND closing Very safe or Somewhat safe.",
+                      "2": "Any frequency item Sometimes/Frequently, OR closing Somewhat safe with any frequency item above Never.",
+                      "3": "Any item flagged tier3 answered Sometimes/Frequently, OR closing Not safe.",
+                      "tier3_items": {k: [i["id"] for i in v["items"] if i["tier3"]] for k, v in VERSIONS.items()}},
+            "assignment": {"choice_screen": "Which questions fit your situation best?", "default_by_gender": {"woman": "A", "man": "B"}, "no_gender_or_non_binary": ["A", "B", "C"], "always_offer": "C",
+                           "store_only": "version letter (A|B|C) — never infer or store orientation"},
+            "export_contract": {"path": "GET /api/integrations/export-assessments?email=<parent email>", "field": "safety_screening",
+                                "shape": {"version": "A|B|C", "completed_at": "ISO-8601", "tier": "1|2|3 (optional; recomputed if missing)", "answered_count": "int (optional)", "responses": {"<item id>": "<scale value or free text>"}},
+                                "privacy": "Reports/PDFs/co-parent views show only Received, version letter, tier, date. Raw responses go to the assigned professional only."}}
+
+
 def build_router(db, get_current_user, get_joint_report_doc, report_role, log_access) -> APIRouter:
     r = APIRouter()
 
