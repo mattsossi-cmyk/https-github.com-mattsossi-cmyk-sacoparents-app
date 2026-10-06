@@ -344,9 +344,9 @@ def _report_routes(s: LensStore, get_current_user) -> APIRouter:
 
     @r.get("/cases/{rid}/professional-report/walkthrough")
     async def walkthrough(rid: str, user=Depends(get_current_user)):
-        from lens_walkthrough import WALKTHROUGH
+        from lens_walkthrough import QUESTION_OF_SECTION, SOURCE_OF_SECTION, WALKTHROUGH
         await s.own_case(rid, user)
-        return [{"n": i, "title": t, "what": w, "how": h, "guardrail": g} for i, (t, w, h, g) in enumerate(WALKTHROUGH, 1)]
+        return [{"n": i, "title": t, "what": w, "how": h, "guardrail": g, "question": QUESTION_OF_SECTION[i], "source": SOURCE_OF_SECTION[i]} for i, (t, w, h, g) in enumerate(WALKTHROUGH, 1)]
 
     @r.get("/cases/{rid}/professional-report/readiness")
     async def get_readiness(rid: str, user=Depends(get_current_user)):

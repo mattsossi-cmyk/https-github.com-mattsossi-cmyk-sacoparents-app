@@ -353,6 +353,8 @@ class ProJointReportIn(BaseModel):
     parent_a_email: EmailStr
     parent_b_name: str
     parent_b_email: EmailStr
+    parent_a_gender: str = ""
+    parent_b_gender: str = ""
     case_reference: str = ""
     court_referral_id: str = ""
 
@@ -514,8 +516,8 @@ async def create_pro_joint_report(body: ProJointReportIn, user=Depends(get_curre
         "professional_name": user.get("name", ""),
         "shared_with": [],
         "participants": {
-            "a": {"user_id": None, "name": body.parent_a_name.strip(), "email": body.parent_a_email.lower()},
-            "b": {"user_id": None, "name": body.parent_b_name.strip(), "email": body.parent_b_email.lower()},
+            "a": {"user_id": None, "name": body.parent_a_name.strip(), "email": body.parent_a_email.lower(), "gender": body.parent_a_gender.strip().lower()[:20]},
+            "b": {"user_id": None, "name": body.parent_b_name.strip(), "email": body.parent_b_email.lower(), "gender": body.parent_b_gender.strip().lower()[:20]},
         },
         "responses": {},
         "status": "pending_invite",
@@ -1876,6 +1878,8 @@ from legal_lens import build_router as _build_lens_router  # noqa: E402
 app.include_router(_build_lens_router(db, get_current_user, _log_lifecycle), prefix="/api")
 from providers import build_router as _build_providers_router  # noqa: E402
 app.include_router(_build_providers_router(db, get_current_user), prefix="/api")
+from safety_screening import build_router as _build_safety_router  # noqa: E402
+app.include_router(_build_safety_router(db, get_current_user, get_joint_report_doc, report_role, _log_report_access), prefix="/api")
 from foundation import build_router as _build_foundation_router  # noqa: E402
 app.include_router(_build_foundation_router(db, get_current_user, get_joint_report_doc, report_role), prefix="/api")
 from ai_tools import build_router as _build_ai_tools_router  # noqa: E402

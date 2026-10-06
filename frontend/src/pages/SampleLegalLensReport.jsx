@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SixQuestions, SourceLegend, StatementDivider } from "@/components/ReportFraming";
 import { ReportCover } from "@/components/ReportCover";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Download, Eye, Gavel, Lock, ShieldCheck } from "lucide-react";
@@ -9,7 +10,7 @@ import { SampleEmailForm } from "@/components/SampleEmailForm";
 import { ListenButton } from "@/components/ListenButton";
 import { SampleLensTour, StartTourButton, useSampleLensTour } from "@/components/SampleLensTour";
 import { IndividualScaleTable, JointScaleTable, growthOf } from "@/components/LensScale";
-import { ReportPrinciple, ChildFocusSummary, PathwayPicker, SourceTag, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
+import { ReportPrinciple, ChildFocusSummary, PathwayPicker, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
 
 const Sec = ({ n, title, children, testId }) => <LensSec n={n} title={title} testId={testId}>{children}</LensSec>;
 const H3 = ({ children }) => <h3 className="font-semibold text-align-green">{children}</h3>;
@@ -51,6 +52,8 @@ export default function SampleLegalLensReport() {
         <ReportCover pro={d.professional} testId="sample-lens-cover" />
         <details className="rounded-lg border border-border bg-white p-3" data-testid="sample-lens-preview-image"><summary className="cursor-pointer text-sm font-semibold text-brand-purple">See the printed report layout (11 numbered sections)</summary><img src="/alignment-report-preview.jpg" alt="Printed Professional Alignment Report — 11-section layout preview" className="mt-3 w-full rounded-md border border-border" loading="lazy" /></details>
         <div className="rounded-lg border border-border bg-white p-4"><KV rows={[["Court", rep.court_county], ["Cause No.", rep.cause_number], ["Align case", d.case.case_code], ["Professional", `${rep.professional_name} · ${rep.professional_role}`], ["Report date", rep.report_date], ["Status", rep.status.replace(/_/g, " ")]]} /></div>
+        <SixQuestions testId="sample-lens-six-questions" />
+        <SourceLegend testId="sample-lens-source-legend" />
         <Sec n={1} title="Case & Assessment Overview" testId="sample-lens-s1">
           <p data-testid="sample-lens-intro">{d.notes.intro}</p>
           <H3>Assessments completed</H3>
@@ -67,18 +70,15 @@ export default function SampleLegalLensReport() {
           <p className="text-xs italic text-muted-foreground flex gap-2"><ShieldCheck className="h-4 w-4 shrink-0" /> {d.notes.safety}</p>
         </Sec>
         <Sec n={3} title={`Parent A Perspective — ${rep.parent_a_name}`} testId="sample-lens-s3">
-          <SourceTag kind="parent" />
           <p className="text-xs italic text-muted-foreground">Each parent is presented separately and neutrally (PARENT-REPORTED INFORMATION summarized by the professional); no determination is made about which account is correct.</p>
           <ParentBlock role="a" rep={rep} testId="sample-lens-parent-a" />
           <IndividualScaleTable scale={lib.scale_table} row={cls.parent_a?.row} rating={rep.parent_a_rating} role="a" name={rep.parent_a_name} growth={growthOf(rep, "a")} />
         </Sec>
         <Sec n={4} title={`Parent B Perspective — ${rep.parent_b_name}`} testId="sample-lens-s4b">
-          <SourceTag kind="parent" />
           <ParentBlock role="b" rep={rep} testId="sample-lens-parent-b" />
           <IndividualScaleTable scale={lib.scale_table} row={cls.parent_b?.row} rating={rep.parent_b_rating} role="b" name={rep.parent_b_name} growth={growthOf(rep, "b")} />
         </Sec>
         <Sec n={5} title="Joint Co-Parenting Assessment" testId="sample-lens-joint">
-          <SourceTag kind="system" />
           <p><strong>Joint rating:</strong> Level {rep.joint_rating} — <strong>{cls.joint.mode} Mode</strong> — {cls.joint.label}</p>
           <Lines label="Areas of alignment" text={rep.alignment_agreements || rep.joint_strengths} />
           <Lines label="Areas of partial alignment" text={rep.partial_alignment} />
@@ -105,6 +105,7 @@ export default function SampleLegalLensReport() {
           <p><strong>Why these pathways are relevant:</strong> {rep.pathway_rationale}</p>
           <p className="text-xs italic text-muted-foreground">{d.notes.rating}</p>
         </Sec>
+        <StatementDivider testId="sample-lens-statement-divider" />
         <Sec n={9} title="Legal Conflict & Agreement-Building Analysis" testId="sample-lens-s9-legal">
           <div className="grid gap-3 sm:grid-cols-2">
             <Lines label="Areas potentially capable of agreement" text={rep.agreement_building_opportunities || rep.alignment_agreements} />
@@ -114,7 +115,6 @@ export default function SampleLegalLensReport() {
           </div>
         </Sec>
         <Sec n={10} title="Professional Legal Statement & Roadmap" testId="sample-lens-s8">
-          <SourceTag kind="professional" />
           <p className="text-xs italic text-muted-foreground">The professional's own observations, interpretation, recommendations and conclusions — distinct from parent-reported information and system- or AI-generated summaries.</p>
           <p data-testid="sample-lens-statement">{rep.professional_summary}</p>
           <H3>30–90 Day Goals</H3><Lines text={rep.short_term_goals} />

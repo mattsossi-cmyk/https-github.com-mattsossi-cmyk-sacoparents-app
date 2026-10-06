@@ -28,6 +28,31 @@ WALKTHROUGH = [
      "Neutral and procedural: no recommendations, diagnoses or legal conclusions."),
 ]
 
+SIX_QUESTIONS = [
+    ("What did each parent report?", [3, 4]), ("Where are they aligned?", [2, 5]), ("Where do their perspectives differ?", [5]),
+    ("What child-focused issues need attention?", [6]), ("What options and resources are available?", [7]), ("What conflict-resolution pathway could be considered?", [8]),
+]
+QUESTION_OF_SECTION = {1: "Case record", 2: "Q2 · Where are they aligned?", 3: "Q1 · What did each parent report?", 4: "Q1 · What did each parent report?",
+                       5: "Q2 & Q3 · Where are they aligned — and where do their perspectives differ?", 6: "Q4 · What child-focused issues need attention?",
+                       7: "Q5 · What options and resources are available?", 8: "Q6 · What conflict-resolution pathway could be considered?",
+                       9: "Professional Statement · agreement-building analysis", 10: "Professional Statement · the professional's own observation", 11: "Professional Statement · court summary"}
+SOURCE_OF_SECTION = {1: "professional", 2: "system", 3: "parent", 4: "parent", 5: "system", 6: "professional", 7: "professional", 8: "professional", 9: "professional", 10: "professional", 11: "professional"}
+SOURCE_LEGEND = [
+    ("parent", "Parent-reported information", "What a parent said about their own experience, summarised neutrally. Not verified, not a finding."),
+    ("system", "System-generated comparison", "Align lines up the two accounts side by side. It shows alignment and difference; it does not decide who is right."),
+    ("ai", "AI-assisted draft", "Wording first drafted by an AI aid at the professional's request, then reviewed and owned by the professional."),
+    ("professional", "Professional observation", "The professional's own observation, analysis and plan — the only opinion in this report."),
+]
+DISTINCTIONS = [
+    ("Assessment", "finding", "A self-assessment records what a parent reports. It does not establish what happened."),
+    ("Difference in perspective", "fact determination", "Two accounts can differ without either being false. This report does not resolve which is accurate."),
+    ("AI summary", "professional opinion", "AI drafts only organise wording. Every judgment in this report is the professional's, after review."),
+    ("Professional report", "court determination", "This report informs; it does not recommend custody, assess credibility, diagnose, or decide."),
+]
+WORKFLOW = [("Invite", "The professional opens the case and invites each parent privately."), ("Assess", "Each parent completes their own assessment; neither sees the other's answers."),
+            ("Align", "Align lines up the two perspectives: shared ground, differences, child-focused issues."), ("Review", "The professional reviews, edits and certifies — nothing is automatic."),
+            ("Respond", "Options, resources and a pathway — released only to authorised recipients.")]
+
 READER_INTRO = ("This report organizes information from two parents' separate assessments, safety screenings and a system-generated Joint Report, reviewed by an authorized professional. "
                 "It is designed to help the court and professionals understand where the parents align, where they differ, and what neutral options may help the child. "
                 "It contains no custody recommendation, credibility determination, diagnosis or legal conclusion.")

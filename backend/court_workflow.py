@@ -472,9 +472,11 @@ def _judge_routes(c: Ctx) -> APIRouter:
 
     @r.get("/court-dashboard/report-guide")
     async def report_guide(user=Depends(get_current_user)):
-        from lens_walkthrough import READER_INTRO, SCALE_NOTE, WALKTHROUGH
+        from lens_walkthrough import DISTINCTIONS, QUESTION_OF_SECTION, READER_INTRO, SCALE_NOTE, SIX_QUESTIONS, SOURCE_LEGEND, SOURCE_OF_SECTION, WALKTHROUGH
         await require_judge(user)
-        return {"intro": READER_INTRO, "scale": SCALE_NOTE, "sections": [{"n": i, "title": t, "what": w, "guardrail": g} for i, (t, w, _h, g) in enumerate(WALKTHROUGH, 1)]}
+        return {"intro": READER_INTRO, "scale": SCALE_NOTE, "questions": [{"q": q, "sections": s} for q, s in SIX_QUESTIONS],
+                "legend": [{"kind": k, "label": lb, "desc": d} for k, lb, d in SOURCE_LEGEND], "distinctions": [{"a": a, "b": b, "note": n} for a, b, n in DISTINCTIONS],
+                "sections": [{"n": i, "title": t, "what": w, "guardrail": g, "question": QUESTION_OF_SECTION[i], "source": SOURCE_OF_SECTION[i]} for i, (t, w, _h, g) in enumerate(WALKTHROUGH, 1)]}
 
     @r.get("/court-dashboard/professionals")
     async def referable_professionals(zip: str = "", radius: int = 0, user=Depends(get_current_user)):

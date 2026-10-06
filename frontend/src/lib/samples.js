@@ -6,7 +6,7 @@ export const SAMPLE_REPORTS = [
   { key: "education", label: "Educational Needs", blurb: "School, homework, tutoring, and academic support alignment." },
   { key: "medical", label: "Medical Needs", blurb: "Healthcare routines, medication, appointments, and care decisions." },
   { key: "psychological", label: "Psychological Needs", blurb: "Emotional wellbeing, counseling, and support strategies." },
-  { key: "safety", label: "Safety / Family Violence", blurb: "Professional-mediated self-assessment: each parent answers privately and only the professional sees both. Not a Joint Assessment — controlled preview of the safety report format.", safety: true, tag: "Self-assessments · professional-mediated" },
+  { key: "safety", label: "Safety / Family Violence", blurb: "Two private self-assessments — Version A (women) and Version B (men), assigned by the professional. Each parent answers alone; only the assigned professional sees responses. Reports show receipt, version and tier — never answers. Screening questions, not a diagnostic tool.", safety: true, tag: "Private self-assessments · Version A / B" },
   { key: "mediation", label: "Mediation Statement", blurb: "Pre-mediation comparison statement for session preparation." },
   { key: "foundation-statement", label: "Child-Focused Foundation Statement", blurb: "One parent's statement of shared purpose, vision, priorities, the child's strengths and needs, concerns, commitments and 12-month goals.",
     to: "/samples/foundation-statement", pdf: `${API}/api/joint/sample-foundation-statement/pdf`, emailEndpoint: "/joint/sample-extra/foundation-statement/email", tag: "For parents" },

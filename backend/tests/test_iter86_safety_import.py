@@ -28,8 +28,8 @@ def test_structured_field_supported_and_absent_returns_none():
 def test_summary_is_neutral_and_never_leaks_answers():
     s = extract_safety_screening(PAYLOAD)
     line = screening_summary(s, "Parent A")
-    assert "received from sacoparentsapp.online" in line and "3 screening items" in line and "1 item(s) indicated a concern" in line
-    assert "afraid" not in line and "exchanges" not in line and "not findings" in line
+    assert "Received (legacy format, sacoparentsapp.online)" in line and "Tier not available" in line
+    assert "afraid" not in line and "exchanges" not in line
 
 
 def test_readiness_marks_fv_received_when_screening_imported():
@@ -44,7 +44,7 @@ def test_completed_at_non_string_does_not_crash():
     for bad in (1718000000, 1718000000000, {"x": 1}, ["a"], True, None, "2026-06-01T10:00:00Z"):
         scr = extract_safety_screening({"safety_screening": {"completed_at": bad, "responses": {"Do you feel safe?": "no"}}})
         out = screening_summary(scr, "Parent A")
-        assert "safety screening received" in out
+        assert "safety screening — Received" in out
     assert screening_summary({"completed_at": 1718000000, "source": "x", "item_count": 1, "concern_count": 0}, "P") .startswith("P:")
 
 

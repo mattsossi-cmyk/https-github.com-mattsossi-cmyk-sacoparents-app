@@ -9,6 +9,8 @@ import ReportView from "@/pages/ReportView";
 import JointNew from "@/pages/JointNew";
 import Join from "@/pages/Join";
 import JointAssessment from "@/pages/JointAssessment";
+import SafetyScreening from "@/pages/SafetyScreening";
+import SafetyResponses from "@/pages/SafetyResponses";
 import JointReport from "@/pages/JointReport";
 import Hub from "@/pages/Hub";
 import CompleteReport from "@/pages/CompleteReport";
@@ -68,6 +70,8 @@ function App() {
             <Route path="/join/:token" element={<Join />} />
             <Route path="/joint/new" element={<Protected><JointNew /></Protected>} />
             <Route path="/joint/:id/assess" element={<Protected><JointAssessment /></Protected>} />
+            <Route path="/joint/:id/safety-screening" element={<Protected><SafetyScreening /></Protected>} />
+            <Route path="/joint/:id/safety-screening/:role" element={<Protected><SafetyResponses /></Protected>} />
             <Route path="/joint/:id/legal-report" element={<Protected><LegalLensRedirect /></Protected>} />
             <Route path="/joint/:id/legal-report/sample" element={<Protected><LegalLensRedirect /></Protected>} />
             <Route path="/samples/legal-report" element={<Navigate to="/samples/legal-lens-report" replace />} />

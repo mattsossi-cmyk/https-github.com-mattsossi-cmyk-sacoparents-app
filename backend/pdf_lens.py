@@ -198,8 +198,22 @@ def _research_base(pdf: FPDF, rb: dict | None) -> None:
     full_card(pdf, "RESEARCH BASE (Perplexity — professional-reviewed)", lines, TEAL_FILL, TEAL)
 
 
+SOURCE_PDF = {"parent": ("PARENT-REPORTED", BLUE), "system": ("SYSTEM-GENERATED COMPARISON", PURPLE), "ai": ("AI-ASSISTED DRAFT", GOLD), "professional": ("PROFESSIONAL OBSERVATION", GREEN)}
+
+
+def _ai_tag(rep: dict, *keys: str) -> str:
+    """Inline suffix for a card/label whose text began as an AI draft — so AI-assisted wording is visible in the body, not only the appendix."""
+    drafts, review = rep.get("ai_drafts") or {}, rep.get("ai_review") or {}
+    hit = [k for k in keys if k in drafts and (rep.get(k) or "").strip()]
+    if not hit:
+        return ""
+    edited = any((review.get(k) or {}).get("edited") or (rep.get(k) or "").strip() != (drafts[k].get("text") or "").strip() for k in hit)
+    return "  [AI-assisted draft — edited by professional]" if edited else "  [AI-assisted draft — reviewed by professional]"
+
+
 def heading(pdf: FPDF, n: int, text: str) -> None:
-    """Numbered circle badge + title + hairline, tinted per section (SECTION_COLORS)."""
+    """Numbered circle badge + title + hairline, tinted per section (SECTION_COLORS), then the question it answers and its source label."""
+    from lens_walkthrough import QUESTION_OF_SECTION, SOURCE_OF_SECTION
     if pdf.get_y() > pdf.h - 50:
         pdf.add_page()
     color, fill = SECTION_COLORS.get(n, (PURPLE, PURPLE_FILL))
@@ -219,6 +233,35 @@ def heading(pdf: FPDF, n: int, text: str) -> None:
     pdf.line(pdf.l_margin, y + 9, pdf.w - pdf.r_margin, y + 9)
     pdf.set_line_width(0.2)
     pdf.set_y(y + 12)
+    if n in QUESTION_OF_SECTION:
+        label, scol = SOURCE_PDF[SOURCE_OF_SECTION[n]]
+        pdf.set_x(pdf.l_margin)
+        pdf.set_font(FONT, "I", 8.2)
+        pdf.set_text_color(*GRAY)
+        pdf.cell(pdf.w - pdf.l_margin - pdf.r_margin - 62, 4.5, _s(QUESTION_OF_SECTION[n]))
+        pdf.set_font(FONT, "B", 6.8)
+        pdf.set_text_color(*scol)
+        pdf.cell(62, 4.5, _s(f"SOURCE: {label}"), align="R", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(1.5)
+
+
+def statement_band(pdf: FPDF) -> None:
+    """Heavy divider: everything below is the professional's own statement, not parent or system content."""
+    if pdf.get_y() > pdf.h - 60:
+        pdf.add_page()
+    y, w = pdf.get_y(), pdf.w - pdf.l_margin - pdf.r_margin
+    pdf.set_fill_color(*GREEN)
+    pdf.rect(pdf.l_margin, y, w, 11, style="F")
+    pdf.set_xy(pdf.l_margin + 3, y + 1)
+    pdf.set_font(FONT, "B", 9.5)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(w - 6, 5, _s("PROFESSIONAL STATEMENT — Sections 9 to 11"), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_x(pdf.l_margin + 3)
+    pdf.set_font(FONT, "I", 7.4)
+    pdf.cell(w - 6, 4, _s("From here on, the words are the professional's own observation and analysis — separate from parent-reported information (Sections 3–4) and the system-generated comparison (Sections 2, 5)."))
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_text_color(*BODY)
+    pdf.set_y(y + 15)
 
 
 def title_band(pdf: FPDF, title: str, sub: str) -> None:
@@ -264,7 +307,7 @@ def _perspective(pdf: FPDF, rep: dict, role: str, scale, cls) -> None:
     growth = [f"{'☑' if x['met'] else '☐'} {x['text']}{'  [MET at reassessment]' if x['met'] else ''}" for x in g] + ([f"{met} of {total} growth areas met ({round(met / total * 100)}%)"] if total else [])
     cards_row(pdf, [("Successes", [f"✓ {x}" for x in _lines(rep.get(f"parent_{role}_strengths"))] or ["—"], GREEN_FILL, GREEN),
                     ("Challenges", [f"! {x}" for x in _lines(rep.get(f"parent_{role}_gaps"))] or ["—"], ORANGE_FILL, ORANGE),
-                    ("Growth Priorities", growth or ["—"], BLUE_FILL, BLUE)])
+                    ("Growth Priorities" + _ai_tag(rep, f"parent_{role}_growth"), growth or ["—"], BLUE_FILL, BLUE)])
     if rep.get(f"parent_{role}_notes"):
         _body(pdf, f"Notes: {rep[f'parent_{role}_notes']}", italic=True)
     _lens_individual_scale(pdf, scale, cls, rep, role)
@@ -333,12 +376,24 @@ def cover_page(pdf: FPDF, pro: dict) -> None:
     pdf.set_y(y + 22)
 
 
+def _legend_and_distinctions(pdf: FPDF) -> None:
+    from lens_walkthrough import DISTINCTIONS, SIX_QUESTIONS, SOURCE_LEGEND
+    full_card(pdf, "This report answers six questions — then gives a clearly separated Professional Statement",
+              [f"Q{i}. {q}  (Section {' & '.join(map(str, s))})" for i, (q, s) in enumerate(SIX_QUESTIONS, 1)] + ["Professional Statement  (Sections 9–11) — the professional's own observation, analysis and court summary."], PURPLE_FILL, PURPLE)
+    cards_row(pdf, [(f"■ {lb}", [d], {"parent": BLUE_FILL, "system": PURPLE_FILL, "ai": GOLD_SOFT, "professional": GREEN_FILL}[k], SOURCE_PDF[k][1]) for k, lb, d in SOURCE_LEGEND[:2]], subhead="Who is speaking? Every section is labelled with its source")
+    cards_row(pdf, [(f"■ {lb}", [d], {"parent": BLUE_FILL, "system": PURPLE_FILL, "ai": GOLD_SOFT, "professional": GREEN_FILL}[k], SOURCE_PDF[k][1]) for k, lb, d in SOURCE_LEGEND[2:]])
+    full_card(pdf, "Four distinctions to keep in mind", [f"{a}  ≠  {b}.  {n}" for a, b, n in DISTINCTIONS], (255, 255, 255), ORANGE)
+
+
 def how_to_read_page(pdf: FPDF) -> None:
     """One-page reader's guide inserted after the title band."""
     from lens_walkthrough import READER_INTRO, SCALE_NOTE, WALKTHROUGH
     pdf.add_page()
     heading(pdf, 0, "How to Read This Report")
     _body(pdf, READER_INTRO, italic=True)
+    _legend_and_distinctions(pdf)
+    if pdf.get_y() > pdf.h - 80:
+        pdf.add_page()
     pdf.set_font(FONT, "", 8.4)
     for i, (title, what, _how, guard) in enumerate(WALKTHROUGH, 1):
         if pdf.get_y() > pdf.h - 30:
@@ -380,8 +435,9 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
                       ("Joint Co-Parenting", rep.get("joint_rating"), (cls["joint"] or {}).get("label"), TEAL)])
     risk = rep.get("risk_screening") or {}
     scr = v.get("safety_screening") or {}
-    imported = [screening_summary(scr.get(r), f"Parent {r.upper()}") for r in ("a", "b") if scr.get(r)]
-    cards_row(pdf, [(f"Joint process: {rep.get('joint_process_appropriate') or 'Not yet determined'}", [rep.get("safety_takeaway") or "—", "", f"Parent A FV assessment: {rep.get('fv_a_received') or '—'}", f"Parent B FV assessment: {rep.get('fv_b_received') or '—'}", *([""] + imported if imported else []), "", notes["safety"]], TEAL_FILL, TEAL),
+    from safety_screening import SCALE_NOTE as _SCR_NOTE
+    imported = [screening_summary(scr.get(r), rep.get(f"parent_{r}_name") or f"Parent {r.upper()}") for r in ("a", "b")] + [_SCR_NOTE]
+    cards_row(pdf, [(f"Joint process: {rep.get('joint_process_appropriate') or 'Not yet determined'}" + _ai_tag(rep, "safety_takeaway"), [rep.get("safety_takeaway") or "—", "", f"Parent A FV assessment: {rep.get('fv_a_received') or '—'}", f"Parent B FV assessment: {rep.get('fv_b_received') or '—'}", *([""] + imported if imported else []), "", notes["safety"]], TEAL_FILL, TEAL),
                     ("Risk Screening Summary", [f"{lbl}: {risk.get(k, {}).get('level', 'Not assessed')}." + (f" {risk[k]['note']}" if risk.get(k, {}).get("note") else "") for k, lbl, _ in RISK_CATEGORIES] + ([f"Safeguards: {rep['safety_notes']}"] if rep.get("safety_notes") else []), ORANGE_FILL, ORANGE)], subhead="Safety Screening & Process Considerations")
     new_page(pdf)
     heading(pdf, 3, f"Parent A Perspective — {rep.get('parent_a_name') or 'Parent A'}")
@@ -397,8 +453,8 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     full_card(pdf, f"Joint Alignment Level: {rep.get('joint_rating') or '—'} / 10" + (f" — {j['label']} ({j['mode']} Mode)" if j and rep.get("joint_rating") else ""), [], PURPLE_FILL, PURPLE)
     cards_row(pdf, [("Areas of Alignment — Successes", [f"✓ {x}" for x in _lines(rep.get("alignment_agreements") or rep.get("joint_strengths"))] or ["—"], GREEN_FILL, GREEN),
                     ("Areas of Difference — Challenges", [f"! {x}" for x in _lines(rep.get("alignment_disagreements") or rep.get("joint_gaps"))] or ["—"], ORANGE_FILL, ORANGE)])
-    cards_row(pdf, [("Partial Alignment", _lines(rep.get("partial_alignment")) or ["—"], BLUE_FILL, BLUE), ("Shared Concerns", _lines(rep.get("shared_concerns")) or ["—"], TEAL_FILL, TEAL)])
-    _stmt_text(pdf, "Issues requiring further discussion or professional attention", rep.get("joint_notes"), required=True)
+    cards_row(pdf, [("Partial Alignment", _lines(rep.get("partial_alignment")) or ["—"], BLUE_FILL, BLUE), ("Shared Concerns" + _ai_tag(rep, "shared_concerns"), _lines(rep.get("shared_concerns")) or ["—"], TEAL_FILL, TEAL)])
+    _stmt_text(pdf, "Issues requiring further discussion or professional attention" + _ai_tag(rep, "joint_notes"), rep.get("joint_notes"), required=True)
     _lens_joint_scale(pdf, SCALE_TABLE, j, rep)
     new_page(pdf)
     heading(pdf, 6, "Child-Focused Legal Issues")
@@ -415,22 +471,23 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     chosen = set(rep.get("conflict_pathways") or ([rep.get("conflict_pathway")] if rep.get("conflict_pathway") else []))
     pathway_steps(pdf, PATHWAYS, chosen)
     small_lines(pdf, [f"{n}. {p['name']}: {p['desc']}" for n, p in enumerate(PATHWAYS, 1)])
-    _stmt_text(pdf, "Why these pathways are relevant to the issues identified", rep.get("pathway_rationale") or rep.get("conflict_management_rationale"), required=True)
+    _stmt_text(pdf, "Why these pathways are relevant to the issues identified" + _ai_tag(rep, "pathway_rationale", "conflict_management_rationale"), rep.get("pathway_rationale") or rep.get("conflict_management_rationale"), required=True)
     full_card(pdf, "Guidance by Type of Conflict", [f"• {t}: {d}" for t, d in CONFLICT_GUIDANCE], BLUE_FILL, BLUE)
     full_card(pdf, f"Safety Override — {SAFETY_PATHWAY[0]}", [SAFETY_PATHWAY[1]], GOLD_SOFT, GOLD)
     _body(pdf, notes["rating"], italic=True)
+    statement_band(pdf)
     heading(pdf, 9, "Legal Conflict & Agreement-Building Analysis")
     cards_row(pdf, [("Areas Potentially Capable of Agreement", [f"✓ {x}" for x in _lines(rep.get("agreement_building_opportunities") or rep.get("alignment_agreements"))] or ["—"], GREEN_FILL, GREEN),
                     ("Issues Requiring Further Resolution", [f"! {x}" for x in _lines(rep.get("issues_requiring_attention") or rep.get("alignment_disagreements"))] or ["—"], ORANGE_FILL, ORANGE)])
     cards_row(pdf, [("Existing Agreements / Orders Noted", _lines(rep.get("existing_agreements")) or ["—"], BLUE_FILL, BLUE), ("Procedural Considerations", _lines(rep.get("procedural_considerations")) or ["—"], PURPLE_FILL, PURPLE)])
     heading(pdf, 10, "Professional Legal Statement & Roadmap")
-    full_card(pdf, "PROFESSIONAL OBSERVATION", [rep.get("professional_summary") or "—", "", "The professional's own observations and judgment — distinct from parent-reported information and system- or AI-generated summaries."], BLUE_FILL, BLUE)
+    full_card(pdf, "PROFESSIONAL OBSERVATION" + _ai_tag(rep, "professional_summary"), [rep.get("professional_summary") or "—", "", "The professional's own observations and judgment — distinct from parent-reported information and system- or AI-generated summaries."], BLUE_FILL, BLUE)
     plan = ([f"☐ {g}" for g in _lines(rep.get("short_term_goals"))] or ["—"]) + ["", f"Reassessment: {rep.get('reassess_interval') or 'every 90 to 180 days'}" + (f" · next review {rep['next_review_date']}" if rep.get("next_review_date") else "")]
     indicators = _lines(rep.get("success_indicators")) or _lines(rep.get("long_term_goals")) or ["—"]
-    cards_row(pdf, [("30–90 Day Goals", plan, TEAL_FILL, TEAL), ("How We Will Know Things Are Improving", [f"• {x}" for x in indicators], BLUE_FILL, BLUE)])
-    cards_row(pdf, [("Long-Term Goals (6 to 12 Months)", [f"• {x}" for x in _lines(rep.get("long_term_goals"))] or ["—"], PURPLE_FILL, PURPLE), ("Reassessment Triggers", [rep.get("reassess_up") or "Score moves up: —", "", rep.get("reassess_down") or "Score drops: —"], GREEN_FILL, GREEN)])
+    cards_row(pdf, [("30–90 Day Goals" + _ai_tag(rep, "short_term_goals"), plan, TEAL_FILL, TEAL), ("How We Will Know Things Are Improving", [f"• {x}" for x in indicators], BLUE_FILL, BLUE)])
+    cards_row(pdf, [("Long-Term Goals (6 to 12 Months)" + _ai_tag(rep, "long_term_goals"), [f"• {x}" for x in _lines(rep.get("long_term_goals"))] or ["—"], PURPLE_FILL, PURPLE), ("Reassessment Triggers", [rep.get("reassess_up") or "Score moves up: —", "", rep.get("reassess_down") or "Score drops: —"], GREEN_FILL, GREEN)])
     heading(pdf, 11, "Concise Court Summary")
-    full_card(pdf, f"Parent A: Level {rep.get('parent_a_rating') or '—'}   |   Parent B: Level {rep.get('parent_b_rating') or '—'}   |   Joint Co-Parenting: Level {rep.get('joint_rating') or '—'}", _lines(rep.get("court_summary_text")) or ["—"], (255, 255, 255), PURPLE)
+    full_card(pdf, f"Parent A: Level {rep.get('parent_a_rating') or '—'}   |   Parent B: Level {rep.get('parent_b_rating') or '—'}   |   Joint Co-Parenting: Level {rep.get('joint_rating') or '—'}" + _ai_tag(rep, "court_summary_text"), _lines(rep.get("court_summary_text")) or ["—"], (255, 255, 255), PURPLE)
     full_card(pdf, "Our Report Principle", notes.get("principle") or [], PURPLE_FILL, PURPLE)
 
 

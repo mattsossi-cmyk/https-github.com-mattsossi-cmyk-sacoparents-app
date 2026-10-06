@@ -240,7 +240,7 @@ async def import_external_assessment(rid: str, user=Depends(get_current_user)):
             "imported": True,
             "external": payload,
             "safety_screening": screening,
-            "safety_route": bool(screening and screening["concern_count"]),
+            "safety_route": bool(screening and ((screening.get("tier") or 0) >= 2 or screening.get("concern_count"))),
             "completed_at": datetime.now(timezone.utc).isoformat(),
         }
     }

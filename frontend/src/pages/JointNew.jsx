@@ -32,6 +32,8 @@ export default function JointNew() {
   const [childName, setChildName] = useState("");
   const [coName, setCoName] = useState("");
   const [coEmail, setCoEmail] = useState("");
+  const [paGender, setPaGender] = useState("");
+  const [coGender, setCoGender] = useState("");
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -121,7 +123,7 @@ export default function JointNew() {
       const url = isAgreement ? "/joint/agreements" : "/joint/reports/professional";
       const body = isAgreement
         ? { child_name: childName, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail }
-        : { ...base, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail, case_reference: caseRef, court_referral_id: referral?.id || "" };
+        : { ...base, parent_a_name: paName, parent_a_email: paEmail, parent_b_name: coName, parent_b_email: coEmail, parent_a_gender: paGender, parent_b_gender: coGender, case_reference: caseRef, court_referral_id: referral?.id || "" };
       const { data } = await api.post(url, body);
       toast.success("Invitations sent — private share links are ready below");
       setCreated(data);
@@ -374,6 +376,7 @@ export default function JointNew() {
                         <Label htmlFor="pa-email">Parent 1 email</Label>
                         <Input id="pa-email" type="email" className="h-12" value={paEmail} onChange={(e) => setPaEmail(e.target.value)} placeholder="ann@example.com" data-testid="parent-a-invite-email-input" />
                       </div>
+                      <div className="space-y-2"><Label htmlFor="pa-gender">{isPro ? "Gender (for safety screening version)" : "Gender (optional)"}</Label><select id="pa-gender" value={paGender} onChange={(e) => setPaGender(e.target.value)} className="h-12 w-full rounded-md border border-input bg-white px-3 text-sm" data-testid="parent-a-gender-select"><option value="">Prefer not to say / assign later</option><option value="woman">Woman</option><option value="man">Man</option><option value="non-binary">Non-binary</option></select></div>
                     </>
                   )}
                   <div className="space-y-2">
@@ -384,6 +387,7 @@ export default function JointNew() {
                     <Label htmlFor="co-email">{isPro ? "Parent 2 email" : "Co-parent's email"}</Label>
                     <Input id="co-email" type="email" className="h-12" value={coEmail} onChange={(e) => setCoEmail(e.target.value)} placeholder="jordan@example.com" data-testid="co-parent-email-input" />
                   </div>
+                  {isPro && <div className="space-y-2"><Label htmlFor="co-gender">{isPro ? "Gender (for safety screening version)" : "Gender (optional)"}</Label><select id="co-gender" value={coGender} onChange={(e) => setCoGender(e.target.value)} className="h-12 w-full rounded-md border border-input bg-white px-3 text-sm" data-testid="co-parent-gender-select"><option value="">Prefer not to say / assign later</option><option value="woman">Woman</option><option value="man">Man</option><option value="non-binary">Non-binary</option></select></div>}
                   <p className="text-xs text-muted-foreground" data-testid="invite-privacy-note">
                     {isPro ? "Each parent receives their own secure link and completes the assessment privately. Parents never see each other's answers and never exchange codes." : "Each parent keeps a separate login. Your co-parent receives an invitation code — never share your password."}
                   </p>

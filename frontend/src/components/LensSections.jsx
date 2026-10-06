@@ -1,12 +1,14 @@
 import { PathwayList } from "@/components/LensScale";
+import { QUESTION_OF_SECTION, SOURCE_OF_SECTION } from "@/components/ReportFraming";
 
 export const REPORT_STEPS = ["Case & Assessment Overview", "Alignment Snapshot & Safety Screening", "Parent A Perspective", "Parent B Perspective", "Joint Co-Parenting Assessment", "Child-Focused Legal Issues", "Options & Resources", "Conflict Resolution Pathways", "Legal Conflict & Agreement-Building Analysis", "Professional Legal Statement & Roadmap", "Concise Court Summary"];
 
-const TAG = { parent: ["Parent-Reported Information", "bg-align-blue/15 text-align-blue"], system: ["System-Generated Comparison", "bg-brand-purple/10 text-brand-purple"], professional: ["Professional Observation", "bg-align-green/15 text-green-900"], safety: ["Separate Safety Pathway", "bg-red-50 text-red-700"] };
+const TAG = { parent: ["Parent-Reported Information", "bg-align-blue/15 text-align-blue"], system: ["System-Generated Comparison", "bg-brand-purple/10 text-brand-purple"], professional: ["Professional Observation", "bg-align-green/15 text-green-900"], ai: ["AI-Assisted Draft", "bg-align-yellow/25 text-yellow-900"], safety: ["Separate Safety Pathway", "bg-red-50 text-red-700"] };
 export function SourceTag({ kind }) {
   const [label, cls] = TAG[kind];
   return <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${cls}`} data-testid={`lens-source-${kind}`}>{label}</span>;
 }
+export const SOURCE_TAG = TAG;
 
 export function ReportHeader({ title = "Professional Alignment Report", subtitle, right }) {
   return (
@@ -35,9 +37,11 @@ export const SECTION_TINT = { 1: ["bg-slate-100 text-slate-600", "bg-slate-500"]
 
 export function LensSec({ n, title, children, testId, id }) {
   const [head, badge] = SECTION_TINT[n] || PURPLE_SEC;
+  const q = QUESTION_OF_SECTION[n], src = SOURCE_OF_SECTION[n];
   return (
     <section className="rounded-lg border border-border bg-white p-5 sm:p-6" data-testid={testId || `lens-${id}`} id={id}>
       <h2 className={`flex items-center gap-2 rounded-md px-3 py-2 text-lg font-semibold ${head}`}>{n !== undefined && <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${badge}`}>{n}</span>}{title}</h2>
+      {q && <div className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1" data-testid={`lens-sec-${n}-framing`}><p className="text-xs italic text-muted-foreground" data-testid={`lens-sec-${n}-question`}>{q}</p><SourceTag kind={src} /></div>}
       <div className="mt-4 space-y-3 text-sm leading-relaxed">{children}</div>
     </section>
   );

@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Users, ShieldAlert, HeartPulse, GraduationCap, Brain, Scale, MessagesSquare,
-  ArrowRight, FolderPlus, Mail, FileText, Lock, CheckCircle2, Eye, ClipboardCheck, Send, Gavel,
+  ArrowRight, Mail, Lock, CheckCircle2, Eye, ClipboardCheck, Send, Gavel, Columns2,
 } from "lucide-react";
+import { Distinctions } from "@/components/ReportFraming";
 import { BrandLogo } from "@/components/Brand";
 import { SampleCard } from "@/components/SampleCard";
 import { AlignModel } from "@/components/AlignModel";
@@ -15,12 +16,11 @@ import { DemoVideoButton } from "@/components/DemoVideoButton";
 const POSTER_IMG = "/align-hero-simple.jpg";
 
 const STEPS = [
-  { n: 1, key: "create", icon: FolderPlus, title: "Create or Receive a Case", body: "Open a case yourself, or accept a matter referred to you by a court." },
-  { n: 2, key: "invite", icon: Mail, title: "Invite Parents", body: "Each parent receives a private invitation and completes their assessment independently." },
-  { n: 3, key: "monitor", icon: Eye, title: "Monitor Assessments", body: "Track each parent's progress without seeing the other parent's answers." },
-  { n: 4, key: "report", icon: FileText, title: "Review Joint Reports", body: "Align organizes shared ground, differences, child needs, and subjects for discussion." },
-  { n: 5, key: "statement", icon: ClipboardCheck, title: "Prepare Professional Statement", body: "Record your neutral professional assessment alongside the Joint Report." },
-  { n: 6, key: "submit", icon: Send, title: "Share / Submit Authorized Reports", body: "Release authorized reports to parents, counsel, or the court — frozen, timestamped, and logged." },
+  { n: 1, key: "invite", icon: Mail, title: "Invite", body: "The professional opens the case and invites each parent privately — parents never exchange codes." },
+  { n: 2, key: "assess", icon: ClipboardCheck, title: "Assess", body: "Each parent completes their own assessment. Neither sees the other's answers." },
+  { n: 3, key: "align", icon: Columns2, title: "Align", body: "Align lines up the two perspectives: shared ground, differences, child-focused issues." },
+  { n: 4, key: "review", icon: Eye, title: "Review", body: "The professional reviews, edits and certifies every section. Nothing is automatic." },
+  { n: 5, key: "respond", icon: Send, title: "Respond", body: "Options, resources and a pathway — released only to authorised recipients, frozen and logged." },
 ];
 
 const COURT_STEPS = [
@@ -88,7 +88,9 @@ export default function Landing() {
           </h1>
           <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-xl" data-testid="hero-subtext">
             For professionals and courts working with parents experiencing separation, divorce, and co-parenting conflict.
-            Better Information. Stronger Decisions. Brighter Futures.
+          </p>
+          <p className="mt-4 rounded-md border-l-4 border-brand-teal bg-brand-teal/5 px-4 py-3 text-base md:text-lg font-semibold text-brand-purple max-w-xl" data-testid="hero-mantra">
+            Align is not about more assessments.<br />Align is about making two perspectives useful.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2" data-testid="portal-doors">
             <div className="rounded-xl border-2 border-brand-purple/30 bg-white p-5" data-testid="portal-professionals">
@@ -111,8 +113,8 @@ export default function Landing() {
           <p className="mt-5 text-sm text-muted-foreground" data-testid="hero-accept-line">
             Have an invitation? <Link to="/auth" className="text-primary font-medium hover:underline" data-testid="hero-accept-link">Accept Invitation</Link>
           </p>
-          <p className="mt-6 text-sm font-semibold tracking-wide text-brand-purple" data-testid="hero-journey">
-            Parent Reflection → Shared Understanding → Professional Alignment → Options &amp; Resources → Agreement → Court Review (when needed)
+          <p className="mt-6 text-sm font-extrabold uppercase tracking-[0.18em] text-brand-purple" data-testid="hero-journey">
+            Invite → Assess → Align → Review → Respond
           </p>
         </div>
       </section>
@@ -120,26 +122,35 @@ export default function Landing() {
       <MomentsStrip />
       <section id="how-it-works" className="bg-brand-purple text-white py-16" data-testid="four-steps">
         <div className="max-w-6xl mx-auto px-6">
-          <p className="text-xs uppercase tracking-widest font-bold text-white/70">How it works · Two ways a case begins</p>
+          <p className="text-xs uppercase tracking-widest font-bold text-white/70">How it works · Five steps</p>
           <h2 className="mt-2 text-base md:text-lg text-white/90 max-w-3xl" data-testid="four-steps-heading">
-            <span className="font-semibold">Option 1 — Not court-ordered:</span> the professional opens the case and invites both parents.{" "}
-            <span className="font-semibold">Option 2 — Court-ordered:</span> the court sends the professional an invitation to create the reports. Either way, the same six steps follow.
+            Whether a professional opens the case or a court refers it, every matter follows the same five steps.
           </h2>
-          <ol className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="four-steps-list">
+          <ol className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" data-testid="four-steps-list">
             {STEPS.map((s, i) => (
               <li key={s.key} className="relative bg-white/10 rounded-xl p-5 border border-white/15 hover:bg-white/15 transition-colors duration-200" data-testid={`step-${s.key}`}>
                 <div className="flex items-center justify-between">
                   <span className="h-9 w-9 rounded-full bg-white text-brand-purple font-extrabold flex items-center justify-center">{s.n}</span>
                   <s.icon className="h-6 w-6 text-white/80" />
                 </div>
-                <p className="mt-4 text-sm font-extrabold uppercase tracking-wide">{s.title}</p>
+                <p className="mt-4 text-base font-extrabold uppercase tracking-[0.14em]">{s.title}</p>
                 <p className="mt-2 text-sm text-white/85 leading-relaxed">{s.body}</p>
-                {i < STEPS.length - 1 && i % 3 !== 2 && (
-                  <ArrowRight className="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60 z-10" />
+                {i < STEPS.length - 1 && (
+                  <ArrowRight className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60 z-10" />
                 )}
               </li>
             ))}
           </ol>
+          <div className="mt-12" data-testid="distinctions-block">
+            <p className="text-xs uppercase tracking-widest font-bold text-white/70">Four distinctions we never blur</p>
+            <h2 className="mt-2 text-base md:text-lg text-white/90 max-w-3xl">Align organises two perspectives. It does not decide between them — and the report says so at every step.</h2>
+            <div className="mt-6"><Distinctions dark testId="landing-distinctions" /></div>
+          </div>
+          <details className="mt-10 rounded-xl border border-white/20 bg-white/5 p-4" data-testid="landing-journey-details">
+            <summary className="cursor-pointer text-sm font-semibold text-white/90">The longer view: how a case moves from reflection to agreement</summary>
+            <p className="mt-3 text-sm text-white/85" data-testid="landing-journey-long">Parent Reflection → Shared Understanding → Professional Alignment → Options &amp; Resources → Agreement → Court Review (when needed)</p>
+            <p className="mt-2 text-xs text-white/70">Not court-ordered: the professional opens the case and invites both parents. Court-ordered: the court sends the professional an invitation to create the reports. Either way, the same five steps follow.</p>
+          </details>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/auth?mode=register" data-testid="steps-create-account-link">
               <Button size="lg" variant="secondary" className="gap-2" data-testid="steps-create-account-btn">Create a Case <ArrowRight className="h-4 w-4" /></Button>
@@ -157,13 +168,16 @@ export default function Landing() {
           <h2 className="mt-2 text-base md:text-lg text-muted-foreground max-w-2xl" data-testid="court-pathway-heading">
             A separate, procedural pathway. The professional is the bridge between the court and the parents; judges receive only authorized, frozen submissions.
           </h2>
-          <ol className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="court-pathway-list">
-            {COURT_STEPS.map((t, i) => (
-              <li key={t} className="relative rounded-lg border border-brand-purple/25 bg-secondary/40 px-4 py-3 text-sm font-semibold text-brand-purple" data-testid={`court-step-${i + 1}`}>
-                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-purple text-xs text-white">{i + 1}</span>{t}
-              </li>
-            ))}
-          </ol>
+          <details className="mt-8 rounded-xl border border-brand-purple/20 bg-secondary/30 p-4" data-testid="court-pathway-details">
+            <summary className="cursor-pointer text-sm font-semibold text-brand-purple">See the eight procedural steps of a court-referred case</summary>
+            <ol className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="court-pathway-list">
+              {COURT_STEPS.map((t, i) => (
+                <li key={t} className="relative rounded-lg border border-brand-purple/25 bg-white px-4 py-3 text-sm font-semibold text-brand-purple" data-testid={`court-step-${i + 1}`}>
+                  <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-purple text-xs text-white">{i + 1}</span>{t}
+                </li>
+              ))}
+            </ol>
+          </details>
           <p className="mt-6 text-sm text-muted-foreground" data-testid="court-pathway-note">
             Court accounts are invitation-only. <Link to="/auth?mode=register&court=1" className="text-primary font-medium hover:underline" data-testid="court-register-link">Register a court account</Link> · <Link to="/verify" className="text-primary font-medium hover:underline">Verify a professional</Link>
           </p>
