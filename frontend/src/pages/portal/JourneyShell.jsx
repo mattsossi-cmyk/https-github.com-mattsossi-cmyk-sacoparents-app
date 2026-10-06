@@ -43,6 +43,7 @@ import {
 const DOOR_MEMORY_KEY = "sacoparents_last_door";
 const CELEBRATED_KEY = "sacoparents_celebrated_modules";
 const ALL_THREE_KEY = "sacoparents_all_three_celebrated";
+const PAIR_CELEBRATED_KEY = "sacoparents_pair_celebrated";
 
 const readLastDoor = () => {
   try {
@@ -126,6 +127,66 @@ const celebrateFinaleConfetti = () => {
         scalar: 1.05,
       });
     }, 180);
+  } catch {
+    /* best-effort */
+  }
+};
+
+// iter265 — Shared "pair milestone" burst for when both the parent
+// and their invited co-parent have finished the three primary
+// modules. Two bursts converging from top-left and top-right so it
+// visually reads as two sides meeting in the middle.
+const celebratePairConfetti = () => {
+  try {
+    const palette = ["#7c3aed", "#10b981", "#2563eb", "#f59e0b", "#ec4899"];
+    confetti({
+      particleCount: 110,
+      spread: 70,
+      angle: 300, // from upper-left toward middle
+      startVelocity: 50,
+      origin: { x: 0.1, y: 0.3 },
+      colors: palette,
+      ticks: 240,
+      scalar: 1.0,
+    });
+    confetti({
+      particleCount: 110,
+      spread: 70,
+      angle: 240, // from upper-right toward middle
+      startVelocity: 50,
+      origin: { x: 0.9, y: 0.3 },
+      colors: palette,
+      ticks: 240,
+      scalar: 1.0,
+    });
+    setTimeout(() => {
+      confetti({
+        particleCount: 60,
+        spread: 110,
+        startVelocity: 30,
+        origin: { x: 0.5, y: 0.6 },
+        colors: palette,
+        ticks: 200,
+        scalar: 0.9,
+      });
+    }, 220);
+  } catch {
+    /* best-effort */
+  }
+};
+
+const readPairCelebrated = () => {
+  try {
+    return window.localStorage.getItem(PAIR_CELEBRATED_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const writePairCelebrated = (value) => {
+  try {
+    if (value) window.localStorage.setItem(PAIR_CELEBRATED_KEY, "1");
+    else window.localStorage.removeItem(PAIR_CELEBRATED_KEY);
   } catch {
     /* best-effort */
   }
@@ -318,6 +379,7 @@ export function JourneyShell({
   biffAuthoredCount = 0,
   biffPairCount = 0,
   progressByTopic = {},
+  pairProgress = null,
   safetyFlagged = false,
 }) {
   // Suppress a few unused props so we don't trip the linter; they
@@ -407,6 +469,40 @@ export function JourneyShell({
       writeAllThreeCelebrated(true);
     }
   }, [progressByTopic]);
+
+  // iter265 — Pair milestone celebration. Fires once when the
+  // linked co-parent has finished their three primary modules. The
+  // trigger reads only `pairProgress.coparent_all_three_done`
+  // (surfaced by `/api/invites/coparent/pair-progress`), so this is
+  // decoupled from THIS parent's own completion state — a parent
+  // who hasn't yet started their own reflections still gets the
+  // "your co-parent is ready" nudge the moment it happens.
+  const pairCelebratedRef = useRef(readPairCelebrated());
+  useEffect(() => {
+    if (!pairProgress || !pairProgress.paired) return;
+    if (!pairProgress.coparent_all_three_done) return;
+    if (pairCelebratedRef.current) return;
+    const name = pairProgress.coparent_display_name;
+    setTimeout(() => {
+      celebratePairConfetti();
+      try {
+        toast.success(
+          name
+            ? `${name} completed their reflections too`
+            : "Your co-parent completed their reflections too",
+          {
+            description:
+              "You're both ready to carry the momentum into the joint report.",
+            duration: 7000,
+          }
+        );
+      } catch {
+        /* ignore */
+      }
+    }, 350);
+    pairCelebratedRef.current = true;
+    writePairCelebrated(true);
+  }, [pairProgress]);
 
   // iter262 — Replay celebration. Re-fires the per-module toasts +
   // confetti bursts for every module currently marked completed,
@@ -733,12 +829,54 @@ export function JourneyShell({
     },
   ];
 
+  // iter265 — journey roadmap progress: how many of the six steps
+  // the parent has finished. Powers the thin bar at the top of the
+  // roadmap section.
+  const roadmapCompleted = JOURNEY_STEPS.filter(
+    (s) => s.completedWhen
+  ).length;
+  const roadmapPct = Math.round(
+    (roadmapCompleted / JOURNEY_STEPS.length) * 100
+  );
+
   // -----------------------------------------------------------------
-  // LANDING — two doors + co-parenting journey roadmap.
+  // LANDING — hero banner + two doors + co-parenting journey roadmap.
   // -----------------------------------------------------------------
   if (view === "door") {
     return (
       <div data-testid="journey-shell" className="space-y-4">
+        {/* iter265 — Hero image banner above the two doors. */}
+        <section
+          data-testid="door-hero"
+          className="relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1476703993599-0035a21b17a9?auto=format&fit=crop&w=1200&q=80"
+            alt="A parent and child enjoying a sunset together outdoors"
+            className="w-full h-44 object-cover"
+            loading="lazy"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-t from-purple-950/85 via-purple-900/45 to-transparent"
+          />
+          <div className="absolute inset-x-0 bottom-0 px-4 py-3 text-white">
+            <div className="text-[10px] uppercase font-bold tracking-[0.18em] text-purple-200">
+              SA CoParents · Start with alignment, end with agreement
+            </div>
+            <div
+              data-testid="door-hero-tagline"
+              className="text-base sm:text-lg font-bold leading-tight mt-0.5"
+              style={{
+                fontFamily:
+                  '"Snell Roundhand", "Lucida Handwriting", cursive',
+              }}
+            >
+              A Brighter Future for Your Child
+            </div>
+          </div>
+        </section>
+
         <section
           data-testid="door-landing"
           className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
@@ -807,6 +945,26 @@ export function JourneyShell({
               Your Co-Parenting Journey
             </h3>
             <div className="flex-1 h-px bg-slate-200" />
+          </div>
+          {/* iter265 — thin progress bar at the top of the roadmap. */}
+          <div data-testid="door-roadmap-progress" className="space-y-1">
+            <div className="flex justify-between text-[10px] font-semibold text-slate-600">
+              <span>
+                {roadmapCompleted}/{JOURNEY_STEPS.length} steps complete
+              </span>
+              <span
+                data-testid="door-roadmap-progress-pct"
+                className="text-purple-700"
+              >
+                {roadmapPct}%
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-1.5">
+              <div
+                className="bg-purple-500 h-1.5 rounded-full transition-all duration-300"
+                style={{ width: `${roadmapPct}%` }}
+              />
+            </div>
           </div>
           <div className="space-y-2">
             {JOURNEY_STEPS.map((s, idx) => (

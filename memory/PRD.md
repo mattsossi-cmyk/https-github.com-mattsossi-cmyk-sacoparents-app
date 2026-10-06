@@ -45,6 +45,61 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter265 · Hero Banner + Roadmap Progress + Partner Pair Celebration
+
+Founder ask:
+- "Hero Image Banner: Add the 'A Brighter Future for Your Child'
+  hero image + tagline above the two doors so the landing has the
+  same emotional pull as the mockup".
+- "Journey Progress Bar: Show a thin bar at the top of the roadmap
+  counting completed steps so parents see momentum at a glance".
+- "Partner Pair Celebration: Fire a shared confetti when the
+  invited co-parent accepts and finishes their own three modules
+  so both sides feel the shared milestone".
+
+**Hero banner — `door-hero` / `door-hero-tagline`**
+Rendered above the `door-landing` section on the landing. An
+Unsplash CDN image (`photo-1476703993599-0035a21b17a9`, loaded with
+`loading="lazy"`) sits under a purple vertical gradient. The brand
+lockup "SA CoParents · Start with alignment, end with agreement"
+sits above the tagline "A Brighter Future for Your Child" rendered
+in a cursive script face to echo the mockup.
+
+**Roadmap progress bar — `door-roadmap-progress`**
+Thin 1.5-px purple bar at the top of the `door-journey-roadmap`
+section, labelled "{n}/6 steps complete" and
+`door-roadmap-progress-pct` (0–100%). Completion is derived from
+the same `completedWhen` flags each step already carries.
+
+**Partner Pair Celebration**
+- New backend endpoint `GET /api/invites/coparent/pair-progress`
+  (invite_routes.py, right after `coparent_invite_gate`). Looks at
+  both directions of the invite link: inviter→invitee (via
+  `coparent_invites.signed_up_user_id`) and invitee→inviter (via
+  `users.invited_by_user_id`). Reads the paired user's
+  `portal_state` and derives
+  `coparent_all_three_done` from the same primary-topic rule the
+  frontend uses locally (`snapshot_history` topics + `foundation_text`
+  + `safety_ack.ack_at`). Returns `{paired, coparent_user_id,
+  coparent_all_three_done, coparent_display_name, direction}`.
+- `SacoparentsPortal` polls the endpoint once on mount and passes
+  the result to `JourneyShell` as a new `pairProgress` prop.
+- `JourneyShell` has a new `celebratePairConfetti()` (two bursts
+  converging from the upper corners + a small central follow-up),
+  a `PAIR_CELEBRATED_KEY = "sacoparents_pair_celebrated"` flag,
+  and a dedicated effect that fires exactly once when
+  `pairProgress.paired && coparent_all_three_done` turn true.
+- Toast title "{Name} completed their reflections too" (or a
+  generic variant when the name is unavailable); description
+  "You're both ready to carry the momentum into the joint report."
+- The effect is decoupled from the current parent's own
+  completion, so a parent can be nudged the moment their invited
+  co-parent crosses the line.
+
+No PDF or AI-service touch — clinical lockstep preserved.
+
+
+
 ### 2026-02-27 — Iter264 · Co-Parenting Journey Roadmap on Landing
 
 Founder ask (via Figma-style mockup PNG): add a six-step

@@ -303,6 +303,113 @@ async def coparent_invite_gate(
     return await ipv_gate_status(db, current.user_id)
 
 
+# iter265 — Partner Pair Celebration endpoint.
+#
+# Returns the completion state of the current parent's linked
+# co-parent (either direction: this parent invited them, or this
+# parent was invited by them) so the dashboard can fire a shared
+# celebration when both parents have finished the three primary
+# reflection modules. Completion is derived from the invitee's
+# `portal_state.snapshot_history` using the same primary-module
+# rule the frontend applies locally.
+_PRIMARY_TOPICS = {"foundation", "coparenting", "safety"}
+
+
+def _derive_all_three_from_portal_state(state: Optional[dict]) -> bool:
+    if not state:
+        return False
+    history = state.get("snapshot_history") or []
+    if not isinstance(history, list):
+        return False
+    covered = {
+        snap.get("topic")
+        for snap in history
+        if isinstance(snap, dict)
+    }
+    # Foundation can also be signalled by non-empty foundation_text.
+    foundation_text = (state.get("foundation_text") or "").strip()
+    if foundation_text:
+        covered.add("foundation")
+    # Safety can be signalled by a stored safety_ack with ack_at.
+    safety_ack = state.get("safety_ack") or {}
+    if isinstance(safety_ack, dict) and safety_ack.get("ack_at"):
+        covered.add("safety")
+    return _PRIMARY_TOPICS.issubset(covered)
+
+
+@router.get("/coparent/pair-progress")
+async def coparent_pair_progress(
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Return the paired co-parent's three-module completion state.
+
+    Looks at both directions of the invite link:
+      1. Did the current user invite someone who signed up? If yes,
+         read that invitee's portal_state.
+      2. Was the current user invited by someone? If yes, read the
+         inviter's portal_state.
+
+    Returns `paired=False` when no linked co-parent exists so the
+    frontend can quietly skip the pair-celebration logic.
+    """
+    coparent_user_id = None
+    direction = None
+
+    # Direction 1 — I invited someone who signed up.
+    invited = await db.coparent_invites.find_one(
+        {
+            "inviter_user_id": current.user_id,
+            "status": "signed_up",
+        },
+        {"_id": 0, "signed_up_user_id": 1},
+    )
+    if invited and invited.get("signed_up_user_id"):
+        coparent_user_id = invited["signed_up_user_id"]
+        direction = "i_invited"
+
+    # Direction 2 — I was invited and signed up myself.
+    if not coparent_user_id:
+        me = await db.users.find_one(
+            {"user_id": current.user_id},
+            {"_id": 0, "invited_by_user_id": 1},
+        )
+        if me and me.get("invited_by_user_id"):
+            coparent_user_id = me["invited_by_user_id"]
+            direction = "they_invited"
+
+    if not coparent_user_id:
+        return {
+            "paired": False,
+            "coparent_all_three_done": False,
+            "coparent_display_name": None,
+            "direction": None,
+        }
+
+    coparent_state = await db.portal_state.find_one(
+        {"user_id": coparent_user_id}, {"_id": 0}
+    )
+    coparent_user = await db.users.find_one(
+        {"user_id": coparent_user_id},
+        {"_id": 0, "name": 1},
+    )
+    display_name = None
+    if coparent_user and coparent_user.get("name"):
+        # Only show the first name — keeps the celebration warm but
+        # not identity-heavy on a clinical surface.
+        display_name = str(coparent_user["name"]).split()[0]
+
+    return {
+        "paired": True,
+        "coparent_user_id": coparent_user_id,
+        "coparent_all_three_done": _derive_all_three_from_portal_state(
+            coparent_state
+        ),
+        "coparent_display_name": display_name,
+        "direction": direction,
+    }
+
+
 @router.post("/coparent/resend/{invite_id}")
 async def resend_coparent_invite(
     invite_id: str,

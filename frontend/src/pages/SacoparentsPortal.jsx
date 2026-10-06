@@ -136,6 +136,29 @@ export default function SacoparentsPortal() {
   // iter228 — intro chatbot ("SA CoParents Guide") shown on first
   // visit and re-invokable from a Gateway pill.
   const [introOpen, setIntroOpen] = useState(false);
+  // iter265 — Partner Pair Celebration. The dashboard polls
+  // /api/invites/coparent/pair-progress once on mount (and after
+  // a sync hint) so the JourneyShell can fire a shared confetti +
+  // toast when the linked co-parent has finished their three
+  // primary reflection modules. The backend endpoint enforces the
+  // invitee-link lookup; the frontend just reads the booleans.
+  const [pairProgress, setPairProgress] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const resp = await api.get("/invites/coparent/pair-progress");
+        if (!cancelled) setPairProgress(resp.data || null);
+      } catch {
+        // Non-fatal: parent may not have a linked co-parent, or
+        // may not be signed in on this device.
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // iter231 — follow-up "how's it going?" modal shown to a parent
   // who picked a path but never opened their first tile.
   const [followupState, setFollowupState] = useState(null);
@@ -1759,6 +1782,7 @@ export default function SacoparentsPortal() {
             onOpenIntroGuide={() => setIntroOpen(true)}
             onOpenReport={() => setFoundationDrawerOpen(true)}
             progressByTopic={progressByTopic}
+            pairProgress={pairProgress}
             safetyFlagged={safetyFlagged}
           />
         )}
