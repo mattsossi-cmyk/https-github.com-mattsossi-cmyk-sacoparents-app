@@ -45,6 +45,39 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter264 · Co-Parenting Journey Roadmap on Landing
+
+Founder ask (via Figma-style mockup PNG): add a six-step
+"YOUR CO-PARENTING JOURNEY" roadmap directly beneath the two
+primary doors on the landing. Each row is a live tap-through to
+the matching existing feature, with a green completion tick when
+the parent has finished that step.
+
+**Delivered — `door-journey-roadmap`**
+A new section on the landing (below `door-court` + `door-self`),
+with a horizontally-ruled section label and six tappable rows
+styled per the mockup (number badge, icon tile, title, body,
+chevron):
+
+| # | Title | Handler | Completion signal |
+|---|-------|---------|-------------------|
+| 1 | Assess Your Situation | `onOpenSafety` | `progressByTopic.safety === "completed"` |
+| 2 | Understand Your Relationship | `onOpenGuidedJourney("coparenting")` | `progressByTopic.coparenting === "completed"` |
+| 3 | Identify Your Child's Needs | `onOpenGuidedJourney("educational")` | any of Educational/Medical/Psychological completed |
+| 4 | Create Your Foundation Statement | `onOpenGuidedJourney("foundation")` | `progressByTopic.foundation === "completed"` |
+| 5 | Prepare for Mediation | `openDoor("court")` | `!!courtKey` (court key verified) |
+| 6 | Strengthen Communication | `onOpenBiffCoach` | `biffAuthoredCount > 0` |
+
+Testids:
+- `door-roadmap-{assess|relationship|child|foundation|mediation|communicate}`
+- `door-roadmap-{key}-check` (green tick icon when completed)
+- `data-completed="true|false"` on each row for test assertions.
+
+No backend changes. No PDF or AI-service touch — clinical lockstep
+preserved. ESLint warnings unchanged.
+
+
+
 ### 2026-02-27 — Iter263 · Celebration Share + Partner Invite Nudge
 
 Founder ask:

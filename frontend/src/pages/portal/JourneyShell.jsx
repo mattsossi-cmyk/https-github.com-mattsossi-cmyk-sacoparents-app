@@ -663,8 +663,78 @@ export function JourneyShell({
     </div>
   );
 
+  // iter264 — "Your co-parenting journey" roadmap shown beneath the
+  // two primary doors on the landing. Each step maps to the closest
+  // existing handler so the roadmap is live, not decorative. Status
+  // tick appears when the corresponding topic is marked completed.
+  const JOURNEY_STEPS = [
+    {
+      key: "assess",
+      title: "Assess Your Situation",
+      body: "Understand where you are today.",
+      icon: "fa-file-magnifying-glass",
+      badgeBg: "bg-purple-500",
+      iconBg: "bg-purple-100 text-purple-700",
+      action: onOpenSafety,
+      completedWhen: progressByTopic?.safety === "completed",
+    },
+    {
+      key: "relationship",
+      title: "Understand Your Relationship",
+      body: "Explore your co-parenting dynamic.",
+      icon: "fa-users",
+      badgeBg: "bg-purple-500",
+      iconBg: "bg-purple-100 text-purple-700",
+      action: () => onOpenGuidedJourney("coparenting"),
+      completedWhen: progressByTopic?.coparenting === "completed",
+    },
+    {
+      key: "child",
+      title: "Identify Your Child's Needs",
+      body: "Focus on what matters most — your child.",
+      icon: "fa-child-reaching",
+      badgeBg: "bg-emerald-500",
+      iconBg: "bg-emerald-100 text-emerald-700",
+      action: () => onOpenGuidedJourney("educational"),
+      completedWhen:
+        progressByTopic?.educational === "completed" ||
+        progressByTopic?.medical === "completed" ||
+        progressByTopic?.psychological === "completed",
+    },
+    {
+      key: "foundation",
+      title: "Create Your Foundation Statement",
+      body: "Define your shared goals and values.",
+      icon: "fa-file-pen",
+      badgeBg: "bg-orange-500",
+      iconBg: "bg-orange-100 text-orange-700",
+      action: () => onOpenGuidedJourney("foundation"),
+      completedWhen: progressByTopic?.foundation === "completed",
+    },
+    {
+      key: "mediation",
+      title: "Prepare for Mediation",
+      body: "Build options and plan for productive discussions.",
+      icon: "fa-handshake",
+      badgeBg: "bg-purple-500",
+      iconBg: "bg-purple-100 text-purple-700",
+      action: () => openDoor("court"),
+      completedWhen: !!courtKey,
+    },
+    {
+      key: "communicate",
+      title: "Strengthen Communication",
+      body: "Put agreements into action and keep progress going.",
+      icon: "fa-comments",
+      badgeBg: "bg-blue-500",
+      iconBg: "bg-blue-100 text-blue-700",
+      action: onOpenBiffCoach,
+      completedWhen: biffAuthoredCount > 0,
+    },
+  ];
+
   // -----------------------------------------------------------------
-  // LANDING — two doors only.
+  // LANDING — two doors + co-parenting journey roadmap.
   // -----------------------------------------------------------------
   if (view === "door") {
     return (
@@ -723,6 +793,60 @@ export function JourneyShell({
               </div>
               <i className="fa-solid fa-chevron-right text-purple-400"></i>
             </button>
+          </div>
+        </section>
+
+        {/* iter264 — "Your co-parenting journey" roadmap. */}
+        <section
+          data-testid="door-journey-roadmap"
+          className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm space-y-3"
+        >
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-px bg-slate-200" />
+            <h3 className="text-[10px] uppercase font-bold tracking-wider text-purple-700 shrink-0">
+              Your Co-Parenting Journey
+            </h3>
+            <div className="flex-1 h-px bg-slate-200" />
+          </div>
+          <div className="space-y-2">
+            {JOURNEY_STEPS.map((s, idx) => (
+              <button
+                key={s.key}
+                type="button"
+                data-testid={`door-roadmap-${s.key}`}
+                data-completed={s.completedWhen ? "true" : "false"}
+                onClick={s.action}
+                className="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 rounded-xl p-3 transition flex items-center gap-3"
+              >
+                <div
+                  className={`shrink-0 w-7 h-7 rounded-full ${s.badgeBg} text-white font-bold text-xs flex items-center justify-center`}
+                >
+                  {idx + 1}
+                </div>
+                <div
+                  className={`shrink-0 w-10 h-10 rounded-lg ${s.iconBg} flex items-center justify-center`}
+                >
+                  <i className={`fa-solid ${s.icon} text-lg`}></i>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="text-sm font-bold text-slate-900 leading-tight">
+                      {s.title}
+                    </div>
+                    {s.completedWhen && (
+                      <i
+                        data-testid={`door-roadmap-${s.key}-check`}
+                        className="fa-solid fa-circle-check text-emerald-500 text-xs"
+                      ></i>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                    {s.body}
+                  </p>
+                </div>
+                <i className="fa-solid fa-chevron-right text-slate-300"></i>
+              </button>
+            ))}
           </div>
         </section>
       </div>
