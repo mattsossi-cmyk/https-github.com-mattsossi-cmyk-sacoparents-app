@@ -57,7 +57,7 @@ export default function SafetyScreening() {
             <h1 className="text-2xl font-semibold" data-testid="screening-choice-title">{data.choice.question}</h1>
             <p className="text-sm" data-testid="screening-choice-intro">{data.choice.intro}</p>
             <p className="rounded-md border-l-4 border-amber-500 bg-amber-50 p-2 text-xs" data-testid="screening-choice-trigger-warning">{data.choice.trigger_warning}</p>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className={`grid gap-2 ${data.choice.options.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
               {data.choice.options.map((o) => <button key={o.version} type="button" disabled={busy} onClick={() => choose(o.version)} className="rounded-lg border border-brand-purple/30 bg-white p-4 text-left text-sm font-medium hover:bg-brand-purple/5" data-testid={`screening-choice-${o.version}`}>{o.label}</button>)}
             </div>
             {data.choice.note && <p className="text-xs text-muted-foreground" data-testid="screening-choice-note">{data.choice.note}</p>}

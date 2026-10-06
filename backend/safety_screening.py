@@ -186,8 +186,8 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         choice = None
         if mine and mine["choice_needed"]:
             choice = {"question": "Which questions fit your situation best?", "intro": INTRO, "trigger_warning": TRIGGER_WARNING,
-                      "options": ([{"version": mine["default_version"], "label": CHOICE_LABEL[mine["default_version"]]}] if mine["default_version"] else []) + [{"version": "C", "label": CHOICE_LABEL["C"]}],
-                      "note": None if mine["default_version"] else "Your professional will assign Version A or B if you prefer to wait; you may also choose Version C now."}
+                      "options": ([{"version": mine["default_version"], "label": CHOICE_LABEL[mine["default_version"]]}] if mine["default_version"] else [{"version": v, "label": CHOICE_LABEL[v]} for v in ("A", "B")]) + [{"version": "C", "label": CHOICE_LABEL["C"]}],
+                      "note": None if mine["default_version"] else "Pick whichever set of questions fits your situation. Your professional can adjust this later."}
         return {"my_role": role, "is_professional": pro, "roles": st, "spec": spec, "choice": choice, "versions": VERSION_LABEL_PRO if pro else VERSION_LABEL, "scale_note": SCALE_NOTE}
 
     @r.put("/joint/reports/{rid}/safety-screening/choose")
@@ -197,8 +197,9 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if role is None:
             raise HTTPException(status_code=403, detail="Only invited parents can choose a screening version")
         st = _status(doc)[role]
-        if body.version not in VERSIONS or (body.version != "C" and body.version != st["default_version"]):
-            raise HTTPException(status_code=400, detail="Choose the version offered to you or Version C")
+        allowed = {"C", st["default_version"]} if st["default_version"] else set(VERSIONS)
+        if body.version not in allowed:
+            raise HTTPException(status_code=400, detail="Choose one of the versions offered to you")
         await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_version.{role}": body.version, f"safety_version_confirmed.{role}": True}})
         return {"version": body.version, "spec": public_spec(body.version)}
 

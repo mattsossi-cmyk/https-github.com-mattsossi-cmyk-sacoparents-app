@@ -261,6 +261,36 @@ class TestParentScreening:
         assert r.status_code == 200, r.text
         assert r.json()["tier"] == 1
 
+    def test_no_gender_parent_sees_a_b_c_and_pro_can_override(self, pro_session):
+        """Missing/non-binary gender → neutral choice screen offers A, B and C; parent picks; professional may override afterward."""
+        body = {"child_name": f"TEST NB {TS}", "subject": "communication",
+                "parent_a_name": "NB A", "parent_a_email": f"qa.nb.a.{TS}@example.com", "parent_a_gender": "non-binary",
+                "parent_b_name": "NB B", "parent_b_email": f"qa.nb.b.{TS}@example.com"}
+        r = pro_session.post(f"{BASE}/api/joint/reports/professional", json=body, timeout=30)
+        assert r.status_code in (200, 201), r.text
+        rid = r.json()["id"]
+        email = f"qa.nb.a.actual.{TS}@example.com"
+        inv = MONGO.invitations.find_one({"report_id": rid, "role": "a"})
+        MONGO.invitations.update_one({"_id": inv["_id"]}, {"$set": {"invitee_email": email}})
+        token = inv.get("token") or inv.get("code")
+        _register(email, "NB Actual A", invite=token)
+        s = _login(email, PARENT_PASSWORD)
+        _accept_invite(s, token)
+        d = s.get(f"{BASE}/api/joint/reports/{rid}/safety-screening", timeout=15).json()
+        assert d["spec"] is None and [o["version"] for o in d["choice"]["options"]] == ["A", "B", "C"]
+        assert "orientation" not in str(d["roles"]["a"]).lower()
+        ok = s.put(f"{BASE}/api/joint/reports/{rid}/safety-screening/choose", json={"version": "B"}, timeout=15)
+        assert ok.status_code == 200 and ok.json()["version"] == "B"
+        d = s.get(f"{BASE}/api/joint/reports/{rid}/safety-screening", timeout=15).json()
+        assert d["choice"] is None and d["spec"]["version"] == "B"
+        doc = MONGO.joint_reports.find_one({"id": rid}, {"safety_version": 1, "safety_version_confirmed": 1, "participants": 1})
+        assert doc["safety_version"] == {"a": "B"} and doc["safety_version_confirmed"] == {"a": True}
+        assert not any("orientation" in k.lower() for k in doc["participants"]["a"])
+        r = pro_session.put(f"{BASE}/api/joint/reports/{rid}/safety-screening/assign", json={"role": "a", "version": "C"}, timeout=15)
+        assert r.status_code == 200 and r.json()["a"]["version"] == "C"
+        d = s.get(f"{BASE}/api/joint/reports/{rid}/safety-screening", timeout=15).json()
+        assert d["spec"]["version"] == "C" and d["choice"] is None
+
 
 # =============================================================================
 # Privacy
