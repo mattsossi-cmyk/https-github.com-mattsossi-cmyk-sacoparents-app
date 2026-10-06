@@ -140,58 +140,63 @@ export default function SacoparentsPortal() {
   // /api/invites/coparent/pair-progress on mount so the
   // JourneyShell can fire a shared confetti + toast when the
   // linked co-parent has finished their three primary reflection
-  // modules. iter266 — polling is now periodic (every 60 s while
-  // the tab is visible) so the celebration can fire while the
-  // parent is still in the app, not only on refresh. Polling stops
-  // automatically once the pair milestone has been reached.
+  // modules. iter266 — polling is periodic so the celebration can
+  // fire while the parent is still in the app. iter267 — the
+  // interval is jittered by ±10 s so a thousand simultaneous
+  // parents don't all hit the endpoint on the same tick.
   const [pairProgress, setPairProgress] = useState(null);
   useEffect(() => {
     let cancelled = false;
     let timerId = null;
 
-    const fetchOnce = async () => {
+    const schedule = () => {
       if (cancelled) return;
+      // 60 s ± 10 s jitter.
+      const next = 60000 + Math.floor(Math.random() * 20001) - 10000;
+      timerId = setTimeout(async () => {
+        if (cancelled) return;
+        try {
+          if (
+            typeof document !== "undefined" &&
+            document.visibilityState &&
+            document.visibilityState !== "visible"
+          ) {
+            // Still schedule the next tick, just skip this fetch.
+            schedule();
+            return;
+          }
+        } catch {
+          /* ignore */
+        }
+        const stop = await fetchOnce();
+        if (!stop) schedule();
+      }, next);
+    };
+
+    const fetchOnce = async () => {
+      if (cancelled) return true;
       try {
         const resp = await api.get("/invites/coparent/pair-progress");
-        if (cancelled) return;
+        if (cancelled) return true;
         const data = resp.data || null;
         setPairProgress(data);
-        // Stop polling once the pair milestone is reached — the
-        // local celebration flag will prevent the toast firing twice
-        // anyway, but there's no reason to keep hitting the API.
+        // Stop polling once the pair milestone is reached.
         if (data && data.coparent_all_three_done) {
-          if (timerId) {
-            clearInterval(timerId);
-            timerId = null;
-          }
+          return true;
         }
       } catch {
         // Non-fatal: parent may not have a linked co-parent, or
         // may not be signed in on this device.
       }
+      return false;
     };
 
-    // Fire once immediately.
-    fetchOnce();
+    // Fire once immediately, then start the jittered schedule.
+    fetchOnce().then((stop) => {
+      if (!stop) schedule();
+    });
 
-    // Then every 60 s while the tab is visible.
-    timerId = setInterval(() => {
-      try {
-        if (
-          typeof document !== "undefined" &&
-          document.visibilityState &&
-          document.visibilityState !== "visible"
-        ) {
-          return;
-        }
-      } catch {
-        /* ignore */
-      }
-      fetchOnce();
-    }, 60000);
-
-    // Also refetch when the tab becomes visible again (e.g. parent
-    // comes back from backgrounding the app).
+    // Also refetch when the tab becomes visible again.
     const onVisibility = () => {
       try {
         if (document.visibilityState === "visible") fetchOnce();
@@ -207,7 +212,7 @@ export default function SacoparentsPortal() {
 
     return () => {
       cancelled = true;
-      if (timerId) clearInterval(timerId);
+      if (timerId) clearTimeout(timerId);
       try {
         document.removeEventListener("visibilitychange", onVisibility);
       } catch {

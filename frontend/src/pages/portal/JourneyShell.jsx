@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { GreyRockToggleChip } from "./AlignmentHub";
 import InviteCoparentCard from "../../components/InviteCoparentCard";
+import { api } from "../../lib/api";
 import {
   Dialog,
   DialogContent,
@@ -586,6 +587,16 @@ export function JourneyShell({
       }, delay);
       allThreeRef.current = true;
       writeAllThreeCelebrated(true);
+
+      // iter267 — Fire the warm nudge email to the invited
+      // co-parent (if any). The backend is idempotent and
+      // enforces the IPV clearance guardrail; the frontend just
+      // posts fire-and-forget. 404/503/502/403 are all expected
+      // in various no-op cases (no invite, email not configured,
+      // IPV flagged) and should be silently ignored.
+      api.post("/invites/coparent/pair-nudge").catch(() => {
+        /* non-fatal */
+      });
     }
   }, [progressByTopic]);
 
@@ -685,50 +696,44 @@ export function JourneyShell({
   );
   const [inviteOpen, setInviteOpen] = useState(false);
 
-  const shareCelebrationBadge = async () => {
-    try {
-      const blob = await renderCelebrationBadge(greetingName);
-      const file = new File([blob], "sa-coparents-reflection-badge.png", {
-        type: "image/png",
-      });
-      // Prefer the native share sheet when it accepts files (mobile
-      // Safari / Chrome). Fall back to a direct download.
-      if (
-        typeof navigator !== "undefined" &&
-        navigator.canShare &&
-        navigator.canShare({ files: [file] })
-      ) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: "SA CoParents — Reflection Milestone",
-            text: "A · B · C — complete. My reflection milestone.",
-          });
-          return;
-        } catch {
-          /* parent cancelled share — fall through to download */
-        }
-      }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "sa-coparents-reflection-badge.png";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
+  // iter267 — Badge preview dialog state. The chip taps now
+  // render the generated PNG inside a shadcn Dialog so the parent
+  // can see what they'll keep before tapping Save. Save then runs
+  // the share-sheet / download fallback as before.
+  const [badgePreview, setBadgePreview] = useState(null);
+  // { kind: "solo" | "joint", blob: Blob, url: string, filename: string }
+
+  const closeBadgePreview = () => {
+    if (badgePreview?.url) {
       try {
-        toast.success("Badge saved", {
-          description:
-            "Your Reflection Milestone badge has been downloaded.",
-          duration: 4000,
-        });
+        URL.revokeObjectURL(badgePreview.url);
       } catch {
         /* ignore */
       }
-    } catch (err) {
+    }
+    setBadgePreview(null);
+  };
+
+  const openBadgePreview = async (kind) => {
+    try {
+      let blob;
+      let filename;
+      if (kind === "joint") {
+        const coparentName = pairProgress?.coparent_display_name || null;
+        blob = await renderJointCelebrationBadge(
+          greetingName,
+          coparentName
+        );
+        filename = "sa-coparents-joint-reflection-badge.png";
+      } else {
+        blob = await renderCelebrationBadge(greetingName);
+        filename = "sa-coparents-reflection-badge.png";
+      }
+      const url = URL.createObjectURL(blob);
+      setBadgePreview({ kind, blob, url, filename });
+    } catch {
       try {
-        toast.error("Could not save badge", {
+        toast.error("Could not render badge", {
           description:
             "Please try again — if it keeps failing, let us know.",
           duration: 4000,
@@ -739,20 +744,19 @@ export function JourneyShell({
     }
   };
 
-  // iter266 — Joint celebration share. Visible only when both this
-  // parent and their paired co-parent are "all three done". Falls
-  // back to the same share-sheet / download pattern as the solo
-  // badge.
-  const shareJointCelebrationBadge = async () => {
+  const saveBadgeFromPreview = async () => {
+    if (!badgePreview) return;
+    const { blob, filename, kind } = badgePreview;
+    const file = new File([blob], filename, { type: "image/png" });
+    const shareTitle =
+      kind === "joint"
+        ? "SA CoParents — Shared Reflection Milestone"
+        : "SA CoParents — Reflection Milestone";
+    const shareText =
+      kind === "joint"
+        ? "Both parents finished their reflections. Shared milestone."
+        : "A · B · C — complete. My reflection milestone.";
     try {
-      const coparentName = pairProgress?.coparent_display_name || null;
-      const blob = await renderJointCelebrationBadge(
-        greetingName,
-        coparentName
-      );
-      const file = new File([blob], "sa-coparents-joint-reflection-badge.png", {
-        type: "image/png",
-      });
       if (
         typeof navigator !== "undefined" &&
         navigator.canShare &&
@@ -761,34 +765,40 @@ export function JourneyShell({
         try {
           await navigator.share({
             files: [file],
-            title: "SA CoParents — Shared Reflection Milestone",
-            text: "Both parents finished their reflections. Shared milestone.",
+            title: shareTitle,
+            text: shareText,
           });
+          closeBadgePreview();
           return;
         } catch {
           /* parent cancelled share — fall through to download */
         }
       }
-      const url = URL.createObjectURL(blob);
+      // Direct download fallback.
       const a = document.createElement("a");
-      a.href = url;
-      a.download = "sa-coparents-joint-reflection-badge.png";
+      a.href = badgePreview.url;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
       try {
-        toast.success("Joint badge saved", {
-          description:
-            "Your Shared Reflection Milestone badge has been downloaded.",
-          duration: 4000,
-        });
+        toast.success(
+          kind === "joint" ? "Joint badge saved" : "Badge saved",
+          {
+            description:
+              kind === "joint"
+                ? "Your Shared Reflection Milestone badge has been downloaded."
+                : "Your Reflection Milestone badge has been downloaded.",
+            duration: 4000,
+          }
+        );
       } catch {
         /* ignore */
       }
-    } catch (err) {
+      closeBadgePreview();
+    } catch {
       try {
-        toast.error("Could not save joint badge", {
+        toast.error("Could not save badge", {
           description:
             "Please try again — if it keeps failing, let us know.",
           duration: 4000,
@@ -1451,7 +1461,7 @@ export function JourneyShell({
               <button
                 type="button"
                 data-testid="door-self-share-badge"
-                onClick={shareCelebrationBadge}
+                onClick={() => openBadgePreview("solo")}
                 className="w-full text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-purple-900 transition flex items-center gap-2"
               >
                 <i className="fa-solid fa-award"></i>
@@ -1462,7 +1472,7 @@ export function JourneyShell({
                 <button
                   type="button"
                   data-testid="door-self-share-joint-badge"
-                  onClick={shareJointCelebrationBadge}
+                  onClick={() => openBadgePreview("joint")}
                   className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-emerald-900 transition flex items-center gap-2"
                 >
                   <i className="fa-solid fa-award"></i>
@@ -1542,6 +1552,68 @@ export function JourneyShell({
             </DialogDescription>
           </DialogHeader>
           <InviteCoparentCard variant="summary" />
+        </DialogContent>
+      </Dialog>
+
+      {/* iter267 — Badge preview dialog. The parent sees the
+          generated PNG before deciding to save. The Save button
+          runs the share-sheet / download fallback used by the
+          previous one-tap flow. */}
+      <Dialog
+        open={!!badgePreview}
+        onOpenChange={(open) => {
+          if (!open) closeBadgePreview();
+        }}
+      >
+        <DialogContent
+          data-testid="door-self-badge-preview-dialog"
+          className="max-w-md"
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {badgePreview?.kind === "joint"
+                ? "Shared Reflection Milestone"
+                : "Reflection Milestone"}
+            </DialogTitle>
+            <DialogDescription>
+              {badgePreview?.kind === "joint"
+                ? "Preview the badge both parents can keep. Tap Save to download or share."
+                : "Preview your badge before saving. Tap Save to download or share."}
+            </DialogDescription>
+          </DialogHeader>
+          {badgePreview && (
+            <div className="space-y-3">
+              <img
+                data-testid="door-self-badge-preview-image"
+                src={badgePreview.url}
+                alt={
+                  badgePreview.kind === "joint"
+                    ? "Shared Reflection Milestone badge preview"
+                    : "Reflection Milestone badge preview"
+                }
+                className="w-full rounded-xl border border-slate-200 shadow-sm"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  data-testid="door-self-badge-preview-cancel"
+                  onClick={closeBadgePreview}
+                  className="flex-1 py-2 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-sm font-semibold transition"
+                >
+                  Not yet
+                </button>
+                <button
+                  type="button"
+                  data-testid="door-self-badge-preview-save"
+                  onClick={saveBadgeFromPreview}
+                  className="flex-1 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold transition"
+                >
+                  <i className="fa-solid fa-arrow-down-to-line mr-1.5"></i>
+                  Save badge
+                </button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -45,6 +45,71 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter267 · Polling Jitter + Badge Preview + Pair Nudge Email
+
+Founder ask:
+- "Pair Polling Jitter: Add a small randomised jitter to the
+  60-second interval so a thousand simultaneous parents don't all
+  hit the endpoint on the same tick".
+- "Joint Badge Preview: Show the joint badge inline before saving
+  so both parents can see the shared design before downloading".
+- "Pair Celebration Nudge Email: Send a short Resend email to the
+  invited co-parent the moment the inviter completes their three,
+  warm nudging them to finish theirs".
+
+**Pair polling jitter — `SacoparentsPortal`**
+Replaced the fixed `setInterval(60000)` with a recursive
+`setTimeout` that schedules the next tick with
+`60000 + Math.floor(Math.random() * 20001) - 10000`, giving a
+50–70 s uniform jitter per device. Still gated on
+`document.visibilityState === "visible"`, still refetches on
+`visibilitychange`, still auto-stops once
+`coparent_all_three_done` returns true.
+
+**Badge preview dialog — iter267**
+- Replaced the one-tap share flow with a two-step: tap chip →
+  render PNG → open shadcn `Dialog` (`door-self-badge-preview-dialog`)
+  showing the preview image (`door-self-badge-preview-image`),
+  then tap `door-self-badge-preview-save` to run the share-sheet
+  / download fallback. "Not yet"
+  (`door-self-badge-preview-cancel`) revokes the blob URL and
+  closes the dialog.
+- Both the solo and the joint badge share the same preview
+  dialog — `openBadgePreview("solo"|"joint")` branches on the
+  renderer. Removed the now-unused `shareCelebrationBadge` and
+  `shareJointCelebrationBadge` helpers to keep the file lean.
+
+**Pair celebration nudge email**
+- Backend: new helper
+  `email_service.send_pair_celebration_nudge(to_email, link_url,
+  inviter_name)` mirrors the branding + style of
+  `send_coparent_invite`, subject
+  `"{Inviter} finished their reflections — your turn, no rush"`,
+  CTA "Pick up my private prep".
+- Backend: new endpoint
+  `POST /api/invites/coparent/pair-nudge` (invite_routes.py).
+  Gated by `require_ipv_clearance` (defence in depth) and only
+  runs when (a) the inviter has a signed-up co-parent, (b) the
+  inviter has really finished all three primary modules
+  server-side, and (c) `pair_nudge_sent_at` is not yet set.
+  Writes `pair_nudge_sent_at` after a successful send so the
+  endpoint is idempotent on repeat calls.
+- Frontend: the existing all-three finale effect in
+  `JourneyShell` now additionally fires a fire-and-forget
+  `api.post("/invites/coparent/pair-nudge")`. 404/503/502/403
+  responses are expected in the no-op branches (no invite,
+  Resend not configured, IPV flagged) and silently ignored.
+
+Backend endpoint smoke-tested with parent1 — returned
+`{"ok":false,"reason":"no_signed_up_coparent"}` for the no-pair
+baseline. Frontend badge preview verified end-to-end at 390×844:
+dialog opens, PNG rendered inline, both Save and Not-yet actions
+wired.
+
+No PDF or AI-service touch — clinical lockstep preserved.
+
+
+
 ### 2026-02-27 — Iter266 · Pair Polling + Joint Badge Share
 
 Founder ask:

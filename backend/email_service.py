@@ -1310,6 +1310,60 @@ def send_coparent_invite(*, to_email: str, link_url: str, inviter_name: Optional
     )
 
 
+# iter267 — Pair Celebration Nudge email.
+#
+# Sent one time to the invited co-parent the moment the inviter
+# finishes their own three primary reflection modules. The tone is
+# warm and non-coercive: it names what the inviter did and invites
+# the co-parent to catch up at their own pace, with the same private
+# prep guarantee as the original invite.
+def send_pair_celebration_nudge(
+    *,
+    to_email: str,
+    link_url: str,
+    inviter_name: Optional[str] = None,
+) -> None:
+    """Nudge the invited co-parent after the inviter finishes A/B/C.
+
+    Guardrail: the caller is expected to check IPV clearance before
+    invoking this helper. This function makes no safety decisions of
+    its own; it just sends the email.
+    """
+    inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"
+    plain = (
+        f"{inviter} just finished their three reflections on SA CoParenting App.\n\n"
+        "No pressure — but when you're ready, your prep continues to be completely "
+        "private and goes at your own pace.\n\n"
+        f"Pick up where you left off:\n{link_url}\n\n"
+        "— SA CoParenting App · sacoparentsapp.online\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        f"<strong>{inviter}</strong> just finished their three reflections on "
+        f"SA CoParenting App.</p>"
+        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
+        "No pressure — when you're ready, your prep continues to be "
+        "<strong>completely private</strong> and goes at your own pace.</p>"
+        '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">'
+        "Finishing yours lets you both arrive at mediation feeling heard, "
+        "focused on your child.</p>"
+    )
+    html = _branded_html(
+        headline=f"{inviter} finished — you can catch up when you're ready",
+        body_html=body_html,
+        cta_label="Pick up my private prep",
+        cta_url=link_url,
+    )
+    _send(
+        to_email=to_email,
+        subject=f"{inviter} finished their reflections — your turn, no rush",
+        html=html,
+        text=plain,
+        failure_message="Could not send the pair celebration nudge right now.",
+    )
+
+
+
 
 def send_joint_alignment_invitation(
     *,

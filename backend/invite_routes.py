@@ -410,6 +410,78 @@ async def coparent_pair_progress(
     }
 
 
+# iter267 — Pair Celebration Nudge email endpoint.
+#
+# Called by the frontend the first time the inviter's three primary
+# modules reach completion. Sends a one-time warm nudge to the
+# invited co-parent and records `pair_nudge_sent_at` on the invite
+# so the endpoint is idempotent — subsequent calls are a no-op.
+#
+# Clinical guardrail: the endpoint relies on `require_ipv_clearance`
+# so an inviter who has disclosed family violence can never trigger
+# a nudge to the other parent, matching the same safety gate the
+# original invite send uses.
+@router.post("/coparent/pair-nudge")
+async def send_pair_nudge(
+    request: Request,
+    current: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    await require_ipv_clearance(db, current.user_id)
+
+    # Only inviter→invitee direction qualifies for this nudge — a
+    # parent who was invited cannot nudge their inviter back here.
+    invite = await db.coparent_invites.find_one(
+        {
+            "inviter_user_id": current.user_id,
+            "status": "signed_up",
+        },
+        {"_id": 0},
+    )
+    if not invite:
+        return {"ok": False, "reason": "no_signed_up_coparent"}
+
+    # Confirm this parent (the inviter) really has finished A/B/C.
+    my_state = await db.portal_state.find_one(
+        {"user_id": current.user_id}, {"_id": 0}
+    )
+    if not _derive_all_three_from_portal_state(my_state):
+        return {"ok": False, "reason": "inviter_not_all_three_done"}
+
+    # Idempotent — already nudged.
+    if invite.get("pair_nudge_sent_at"):
+        return {
+            "ok": True,
+            "already_sent_at": invite.get("pair_nudge_sent_at"),
+        }
+
+    origin = _frontend_origin(request)
+    token = invite.get("token")
+    link_url = (
+        f"{origin}/invite/{token}" if origin and token else origin or ""
+    )
+    try:
+        email_service.send_pair_celebration_nudge(
+            to_email=invite.get("invitee_email"),
+            link_url=link_url,
+            inviter_name=current.name or "",
+        )
+    except email_service.EmailNotConfigured:
+        raise HTTPException(
+            status_code=503,
+            detail="Email isn't configured yet. Please try again in a moment.",
+        )
+    except email_service.EmailSendError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    sent_at = _iso(_now())
+    await db.coparent_invites.update_one(
+        {"invite_id": invite.get("invite_id")},
+        {"$set": {"pair_nudge_sent_at": sent_at}},
+    )
+    return {"ok": True, "sent_at": sent_at}
+
+
 @router.post("/coparent/resend/{invite_id}")
 async def resend_coparent_invite(
     invite_id: str,
