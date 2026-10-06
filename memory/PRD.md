@@ -45,6 +45,47 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter261 · Progress Celebrations + Switch-Door Chip
+
+Founder ask:
+- "Progress Celebrations: Show a subtle confetti plus toast when a
+  parent completes a primary module so the sub-views reward
+  momentum".
+- "Door Memory Chip: Add a tiny 'Switch door' chip on the sub-views
+  so parents can jump straight to the other door without going
+  through the landing".
+
+**Progress Celebrations**
+- `canvas-confetti` (already in `package.json`) fires a quiet burst
+  (60 particles, 70° spread, 0.75 y-origin, 150-tick duration) from
+  the bottom-centre of the viewport whenever a primary A/B/C module
+  transitions to `"completed"`.
+- `sonner` toast at bottom-right (Toaster already mounted in
+  `App.js`): title `"You completed {module title}"`, description
+  `"Nice work. Your reflection is saved privately."`.
+- A new `useEffect` in `JourneyShell` watches `progressByTopic` and
+  diffs against a `CELEBRATED_KEY = "sacoparents_celebrated_modules"`
+  localStorage array so each module celebration fires at most once
+  per device. Stagger of 500 ms between simultaneous completions.
+- `useRef` holds the current celebrated set in-memory so the effect
+  doesn't re-fire when React batches renders.
+
+**Switch-Door Chip**
+- New `door-switch` chip rendered inside the shared `SubViewHeader`
+  between the Back and Quick Exit buttons.
+- Reads the current `view` and derives the opposite door; label and
+  icon flip between "Switch to Court Ordered" (gavel) and "Switch to
+  Self Journey" (door-open). Tapping it calls `openDoor(otherDoor)`,
+  which both updates the view AND rewrites `DOOR_MEMORY_KEY` so a
+  subsequent reload lands straight on the switched door.
+- `data-target` attribute mirrors the destination door for test
+  assertions.
+
+No backend changes. No PDF or AI-service touch — clinical lockstep
+preserved.
+
+
+
 ### 2026-02-27 — Iter260 · Quick Exit + Door Memory
 
 Founder ask:

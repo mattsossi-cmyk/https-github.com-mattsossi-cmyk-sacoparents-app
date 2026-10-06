@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import confetti from "canvas-confetti";
+import { toast } from "sonner";
 
 import { GreyRockToggleChip } from "./AlignmentHub";
 
@@ -31,6 +33,7 @@ import { GreyRockToggleChip } from "./AlignmentHub";
  */
 
 const DOOR_MEMORY_KEY = "sacoparents_last_door";
+const CELEBRATED_KEY = "sacoparents_celebrated_modules";
 
 const readLastDoor = () => {
   try {
@@ -47,6 +50,44 @@ const writeLastDoor = (door) => {
     else window.localStorage.removeItem(DOOR_MEMORY_KEY);
   } catch {
     /* storage unavailable — fail silently */
+  }
+};
+
+const readCelebrated = () => {
+  try {
+    const raw = window.localStorage.getItem(CELEBRATED_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeCelebrated = (list) => {
+  try {
+    window.localStorage.setItem(CELEBRATED_KEY, JSON.stringify(list));
+  } catch {
+    /* storage unavailable — fail silently */
+  }
+};
+
+// iter261 — subtle confetti burst from the bottom-centre of the
+// viewport. Kept quiet (small particle count, short duration) so it
+// stays appropriate for a clinical surface.
+const celebrateConfetti = () => {
+  try {
+    confetti({
+      particleCount: 60,
+      spread: 70,
+      startVelocity: 35,
+      origin: { x: 0.5, y: 0.75 },
+      colors: ["#7c3aed", "#2563eb", "#10b981", "#f59e0b"],
+      ticks: 150,
+      scalar: 0.9,
+    });
+  } catch {
+    /* best-effort */
   }
 };
 
@@ -153,6 +194,41 @@ export function JourneyShell({
     setView("door");
   };
 
+  // iter261 — Progress celebrations. Fire a quiet confetti + toast
+  // the first time each primary module transitions to "completed".
+  // The celebrated set is persisted so refreshing or revisiting the
+  // sub-view does not re-trigger the celebration.
+  const celebratedRef = useRef(readCelebrated());
+  useEffect(() => {
+    const already = celebratedRef.current;
+    const newly = PRIMARY_MODULES.filter(
+      (m) =>
+        progressByTopic?.[m.topic] === "completed" &&
+        !already.includes(m.topic)
+    );
+    if (newly.length === 0) return;
+    newly.forEach((m, idx) => {
+      // Stagger the toasts and the confetti bursts slightly so a
+      // double-complete still feels sequential rather than noisy.
+      setTimeout(() => {
+        celebrateConfetti();
+        try {
+          toast.success(`You completed ${m.title}`, {
+            description: "Nice work. Your reflection is saved privately.",
+            duration: 4500,
+          });
+        } catch {
+          /* toast library absent — ignore */
+        }
+      }, idx * 500);
+    });
+    const nextList = Array.from(
+      new Set([...already, ...newly.map((m) => m.topic)])
+    );
+    celebratedRef.current = nextList;
+    writeCelebrated(nextList);
+  }, [progressByTopic]);
+
   const greetingName = user?.name ? user.name.split(" ")[0] : null;
 
   const moduleCta = (m) => {
@@ -202,44 +278,63 @@ export function JourneyShell({
     );
   };
 
-  // Shared sub-view header (brand + back + quick-exit).
-  const SubViewHeader = ({ title, subtitle }) => (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          data-testid="door-back"
-          onClick={goBack}
-          className="text-[12px] font-semibold text-purple-700 hover:text-purple-900"
-        >
-          <i className="fa-solid fa-arrow-left mr-1"></i>
-          Back
-        </button>
-        <button
-          type="button"
-          data-testid="door-quick-exit"
-          onClick={quickExitAction}
-          className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
-        >
-          <i className="fa-solid fa-bolt mr-1"></i>
-          Quick Exit
-        </button>
-      </div>
-      <div>
-        <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
-          {greetingName ? `Welcome, ${greetingName}` : "Welcome"}
+  // Shared sub-view header (brand + back + switch-door + quick-exit).
+  const SubViewHeader = ({ title, subtitle }) => {
+    const otherDoor = view === "court" ? "self" : "court";
+    const otherLabel =
+      otherDoor === "self" ? "Self Journey" : "Court Ordered";
+    const otherIcon =
+      otherDoor === "self" ? "fa-door-open" : "fa-gavel";
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <button
+            type="button"
+            data-testid="door-back"
+            onClick={goBack}
+            className="text-[12px] font-semibold text-purple-700 hover:text-purple-900"
+          >
+            <i className="fa-solid fa-arrow-left mr-1"></i>
+            Back
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              data-testid="door-switch"
+              data-target={otherDoor}
+              onClick={() => openDoor(otherDoor)}
+              className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 transition"
+            >
+              <i className={`fa-solid ${otherIcon} mr-1`}></i>
+              Switch to {otherLabel}
+            </button>
+            <button
+              type="button"
+              data-testid="door-quick-exit"
+              onClick={quickExitAction}
+              className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
+            >
+              <i className="fa-solid fa-bolt mr-1"></i>
+              Quick Exit
+            </button>
+          </div>
         </div>
-        <h2 className="text-lg font-bold text-slate-900 leading-tight">
-          {title}
-        </h2>
-        {subtitle && (
-          <p className="text-xs text-slate-600 mt-1 leading-snug">
-            {subtitle}
-          </p>
-        )}
+        <div>
+          <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
+            {greetingName ? `Welcome, ${greetingName}` : "Welcome"}
+          </div>
+          <h2 className="text-lg font-bold text-slate-900 leading-tight">
+            {title}
+          </h2>
+          {subtitle && (
+            <p className="text-xs text-slate-600 mt-1 leading-snug">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const SafetyStrip = () => (
     <div className="space-y-2">
