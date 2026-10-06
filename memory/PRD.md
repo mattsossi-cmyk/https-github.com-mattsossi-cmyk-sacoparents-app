@@ -923,3 +923,5 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-10-06 Reminder dashboard (agent-tested, NOT deployed)
 - Safety screening overview exposes `reminded_at` per role; SafetyScreeningPanel shows "Reminder sent <date> · no response yet" or "No reminder sent yet (automatic nudge 7 days after joining)" for unreceived screenings (testids safety-screening-{role}-reminded / -not-reminded).
 - Resend rotation still BLOCKED (secret absent).
+
+## 2026-10-06 ~12:05 CDT Release dispatched (job 84013524). Readiness check passed. Contents: six-questions framing, A/B/C screenings + choice screen, pro-only responses, Tier 3 alert, spec endpoint, 7-day reminders, reminder status. Production RESEND_API_KEY rotated by user in Secrets tab; preview rotation pending `SA_COPARENTS_ALIGN_RESEND_KEY` appearing in env (option c).
