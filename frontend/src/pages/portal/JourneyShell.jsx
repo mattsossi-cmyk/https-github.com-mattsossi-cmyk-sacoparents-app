@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { GreyRockToggleChip } from "./AlignmentHub";
 
 /**
- * JourneyShell — iter259 two-door landing.
+ * JourneyShell — iter259 two-door landing (iter260 adds Door Memory
+ * + in-door Quick Exit).
  *
  * Per founder: the first page shows only two primary buttons —
  * Court Ordered and Self Journey. Picking a door reveals a lean
@@ -17,10 +18,47 @@ import { GreyRockToggleChip } from "./AlignmentHub";
  *                  Self assessment → Alignment reports → Foundation
  *                  statements → Communication Builder
  *
+ * iter260:
+ *   • `DOOR_MEMORY_KEY` persists the last door the parent opened so
+ *     returning sessions land straight back in that sub-view.
+ *   • Both sub-views carry a tiny Quick Exit chip in the top row so
+ *     a parent in distress can replace the tab with a neutral page
+ *     even once they are deep inside a path.
+ *
  * The SA CoParents Guide chatbot modal is NOT auto-opened on this
  * screen (suppressed in SacoparentsPortal `iter259`); it stays
  * reachable from any `onOpenIntroGuide` caller.
  */
+
+const DOOR_MEMORY_KEY = "sacoparents_last_door";
+
+const readLastDoor = () => {
+  try {
+    const v = window.localStorage.getItem(DOOR_MEMORY_KEY);
+    return v === "court" || v === "self" ? v : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeLastDoor = (door) => {
+  try {
+    if (door) window.localStorage.setItem(DOOR_MEMORY_KEY, door);
+    else window.localStorage.removeItem(DOOR_MEMORY_KEY);
+  } catch {
+    /* storage unavailable — fail silently */
+  }
+};
+
+const quickExitAction = () => {
+  // Low-friction DV pattern: replace the tab with a neutral weather
+  // page so a back button can't recover the app.
+  try {
+    window.location.replace("https://www.weather.com/");
+  } catch {
+    /* best-effort */
+  }
+};
 
 const PRIMARY_MODULES = [
   {
@@ -99,8 +137,21 @@ export function JourneyShell({
 
   const safetyFlag = safetyFlagged || !!(safetyAck && safetyAck.flagged);
 
-  // "door" (landing), "court", "self".
-  const [view, setView] = useState("door");
+  // "door" (landing), "court", "self". Lazy-init from localStorage
+  // so returning parents land straight back in the door they last
+  // picked. Back clears the memory so a parent who deliberately
+  // exits a sub-view returns to the landing on the next visit too.
+  const [view, setView] = useState(() => readLastDoor() || "door");
+
+  const openDoor = (next) => {
+    writeLastDoor(next);
+    setView(next);
+  };
+
+  const goBack = () => {
+    writeLastDoor(null);
+    setView("door");
+  };
 
   const greetingName = user?.name ? user.name.split(" ")[0] : null;
 
@@ -151,18 +202,29 @@ export function JourneyShell({
     );
   };
 
-  // Shared sub-view header (brand + back + courtKey chip).
+  // Shared sub-view header (brand + back + quick-exit).
   const SubViewHeader = ({ title, subtitle }) => (
     <div className="space-y-2">
-      <button
-        type="button"
-        data-testid="door-back"
-        onClick={() => setView("door")}
-        className="text-[12px] font-semibold text-purple-700 hover:text-purple-900"
-      >
-        <i className="fa-solid fa-arrow-left mr-1"></i>
-        Back
-      </button>
+      <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          data-testid="door-back"
+          onClick={goBack}
+          className="text-[12px] font-semibold text-purple-700 hover:text-purple-900"
+        >
+          <i className="fa-solid fa-arrow-left mr-1"></i>
+          Back
+        </button>
+        <button
+          type="button"
+          data-testid="door-quick-exit"
+          onClick={quickExitAction}
+          className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
+        >
+          <i className="fa-solid fa-bolt mr-1"></i>
+          Quick Exit
+        </button>
+      </div>
       <div>
         <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
           {greetingName ? `Welcome, ${greetingName}` : "Welcome"}
@@ -236,7 +298,7 @@ export function JourneyShell({
             <button
               type="button"
               data-testid="door-court"
-              onClick={() => setView("court")}
+              onClick={() => openDoor("court")}
               className="w-full text-left bg-white hover:bg-indigo-50 border-2 border-indigo-300 rounded-2xl p-4 transition flex items-center gap-3"
             >
               <div className="shrink-0 w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
@@ -255,7 +317,7 @@ export function JourneyShell({
             <button
               type="button"
               data-testid="door-self"
-              onClick={() => setView("self")}
+              onClick={() => openDoor("self")}
               className="w-full text-left bg-white hover:bg-purple-50 border-2 border-purple-300 rounded-2xl p-4 transition flex items-center gap-3"
             >
               <div className="shrink-0 w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">

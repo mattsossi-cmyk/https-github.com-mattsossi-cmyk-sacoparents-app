@@ -45,6 +45,42 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter260 · Quick Exit + Door Memory
+
+Founder ask:
+- "Quick Exit In Doors: Add a tiny Quick Exit button back on both
+  sub-views so parents in distress can leave even once they are
+  deep inside a path".
+- "Door Memory: Remember the last door the parent picked so
+  returning parents land straight back in Self Journey or Court
+  Ordered instead of the landing".
+
+Delivered inside `JourneyShell`:
+
+**Quick Exit — `door-quick-exit`**
+- Rendered inside the shared `SubViewHeader` next to the Back
+  button, visible on both the Court Ordered and Self Journey
+  sub-views.
+- Replaces the current tab with `https://www.weather.com/` via
+  `window.location.replace`, the standard low-friction DV pattern.
+  The Back button of the browser cannot bring the app back.
+
+**Door Memory — `DOOR_MEMORY_KEY = "sacoparents_last_door"`**
+- `useState` lazy-initialiser reads the key from localStorage so
+  returning parents open the door they last picked without having
+  to see the landing again. Values are strictly whitelisted to
+  `"court"` or `"self"`.
+- Picking either door writes the memory via `openDoor(next)`.
+- Tapping Back calls `goBack()` which **clears** the memory before
+  returning the parent to the landing — a deliberate exit must
+  reset the memory so a returning session doesn't jump back into
+  the sub-view they just left.
+
+No backend changes. No PDF or AI-service touch — clinical lockstep
+preserved.
+
+
+
 ### 2026-02-27 — Iter259 · Two-Door Landing
 
 Founder ask: "we need to simplify the first page - we need three
