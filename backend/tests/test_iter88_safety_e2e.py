@@ -139,6 +139,11 @@ class TestScreeningOverview:
         assert d["roles"]["b"]["needs_assignment"] is True
         assert d["roles"]["a"]["version"] is None
         assert d["roles"]["b"]["version"] is None
+        # Reminder dashboard: reminded_at surfaces to the professional (None until the 7-day nudge fires)
+        assert d["roles"]["a"]["reminded_at"] is None
+        MONGO.joint_reports.update_one({"id": pro_case_no_gender}, {"$set": {"safety_reminded_at.a": "2026-10-01T13:00:00+00:00"}})
+        d2 = pro_session.get(f"{BASE}/api/joint/reports/{pro_case_no_gender}/safety-screening", timeout=15).json()
+        assert d2["roles"]["a"]["reminded_at"] == "2026-10-01T13:00:00+00:00"
 
     def test_assign_version_pro_ok(self, pro_session, pro_case_no_gender):
         r = pro_session.put(f"{BASE}/api/joint/reports/{pro_case_no_gender}/safety-screening/assign",

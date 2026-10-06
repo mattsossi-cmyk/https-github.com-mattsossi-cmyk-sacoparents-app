@@ -161,7 +161,8 @@ def _status(doc: dict) -> dict:
         out[r] = {"name": p.get("name") or f"Parent {r.upper()}", "gender": p.get("gender"), "version": ver, "needs_assignment": ver is None, "received": bool(scr),
                   "choice_needed": not confirmed and not scr, "default_version": ver if ver in ("A", "B") else None, "chosen_by_parent": confirmed,
                   "tier": scr.get("tier") if scr else None, "tier_label": TIER_LABEL.get(scr.get("tier")) if scr else None, "version_label": VERSION_LABEL.get(ver or ""),
-                  "completed_at": (scr or {}).get("completed_at"), "source": (scr or {}).get("source"), "receipt": receipt(scr, p.get("name") or f"Parent {r.upper()}")}
+                  "completed_at": (scr or {}).get("completed_at"), "source": (scr or {}).get("source"), "receipt": receipt(scr, p.get("name") or f"Parent {r.upper()}"),
+                  "reminded_at": (doc.get("safety_reminded_at") or {}).get(r)}
     return out
 
 

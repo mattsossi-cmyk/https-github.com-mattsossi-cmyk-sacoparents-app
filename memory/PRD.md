@@ -919,3 +919,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-10-06 Screening reminders (agent-tested, NOT deployed)
 - `safety_screening.run_screening_reminders()`: once per parent, 7+ days after invite acceptance, if no screening received; neutral email (no version/identity wording); marks `safety_reminded_at.{role}`; logged kind=safety_screening_reminder. Runs inside existing daily `follow-up-reminder` cron (8am Central) — cron cap of 5 already reached. Cron endpoint verified 401/200 in preview.
 - Resend rotation still BLOCKED (secret absent at 11:50 CDT).
+
+## 2026-10-06 Reminder dashboard (agent-tested, NOT deployed)
+- Safety screening overview exposes `reminded_at` per role; SafetyScreeningPanel shows "Reminder sent <date> · no response yet" or "No reminder sent yet (automatic nudge 7 days after joining)" for unreceived screenings (testids safety-screening-{role}-reminded / -not-reminded).
+- Resend rotation still BLOCKED (secret absent).
