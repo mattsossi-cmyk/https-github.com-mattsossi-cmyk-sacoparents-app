@@ -1,4 +1,5 @@
 """Version C (LGBTQ+ relationship self-assessment): content, tiering, import, and identity-leak guards in report/PDF projections."""
+from datetime import datetime, timezone
 import pymupdf
 
 from safety_import import extract_safety_screening, screening_summary
@@ -67,3 +68,36 @@ def test_spec_export_matches_runtime():
         assert [i["id"] for i in v["items"]] == [i["id"] for i in VERSIONS[k]["items"]]
         assert all(compute_tier(k, {i: "Sometimes"}) == 3 for i in spec["tiers"]["tier3_items"][k])
     assert "orientation" in spec["assignment"]["store_only"] and spec["export_contract"]["field"] == "safety_screening"
+
+
+def test_screening_reminder_nudges_once_after_seven_days():
+    import asyncio, os, uuid, logging
+    from datetime import timedelta
+    from motor.motor_asyncio import AsyncIOMotorClient
+    from safety_screening import run_screening_reminders
+    db = AsyncIOMotorClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
+    sent = []
+
+    async def fake_send(**kw):
+        sent.append(kw)
+        return "id"
+
+    async def go():
+        uid, rid = str(uuid.uuid4()), str(uuid.uuid4())
+        old = (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
+        await db.users.insert_one({"_id": uid, "email": "qa.remind@example.com", "name": "Remind Me", "role": "parent"})
+        await db.joint_reports.insert_one({"id": rid, "case_code": "SA-REM", "created_at": old, "participants": {"a": {"user_id": uid, "name": "R"}, "b": {"user_id": None, "name": "S"}}, "responses": {}})
+        await db.invitations.insert_one({"report_id": rid, "role": "a", "status": "accepted", "accepted_at": old, "token": "t-" + rid})
+        try:
+            n1 = await run_screening_reminders(db, fake_send, lambda: "https://x.test", "SA", logging.getLogger("t"))
+            n2 = await run_screening_reminders(db, fake_send, lambda: "https://x.test", "SA", logging.getLogger("t"))
+            mine = [s for s in sent if s["case_id"] == rid]
+            assert len(mine) == 1 and n2 == 0 and n1 >= 1
+            assert mine[0]["to"] == "qa.remind@example.com" and "/safety-screening" in mine[0]["html"]
+            low = (mine[0]["subject"] + mine[0]["html"]).lower()
+            assert "lgbtq" not in low and "women" not in low and "version" not in low
+            doc = await db.joint_reports.find_one({"id": rid})
+            assert doc["safety_reminded_at"]["a"]
+        finally:
+            await db.users.delete_one({"_id": uid}); await db.joint_reports.delete_one({"id": rid}); await db.invitations.delete_many({"report_id": rid})
+    asyncio.run(go())

@@ -284,3 +284,45 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
                 "notice": "Parent-reported screening responses, shown to the assigned professional only. Not findings. Never shared with the co-parent, the court, or any report."}
 
     return r
+
+
+REMINDER_AFTER_DAYS = 7
+
+
+async def run_screening_reminders(db, send_email, app_url, from_name: str, logger) -> int:
+    """Daily: one gentle nudge per parent whose assigned (or offered) safety screening is still not received 7+ days after they joined. Neutral — no version name, no answers."""
+    from datetime import timedelta
+    from html import escape
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(days=REMINDER_AFTER_DAYS)).isoformat()
+    sent = 0
+    async for doc in db.joint_reports.find({"kind": {"$ne": "foundation"}, "closed_at": {"$exists": False}, "is_demo": {"$ne": True},
+                                            "$or": [{"participants.a.user_id": {"$ne": None}}, {"participants.b.user_id": {"$ne": None}}]},
+                                           {"_id": 0, "id": 1, "case_code": 1, "child_name": 1, "participants": 1, "safety_screenings": 1, "safety_reminded_at": 1, "created_at": 1}):
+        for role in ("a", "b"):
+            p = doc["participants"][role]
+            if not p.get("user_id") or (doc.get("safety_screenings") or {}).get(role) or (doc.get("safety_reminded_at") or {}).get(role):
+                continue
+            inv = await db.invitations.find_one({"report_id": doc["id"], "role": role, "status": "accepted"}, {"accepted_at": 1})
+            joined = (inv or {}).get("accepted_at") or doc.get("created_at") or ""
+            if not joined or joined > cutoff:
+                continue
+            user = await db.users.find_one({"_id": p["user_id"]}, {"email": 1, "name": 1})
+            if not user or not user.get("email"):
+                continue
+            code = doc.get("case_code") or doc["id"][:8]
+            html = ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                    f"<p>Hi {escape(user.get('name') or 'there')},</p>"
+                    f"<p>A short, private safety screening is still waiting for you on case <strong>{escape(code)}</strong>. It takes about five minutes. "
+                    "Every question can be skipped, and your co-parent will never see your answers — only your professional can.</p>"
+                    f'<p><a href="{app_url()}/joint/{doc["id"]}/safety-screening" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Open my private screening</a></p>'
+                    "<p style=\"color:#666;font-size:13px\">If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (text START to 88788).</p>"
+                    f'<p style="font-size:12px;color:#888">Sent by {escape(from_name)}. We never ask for your password by email.</p></td></tr></table>')
+            try:
+                await send_email(to=user["email"], subject=f"A private screening is waiting for you — Case {code} - {from_name}", html=html, case_id=doc["id"], kind="safety_screening_reminder", to_role=f"Parent {role.upper()}")
+            except Exception as exc:
+                logger.warning("safety screening reminder failed for %s/%s: %s", doc["id"], role, exc)
+                continue
+            await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"safety_reminded_at.{role}": now.isoformat()}})
+            sent += 1
+    return sent

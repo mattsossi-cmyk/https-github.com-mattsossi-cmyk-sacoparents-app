@@ -915,3 +915,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 
 ## 2026-10-06 Parent App Spec export (agent-tested, NOT deployed)
 - `safety_screening.spec_export()`; server-to-server `GET /api/integrations/safety-screening-spec` (X-Integration-Key = INTEGRATION_SHARED_SECRET). Snapshot committed at `/app/docs/safety_screening_spec.json`. Test asserts tier3 ids match runtime.
+
+## 2026-10-06 Screening reminders (agent-tested, NOT deployed)
+- `safety_screening.run_screening_reminders()`: once per parent, 7+ days after invite acceptance, if no screening received; neutral email (no version/identity wording); marks `safety_reminded_at.{role}`; logged kind=safety_screening_reminder. Runs inside existing daily `follow-up-reminder` cron (8am Central) — cron cap of 5 already reached. Cron endpoint verified 401/200 in preview.
+- Resend rotation still BLOCKED (secret absent at 11:50 CDT).
