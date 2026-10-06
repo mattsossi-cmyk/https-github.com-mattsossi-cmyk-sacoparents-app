@@ -908,3 +908,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Labels: VERSION_LABEL (report/PDF/co-parent-safe) = "Version A/B/C"; VERSION_LABEL_PRO (full names) only in professional endpoints/screens. public_record() drops `title`.
 - Import accepts version "C"; legacy fallback intact. Tests: tests/test_iter89_version_c.py. Frontend: choice screen in SafetyScreening.jsx (screening-choice-A/B/C), panel "Chosen by parent".
 - DEPLOY PENDING user confirmation.
+
+## 2026-10-06 Tier 3 alert (agent-tested, NOT deployed)
+- `safety_screening._tier3_alert`: on a Tier 3 submission, emails the assigned professional (receipt, version letter, tier, pro-only link). No answers, no identity wording. Logged in `communications` kind=safety_tier3_alert. Never blocks the parent's submission. E2E asserts the comm record (17/17 pass).
+- Resend rotation BLOCKED: `SA_COPARENTS_ALIGN_RESEND_KEY` not present in preview env as of 11:35 CDT. Nothing changed in .env. Deploy still pending user confirmation.

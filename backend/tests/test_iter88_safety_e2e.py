@@ -207,6 +207,15 @@ class TestParentScreening:
         d = r.json()
         assert d["tier"] == 3
         assert "Tier 3" in d["tier_label"]
+        # Tier 3 alert to the professional: logged in communications, no answers / no identity wording in the subject
+        import time as _t
+        for _ in range(10):
+            comm = MONGO.communications.find_one({"case_id": pro_case["id"], "kind": "safety_tier3_alert"})
+            if comm:
+                break
+            _t.sleep(0.5)
+        assert comm and comm["to"] == PRO_EMAIL and "Tier 3" in comm["subject"]
+        assert UNIQUE_SIGNAL not in comm["subject"] and "women" not in comm["subject"].lower()
 
     def test_parent_b_tier2(self, pro_case, parent_b_session, parents_accepted):
         # b3 Frequently (non-tier3) + safe Very safe → tier 2

@@ -168,6 +168,25 @@ def _status(doc: dict) -> dict:
 def build_router(db, get_current_user, get_joint_report_doc, report_role, log_access) -> APIRouter:
     r = APIRouter()
 
+    async def _tier3_alert(doc: dict, role: str, rec: dict) -> None:
+        """Immediate professional alert for a Tier 3 screening — receipt, version letter, tier only; never answers, never identity."""
+        from core import _pro_email_wrap, app_url
+        from email_utils import EMAIL_FROM_NAME, send_email
+        from html import escape
+        pro = await db.users.find_one({"_id": doc.get("professional_id") or doc.get("created_by"), "role": {"$in": ["professional", "admin"]}}, {"email": 1, "name": 1})
+        if not pro or doc.get("is_demo"):
+            return
+        code = doc.get("case_code") or doc["id"][:8]
+        name = escape((doc["participants"][role].get("name")) or f"Parent {role.upper()}")
+        html = _pro_email_wrap(
+            f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
+            f"<p><strong>{name}</strong> completed a private safety screening ({VERSION_LABEL[rec['version']]}) on Case {escape(code)} and it landed at "
+            f"<strong>{TIER_LABEL[3]}</strong>.</p>"
+            f"<p>Only the assigned professional can open item-level responses; access is logged. The co-parent and the court see nothing of this.</p>"
+            f'<p><a href="{app_url()}/joint/{doc["id"]}/safety-screening/{role}" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Open screening (professional-only)</a></p>'
+            f"<p style=\"color:#666;font-size:13px\">{SCALE_NOTE}</p>")
+        await send_email(to=pro["email"], subject=f"Safety screening Tier 3 — Case {code} - {EMAIL_FROM_NAME}", html=html, case_id=doc["id"], kind="safety_tier3_alert", to_role="Professional")
+
     def _is_pro(doc, user):
         return user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))
 
@@ -224,6 +243,12 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
             raise HTTPException(status_code=409, detail="Please choose a screening version first")
         rec = build_record(version, body.responses or {})
         await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_screenings.{role}": rec, f"safety_flags.{role}": rec["tier"] >= 2}})
+        if rec["tier"] == 3:
+            try:
+                await _tier3_alert(doc, role, rec)
+            except Exception as exc:  # alert must never block the parent's submission
+                import logging
+                logging.getLogger("safety_screening").warning("Tier 3 alert not sent for case %s: %s", rid, exc)
         return {"tier": rec["tier"], "tier_label": TIER_LABEL[rec["tier"]], "resources": RESOURCES, "answered_count": rec["answered_count"], "skipped_count": rec["skipped_count"], "scale_note": SCALE_NOTE}
 
     @r.get("/joint/reports/{rid}/safety-screening/{role}/responses")
