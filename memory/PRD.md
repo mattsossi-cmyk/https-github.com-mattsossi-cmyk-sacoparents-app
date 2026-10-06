@@ -45,6 +45,52 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter263 · Celebration Share + Partner Invite Nudge
+
+Founder ask:
+- "Celebration Share: Let a parent save a short celebration badge
+  image after the finale so they can keep a tangible marker of
+  their reflection milestone".
+- "Partner Invite Nudge: After the finale, offer a one-tap invite
+  to the other parent so the momentum carries into the joint
+  report — provided that there is no family violence accusations".
+
+Delivered inside `JourneyShell`:
+
+**Finale rewards block — `door-self-finale-rewards`**
+Rendered inside the Self Journey sub-view only when
+`PRIMARY_MODULES.every(m => progressByTopic[m.topic] === "completed")`
+— i.e. after the all-three finale has been earned.
+
+**Celebration Share — `door-self-share-badge`**
+- `renderCelebrationBadge(name)` draws a 1200×630 PNG on an
+  off-screen canvas: purple gradient background, decorative dots,
+  rounded card, brand pill `SA COPARENTS`, title `Reflection
+  Milestone`, chip `A · B · C — Complete`, name line
+  `Earned by {first-name}`, today's date, and the
+  `sacoparentsapp.online` footer.
+- `shareCelebrationBadge()` wraps the blob as a `File`, prefers
+  `navigator.share({ files })` on mobile Safari / Chrome, and
+  falls back to a direct `<a download>` click. Shows "Badge
+  saved" success toast once the file is on disk.
+
+**Partner Invite Nudge — `door-self-invite-partner`**
+- Clinical guardrail (defence in depth): the chip is **not
+  rendered** when `safetyFlag` is on (grey-rock active or DV
+  flagged in `safetyAck`). The backend `/api/invites/coparent`
+  endpoint ALSO enforces IPV clearance via
+  `require_ipv_clearance`, so the parent cannot bypass by DOM
+  manipulation.
+- Tap opens a shadcn `Dialog` (`door-self-invite-dialog`) that
+  wraps the existing `InviteCoparentCard` (variant `"summary"`),
+  which handles the whole send flow: safety-gate check, rate
+  limit, one-shot flag, success state. No new backend wiring.
+
+No backend changes. No PDF or AI-service touch — clinical
+lockstep preserved. ESLint warnings unchanged.
+
+
+
 ### 2026-02-27 — Iter262 · All-Three Finale + Celebration Replay
 
 Founder ask:

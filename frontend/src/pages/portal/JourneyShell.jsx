@@ -3,6 +3,14 @@ import confetti from "canvas-confetti";
 import { toast } from "sonner";
 
 import { GreyRockToggleChip } from "./AlignmentHub";
+import InviteCoparentCard from "../../components/InviteCoparentCard";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../../components/ui/dialog";
 
 /**
  * JourneyShell — iter259 two-door landing (iter260 adds Door Memory
@@ -138,6 +146,101 @@ const writeAllThreeCelebrated = (value) => {
   } catch {
     /* storage unavailable — fail silently */
   }
+};
+
+// iter263 — Celebration badge PNG. Drawn on a <canvas> at 2x DPI so
+// it looks crisp on both phones and desktop. The caller passes the
+// parent's first name (optional) and we return a Promise<Blob>.
+const renderCelebrationBadge = (name) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const W = 1200;
+      const H = 630;
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      // Gradient background.
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, "#1e1b4b");
+      bg.addColorStop(0.55, "#5b21b6");
+      bg.addColorStop(1, "#9333ea");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+      // Decorative dots.
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      for (let i = 0; i < 60; i++) {
+        const x = (i * 97 + 23) % W;
+        const y = (i * 71 + 11) % H;
+        const r = 4 + ((i * 17) % 10);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Soft rounded rectangle (card).
+      const padX = 90;
+      const padY = 80;
+      const r = 32;
+      ctx.fillStyle = "rgba(255,255,255,0.07)";
+      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(padX + r, padY);
+      ctx.lineTo(W - padX - r, padY);
+      ctx.quadraticCurveTo(W - padX, padY, W - padX, padY + r);
+      ctx.lineTo(W - padX, H - padY - r);
+      ctx.quadraticCurveTo(W - padX, H - padY, W - padX - r, H - padY);
+      ctx.lineTo(padX + r, H - padY);
+      ctx.quadraticCurveTo(padX, H - padY, padX, H - padY - r);
+      ctx.lineTo(padX, padY + r);
+      ctx.quadraticCurveTo(padX, padY, padX + r, padY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Text — Brand pill.
+      ctx.fillStyle = "#f5f3ff";
+      ctx.font = "bold 26px 'Helvetica Neue', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("SA COPARENTS", W / 2, padY + 90);
+      // Title.
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 72px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText("Reflection Milestone", W / 2, padY + 190);
+      // Subtitle — chips A · B · C.
+      ctx.fillStyle = "#c4b5fd";
+      ctx.font = "bold 44px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText("A  ·  B  ·  C  —  Complete", W / 2, padY + 265);
+      // Name line.
+      ctx.fillStyle = "#e9d5ff";
+      ctx.font = "500 32px 'Helvetica Neue', Arial, sans-serif";
+      const displayName = (name || "A caring parent").trim();
+      ctx.fillText(`Earned by ${displayName}`, W / 2, padY + 335);
+      // Date line.
+      const today = new Date();
+      const dateStr = today.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      ctx.fillStyle = "#a78bfa";
+      ctx.font = "500 24px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText(dateStr, W / 2, padY + 385);
+      // Footer tag.
+      ctx.fillStyle = "#ddd6fe";
+      ctx.font = "600 20px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText("sacoparentsapp.online", W / 2, H - padY - 35);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Badge render returned no blob"));
+        },
+        "image/png",
+        0.95
+      );
+    } catch (err) {
+      reject(err);
+    }
+  });
 };
 
 const quickExitAction = () => {
@@ -351,6 +454,73 @@ export function JourneyShell({
           /* ignore */
         }
       }, completed.length * 450 + 200);
+    }
+  };
+
+  // iter263 — Celebration Share + Partner Invite nudge.
+  //
+  // Both features surface AFTER the all-three finale has been
+  // earned. The Partner Invite nudge is additionally suppressed
+  // when the parent is safety-flagged (grey-rock on / DV disclosed)
+  // — the backend `/api/invites/coparent` endpoint ALSO enforces
+  // the IPV safety gate, so this is a defence-in-depth guardrail,
+  // not the sole protection.
+  const allThreeDone = PRIMARY_MODULES.every(
+    (m) => progressByTopic?.[m.topic] === "completed"
+  );
+  const [inviteOpen, setInviteOpen] = useState(false);
+
+  const shareCelebrationBadge = async () => {
+    try {
+      const blob = await renderCelebrationBadge(greetingName);
+      const file = new File([blob], "sa-coparents-reflection-badge.png", {
+        type: "image/png",
+      });
+      // Prefer the native share sheet when it accepts files (mobile
+      // Safari / Chrome). Fall back to a direct download.
+      if (
+        typeof navigator !== "undefined" &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: "SA CoParents — Reflection Milestone",
+            text: "A · B · C — complete. My reflection milestone.",
+          });
+          return;
+        } catch {
+          /* parent cancelled share — fall through to download */
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "sa-coparents-reflection-badge.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      try {
+        toast.success("Badge saved", {
+          description:
+            "Your Reflection Milestone badge has been downloaded.",
+          duration: 4000,
+        });
+      } catch {
+        /* ignore */
+      }
+    } catch (err) {
+      try {
+        toast.error("Could not save badge", {
+          description:
+            "Please try again — if it keeps failing, let us know.",
+          duration: 4000,
+        });
+      } catch {
+        /* ignore */
+      }
     }
   };
 
@@ -798,6 +968,44 @@ export function JourneyShell({
               Relive your reflection wins
             </span>
           </button>
+
+          {/* iter263 — Celebration Share + Partner Invite nudge.
+              Both are only visible once the all-three finale has
+              been earned. The Partner Invite chip is additionally
+              hidden when the parent is safety-flagged (defence in
+              depth with the backend IPV gate). */}
+          {allThreeDone && (
+            <div
+              data-testid="door-self-finale-rewards"
+              className="rounded-xl border border-purple-200 bg-purple-50/70 p-3 space-y-2"
+            >
+              <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
+                Keep your momentum
+              </div>
+              <button
+                type="button"
+                data-testid="door-self-share-badge"
+                onClick={shareCelebrationBadge}
+                className="w-full text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-purple-900 transition flex items-center gap-2"
+              >
+                <i className="fa-solid fa-award"></i>
+                Save my Reflection Milestone badge
+                <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[10px]"></i>
+              </button>
+              {!safetyFlag && (
+                <button
+                  type="button"
+                  data-testid="door-self-invite-partner"
+                  onClick={() => setInviteOpen(true)}
+                  className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-emerald-900 transition flex items-center gap-2"
+                >
+                  <i className="fa-solid fa-user-plus"></i>
+                  Invite the other parent
+                  <i className="fa-solid fa-arrow-right ml-auto text-slate-400 text-[10px]"></i>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -837,6 +1045,27 @@ export function JourneyShell({
           </button>
         )}
       </section>
+
+      {/* iter263 — Partner Invite Dialog. Wraps the existing
+          `InviteCoparentCard`, which itself calls the backend
+          `/api/invites/coparent` endpoint; that endpoint enforces
+          the IPV safety gate so this is defence-in-depth. */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent
+          data-testid="door-self-invite-dialog"
+          className="max-w-md"
+        >
+          <DialogHeader>
+            <DialogTitle>Invite the other parent</DialogTitle>
+            <DialogDescription>
+              Send a private invite so your co-parent can run their
+              own reflections. Nothing of yours is shared without
+              your explicit permission.
+            </DialogDescription>
+          </DialogHeader>
+          <InviteCoparentCard variant="summary" />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
