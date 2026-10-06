@@ -221,11 +221,14 @@ export default function SacoparentsPortal() {
       setSnapshotHistory(seededSnapshotHistory);
     }
 
-    // iter228 — auto-open the SA CoParents Guide intro chat on the
-    // very first visit. The modal itself marks the flag as seen when
-    // the parent closes or picks a path so we don't re-show it after.
+    // iter259 — auto-open suppressed per founder: the simplified
+    // two-door landing shows only the Court Ordered / Self Journey
+    // buttons on first visit. The intro Guide stays reachable (any
+    // call site that invokes `onOpenIntroGuide` still works) but is
+    // no longer force-opened on load.
     if (!hasIntroBeenSeen()) {
-      setIntroOpen(true);
+      // intentionally no-op; keep the "seen" marker so the follow-up
+      // branch below doesn't misfire on later visits.
     } else {
       // iter231 — if a returning parent picked a path (via intro or
       // gateway) but never opened a tile in the meantime, and enough

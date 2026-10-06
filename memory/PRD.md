@@ -45,6 +45,63 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter259 · Two-Door Landing
+
+Founder ask: "we need to simplify the first page - we need three
+options - court ordered, self journey, after those two options...
+After click under court ordered - safety first, choose option
+a, b and c, and professional report invite from sacoparentsalign.com.
+Under self journey - we need safety first, choose option a, b and
+c and coparenting journey, along with self assessment and alignment
+reports and foundation statements."
+
+The 3-tab dashboard (iter258) is replaced by a two-door landing +
+two lean sub-views. The SA CoParents Guide chatbot auto-open is
+suppressed in `SacoparentsPortal` (`iter259` comment on the mount
+effect); the modal itself is still reachable from the "Chat with
+the Guide" chip inside Self Journey.
+
+**Landing — `door-landing`**
+Only two primary buttons: `door-court` (Court Ordered) and
+`door-self` (Self Journey). Nothing else on the landing — no
+banner, no tabs, no chatbot auto-open.
+
+**Court Ordered — `door-view-court`**
+- `door-back` (returns to the landing).
+- `door-court-banner` (shown when a court key is verified).
+- `door-safety-first` (opens the DV/IPV screen; grey-rock chip
+  below when the parent is flagged).
+- `door-court-abc`: three primary modules (`door-module-foundation`
+  = Child Needs & Priorities, `door-module-coparenting` =
+  Co-Parenting Dynamics, `door-module-safety` = Conflict
+  Readiness). Each row shows the `completed`/`in_progress`/
+  `not_yet` chip from `progressByTopic`.
+- `door-court-pro-invite` panel with `door-court-pro-link` →
+  `REACT_APP_ALIGN_SITE_URL` (default `https://sacoparentsalign.online`,
+  opens in a new tab).
+- `door-court-enter-key` chip (only when no court key is verified
+  yet) → opens the existing court-key entry screen.
+
+**Self Journey — `door-view-self`**
+Section order (top to bottom), matching the founder's spec:
+1. `door-safety-first` + optional grey-rock chip.
+2. `door-self-abc` — same A/B/C modules.
+3. `door-self-coparenting` — 40-Q co-parenting journey card.
+4. `door-self-selfassessment` — 40-Q interactive preview (opens
+   the static HTML preview in a new tab).
+5. `door-self-alignment-{educational|medical|psychological}` —
+   three alignment-report chips with completion ticks.
+6. `door-self-foundation` — opens the Foundation drawer via
+   `onOpenReport`.
+7. `door-self-biff` — Communication Builder entry.
+8. `door-self-chat-guide` (first-time only) — manual chatbot
+   trigger so the Guide stays reachable.
+
+No backend changes. No PDF or AI-service touch — clinical lockstep
+preserved. ESLint warnings unchanged.
+
+
+
 ### 2026-02-27 — Iter258 · 3-Tab Dashboard
 
 Founder ask (via Tailwind HTML mockup): "we need to redo the
