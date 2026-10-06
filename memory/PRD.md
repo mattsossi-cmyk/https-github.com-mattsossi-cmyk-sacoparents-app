@@ -45,6 +45,56 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter266 · Pair Polling + Joint Badge Share
+
+Founder ask:
+- "Pair Progress Polling: Poll the pair-progress endpoint
+  periodically so the celebration fires while the parent is still
+  in the app, not only on refresh".
+- "Pair Celebration Share: Offer a joint badge after both parents
+  finish so each can save a two-side version of the Reflection
+  Milestone".
+
+**Pair progress polling — `SacoparentsPortal`**
+The pair-progress effect now:
+- Fires once immediately on mount.
+- Then every 60 s via `setInterval`, but skips the fetch when
+  `document.visibilityState !== "visible"` so a backgrounded tab
+  doesn't drain battery or hit the API unnecessarily.
+- Also refetches on `visibilitychange` so a parent returning to a
+  foregrounded tab gets a fresh read without waiting the full
+  interval.
+- Stops the interval as soon as `coparent_all_three_done` is true —
+  there's no reason to keep polling once the milestone fires (the
+  local `PAIR_CELEBRATED_KEY` flag prevents double-firing anyway).
+- All timers / listeners cleaned up on unmount.
+
+**Joint celebration share — `door-self-share-joint-badge`**
+A second canvas renderer `renderJointCelebrationBadge(myName,
+coparentName)` draws a 1200×630 PNG with an emerald→purple
+gradient, the brand pill, the two-line title "Shared Reflection
+Milestone", a subtitle "A · B · C — Complete (both parents)", and
+two signed name columns separated by a vertical divider (`Earned
+by {myName}` on the left, `With {coparentName}` on the right).
+
+The chip is rendered inside the existing finale-rewards block, but
+only when `pairBothDone` is true — both the current parent's
+`allThreeDone` AND the paired co-parent's
+`coparent_all_three_done` must be set. The chip reuses the
+`navigator.share({ files })` → direct-download fallback pattern
+from the solo badge and shows a "Joint badge saved" toast on
+success.
+
+Note on end-to-end testing: Playwright `page.route` mocking is
+unreliable in this preview environment for same-origin API calls,
+so the joint chip visibility was validated by code inspection +
+backend endpoint curl + reuse of the already-verified solo-badge
+share pattern.
+
+No PDF or AI-service touch — clinical lockstep preserved.
+
+
+
 ### 2026-02-27 — Iter265 · Hero Banner + Roadmap Progress + Partner Pair Celebration
 
 Founder ask:

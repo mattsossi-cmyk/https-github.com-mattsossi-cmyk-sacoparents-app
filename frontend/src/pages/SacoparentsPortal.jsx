@@ -137,26 +137,82 @@ export default function SacoparentsPortal() {
   // visit and re-invokable from a Gateway pill.
   const [introOpen, setIntroOpen] = useState(false);
   // iter265 — Partner Pair Celebration. The dashboard polls
-  // /api/invites/coparent/pair-progress once on mount (and after
-  // a sync hint) so the JourneyShell can fire a shared confetti +
-  // toast when the linked co-parent has finished their three
-  // primary reflection modules. The backend endpoint enforces the
-  // invitee-link lookup; the frontend just reads the booleans.
+  // /api/invites/coparent/pair-progress on mount so the
+  // JourneyShell can fire a shared confetti + toast when the
+  // linked co-parent has finished their three primary reflection
+  // modules. iter266 — polling is now periodic (every 60 s while
+  // the tab is visible) so the celebration can fire while the
+  // parent is still in the app, not only on refresh. Polling stops
+  // automatically once the pair milestone has been reached.
   const [pairProgress, setPairProgress] = useState(null);
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
+    let timerId = null;
+
+    const fetchOnce = async () => {
+      if (cancelled) return;
       try {
         const resp = await api.get("/invites/coparent/pair-progress");
-        if (!cancelled) setPairProgress(resp.data || null);
+        if (cancelled) return;
+        const data = resp.data || null;
+        setPairProgress(data);
+        // Stop polling once the pair milestone is reached — the
+        // local celebration flag will prevent the toast firing twice
+        // anyway, but there's no reason to keep hitting the API.
+        if (data && data.coparent_all_three_done) {
+          if (timerId) {
+            clearInterval(timerId);
+            timerId = null;
+          }
+        }
       } catch {
         // Non-fatal: parent may not have a linked co-parent, or
         // may not be signed in on this device.
       }
     };
-    load();
+
+    // Fire once immediately.
+    fetchOnce();
+
+    // Then every 60 s while the tab is visible.
+    timerId = setInterval(() => {
+      try {
+        if (
+          typeof document !== "undefined" &&
+          document.visibilityState &&
+          document.visibilityState !== "visible"
+        ) {
+          return;
+        }
+      } catch {
+        /* ignore */
+      }
+      fetchOnce();
+    }, 60000);
+
+    // Also refetch when the tab becomes visible again (e.g. parent
+    // comes back from backgrounding the app).
+    const onVisibility = () => {
+      try {
+        if (document.visibilityState === "visible") fetchOnce();
+      } catch {
+        /* ignore */
+      }
+    };
+    try {
+      document.addEventListener("visibilitychange", onVisibility);
+    } catch {
+      /* SSR / no document */
+    }
+
     return () => {
       cancelled = true;
+      if (timerId) clearInterval(timerId);
+      try {
+        document.removeEventListener("visibilitychange", onVisibility);
+      } catch {
+        /* ignore */
+      }
     };
   }, []);
   // iter231 — follow-up "how's it going?" modal shown to a parent

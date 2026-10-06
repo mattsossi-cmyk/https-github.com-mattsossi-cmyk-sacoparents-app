@@ -304,6 +304,125 @@ const renderCelebrationBadge = (name) => {
   });
 };
 
+// iter266 — Joint celebration badge: two-side version of the
+// Reflection Milestone, rendered when both parents in the linked
+// pair have finished the three primary modules. Uses the same
+// 1200×630 canvas footprint but splits the lower half into two
+// signed columns so both parents' names are visible side by side.
+const renderJointCelebrationBadge = (myName, coparentName) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const W = 1200;
+      const H = 630;
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      // Gradient background — emerald → purple to signal "shared".
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, "#064e3b");
+      bg.addColorStop(0.55, "#5b21b6");
+      bg.addColorStop(1, "#9333ea");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+      // Decorative dots.
+      ctx.fillStyle = "rgba(255,255,255,0.09)";
+      for (let i = 0; i < 70; i++) {
+        const x = (i * 103 + 29) % W;
+        const y = (i * 61 + 7) % H;
+        const r = 4 + ((i * 19) % 12);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Rounded outer card.
+      const padX = 90;
+      const padY = 70;
+      const r = 32;
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.strokeStyle = "rgba(255,255,255,0.28)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(padX + r, padY);
+      ctx.lineTo(W - padX - r, padY);
+      ctx.quadraticCurveTo(W - padX, padY, W - padX, padY + r);
+      ctx.lineTo(W - padX, H - padY - r);
+      ctx.quadraticCurveTo(W - padX, H - padY, W - padX - r, H - padY);
+      ctx.lineTo(padX + r, H - padY);
+      ctx.quadraticCurveTo(padX, H - padY, padX, H - padY - r);
+      ctx.lineTo(padX, padY + r);
+      ctx.quadraticCurveTo(padX, padY, padX + r, padY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Brand pill.
+      ctx.fillStyle = "#ecfdf5";
+      ctx.font = "bold 26px 'Helvetica Neue', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("SA COPARENTS", W / 2, padY + 80);
+      // Title.
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 70px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText("Shared Reflection", W / 2, padY + 170);
+      ctx.fillText("Milestone", W / 2, padY + 240);
+      // Subtitle — A · B · C.
+      ctx.fillStyle = "#a7f3d0";
+      ctx.font = "bold 36px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText("A  ·  B  ·  C  —  Complete (both parents)", W / 2, padY + 310);
+      // Two name columns.
+      const colY = padY + 390;
+      const nameA = (myName || "You").trim();
+      const nameB = (coparentName || "Your co-parent").trim();
+      // Column A.
+      ctx.fillStyle = "#e9d5ff";
+      ctx.font = "500 24px 'Helvetica Neue', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Earned by", W * 0.3, colY);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 42px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText(nameA, W * 0.3, colY + 48);
+      // Separator.
+      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(W / 2, colY - 20);
+      ctx.lineTo(W / 2, colY + 60);
+      ctx.stroke();
+      // Column B.
+      ctx.fillStyle = "#e9d5ff";
+      ctx.font = "500 24px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText("With", W * 0.7, colY);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 42px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText(nameB, W * 0.7, colY + 48);
+      // Date.
+      const today = new Date();
+      const dateStr = today.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      ctx.fillStyle = "#a78bfa";
+      ctx.font = "500 20px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText(dateStr, W / 2, H - padY - 55);
+      // Footer tag.
+      ctx.fillStyle = "#ddd6fe";
+      ctx.font = "600 20px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillText("sacoparentsapp.online", W / 2, H - padY - 25);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Joint badge render returned no blob"));
+        },
+        "image/png",
+        0.95
+      );
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
 const quickExitAction = () => {
   // Low-friction DV pattern: replace the tab with a neutral weather
   // page so a back button can't recover the app.
@@ -619,6 +738,71 @@ export function JourneyShell({
       }
     }
   };
+
+  // iter266 — Joint celebration share. Visible only when both this
+  // parent and their paired co-parent are "all three done". Falls
+  // back to the same share-sheet / download pattern as the solo
+  // badge.
+  const shareJointCelebrationBadge = async () => {
+    try {
+      const coparentName = pairProgress?.coparent_display_name || null;
+      const blob = await renderJointCelebrationBadge(
+        greetingName,
+        coparentName
+      );
+      const file = new File([blob], "sa-coparents-joint-reflection-badge.png", {
+        type: "image/png",
+      });
+      if (
+        typeof navigator !== "undefined" &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: "SA CoParents — Shared Reflection Milestone",
+            text: "Both parents finished their reflections. Shared milestone.",
+          });
+          return;
+        } catch {
+          /* parent cancelled share — fall through to download */
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "sa-coparents-joint-reflection-badge.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      try {
+        toast.success("Joint badge saved", {
+          description:
+            "Your Shared Reflection Milestone badge has been downloaded.",
+          duration: 4000,
+        });
+      } catch {
+        /* ignore */
+      }
+    } catch (err) {
+      try {
+        toast.error("Could not save joint badge", {
+          description:
+            "Please try again — if it keeps failing, let us know.",
+          duration: 4000,
+        });
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
+  // iter266 — Both-parents-done condition. Drives the joint
+  // badge chip visibility inside the finale rewards block.
+  const pairBothDone =
+    allThreeDone && !!(pairProgress && pairProgress.coparent_all_three_done);
 
   const greetingName = user?.name ? user.name.split(" ")[0] : null;
 
@@ -1274,6 +1458,18 @@ export function JourneyShell({
                 Save my Reflection Milestone badge
                 <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[10px]"></i>
               </button>
+              {pairBothDone && (
+                <button
+                  type="button"
+                  data-testid="door-self-share-joint-badge"
+                  onClick={shareJointCelebrationBadge}
+                  className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-emerald-900 transition flex items-center gap-2"
+                >
+                  <i className="fa-solid fa-award"></i>
+                  Save our Shared Reflection Milestone badge
+                  <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[10px]"></i>
+                </button>
+              )}
               {!safetyFlag && (
                 <button
                   type="button"
