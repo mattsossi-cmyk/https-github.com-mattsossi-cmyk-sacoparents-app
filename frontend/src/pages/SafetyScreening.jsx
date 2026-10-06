@@ -38,6 +38,10 @@ export default function SafetyScreening() {
   useEffect(() => { api.get(`/joint/reports/${id}/safety-screening`).then((r) => setData(r.data)).catch((e) => toast.error(formatApiError(e))); }, [id]);
   if (!data) return <div className="min-h-screen bg-background" data-testid="screening-loading" />;
   const spec = data.spec;
+  const choose = async (version) => {
+    setBusy(true);
+    try { await api.put(`/joint/reports/${id}/safety-screening/choose`, { version }); const r = await api.get(`/joint/reports/${id}/safety-screening`); setData(r.data); window.scrollTo(0, 0); } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
+  };
   const submit = async () => {
     setBusy(true);
     try { const { data: res } = await api.put(`/joint/reports/${id}/safety-screening`, { responses: answers }); setResult(res); window.scrollTo(0, 0); } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
@@ -47,7 +51,20 @@ export default function SafetyScreening() {
     <div className="min-h-screen bg-background" data-testid="screening-page">
       <header className="bg-white border-b border-border"><div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="screening-back"><ArrowLeft className="h-4 w-4" /> Back to case</Link><BrandLogo size="text-xl" /></div></header>
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-4">
-        {!spec && <div className="rounded-lg border border-border bg-white p-5 text-sm" data-testid="screening-unassigned">Your professional has not assigned a screening version yet. Please check back shortly.</div>}
+        {data.choice && (
+          <div className="rounded-lg border border-border bg-white p-5 space-y-3" data-testid="screening-choice">
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-purple">Screening questions, not a diagnostic tool</p>
+            <h1 className="text-2xl font-semibold" data-testid="screening-choice-title">{data.choice.question}</h1>
+            <p className="text-sm" data-testid="screening-choice-intro">{data.choice.intro}</p>
+            <p className="rounded-md border-l-4 border-amber-500 bg-amber-50 p-2 text-xs" data-testid="screening-choice-trigger-warning">{data.choice.trigger_warning}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {data.choice.options.map((o) => <button key={o.version} type="button" disabled={busy} onClick={() => choose(o.version)} className="rounded-lg border border-brand-purple/30 bg-white p-4 text-left text-sm font-medium hover:bg-brand-purple/5" data-testid={`screening-choice-${o.version}`}>{o.label}</button>)}
+            </div>
+            {data.choice.note && <p className="text-xs text-muted-foreground" data-testid="screening-choice-note">{data.choice.note}</p>}
+            <p className="text-[11px] text-muted-foreground">Only the version you pick is saved. Your co-parent never sees this choice or your answers.</p>
+          </div>
+        )}
+        {!spec && !data.choice && <div className="rounded-lg border border-border bg-white p-5 text-sm" data-testid="screening-unassigned">Your professional has not assigned a screening version yet. Please check back shortly.</div>}
         {spec && result && (
           <div className="space-y-4" data-testid="screening-result">
             <div className={`rounded-lg border p-5 ${result.tier === 3 ? "border-amber-300 bg-amber-50" : "border-align-green/40 bg-align-green/10"}`}>

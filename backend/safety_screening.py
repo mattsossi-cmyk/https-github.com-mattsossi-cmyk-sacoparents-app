@@ -21,9 +21,19 @@ RESOURCES = [
     {"name": "National Domestic Violence Hotline", "contact": "1-800-799-7233 · text START to 88788", "url": "https://www.thehotline.org", "verified": True},
     {"name": "Family Violence Prevention Services (San Antonio)", "contact": "210-733-8810", "url": "https://fvps.org", "verified": False},
 ]
+INTRO_C = ("These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. These questions are for people of any gender or orientation. "
+           "If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (text START to 88788). LGBTQ+ support: The Network/La Red, 1-800-832-1901.")
+LABEL_C = "Screening questions, not a diagnostic tool. Adapted from published guidance; not a validated instrument."
 # TODO(permission): Version B items are HITS-based (Velonis et al. 2021, J. Interpersonal Violence; © SAGE). Written permission from the author is pending.
 SOURCES = {"A": "Adapted from the WPSI Screening for Intimate Partner and Domestic Violence in Women — Resource Guide & Clinical Workflow (9.9.25).",
-           "B": "Adapted from Velonis et al. (2021), Journal of Interpersonal Violence (HITS-based, 9 items). © SAGE Publications; used with attribution, permission pending."}
+           "B": "Adapted from Velonis et al. (2021), Journal of Interpersonal Violence (HITS-based, 9 items). © SAGE Publications; used with attribution, permission pending.",
+           "C": "Adapted from the Safe & Together Institute behavior/pattern-based approach and LGBTQ+ IPV screening guidance (NCAVP; The Network/La Red; LGBTQ health education sources)."}
+_C_FREQ = [("c_1", "insult you, put you down, or yell at you?", False), ("c_2", "control who you see, where you go, your money, or your phone?", False), ("c_3", "make you feel afraid of them?", False),
+           ("c_4", "threaten to harm you or someone you care about?", True), ("c_5", "physically hurt you?", True), ("c_6", "force or pressure you into sexual activity?", True),
+           ("c_7", "isolate you from friends, family, or LGBTQ+ community?", False)]
+_C_IDENTITY = [("c_8", "threaten to out you to family, friends, an employer, or others?", True), ("c_9", "threaten to use your sexual orientation, gender identity, or HIV status against you?", True),
+               ("c_10", "pressure you to change or hide your gender expression, name, pronouns, or transition?", False), ("c_11", "hide, destroy, or withhold medication, hormones, or other personal items?", False),
+               ("c_12", "tell you no one will believe you, or that you won't get help because of who you are?", False)]
 
 _CHILD = [("c1", "Have your children seen or heard any of the above?", "yn"), ("c2", "Have you noticed changes in them (sleep problems, fear, anxiety, school trouble, acting out)?", "yn")]
 _A_FREQ = [("a1", "humiliate you or emotionally abuse you?", False), ("a2", "make you feel afraid of them?", True), ("a3", "force or pressure you into sexual activity?", True),
@@ -51,15 +61,24 @@ VERSIONS = {
         *[_item(i, t, "yn", "Part 2 · Your children") for i, t, _k in _CHILD],
         _item("c3", "Do you worry about losing contact with your children if you ask for help?", "yn", "Part 2 · Your children"),
         _item("safe", "How safe do you feel going home today?", "safe", "Closing")]},
+    "C": {"version": "C", "title": "Safety Screening — Version C (LGBTQ+ Relationship Self-Assessment)", "intro": INTRO_C, "source": SOURCES["C"], "label": LABEL_C, "items": [
+        *[_item(i, t, "freq", "Part 1 · Your relationship", t3, STEM) for i, t, t3 in _C_FREQ],
+        *[_item(i, t, "freq", "Part 2 · Identity-based tactics", t3, STEM) for i, t, t3 in _C_IDENTITY],
+        *[_item(i, t, "yn", "Part 3 · Your children") for i, t, _k in _CHILD],
+        _item("c_15", "Do you worry about losing contact with your children, or how a court would view you, if you ask for help?", "yn", "Part 3 · Your children"),
+        _item("safe", "How safe do you feel going home today?", "safe", "Closing")]},
 }
 TIER_LABEL = {1: "Tier 1 — resources only", 2: "Tier 2 — review resources; professional follow-up suggested", 3: "Tier 3 — professional follow-up recommended"}
-VERSION_LABEL = {"A": "Version A (women)", "B": "Version B (men)"}
+# Report/PDF/co-parent-safe labels: never name identity. Full names live in VERSION_LABEL_PRO (professional-only screens).
+VERSION_LABEL = {"A": "Version A", "B": "Version B", "C": "Version C"}
+VERSION_LABEL_PRO = {"A": "Version A (women)", "B": "Version B (men)", "C": "Version C (LGBTQ+ relationship)"}
+CHOICE_LABEL = {"A": "The questions for women (Version A)", "B": "The questions for men (Version B)", "C": "I'd like the LGBTQ+ relationship version (Version C)"}
 GENDER_DEFAULT = {"woman": "A", "female": "A", "f": "A", "man": "B", "male": "B", "m": "B"}
 
 
 def public_spec(version: str) -> dict:
     v = VERSIONS[version]
-    return {**v, "label": LABEL, "trigger_warning": TRIGGER_WARNING, "scale_note": SCALE_NOTE, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE}, "resources": RESOURCES}
+    return {**v, "label": v.get("label", LABEL), "trigger_warning": TRIGGER_WARNING, "scale_note": SCALE_NOTE, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE}, "resources": RESOURCES}
 
 
 def compute_tier(version: str, responses: dict) -> int:
@@ -96,7 +115,7 @@ def public_record(scr: dict | None) -> dict | None:
     """Report-safe projection: receipt metadata only — never responses or items."""
     if not scr:
         return None
-    return {k: scr.get(k) for k in ("source", "version", "title", "completed_at", "tier", "answered_count", "skipped_count", "item_count")}
+    return {k: scr.get(k) for k in ("source", "version", "completed_at", "tier", "answered_count", "skipped_count", "item_count")}
 
 
 def receipt(scr: dict | None, parent_label: str) -> str:
@@ -128,13 +147,19 @@ class AssignIn(BaseModel):
     version: str
 
 
+class ChooseIn(BaseModel):
+    version: str
+
+
 def _status(doc: dict) -> dict:
     out = {}
     for r in ("a", "b"):
         p = doc["participants"][r]
         scr = (doc.get("safety_screenings") or {}).get(r) or None
         ver = (doc.get("safety_version") or {}).get(r) or default_version(p.get("gender"))
+        confirmed = bool((doc.get("safety_version_confirmed") or {}).get(r))
         out[r] = {"name": p.get("name") or f"Parent {r.upper()}", "gender": p.get("gender"), "version": ver, "needs_assignment": ver is None, "received": bool(scr),
+                  "choice_needed": not confirmed and not scr, "default_version": ver if ver in ("A", "B") else None, "chosen_by_parent": confirmed,
                   "tier": scr.get("tier") if scr else None, "tier_label": TIER_LABEL.get(scr.get("tier")) if scr else None, "version_label": VERSION_LABEL.get(ver or ""),
                   "completed_at": (scr or {}).get("completed_at"), "source": (scr or {}).get("source"), "receipt": receipt(scr, p.get("name") or f"Parent {r.upper()}")}
     return out
@@ -151,10 +176,31 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         doc = await get_joint_report_doc(rid, user)
         role, pro = report_role(doc, user["_id"]), _is_pro(doc, user)
         st = _status(doc)
-        if not pro:
+        if pro:
+            for v in st.values():
+                v["version_label"] = VERSION_LABEL_PRO.get(v["version"] or "")
+        else:
             st = {role: st[role]} if role else {}
-        spec = public_spec(st[role]["version"]) if role and st.get(role, {}).get("version") else None
-        return {"my_role": role, "is_professional": pro, "roles": st, "spec": spec, "versions": VERSION_LABEL, "scale_note": SCALE_NOTE}
+        mine = st.get(role) if role else None
+        spec = public_spec(mine["version"]) if mine and mine["version"] and not mine["choice_needed"] else None
+        choice = None
+        if mine and mine["choice_needed"]:
+            choice = {"question": "Which questions fit your situation best?", "intro": INTRO, "trigger_warning": TRIGGER_WARNING,
+                      "options": ([{"version": mine["default_version"], "label": CHOICE_LABEL[mine["default_version"]]}] if mine["default_version"] else []) + [{"version": "C", "label": CHOICE_LABEL["C"]}],
+                      "note": None if mine["default_version"] else "Your professional will assign Version A or B if you prefer to wait; you may also choose Version C now."}
+        return {"my_role": role, "is_professional": pro, "roles": st, "spec": spec, "choice": choice, "versions": VERSION_LABEL_PRO if pro else VERSION_LABEL, "scale_note": SCALE_NOTE}
+
+    @r.put("/joint/reports/{rid}/safety-screening/choose")
+    async def choose_version(rid: str, body: ChooseIn, user=Depends(get_current_user)):
+        doc = await get_joint_report_doc(rid, user)
+        role = report_role(doc, user["_id"])
+        if role is None:
+            raise HTTPException(status_code=403, detail="Only invited parents can choose a screening version")
+        st = _status(doc)[role]
+        if body.version not in VERSIONS or (body.version != "C" and body.version != st["default_version"]):
+            raise HTTPException(status_code=400, detail="Choose the version offered to you or Version C")
+        await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_version.{role}": body.version, f"safety_version_confirmed.{role}": True}})
+        return {"version": body.version, "spec": public_spec(body.version)}
 
     @r.put("/joint/reports/{rid}/safety-screening/assign")
     async def assign_version(rid: str, body: AssignIn, user=Depends(get_current_user)):
@@ -174,7 +220,7 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
             raise HTTPException(status_code=403, detail="Only invited parents can complete a safety screening")
         version = _status(doc)[role]["version"]
         if not version:
-            raise HTTPException(status_code=409, detail="Your professional has not assigned a screening version yet")
+            raise HTTPException(status_code=409, detail="Please choose a screening version first")
         rec = build_record(version, body.responses or {})
         await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_screenings.{role}": rec, f"safety_flags.{role}": rec["tier"] >= 2}})
         return {"tier": rec["tier"], "tier_label": TIER_LABEL[rec["tier"]], "resources": RESOURCES, "answered_count": rec["answered_count"], "skipped_count": rec["skipped_count"], "scale_note": SCALE_NOTE}
@@ -188,7 +234,10 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if not scr:
             raise HTTPException(status_code=404, detail="No safety screening on file for this parent")
         await log_access(doc, user, f"Viewed Parent {role.upper()} safety screening responses (professional-only)", "safety_screening")
-        return {"status": _status(doc)[role], "items": item_view(scr), "scale_note": SCALE_NOTE, "source_credit": SOURCES.get(scr.get("version") or "", ""),
+        st = _status(doc)[role]
+        st["version_label"] = VERSION_LABEL_PRO.get(scr.get("version") or "", "legacy format")
+        st["title"] = scr.get("title")
+        return {"status": st, "items": item_view(scr), "scale_note": SCALE_NOTE, "source_credit": SOURCES.get(scr.get("version") or "", ""),
                 "notice": "Parent-reported screening responses, shown to the assigned professional only. Not findings. Never shared with the co-parent, the court, or any report."}
 
     return r

@@ -901,3 +901,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Testing-agent fixes kept: joint_helpers.joint_public `.get("answers")`, coparenting_tiers._complete checks answers.
 - Note: run E2E tests with `-n0` (xdist workers collide on timestamped fixture emails).
 - DEPLOY PENDING user confirmation.
+
+## 2026-10-06 Version C (LGBTQ+ relationship self-assessment) (agent-tested 36 passed incl. 16 E2E, NOT deployed)
+- `safety_screening.py`: VERSIONS["C"] (16 items; tier3 = c_4,c_5,c_6,c_8,c_9), INTRO_C with Network/La Red 1-800-832-1901, LABEL_C.
+- Neutral choice screen: GET overview returns `choice` {question, options:[default A/B if any, C]} until parent confirms via PUT …/safety-screening/choose (only default or C allowed). Stored: `safety_version.{role}` + `safety_version_confirmed.{role}` only — no orientation field.
+- Labels: VERSION_LABEL (report/PDF/co-parent-safe) = "Version A/B/C"; VERSION_LABEL_PRO (full names) only in professional endpoints/screens. public_record() drops `title`.
+- Import accepts version "C"; legacy fallback intact. Tests: tests/test_iter89_version_c.py. Frontend: choice screen in SafetyScreening.jsx (screening-choice-A/B/C), panel "Chosen by parent".
+- DEPLOY PENDING user confirmation.

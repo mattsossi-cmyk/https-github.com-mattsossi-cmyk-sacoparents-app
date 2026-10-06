@@ -178,6 +178,15 @@ class TestParentScreening:
         assert d["my_role"] == "a"
         # Co-parent's role must NOT be included
         assert "b" not in d["roles"], f"parent A can see parent B status: {d['roles']}"
+        # Neutral choice screen first: default (A) or Version C; choosing the default reveals the spec
+        assert d["spec"] is None and d["choice"]["question"] == "Which questions fit your situation best?"
+        assert [o["version"] for o in d["choice"]["options"]] == ["A", "C"]
+        bad = parent_a_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "B"}, timeout=15)
+        assert bad.status_code == 400
+        ok = parent_a_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "A"}, timeout=15)
+        assert ok.status_code == 200 and ok.json()["version"] == "A"
+        d = parent_a_session.get(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening", timeout=15).json()
+        assert d["choice"] is None
         assert d["spec"]["version"] == "A"
         assert d["spec"]["title"] == "Safety Screening — Version A (Women)"
         assert "Your co-parent will not see" in d["spec"]["intro"]
@@ -317,7 +326,7 @@ class TestProfessionalReport:
         text = _re.sub(r"\s+", " ", text)
         # Required framing strings
         for needle in [
-            "Version A (women)",
+            "Version A",
             "Tier 3",
             "Not a validated or diagnostic instrument",
             "answers six questions",

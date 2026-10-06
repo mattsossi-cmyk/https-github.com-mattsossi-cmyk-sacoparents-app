@@ -17,8 +17,8 @@ export function SafetyScreeningPanel({ rid }) {
       <p className="flex items-center gap-1.5 text-sm font-semibold"><ShieldCheck className="h-4 w-4 text-brand-purple" /> Private safety screening <span className="text-xs font-normal text-muted-foreground">— screening questions, not a diagnostic tool</span></p>
       {mine && !d.is_professional && (
         <div className="mt-2 text-sm" data-testid="safety-screening-mine">
-          {mine.received ? <p data-testid="safety-screening-mine-done">Your screening was received privately ({mine.version_label}). Only your professional can see your answers.</p>
-            : mine.version ? <Link to={`/joint/${rid}/safety-screening`}><Button size="sm" variant="outline" data-testid="safety-screening-start-btn">Complete my private safety screening</Button></Link>
+          {mine.received ? <p data-testid="safety-screening-mine-done">Your screening was received privately. Only your professional can see your answers.</p>
+            : (mine.version || mine.choice_needed) ? <Link to={`/joint/${rid}/safety-screening`}><Button size="sm" variant="outline" data-testid="safety-screening-start-btn">Complete my private safety screening</Button></Link>
             : <p className="text-muted-foreground" data-testid="safety-screening-mine-unassigned">Your professional will assign your screening shortly.</p>}
         </div>
       )}
@@ -36,7 +36,8 @@ export function SafetyScreeningPanel({ rid }) {
                     {Object.entries(d.versions).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
                   </select>
                 </label>
-                {s.needs_assignment && <span className="text-[11px] text-amber-800" data-testid={`safety-screening-${role}-needs-assignment`}>Gender not recorded — please assign a version.</span>}
+                {s.needs_assignment && <span className="text-[11px] text-amber-800" data-testid={`safety-screening-${role}-needs-assignment`}>Gender not recorded — assign a version, or the parent may choose on their intro screen.</span>}
+                {s.chosen_by_parent && <span className="text-[11px] text-muted-foreground" data-testid={`safety-screening-${role}-chosen`}>Chosen by parent</span>}
                 {s.received && <Link to={`/joint/${rid}/safety-screening/${role}`} className="inline-flex items-center gap-1 text-xs font-semibold text-brand-purple hover:underline" data-testid={`safety-screening-${role}-view`}><Lock className="h-3 w-3" /> View responses (logged)</Link>}
               </div>
             </div>); })}

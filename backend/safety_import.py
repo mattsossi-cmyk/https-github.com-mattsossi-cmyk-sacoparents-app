@@ -1,6 +1,6 @@
 """Extract a family-violence / safety screening from a sacoparentsapp.online export payload (neutral, non-adjudicative).
 
-New structured format: payload["safety_screening"] = {version: "A"|"B", completed_at, tier, answered_count, responses: {...}}.
+New structured format: payload["safety_screening"] = {version: "A"|"B"|"C", completed_at, tier, answered_count, responses: {...}}.
 Legacy free-text formats (family_violence_assessment / titled assessment) are still accepted.
 """
 import re
