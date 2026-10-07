@@ -77,7 +77,27 @@ save every completed run, measure the parent against themselves, set a goal.
 - Testing: iteration_89 (v1 save/PDF) + iteration_90 (v2 full flow) 100% pass;
   graph + rename self-tested (PDF render + 390px screenshot, toggle 1→5 lines).
 
-**Next / backlog:** founder score bands; Card 2 reconnect to 65-Q backend
+**Iter274 (2026-06) · Score Labels + Goal Check-ins + Reassess Reminders**
+- Bands (founder-approved) in content JSON: 85+ Consistent Strength · 70 Growing
+  Strength · 55 Developing · 40 Building Foundations · 0 Starting Point, each with
+  a supportive `body`; shown on overall + 4 area cards and in PDF.
+- Goal check-ins: POST `/api/self-assessment/goal/checkin` {entry_id, date}
+  (one per local day, today±1 window), collection `self_assessment_checkins`;
+  `/history` returns `goal_practice` for latest entry. GoalBanner shows running
+  count + "I practised this today".
+- Reminders: `self_assessment_reminders.py` sweep (6w at ≥42d, 8w at ≥56d if 6w
+  sent ≥10d before; skips safety_ack.flagged / IPV level ≤2 / unsubscribed /
+  guest / bounced; dedupe in `self_assessment_reminders`). Email
+  `email_service.send_reassess_reminder` subject "Your reflection check-in" +
+  unsubscribe link → GET `/api/self-assessment/reminders/unsubscribe?token=`
+  (JWT kind `sa_reminder_unsub`, prefs in `self_assessment_reminder_prefs`).
+  Cron `sa-reassess-reminder` daily 15:00 UTC → POST `/api/cron/self-assessment-reminders`.
+  In-app "Time to reassess" note on GoalBanner (≥42 days); deep link
+  `/dashboard?open=self-assessment` opens chat directly.
+- Resend in preview is sandbox → real delivery needs verified domain in prod.
+- Testing: iteration_91 backend 40/40; frontend verified (check-in tap re-verified by main agent).
+
+**Next / backlog:** Card 2 reconnect to 65-Q backend
 assessment (orphaned); Mediator PDF grey-rock timeline (P1); post-deploy smoke
 script (P1); prod env toggles (digest, PUBLIC_BACKEND_URL, domain split).
 
