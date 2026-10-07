@@ -95,6 +95,10 @@
     "toggle_label": "Show the four areas",
     "first_note": "This is your starting point. Your next Self-Assessment will show how each area has changed."
   },
+  "growth": {
+    "title": "Growth moment",
+    "lead": "You've moved up a level since your last Self-Assessment:"
+  },
   "central_message": "Your progress isn't about changing the other parent. It's about recognizing what you can do to create a healthier co-parenting environment for your child.",
   "cycle": ["Reflect", "Identify", "Set a Goal", "Practice", "Reassess", "See Your Progress"],
   "bands": [

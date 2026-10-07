@@ -172,12 +172,88 @@ def _draw_movers(pdf: _ProgressPDF, movers: List[Dict[str, Any]], max_rows: int 
         pdf.ln(6)
 
 
+def _fmt_datetime(iso: Optional[str]) -> str:
+    if not iso:
+        return "-"
+    try:
+        return datetime.fromisoformat(iso.replace("Z", "+00:00")).strftime("%b %-d, %Y  %-I:%M %p")
+    except Exception:
+        return iso[:16]
+
+
+def _section_title(pdf: "_ProgressPDF", text: str) -> None:
+    if pdf.get_y() > 235:
+        pdf.add_page()
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(61, 26, 120)
+    pdf.cell(0, 5, _safe(text), ln=1)
+    pdf.ln(0.5)
+
+
+def _draw_safety_timeline(pdf: "_ProgressPDF", parent_name: str, rows: List[Dict[str, Any]]) -> None:
+    _section_title(pdf, "Safety timeline (Grey-Rock mode)")
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(133, 126, 156)
+    pdf.multi_cell(pdf.epw, 4, _safe(f"Included by {parent_name} by choice. Shows when Grey-Rock safety mode was turned on or off."),
+                   new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
+    if not rows:
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.cell(0, 5, _safe("No safety-mode changes recorded."), ln=1)
+        return
+    for r in rows:
+        on = r.get("event") == "on"
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(52, 46, 78)
+        pdf.cell(52, 5, _safe(_fmt_datetime(r.get("at"))))
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_text_color(*((182, 102, 59) if on else (63, 123, 71)))
+        pdf.cell(55, 5, _safe(f"Grey-Rock mode turned {'ON' if on else 'OFF'}"))
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(133, 126, 156)
+        pdf.cell(0, 5, _safe(r.get("source") or ""), ln=1)
+
+
+def _draw_biff_pairs(pdf: "_ProgressPDF", parent_name: str, pairs: List[Dict[str, Any]]) -> None:
+    _section_title(pdf, "Recent BIFF messages")
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(133, 126, 156)
+    pdf.multi_cell(pdf.epw, 4, _safe(f"Included by {parent_name} by choice. Up to 5 most recent drafts and their BIFF rewrites."),
+                   new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
+    if not pairs:
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.cell(0, 5, _safe("No BIFF messages saved yet."), ln=1)
+        return
+    for p in pairs:
+        if pdf.get_y() > 240:
+            pdf.add_page()
+        pdf.set_font("Helvetica", "B", 8.5)
+        pdf.set_text_color(133, 126, 156)
+        pdf.cell(0, 4.5, _safe(_fmt_datetime(p.get("saved_at"))), ln=1)
+        for label, key, rgb in (("Original:", "original", (52, 46, 78)), ("BIFF rewrite:", "rewrite", (31, 92, 59))):
+            text = (p.get(key) or "").strip()
+            if not text:
+                continue
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_text_color(*rgb)
+            pdf.cell(24, 4.8, _safe(label))
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_text_color(52, 46, 78)
+            pdf.multi_cell(pdf.epw - 24, 4.8, _safe(text[:700] + ("..." if len(text) > 700 else "")),
+                           new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(2)
+
+
 def build_progress_pdf(
     *,
     parent_name: str,
     progress: Dict[str, Any],
     mediator_name: Optional[str] = None,
     note: Optional[str] = None,
+    safety_timeline: Optional[List[Dict[str, Any]]] = None,
+    biff_pairs: Optional[List[Dict[str, Any]]] = None,
 ) -> bytes:
     """Render the single-page progress PDF.
 
@@ -295,5 +371,11 @@ def build_progress_pdf(
         pdf.set_text_color(52, 46, 78)
         pdf.set_x(pdf.l_margin)
         pdf.multi_cell(pdf.epw, 4.6, _safe(cleaned_note))
+
+    # Opt-in extras — None means the parent did not tick the box.
+    if safety_timeline is not None:
+        _draw_safety_timeline(pdf, parent_name, safety_timeline)
+    if biff_pairs is not None:
+        _draw_biff_pairs(pdf, parent_name, biff_pairs)
 
     return bytes(pdf.output(dest="S"))

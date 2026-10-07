@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "brand_tagline": "ALIGN • SUPPORT • EMPOWER",
+  "title": "Your Child's Specific Needs",
+  "subtitle": "Explore assessments to better understand your child's needs and create a supportive plan.",
+  "footer": "A stronger tomorrow for their brightest possibilities.",
+  "submit_label": "SAVE & GENERATE ALIGNMENT REPORT",
+  "select_placeholder": "Select one…",
+  "categories": [
+    {
+      "key": "medical",
+      "card_title": "Medical Assessment",
+      "card_desc": "Explore your child's medical needs, healthcare providers, medications, and care coordination.",
+      "button": "TAKE MEDICAL ASSESSMENT",
+      "form_title": "Child Medical Needs Assessment",
+      "fields": [
+        { "id": "med_provider", "label": "Pediatrician / Primary Healthcare Provider", "type": "text", "placeholder": "Doctor or clinic name..." },
+        { "id": "med_prescriptions", "label": "Active Medications & Prescription Schedule", "type": "textarea", "placeholder": "List medications and administration details..." },
+        { "id": "med_allergies", "label": "Allergies, Dietary Restrictions, or Special Care Needs", "type": "textarea", "placeholder": "Specify any health conditions or food allergies..." },
+        { "id": "med_insurance", "label": "Medical Insurance & Expense Coordination", "type": "select", "options": ["Both parents agree & share costs", "Needs clarification/discussion", "Currently disputed"] },
+        { "id": "med_goal", "label": "Primary Medical Goal for Both Parents", "type": "textarea", "placeholder": "What is one medical priority both parents need to coordinate?" }
+      ]
+    },
+    {
+      "key": "educational",
+      "card_title": "Educational Assessment",
+      "card_desc": "Explore your child's learning needs, IEP/ARD support, school communication, and academic progress.",
+      "button": "TAKE EDUCATIONAL ASSESSMENT",
+      "form_title": "Child Educational Needs Assessment",
+      "fields": [
+        { "id": "edu_school", "label": "Current School Name & Grade Level", "type": "text", "placeholder": "School name and grade..." },
+        { "id": "edu_iep", "label": "IEP, 504 Plan, or Learning Accommodation Status", "type": "select", "options": ["No special accommodations needed", "Active IEP or 504 plan in place", "Formal evaluation requested/needed"] },
+        { "id": "edu_academic", "label": "Academic Progress & Areas Needing Support", "type": "textarea", "placeholder": "Subjects or areas where child thrives or struggles..." },
+        { "id": "edu_communication", "label": "School Portal & Teacher Communication Sharing", "type": "select", "options": ["Both parents have active portal accounts", "One parent forwards school updates", "Need equal portal access established"] },
+        { "id": "edu_goal", "label": "Homework & Tutoring Goal Across Households", "type": "textarea", "placeholder": "What study routine can both parents agree to maintain?" }
+      ]
+    },
+    {
+      "key": "psychological",
+      "card_title": "Psychological Assessment",
+      "card_desc": "Explore your child's emotional and behavioral needs, mental health support, and strategies for well-being (including ADHD).",
+      "button": "TAKE PSYCHOLOGICAL ASSESSMENT",
+      "form_title": "Child Psychological & Emotional Assessment",
+      "fields": [
+        { "id": "psych_needs", "label": "Emotional & Behavioral Needs (including ADHD / Anxiety)", "type": "textarea", "placeholder": "Describe behavioral patterns, emotional triggers, or ADHD support..." },
+        { "id": "psych_therapy", "label": "Counseling or Child Therapy Status", "type": "select", "options": ["Currently attending therapy", "Therapy recommended / evaluating providers", "Not currently needed"] },
+        { "id": "psych_transitions", "label": "Emotional Well-Being During House Transitions", "type": "select", "options": ["Transitions are smooth and low-stress", "Child reports anxiety or mood shifts", "High tension during transitions"] },
+        { "id": "psych_goal", "label": "Co-Parenting Action Goal for Emotional Safety", "type": "textarea", "placeholder": "What change can be made to improve emotional stability in both homes?" }
+      ]
+    }
+  ],
+  "disclaimer": "A planning aid for parents — not a medical, educational, or psychological evaluation."
+}

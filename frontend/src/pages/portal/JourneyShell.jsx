@@ -7,6 +7,7 @@ import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentModal } from "./SelfAssessmentModal";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
+import { CoparentingAssessmentModal } from "./coparenting/CoparentingAssessmentModal";
 import { ChildNeedsView } from "./ChildNeedsView";
 import { FoundationStatementView } from "./FoundationStatementView";
 import { api } from "../../lib/api";
@@ -818,6 +819,7 @@ export function JourneyShell({
   const [assessOpen, setAssessOpen] = useState(false);
   const saHistory = useSelfAssessmentHistory(user?.user_id);
   const [assessStartNew, setAssessStartNew] = useState(false);
+  const [cpAssessOpen, setCpAssessOpen] = useState(false);
   const openAssess = (startNew = false) => {
     setAssessStartNew(startNew);
     setAssessOpen(true);
@@ -1001,7 +1003,10 @@ export function JourneyShell({
       icon: "fa-users",
       badgeBg: "bg-purple-500",
       iconBg: "bg-purple-100 text-purple-700",
-      action: () => onOpenGuidedJourney("coparenting"),
+      action: () => {
+        openDoor("self");
+        setCpAssessOpen(true);
+      },
       completedWhen: progressByTopic?.coparenting === "completed",
     },
     {
@@ -1360,15 +1365,10 @@ export function JourneyShell({
     return (
       <ChildNeedsView
         onBack={() => setView("self")}
-        onOpenAssess={() => {
-          setView("self");
-          setAssessOpen(true);
-        }}
-        onOpenRelationship={() => onOpenGuidedJourney("coparenting")}
-        onOpenFoundation={onOpenReport}
-        onOpenBiffCoach={onOpenBiffCoach}
         QuickExit={quickExitChip}
         SafetyStrip={safetyStrip}
+        userId={user?.user_id}
+        parentName={greetingName}
       />
     );
   }
@@ -1515,7 +1515,7 @@ export function JourneyShell({
           <button
             type="button"
             data-testid="door-self-card-relationship"
-            onClick={() => onOpenGuidedJourney("coparenting")}
+            onClick={() => setCpAssessOpen(true)}
             className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
           >
             <div className="shrink-0 w-9 h-9 rounded-full bg-indigo-500 text-white font-extrabold flex items-center justify-center">
@@ -1791,6 +1791,12 @@ export function JourneyShell({
         history={saHistory.history}
         startNew={assessStartNew}
         onCompleted={saHistory.addEntry}
+        onQuickExit={quickExitAction}
+      />
+      <CoparentingAssessmentModal
+        open={cpAssessOpen}
+        onOpenChange={setCpAssessOpen}
+        userId={user?.user_id}
         onQuickExit={quickExitAction}
       />
     </div>

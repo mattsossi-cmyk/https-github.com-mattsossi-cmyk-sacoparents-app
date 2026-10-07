@@ -2,9 +2,65 @@ import React from "react";
 
 import { CONTENT } from "./content";
 
+const dayAgo = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d;
+};
+const key = (d) => d.toLocaleDateString("en-CA");
+
+// Consecutive practised days ending today (or yesterday, so today isn't "broken" yet).
+const streakOf = (done) => {
+  let n = done.has(key(dayAgo(0))) ? 0 : 1;
+  let streak = 0;
+  while (done.has(key(dayAgo(n)))) {
+    streak += 1;
+    n += 1;
+  }
+  return streak;
+};
+
+function WeekStrip({ recentDates, testid }) {
+  const done = new Set(recentDates);
+  const streak = streakOf(done);
+  const days = [6, 5, 4, 3, 2, 1, 0].map((n) => dayAgo(n));
+  return (
+    <div className="mt-3 flex items-center justify-between gap-2">
+      <div data-testid={`${testid}-week`} className="flex items-end gap-1.5">
+        {days.map((d, i) => {
+          const on = done.has(key(d));
+          const today = i === 6;
+          return (
+            <div key={key(d)} className="flex flex-col items-center gap-0.5">
+              <span
+                data-testid={`${testid}-day-${i}`}
+                data-done={on ? "true" : "false"}
+                className={`w-4 h-4 rounded-full transition-colors ${on ? "bg-emerald-500" : "bg-white border border-emerald-200"} ${
+                  today ? "ring-2 ring-offset-1 ring-emerald-600" : ""
+                }`}
+              />
+              <span className={`text-[9px] font-bold ${today ? "text-emerald-800" : "text-slate-400"}`}>
+                {d.toLocaleDateString("en-US", { weekday: "narrow" })}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {streak > 0 && (
+        <span data-testid={`${testid}-streak`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-[11px] font-extrabold">
+          <i className="fa-solid fa-fire text-orange-500"></i>
+          {streak}-day streak
+        </span>
+      )}
+    </div>
+  );
+}
+
 function PracticeRow({ practice, onPractise, testid }) {
   const { count, practisedToday } = practice;
   return (
+    <>
+    <WeekStrip recentDates={practice.recentDates || []} testid={testid} />
     <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
       <p data-testid={`${testid}-practice-count`} className="text-[11.5px] font-semibold text-emerald-900">
         <i className="fa-solid fa-seedling mr-1.5 text-emerald-600"></i>
@@ -26,6 +82,7 @@ function PracticeRow({ practice, onPractise, testid }) {
         )}
       </button>
     </div>
+    </>
   );
 }
 

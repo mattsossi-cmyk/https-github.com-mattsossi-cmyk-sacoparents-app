@@ -65,7 +65,15 @@ export function useSelfAssessmentHistory(userId) {
       if (userId) {
         ({ data: next } = await api.post("/self-assessment/goal/checkin", { entry_id: latest.id, date }));
       } else {
-        next = current.last_date === date ? current : { ...current, count: current.count + 1, last_date: date };
+        next =
+          current.last_date === date
+            ? current
+            : {
+                ...current,
+                count: current.count + 1,
+                last_date: date,
+                recent_dates: [...(current.recent_dates || []), date].slice(-60),
+              };
       }
       setPractice(next);
       writeJson(practiceKeyFor(userId), next);
@@ -79,7 +87,11 @@ export function useSelfAssessmentHistory(userId) {
     history,
     latest,
     currentGoal: latest?.goal || "",
-    practice: { count: current.count, practisedToday: current.last_date === todayLocal() },
+    practice: {
+      count: current.count,
+      practisedToday: current.last_date === todayLocal(),
+      recentDates: current.recent_dates || [],
+    },
     practise,
     dueDays: latest && daysSince(latest.completed_at) >= REASSESS_AFTER_DAYS ? daysSince(latest.completed_at) : 0,
     addEntry,

@@ -84,6 +84,7 @@ class SAGoalPractice(BaseModel):
     entry_id: str
     count: int = 0
     last_date: Optional[str] = None
+    recent_dates: List[str] = Field(default_factory=list)
 
 
 class SAHistoryOut(BaseModel):
@@ -196,7 +197,9 @@ async def _goal_practice(db: AsyncIOMotorDatabase, user_id: str, entry_id: str) 
         {"user_id": user_id, "entry_id": entry_id}, {"_id": 0, "date": 1}
     ).to_list(1000)
     dates = sorted(r["date"] for r in rows)
-    return SAGoalPractice(entry_id=entry_id, count=len(dates), last_date=dates[-1] if dates else None)
+    return SAGoalPractice(
+        entry_id=entry_id, count=len(dates), last_date=dates[-1] if dates else None, recent_dates=dates[-60:]
+    )
 
 
 @router.post("/goal/checkin", response_model=SAGoalPractice)

@@ -335,6 +335,8 @@ async def download_report_progress_pdf(
     db: AsyncIOMotorDatabase = Depends(get_db),
     mediator_name: Optional[str] = None,
     note: Optional[str] = None,
+    include_safety: bool = False,
+    include_biff: bool = False,
 ):
     """Iter235 — download the one-page Progress Snapshot PDF for
     the current parent. Same payload the share-email route uses, but
@@ -353,6 +355,7 @@ async def download_report_progress_pdf(
         progress=progress,
         mediator_name=(mediator_name or None),
         note=(note or None),
+        **(await _progress_extras(db, user.user_id, include_safety, include_biff)),
     )
     filename = f"Progress_Snapshot_{_safe_filename(user.name or 'me')}.pdf"
     return StreamingResponse(
@@ -366,6 +369,20 @@ class ProgressShareRequest(BaseModel):
     to_email: str = Field(..., min_length=3)
     mediator_name: Optional[str] = Field(default=None, max_length=120)
     note: Optional[str] = Field(default=None, max_length=1200)
+    include_safety: bool = False
+    include_biff: bool = False
+
+
+async def _progress_extras(db, user_id: str, include_safety: bool, include_biff: bool) -> Dict[str, Any]:
+    """Opt-in Mediator PDF extras; omitted entirely unless the parent ticked them."""
+    import cp_progress_extras
+
+    extras: Dict[str, Any] = {}
+    if include_safety:
+        extras["safety_timeline"] = await cp_progress_extras.load_grey_rock_timeline(db, user_id)
+    if include_biff:
+        extras["biff_pairs"] = await cp_progress_extras.load_biff_pairs(db, user_id)
+    return extras
 
 
 @router.post("/report/progress/share")
@@ -395,6 +412,7 @@ async def share_report_progress(
         progress=progress,
         mediator_name=(body.mediator_name or None),
         note=(body.note or None),
+        **(await _progress_extras(db, user.user_id, body.include_safety, body.include_biff)),
     )
 
     # Import inline so an email misconfig in dev doesn't break the

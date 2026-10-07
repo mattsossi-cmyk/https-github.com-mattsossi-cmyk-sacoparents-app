@@ -292,6 +292,58 @@ function Radar({ radar }) {
   );
 }
 
+
+const extrasQuery = (safety, biff) => {
+  const q = [safety && "include_safety=true", biff && "include_biff=true"].filter(Boolean).join("&");
+  return q ? `?${q}` : "";
+};
+
+function ExtraToggle({ testid, checked, onChange, label, warning }) {
+  return (
+    <label className="flex items-start gap-2 cursor-pointer select-none">
+      <input
+        type="checkbox"
+        data-testid={testid}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 accent-purple-800"
+      />
+      <span className="min-w-0">
+        <span className="text-[11px] font-bold text-slate-800">{label}</span>
+        {checked && (
+          <span data-testid={`${testid}-warning`} className="block text-[10px] text-amber-800 leading-snug mt-0.5">
+            <i className="fa-solid fa-triangle-exclamation mr-1"></i>
+            {warning}
+          </span>
+        )}
+      </span>
+    </label>
+  );
+}
+
+// Mediator PDF extras — both OFF by default; parent must opt in each time.
+function ProgressExtras({ includeSafety, setIncludeSafety, includeBiff, setIncludeBiff }) {
+  return (
+    <div data-testid="cp-progress-extras" className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 space-y-2">
+      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Optional — add to the PDF</div>
+      <ExtraToggle
+        testid="cp-progress-include-safety"
+        checked={includeSafety}
+        onChange={setIncludeSafety}
+        label="Include my safety timeline"
+        warning="Anyone who receives this PDF will see when you turned Grey-Rock safety mode on or off. Only include it if sharing feels safe."
+      />
+      <ExtraToggle
+        testid="cp-progress-include-biff"
+        checked={includeBiff}
+        onChange={setIncludeBiff}
+        label="Include BIFF messages"
+        warning="Your 5 most recent original messages and their BIFF rewrites will be included, exactly as you wrote them."
+      />
+    </div>
+  );
+}
+
 export function CpProgressTile({
   samplePdfUrl = "/api/insights/samples/coparenting-self-assessment.pdf",
   onRetake,
@@ -314,6 +366,9 @@ export function CpProgressTile({
   // after every successful send, plus a 30s poller while the tile
   // is mounted so a new open shows up without a page reload.
   const [shares, setShares] = useState([]);
+  // Opt-in Mediator extras — always reset to OFF on mount (safety-first).
+  const [includeSafety, setIncludeSafety] = useState(false);
+  const [includeBiff, setIncludeBiff] = useState(false);
 
   const refreshShares = async () => {
     try {
@@ -343,6 +398,8 @@ export function CpProgressTile({
         to_email: email,
         mediator_name: shareForm.mediator_name.trim() || null,
         note: shareForm.note.trim() || null,
+        include_safety: includeSafety,
+        include_biff: includeBiff,
       });
       setShareState("sent");
       // Pull fresh share history so the "Share with X — not yet
@@ -534,10 +591,16 @@ export function CpProgressTile({
         className="pt-2 border-t border-slate-100 space-y-2"
         data-testid="cp-progress-share-block"
       >
+        <ProgressExtras
+          includeSafety={includeSafety}
+          setIncludeSafety={setIncludeSafety}
+          includeBiff={includeBiff}
+          setIncludeBiff={setIncludeBiff}
+        />
         {shareState !== "open" && shareState !== "sending" && (
           <div className="grid grid-cols-2 gap-2">
             <a
-              href={`${fullBase}/api/coparenting/report/progress/pdf`}
+              href={`${fullBase}/api/coparenting/report/progress/pdf${extrasQuery(includeSafety, includeBiff)}`}
               target="_blank"
               rel="noopener noreferrer"
               data-testid="cp-progress-download-btn"

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import confetti from "canvas-confetti";
 import { toast } from "sonner";
 
 import { api } from "../../../lib/api";
-import { CONTENT } from "./content";
+import { CONTENT, SECTIONS, bandFor } from "./content";
 import { CoachBubble } from "./ChatBubbles";
 import { CentralMessage, CycleStrip, ProgressHistory, ScoreCards } from "./ProgressPanel";
 
@@ -42,13 +43,58 @@ function useDownloadPdf() {
   return { busy, download };
 }
 
+const bandRank = (score) => CONTENT.bands.findIndex((b) => score >= b.min);
+
+// Areas (and overall) that moved up a band vs the previous assessment.
+export const growthMoves = (history) => {
+  if (history.length < 2) return [];
+  const [prev, cur] = history.slice(-2);
+  return [
+    { key: "overall", label: CONTENT.chart.overall_label, from: prev.scores.overall, to: cur.scores.overall },
+    ...SECTIONS.map((s) => ({ key: s.key, label: s.score_label, from: prev.scores.sections[s.key], to: cur.scores.sections[s.key] })),
+  ]
+    .filter((m) => bandRank(m.to) < bandRank(m.from))
+    .map((m) => ({ ...m, fromBand: bandFor(m.from).label, toBand: bandFor(m.to).label }));
+};
+
+function GrowthMoment({ moves }) {
+  useEffect(() => {
+    const opts = { particleCount: 90, spread: 80, startVelocity: 45, colors: ["#40a040", "#4c2889", "#e67e22", "#0284c7"] };
+    const t = setTimeout(() => {
+      confetti({ ...opts, angle: 60, origin: { x: 0, y: 0.75 } });
+      confetti({ ...opts, angle: 120, origin: { x: 1, y: 0.75 } });
+    }, 400);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div data-testid="sa-growth-moment" className="rounded-2xl border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-white p-4 animate-in fade-in zoom-in-95 duration-500">
+      <div className="flex items-center gap-2">
+        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+          <i className="fa-solid fa-arrow-trend-up"></i>
+        </span>
+        <h4 className="text-base font-extrabold text-emerald-900">{CONTENT.growth.title}</h4>
+      </div>
+      <p className="text-[12.5px] text-slate-700 mt-1.5">{CONTENT.growth.lead}</p>
+      <ul className="mt-2 space-y-1">
+        {moves.map((m) => (
+          <li key={m.key} data-testid={`sa-growth-row-${m.key}`} className="text-[13px] text-slate-800">
+            <span className="font-bold">{m.label}:</span> {m.fromBand} <span className="text-emerald-700 font-bold">→ {m.toBand}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function OverviewPanel({ history, celebrate, onStartNew, onClose }) {
   const { busy, download } = useDownloadPdf();
   const latest = history[history.length - 1];
+  const moves = useMemo(() => (celebrate ? growthMoves(history) : []), [celebrate, history]);
   if (!latest) return null;
   return (
     <div data-testid="sa-overview" className="space-y-4">
       {celebrate && <CoachBubble testid="sa-completion-message">{CONTENT.completion_message}</CoachBubble>}
+      {moves.length > 0 && <GrowthMoment moves={moves} />}
       <ScoreCards scores={latest.scores} />
       <ProgressHistory history={history} />
       <CentralMessage />
