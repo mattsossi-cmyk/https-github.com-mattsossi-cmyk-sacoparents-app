@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "../../lib/api";
 
 /**
  * CpProgressTile — iter234
  *
  * Lives inside the Coparenting Journey Toolkit on Alignment & Tools.
- * Reads `/api/coparenting/report/progress` and renders four things:
+ * Reads `/api/coparenting/report/progress` and renders:
  *
  *   1. 60-day retake soft banner (only when `retake_due`).
- *   2. Overall-rating sparkline over every submission.
- *   3. Per-section movers — change bars (↑ improved, ↓ slipped)
- *      against the ~60-days-ago baseline.
- *   4. A compact radar comparing the most recent run to the baseline.
+ *   2. One line graph of the overall score for every submission.
  *
- * All four hide cleanly when there's no history yet; in that case we
+ * Both hide cleanly when there's no history yet; in that case we
  * render a short empty-state inviting the parent to take the
  * assessment, with the public sample link beside it.
  */
@@ -60,233 +58,44 @@ function relativeAge(iso) {
   return `${months}mo ago`;
 }
 
-function Sparkline({ series }) {
-  if (!series || series.length === 0) return null;
-  const w = 240;
-  const h = 56;
-  const padX = 8;
-  const padY = 10;
-  const maxV = 4;
-  const n = series.length;
-  const xStep = n > 1 ? (w - padX * 2) / (n - 1) : 0;
-  const yFor = (v) => h - padY - ((v || 0) / maxV) * (h - padY * 2);
-  const points = series.map((p, i) => [padX + i * xStep, yFor(p.value)]);
-  const path = points
-    .map((pt, i) => (i === 0 ? `M ${pt[0]},${pt[1]}` : `L ${pt[0]},${pt[1]}`))
-    .join(" ");
-  const last = series[series.length - 1];
+// Overall score over time — one clean line, dates along the bottom.
+// Mirrors cp_progress_pdf._draw_line_graph so screen and PDF match.
+export const CP_LINE_TITLE = "Overall score over time";
+
+function CpProgressLine({ series }) {
+  if (!series.length) return null;
+  const data = series.map((p) => ({
+    label: new Date(p.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    value: Math.round((p.value || 0) * 100) / 100,
+    rating: p.rating,
+  }));
   return (
-    <div data-testid="cp-progress-sparkline">
-      <svg
-        viewBox={`0 0 ${w} ${h}`}
-        className="w-full h-14"
-        preserveAspectRatio="none"
-      >
-        {/* rating guide lines */}
-        {RATING_BANDS.map((b) => (
-          <line
-            key={b.v}
-            x1={padX}
-            x2={w - padX}
-            y1={yFor(b.v)}
-            y2={yFor(b.v)}
-            stroke="#EEE9F7"
-            strokeDasharray="2 3"
-          />
-        ))}
-        <path
-          d={path}
-          fill="none"
-          stroke="#3D1A78"
-          strokeWidth="2"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        {points.map(([x, y], i) => (
-          <circle
-            key={i}
-            cx={x}
-            cy={y}
-            r="2.5"
-            fill={ratingColor(series[i].rating)}
-          />
-        ))}
-      </svg>
-      <div className="flex justify-between text-[9px] text-slate-400 mt-1">
-        <span>{fmtDate(series[0].submitted_at)}</span>
-        <span
-          className="font-bold"
-          style={{ color: ratingColor(last.rating) }}
-          data-testid="cp-progress-latest-rating"
-        >
-          Latest · {last.rating}
-        </span>
-        <span>{fmtDate(last.submitted_at)}</span>
+    <div data-testid="cp-progress-line-chart" className="space-y-1">
+      <div className="flex items-baseline justify-between">
+        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{CP_LINE_TITLE}</div>
+        <div className="text-[10px] text-slate-400">Average (0–4)</div>
       </div>
-    </div>
-  );
-}
-
-function MoverBars({ movers }) {
-  if (!movers || movers.length === 0) return null;
-  const top = movers.slice(0, 5);
-  const max = Math.max(...top.map((m) => Math.abs(m.delta)), 1);
-  return (
-    <div className="space-y-1.5" data-testid="cp-progress-movers">
-      {top.map((m) => {
-        const widthPct = Math.min(100, (Math.abs(m.delta) / max) * 100);
-        const isUp = m.direction === "up";
-        const isDown = m.direction === "down";
-        const bar =
-          isUp
-            ? "bg-emerald-500"
-            : isDown
-            ? "bg-amber-500"
-            : "bg-slate-300";
-        const icon = isUp ? "↑" : isDown ? "↓" : "·";
-        return (
-          <div
-            key={m.id}
-            className="text-[11px]"
-            data-testid={`cp-mover-${m.id}`}
-          >
-            <div className="flex justify-between items-baseline">
-              <span className="text-slate-700 font-medium truncate pr-2">
-                {m.number}. {m.name}
-              </span>
-              <span
-                className={
-                  isUp
-                    ? "text-emerald-600 font-bold tabular-nums"
-                    : isDown
-                    ? "text-amber-700 font-bold tabular-nums"
-                    : "text-slate-400 font-bold tabular-nums"
-                }
-              >
-                {icon} {m.delta > 0 ? "+" : ""}
-                {m.delta.toFixed(2)}
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden mt-0.5">
-              <div
-                className={`h-full ${bar} transition-all`}
-                style={{
-                  width: `${widthPct}%`,
-                  marginLeft: isDown ? "auto" : 0,
-                }}
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/** Compact 10-axis radar comparing recent vs baseline. */
-function Radar({ radar }) {
-  const labels = radar?.labels || [];
-  const recent = radar?.recent || [];
-  const baseline = radar?.baseline || [];
-  if (labels.length < 3) return null;
-  const size = 180;
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size / 2 - 14;
-  const n = labels.length;
-  const maxV = 4;
-  const point = (i, v) => {
-    const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
-    const rr = (v / maxV) * r;
-    return [cx + Math.cos(angle) * rr, cy + Math.sin(angle) * rr];
-  };
-  const makePath = (vals) =>
-    vals
-      .map((v, i) => {
-        const [x, y] = point(i, v || 0);
-        return `${i === 0 ? "M" : "L"} ${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(" ") + " Z";
-
-  // Ring guides at each rating band.
-  const ringPaths = [1, 2, 3, 4].map((band) =>
-    Array.from({ length: n }, (_, i) => point(i, band))
-      .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)},${y.toFixed(1)}`)
-      .join(" ") + " Z"
-  );
-  const hasBaseline = baseline.length > 0;
-  return (
-    <div
-      className="flex flex-col items-center"
-      data-testid="cp-progress-radar"
-    >
-      <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[200px]">
-        {ringPaths.map((p, i) => (
-          <path
-            key={i}
-            d={p}
-            fill="none"
-            stroke="#EEE9F7"
-            strokeWidth="1"
-          />
-        ))}
-        {/* spokes */}
-        {labels.map((_, i) => {
-          const [x, y] = point(i, maxV);
-          return (
-            <line
-              key={i}
-              x1={cx}
-              y1={cy}
-              x2={x}
-              y2={y}
-              stroke="#EEE9F7"
+      <div className="h-44 -ml-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 8, right: 14, bottom: 0, left: 0 }}>
+            <CartesianGrid stroke="#ede9fe" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} />
+            <YAxis domain={[0, 4]} ticks={[0, 1, 2, 3, 4]} tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} width={30} />
+            <Tooltip
+              contentStyle={{ fontSize: 12, borderRadius: 12, borderColor: "#ddd6fe" }}
+              formatter={(v, _n, item) => [`${v} · ${item.payload.rating}`, "Overall"]}
             />
-          );
-        })}
-        {hasBaseline && (
-          <path
-            d={makePath(baseline)}
-            fill="rgba(133,126,156,0.18)"
-            stroke="#857E9C"
-            strokeWidth="1.5"
-            strokeDasharray="3 2"
-          />
-        )}
-        <path
-          d={makePath(recent)}
-          fill="rgba(61,26,120,0.22)"
-          stroke="#3D1A78"
-          strokeWidth="1.8"
-        />
-        {labels.map((_, i) => {
-          const [x, y] = point(i, maxV + 0.3);
-          return (
-            <text
-              key={i}
-              x={x}
-              y={y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize="7"
-              fill="#4B4567"
-            >
-              {i + 1}
-            </text>
-          );
-        })}
-      </svg>
-      <div className="flex gap-3 text-[9px] text-slate-500 mt-1">
-        <span className="inline-flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-[#3D1A78]"></span>
-          Latest
-        </span>
-        {hasBaseline && (
-          <span className="inline-flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm border border-dashed border-[#857E9C]"></span>
-            ~60d ago
-          </span>
-        )}
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#4c2889"
+              strokeWidth={3}
+              dot={({ cx, cy, payload, index }) => (
+                <circle key={index} cx={cx} cy={cy} r={4.5} fill={ratingColor(payload.rating)} stroke="#fff" strokeWidth={1.5} />
+              )}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -562,25 +371,7 @@ export function CpProgressTile({
         </a>
       </div>
 
-      <Sparkline series={data.overall_series || []} />
-
-      {data.section_movers && data.section_movers.length > 0 && (
-        <div className="pt-1">
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-            Biggest movers vs ~{interval}d ago
-          </div>
-          <MoverBars movers={data.section_movers} />
-        </div>
-      )}
-
-      {data.radar && (data.radar.labels || []).length >= 3 && (
-        <div className="pt-1">
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 text-center">
-            Section balance · latest vs ~{interval}d ago
-          </div>
-          <Radar radar={data.radar} />
-        </div>
-      )}
+      <CpProgressLine series={data.overall_series || []} />
 
       {/* iter235 — Share-with-mediator block.
           Download = direct PDF of this exact view.

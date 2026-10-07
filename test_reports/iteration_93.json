@@ -1,0 +1,27 @@
+{
+  "summary": "Iter 93 — frontend-only retest after iter92 fixes. ALL 4 FEATURES VERIFIED on https://prepared-parents.preview.emergentagent.com (parent1 + parent2). (1) Mediator PDF extras tick-boxes now mounted inside Card 2 results modal (cp-assess-mediator → CpProgressTile) — defaults OFF, warnings appear on tick, download href rewrites to ?include_safety=true&include_biff=true correctly (none/only-safety/both), and the Share POST body includes include_safety:true/include_biff:true (share returned 'sent' on sandbox). (2) Card 2 full flow for parent2 (section-mode on entry → closed mid-section → reopened → first 3 s1 answers preserved by auto-save) → answered all 67 (6 sections × 7 + 2 × 6) → cp-assess-finish → results mode with cp-assess-overall + cp-assess-focus + cp-assess-rating-s1..s10 + download-pdf + retake; cp-assess-retake→intro. Roadmap step 'Understand Your Relationship' on dashboard landing also opens the same cp-assess-modal (results for parent1). (3) Growth Moment: parent2 fresh SA with all 5s after prior all-4s → sa-growth-moment visible with sa-growth-row-overall / child_focus / self_awareness / communication / boundaries all reading 'Growing Strength → Consistent Strength'; second consecutive run with all 5s → sa-growth-moment NOT rendered (no band change) ✓. (4) Regression at 390px: no horizontal overflow in results (modalScroll 372 ≤ clientWidth 390) nor section screens (docW==scrollW); cp-assess-quick-exit present in both results & section views. Iter92's Card 2 non-open was indeed environmental — opened cleanly in every attempt this run (after dismissing legal-ack).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Legal-Acknowledgement modal", "issues": ["Still re-appears on first Self-Journey navigation and must be dismissed before clicking card tiles (pre-existing, carried from iter91/92)."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter92_http.py (prior iter, re-usable)"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CpAssessmentParts.jsx now cleanly embeds <CpProgressTile onRetake={onRetake}/> inside cp-assess-mediator — resolves iter92 CRITICAL dead-code issue; CpProgressTile is now reachable from the natural Card 2 results surface instead of relying on an unmounted AlignmentHub.",
+    "CpProgressTile mediator extras: includeSafety/includeBiff default to false on mount (safety-first), warnings only render when checked, and both the download anchor href and the share POST body correctly include the flags (verified end-to-end).",
+    "Legal-Ack re-appearance on Self-Journey navigation is still a UX papercut (needs to be dismissed each visit). Not blocking but worth smoothing in a future pass.",
+    "Growth Moment detection via bandRank comparison is working — same-band repeat correctly suppresses the moment."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped as requested)", "frontend": "100% — 4/4 feature areas verified"},
+  "test_credentials": "parent1@test.com / TestPass123! and parent2@test.com / TestPass123!",
+  "seed_data_creation": "parent2 completed 2 additional Self-Assessments (both all-5s → Consistent Strength) during Growth Moment testing. parent2 Card 2 answers rewritten to all-'often' (index 3) across all 10 sections. If a future test needs parent2's prior 'all-4s latest SA' state restored, reseed via backend fixture.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login flow: /login → click 'Sign in with email' link → fill email/password → submit (Demo mode is default on welcome card). Legal-ack modal must be dismissed on first Self-Journey nav (legal-ack-checkbox + legal-ack-continue-button). Card 2 modal open from both door-self-card-relationship AND landing-roadmap 'Understand Your Relationship' step. Mediator extras live inside cp-assess-mediator in results mode (needs completed assessment). parent2 state has been changed by this run (see seed_data_creation).",
+  "rca of the issue": "n/a — all previously-reported issues from iter92 are resolved. Mediator-extras unreachability fixed by main agent embedding CpProgressTile in CpResults; Card 2 non-open was environmental (legal-ack overlay) and did not reproduce once legal-ack was dismissed before the click."
+}

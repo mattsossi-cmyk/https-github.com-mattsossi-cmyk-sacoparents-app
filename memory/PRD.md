@@ -97,7 +97,16 @@ save every completed run, measure the parent against themselves, set a goal.
 - Resend in preview is sandbox → real delivery needs verified domain in prod.
 - Testing: iteration_91 backend 40/40; frontend verified (check-in tap re-verified by main agent).
 
-**Next / backlog:** Card 2 reconnect to 65-Q backend
+**Iter275–276 (2026-06) · Streak, Card 2 reconnect, Mediator extras, Growth Moment, Child Needs page, CP line graph**
+- Streak: GoalBanner 7-day dot strip + flame "N-day streak" (consecutive days ending today/yesterday); `/history` + `/goal/checkin` return `recent_dates`.
+- Card 2 "Understand Your Relationship" now opens `portal/coparenting/CoparentingAssessmentModal` (67 Qs / 10 sections, one section per screen, auto-save via /api/coparenting/answer, finish → /complete + /report/generate, results with ratings, priority focus, PDF, retake). Guided chat no longer opened from Card 2 / roadmap step.
+- Mediator Progress PDF: opt-in `include_safety` / `include_biff` (GET query + share body) → `cp_progress_extras.py` (grey_rock_audit timeline, 5 latest biff_pair snapshots). UI tick boxes (default OFF + warnings) in CpProgressTile, now mounted in Card 2 results (`cp-assess-mediator`). CpProgressTile + PDF charts replaced by ONE line graph "Overall score over time" (0–4 avg, dates on x-axis); movers bars, radar and sparkline removed.
+- Growth Moment: results screen card + confetti when overall/any area moves up a band vs PREVIOUS assessment (`growthMoves` in OverviewPanel; copy `growth` in SA content JSON).
+- Card 3 replaced by founder mockup "Your Child's Specific Needs" (Medical / Educational / Psychological forms). Content `child_needs_content.json` == `frontend/.../childNeedsContent.json`. API `/api/child-needs`: GET/PUT `/me/{category}` (auth), POST `/pdf` (public, combined PDF of filled categories). Cards show "Completed ✓ · Edit".
+- Testing: iteration_92 (backend 60/60) + iteration_93 (frontend 100%); line-graph swap self-tested (PDF render + 390px screenshot).
+- Seeded test data on parent1: grey_rock_audit (2), 1 biff_pair snapshot, completed 67-Q run.
+
+**Next / backlog:** to 65-Q backend
 assessment (orphaned); Mediator PDF grey-rock timeline (P1); post-deploy smoke
 script (P1); prod env toggles (digest, PUBLIC_BACKEND_URL, domain split).
 

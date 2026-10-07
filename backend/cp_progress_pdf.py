@@ -86,90 +86,47 @@ def _fmt_date(iso: Optional[str]) -> str:
         return iso[:10]
 
 
-def _draw_sparkline(pdf: _ProgressPDF, series: List[Dict[str, Any]]) -> None:
-    """Compact rating sparkline, 180 x 24 mm."""
+LINE_TITLE = "Overall score over time"  # mirrors CP_LINE_TITLE in CpProgressTile.jsx
+
+
+def _draw_line_graph(pdf: _ProgressPDF, series: List[Dict[str, Any]]) -> None:
+    """Overall score (0-4 average) per submission, dates along the bottom."""
     if not series:
         return
-    x0 = pdf.l_margin
-    y0 = pdf.get_y()
-    w = pdf.epw
-    h = 24
-    pad = 3
-    # Faint guide rows (1..4)
-    pdf.set_draw_color(230, 225, 240)
-    for band in (1, 2, 3, 4):
-        y = y0 + h - pad - ((band - 0) / 4) * (h - pad * 2)
-        pdf.line(x0 + pad, y, x0 + w - pad, y)
-    # Line through points
+    x0, y0 = pdf.l_margin + 8, pdf.get_y() + 2
+    w, h = pdf.epw - 12, 46
+    pdf.set_font("Helvetica", "", 7)
+    pdf.set_line_width(0.15)
+    for tick in (0, 1, 2, 3, 4):
+        y = y0 + h - h * tick / 4
+        pdf.set_draw_color(226, 220, 245)
+        pdf.line(x0, y, x0 + w, y)
+        pdf.set_text_color(133, 126, 156)
+        pdf.set_xy(pdf.l_margin, y - 2)
+        pdf.cell(7, 4, str(tick), align="R")
     n = len(series)
-    xs = [
-        x0 + pad + (i * (w - pad * 2) / max(1, n - 1))
-        for i in range(n)
-    ]
-    ys = [
-        y0 + h - pad - ((p.get("value") or 0) / 4) * (h - pad * 2)
-        for p in series
-    ]
-    pdf.set_draw_color(61, 26, 120)
-    pdf.set_line_width(0.6)
+    xs = [x0 + (w * i / (n - 1) if n > 1 else w / 2) for i in range(n)]
+    ys = [y0 + h - h * min(4.0, max(0.0, float(p.get("value") or 0))) / 4 for p in series]
+    pdf.set_draw_color(76, 40, 137)
+    pdf.set_line_width(0.9)
     for i in range(1, n):
         pdf.line(xs[i - 1], ys[i - 1], xs[i], ys[i])
-    # Dots coloured by rating band
     for i, p in enumerate(series):
-        c = _RATING_COLOURS.get(p.get("rating") or "", (61, 26, 120))
-        pdf.set_fill_color(*c)
-        pdf.ellipse(xs[i] - 0.9, ys[i] - 0.9, 1.8, 1.8, "F")
-    pdf.set_y(y0 + h + 1)
-    pdf.set_font("Helvetica", "", 8)
+        pdf.set_fill_color(*_RATING_COLOURS.get(p.get("rating") or "", (76, 40, 137)))
+        pdf.ellipse(xs[i] - 1.3, ys[i] - 1.3, 2.6, 2.6, "F")
+    step = max(1, (n + 7) // 8)
     pdf.set_text_color(133, 126, 156)
-    pdf.cell(w / 2, 4, _safe(_fmt_date(series[0].get("submitted_at"))), align="L")
-    pdf.cell(w / 2, 4, _safe(_fmt_date(series[-1].get("submitted_at"))), align="R", ln=1)
-
-
-def _draw_movers(pdf: _ProgressPDF, movers: List[Dict[str, Any]], max_rows: int = 5) -> None:
-    rows = movers[:max_rows]
-    if not rows:
-        pdf.set_font("Helvetica", "I", 9)
-        pdf.set_text_color(133, 126, 156)
-        pdf.cell(0, 5, _safe("Not enough history yet to show section movers."), ln=1)
-        return
-    x0 = pdf.l_margin
-    bar_w_max = 46  # mm
-    pdf.set_font("Helvetica", "", 9)
-    max_delta = max((abs(m.get("delta") or 0) for m in rows), default=1) or 1
-    for m in rows:
-        delta = float(m.get("delta") or 0)
-        direction = m.get("direction") or "flat"
-        label = f"{m.get('number')}. {m.get('name') or ''}"
-        delta_str = f"{'+' if delta > 0 else ''}{delta:.2f}"
-        arrow = "^" if direction == "up" else "v" if direction == "down" else "-"
-        pdf.set_x(x0)
-        pdf.set_text_color(52, 46, 78)
-        pdf.set_font("Helvetica", "", 9)
-        pdf.cell(100, 5, _safe(label[:52]))
-        pdf.set_font("Helvetica", "B", 9)
-        if direction == "up":
-            pdf.set_text_color(31, 92, 59)
-        elif direction == "down":
-            pdf.set_text_color(182, 102, 59)
-        else:
-            pdf.set_text_color(133, 126, 156)
-        pdf.cell(20, 5, _safe(f"{arrow} {delta_str}"), align="R")
-        # bar
-        bar_x = x0 + 125
-        bar_y = pdf.get_y() + 1.6
-        pdf.set_draw_color(230, 225, 240)
-        pdf.set_fill_color(241, 237, 248)
-        pdf.rect(bar_x, bar_y, bar_w_max, 1.8, "F")
-        used = (abs(delta) / max_delta) * bar_w_max
-        if direction == "up":
-            pdf.set_fill_color(63, 123, 71)
-        elif direction == "down":
-            pdf.set_fill_color(203, 128, 53)
-        else:
-            pdf.set_fill_color(190, 185, 205)
-        pdf.rect(bar_x, bar_y, used, 1.8, "F")
-        pdf.ln(6)
+    for i, x in enumerate(xs):
+        if i % step == 0 or i == n - 1:
+            d = series[i].get("submitted_at")
+            try:
+                label = datetime.fromisoformat((d or "").replace("Z", "+00:00")).strftime("%b %-d")
+            except Exception:
+                label = (d or "")[:10]
+            pdf.set_xy(x - 10, y0 + h + 1)
+            pdf.cell(20, 4, _safe(label), align="C")
+    pdf.set_line_width(0.2)
+    pdf.set_y(y0 + h + 7)
 
 
 def _fmt_datetime(iso: Optional[str]) -> str:
@@ -310,23 +267,14 @@ def build_progress_pdf(
     )
     pdf.set_y(y_card + 16)
 
-    # Trend sparkline
+    # Overall score line graph (matches the in-app graph)
     pdf.set_font("Helvetica", "B", 11)
     pdf.set_text_color(61, 26, 120)
-    pdf.cell(0, 5, _safe("Rating trend over time"), ln=1)
-    _draw_sparkline(pdf, progress.get("overall_series") or [])
-
-    # Section movers
-    pdf.ln(4)
-    pdf.set_font("Helvetica", "B", 11)
-    pdf.set_text_color(61, 26, 120)
-    label = (
-        f"Biggest movers vs ~{interval}d ago"
-        if baseline else "Section ratings (baseline not available yet)"
-    )
-    pdf.cell(0, 5, _safe(label), ln=1)
-    pdf.ln(0.5)
-    _draw_movers(pdf, progress.get("section_movers") or [])
+    pdf.cell(0, 5, _safe(LINE_TITLE), ln=1)
+    pdf.set_font("Helvetica", "", 7.5)
+    pdf.set_text_color(133, 126, 156)
+    pdf.cell(0, 4, _safe("Average (0-4)"), ln=1)
+    _draw_line_graph(pdf, progress.get("overall_series") or [])
 
     # Section-by-section ratings table (latest + baseline)
     pdf.ln(3)
