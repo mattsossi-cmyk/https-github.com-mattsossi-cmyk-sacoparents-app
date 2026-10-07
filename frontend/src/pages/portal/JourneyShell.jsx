@@ -7,6 +7,7 @@ import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentModal } from "./SelfAssessmentModal";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
+import { WelcomeArtwork } from "./WelcomeArtwork";
 import { CoparentingAssessmentModal } from "./coparenting/CoparentingAssessmentModal";
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
@@ -1132,38 +1133,14 @@ export function JourneyShell({
           </div>
         </section>
 
-        {/* Founder "Welcome to SA CoParents" artwork under the two doors; the
-            three pictured cards are tappable shortcuts. */}
-        <section
-          data-testid="door-welcome-image"
-          className="relative overflow-hidden rounded-2xl border border-purple-100 shadow-sm bg-purple-50"
-        >
-          <img
-            src="/images/sa-welcome.webp"
-            srcSet="/images/sa-welcome-768.webp 768w, /images/sa-welcome.webp 1024w"
-            sizes="(max-width: 640px) 100vw, 640px"
-            width={1024}
-            height={1536}
-            alt="Welcome to SA CoParents. Choose your path: Individual Journey, Court Ordered Path, or the SA CoParent Communication Builder. Same goals, a brighter future."
-            className="block w-full h-auto"
-            loading="lazy"
-          />
-          {[
-            { id: "self", label: "Open Individual Journey", left: "2%", width: "31.5%", go: () => openDoor("self") },
-            { id: "court", label: "Open Court Ordered Path", left: "35%", width: "30.5%", go: () => openDoor("court") },
-            { id: "comm", label: "Open the Communication Builder", left: "66.5%", width: "31.5%", go: onOpenBiffCoach },
-          ].map((h) => (
-            <button
-              key={h.id}
-              type="button"
-              data-testid={`door-welcome-hotspot-${h.id}`}
-              aria-label={h.label}
-              onClick={h.go}
-              className="absolute rounded-2xl focus-visible:outline focus-visible:outline-4 focus-visible:outline-purple-600 hover:bg-white/10 transition-colors"
-              style={{ left: h.left, width: h.width, top: "32.5%", height: "53%" }}
-            />
-          ))}
-        </section>
+        <WelcomeArtwork
+          testid="door-welcome-image"
+          actions={{
+            self: () => openDoor("self"),
+            court: () => openDoor("court"),
+            comm: onOpenBiffCoach,
+          }}
+        />
 
         <GoalBanner
           testid="door-landing-goal"
@@ -1460,28 +1437,20 @@ export function JourneyShell({
           onOpen={() => openAssess(saHistory.dueDays > 0)}
         />
 
-        {/* iter268 — Hero brand banner above the 4 action cards. */}
-        <section
-          data-testid="door-self-brand"
-          className="text-center bg-gradient-to-b from-purple-50 to-white border border-purple-100 rounded-2xl py-5 px-4"
-        >
-          <div className="text-[22px] font-extrabold text-purple-800 leading-none">
-            SA CoParents
-          </div>
-          <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-purple-700 mt-1">
-            Start With Alignment, End With Agreement
-          </div>
-          <h2 className="text-lg font-extrabold text-purple-900 mt-3">
-            Welcome to SA CoParents
-          </h2>
-          <p className="text-xs text-slate-600 mt-1 leading-snug px-2">
-            Take the next step to build a safer, calmer, and more
-            child-focused future.
-          </p>
-        </section>
+        <WelcomeArtwork
+          testid="door-self-welcome-image"
+          actions={{
+            self: () =>
+              document
+                .getElementById("door-self-actions")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+            court: () => openDoor("court"),
+            comm: onOpenBiffCoach,
+          }}
+        />
 
         {/* iter268 — 4 numbered action cards, matching the mockup. */}
-        <div data-testid="door-self-actions" className="space-y-3">
+        <div id="door-self-actions" data-testid="door-self-actions" className="space-y-3 scroll-mt-4">
           {/* Card 1 — Assess Your Situation (opens the new modal). */}
           <button
             type="button"

@@ -8596,3 +8596,11 @@ dashboard for sharing SELECTED completed reports with any professional.
 - `POST /api/auth/register` (auto-adds HB 300 ack)
 - `GET /api/insights/samples/{filename}`
 - `POST /api/safety-assessment/{id}/regenerate-summaries`
+
+## 2026-06 — Self Journey welcome artwork
+- Self Journey's text "Welcome to SA CoParents" banner was replaced with the same welcome artwork the dashboard uses (`/images/sa-welcome*.webp`), via the shared `portal/WelcomeArtwork.jsx`.
+- Self Journey order: header → SafetyStrip → goal card → artwork → 4 action cards.
+- All three pictured cards work as action buttons on both screens. Dashboard: Individual → Self door, Court → Court door, Comm → BIFF coach. Self Journey: Individual → smooth-scrolls to the 4 cards, Court → Court door, Comm → BIFF coach.
+- testids: `door-welcome-image` / `door-welcome-hotspot-{self,court,comm}` (dashboard), `door-self-welcome-image` / `door-self-welcome-hotspot-{self,court,comm}` (Self Journey). The old `door-self-brand` has been removed.
+- Still pending from earlier: user check of the Card 4 Foundation Statement PDF (one signature/date line).
+
