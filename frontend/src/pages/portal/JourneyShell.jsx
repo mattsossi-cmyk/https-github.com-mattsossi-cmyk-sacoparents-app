@@ -955,29 +955,6 @@ export function JourneyShell({
     );
   };
 
-  const SafetyStrip = () => (
-    <div className="space-y-2">
-      <button
-        type="button"
-        data-testid="door-safety-first"
-        onClick={onOpenSafety}
-        className="w-full p-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-left transition flex items-center gap-2"
-      >
-        <i className="fa-solid fa-shield-heart"></i>
-        <span className="text-sm font-bold">Safety First</span>
-        <span className="ml-auto text-[11px] opacity-90">
-          Private · DV &amp; IPV check
-        </span>
-      </button>
-      {safetyFlag && (
-        <GreyRockToggleChip
-          onClear={onClearGreyRock}
-          onRetake={onOpenSafetyRetake}
-        />
-      )}
-    </div>
-  );
-
   const SectionLabel = ({ children, testid }) => (
     <div
       data-testid={testid}
@@ -1257,8 +1234,6 @@ export function JourneyShell({
             </div>
           )}
 
-          <SafetyStrip />
-
           <div data-testid="door-court-abc" className="space-y-2">
             <SectionLabel testid="door-court-abc-label">
               Choose where to start
@@ -1423,9 +1398,6 @@ export function JourneyShell({
           title="Self Journey"
           subtitle="Take the next step to build a safer, calmer, and more child-focused future."
         />
-
-        {/* Keep clinical safety strip visible on every pass. */}
-        <SafetyStrip />
 
         <GoalBanner
           testid="door-self-goal"

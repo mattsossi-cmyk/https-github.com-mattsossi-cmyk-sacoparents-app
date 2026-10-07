@@ -8603,5 +8603,7 @@ dashboard for sharing SELECTED completed reports with any professional.
 - All three pictured cards work as action buttons on both screens. Dashboard: Individual → Self door, Court → Court door, Comm → BIFF coach. Self Journey: Individual → smooth-scrolls to the 4 cards, Court → Court door, Comm → BIFF coach.
 - testids: `door-welcome-image` / `door-welcome-hotspot-{self,court,comm}` (dashboard), `door-self-welcome-image` / `door-self-welcome-hotspot-{self,court,comm}` (Self Journey). The old `door-self-brand` has been removed.
 - Dashboard landing order is now: welcome artwork (3 tappable cards) → "Pick your door" + Court Ordered / Self Journey buttons → goal card → journey roadmap. This replaces the earlier "doors → artwork" order.
+- The "Safety First" bar and the Grey-rock chip were removed from the Self Journey and Court Ordered screens (user request), and the unused `SafetyStrip` was deleted. What stays: the pre-door safety gate, Quick Exit, the "In danger?" bar, grey-rock behaviour, and the Grey-rock chip on the Card 3/Card 4 sub-screens, BIFF and Alignment Hub.
+- The test goals (`TEST_*`) were blanked in the preview DB and their check-ins deleted. The goal card still renders for real goals.
 - Still pending from earlier: user check of the Card 4 Foundation Statement PDF (one signature/date line).
 
