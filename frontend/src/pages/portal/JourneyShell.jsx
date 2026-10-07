@@ -1076,6 +1076,15 @@ export function JourneyShell({
   if (view === "door") {
     return (
       <div data-testid="journey-shell" className="space-y-4">
+        <WelcomeArtwork
+          testid="door-welcome-image"
+          actions={{
+            self: () => openDoor("self"),
+            court: () => openDoor("court"),
+            comm: onOpenBiffCoach,
+          }}
+        />
+
         <section
           data-testid="door-landing"
           className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
@@ -1132,15 +1141,6 @@ export function JourneyShell({
             </button>
           </div>
         </section>
-
-        <WelcomeArtwork
-          testid="door-welcome-image"
-          actions={{
-            self: () => openDoor("self"),
-            court: () => openDoor("court"),
-            comm: onOpenBiffCoach,
-          }}
-        />
 
         <GoalBanner
           testid="door-landing-goal"

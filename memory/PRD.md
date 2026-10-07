@@ -8602,5 +8602,6 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Self Journey order: header → SafetyStrip → goal card → artwork → 4 action cards.
 - All three pictured cards work as action buttons on both screens. Dashboard: Individual → Self door, Court → Court door, Comm → BIFF coach. Self Journey: Individual → smooth-scrolls to the 4 cards, Court → Court door, Comm → BIFF coach.
 - testids: `door-welcome-image` / `door-welcome-hotspot-{self,court,comm}` (dashboard), `door-self-welcome-image` / `door-self-welcome-hotspot-{self,court,comm}` (Self Journey). The old `door-self-brand` has been removed.
+- Dashboard landing order is now: welcome artwork (3 tappable cards) → "Pick your door" + Court Ordered / Self Journey buttons → goal card → journey roadmap. This replaces the earlier "doors → artwork" order.
 - Still pending from earlier: user check of the Card 4 Foundation Statement PDF (one signature/date line).
 
