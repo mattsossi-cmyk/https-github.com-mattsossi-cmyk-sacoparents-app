@@ -8,6 +8,7 @@ import { SelfAssessmentModal } from "./SelfAssessmentModal";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { CoparentingAssessmentModal } from "./coparenting/CoparentingAssessmentModal";
+import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
 import { FoundationStatementView } from "./FoundationStatementView";
 import { api } from "../../lib/api";
@@ -820,6 +821,10 @@ export function JourneyShell({
   const saHistory = useSelfAssessmentHistory(user?.user_id);
   const [assessStartNew, setAssessStartNew] = useState(false);
   const [cpAssessOpen, setCpAssessOpen] = useState(false);
+  const foundationBuilder = useFoundationBuilder(
+    user?.user_id,
+    user?.name ? user.name.split(" ")[0] : null
+  );
   const openAssess = (startNew = false) => {
     setAssessStartNew(startNew);
     setAssessOpen(true);
@@ -1070,51 +1075,6 @@ export function JourneyShell({
   if (view === "door") {
     return (
       <div data-testid="journey-shell" className="space-y-4">
-        {/* iter265 — Hero image banner above the two doors. */}
-        <section
-          data-testid="door-hero"
-          className="relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
-        >
-          <img
-            src="https://images.unsplash.com/photo-1476703993599-0035a21b17a9?auto=format&fit=crop&w=1200&q=80"
-            alt="A parent and child enjoying a sunset together outdoors"
-            className="w-full h-44 object-cover"
-            loading="lazy"
-          />
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-purple-950/85 via-purple-900/45 to-transparent"
-          />
-          <div className="absolute inset-x-0 bottom-0 px-4 py-3 text-white">
-            <div className="text-[10px] uppercase font-bold tracking-[0.18em] text-purple-200">
-              SA CoParents · Start with alignment, end with agreement
-            </div>
-            <div
-              data-testid="door-hero-tagline"
-              className="text-base sm:text-lg font-bold leading-tight mt-0.5"
-              style={{
-                fontFamily:
-                  '"Snell Roundhand", "Lucida Handwriting", cursive',
-              }}
-            >
-              A Brighter Future for Your Child
-            </div>
-          </div>
-        </section>
-
-        <GoalBanner
-          testid="door-landing-goal"
-          goal={saHistory.currentGoal}
-          setAt={saHistory.latest?.completed_at}
-          practice={saHistory.practice}
-          onPractise={saHistory.practise}
-          dueDays={saHistory.dueDays}
-          onOpen={() => {
-            openDoor("self");
-            openAssess(saHistory.dueDays > 0);
-          }}
-        />
-
         <section
           data-testid="door-landing"
           className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
@@ -1171,6 +1131,52 @@ export function JourneyShell({
             </button>
           </div>
         </section>
+
+        {/* Founder "Welcome to SA CoParents" artwork under the two doors; the
+            three pictured cards are tappable shortcuts. */}
+        <section
+          data-testid="door-welcome-image"
+          className="relative overflow-hidden rounded-2xl border border-purple-100 shadow-sm bg-purple-50"
+        >
+          <img
+            src="/images/sa-welcome.webp"
+            srcSet="/images/sa-welcome-768.webp 768w, /images/sa-welcome.webp 1024w"
+            sizes="(max-width: 640px) 100vw, 640px"
+            width={1024}
+            height={1536}
+            alt="Welcome to SA CoParents. Choose your path: Individual Journey, Court Ordered Path, or the SA CoParent Communication Builder. Same goals, a brighter future."
+            className="block w-full h-auto"
+            loading="lazy"
+          />
+          {[
+            { id: "self", label: "Open Individual Journey", left: "2%", width: "31.5%", go: () => openDoor("self") },
+            { id: "court", label: "Open Court Ordered Path", left: "35%", width: "30.5%", go: () => openDoor("court") },
+            { id: "comm", label: "Open the Communication Builder", left: "66.5%", width: "31.5%", go: onOpenBiffCoach },
+          ].map((h) => (
+            <button
+              key={h.id}
+              type="button"
+              data-testid={`door-welcome-hotspot-${h.id}`}
+              aria-label={h.label}
+              onClick={h.go}
+              className="absolute rounded-2xl focus-visible:outline focus-visible:outline-4 focus-visible:outline-purple-600 hover:bg-white/10 transition-colors"
+              style={{ left: h.left, width: h.width, top: "32.5%", height: "53%" }}
+            />
+          ))}
+        </section>
+
+        <GoalBanner
+          testid="door-landing-goal"
+          goal={saHistory.currentGoal}
+          setAt={saHistory.latest?.completed_at}
+          practice={saHistory.practice}
+          onPractise={saHistory.practise}
+          dueDays={saHistory.dueDays}
+          onOpen={() => {
+            openDoor("self");
+            openAssess(saHistory.dueDays > 0);
+          }}
+        />
 
         {/* iter264 — "Your co-parenting journey" roadmap. */}
         <section
@@ -1420,6 +1426,7 @@ export function JourneyShell({
         parentName={greetingName}
         QuickExit={quickExitChip}
         SafetyStrip={safetyStrip}
+        fb={foundationBuilder}
       />
     );
   }
@@ -1588,6 +1595,14 @@ export function JourneyShell({
                 foundation for productive discussions and future
                 agreements.
               </p>
+              {foundationBuilder.savedAt && (
+                <p
+                  data-testid="door-self-card-foundation-saved"
+                  className="text-[10px] font-bold text-emerald-700 mt-1"
+                >
+                  Saved <i className="fa-solid fa-check mx-0.5"></i> · Edit
+                </p>
+              )}
             </div>
             <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
               <i className="fa-solid fa-chevron-right text-xs"></i>
