@@ -1,4 +1,4 @@
-"""Branded PDF for the Self Journey Co-Parenting Self-Assessment.
+"""Branded PDF for the Self Journey Co-Parenting Self-Assessment (v2).
 
 Render-only: every label comes from `self_assessment_content.json` so the
 PDF says exactly what the parent saw on screen.
@@ -6,7 +6,7 @@ PDF says exactly what the parent saw on screen.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from fpdf import FPDF
 
@@ -17,20 +17,37 @@ except Exception:  # pragma: no cover
         return
 
 PURPLE = (76, 40, 137)
+PURPLE_LIGHT = (243, 239, 254)
 INK = (30, 41, 59)
 MUTED = (100, 116, 139)
-TIER_RGB = [(31, 122, 77), (178, 122, 24), (203, 105, 35), (176, 52, 70)]
+EMERALD = (31, 122, 77)
+ROSE = (176, 52, 70)
 
 
 def _safe(text: Optional[str]) -> str:
     s = "" if text is None else str(text)
     for k, v in {
-        "\u2014": "-", "\u2013": "-", "\u2212": "-",
+        "\u2014": "-", "\u2013": "-", "\u2212": "-", "\u2192": "->",
         "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
         "\u2026": "...", "\u2022": "-", "\u00a0": " ",
     }.items():
         s = s.replace(k, v)
     return s.encode("latin-1", errors="replace").decode("latin-1")
+
+
+def _parse(iso: Optional[str]) -> datetime:
+    try:
+        return datetime.fromisoformat((iso or "").replace("Z", "+00:00"))
+    except ValueError:
+        return datetime.now(timezone.utc)
+
+
+def entry_label(entries: List[Dict[str, Any]], i: int) -> str:
+    """'May 2026', or 'May 12, 2026' when two entries share a month."""
+    d = _parse(entries[i].get("completed_at"))
+    month = d.strftime("%B %Y")
+    clash = sum(1 for e in entries if _parse(e.get("completed_at")).strftime("%B %Y") == month) > 1
+    return f"{d.strftime('%B')} {d.day}, {d.year}" if clash else month
 
 
 class _SAPDF(FPDF):
@@ -67,152 +84,165 @@ def _heading(pdf: _SAPDF, text: str) -> None:
     pdf.ln(0.5)
 
 
-def _meta_block(pdf: _SAPDF, meta: Dict[str, Any]) -> None:
-    rows = [
-        ("Parent name", meta.get("parent_name")),
-        ("Date", meta.get("date")),
-        ("Child(ren)", meta.get("child")),
-        ("Case / Reference", meta.get("case_ref")),
-    ]
-    pdf.set_font("Helvetica", "", 9)
-    for label, value in rows:
-        pdf.set_text_color(*MUTED)
-        pdf.cell(35, 5, _safe(label))
-        pdf.set_text_color(*INK)
-        pdf.cell(0, 5, _safe(value or "-"), new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(2)
-
-
-def _overall_card(pdf: _SAPDF, content: Dict[str, Any], scores: Dict[str, Any]) -> None:
-    tier = scores["tier"]
-    idx = content["tiers"].index(tier) if tier else None
-    rgb = TIER_RGB[idx] if idx is not None and idx < len(TIER_RGB) else MUTED
-    y = pdf.get_y()
-    pdf.set_fill_color(*[int(c + (255 - c) * 0.88) for c in rgb])
-    pdf.set_draw_color(*[int(c + (255 - c) * 0.5) for c in rgb])
-    pdf.rect(pdf.l_margin, y, pdf.epw, 20, "DF")
-    pdf.set_xy(pdf.l_margin + 4, y + 2.5)
-    pdf.set_font("Helvetica", "B", 12)
-    pdf.set_text_color(*rgb)
-    pdf.cell(0, 6, _safe(f"Total score: {scores['total']} / {scores['max']}"), new_x="LMARGIN", new_y="NEXT")
-    pdf.set_x(pdf.l_margin + 4)
+def _boxed(pdf: _SAPDF, label: str, body: str, fill=PURPLE_LIGHT) -> None:
+    pdf.set_fill_color(*fill)
     pdf.set_font("Helvetica", "B", 9)
-    pending = content["tier_pending"].format(n=scores["question_count"])
-    pdf.cell(0, 5, _safe(tier["title"] if tier else pending),
-             new_x="LMARGIN", new_y="NEXT")
-    pdf.set_x(pdf.l_margin + 4)
-    pdf.set_font("Helvetica", "", 9)
-    pdf.set_text_color(*INK)
-    pdf.cell(0, 5, _safe(tier["body"] if tier else ""), new_x="LMARGIN", new_y="NEXT")
-    pdf.set_y(y + 23)
-    pdf.set_font("Helvetica", "I", 8)
-    pdf.set_text_color(*MUTED)
-    pdf.cell(0, 4, _safe(f"{scores['answered']} of {scores['question_count']} questions answered"),
-             new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(2)
-
-
-def _section_row(pdf: _SAPDF, row: Dict[str, Any]) -> None:
-    y0 = pdf.get_y()
-    pdf.set_font("Helvetica", "B", 9)
-    pdf.set_text_color(*INK)
-    pdf.cell(150, 5, _safe(f"Section {row['key']} - {row['label']}"))
     pdf.set_text_color(*PURPLE)
-    pdf.cell(0, 5, _safe(f"{row['score']} / {row['max']}"), align="R", new_x="LMARGIN", new_y="NEXT")
+    pdf.multi_cell(pdf.epw, 5.5, _safe(f"  {label}"), fill=True, new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 9.5)
+    pdf.set_text_color(*INK)
+    pdf.multi_cell(pdf.epw, 5, _safe(body), fill=True, padding=(0, 3, 2.5, 3), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(3)
+
+
+def _overall(pdf: _SAPDF, scores: Dict[str, Any], band_for: Callable) -> None:
+    band = band_for(scores["overall"])
+    y = pdf.get_y()
+    pdf.set_fill_color(*PURPLE_LIGHT)
+    pdf.set_draw_color(216, 199, 251)
+    pdf.rect(pdf.l_margin, y, pdf.epw, 18 if band else 14, "DF")
+    pdf.set_xy(pdf.l_margin + 4, y + 3)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 7, _safe(f"Overall score: {scores['overall']} / 100"), new_x="LMARGIN", new_y="NEXT")
+    if band:
+        pdf.set_x(pdf.l_margin + 4)
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.cell(0, 5, _safe(band["label"]), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_y(y + (21 if band else 17))
+
+
+def _section_bar(pdf: _SAPDF, label: str, score: int, band_for: Callable) -> None:
+    y0 = pdf.get_y()
+    band = band_for(score)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_text_color(*INK)
+    pdf.cell(120, 5, _safe(label + (f"  ·  {band['label']}" if band else "")))
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 5, _safe(f"{score} / 100"), align="R", new_x="LMARGIN", new_y="NEXT")
     bar_y = pdf.get_y() + 0.5
     pdf.set_fill_color(238, 233, 242)
     pdf.rect(pdf.l_margin, bar_y, pdf.epw, 2.4, "F")
-    if row["score"] > 0:
+    if score > 0:
         pdf.set_fill_color(*PURPLE)
-        pdf.rect(pdf.l_margin, bar_y, pdf.epw * min(1.0, row["score"] / row["max"]), 2.4, "F")
+        pdf.rect(pdf.l_margin, bar_y, pdf.epw * min(1.0, score / 100), 2.4, "F")
     pdf.set_y(y0 + 10)
 
 
-def _responses(pdf: _SAPDF, content: Dict[str, Any], answers: Dict[str, int]) -> None:
+def _progress(pdf: _SAPDF, content: Dict[str, Any], history: List[Dict[str, Any]]) -> None:
+    _heading(pdf, "Your Progress")
+    pdf.set_font("Helvetica", "", 9.5)
+    for i, h in enumerate(history):
+        pdf.set_text_color(*INK)
+        pdf.cell(60, 5.5, _safe(entry_label(history, i)))
+        pdf.set_font("Helvetica", "B", 9.5)
+        pdf.set_text_color(*PURPLE)
+        pdf.cell(0, 5.5, _safe(f"{h['scores']['overall']}/100"), new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font("Helvetica", "", 9.5)
+    if len(history) > 1:
+        first, latest = history[0]["scores"]["sections"], history[-1]["scores"]["sections"]
+        pdf.ln(1.5)
+        for s in content["sections"]:
+            delta = latest[s["key"]] - first[s["key"]]
+            pdf.set_text_color(*INK)
+            pdf.set_font("Helvetica", "", 9.5)
+            pdf.cell(60, 5.5, _safe(f"{s['score_label']}:"))
+            pdf.set_font("Helvetica", "B", 9.5)
+            pdf.set_text_color(*(EMERALD if delta > 0 else ROSE if delta < 0 else MUTED))
+            pdf.cell(0, 5.5, _safe(f"{first[s['key']]} → {latest[s['key']]}"), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(3)
+
+
+def _responses(pdf: _SAPDF, content: Dict[str, Any], entry: Dict[str, Any]) -> None:
     labels = {s["value"]: s["label"] for s in content["scale"]}
+    answers = entry.get("answers") or {}
     for s in content["sections"]:
-        if pdf.get_y() > 240:
+        if pdf.get_y() > 235:
             pdf.add_page()
         pdf.set_fill_color(*PURPLE)
         pdf.set_text_color(255, 255, 255)
         pdf.set_font("Helvetica", "B", 9)
-        pdf.cell(0, 6.5, _safe(f"  Section {s['key']} - {s['label']}"), fill=True, new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 6.5, _safe(f"  {s['number']}. {s['title']}"), fill=True, new_x="LMARGIN", new_y="NEXT")
         pdf.ln(1)
         for i, q in enumerate(s["questions"]):
-            v = answers.get(f"{s['key']}{i + 1}")
             if pdf.get_y() > 250:
                 pdf.add_page()
+            v = answers.get(f"{s['key']}_{i + 1}")
             y0 = pdf.get_y()
             pdf.set_font("Helvetica", "", 8.5)
             pdf.set_text_color(*INK)
-            pdf.multi_cell(135, 4.4, _safe(f"{s['key']}{i + 1}. {q}"), align="L", new_x="LMARGIN", new_y="NEXT")
+            pdf.multi_cell(140, 4.4, _safe(q), align="L", new_x="LMARGIN", new_y="NEXT")
             y_q = pdf.get_y()
-            pdf.set_xy(pdf.l_margin + 137, y0)
+            pdf.set_xy(pdf.l_margin + 142, y0)
             pdf.set_font("Helvetica", "B", 8.5)
             pdf.set_text_color(*(PURPLE if v else MUTED))
-            pdf.multi_cell(0, 4.4, _safe(f"{v} = {labels[v]}" if v else "Not answered"), align="R",
+            pdf.multi_cell(0, 4.4, _safe(f"{v} — {labels[v]}" if v else "Not answered"), align="R",
                            new_x="LMARGIN", new_y="NEXT")
             pdf.set_y(max(pdf.get_y(), y_q) + 1.2)
         pdf.ln(1.5)
 
-
-def _foundation(pdf: _SAPDF, content: Dict[str, Any], foundation: Dict[str, Any]) -> None:
-    f = content["foundation"]
-    blocks = [
-        (f["going_well"], [x for x in foundation.get("going_well", []) if (x or "").strip()]),
-        (f["improve"], [x for x in foundation.get("improve", []) if (x or "").strip()]),
-        (f["shared_goals"], [foundation.get("shared_goals")] if (foundation.get("shared_goals") or "").strip() else []),
-    ]
-    if not any(items for _, items in blocks):
-        return
+    r = content["reflection"]
     if pdf.get_y() > 220:
         pdf.add_page()
-    _heading(pdf, f["heading"])
-    for label, items in blocks:
-        if not items:
-            continue
+    pdf.set_fill_color(*PURPLE)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(0, 6.5, _safe(f"  {r['number']}. {r['title']}"), fill=True, new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1.5)
+    reflections = entry.get("reflections") or {}
+    for q in r["questions"]:
+        if pdf.get_y() > 245:
+            pdf.add_page()
         pdf.set_font("Helvetica", "B", 9)
         pdf.set_text_color(*INK)
-        pdf.cell(0, 5, _safe(label), new_x="LMARGIN", new_y="NEXT")
-        pdf.set_font("Helvetica", "", 9)
-        for n, item in enumerate(items, 1):
-            prefix = f"{n}. " if len(items) > 1 or label != f["shared_goals"] else ""
-            pdf.multi_cell(pdf.epw, 4.8, _safe(f"{prefix}{item.strip()}"), new_x="LMARGIN", new_y="NEXT")
-        pdf.ln(1.5)
+        pdf.multi_cell(pdf.epw, 4.8, _safe(q["prompt"]), new_x="LMARGIN", new_y="NEXT")
+        body = (reflections.get(q["key"]) or "").strip()
+        pdf.set_font("Helvetica", "" if body else "I", 9)
+        pdf.set_text_color(*(INK if body else MUTED))
+        pdf.multi_cell(pdf.epw, 4.8, _safe(body or "Skipped"), new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(2)
 
 
-def build_self_assessment_pdf(*, content: Dict[str, Any], state: Dict[str, Any], scores: Dict[str, Any]) -> bytes:
+def build_self_assessment_pdf(
+    *,
+    content: Dict[str, Any],
+    entry: Dict[str, Any],
+    history: List[Dict[str, Any]],
+    band_for: Callable[[int], Optional[Dict[str, Any]]],
+) -> bytes:
     pdf = _SAPDF(content["title"], content["disclaimer"])
     pdf.add_page()
+    scores = entry["scores"]
+    completed = _parse(entry.get("completed_at"))
 
     pdf.set_font("Helvetica", "B", 18)
     pdf.set_text_color(*PURPLE)
     pdf.cell(0, 9, _safe(content["title"]), new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "I", 9.5)
     pdf.set_text_color(*MUTED)
-    pdf.multi_cell(pdf.epw, 5, _safe(content["subtitle"]), new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font("Helvetica", "", 8)
-    pdf.cell(0, 5, _safe(f"Generated {datetime.now(timezone.utc).strftime('%b %d, %Y')}"),
+    who = entry.get("parent_name") or "a parent"
+    pdf.cell(0, 5, _safe(f"Prepared for {who}  ·  {completed.strftime('%B')} {completed.day}, {completed.year}"),
              new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(2)
+    pdf.ln(3)
 
-    _meta_block(pdf, state.get("meta") or {})
-    _overall_card(pdf, content, scores)
-
-    _heading(pdf, "Your reflection summary")
-    for row in scores["sections"]:
-        _section_row(pdf, row)
-
+    _overall(pdf, scores, band_for)
+    for s in content["sections"]:
+        _section_bar(pdf, s["score_label"], scores["sections"][s["key"]], band_for)
     pdf.ln(1)
-    pdf.set_fill_color(224, 242, 254)
-    pdf.set_text_color(12, 74, 110)
-    pdf.set_font("Helvetica", "", 8.5)
-    pdf.multi_cell(pdf.epw, 4.6, _safe(f"How to use this assessment: {content['how_to_use']}"),
-                   fill=True, new_x="LMARGIN", new_y="NEXT")
+
+    if history:
+        _progress(pdf, content, history)
+    _boxed(pdf, "Remember", content["central_message"])
+    goal = (entry.get("goal") or "").strip()
+    if goal:
+        _boxed(pdf, content["goal"]["label"], goal, fill=(234, 247, 234))
+
+    pdf.set_font("Helvetica", "B", 8.5)
+    pdf.set_text_color(*PURPLE)
+    pdf.multi_cell(pdf.epw, 5, _safe("  →  ".join(content["cycle"])), align="C", new_x="LMARGIN", new_y="NEXT")
 
     pdf.add_page()
     _heading(pdf, "Your responses")
-    _responses(pdf, content, state.get("answers") or {})
-    _foundation(pdf, content, state.get("foundation") or {})
+    _responses(pdf, content, entry)
 
     return bytes(pdf.output())

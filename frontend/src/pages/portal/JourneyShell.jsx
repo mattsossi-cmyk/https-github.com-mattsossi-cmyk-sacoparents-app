@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { GreyRockToggleChip } from "./AlignmentHub";
 import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentModal } from "./SelfAssessmentModal";
+import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
+import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { ChildNeedsView } from "./ChildNeedsView";
 import { FoundationStatementView } from "./FoundationStatementView";
 import { api } from "../../lib/api";
@@ -814,6 +816,7 @@ export function JourneyShell({
 
   // iter268 — new Self Journey "Assess Your Situation" modal state.
   const [assessOpen, setAssessOpen] = useState(false);
+  const saHistory = useSelfAssessmentHistory(user?.user_id);
 
   // iter266 — Both-parents-done condition. Drives the joint
   // badge chip visibility inside the finale rewards block.
@@ -1077,6 +1080,16 @@ export function JourneyShell({
           </div>
         </section>
 
+        <GoalBanner
+          testid="door-landing-goal"
+          goal={saHistory.currentGoal}
+          setAt={saHistory.latest?.completed_at}
+          onOpen={() => {
+            openDoor("self");
+            setAssessOpen(true);
+          }}
+        />
+
         <section
           data-testid="door-landing"
           className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
@@ -1327,7 +1340,10 @@ export function JourneyShell({
     return (
       <ChildNeedsView
         onBack={() => setView("self")}
-        onOpenAssess={() => setAssessOpen(true)}
+        onOpenAssess={() => {
+          setView("self");
+          setAssessOpen(true);
+        }}
         onOpenRelationship={() => onOpenGuidedJourney("coparenting")}
         onOpenFoundation={onOpenReport}
         onOpenBiffCoach={onOpenBiffCoach}
@@ -1407,6 +1423,13 @@ export function JourneyShell({
         {/* Keep clinical safety strip visible on every pass. */}
         <SafetyStrip />
 
+        <GoalBanner
+          testid="door-self-goal"
+          goal={saHistory.currentGoal}
+          setAt={saHistory.latest?.completed_at}
+          onOpen={() => setAssessOpen(true)}
+        />
+
         {/* iter268 — Hero brand banner above the 4 action cards. */}
         <section
           data-testid="door-self-brand"
@@ -1450,6 +1473,15 @@ export function JourneyShell({
                 Understand where you are today. Explore your parenting
                 circumstances, strengths, and challenges.
               </p>
+              {saHistory.latest && (
+                <p
+                  data-testid="door-self-card-assess-last"
+                  className="text-[10px] font-semibold text-purple-700 mt-1"
+                >
+                  Latest: {saHistory.latest.scores.overall}/100 ·{" "}
+                  {saHistory.history.length} completed
+                </p>
+              )}
             </div>
             <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
               <i className="fa-solid fa-chevron-right text-xs"></i>
@@ -1733,6 +1765,9 @@ export function JourneyShell({
         onOpenChange={setAssessOpen}
         parentName={greetingName}
         userId={user?.user_id}
+        history={saHistory.history}
+        onCompleted={saHistory.addEntry}
+        onQuickExit={quickExitAction}
       />
     </div>
   );
