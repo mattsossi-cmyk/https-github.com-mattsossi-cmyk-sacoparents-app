@@ -1,5 +1,7 @@
 import React from "react";
 
+import { CpProgressTile } from "../CpProgressTile";
+
 export const RATING_CHIP = {
   Excellent: "bg-emerald-100 text-emerald-900 border-emerald-300",
   Good: "bg-emerald-50 text-emerald-800 border-emerald-200",
@@ -125,6 +127,13 @@ export function CpResults({ scores, onDownload, onRetake, onClose }) {
         <button type="button" data-testid="cp-assess-retake" onClick={onRetake} className="py-2.5 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-xs font-bold transition-colors">
           <i className="fa-solid fa-rotate mr-1.5"></i>Retake the assessment
         </button>
+      </div>
+      <div data-testid="cp-assess-mediator">
+        <h4 className="text-[12px] font-extrabold text-slate-800 mb-1.5">
+          <i className="fa-solid fa-chart-line mr-1.5 text-purple-700"></i>
+          Progress Snapshot for your mediator
+        </h4>
+        <CpProgressTile onRetake={onRetake} />
       </div>
       <button type="button" data-testid="cp-assess-close" onClick={onClose} className="w-full py-2 text-xs font-semibold text-slate-500 hover:text-slate-800">
         Close
