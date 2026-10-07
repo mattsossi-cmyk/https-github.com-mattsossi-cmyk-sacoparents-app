@@ -45,6 +45,66 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-02-27 — Iter269/270 · Child-Needs View + Foundation Statement View
+
+Founder ask (two sequential mockups):
+- "When we get to item 3 - specific needs when action button is
+  pushed i want the parent to see the following" (child-needs
+  mobile mockup).
+- "when parents click on action button 4 - foundation statement -
+  i want parents directed to following page" (foundation
+  statement mockup).
+
+**Iter269 — Child-Needs sub-view (`door-view-child-needs`)**
+- New component `/app/frontend/src/pages/portal/ChildNeedsView.jsx`.
+- Reached from `door-self-card-child-needs` which now pushes
+  `setView("child_needs")` instead of opening the old picker
+  Dialog (dialog removed).
+- Brand header + hero card ("What does my child need?") with the
+  `child-needs-explore` CTA that opens the "all-needs" overview
+  checklist.
+- Three colour-coded category chips: `child-needs-cat-educational`
+  (blue), `-medical` (rose), `-psychological` (teal); each opens
+  a checklist dialog with 4 items.
+- Checkbox state persists per category in
+  `localStorage.sacoparents_child_needs_checklist_{category}` as
+  an array of checked indices.
+- Co-Parenting Roadmap (1–4) and Communication Builder repeated
+  per mockup so parents can jump back out without leaving the
+  flow.
+- Back button returns to Self Journey without clearing the door
+  memory (`setView("self")`).
+
+**Iter270 — Foundation Statement sub-view (`door-view-foundation`)**
+- New component `/app/frontend/src/pages/portal/FoundationStatementView.jsx`.
+- Reached from `door-self-card-foundation` which now pushes
+  `setView("foundation")` instead of calling `onOpenReport`
+  directly. The existing Foundation drawer is still reachable
+  from the finale rewards block in Self Journey.
+- Brand header + hero card ("A Brighter Future for Your Child")
+  with four pillars (`foundation-pillar-goals`, `-child`,
+  `-values`, `-path`), colour-coded icons per the mockup.
+- `foundation-access` button opens a `foundation-builder-dialog`
+  with six fields (parent names, child info, core hopes, child
+  needs, co-parenting principles, personal commitments).
+- Form state persists to
+  `localStorage.sacoparents_foundation_statement_v1` on every
+  change. `foundation-print` triggers `window.print()` (clinical
+  PDF lockstep preserved — no new backend PDF route).
+- Sub-banner footer "Same Goals. A Brighter Future. · Safer
+  Children · Stronger Families · Healthier Tomorrows" matches
+  the mockup.
+- Back returns to Self Journey.
+
+Both sub-views receive the existing `QuickExit` chip and the
+Safety-First strip as slot props so the clinical safety rails
+remain one tap away.
+
+No backend changes. No PDF or AI-service touch — clinical lockstep
+preserved. ESLint warnings unchanged.
+
+
+
 ### 2026-02-27 — Iter267 · Polling Jitter + Badge Preview + Pair Nudge Email
 
 Founder ask:

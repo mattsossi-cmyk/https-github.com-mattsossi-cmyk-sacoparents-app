@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "title": "Co-Parenting Self-Assessment",
+  "subtitle": "A private reflection to help you identify strengths, growth areas, and the next child-focused step.",
+  "how_to_use": "Answer based on how co-parenting is working right now, not how you hope it will work. This is a reflection tool — not a diagnosis or custody evaluation.",
+  "disclaimer": "This is a reflection tool — not a diagnosis or custody evaluation.",
+  "scale": [
+    { "value": 1, "label": "Rarely / Not true now" },
+    { "value": 2, "label": "Sometimes" },
+    { "value": 3, "label": "Often" },
+    { "value": 4, "label": "Usually / Strongly true" }
+  ],
+  "sections": [
+    {
+      "key": "A",
+      "label": "Child-Focused Parenting",
+      "questions": [
+        "I can separate my feelings about the other parent from decisions about our child.",
+        "I keep our child out of adult disagreements and avoid using the child as a messenger.",
+        "I can identify our child's current emotional, educational, medical, and developmental needs.",
+        "I support our child's relationship with the other parent when it is safe and appropriate.",
+        "I try to make parenting decisions based on what helps our child feel secure and supported."
+      ]
+    },
+    {
+      "key": "B",
+      "label": "Communication",
+      "questions": [
+        "I can communicate about our child without unnecessary criticism, blame, or personal attacks.",
+        "I share important information about school, health, activities, and schedules in a timely way.",
+        "I can keep messages brief, informative, respectful, and focused on the child when conflict is high.",
+        "I can listen for the other parent's concern even when I disagree with the proposed solution.",
+        "I use a communication method that reduces confusion and creates a useful record when needed."
+      ]
+    },
+    {
+      "key": "C",
+      "label": "Reliability, Routines & Transitions",
+      "questions": [
+        "I follow the parenting schedule and give reasonable notice when a change is needed.",
+        "I help our child move between homes without placing the child in the middle of tension.",
+        "I can maintain predictable routines while allowing reasonable flexibility when appropriate.",
+        "I make sure our child has needed school, medical, activity, and personal items for transitions.",
+        "I address transition problems directly with the other parent or an appropriate professional."
+      ]
+    },
+    {
+      "key": "D",
+      "label": "Decision-Making & Information Sharing",
+      "questions": [
+        "I understand which parenting decisions require consultation or joint decision-making.",
+        "I provide the other parent access to important records and information when appropriate.",
+        "I can discuss options before taking a fixed position on an important parenting issue.",
+        "I can identify areas where we already agree or have similar goals for our child.",
+        "When we disagree, I can focus on the specific decision rather than reopening unrelated past disputes."
+      ]
+    },
+    {
+      "key": "E",
+      "label": "Conflict Management & Boundaries",
+      "questions": [
+        "I recognize situations that tend to trigger conflict between us.",
+        "I can pause before responding when a message or event makes me angry or defensive.",
+        "I maintain appropriate boundaries and avoid monitoring or controlling the other parent's household.",
+        "I know when structured communication, mediation, therapy, or another resource may help.",
+        "I can use a conflict-resolution process instead of repeatedly arguing about the same issue."
+      ]
+    },
+    {
+      "key": "F",
+      "label": "Alignment & Readiness",
+      "questions": [
+        "I can name at least three goals I believe both parents may share for our child.",
+        "I can distinguish between an essential child need and a personal preference.",
+        "I am willing to consider more than one workable option for resolving a parenting issue.",
+        "I can describe what is going well in our co-parenting relationship, even if some areas are difficult.",
+        "I am prepared to build a child-focused Foundation Statement and identify next steps."
+      ]
+    }
+  ],
+  "tiers": [
+    { "min": 96, "title": "96–120 · Strong co-parenting practices", "body": "Protect these strengths while addressing remaining issues." },
+    { "min": 76, "title": "76–95 · Workable with growth areas", "body": "Focus on lowest sections and create specific decision structures." },
+    { "min": 56, "title": "56–75 · Significant structure helpful", "body": "Consider structured communication and child-focused mediation." },
+    { "min": 1, "title": "30–55 · High difficulty reported", "body": "Prioritize safety, structure, and professional review." }
+  ],
+  "tier_pending": "Answer all {n} questions to see your tier guidance.",
+  "foundation": {
+    "heading": "Build your child-focused foundation",
+    "going_well": "Three things going well",
+    "improve": "Three areas to improve",
+    "shared_goals": "Shared goals for our child"
+  }
+}

@@ -4,6 +4,9 @@ import { toast } from "sonner";
 
 import { GreyRockToggleChip } from "./AlignmentHub";
 import InviteCoparentCard from "../../components/InviteCoparentCard";
+import { SelfAssessmentModal } from "./SelfAssessmentModal";
+import { ChildNeedsView } from "./ChildNeedsView";
+import { FoundationStatementView } from "./FoundationStatementView";
 import { api } from "../../lib/api";
 import {
   Dialog,
@@ -809,6 +812,9 @@ export function JourneyShell({
     }
   };
 
+  // iter268 — new Self Journey "Assess Your Situation" modal state.
+  const [assessOpen, setAssessOpen] = useState(false);
+
   // iter266 — Both-parents-done condition. Drives the joint
   // badge chip visibility inside the finale rewards block.
   const pairBothDone =
@@ -1280,6 +1286,109 @@ export function JourneyShell({
   }
 
   // -----------------------------------------------------------------
+  // CHILD-NEEDS SUB-VIEW — iter269.
+  // Reached from Card 3 inside Self Journey. Back returns to Self
+  // Journey without clearing the door memory.
+  // -----------------------------------------------------------------
+  if (view === "child_needs") {
+    const quickExitChip = (
+      <button
+        type="button"
+        data-testid="door-quick-exit"
+        onClick={quickExitAction}
+        className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
+      >
+        <i className="fa-solid fa-bolt mr-1"></i>
+        Quick Exit
+      </button>
+    );
+    const safetyStrip = (
+      <div className="space-y-2">
+        <button
+          type="button"
+          data-testid="door-safety-first"
+          onClick={onOpenSafety}
+          className="w-full p-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-left transition flex items-center gap-2"
+        >
+          <i className="fa-solid fa-shield-heart"></i>
+          <span className="text-sm font-bold">Safety First</span>
+          <span className="ml-auto text-[11px] opacity-90">
+            Private · DV &amp; IPV check
+          </span>
+        </button>
+        {safetyFlag && (
+          <GreyRockToggleChip
+            onClear={onClearGreyRock}
+            onRetake={onOpenSafetyRetake}
+          />
+        )}
+      </div>
+    );
+    return (
+      <ChildNeedsView
+        onBack={() => setView("self")}
+        onOpenAssess={() => setAssessOpen(true)}
+        onOpenRelationship={() => onOpenGuidedJourney("coparenting")}
+        onOpenFoundation={onOpenReport}
+        onOpenBiffCoach={onOpenBiffCoach}
+        QuickExit={quickExitChip}
+        SafetyStrip={safetyStrip}
+      />
+    );
+  }
+
+  // -----------------------------------------------------------------
+  // FOUNDATION STATEMENT SUB-VIEW — iter270.
+  // Reached from Card 4 inside Self Journey. Back returns to Self
+  // Journey without clearing the door memory. Keeps `onOpenReport`
+  // as a secondary path (the "Open full report" affordance lives
+  // in the finale-rewards block in Self Journey).
+  // -----------------------------------------------------------------
+  if (view === "foundation") {
+    const quickExitChip = (
+      <button
+        type="button"
+        data-testid="door-quick-exit"
+        onClick={quickExitAction}
+        className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
+      >
+        <i className="fa-solid fa-bolt mr-1"></i>
+        Quick Exit
+      </button>
+    );
+    const safetyStrip = (
+      <div className="space-y-2">
+        <button
+          type="button"
+          data-testid="door-safety-first"
+          onClick={onOpenSafety}
+          className="w-full p-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-left transition flex items-center gap-2"
+        >
+          <i className="fa-solid fa-shield-heart"></i>
+          <span className="text-sm font-bold">Safety First</span>
+          <span className="ml-auto text-[11px] opacity-90">
+            Private · DV &amp; IPV check
+          </span>
+        </button>
+        {safetyFlag && (
+          <GreyRockToggleChip
+            onClear={onClearGreyRock}
+            onRetake={onOpenSafetyRetake}
+          />
+        )}
+      </div>
+    );
+    return (
+      <FoundationStatementView
+        onBack={() => setView("self")}
+        parentName={greetingName}
+        QuickExit={quickExitChip}
+        SafetyStrip={safetyStrip}
+      />
+    );
+  }
+
+  // -----------------------------------------------------------------
   // SELF JOURNEY SUB-VIEW
   // -----------------------------------------------------------------
   const biffCountLabel =
@@ -1292,234 +1401,234 @@ export function JourneyShell({
       <section data-testid="door-view-self" className="space-y-4">
         <SubViewHeader
           title="Self Journey"
-          subtitle="Private safety check, three choices to start, and your reports — all in one place."
+          subtitle="Take the next step to build a safer, calmer, and more child-focused future."
         />
 
+        {/* Keep clinical safety strip visible on every pass. */}
         <SafetyStrip />
 
-        <div data-testid="door-self-abc" className="space-y-2">
-          <SectionLabel testid="door-self-abc-label">
-            Choose where to start
-          </SectionLabel>
-          {PRIMARY_MODULES.map((m) => renderModuleRow(m))}
-        </div>
-
-        <div className="space-y-2">
-          <SectionLabel testid="door-self-journey-label">
-            Co-parenting journey
-          </SectionLabel>
-          <button
-            type="button"
-            data-testid="door-self-coparenting"
-            onClick={() => onOpenGuidedJourney("coparenting")}
-            className="w-full text-left bg-white hover:bg-purple-50 border border-purple-300 rounded-xl p-3 transition flex items-center gap-3"
-          >
-            <div className="shrink-0 w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
-              <i className="fa-solid fa-chart-line"></i>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-slate-900">
-                Take or re-take the 40-Q check
-              </div>
-              <p className="text-[11px] text-slate-600 mt-0.5">
-                Track how we're doing as co-parents over time.
-              </p>
-            </div>
-            <i className="fa-solid fa-arrow-right text-slate-400"></i>
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          <SectionLabel testid="door-self-selfassessment-label">
-            Self assessment
-          </SectionLabel>
-          <a
-            href={selfAssessmentUrl}
-            target="_blank"
-            rel="noreferrer"
-            data-testid="door-self-selfassessment"
-            className="block w-full text-left bg-white hover:bg-indigo-50 border border-indigo-300 rounded-xl p-3 transition flex items-center gap-3"
-          >
-            <div className="shrink-0 w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
-              <i className="fa-solid fa-wand-magic-sparkles"></i>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-slate-900">
-                40-question interactive preview
-              </div>
-              <p className="text-[11px] text-slate-600 mt-0.5">
-                Try the self-assessment without saving anything.
-              </p>
-            </div>
-            <i className="fa-solid fa-arrow-up-right-from-square text-slate-400 text-xs"></i>
-          </a>
-        </div>
-
-        <div className="space-y-2">
-          <SectionLabel testid="door-self-alignment-label">
-            Alignment reports
-          </SectionLabel>
-          <div className="grid grid-cols-3 gap-1.5">
-            {[
-              {
-                key: "educational",
-                label: "Educational",
-                icon: "fa-graduation-cap",
-                hover: "hover:bg-emerald-50",
-                border: "border-emerald-200",
-                color: "text-emerald-800",
-              },
-              {
-                key: "medical",
-                label: "Medical",
-                icon: "fa-stethoscope",
-                hover: "hover:bg-sky-50",
-                border: "border-sky-200",
-                color: "text-sky-800",
-              },
-              {
-                key: "psychological",
-                label: "Psychological",
-                icon: "fa-brain",
-                hover: "hover:bg-fuchsia-50",
-                border: "border-fuchsia-200",
-                color: "text-fuchsia-800",
-              },
-            ].map((d) => {
-              const status = progressByTopic?.[d.key] || "not_yet";
-              return (
-                <button
-                  key={d.key}
-                  type="button"
-                  data-testid={`door-self-alignment-${d.key}`}
-                  data-status={status}
-                  onClick={() => onOpenGuidedJourney(d.key)}
-                  className={`relative text-center bg-white ${d.hover} border ${d.border} ${d.color} rounded-lg py-2 px-1 text-[11px] font-semibold transition`}
-                >
-                  {status === "completed" && (
-                    <span className="absolute top-1 right-1 text-emerald-600 text-[10px]">
-                      <i className="fa-solid fa-check"></i>
-                    </span>
-                  )}
-                  <i className={`fa-solid ${d.icon} block text-sm mb-0.5`}></i>
-                  {d.label}
-                </button>
-              );
-            })}
+        {/* iter268 — Hero brand banner above the 4 action cards. */}
+        <section
+          data-testid="door-self-brand"
+          className="text-center bg-gradient-to-b from-purple-50 to-white border border-purple-100 rounded-2xl py-5 px-4"
+        >
+          <div className="text-[22px] font-extrabold text-purple-800 leading-none">
+            SA CoParents
           </div>
-        </div>
+          <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-purple-700 mt-1">
+            Start With Alignment, End With Agreement
+          </div>
+          <h2 className="text-lg font-extrabold text-purple-900 mt-3">
+            Welcome to SA CoParents
+          </h2>
+          <p className="text-xs text-slate-600 mt-1 leading-snug px-2">
+            Take the next step to build a safer, calmer, and more
+            child-focused future.
+          </p>
+        </section>
 
-        <div className="space-y-2">
-          <SectionLabel testid="door-self-foundation-label">
-            Foundation statements
-          </SectionLabel>
+        {/* iter268 — 4 numbered action cards, matching the mockup. */}
+        <div data-testid="door-self-actions" className="space-y-3">
+          {/* Card 1 — Assess Your Situation (opens the new modal). */}
           <button
             type="button"
-            data-testid="door-self-foundation"
-            onClick={onOpenReport}
-            className="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 rounded-xl p-3 transition flex items-center gap-3"
+            data-testid="door-self-card-assess"
+            onClick={() => setAssessOpen(true)}
+            className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
           >
-            <div className="shrink-0 w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center">
-              <i className="fa-solid fa-file-lines"></i>
+            <div className="shrink-0 w-9 h-9 rounded-full bg-violet-500 text-white font-extrabold flex items-center justify-center">
+              1
+            </div>
+            <div className="shrink-0 w-12 h-12 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center">
+              <i className="fa-solid fa-magnifying-glass-chart text-lg"></i>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-slate-900">
-                Foundation Statement
+              <div className="text-sm font-bold text-slate-900 leading-tight">
+                Assess Your Situation
               </div>
-              <p className="text-[11px] text-slate-600 mt-0.5">
-                Open to review, edit, or export the PDF.
+              <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                Understand where you are today. Explore your parenting
+                circumstances, strengths, and challenges.
               </p>
             </div>
-            <i className="fa-solid fa-arrow-right text-slate-400"></i>
-          </button>
-          <button
-            type="button"
-            data-testid="door-self-replay-celebration"
-            onClick={replayCelebration}
-            className="w-full text-left bg-white hover:bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 text-[11px] font-semibold text-purple-800 transition flex items-center gap-2"
-          >
-            <i className="fa-solid fa-wand-sparkles"></i>
-            Replay celebration
-            <span className="ml-auto text-[10px] text-slate-500">
-              Relive your reflection wins
-            </span>
+            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i className="fa-solid fa-chevron-right text-xs"></i>
+            </div>
           </button>
 
-          {/* iter263 — Celebration Share + Partner Invite nudge.
-              Both are only visible once the all-three finale has
-              been earned. The Partner Invite chip is additionally
-              hidden when the parent is safety-flagged (defence in
-              depth with the backend IPV gate). */}
-          {allThreeDone && (
-            <div
-              data-testid="door-self-finale-rewards"
-              className="rounded-xl border border-purple-200 bg-purple-50/70 p-3 space-y-2"
-            >
-              <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
-                Keep your momentum
+          {/* Card 2 — Understand Your Relationship → coparenting 40-Q. */}
+          <button
+            type="button"
+            data-testid="door-self-card-relationship"
+            onClick={() => onOpenGuidedJourney("coparenting")}
+            className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
+          >
+            <div className="shrink-0 w-9 h-9 rounded-full bg-indigo-500 text-white font-extrabold flex items-center justify-center">
+              2
+            </div>
+            <div className="shrink-0 w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center">
+              <i className="fa-solid fa-users text-lg"></i>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-bold text-slate-900 leading-tight">
+                Understand Your Relationship
               </div>
+              <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                Explore your co-parenting dynamic. Look at communication
+                patterns, co-parenting styles, and areas of alignment
+                and difference.
+              </p>
+            </div>
+            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i className="fa-solid fa-chevron-right text-xs"></i>
+            </div>
+          </button>
+
+          {/* Card 3 — Identify Your Child's Specific Needs. */}
+          <button
+            type="button"
+            data-testid="door-self-card-child-needs"
+            onClick={() => setView("child_needs")}
+            className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
+          >
+            <div className="shrink-0 w-9 h-9 rounded-full bg-emerald-500 text-white font-extrabold flex items-center justify-center">
+              3
+            </div>
+            <div className="shrink-0 w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <i className="fa-solid fa-child-reaching text-lg"></i>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-bold text-slate-900 leading-tight">
+                Identify Your Child's Specific Needs
+              </div>
+              <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                Focus on what matters most. Explore your child's
+                well-being, education, development, health, and stability.
+              </p>
+            </div>
+            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i className="fa-solid fa-chevron-right text-xs"></i>
+            </div>
+          </button>
+
+          {/* Card 4 — Create Your Foundation Statement. */}
+          <button
+            type="button"
+            data-testid="door-self-card-foundation"
+            onClick={() => setView("foundation")}
+            className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-orange-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
+          >
+            <div className="shrink-0 w-9 h-9 rounded-full bg-orange-500 text-white font-extrabold flex items-center justify-center">
+              4
+            </div>
+            <div className="shrink-0 w-12 h-12 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center">
+              <i className="fa-solid fa-file-pen text-lg"></i>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-bold text-slate-900 leading-tight">
+                Create Your Foundation Statement
+              </div>
+              <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                Define your shared goals and values. Build the
+                foundation for productive discussions and future
+                agreements.
+              </p>
+            </div>
+            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i className="fa-solid fa-chevron-right text-xs"></i>
+            </div>
+          </button>
+        </div>
+
+        {/* Communication Builder — the big purple hero card. */}
+        <button
+          type="button"
+          data-testid="door-self-card-biff"
+          onClick={onOpenBiffCoach}
+          className="w-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-purple-300 hover:border-purple-700 rounded-2xl p-4 shadow-md hover:shadow-lg transition flex items-center gap-3 text-left"
+        >
+          <div className="shrink-0 w-14 h-14 rounded-full bg-purple-700 text-white flex items-center justify-center">
+            <i className="fa-solid fa-comments text-xl"></i>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-extrabold text-purple-900 leading-tight">
+              SA CoParent Communication Builder
+            </div>
+            <p className="text-[11px] text-slate-700 mt-0.5 leading-snug">
+              Get support for clearer, calmer, and more effective
+              co-parent communication. Build messages, learn strategies,
+              reduce misunderstandings.
+            </p>
+            <p
+              data-testid="door-self-biff-count"
+              className="text-[10px] text-purple-800/80 mt-0.5"
+            >
+              {biffCountLabel}.
+            </p>
+          </div>
+          <div className="shrink-0 w-10 h-10 rounded-full bg-purple-700 text-white flex items-center justify-center">
+            <i className="fa-solid fa-chevron-right text-sm"></i>
+          </div>
+        </button>
+
+        {/* Keep the finale rewards block (badges + partner invite).
+            Only visible once the all-three finale is earned. */}
+        {allThreeDone && (
+          <div
+            data-testid="door-self-finale-rewards"
+            className="rounded-xl border border-purple-200 bg-purple-50/70 p-3 space-y-2"
+          >
+            <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
+              Keep your momentum
+            </div>
+            <button
+              type="button"
+              data-testid="door-self-replay-celebration"
+              onClick={replayCelebration}
+              className="w-full text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg px-3 py-2 text-[11px] font-semibold text-purple-800 transition flex items-center gap-2"
+            >
+              <i className="fa-solid fa-wand-sparkles"></i>
+              Replay celebration
+              <span className="ml-auto text-[10px] text-slate-500">
+                Relive your reflection wins
+              </span>
+            </button>
+            <button
+              type="button"
+              data-testid="door-self-share-badge"
+              onClick={() => openBadgePreview("solo")}
+              className="w-full text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-purple-900 transition flex items-center gap-2"
+            >
+              <i className="fa-solid fa-award"></i>
+              Save my Reflection Milestone badge
+              <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[10px]"></i>
+            </button>
+            {pairBothDone && (
               <button
                 type="button"
-                data-testid="door-self-share-badge"
-                onClick={() => openBadgePreview("solo")}
-                className="w-full text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-purple-900 transition flex items-center gap-2"
+                data-testid="door-self-share-joint-badge"
+                onClick={() => openBadgePreview("joint")}
+                className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-emerald-900 transition flex items-center gap-2"
               >
                 <i className="fa-solid fa-award"></i>
-                Save my Reflection Milestone badge
+                Save our Shared Reflection Milestone badge
                 <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[10px]"></i>
               </button>
-              {pairBothDone && (
-                <button
-                  type="button"
-                  data-testid="door-self-share-joint-badge"
-                  onClick={() => openBadgePreview("joint")}
-                  className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-emerald-900 transition flex items-center gap-2"
-                >
-                  <i className="fa-solid fa-award"></i>
-                  Save our Shared Reflection Milestone badge
-                  <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[10px]"></i>
-                </button>
-              )}
-              {!safetyFlag && (
-                <button
-                  type="button"
-                  data-testid="door-self-invite-partner"
-                  onClick={() => setInviteOpen(true)}
-                  className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-emerald-900 transition flex items-center gap-2"
-                >
-                  <i className="fa-solid fa-user-plus"></i>
-                  Invite the other parent
-                  <i className="fa-solid fa-arrow-right ml-auto text-slate-400 text-[10px]"></i>
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <SectionLabel testid="door-self-communication-label">
-            Communication Builder
-          </SectionLabel>
-          <button
-            type="button"
-            data-testid="door-self-biff"
-            onClick={onOpenBiffCoach}
-            className="w-full text-left bg-white hover:bg-amber-50 border border-amber-300 rounded-xl p-3 transition flex items-center gap-3"
-          >
-            <div className="shrink-0 w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
-              <i className="fa-solid fa-wand-magic-sparkles"></i>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-slate-900">
-                BIFF rewrite + growth record
-              </div>
-              <p className="text-[11px] text-slate-600 mt-0.5">
-                {biffCountLabel}.
-              </p>
-            </div>
-            <i className="fa-solid fa-arrow-right text-slate-400"></i>
-          </button>
-        </div>
+            )}
+            {!safetyFlag && (
+              <button
+                type="button"
+                data-testid="door-self-invite-partner"
+                onClick={() => setInviteOpen(true)}
+                className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-emerald-900 transition flex items-center gap-2"
+              >
+                <i className="fa-solid fa-user-plus"></i>
+                Invite the other parent
+                <i className="fa-solid fa-arrow-right ml-auto text-slate-400 text-[10px]"></i>
+              </button>
+            )}
+          </div>
+        )}
 
         {!pathPickedAt && (
           <button
@@ -1533,6 +1642,7 @@ export function JourneyShell({
           </button>
         )}
       </section>
+
 
       {/* iter263 — Partner Invite Dialog. Wraps the existing
           `InviteCoparentCard`, which itself calls the backend
@@ -1616,6 +1726,14 @@ export function JourneyShell({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* iter268 — Self-Assessment modal, triggered by Card 1. */}
+      <SelfAssessmentModal
+        open={assessOpen}
+        onOpenChange={setAssessOpen}
+        parentName={greetingName}
+        userId={user?.user_id}
+      />
     </div>
   );
 }
