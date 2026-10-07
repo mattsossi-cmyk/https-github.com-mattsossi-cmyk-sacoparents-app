@@ -188,7 +188,7 @@ async def self_journey_weekly_note_cron(
 
     async def _run() -> None:
         try:
-            stats = await send_weekly_notes(db, app_url=origin, api_url=origin)
+            stats = await send_weekly_notes(db, api_url=origin)
             logger.info("self-journey-weekly-note cron run_id=%s stats=%s", run_id, stats)
         except Exception as exc:  # noqa: BLE001
             logger.exception("self-journey-weekly-note cron run_id=%s failed: %s", run_id, exc)

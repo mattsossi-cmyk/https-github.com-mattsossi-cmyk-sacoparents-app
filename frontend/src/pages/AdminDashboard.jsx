@@ -23,6 +23,7 @@ import {
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
 import ReleaseCheckTile from "../components/ReleaseCheckTile";
+import WeeklyNoteStatsTile from "../components/WeeklyNoteStatsTile";
 
 const FUNNEL_STEPS = [
   { key: "child_goals", label: "Child Goals" },
@@ -546,6 +547,8 @@ export default function AdminDashboard() {
         </div>
 
         <ReleaseCheckTile />
+
+        <WeeklyNoteStatsTile />
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Signup chart */}

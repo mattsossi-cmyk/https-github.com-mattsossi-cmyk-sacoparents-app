@@ -19,13 +19,27 @@ from self_assessment_reminders import is_safety_flagged
 logger = logging.getLogger(__name__)
 
 UNSUB_KIND = "sj_weekly_unsub"
+CLICK_KIND = "sj_weekly_click"
 NOTES = "self_journey_weekly_notes"
 PREFS = "self_journey_weekly_prefs"
 CN_NAMES = {"medical": "Medical", "educational": "Educational", "psychological": "Psychological"}
+RETURN_WINDOW = timedelta(days=7)
 
 
 def make_unsubscribe_token(user_id: str) -> str:
     return jwt.encode({"kind": UNSUB_KIND, "sub": user_id}, JWT_SECRET, algorithm=JWT_ALGO)
+
+
+def make_click_token(user_id: str, week_key: str) -> str:
+    return jwt.encode({"kind": CLICK_KIND, "sub": user_id, "wk": week_key}, JWT_SECRET, algorithm=JWT_ALGO)
+
+
+def read_click_token(token: str) -> Optional[Dict[str, str]]:
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO], options={"require": ["kind", "sub", "wk"]})
+    except jwt.PyJWTError:
+        return None
+    return payload if payload.get("kind") == CLICK_KIND else None
 
 
 def read_unsubscribe_token(token: str) -> Optional[str]:
@@ -96,7 +110,7 @@ def build_highlights(a: Dict[str, Any]) -> List[str]:
 
 
 async def send_weekly_notes(
-    db: AsyncIOMotorDatabase, *, app_url: str, api_url: str, now: Optional[datetime] = None,
+    db: AsyncIOMotorDatabase, *, api_url: str, now: Optional[datetime] = None,
 ) -> Dict[str, int]:
     from email_service import EmailNotConfigured, EmailSendError, send_self_journey_weekly_note
 
@@ -130,7 +144,7 @@ async def send_weekly_notes(
                 to_email=user["email"],
                 first_name=(user.get("name") or "").split(" ")[0] or None,
                 highlights=highlights,
-                cta_url=f"{app_url.rstrip('/')}/dashboard",
+                cta_url=f"{api_url.rstrip('/')}/api/self-journey/weekly-note/open?token={make_click_token(user_id, week)}",
                 unsubscribe_url=f"{api_url.rstrip('/')}/api/self-journey/weekly-note/unsubscribe"
                                 f"?token={make_unsubscribe_token(user_id)}",
             )
@@ -145,3 +159,40 @@ async def send_weekly_notes(
             upsert=True,
         )
     return stats
+
+
+async def came_back(db: AsyncIOMotorDatabase, user_id: str, start: str, end: str) -> bool:
+    rng = {"$gt": start, "$lte": end}
+    if await db.self_assessment_history.find_one({"user_id": user_id, "completed_at": rng}, {"_id": 1}):
+        return True
+    if await db.self_assessment_checkins.find_one({"user_id": user_id, "created_at": rng}, {"_id": 1}):
+        return True
+    if await db.cp_report_history.find_one({"_id": user_id, "snapshots": {"$elemMatch": {"submitted_at": rng}}}, {"_id": 1}):
+        return True
+    for coll in ("child_needs_assessments", "foundation_builder"):
+        if await db[coll].find_one({"user_id": user_id, "updated_at": rng}, {"_id": 1}):
+            return True
+    return False
+
+
+async def weekly_stats(db: AsyncIOMotorDatabase, *, weeks: int = 8, now: Optional[datetime] = None) -> Dict[str, Any]:
+    now = now or datetime.now(timezone.utc)
+    keys = sorted(await db[NOTES].distinct("week_key", {"status": "sent"}), reverse=True)[:weeks]
+    rows = []
+    for wk in keys:
+        notes = await db[NOTES].find({"week_key": wk, "status": "sent"}, {"_id": 0}).to_list(10000)
+        progressed = 0
+        for n in notes:
+            end = (datetime.fromisoformat(n["sent_at"]) + RETURN_WINDOW).isoformat()
+            progressed += await came_back(db, n["user_id"], n["sent_at"], end)
+        first = min(n["sent_at"] for n in notes)
+        rows.append({
+            "week_key": wk,
+            "sent_on": first,
+            "sent": len(notes),
+            "progressed": progressed,
+            "clicked": sum(1 for n in notes if n.get("clicked_at")),
+            "counting": now < datetime.fromisoformat(max(n["sent_at"] for n in notes)) + RETURN_WINDOW,
+        })
+    totals = {k: sum(r[k] for r in rows) for k in ("sent", "progressed", "clicked")}
+    return {"weeks": rows, "totals": totals}

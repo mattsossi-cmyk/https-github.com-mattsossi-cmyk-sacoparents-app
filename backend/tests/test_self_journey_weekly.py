@@ -152,14 +152,13 @@ class TestSendWeeklyNotes:
 
             now = datetime.now(timezone.utc)
             # Only match our seeded users via collect_activity scope (fine since they have activity)
-            stats = await send_weekly_notes(db, app_url="https://app.example.com",
-                                            api_url="https://api.example.com", now=now)
+            stats = await send_weekly_notes(db, api_url="https://api.example.com", now=now)
 
             # Our active test user got exactly one call
             matching = [c for c in calls if c["to_email"] == f"{active}@example.com"]
             assert len(matching) == 1, f"expected 1 call for active, got {len(matching)}: {calls}"
             c = matching[0]
-            assert c["cta_url"] == "https://app.example.com/dashboard"
+            assert c["cta_url"].startswith("https://api.example.com/api/self-journey/weekly-note/open?token=")
             assert c["unsubscribe_url"].startswith(
                 "https://api.example.com/api/self-journey/weekly-note/unsubscribe?token=")
             # Highlights include foundation + practised days (fb True, days=3)
@@ -182,8 +181,7 @@ class TestSendWeeklyNotes:
 
             # Second run same week: should NOT send to our active user again
             before = len(calls)
-            stats2 = await send_weekly_notes(db, app_url="https://app.example.com",
-                                             api_url="https://api.example.com", now=now)
+            stats2 = await send_weekly_notes(db, api_url="https://api.example.com", now=now)
             matching2 = [c for c in calls[before:] if c["to_email"] == f"{active}@example.com"]
             assert matching2 == []
             assert stats2["already_sent"] >= 1

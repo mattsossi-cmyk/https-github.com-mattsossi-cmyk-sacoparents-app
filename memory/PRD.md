@@ -8625,5 +8625,12 @@ dashboard for sharing SELECTED completed reports with any professional.
   - Sent only to parents with Self Journey activity in the last 7 days: Card 1 completions, practice check-ins + streak, Card 2 snapshots, Card 3 categories, Card 4 updated.
   - Subject: "Your weekly note". Safety-flagged parents are skipped; separate one-tap unsubscribe (`GET /api/self-journey/weekly-note/unsubscribe`, prefs in `self_journey_weekly_prefs`); one note per user per ISO week (`self_journey_weekly_notes`). Links use the cron request's origin.
 - Tests: `/app/backend/tests/test_self_journey_weekly.py`.
+
+## 2026-06 — Weekly note stats (self-tested: curl + in-process + screenshots; pytest 25/25)
+- The email button now goes through a tracked link, `GET /api/self-journey/weekly-note/open?token=` (signed JWT, kind `sj_weekly_click`, sub + wk). It records the first `clicked_at` on the note doc, then always 302s to `<request origin>/dashboard`, so there's no open redirect.
+- "Came back with progress" means any Self Journey activity within 7 days after `sent_at`: Card 1 entry, check-in `created_at`, Card 2 snapshot, Card 3/4 `updated_at` (`came_back()`).
+- `GET /api/admin/self-journey-weekly/stats` (admin only) returns the last 8 ISO weeks: sent, progressed, clicked, and a `counting` flag while the 7-day window is still open, plus totals.
+- `WeeklyNoteStatsTile.jsx` on /admin, under the Release check tile: totals cards, a weekly table, and an empty state explaining that the first notes go out Sunday 5pm CT.
+- Still pending from the earlier ask (no answers yet): the live address allowlist (needs the URL), the weekly note sample button, and custom domain steps.
 - Still pending from earlier: user check of the Card 4 Foundation Statement PDF (one signature/date line).
 
