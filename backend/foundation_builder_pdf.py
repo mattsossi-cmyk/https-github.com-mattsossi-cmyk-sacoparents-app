@@ -87,16 +87,14 @@ def _signatures(pdf: _FBPDF, content: Dict[str, Any]) -> None:
     pdf.set_draw_color(*MUTED)
     pdf.set_font("Helvetica", "", 8.5)
     pdf.set_text_color(*MUTED)
-    for _ in range(2):
-        y = pdf.get_y() + 10
-        pdf.line(pdf.l_margin, y, pdf.l_margin + 110, y)
-        pdf.line(pdf.l_margin + 125, y, pdf.w - pdf.r_margin, y)
-        pdf.set_xy(pdf.l_margin, y + 1)
-        pdf.cell(110, 4, _safe(content["signature_label"]))
-        pdf.set_x(pdf.l_margin + 125)
-        pdf.cell(0, 4, _safe(content["date_label"]), new_x="LMARGIN", new_y="NEXT")
-        pdf.ln(2)
-    pdf.ln(4)
+    y = pdf.get_y() + 10
+    pdf.line(pdf.l_margin, y, pdf.l_margin + 110, y)
+    pdf.line(pdf.l_margin + 125, y, pdf.w - pdf.r_margin, y)
+    pdf.set_xy(pdf.l_margin, y + 1)
+    pdf.cell(110, 4, _safe(content["signature_label"]))
+    pdf.set_x(pdf.l_margin + 125)
+    pdf.cell(0, 4, _safe(content["date_label"]), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(6)
 
 
 def build_foundation_builder_pdf(*, content: Dict[str, Any], fields: Dict[str, str]) -> bytes:

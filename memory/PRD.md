@@ -106,6 +106,12 @@ save every completed run, measure the parent against themselves, set a goal.
 - Testing: iteration_92 (backend 60/60) + iteration_93 (frontend 100%); line-graph swap self-tested (PDF render + 390px screenshot).
 - Seeded test data on parent1: grey_rock_audit (2), 1 biff_pair snapshot, completed 67-Q run.
 
+**Iter277–278 (2026-06) · Landing welcome image + Card 4 saving/PDF**
+- Landing: old `door-hero` banner removed; founder "Welcome to SA CoParents" artwork (`/images/sa-welcome*.webp`, compressed from 1.9MB PNG) sits UNDER the two door buttons with 3 tappable hotspots (self / court / BIFF Communication Builder); Goal card + 6-step roadmap below it.
+- Card 4 Foundation Statement builder: `foundation_builder_routes.py` GET/PUT `/api/foundation-builder/me` (latest only, overwrite), POST `/pdf` (public, branded, ONE parent signature + date line per founder). Copy `foundation_builder_content.json` == `frontend/.../foundationBuilderContent.json`. Hook `portal/foundation/useFoundationBuilder.js` (autosave 1s debounce, legacy localStorage key migrated). "Saved ✓ · Edit" on tile + Access button. Older reflection-based Foundation Statement (mediation_routes) untouched.
+- Testing: iteration_94 100% (backend 10/10, frontend all areas); single-signature change self-tested.
+- Deployment health check: PASS (no blockers).
+
 **Next / backlog:** to 65-Q backend
 assessment (orphaned); Mediator PDF grey-rock timeline (P1); post-deploy smoke
 script (P1); prod env toggles (digest, PUBLIC_BACKEND_URL, domain split).

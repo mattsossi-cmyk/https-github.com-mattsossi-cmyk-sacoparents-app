@@ -1,0 +1,38 @@
+{
+  "summary": "Iteration 94 — Tested Card 4 Foundation Builder (backend + frontend) and the new /dashboard landing (welcome image replaces 'A Brighter Future' banner, 3 hotspots). All 10 backend tests pass (3 unit + 7 HTTP). All 6 frontend acceptance areas pass: landing layout/order/overflow, image load (sa-welcome-768.webp, naturalWidth=390, alt text present), hero removed, hotspots open Self/Court/BIFF correctly with aria-labels, Card 4 autosave pending→saved, PDF download, saved badges on tile + access button, persistence after reload, and legacy mediation foundation-statement endpoint still reachable.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/foundation-builder/pdf", "issue": "Content-Disposition filename uses sanitized parent_names; when empty it falls back to literal 'me' (SA_CoParents_Foundation_Statement_me.pdf). Spec says '<name>' — fallback is reasonable but worth documenting."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Self Journey (inside door-self)", "issues": ["The 'Welcome to SA CoParents / Take the next step to build a safer, calmer, and more child-focused future.' banner (A Brighter Future-style) is still rendered inside Self Journey sub-view below the card grid. Spec said replace it on LANDING only — present behaviour is correct per the request, flagging for awareness."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_foundation_builder.py",
+    "/app/backend/tests/test_foundation_builder_http.py",
+    "/app/test_reports/pytest/iteration_94_fb_http.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "foundation_builder_routes.py is small, clean, async-correct, excludes _id in GET projection, caps field length (3000), drops unknown keys — looks good.",
+    "PUT /me overwrites by setting the entire fields dict ($set), which matches the 'keep only latest / overwrite' spec. Confirmed via test_put_me_overwrite_replaces.",
+    "Lockstep JSON copy test (frontend/src/pages/portal/foundationBuilderContent.json ≡ backend/foundation_builder_content.json) is in place and passing.",
+    "POST /pdf is public by design (localStorage-first portal) — comment documents this intentionally."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_foundation_builder_http.py (new — HTTP coverage for GET/PUT/POST + legacy regression)"
+  ],
+  "success_rate": {"backend": "100% (10/10 passing: 3 unit + 7 HTTP)", "frontend": "100% on tested acceptance criteria"},
+  "test_credentials": "parent1@test.com / TestPass123! (used; existing saved core_goals preserved/restored after destructive overwrite test)",
+  "seed_data_creation": "Restored parent1 foundation builder record to {parent_names: 'Sarah & Mark', core_goals: 'Emma feels safe — always.'} after overwrite test so UI shows Saved ✓ state.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Landing layout verified at 390px mobile — door-landing (buttons) at y=86, door-welcome-image at y=415 (img /images/sa-welcome-768.webp, naturalWidth=390, alt describes 3 paths), door-landing-goal at y=967, door-journey-roadmap at y=1203. No horizontal overflow. door-hero is confirmed removed. Hotspot aria-labels: self='Open Individual Journey', court='Open Court Ordered Path', comm='Open the Communication Builder'. Clicking comm hotspot opens the BIFF Communication Builder modal (text 'BIFF Communication Builder' + 'DE-ESCALATION ENGINE'). Clicking court hotspot opens the Court Ordered sub-view (A/B/C cards: Child Needs, Co-Parenting Dynamics, Conflict Readiness). Clicking self hotspot opens Self Journey with Card 4 (foundation). Card 4: foundation-save-status data-status transitions pending→saved on autosave while signed in; foundation-save closes dialog; filename returned 'SA_CoParents_Foundation_Statement.pdf' (name-less fallback). Safety First strip (text 'Safety First Private · DV & IPV check') and Quick Exit (data-testid='door-quick-exit') are present on Self Journey, Court view, and Foundation view. Note: legal-ack modal re-appears on first entry into every door even for returning users — gate with tick+continue in tests.",
+  "rca_of_the_issue": "No bugs — all acceptance criteria met."
+}
