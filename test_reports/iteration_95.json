@@ -1,0 +1,35 @@
+{
+  "summary": "Iteration 95 - Comprehensive backend + frontend verification of the SA CoParents release-check feature, the new welcome-artwork hotspots (landing + court view), the Safety-strip/Grey-rock removal on Card 3 + Card 4 sub-screens + Self + Court views, the roadmap deletion from the dashboard landing, and the Card 2 title rename. All 8 backend tests pass (admin GET/POST auth gating, 9-result manual run, cron 401/401/200 flow with daily run appearing). All frontend acceptance criteria pass: 3 landing hotspots have sa-hotspot-pulse class on mount, hover produces computed box-shadow rgba(147,51,234,...), door-journey-roadmap is absent, Court view shows door-court-welcome-image above door-court-abc, Self view shows door-self-welcome-image between goal and door-self-actions, Card 2 tile reads 'Understand Your Co-Parenting Relationship', door-safety-first is absent on landing+court+self+Card 3+Card 4 views, 'Grey-rock mode is on' text absent on all sub-screens, door-quick-exit still visible everywhere a sub-view is active, and the 'In danger?' bar at the bottom stays. Admin /admin tile shows status 'All checks passed', 9-row result list, history dots (2+ runs), 'Run check now' button correctly flips to 'Checking...' then re-populates results.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Court view ABC smooth-scroll (desktop 1920x1080)", "issues": ["door-court-welcome-hotspot-court does smooth-scroll into view, but at desktop 1920x1080 the page is only 1478px tall (scrollH), so maxScroll=398 and door-court-abc lands at top=450px (not 0-30px). On mobile viewports the page is tall enough and this is non-issue. Not a bug - just note the acceptance thresholds in the review request assume shorter viewports. ABC list ends up fully visible mid-screen on desktop, which is still correct UX."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_release_check.py",
+    "/app/test_reports/pytest/iteration_95_release_check.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "release_check.py is small (~200 lines), well-structured, and correctly separates concerns (checks, timed runner, run_release_check, _maybe_alert with 12h dedupe, post_boot_release_check with preview-host guard).",
+    "cron_routes.py uses hmac.compare_digest for the shared secret and refuses when WEBHOOK_CRON_SECRET is unset - good constant-time check and fail-closed default.",
+    "ReleaseCheckTile placement after the top stats block on /admin is appropriate; the 9-row results list uses stable keys and status indicators.",
+    "scrollIntoView usage with scroll-mt-4 (16px) is correct; the perceived 'not reaching top=0' on desktop is a viewport-size artifact (short page), not a bug."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_release_check.py (new - 8 tests for admin GET/POST + cron POST contracts)"
+  ],
+  "success_rate": {"backend": "100% (8/8 passing)", "frontend": "100% on tested acceptance criteria"},
+  "test_credentials": "parent1@test.com / TestPass123! and mattsossi@bsossi.com / AdminPass123! (WEBHOOK_CRON_SECRET read from /app/backend/.env for cron test)",
+  "seed_data_creation": "Each test run inserts one 'manual' and one 'daily' release_checks document in Mongo via the real endpoints. These accumulate; prune /release_checks collection if desired.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Landing door-self-* testids only expose door-self at the landing level; sub-items (door-self-card-assess/relationship/child-needs/foundation/biff/...) only appear inside door-view-self. The portal remembers the last door via localStorage, so after login you can land directly in Self or Court - use the Back button to return to landing. Legal-ack modal is bypassed by seeding sac_legal_ack_v1 via page.add_init_script before navigation. Hotspot pulse is a one-time CSS animation (sa-hotspot-pulse); its className persists on the element even after the animation ends, that is normal and does not block hover glow. The 'All three reflections complete' sonner toast appears on the Court view and overlaps the bottom-left area but not the ABC list or hotspots. For admin tests, the manual Run button is synchronous (POST /api/admin/release-checks/run returns after all 9 checks finish, ~1-2s in preview).",
+  "rca_of_the_issue": "No bugs found - every tested acceptance criterion in the review request is met."
+}

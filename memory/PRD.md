@@ -8605,5 +8605,18 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Dashboard landing order is now: welcome artwork (3 tappable cards) → "Pick your door" + Court Ordered / Self Journey buttons → goal card → journey roadmap. This replaces the earlier "doors → artwork" order.
 - The "Safety First" bar and the Grey-rock chip were removed from the Self Journey and Court Ordered screens (user request), and the unused `SafetyStrip` was deleted. What stays: the pre-door safety gate, Quick Exit, the "In danger?" bar, grey-rock behaviour, and the Grey-rock chip on the Card 3/Card 4 sub-screens, BIFF and Alignment Hub.
 - The test goals (`TEST_*`) were blanked in the preview DB and their check-ins deleted. The goal card still renders for real goals.
+
+## 2026-06 — Cleanup, tap glow, Court artwork, release check (iteration_95: all passed)
+- The Safety First bar and grey-rock note were also removed from the Card 3 and Card 4 sub-screens. Quick Exit and the "In danger?" bar remain.
+- The "Your Co-Parenting Journey" 6-step roadmap was deleted from the dashboard landing. Landing order: artwork → doors → goal card.
+- Card 2 is renamed "Understand Your Co-Parenting Relationship" (tile + modal title). The text baked into the artwork image is unchanged.
+- WelcomeArtwork hotspots now glow purple on hover/tap (`.sa-hotspot`) and pulse once after the image loads (`.sa-hotspot-pulse`, fill-mode backwards so the hover glow still works). Reduced-motion users get no pulse.
+- The Court Ordered screen shows the artwork under its header (`door-court-welcome-image`). Hotspots: self → Self Journey, court → scrolls to `door-court-abc`, comm → BIFF.
+- Release check (`release_check.py`): runs 9 checks (3 pages, app JS bundle, /api/health, Card 1/3/4 PDFs over HTTP, Mediator PDF in-process). Triggers:
+  - post-boot, 90s after start; retries once after 90s before alerting; 10-min throttle lock; skipped on preview hosts
+  - daily cron `release-check` at 14:00 UTC
+  - admin "Run check now" button
+- Alerts email ADMIN_EMAILS on failure, with a 12h cooldown while failures persist. Runs are stored in `release_checks`; the live origin is stored in `release_check_state` (from the cron request or an admin visit).
+- Admin tile: `ReleaseCheckTile.jsx` on /admin. APIs: `GET /api/admin/release-checks`, `POST /api/admin/release-checks/run`, `POST /api/cron/release-check`.
 - Still pending from earlier: user check of the Card 4 Foundation Statement PDF (one signature/date line).
 
