@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "title": "Co-Parenting Self-Assessment",
+  "title": "Self-Assessment",
   "guide_name": "SA CoParents Guide",
   "intro": [
     "This is a reflection on where you are today. There are no right or wrong answers.",
@@ -89,6 +89,12 @@
     "helper": "Your answer becomes your Personal Co-Parenting Goal. It stays on your dashboard until your next Self-Assessment."
   },
   "completion_message": "Thank you for taking the time to reflect. Here's where you are today.",
+  "chart": {
+    "title": "Your Progress Over Time",
+    "overall_label": "Overall",
+    "toggle_label": "Show the four areas",
+    "first_note": "This is your starting point. Your next Self-Assessment will show how each area has changed."
+  },
   "central_message": "Your progress isn't about changing the other parent. It's about recognizing what you can do to create a healthier co-parenting environment for your child.",
   "cycle": ["Reflect", "Identify", "Set a Goal", "Practice", "Reassess", "See Your Progress"],
   "bands": [],

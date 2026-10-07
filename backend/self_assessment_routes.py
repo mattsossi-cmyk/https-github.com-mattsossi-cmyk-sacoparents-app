@@ -1,4 +1,4 @@
-"""Self Journey Card 1 · Co-Parenting Self-Assessment (v2, chat-style).
+"""Self Journey Card 1 · Self-Assessment (v2, chat-style).
 
 Draft auto-save, an append-only history of completed assessments, and a
 branded PDF. Copy lives in `self_assessment_content.json`, mirrored at

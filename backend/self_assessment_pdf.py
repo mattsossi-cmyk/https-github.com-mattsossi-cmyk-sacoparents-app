@@ -1,4 +1,4 @@
-"""Branded PDF for the Self Journey Co-Parenting Self-Assessment (v2).
+"""Branded PDF for the Self Journey Self-Assessment (v2).
 
 Render-only: every label comes from `self_assessment_content.json` so the
 PDF says exactly what the parent saw on screen.
@@ -21,6 +21,14 @@ PURPLE_LIGHT = (243, 239, 254)
 INK = (30, 41, 59)
 MUTED = (100, 116, 139)
 EMERALD = (31, 122, 77)
+# Mirrors SERIES_COLORS in frontend selfAssessment/content.js.
+SERIES_RGB = {
+    "overall": (76, 40, 137),
+    "child_focus": (64, 160, 64),
+    "self_awareness": (139, 92, 246),
+    "communication": (2, 132, 199),
+    "differences": (230, 126, 34),
+}
 ROSE = (176, 52, 70)
 
 
@@ -48,6 +56,13 @@ def entry_label(entries: List[Dict[str, Any]], i: int) -> str:
     month = d.strftime("%B %Y")
     clash = sum(1 for e in entries if _parse(e.get("completed_at")).strftime("%B %Y") == month) > 1
     return f"{d.strftime('%B')} {d.day}, {d.year}" if clash else month
+
+
+def chart_label(entries: List[Dict[str, Any]], i: int) -> str:
+    """'May 2026', or 'May 12' when two entries share a month (mirrors chartLabel)."""
+    d = _parse(entries[i].get("completed_at"))
+    full = entry_label(entries, i)
+    return f"{d.strftime('%b')} {d.day}" if "," in full else d.strftime("%b %Y")
 
 
 class _SAPDF(FPDF):
@@ -129,6 +144,54 @@ def _section_bar(pdf: _SAPDF, label: str, score: int, band_for: Callable) -> Non
     pdf.set_y(y0 + 10)
 
 
+def _chart(pdf: _SAPDF, content: Dict[str, Any], history: List[Dict[str, Any]]) -> None:
+    pdf.set_font("Helvetica", "B", 9.5)
+    pdf.set_text_color(*INK)
+    pdf.cell(0, 6, _safe(content["chart"]["title"]), new_x="LMARGIN", new_y="NEXT")
+    x0, y0 = pdf.l_margin + 9, pdf.get_y() + 2
+    w, h = pdf.epw - 14, 48
+    pdf.set_font("Helvetica", "", 7)
+    pdf.set_line_width(0.15)
+    for tick in (0, 25, 50, 75, 100):
+        y = y0 + h - h * tick / 100
+        pdf.set_draw_color(226, 220, 245)
+        pdf.line(x0, y, x0 + w, y)
+        pdf.set_text_color(*MUTED)
+        pdf.set_xy(pdf.l_margin, y - 2)
+        pdf.cell(8, 4, str(tick), align="R")
+    n = len(history)
+    xs = [x0 + (w * i / (n - 1) if n > 1 else w / 2) for i in range(n)]
+    step = max(1, (n + 7) // 8)
+    for i, x in enumerate(xs):
+        if i % step == 0 or i == n - 1:
+            pdf.set_xy(x - 12, y0 + h + 1)
+            pdf.cell(24, 4, _safe(chart_label(history, i)), align="C")
+    series = [("overall", content["chart"]["overall_label"])] + [
+        (s["key"], s["score_label"]) for s in content["sections"]
+    ]
+    for key, _label in reversed(series):
+        vals = [h_["scores"]["overall"] if key == "overall" else h_["scores"]["sections"][key] for h_ in history]
+        pts = [(x, y0 + h - h * v / 100) for x, v in zip(xs, vals)]
+        pdf.set_draw_color(*SERIES_RGB[key])
+        pdf.set_fill_color(*SERIES_RGB[key])
+        pdf.set_line_width(0.9 if key == "overall" else 0.45)
+        for a, b in zip(pts, pts[1:]):
+            pdf.line(a[0], a[1], b[0], b[1])
+        r = 1.1 if key == "overall" else 0.7
+        for x, y in pts:
+            pdf.ellipse(x - r, y - r, 2 * r, 2 * r, "F")
+    pdf.set_line_width(0.2)
+    pdf.set_xy(pdf.l_margin, y0 + h + 7)
+    for key, label in series:
+        pdf.set_fill_color(*SERIES_RGB[key])
+        pdf.rect(pdf.get_x(), pdf.get_y() + 1.3, 2.4, 2.4, "F")
+        pdf.set_x(pdf.get_x() + 3.2)
+        pdf.set_text_color(*INK)
+        pdf.set_font("Helvetica", "B" if key == "overall" else "", 7.5)
+        pdf.cell(pdf.get_string_width(_safe(label)) + 5, 5, _safe(label))
+    pdf.ln(8)
+
+
 def _progress(pdf: _SAPDF, content: Dict[str, Any], history: List[Dict[str, Any]]) -> None:
     _heading(pdf, "Your Progress")
     pdf.set_font("Helvetica", "", 9.5)
@@ -140,8 +203,11 @@ def _progress(pdf: _SAPDF, content: Dict[str, Any], history: List[Dict[str, Any]
         pdf.cell(0, 5.5, _safe(f"{h['scores']['overall']}/100"), new_x="LMARGIN", new_y="NEXT")
         pdf.set_font("Helvetica", "", 9.5)
     if len(history) > 1:
+        pdf.ln(2)
+        if pdf.get_y() > 190:
+            pdf.add_page()
+        _chart(pdf, content, history)
         first, latest = history[0]["scores"]["sections"], history[-1]["scores"]["sections"]
-        pdf.ln(1.5)
         for s in content["sections"]:
             delta = latest[s["key"]] - first[s["key"]]
             pdf.set_text_color(*INK)

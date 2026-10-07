@@ -45,6 +45,43 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-06 — Iter271–273 · Self-Assessment v2 (chat-style) + Progress Graph
+
+Founder ask: replace Self Journey Card 1 with a new chat-style Self-Assessment,
+save every completed run, measure the parent against themselves, set a goal.
+
+- Copy (single source, lockstep): `backend/self_assessment_content.json` ==
+  `frontend/src/pages/portal/selfAssessmentContent.json` (pytest
+  `tests/test_self_assessment.py` asserts equality). Title renamed to
+  **"Self-Assessment"** everywhere. `bands: []` — **score labels pending from
+  founder** (drop `{min,label}` items into `bands` in BOTH files to enable).
+- Content: chat intro (3 bubbles + safety note) → 4 rated sections × 5 Qs
+  (1–5 Rarely…Consistently) → 5 open "My Progress" reflections → goal prompt
+  "What would you like to work on next?" (prefilled from reflection #5).
+- Scoring: overall = sum of 20 answers (/100); section = raw × 4 (/100).
+- Backend `self_assessment_routes.py` (`/api/self-assessment`): GET/PUT `/me`
+  (draft, auth), POST `/complete` (422 unless 20 answered; appends to
+  `self_assessment_history`, deletes draft), GET `/history` (+current_goal),
+  POST `/pdf` (public; body {entry, history}). Collections:
+  `self_assessment_drafts`, `self_assessment_history` (old `self_assessments` dropped).
+- PDF `self_assessment_pdf.py`: overall + 4 bars, Your Progress list, line
+  graph (overall + 4 areas), first → latest deltas, central message, goal,
+  cycle, full responses + reflections.
+- Frontend `pages/portal/selfAssessment/*`: fully chat-style one-question-at-a-
+  time flow (typing indicator, section dividers, "Change my last answer",
+  resume with "Welcome back"), overview/results with score cards, Your
+  Progress list, recharts graph with "Show the four areas" toggle, central
+  message, cycle strip, PDF download, Quick Exit in modal header.
+- Personal Co-Parenting Goal banner on landing (`door-landing-goal`) and top of
+  Self Journey below Safety First (`door-self-goal`); Card 1 shows latest score.
+- Testing: iteration_89 (v1 save/PDF) + iteration_90 (v2 full flow) 100% pass;
+  graph + rename self-tested (PDF render + 390px screenshot, toggle 1→5 lines).
+
+**Next / backlog:** founder score bands; Card 2 reconnect to 65-Q backend
+assessment (orphaned); Mediator PDF grey-rock timeline (P1); post-deploy smoke
+script (P1); prod env toggles (digest, PUBLIC_BACKEND_URL, domain split).
+
+
 ### 2026-02-27 — Iter269/270 · Child-Needs View + Foundation Statement View
 
 Founder ask (two sequential mockups):

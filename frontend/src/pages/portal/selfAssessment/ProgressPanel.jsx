@@ -1,6 +1,7 @@
 import React from "react";
 
 import { CONTENT, SECTIONS, bandFor, entryLabel } from "./content";
+import { ProgressChart } from "./ProgressChart";
 
 export function ScoreCards({ scores }) {
   const band = bandFor(scores.overall);
@@ -61,6 +62,7 @@ export function ProgressHistory({ history }) {
           </li>
         ))}
       </ul>
+      {history.length > 1 && <ProgressChart history={history} />}
       {history.length > 1 ? (
         <ul className="space-y-1 border-t border-slate-100 pt-2">
           {SECTIONS.map((s) => (
@@ -72,7 +74,7 @@ export function ProgressHistory({ history }) {
         </ul>
       ) : (
         <p data-testid="sa-progress-first-note" className="text-[11px] text-slate-500 border-t border-slate-100 pt-2">
-          This is your starting point. Your next Self-Assessment will show how each area has changed.
+          {CONTENT.chart.first_note}
         </p>
       )}
     </div>

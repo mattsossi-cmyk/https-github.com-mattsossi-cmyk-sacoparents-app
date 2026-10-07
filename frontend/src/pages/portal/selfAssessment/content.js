@@ -71,6 +71,24 @@ export const entryLabel = (entries, i) => {
     : month;
 };
 
+// Short x-axis label for the progress chart: "May 2026", or "May 12" when two entries share a month.
+export const chartLabel = (entries, i) => {
+  const d = new Date(entries[i].completed_at);
+  const full = entryLabel(entries, i);
+  return full.includes(",")
+    ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    : d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+};
+
+// Chart series colours — mirrored in backend self_assessment_pdf.SERIES_RGB.
+export const SERIES_COLORS = {
+  overall: "#4c2889",
+  child_focus: "#40a040",
+  self_awareness: "#8b5cf6",
+  communication: "#0284c7",
+  differences: "#e67e22",
+};
+
 export const emptyDraft = (parentName) => ({
   started: false,
   parent_name: parentName || "",
