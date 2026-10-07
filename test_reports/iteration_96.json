@@ -1,0 +1,40 @@
+{
+  "summary": "Verified Weekly Self Journey Note feature (backend units, email template, HTTP unsubscribe, cron auth, crons.yml) and the updated welcome artwork ('Understand Your Co-Parenting Relationship' on 2 lines) across landing, Self Journey, and Court Ordered doors. All 16 new tests pass; regression tests (release_check, self_assessment_reminders, foundation_builder, foundation_builder_http = 19 tests) all pass; admin release-checks still returns ok with 9 results.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verified": [
+    "build_highlights full example and singular variants (SA/day/cn) produce exact strings per spec",
+    "make_unsubscribe_token round-trip; reassess-reminder token (different kind) correctly rejected",
+    "send_weekly_notes: sends exactly one email to active user with correct cta_url=/dashboard and unsubscribe_url=/api/self-journey/weekly-note/unsubscribe?token=... ; skips safety-flagged (portal_state.safety_ack.flagged), unsubscribed (self_journey_weekly_prefs.unsubscribed), guest, bounced; activity >7d (stale foundation_builder updated_at) does not count; second run in same ISO week yields already_sent",
+    "send_self_journey_weekly_note: subject exactly 'Your weekly note'; highlights HTML-escaped ('<Foundation>' -> &lt;Foundation&gt;); HTML contains 'Open my Self Journey' CTA and 'Unsubscribe' link; plain text contains full unsubscribe URL",
+    "GET /api/self-journey/weekly-note/unsubscribe?token=<valid> -> 200, 'You're unsubscribed', self_journey_weekly_prefs.unsubscribed=true persisted",
+    "GET .../unsubscribe?token=garbage -> 400 'Link not valid'; reassess-reminder token -> 400 (kind mismatch)",
+    "POST /api/cron/self-journey-weekly-note -> 401 unauth / 401 wrong bearer / 200 with correct bearer (WEBHOOK_CRON_SECRET)",
+    "/app/.emergent/crons.yml: 5 crons; sj-weekly-note cron '0 17 * * 0', timezone 'America/Chicago', endpoint '/api/cron/self-journey-weekly-note'",
+    "Images: /images/sa-welcome.webp?v=2 and sa-welcome-768.webp?v=2 both return HTTP 200 image/webp",
+    "Frontend doors: door-welcome-image (landing), door-self-welcome-image (Self Journey), door-court-welcome-image (Court) all render; hotspots door-welcome-hotspot-self/court/comm present",
+    "Individual Journey checklist (zoom screenshot) reads exactly: Co-Parenting Self-Assessment / Understand Your Co-Parenting Relationship (2 lines) / Identify Your Child's Specific Needs / Create Your Foundation Statement / Track Your Progress — no overlaps or artifacts",
+    "Admin POST /api/admin/release-checks/run returns ok=true with 9 results"
+  ],
+  "note_on_cron": "Authorized cron POST was called once to confirm 200 (returns {ok:true, enqueued:'self-journey-weekly-note'}). Background work may have sent sandboxed-Resend emails to users with activity this week; prior iteration already verified this manually (see /var/log/supervisor/backend.err.log).",
+  "test_report_links": [
+    "/app/backend/tests/test_self_journey_weekly.py",
+    "/app/test_reports/pytest/sj_weekly.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "self_journey_weekly.collect_activity scans entire collections for the 7-day window on every cron run — fine today but consider adding indexes on {completed_at, user_id} / {date, user_id} / {updated_at, user_id} as volume grows.",
+    "No lower bound on cp_report_history snapshot count — if a snapshot has falsy submitted_at it is treated as empty string and compared with >= since, which is correct, but worth adding unit coverage if cp_report path is exercised heavily."
+  ],
+  "updated_files": ["/app/backend/tests/test_self_journey_weekly.py"],
+  "success_rate": {"backend": "100% (16/16 new + 19/19 regression)", "frontend": "100%"},
+  "test_credentials": "parent2@test.com / TestPass123! used for frontend (parent1 is safety-flagged); admin mattsossi@bsossi.com / AdminPass123! for release-check",
+  "seed_data_creation": "Transient TEST_u_* users / portal_state / self_journey_weekly_prefs / foundation_builder / self_assessment_checkins rows seeded and cleaned up within test_sends_once_per_week_and_respects_filters. Unsubscribe HTTP test cleans up its PREFS row.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "test_self_journey_weekly.py covers the full weekly-note surface. If adding more cases, reuse the _seed_user/_cleanup helpers and the email_service.send_self_journey_weekly_note monkeypatch pattern."
+}

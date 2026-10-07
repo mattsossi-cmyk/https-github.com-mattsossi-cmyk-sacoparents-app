@@ -8618,5 +8618,12 @@ dashboard for sharing SELECTED completed reports with any professional.
   - admin "Run check now" button
 - Alerts email ADMIN_EMAILS on failure, with a 12h cooldown while failures persist. Runs are stored in `release_checks`; the live origin is stored in `release_check_state` (from the cron request or an admin visit).
 - Admin tile: `ReleaseCheckTile.jsx` on /admin. APIs: `GET /api/admin/release-checks`, `POST /api/admin/release-checks/run`, `POST /api/cron/release-check`.
+
+## 2026-06 — Artwork text + weekly Self Journey note (iteration_96: all passed)
+- Welcome artwork pixel-edited: the Individual Journey checklist now reads "Understand Your / Co-Parenting Relationship". Reused the image's own glyphs; the list was re-spaced slightly. Served as `?v=2` to bust the cache.
+- Weekly note (`self_journey_weekly.py`): Sunday 17:00 America/Chicago (cron `sj-weekly-note`, the 5th and last allowed cron).
+  - Sent only to parents with Self Journey activity in the last 7 days: Card 1 completions, practice check-ins + streak, Card 2 snapshots, Card 3 categories, Card 4 updated.
+  - Subject: "Your weekly note". Safety-flagged parents are skipped; separate one-tap unsubscribe (`GET /api/self-journey/weekly-note/unsubscribe`, prefs in `self_journey_weekly_prefs`); one note per user per ISO week (`self_journey_weekly_notes`). Links use the cron request's origin.
+- Tests: `/app/backend/tests/test_self_journey_weekly.py`.
 - Still pending from earlier: user check of the Card 4 Foundation Statement PDF (one signature/date line).
 
