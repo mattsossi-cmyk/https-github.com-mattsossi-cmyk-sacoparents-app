@@ -12,3 +12,9 @@ crons:
     endpoint: "{{BASE_URL}}/api/cron/nudge-digest"
     method: POST
     enabled: true
+  - name: sa-reassess-reminder
+    description: "Daily check: emails parents 6 weeks (and a gentle 8-week follow-up) after their last Self-Assessment"
+    cron: "0 15 * * *"
+    endpoint: "{{BASE_URL}}/api/cron/self-assessment-reminders"
+    method: POST
+    enabled: true

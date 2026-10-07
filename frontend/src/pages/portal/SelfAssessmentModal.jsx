@@ -111,7 +111,7 @@ function useChatEffects(currentIdx, mode) {
   return { typing, endRef, bodyRef };
 }
 
-export function SelfAssessmentModal({ open, onOpenChange, parentName, userId, history = [], onCompleted, onQuickExit }) {
+export function SelfAssessmentModal({ open, onOpenChange, parentName, userId, history = [], startNew = false, onCompleted, onQuickExit }) {
   const { draft, update, status, flush, complete } = useSelfAssessmentDraft({ open, userId, parentName, onCompleted });
   const [view, setView] = useState("auto");
   const [busy, setBusy] = useState(false);
@@ -121,8 +121,8 @@ export function SelfAssessmentModal({ open, onOpenChange, parentName, userId, hi
   const { typing, endRef, bodyRef } = useChatEffects(currentIdx, mode);
 
   useEffect(() => {
-    if (open) setView("auto");
-  }, [open]);
+    if (open) setView(startNew ? "chat" : "auto");
+  }, [open, startNew]);
   useEffect(() => {
     if (open && draft.started && resumeAt === null) setResumeAt(currentIdx);
     if (!open) setResumeAt(null);

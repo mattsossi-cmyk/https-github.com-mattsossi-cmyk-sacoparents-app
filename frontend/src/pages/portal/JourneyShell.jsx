@@ -817,6 +817,23 @@ export function JourneyShell({
   // iter268 — new Self Journey "Assess Your Situation" modal state.
   const [assessOpen, setAssessOpen] = useState(false);
   const saHistory = useSelfAssessmentHistory(user?.user_id);
+  const [assessStartNew, setAssessStartNew] = useState(false);
+  const openAssess = (startNew = false) => {
+    setAssessStartNew(startNew);
+    setAssessOpen(true);
+  };
+
+  // Email reminder deep link: /dashboard?open=self-assessment
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("open") !== "self-assessment") return;
+    params.delete("open");
+    const qs = params.toString();
+    window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
+    openDoor("self");
+    openAssess(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // iter266 — Both-parents-done condition. Drives the joint
   // badge chip visibility inside the finale rewards block.
@@ -1084,9 +1101,12 @@ export function JourneyShell({
           testid="door-landing-goal"
           goal={saHistory.currentGoal}
           setAt={saHistory.latest?.completed_at}
+          practice={saHistory.practice}
+          onPractise={saHistory.practise}
+          dueDays={saHistory.dueDays}
           onOpen={() => {
             openDoor("self");
-            setAssessOpen(true);
+            openAssess(saHistory.dueDays > 0);
           }}
         />
 
@@ -1427,7 +1447,10 @@ export function JourneyShell({
           testid="door-self-goal"
           goal={saHistory.currentGoal}
           setAt={saHistory.latest?.completed_at}
-          onOpen={() => setAssessOpen(true)}
+          practice={saHistory.practice}
+          onPractise={saHistory.practise}
+          dueDays={saHistory.dueDays}
+          onOpen={() => openAssess(saHistory.dueDays > 0)}
         />
 
         {/* iter268 — Hero brand banner above the 4 action cards. */}
@@ -1456,7 +1479,7 @@ export function JourneyShell({
           <button
             type="button"
             data-testid="door-self-card-assess"
-            onClick={() => setAssessOpen(true)}
+            onClick={() => openAssess(false)}
             className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
           >
             <div className="shrink-0 w-9 h-9 rounded-full bg-violet-500 text-white font-extrabold flex items-center justify-center">
@@ -1766,6 +1789,7 @@ export function JourneyShell({
         parentName={greetingName}
         userId={user?.user_id}
         history={saHistory.history}
+        startNew={assessStartNew}
         onCompleted={saHistory.addEntry}
         onQuickExit={quickExitAction}
       />

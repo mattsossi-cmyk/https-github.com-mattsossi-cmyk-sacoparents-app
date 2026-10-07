@@ -55,6 +55,10 @@ export const scoreAnswers = (answers) => {
   };
 };
 
+export const REASSESS_AFTER_DAYS = CONTENT.reassess_after_days;
+export const daysSince = (iso) => Math.floor((Date.now() - Date.parse(iso)) / 86400000);
+export const todayLocal = () => new Date().toLocaleDateString("en-CA");
+
 export const bandFor = (score) => CONTENT.bands.find((b) => score >= b.min) || null;
 
 // "May 2026", or "May 12, 2026" when two entries share a month (mirrors PDF).

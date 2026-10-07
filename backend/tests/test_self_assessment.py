@@ -44,8 +44,27 @@ def test_invalid_values_dropped():
     assert d.reflections == {"going_better": "x"}
 
 
-def test_no_bands_until_configured():
-    assert band_for(90) is None
+def test_bands_match_founder_ranges():
+    assert band_for(100)["label"] == band_for(85)["label"] == "Consistent Strength"
+    assert band_for(84)["label"] == "Growing Strength" and band_for(70)["label"] == "Growing Strength"
+    assert band_for(69)["label"] == "Developing" and band_for(55)["label"] == "Developing"
+    assert band_for(54)["label"] == "Building Foundations" and band_for(40)["label"] == "Building Foundations"
+    assert band_for(39)["label"] == "Starting Point" and band_for(20)["label"] == "Starting Point"
+    assert all(b.get("body") for b in CONTENT["bands"])
+
+
+def test_reminder_due_logic():
+    from datetime import datetime, timedelta, timezone
+    from self_assessment_reminders import _due_kind, make_unsubscribe_token, read_unsubscribe_token
+    now = datetime(2026, 9, 1, tzinfo=timezone.utc)
+    assert _due_kind(now - timedelta(days=41), {}, now) is None
+    assert _due_kind(now - timedelta(days=42), {}, now) == "6w"
+    assert _due_kind(now - timedelta(days=50), {"6w": now - timedelta(days=8)}, now) is None
+    assert _due_kind(now - timedelta(days=56), {"6w": now - timedelta(days=14)}, now) == "8w"
+    assert _due_kind(now - timedelta(days=70), {"6w": now - timedelta(days=3)}, now) is None
+    assert _due_kind(now - timedelta(days=90), {"6w": now, "8w": now}, now) is None
+    assert read_unsubscribe_token(make_unsubscribe_token("u1")) == "u1"
+    assert read_unsubscribe_token("garbage") is None
 
 
 def test_pdf_renders_with_history():

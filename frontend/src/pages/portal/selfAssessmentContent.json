@@ -97,6 +97,13 @@
   },
   "central_message": "Your progress isn't about changing the other parent. It's about recognizing what you can do to create a healthier co-parenting environment for your child.",
   "cycle": ["Reflect", "Identify", "Set a Goal", "Practice", "Reassess", "See Your Progress"],
-  "bands": [],
+  "bands": [
+    { "min": 85, "label": "Consistent Strength", "body": "This is a real strength. Keep protecting it — it's making a difference for your child." },
+    { "min": 70, "label": "Growing Strength", "body": "You're building solid habits here. Small, steady steps will keep this growing." },
+    { "min": 55, "label": "Developing", "body": "You're making real progress. Focusing here next could make co-parenting feel calmer." },
+    { "min": 40, "label": "Building Foundations", "body": "You're laying important groundwork. Every small change you practise counts." },
+    { "min": 0, "label": "Starting Point", "body": "Every journey starts somewhere. Noticing where you are today is a meaningful first step." }
+  ],
+  "reassess_after_days": 42,
   "disclaimer": "This is a reflection tool — not a diagnosis or custody evaluation."
 }

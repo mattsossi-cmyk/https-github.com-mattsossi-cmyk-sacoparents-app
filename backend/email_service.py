@@ -1365,6 +1365,55 @@ def send_pair_celebration_nudge(
 
 
 
+# Self-Assessment reassess reminder (6-week + 8-week follow-up).
+# Plain, neutral subject line by design; callers skip safety-flagged parents.
+def send_reassess_reminder(
+    *,
+    to_email: str,
+    cta_url: str,
+    unsubscribe_url: str,
+    first_name: Optional[str] = None,
+    follow_up: bool = False,
+) -> None:
+    hello = f"Hi {first_name}," if first_name else "Hi,"
+    if follow_up:
+        headline = "A gentle reminder"
+        lead = "Your next reflection is here whenever you're ready. There's no rush and no right or wrong answers."
+    else:
+        headline = "Ready for a check-in?"
+        lead = (
+            "It's been about six weeks since your last reflection. Taking a few quiet minutes "
+            "to reflect again can show you how far you've come."
+        )
+    note = "You're only ever measured against yourself."
+    plain = (
+        f"{hello}\n\n{lead}\n\n{note}\n\nStart my check-in:\n{cta_url}\n\n"
+        f"Don't want these reminders? Unsubscribe: {unsubscribe_url}\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{hello}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{lead}</p>'
+        f'<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">{note}</p>'
+    )
+    html = _branded_html(
+        headline=headline,
+        body_html=body_html,
+        cta_label="Start my check-in",
+        cta_url=cta_url,
+    ) + (
+        f'<p style="font-family:Arial,sans-serif;font-size:12px;color:#857E9C;text-align:center;margin:12px 0;">'
+        f"Don't want these reminders? "
+        f'<a href="{unsubscribe_url}" style="color:#857E9C;">Unsubscribe</a></p>'
+    )
+    _send(
+        to_email=to_email,
+        subject="Your reflection check-in",
+        html=html,
+        text=plain,
+        failure_message="Could not send the reflection check-in right now.",
+    )
+
+
 def send_joint_alignment_invitation(
     *,
     to_email: str,

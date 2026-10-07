@@ -107,3 +107,31 @@ async def nudge_digest_cron(
 
     background.add_task(_run)
     return {"ok": True, "run_id": run_id, "enqueued": "nudge-digest"}
+
+
+@router.post("/self-assessment-reminders")
+async def self_assessment_reminders_cron(
+    background: BackgroundTasks,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Daily sweep: 6-week reassess email + 8-week follow-up (safety-flagged skipped).
+
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    """
+    _verify_cron_auth(authorization)
+    # Dedupe lives in `self_assessment_reminders` (one sent row per entry + kind).
+    run_id = request.headers.get("X-Webhook-Id") or "manual"
+
+    from self_assessment_reminders import send_reassess_reminders
+
+    async def _run() -> None:
+        try:
+            stats = await send_reassess_reminders(db)
+            logger.info("self-assessment-reminders cron run_id=%s stats=%s", run_id, stats)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("self-assessment-reminders cron run_id=%s failed: %s", run_id, exc)
+
+    background.add_task(_run)
+    return {"ok": True, "run_id": run_id, "enqueued": "self-assessment-reminders"}

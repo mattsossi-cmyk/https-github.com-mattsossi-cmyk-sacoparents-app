@@ -115,16 +115,20 @@ def _overall(pdf: _SAPDF, scores: Dict[str, Any], band_for: Callable) -> None:
     y = pdf.get_y()
     pdf.set_fill_color(*PURPLE_LIGHT)
     pdf.set_draw_color(216, 199, 251)
-    pdf.rect(pdf.l_margin, y, pdf.epw, 18 if band else 14, "DF")
+    pdf.rect(pdf.l_margin, y, pdf.epw, 24 if band else 14, "DF")
     pdf.set_xy(pdf.l_margin + 4, y + 3)
     pdf.set_font("Helvetica", "B", 14)
     pdf.set_text_color(*PURPLE)
     pdf.cell(0, 7, _safe(f"Overall score: {scores['overall']} / 100"), new_x="LMARGIN", new_y="NEXT")
     if band:
         pdf.set_x(pdf.l_margin + 4)
-        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_font("Helvetica", "B", 9.5)
         pdf.cell(0, 5, _safe(band["label"]), new_x="LMARGIN", new_y="NEXT")
-    pdf.set_y(y + (21 if band else 17))
+        pdf.set_x(pdf.l_margin + 4)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(*INK)
+        pdf.cell(0, 5, _safe(band["body"]), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_y(y + (27 if band else 17))
 
 
 def _section_bar(pdf: _SAPDF, label: str, score: int, band_for: Callable) -> None:

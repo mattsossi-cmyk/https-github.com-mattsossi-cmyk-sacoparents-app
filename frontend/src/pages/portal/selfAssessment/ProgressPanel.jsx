@@ -10,13 +10,22 @@ export function ScoreCards({ scores }) {
       <div className="rounded-2xl bg-[#4c2889] text-white p-4 flex items-center justify-between">
         <div>
           <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-purple-200">Overall score</div>
-          {band && <div className="text-xs font-semibold text-purple-100 mt-0.5">{band.label}</div>}
+          {band && (
+            <div data-testid="sa-overall-band" className="text-sm font-bold text-white mt-0.5">
+              {band.label}
+            </div>
+          )}
         </div>
         <div data-testid="sa-overall-score" className="text-3xl font-extrabold leading-none">
           {scores.overall}
           <span className="text-base font-bold text-purple-200">/100</span>
         </div>
       </div>
+      {band && (
+        <p data-testid="sa-overall-band-body" className="text-[12px] text-slate-600 leading-snug px-1">
+          {band.body}
+        </p>
+      )}
       <div className="grid grid-cols-2 gap-2">
         {SECTIONS.map((s) => {
           const v = scores.sections[s.key];
@@ -25,7 +34,12 @@ export function ScoreCards({ scores }) {
             <div key={s.key} data-testid={`sa-section-score-${s.key}`} className="rounded-xl border border-purple-100 bg-white p-3">
               <div className="text-[11px] font-semibold text-slate-600 leading-tight">{s.score_label}</div>
               <div className="text-xl font-extrabold text-[#4c2889] mt-1">{v}</div>
-              {b && <div className="text-[10px] text-slate-500">{b.label}</div>}
+              {b && (
+                <div data-testid={`sa-section-band-${s.key}`} className="text-[11px] font-bold text-purple-800">
+                  {b.label}
+                </div>
+              )}
+              {b && <p className="text-[10px] text-slate-500 leading-snug mt-0.5">{b.body}</p>}
               <div className="h-1.5 rounded-full bg-purple-50 mt-1.5 overflow-hidden">
                 <div className="h-full bg-purple-600 rounded-full transition-[width] duration-700" style={{ width: `${v}%` }} />
               </div>
