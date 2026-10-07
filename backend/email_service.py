@@ -4281,3 +4281,48 @@ def send_release_check_alert(
         text=plain,
         failure_message="Could not send the release check alert.",
     )
+
+
+def send_self_journey_weekly_note(
+    *,
+    to_email: str,
+    highlights: List[str],
+    cta_url: str,
+    unsubscribe_url: str,
+    first_name: Optional[str] = None,
+) -> None:
+    """Gentle Sunday note celebrating the Self Journey steps a parent took this week."""
+    hello = f"Hi {_html.escape(first_name)}," if first_name else "Hi,"
+    lead = "Here's a quick look back at what you made time for this week:"
+    note = "Every small step is a step for your child. You're only ever measured against yourself."
+    plain = (
+        f"{hello}\n\n{lead}\n\n" + "\n".join(f"- {h}" for h in highlights)
+        + f"\n\n{note}\n\nOpen my Self Journey:\n{cta_url}\n\n"
+        f"Don't want weekly notes? Unsubscribe: {unsubscribe_url}\n"
+    )
+    items = "".join(
+        f'<li style="margin:0 0 8px 0;">{_html.escape(h)}</li>' for h in highlights
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{hello}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 12px 0;">{lead}</p>'
+        f'<ul style="font-size:15px;line-height:1.5;color:#1A1330;margin:0 0 18px 18px;padding:0;">{items}</ul>'
+        f'<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">{note}</p>'
+    )
+    html = _branded_html(
+        headline="A look back at your week",
+        body_html=body_html,
+        cta_label="Open my Self Journey",
+        cta_url=cta_url,
+    ) + (
+        f'<p style="font-family:Arial,sans-serif;font-size:12px;color:#857E9C;text-align:center;margin:12px 0;">'
+        f"Don't want weekly notes? "
+        f'<a href="{unsubscribe_url}" style="color:#857E9C;">Unsubscribe</a></p>'
+    )
+    _send(
+        to_email=to_email,
+        subject="Your weekly note",
+        html=html,
+        text=plain,
+        failure_message="Could not send the weekly note right now.",
+    )

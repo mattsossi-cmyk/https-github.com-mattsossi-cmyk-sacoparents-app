@@ -22,8 +22,8 @@ export const WelcomeArtwork = ({ testid, actions }) => {
       <img
         ref={imgRef}
         onLoad={() => setLoaded(true)}
-        src="/images/sa-welcome.webp"
-        srcSet="/images/sa-welcome-768.webp 768w, /images/sa-welcome.webp 1024w"
+        src="/images/sa-welcome.webp?v=2"
+        srcSet="/images/sa-welcome-768.webp?v=2 768w, /images/sa-welcome.webp?v=2 1024w"
         sizes="(max-width: 640px) 100vw, 640px"
         width={1024}
         height={1536}

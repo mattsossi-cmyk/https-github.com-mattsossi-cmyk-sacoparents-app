@@ -164,3 +164,34 @@ async def release_check_cron(
 
     background.add_task(_run)
     return {"ok": True, "run_id": run_id, "enqueued": "release-check"}
+
+
+@router.post("/self-journey-weekly-note")
+async def self_journey_weekly_note_cron(
+    background: BackgroundTasks,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Sunday 5pm Central: gentle note to parents who made Self Journey progress this week.
+
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    """
+    _verify_cron_auth(authorization)
+    # Dedupe lives in `self_journey_weekly_notes` (one sent row per user + ISO week).
+    run_id = request.headers.get("X-Webhook-Id") or "manual"
+
+    from release_check import origin_from_request
+    from self_journey_weekly import send_weekly_notes
+
+    origin = origin_from_request(request)
+
+    async def _run() -> None:
+        try:
+            stats = await send_weekly_notes(db, app_url=origin, api_url=origin)
+            logger.info("self-journey-weekly-note cron run_id=%s stats=%s", run_id, stats)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("self-journey-weekly-note cron run_id=%s failed: %s", run_id, exc)
+
+    background.add_task(_run)
+    return {"ok": True, "run_id": run_id, "enqueued": "self-journey-weekly-note"}
